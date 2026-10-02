@@ -4,11 +4,13 @@ from jobbot.db.models import Source
 from jobbot.mail.message import ParsedEmail
 from jobbot.sources.base import Parser
 from jobbot.sources.indeed import IndeedParser
+from jobbot.sources.jobup import JobupParser
 
 # Un e-mail qu'aucun analyseur ne reconnaît est enregistré « non reconnu ».
-PARSERS: list[Parser] = [IndeedParser()]
+PARSERS: list[Parser] = [IndeedParser(), JobupParser()]
 
-# Domaines d'expéditeur. Confirmés : jobalert.indeed.com, my.jobup.ch. Job-Room à confirmer.
+# Domaines d'expéditeur. Confirmés : jobalert.indeed.com, jobup.ch, my.jobup.ch.
+# Job-Room à confirmer.
 _SENDER_DOMAINS: tuple[tuple[str, Source], ...] = (
     ("jobup.ch", Source.JOBUP),
     ("indeed.com", Source.INDEED),

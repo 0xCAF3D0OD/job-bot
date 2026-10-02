@@ -47,6 +47,7 @@ def test_normalize_title(title: str, expected: str) -> None:
         ("Admin", (None, None)),
         ("Admin 150%", (None, None)),
         ("Admin 2024", (None, None)),
+        ("Animateur Poste à 26,25%", (None, None)),
     ],
 )
 def test_parse_rate(title: str, expected: tuple[int | None, int | None]) -> None:
