@@ -11,6 +11,7 @@ function status(overrides: Partial<StatusResponse> = {}): StatusResponse {
     env: "dev",
     database: { ok: true, revision: "0002", head: "0002", up_to_date: true, error: null },
     worker: { healthy: true, last_heartbeat_at: "2026-10-02T11:58:00Z", stale_after_seconds: 600 },
+    collect: { configured: true, last_success_at: "2026-10-02T11:00:00Z", last_failure_at: null, last_error: null },
     ...overrides,
   };
 }
@@ -18,8 +19,9 @@ function status(overrides: Partial<StatusResponse> = {}): StatusResponse {
 describe("indicators", () => {
   it("tout va bien", () => {
     const lights = indicators(status(), NOW);
-    expect(lights.map((l) => l.level)).toEqual(["ok", "ok", "ok"]);
+    expect(lights.map((l) => l.level)).toEqual(["ok", "ok", "ok", "ok"]);
     expect(lights[2]?.detail).toBe("dernier heartbeat il y a 2 minutes");
+    expect(lights[3]?.detail).toBe("dernière collecte il y a 1 heure");
   });
 
   it("base absente", () => {
@@ -30,7 +32,7 @@ describe("indicators", () => {
       }),
       NOW,
     );
-    expect(lights.map((l) => l.level)).toEqual(["ok", "down", "down"]);
+    expect(lights.map((l) => l.level).slice(0, 3)).toEqual(["ok", "down", "down"]);
     expect(lights[1]?.detail).toContain("OperationalError");
   });
 
@@ -53,6 +55,31 @@ describe("indicators", () => {
   });
 
   it("API injoignable", () => {
-    expect(indicators(null, NOW).map((l) => l.level)).toEqual(["down", "down", "down"]);
+    expect(indicators(null, NOW).map((l) => l.level)).toEqual(["down", "down", "down", "down"]);
+  });
+
+  it("collecte non configurée", () => {
+    const lights = indicators(
+      status({ collect: { configured: false, last_success_at: null, last_failure_at: null, last_error: null } }),
+      NOW,
+    );
+    expect(lights[3]?.level).toBe("warn");
+    expect(lights[3]?.detail).toContain("JOBBOT_IMAP_USER");
+  });
+
+  it("collecte en échec", () => {
+    const lights = indicators(
+      status({
+        collect: {
+          configured: true,
+          last_success_at: "2026-10-01T11:00:00Z",
+          last_failure_at: "2026-10-02T11:00:00Z",
+          last_error: "MailboxError: authentification IMAP refusée",
+        },
+      }),
+      NOW,
+    );
+    expect(lights[3]?.level).toBe("down");
+    expect(lights[3]?.detail).toContain("authentification IMAP refusée");
   });
 });

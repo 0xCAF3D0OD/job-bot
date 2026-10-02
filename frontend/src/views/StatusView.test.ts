@@ -13,6 +13,7 @@ const healthy = {
   env: "dev",
   database: { ok: true, revision: "0002", head: "0002", up_to_date: true, error: null },
   worker: { healthy: true, last_heartbeat_at: new Date().toISOString(), stale_after_seconds: 600 },
+  collect: { configured: true, last_success_at: new Date().toISOString(), last_failure_at: null, last_error: null },
 };
 
 describe("StatusView", () => {
@@ -40,11 +41,8 @@ describe("StatusView", () => {
     const wrapper = mount(StatusView);
     await flushPromises();
     const lights = wrapper.findAll("[data-test=indicator]");
-    expect(lights.map((l) => l.classes())).toEqual([
-      expect.arrayContaining(["ok"]),
-      expect.arrayContaining(["ok"]),
-      expect.arrayContaining(["ok"]),
-    ]);
+    expect(lights).toHaveLength(4);
+    expect(lights.every((l) => l.classes().includes("ok"))).toBe(true);
     expect(wrapper.findAll("[data-test=run]")).toHaveLength(1);
     expect(wrapper.text()).toContain("réussie");
     wrapper.unmount();

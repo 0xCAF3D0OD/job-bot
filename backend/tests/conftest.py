@@ -61,7 +61,7 @@ async def client(settings: Settings, runtime: Runtime) -> AsyncIterator[AsyncCli
 @pytest.fixture
 async def clean_job_runs(runtime: Runtime) -> None:
     async with runtime.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE job_runs"))
+        await conn.execute(text("TRUNCATE job_runs CASCADE"))
 
 
 @pytest.fixture

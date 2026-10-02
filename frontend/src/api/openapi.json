@@ -90,10 +90,288 @@
           }
         }
       }
+    },
+    "/api/searches": {
+      "get": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "List Searches",
+        "operationId": "listSearches",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Source"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "name": "parse_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ParseStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parse Status"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/searches/{search_id}": {
+      "get": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Get Search",
+        "operationId": "getSearch",
+        "parameters": [
+          {
+            "name": "search_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Search Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers": {
+      "get": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "List Offers",
+        "operationId": "listOffers",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collect": {
+      "post": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Start Collect",
+        "operationId": "startCollect",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Collecte non configurée"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CollectResponse": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "already_queued"
+            ],
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "CollectResponse"
+      },
+      "CollectStatus": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          },
+          "last_failure_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Failure At"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured",
+          "last_success_at",
+          "last_failure_at",
+          "last_error"
+        ],
+        "title": "CollectStatus"
+      },
       "DatabaseStatus": {
         "properties": {
           "ok": {
@@ -253,6 +531,507 @@
         ],
         "title": "JobRunStatus"
       },
+      "OfferLinkOut": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "url"
+        ],
+        "title": "OfferLinkOut"
+      },
+      "OfferOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rate_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Min"
+          },
+          "rate_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Max"
+          },
+          "snippet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snippet"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          },
+          "first_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Seen At"
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Seen At"
+          },
+          "seen_count": {
+            "type": "integer",
+            "title": "Seen Count"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/OfferLinkOut"
+            },
+            "type": "array",
+            "title": "Links"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "company",
+          "location",
+          "rate_min",
+          "rate_max",
+          "snippet",
+          "status",
+          "first_seen_at",
+          "last_seen_at",
+          "seen_count",
+          "links"
+        ],
+        "title": "OfferOut"
+      },
+      "OfferPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OfferOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "OfferPage"
+      },
+      "OfferStatus": {
+        "type": "string",
+        "enum": [
+          "new",
+          "filtered_out",
+          "to_review",
+          "later",
+          "ignored",
+          "preparing",
+          "applied"
+        ],
+        "title": "OfferStatus"
+      },
+      "ParseStatus": {
+        "type": "string",
+        "enum": [
+          "parsed",
+          "empty",
+          "unrecognized",
+          "failed"
+        ],
+        "title": "ParseStatus"
+      },
+      "SearchDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "alert_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert Label"
+          },
+          "parse_status": {
+            "$ref": "#/components/schemas/ParseStatus"
+          },
+          "parser_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parser Version"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "results_count": {
+            "type": "integer",
+            "title": "Results Count"
+          },
+          "new_offers_count": {
+            "type": "integer",
+            "title": "New Offers Count"
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Collected At"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/SearchOffer"
+            },
+            "type": "array",
+            "title": "Offers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "received_at",
+          "subject",
+          "alert_label",
+          "parse_status",
+          "parser_version",
+          "error",
+          "results_count",
+          "new_offers_count",
+          "collected_at",
+          "offers"
+        ],
+        "title": "SearchDetail"
+      },
+      "SearchOffer": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rate_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Min"
+          },
+          "rate_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Max"
+          },
+          "snippet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snippet"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          },
+          "first_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "First Seen At"
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Seen At"
+          },
+          "seen_count": {
+            "type": "integer",
+            "title": "Seen Count"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/OfferLinkOut"
+            },
+            "type": "array",
+            "title": "Links"
+          },
+          "is_first": {
+            "type": "boolean",
+            "title": "Is First"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "company",
+          "location",
+          "rate_min",
+          "rate_max",
+          "snippet",
+          "status",
+          "first_seen_at",
+          "last_seen_at",
+          "seen_count",
+          "links",
+          "is_first"
+        ],
+        "title": "SearchOffer"
+      },
+      "SearchOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "alert_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alert Label"
+          },
+          "parse_status": {
+            "$ref": "#/components/schemas/ParseStatus"
+          },
+          "parser_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parser Version"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "results_count": {
+            "type": "integer",
+            "title": "Results Count"
+          },
+          "new_offers_count": {
+            "type": "integer",
+            "title": "New Offers Count"
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Collected At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "received_at",
+          "subject",
+          "alert_label",
+          "parse_status",
+          "parser_version",
+          "error",
+          "results_count",
+          "new_offers_count",
+          "collected_at"
+        ],
+        "title": "SearchOut"
+      },
+      "SearchPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "SearchPage"
+      },
+      "Source": {
+        "type": "string",
+        "enum": [
+          "jobup",
+          "indeed",
+          "jobroom",
+          "unknown"
+        ],
+        "title": "Source"
+      },
       "StatusResponse": {
         "properties": {
           "version": {
@@ -268,6 +1047,9 @@
           },
           "worker": {
             "$ref": "#/components/schemas/WorkerStatus"
+          },
+          "collect": {
+            "$ref": "#/components/schemas/CollectStatus"
           }
         },
         "type": "object",
@@ -275,7 +1057,8 @@
           "version",
           "env",
           "database",
-          "worker"
+          "worker",
+          "collect"
         ],
         "title": "StatusResponse"
       },

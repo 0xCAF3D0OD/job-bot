@@ -38,10 +38,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Searches */
+        get: operations["listSearches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/searches/{search_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Search */
+        get: operations["getSearch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Offers */
+        get: operations["listOffers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/collect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Collect */
+        post: operations["startCollect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** CollectResponse */
+        CollectResponse: {
+            /**
+             * Result
+             * @enum {string}
+             */
+            result: "queued" | "already_queued";
+        };
+        /** CollectStatus */
+        CollectStatus: {
+            /** Configured */
+            configured: boolean;
+            /** Last Success At */
+            last_success_at: string | null;
+            /** Last Failure At */
+            last_failure_at: string | null;
+            /** Last Error */
+            last_error: string | null;
+        };
         /** DatabaseStatus */
         DatabaseStatus: {
             /** Ok */
@@ -91,6 +178,167 @@ export interface components {
          * @enum {string}
          */
         JobRunStatus: "running" | "success" | "failure";
+        /** OfferLinkOut */
+        OfferLinkOut: {
+            source: components["schemas"]["Source"];
+            /** Url */
+            url: string;
+        };
+        /** OfferOut */
+        OfferOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /** Location */
+            location: string | null;
+            /** Rate Min */
+            rate_min: number | null;
+            /** Rate Max */
+            rate_max: number | null;
+            /** Snippet */
+            snippet: string | null;
+            status: components["schemas"]["OfferStatus"];
+            /**
+             * First Seen At
+             * Format: date-time
+             */
+            first_seen_at: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+            /** Seen Count */
+            seen_count: number;
+            /** Links */
+            links: components["schemas"]["OfferLinkOut"][];
+        };
+        /** OfferPage */
+        OfferPage: {
+            /** Items */
+            items: components["schemas"]["OfferOut"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * OfferStatus
+         * @enum {string}
+         */
+        OfferStatus: "new" | "filtered_out" | "to_review" | "later" | "ignored" | "preparing" | "applied";
+        /**
+         * ParseStatus
+         * @enum {string}
+         */
+        ParseStatus: "parsed" | "empty" | "unrecognized" | "failed";
+        /** SearchDetail */
+        SearchDetail: {
+            /** Id */
+            id: number;
+            source: components["schemas"]["Source"];
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Subject */
+            subject: string | null;
+            /** Alert Label */
+            alert_label: string | null;
+            parse_status: components["schemas"]["ParseStatus"];
+            /** Parser Version */
+            parser_version: string | null;
+            /** Error */
+            error: string | null;
+            /** Results Count */
+            results_count: number;
+            /** New Offers Count */
+            new_offers_count: number;
+            /**
+             * Collected At
+             * Format: date-time
+             */
+            collected_at: string;
+            /** Offers */
+            offers: components["schemas"]["SearchOffer"][];
+        };
+        /** SearchOffer */
+        SearchOffer: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /** Location */
+            location: string | null;
+            /** Rate Min */
+            rate_min: number | null;
+            /** Rate Max */
+            rate_max: number | null;
+            /** Snippet */
+            snippet: string | null;
+            status: components["schemas"]["OfferStatus"];
+            /**
+             * First Seen At
+             * Format: date-time
+             */
+            first_seen_at: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+            /** Seen Count */
+            seen_count: number;
+            /** Links */
+            links: components["schemas"]["OfferLinkOut"][];
+            /** Is First */
+            is_first: boolean;
+        };
+        /** SearchOut */
+        SearchOut: {
+            /** Id */
+            id: number;
+            source: components["schemas"]["Source"];
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Subject */
+            subject: string | null;
+            /** Alert Label */
+            alert_label: string | null;
+            parse_status: components["schemas"]["ParseStatus"];
+            /** Parser Version */
+            parser_version: string | null;
+            /** Error */
+            error: string | null;
+            /** Results Count */
+            results_count: number;
+            /** New Offers Count */
+            new_offers_count: number;
+            /**
+             * Collected At
+             * Format: date-time
+             */
+            collected_at: string;
+        };
+        /** SearchPage */
+        SearchPage: {
+            /** Items */
+            items: components["schemas"]["SearchOut"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * Source
+         * @enum {string}
+         */
+        Source: "jobup" | "indeed" | "jobroom" | "unknown";
         /** StatusResponse */
         StatusResponse: {
             /** Version */
@@ -99,6 +347,7 @@ export interface components {
             env: string;
             database: components["schemas"]["DatabaseStatus"];
             worker: components["schemas"]["WorkerStatus"];
+            collect: components["schemas"]["CollectStatus"];
         };
         /** ValidationError */
         ValidationError: {
@@ -180,6 +429,130 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    listSearches: {
+        parameters: {
+            query?: {
+                source?: components["schemas"]["Source"] | null;
+                parse_status?: components["schemas"]["ParseStatus"] | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listOffers: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    startCollect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectResponse"];
+                };
+            };
+            /** @description Collecte non configurée */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -10,6 +10,7 @@ import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 
 import structlog
 from sqlalchemy import update
@@ -32,23 +33,38 @@ class RunContext:
 
 JobFunc = Callable[[Runtime, RunContext], Awaitable[None]]
 
+# Les plages horaires des tâches planifiées s'entendent en heure suisse ; le planificateur,
+# lui, compte en UTC. La tâche est donc planifiée large et filtrée ici.
+LOCAL_TZ = ZoneInfo("Europe/Zurich")
+
 
 @dataclass(frozen=True)
 class JobSpec:
     name: str
     func: JobFunc
-    # Planification cron du worker ; ignorée si JOBBOT_SCHEDULER_ENABLED=false.
+    # Planification cron du worker (en UTC) ; ignorée si JOBBOT_SCHEDULER_ENABLED=false.
     cron: str | None = None
+    # Heures (début, fin incluses, heure suisse) où une exécution planifiée est utile.
+    # Les exécutions manuelles (bouton, `jobbot run-job`) ne sont pas limitées.
+    active_hours: tuple[int, int] | None = None
+
+    def is_active_at(self, moment: datetime) -> bool:
+        if self.active_hours is None:
+            return True
+        start, end = self.active_hours
+        return start <= moment.astimezone(LOCAL_TZ).hour <= end
 
 
 JOBS: dict[str, JobSpec] = {}
 
 
-def register(name: str, *, cron: str | None = None) -> Callable[[JobFunc], JobFunc]:
+def register(
+    name: str, *, cron: str | None = None, active_hours: tuple[int, int] | None = None
+) -> Callable[[JobFunc], JobFunc]:
     def decorator(func: JobFunc) -> JobFunc:
         if name in JOBS:
             raise ValueError(f"Tâche déjà enregistrée : {name}")
-        JOBS[name] = JobSpec(name=name, func=func, cron=cron)
+        JOBS[name] = JobSpec(name=name, func=func, cron=cron, active_hours=active_hours)
         return func
 
     return decorator
