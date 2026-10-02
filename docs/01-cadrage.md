@@ -1,7 +1,7 @@
 # 01 — Cadrage de job-bot
 
-> Statut : **à valider**. Aucun code avant accord.
-> Décisions déjà prises (2026-10-02) : journal au format ORP, collecte par alertes e-mail Gmail, mode semi-automatique (Kevin valide chaque envoi), projet local, architecture prête à migrer vers Kubernetes après la CKA.
+> Statut : **validé le 2026-10-02**, avec les valeurs par défaut pour les points non tranchés (voir « Décisions » en fin de document).
+> Décisions : journal au format ORP, collecte par alertes e-mail Gmail, mode semi-automatique (Kevin valide chaque envoi), projet local, **backend Python + frontend TypeScript**, architecture prête pour Terraform, Ansible et Kubernetes après la CKA.
 
 ## 1. Objectif
 
@@ -82,14 +82,17 @@ Règle stricte pour l'IA : elle ne peut rien affirmer sur Kevin qui ne figure pa
 - mots interdits dans le titre ;
 - salaire minimum, appliqué seulement si l'offre l'indique (une offre sans salaire n'est pas exclue).
 
-**Valeurs à fournir par Kevin** (cf. point 1 à valider).
+**Aucune valeur n'est écrite dans le code.** Kevin saisit ses prérequis dans un formulaire de la plateforme (page « Prérequis »), qui les enregistre dans `criteria`. Le filtre lit cette table à chaque passage. Une modification du formulaire s'applique donc aux nouvelles offres, et un bouton « refiltrer » permet de l'appliquer aussi aux offres déjà reçues.
+
+Les autres réglages passent aussi par un formulaire (page « Réglages », table `settings`) : objectif mensuel ORP, seuil de notification, plafond du coût IA, fréquence de collecte.
 
 ## 5. Schéma de données
 
 ```
 documents        id, filename, kind(cv|certificat|diplome|autre), storage_key, sha256, uploaded_at
 profile_chunks   id, document_id?, kind, title, content, tags[], active, updated_at
-criteria         id, field, operator, value, active            -- prérequis du §4
+criteria         id, field, operator, value, active, updated_at  -- prérequis du §4, saisis par formulaire
+settings         key PRIMARY, value, updated_at                  -- objectif ORP, seuil ntfy, plafond IA…
 searches         id, source(jobup|indeed|jobroom|manual), message_id UNIQUE, alert_label,
                  received_at, executed_at, results_count, retained_count
 offers           id, fingerprint UNIQUE, title, company, company_address?, contact_name?,
@@ -132,46 +135,60 @@ Le but est que la version locale soit déjà une version « cloud native » qui 
 | API sans état | 1 conteneur `api` | `Deployment` avec plusieurs réplicas + `Ingress` |
 | Jobs séparés de l'API | conteneur `worker` + planificateur interne | `CronJob` par job, ou worker qui lit la file |
 | Base de données | **PostgreSQL** dans compose | `StatefulSet` + PVC, ou opérateur CloudNativePG |
-| File de jobs | pg-boss (dans PostgreSQL, sans Redis) | inchangée |
+| File de jobs | procrastinate (file de tâches Python dans PostgreSQL, sans Redis) | inchangée |
 | Fichiers (CV…) | interface `Storage` → disque local | même interface → MinIO / S3 |
 | Santé | `/healthz` (vivant), `/readyz` (base joignable) | sondes liveness / readiness |
 | Métriques | `/metrics` Prometheus (jobs, offres, coût IA, latence) | ServiceMonitor, Grafana, alertes |
-| Logs | JSON structuré (pino, natif à Fastify) | Loki ou équivalent |
+| Logs | JSON structuré (structlog) | Loki ou équivalent |
 | Arrêt propre | gestion de SIGTERM | `terminationGracePeriodSeconds` |
 
-**Écart par rapport à ta stack trading :** là-bas tu utilises `node:sqlite`. Ici je propose PostgreSQL dès le départ. SQLite tient sur un seul fichier, ce qui empêche plusieurs réplicas et transforme la migration en chantier. Avec PostgreSQL dans compose, rien ne change à l'usage en local.
+**Écart par rapport à ta stack trading :** là-bas tu utilises `node:sqlite`. Ici, PostgreSQL dès le départ. SQLite tient sur un seul fichier, ce qui empêche plusieurs réplicas et transforme la migration en chantier. Avec PostgreSQL dans compose, rien ne change à l'usage en local.
+
+**Deux images, deux langages, un contrat.** Le backend Python publie son contrat OpenAPI (généré par FastAPI). Le frontend TypeScript en tire ses types (`openapi-typescript`), et la CI échoue si les deux divergent. Chaque partie se construit, se teste et se déploie séparément : c'est la situation d'une vraie équipe, et un bon terrain d'exercice pour la CI et Helm.
 
 Feuille de route infra, à démarrer après la CKA, chaque étape étant un exercice :
 
 1. `deploy/k8s/` : manifestes bruts sur un cluster local (kind ou k3d) : Deployment, Service, CronJob, StatefulSet, PVC, Secret, NetworkPolicy, RBAC du worker.
-2. `deploy/helm/` : chart avec values par environnement.
+2. `deploy/helm/` : un chart pour backend + worker + frontend, avec des values par environnement.
 3. `deploy/monitoring/` : kube-prometheus-stack, tableau de bord Grafana, alertes (job en échec, coût IA du mois).
-4. `deploy/terraform/` : cluster managé chez un hébergeur suisse (Infomaniak ou Exoscale) ou cluster local via le provider kind, DNS, stockage objet.
-5. GitOps (Argo CD), CI GitHub Actions (build, scan d'image, push vers le registre).
+4. `deploy/terraform/` : création des machines virtuelles, du réseau, du DNS et du stockage objet chez un hébergeur suisse (Infomaniak ou Exoscale). Pour s'exercer gratuitement, d'abord en local avec le provider libvirt ou Multipass.
+5. `deploy/ansible/` : configuration des machines créées par Terraform : durcissement (SSH, pare-feu, mises à jour), containerd, puis **installation du cluster avec kubeadm** (control plane + workers). C'est exactement le geste de la CKA, rendu reproductible. Terraform génère l'inventaire Ansible.
+6. GitOps (Argo CD) pour déployer le chart, CI GitHub Actions (tests, build des deux images, scan, push vers le registre).
 
-Les dossiers `deploy/k8s`, `helm`, `monitoring` et `terraform` existent dès le départ, vides avec un README, pour que la structure ne bouge pas.
+Chaîne cible : **Terraform crée les machines → Ansible les configure et monte le cluster → Argo CD déploie l'application → Prometheus/Grafana surveillent**.
+
+Les dossiers `deploy/k8s`, `helm`, `monitoring`, `terraform` et `ansible` existent dès le départ, vides avec un README, pour que la structure ne bouge pas.
 
 ## 8. Arborescence
 
 ```
 job-bot/
-├── apps/
-│   ├── api/            Fastify : routes REST, /healthz /readyz /metrics
-│   ├── worker/         jobs collect, normalize, filter, evaluate, draft, report (pg-boss)
-│   └── web/            interface (même choix que trading : Vite + Vue)
-├── packages/
-│   ├── core/           domaine pur : règles du filtre, empreinte, format ORP (testé à fond)
-│   ├── db/             schéma, migrations, accès PostgreSQL
-│   ├── sources/        un analyseur d'e-mail par site : jobup, indeed, jobroom
-│   ├── llm/            appels Claude, prompts versionnés, comptage des tokens et du coût
-│   └── storage/        interface Storage : local / S3
+├── backend/                 Python 3.13, géré avec uv
+│   ├── pyproject.toml
+│   ├── Dockerfile           une image, deux commandes : `api` et `worker`
+│   ├── alembic/             migrations de la base
+│   ├── src/jobbot/
+│   │   ├── api/             FastAPI : routes REST, /healthz /readyz /metrics
+│   │   ├── worker/          tâches procrastinate : collect, normalize, filter, evaluate, draft, report
+│   │   ├── core/            domaine pur : règles du filtre, empreinte, format ORP (testé à fond)
+│   │   ├── db/              modèles SQLAlchemy 2, sessions
+│   │   ├── sources/         un analyseur d'e-mail par site : jobup, indeed, jobroom
+│   │   ├── llm/             SDK Anthropic, prompts versionnés, comptage des tokens et du coût
+│   │   ├── storage/         interface Storage : local / S3
+│   │   └── settings.py      configuration par variables d'environnement (pydantic-settings)
+│   └── tests/               pytest
+├── frontend/                Vue 3 + Vite + TypeScript (même choix que trading)
+│   ├── Dockerfile           build statique servi par nginx
+│   └── src/api/             types générés depuis l'OpenAPI du backend
 ├── deploy/
-│   ├── compose/        docker-compose.yml (postgres, api, worker, web)
-│   ├── k8s/  helm/  monitoring/  terraform/    (vides au départ, voir §7)
-├── docs/               01-cadrage.md, puis un document par module
-├── data/               ← .gitignore : documents, exports ORP, rien de personnel commité
+│   ├── compose/             docker-compose.yml (postgres, api, worker, frontend)
+│   └── k8s/  helm/  monitoring/  terraform/  ansible/   (vides au départ, voir §7)
+├── docs/                    01-cadrage.md, puis un document par module
+├── data/                    ← .gitignore : documents, exports ORP, rien de personnel commité
 └── .env.example
 ```
+
+Outils côté backend : FastAPI, SQLAlchemy 2 + Alembic, procrastinate, imap-tools, SDK `anthropic`, structlog, prometheus-client, ruff + mypy, pytest.
 
 **Dépôt public :** le dépôt `0xCAF3D0OD/job-bot` est public. CV, certificats, blocs de profil, offres, lettres et exports ORP restent dans `data/` et dans PostgreSQL, jamais dans git. On ajoute un test CI qui échoue si un fichier de `data/` est suivi.
 
@@ -193,24 +210,25 @@ job-bot/
 
 | Version | Contenu |
 |---|---|
-| 0.1.0 | Squelette, compose (PostgreSQL, api, worker), santé, métriques, CI anti-données personnelles |
+| 0.1.0 | Squelette backend + frontend, compose (PostgreSQL, api, worker, frontend), santé, métriques, CI (tests, lint, contrat OpenAPI, anti-données personnelles) |
 | 0.2.0 | Collecte Gmail + analyseurs des 3 sites + journal `searches` + dédoublonnage |
-| 0.3.0 | Documents + blocs de profil + prérequis + filtre |
+| 0.3.0 | Documents + blocs de profil + formulaires « Prérequis » et « Réglages » + filtre |
 | 0.4.0 | Note IA + tableau de bord + ntfy |
 | 0.5.0 | Rédaction lettre et CV + suivi des candidatures |
 | 0.6.0 | Export ORP + rappels |
-| 1.x | Infra : k8s, Helm, monitoring, Terraform, GitOps (§7) |
+| 1.x | Infra : k8s, Helm, monitoring, Terraform, Ansible + kubeadm, GitOps (§7) |
 
 Pour chaque version : un document `docs/NN-*.md` validé, puis une PR.
 
-## Points à valider
+## Décisions (2026-10-02)
 
-1. **Tes prérequis non négociables** : communes ou rayon, taux minimum, contrats acceptés, langues, mots interdits, salaire minimum.
-2. **Langage : TypeScript** (Fastify, comme le projet trading) ? Le `.gitignore` du dépôt est celui de Python. Si tu veux pratiquer Python, c'est le moment de le dire. Sinon je remplace ce `.gitignore`.
-3. **PostgreSQL dès la 0.1** au lieu de SQLite, pour la migration Kubernetes (§7).
+1. **Prérequis** : saisis par Kevin dans un formulaire de la plateforme, rien n'est écrit dans le code (§4).
+2. **Langages** : backend Python (FastAPI) et frontend TypeScript (Vue) dès la 0.1, pour éviter une réécriture.
+3. **PostgreSQL dès la 0.1** (§7).
 4. **Adresse Gmail dédiée + IMAP avec mot de passe d'application** (§9).
 5. **Détail des offres** : niveaux A puis B, et C en secours (§2).
-6. **Seuil de notification** ntfy : score ≥ 70 ?
-7. **Objectif mensuel ORP** : combien de candidatures te demande ton conseiller ?
-8. **Plafond mensuel du coût IA** : 10 CHF pour commencer ?
-9. **Dépôt public** : on le garde public avec les règles du §8, ou tu le passes en privé ?
+6. **Valeurs par défaut des réglages**, modifiables dans le formulaire : seuil ntfy à 70, plafond IA à 10 CHF par mois, objectif ORP vide tant que Kevin ne l'a pas saisi.
+7. **Dépôt public**, avec les règles du §8.
+8. **Infra cible** : Terraform → Ansible (kubeadm) → Argo CD → Prometheus/Grafana (§7).
+
+Prochaine étape : `docs/02-squelette.md` (version 0.1.0), à valider avant code.
