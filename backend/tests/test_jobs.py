@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from jobbot.__main__ import main
 from jobbot.db.models import JobRun
+from jobbot.db.schema import head_revision
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 from jobbot.worker.app import build_procrastinate_app
@@ -54,9 +55,9 @@ def test_scheduler_can_be_disabled(settings: Settings) -> None:
     runtime = Runtime.create(settings)
     enabled = build_procrastinate_app(runtime)
     periodic = enabled.periodic_registry.periodic_tasks.values()
-    assert [t.periodic_id for t in periodic] == ["heartbeat"]
+    assert sorted(t.periodic_id for t in periodic) == ["collect", "heartbeat"]
     disabled = build_procrastinate_app(Runtime.create(make_settings(scheduler_enabled=False)))
-    assert "heartbeat" in disabled.tasks
+    assert {"collect", "heartbeat"} <= set(disabled.tasks)
     assert not disabled.periodic_registry.periodic_tasks
 
 
@@ -76,4 +77,4 @@ def test_run_job_cli_exit_codes(failing_job: str) -> None:
 @pytest.mark.usefixtures("cli_env")
 def test_check_cli(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["check"]) == 0
-    assert "migration 0002 à jour" in capsys.readouterr().out
+    assert f"migration {head_revision()} à jour" in capsys.readouterr().out

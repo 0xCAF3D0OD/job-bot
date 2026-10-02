@@ -35,3 +35,21 @@ DB_UP = Gauge(
     "jobbot_db_up",
     "1 si la base a répondu au dernier contrôle, 0 sinon",
 )
+
+# --- Collecte (0.2) ---
+
+COLLECT_EMAILS = Counter(
+    "jobbot_collect_emails_total",
+    "E-mails d'alerte traités",
+    ["source", "parse_status"],
+)
+COLLECT_OFFERS = Counter(
+    "jobbot_collect_offers_total",
+    "Offres trouvées dans les alertes",
+    ["source", "result"],
+)
+IMAP_ERRORS = Counter(
+    "jobbot_imap_errors_total",
+    "Erreurs de lecture de la boîte d'alertes",
+    ["kind"],
+)

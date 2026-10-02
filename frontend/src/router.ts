@@ -1,5 +1,8 @@
+import type { Component } from "vue";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
+import JournalView from "./views/JournalView.vue";
+import OffersView from "./views/OffersView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
 import StatusView from "./views/StatusView.vue";
 
@@ -14,13 +17,7 @@ export interface NavEntry {
 
 // Menu définitif : les pages vides indiquent la version qui les remplira.
 export const navigation: NavEntry[] = [
-  {
-    path: "/offres",
-    name: "offers",
-    label: "Offres",
-    since: "0.4.0",
-    description: "Offres collectées, filtrées et notées, à préparer, ignorer ou garder pour plus tard.",
-  },
+  { path: "/offres", name: "offers", label: "Offres" },
   {
     path: "/profil",
     name: "profile",
@@ -35,13 +32,7 @@ export const navigation: NavEntry[] = [
     since: "0.3.0",
     description: "Formulaire des prérequis non négociables : lieu, taux, contrats, langues, salaire.",
   },
-  {
-    path: "/journal",
-    name: "journal",
-    label: "Journal",
-    since: "0.2.0",
-    description: "Recherches exécutées (alertes reçues) et candidatures envoyées.",
-  },
+  { path: "/journal", name: "journal", label: "Journal" },
   {
     path: "/orp",
     name: "orp",
@@ -59,12 +50,22 @@ export const navigation: NavEntry[] = [
   { path: "/etat", name: "status", label: "État" },
 ];
 
+// Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
+const views: Record<string, Component> = {
+  offers: OffersView,
+  journal: JournalView,
+  status: StatusView,
+};
+
 const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/etat" },
-  ...navigation.map((entry): RouteRecordRaw =>
-    entry.name === "status"
-      ? { path: entry.path, name: entry.name, component: StatusView }
-      : { path: entry.path, name: entry.name, component: PlaceholderView, props: { entry } },
+  ...navigation.map(
+    (entry): RouteRecordRaw => ({
+      path: entry.path,
+      name: entry.name,
+      component: views[entry.name] ?? PlaceholderView,
+      props: views[entry.name] ? false : { entry },
+    }),
   ),
   { path: "/:pathMatch(.*)*", redirect: "/etat" },
 ];

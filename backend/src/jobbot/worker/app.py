@@ -9,6 +9,7 @@ Si la base est injoignable au démarrage, le worker attend (sans planter en bouc
 import asyncio
 import contextlib
 import signal
+from datetime import UTC, datetime
 from typing import Any
 
 import procrastinate
@@ -22,10 +23,10 @@ from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 from jobbot.worker import tasks as _tasks  # noqa: F401  (enregistre les tâches)
 from jobbot.worker.jobs import JOBS, execute
+from jobbot.worker.queue import QUEUE
 
 log = get_logger(__name__)
 
-QUEUE = "default"
 SHUTDOWN_GRACE_SECONDS = 20
 DB_RETRY_MAX_SECONDS = 30
 
@@ -38,9 +39,17 @@ def build_procrastinate_app(runtime: Runtime) -> procrastinate.App:
         name = spec.name
 
         async def run(timestamp: int | None = None, _name: str = name) -> None:
+            # timestamp n'est fourni que par le planificateur : c'est une exécution planifiée.
+            if timestamp is not None and not JOBS[_name].is_active_at(
+                datetime.fromtimestamp(timestamp, UTC)
+            ):
+                log.debug("job_skipped_outside_active_hours", job=_name)
+                return
             await execute(runtime, _name)
 
-        task = app.task(name=name, queue=QUEUE)(run)
+        # queueing_lock : jamais deux exécutions de la même tâche en attente ;
+        # lock : jamais deux exécutions simultanées, même avec plusieurs workers.
+        task = app.task(name=name, queue=QUEUE, queueing_lock=name, lock=name)(run)
         if runtime.settings.scheduler_enabled and spec.cron:
             app.periodic(cron=spec.cron, periodic_id=name)(task)
     return app

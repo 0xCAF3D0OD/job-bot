@@ -1,6 +1,6 @@
 # 03 — Collecte des alertes Gmail (version 0.2.0)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé le 2026-10-02**. Partie a livrée (PR feat/0.2.0-a-collecte) ; partie b (analyseurs) en attente des premières alertes.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2 et §9, et sur le squelette livré en 0.1.0.
 
 ## 1. Objectif

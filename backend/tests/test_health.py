@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy import text
 from structlog.testing import capture_logs
 
+from jobbot.db.schema import head_revision
 from jobbot.runtime import Runtime
 from jobbot.worker.jobs import execute
 
@@ -24,7 +25,7 @@ async def test_readyz_503_when_database_unreachable(offline_client: AsyncClient)
 async def test_readyz_200_when_migrated(client: AsyncClient) -> None:
     response = await client.get("/readyz")
     assert response.status_code == 200
-    assert response.json() == {"status": "ready", "revision": "0002"}
+    assert response.json() == {"status": "ready", "revision": head_revision()}
 
 
 @pytest.fixture
@@ -33,7 +34,9 @@ async def outdated_schema(runtime: Runtime) -> AsyncIterator[None]:
         await conn.execute(text("UPDATE alembic_version SET version_num = '0001'"))
     yield
     async with runtime.engine.begin() as conn:
-        await conn.execute(text("UPDATE alembic_version SET version_num = '0002'"))
+        await conn.execute(
+            text("UPDATE alembic_version SET version_num = :head"), {"head": head_revision()}
+        )
 
 
 @pytest.mark.usefixtures("outdated_schema")
@@ -45,7 +48,7 @@ async def test_readyz_503_when_migration_missing(client: AsyncClient) -> None:
 
 async def test_version(client: AsyncClient) -> None:
     response = await client.get("/version")
-    assert response.json() == {"version": "test", "migration_head": "0002"}
+    assert response.json() == {"version": "test", "migration_head": head_revision()}
 
 
 @pytest.mark.usefixtures("clean_job_runs")

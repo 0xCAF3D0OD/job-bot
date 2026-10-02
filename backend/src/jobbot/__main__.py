@@ -6,6 +6,7 @@ migrate      applique les migrations puis s'arrête
 run-job NOM  exécute une tâche une fois ; code retour 0 (succès) ou 1 (échec)
 check        valide la configuration et la connexion à la base
 openapi      écrit le schéma OpenAPI de l'API sur la sortie standard (sans base)
+imap-sample  copie les derniers e-mails de la boîte dans <stockage>/samples (lecture seule)
 """
 
 import argparse
@@ -118,6 +119,33 @@ def cmd_openapi(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_imap_sample(args: argparse.Namespace) -> int:
+    from datetime import UTC, datetime, timedelta
+
+    from jobbot.mail.imap import ImapMailbox, MailboxError
+    from jobbot.storage.base import create_storage
+
+    settings = _settings()
+    if not settings.imap_configured:
+        print(
+            "Collecte non configurée : JOBBOT_IMAP_USER et JOBBOT_IMAP_PASSWORD.", file=sys.stderr
+        )
+        return 1
+    since = (datetime.now(UTC) - timedelta(days=settings.imap_backfill_days)).date()
+    try:
+        emails = ImapMailbox.from_settings(settings).fetch_since(
+            since, limit=args.limit, skip_message_ids=lambda _: set(), newest_first=True
+        )
+    except MailboxError as exc:
+        print(f"Erreur IMAP : {exc}", file=sys.stderr)
+        return 1
+    storage = create_storage(settings)
+    for email in emails:
+        storage.put(f"samples/{email.uid:08d}.eml", email.raw)
+    print(f"{len(emails)} e-mail(s) copié(s) dans {settings.storage_path / 'samples'}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="job-bot")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -129,6 +157,9 @@ def main(argv: list[str] | None = None) -> int:
     run_job.set_defaults(func=cmd_run_job)
     sub.add_parser("check", help="vérifie configuration et base").set_defaults(func=cmd_check)
     sub.add_parser("openapi", help="schéma OpenAPI sur stdout").set_defaults(func=cmd_openapi)
+    sample = sub.add_parser("imap-sample", help="copie des e-mails pour écrire les analyseurs")
+    sample.add_argument("--limit", type=int, default=30)
+    sample.set_defaults(func=cmd_imap_sample)
     args = parser.parse_args(argv)
     code: int = args.func(args)
     return code

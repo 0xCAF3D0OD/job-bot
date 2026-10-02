@@ -25,10 +25,11 @@ export function indicators(status: StatusResponse | null, now: Date = new Date()
       { label: "API", level: "down", detail: "injoignable" },
       { label: "Base de données", level: "down", detail: "inconnue (API injoignable)" },
       { label: "Worker", level: "down", detail: "inconnu (API injoignable)" },
+      { label: "Collecte", level: "down", detail: "inconnue (API injoignable)" },
     ];
   }
 
-  const { database, worker } = status;
+  const { database, worker, collect } = status;
   let db: Indicator;
   if (!database.ok) {
     db = { label: "Base de données", level: "down", detail: `injoignable (${database.error ?? "erreur"})` };
@@ -51,5 +52,16 @@ export function indicators(status: StatusResponse | null, now: Date = new Date()
     wk = { label: "Worker", level: "down", detail: "aucun heartbeat reçu" };
   }
 
-  return [{ label: "API", level: "ok", detail: `version ${status.version} (${status.env})` }, db, wk];
+  let col: Indicator;
+  if (!collect.configured) {
+    col = { label: "Collecte", level: "warn", detail: "non configurée : JOBBOT_IMAP_USER et JOBBOT_IMAP_PASSWORD" };
+  } else if (collect.last_error) {
+    col = { label: "Collecte", level: "down", detail: `dernière collecte en échec : ${collect.last_error}` };
+  } else if (collect.last_success_at) {
+    col = { label: "Collecte", level: "ok", detail: `dernière collecte ${sinceText(collect.last_success_at, now)}` };
+  } else {
+    col = { label: "Collecte", level: "warn", detail: "configurée, pas encore exécutée" };
+  }
+
+  return [{ label: "API", level: "ok", detail: `version ${status.version} (${status.env})` }, db, wk, col];
 }

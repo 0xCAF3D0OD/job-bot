@@ -3,7 +3,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup, Indeed, Job-Room), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/02-squelette.md](docs/02-squelette.md) (0.1.0)
+- Version en cours : [docs/03-collecte-gmail.md](docs/03-collecte-gmail.md) (0.2.0)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
 ## Versions
@@ -11,7 +11,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | Version | Contenu | État |
 |---|---|---|
 | 0.1.0 | Squelette : API, worker, base, page État | livrée |
-| 0.2.0 | Collecte Gmail, journal des recherches, dédoublonnage | à venir |
+| 0.2.0 | Collecte Gmail, journal des recherches, dédoublonnage | partie a livrée ; analyseurs (b) à venir |
 | 0.3.0 | Documents, blocs de profil, prérequis et réglages, filtre | à venir |
 | 0.4.0 | Note IA, tableau de bord, notifications | à venir |
 | 0.5.0 | Lettre et CV, suivi des candidatures | à venir |

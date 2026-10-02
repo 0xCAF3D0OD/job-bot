@@ -15,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 ENV_PREFIX = "JOBBOT_"
 
 # Variables dont la valeur peut être lue depuis un fichier (JOBBOT_<NOM>_FILE).
-SECRET_FIELDS = ("database_url",)
+SECRET_FIELDS = ("database_url", "imap_password")
 
 
 class Env(StrEnum):
@@ -55,6 +55,14 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default_factory=list)
     version: str = "dev"
 
+    # Collecte des alertes (0.2). Sans utilisateur ni mot de passe, la collecte est inactive.
+    imap_host: str = "imap.gmail.com"
+    imap_port: int = Field(default=993, ge=1, le=65535)
+    imap_user: str = ""
+    imap_password: SecretStr | None = None
+    imap_folder: str = "INBOX"
+    imap_backfill_days: int = Field(default=30, ge=1, le=365)
+
     @field_validator("database_url")
     @classmethod
     def _check_database_url(cls, value: SecretStr) -> SecretStr:
@@ -72,6 +80,11 @@ class Settings(BaseSettings):
     @property
     def is_prod(self) -> bool:
         return self.env is Env.PROD
+
+    @property
+    def imap_configured(self) -> bool:
+        password = self.imap_password.get_secret_value() if self.imap_password else ""
+        return bool(self.imap_user.strip() and password)
 
     @property
     def sqlalchemy_url(self) -> str:

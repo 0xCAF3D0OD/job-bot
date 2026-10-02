@@ -7,10 +7,12 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.models import JobRun, JobRunStatus
 from jobbot.health import check_database
 from jobbot.runtime import Runtime
+from jobbot.worker.tasks.collect import COLLECT_JOB
 from jobbot.worker.tasks.heartbeat import HEARTBEAT_JOB, HEARTBEAT_STALE_AFTER_SECONDS
 
 router = APIRouter(prefix="/api", tags=["status"])
@@ -30,11 +32,20 @@ class WorkerStatus(BaseModel):
     stale_after_seconds: int
 
 
+class CollectStatus(BaseModel):
+    configured: bool
+    last_success_at: datetime | None
+    last_failure_at: datetime | None
+    # Erreur de la dernière exécution, si elle a échoué.
+    last_error: str | None
+
+
 class StatusResponse(BaseModel):
     version: str
     env: str
     database: DatabaseStatus
     worker: WorkerStatus
+    collect: CollectStatus
 
 
 class JobRunOut(BaseModel):
@@ -56,19 +67,43 @@ def _runtime(request: Request) -> Runtime:
     return runtime
 
 
+async def _last_finished(session: AsyncSession, job: str, status: JobRunStatus) -> datetime | None:
+    return await session.scalar(
+        select(JobRun.finished_at)
+        .where(JobRun.job == job, JobRun.status == status)
+        .order_by(JobRun.finished_at.desc())
+        .limit(1)
+    )
+
+
 @router.get("/status", operation_id="getStatus")
 async def get_status(request: Request) -> StatusResponse:
     runtime = _runtime(request)
     check = await check_database(runtime.engine)
     last_heartbeat: datetime | None = None
+    collect = CollectStatus(
+        configured=runtime.settings.imap_configured,
+        last_success_at=None,
+        last_failure_at=None,
+        last_error=None,
+    )
     if check.up_to_date:
         async with runtime.sessionmaker() as session:
-            last_heartbeat = await session.scalar(
-                select(JobRun.finished_at)
-                .where(JobRun.job == HEARTBEAT_JOB, JobRun.status == JobRunStatus.SUCCESS)
+            last_heartbeat = await _last_finished(session, HEARTBEAT_JOB, JobRunStatus.SUCCESS)
+            collect.last_success_at = await _last_finished(
+                session, COLLECT_JOB, JobRunStatus.SUCCESS
+            )
+            collect.last_failure_at = await _last_finished(
+                session, COLLECT_JOB, JobRunStatus.FAILURE
+            )
+            latest = await session.scalar(
+                select(JobRun)
+                .where(JobRun.job == COLLECT_JOB, JobRun.status != JobRunStatus.RUNNING)
                 .order_by(JobRun.finished_at.desc())
                 .limit(1)
             )
+            if latest is not None and latest.status == JobRunStatus.FAILURE:
+                collect.last_error = latest.error
     stale_after = timedelta(seconds=HEARTBEAT_STALE_AFTER_SECONDS)
     healthy = last_heartbeat is not None and datetime.now(UTC) - last_heartbeat < stale_after
     return StatusResponse(
@@ -86,6 +121,7 @@ async def get_status(request: Request) -> StatusResponse:
             last_heartbeat_at=last_heartbeat,
             stale_after_seconds=HEARTBEAT_STALE_AFTER_SECONDS,
         ),
+        collect=collect,
     )
 
 
