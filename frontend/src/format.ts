@@ -28,3 +28,21 @@ export function rateText(min: number | null, max: number | null): string {
   if (min === null || max === null) return "";
   return min === max ? `${min} %` : `${min}–${max} %`;
 }
+
+const shortDate = new Intl.DateTimeFormat("fr-CH", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "Europe/Zurich",
+});
+
+export function formatDate(iso: string): string {
+  return shortDate.format(new Date(iso));
+}
+
+/** Couleur stable (0 à 3) pour la pastille d'une entreprise. */
+export function colorIndex(name: string): number {
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return hash % 4;
+}

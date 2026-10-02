@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { api, type Offer } from "../api/client";
-import { formatDateTime, rateText, sourceLabel } from "../format";
+import AppIcon from "../components/AppIcon.vue";
+import PageHero from "../components/PageHero.vue";
+import { colorIndex, formatDate, rateText, sourceLabel } from "../format";
 
 const PAGE_SIZE = 50;
 
+const sort = ref<"recent" | "popular">("recent");
 const items = ref<Offer[]>([]);
 const total = ref(0);
 const loading = ref(false);
@@ -18,12 +21,22 @@ function initial(offer: Offer): string {
   return (offer.company ?? offer.title).trim().charAt(0).toUpperCase() || "?";
 }
 
+function logoClass(offer: Offer): string {
+  return `logo c${colorIndex(offer.company ?? offer.title)}`;
+}
+
+function sites(offer: Offer): string {
+  return offer.links.map((link) => sourceLabel[link.source]).join(", ");
+}
+
 async function load(append = false): Promise<void> {
   loading.value = true;
   failed.value = false;
   try {
     const { data } = await api.GET("/api/offers", {
-      params: { query: { limit: PAGE_SIZE, offset: append ? items.value.length : 0 } },
+      params: {
+        query: { limit: PAGE_SIZE, offset: append ? items.value.length : 0, sort: sort.value },
+      },
     });
     if (!data) throw new Error("réponse vide");
     items.value = append ? [...items.value, ...data.items] : data.items;
@@ -35,147 +48,185 @@ async function load(append = false): Promise<void> {
   }
 }
 
+watch(sort, () => {
+  selectedId.value = null;
+  void load();
+});
 onMounted(() => void load());
 </script>
 
 <template>
-  <section>
-    <h1>Offres</h1>
-    <p class="muted">
-      {{ total }} offre(s) collectée(s), sans doublon. Le tri par prérequis arrive en 0.3, la note et les actions en 0.4.
-    </p>
+  <PageHero
+    eyebrow="Offres"
+    title="Les offres pour toi"
+    subtitle="Toutes les offres reçues par tes alertes, sans doublon. Le tri par prérequis arrive en 0.3, la note en 0.4."
+  />
 
-    <p
-      v-if="failed"
-      class="notice error"
-    >
-      Impossible de charger les offres.
-    </p>
-    <p
-      v-else-if="!loading && items.length === 0"
-      class="muted"
-    >
-      Aucune offre collectée pour l'instant.
-    </p>
-
-    <div
-      v-else
-      :class="['offers-layout', { 'has-selection': selected }]"
-    >
-      <div>
-        <ul class="offer-cards">
-          <li
-            v-for="offer in items"
-            :key="offer.id"
-          >
-            <button
-              type="button"
-              :class="['offer-card', { selected: offer.id === selectedId }]"
-              :aria-pressed="offer.id === selectedId"
-              data-test="offer"
-              @click="selectedId = offer.id"
-            >
-              <div class="offer-head">
-                <span class="offer-title">{{ offer.title }}</span>
-                <span
-                  v-if="offer.seen_count > 1"
-                  class="badge seen"
-                >vue {{ offer.seen_count }} fois</span>
-              </div>
-              <span class="detail">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
-              <div class="offer-meta">
-                <span
-                  v-if="rateText(offer.rate_min, offer.rate_max)"
-                  class="badge rate"
-                >{{ rateText(offer.rate_min, offer.rate_max) }}</span>
-                <span
-                  v-for="link in offer.links"
-                  :key="link.source"
-                  class="badge site"
-                >{{ sourceLabel[link.source] }}</span>
-                <span class="detail">{{ formatDateTime(offer.first_seen_at) }}</span>
-              </div>
-            </button>
-          </li>
-        </ul>
-        <button
-          v-if="items.length < total"
-          type="button"
-          class="secondary more"
-          :disabled="loading"
-          @click="load(true)"
-        >
-          Afficher plus
-        </button>
-      </div>
-
-      <article
-        v-if="selected"
-        class="detail-panel"
-        data-test="offer-detail"
+  <section class="plain">
+    <div class="container">
+      <p
+        v-if="failed"
+        class="notice error"
       >
-        <button
-          type="button"
-          class="secondary back"
-          @click="selectedId = null"
+        Impossible de charger les offres.
+      </p>
+      <p
+        v-else-if="!loading && items.length === 0"
+        class="muted"
+      >
+        Aucune offre collectée pour l'instant.
+      </p>
+
+      <div
+        v-else
+        :class="['offers-layout', { 'has-selection': selected }]"
+      >
+        <div>
+          <div class="offers-toolbar">
+            <div
+              class="tabs"
+              role="tablist"
+              aria-label="Tri des offres"
+            >
+              <button
+                type="button"
+                role="tab"
+                :aria-selected="sort === 'recent'"
+                data-test="sort-recent"
+                @click="sort = 'recent'"
+              >
+                Récentes
+              </button>
+              <button
+                type="button"
+                role="tab"
+                :aria-selected="sort === 'popular'"
+                data-test="sort-popular"
+                @click="sort = 'popular'"
+              >
+                Populaires
+              </button>
+            </div>
+            <span class="count">{{ total }} offre(s)</span>
+          </div>
+
+          <ul class="offer-cards">
+            <li
+              v-for="offer in items"
+              :key="offer.id"
+            >
+              <button
+                type="button"
+                :class="['job-card', { selected: offer.id === selectedId }]"
+                :aria-pressed="offer.id === selectedId"
+                data-test="offer"
+                @click="selectedId = offer.id"
+              >
+                <div class="job-head">
+                  <span
+                    :class="logoClass(offer)"
+                    aria-hidden="true"
+                  >{{ initial(offer) }}</span>
+                  <div>
+                    <span class="job-title">{{ offer.title }}</span>
+                    <span class="job-company">{{ offer.company ?? "Entreprise non indiquée" }}</span>
+                  </div>
+                  <span class="job-date">{{ formatDate(offer.first_seen_at) }}</span>
+                </div>
+                <p
+                  v-if="offer.snippet"
+                  class="job-snippet"
+                >
+                  {{ offer.snippet }}
+                </p>
+                <div class="job-meta">
+                  <span v-if="offer.location"><AppIcon name="pin" />{{ offer.location }}</span>
+                  <span v-if="rateText(offer.rate_min, offer.rate_max)">
+                    <AppIcon name="rate" />{{ rateText(offer.rate_min, offer.rate_max) }}
+                  </span>
+                  <span><AppIcon name="globe" />{{ sites(offer) }}</span>
+                  <span v-if="offer.seen_count > 1"><AppIcon name="eye" />vue {{ offer.seen_count }} fois</span>
+                </div>
+              </button>
+            </li>
+          </ul>
+          <button
+            v-if="items.length < total"
+            type="button"
+            class="secondary more"
+            :disabled="loading"
+            @click="load(true)"
+          >
+            Afficher plus <AppIcon name="chevron" />
+          </button>
+        </div>
+
+        <article
+          v-if="selected"
+          class="detail-panel"
+          data-test="offer-detail"
         >
-          ← Retour à la liste
-        </button>
-        <div class="detail-head">
+          <button
+            type="button"
+            class="secondary back"
+            @click="selectedId = null"
+          >
+            ← Retour à la liste
+          </button>
           <span
-            class="company-mark"
+            :class="[logoClass(selected), 'large']"
             aria-hidden="true"
           >{{ initial(selected) }}</span>
           <div>
             <h2>{{ selected.title }}</h2>
             <span class="detail">{{ selected.company ?? "Entreprise non indiquée" }}</span>
           </div>
-        </div>
-        <dl class="facts">
-          <div>
-            <dt>Lieu</dt>
-            <dd>{{ selected.location ?? "–" }}</dd>
+          <p
+            v-if="selected.snippet"
+            class="detail-snippet"
+          >
+            {{ selected.snippet }}
+          </p>
+          <p
+            v-else
+            class="detail-snippet"
+          >
+            Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site.
+          </p>
+          <ul class="checks">
+            <li>
+              <AppIcon name="check" /><strong>Lieu.</strong>
+              <span>{{ selected.location ?? "non indiqué" }}</span>
+            </li>
+            <li>
+              <AppIcon name="check" /><strong>Taux.</strong>
+              <span>{{ rateText(selected.rate_min, selected.rate_max) || "non indiqué" }}</span>
+            </li>
+            <li>
+              <AppIcon name="check" /><strong>Vue.</strong>
+              <span>{{ selected.seen_count }} fois, sur {{ sites(selected) }}</span>
+            </li>
+            <li>
+              <AppIcon name="check" /><strong>Depuis.</strong>
+              <span>{{ formatDate(selected.first_seen_at) }}</span>
+            </li>
+          </ul>
+          <div class="actions">
+            <a
+              v-for="link in selected.links"
+              :key="link.source"
+              :href="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Voir sur {{ sourceLabel[link.source] }} <AppIcon name="chevron" /></a>
           </div>
-          <div>
-            <dt>Taux</dt>
-            <dd>{{ rateText(selected.rate_min, selected.rate_max) || "non indiqué" }}</dd>
-          </div>
-          <div>
-            <dt>Vue</dt>
-            <dd>{{ selected.seen_count }} fois</dd>
-          </div>
-          <div>
-            <dt>Première fois</dt>
-            <dd>{{ formatDateTime(selected.first_seen_at) }}</dd>
-          </div>
-        </dl>
-        <p
-          v-if="selected.snippet"
-          class="snippet"
-        >
-          {{ selected.snippet }}
-        </p>
-        <p
+        </article>
+        <div
           v-else
-          class="muted"
+          class="detail-panel empty-detail"
         >
-          Pas d'extrait dans l'alerte. Le texte complet de l'annonce est sur le site.
-        </p>
-        <div class="actions">
-          <a
-            v-for="link in selected.links"
-            :key="link.source"
-            :href="link.url"
-            target="_blank"
-            rel="noopener noreferrer"
-          >Voir sur {{ sourceLabel[link.source] }}</a>
+          Choisis une offre pour voir son détail.
         </div>
-      </article>
-      <div
-        v-else
-        class="detail-panel empty-detail"
-      >
-        Choisis une offre pour voir son détail.
       </div>
     </div>
   </section>

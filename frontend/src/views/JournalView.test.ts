@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { useCollect } from "../composables/useCollect";
 import JournalView from "./JournalView.vue";
 
 const GET = vi.fn();
@@ -101,6 +102,7 @@ describe("JournalView", () => {
     await flushPromises();
     await wrapper.find("[data-test=collect]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[role=status]").text()).toContain(message);
+    expect(POST).toHaveBeenCalledWith("/api/collect");
+    expect(useCollect().message.value).toContain(message);
   });
 });

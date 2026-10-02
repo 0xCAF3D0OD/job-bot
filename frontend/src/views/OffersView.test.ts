@@ -48,13 +48,23 @@ describe("OffersView", () => {
 
     const cards = wrapper.findAll("[data-test=offer]");
     expect(cards[1]?.text()).toContain("vue 2 fois");
+    expect(cards[1]?.text()).toContain("jobup, Indeed");
     await cards[1]?.trigger("click");
 
     const detail = wrapper.find("[data-test=offer-detail]");
     expect(detail.find("h2").text()).toBe("DevOps");
     expect(detail.text()).toContain("80–100 %");
     const links = detail.findAll(".actions a");
-    expect(links.map((a) => a.text())).toEqual(["Voir sur jobup", "Voir sur Indeed"]);
+    expect(links.map((a) => a.text().trim())).toEqual(["Voir sur jobup", "Voir sur Indeed"]);
     expect(links.every((a) => a.attributes("rel") === "noopener noreferrer")).toBe(true);
   });
+});
+
+it("le tri Populaires est transmis à l'API", async () => {
+  GET.mockResolvedValue({ data: { items: [offer(1, "A")], total: 1 } });
+  const wrapper = mount(OffersView);
+  await flushPromises();
+  await wrapper.find("[data-test=sort-popular]").trigger("click");
+  await flushPromises();
+  expect(GET.mock.calls.at(-1)?.[1]).toMatchObject({ params: { query: { sort: "popular" } } });
 });

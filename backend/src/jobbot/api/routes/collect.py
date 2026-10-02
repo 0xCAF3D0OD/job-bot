@@ -167,14 +167,21 @@ async def list_offers(
     request: Request,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
+    sort: Literal["recent", "popular"] = "recent",
 ) -> OfferPage:
+    """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes."""
     runtime = _runtime(request)
+    order = (
+        (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc())
+        if sort == "popular"
+        else (Offer.first_seen_at.desc(), Offer.id.desc())
+    )
     async with runtime.sessionmaker() as session:
         total = await session.scalar(select(func.count()).select_from(Offer))
         offers = list(
             await session.scalars(
                 select(Offer)
-                .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
+                .order_by(*order)
                 .limit(limit)
                 .offset(offset)
             )
