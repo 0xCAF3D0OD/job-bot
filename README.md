@@ -11,7 +11,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | Version | Contenu | État |
 |---|---|---|
 | 0.1.0 | Squelette : API, worker, base, page État | livrée |
-| 0.2.0 | Collecte Gmail, journal des recherches, dédoublonnage | collecte et analyseur Indeed livrés ; jobup et Job-Room à venir |
+| 0.2.0 | Collecte Gmail, journal des recherches, dédoublonnage | collecte, analyseurs Indeed et jobup livrés ; Job-Room à venir |
 | 0.3.0 | Documents, blocs de profil, prérequis et réglages, filtre | à venir |
 | 0.4.0 | Note IA, tableau de bord, notifications | à venir |
 | 0.5.0 | Lettre et CV, suivi des candidatures | à venir |

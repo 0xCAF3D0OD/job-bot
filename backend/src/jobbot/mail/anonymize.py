@@ -20,8 +20,10 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 KEPT_PARAMS = frozenset({"jk", "q", "l", "radius", "hl", "from", "lang"})
 _URL = re.compile(r"https?://[^\s<>\"')]+")
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
-# Segment de chemin qui ressemble à un identifiant ou à un jeton (long, sans voyelles lisibles).
-_TOKEN_SEGMENT = re.compile(r"^[A-Za-z0-9_-]{16,}$")
+# Segment de chemin qui ressemble à un jeton (long, éventuellement un JWT avec des points).
+# Les UUID sont gardés : dans un chemin, ils identifient l'offre (jobup), pas la personne.
+_UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+_TOKEN_SEGMENT = re.compile(rf"^(?!{_UUID}$)[A-Za-z0-9_.=-]{{16,}}$", re.IGNORECASE)
 
 
 def anonymize_url(url: str) -> str:

@@ -1,6 +1,6 @@
 # 03 — Collecte des alertes Gmail (version 0.2.0)
 
-> Statut : **validé le 2026-10-02**. Partie a livrée. Partie b : analyseur Indeed livré ; jobup et Job-Room à suivre.
+> Statut : **validé le 2026-10-02**. Partie a livrée. Partie b : analyseurs Indeed et jobup livrés ; Job-Room à suivre.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2 et §9, et sur le squelette livré en 0.1.0.
 
 ## 1. Objectif
@@ -195,4 +195,6 @@ La PR **a** peut avancer pendant que les premières alertes arrivent.
 - **Indeed** : l'analyseur lit la partie texte de l'e-mail, plus stable que le HTML. Les liens sont reconstruits à partir de l'identifiant d'offre (`jk`), sans les jetons de suivi du compte. Les annonces sponsorisées n'ont pas d'identifiant : elles sont dédoublonnées par l'empreinte.
 - **Jeux de test** : seule la partie texte est gardée, avec des en-têtes réduits au minimum.
 - **Stockage en local** : `JOBBOT_STORAGE_PATH=../data`, car les commandes tournent depuis `backend/`.
-- **Expéditeurs confirmés** : `donotreply@jobalert.indeed.com` et `candidat@my.jobup.ch`.
+- **Expéditeurs confirmés** : `donotreply@jobalert.indeed.com`, `candidat@jobup.ch` et `candidat@my.jobup.ch`.
+- **jobup** : les e-mails reçus sont des « Suggestions d'offres d'emploi » (recommandations d'après les offres consultées), pas des alertes de recherche. Ils sont analysés (libellé « Recommandations jobup »). Une vraie alerte jobup aura sans doute un autre format : elle apparaîtra « sans offre » ou « non reconnue » dans le Journal, et il faudra une deuxième variante de l'analyseur.
+- **Taux décimal** (« 26,25 % ») : ignoré, ce n'est pas un taux d'activité standard.

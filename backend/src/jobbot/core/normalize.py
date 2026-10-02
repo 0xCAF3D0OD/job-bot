@@ -24,10 +24,11 @@ _INCLUSIVE_SUFFIX = re.compile(
 # Taux d'activité : « 80-100 % », « 80 % - 100 % », « 80 à 100% », « 100% », « 60 bis 80 % ».
 _RATE_RANGE = re.compile(
     # \u2013 et \u2014 : tirets demi-cadratin et cadratin.
-    r"(?<!\d)(\d{1,3})\s*%?\s*(?:-|\u2013|\u2014|à|a|bis|to)\s*(\d{1,3})\s*%",
+    r"(?<![\d,.])(\d{1,3})\s*%?\s*(?:-|\u2013|\u2014|à|a|bis|to)\s*(\d{1,3})\s*%",
     re.IGNORECASE,
 )
-_RATE_SINGLE = re.compile(r"(?<!\d)(\d{1,3})\s*%")
+# Taux décimal (« 26,25 % ») : ignoré, ce n'est pas un taux d'activité standard.
+_RATE_SINGLE = re.compile(r"(?<![\d,.])(\d{1,3})\s*%")
 
 # Formes juridiques retirées en fin de nom d'entreprise (après normalisation).
 _LEGAL_SUFFIXES = (
