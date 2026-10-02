@@ -1,6 +1,6 @@
 # 02 — Squelette de la plateforme (version 0.1.0)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé le 2026-10-02, livré** (voir « Écarts à la livraison » en fin de document).
 > S'appuie sur [01-cadrage.md](01-cadrage.md), qui n'est pas modifié.
 
 ## 1. Partage des rôles
@@ -222,3 +222,12 @@ Le `Makefile` ne sert qu'au développement. Il ne construit pas d'image et ne d�
 3. **Port et adresse par défaut** : API sur `127.0.0.1:8000`, worker sur `8001`.
 4. **Planificateur** : intégré au worker par défaut, désactivable par `JOBBOT_SCHEDULER_ENABLED=false` pour que tu passes à des `CronJob` (§4.2).
 5. **Pas d'authentification en 0.1** : l'application n'écoute que sur `127.0.0.1`. La protection d'un accès distant (VPN, authentification devant l'Ingress, ou login dans l'application) sera tranchée avant ton premier déploiement hors de ton Mac.
+
+## Écarts à la livraison
+
+- Les migrations sont dans le paquet (`backend/src/jobbot/db/migrations/`) et non dans `backend/alembic/`, sans `alembic.ini` : elles voyagent avec le paquet, donc avec l'image. Elles s'appliquent par `jobbot migrate`.
+- Le module de logs s'appelle `log.py` et non `logging.py`, pour ne pas masquer le module `logging` de Python.
+- Une commande `jobbot openapi` a été ajoutée : elle produit le schéma sans base de données et sert à `make openapi`.
+- Le schéma OpenAPI (`frontend/src/api/openapi.json`) est versionné à côté des types générés.
+- Les tests des tâches sont dans `test_jobs.py`. `test_storage.py` a été ajouté : il vérifie qu'une clé ne peut pas sortir du dossier de stockage.
+- TypeScript est fixé en 5.9 : TypeScript 6 et 7 ne sont pas encore acceptés par typescript-eslint et openapi-typescript.
