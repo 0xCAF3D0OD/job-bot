@@ -7,6 +7,8 @@ run-job NOM  exécute une tâche une fois ; code retour 0 (succès) ou 1 (échec
 check        valide la configuration et la connexion à la base
 openapi      écrit le schéma OpenAPI de l'API sur la sortie standard (sans base)
 imap-sample  copie les derniers e-mails de la boîte dans <stockage>/samples (lecture seule)
+reparse      réanalyse les copies brutes stockées (après un analyseur nouveau ou corrigé)
+anonymize-sample ID…  fait des jeux de test anonymisés à partir d'alertes stockées
 """
 
 import argparse
@@ -146,6 +148,59 @@ def cmd_imap_sample(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_reparse(args: argparse.Namespace) -> int:
+    from jobbot.collect.service import reparse
+    from jobbot.db.models import Source
+    from jobbot.runtime import Runtime
+
+    settings = _settings()
+
+    async def run() -> int:
+        runtime = Runtime.create(settings)
+        try:
+            source = Source(args.source) if args.source else None
+            result = await reparse(runtime, source=source)
+        finally:
+            await runtime.dispose()
+        print(
+            f"{result.examined} alerte(s) examinée(s), {result.updated} mise(s) à jour, "
+            f"{result.new_offers} nouvelle(s) offre(s), {result.missing_raw} copie(s) manquante(s)"
+        )
+        return 0
+
+    return asyncio.run(run())
+
+
+def cmd_anonymize_sample(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from sqlalchemy import select
+
+    from jobbot.db.models import Search
+    from jobbot.mail.anonymize import anonymize
+    from jobbot.runtime import Runtime
+
+    settings = _settings()
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+
+    async def run() -> int:
+        runtime = Runtime.create(settings)
+        try:
+            async with runtime.sessionmaker() as session:
+                rows = list(await session.scalars(select(Search).where(Search.id.in_(args.ids))))
+        finally:
+            await runtime.dispose()
+        for index, search in enumerate(sorted(rows, key=lambda s: s.id), start=1):
+            target = out / f"{search.source}-{index}.eml"
+            target.write_bytes(anonymize(runtime.storage.get(search.raw_key), index=index))
+            print(f"alerte {search.id} → {target}")
+        print("À relire avant tout commit : le dépôt est public.")
+        return 0
+
+    return asyncio.run(run())
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="job-bot")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -160,6 +215,13 @@ def main(argv: list[str] | None = None) -> int:
     sample = sub.add_parser("imap-sample", help="copie des e-mails pour écrire les analyseurs")
     sample.add_argument("--limit", type=int, default=30)
     sample.set_defaults(func=cmd_imap_sample)
+    reparse = sub.add_parser("reparse", help="réanalyse les copies brutes stockées")
+    reparse.add_argument("--source", choices=["jobup", "indeed", "jobroom", "unknown"])
+    reparse.set_defaults(func=cmd_reparse)
+    anon = sub.add_parser("anonymize-sample", help="jeux de test anonymisés")
+    anon.add_argument("ids", nargs="+", type=int, help="identifiants d'alertes (journal)")
+    anon.add_argument("--out", required=True, help="dossier de sortie")
+    anon.set_defaults(func=cmd_anonymize_sample)
     args = parser.parse_args(argv)
     code: int = args.func(args)
     return code

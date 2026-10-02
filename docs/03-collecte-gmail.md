@@ -1,6 +1,6 @@
 # 03 — Collecte des alertes Gmail (version 0.2.0)
 
-> Statut : **validé le 2026-10-02**. Partie a livrée (PR feat/0.2.0-a-collecte) ; partie b (analyseurs) en attente des premières alertes.
+> Statut : **validé le 2026-10-02**. Partie a livrée. Partie b : analyseur Indeed livré ; jobup et Job-Room à suivre.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2 et §9, et sur le squelette livré en 0.1.0.
 
 ## 1. Objectif
@@ -187,3 +187,12 @@ La PR **a** peut avancer pendant que les premières alertes arrivent.
 6. **Fusion des doublons** par identifiant du site puis par empreinte titre + entreprise + lieu, en acceptant que deux ouvertures identiques soient fusionnées (§4).
 7. **Deux tables `offer_links` et `offer_sightings`** à la place de `offer_sources` (§7).
 8. **Livraison en deux PR** (§11).
+
+## Écarts à la livraison
+
+- **Fenêtre de collecte** : chaque collecte relit les `JOBBOT_IMAP_BACKFILL_DAYS` derniers jours, au lieu de repartir de la veille du dernier e-mail reçu. Sinon, des alertes étiquetées après coup (filtre Gmail ajouté plus tard) étaient ignorées. Les e-mails déjà connus ne sont pas retéléchargés : seul leur en-tête est lu.
+- **Boîte lue** : une adresse Gmail existante, en ne lisant qu'un libellé (`JOBBOT_IMAP_FOLDER`, par exemple `Professionnel/job-bot`), plutôt qu'une adresse dédiée.
+- **Indeed** : l'analyseur lit la partie texte de l'e-mail, plus stable que le HTML. Les liens sont reconstruits à partir de l'identifiant d'offre (`jk`), sans les jetons de suivi du compte. Les annonces sponsorisées n'ont pas d'identifiant : elles sont dédoublonnées par l'empreinte.
+- **Jeux de test** : seule la partie texte est gardée, avec des en-têtes réduits au minimum.
+- **Stockage en local** : `JOBBOT_STORAGE_PATH=../data`, car les commandes tournent depuis `backend/`.
+- **Expéditeurs confirmés** : `donotreply@jobalert.indeed.com` et `candidat@my.jobup.ch`.

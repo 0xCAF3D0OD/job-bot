@@ -12,7 +12,7 @@ from jobbot.db.models import JobRun, Offer, OfferLink, OfferSighting, Search, So
 from jobbot.mail.imap import FetchedEmail, MailboxError
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
-from jobbot.sources import base as sources
+from jobbot.sources import registry as sources
 from jobbot.worker.jobs import JOBS, execute
 
 from .conftest import make_settings
@@ -96,7 +96,7 @@ async def test_not_configured_is_a_quiet_success(runtime: Runtime, mailbox: Fake
 
 @pytest.mark.usefixtures("parsers")
 async def test_collect_twice_creates_no_duplicates(
-    collect_runtime: Runtime, mailbox: FakeMailbox, tmp_path: Path
+    collect_runtime: Runtime, mailbox: FakeMailbox, tmp_path: Path, imap_settings: Settings
 ) -> None:
     mailbox.add(
         make_email(
@@ -132,8 +132,9 @@ async def test_collect_twice_creates_no_duplicates(
     assert search.new_offers_count == 2
     assert (offer.rate_min, offer.rate_max, offer.status) == (80, 100, "new")
     assert (tmp_path / search.raw_key).read_bytes().startswith(b"From:")
-    # Deuxième passage : la recherche repart de la veille du dernier e-mail.
-    assert mailbox.since_calls[1] == (T0 - timedelta(days=1)).date()
+    # Chaque passage relit toute la fenêtre : un e-mail étiqueté après coup est rattrapé.
+    expected = (datetime.now(UTC) - timedelta(days=imap_settings.imap_backfill_days)).date()
+    assert mailbox.since_calls == [expected, expected]
 
 
 @pytest.mark.usefixtures("parsers")
@@ -358,3 +359,38 @@ async def test_status_reports_collect(
     assert body["configured"] is True
     assert body["last_success_at"] is None
     assert body["last_error"] == "MailboxError: connexion IMAP impossible (TimeoutError)"
+
+
+async def test_reparse_after_new_parser(
+    collect_runtime: Runtime, mailbox: FakeMailbox, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(sources, "PARSERS", [])
+    mailbox.add(
+        make_email(
+            message_id="<r@jobup.ch>",
+            sender="alerts@jobup.ch",
+            received_at=T0,
+            offers=[("Admin", "Acme", "Lausanne", "https://j/1", "J1")],
+        ),
+        "<r@jobup.ch>",
+    )
+    await service.collect(collect_runtime)
+    async with collect_runtime.sessionmaker() as session:
+        search = await session.scalar(select(Search))
+    assert search is not None and search.parse_status == "unrecognized"
+
+    monkeypatch.setattr(sources, "PARSERS", [LineParser(source=Source.JOBUP, domain="jobup.ch")])
+    first = await service.reparse(collect_runtime)
+    again = await service.reparse(collect_runtime)
+
+    assert (first.updated, first.new_offers) == (1, 1)
+    assert (again.updated, again.new_offers) == (0, 0)
+    async with collect_runtime.sessionmaker() as session:
+        search = await session.scalar(select(Search))
+    assert search is not None
+    assert (search.parse_status, search.parser_version, search.new_offers_count) == (
+        "parsed",
+        "test-1",
+        1,
+    )
+    assert await _count(collect_runtime, Offer) == 1
