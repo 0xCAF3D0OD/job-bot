@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import AppIcon from "./components/AppIcon.vue";
+import { useCollect } from "./composables/useCollect";
 import { navigation } from "./router";
+
+const { message, running, collectNow } = useCollect();
 </script>
 
 <template>
@@ -13,7 +17,7 @@ import { navigation } from "./router";
         <span
           class="brand-mark"
           aria-hidden="true"
-        >jb</span>
+        />
         job-bot
       </RouterLink>
       <nav aria-label="Navigation principale">
@@ -28,9 +32,25 @@ import { navigation } from "./router";
           </li>
         </ul>
       </nav>
+      <button
+        type="button"
+        class="primary small"
+        :disabled="running"
+        data-test="collect-top"
+        @click="collectNow"
+      >
+        Collecter <AppIcon name="chevron" />
+      </button>
     </div>
   </header>
-  <main class="content">
+  <p
+    v-if="message"
+    class="toast"
+    role="status"
+  >
+    {{ message }}
+  </p>
+  <main>
     <RouterView />
   </main>
 </template>

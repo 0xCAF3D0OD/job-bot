@@ -79,7 +79,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Offers */
+        /**
+         * List Offers
+         * @description `recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.
+         */
         get: operations["listOffers"];
         put?: never;
         post?: never;
@@ -502,6 +505,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                sort?: "recent" | "popular";
             };
             header?: never;
             path?: never;

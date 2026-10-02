@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref, computed } from "vue";
 
 import { api, type JobRun, type StatusResponse } from "../api/client";
+import PageHero from "../components/PageHero.vue";
 import { indicators, sinceText } from "./status";
 
 const REFRESH_MS = 30_000;
@@ -47,72 +48,74 @@ onUnmounted(() => clearInterval(timer));
 </script>
 
 <template>
-  <section>
-    <h1>État</h1>
-    <p class="muted">
-      Santé de la plateforme, actualisée toutes les 30 secondes.
-    </p>
-
-    <ul
-      v-if="loaded"
-      class="indicators"
-    >
-      <li
-        v-for="light in lights"
-        :key="light.label"
-        :class="['indicator', light.level]"
-        data-test="indicator"
+  <PageHero
+    eyebrow="État"
+    title="La plateforme en un coup d'œil"
+    subtitle="API, base de données, worker et collecte. Actualisé toutes les 30 secondes."
+  />
+  <section class="band">
+    <div class="container">
+      <ul
+        v-if="loaded"
+        class="indicators"
       >
-        <span
-          class="dot"
-          aria-hidden="true"
-        />
-        <div>
+        <li
+          v-for="light in lights"
+          :key="light.label"
+          :class="['indicator', light.level]"
+          data-test="indicator"
+        >
+          <span
+            class="dot"
+            aria-hidden="true"
+          />
           <strong>{{ light.label }}</strong>
           <span class="detail">{{ light.detail }}</span>
-        </div>
-      </li>
-    </ul>
+        </li>
+      </ul>
 
-    <h2>Dernières tâches</h2>
-    <table
-      v-if="runs.length"
-      class="runs"
-    >
-      <thead>
-        <tr>
-          <th>Tâche</th>
-          <th>Début</th>
-          <th>Statut</th>
-          <th>Entrées / sorties</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="run in runs"
-          :key="run.id"
-          data-test="run"
-        >
-          <td>{{ run.job }}</td>
-          <td :title="run.started_at">
-            {{ sinceText(run.started_at) }}
-          </td>
-          <td :class="['run-status', run.status]">
-            {{ statusLabel[run.status] }}
-            <span
-              v-if="run.error"
-              class="detail"
-            >{{ run.error }}</span>
-          </td>
-          <td>{{ run.items_in ?? "–" }} / {{ run.items_out ?? "–" }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <p
-      v-else-if="loaded"
-      class="muted"
-    >
-      Aucune exécution enregistrée.
-    </p>
+      <h2 class="section-title">
+        Dernières tâches
+      </h2>
+      <table
+        v-if="runs.length"
+        class="runs"
+      >
+        <thead>
+          <tr>
+            <th>Tâche</th>
+            <th>Début</th>
+            <th>Statut</th>
+            <th>Entrées / sorties</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="run in runs"
+            :key="run.id"
+            data-test="run"
+          >
+            <td>{{ run.job }}</td>
+            <td :title="run.started_at">
+              {{ sinceText(run.started_at) }}
+            </td>
+            <td :class="['run-status', run.status]">
+              {{ statusLabel[run.status] }}
+              <span
+                v-if="run.error"
+                class="detail"
+              >{{ run.error }}</span>
+            </td>
+            <td>{{ run.items_in ?? "–" }} / {{ run.items_out ?? "–" }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p
+        v-else-if="loaded"
+        class="muted"
+      >
+        Aucune exécution enregistrée.
+      </p>
+    </div>
   </section>
 </template>

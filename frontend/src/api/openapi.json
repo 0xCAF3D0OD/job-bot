@@ -227,6 +227,7 @@
           "collect"
         ],
         "summary": "List Offers",
+        "description": "`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.",
         "operationId": "listOffers",
         "parameters": [
           {
@@ -250,6 +251,20 @@
               "minimum": 0,
               "default": 0,
               "title": "Offset"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "recent",
+                "popular"
+              ],
+              "type": "string",
+              "default": "recent",
+              "title": "Sort"
             }
           }
         ],

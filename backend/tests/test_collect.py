@@ -333,6 +333,9 @@ async def test_api_journal_and_offers(
 
     offers = (await api.get("/api/offers")).json()
     assert offers["total"] == 1 and offers["items"][0]["title"] == "Admin 80%"
+    popular = (await api.get("/api/offers", params={"sort": "popular"})).json()
+    assert popular["items"][0]["title"] == "Admin 80%"
+    assert (await api.get("/api/offers", params={"sort": "autre"})).status_code == 422
     assert (await api.get("/api/searches/999999")).status_code == 404
 
 
