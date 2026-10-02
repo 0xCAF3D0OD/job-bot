@@ -23,7 +23,14 @@ UNREACHABLE_DATABASE_URL = "postgresql+psycopg://jobbot@127.0.0.1:1/jobbot"
 
 
 def make_settings(**overrides: object) -> Settings:
-    values: dict[str, object] = {"database_url": TEST_DATABASE_URL, "version": "test"}
+    """Configuration de test, indépendante du .env du poste (boîte IMAP comprise)."""
+    values: dict[str, object] = {
+        "database_url": TEST_DATABASE_URL,
+        "version": "test",
+        "imap_user": "",
+        "imap_password": None,
+        "_env_file": None,
+    }
     values.update(overrides)
     return Settings(**values)  # type: ignore[arg-type]
 

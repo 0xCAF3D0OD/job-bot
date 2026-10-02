@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from typing import Protocol
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,14 +24,13 @@ from jobbot.mail.message import ParsedEmail, parse_email
 from jobbot.metrics import COLLECT_EMAILS, COLLECT_OFFERS, IMAP_ERRORS
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
-from jobbot.sources.base import ParsedAlert, RawOffer, detect_source, find_parser
+from jobbot.sources.base import ParsedAlert, RawOffer
+from jobbot.sources.registry import detect_source, find_parser
 
 log = get_logger(__name__)
 
 # Nombre maximal d'e-mails téléchargés par collecte ; le reste passe à la suivante.
 MAX_EMAILS_PER_RUN = 200
-# Chevauchement avec la collecte précédente : les dates IMAP sont au jour près.
-SINCE_OVERLAP = timedelta(days=1)
 
 
 class Mailbox(Protocol):
@@ -60,11 +59,12 @@ def raw_key(email: ParsedEmail) -> str:
     return f"emails/{email.received_at:%Y/%m}/{digest}.eml"
 
 
-async def _since(session: AsyncSession, settings: Settings) -> date:
-    last: datetime | None = await session.scalar(select(func.max(Search.received_at)))
-    if last is None:
-        return (datetime.now(UTC) - timedelta(days=settings.imap_backfill_days)).date()
-    return (last - SINCE_OVERLAP).date()
+def _since(settings: Settings) -> date:
+    """Toujours toute la fenêtre JOBBOT_IMAP_BACKFILL_DAYS, et non « depuis la dernière
+    collecte » : un e-mail ancien peut entrer dans le dossier plus tard (libellé posé après
+    coup, filtre ajouté). Les e-mails déjà connus sont écartés par leur Message-ID avant
+    téléchargement, donc relire la fenêtre ne coûte que la lecture des en-têtes."""
+    return (datetime.now(UTC) - timedelta(days=settings.imap_backfill_days)).date()
 
 
 async def _known_message_ids(runtime: Runtime, ids: set[str]) -> set[str]:
@@ -212,8 +212,7 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
         log.info("collect_not_configured")
         return CollectResult(configured=False)
 
-    async with runtime.sessionmaker() as session:
-        since = await _since(session, settings)
+    since = _since(settings)
 
     loop = asyncio.get_running_loop()
 
@@ -242,5 +241,61 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
         fetched=result.fetched,
         new_searches=result.new_searches,
         new_offers=result.new_offers,
+    )
+    return result
+
+
+@dataclass
+class ReparseResult:
+    examined: int = 0
+    updated: int = 0
+    new_offers: int = 0
+    missing_raw: int = 0
+
+
+async def reparse(runtime: Runtime, *, source: Source | None = None) -> ReparseResult:
+    """Réanalyse les copies brutes stockées, sans retourner dans la boîte.
+
+    Ne touche que les alertes dont le résultat change : analyseur nouveau ou corrigé
+    (version différente), ou alerte jusqu'ici non reconnue ou en échec. Les offres déjà
+    rattachées ne sont pas dupliquées.
+    """
+    result = ReparseResult()
+    query = select(Search.id).order_by(Search.received_at, Search.id)
+    if source is not None:
+        query = query.where(Search.source == source)
+    async with runtime.sessionmaker() as session:
+        ids = list(await session.scalars(query))
+
+    for search_id in ids:
+        result.examined += 1
+        async with runtime.sessionmaker.begin() as session:
+            search = await session.get_one(Search, search_id)
+            try:
+                raw = runtime.storage.get(search.raw_key)
+            except FileNotFoundError:
+                result.missing_raw += 1
+                continue
+            email = parse_email(raw, fallback_received=search.received_at)
+            new_source, status, version, alert, error = _analyse(email)
+            unchanged = version == search.parser_version and status == search.parse_status
+            if unchanged or (version is None and status == ParseStatus.UNRECOGNIZED):
+                continue
+            search.source = new_source
+            search.parse_status = status
+            search.parser_version = version
+            search.alert_label = alert.alert_label
+            search.error = error
+            search.results_count = len(alert.offers)
+            created = await ingest_offers(session, search, new_source, alert.offers)
+            search.new_offers_count += created
+            result.updated += 1
+            result.new_offers += created
+    log.info(
+        "reparse_finished",
+        examined=result.examined,
+        updated=result.updated,
+        new_offers=result.new_offers,
+        missing_raw=result.missing_raw,
     )
     return result
