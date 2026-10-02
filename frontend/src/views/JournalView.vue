@@ -213,7 +213,7 @@ onMounted(() => void load());
                 >
                   <span
                     v-if="offer.is_first"
-                    class="badge"
+                    class="badge new"
                   >nouvelle</span>
                   <strong>{{ offer.title }}</strong>
                   <span class="detail">

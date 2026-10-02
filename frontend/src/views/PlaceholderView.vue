@@ -10,8 +10,9 @@ defineProps<{ entry: NavEntry }>();
     <p class="muted">
       {{ entry.description }}
     </p>
-    <p class="notice">
-      Arrive avec la version {{ entry.since }}.
-    </p>
+    <div class="card placeholder-card">
+      <span class="badge">Version {{ entry.since }}</span>
+      <span class="detail">Cette page arrive avec la version {{ entry.since }}.</span>
+    </div>
   </section>
 </template>

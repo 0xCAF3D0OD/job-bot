@@ -3,30 +3,34 @@ import { navigation } from "./router";
 </script>
 
 <template>
-  <div class="layout">
-    <nav
-      class="sidebar"
-      aria-label="Navigation principale"
-    >
+  <header class="topbar">
+    <div class="topbar-inner">
       <RouterLink
         to="/"
         class="brand"
+        aria-label="job-bot, accueil"
       >
+        <span
+          class="brand-mark"
+          aria-hidden="true"
+        >jb</span>
         job-bot
       </RouterLink>
-      <ul>
-        <li
-          v-for="entry in navigation"
-          :key="entry.name"
-        >
-          <RouterLink :to="entry.path">
-            {{ entry.label }}
-          </RouterLink>
-        </li>
-      </ul>
-    </nav>
-    <main class="content">
-      <RouterView />
-    </main>
-  </div>
+      <nav aria-label="Navigation principale">
+        <ul class="nav">
+          <li
+            v-for="entry in navigation"
+            :key="entry.name"
+          >
+            <RouterLink :to="entry.path">
+              {{ entry.label }}
+            </RouterLink>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="content">
+    <RouterView />
+  </main>
 </template>
