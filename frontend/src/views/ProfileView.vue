@@ -6,10 +6,12 @@ import {
   type Chunk,
   type ChunkIn,
   type ChunkKind,
+  type ChunkProposal,
   type DocumentOut,
   type DocumentText,
 } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import ChunkProposals from "../components/ChunkProposals.vue";
 import PageHero from "../components/PageHero.vue";
 import TagInput from "../components/TagInput.vue";
 import { formatDate } from "../format";
@@ -42,6 +44,8 @@ const textBox = ref<HTMLElement | null>(null);
 const filter = ref<ChunkKind | "all">("all");
 const editing = ref<{ id: number | null; form: ChunkForm } | null>(null);
 const uploading = ref(false);
+const proposing = ref<number | null>(null);
+const proposal = ref<{ doc: DocumentOut; items: ChunkProposal[] } | null>(null);
 const message = ref("");
 
 const visibleChunks = computed(() =>
@@ -104,6 +108,33 @@ async function showText(id: number): Promise<void> {
   openText.value = data ?? null;
 }
 
+async function propose(doc: DocumentOut): Promise<void> {
+  proposing.value = doc.id;
+  message.value = "";
+  try {
+    const { data, error, response } = await api.POST("/api/documents/{document_id}/propose-chunks", {
+      params: { path: { document_id: doc.id } },
+    });
+    if (data) {
+      if (data.length) proposal.value = { doc, items: data };
+      else message.value = "L'IA n'a rien trouvé à proposer dans ce document.";
+    } else {
+      const detail = (error as { detail?: unknown } | undefined)?.detail;
+      message.value = typeof detail === "string" ? `Impossible : ${detail}.` : `Échec (HTTP ${response.status}).`;
+    }
+  } catch {
+    message.value = "API injoignable.";
+  } finally {
+    proposing.value = null;
+  }
+}
+
+async function onProposalsSaved(count: number): Promise<void> {
+  proposal.value = null;
+  message.value = `${count} bloc(s) ajouté(s) à ton profil.`;
+  await Promise.all([loadChunks(), loadDocuments()]);
+}
+
 async function removeDocument(doc: DocumentOut): Promise<void> {
   if (!window.confirm(`Supprimer « ${doc.filename} » ? Les blocs créés à partir de lui sont gardés.`)) return;
   await api.DELETE("/api/documents/{document_id}", { params: { path: { document_id: doc.id } } });
@@ -162,7 +193,9 @@ async function removeChunk(chunk: Chunk): Promise<void> {
 }
 
 function onKeydown(event: KeyboardEvent): void {
-  if (event.key === "Escape") editing.value = null;
+  if (event.key !== "Escape") return;
+  editing.value = null;
+  proposal.value = null;
 }
 
 onMounted(() => {
@@ -235,6 +268,16 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
                   @click="showText(doc.id)"
                 >
                   Texte
+                </button>
+                <button
+                  v-if="doc.text_status === 'ok'"
+                  type="button"
+                  class="primary small"
+                  :disabled="proposing !== null"
+                  :data-test="`propose-${doc.id}`"
+                  @click="propose(doc)"
+                >
+                  {{ proposing === doc.id ? "L'IA lit le document… (≈ 30 s)" : "Proposer des blocs" }}
                 </button>
                 <a
                   class="link"
@@ -377,6 +420,16 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       </p>
     </div>
   </section>
+
+  <ChunkProposals
+    v-if="proposal"
+    :document-id="proposal.doc.id"
+    :document-name="proposal.doc.filename"
+    :proposals="proposal.items"
+    :existing="chunks"
+    @close="proposal = null"
+    @saved="onProposalsSaved"
+  />
 
   <div
     v-if="editing"

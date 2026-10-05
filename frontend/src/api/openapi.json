@@ -750,6 +750,52 @@
         }
       }
     },
+    "/api/documents/{document_id}/propose-chunks": {
+      "post": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Propose Chunks",
+        "description": "L'IA lit le document et propose des blocs. Rien n'est enregistré : c'est l'interface\nqui crée les blocs que Kevin accepte.",
+        "operationId": "proposeChunks",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChunkProposal"
+                  },
+                  "title": "Response Proposechunks"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA non configurée, budget atteint ou compte API indisponible"
+          },
+          "422": {
+            "description": "Document sans texte lisible"
+          },
+          "502": {
+            "description": "Réponse de l'IA inutilisable"
+          }
+        }
+      }
+    },
     "/api/profile-chunks": {
       "get": {
         "tags": [
@@ -1093,6 +1139,48 @@
           "updated_at"
         ],
         "title": "ChunkOut"
+      },
+      "ChunkProposal": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ChunkKind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "duplicate_of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "content",
+          "tags",
+          "duplicate_of"
+        ],
+        "title": "ChunkProposal"
       },
       "CollectResponse": {
         "properties": {

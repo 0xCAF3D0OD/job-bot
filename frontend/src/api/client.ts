@@ -26,3 +26,4 @@ export type ChunkKind = Schemas["ChunkKind"];
 export type OfferFacets = Schemas["OfferFacets"];
 export type ScoringStatus = Schemas["ScoringStatus"];
 export type ScorePoint = Schemas["ScorePoint"];
+export type ChunkProposal = Schemas["ChunkProposal"];

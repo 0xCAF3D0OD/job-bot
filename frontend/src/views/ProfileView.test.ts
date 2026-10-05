@@ -119,3 +119,57 @@ describe("ProfileView", () => {
     wrapper.unmount();
   });
 });
+
+describe("propositions de blocs", () => {
+  it("propose, laisse décocher les doublons, ajoute la sélection", async () => {
+    mockApi();
+    POST.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/documents/{document_id}/propose-chunks"
+          ? {
+              data: [
+                { kind: "competence", title: "Kubernetes", content: "K3s", tags: ["k8s"], duplicate_of: 9 },
+                { kind: "experience", title: "Projets 42", content: "Cloud-1, Webserv", tags: [], duplicate_of: null },
+              ],
+              response: { status: 200 },
+            }
+          : { data: { id: 50 }, response: { status: 201 } },
+      ),
+    );
+    const wrapper = mount(ProfileView);
+    await flushPromises();
+    await wrapper.find("[data-test=propose-4]").trigger("click");
+    await flushPromises();
+
+    const proposals = wrapper.findAll("[data-test=proposal]");
+    expect(proposals).toHaveLength(2);
+    expect(proposals[0]?.text()).toContain("ressemble à : Kubernetes");
+    expect((proposals[0]?.find("input[type=checkbox]").element as HTMLInputElement).checked).toBe(false);
+    expect(wrapper.find("[data-test=add-proposals]").text()).toContain("Ajouter 1 bloc(s)");
+
+    await proposals[1]?.find("input[type=text]").setValue("Projets 42 Lausanne");
+    await wrapper.find("[data-test=proposals]").trigger("submit");
+    await flushPromises();
+    const created = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
+    expect(created).toHaveLength(1);
+    expect(created[0]?.[1]).toEqual({
+      body: expect.objectContaining({ title: "Projets 42 Lausanne", kind: "experience", document_id: 4 }),
+    });
+    expect(wrapper.find("[data-test=proposals]").exists()).toBe(false);
+    expect(wrapper.find("[role=status]").text()).toContain("1 bloc(s) ajouté(s)");
+  });
+
+  it("explique un refus de l'API", async () => {
+    mockApi();
+    POST.mockResolvedValue({
+      data: undefined,
+      error: { detail: "plafond mensuel de l'IA atteint : le relever dans les Réglages" },
+      response: { status: 409 },
+    });
+    const wrapper = mount(ProfileView);
+    await flushPromises();
+    await wrapper.find("[data-test=propose-4]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[role=status]").text()).toContain("plafond mensuel");
+  });
+});

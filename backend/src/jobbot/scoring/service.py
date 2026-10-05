@@ -58,7 +58,7 @@ class ScoringUnavailable(Exception):
     n'est pas la faute des offres, qui restent à noter."""
 
 
-def _account_problem(exc: anthropic.APIStatusError) -> str | None:
+def account_problem(exc: anthropic.APIStatusError) -> str | None:
     if isinstance(exc, anthropic.AuthenticationError | anthropic.PermissionDeniedError):
         return "clé API Anthropic refusée : vérifier JOBBOT_ANTHROPIC_API_KEY"
     if "credit balance" in str(exc.message).lower():
@@ -200,19 +200,20 @@ async def _store(
     )
 
 
-async def _record_call(
+async def record_call(
     session: AsyncSession,
     raw: RawResult,
     *,
     offer_id: int | None,
     rate: Decimal,
     batch_id: str | None = None,
+    purpose: str = "score",
 ) -> Decimal:
     usd = cost_usd(raw.model, raw.usage, batch=batch_id is not None)
     chf = (usd * rate).quantize(Decimal("0.00001"))
     session.add(
         LlmCall(
-            purpose="score",
+            purpose=purpose,
             offer_id=offer_id,
             model=raw.model,
             batch_id=batch_id,
@@ -270,7 +271,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                     )
                     result.failed += 1
                     continue
-                await _record_call(
+                await record_call(
                     session,
                     item.result,
                     offer_id=offer.id,
@@ -326,7 +327,7 @@ async def _submit_batch(
     try:
         batch_id = await client.create_batch(requests)
     except anthropic.APIStatusError as exc:
-        if problem := _account_problem(exc):
+        if problem := account_problem(exc):
             raise ScoringUnavailable(problem) from None
         raise
     async with runtime.sessionmaker.begin() as session:
@@ -364,7 +365,7 @@ async def _score_direct(
             log.warning("score_api_unavailable", error=type(exc).__name__)
             return  # nouvel essai à la prochaine exécution
         except anthropic.APIStatusError as exc:
-            if problem := _account_problem(exc):
+            if problem := account_problem(exc):
                 raise ScoringUnavailable(problem) from None
             error, raw = f"API : erreur {exc.status_code}", None
 
@@ -381,7 +382,7 @@ async def _score_direct(
                 )
                 result.failed += 1
                 continue
-            await _record_call(session, raw, offer_id=offer.id, rate=rate)
+            await record_call(session, raw, offer_id=offer.id, rate=rate)
             try:
                 output = parse_output(raw.text, profile)
             except InvalidScore as exc:

@@ -540,3 +540,13 @@ p.badge.reason { margin: 0; }
 .facts div { background: var(--band); border-radius: 10px; padding: 0.65rem 0.85rem; }
 .facts dt { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 .facts dd { margin: 0.15rem 0 0; font-weight: 600; font-size: 1.1rem; }
+
+/* --- Propositions de blocs (0.4.1) --- */
+
+.proposals { width: min(46rem, 100%); max-height: calc(100vh - 2rem); overflow: auto; }
+.proposal-list { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.9rem; }
+.proposal { display: grid; gap: 0.45rem; padding: 0.9rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.proposal.off { opacity: 0.6; }
+.proposal-check { align-items: center; flex-wrap: wrap; }
+.proposal-check input { margin-top: 0; }
+.proposal input[type="text"] { width: 100%; font-weight: 500; }
