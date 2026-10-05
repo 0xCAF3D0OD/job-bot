@@ -40,3 +40,5 @@ export type LetterParagraph = Schemas["LetterParagraph"];
 export type LetterLanguage = Letter["language"];
 export type Cv = Schemas["CvOut"];
 export type CvBlock = Schemas["CvBlock"];
+export type OrpMonth = Schemas["OrpMonthOut"];
+export type OrpRow = Schemas["OrpRowOut"];

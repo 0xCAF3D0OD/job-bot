@@ -615,6 +615,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Orp Month */
+        get: operations["getOrpMonth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orp/{month}/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Orp Csv */
+        get: operations["downloadOrpCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orp/{month}/exported": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Exported
+         * @description Le PDF passe par l'impression du navigateur : l'interface signale l'export.
+         */
+        post: operations["markOrpExported"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orp/{month}/submission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Submit Month
+         * @description « Marquer comme remis » : la remise est datée, les modifications repartent de zéro.
+         */
+        put: operations["submitOrpMonth"];
+        post?: never;
+        /** Cancel Submission */
+        delete: operations["cancelOrpSubmission"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1399,6 +1474,89 @@ export interface components {
             /** Id */
             id: number;
             status: components["schemas"]["OfferStatus"];
+        };
+        /**
+         * OrpHolder
+         * @description En-tête du formulaire : nom et adresse saisis dans les Réglages.
+         */
+        OrpHolder: {
+            /** Name */
+            name: string | null;
+            /** Address */
+            address: string | null;
+        };
+        /** OrpMonthOut */
+        OrpMonthOut: {
+            /** Month */
+            month: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "en_cours" | "a_remettre" | "remis";
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Count */
+            count: number;
+            /** Target */
+            target: number | null;
+            /** Incomplete */
+            incomplete: number;
+            /** Rows */
+            rows: components["schemas"]["OrpRowOut"][];
+            /** Submitted At */
+            submitted_at: string | null;
+            /** Exported At */
+            exported_at: string | null;
+            /** Changed After Submit */
+            changed_after_submit: boolean;
+            holder: components["schemas"]["OrpHolder"];
+            /** Searches */
+            searches: components["schemas"]["OrpSearchOut"][];
+        };
+        /** OrpRowOut */
+        OrpRowOut: {
+            /** Application Id */
+            application_id: number;
+            /** Date */
+            date: string;
+            /** Company */
+            company: string;
+            /** Address */
+            address: string;
+            /** Contact */
+            contact: string;
+            /** Phone */
+            phone: string;
+            /** Job Title */
+            job_title: string;
+            /** Rate */
+            rate: string;
+            /** Method */
+            method: string;
+            /** Assigned */
+            assigned: string;
+            /** Result */
+            result: string;
+            /** Missing */
+            missing: string[];
+        };
+        /** OrpSearchOut */
+        OrpSearchOut: {
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Source */
+            source: string;
+            /** Label */
+            label: string | null;
+            /** Results Count */
+            results_count: number;
         };
         /**
          * ParseStatus
@@ -3009,6 +3167,155 @@ export interface operations {
                 content: {
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOrpMonth: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrpMonthOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    downloadOrpCsv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markOrpExported: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submitOrpMonth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancelOrpSubmission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

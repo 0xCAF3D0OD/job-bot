@@ -1,6 +1,6 @@
 # 09 — Export ORP et rappels (version 0.6.0)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** le 2026-10-05. PR a (page ORP, PDF, CSV, Job-Room, remise) livrée ; PR b (rappels) à venir.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §6 et sur les candidatures de la 0.5 ([08-candidatures.md](08-candidatures.md) §5), qui enregistrent déjà tous les champs du formulaire.
 
 ## 1. Objectif
@@ -99,3 +99,11 @@ Les candidatures ne changent pas : `orp_month` existe déjà.
 6. **Journal des recherches** en annexe facultative (§3).
 7. **Rappels** le 25, le 1er et la veille de la date limite, **jour 5 par défaut** (§5).
 8. **Deux PR** (§7).
+
+## Écarts avec la PR a
+
+- **Job-Room** : sans capture du formulaire, les boutons « copier » suivent l'ordre des colonnes du formulaire papier. À ajuster quand tu m'envoies la capture.
+- **Journal des recherches** : l'annexe liste les alertes reçues dans le mois (date, site, alerte, nombre d'offres). Les « offres examinées » ne sont pas encore datées en base : elles n'y figurent pas.
+- **Mois par défaut** : le mois précédent seulement s'il contient des candidatures ; sinon le mois en cours.
+- **Export** : la date du dernier export est notée au téléchargement du CSV et à l'impression du PDF ; elle servira aux rappels (PR b).
+- **Date limite** : fixée au 5 du mois suivant ; le réglage arrive avec la PR b.

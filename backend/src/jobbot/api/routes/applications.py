@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot.api.routes.orp import mark_changed
 from jobbot.db.models import (
     Application,
     ApplicationMethod,
@@ -239,6 +240,7 @@ async def create_application(request: Request, body: ApplicationIn) -> Applicati
             cv_draft_id=cv.id if cv else None,
         )
         session.add(application)
+        await mark_changed(session, {application.orp_month})
         await session.flush()
         await session.refresh(application)
         out = ApplicationOut.model_validate(application)
@@ -254,12 +256,14 @@ async def update_application(
         application = await session.get(Application, application_id)
         if application is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+        before = application.orp_month
         values = body.model_dump()
         if values["status"] != application.status and values["status_at"] is None:
             values["status_at"] = _today()
         for key, value in values.items():
             setattr(application, key, value)
         application.orp_month = body.sent_at.strftime("%Y-%m")
+        await mark_changed(session, {before, application.orp_month})
         await session.flush()
         await session.refresh(application)
         return ApplicationOut.model_validate(application)
@@ -280,6 +284,7 @@ async def delete_application(request: Request, application_id: int) -> None:
             offer = await session.get(Offer, application.offer_id)
             if offer is not None:
                 offer.status = OfferStatus.PREPARING
+        await mark_changed(session, {application.orp_month})
         await session.delete(application)
 
 

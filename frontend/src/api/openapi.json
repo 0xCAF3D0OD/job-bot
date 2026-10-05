@@ -1857,6 +1857,203 @@
           }
         }
       }
+    },
+    "/api/orp": {
+      "get": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Get Orp Month",
+        "operationId": "getOrpMonth",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrpMonthOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orp/{month}/csv": {
+      "get": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Download Orp Csv",
+        "operationId": "downloadOrpCsv",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/csv": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orp/{month}/exported": {
+      "post": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Mark Exported",
+        "description": "Le PDF passe par l'impression du navigateur : l'interface signale l'export.",
+        "operationId": "markOrpExported",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orp/{month}/submission": {
+      "put": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Submit Month",
+        "description": "« Marquer comme remis » : la remise est datée, les modifications repartent de zéro.",
+        "operationId": "submitOrpMonth",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Cancel Submission",
+        "operationId": "cancelOrpSubmission",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4334,6 +4531,248 @@
           "status"
         ],
         "title": "OfferStatusOut"
+      },
+      "OrpHolder": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "address"
+        ],
+        "title": "OrpHolder",
+        "description": "En-tête du formulaire : nom et adresse saisis dans les Réglages."
+      },
+      "OrpMonthOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "en_cours",
+              "a_remettre",
+              "remis"
+            ],
+            "title": "State"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Due Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "incomplete": {
+            "type": "integer",
+            "title": "Incomplete"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/OrpRowOut"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "exported_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exported At"
+          },
+          "changed_after_submit": {
+            "type": "boolean",
+            "title": "Changed After Submit"
+          },
+          "holder": {
+            "$ref": "#/components/schemas/OrpHolder"
+          },
+          "searches": {
+            "items": {
+              "$ref": "#/components/schemas/OrpSearchOut"
+            },
+            "type": "array",
+            "title": "Searches"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "state",
+          "due_date",
+          "count",
+          "target",
+          "incomplete",
+          "rows",
+          "submitted_at",
+          "exported_at",
+          "changed_after_submit",
+          "holder",
+          "searches"
+        ],
+        "title": "OrpMonthOut"
+      },
+      "OrpRowOut": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "assigned": {
+            "type": "string",
+            "title": "Assigned"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "date",
+          "company",
+          "address",
+          "contact",
+          "phone",
+          "job_title",
+          "rate",
+          "method",
+          "assigned",
+          "result",
+          "missing"
+        ],
+        "title": "OrpRowOut"
+      },
+      "OrpSearchOut": {
+        "properties": {
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "results_count": {
+            "type": "integer",
+            "title": "Results Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "received_at",
+          "source",
+          "label",
+          "results_count"
+        ],
+        "title": "OrpSearchOut"
       },
       "ParseStatus": {
         "type": "string",
