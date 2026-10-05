@@ -80,6 +80,9 @@ const STATUS_LABEL: Partial<Record<Offer["status"], string>> = {
 const statusLabel = computed(() =>
   props.offer.expired_at && props.offer.status !== "applied" ? "Expirée" : (STATUS_LABEL[props.offer.status] ?? ""),
 );
+const pillClass = computed(() =>
+  props.offer.expired_at && props.offer.status !== "applied" ? "expired" : props.offer.status,
+);
 const ADDRESS_SOURCE: Record<string, string> = {
   page: "annonce",
   registry: "registre IDE",
@@ -228,7 +231,7 @@ function initial(offer: Offer): string {
       <div class="status-line">
         <span
           v-if="statusLabel"
-          :class="['badge', offer.status === 'applied' ? 'new' : '']"
+          :class="['status-pill', pillClass]"
           data-test="status-pill"
         >{{ statusLabel }}</span>
         <RouterLink

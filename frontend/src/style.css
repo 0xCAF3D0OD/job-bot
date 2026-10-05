@@ -754,3 +754,34 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .sites-list li.paused { opacity: 0.6; }
 .site-main { display: grid; flex: 1; min-width: 12rem; }
 .site-stats { white-space: nowrap; }
+
+/* Page Offres (docs/14 §1) : sans offre ouverte, la liste est centrée ; à l'ouverture, elle
+   se décale et le détail entre par la droite. */
+@media (min-width: 1201px) {
+  .offers-grid { grid-template-columns: 16.5rem minmax(0, 1fr) minmax(0, 0fr); transition: grid-template-columns 0.28s ease; }
+  .offers-grid.has-selection { grid-template-columns: 16.5rem minmax(0, 1fr) minmax(0, 1.05fr); }
+  .offers-grid .detail-column { min-width: 0; overflow-x: hidden; }
+  .offers-grid:not(.has-selection) { column-gap: 0; }
+  .offers-grid:not(.has-selection) .filters-column { margin-right: 1.5rem; }
+  .offers-list { width: 100%; max-width: 52rem; justify-self: center; transition: max-width 0.28s ease; }
+  .offers-grid.has-selection .offers-list { max-width: 100%; }
+  .detail-enter-active, .detail-leave-active { transition: opacity 0.25s ease, transform 0.28s ease; }
+  .detail-enter-from, .detail-leave-to { opacity: 0; transform: translateX(2.5rem); }
+}
+@media (max-width: 1200px) {
+  .detail-enter-active, .detail-leave-active { transition: opacity 0.2s ease; }
+  .detail-enter-active .detail-panel, .detail-leave-active .detail-panel { transition: transform 0.25s ease; }
+  .detail-enter-from, .detail-leave-to { opacity: 0; }
+  .detail-enter-from .detail-panel, .detail-leave-to .detail-panel { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .offers-grid, .offers-list, .detail-enter-active, .detail-leave-active,
+  .detail-enter-active .detail-panel, .detail-leave-active .detail-panel { transition: none !important; }
+}
+.segmented:has(> button:nth-child(4)) { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+
+/* Pastilles de statut (docs/14 §2) : même taille partout, seule la couleur change. */
+.status-pill { display: inline-flex; flex: none; align-items: center; justify-content: center; min-height: 1.6rem; padding: 0.2rem 0.75rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; line-height: 1.2; white-space: nowrap; background: var(--accent-soft); color: var(--accent); }
+.status-pill.applied { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.status-pill.later, .status-pill.ignored, .status-pill.filtered_out { background: var(--band); color: var(--muted); border: 1px solid var(--border); }
+.status-pill.expired { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }

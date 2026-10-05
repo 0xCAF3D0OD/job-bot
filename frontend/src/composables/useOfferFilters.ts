@@ -4,7 +4,7 @@ import { useRoute, useRouter, type LocationQuery } from "vue-router";
 import type { Source } from "../api/client";
 
 export type View = "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
-export type Sort = "recent" | "popular" | "score";
+export type Sort = "recent" | "popular" | "score" | "activity";
 
 export interface OfferFilters {
   view: View;
@@ -29,7 +29,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
 };
 
 const VIEWS: View[] = ["to_review", "filtered_out", "later", "in_progress", "expired", "all"];
-const SORTS: Sort[] = ["recent", "popular", "score"];
+const SORTS: Sort[] = ["recent", "popular", "score", "activity"];
 
 function list(value: LocationQuery[string] | undefined): string[] {
   const values = Array.isArray(value) ? value : value ? [value] : [];

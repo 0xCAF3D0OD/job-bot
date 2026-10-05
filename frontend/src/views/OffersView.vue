@@ -297,30 +297,24 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         </button>
       </div>
 
-      <div
-        v-if="selected"
-        class="detail-column"
-        @click.self="selectedId = null"
-      >
-        <OfferDetail
-          :offer="selected"
-          :chunk-titles="chunkTitles"
-          @close="selectedId = null"
-          @status="setStatus"
-          @applied="openApplication"
-          @expiry="setExpiry"
-          @address="setAddress"
-          @changed="load()"
-        />
-      </div>
-      <div
-        v-else
-        class="detail-column placeholder"
-      >
-        <div class="detail-panel empty-detail">
-          Choisis une offre pour voir son détail.
+      <Transition name="detail">
+        <div
+          v-if="selected"
+          class="detail-column"
+          @click.self="selectedId = null"
+        >
+          <OfferDetail
+            :offer="selected"
+            :chunk-titles="chunkTitles"
+            @close="selectedId = null"
+            @status="setStatus"
+            @applied="openApplication"
+            @expiry="setExpiry"
+            @address="setAddress"
+            @changed="load()"
+          />
         </div>
-      </div>
+      </Transition>
     </div>
   </section>
   <ApplicationForm
