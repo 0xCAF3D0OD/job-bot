@@ -146,3 +146,10 @@ La PR a sert tout de suite : tu peux suivre les candidatures que tu envoies déj
 - **Coût** : environ 0,05 $ par CV (moins de texte produit que pour la lettre).
 - **Une page** : la mise en page ne coupe rien ; c'est la sélection des blocs qui garde le CV sur une page.
 - La candidature retient aussi le CV qui compte au moment de « Marquer comme envoyée ».
+
+## Correctif d'impression (2026-10-05)
+
+- Seule la feuille du document est imprimée : une copie est placée à part et le reste de la page est retiré de la mise en page (avant, il ajoutait des pages blanches).
+- Marges de page à zéro, marge recréée dans la feuille : le navigateur n'imprime plus le titre, l'adresse de la page, la date ni les numéros de page (vérifié avec Chrome ; dans Firefox, décocher au besoin « Imprimer les en-têtes et pieds de page » dans « Plus de paramètres », réglage mémorisé).
+- Un document qui dépasse à peine d'une page (moins d'un tiers de page en trop) est légèrement réduit pour tenir sur une page de moins ; une deuxième page bien remplie est gardée.
+- Nom de fichier proposé : « CV - Nom - Entreprise », « Lettre - Entreprise », « Preuves ORP - AAAA-MM ».

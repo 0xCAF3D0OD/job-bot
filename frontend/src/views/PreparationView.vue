@@ -8,6 +8,7 @@ import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import CvPanel from "../components/CvPanel.vue";
 import PageHero from "../components/PageHero.vue";
+import { printSheet } from "../composables/usePrint";
 import { expiredText } from "../format";
 
 const route = useRoute();
@@ -168,7 +169,8 @@ async function save(): Promise<void> {
 }
 
 function print(): void {
-  window.print();
+  const sheet = document.querySelector<HTMLElement>(".letter-sheet");
+  if (sheet) printSheet(sheet, { title: `Lettre - ${offer.value?.company ?? offer.value?.title ?? "candidature"}` });
 }
 
 function edited(): void {
