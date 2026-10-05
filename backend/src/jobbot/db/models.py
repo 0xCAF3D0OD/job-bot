@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import BigInteger, DateTime, ForeignKey, Text, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from jobbot.db.base import Base
@@ -174,5 +174,53 @@ class Evaluation(Base):
     filter_reasons: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     criteria_hash: Mapped[str] = mapped_column(Text)
     evaluated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+# --- Documents et blocs de profil (0.3) -----------------------------------------------
+
+
+class ChunkKind(StrEnum):
+    EXPERIENCE = "experience"
+    COMPETENCE = "competence"
+    FORMATION = "formation"
+    PREFERENCE = "preference"
+    REDHIBITOIRE = "redhibitoire"
+    TON = "ton"
+
+
+class Document(Base):
+    """Document déposé par Kevin (CV, certificats…). Le fichier est dans le stockage."""
+
+    __tablename__ = "documents"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    filename: Mapped[str] = mapped_column(Text)
+    doc_type: Mapped[str] = mapped_column(Text)
+    size: Mapped[int]
+    sha256: Mapped[str] = mapped_column(Text, unique=True)
+    storage_key: Mapped[str] = mapped_column(Text)
+    text_status: Mapped[str] = mapped_column(Text)
+    extracted_text: Mapped[str] = mapped_column(Text, default="")
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class ProfileChunk(Base):
+    """Bloc de profil : la seule source de vérité de l'IA sur Kevin (cadrage §3)."""
+
+    __tablename__ = "profile_chunks"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[int | None] = mapped_column(ForeignKey("documents.id", ondelete="SET NULL"))
+    kind: Mapped[str] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    content: Mapped[str] = mapped_column(Text)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
