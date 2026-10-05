@@ -90,7 +90,7 @@ applications  id, offer_id UNIQUE, sent_at, method (electronique|ecrit|telephone
               job_title, rate_text?, status (en_attente|relancee|entretien|refus|engagement|sans_reponse),
               status_reason?, status_at?, interview_at?, letter_draft_id?, cv_draft_id?,
               reminded_at?, orp_month (AAAA-MM)
-settings      + coordonnées : identity_name, identity_address, identity_phone, identity_email
+settings      + coordonnées : identity_name, identity_street, identity_postcode, identity_city, identity_phone, identity_email
 ```
 
 ## 8. Documents produits

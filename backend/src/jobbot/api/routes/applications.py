@@ -267,7 +267,9 @@ async def delete_application(request: Request, application_id: int) -> None:
 
 IDENTITY_KEYS = {
     "name": "identity_name",
-    "address": "identity_address",
+    "street": "identity_street",
+    "postcode": "identity_postcode",
+    "city": "identity_city",
     "phone": "identity_phone",
     "email": "identity_email",
 }
@@ -275,15 +277,24 @@ IDENTITY_KEYS = {
 
 class Identity(BaseModel):
     name: ShortText | None = None
-    # Plusieurs lignes possibles (rue, NPA et localité).
-    address: Annotated[str, Field(max_length=500)] | None = None
+    street: ShortText | None = None
+    # NPA suisse : quatre chiffres.
+    postcode: Annotated[str, Field(max_length=20)] | None = None
+    city: ShortText | None = None
     phone: ShortText | None = None
     email: ShortText | None = None
 
-    @field_validator("name", "address", "phone", "email")
+    @field_validator("name", "street", "postcode", "city", "phone", "email")
     @classmethod
     def _strip(cls, value: str | None) -> str | None:
         return _clean(value)
+
+    @field_validator("postcode")
+    @classmethod
+    def _postcode(cls, value: str | None) -> str | None:
+        if value is not None and not (len(value) == 4 and value.isdigit()):
+            raise ValueError("NPA attendu : quatre chiffres")
+        return value
 
 
 @router.get("/identity", operation_id="getIdentity")
