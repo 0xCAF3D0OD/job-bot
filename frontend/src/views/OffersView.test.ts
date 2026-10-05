@@ -232,6 +232,7 @@ describe("tri et candidature", () => {
     PATCH.mockResolvedValue({ data: { id: 1, status: "later" } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=more]").trigger("click");
     await wrapper.find("[data-test=later]").trigger("click");
     await flushPromises();
     expect(PATCH).toHaveBeenCalledWith("/api/offers/{offer_id}/status", {
@@ -321,6 +322,7 @@ describe("expiration signalée", () => {
     PATCH.mockResolvedValue({ data: { id: 1 } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=more]").trigger("click");
     await wrapper.find("[data-test=flag-expired]").trigger("click");
     await flushPromises();
     expect(PATCH).toHaveBeenCalledWith("/api/offers/{offer_id}/expiry", {
@@ -333,11 +335,45 @@ describe("expiration signalée", () => {
     const expired = await mountAt("/offres?statut=expired");
     await expired.find("[data-test=offer]").trigger("click");
     expect(expired.find("[data-test=expired]").text()).toContain("Signalée expirée par toi");
+    await expired.find("[data-test=more]").trigger("click");
     await expired.find("[data-test=not-expired]").trigger("click");
     await flushPromises();
     expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/expiry", {
       params: { path: { offer_id: 5 } },
       body: { expired: false },
+    });
+  });
+});
+
+describe("détail allégé et adresse", () => {
+  it("pastille de statut, menu « ⋯ » et adresse modifiable", async () => {
+    PATCH.mockResolvedValue({ data: { id: 1 } });
+    mockOffers(
+      page([
+        offer(1, "Ingénieur système", {
+          status: "later",
+          company_address: "Chemin de l'Exemple 10\n1206 Genève",
+          company_address_source: "page",
+        }),
+      ]),
+    );
+    const wrapper = await mountAt("/offres?statut=later");
+    await wrapper.find("[data-test=offer]").trigger("click");
+    expect(wrapper.find("[data-test=status-pill]").text()).toBe("Plus tard");
+    expect(wrapper.find("[data-test=later]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=address]").text()).toContain("Chemin de l'Exemple 10, 1206 Genève");
+    expect(wrapper.find("[data-test=address]").text()).toContain("annonce");
+
+    await wrapper.find("[data-test=more]").trigger("click");
+    expect(wrapper.find("[data-test=back-to-review]").exists()).toBe(true);
+
+    await wrapper.find("[data-test=edit-address]").trigger("click");
+    await wrapper.find("[data-test=address-input]").setValue("Rue du Port 2\n1201 Genève");
+    await wrapper.find("[data-test=save-address]").trigger("submit");
+    await flushPromises();
+    expect(PATCH).toHaveBeenCalledWith("/api/offers/{offer_id}/address", {
+      params: { path: { offer_id: 1 } },
+      body: { address: "Rue du Port 2\n1201 Genève" },
     });
   });
 });

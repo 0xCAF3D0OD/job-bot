@@ -144,6 +144,9 @@ class Offer(Base):
     expiry_source: Mapped[str | None] = mapped_column(Text)
     # Choix de Kevin (docs/11 §1) : « expired » ou « alive », prioritaire sur la détection.
     expiry_override: Mapped[str | None] = mapped_column(Text)
+    # Adresse de l'entreprise (docs/12 §2) et sa source : page, registry, letter ou manual.
+    company_address: Mapped[str | None] = mapped_column(Text)
+    company_address_source: Mapped[str | None] = mapped_column(Text)
     # Dernière revérification de la page jobup.
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

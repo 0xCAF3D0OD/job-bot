@@ -104,6 +104,17 @@ async function setExpiry(expired: boolean): Promise<void> {
   await load();
 }
 
+async function setAddress(address: string): Promise<void> {
+  const offer = selected.value;
+  if (!offer) return;
+  const { error } = await api.PATCH("/api/offers/{offer_id}/address", {
+    params: { path: { offer_id: offer.id } },
+    body: { address: address.trim() || null },
+  });
+  notice.value = error ? "Adresse refusée (300 caractères au plus)." : "Adresse enregistrée.";
+  await load();
+}
+
 async function openApplication(): Promise<void> {
   const offer = selected.value;
   if (!offer) return;
@@ -309,6 +320,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           @status="setStatus"
           @applied="openApplication"
           @expiry="setExpiry"
+          @address="setAddress"
         />
       </div>
       <div

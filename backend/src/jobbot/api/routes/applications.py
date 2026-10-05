@@ -119,6 +119,36 @@ async def set_offer_expiry(request: Request, offer_id: int, body: OfferExpiryIn)
         )
 
 
+class OfferAddressIn(BaseModel):
+    # None ou vide : efface l'adresse.
+    address: Annotated[str, Field(max_length=300)] | None = None
+
+
+class OfferAddressOut(BaseModel):
+    id: int
+    company_address: str | None
+    company_address_source: str | None
+
+
+@router.patch("/offers/{offer_id}/address", operation_id="setOfferAddress")
+async def set_offer_address(
+    request: Request, offer_id: int, body: OfferAddressIn
+) -> OfferAddressOut:
+    """Adresse corrigée ou saisie par Kevin : prioritaire sur toute source automatique."""
+    address = "\n".join(line.strip() for line in (body.address or "").splitlines() if line.strip())
+    async with _runtime(request).sessionmaker.begin() as session:
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+        offer.company_address = address or None
+        offer.company_address_source = "manual" if address else None
+        return OfferAddressOut(
+            id=offer.id,
+            company_address=offer.company_address,
+            company_address_source=offer.company_address_source,
+        )
+
+
 # --- Candidatures ---------------------------------------------------------------------
 
 
@@ -211,7 +241,8 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
     return ApplicationPrefill(
         offer_id=offer.id,
         sent_at=_today(),
-        company_address=employer.get("address"),
+        # Adresse connue de l'offre (annonce, registre, saisie), sinon celle relevée par l'IA.
+        company_address=offer.company_address or employer.get("address"),
         contact_name=employer.get("contact_name"),
         contact_phone=employer.get("contact_phone"),
         company=offer.company or "Entreprise non indiquée",

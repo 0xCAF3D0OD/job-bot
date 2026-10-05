@@ -209,3 +209,55 @@ async def test_description_feeds_the_filter(fresh: Runtime, web: FakeWeb) -> Non
     await service.enrich(fresh)  # la page indique « Temporaire »
     await run_filter(fresh)
     assert (await get(fresh, offer)).status == "filtered_out"
+
+
+# --- Adresse du lieu de travail (docs/12 §2.1) ------------------------------------------
+
+LOCATION = (
+    '"jobLocation": {"@type": "Place", "address": {"@type": "PostalAddress",'
+    ' "streetAddress": "Chemin de l\'Exemple  10", "addressRegion": "Genève",'
+    ' "postalCode": "1206", "addressCountry": "CH"}}, "employmentType"'
+)
+
+
+def page_with_address() -> str:
+    return page("jobup-externe.html").replace('"employmentType"', LOCATION, 1)
+
+
+def test_address_from_job_location() -> None:
+    assert (
+        parse_jobup_page(page_with_address(), URL).address == "Chemin de l'Exemple 10\n1206 Genève"
+    )
+    assert parse_jobup_page(page("jobup-externe.html"), URL).address is None
+
+
+def url(n: int) -> str:
+    return f"https://www.jobup.ch/fr/emplois/detail/{n:08d}-0000-4000-8000-000000000000/"
+
+
+async def test_enrich_and_recheck_store_address(fresh: Runtime, web: FakeWeb) -> None:
+    new = await add(fresh, 1)
+    manual = await add(fresh, 2)
+    old = await add(fresh, 3)
+    for n in (1, 2, 3):
+        web.responses[url(n)] = FetchResult(200, page_with_address(), url(n))
+    async with fresh.sessionmaker.begin() as session:
+        await session.execute(
+            update(Offer)
+            .where(Offer.id == manual)
+            .values(company_address="Rue saisie 1\n1000 Lausanne", company_address_source="manual")
+        )
+        await session.execute(
+            update(Offer)
+            .where(Offer.id == old)
+            .values(enrich_status="ok", enriched_at=datetime.now(UTC) - timedelta(days=4))
+        )
+    await service.enrich(fresh)
+    assert ((await get(fresh, new)).company_address_source) == "page"
+    assert (await get(fresh, manual)).company_address == "Rue saisie 1\n1000 Lausanne"
+    # Lue avant 0.7.1 : l'adresse arrive à la revérification.
+    rechecked = await get(fresh, old)
+    assert (rechecked.company_address, rechecked.company_address_source) == (
+        "Chemin de l'Exemple 10\n1206 Genève",
+        "page",
+    )

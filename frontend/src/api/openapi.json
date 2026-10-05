@@ -1244,6 +1244,59 @@
         }
       }
     },
+    "/api/offers/{offer_id}/address": {
+      "patch": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Set Offer Address",
+        "description": "Adresse corrigée ou saisie par Kevin : prioritaire sur toute source automatique.",
+        "operationId": "setOfferAddress",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferAddressIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferAddressOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/application-prefill": {
       "get": {
         "tags": [
@@ -4322,6 +4375,61 @@
         ],
         "title": "NotificationsStatus"
       },
+      "OfferAddressIn": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          }
+        },
+        "type": "object",
+        "title": "OfferAddressIn"
+      },
+      "OfferAddressOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "company_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address"
+          },
+          "company_address_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company_address",
+          "company_address_source"
+        ],
+        "title": "OfferAddressOut"
+      },
       "OfferCounts": {
         "properties": {
           "to_review": {
@@ -4680,6 +4788,34 @@
               }
             ],
             "title": "Expiry Override"
+          },
+          "company_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address"
+          },
+          "company_address_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "page",
+                  "registry",
+                  "letter",
+                  "manual"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address Source"
           },
           "filter_reasons": {
             "items": {
@@ -5548,6 +5684,34 @@
               }
             ],
             "title": "Expiry Override"
+          },
+          "company_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address"
+          },
+          "company_address_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "page",
+                  "registry",
+                  "letter",
+                  "manual"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address Source"
           },
           "filter_reasons": {
             "items": {

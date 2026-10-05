@@ -83,6 +83,9 @@ class OfferOut(BaseModel):
     expiry_source: Literal["page", "age", "manual"] | None = None
     # Choix de Kevin, prioritaire sur la détection automatique.
     expiry_override: Literal["expired", "alive"] | None = None
+    # Adresse de l'entreprise (docs/12 §2) et sa source.
+    company_address: str | None = None
+    company_address_source: Literal["page", "registry", "letter", "manual"] | None = None
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
     filter_reasons: list[str] = []
     # Note et résumé de l'IA (docs/06), absents tant que l'offre n'est pas notée.

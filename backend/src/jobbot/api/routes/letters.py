@@ -105,7 +105,8 @@ async def _recipient(session: AsyncSession, offer: Offer, draft: Draft) -> Recip
     if application is not None:
         return Recipient(application.company, application.company_address, application.contact_name)
     employer = draft.content.get("employer") or {}
-    return Recipient(offer.company, employer.get("address"), employer.get("contact_name"))
+    address = offer.company_address or employer.get("address")
+    return Recipient(offer.company, address, employer.get("contact_name"))
 
 
 def _document(identity: Identity, recipient: Recipient, draft: Draft) -> LetterDocument:
@@ -216,6 +217,11 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
             model=raw.model,
             prompt_version=letter_llm.PROMPT_VERSION,
         )
+        offer = await session.get(Offer, offer_id)
+        if offer is not None and offer.company_address is None and output.employer.address:
+            # Dernier recours (docs/12 §2.3) : l'adresse relevée dans l'annonce par l'IA.
+            offer.company_address = output.employer.address
+            offer.company_address_source = "letter"
         out = await _render(session, draft)
     log.info("letter_written", offer_id=offer_id, version=out.version, language=out.language)
     return out
