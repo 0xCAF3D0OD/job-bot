@@ -2,7 +2,8 @@
 
 from jobbot.collect.service import collect
 from jobbot.runtime import Runtime
-from jobbot.worker.jobs import RunContext, register
+from jobbot.worker.jobs import RunContext, execute, register
+from jobbot.worker.tasks.filter import FILTER_JOB
 
 COLLECT_JOB = "collect"
 # Toutes les 2 heures (UTC), utile de 7 h à 21 h, heure suisse.
@@ -15,3 +16,6 @@ async def collect_job(runtime: Runtime, ctx: RunContext) -> None:
     result = await collect(runtime, ctx.run_id)
     ctx.items_in = result.fetched
     ctx.items_out = result.new_offers
+    # Les nouvelles offres passent aussitôt par le filtre (exécution tracée à part).
+    if result.new_offers:
+        await execute(runtime, FILTER_JOB)

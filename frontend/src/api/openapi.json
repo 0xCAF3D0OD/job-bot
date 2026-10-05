@@ -227,7 +227,7 @@
           "collect"
         ],
         "summary": "List Offers",
-        "description": "`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.",
+        "description": "`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.\n`view` : à examiner, écartées par le filtre, ou toutes.",
         "operationId": "listOffers",
         "parameters": [
           {
@@ -265,6 +265,21 @@
               "type": "string",
               "default": "recent",
               "title": "Sort"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "to_review",
+                "filtered_out",
+                "all"
+              ],
+              "type": "string",
+              "default": "all",
+              "title": "View"
             }
           }
         ],
@@ -312,6 +327,148 @@
           },
           "409": {
             "description": "Collecte non configurée"
+          }
+        }
+      }
+    },
+    "/api/criteria": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Criteria",
+        "operationId": "getCriteria",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CriteriaOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Criteria",
+        "description": "Enregistre les prérequis et relance le filtre sur les offres non triées à la main.",
+        "operationId": "saveCriteria",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriteriaIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CriteriaOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/filter": {
+      "post": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Start Filter",
+        "operationId": "startFilter",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Settings",
+        "operationId": "getSettings",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Settings",
+        "operationId": "saveSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -387,6 +544,90 @@
         ],
         "title": "CollectStatus"
       },
+      "ContractType": {
+        "type": "string",
+        "enum": [
+          "stage",
+          "apprentissage",
+          "temporaire",
+          "freelance"
+        ],
+        "title": "ContractType"
+      },
+      "CriteriaIn": {
+        "properties": {
+          "locations": {
+            "items": {
+              "type": "string",
+              "maxLength": 80,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Locations"
+          },
+          "remote_ok": {
+            "type": "boolean",
+            "title": "Remote Ok",
+            "default": false
+          },
+          "min_rate": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Rate"
+          },
+          "excluded_types": {
+            "items": {
+              "$ref": "#/components/schemas/ContractType"
+            },
+            "type": "array",
+            "title": "Excluded Types"
+          },
+          "banned_words": {
+            "items": {
+              "type": "string",
+              "maxLength": 80,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Banned Words"
+          },
+          "unspoken_languages": {
+            "items": {
+              "$ref": "#/components/schemas/Language"
+            },
+            "type": "array",
+            "title": "Unspoken Languages"
+          }
+        },
+        "type": "object",
+        "title": "CriteriaIn"
+      },
+      "CriteriaOut": {
+        "properties": {
+          "criteria": {
+            "$ref": "#/components/schemas/CriteriaIn"
+          },
+          "keywords": {
+            "$ref": "#/components/schemas/KeywordsOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "criteria",
+          "keywords"
+        ],
+        "title": "CriteriaOut"
+      },
       "DatabaseStatus": {
         "properties": {
           "ok": {
@@ -440,6 +681,23 @@
           "error"
         ],
         "title": "DatabaseStatus"
+      },
+      "FilterResponse": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "already_queued"
+            ],
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "FilterResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -546,6 +804,83 @@
         ],
         "title": "JobRunStatus"
       },
+      "KeywordsOut": {
+        "properties": {
+          "contract_types": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ContractType"
+            },
+            "type": "object",
+            "title": "Contract Types"
+          },
+          "language_names": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/Language"
+            },
+            "type": "object",
+            "title": "Language Names"
+          },
+          "requirement_words": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requirement Words"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contract_types",
+          "language_names",
+          "requirement_words"
+        ],
+        "title": "KeywordsOut",
+        "description": "Mots-clés cherchés par le filtre, affichés sous chaque case du formulaire."
+      },
+      "Language": {
+        "type": "string",
+        "enum": [
+          "allemand",
+          "italien",
+          "anglais"
+        ],
+        "title": "Language"
+      },
+      "OfferCounts": {
+        "properties": {
+          "to_review": {
+            "type": "integer",
+            "title": "To Review"
+          },
+          "filtered_out": {
+            "type": "integer",
+            "title": "Filtered Out"
+          },
+          "all": {
+            "type": "integer",
+            "title": "All"
+          }
+        },
+        "type": "object",
+        "required": [
+          "to_review",
+          "filtered_out",
+          "all"
+        ],
+        "title": "OfferCounts"
+      },
       "OfferLinkOut": {
         "properties": {
           "source": {
@@ -651,6 +986,14 @@
             },
             "type": "array",
             "title": "Links"
+          },
+          "filter_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filter Reasons",
+            "default": []
           }
         },
         "type": "object",
@@ -682,12 +1025,16 @@
           "total": {
             "type": "integer",
             "title": "Total"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/OfferCounts"
           }
         },
         "type": "object",
         "required": [
           "items",
-          "total"
+          "total",
+          "counts"
         ],
         "title": "OfferPage"
       },
@@ -902,6 +1249,14 @@
             "type": "array",
             "title": "Links"
           },
+          "filter_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filter Reasons",
+            "default": []
+          },
           "is_first": {
             "type": "boolean",
             "title": "Is First"
@@ -1036,6 +1391,39 @@
           "total"
         ],
         "title": "SearchPage"
+      },
+      "SettingsModel": {
+        "properties": {
+          "orp_monthly_target": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orp Monthly Target"
+          },
+          "notify_score_threshold": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Notify Score Threshold",
+            "default": 70
+          },
+          "llm_monthly_budget_chf": {
+            "type": "number",
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Llm Monthly Budget Chf",
+            "default": 10
+          }
+        },
+        "type": "object",
+        "title": "SettingsModel"
       },
       "Source": {
         "type": "string",

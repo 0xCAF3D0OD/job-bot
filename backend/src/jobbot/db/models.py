@@ -145,3 +145,34 @@ class OfferSighting(Base):
     position: Mapped[int]
     # Vrai si l'offre est apparue pour la première fois dans cette alerte.
     is_first: Mapped[bool] = mapped_column(default=False)
+
+
+# --- Prérequis et filtre (0.3) --------------------------------------------------------
+
+
+class Criterion(Base):
+    """Une règle de prérequis par ligne (docs/04 §8), valeur en JSON."""
+
+    __tablename__ = "criteria"
+
+    kind: Mapped[str] = mapped_column(Text, primary_key=True)
+    value: Mapped[Any] = mapped_column(JSONB, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class Evaluation(Base):
+    """Résultat du filtre pour une offre ; la note IA s'y ajoutera en 0.4."""
+
+    __tablename__ = "evaluations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"), unique=True)
+    filter_passed: Mapped[bool]
+    # Liste de {"rule": …, "message": …}
+    filter_reasons: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    criteria_hash: Mapped[str] = mapped_column(Text)
+    evaluated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

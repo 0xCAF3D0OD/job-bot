@@ -261,6 +261,12 @@ async def test_collect_job_records_counts(collect_runtime: Runtime, mailbox: Fak
         search = await session.scalar(select(Search))
     assert run is not None and (run.items_in, run.items_out) == (1, 1)
     assert search is not None and search.job_run_id == run.run_id
+    # Le filtre est enchaîné après une collecte qui a trouvé de nouvelles offres.
+    async with collect_runtime.sessionmaker() as session:
+        filter_run = await session.scalar(select(JobRun).where(JobRun.job == "filter"))
+        offer = await session.scalar(select(Offer))
+    assert filter_run is not None and filter_run.status == "success"
+    assert offer is not None and offer.status == "to_review"
 
 
 @pytest.mark.parametrize(
