@@ -93,3 +93,30 @@ it("onglets par statut et raisons d'exclusion", async () => {
   await card.trigger("click");
   expect(wrapper.find("[data-test=reasons]").text()).toContain("Type : stage");
 });
+
+it("bouton de candidature chez l'employeur et texte complet", async () => {
+  GET.mockResolvedValue({
+    data: {
+      items: [
+        offer(7, "Ingénieur VMware", {
+          apply_url: "https://www.aplitrak.com/?adid=x",
+          apply_kind: "external",
+          description: "Notre client recherche un ingénieur.",
+          employment_type: "Temporaire",
+          enrich_status: "ok",
+        }),
+      ],
+      total: 1,
+      counts: { to_review: 1, filtered_out: 0, all: 1 },
+    },
+  });
+  const wrapper = mount(OffersView);
+  await flushPromises();
+  await wrapper.find("[data-test=offer]").trigger("click");
+  const apply = wrapper.find("[data-test=apply]");
+  expect(apply.text()).toContain("Postuler chez l'employeur");
+  expect(apply.attributes("href")).toBe("https://www.aplitrak.com/?adid=x");
+  expect(apply.attributes("rel")).toBe("noopener noreferrer");
+  expect(wrapper.find("[data-test=description]").text()).toBe("Notre client recherche un ingénieur.");
+  expect(wrapper.text()).toContain("Temporaire");
+});

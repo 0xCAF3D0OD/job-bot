@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     imap_folder: str = "INBOX"
     imap_backfill_days: int = Field(default=30, ge=1, le=365)
 
+    # Lecture des pages d'offres jobup après la collecte (docs/05). false : désactivée.
+    enrich_enabled: bool = True
+
     @field_validator("database_url")
     @classmethod
     def _check_database_url(cls, value: SecretStr) -> SecretStr:

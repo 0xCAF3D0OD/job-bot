@@ -221,8 +221,39 @@ onMounted(() => void load());
             <h2>{{ selected.title }}</h2>
             <span class="detail">{{ selected.company ?? "Entreprise non indiquée" }}</span>
           </div>
+          <div class="actions">
+            <a
+              v-if="selected.apply_url"
+              :href="selected.apply_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-test="apply"
+            >{{ selected.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" }}
+              <AppIcon name="chevron" /></a>
+            <a
+              v-for="link in selected.links"
+              :key="link.source"
+              :class="{ secondary: selected.apply_url }"
+              :href="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+            >Voir sur {{ sourceLabel[link.source] }} <AppIcon name="chevron" /></a>
+          </div>
           <p
-            v-if="selected.snippet"
+            v-if="selected.enrich_status === 'expired'"
+            class="badge reason"
+          >
+            L'annonce n'est plus en ligne sur jobup.
+          </p>
+          <div
+            v-if="selected.description"
+            class="full-text"
+            data-test="description"
+          >
+            {{ selected.description }}
+          </div>
+          <p
+            v-else-if="selected.snippet"
             class="detail-snippet"
           >
             {{ selected.snippet }}
@@ -262,16 +293,11 @@ onMounted(() => void load());
               <AppIcon name="check" /><strong>Depuis.</strong>
               <span>{{ formatDate(selected.first_seen_at) }}</span>
             </li>
+            <li v-if="selected.employment_type">
+              <AppIcon name="check" /><strong>Type.</strong>
+              <span>{{ selected.employment_type }}</span>
+            </li>
           </ul>
-          <div class="actions">
-            <a
-              v-for="link in selected.links"
-              :key="link.source"
-              :href="link.url"
-              target="_blank"
-              rel="noopener noreferrer"
-            >Voir sur {{ sourceLabel[link.source] }} <AppIcon name="chevron" /></a>
-          </div>
         </article>
         <div
           v-else

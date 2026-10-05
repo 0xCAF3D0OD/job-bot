@@ -116,6 +116,14 @@ class Offer(Base):
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     seen_count: Mapped[int] = mapped_column(default=1)
+    # Lecture de la page de l'offre (jobup seulement, docs/05).
+    apply_url: Mapped[str | None] = mapped_column(Text)
+    apply_kind: Mapped[str | None] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
+    employment_type: Mapped[str | None] = mapped_column(Text)
+    enrich_status: Mapped[str] = mapped_column(Text, default="pending")
+    enrich_attempts: Mapped[int] = mapped_column(default=0)
+    enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class OfferLink(Base):
@@ -224,3 +232,11 @@ class ProfileChunk(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class EnrichStatus(StrEnum):
+    PENDING = "pending"
+    OK = "ok"
+    EXPIRED = "expired"
+    FAILED = "failed"
+    SKIPPED = "skipped"  # pas de page lisible (offre Indeed)

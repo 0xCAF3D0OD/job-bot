@@ -82,7 +82,12 @@ async def run_filter(runtime: Runtime) -> FilterResult:
                     title=offer.title,
                     company=offer.company,
                     location=offer.location,
-                    snippet=offer.snippet,
+                    # Texte complet de l'annonce (jobup) quand il est connu.
+                    snippet=" ".join(
+                        part
+                        for part in (offer.snippet, offer.employment_type, offer.description)
+                        if part
+                    ),
                     rate_min=offer.rate_min,
                     rate_max=offer.rate_max,
                 ),

@@ -1,6 +1,6 @@
 # 05 — Lien de candidature externe jobup
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé le 2026-10-05, livré** (version 0.3.1).
 > Demande de Kevin (2026-10-05) : récupérer le lien vers la candidature chez l'employeur.
 
 ## 1. Ce qui est possible
@@ -24,7 +24,7 @@
   - **texte complet de l'annonce**, s'il est présent dans le même bloc JSON. C'est la même requête, et il servira à l'IA en 0.4.
 - **En cas d'échec :** au plus 3 essais par offre, espacés d'un jour au moins. Une offre expirée sur jobup est marquée `expired`.
 
-## 3. Base (migration 0005)
+## 3. Base (migration 0006)
 
 ```
 offers  + apply_url TEXT?, apply_kind (external|jobup)?, description TEXT?,
@@ -53,3 +53,11 @@ Dans le panneau de détail d'une offre :
 2. **Rythme** : 1 requête toutes les 10 s, 30 au plus par exécution (§2).
 3. **Seulement les offres à examiner**, pas les écartées (§2).
 4. **Texte complet de l'annonce** récupéré dans la même requête, pour l'IA en 0.4 (§2).
+
+## Écarts à la livraison
+
+- **Migration 0006** et non 0005 (prise par les documents et blocs de profil).
+- **Deux sources dans la page** : le bloc standard `JobPosting` (schema.org) donne le texte complet et le **type d'emploi** (« Temporaire », « CDI »…), et l'objet `applicationOptions` donne le lien de candidature.
+- **Le filtre lit aussi le texte complet et le type d'emploi** : une offre « Temporaire » est écartée si tu exclus les temporaires, même si le titre ne le dit pas. Le filtre est relancé après chaque lecture qui a abouti.
+- **Lecture désactivable** par `JOBBOT_ENRICH_ENABLED=false` (contrat d'exploitation).
+- **Liens de candidature** : ils peuvent contenir l'identifiant d'un recruteur (par exemple le paramètre `adid` d'aplitrak encode son nom et son adresse). Ils restent dans ta base locale. Dans les jeux de test, ils sont masqués.

@@ -69,6 +69,12 @@ class OfferOut(BaseModel):
     last_seen_at: datetime
     seen_count: int
     links: list[OfferLinkOut]
+    # Lien de candidature et texte complet, lus sur la page de l'offre (jobup seulement).
+    apply_url: str | None = None
+    apply_kind: Literal["external", "jobup"] | None = None
+    description: str | None = None
+    employment_type: str | None = None
+    enrich_status: Literal["pending", "ok", "expired", "failed", "skipped"] = "pending"
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
     filter_reasons: list[str] = []
 
