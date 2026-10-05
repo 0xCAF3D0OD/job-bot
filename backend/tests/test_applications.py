@@ -277,3 +277,24 @@ async def test_reminders_once_after_ten_days(rt: Runtime, sent: list[Message]) -
 )
 def test_reminders_run_once_a_day_at_nine(moment: datetime, active: bool) -> None:
     assert JOBS["reminders"].is_active_at(moment) is active
+
+
+async def test_offer_address_manual_and_prefill(api: AsyncClient, rt: Runtime) -> None:
+    offer_id = await add_offer(rt, 1)
+    saved = (
+        await api.patch(
+            f"/api/offers/{offer_id}/address", json={"address": " Rue du Port 2 \n\n1201 Genève "}
+        )
+    ).json()
+    assert saved == {
+        "id": offer_id,
+        "company_address": "Rue du Port 2\n1201 Genève",
+        "company_address_source": "manual",
+    }
+    offer = (await api.get(f"/api/offers/{offer_id}")).json()
+    assert offer["company_address_source"] == "manual"
+    prefill = (await api.get(f"/api/offers/{offer_id}/application-prefill")).json()
+    assert prefill["company_address"] == "Rue du Port 2\n1201 Genève"
+    cleared = (await api.patch(f"/api/offers/{offer_id}/address", json={"address": ""})).json()
+    assert cleared["company_address"] is None and cleared["company_address_source"] is None
+    assert (await api.patch("/api/offers/999999/address", json={})).status_code == 404

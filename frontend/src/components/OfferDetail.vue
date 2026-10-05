@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+
 import type { Offer } from "../api/client";
 import { colorIndex, expiredText, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
@@ -16,7 +18,56 @@ const emit = defineEmits<{
   status: [status: "to_review" | "later" | "ignored" | "preparing"];
   applied: [];
   expiry: [expired: boolean];
+  address: [address: string];
 }>();
+
+const STATUS_LABEL: Partial<Record<Offer["status"], string>> = {
+  preparing: "En préparation",
+  later: "Plus tard",
+  ignored: "Ignorée",
+  filtered_out: "Écartée par le filtre",
+  applied: "Candidature envoyée",
+};
+const statusLabel = computed(() =>
+  props.offer.expired_at && props.offer.status !== "applied" ? "Expirée" : (STATUS_LABEL[props.offer.status] ?? ""),
+);
+const ADDRESS_SOURCE: Record<string, string> = {
+  page: "annonce",
+  registry: "registre IDE",
+  letter: "relevée dans l'annonce",
+  manual: "saisie par toi",
+};
+
+// Menu « ⋯ » : les actions rares, hors de la vue principale (docs/12 §1).
+const menuOpen = ref(false);
+const menuRoot = ref<HTMLElement | null>(null);
+function act(action: () => void): void {
+  menuOpen.value = false;
+  action();
+}
+function onDocumentClick(event: MouseEvent): void {
+  if (menuOpen.value && menuRoot.value && !menuRoot.value.contains(event.target as Node)) menuOpen.value = false;
+}
+onMounted(() => document.addEventListener("click", onDocumentClick));
+onUnmounted(() => document.removeEventListener("click", onDocumentClick));
+
+const editingAddress = ref(false);
+const addressDraft = ref("");
+function startAddress(): void {
+  addressDraft.value = props.offer.company_address ?? "";
+  editingAddress.value = true;
+}
+function saveAddress(): void {
+  editingAddress.value = false;
+  emit("address", addressDraft.value);
+}
+watch(
+  () => props.offer.id,
+  () => {
+    editingAddress.value = false;
+    menuOpen.value = false;
+  },
+);
 
 function initial(offer: Offer): string {
   return (offer.company ?? offer.title).trim().charAt(0).toUpperCase() || "?";
@@ -33,19 +84,109 @@ function initial(offer: Offer): string {
         :class="['logo', 'large', `c${colorIndex(offer.company ?? offer.title)}`]"
         aria-hidden="true"
       >{{ initial(offer) }}</span>
-      <button
-        type="button"
-        class="close"
-        aria-label="Fermer le détail"
-        data-test="close-detail"
-        @click="$emit('close')"
-      >
-        ×
-      </button>
+      <div class="detail-top-actions">
+        <div
+          v-if="offer.status !== 'applied'"
+          ref="menuRoot"
+          class="more-menu"
+        >
+          <button
+            type="button"
+            class="close"
+            aria-label="Plus d'actions"
+            :aria-expanded="menuOpen"
+            data-test="more"
+            @click="menuOpen = !menuOpen"
+          >
+            ⋯
+          </button>
+          <ul
+            v-if="menuOpen"
+            class="menu"
+            role="menu"
+          >
+            <li v-if="offer.status === 'later' || offer.status === 'ignored' || offer.status === 'preparing'">
+              <button
+                type="button"
+                role="menuitem"
+                data-test="back-to-review"
+                @click="act(() => emit('status', 'to_review'))"
+              >
+                Remettre à examiner
+              </button>
+            </li>
+            <template v-else>
+              <li>
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-test="later"
+                  @click="act(() => emit('status', 'later'))"
+                >
+                  Plus tard
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-test="ignore"
+                  @click="act(() => emit('status', 'ignored'))"
+                >
+                  Ignorer
+                </button>
+              </li>
+            </template>
+            <li>
+              <button
+                v-if="offer.expired_at"
+                type="button"
+                role="menuitem"
+                data-test="not-expired"
+                @click="act(() => emit('expiry', false))"
+              >
+                Pas expirée
+              </button>
+              <button
+                v-else
+                type="button"
+                role="menuitem"
+                data-test="flag-expired"
+                @click="act(() => emit('expiry', true))"
+              >
+                Signaler comme expirée
+              </button>
+            </li>
+          </ul>
+        </div>
+        <button
+          type="button"
+          class="close"
+          aria-label="Fermer le détail"
+          data-test="close-detail"
+          @click="$emit('close')"
+        >
+          ×
+        </button>
+      </div>
     </div>
     <div>
       <h2>{{ offer.title }}</h2>
       <span class="detail">{{ offer.company ?? "Entreprise non indiquée" }}</span>
+      <div class="status-line">
+        <span
+          v-if="statusLabel"
+          :class="['badge', offer.status === 'applied' ? 'new' : '']"
+          data-test="status-pill"
+        >{{ statusLabel }}</span>
+        <RouterLink
+          v-if="offer.status === 'applied'"
+          to="/candidatures"
+          class="link"
+        >
+          Voir le suivi
+        </RouterLink>
+      </div>
     </div>
     <p
       v-if="offer.expired_at && offer.status !== 'applied'"
@@ -54,85 +195,81 @@ function initial(offer: Offer): string {
     >
       {{ expiredText(offer) }}
     </p>
+
     <div
-      class="triage"
-      data-test="triage"
+      class="address-line"
+      data-test="address"
     >
-      <template v-if="offer.status === 'applied'">
-        <span class="badge new">Candidature envoyée</span>
-        <RouterLink
-          to="/candidatures"
-          class="link"
-        >
-          Voir le suivi
-        </RouterLink>
-      </template>
-      <template v-else>
+      <template v-if="!editingAddress">
+        <span class="muted">Adresse :</span>
+        <span v-if="offer.company_address">
+          {{ offer.company_address.split("\n").join(", ") }}
+          <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
+        </span>
         <span
-          v-if="offer.status === 'preparing'"
-          class="badge"
-        >En préparation</span>
-        <RouterLink
-          :to="`/offres/${offer.id}/preparer`"
-          class="button-link"
-          data-test="prepare"
-        >
-          {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
-        </RouterLink>
+          v-else
+          class="hint"
+        >inconnue</span>
         <button
-          type="button"
-          class="primary small"
-          data-test="mark-applied"
-          @click="emit('applied')"
-        >
-          Marquer comme envoyée
-        </button>
-        <button
-          v-if="offer.status === 'later' || offer.status === 'ignored' || offer.status === 'preparing'"
           type="button"
           class="link"
-          data-test="back-to-review"
-          @click="emit('status', 'to_review')"
+          data-test="edit-address"
+          @click="startAddress"
         >
-          Remettre à examiner
+          {{ offer.company_address ? "Modifier" : "Ajouter" }}
         </button>
-        <template v-else>
+      </template>
+      <form
+        v-else
+        class="address-form"
+        @submit.prevent="saveAddress"
+      >
+        <textarea
+          v-model="addressDraft"
+          rows="2"
+          placeholder="Rue et numéro&#10;NPA localité"
+          aria-label="Adresse de l'entreprise"
+          data-test="address-input"
+        />
+        <div>
+          <button
+            type="submit"
+            class="primary small"
+            data-test="save-address"
+          >
+            Enregistrer
+          </button>
           <button
             type="button"
             class="link"
-            data-test="later"
-            @click="emit('status', 'later')"
+            @click="editingAddress = false"
           >
-            Plus tard
+            Annuler
           </button>
-          <button
-            type="button"
-            class="link danger"
-            data-test="ignore"
-            @click="emit('status', 'ignored')"
-          >
-            Ignorer
-          </button>
-        </template>
-        <button
-          v-if="offer.expired_at"
-          type="button"
-          class="link"
-          data-test="not-expired"
-          @click="emit('expiry', false)"
-        >
-          Pas expirée
-        </button>
-        <button
-          v-else
-          type="button"
-          class="link"
-          data-test="flag-expired"
-          @click="emit('expiry', true)"
-        >
-          Signaler comme expirée
-        </button>
-      </template>
+        </div>
+      </form>
+    </div>
+
+    <div
+      v-if="offer.status !== 'applied'"
+      class="triage"
+      data-test="triage"
+    >
+      <RouterLink
+        :to="`/offres/${offer.id}/preparer`"
+        class="button-link primary-link"
+        data-test="prepare"
+      >
+        {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+      </RouterLink>
+      <button
+        type="button"
+        class="secondary small"
+        data-test="mark-applied"
+        @click="emit('applied')"
+      >
+        Marquer comme envoyée
+      </button>
     </div>
     <div class="actions">
       <a

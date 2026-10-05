@@ -175,6 +175,10 @@ async def test_write_letter(api: AsyncClient, rt: Runtime, fake: FakeClient) -> 
     assert fake.params[0]["output_config"]["effort"] == "medium"
 
     assert await offer_status(rt, offer_id) == "preparing"
+    # Aucune adresse connue : celle relevée par l'IA devient celle de l'offre (« letter »).
+    offer = (await api.get(f"/api/offers/{offer_id}")).json()
+    assert offer["company_address"] == "Avenue de l'Exemple 5\n1003 Lausanne"
+    assert offer["company_address_source"] == "letter"
     async with rt.sessionmaker() as session:
         assert list(await session.scalars(select(LlmCall.purpose))) == ["letter"]
 

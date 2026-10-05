@@ -438,6 +438,26 @@ export interface paths {
         patch: operations["setOfferExpiry"];
         trace?: never;
     };
+    "/api/offers/{offer_id}/address": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Offer Address
+         * @description Adresse corrigée ou saisie par Kevin : prioritaire sur toute source automatique.
+         */
+        patch: operations["setOfferAddress"];
+        trace?: never;
+    };
     "/api/offers/{offer_id}/application-prefill": {
         parameters: {
             query?: never;
@@ -1423,6 +1443,20 @@ export interface components {
             /** Server */
             server: string;
         };
+        /** OfferAddressIn */
+        OfferAddressIn: {
+            /** Address */
+            address?: string | null;
+        };
+        /** OfferAddressOut */
+        OfferAddressOut: {
+            /** Id */
+            id: number;
+            /** Company Address */
+            company_address: string | null;
+            /** Company Address Source */
+            company_address_source: string | null;
+        };
         /** OfferCounts */
         OfferCounts: {
             /** To Review */
@@ -1529,6 +1563,10 @@ export interface components {
             expiry_source?: ("page" | "age" | "manual") | null;
             /** Expiry Override */
             expiry_override?: ("expired" | "alive") | null;
+            /** Company Address */
+            company_address?: string | null;
+            /** Company Address Source */
+            company_address_source?: ("page" | "registry" | "letter" | "manual") | null;
             /**
              * Filter Reasons
              * @default []
@@ -1812,6 +1850,10 @@ export interface components {
             expiry_source?: ("page" | "age" | "manual") | null;
             /** Expiry Override */
             expiry_override?: ("expired" | "alive") | null;
+            /** Company Address */
+            company_address?: string | null;
+            /** Company Address Source */
+            company_address_source?: ("page" | "registry" | "letter" | "manual") | null;
             /**
              * Filter Reasons
              * @default []
@@ -2865,6 +2907,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setOfferAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferAddressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferAddressOut"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -13,12 +13,14 @@ des offres expirées (docs/10-ergonomie.md §1).
 import asyncio
 import re
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 import httpx
 from sqlalchemy import and_, func, or_, select, update
 
+from jobbot.core.address import weaker_sources
 from jobbot.db.models import EnrichStatus, Offer, OfferLink, OfferStatus, Source
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -155,6 +157,24 @@ def _gone(page: FetchResult) -> bool:
     return page.status_code == 200 and not DETAIL_PAGE.match(page.final_url)
 
 
+async def _set_address(runtime: Runtime, offer_id: int, address: str | None) -> None:
+    """Adresse du lieu de travail lue sur la page : remplace celle d'une source moins sûre."""
+    if not address:
+        return
+    async with runtime.sessionmaker.begin() as session:
+        await session.execute(
+            update(Offer)
+            .where(
+                Offer.id == offer_id,
+                or_(
+                    Offer.company_address_source.is_(None),
+                    Offer.company_address_source.in_(weaker_sources("page")),
+                ),
+            )
+            .values(company_address=address, company_address_source="page")
+        )
+
+
 async def _expire(runtime: Runtime, offer_id: int, now: datetime) -> None:
     async with runtime.sessionmaker.begin() as session:
         await session.execute(
@@ -227,6 +247,7 @@ async def enrich(runtime: Runtime) -> EnrichResult:
             description=parsed.description,
             employment_type=parsed.employment_type,
         )
+        await _set_address(runtime, offer_id, parsed.address)
     for offer_id, url in await _recheck_candidates(runtime, now, MAX_PER_RUN - len(candidates)):
         if not ALLOWED_URL.match(url):
             continue
@@ -243,6 +264,10 @@ async def enrich(runtime: Runtime) -> EnrichResult:
             result.expired += 1
             await _expire(runtime, offer_id, now)
             continue
+        if checked is not None and checked.status_code == 200:
+            # Toujours en ligne : l'adresse, absente des lectures d'avant 0.7.1, est relevée.
+            with suppress(PageNotParsable, ValueError):
+                await _set_address(runtime, offer_id, parse_jobup_page(checked.text, url).address)
         # Toujours en ligne, ou réponse inattendue : on revérifiera dans 3 jours.
         async with runtime.sessionmaker.begin() as session:
             await session.execute(update(Offer).where(Offer.id == offer_id).values(checked_at=now))

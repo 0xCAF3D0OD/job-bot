@@ -32,6 +32,8 @@ class JobupPage:
     apply_url: str
     description: str | None
     employment_type: str | None
+    # Adresse du lieu de travail (JSON-LD « jobLocation »), sur deux lignes : rue, NPA localité.
+    address: str | None = None
 
 
 class PageNotParsable(ValueError):
@@ -87,4 +89,26 @@ def parse_jobup_page(page: str, offer_url: str) -> JobupPage:
         if isinstance(value, list):
             value = ", ".join(str(v) for v in value)
         employment_type = str(value).strip() if value else None
-    return JobupPage(kind, url, description, employment_type)
+    return JobupPage(kind, url, description, employment_type, _address(posting))
+
+
+def _address(posting: dict[str, Any] | None) -> str | None:
+    """« Chemin Malombré 10\n1206 Genève » ; None si la rue ou le NPA manque."""
+    if not posting:
+        return None
+    locations = posting.get("jobLocation")
+    location = locations[0] if isinstance(locations, list) and locations else locations
+    if not isinstance(location, dict) or not isinstance(location.get("address"), dict):
+        return None
+    address = location["address"]
+
+    def text(key: str) -> str:
+        value = address.get(key)
+        return " ".join(str(value).split()) if value else ""
+
+    street = text("streetAddress")
+    postcode = text("postalCode")
+    town = text("addressLocality") or text("addressRegion")
+    if not street or not postcode:
+        return None
+    return f"{street}\n{postcode} {town}".strip()

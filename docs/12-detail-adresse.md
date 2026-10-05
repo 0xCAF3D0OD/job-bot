@@ -1,6 +1,6 @@
 # 12 — Détail d'une offre allégé et adresse de l'entreprise (version 0.7.1)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** le 2026-10-05. PR a (détail, adresse de l'annonce) livrée ; PR b (registre IDE) à venir.
 > Retours d'usage du 2026-10-05. Complète [11-sites-etiquettes.md](11-sites-etiquettes.md) ; s'insère avant les PR b et c de la 0.7.
 
 ## 1. Actions du détail : deux boutons et un menu
@@ -59,3 +59,10 @@ Les migrations prévues au cadrage 11 pour les mots-clés et les sites deviennen
 3. **Registre du commerce (Zefix)** pour les autres : adresse du siège, retenue seulement si la correspondance est sûre, sinon tu choisis (§2.2).
 4. **Compte Zefix gratuit** à créer de ton côté (facultatif) (§2).
 5. **Deux PR** (§4).
+
+## Écarts avec la PR a
+
+- **Menu « ⋯ »** : en haut à droite du détail, à côté de la croix. Absent une fois la candidature envoyée (plus rien à trier).
+- **Adresse de la lettre** : si aucune adresse n'est connue, celle que l'IA relève pendant la rédaction devient celle de l'offre (source « relevée dans l'annonce ») ; une adresse lue sur la page jobup la remplace ensuite.
+- **Priorité des sources** : saisie > annonce > registre IDE > lettre ; une adresse saisie par toi n'est jamais remplacée.
+- La pastille de statut affiche aussi « Écartée par le filtre » et « Expirée ».
