@@ -8,8 +8,10 @@ import OffersView from "./OffersView.vue";
 const GET = vi.fn();
 const PATCH = vi.fn();
 const POST = vi.fn();
+const PUT = vi.fn();
 vi.mock("../api/client", () => ({
   api: {
+    PUT: (...args: unknown[]) => PUT(...args),
     GET: (...args: unknown[]) => GET(...args),
     PATCH: (...args: unknown[]) => PATCH(...args),
     POST: (...args: unknown[]) => POST(...args),
@@ -284,5 +286,32 @@ describe("offres expirées", () => {
     expect(wrapper.text()).toContain("Expirées");
     await wrapper.find("[data-test=offer]").trigger("click");
     expect(wrapper.find("[data-test=expired]").text()).toContain("Probablement expirée");
+  });
+});
+
+describe("filtres au choix", () => {
+  it("affiche les filtres enregistrés, masque et remet à zéro un filtre actif", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offer-filters"
+          ? { data: { visible: ["sources", "rate"] } }
+          : path === "/api/profile-chunks"
+            ? { data: [] }
+            : page([offer(1, "Ingénieur système")]),
+      ),
+    );
+    PUT.mockResolvedValue({ data: { visible: ["sources"] } });
+    const wrapper = await mountAt("/offres?taux=80");
+    const panel = wrapper.find("[data-test=filters]");
+    expect(panel.text()).toContain("Sites");
+    expect(panel.text()).not.toContain("Cantons");
+    expect(panel.text()).toContain("Taux minimum");
+
+    await wrapper.find("[data-test=customize]").trigger("click");
+    await wrapper.find("[data-test=show-rate]").setValue(false);
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/offer-filters", { body: { visible: ["sources"] } });
+    expect(router.currentRoute.value.query.taux).toBeUndefined();
+    expect(wrapper.find("[data-test=filters]").text()).not.toContain("Les offres sans taux indiqué");
   });
 });

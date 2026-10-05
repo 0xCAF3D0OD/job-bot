@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
-import { api, type Offer, type OfferFacets } from "../api/client";
+import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import OfferCard from "../components/OfferCard.vue";
@@ -130,6 +130,34 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 watch(filters, () => void load(), { deep: true });
+
+// Filtres affichés (docs/10 §3), enregistrés en base ; tous par défaut.
+const ALL_FILTERS: FilterKey[] = ["score", "sources", "cantons", "rate", "external"];
+const visibleFilters = ref<FilterKey[]>([...ALL_FILTERS]);
+
+async function loadVisibility(): Promise<void> {
+  try {
+    const { data } = await api.GET("/api/offer-filters");
+    if (Array.isArray(data?.visible)) visibleFilters.value = data.visible;
+  } catch {
+    // Panneau complet si l'API ne répond pas.
+  }
+}
+
+async function setVisibility(visible: FilterKey[]): Promise<void> {
+  visibleFilters.value = visible;
+  // Un filtre masqué ne doit pas cacher d'offres sans qu'on le voie : il est remis à zéro.
+  const hidden = ALL_FILTERS.filter((key) => !visible.includes(key));
+  const patch: Partial<typeof filters.value> = {};
+  if (hidden.includes("score") && filters.value.minScore !== null) patch.minScore = null;
+  if (hidden.includes("sources") && filters.value.sources.length) patch.sources = [];
+  if (hidden.includes("cantons") && filters.value.cantons.length) patch.cantons = [];
+  if (hidden.includes("rate") && filters.value.minRate !== null) patch.minRate = null;
+  if (hidden.includes("external") && filters.value.externalOnly) patch.externalOnly = false;
+  if (Object.keys(patch).length) update(patch);
+  await api.PUT("/api/offer-filters", { body: { visible } });
+}
+
 async function loadChunkTitles(): Promise<void> {
   try {
     const { data } = await api.GET("/api/profile-chunks");
@@ -143,6 +171,7 @@ onMounted(() => {
   window.addEventListener("keydown", onKeydown);
   void load();
   void loadChunkTitles();
+  void loadVisibility();
 });
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 </script>
@@ -182,8 +211,10 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           :filters="filters"
           :counts="counts"
           :facets="facets"
+          :visible="visibleFilters"
           @update="update"
           @reset="reset"
+          @visibility="setVisibility"
         />
         <button
           type="button"

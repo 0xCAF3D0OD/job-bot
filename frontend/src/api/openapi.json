@@ -609,6 +609,66 @@
         }
       }
     },
+    "/api/offer-filters": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Offer Filters",
+        "operationId": "getOfferFilters",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferFiltersVisible"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Offer Filters",
+        "operationId": "saveOfferFilters",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferFiltersVisible"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferFiltersVisible"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -4268,6 +4328,30 @@
         ],
         "title": "OfferFacets",
         "description": "Valeurs disponibles pour les filtres, avec le nombre d'offres de chacune."
+      },
+      "OfferFiltersVisible": {
+        "properties": {
+          "visible": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "score",
+                "sources",
+                "cantons",
+                "rate",
+                "external"
+              ]
+            },
+            "type": "array",
+            "title": "Visible"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visible"
+        ],
+        "title": "OfferFiltersVisible",
+        "description": "Filtres affichés dans le panneau ; statut, recherche et tri le sont toujours."
       },
       "OfferLinkOut": {
         "properties": {

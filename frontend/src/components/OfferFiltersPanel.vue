@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 
-import type { OfferFacets, Source } from "../api/client";
+import type { FilterKey, OfferFacets, Source } from "../api/client";
 import type { OfferFilters, Sort, View } from "../composables/useOfferFilters";
 import { activeCount } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
@@ -10,8 +10,28 @@ const props = defineProps<{
   filters: OfferFilters;
   counts: Record<View, number>;
   facets: OfferFacets;
+  // Filtres affichés (docs/10 §3) ; statut, recherche et tri le sont toujours.
+  visible: FilterKey[];
 }>();
-const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: [] }>();
+const emit = defineEmits<{
+  update: [patch: Partial<OfferFilters>];
+  reset: [];
+  visibility: [visible: FilterKey[]];
+}>();
+
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: "score", label: "Note minimale" },
+  { key: "sources", label: "Sites" },
+  { key: "cantons", label: "Cantons" },
+  { key: "rate", label: "Taux minimum" },
+  { key: "external", label: "Candidature chez l'employeur" },
+];
+const customizing = ref(false);
+
+function toggleVisible(key: FilterKey): void {
+  const next = props.visible.includes(key) ? props.visible.filter((k) => k !== key) : [...props.visible, key];
+  emit("visibility", next);
+}
 
 const VIEWS: { value: View; label: string }[] = [
   { value: "to_review", label: "À examiner" },
@@ -75,6 +95,40 @@ function onScore(event: Event): void {
       >
     </div>
 
+    <div class="filter-customize">
+      <button
+        type="button"
+        class="link"
+        :aria-expanded="customizing"
+        data-test="customize"
+        @click="customizing = !customizing"
+      >
+        {{ customizing ? "Terminer" : "Personnaliser les filtres" }}
+      </button>
+      <fieldset
+        v-if="customizing"
+        class="customize-list"
+        data-test="customize-list"
+      >
+        <legend class="hint">
+          Filtres affichés (statut, recherche et tri le sont toujours)
+        </legend>
+        <label
+          v-for="entry in FILTERS"
+          :key="entry.key"
+          class="check"
+        >
+          <input
+            type="checkbox"
+            :checked="visible.includes(entry.key)"
+            :data-test="`show-${entry.key}`"
+            @change="toggleVisible(entry.key)"
+          >
+          {{ entry.label }}
+        </label>
+      </fieldset>
+    </div>
+
     <div class="filter-group">
       <span class="filter-title">Statut</span>
       <div
@@ -118,7 +172,10 @@ function onScore(event: Event): void {
       </div>
     </div>
 
-    <div class="filter-group">
+    <div
+      v-if="visible.includes('score')"
+      class="filter-group"
+    >
       <label
         class="filter-title"
         for="offer-score"
@@ -141,7 +198,10 @@ function onScore(event: Event): void {
       >Les offres pas encore notées sont masquées.</span>
     </div>
 
-    <div class="filter-group">
+    <div
+      v-if="visible.includes('sources')"
+      class="filter-group"
+    >
       <span class="filter-title">Sites</span>
       <label
         v-for="facet in facets.sources"
@@ -159,7 +219,10 @@ function onScore(event: Event): void {
       </label>
     </div>
 
-    <div class="filter-group">
+    <div
+      v-if="visible.includes('cantons')"
+      class="filter-group"
+    >
       <span class="filter-title">Cantons</span>
       <div class="facet-chips">
         <button
@@ -176,7 +239,10 @@ function onScore(event: Event): void {
       </div>
     </div>
 
-    <div class="filter-group">
+    <div
+      v-if="visible.includes('rate')"
+      class="filter-group"
+    >
       <label
         class="filter-title"
         for="offer-rate"
@@ -196,7 +262,10 @@ function onScore(event: Event): void {
       <span class="hint">Les offres sans taux indiqué restent visibles.</span>
     </div>
 
-    <div class="filter-group">
+    <div
+      v-if="visible.includes('external')"
+      class="filter-group"
+    >
       <span class="filter-title">Candidature</span>
       <label class="check facet">
         <input

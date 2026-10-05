@@ -156,6 +156,44 @@ async def put_settings(request: Request, body: SettingsModel) -> SettingsModel:
     return body
 
 
+# --- Filtres affichés sur la page Offres (docs/10 §3) -----------------------------------
+
+FilterKey = Literal["score", "sources", "cantons", "rate", "external"]
+ALL_FILTERS: list[FilterKey] = ["score", "sources", "cantons", "rate", "external"]
+
+
+class OfferFiltersVisible(BaseModel):
+    """Filtres affichés dans le panneau ; statut, recherche et tri le sont toujours."""
+
+    visible: list[FilterKey]
+
+    @field_validator("visible")
+    @classmethod
+    def _ordered(cls, values: list[FilterKey]) -> list[FilterKey]:
+        return [key for key in ALL_FILTERS if key in values]
+
+
+@router.get("/offer-filters", operation_id="getOfferFilters")
+async def get_offer_filters(request: Request) -> OfferFiltersVisible:
+    async with _runtime(request).sessionmaker() as session:
+        value = await session.scalar(
+            select(Setting.value).where(Setting.key == "offer_filters_visible")
+        )
+    # Par défaut, tous les filtres, comme avant.
+    return OfferFiltersVisible(visible=value if isinstance(value, list) else ALL_FILTERS)
+
+
+@router.put("/offer-filters", operation_id="saveOfferFilters")
+async def put_offer_filters(request: Request, body: OfferFiltersVisible) -> OfferFiltersVisible:
+    async with _runtime(request).sessionmaker.begin() as session:
+        await session.execute(
+            insert(Setting)
+            .values(key="offer_filters_visible", value=body.visible)
+            .on_conflict_do_update(index_elements=["key"], set_={"value": body.visible})
+        )
+    return body
+
+
 # --- Notifications (0.4.0-c) -----------------------------------------------------------
 
 

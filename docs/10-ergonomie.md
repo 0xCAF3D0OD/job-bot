@@ -1,6 +1,6 @@
 # 10 — Offres expirées, prise en main et filtres au choix (version 0.6.1)
 
-> Statut : **validé** le 2026-10-05. PR a (offres expirées) et PR b (prise en main) livrées ; PR c à venir.
+> Statut : **validé** le 2026-10-05. livré : PR a (offres expirées), PR b (prise en main), PR c (filtres au choix).
 > Retours d'usage du 2026-10-05. Les rappels ORP (0.6.0-b) restent prévus, après cette version ou avant, à ton choix.
 
 ## 1. Offres expirées
@@ -108,3 +108,8 @@ Les prérequis ne sont **pas redemandés à chaque ouverture**. Ils sont saisis 
 - **Meilleures offres** : les trois offres à examiner les mieux notées, sans lien direct vers leur détail (la page Offres s'ouvre triée par note).
 - **Anciennes adresses** : `/prerequis`, `/journal` et `/etat` redirigent vers leur nouvelle place.
 - **Liste de démarrage** : « Masquer » l'enlève même s'il reste des étapes ; elle disparaît aussi d'elle-même quand tout est fait.
+
+## Écarts avec la PR c
+
+- Choix enregistré dans le réglage `offer_filters_visible` (API `GET` / `PUT /api/offer-filters`), pas dans `PUT /api/settings`, pour ne pas réécrire les autres réglages.
+- Liste de démarrage : les étapes faites ne sont plus barrées, la pastille suffit (retour du 2026-10-05).

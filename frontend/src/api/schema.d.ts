@@ -185,6 +185,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offer-filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Offer Filters */
+        get: operations["getOfferFilters"];
+        /** Put Offer Filters */
+        put: operations["saveOfferFilters"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -1409,6 +1427,14 @@ export interface components {
             /** Cantons */
             cantons: components["schemas"]["Facet"][];
         };
+        /**
+         * OfferFiltersVisible
+         * @description Filtres affichés dans le panneau ; statut, recherche et tri le sont toujours.
+         */
+        OfferFiltersVisible: {
+            /** Visible */
+            visible: ("score" | "sources" | "cantons" | "rate" | "external")[];
+        };
         /** OfferLinkOut */
         OfferLinkOut: {
             source: components["schemas"]["Source"];
@@ -2245,6 +2271,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOfferFilters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferFiltersVisible"];
+                };
+            };
+        };
+    };
+    saveOfferFilters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferFiltersVisible"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferFiltersVisible"];
                 };
             };
             /** @description Validation Error */
