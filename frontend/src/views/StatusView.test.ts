@@ -53,7 +53,7 @@ describe("StatusView", () => {
     const wrapper = mount(StatusView);
     await flushPromises();
     expect(wrapper.findAll("[data-test=indicator]").every((l) => l.classes().includes("down"))).toBe(true);
-    expect(GET).toHaveBeenCalledTimes(1);
+    expect(GET.mock.calls.some((c) => c[0] === "/api/job-runs")).toBe(false);
     expect(wrapper.text()).toContain("Aucune exécution enregistrée.");
     wrapper.unmount();
   });

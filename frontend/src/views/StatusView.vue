@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref, computed } from "vue";
 
 import { api, type JobRun, type StatusResponse } from "../api/client";
 import PageHero from "../components/PageHero.vue";
+import ScoringCard from "../components/ScoringCard.vue";
 import { indicators, sinceText } from "./status";
 
 const REFRESH_MS = 30_000;
@@ -73,6 +74,8 @@ onUnmounted(() => clearInterval(timer));
           <span class="detail">{{ light.detail }}</span>
         </li>
       </ul>
+
+      <ScoringCard />
 
       <h2 class="section-title">
         Dernières tâches

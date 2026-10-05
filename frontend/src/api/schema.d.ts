@@ -81,7 +81,8 @@ export interface paths {
         };
         /**
          * List Offers
-         * @description `recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.
+         * @description `recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
+         *     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
          *     `view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des
          *     filtres d'affichage ; les compteurs par statut et les facettes en tiennent compte.
          */
@@ -270,6 +271,40 @@ export interface paths {
         post?: never;
         /** Delete Chunk */
         delete: operations["deleteProfileChunk"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/scoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scoring Status */
+        get: operations["getScoringStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rescore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Rescore */
+        post: operations["startRescore"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -576,6 +611,38 @@ export interface components {
              * @default []
              */
             filter_reasons: string[];
+            /** Score */
+            score?: number | null;
+            /** Summary Role */
+            summary_role?: string | null;
+            /** Summary Asks */
+            summary_asks?: string | null;
+            /** Summary Offers */
+            summary_offers?: string | null;
+            /**
+             * Summary Partial
+             * @default false
+             */
+            summary_partial: boolean;
+            /**
+             * Strengths
+             * @default []
+             */
+            strengths: components["schemas"]["ScorePoint"][];
+            /**
+             * Gaps
+             * @default []
+             */
+            gaps: components["schemas"]["ScorePoint"][];
+            /** Scored At */
+            scored_at?: string | null;
+            /**
+             * Score Stale
+             * @default false
+             */
+            score_stale: boolean;
+            /** Score Error */
+            score_error?: string | null;
         };
         /** OfferPage */
         OfferPage: {
@@ -596,6 +663,48 @@ export interface components {
          * @enum {string}
          */
         ParseStatus: "parsed" | "empty" | "unrecognized" | "failed";
+        /** RescoreResponse */
+        RescoreResponse: {
+            /**
+             * Result
+             * @enum {string}
+             */
+            result: "queued" | "already_queued";
+        };
+        /** ScorePoint */
+        ScorePoint: {
+            /** Text */
+            text: string;
+            /** Chunk Ids */
+            chunk_ids: number[];
+        };
+        /** ScoringStatus */
+        ScoringStatus: {
+            /** Configured */
+            configured: boolean;
+            /** Model */
+            model: string;
+            /** Month Spend Chf */
+            month_spend_chf: string;
+            /** Budget Chf */
+            budget_chf: string;
+            /** Budget Reached */
+            budget_reached: boolean;
+            /** Active Chunks */
+            active_chunks: number;
+            /** Scored */
+            scored: number;
+            /** Unscored */
+            unscored: number;
+            /** Stale */
+            stale: number;
+            /** Failed */
+            failed: number;
+            /** Pending Batches */
+            pending_batches: number;
+            /** Last Error */
+            last_error: string | null;
+        };
         /** SearchDetail */
         SearchDetail: {
             /** Id */
@@ -677,6 +786,38 @@ export interface components {
              * @default []
              */
             filter_reasons: string[];
+            /** Score */
+            score?: number | null;
+            /** Summary Role */
+            summary_role?: string | null;
+            /** Summary Asks */
+            summary_asks?: string | null;
+            /** Summary Offers */
+            summary_offers?: string | null;
+            /**
+             * Summary Partial
+             * @default false
+             */
+            summary_partial: boolean;
+            /**
+             * Strengths
+             * @default []
+             */
+            strengths: components["schemas"]["ScorePoint"][];
+            /**
+             * Gaps
+             * @default []
+             */
+            gaps: components["schemas"]["ScorePoint"][];
+            /** Scored At */
+            scored_at?: string | null;
+            /**
+             * Score Stale
+             * @default false
+             */
+            score_stale: boolean;
+            /** Score Error */
+            score_error?: string | null;
             /** Is First */
             is_first: boolean;
         };
@@ -904,9 +1045,10 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
-                sort?: "recent" | "popular";
+                sort?: "recent" | "popular" | "score";
                 view?: "to_review" | "filtered_out" | "all";
                 q?: string | null;
+                min_score?: number | null;
                 sources?: components["schemas"]["Source"][];
                 cantons?: string[];
                 min_rate?: number | null;
@@ -1363,6 +1505,53 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    getScoringStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoringStatus"];
+                };
+            };
+        };
+    };
+    startRescore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RescoreResponse"];
+                };
+            };
+            /** @description IA non configurée */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

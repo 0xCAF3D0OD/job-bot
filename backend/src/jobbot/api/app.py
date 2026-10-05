@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from jobbot.api.middleware import RequestContextMiddleware
-from jobbot.api.routes import collect, preferences, profile, status
+from jobbot.api.routes import collect, preferences, profile, scoring, status
 from jobbot.db.schema import head_revision
 from jobbot.health import health_router
 from jobbot.runtime import Runtime
@@ -58,4 +58,5 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(collect.router)
     app.include_router(preferences.router)
     app.include_router(profile.router)
+    app.include_router(scoring.router)
     return app

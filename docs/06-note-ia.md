@@ -1,6 +1,6 @@
 # 06 — Note IA, résumé des offres et filtres toujours visibles (version 0.4.0)
 
-> Statut : **validé le 2026-10-05 avec Claude Opus 5, effort bas.** Partie a (page Offres et filtres) livrée ; b (note et résumé IA) et c (notifications) à suivre.
+> Statut : **validé le 2026-10-05 avec Claude Opus 5, effort bas.** Parties a (page Offres et filtres) et b (note et résumé IA) livrées ; c (notifications) à suivre.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2, §3 et §10, sur le profil (0.3) et le texte complet jobup (0.3.1).
 > Demandes de Kevin (2026-10-05) : les principaux filtres toujours à disposition, et pour chaque offre un résumé de 2-3 lignes (ce qu'elle demande, ce qu'elle offre, le poste).
 
@@ -174,3 +174,12 @@ Ces filtres **n'écartent rien** : ils changent seulement ce que tu vois. Les pr
 - **Note minimale et tri « Meilleure note »** : ils arrivent avec la partie b, puisqu'il n'y a pas encore de note.
 - **Écran moyen** (moins de 1200 px) : le détail s'ouvre par-dessus la liste, à droite. **Mobile** : les filtres s'ouvrent en plein écran, avec un bouton « Voir N offres ».
 - **Recherche** : sans accents ni majuscules, sur le titre, l'entreprise, le lieu, l'extrait, le type d'emploi et le texte complet. Tous les mots doivent être présents.
+
+## Écarts à la livraison (partie b)
+
+- **Problèmes de compte** (clé refusée, crédit API épuisé) : la notation s'arrête et l'erreur s'affiche dans la page État (« crédit API Anthropic épuisé… »). Les offres ne sont pas marquées en échec et restent à noter. Découvert au premier essai réel : le compte n'avait pas encore de crédit.
+- **Sans bloc de profil actif**, l'IA fait quand même le résumé, mais sans note (« – » sur la carte).
+- **Tâche `score` toutes les 10 minutes** : elle relève les lots terminés et note ce qui manque. Elle est aussi enchaînée après chaque collecte.
+- **Échecs d'une offre** (réponse non conforme, refus) : pas de nouvel essai automatique, pour éviter de payer en boucle. « Renoter » les reprend.
+- **Arrondi des coûts** au cent-millième de dollar : un appel en lot de 0,006125 $ est compté 0,00612 $.
+- **Évaluation manuelle sur 15 offres** : reportée jusqu'à ce que le compte API ait du crédit et que les blocs de profil soient saisis.

@@ -46,3 +46,10 @@ export function colorIndex(name: string): number {
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   return hash % 4;
 }
+
+/** Niveau d'une note, pour sa couleur : bonne (≥ 70), moyenne (≥ 50) ou faible. */
+export function scoreLevel(score: number): "high" | "mid" | "low" {
+  if (score >= 70) return "high";
+  if (score >= 50) return "mid";
+  return "low";
+}
