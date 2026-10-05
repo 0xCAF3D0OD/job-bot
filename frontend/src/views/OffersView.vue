@@ -86,6 +86,24 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   await load();
 }
 
+// « Signaler comme expirée » / « Pas expirée » (docs/11 §1) : prioritaire sur la détection.
+async function setExpiry(expired: boolean): Promise<void> {
+  const offer = selected.value;
+  if (!offer) return;
+  const { error } = await api.PATCH("/api/offers/{offer_id}/expiry", {
+    params: { path: { offer_id: offer.id } },
+    body: { expired },
+  });
+  if (error) {
+    notice.value = "Changement refusé.";
+    return;
+  }
+  // En préparation, l'offre reste affichée (avec ou sans bandeau) ; ailleurs elle change d'onglet.
+  if (offer.status !== "preparing") selectedId.value = null;
+  notice.value = expired ? "Offre signalée comme expirée." : "Offre remise dans sa liste.";
+  await load();
+}
+
 async function openApplication(): Promise<void> {
   const offer = selected.value;
   if (!offer) return;
@@ -290,6 +308,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           @close="selectedId = null"
           @status="setStatus"
           @applied="openApplication"
+          @expiry="setExpiry"
         />
       </div>
       <div

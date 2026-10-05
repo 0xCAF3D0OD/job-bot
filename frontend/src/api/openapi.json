@@ -1188,6 +1188,62 @@
         }
       }
     },
+    "/api/offers/{offer_id}/expiry": {
+      "patch": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Set Offer Expiry",
+        "description": "« Signaler comme expirée » ou « Pas expirée » (docs/11 §1) : le choix de Kevin passe\navant la détection automatique, dans les deux sens.",
+        "operationId": "setOfferExpiry",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferExpiryIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferExpiryOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Candidature déjà envoyée"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/application-prefill": {
       "get": {
         "tags": [
@@ -4304,6 +4360,69 @@
         ],
         "title": "OfferCounts"
       },
+      "OfferExpiryIn": {
+        "properties": {
+          "expired": {
+            "type": "boolean",
+            "title": "Expired"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expired"
+        ],
+        "title": "OfferExpiryIn"
+      },
+      "OfferExpiryOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "expired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expired At"
+          },
+          "expiry_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Source"
+          },
+          "expiry_override": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Override"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "expired_at",
+          "expiry_source",
+          "expiry_override"
+        ],
+        "title": "OfferExpiryOut"
+      },
       "OfferFacets": {
         "properties": {
           "sources": {
@@ -4537,7 +4656,8 @@
                 "type": "string",
                 "enum": [
                   "page",
-                  "age"
+                  "age",
+                  "manual"
                 ]
               },
               {
@@ -4545,6 +4665,21 @@
               }
             ],
             "title": "Expiry Source"
+          },
+          "expiry_override": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "expired",
+                  "alive"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Override"
           },
           "filter_reasons": {
             "items": {
@@ -5389,7 +5524,8 @@
                 "type": "string",
                 "enum": [
                   "page",
-                  "age"
+                  "age",
+                  "manual"
                 ]
               },
               {
@@ -5397,6 +5533,21 @@
               }
             ],
             "title": "Expiry Source"
+          },
+          "expiry_override": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "expired",
+                  "alive"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Override"
           },
           "filter_reasons": {
             "items": {

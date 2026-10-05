@@ -142,6 +142,8 @@ class Offer(Base):
     # alerte depuis 30 jours (« age », pour les sites qu'on ne peut pas vérifier).
     expired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     expiry_source: Mapped[str | None] = mapped_column(Text)
+    # Choix de Kevin (docs/11 §1) : « expired » ou « alive », prioritaire sur la détection.
+    expiry_override: Mapped[str | None] = mapped_column(Text)
     # Dernière revérification de la page jobup.
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

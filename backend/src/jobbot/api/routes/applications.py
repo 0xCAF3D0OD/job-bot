@@ -78,6 +78,47 @@ async def set_offer_status(request: Request, offer_id: int, body: OfferStatusIn)
     return OfferStatusOut(id=offer_id, status=OfferStatus(body.status))
 
 
+class OfferExpiryIn(BaseModel):
+    expired: bool
+
+
+class OfferExpiryOut(BaseModel):
+    id: int
+    expired_at: datetime | None
+    expiry_source: str | None
+    expiry_override: str | None
+
+
+@router.patch(
+    "/offers/{offer_id}/expiry",
+    operation_id="setOfferExpiry",
+    responses={409: {"description": "Candidature déjà envoyée"}},
+)
+async def set_offer_expiry(request: Request, offer_id: int, body: OfferExpiryIn) -> OfferExpiryOut:
+    """« Signaler comme expirée » ou « Pas expirée » (docs/11 §1) : le choix de Kevin passe
+    avant la détection automatique, dans les deux sens."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+        if offer.status == OfferStatus.APPLIED:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "candidature envoyée : l'offre n'est plus modifiée"
+            )
+        if body.expired:
+            offer.expired_at = datetime.now(UTC)
+            offer.expiry_source, offer.expiry_override = "manual", "expired"
+        else:
+            offer.expired_at = offer.expiry_source = None
+            offer.expiry_override = "alive"
+        return OfferExpiryOut(
+            id=offer.id,
+            expired_at=offer.expired_at,
+            expiry_source=offer.expiry_source,
+            expiry_override=offer.expiry_override,
+        )
+
+
 # --- Candidatures ---------------------------------------------------------------------
 
 

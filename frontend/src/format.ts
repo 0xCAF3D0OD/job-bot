@@ -91,6 +91,7 @@ export function shiftMonth(month: string, delta: number): string {
 export function expiredText(offer: { expired_at?: string | null; expiry_source?: string | null }): string {
   if (!offer.expired_at) return "";
   const day = new Date(offer.expired_at).toLocaleDateString("fr-CH");
+  if (offer.expiry_source === "manual") return `Signalée expirée par toi le ${day}.`;
   return offer.expiry_source === "age"
     ? `Probablement expirée : plus vue dans aucune alerte depuis 30 jours (${day}).`
     : `Offre expirée le ${day} : l'annonce n'est plus en ligne.`;

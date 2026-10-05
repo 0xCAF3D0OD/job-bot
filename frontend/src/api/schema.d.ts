@@ -417,6 +417,27 @@ export interface paths {
         patch: operations["setOfferStatus"];
         trace?: never;
     };
+    "/api/offers/{offer_id}/expiry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Offer Expiry
+         * @description « Signaler comme expirée » ou « Pas expirée » (docs/11 §1) : le choix de Kevin passe
+         *     avant la détection automatique, dans les deux sens.
+         */
+        patch: operations["setOfferExpiry"];
+        trace?: never;
+    };
     "/api/offers/{offer_id}/application-prefill": {
         parameters: {
             query?: never;
@@ -1417,6 +1438,22 @@ export interface components {
             /** All */
             all: number;
         };
+        /** OfferExpiryIn */
+        OfferExpiryIn: {
+            /** Expired */
+            expired: boolean;
+        };
+        /** OfferExpiryOut */
+        OfferExpiryOut: {
+            /** Id */
+            id: number;
+            /** Expired At */
+            expired_at: string | null;
+            /** Expiry Source */
+            expiry_source: string | null;
+            /** Expiry Override */
+            expiry_override: string | null;
+        };
         /**
          * OfferFacets
          * @description Valeurs disponibles pour les filtres, avec le nombre d'offres de chacune.
@@ -1489,7 +1526,9 @@ export interface components {
             /** Expired At */
             expired_at?: string | null;
             /** Expiry Source */
-            expiry_source?: ("page" | "age") | null;
+            expiry_source?: ("page" | "age" | "manual") | null;
+            /** Expiry Override */
+            expiry_override?: ("expired" | "alive") | null;
             /**
              * Filter Reasons
              * @default []
@@ -1770,7 +1809,9 @@ export interface components {
             /** Expired At */
             expired_at?: string | null;
             /** Expiry Source */
-            expiry_source?: ("page" | "age") | null;
+            expiry_source?: ("page" | "age" | "manual") | null;
+            /** Expiry Override */
+            expiry_override?: ("expired" | "alive") | null;
             /**
              * Filter Reasons
              * @default []
@@ -2782,6 +2823,48 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["OfferStatusOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setOfferExpiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferExpiryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferExpiryOut"];
+                };
+            };
+            /** @description Candidature déjà envoyée */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

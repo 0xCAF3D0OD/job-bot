@@ -1,6 +1,6 @@
 # 11 — Expiration signalée, sites ajoutés, étiquettes en mots-clés (version 0.7.0)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** le 2026-10-05, sites retenus : **jobs.ch** et **LinkedIn**. PR a (expiration signalée) livrée ; PR b et c à venir.
 > Retours d'usage du 2026-10-05. S'appuie sur [10-ergonomie.md](10-ergonomie.md) §1 (offres expirées), [03-collecte-gmail.md](03-collecte-gmail.md) (alertes e-mail) et [06-note-ia.md](06-note-ia.md) (résumé).
 
 ## 1. Signaler une offre expirée (ou non)
@@ -84,3 +84,8 @@ sites         id, name, senders[], url, reader (jobup|indeed|jobroom|ai), active
 4. **Mots-clés en pastilles** sur les cartes, demandes non couvertes en orange, phrases complètes dans le détail (§3).
 5. **Renotation en lot** des offres encore utiles, environ 2 $ (§3).
 6. **Trois PR**, dans cet ordre (§5).
+
+## Écarts avec la PR a
+
+- **Migrations** : la 0014 ne contient que le choix de Kevin (`expiry_override`, `expiry_source = manual`). Les mots-clés et les sites auront leurs propres migrations (0015, 0016).
+- **Boutons** : « Signaler comme expirée » et « Pas expirée » sont dans la ligne d'actions du détail, à côté de « Plus tard » et « Ignorer ». Absents une fois la candidature envoyée.
