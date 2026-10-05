@@ -1,6 +1,6 @@
 [project]
 name = "jobbot"
-version = "0.1.0"
+version = "0.3.1"
 description = "Assistant de recherche d'emploi : collecte, tri, notation et suivi des candidatures"
 authors = [
     { name = "0xCAF3D0OD" }
@@ -13,6 +13,7 @@ dependencies = [
     "fastapi>=0.142.2",
     # Le schéma de procrastinate est appliqué par une migration Alembic :
     # toute montée de version doit s'accompagner d'une migration (voir docs/exploitation.md).
+    "httpx>=0.28.1",
     "procrastinate>=3.10.0,<3.11",
     "prometheus-client>=0.26.0",
     "psycopg[binary]>=3.3.6",
@@ -34,7 +35,6 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",

@@ -1543,6 +1543,66 @@
             "type": "array",
             "title": "Links"
           },
+          "apply_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apply Url"
+          },
+          "apply_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "external",
+                  "jobup"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apply Kind"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "employment_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Type"
+          },
+          "enrich_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ok",
+              "expired",
+              "failed",
+              "skipped"
+            ],
+            "title": "Enrich Status",
+            "default": "pending"
+          },
           "filter_reasons": {
             "items": {
               "type": "string"
@@ -1804,6 +1864,66 @@
             },
             "type": "array",
             "title": "Links"
+          },
+          "apply_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apply Url"
+          },
+          "apply_kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "external",
+                  "jobup"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apply Kind"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "employment_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Type"
+          },
+          "enrich_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ok",
+              "expired",
+              "failed",
+              "skipped"
+            ],
+            "title": "Enrich Status",
+            "default": "pending"
           },
           "filter_reasons": {
             "items": {

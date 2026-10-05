@@ -29,6 +29,7 @@ def make_settings(**overrides: object) -> Settings:
         "version": "test",
         "imap_user": "",
         "imap_password": None,
+        "enrich_enabled": False,  # aucun accès réseau réel depuis les tests
         "_env_file": None,
     }
     values.update(overrides)

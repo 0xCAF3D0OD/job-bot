@@ -3,6 +3,7 @@
 from jobbot.collect.service import collect
 from jobbot.runtime import Runtime
 from jobbot.worker.jobs import RunContext, execute, register
+from jobbot.worker.tasks.enrich import ENRICH_JOB
 from jobbot.worker.tasks.filter import FILTER_JOB
 
 COLLECT_JOB = "collect"
@@ -16,6 +17,9 @@ async def collect_job(runtime: Runtime, ctx: RunContext) -> None:
     result = await collect(runtime, ctx.run_id)
     ctx.items_in = result.fetched
     ctx.items_out = result.new_offers
-    # Les nouvelles offres passent aussitôt par le filtre (exécution tracée à part).
+    # Les nouvelles offres passent aussitôt par le filtre, puis les offres jobup retenues
+    # sont lues sur le site (exécutions tracées à part).
     if result.new_offers:
         await execute(runtime, FILTER_JOB)
+    if runtime.settings.enrich_enabled:
+        await execute(runtime, ENRICH_JOB)

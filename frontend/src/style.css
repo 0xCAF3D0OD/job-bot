@@ -412,3 +412,10 @@ textarea { width: 100%; resize: vertical; line-height: 1.55; }
   .profile-docs { grid-template-columns: minmax(0, 1fr); }
   .profile-docs .empty-detail { display: none; }
 }
+
+/* --- Candidature et texte complet (0.3.1) --- */
+
+.actions a.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--border); }
+.actions a.secondary:hover { border-color: var(--accent); background: var(--surface); }
+.full-text { white-space: pre-line; color: var(--muted); line-height: 1.65; font-size: 0.92rem; max-height: 26rem; overflow: auto; padding-right: 0.5rem; }
+p.badge.reason { margin: 0; }

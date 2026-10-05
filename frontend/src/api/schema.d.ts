@@ -539,6 +539,20 @@ export interface components {
             seen_count: number;
             /** Links */
             links: components["schemas"]["OfferLinkOut"][];
+            /** Apply Url */
+            apply_url?: string | null;
+            /** Apply Kind */
+            apply_kind?: ("external" | "jobup") | null;
+            /** Description */
+            description?: string | null;
+            /** Employment Type */
+            employment_type?: string | null;
+            /**
+             * Enrich Status
+             * @default pending
+             * @enum {string}
+             */
+            enrich_status: "pending" | "ok" | "expired" | "failed" | "skipped";
             /**
              * Filter Reasons
              * @default []
@@ -625,6 +639,20 @@ export interface components {
             seen_count: number;
             /** Links */
             links: components["schemas"]["OfferLinkOut"][];
+            /** Apply Url */
+            apply_url?: string | null;
+            /** Apply Kind */
+            apply_kind?: ("external" | "jobup") | null;
+            /** Description */
+            description?: string | null;
+            /** Employment Type */
+            employment_type?: string | null;
+            /**
+             * Enrich Status
+             * @default pending
+             * @enum {string}
+             */
+            enrich_status: "pending" | "ok" | "expired" | "failed" | "skipped";
             /**
              * Filter Reasons
              * @default []
