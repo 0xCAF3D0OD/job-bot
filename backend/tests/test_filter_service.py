@@ -180,3 +180,19 @@ async def test_api_offer_views(api: AsyncClient, fresh: Runtime) -> None:
     out = (await api.get("/api/offers", params={"view": "filtered_out"})).json()
     assert out["total"] == 2
     assert all(o["filter_reasons"] for o in out["items"])
+
+
+async def test_api_offer_filters(api: AsyncClient, fresh: Runtime) -> None:
+    async with fresh.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM settings WHERE key = 'offer_filters_visible'"))
+    default = (await api.get("/api/offer-filters")).json()
+    assert default == {"visible": ["score", "sources", "cantons", "rate", "external"]}
+    saved = (
+        await api.put("/api/offer-filters", json={"visible": ["rate", "score", "rate"]})
+    ).json()
+    assert saved == {"visible": ["score", "rate"]}
+    assert (await api.get("/api/offer-filters")).json() == saved
+    assert (await api.put("/api/offer-filters", json={"visible": []})).json() == {"visible": []}
+    assert (await api.put("/api/offer-filters", json={"visible": ["salaire"]})).status_code == 422
+    async with fresh.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM settings WHERE key = 'offer_filters_visible'"))
