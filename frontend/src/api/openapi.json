@@ -489,7 +489,7 @@
         }
       }
     },
-    "/api/collect": {
+    "/api/alerts/refresh": {
       "post": {
         "tags": [
           "collect"

@@ -132,7 +132,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/collect": {
+    "/api/alerts/refresh": {
         parameters: {
             query?: never;
             header?: never;

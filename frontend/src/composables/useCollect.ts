@@ -10,7 +10,7 @@ export function useCollect() {
   async function collectNow(): Promise<void> {
     running.value = true;
     try {
-      const { data, response } = await api.POST("/api/collect");
+      const { data, response } = await api.POST("/api/alerts/refresh");
       if (response.status === 409) {
         message.value =
           "Collecte non configurée : renseigne JOBBOT_IMAP_USER et JOBBOT_IMAP_PASSWORD dans .env.";
