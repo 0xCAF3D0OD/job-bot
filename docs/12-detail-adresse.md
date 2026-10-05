@@ -75,7 +75,7 @@ Les migrations prévues au cadrage 11 pour les mots-clés et les sites deviennen
 - **Choix** : il vaut pour toutes les offres de la même entreprise ; le cache dure 30 jours.
 - **Pas de recherche** pour une adresse saisie par toi ou lue sur l'annonce.
 
-## Complément 0.7.2 — recherche sur Internet (à valider)
+## Complément 0.7.2 — recherche sur Internet (validé le 2026-10-05, livré)
 
 **Constat (2026-10-05)** : le registre IDE cherche le **nom légal**. Les annonces donnent souvent un nom commercial (« Clinique de La Source », « JEMS Group ») ou une entreprise étrangère (Broadcom, Red Hat, Chanel) : la recherche ne tranche pas, ou propose des homonymes sans rapport.
 
@@ -93,3 +93,10 @@ Les migrations prévues au cadrage 11 pour les mots-clés et les sites deviennen
 Points à valider :
 1. **Recherche web par l'IA** en dernier recours après le registre IDE, avec la source affichée.
 2. **Environ 1,50 $** pour les entreprises actuelles, puis quelques centimes par nouvelle entreprise.
+
+### Écarts avec le complément 0.7.2
+
+- **Modèle** : la recherche passe par **Claude Haiku 4.5** et la recherche web de base. Un essai sur Opus 5 a coûté 0,10 $, car les pages lues pèsent environ 15 000 jetons ; sur Haiku, 0,02 $ pour un résultat juste (« Clinique de La Source » → « Avenue Alexandre-Vinet 30, 1004 Lausanne »).
+- **Rythme** : 15 entreprises au plus par passage, après le registre ; une seule tentative par entreprise, même sans résultat.
+- **Bouton** : « Chercher l'adresse » dans le détail lance le registre, puis Internet si besoin ; la source s'ouvre d'un clic (« vérifier la source »).
+- **Migration 0017** ; les mots-clés et les sites du cadrage 11 passent en 0018 et 0019.

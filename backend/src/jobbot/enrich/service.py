@@ -171,7 +171,9 @@ async def _set_address(runtime: Runtime, offer_id: int, address: str | None) -> 
                     Offer.company_address_source.in_(weaker_sources("page")),
                 ),
             )
-            .values(company_address=address, company_address_source="page")
+            .values(
+                company_address=address, company_address_source="page", company_address_url=None
+            )
         )
 
 

@@ -836,6 +836,12 @@ export interface components {
             chosen_uid: string | null;
             /** Candidates */
             candidates: components["schemas"]["RegistryCandidate"][];
+            /** Web Address */
+            web_address?: string | null;
+            /** Web Source Url */
+            web_source_url?: string | null;
+            /** Web Unavailable */
+            web_unavailable?: string | null;
         };
         /** ApplicationIn */
         ApplicationIn: {
@@ -1625,7 +1631,9 @@ export interface components {
             /** Company Address */
             company_address?: string | null;
             /** Company Address Source */
-            company_address_source?: ("page" | "registry" | "letter" | "manual") | null;
+            company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
+            /** Company Address Url */
+            company_address_url?: string | null;
             /**
              * Filter Reasons
              * @default []
@@ -1923,7 +1931,9 @@ export interface components {
             /** Company Address */
             company_address?: string | null;
             /** Company Address Source */
-            company_address_source?: ("page" | "registry" | "letter" | "manual") | null;
+            company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
+            /** Company Address Url */
+            company_address_url?: string | null;
             /**
              * Filter Reasons
              * @default []

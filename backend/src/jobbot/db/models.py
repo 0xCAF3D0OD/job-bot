@@ -147,6 +147,8 @@ class Offer(Base):
     # Adresse de l'entreprise (docs/12 §2) et sa source : page, registry, letter ou manual.
     company_address: Mapped[str | None] = mapped_column(Text)
     company_address_source: Mapped[str | None] = mapped_column(Text)
+    # Page où l'IA a trouvé l'adresse (source « web »), pour vérifier d'un clic.
+    company_address_url: Mapped[str | None] = mapped_column(Text)
     # Dernière revérification de la page jobup.
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -427,6 +429,10 @@ class Company(Base):
     address: Mapped[str | None] = mapped_column(Text)
     # Jusqu'à 3 propositions : {uid, name, street, zip_code, town, canton, active, address}.
     candidates: Mapped[Any] = mapped_column(JSONB, default=list)
-    # « auto » : correspondance sûre ; « manual » : choisie par Kevin ; None : à choisir.
+    # « auto » : correspondance sûre ; « manual » : choisie par Kevin ; « web » : trouvée sur
+    # Internet par l'IA ; None : à choisir.
     chosen_by: Mapped[str | None] = mapped_column(Text)
     looked_up_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Recherche sur Internet (0.7.2), faute de correspondance sûre dans le registre.
+    source_url: Mapped[str | None] = mapped_column(Text)
+    web_looked_up_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

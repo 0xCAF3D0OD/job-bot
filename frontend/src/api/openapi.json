@@ -2402,6 +2402,39 @@
             },
             "type": "array",
             "title": "Candidates"
+          },
+          "web_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Web Address"
+          },
+          "web_source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Web Source Url"
+          },
+          "web_unavailable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Web Unavailable"
           }
         },
         "type": "object",
@@ -4965,6 +4998,7 @@
                 "enum": [
                   "page",
                   "registry",
+                  "web",
                   "letter",
                   "manual"
                 ]
@@ -4974,6 +5008,17 @@
               }
             ],
             "title": "Company Address Source"
+          },
+          "company_address_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address Url"
           },
           "filter_reasons": {
             "items": {
@@ -5889,6 +5934,7 @@
                 "enum": [
                   "page",
                   "registry",
+                  "web",
                   "letter",
                   "manual"
                 ]
@@ -5898,6 +5944,17 @@
               }
             ],
             "title": "Company Address Source"
+          },
+          "company_address_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address Url"
           },
           "filter_reasons": {
             "items": {

@@ -38,13 +38,20 @@ async function searchRegistry(): Promise<void> {
     if (!data) {
       registryMessage.value = "Registre IDE injoignable, réessaie plus tard.";
     } else if (data.chosen_uid && props.offer.company_address_source !== "registry") {
-      registryMessage.value = "Adresse trouvée dans le registre.";
+      registryMessage.value = "Adresse trouvée dans le registre IDE.";
       emit("changed");
-    } else if (!data.candidates.length) {
-      registryMessage.value = "Aucune entreprise active à ce nom dans le registre. Saisis l'adresse à la main.";
+    } else if (data.web_address) {
+      registryMessage.value = "Adresse trouvée sur Internet : vérifie la source.";
+      proposals.value = data.candidates;
+      emit("changed");
     } else {
       proposals.value = data.candidates;
-      registryMessage.value = "Plusieurs entreprises possibles : choisis la bonne.";
+      const web = data.web_unavailable
+        ? ` Recherche sur Internet impossible : ${data.web_unavailable}.`
+        : " Rien de fiable sur Internet non plus.";
+      registryMessage.value = data.candidates.length
+        ? `Pas de correspondance sûre : choisis parmi le registre, ou saisis l'adresse.${web}`
+        : `Aucune entreprise à ce nom dans le registre.${web} Saisis l'adresse à la main.`;
     }
   } catch {
     registryMessage.value = "API injoignable.";
@@ -76,6 +83,7 @@ const statusLabel = computed(() =>
 const ADDRESS_SOURCE: Record<string, string> = {
   page: "annonce",
   registry: "registre IDE",
+  web: "trouvée sur Internet",
   letter: "relevée dans l'annonce",
   manual: "saisie par toi",
 };
@@ -249,6 +257,14 @@ function initial(offer: Offer): string {
         <span v-if="offer.company_address">
           {{ offer.company_address.split("\n").join(", ") }}
           <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
+          <a
+            v-if="offer.company_address_source === 'web' && offer.company_address_url"
+            :href="offer.company_address_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hint"
+            data-test="address-source"
+          > (vérifier la source)</a>
         </span>
         <span
           v-else
@@ -270,7 +286,7 @@ function initial(offer: Offer): string {
           data-test="search-registry"
           @click="searchRegistry"
         >
-          {{ searching ? "Recherche…" : "Chercher dans le registre" }}
+          {{ searching ? "Recherche…" : "Chercher l'adresse" }}
         </button>
       </template>
       <div

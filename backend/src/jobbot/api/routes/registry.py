@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 
+import anthropic
 import httpx
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
@@ -9,7 +10,16 @@ from pydantic import BaseModel
 from jobbot.core.normalize import normalize_location
 from jobbot.db.models import Company, Offer
 from jobbot.registry import uid
-from jobbot.registry.service import CACHE_FOR, Place, apply_address, choose, name_key, remember
+from jobbot.registry.service import (
+    CACHE_FOR,
+    Place,
+    WebUnavailable,
+    apply_address,
+    choose,
+    name_key,
+    remember,
+    web_lookup,
+)
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["registry"])
@@ -31,6 +41,11 @@ class AddressCandidates(BaseModel):
     # La proposition retenue d'office (correspondance sûre) ou choisie, s'il y en a une.
     chosen_uid: str | None
     candidates: list[RegistryCandidate]
+    # Faute de correspondance sûre : adresse trouvée sur Internet par l'IA (0.7.2).
+    web_address: str | None = None
+    web_source_url: str | None = None
+    # Pourquoi la recherche sur Internet n'a pas été faite (IA non configurée, plafond…).
+    web_unavailable: str | None = None
 
 
 class ChooseIn(BaseModel):
@@ -82,7 +97,24 @@ async def get_address_candidates(request: Request, offer_id: int) -> AddressCand
         async with runtime.sessionmaker() as session:
             record = await session.get(Company, key)
     assert record is not None
+    web_unavailable = None
+    if record.uid is None and record.address is None and record.web_looked_up_at is None:
+        try:
+            await web_lookup(
+                runtime, key, offer.company, normalize_location(offer.location) or None
+            )
+        except WebUnavailable as exc:
+            web_unavailable = str(exc)
+        except (anthropic.APIError, httpx.HTTPError):
+            web_unavailable = "IA momentanément indisponible"
+        async with runtime.sessionmaker() as session:
+            record = await session.get(Company, key)
+        assert record is not None
+    from_web = record.chosen_by == "web"
     return AddressCandidates(
+        web_address=record.address if from_web else None,
+        web_source_url=record.source_url if from_web else None,
+        web_unavailable=web_unavailable,
         chosen_uid=record.uid,
         candidates=[
             RegistryCandidate(**{k: c[k] for k in ("uid", "name", "address", "canton")})
