@@ -34,6 +34,9 @@ class JobupPage:
     employment_type: str | None
     # Adresse du lieu de travail (JSON-LD « jobLocation »), sur deux lignes : rue, NPA localité.
     address: str | None = None
+    # Logo et site de l'entreprise (JSON-LD « hiringOrganization »), docs/14 §4.
+    logo: str | None = None
+    website: str | None = None
 
 
 class PageNotParsable(ValueError):
@@ -89,7 +92,30 @@ def parse_jobup_page(page: str, offer_url: str) -> JobupPage:
         if isinstance(value, list):
             value = ", ".join(str(v) for v in value)
         employment_type = str(value).strip() if value else None
-    return JobupPage(kind, url, description, employment_type, _address(posting))
+    logo, website = _organization(posting)
+    return JobupPage(kind, url, description, employment_type, _address(posting), logo, website)
+
+
+def _organization(posting: dict[str, Any] | None) -> tuple[str | None, str | None]:
+    """(logo, site) ; seulement des adresses https."""
+    org = (posting or {}).get("hiringOrganization")
+    if not isinstance(org, dict):
+        return None, None
+    logo = org.get("logo")
+    if isinstance(logo, dict):
+        logo = logo.get("url")
+    website = org.get("sameAs") or org.get("url")
+    if isinstance(website, list):
+        website = website[0] if website else None
+
+    def https(value: object) -> str | None:
+        return (
+            value.strip()
+            if isinstance(value, str) and value.strip().startswith("https://")
+            else None
+        )
+
+    return https(logo), https(website)
 
 
 def _address(posting: dict[str, Any] | None) -> str | None:

@@ -2,15 +2,13 @@
 import { computed } from "vue";
 
 import type { Offer } from "../api/client";
-import { colorIndex, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
+import { formatDate, rateText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import CompanyLogo from "./CompanyLogo.vue";
 
 const props = defineProps<{ offer: Offer; selected: boolean }>();
 defineEmits<{ select: [] }>();
 
-const name = computed(() => props.offer.company ?? props.offer.title);
-const initial = computed(() => name.value.trim().charAt(0).toUpperCase() || "?");
-const logo = computed(() => `logo c${colorIndex(name.value)}`);
 // Sans résumé de l'IA : début du texte complet, sinon l'extrait de l'alerte.
 const excerpt = computed(() => props.offer.description ?? props.offer.snippet ?? null);
 const hasSummary = computed(() => Boolean(props.offer.summary_role));
@@ -32,10 +30,7 @@ const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.so
     @click="$emit('select')"
   >
     <div class="job-head">
-      <span
-        :class="logo"
-        aria-hidden="true"
-      >{{ initial }}</span>
+      <CompanyLogo :offer="offer" />
       <div>
         <span class="job-title">{{ offer.title }}</span>
         <span class="job-company">{{ offer.company ?? "Entreprise non indiquée" }}</span>

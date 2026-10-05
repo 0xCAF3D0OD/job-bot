@@ -1,6 +1,7 @@
 """Lecture des pages d'offres jobup (docs/05-candidature-externe.md)."""
 
 from jobbot.enrich.service import enrich
+from jobbot.logos.service import fetch_logos
 from jobbot.registry.service import lookup_addresses
 from jobbot.runtime import Runtime
 from jobbot.worker.jobs import RunContext, execute, register
@@ -19,3 +20,5 @@ async def enrich_job(runtime: Runtime, ctx: RunContext) -> None:
         await execute(runtime, FILTER_JOB)
     # Adresse des entreprises sans page lisible (Indeed, LinkedIn) : registre IDE (docs/12).
     await lookup_addresses(runtime)
+    # Logos des entreprises (docs/14 §4), téléchargés une fois par entreprise.
+    await fetch_logos(runtime)

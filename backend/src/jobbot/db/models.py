@@ -151,6 +151,10 @@ class Offer(Base):
     company_address_source: Mapped[str | None] = mapped_column(Text)
     # Page où l'IA a trouvé l'adresse (source « web »), pour vérifier d'un clic.
     company_address_url: Mapped[str | None] = mapped_column(Text)
+    # Logo relevé sur la page de l'offre ou dans l'e-mail d'alerte, et site de l'entreprise
+    # (docs/14 §4) ; le logo lui-même est téléchargé une fois par entreprise.
+    logo_url: Mapped[str | None] = mapped_column(Text)
+    company_website: Mapped[str | None] = mapped_column(Text)
     # Dernière revérification de la page jobup.
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -472,3 +476,16 @@ class Site(Base):
     active: Mapped[bool] = mapped_column(default=True)
     builtin: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CompanyLogo(Base):
+    """Logo téléchargé d'une entreprise (nom normalisé), servi par la plateforme."""
+
+    __tablename__ = "company_logos"
+
+    name_key: Mapped[str] = mapped_column(Text, primary_key=True)
+    # Fichier dans le stockage (logos/…), None si aucun logo utilisable n'a été trouvé.
+    storage_key: Mapped[str | None] = mapped_column(Text)
+    media_type: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str | None] = mapped_column(Text)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

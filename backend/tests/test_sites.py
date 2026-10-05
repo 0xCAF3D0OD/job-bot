@@ -148,7 +148,7 @@ async def test_linkedin_alert_read_by_ai(
         assert (search.source, search.parse_status, search.parser_version) == (
             "linkedin",
             "parsed",
-            "alert-v1",
+            "alert-v2",
         )
         [link] = (await session.scalars(select(OfferLink))).all()
         assert (link.source, link.url) == (

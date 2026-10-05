@@ -17,6 +17,8 @@ class RawOffer:
     location: str | None = None
     snippet: str | None = None
     external_id: str | None = None
+    # Logo de l'entreprise, quand l'alerte en montre un (docs/14 §4).
+    logo_url: str | None = None
 
 
 @dataclass(frozen=True)
