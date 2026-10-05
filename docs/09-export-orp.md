@@ -1,6 +1,6 @@
 # 09 — Export ORP et rappels (version 0.6.0)
 
-> Statut : **validé** le 2026-10-05. PR a (page ORP, PDF, CSV, Job-Room, remise) livrée ; PR b (rappels) à venir.
+> Statut : **validé** le 2026-10-05. Livré : PR a (page ORP, PDF, CSV, Job-Room, remise), PR b (rappels).
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §6 et sur les candidatures de la 0.5 ([08-candidatures.md](08-candidatures.md) §5), qui enregistrent déjà tous les champs du formulaire.
 
 ## 1. Objectif
@@ -107,3 +107,11 @@ Les candidatures ne changent pas : `orp_month` existe déjà.
 - **Mois par défaut** : le mois précédent seulement s'il contient des candidatures ; sinon le mois en cours.
 - **Export** : la date du dernier export est notée au téléchargement du CSV et à l'impression du PDF ; elle servira aux rappels (PR b).
 - **Date limite** : fixée au 5 du mois suivant ; le réglage arrive avec la PR b.
+
+## Écarts avec la PR b
+
+- **Heure** : les rappels partent avec la tâche quotidienne `reminders`, vers 9 h (heure suisse), comme la relance des candidatures.
+- **Date limite** : réglable de 2 à 28 (Réglages) ; le jour 1 rendrait la veille impossible.
+- **Rappel de remise** : envoyé au premier passage du mois (le 1er en général, plus tard si la plateforme était arrêtée), tant que la date limite n'est pas passée ; puis un rappel la veille, en priorité haute.
+- **Mois remis** : plus aucun rappel. Le rappel du 25 ne part pas sans objectif saisi.
+- Le jour réglé sert aussi à l'échéance affichée sur les pages ORP et Aujourd'hui.

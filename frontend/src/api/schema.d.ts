@@ -1868,6 +1868,11 @@ export interface components {
              * @default 10
              */
             llm_monthly_budget_chf: number;
+            /**
+             * Orp Due Day
+             * @default 5
+             */
+            orp_due_day: number;
         };
         /**
          * Source

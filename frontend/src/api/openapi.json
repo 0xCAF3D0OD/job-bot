@@ -5680,6 +5680,13 @@
             "minimum": 0.0,
             "title": "Llm Monthly Budget Chf",
             "default": 10
+          },
+          "orp_due_day": {
+            "type": "integer",
+            "maximum": 28.0,
+            "minimum": 2.0,
+            "title": "Orp Due Day",
+            "default": 5
           }
         },
         "type": "object",

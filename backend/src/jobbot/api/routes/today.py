@@ -23,6 +23,7 @@ from jobbot.db.models import (
     Setting,
 )
 from jobbot.letters.service import load_identity
+from jobbot.orp.service import load_due_day
 from jobbot.runtime import Runtime
 from jobbot.worker.tasks.collect import COLLECT_JOB
 
@@ -111,6 +112,7 @@ async def get_today(request: Request) -> TodayOut:
             select(func.count()).select_from(Application).where(Application.orp_month == previous)
         )
         previous_record = await session.get(OrpMonth, previous)
+        due_day = await load_due_day(session)
         last_collect_at = await session.scalar(
             select(func.max(JobRun.finished_at)).where(
                 JobRun.job == COLLECT_JOB, JobRun.status == JobRunStatus.SUCCESS
@@ -140,7 +142,7 @@ async def get_today(request: Request) -> TodayOut:
         month_target=int(target) if target else None,
         to_follow_up=to_follow_up,
         orp_due_month=due_month,
-        orp_due_date=due_date(due_month) if due_month else None,
+        orp_due_date=due_date(due_month, due_day) if due_month else None,
         last_collect_at=last_collect_at,
     )
 

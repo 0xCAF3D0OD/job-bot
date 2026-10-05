@@ -10,6 +10,7 @@ const form = ref<SettingsModel>({
   orp_monthly_target: null,
   notify_score_threshold: 70,
   llm_monthly_budget_chf: 10,
+  orp_due_day: 5,
 });
 const loaded = ref(false);
 const saving = ref(false);
@@ -98,6 +99,26 @@ async function save(): Promise<void> {
               max="100"
             >
             <span>candidatures par mois</span>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend><label for="due-day">Date limite de remise des preuves</label></legend>
+          <p class="hint">
+            Jour du mois suivant où ton conseiller attend les preuves (souvent le 5). Rappels : le 25 si tu es
+            sous l'objectif, le 1er, puis la veille de cette date si le mois n'est pas marqué remis.
+          </p>
+          <div class="inline-field">
+            <span>le</span>
+            <input
+              id="due-day"
+              v-model.number="form.orp_due_day"
+              type="number"
+              min="2"
+              max="28"
+              required
+              data-test="due-day"
+            >
+            <span>du mois suivant</span>
           </div>
         </fieldset>
         <fieldset>
