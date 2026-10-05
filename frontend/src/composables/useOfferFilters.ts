@@ -3,7 +3,7 @@ import { useRoute, useRouter, type LocationQuery } from "vue-router";
 
 import type { Source } from "../api/client";
 
-export type View = "to_review" | "filtered_out" | "all";
+export type View = "to_review" | "filtered_out" | "later" | "in_progress" | "all";
 export type Sort = "recent" | "popular" | "score";
 
 export interface OfferFilters {
@@ -28,7 +28,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   externalOnly: false,
 };
 
-const VIEWS: View[] = ["to_review", "filtered_out", "all"];
+const VIEWS: View[] = ["to_review", "filtered_out", "later", "in_progress", "all"];
 const SORTS: Sort[] = ["recent", "popular", "score"];
 const SOURCES: Source[] = ["jobup", "indeed", "jobroom"];
 

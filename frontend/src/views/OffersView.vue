@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { api, type Offer, type OfferFacets } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
@@ -13,7 +14,16 @@ const PAGE_SIZE = 50;
 const { filters, update, reset } = useOfferFilters();
 const items = ref<Offer[]>([]);
 const total = ref(0);
-const counts = ref<Record<View, number>>({ to_review: 0, filtered_out: 0, all: 0 });
+const counts = ref<Record<View, number>>({
+  to_review: 0,
+  filtered_out: 0,
+  later: 0,
+  in_progress: 0,
+  all: 0,
+});
+const applying = ref<ApplicationFormValue | null>(null);
+const applyError = ref("");
+const notice = ref("");
 const facets = ref<OfferFacets>({ sources: [], cantons: [] });
 const loading = ref(false);
 const failed = ref(false);
@@ -59,9 +69,62 @@ async function load(append = false): Promise<void> {
   }
 }
 
+async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"): Promise<void> {
+  const offer = selected.value;
+  if (!offer) return;
+  const { error } = await api.PATCH("/api/offers/{offer_id}/status", {
+    params: { path: { offer_id: offer.id } },
+    body: { status },
+  });
+  if (error) {
+    notice.value = "Changement refusé.";
+    return;
+  }
+  // L'offre quitte la vue actuelle si elle n'y a plus sa place : on recharge.
+  if (status !== "preparing") selectedId.value = null;
+  await load();
+}
+
+async function openApplication(): Promise<void> {
+  const offer = selected.value;
+  if (!offer) return;
+  applyError.value = "";
+  const { data } = await api.GET("/api/offers/{offer_id}/application-prefill", {
+    params: { path: { offer_id: offer.id } },
+  });
+  if (data) applying.value = { ...data, status: "en_attente" };
+}
+
+async function saveApplication(value: ApplicationFormValue): Promise<void> {
+  const { data, error } = await api.POST("/api/applications", {
+    body: {
+      offer_id: value.offer_id ?? null,
+      sent_at: value.sent_at,
+      method: value.method,
+      assigned_by_orp: value.assigned_by_orp,
+      company: value.company,
+      company_address: value.company_address || null,
+      contact_name: value.contact_name || null,
+      contact_phone: value.contact_phone || null,
+      job_title: value.job_title,
+      location: value.location || null,
+      rate_text: value.rate_text || null,
+    },
+  });
+  if (!data) {
+    const detail = (error as { detail?: unknown } | undefined)?.detail;
+    applyError.value = typeof detail === "string" ? detail : "Vérifie les champs obligatoires.";
+    return;
+  }
+  applying.value = null;
+  notice.value = `Candidature chez ${data.company} enregistrée.`;
+  await load();
+}
+
 function onKeydown(event: KeyboardEvent): void {
   if (event.key !== "Escape") return;
-  if (filtersOpen.value) filtersOpen.value = false;
+  if (applying.value) applying.value = null;
+  else if (filtersOpen.value) filtersOpen.value = false;
   else selectedId.value = null;
 }
 
@@ -131,6 +194,13 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       </aside>
 
       <div class="offers-list">
+        <p
+          v-if="notice"
+          class="notice"
+          role="status"
+        >
+          {{ notice }}
+        </p>
         <p class="count list-count">
           {{ total }} offre(s){{ loading ? "…" : "" }}
         </p>
@@ -186,6 +256,8 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           :offer="selected"
           :chunk-titles="chunkTitles"
           @close="selectedId = null"
+          @status="setStatus"
+          @applied="openApplication"
         />
       </div>
       <div
@@ -198,4 +270,13 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       </div>
     </div>
   </section>
+  <ApplicationForm
+    v-if="applying"
+    title="Marquer comme envoyée"
+    :initial="applying"
+    :with-status="false"
+    :error="applyError"
+    @submit="saveApplication"
+    @close="applying = null"
+  />
 </template>

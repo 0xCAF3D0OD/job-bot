@@ -1,6 +1,6 @@
 # 08 — Candidatures : lettre, CV adapté et suivi (version 0.5.0)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** le 2026-10-05. PR a (tri, suivi, coordonnées, relance) livrée ; PR b et c à venir.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2, §3 et §5 (`drafts`, `applications`), sur le profil en blocs (0.3) et la note IA (0.4). L'export ORP reste en 0.6, mais la 0.5 enregistre déjà tout ce dont il aura besoin.
 
 ## 1. Objectif
@@ -119,3 +119,11 @@ La PR a sert tout de suite : tu peux suivre les candidatures que tu envoies déj
 6. **Opus 5 en effort `medium`** pour la rédaction, environ 0,10 $ par candidature (§6).
 7. **PDF par l'impression du navigateur, plus un export Word** (§8).
 8. **Trois PR**, le suivi d'abord (§9).
+
+## Écarts avec la PR a
+
+- **Migration 0010** : seule la table `applications` est créée ; `drafts` et les colonnes `letter_draft_id`, `cv_draft_id` arriveront avec la PR b (migration 0011). La table `applications` garde en plus `location`, utile à l'export ORP.
+- **Pré-remplissage** : adresse, contact et téléphone de l'entreprise restent vides tant que la préparation par l'IA (PR b) n'existe pas ; tu peux les saisir à la main.
+- **Ajout manuel** : la page Candidatures permet aussi d'enregistrer une candidature envoyée hors plateforme (sans offre liée).
+- **Suppression** : supprimer une candidature remet l'offre « en préparation ».
+- **Relance** : la tâche `reminders` passe une fois par jour vers 9 h ; sans ntfy configuré, aucune candidature n'est marquée comme relancée.

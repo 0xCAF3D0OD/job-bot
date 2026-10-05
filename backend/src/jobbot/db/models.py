@@ -1,13 +1,14 @@
 """Tables de la version 0.1. Les suivantes arrivent avec leurs versions (cadrage §5)."""
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import (
     BigInteger,
+    Date,
     DateTime,
     ForeignKey,
     Numeric,
@@ -305,3 +306,53 @@ class LlmBatch(Base):
     offer_ids: Mapped[list[int]] = mapped_column(ARRAY(BigInteger))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+# --- Candidatures (0.5) ---------------------------------------------------------------
+
+
+class ApplicationMethod(StrEnum):
+    """Mode de candidature, au sens du formulaire ORP."""
+
+    ELECTRONIQUE = "electronique"
+    ECRIT = "ecrit"
+    TELEPHONE = "telephone"
+    PERSONNEL = "personnel"
+
+
+class ApplicationStatus(StrEnum):
+    EN_ATTENTE = "en_attente"
+    RELANCEE = "relancee"
+    ENTRETIEN = "entretien"
+    REFUS = "refus"
+    ENGAGEMENT = "engagement"
+    SANS_REPONSE = "sans_reponse"
+
+
+class Application(Base):
+    """Une candidature envoyée par Kevin : suivi et données du formulaire ORP (docs/08)."""
+
+    __tablename__ = "applications"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    offer_id: Mapped[int | None] = mapped_column(
+        ForeignKey("offers.id", ondelete="SET NULL"), unique=True
+    )
+    sent_at: Mapped[date] = mapped_column(Date)
+    method: Mapped[str] = mapped_column(Text)
+    assigned_by_orp: Mapped[bool] = mapped_column(default=False)
+    company: Mapped[str] = mapped_column(Text)
+    company_address: Mapped[str | None] = mapped_column(Text)
+    contact_name: Mapped[str | None] = mapped_column(Text)
+    contact_phone: Mapped[str | None] = mapped_column(Text)
+    job_title: Mapped[str] = mapped_column(Text)
+    location: Mapped[str | None] = mapped_column(Text)
+    # « plein temps » ou « temps partiel (80 %) », comme sur le formulaire ORP.
+    rate_text: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default=ApplicationStatus.EN_ATTENTE)
+    status_reason: Mapped[str | None] = mapped_column(Text)
+    status_at: Mapped[date | None] = mapped_column(Date)
+    interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    orp_month: Mapped[str] = mapped_column(Text, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

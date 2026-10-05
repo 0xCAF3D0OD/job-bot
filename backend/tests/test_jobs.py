@@ -55,7 +55,7 @@ def test_scheduler_can_be_disabled(settings: Settings) -> None:
     runtime = Runtime.create(settings)
     enabled = build_procrastinate_app(runtime)
     periodic = enabled.periodic_registry.periodic_tasks.values()
-    assert sorted(t.periodic_id for t in periodic) == ["collect", "heartbeat", "score"]
+    assert sorted(t.periodic_id for t in periodic) == ["collect", "heartbeat", "reminders", "score"]
     disabled = build_procrastinate_app(Runtime.create(make_settings(scheduler_enabled=False)))
     assert {"collect", "heartbeat"} <= set(disabled.tasks)
     assert not disabled.periodic_registry.periodic_tasks

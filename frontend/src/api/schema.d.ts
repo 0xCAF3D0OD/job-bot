@@ -365,10 +365,281 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set Offer Status */
+        patch: operations["setOfferStatus"];
+        trace?: never;
+    };
+    "/api/offers/{offer_id}/application-prefill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Application Prefill
+         * @description Valeurs proposées pour « Marquer comme envoyée ».
+         */
+        get: operations["getApplicationPrefill"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Applications */
+        get: operations["listApplications"];
+        put?: never;
+        /** Create Application */
+        post: operations["createApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Applications Summary */
+        get: operations["getApplicationsSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{application_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Application */
+        put: operations["updateApplication"];
+        post?: never;
+        /**
+         * Delete Application
+         * @description Annule une candidature enregistrée par erreur ; l'offre revient « en préparation ».
+         */
+        delete: operations["deleteApplication"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Identity */
+        get: operations["getIdentity"];
+        /** Put Identity */
+        put: operations["saveIdentity"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ApplicationIn */
+        ApplicationIn: {
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+            /** @default electronique */
+            method: components["schemas"]["ApplicationMethod"];
+            /**
+             * Assigned By Orp
+             * @default false
+             */
+            assigned_by_orp: boolean;
+            /** Company */
+            company: string;
+            /** Company Address */
+            company_address?: string | null;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Contact Phone */
+            contact_phone?: string | null;
+            /** Job Title */
+            job_title: string;
+            /** Location */
+            location?: string | null;
+            /** Rate Text */
+            rate_text?: string | null;
+            /** Offer Id */
+            offer_id?: number | null;
+        };
+        /**
+         * ApplicationMethod
+         * @description Mode de candidature, au sens du formulaire ORP.
+         * @enum {string}
+         */
+        ApplicationMethod: "electronique" | "ecrit" | "telephone" | "personnel";
+        /** ApplicationOut */
+        ApplicationOut: {
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+            /** @default electronique */
+            method: components["schemas"]["ApplicationMethod"];
+            /**
+             * Assigned By Orp
+             * @default false
+             */
+            assigned_by_orp: boolean;
+            /** Company */
+            company: string;
+            /** Company Address */
+            company_address?: string | null;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Contact Phone */
+            contact_phone?: string | null;
+            /** Job Title */
+            job_title: string;
+            /** Location */
+            location?: string | null;
+            /** Rate Text */
+            rate_text?: string | null;
+            /** @default en_attente */
+            status: components["schemas"]["ApplicationStatus"];
+            /** Status Reason */
+            status_reason?: string | null;
+            /** Status At */
+            status_at?: string | null;
+            /** Interview At */
+            interview_at?: string | null;
+            /** Id */
+            id: number;
+            /** Offer Id */
+            offer_id: number | null;
+            /** Orp Month */
+            orp_month: string;
+            /** Reminded At */
+            reminded_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ApplicationPrefill */
+        ApplicationPrefill: {
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+            /** @default electronique */
+            method: components["schemas"]["ApplicationMethod"];
+            /**
+             * Assigned By Orp
+             * @default false
+             */
+            assigned_by_orp: boolean;
+            /** Company */
+            company: string;
+            /** Company Address */
+            company_address?: string | null;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Contact Phone */
+            contact_phone?: string | null;
+            /** Job Title */
+            job_title: string;
+            /** Location */
+            location?: string | null;
+            /** Rate Text */
+            rate_text?: string | null;
+            /** Offer Id */
+            offer_id: number;
+        };
+        /**
+         * ApplicationStatus
+         * @enum {string}
+         */
+        ApplicationStatus: "en_attente" | "relancee" | "entretien" | "refus" | "engagement" | "sans_reponse";
+        /** ApplicationUpdate */
+        ApplicationUpdate: {
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+            /** @default electronique */
+            method: components["schemas"]["ApplicationMethod"];
+            /**
+             * Assigned By Orp
+             * @default false
+             */
+            assigned_by_orp: boolean;
+            /** Company */
+            company: string;
+            /** Company Address */
+            company_address?: string | null;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Contact Phone */
+            contact_phone?: string | null;
+            /** Job Title */
+            job_title: string;
+            /** Location */
+            location?: string | null;
+            /** Rate Text */
+            rate_text?: string | null;
+            /** @default en_attente */
+            status: components["schemas"]["ApplicationStatus"];
+            /** Status Reason */
+            status_reason?: string | null;
+            /** Status At */
+            status_at?: string | null;
+            /** Interview At */
+            interview_at?: string | null;
+        };
         /** Body_uploadDocument */
         Body_uploadDocument: {
             /** File */
@@ -551,6 +822,17 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** Identity */
+        Identity: {
+            /** Name */
+            name?: string | null;
+            /** Address */
+            address?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Email */
+            email?: string | null;
+        };
         /** JobRunOut */
         JobRunOut: {
             /** Id */
@@ -603,6 +885,15 @@ export interface components {
          * @enum {string}
          */
         Language: "allemand" | "italien" | "anglais";
+        /** MonthSummary */
+        MonthSummary: {
+            /** Month */
+            month: string;
+            /** Count */
+            count: number;
+            /** Target */
+            target: number | null;
+        };
         /** NotificationsStatus */
         NotificationsStatus: {
             /** Configured */
@@ -616,6 +907,10 @@ export interface components {
             to_review: number;
             /** Filtered Out */
             filtered_out: number;
+            /** Later */
+            later: number;
+            /** In Progress */
+            in_progress: number;
             /** All */
             all: number;
         };
@@ -732,6 +1027,20 @@ export interface components {
          * @enum {string}
          */
         OfferStatus: "new" | "filtered_out" | "to_review" | "later" | "ignored" | "preparing" | "applied";
+        /** OfferStatusIn */
+        OfferStatusIn: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "to_review" | "later" | "ignored" | "preparing";
+        };
+        /** OfferStatusOut */
+        OfferStatusOut: {
+            /** Id */
+            id: number;
+            status: components["schemas"]["OfferStatus"];
+        };
         /**
          * ParseStatus
          * @enum {string}
@@ -1120,7 +1429,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 sort?: "recent" | "popular" | "score";
-                view?: "to_review" | "filtered_out" | "all";
+                view?: "to_review" | "filtered_out" | "later" | "in_progress" | "all";
                 q?: string | null;
                 min_score?: number | null;
                 sources?: components["schemas"]["Source"][];
@@ -1721,6 +2030,291 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    setOfferStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferStatusIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getApplicationPrefill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationPrefill"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listApplications: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
+                };
+            };
+            /** @description Candidature déjà enregistrée pour cette offre */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getApplicationsSummary: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Identity"];
+                };
+            };
+        };
+    };
+    saveIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Identity"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Identity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

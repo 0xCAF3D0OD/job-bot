@@ -1,6 +1,7 @@
 import type { Component } from "vue";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
+import ApplicationsView from "./views/ApplicationsView.vue";
 import CriteriaView from "./views/CriteriaView.vue";
 import JournalView from "./views/JournalView.vue";
 import OffersView from "./views/OffersView.vue";
@@ -21,6 +22,7 @@ export interface NavEntry {
 // Menu définitif : les pages vides indiquent la version qui les remplira.
 export const navigation: NavEntry[] = [
   { path: "/offres", name: "offers", label: "Offres" },
+  { path: "/candidatures", name: "applications", label: "Candidatures" },
   { path: "/profil", name: "profile", label: "Profil" },
   { path: "/prerequis", name: "criteria", label: "Prérequis" },
   { path: "/journal", name: "journal", label: "Journal" },
@@ -38,6 +40,7 @@ export const navigation: NavEntry[] = [
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, Component> = {
   offers: OffersView,
+  applications: ApplicationsView,
   profile: ProfileView,
   journal: JournalView,
   criteria: CriteriaView,

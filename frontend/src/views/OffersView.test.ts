@@ -6,7 +6,15 @@ import { fromQuery, toQuery } from "../composables/useOfferFilters";
 import OffersView from "./OffersView.vue";
 
 const GET = vi.fn();
-vi.mock("../api/client", () => ({ api: { GET: (...args: unknown[]) => GET(...args) } }));
+const PATCH = vi.fn();
+const POST = vi.fn();
+vi.mock("../api/client", () => ({
+  api: {
+    GET: (...args: unknown[]) => GET(...args),
+    PATCH: (...args: unknown[]) => PATCH(...args),
+    POST: (...args: unknown[]) => POST(...args),
+  },
+}));
 
 const offer = (id: number, title: string, extra: Record<string, unknown> = {}) => ({
   id,
@@ -30,7 +38,7 @@ function page(items: unknown[]) {
     data: {
       items,
       total: items.length,
-      counts: { to_review: 5, filtered_out: 2, all: 7 },
+      counts: { to_review: 5, filtered_out: 2, later: 0, in_progress: 0, all: 7 },
       facets: {
         sources: [
           { value: "indeed", count: 3 },
@@ -214,5 +222,54 @@ describe("note et résumé", () => {
     expect(wrapper.find("[data-test=ai]").text()).toContain("82/100");
     expect(wrapper.find("[data-test=strengths]").text()).toContain("Bloc : Linux");
     expect(wrapper.find("[data-test=gaps]").text()).toContain("Pas d'Ansible");
+  });
+});
+
+describe("tri et candidature", () => {
+  it("« Plus tard » change le statut et ferme le détail", async () => {
+    PATCH.mockResolvedValue({ data: { id: 1, status: "later" } });
+    const wrapper = await mountAt("/offres");
+    await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=later]").trigger("click");
+    await flushPromises();
+    expect(PATCH).toHaveBeenCalledWith("/api/offers/{offer_id}/status", {
+      params: { path: { offer_id: 1 } },
+      body: { status: "later" },
+    });
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
+  });
+
+  it("« Marquer comme envoyée » pré-remplit puis enregistre la candidature", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offers/{offer_id}/application-prefill"
+          ? {
+              data: {
+                offer_id: 1,
+                sent_at: "2026-10-05",
+                method: "electronique",
+                assigned_by_orp: false,
+                company: "Acme SA",
+                job_title: "Ingénieur système",
+                location: "Lausanne, VD",
+                rate_text: "plein temps ou temps partiel (80-100 %)",
+              },
+            }
+          : path === "/api/profile-chunks"
+            ? { data: [] }
+            : page([offer(1, "Ingénieur système")]),
+      ),
+    );
+    POST.mockResolvedValue({ data: { id: 9, company: "Acme SA" } });
+    const wrapper = await mountAt("/offres");
+    await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=mark-applied]").trigger("click");
+    await flushPromises();
+    await wrapper.find("form.application-form").trigger("submit");
+    await flushPromises();
+    const [path, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    expect(path).toBe("/api/applications");
+    expect(opts.body).toMatchObject({ offer_id: 1, company: "Acme SA", rate_text: "plein temps ou temps partiel (80-100 %)" });
+    expect(wrapper.text()).toContain("Candidature chez Acme SA enregistrée.");
   });
 });
