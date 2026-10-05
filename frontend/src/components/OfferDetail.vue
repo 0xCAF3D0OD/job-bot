@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
-import type { Offer } from "../api/client";
+import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { colorIndex, expiredText, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 
@@ -19,7 +19,49 @@ const emit = defineEmits<{
   applied: [];
   expiry: [expired: boolean];
   address: [address: string];
+  changed: [];
 }>();
+
+// Registre IDE (docs/12 §2.2) : propositions quand le nom ne suffit pas à trancher.
+const searching = ref(false);
+const proposals = ref<RegistryCandidate[]>([]);
+const registryMessage = ref("");
+
+async function searchRegistry(): Promise<void> {
+  searching.value = true;
+  registryMessage.value = "";
+  proposals.value = [];
+  try {
+    const { data } = await api.GET("/api/offers/{offer_id}/address-candidates", {
+      params: { path: { offer_id: props.offer.id } },
+    });
+    if (!data) {
+      registryMessage.value = "Registre IDE injoignable, réessaie plus tard.";
+    } else if (data.chosen_uid && props.offer.company_address_source !== "registry") {
+      registryMessage.value = "Adresse trouvée dans le registre.";
+      emit("changed");
+    } else if (!data.candidates.length) {
+      registryMessage.value = "Aucune entreprise active à ce nom dans le registre. Saisis l'adresse à la main.";
+    } else {
+      proposals.value = data.candidates;
+      registryMessage.value = "Plusieurs entreprises possibles : choisis la bonne.";
+    }
+  } catch {
+    registryMessage.value = "API injoignable.";
+  } finally {
+    searching.value = false;
+  }
+}
+
+async function chooseRegistry(uid: string): Promise<void> {
+  const { data } = await api.POST("/api/offers/{offer_id}/address-candidates/choose", {
+    params: { path: { offer_id: props.offer.id } },
+    body: { uid },
+  });
+  proposals.value = [];
+  registryMessage.value = data ? "" : "Choix refusé.";
+  if (data) emit("changed");
+}
 
 const STATUS_LABEL: Partial<Record<Offer["status"], string>> = {
   preparing: "En préparation",
@@ -66,6 +108,8 @@ watch(
   () => {
     editingAddress.value = false;
     menuOpen.value = false;
+    proposals.value = [];
+    registryMessage.value = "";
   },
 );
 
@@ -218,9 +262,50 @@ function initial(offer: Offer): string {
         >
           {{ offer.company_address ? "Modifier" : "Ajouter" }}
         </button>
+        <button
+          v-if="offer.company && offer.company_address_source !== 'manual' && offer.company_address_source !== 'page'"
+          type="button"
+          class="link"
+          :disabled="searching"
+          data-test="search-registry"
+          @click="searchRegistry"
+        >
+          {{ searching ? "Recherche…" : "Chercher dans le registre" }}
+        </button>
       </template>
+      <div
+        v-if="registryMessage || proposals.length"
+        class="registry-proposals"
+        data-test="registry"
+      >
+        <p
+          v-if="registryMessage"
+          class="hint"
+        >
+          {{ registryMessage }}
+        </p>
+        <ul v-if="proposals.length">
+          <li
+            v-for="proposal in proposals"
+            :key="proposal.uid"
+          >
+            <span>
+              <strong>{{ proposal.name }}</strong><br>
+              <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
+            </span>
+            <button
+              type="button"
+              class="secondary small"
+              data-test="choose-registry"
+              @click="chooseRegistry(proposal.uid)"
+            >
+              Choisir
+            </button>
+          </li>
+        </ul>
+      </div>
       <form
-        v-else
+        v-if="editingAddress"
         class="address-form"
         @submit.prevent="saveAddress"
       >

@@ -321,6 +321,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           @applied="openApplication"
           @expiry="setExpiry"
           @address="setAddress"
+          @changed="load()"
         />
       </div>
       <div

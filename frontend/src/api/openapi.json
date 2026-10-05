@@ -2280,10 +2280,137 @@
           }
         }
       }
+    },
+    "/api/offers/{offer_id}/address-candidates": {
+      "get": {
+        "tags": [
+          "registry"
+        ],
+        "summary": "Get Address Candidates",
+        "description": "Propositions du registre IDE ; une recherche est faite si rien n'est en cache.",
+        "operationId": "getAddressCandidates",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressCandidates"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Registre IDE injoignable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/address-candidates/choose": {
+      "post": {
+        "tags": [
+          "registry"
+        ],
+        "summary": "Choose Address",
+        "description": "Kevin choisit une proposition : elle vaut pour toutes les offres de cette entreprise.",
+        "operationId": "chooseAddressCandidate",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChooseIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChosenAddress"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AddressCandidates": {
+        "properties": {
+          "chosen_uid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chosen Uid"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/RegistryCandidate"
+            },
+            "type": "array",
+            "title": "Candidates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chosen_uid",
+          "candidates"
+        ],
+        "title": "AddressCandidates"
+      },
       "ApplicationIn": {
         "properties": {
           "sent_at": {
@@ -2895,6 +3022,37 @@
           "done"
         ],
         "title": "ChecklistItem"
+      },
+      "ChooseIn": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid"
+        ],
+        "title": "ChooseIn"
+      },
+      "ChosenAddress": {
+        "properties": {
+          "company_address": {
+            "type": "string",
+            "title": "Company Address"
+          },
+          "company_address_source": {
+            "type": "string",
+            "title": "Company Address Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_address",
+          "company_address_source"
+        ],
+        "title": "ChosenAddress"
       },
       "ChunkIn": {
         "properties": {
@@ -5278,6 +5436,34 @@
           "failed"
         ],
         "title": "ParseStatus"
+      },
+      "RegistryCandidate": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "canton": {
+            "type": "string",
+            "title": "Canton"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid",
+          "name",
+          "address",
+          "canton"
+        ],
+        "title": "RegistryCandidate"
       },
       "RescoreResponse": {
         "properties": {

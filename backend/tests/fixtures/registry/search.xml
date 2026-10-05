@@ -1,0 +1,12 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body>
+<SearchResponse xmlns="http://www.uid.admin.ch/xmlns/uid-wse"><SearchResult>
+<uidEntitySearchResultItem xmlns="http://www.uid.admin.ch/xmlns/uid-wse/5"><organisation>
+<organisation xmlns="http://www.ech.ch/xmlns/eCH-0108/5"><organisationIdentification>
+<uid xmlns="http://www.ech.ch/xmlns/eCH-0097/5"><uidOrganisationIdCategorie>CHE</uidOrganisationIdCategorie><uidOrganisationId>100000001</uidOrganisationId></uid>
+<organisationName xmlns="http://www.ech.ch/xmlns/eCH-0097/5">Exemple &amp; Cie SA</organisationName></organisationIdentification>
+<address><street>chemin de l'Exemple</street><houseNumber>10</houseNumber><town>Genève</town><swissZipCode>1206</swissZipCode><cantonAbbreviation>GE</cantonAbbreviation></address>
+</organisation>
+<uidregInformation xmlns="http://www.ech.ch/xmlns/eCH-0108/5"><uidregStatusEnterpriseDetail>3</uidregStatusEnterpriseDetail></uidregInformation>
+<commercialRegisterInformation xmlns="http://www.ech.ch/xmlns/eCH-0108/5"><commercialRegisterEntryStatus>2</commercialRegisterEntryStatus></commercialRegisterInformation>
+</organisation></uidEntitySearchResultItem>
+</SearchResult></SearchResponse></s:Body></s:Envelope>

@@ -1,6 +1,6 @@
 # 12 — Détail d'une offre allégé et adresse de l'entreprise (version 0.7.1)
 
-> Statut : **validé** le 2026-10-05. PR a (détail, adresse de l'annonce) livrée ; PR b (registre IDE) à venir.
+> Statut : **validé** le 2026-10-05. livré : PR a (détail, adresse de l'annonce), PR b (registre IDE).
 > Retours d'usage du 2026-10-05. Complète [11-sites-etiquettes.md](11-sites-etiquettes.md) ; s'insère avant les PR b et c de la 0.7.
 
 ## 1. Actions du détail : deux boutons et un menu
@@ -66,3 +66,11 @@ Les migrations prévues au cadrage 11 pour les mots-clés et les sites deviennen
 - **Adresse de la lettre** : si aucune adresse n'est connue, celle que l'IA relève pendant la rédaction devient celle de l'offre (source « relevée dans l'annonce ») ; une adresse lue sur la page jobup la remplace ensuite.
 - **Priorité des sources** : saisie > annonce > registre IDE > lettre ; une adresse saisie par toi n'est jamais remplacée.
 - La pastille de statut affiche aussi « Écartée par le filtre » et « Expirée ».
+
+## Écarts avec la PR b
+
+- **Migrations** : registre IDE en 0016 ; les mots-clés et les sites du cadrage 11 passent en 0017 et 0018.
+- **Quand** : la recherche suit la lecture des pages jobup (tâche `enrich`, après chaque collecte) ; le bouton « Chercher dans le registre » du détail la lance tout de suite pour une offre.
+- **Comparaison des noms** : sans majuscules, accents ni formes juridiques (« Moser Vernet & Cie » = « Moser Vernet & Cie SA ») ; une entreprise radiée ou inactive est écartée.
+- **Choix** : il vaut pour toutes les offres de la même entreprise ; le cache dure 30 jours.
+- **Pas de recherche** pour une adresse saisie par toi ou lue sur l'annonce.
