@@ -754,3 +754,4 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .sites-list li.paused { opacity: 0.6; }
 .site-main { display: grid; flex: 1; min-width: 12rem; }
 .site-stats { white-space: nowrap; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

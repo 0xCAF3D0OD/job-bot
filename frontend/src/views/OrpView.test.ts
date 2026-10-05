@@ -93,6 +93,8 @@ describe("OrpView", () => {
     );
     PUT.mockResolvedValue({ data: { id: 2 } });
     const { wrapper } = await mountView();
+    // Chaque ligne se modifie ; « À compléter » ouvre le même formulaire.
+    expect(wrapper.findAll("[data-test=edit-row]")).toHaveLength(2);
     await wrapper.find("[data-test=complete]").trigger("click");
     await flushPromises();
     const form = wrapper.find("form.application-form");
