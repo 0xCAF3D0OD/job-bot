@@ -19,6 +19,7 @@ const VIEWS: { value: View; label: string }[] = [
   { value: "all", label: "Toutes" },
 ];
 const SORTS: { value: Sort; label: string }[] = [
+  { value: "score", label: "Note" },
   { value: "recent", label: "Récentes" },
   { value: "popular", label: "Populaires" },
 ];
@@ -44,6 +45,11 @@ function toggle<T extends string>(values: T[], value: T): T[] {
 function onRate(event: Event): void {
   const value = Number((event.target as HTMLInputElement).value);
   emit("update", { minRate: value > 0 ? value : null });
+}
+
+function onScore(event: Event): void {
+  const value = Number((event.target as HTMLInputElement).value);
+  emit("update", { minScore: value > 0 ? value : null });
 }
 </script>
 
@@ -107,6 +113,29 @@ function onRate(event: Event): void {
           {{ entry.label }}
         </button>
       </div>
+    </div>
+
+    <div class="filter-group">
+      <label
+        class="filter-title"
+        for="offer-score"
+      >
+        Note minimale <span class="filter-value">{{ filters.minScore ? `${filters.minScore} / 100` : "toutes" }}</span>
+      </label>
+      <input
+        id="offer-score"
+        type="range"
+        min="0"
+        max="90"
+        step="10"
+        :value="filters.minScore ?? 0"
+        data-test="min-score"
+        @change="onScore"
+      >
+      <span
+        v-if="filters.minScore"
+        class="hint"
+      >Les offres pas encore notées sont masquées.</span>
     </div>
 
     <div class="filter-group">

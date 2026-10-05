@@ -18,6 +18,7 @@ const facets = ref<OfferFacets>({ sources: [], cantons: [] });
 const loading = ref(false);
 const failed = ref(false);
 const selectedId = ref<number | null>(null);
+const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
@@ -40,6 +41,7 @@ async function load(append = false): Promise<void> {
           sources: f.sources.length ? f.sources : undefined,
           cantons: f.cantons.length ? f.cantons : undefined,
           min_rate: f.minRate ?? undefined,
+          min_score: f.minScore ?? undefined,
           external_only: f.externalOnly || undefined,
         },
       },
@@ -64,9 +66,19 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 watch(filters, () => void load(), { deep: true });
+async function loadChunkTitles(): Promise<void> {
+  try {
+    const { data } = await api.GET("/api/profile-chunks");
+    chunkTitles.value = Object.fromEntries((data ?? []).map((c) => [c.id, c.title]));
+  } catch {
+    chunkTitles.value = {};
+  }
+}
+
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
   void load();
+  void loadChunkTitles();
 });
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 </script>
@@ -172,6 +184,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       >
         <OfferDetail
           :offer="selected"
+          :chunk-titles="chunkTitles"
           @close="selectedId = null"
         />
       </div>

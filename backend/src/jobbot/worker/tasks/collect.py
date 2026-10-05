@@ -5,6 +5,7 @@ from jobbot.runtime import Runtime
 from jobbot.worker.jobs import RunContext, execute, register
 from jobbot.worker.tasks.enrich import ENRICH_JOB
 from jobbot.worker.tasks.filter import FILTER_JOB
+from jobbot.worker.tasks.score import SCORE_JOB
 
 COLLECT_JOB = "collect"
 # Toutes les 2 heures (UTC), utile de 7 h à 21 h, heure suisse.
@@ -23,3 +24,6 @@ async def collect_job(runtime: Runtime, ctx: RunContext) -> None:
         await execute(runtime, FILTER_JOB)
     if runtime.settings.enrich_enabled:
         await execute(runtime, ENRICH_JOB)
+    # Puis l'IA note les offres retenues (appels directs si elles sont peu nombreuses).
+    if runtime.settings.llm_configured:
+        await execute(runtime, SCORE_JOB)

@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import type { Offer } from "../api/client";
-import { colorIndex, formatDate, rateText, sourceLabel } from "../format";
+import { colorIndex, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 
-defineProps<{ offer: Offer }>();
+const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
+
+function sources(ids: number[]): string {
+  return ids
+    .map((id) => props.chunkTitles?.[id])
+    .filter(Boolean)
+    .join(", ");
+}
 defineEmits<{ close: [] }>();
 
 function initial(offer: Offer): string {
@@ -53,6 +60,68 @@ function initial(offer: Offer): string {
         rel="noopener noreferrer"
       >Voir sur {{ sourceLabel[link.source] }} <AppIcon name="chevron" /></a>
     </div>
+    <section
+      v-if="offer.summary_role"
+      class="ai-block"
+      data-test="ai"
+    >
+      <div class="ai-head">
+        <span
+          v-if="offer.score !== null && offer.score !== undefined"
+          :class="['score', 'big', scoreLevel(offer.score)]"
+        >{{ offer.score }}<small>/100</small></span>
+        <span class="detail">
+          Résumé et note par l'IA{{ offer.summary_partial ? ", sur l'extrait de l'alerte seulement" : "" }}.
+          <template v-if="offer.score_stale">Ton profil a changé depuis : note à refaire.</template>
+          <template v-if="offer.score === null">Pas de note : aucun bloc de profil actif.</template>
+        </span>
+      </div>
+      <dl class="summary">
+        <div><dt>Poste</dt><dd>{{ offer.summary_role }}</dd></div>
+        <div><dt>Demande</dt><dd>{{ offer.summary_asks }}</dd></div>
+        <div><dt>Offre</dt><dd>{{ offer.summary_offers }}</dd></div>
+      </dl>
+      <div
+        v-if="offer.strengths?.length || offer.gaps?.length"
+        class="points"
+      >
+        <div v-if="offer.strengths?.length">
+          <h3>Points forts</h3>
+          <ul data-test="strengths">
+            <li
+              v-for="point in offer.strengths"
+              :key="point.text"
+            >
+              {{ point.text }}
+              <span
+                v-if="sources(point.chunk_ids)"
+                class="detail"
+              >Bloc : {{ sources(point.chunk_ids) }}</span>
+            </li>
+          </ul>
+        </div>
+        <div v-if="offer.gaps?.length">
+          <h3>Manques</h3>
+          <ul
+            class="gaps"
+            data-test="gaps"
+          >
+            <li
+              v-for="point in offer.gaps"
+              :key="point.text"
+            >
+              {{ point.text }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    <p
+      v-else-if="offer.score_error"
+      class="badge reason"
+    >
+      Note impossible : {{ offer.score_error }}
+    </p>
     <ul
       v-if="offer.filter_reasons?.length"
       class="reasons"

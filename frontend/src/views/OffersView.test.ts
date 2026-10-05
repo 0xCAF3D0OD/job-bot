@@ -47,6 +47,12 @@ function page(items: unknown[]) {
 
 let router: Router;
 
+function mockOffers(response: unknown): void {
+  GET.mockImplementation((path: string) =>
+    Promise.resolve(path === "/api/profile-chunks" ? { data: [{ id: 1, title: "Linux" }] } : response),
+  );
+}
+
 async function mountAt(path: string) {
   router = createRouter({
     history: createMemoryHistory(),
@@ -59,10 +65,19 @@ async function mountAt(path: string) {
 }
 
 function lastQuery(): Record<string, unknown> {
-  return (GET.mock.calls.at(-1)?.[1] as { params: { query: Record<string, unknown> } }).params.query;
+  const call = GET.mock.calls.filter((c) => c[0] === "/api/offers").at(-1);
+  return (call?.[1] as { params: { query: Record<string, unknown> } }).params.query;
 }
 
-beforeEach(() => GET.mockResolvedValue(page([offer(1, "Ingénieur système")])));
+beforeEach(() =>
+  GET.mockImplementation((path: string) =>
+    Promise.resolve(
+      path === "/api/profile-chunks"
+        ? { data: [{ id: 1, title: "Linux" }] }
+        : page([offer(1, "Ingénieur système")]),
+    ),
+  ),
+);
 afterEach(() => {
   GET.mockReset();
   vi.useRealTimers();
@@ -128,10 +143,10 @@ describe("OffersView", () => {
   it("la recherche attend la fin de la frappe", async () => {
     vi.useFakeTimers();
     const wrapper = await mountAt("/offres");
-    const calls = GET.mock.calls.length;
+    const calls = GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
     await wrapper.find("[data-test=search]").setValue("dev");
     await wrapper.find("[data-test=search]").setValue("devops");
-    expect(GET.mock.calls.length).toBe(calls);
+    expect(GET.mock.calls.filter((c) => c[0] === "/api/offers").length).toBe(calls);
     await vi.advanceTimersByTimeAsync(350);
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ q: "devops" });
@@ -139,7 +154,7 @@ describe("OffersView", () => {
   });
 
   it("détail : candidature, raisons, texte complet, fermeture", async () => {
-    GET.mockResolvedValue(
+    mockOffers(
       page([
         offer(7, "Ingénieur VMware", {
           apply_url: "https://www.aplitrak.com/?adid=x",
@@ -168,5 +183,36 @@ describe("OffersView", () => {
 
     await cards[1]?.trigger("click");
     expect(wrapper.find("[data-test=reasons]").text()).toContain("Type : stage");
+  });
+});
+
+describe("note et résumé", () => {
+  it("carte avec note et résumé, détail avec points forts reliés aux blocs", async () => {
+    mockOffers(
+      page([
+        offer(9, "Ingénieur système", {
+          score: 82,
+          summary_role: "Exploiter des serveurs Linux",
+          summary_asks: "5 ans Linux, Ansible",
+          summary_offers: "80-100 %, salaire non précisé",
+          strengths: [{ text: "Linux solide", chunk_ids: [1] }],
+          gaps: [{ text: "Pas d'Ansible", chunk_ids: [] }],
+          scored_at: "2026-10-05T08:00:00Z",
+        }),
+        offer(10, "Pas notée"),
+      ]),
+    );
+    const wrapper = await mountAt("/offres?tri=score&note=70");
+    expect(lastQuery()).toMatchObject({ sort: "score", min_score: 70 });
+    const [scored, unscored] = wrapper.findAll("[data-test=offer]");
+    expect(scored?.find("[data-test=score]").text()).toBe("82");
+    expect(scored?.find("[data-test=score]").classes()).toContain("high");
+    expect(scored?.find("[data-test=summary]").text()).toContain("Demande5 ans Linux, Ansible");
+    expect(unscored?.text()).toContain("à noter");
+
+    await scored?.trigger("click");
+    expect(wrapper.find("[data-test=ai]").text()).toContain("82/100");
+    expect(wrapper.find("[data-test=strengths]").text()).toContain("Bloc : Linux");
+    expect(wrapper.find("[data-test=gaps]").text()).toContain("Pas d'Ansible");
   });
 });

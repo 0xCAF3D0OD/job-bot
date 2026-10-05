@@ -18,8 +18,10 @@ from jobbot.db.models import (
     Search,
     Source,
 )
+from jobbot.llm.scoring import profile_hash
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
+from jobbot.scoring.service import active_profile
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.collect import COLLECT_JOB
 
@@ -78,6 +80,23 @@ class OfferOut(BaseModel):
     enrich_status: Literal["pending", "ok", "expired", "failed", "skipped"] = "pending"
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
     filter_reasons: list[str] = []
+    # Note et résumé de l'IA (docs/06), absents tant que l'offre n'est pas notée.
+    score: int | None = None
+    summary_role: str | None = None
+    summary_asks: str | None = None
+    summary_offers: str | None = None
+    summary_partial: bool = False
+    strengths: list["ScorePoint"] = []
+    gaps: list["ScorePoint"] = []
+    scored_at: datetime | None = None
+    # Note faite avec un autre profil que l'actuel : à renoter.
+    score_stale: bool = False
+    score_error: str | None = None
+
+
+class ScorePoint(BaseModel):
+    text: str
+    chunk_ids: list[int]
 
 
 class OfferCounts(BaseModel):
@@ -124,19 +143,47 @@ async def _links(runtime: Runtime, offer_ids: list[int]) -> dict[int, list[Offer
     return links
 
 
-async def _reasons(runtime: Runtime, offer_ids: list[int]) -> dict[int, list[str]]:
-    reasons: dict[int, list[str]] = {i: [] for i in offer_ids}
+async def _evaluations(runtime: Runtime, offer_ids: list[int]) -> dict[int, Evaluation]:
     if not offer_ids:
-        return reasons
+        return {}
     async with runtime.sessionmaker() as session:
         rows = await session.scalars(select(Evaluation).where(Evaluation.offer_id.in_(offer_ids)))
-        for evaluation in rows:
-            reasons[evaluation.offer_id] = [r["message"] for r in evaluation.filter_reasons]
-    return reasons
+        return {evaluation.offer_id: evaluation for evaluation in rows}
 
 
-def _offer_out(offer: Offer, links: list[OfferLinkOut], reasons: list[str]) -> OfferOut:
-    return OfferOut.model_validate({**_columns(offer), "links": links, "filter_reasons": reasons})
+def _evaluation_fields(
+    evaluation: Evaluation | None, current_hash: str | None
+) -> dict[str, object]:
+    if evaluation is None:
+        return {}
+    fields: dict[str, object] = {
+        "filter_reasons": [r["message"] for r in evaluation.filter_reasons],
+        "score_error": evaluation.score_error,
+    }
+    if evaluation.scored_at is not None:
+        fields |= {
+            "score": evaluation.score,
+            "summary_role": evaluation.summary_role,
+            "summary_asks": evaluation.summary_asks,
+            "summary_offers": evaluation.summary_offers,
+            "summary_partial": evaluation.summary_partial,
+            "strengths": evaluation.strengths,
+            "gaps": evaluation.gaps,
+            "scored_at": evaluation.scored_at,
+            "score_stale": current_hash is not None and evaluation.profile_hash != current_hash,
+        }
+    return fields
+
+
+def _offer_out(
+    offer: Offer,
+    links: list[OfferLinkOut],
+    evaluation: Evaluation | None = None,
+    current_hash: str | None = None,
+) -> OfferOut:
+    return OfferOut.model_validate(
+        {**_columns(offer), "links": links, **_evaluation_fields(evaluation, current_hash)}
+    )
 
 
 # « À examiner » regroupe les offres retenues par le filtre et celles qui n'y sont pas encore
@@ -270,29 +317,40 @@ async def list_offers(
     request: Request,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-    sort: Literal["recent", "popular"] = "recent",
+    sort: Literal["recent", "popular", "score"] = "recent",
     view: Literal["to_review", "filtered_out", "all"] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
+    min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
     sources: Annotated[list[Source], Query()] = [],  # noqa: B006
     cantons: Annotated[list[str], Query(max_length=26)] = [],  # noqa: B006
     min_rate: Annotated[int | None, Query(ge=1, le=100)] = None,
     external_only: bool = False,
 ) -> OfferPage:
-    """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.
+    """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
+    `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
     `view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des
     filtres d'affichage ; les compteurs par statut et les facettes en tiennent compte."""
     runtime = _runtime(request)
-    order = (
-        (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc())
-        if sort == "popular"
-        else (Offer.first_seen_at.desc(), Offer.id.desc())
+    score = (
+        select(Evaluation.score)
+        .where(Evaluation.offer_id == Offer.id, Evaluation.scored_at.is_not(None))
+        .scalar_subquery()
     )
+    order = {
+        "popular": (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc()),
+        "score": (score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
+    }.get(sort, (Offer.first_seen_at.desc(), Offer.id.desc()))
     conditions = _filters(q, sources, cantons, min_rate, external_only)
+    if min_score is not None:
+        conditions.append(score >= min_score)
     view_condition = _view_condition(view)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
     without_sources = _filters(q, [], cantons, min_rate, external_only)
     without_cantons = _filters(q, sources, [], min_rate, external_only)
+    if min_score is not None:
+        without_sources.append(score >= min_score)
+        without_cantons.append(score >= min_score)
     if view_condition is not None:
         without_sources.append(view_condition)
         without_cantons.append(view_condition)
@@ -342,9 +400,11 @@ async def list_offers(
         ],
     )
     ids = [offer.id for offer in offers]
-    links, reasons = await _links(runtime, ids), await _reasons(runtime, ids)
+    links, evaluations = await _links(runtime, ids), await _evaluations(runtime, ids)
+    async with runtime.sessionmaker() as session:
+        current_hash = profile_hash(await active_profile(session))
     return OfferPage(
-        items=[_offer_out(o, links[o.id], reasons[o.id]) for o in offers],
+        items=[_offer_out(o, links[o.id], evaluations.get(o.id), current_hash) for o in offers],
         total=total,
         counts=counts,
         facets=facets,

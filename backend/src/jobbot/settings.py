@@ -7,7 +7,7 @@ pour les secrets Docker et les Secrets Kubernetes montés en fichier.
 import os
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -15,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 ENV_PREFIX = "JOBBOT_"
 
 # Variables dont la valeur peut être lue depuis un fichier (JOBBOT_<NOM>_FILE).
-SECRET_FIELDS = ("database_url", "imap_password")
+SECRET_FIELDS = ("database_url", "imap_password", "anthropic_api_key")
 
 
 class Env(StrEnum):
@@ -66,6 +66,11 @@ class Settings(BaseSettings):
     # Lecture des pages d'offres jobup après la collecte (docs/05). false : désactivée.
     enrich_enabled: bool = True
 
+    # Note et résumé des offres par l'IA (docs/06). Sans clé, aucune note.
+    anthropic_api_key: SecretStr | None = None
+    llm_model: str = "claude-opus-5"
+    llm_effort: Literal["low", "medium", "high"] = "low"
+
     @field_validator("database_url")
     @classmethod
     def _check_database_url(cls, value: SecretStr) -> SecretStr:
@@ -88,6 +93,11 @@ class Settings(BaseSettings):
     def imap_configured(self) -> bool:
         password = self.imap_password.get_secret_value() if self.imap_password else ""
         return bool(self.imap_user.strip() and password)
+
+    @property
+    def llm_configured(self) -> bool:
+        key = self.anthropic_api_key.get_secret_value() if self.anthropic_api_key else ""
+        return bool(key.strip())
 
     @property
     def sqlalchemy_url(self) -> str:

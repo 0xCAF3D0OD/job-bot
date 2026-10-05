@@ -2,10 +2,20 @@
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Text, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    SmallInteger,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -183,6 +193,20 @@ class Evaluation(Base):
     # Liste de {"rule": …, "message": …}
     filter_reasons: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     criteria_hash: Mapped[str] = mapped_column(Text)
+    # Note et résumé de l'IA (0.4).
+    score: Mapped[int | None] = mapped_column(SmallInteger)
+    summary_role: Mapped[str | None] = mapped_column(Text)
+    summary_asks: Mapped[str | None] = mapped_column(Text)
+    summary_offers: Mapped[str | None] = mapped_column(Text)
+    # Vrai si le résumé est fait sur l'extrait de l'alerte, faute de texte complet.
+    summary_partial: Mapped[bool] = mapped_column(default=False)
+    strengths: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    gaps: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    model: Mapped[str | None] = mapped_column(Text)
+    prompt_version: Mapped[str | None] = mapped_column(Text)
+    profile_hash: Mapped[str | None] = mapped_column(Text)
+    scored_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    score_error: Mapped[str | None] = mapped_column(Text)
     evaluated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -242,3 +266,40 @@ class EnrichStatus(StrEnum):
     EXPIRED = "expired"
     FAILED = "failed"
     SKIPPED = "skipped"  # pas de page lisible (offre Indeed)
+
+
+# --- Note IA (0.4) --------------------------------------------------------------------
+
+
+class LlmCall(Base):
+    """Un appel facturé à l'IA (direct ou résultat d'un lot), pour le budget mensuel."""
+
+    __tablename__ = "llm_calls"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    purpose: Mapped[str] = mapped_column(Text)
+    offer_id: Mapped[int | None] = mapped_column(ForeignKey("offers.id", ondelete="SET NULL"))
+    model: Mapped[str] = mapped_column(Text)
+    batch_id: Mapped[str | None] = mapped_column(Text)
+    input_tokens: Mapped[int] = mapped_column(default=0)
+    cache_read_tokens: Mapped[int] = mapped_column(default=0)
+    cache_write_tokens: Mapped[int] = mapped_column(default=0)
+    output_tokens: Mapped[int] = mapped_column(default=0)
+    cost_usd: Mapped[Decimal] = mapped_column(Numeric(10, 5))
+    cost_chf: Mapped[Decimal] = mapped_column(Numeric(10, 5))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+
+
+class LlmBatch(Base):
+    """Lot de notes envoyé à l'API (rattrapage, renotation) : moitié prix, résultat différé."""
+
+    __tablename__ = "llm_batches"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    provider_batch_id: Mapped[str] = mapped_column(Text, unique=True)
+    status: Mapped[str] = mapped_column(Text, default="in_progress")  # in_progress|ended|failed
+    offer_ids: Mapped[list[int]] = mapped_column(ARRAY(BigInteger))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

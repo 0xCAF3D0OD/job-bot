@@ -227,7 +227,7 @@
           "collect"
         ],
         "summary": "List Offers",
-        "description": "`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.\n`view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des\nfiltres d'affichage ; les compteurs par statut et les facettes en tiennent compte.",
+        "description": "`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;\n`score` : meilleure note de l'IA d'abord (offres non notées à la fin).\n`view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des\nfiltres d'affichage ; les compteurs par statut et les facettes en tiennent compte.",
         "operationId": "listOffers",
         "parameters": [
           {
@@ -260,7 +260,8 @@
             "schema": {
               "enum": [
                 "recent",
-                "popular"
+                "popular",
+                "score"
               ],
               "type": "string",
               "default": "recent",
@@ -297,6 +298,24 @@
                 }
               ],
               "title": "Q"
+            }
+          },
+          {
+            "name": "min_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Score"
             }
           },
           {
@@ -876,6 +895,51 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/scoring": {
+      "get": {
+        "tags": [
+          "scoring"
+        ],
+        "summary": "Get Scoring Status",
+        "operationId": "getScoringStatus",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoringStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rescore": {
+      "post": {
+        "tags": [
+          "scoring"
+        ],
+        "summary": "Start Rescore",
+        "operationId": "startRescore",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescoreResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA non configurée"
           }
         }
       }
@@ -1725,6 +1789,99 @@
             "type": "array",
             "title": "Filter Reasons",
             "default": []
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "summary_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Role"
+          },
+          "summary_asks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Asks"
+          },
+          "summary_offers": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Offers"
+          },
+          "summary_partial": {
+            "type": "boolean",
+            "title": "Summary Partial",
+            "default": false
+          },
+          "strengths": {
+            "items": {
+              "$ref": "#/components/schemas/ScorePoint"
+            },
+            "type": "array",
+            "title": "Strengths",
+            "default": []
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/ScorePoint"
+            },
+            "type": "array",
+            "title": "Gaps",
+            "default": []
+          },
+          "scored_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scored At"
+          },
+          "score_stale": {
+            "type": "boolean",
+            "title": "Score Stale",
+            "default": false
+          },
+          "score_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Error"
           }
         },
         "type": "object",
@@ -1795,6 +1952,121 @@
           "failed"
         ],
         "title": "ParseStatus"
+      },
+      "RescoreResponse": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "already_queued"
+            ],
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "RescoreResponse"
+      },
+      "ScorePoint": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "chunk_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Chunk Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "chunk_ids"
+        ],
+        "title": "ScorePoint"
+      },
+      "ScoringStatus": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "month_spend_chf": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Month Spend Chf"
+          },
+          "budget_chf": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Budget Chf"
+          },
+          "budget_reached": {
+            "type": "boolean",
+            "title": "Budget Reached"
+          },
+          "active_chunks": {
+            "type": "integer",
+            "title": "Active Chunks"
+          },
+          "scored": {
+            "type": "integer",
+            "title": "Scored"
+          },
+          "unscored": {
+            "type": "integer",
+            "title": "Unscored"
+          },
+          "stale": {
+            "type": "integer",
+            "title": "Stale"
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed"
+          },
+          "pending_batches": {
+            "type": "integer",
+            "title": "Pending Batches"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured",
+          "model",
+          "month_spend_chf",
+          "budget_chf",
+          "budget_reached",
+          "active_chunks",
+          "scored",
+          "unscored",
+          "stale",
+          "failed",
+          "pending_batches",
+          "last_error"
+        ],
+        "title": "ScoringStatus"
       },
       "SearchDetail": {
         "properties": {
@@ -2051,6 +2323,99 @@
             "type": "array",
             "title": "Filter Reasons",
             "default": []
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "summary_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Role"
+          },
+          "summary_asks": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Asks"
+          },
+          "summary_offers": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary Offers"
+          },
+          "summary_partial": {
+            "type": "boolean",
+            "title": "Summary Partial",
+            "default": false
+          },
+          "strengths": {
+            "items": {
+              "$ref": "#/components/schemas/ScorePoint"
+            },
+            "type": "array",
+            "title": "Strengths",
+            "default": []
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/ScorePoint"
+            },
+            "type": "array",
+            "title": "Gaps",
+            "default": []
+          },
+          "scored_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scored At"
+          },
+          "score_stale": {
+            "type": "boolean",
+            "title": "Score Stale",
+            "default": false
+          },
+          "score_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Error"
           },
           "is_first": {
             "type": "boolean",
