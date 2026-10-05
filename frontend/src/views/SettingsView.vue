@@ -14,6 +14,8 @@ const loaded = ref(false);
 const saving = ref(false);
 const message = ref("");
 const notifications = ref<{ configured: boolean; server: string } | null>(null);
+// Vrai si l'API n'a pas répondu (arrêtée, ou plus ancienne que l'interface).
+const notificationsUnknown = ref(false);
 const testMessage = ref("");
 const testing = ref(false);
 
@@ -38,8 +40,13 @@ onMounted(async () => {
   const { data } = await api.GET("/api/settings");
   if (data) form.value = data;
   loaded.value = true;
-  const status = await api.GET("/api/notifications");
-  notifications.value = status.data ?? null;
+  try {
+    const status = await api.GET("/api/notifications");
+    notifications.value = status.data ?? null;
+    notificationsUnknown.value = !status.data;
+  } catch {
+    notificationsUnknown.value = true;
+  }
 });
 
 async function save(): Promise<void> {
@@ -127,6 +134,14 @@ async function save(): Promise<void> {
               >{{ testMessage }}</span>
             </div>
           </template>
+          <p
+            v-else-if="notificationsUnknown"
+            class="notice error"
+            data-test="notifications-unknown"
+          >
+            Impossible de vérifier : l'API ne répond pas à cette question. Elle est peut-être arrêtée, ou plus
+            ancienne que l'interface. Relance <code>make dev</code>.
+          </p>
           <p
             v-else
             class="hint"

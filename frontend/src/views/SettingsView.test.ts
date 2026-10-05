@@ -22,6 +22,20 @@ function mockGet(configured: boolean): void {
 }
 
 describe("SettingsView, notifications", () => {
+  it("API sans la route : le dit au lieu d'afficher « non configurées »", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/notifications"
+          ? { data: undefined, error: { detail: "Not Found" }, response: { status: 404 } }
+          : { data: { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 } },
+      ),
+    );
+    const wrapper = mount(SettingsView);
+    await flushPromises();
+    expect(wrapper.find("[data-test=notifications-unknown]").text()).toContain("Relance make dev");
+    expect(wrapper.text()).not.toContain("Non configurées");
+  });
+
   it("non configurées : explique quoi faire", async () => {
     mockGet(false);
     const wrapper = mount(SettingsView);
