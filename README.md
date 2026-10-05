@@ -17,7 +17,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.4.0 | Page Offres avec filtres, note et résumé IA, notifications | livrée |
 | 0.4.1 | Propositions de blocs de profil par l'IA depuis un document | livrée |
 | 0.5.0 | Suivi des candidatures (a), lettre (b) et CV adapté (c) | livrée |
-| 0.6.0 | Export ORP et rappels | à venir |
+| 0.6.0 | Export ORP (a) et rappels (b) | en cours (a) |
 
 ## Lancer en local
 

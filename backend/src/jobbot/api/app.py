@@ -16,6 +16,7 @@ from jobbot.api.routes import (
     collect,
     cvs,
     letters,
+    orp,
     preferences,
     profile,
     scoring,
@@ -71,4 +72,5 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(applications.router)
     app.include_router(letters.router)
     app.include_router(cvs.router)
+    app.include_router(orp.router)
     return app

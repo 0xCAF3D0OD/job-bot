@@ -657,3 +657,31 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 @media (max-width: 960px) { .cv-sheet { padding: 1.6rem 1.3rem; } }
 @media print { .cv-sheet { font-size: 9.5pt; } }
 .cv-item .kw { font-weight: 700; }
+
+/* Page ORP (docs/09) */
+.orp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1rem; margin: 0.5rem 0 1.25rem; }
+.orp-actions .spacer { flex: 1; }
+.orp-actions .check { display: inline-flex; gap: 0.4rem; align-items: center; font-size: 0.9rem; color: var(--muted); }
+.table-scroll { overflow-x: auto; }
+.orp-table td { vertical-align: top; font-size: 0.88rem; }
+.orp-table tr.incomplete td { background: color-mix(in srgb, var(--warn) 8%, transparent); }
+.job-room { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); }
+.job-room-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.2rem; }
+.job-room-card h3 { font-size: 0.95rem; margin: 0 0 0.6rem; }
+.job-room-card dl { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 0.8rem; margin: 0; font-size: 0.86rem; }
+.job-room-card dt { color: var(--muted); }
+.job-room-card dd { margin: 0; display: flex; justify-content: space-between; gap: 0.5rem; }
+.orp-sheet { display: none; }
+@page orp { size: A4 landscape; margin: 12mm 12mm; }
+@media print {
+  .orp-sheet { display: block; page: orp; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
+  .orp-sheet h1 { font-size: 12pt; margin: 0 0 4mm; }
+  .orp-sheet h2 { font-size: 10.5pt; margin: 0 0 3mm; }
+  .orp-holder { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; margin-bottom: 4mm; }
+  .orp-sheet table { width: 100%; border-collapse: collapse; }
+  .orp-sheet th, .orp-sheet td { border: 0.5pt solid #444; padding: 1.2mm 1.5mm; text-align: left; vertical-align: top; }
+  .orp-sheet th { background: #eee; font-weight: 700; }
+  .orp-sheet tr { break-inside: avoid; }
+  .orp-sign { display: flex; justify-content: space-between; margin-top: 8mm; }
+  .orp-annex { break-before: page; }
+}

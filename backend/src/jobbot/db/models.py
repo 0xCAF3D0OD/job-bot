@@ -390,3 +390,16 @@ class Draft(Base):
     prompt_version: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class OrpMonth(Base):
+    """État de la remise des preuves ORP d'un mois (docs/09 §4)."""
+
+    __tablename__ = "orp_months"
+
+    month: Mapped[str] = mapped_column(Text, primary_key=True)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    exported_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    changed_after_submit: Mapped[bool] = mapped_column(default=False)
+    # Rappels ntfy déjà envoyés (0.6.0-b) : {"under_target": date, "due": date, "eve": date}.
+    reminders_sent: Mapped[Any] = mapped_column(JSONB, default=dict)

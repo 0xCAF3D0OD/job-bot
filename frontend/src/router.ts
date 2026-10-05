@@ -5,6 +5,7 @@ import ApplicationsView from "./views/ApplicationsView.vue";
 import CriteriaView from "./views/CriteriaView.vue";
 import JournalView from "./views/JournalView.vue";
 import OffersView from "./views/OffersView.vue";
+import OrpView from "./views/OrpView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
 import PreparationView from "./views/PreparationView.vue";
 import ProfileView from "./views/ProfileView.vue";
@@ -27,13 +28,7 @@ export const navigation: NavEntry[] = [
   { path: "/profil", name: "profile", label: "Profil" },
   { path: "/prerequis", name: "criteria", label: "Prérequis" },
   { path: "/journal", name: "journal", label: "Journal" },
-  {
-    path: "/orp",
-    name: "orp",
-    label: "ORP",
-    since: "0.6.0",
-    description: "Export mensuel des preuves de recherches d'emploi.",
-  },
+  { path: "/orp", name: "orp", label: "ORP" },
   { path: "/reglages", name: "settings", label: "Réglages" },
   { path: "/etat", name: "status", label: "État" },
 ];
@@ -42,6 +37,7 @@ export const navigation: NavEntry[] = [
 const views: Record<string, Component> = {
   offers: OffersView,
   applications: ApplicationsView,
+  orp: OrpView,
   profile: ProfileView,
   journal: JournalView,
   criteria: CriteriaView,
