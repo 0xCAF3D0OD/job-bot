@@ -203,6 +203,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orp-columns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Orp Columns */
+        get: operations["getOrpColumns"];
+        /** Put Orp Columns */
+        put: operations["saveOrpColumns"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -1799,6 +1817,15 @@ export interface components {
             dismissed: boolean;
         };
         /**
+         * OrpColumnsVisible
+         * @description Colonnes affichées à l'écran ; date, entreprise et poste le sont toujours. Le PDF et
+         *     le CSV gardent toutes les colonnes, demandées par l'ORP.
+         */
+        OrpColumnsVisible: {
+            /** Visible */
+            visible: ("address" | "contact" | "rate" | "method" | "assigned" | "result" | "url")[];
+        };
+        /**
          * OrpHolder
          * @description En-tête du formulaire : nom et adresse saisis dans les Réglages.
          */
@@ -2650,6 +2677,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OfferFiltersVisible"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOrpColumns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrpColumnsVisible"];
+                };
+            };
+        };
+    };
+    saveOrpColumns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrpColumnsVisible"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrpColumnsVisible"];
                 };
             };
             /** @description Validation Error */

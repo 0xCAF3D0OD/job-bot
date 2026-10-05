@@ -672,6 +672,66 @@
         }
       }
     },
+    "/api/orp-columns": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Orp Columns",
+        "operationId": "getOrpColumns",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrpColumnsVisible"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Put Orp Columns",
+        "operationId": "saveOrpColumns",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrpColumnsVisible"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrpColumnsVisible"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/notifications": {
       "get": {
         "tags": [
@@ -5521,6 +5581,32 @@
           "dismissed"
         ],
         "title": "OnboardingIn"
+      },
+      "OrpColumnsVisible": {
+        "properties": {
+          "visible": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "address",
+                "contact",
+                "rate",
+                "method",
+                "assigned",
+                "result",
+                "url"
+              ]
+            },
+            "type": "array",
+            "title": "Visible"
+          }
+        },
+        "type": "object",
+        "required": [
+          "visible"
+        ],
+        "title": "OrpColumnsVisible",
+        "description": "Colonnes affichées à l'écran ; date, entreprise et poste le sont toujours. Le PDF et\nle CSV gardent toutes les colonnes, demandées par l'ORP."
       },
       "OrpHolder": {
         "properties": {
