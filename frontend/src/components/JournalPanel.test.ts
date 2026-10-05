@@ -102,7 +102,7 @@ describe("JournalView", () => {
     await flushPromises();
     await wrapper.find("[data-test=collect]").trigger("click");
     await flushPromises();
-    expect(POST).toHaveBeenCalledWith("/api/collect");
+    expect(POST).toHaveBeenCalledWith("/api/alerts/refresh");
     expect(useCollect().message.value).toContain(message);
   });
 });

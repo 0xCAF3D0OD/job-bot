@@ -417,14 +417,14 @@ async def test_api_journal_and_offers(
 
 @pytest.mark.usefixtures("clean_queue")
 async def test_api_collect_button_queues_once(api: AsyncClient) -> None:
-    first = await api.post("/api/collect")
+    first = await api.post("/api/alerts/refresh")
     second = await api.post("/api/collect")
     assert (first.status_code, first.json()) == (202, {"result": "queued"})
     assert second.json() == {"result": "already_queued"}
 
 
 async def test_api_collect_button_requires_configuration(client: AsyncClient) -> None:
-    response = await client.post("/api/collect")
+    response = await client.post("/api/alerts/refresh")
     assert response.status_code == 409
 
 

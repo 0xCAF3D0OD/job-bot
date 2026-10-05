@@ -133,7 +133,7 @@ Routes ajoutées :
 | `GET /api/searches?source=&status=&limit=&offset=` | journal des recherches, plus récentes d'abord |
 | `GET /api/searches/{id}` | une alerte et ses offres (nouvelles ou déjà connues) |
 | `GET /api/offers?limit=&offset=` | offres collectées, plus récentes d'abord |
-| `POST /api/collect` | met une collecte en file ; répond `202` avec `queued` ou `already_queued` |
+| `POST /api/alerts/refresh` | met une collecte en file ; répond `202` avec `queued` ou `already_queued` (ancienne adresse `POST /api/collect` gardée, mais bloquée par les bloqueurs de publicité) |
 | `GET /api/status` | ajoute un bloc `collect` : configurée oui/non, dernier succès, dernière erreur |
 
 Interface :

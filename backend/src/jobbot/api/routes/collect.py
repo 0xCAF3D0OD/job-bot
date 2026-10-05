@@ -540,8 +540,11 @@ async def get_offer_logo(request: Request, offer_id: int) -> Response:
     )
 
 
+# « /collect » est bloqué par les bloqueurs de publicité (uBlock, EasyPrivacy), qui le
+# prennent pour un traqueur d'audience : l'interface appelle « /alerts/refresh ».
+@router.post("/collect", include_in_schema=False, status_code=status.HTTP_202_ACCEPTED)
 @router.post(
-    "/collect",
+    "/alerts/refresh",
     operation_id="startCollect",
     status_code=status.HTTP_202_ACCEPTED,
     responses={409: {"description": "Collecte non configurée"}},
