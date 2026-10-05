@@ -39,6 +39,7 @@ describe("OffersView", () => {
           }),
         ],
         total: 2,
+        counts: { to_review: 2, filtered_out: 0, all: 2 },
       },
     });
     const wrapper = mount(OffersView);
@@ -61,10 +62,34 @@ describe("OffersView", () => {
 });
 
 it("le tri Populaires est transmis à l'API", async () => {
-  GET.mockResolvedValue({ data: { items: [offer(1, "A")], total: 1 } });
+  GET.mockResolvedValue({
+    data: { items: [offer(1, "A")], total: 1, counts: { to_review: 1, filtered_out: 0, all: 1 } },
+  });
   const wrapper = mount(OffersView);
   await flushPromises();
   await wrapper.find("[data-test=sort-popular]").trigger("click");
   await flushPromises();
   expect(GET.mock.calls.at(-1)?.[1]).toMatchObject({ params: { query: { sort: "popular" } } });
+});
+
+it("onglets par statut et raisons d'exclusion", async () => {
+  GET.mockResolvedValue({
+    data: {
+      items: [offer(3, "Stage DevOps", { status: "filtered_out", filter_reasons: ["Type : stage (« stage »)"] })],
+      total: 1,
+      counts: { to_review: 5, filtered_out: 1, all: 6 },
+    },
+  });
+  const wrapper = mount(OffersView);
+  await flushPromises();
+  expect(GET.mock.calls[0]?.[1]).toMatchObject({ params: { query: { view: "to_review" } } });
+  expect(wrapper.find("[data-test=view-filtered_out]").text()).toContain("1");
+
+  await wrapper.find("[data-test=view-filtered_out]").trigger("click");
+  await flushPromises();
+  expect(GET.mock.calls.at(-1)?.[1]).toMatchObject({ params: { query: { view: "filtered_out" } } });
+  const card = wrapper.find("[data-test=offer]");
+  expect(card.find(".badge.reason").text()).toBe("Type : stage (« stage »)");
+  await card.trigger("click");
+  expect(wrapper.find("[data-test=reasons]").text()).toContain("Type : stage");
 });

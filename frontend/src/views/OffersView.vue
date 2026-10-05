@@ -8,7 +8,17 @@ import { colorIndex, formatDate, rateText, sourceLabel } from "../format";
 
 const PAGE_SIZE = 50;
 
+type View = "to_review" | "filtered_out" | "all";
+
+const VIEWS: { value: View; label: string }[] = [
+  { value: "to_review", label: "À examiner" },
+  { value: "filtered_out", label: "Écartées" },
+  { value: "all", label: "Toutes" },
+];
+
+const view = ref<View>("to_review");
 const sort = ref<"recent" | "popular">("recent");
+const counts = ref<Record<View, number>>({ to_review: 0, filtered_out: 0, all: 0 });
 const items = ref<Offer[]>([]);
 const total = ref(0);
 const loading = ref(false);
@@ -35,12 +45,18 @@ async function load(append = false): Promise<void> {
   try {
     const { data } = await api.GET("/api/offers", {
       params: {
-        query: { limit: PAGE_SIZE, offset: append ? items.value.length : 0, sort: sort.value },
+        query: {
+          limit: PAGE_SIZE,
+          offset: append ? items.value.length : 0,
+          sort: sort.value,
+          view: view.value,
+        },
       },
     });
     if (!data) throw new Error("réponse vide");
     items.value = append ? [...items.value, ...data.items] : data.items;
     total.value = data.total;
+    counts.value = data.counts;
   } catch {
     failed.value = true;
   } finally {
@@ -48,7 +64,7 @@ async function load(append = false): Promise<void> {
   }
 }
 
-watch(sort, () => {
+watch([sort, view], () => {
   selectedId.value = null;
   void load();
 });
@@ -59,11 +75,31 @@ onMounted(() => void load());
   <PageHero
     eyebrow="Offres"
     title="Les offres pour toi"
-    subtitle="Toutes les offres reçues par tes alertes, sans doublon. Le tri par prérequis arrive en 0.3, la note en 0.4."
+    subtitle="Les offres reçues par tes alertes, sans doublon, triées selon tes prérequis. La note de l'IA arrive en 0.4."
   />
 
   <section class="plain">
     <div class="container">
+      <div class="view-tabs">
+        <div
+          class="tabs"
+          role="tablist"
+          aria-label="Offres à afficher"
+        >
+          <button
+            v-for="entry in VIEWS"
+            :key="entry.value"
+            type="button"
+            role="tab"
+            :aria-selected="view === entry.value"
+            :data-test="`view-${entry.value}`"
+            @click="view = entry.value"
+          >
+            {{ entry.label }} <span class="tab-count">{{ counts[entry.value] }}</span>
+          </button>
+        </div>
+      </div>
+
       <p
         v-if="failed"
         class="notice error"
@@ -72,9 +108,9 @@ onMounted(() => void load());
       </p>
       <p
         v-else-if="!loading && items.length === 0"
-        class="muted"
+        class="muted empty"
       >
-        Aucune offre collectée pour l'instant.
+        {{ view === "filtered_out" ? "Aucune offre écartée." : "Aucune offre ici pour l'instant." }}
       </p>
 
       <div
@@ -133,6 +169,10 @@ onMounted(() => void load());
                   </div>
                   <span class="job-date">{{ formatDate(offer.first_seen_at) }}</span>
                 </div>
+                <span
+                  v-if="offer.filter_reasons?.length"
+                  class="badge reason"
+                >{{ offer.filter_reasons[0] }}</span>
                 <p
                   v-if="offer.snippet"
                   class="job-snippet"
@@ -193,6 +233,18 @@ onMounted(() => void load());
           >
             Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site.
           </p>
+          <ul
+            v-if="selected.filter_reasons?.length"
+            class="reasons"
+            data-test="reasons"
+          >
+            <li
+              v-for="reason in selected.filter_reasons"
+              :key="reason"
+            >
+              {{ reason }}
+            </li>
+          </ul>
           <ul class="checks">
             <li>
               <AppIcon name="check" /><strong>Lieu.</strong>

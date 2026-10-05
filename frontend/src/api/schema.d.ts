@@ -82,6 +82,7 @@ export interface paths {
         /**
          * List Offers
          * @description `recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.
+         *     `view` : à examiner, écartées par le filtre, ou toutes.
          */
         get: operations["listOffers"];
         put?: never;
@@ -109,10 +110,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/criteria": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Criteria */
+        get: operations["getCriteria"];
+        /**
+         * Put Criteria
+         * @description Enregistre les prérequis et relance le filtre sur les offres non triées à la main.
+         */
+        put: operations["saveCriteria"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/filter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Filter */
+        post: operations["startFilter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Settings */
+        get: operations["getSettings"];
+        /** Put Settings */
+        put: operations["saveSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Documents */
+        get: operations["listDocuments"];
+        put?: never;
+        /** Upload Document */
+        post: operations["uploadDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{document_id}/text": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Document Text */
+        get: operations["getDocumentText"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{document_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Document File */
+        get: operations["getDocumentFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Document
+         * @description Supprime le fichier et son texte ; les blocs créés à partir de lui sont gardés.
+         */
+        delete: operations["deleteDocument"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile-chunks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Chunks */
+        get: operations["listProfileChunks"];
+        put?: never;
+        /** Create Chunk */
+        post: operations["createProfileChunk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile-chunks/{chunk_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Chunk */
+        put: operations["updateProfileChunk"];
+        post?: never;
+        /** Delete Chunk */
+        delete: operations["deleteProfileChunk"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Body_uploadDocument */
+        Body_uploadDocument: {
+            /** File */
+            file: string;
+        };
+        /** ChunkIn */
+        ChunkIn: {
+            kind: components["schemas"]["ChunkKind"];
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+            /** Tags */
+            tags?: string[];
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Document Id */
+            document_id?: number | null;
+        };
+        /**
+         * ChunkKind
+         * @enum {string}
+         */
+        ChunkKind: "experience" | "competence" | "formation" | "preference" | "redhibitoire" | "ton";
+        /** ChunkOut */
+        ChunkOut: {
+            kind: components["schemas"]["ChunkKind"];
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+            /** Tags */
+            tags?: string[];
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /** Document Id */
+            document_id?: number | null;
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** CollectResponse */
         CollectResponse: {
             /**
@@ -132,6 +353,34 @@ export interface components {
             /** Last Error */
             last_error: string | null;
         };
+        /**
+         * ContractType
+         * @enum {string}
+         */
+        ContractType: "stage" | "apprentissage" | "temporaire" | "freelance";
+        /** CriteriaIn */
+        CriteriaIn: {
+            /** Locations */
+            locations?: string[];
+            /**
+             * Remote Ok
+             * @default false
+             */
+            remote_ok: boolean;
+            /** Min Rate */
+            min_rate?: number | null;
+            /** Excluded Types */
+            excluded_types?: components["schemas"]["ContractType"][];
+            /** Banned Words */
+            banned_words?: string[];
+            /** Unspoken Languages */
+            unspoken_languages?: components["schemas"]["Language"][];
+        };
+        /** CriteriaOut */
+        CriteriaOut: {
+            criteria: components["schemas"]["CriteriaIn"];
+            keywords: components["schemas"]["KeywordsOut"];
+        };
         /** DatabaseStatus */
         DatabaseStatus: {
             /** Ok */
@@ -144,6 +393,48 @@ export interface components {
             up_to_date: boolean;
             /** Error */
             error: string | null;
+        };
+        /** DocumentOut */
+        DocumentOut: {
+            /** Id */
+            id: number;
+            /** Filename */
+            filename: string;
+            doc_type: components["schemas"]["DocumentType"];
+            /** Size */
+            size: number;
+            text_status: components["schemas"]["TextStatus"];
+            /**
+             * Uploaded At
+             * Format: date-time
+             */
+            uploaded_at: string;
+            /**
+             * Chunk Count
+             * @default 0
+             */
+            chunk_count: number;
+        };
+        /** DocumentText */
+        DocumentText: {
+            /** Id */
+            id: number;
+            text_status: components["schemas"]["TextStatus"];
+            /** Text */
+            text: string;
+        };
+        /**
+         * DocumentType
+         * @enum {string}
+         */
+        DocumentType: "pdf" | "docx" | "txt" | "md";
+        /** FilterResponse */
+        FilterResponse: {
+            /**
+             * Result
+             * @enum {string}
+             */
+            result: "queued" | "already_queued";
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -181,6 +472,36 @@ export interface components {
          * @enum {string}
          */
         JobRunStatus: "running" | "success" | "failure";
+        /**
+         * KeywordsOut
+         * @description Mots-clés cherchés par le filtre, affichés sous chaque case du formulaire.
+         */
+        KeywordsOut: {
+            /** Contract Types */
+            contract_types: {
+                [key: string]: string[];
+            };
+            /** Language Names */
+            language_names: {
+                [key: string]: string[];
+            };
+            /** Requirement Words */
+            requirement_words: string[];
+        };
+        /**
+         * Language
+         * @enum {string}
+         */
+        Language: "allemand" | "italien" | "anglais";
+        /** OfferCounts */
+        OfferCounts: {
+            /** To Review */
+            to_review: number;
+            /** Filtered Out */
+            filtered_out: number;
+            /** All */
+            all: number;
+        };
         /** OfferLinkOut */
         OfferLinkOut: {
             source: components["schemas"]["Source"];
@@ -218,6 +539,11 @@ export interface components {
             seen_count: number;
             /** Links */
             links: components["schemas"]["OfferLinkOut"][];
+            /**
+             * Filter Reasons
+             * @default []
+             */
+            filter_reasons: string[];
         };
         /** OfferPage */
         OfferPage: {
@@ -225,6 +551,7 @@ export interface components {
             items: components["schemas"]["OfferOut"][];
             /** Total */
             total: number;
+            counts: components["schemas"]["OfferCounts"];
         };
         /**
          * OfferStatus
@@ -298,6 +625,11 @@ export interface components {
             seen_count: number;
             /** Links */
             links: components["schemas"]["OfferLinkOut"][];
+            /**
+             * Filter Reasons
+             * @default []
+             */
+            filter_reasons: string[];
             /** Is First */
             is_first: boolean;
         };
@@ -337,6 +669,21 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** SettingsModel */
+        SettingsModel: {
+            /** Orp Monthly Target */
+            orp_monthly_target?: number | null;
+            /**
+             * Notify Score Threshold
+             * @default 70
+             */
+            notify_score_threshold: number;
+            /**
+             * Llm Monthly Budget Chf
+             * @default 10
+             */
+            llm_monthly_budget_chf: number;
+        };
         /**
          * Source
          * @enum {string}
@@ -352,6 +699,11 @@ export interface components {
             worker: components["schemas"]["WorkerStatus"];
             collect: components["schemas"]["CollectStatus"];
         };
+        /**
+         * TextStatus
+         * @enum {string}
+         */
+        TextStatus: "ok" | "empty" | "unreadable";
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -506,6 +858,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 sort?: "recent" | "popular";
+                view?: "to_review" | "filtered_out" | "all";
             };
             header?: never;
             path?: never;
@@ -557,6 +910,407 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getCriteria: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CriteriaOut"];
+                };
+            };
+        };
+    };
+    saveCriteria: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriteriaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CriteriaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    startFilter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FilterResponse"];
+                };
+            };
+        };
+    };
+    getSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsModel"];
+                };
+            };
+        };
+    };
+    saveSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsModel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listDocuments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"][];
+                };
+            };
+        };
+    };
+    uploadDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_uploadDocument"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Document déjà déposé */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Refusé */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getDocumentText: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentText"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getDocumentFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listProfileChunks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChunkOut"][];
+                };
+            };
+        };
+    };
+    createProfileChunk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChunkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChunkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateProfileChunk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chunk_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChunkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChunkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteProfileChunk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chunk_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

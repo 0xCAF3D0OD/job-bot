@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select
 
 from jobbot.db.models import (
+    Evaluation,
     Offer,
     OfferLink,
     OfferSighting,
@@ -68,11 +69,20 @@ class OfferOut(BaseModel):
     last_seen_at: datetime
     seen_count: int
     links: list[OfferLinkOut]
+    # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
+    filter_reasons: list[str] = []
+
+
+class OfferCounts(BaseModel):
+    to_review: int
+    filtered_out: int
+    all: int
 
 
 class OfferPage(BaseModel):
     items: list[OfferOut]
     total: int
+    counts: OfferCounts
 
 
 class SearchOffer(OfferOut):
@@ -106,8 +116,24 @@ async def _links(runtime: Runtime, offer_ids: list[int]) -> dict[int, list[Offer
     return links
 
 
-def _offer_out(offer: Offer, links: list[OfferLinkOut]) -> OfferOut:
-    return OfferOut.model_validate({**_columns(offer), "links": links})
+async def _reasons(runtime: Runtime, offer_ids: list[int]) -> dict[int, list[str]]:
+    reasons: dict[int, list[str]] = {i: [] for i in offer_ids}
+    if not offer_ids:
+        return reasons
+    async with runtime.sessionmaker() as session:
+        rows = await session.scalars(select(Evaluation).where(Evaluation.offer_id.in_(offer_ids)))
+        for evaluation in rows:
+            reasons[evaluation.offer_id] = [r["message"] for r in evaluation.filter_reasons]
+    return reasons
+
+
+def _offer_out(offer: Offer, links: list[OfferLinkOut], reasons: list[str]) -> OfferOut:
+    return OfferOut.model_validate({**_columns(offer), "links": links, "filter_reasons": reasons})
+
+
+# « À examiner » regroupe les offres retenues par le filtre et celles qui n'y sont pas encore
+# passées : une offre n'est jamais cachée faute d'avoir été filtrée.
+TO_REVIEW = (OfferStatus.NEW, OfferStatus.TO_REVIEW)
 
 
 def _columns(offer: Offer) -> dict[str, object]:
@@ -168,26 +194,41 @@ async def list_offers(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
     sort: Literal["recent", "popular"] = "recent",
+    view: Literal["to_review", "filtered_out", "all"] = "all",
 ) -> OfferPage:
-    """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes."""
+    """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.
+    `view` : à examiner, écartées par le filtre, ou toutes."""
     runtime = _runtime(request)
     order = (
         (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc())
         if sort == "popular"
         else (Offer.first_seen_at.desc(), Offer.id.desc())
     )
+    query = select(Offer)
+    if view == "to_review":
+        query = query.where(Offer.status.in_(TO_REVIEW))
+    elif view == "filtered_out":
+        query = query.where(Offer.status == OfferStatus.FILTERED_OUT)
     async with runtime.sessionmaker() as session:
-        total = await session.scalar(select(func.count()).select_from(Offer))
-        offers = list(
-            await session.scalars(
-                select(Offer)
-                .order_by(*order)
-                .limit(limit)
-                .offset(offset)
-            )
+        by_status = dict(
+            (await session.execute(select(Offer.status, func.count()).group_by(Offer.status))).all()
         )
-    links = await _links(runtime, [offer.id for offer in offers])
-    return OfferPage(items=[_offer_out(o, links[o.id]) for o in offers], total=total or 0)
+        offers = list(await session.scalars(query.order_by(*order).limit(limit).offset(offset)))
+    counts = OfferCounts(
+        to_review=sum(by_status.get(s, 0) for s in TO_REVIEW),
+        filtered_out=by_status.get(OfferStatus.FILTERED_OUT, 0),
+        all=sum(by_status.values()),
+    )
+    total = {"to_review": counts.to_review, "filtered_out": counts.filtered_out}.get(
+        view, counts.all
+    )
+    ids = [offer.id for offer in offers]
+    links, reasons = await _links(runtime, ids), await _reasons(runtime, ids)
+    return OfferPage(
+        items=[_offer_out(o, links[o.id], reasons[o.id]) for o in offers],
+        total=total,
+        counts=counts,
+    )
 
 
 @router.post(
