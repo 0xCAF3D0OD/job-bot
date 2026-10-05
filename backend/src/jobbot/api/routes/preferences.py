@@ -76,6 +76,8 @@ class SettingsModel(BaseModel):
     orp_monthly_target: int | None = Field(default=None, ge=1, le=100)
     notify_score_threshold: int = Field(default=70, ge=0, le=100)
     llm_monthly_budget_chf: float = Field(default=10, ge=0, le=1000)
+    # Jour de remise des preuves ORP du mois précédent (docs/09 §5).
+    orp_due_day: int = Field(default=5, ge=2, le=28)
 
 
 def _runtime(request: Request) -> Runtime:

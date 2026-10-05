@@ -150,11 +150,18 @@ async def test_api_settings(api: AsyncClient) -> None:
         "orp_monthly_target": None,
         "notify_score_threshold": 70,
         "llm_monthly_budget_chf": 10,
+        "orp_due_day": 5,
     }
-    new = {"orp_monthly_target": 8, "notify_score_threshold": 75, "llm_monthly_budget_chf": 5}
+    new = {
+        "orp_monthly_target": 8,
+        "notify_score_threshold": 75,
+        "llm_monthly_budget_chf": 5,
+        "orp_due_day": 10,
+    }
     assert (await api.put("/api/settings", json=new)).json() == new
     assert (await api.get("/api/settings")).json() == new
     assert (await api.put("/api/settings", json={"notify_score_threshold": 120})).status_code == 422
+    assert (await api.put("/api/settings", json={"orp_due_day": 31})).status_code == 422
     await api.put("/api/settings", json=defaults)
 
 

@@ -23,6 +23,7 @@ from jobbot.core.orp import (
 )
 from jobbot.db.models import Application, OrpMonth, Search, Setting
 from jobbot.letters.service import load_identity
+from jobbot.orp.service import load_due_day
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/orp", tags=["orp"])
@@ -154,6 +155,7 @@ async def get_orp_month(
             select(Setting.value).where(Setting.key == "orp_monthly_target")
         )
         identity = await load_identity(session)
+        due_day = await load_due_day(session)
         start, end = _bounds(month)
         searches = await session.scalars(
             select(Search)
@@ -179,7 +181,7 @@ async def get_orp_month(
     return OrpMonthOut(
         month=month,
         state=state,
-        due_date=due_date(month),
+        due_date=due_date(month, due_day),
         count=len(rows),
         target=int(target) if target else None,
         incomplete=sum(1 for r in rows if r.missing),

@@ -55,3 +55,26 @@ describe("SettingsView, notifications", () => {
     expect(wrapper.find("[data-test=notifications] [role=status]").text()).toContain("Notification envoyée");
   });
 });
+
+describe("SettingsView, date limite ORP", () => {
+  it("enregistre le jour de remise", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/notifications"
+            ? { configured: false, server: "https://ntfy.sh" }
+            : { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 5 },
+      }),
+    );
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT).mockResolvedValue({ data: {} } as never);
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
+    await flushPromises();
+    await wrapper.find("[data-test=due-day]").setValue(10);
+    await wrapper.find("[data-test=settings-form]").trigger("submit");
+    await flushPromises();
+    expect(put).toHaveBeenCalledWith("/api/settings", {
+      body: { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 10 },
+    });
+  });
+});
