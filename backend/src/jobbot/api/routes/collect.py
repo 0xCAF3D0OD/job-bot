@@ -421,6 +421,18 @@ async def list_offers(
     )
 
 
+@router.get("/offers/{offer_id}", operation_id="getOffer")
+async def get_offer(request: Request, offer_id: int) -> OfferOut:
+    runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+        current_hash = profile_hash(await active_profile(session))
+    links, evaluations = await _links(runtime, [offer_id]), await _evaluations(runtime, [offer_id])
+    return _offer_out(offer, links[offer_id], evaluations.get(offer_id), current_hash)
+
+
 @router.post(
     "/collect",
     operation_id="startCollect",

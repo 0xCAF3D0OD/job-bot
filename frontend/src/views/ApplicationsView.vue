@@ -244,6 +244,13 @@ onMounted(() => void load());
               </select>
             </td>
             <td class="row-actions">
+              <a
+                v-if="application.letter_draft_id"
+                class="link"
+                :href="`/api/letters/${application.letter_draft_id}/docx`"
+                download
+                data-test="letter-docx"
+              >Lettre</a>
               <button
                 type="button"
                 class="link"

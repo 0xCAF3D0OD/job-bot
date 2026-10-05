@@ -35,3 +35,6 @@ export type ApplicationMethod = Schemas["ApplicationMethod"];
 export type ApplicationStatus = Schemas["ApplicationStatus"];
 export type MonthSummary = Schemas["MonthSummary"];
 export type Identity = Schemas["Identity"];
+export type Letter = Schemas["LetterOut"];
+export type LetterParagraph = Schemas["LetterParagraph"];
+export type LetterLanguage = Letter["language"];

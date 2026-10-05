@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr | None = None
     llm_model: str = "claude-opus-5"
     llm_effort: Literal["low", "medium", "high"] = "low"
+    # Rédaction des lettres (docs/08 §6) : plus de soin que la notation.
+    llm_writing_effort: Literal["low", "medium", "high"] = "medium"
 
     # Notifications ntfy (docs/06 §5). Sujet secret : quiconque le connaît lit les messages.
     ntfy_url: str = "https://ntfy.sh"

@@ -572,3 +572,58 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .status-select.engagement { border-color: var(--ok); color: var(--ok); }
 .status-select.refus, .status-select.sans_reponse { color: var(--muted); }
 .row-actions { white-space: nowrap; display: flex; gap: 0.75rem; }
+
+/* Préparation : lettre (docs/08 §3) */
+.prep-layout { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: 1.5rem; align-items: start; }
+.prep-main { display: grid; gap: 1rem; }
+.prep-main .notice { margin: 0; }
+.prep-empty { background: var(--surface); border: 1px dashed var(--border); border-radius: 16px; }
+.prep-side { display: grid; gap: 1rem; position: sticky; top: 5.5rem; }
+.side-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.1rem 1.25rem; display: grid; gap: 0.75rem; }
+.side-card h2 { font-size: 1rem; margin: 0; }
+.side-card label { display: grid; gap: 0.35rem; font-size: 0.9rem; color: var(--muted); }
+.side-card select, .side-card textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.55rem 0.7rem; }
+.side-card button { justify-content: center; }
+.side-card .hint { margin: 0; font-size: 0.85rem; }
+.versions { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; font-size: 0.85rem; }
+.versions .link { text-align: left; color: var(--muted); }
+.versions .link.active { color: var(--accent); font-weight: 600; }
+.letter-sheet {
+  background: #fff; color: #1a1a1a; border: 1px solid var(--border); border-radius: 6px;
+  box-shadow: 0 12px 32px rgba(17, 17, 31, 0.08);
+  padding: 3.2rem 3.6rem; font-family: Arial, Helvetica, sans-serif; font-size: 0.95rem; line-height: 1.5;
+  aspect-ratio: auto; max-width: 52rem; width: 100%; justify-self: center; transition: opacity 0.2s;
+}
+.letter-sheet.busy { opacity: 0.5; }
+.letter-sheet p { margin: 0 0 0.9rem; }
+.letter-sender, .letter-recipient { display: flex; flex-direction: column; margin-bottom: 1.6rem; }
+.letter-recipient, .letter-date { margin-left: 55%; }
+.letter-date { margin-bottom: 1.8rem !important; }
+.letter-subject { font-weight: 700; display: flex; gap: 0.3rem; align-items: baseline; }
+.letter-subject input { flex: 1; font: inherit; font-weight: 700; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.1rem 0.25rem; }
+.letter-paragraph { margin-bottom: 0.9rem; }
+.letter-paragraph textarea { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.15rem 0.25rem; resize: none; overflow: hidden; text-align: justify; }
+.letter-sheet input:hover, .letter-sheet textarea:hover { border-color: #d5d5e0; }
+.letter-sheet input:focus, .letter-sheet textarea:focus { outline: none; border-color: var(--accent); background: #fafaff; }
+.chunk-refs { display: block; font-size: 0.75rem; color: #7a7a90; padding-left: 0.25rem; }
+.letter-signature { margin-top: 2.2rem !important; }
+.letter-enclosure { margin-top: 2rem !important; font-size: 0.85rem; }
+.print-only { display: none; }
+@media (max-width: 960px) {
+  .prep-layout { grid-template-columns: 1fr; }
+  .prep-side { position: static; }
+  .letter-sheet { padding: 1.6rem 1.3rem; }
+  .letter-recipient, .letter-date { margin-left: 0; }
+}
+@media print {
+  @page { size: A4; margin: 20mm 25mm; }
+  body * { visibility: hidden; }
+  .letter-sheet, .letter-sheet * { visibility: visible; }
+  .letter-sheet { position: absolute; inset: 0 auto auto 0; border: 0; box-shadow: none; padding: 0; max-width: none; font-size: 11pt; }
+  .screen-only { display: none !important; }
+  .print-only { display: inline; }
+  p.print-only { display: block; text-align: justify; }
+}
+.button-link { display: inline-flex; align-items: center; padding: 0.5rem 0.9rem; font-size: 0.9rem; font-weight: 500; border-radius: 8px; border: 1px solid var(--border); color: var(--text); text-decoration: none; background: var(--surface); }
+.button-link:hover { border-color: var(--accent); color: var(--accent); }
+.side-card .actions a { flex: 1; justify-content: center; }

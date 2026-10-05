@@ -6,6 +6,7 @@ import CriteriaView from "./views/CriteriaView.vue";
 import JournalView from "./views/JournalView.vue";
 import OffersView from "./views/OffersView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
+import PreparationView from "./views/PreparationView.vue";
 import ProfileView from "./views/ProfileView.vue";
 import SettingsView from "./views/SettingsView.vue";
 import StatusView from "./views/StatusView.vue";
@@ -58,6 +59,8 @@ const routes: RouteRecordRaw[] = [
       props: views[entry.name] ? false : { entry },
     }),
   ),
+  // Hors menu : on y arrive depuis une offre (« Préparer ma candidature »).
+  { path: "/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   { path: "/:pathMatch(.*)*", redirect: "/etat" },
 ];
 
