@@ -123,7 +123,7 @@ async def api(fresh: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
 @pytest.mark.usefixtures("clean_queue")
 async def test_api_criteria_save_and_refilter(api: AsyncClient) -> None:
     empty = (await api.get("/api/criteria")).json()
-    assert empty["criteria"]["locations"] == []
+    assert empty["criteria"]["locations"] == [] and empty["saved_at"] is None
     assert "internship" in empty["keywords"]["contract_types"]["stage"]
 
     body = {
@@ -134,7 +134,9 @@ async def test_api_criteria_save_and_refilter(api: AsyncClient) -> None:
         "banned_words": ["vente"],
         "unspoken_languages": ["allemand"],
     }
-    saved = (await api.put("/api/criteria", json=body)).json()["criteria"]
+    response = (await api.put("/api/criteria", json=body)).json()
+    assert response["saved_at"] is not None
+    saved = response["criteria"]
     assert saved["locations"] == ["VD", "Genève"]  # espaces retirés, doublons écartés
     assert (await api.get("/api/criteria")).json()["criteria"] == saved
 

@@ -18,7 +18,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.4.1 | Propositions de blocs de profil par l'IA depuis un document | livrée |
 | 0.5.0 | Suivi des candidatures (a), lettre (b) et CV adapté (c) | livrée |
 | 0.6.0 | Export ORP (a) et rappels (b) | en cours (a) |
-| 0.6.1 | Offres expirées (a), prise en main (b), filtres au choix (c) | en cours (a) |
+| 0.6.1 | Offres expirées (a), prise en main (b), filtres au choix (c) | en cours (a, b) |
 
 ## Lancer en local
 
@@ -46,7 +46,7 @@ make migrate
 make dev
 ```
 
-L'interface est sur http://localhost:5173 (page État), l'API sur http://127.0.0.1:8000 (documentation sur `/api/docs`). `Ctrl-C` arrête tout.
+L'interface est sur http://localhost:5173 (page Aujourd'hui), l'API sur http://127.0.0.1:8000 (documentation sur `/api/docs`). `Ctrl-C` arrête tout.
 
 | Commande | Effet |
 |---|---|

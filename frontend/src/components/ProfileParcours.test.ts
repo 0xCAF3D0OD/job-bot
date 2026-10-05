@@ -1,7 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import ProfileView from "./ProfileView.vue";
+import ProfileView from "./ProfileParcours.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();

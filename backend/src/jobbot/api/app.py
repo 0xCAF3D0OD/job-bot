@@ -21,6 +21,7 @@ from jobbot.api.routes import (
     profile,
     scoring,
     status,
+    today,
 )
 from jobbot.db.schema import head_revision
 from jobbot.health import health_router
@@ -73,4 +74,5 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(letters.router)
     app.include_router(cvs.router)
     app.include_router(orp.router)
+    app.include_router(today.router)
     return app

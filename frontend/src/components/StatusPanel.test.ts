@@ -1,7 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import StatusView from "./StatusView.vue";
+import StatusView from "./StatusPanel.vue";
 
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...args: unknown[]) => GET(...args) } }));

@@ -2055,6 +2055,62 @@
           }
         }
       }
+    },
+    "/api/today": {
+      "get": {
+        "tags": [
+          "today"
+        ],
+        "summary": "Get Today",
+        "operationId": "getToday",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/onboarding": {
+      "put": {
+        "tags": [
+          "today"
+        ],
+        "summary": "Set Onboarding",
+        "description": "Masque (ou réaffiche) la liste de démarrage.",
+        "operationId": "setOnboarding",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2645,6 +2701,32 @@
         ],
         "title": "Body_uploadDocument"
       },
+      "ChecklistItem": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "criteria",
+              "profile",
+              "identity",
+              "orp_target",
+              "notifications",
+              "imap"
+            ],
+            "title": "Key"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "done"
+        ],
+        "title": "ChecklistItem"
+      },
       "ChunkIn": {
         "properties": {
           "kind": {
@@ -2963,6 +3045,18 @@
           },
           "keywords": {
             "$ref": "#/components/schemas/KeywordsOut"
+          },
+          "saved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved At"
           }
         },
         "type": "object",
@@ -4565,6 +4659,19 @@
         ],
         "title": "OfferStatusOut"
       },
+      "OnboardingIn": {
+        "properties": {
+          "dismissed": {
+            "type": "boolean",
+            "title": "Dismissed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dismissed"
+        ],
+        "title": "OnboardingIn"
+      },
       "OrpHolder": {
         "properties": {
           "name": {
@@ -5542,6 +5649,97 @@
           "unreadable"
         ],
         "title": "TextStatus"
+      },
+      "TodayOut": {
+        "properties": {
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItem"
+            },
+            "type": "array",
+            "title": "Checklist"
+          },
+          "checklist_dismissed": {
+            "type": "boolean",
+            "title": "Checklist Dismissed"
+          },
+          "to_review": {
+            "type": "integer",
+            "title": "To Review"
+          },
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "month_count": {
+            "type": "integer",
+            "title": "Month Count"
+          },
+          "month_target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month Target"
+          },
+          "to_follow_up": {
+            "type": "integer",
+            "title": "To Follow Up"
+          },
+          "orp_due_month": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orp Due Month"
+          },
+          "orp_due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orp Due Date"
+          },
+          "last_collect_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Collect At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "checklist",
+          "checklist_dismissed",
+          "to_review",
+          "month",
+          "month_count",
+          "month_target",
+          "to_follow_up",
+          "orp_due_month",
+          "orp_due_date",
+          "last_collect_at"
+        ],
+        "title": "TodayOut"
       },
       "ValidationError": {
         "properties": {
