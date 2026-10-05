@@ -30,6 +30,7 @@ const row = (id: number, extra: Record<string, unknown> = {}) => ({
   method: "électronique",
   assigned: "non",
   result: "en suspens",
+  url: "https://emploi.exemple.ch/postuler/1",
   missing: [],
   ...extra,
 });
@@ -77,6 +78,8 @@ describe("OrpView", () => {
     expect(wrapper.find("[data-test=csv]").attributes("href")).toBe("/api/orp/2026-10/csv");
     // La version imprimée reprend l'en-tête et laisse le n° AVS à remplir.
     expect(wrapper.find(".orp-sheet").text()).toContain("N° AVS : ____");
+    // Le lien de la candidature est dans le PDF, sous le poste.
+    expect(wrapper.find(".orp-sheet .orp-url").text()).toBe("https://emploi.exemple.ch/postuler/1");
   });
 
   it("compléter une ligne ouvre la candidature et l'enregistre", async () => {

@@ -7,6 +7,7 @@ import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import JournalPanel from "../components/JournalPanel.vue";
 import PageHero from "../components/PageHero.vue";
+import { applicationUpdateBody } from "../applicationBody";
 import { formatMonth, shiftMonth, sourceLabel } from "../format";
 
 const route = useRoute();
@@ -46,6 +47,7 @@ const FIELDS: [keyof OrpRow, string][] = [
   ["method", "Mode"],
   ["assigned", "Assignée par l'ORP"],
   ["result", "Résultat"],
+  ["url", "Lien de la candidature"],
 ];
 
 async function load(): Promise<void> {
@@ -88,22 +90,7 @@ async function save(value: ApplicationFormValue): Promise<void> {
   if (!editing.value) return;
   const { data: saved } = await api.PUT("/api/applications/{application_id}", {
     params: { path: { application_id: editing.value.id } },
-    body: {
-      sent_at: value.sent_at,
-      method: value.method,
-      assigned_by_orp: value.assigned_by_orp,
-      company: value.company,
-      company_address: value.company_address || null,
-      contact_name: value.contact_name || null,
-      contact_phone: value.contact_phone || null,
-      job_title: value.job_title,
-      location: value.location || null,
-      rate_text: value.rate_text || null,
-      status: value.status ?? "en_attente",
-      status_reason: value.status_reason || null,
-      status_at: value.status_at ?? null,
-      interview_at: value.interview_at ?? null,
-    },
+    body: applicationUpdateBody(value),
   });
   if (!saved) {
     editError.value = "Vérifie les champs obligatoires (date, entreprise, poste).";
@@ -339,6 +326,7 @@ onMounted(() => void load());
                 <th>Mode</th>
                 <th>ORP</th>
                 <th>Résultat</th>
+                <th>Lien</th>
               </tr>
             </thead>
             <tbody>
@@ -368,6 +356,16 @@ onMounted(() => void load());
                 <td>{{ row.method }}</td>
                 <td>{{ row.assigned }}</td>
                 <td>{{ row.result }}</td>
+                <td>
+                  <a
+                    v-if="row.url?.startsWith('http')"
+                    :href="row.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="link"
+                  >ouvrir</a>
+                  <span v-else>{{ row.url || "—" }}</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -406,7 +404,13 @@ onMounted(() => void load());
                 <td>{{ row.date }}</td>
                 <td>{{ [row.company, row.address].filter(Boolean).join(", ") }}</td>
                 <td>{{ [row.contact, row.phone].filter(Boolean).join(", ") }}</td>
-                <td>{{ row.job_title }}</td>
+                <td>
+                  {{ row.job_title }}
+                  <span
+                    v-if="row.url"
+                    class="orp-url"
+                  >{{ row.url }}</span>
+                </td>
                 <td>{{ row.rate }}</td>
                 <td>{{ row.method }}</td>
                 <td>{{ row.assigned }}</td>

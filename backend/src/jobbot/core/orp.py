@@ -29,6 +29,7 @@ COLUMNS = (
     "Mode",
     "Assignée par l'ORP",
     "Résultat",
+    "Lien de la candidature",
 )
 
 
@@ -47,6 +48,7 @@ class ApplicationData:
     status: str
     status_reason: str | None
     interview_at: datetime | None
+    application_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -62,6 +64,7 @@ class OrpRow:
     method: str
     assigned: str
     result: str
+    url: str = ""
     # Champs indispensables manquants : la ligne est « à compléter ».
     missing: list[str] = field(default_factory=list)
 
@@ -77,6 +80,7 @@ class OrpRow:
             self.method,
             self.assigned,
             self.result,
+            self.url,
         ]
 
 
@@ -111,6 +115,7 @@ def to_row(app: ApplicationData) -> OrpRow:
         method=METHOD.get(app.method, app.method),
         assigned="oui" if app.assigned_by_orp else "non",
         result=result_text(app.status, app.status_reason, app.interview_at),
+        url=app.application_url or "",
         missing=[] if address else ["adresse de l'entreprise"],
     )
 

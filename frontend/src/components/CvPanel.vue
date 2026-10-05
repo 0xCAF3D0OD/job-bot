@@ -5,6 +5,8 @@ import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 
 const props = defineProps<{ offer: Offer }>();
+// Version affichée, pour le lien « CV (Word) » de la barre de la page.
+const emit = defineEmits<{ current: [id: number | null] }>();
 
 const LANGUAGES: Record<LetterLanguage, string> = { fr: "Français", en: "English", de: "Deutsch" };
 const SECTIONS: Record<string, string> = {
@@ -37,6 +39,7 @@ const blocksBySection = computed(() => {
 
 function show(cv: Cv | null): void {
   selectedId.value = cv?.id ?? null;
+  emit("current", selectedId.value);
   edit.value = { headline: cv?.headline ?? "", summary: cv?.summary ?? "" };
   dirty.value = false;
   void nextTick(resizeAll);

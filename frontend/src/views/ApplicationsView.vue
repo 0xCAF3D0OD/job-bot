@@ -10,6 +10,7 @@ import {
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import PageHero from "../components/PageHero.vue";
+import { applicationBody } from "../applicationBody";
 import { applicationStatusLabel, formatMonth, methodLabel, shiftMonth } from "../format";
 
 function currentMonth(): string {
@@ -64,20 +65,7 @@ function addManual(): void {
   };
 }
 
-function body(value: ApplicationFormValue) {
-  return {
-    sent_at: value.sent_at,
-    method: value.method,
-    assigned_by_orp: value.assigned_by_orp,
-    company: value.company,
-    company_address: value.company_address || null,
-    contact_name: value.contact_name || null,
-    contact_phone: value.contact_phone || null,
-    job_title: value.job_title,
-    location: value.location || null,
-    rate_text: value.rate_text || null,
-  };
-}
+const body = applicationBody;
 
 async function save(value: ApplicationFormValue): Promise<void> {
   if (!editing.value) return;
@@ -224,7 +212,17 @@ onMounted(() => void load());
                 class="badge"
               >ORP</span>
             </td>
-            <td>{{ application.job_title }}</td>
+            <td>
+              {{ application.job_title }}
+              <a
+                v-if="application.application_url?.startsWith('http')"
+                :href="application.application_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link small-link"
+                data-test="application-link"
+              >Lien</a>
+            </td>
             <td>{{ methodLabel[application.method ?? "electronique"] }}</td>
             <td>
               <select

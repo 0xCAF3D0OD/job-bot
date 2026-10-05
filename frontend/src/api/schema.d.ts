@@ -871,6 +871,8 @@ export interface components {
             location?: string | null;
             /** Rate Text */
             rate_text?: string | null;
+            /** Application Url */
+            application_url?: string | null;
             /** Offer Id */
             offer_id?: number | null;
         };
@@ -908,6 +910,8 @@ export interface components {
             location?: string | null;
             /** Rate Text */
             rate_text?: string | null;
+            /** Application Url */
+            application_url?: string | null;
             /** @default en_attente */
             status: components["schemas"]["ApplicationStatus"];
             /** Status Reason */
@@ -962,6 +966,8 @@ export interface components {
             location?: string | null;
             /** Rate Text */
             rate_text?: string | null;
+            /** Application Url */
+            application_url?: string | null;
             /** Offer Id */
             offer_id: number;
         };
@@ -998,6 +1004,8 @@ export interface components {
             location?: string | null;
             /** Rate Text */
             rate_text?: string | null;
+            /** Application Url */
+            application_url?: string | null;
             /** @default en_attente */
             status: components["schemas"]["ApplicationStatus"];
             /** Status Reason */
@@ -1793,6 +1801,8 @@ export interface components {
             assigned: string;
             /** Result */
             result: string;
+            /** Url */
+            url: string;
             /** Missing */
             missing: string[];
         };

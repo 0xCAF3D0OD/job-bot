@@ -23,6 +23,7 @@ const form = ref<ApplicationFormValue>({
   contact_phone: props.initial.contact_phone ?? "",
   location: props.initial.location ?? "",
   rate_text: props.initial.rate_text ?? "",
+  application_url: props.initial.application_url ?? "",
   status_reason: props.initial.status_reason ?? "",
 });
 const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, string][];
@@ -108,6 +109,14 @@ const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, s
             v-model="form.rate_text"
             type="text"
             placeholder="plein temps, temps partiel (80 %)…"
+          >
+        </label>
+        <label class="wide">Lien de la candidature
+          <input
+            v-model="form.application_url"
+            type="text"
+            placeholder="formulaire de l'employeur, annonce ou adresse e-mail utilisée"
+            data-test="application-url"
           >
         </label>
       </div>

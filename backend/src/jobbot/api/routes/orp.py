@@ -51,6 +51,7 @@ class OrpRowOut(BaseModel):
     method: str
     assigned: str
     result: str
+    url: str
     missing: list[str]
 
 
@@ -114,6 +115,7 @@ async def _rows(session: AsyncSession, month: str) -> list[OrpRow]:
                 status=a.status,
                 status_reason=a.status_reason,
                 interview_at=a.interview_at,
+                application_url=a.application_url,
             )
         )
         for a in applications

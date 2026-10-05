@@ -21,6 +21,7 @@ from jobbot.db.models import (
     ApplicationStatus,
     DraftKind,
     Offer,
+    OfferLink,
     OfferStatus,
     Setting,
 )
@@ -164,6 +165,8 @@ class ApplicationBase(BaseModel):
     job_title: Annotated[str, Field(min_length=1, max_length=300)]
     location: ShortText | None = None
     rate_text: ShortText | None = None
+    # Formulaire de l'employeur, annonce ou adresse e-mail utilisée (docs/13 §2).
+    application_url: Annotated[str, Field(max_length=1000)] | None = None
 
     @field_validator("company", "job_title")
     @classmethod
@@ -173,7 +176,14 @@ class ApplicationBase(BaseModel):
             raise ValueError("ne doit pas être vide")
         return stripped
 
-    @field_validator("company_address", "contact_name", "contact_phone", "location", "rate_text")
+    @field_validator(
+        "company_address",
+        "contact_name",
+        "contact_phone",
+        "location",
+        "rate_text",
+        "application_url",
+    )
     @classmethod
     def _strip(cls, value: str | None) -> str | None:
         return _clean(value)
@@ -225,6 +235,12 @@ def _rate_text(offer: Offer) -> str | None:
     return f"temps partiel ({offer.rate_min}-{offer.rate_max} %)"
 
 
+def _one_line(address: str | None) -> str | None:
+    if not address:
+        return None
+    return ", ".join(part.strip() for part in address.splitlines() if part.strip())
+
+
 def _today() -> date:
     return datetime.now(UTC).astimezone(LOCAL_TZ).date()
 
@@ -235,6 +251,9 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
     async with _runtime(request).sessionmaker() as session:
         offer = await session.get(Offer, offer_id)
         letter = await current_draft(session, offer_id)
+        first_link = await session.scalar(
+            select(OfferLink.url).where(OfferLink.offer_id == offer_id).order_by(OfferLink.id)
+        )
     if offer is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
     # Coordonnées de l'employeur relevées par l'IA dans l'annonce, pendant la rédaction.
@@ -243,13 +262,15 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
         offer_id=offer.id,
         sent_at=_today(),
         # Adresse connue de l'offre (annonce, registre, saisie), sinon celle relevée par l'IA.
-        company_address=offer.company_address or employer.get("address"),
+        # Champ sur une ligne : « Rue 1, 1003 Lausanne » (l'adresse est gardée sur deux lignes).
+        company_address=_one_line(offer.company_address or employer.get("address")),
         contact_name=employer.get("contact_name"),
         contact_phone=employer.get("contact_phone"),
         company=offer.company or "Entreprise non indiquée",
         job_title=offer.title,
         location=offer.location,
         rate_text=_rate_text(offer),
+        application_url=offer.apply_url or first_link,
     )
 
 

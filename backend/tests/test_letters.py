@@ -233,7 +233,7 @@ async def test_edit_then_application_and_docx(
     assert edited.status_code == 200 and edited.json()["edited_at"]
 
     prefill = (await api.get(f"/api/offers/{offer_id}/application-prefill")).json()
-    assert prefill["company_address"] == "Avenue de l'Exemple 5\n1003 Lausanne"
+    assert prefill["company_address"] == "Avenue de l'Exemple 5, 1003 Lausanne"
     assert prefill["contact_name"] == "Mme Dupont"
     created = (
         await api.post(

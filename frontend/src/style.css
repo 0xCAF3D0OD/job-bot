@@ -738,3 +738,9 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .kw { font-size: 0.76rem; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--panel); border: 1px solid var(--border); color: var(--text); white-space: nowrap; }
 .kw.gap { background: color-mix(in srgb, var(--warn) 12%, transparent); border-color: color-mix(in srgb, var(--warn) 45%, transparent); color: var(--warn); }
 .kw.offer { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.small-link { font-size: 0.8rem; margin-left: 0.35rem; }
+.orp-url { display: none; }
+@media print { .orp-url { display: block; font-size: 7pt; color: #333; word-break: break-all; } }
+.apply-bar { position: sticky; top: 4.6rem; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; padding: 0.75rem 1rem; margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 6px 18px rgba(17, 17, 31, 0.06); }
+.apply-bar .spacer { flex: 1; }
+@media print { .apply-bar { display: none; } }

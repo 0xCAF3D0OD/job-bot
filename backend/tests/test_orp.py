@@ -61,6 +61,9 @@ def test_row_and_csv() -> None:
     assert incomplete.missing == ["adresse de l'entreprise"]
     assert (incomplete.method, incomplete.assigned) == ("en personne", "oui")
 
+    with_url = to_row(app_data(application_url="https://emploi.exemple.ch/1"))
+    assert with_url.url == "https://emploi.exemple.ch/1"
+    assert to_csv([with_url]).decode("utf-8").rstrip().endswith(";https://emploi.exemple.ch/1")
     content = to_csv([row]).decode("utf-8")
     assert content.startswith("﻿Date;Entreprise;Adresse;")
     assert "02.10.2026;Acme SA;Avenue de l'Exemple 5, 1003 Lausanne;;;" in content
