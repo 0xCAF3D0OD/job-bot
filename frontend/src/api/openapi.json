@@ -227,7 +227,7 @@
           "collect"
         ],
         "summary": "List Offers",
-        "description": "`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.\n`view` : à examiner, écartées par le filtre, ou toutes.",
+        "description": "`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.\n`view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des\nfiltres d'affichage ; les compteurs par statut et les facettes en tiennent compte.",
         "operationId": "listOffers",
         "parameters": [
           {
@@ -280,6 +280,78 @@
               "type": "string",
               "default": "all",
               "title": "View"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "sources",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Source"
+              },
+              "default": [],
+              "title": "Sources"
+            }
+          },
+          {
+            "name": "cantons",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 26,
+              "default": [],
+              "title": "Cantons"
+            }
+          },
+          {
+            "name": "min_rate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Rate"
+            }
+          },
+          {
+            "name": "external_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "External Only"
             }
           }
         ],
@@ -1238,6 +1310,24 @@
         ],
         "title": "DocumentType"
       },
+      "Facet": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "Facet"
+      },
       "FilterResponse": {
         "properties": {
           "result": {
@@ -1436,6 +1526,31 @@
           "all"
         ],
         "title": "OfferCounts"
+      },
+      "OfferFacets": {
+        "properties": {
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Sources"
+          },
+          "cantons": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Cantons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sources",
+          "cantons"
+        ],
+        "title": "OfferFacets",
+        "description": "Valeurs disponibles pour les filtres, avec le nombre d'offres de chacune."
       },
       "OfferLinkOut": {
         "properties": {
@@ -1644,13 +1759,17 @@
           },
           "counts": {
             "$ref": "#/components/schemas/OfferCounts"
+          },
+          "facets": {
+            "$ref": "#/components/schemas/OfferFacets"
           }
         },
         "type": "object",
         "required": [
           "items",
           "total",
-          "counts"
+          "counts",
+          "facets"
         ],
         "title": "OfferPage"
       },

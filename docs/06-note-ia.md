@@ -1,6 +1,6 @@
 # 06 — Note IA, résumé des offres et filtres toujours visibles (version 0.4.0)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé le 2026-10-05 avec Claude Opus 5, effort bas.** Partie a (page Offres et filtres) livrée ; b (note et résumé IA) et c (notifications) à suivre.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2, §3 et §10, sur le profil (0.3) et le texte complet jobup (0.3.1).
 > Demandes de Kevin (2026-10-05) : les principaux filtres toujours à disposition, et pour chaque offre un résumé de 2-3 lignes (ce qu'elle demande, ce qu'elle offre, le poste).
 
@@ -76,7 +76,7 @@ Les offres **écartées ne sont jamais notées**, ce qui évite un coût inutile
 - **Plafond mensuel** (Réglages, 10 CHF par défaut) : une fois atteint, plus aucun appel jusqu'au mois suivant. La page État l'affiche, et une notification te prévient à 80 %.
 - **Notification ntfy** pour chaque nouvelle offre dont la note atteint ton seuil (Réglages, 70 par défaut) : titre, entreprise, note et lien vers l'offre dans job-bot. Au plus une notification groupée par collecte.
 
-## 6. Base (migration 0007)
+## 6. Base (migration 0008)
 
 ```
 evaluations   + score SMALLINT?, summary_role TEXT?, summary_asks TEXT?, summary_offers TEXT?,
@@ -166,3 +166,11 @@ Ces filtres **n'écartent rien** : ils changent seulement ce que tu vois. Les pr
 5. **Filtres de la barre** : la liste du §7 te convient-elle ? Faut-il en ajouter ou en retirer ?
 6. **Ordre des PR** : la page Offres d'abord, sans IA (§10).
 7. **Évaluation manuelle sur 15 offres** avant la mise en service (§9).
+
+## Écarts à la livraison (partie a)
+
+- **Migration 0007** : colonne `canton` des offres, pour le filtre par canton. Elle est remplie à partir du lieu, ou des autres offres de la même ville, et tenue à jour par la tâche `filter`. La note IA passe donc à la migration 0008.
+- **Statut en liste verticale** dans la barre de filtres : trois boutons côte à côte ne tenaient pas dans la colonne.
+- **Note minimale et tri « Meilleure note »** : ils arrivent avec la partie b, puisqu'il n'y a pas encore de note.
+- **Écran moyen** (moins de 1200 px) : le détail s'ouvre par-dessus la liste, à droite. **Mobile** : les filtres s'ouvrent en plein écran, avec un bouton « Voir N offres ».
+- **Recherche** : sans accents ni majuscules, sur le titre, l'entreprise, le lieu, l'extrait, le type d'emploi et le texte complet. Tous les mots doivent être présents.
