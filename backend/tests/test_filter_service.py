@@ -166,7 +166,13 @@ async def test_api_offer_views(api: AsyncClient, fresh: Runtime) -> None:
     await add_offer(fresh, "Arrivée après le filtre", "Sion, VS")
 
     page = (await api.get("/api/offers", params={"view": "to_review"})).json()
-    assert page["counts"] == {"to_review": 2, "filtered_out": 2, "all": 4}
+    assert page["counts"] == {
+        "to_review": 2,
+        "filtered_out": 2,
+        "later": 0,
+        "in_progress": 0,
+        "all": 4,
+    }
     assert sorted(o["title"] for o in page["items"]) == ["Admin", "Arrivée après le filtre"]
     out = (await api.get("/api/offers", params={"view": "filtered_out"})).json()
     assert out["total"] == 2

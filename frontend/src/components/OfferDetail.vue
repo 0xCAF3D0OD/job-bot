@@ -11,7 +11,11 @@ function sources(ids: number[]): string {
     .filter(Boolean)
     .join(", ");
 }
-defineEmits<{ close: [] }>();
+const emit = defineEmits<{
+  close: [];
+  status: [status: "to_review" | "later" | "ignored" | "preparing"];
+  applied: [];
+}>();
 
 function initial(offer: Offer): string {
   return (offer.company ?? offer.title).trim().charAt(0).toUpperCase() || "?";
@@ -41,6 +45,70 @@ function initial(offer: Offer): string {
     <div>
       <h2>{{ offer.title }}</h2>
       <span class="detail">{{ offer.company ?? "Entreprise non indiquée" }}</span>
+    </div>
+    <div
+      class="triage"
+      data-test="triage"
+    >
+      <template v-if="offer.status === 'applied'">
+        <span class="badge new">Candidature envoyée</span>
+        <RouterLink
+          to="/candidatures"
+          class="link"
+        >
+          Voir le suivi
+        </RouterLink>
+      </template>
+      <template v-else>
+        <button
+          v-if="offer.status !== 'preparing'"
+          type="button"
+          class="secondary small"
+          data-test="prepare"
+          @click="emit('status', 'preparing')"
+        >
+          Préparer ma candidature
+        </button>
+        <span
+          v-else
+          class="badge"
+        >En préparation</span>
+        <button
+          type="button"
+          class="primary small"
+          data-test="mark-applied"
+          @click="emit('applied')"
+        >
+          Marquer comme envoyée
+        </button>
+        <button
+          v-if="offer.status === 'later' || offer.status === 'ignored' || offer.status === 'preparing'"
+          type="button"
+          class="link"
+          data-test="back-to-review"
+          @click="emit('status', 'to_review')"
+        >
+          Remettre à examiner
+        </button>
+        <template v-else>
+          <button
+            type="button"
+            class="link"
+            data-test="later"
+            @click="emit('status', 'later')"
+          >
+            Plus tard
+          </button>
+          <button
+            type="button"
+            class="link danger"
+            data-test="ignore"
+            @click="emit('status', 'ignored')"
+          >
+            Ignorer
+          </button>
+        </template>
+      </template>
     </div>
     <div class="actions">
       <a

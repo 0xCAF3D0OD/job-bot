@@ -276,6 +276,8 @@
               "enum": [
                 "to_review",
                 "filtered_out",
+                "later",
+                "in_progress",
                 "all"
               ],
               "type": "string",
@@ -1030,10 +1032,945 @@
           }
         }
       }
+    },
+    "/api/offers/{offer_id}/status": {
+      "patch": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Set Offer Status",
+        "operationId": "setOfferStatus",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferStatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferStatusOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/application-prefill": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Get Application Prefill",
+        "description": "Valeurs proposées pour « Marquer comme envoyée ».",
+        "operationId": "getApplicationPrefill",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationPrefill"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "List Applications",
+        "operationId": "listApplications",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApplicationOut"
+                  },
+                  "title": "Response Listapplications"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Create Application",
+        "operationId": "createApplication",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Candidature déjà enregistrée pour cette offre"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/summary": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Get Applications Summary",
+        "operationId": "getApplicationsSummary",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/{application_id}": {
+      "put": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Update Application",
+        "operationId": "updateApplication",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Delete Application",
+        "description": "Annule une candidature enregistrée par erreur ; l'offre revient « en préparation ».",
+        "operationId": "deleteApplication",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/identity": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Get Identity",
+        "operationId": "getIdentity",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Put Identity",
+        "operationId": "saveIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Identity"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ApplicationIn": {
+        "properties": {
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          },
+          "method": {
+            "$ref": "#/components/schemas/ApplicationMethod",
+            "default": "electronique"
+          },
+          "assigned_by_orp": {
+            "type": "boolean",
+            "title": "Assigned By Orp",
+            "default": false
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Company"
+          },
+          "company_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          },
+          "job_title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Job Title"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rate_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Text"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent_at",
+          "company",
+          "job_title"
+        ],
+        "title": "ApplicationIn"
+      },
+      "ApplicationMethod": {
+        "type": "string",
+        "enum": [
+          "electronique",
+          "ecrit",
+          "telephone",
+          "personnel"
+        ],
+        "title": "ApplicationMethod",
+        "description": "Mode de candidature, au sens du formulaire ORP."
+      },
+      "ApplicationOut": {
+        "properties": {
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          },
+          "method": {
+            "$ref": "#/components/schemas/ApplicationMethod",
+            "default": "electronique"
+          },
+          "assigned_by_orp": {
+            "type": "boolean",
+            "title": "Assigned By Orp",
+            "default": false
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Company"
+          },
+          "company_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          },
+          "job_title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Job Title"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rate_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Text"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus",
+            "default": "en_attente"
+          },
+          "status_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Reason"
+          },
+          "status_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status At"
+          },
+          "interview_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview At"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "orp_month": {
+            "type": "string",
+            "title": "Orp Month"
+          },
+          "reminded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminded At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent_at",
+          "company",
+          "job_title",
+          "id",
+          "offer_id",
+          "orp_month",
+          "reminded_at",
+          "created_at"
+        ],
+        "title": "ApplicationOut"
+      },
+      "ApplicationPrefill": {
+        "properties": {
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          },
+          "method": {
+            "$ref": "#/components/schemas/ApplicationMethod",
+            "default": "electronique"
+          },
+          "assigned_by_orp": {
+            "type": "boolean",
+            "title": "Assigned By Orp",
+            "default": false
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Company"
+          },
+          "company_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          },
+          "job_title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Job Title"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rate_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Text"
+          },
+          "offer_id": {
+            "type": "integer",
+            "title": "Offer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent_at",
+          "company",
+          "job_title",
+          "offer_id"
+        ],
+        "title": "ApplicationPrefill"
+      },
+      "ApplicationStatus": {
+        "type": "string",
+        "enum": [
+          "en_attente",
+          "relancee",
+          "entretien",
+          "refus",
+          "engagement",
+          "sans_reponse"
+        ],
+        "title": "ApplicationStatus"
+      },
+      "ApplicationUpdate": {
+        "properties": {
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          },
+          "method": {
+            "$ref": "#/components/schemas/ApplicationMethod",
+            "default": "electronique"
+          },
+          "assigned_by_orp": {
+            "type": "boolean",
+            "title": "Assigned By Orp",
+            "default": false
+          },
+          "company": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Company"
+          },
+          "company_address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Address"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          },
+          "job_title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Job Title"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "rate_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Text"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApplicationStatus",
+            "default": "en_attente"
+          },
+          "status_reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Reason"
+          },
+          "status_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status At"
+          },
+          "interview_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent_at",
+          "company",
+          "job_title"
+        ],
+        "title": "ApplicationUpdate"
+      },
       "Body_uploadDocument": {
         "properties": {
           "file": {
@@ -1551,6 +2488,60 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "Identity": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "title": "Identity"
+      },
       "JobRunOut": {
         "properties": {
           "id": {
@@ -1697,6 +2688,36 @@
         ],
         "title": "Language"
       },
+      "MonthSummary": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "count",
+          "target"
+        ],
+        "title": "MonthSummary"
+      },
       "NotificationsStatus": {
         "properties": {
           "configured": {
@@ -1725,6 +2746,14 @@
             "type": "integer",
             "title": "Filtered Out"
           },
+          "later": {
+            "type": "integer",
+            "title": "Later"
+          },
+          "in_progress": {
+            "type": "integer",
+            "title": "In Progress"
+          },
           "all": {
             "type": "integer",
             "title": "All"
@@ -1734,6 +2763,8 @@
         "required": [
           "to_review",
           "filtered_out",
+          "later",
+          "in_progress",
           "all"
         ],
         "title": "OfferCounts"
@@ -2089,6 +3120,42 @@
           "applied"
         ],
         "title": "OfferStatus"
+      },
+      "OfferStatusIn": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "to_review",
+              "later",
+              "ignored",
+              "preparing"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "OfferStatusIn"
+      },
+      "OfferStatusOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OfferStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "OfferStatusOut"
       },
       "ParseStatus": {
         "type": "string",

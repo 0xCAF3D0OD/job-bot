@@ -10,7 +10,7 @@ secret JOBBOT_NTFY_TOPIC. Sans sujet, rien n'est envoyé.
 
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -18,7 +18,14 @@ import httpx
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 
-from jobbot.db.models import Evaluation, Offer, OfferStatus, Setting
+from jobbot.db.models import (
+    Application,
+    ApplicationStatus,
+    Evaluation,
+    Offer,
+    OfferStatus,
+    Setting,
+)
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 from jobbot.scoring.service import budget_state
@@ -182,3 +189,54 @@ async def send_test(settings: Settings) -> None:
             click=f"{settings.public_url.rstrip('/')}/offres",
         ),
     )
+
+
+# --- Relances (0.5) -------------------------------------------------------------------
+
+REMIND_AFTER_DAYS = 10
+
+
+async def notify_reminders(runtime: Runtime, today: date | None = None) -> int:
+    """Candidatures en attente depuis 10 jours : une notification groupée, une seule fois
+    par candidature. Sans ntfy configuré, rien n'est marqué (le rappel reste à faire)."""
+    settings = runtime.settings
+    if not settings.ntfy_configured:
+        return 0
+    today = today or datetime.now(UTC).date()
+    limit = today - timedelta(days=REMIND_AFTER_DAYS)
+    async with runtime.sessionmaker() as session:
+        due = list(
+            await session.scalars(
+                select(Application)
+                .where(
+                    Application.status == ApplicationStatus.EN_ATTENTE,
+                    Application.reminded_at.is_(None),
+                    Application.sent_at <= limit,
+                )
+                .order_by(Application.sent_at)
+            )
+        )
+    if not due:
+        return 0
+    lines = [
+        f"{a.company} — {a.job_title} (envoyée le {a.sent_at:%d.%m})" for a in due[:MAX_LISTED]
+    ]
+    if len(due) > MAX_LISTED:
+        lines.append(f"… et {len(due) - MAX_LISTED} autre(s)")
+    await send(
+        settings,
+        Message(
+            title=f"{len(due)} candidature(s) sans réponse depuis {REMIND_AFTER_DAYS} jours",
+            message="Relancer ?\n" + "\n".join(lines),
+            tags=["hourglass"],
+            click=f"{settings.public_url.rstrip('/')}/candidatures",
+        ),
+    )
+    async with runtime.sessionmaker.begin() as session:
+        await session.execute(
+            update(Application)
+            .where(Application.id.in_([a.id for a in due]))
+            .values(reminded_at=datetime.now(UTC))
+        )
+    log.info("reminders_sent", applications=len(due))
+    return len(due)

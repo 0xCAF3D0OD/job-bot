@@ -55,3 +55,30 @@ describe("SettingsView, notifications", () => {
     expect(wrapper.find("[data-test=notifications] [role=status]").text()).toContain("Notification envoyée");
   });
 });
+
+describe("SettingsView, coordonnées", () => {
+  it("charge et enregistre les coordonnées", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/identity"
+            ? { name: "Camille Exemple", address: null, phone: null, email: null }
+            : path === "/api/notifications"
+              ? { configured: false, server: "https://ntfy.sh" }
+              : { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 },
+      }),
+    );
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT).mockResolvedValue({ data: {} } as never);
+    const wrapper = mount(SettingsView);
+    await flushPromises();
+    const name = wrapper.find<HTMLInputElement>("[data-test=identity-name]");
+    expect(name.element.value).toBe("Camille Exemple");
+    await wrapper.find("[data-test=identity-form]").trigger("submit");
+    await flushPromises();
+    expect(put).toHaveBeenCalledWith("/api/identity", {
+      body: { name: "Camille Exemple", address: null, phone: null, email: null },
+    });
+    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("enregistrées");
+  });
+});

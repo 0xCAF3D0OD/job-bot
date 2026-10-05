@@ -13,6 +13,25 @@ const form = ref<SettingsModel>({
 const loaded = ref(false);
 const saving = ref(false);
 const message = ref("");
+const identity = ref<{ name: string; address: string; phone: string; email: string }>({
+  name: "",
+  address: "",
+  phone: "",
+  email: "",
+});
+const identityMessage = ref("");
+
+async function saveIdentity(): Promise<void> {
+  const { data } = await api.PUT("/api/identity", {
+    body: {
+      name: identity.value.name || null,
+      address: identity.value.address || null,
+      phone: identity.value.phone || null,
+      email: identity.value.email || null,
+    },
+  });
+  identityMessage.value = data ? "Coordonnées enregistrées." : "Enregistrement refusé : vérifie les champs.";
+}
 const notifications = ref<{ configured: boolean; server: string } | null>(null);
 // Vrai si l'API n'a pas répondu (arrêtée, ou plus ancienne que l'interface).
 const notificationsUnknown = ref(false);
@@ -40,6 +59,15 @@ onMounted(async () => {
   const { data } = await api.GET("/api/settings");
   if (data) form.value = data;
   loaded.value = true;
+  const who = await api.GET("/api/identity");
+  if (who.data) {
+    identity.value = {
+      name: who.data.name ?? "",
+      address: who.data.address ?? "",
+      phone: who.data.phone ?? "",
+      email: who.data.email ?? "",
+    };
+  }
   try {
     const status = await api.GET("/api/notifications");
     notifications.value = status.data ?? null;
@@ -183,6 +211,65 @@ async function save(): Promise<void> {
             role="status"
             class="muted"
           >{{ message }}</span>
+        </div>
+      </form>
+      <form
+        v-if="loaded"
+        class="form-card identity-card"
+        data-test="identity-form"
+        @submit.prevent="saveIdentity"
+      >
+        <fieldset>
+          <legend>Mes coordonnées</legend>
+          <p class="hint">
+            Pour l'en-tête de tes lettres et de ton CV (0.5). Gardées dans ta base locale, jamais envoyées à l'IA.
+          </p>
+          <div class="form-grid">
+            <label class="wide">Nom et prénom
+              <input
+                v-model="identity.name"
+                type="text"
+                autocomplete="name"
+                data-test="identity-name"
+              >
+            </label>
+            <label class="wide">Adresse
+              <textarea
+                v-model="identity.address"
+                rows="2"
+                autocomplete="street-address"
+                placeholder="Rue et numéro&#10;NPA localité"
+              />
+            </label>
+            <label>Téléphone
+              <input
+                v-model="identity.phone"
+                type="tel"
+                autocomplete="tel"
+              >
+            </label>
+            <label>E-mail
+              <input
+                v-model="identity.email"
+                type="email"
+                autocomplete="email"
+              >
+            </label>
+          </div>
+        </fieldset>
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="primary"
+            data-test="save-identity"
+          >
+            Enregistrer mes coordonnées <AppIcon name="chevron" />
+          </button>
+          <span
+            v-if="identityMessage"
+            role="status"
+            class="muted"
+          >{{ identityMessage }}</span>
         </div>
       </form>
     </div>

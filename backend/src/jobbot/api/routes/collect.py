@@ -102,6 +102,9 @@ class ScorePoint(BaseModel):
 class OfferCounts(BaseModel):
     to_review: int
     filtered_out: int
+    later: int
+    # En préparation ou candidature envoyée.
+    in_progress: int
     all: int
 
 
@@ -304,11 +307,18 @@ def _filters(
     return conditions
 
 
+IN_PROGRESS = (OfferStatus.PREPARING, OfferStatus.APPLIED)
+
+
 def _view_condition(view: str) -> ColumnElement[bool] | None:
     if view == "to_review":
         return Offer.status.in_(TO_REVIEW)
     if view == "filtered_out":
         return Offer.status == OfferStatus.FILTERED_OUT
+    if view == "later":
+        return Offer.status == OfferStatus.LATER
+    if view == "in_progress":
+        return Offer.status.in_(IN_PROGRESS)
     return None
 
 
@@ -318,7 +328,7 @@ async def list_offers(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
     sort: Literal["recent", "popular", "score"] = "recent",
-    view: Literal["to_review", "filtered_out", "all"] = "all",
+    view: Literal["to_review", "filtered_out", "later", "in_progress", "all"] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
     min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
     sources: Annotated[list[Source], Query()] = [],  # noqa: B006
@@ -387,11 +397,11 @@ async def list_offers(
     counts = OfferCounts(
         to_review=sum(by_status.get(s, 0) for s in TO_REVIEW),
         filtered_out=by_status.get(OfferStatus.FILTERED_OUT, 0),
+        later=by_status.get(OfferStatus.LATER, 0),
+        in_progress=sum(by_status.get(s, 0) for s in IN_PROGRESS),
         all=sum(by_status.values()),
     )
-    total = {"to_review": counts.to_review, "filtered_out": counts.filtered_out}.get(
-        view, counts.all
-    )
+    total = counts.model_dump().get(view, counts.all)
     facets = OfferFacets(
         sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],
         cantons=[

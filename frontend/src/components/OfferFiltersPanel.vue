@@ -15,6 +15,8 @@ const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: [] }>(
 
 const VIEWS: { value: View; label: string }[] = [
   { value: "to_review", label: "À examiner" },
+  { value: "in_progress", label: "En cours" },
+  { value: "later", label: "Plus tard" },
   { value: "filtered_out", label: "Écartées" },
   { value: "all", label: "Toutes" },
 ];
