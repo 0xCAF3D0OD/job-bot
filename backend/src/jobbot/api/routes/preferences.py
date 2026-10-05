@@ -2,7 +2,8 @@
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Request, status
+import httpx
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -17,6 +18,7 @@ from jobbot.core.filter import (
 )
 from jobbot.db.models import Setting
 from jobbot.filtering.service import load_criteria, save_criteria
+from jobbot.notify import service as notify_service
 from jobbot.runtime import Runtime
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.filter import FILTER_JOB
@@ -146,3 +148,38 @@ async def put_settings(request: Request, body: SettingsModel) -> SettingsModel:
                 .on_conflict_do_update(index_elements=["key"], set_={"value": value})
             )
     return body
+
+
+# --- Notifications (0.4.0-c) -----------------------------------------------------------
+
+
+class NotificationsStatus(BaseModel):
+    configured: bool
+    # Serveur ntfy (sans le sujet, qui est secret).
+    server: str
+
+
+@router.get("/notifications", operation_id="getNotifications")
+async def get_notifications(request: Request) -> NotificationsStatus:
+    settings = _runtime(request).settings
+    return NotificationsStatus(configured=settings.ntfy_configured, server=settings.ntfy_url)
+
+
+@router.post(
+    "/notifications/test",
+    operation_id="testNotification",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={409: {"description": "Non configuré"}, 502: {"description": "Envoi refusé"}},
+)
+async def test_notification(request: Request) -> None:
+    settings = _runtime(request).settings
+    if not settings.ntfy_configured:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "notifications non configurées : renseigner JOBBOT_NTFY_TOPIC"
+        )
+    try:
+        await notify_service.send_test(settings)
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, f"envoi refusé par le serveur ntfy ({type(exc).__name__})"
+        ) from None

@@ -1,6 +1,6 @@
 # 06 — Note IA, résumé des offres et filtres toujours visibles (version 0.4.0)
 
-> Statut : **validé le 2026-10-05 avec Claude Opus 5, effort bas.** Parties a (page Offres et filtres) et b (note et résumé IA) livrées ; c (notifications) à suivre.
+> Statut : **validé le 2026-10-05 avec Claude Opus 5, effort bas.** Parties a (page Offres et filtres), b (note et résumé IA) et c (notifications) livrées.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2, §3 et §10, sur le profil (0.3) et le texte complet jobup (0.3.1).
 > Demandes de Kevin (2026-10-05) : les principaux filtres toujours à disposition, et pour chaque offre un résumé de 2-3 lignes (ce qu'elle demande, ce qu'elle offre, le poste).
 
@@ -183,3 +183,12 @@ Ces filtres **n'écartent rien** : ils changent seulement ce que tu vois. Les pr
 - **Échecs d'une offre** (réponse non conforme, refus) : pas de nouvel essai automatique, pour éviter de payer en boucle. « Renoter » les reprend.
 - **Arrondi des coûts** au cent-millième de dollar : un appel en lot de 0,006125 $ est compté 0,00612 $.
 - **Évaluation manuelle sur 15 offres** : reportée jusqu'à ce que le compte API ait du crédit et que les blocs de profil soient saisis.
+
+## Écarts à la livraison (partie c)
+
+- **Envoi en JSON** au serveur ntfy (accents conservés), une notification groupée par passage de la tâche `score` (8 offres listées au plus, puis « … et N autre(s) »), avec un lien vers la page Offres triée par note.
+- **Une seule fois par offre** (`evaluations.notified_at`, migration 0009). Les notes faites avant la 0.4.0-c sont marquées comme déjà signalées, pour éviter une avalanche au premier lancement. Une note sous le seuil n'est jamais signalée plus tard, même si le seuil baisse.
+- **Alerte budget** à 80 % du plafond : une fois par mois.
+- **Bouton « Envoyer une notification de test »** dans les Réglages.
+- **Un échec d'envoi** (serveur ntfy injoignable) n'annule pas les notes : il est journalisé, sans plus.
+- **Serveur public ntfy.sh** par défaut : les titres d'offres y transitent. Pour plus de discrétion, `JOBBOT_NTFY_URL` peut pointer vers un serveur ntfy auto-hébergé (infrastructure).

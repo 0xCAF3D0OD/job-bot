@@ -564,6 +564,47 @@
         }
       }
     },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Get Notifications",
+        "operationId": "getNotifications",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/test": {
+      "post": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Test Notification",
+        "operationId": "testNotification",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Non configuré"
+          },
+          "502": {
+            "description": "Envoi refusé"
+          }
+        }
+      }
+    },
     "/api/documents": {
       "get": {
         "tags": [
@@ -1655,6 +1696,24 @@
           "anglais"
         ],
         "title": "Language"
+      },
+      "NotificationsStatus": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "server": {
+            "type": "string",
+            "title": "Server"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured",
+          "server"
+        ],
+        "title": "NotificationsStatus"
       },
       "OfferCounts": {
         "properties": {

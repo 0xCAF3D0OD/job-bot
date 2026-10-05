@@ -13,11 +13,33 @@ const form = ref<SettingsModel>({
 const loaded = ref(false);
 const saving = ref(false);
 const message = ref("");
+const notifications = ref<{ configured: boolean; server: string } | null>(null);
+const testMessage = ref("");
+const testing = ref(false);
+
+async function sendTest(): Promise<void> {
+  testing.value = true;
+  try {
+    const { error, response } = await api.POST("/api/notifications/test");
+    if (response.status === 204) {
+      testMessage.value = "Notification envoyée : vérifie ton téléphone.";
+    } else {
+      const detail = (error as { detail?: unknown } | undefined)?.detail;
+      testMessage.value = typeof detail === "string" ? `Échec : ${detail}.` : `Échec (HTTP ${response.status}).`;
+    }
+  } catch {
+    testMessage.value = "API injoignable.";
+  } finally {
+    testing.value = false;
+  }
+}
 
 onMounted(async () => {
   const { data } = await api.GET("/api/settings");
   if (data) form.value = data;
   loaded.value = true;
+  const status = await api.GET("/api/notifications");
+  notifications.value = status.data ?? null;
 });
 
 async function save(): Promise<void> {
@@ -68,7 +90,7 @@ async function save(): Promise<void> {
         <fieldset>
           <legend><label for="threshold">Seuil de notification</label></legend>
           <p class="hint">
-            Utilisé à partir de la 0.4 : tu es prévenu pour les offres notées au moins à ce score.
+            Tu es prévenu des nouvelles offres notées au moins à ce score.
           </p>
           <div class="inline-field">
             <input
@@ -82,10 +104,42 @@ async function save(): Promise<void> {
             <span>/ 100</span>
           </div>
         </fieldset>
+        <fieldset data-test="notifications">
+          <legend>Notifications</legend>
+          <template v-if="notifications?.configured">
+            <p class="hint">
+              Envoyées par {{ notifications.server }} pour les nouvelles offres notées au moins au seuil ci-dessus,
+              et quand la dépense de l'IA atteint 80 % du plafond.
+            </p>
+            <div class="inline-field">
+              <button
+                type="button"
+                class="secondary small"
+                :disabled="testing"
+                data-test="test-notification"
+                @click="sendTest"
+              >
+                Envoyer une notification de test
+              </button>
+              <span
+                v-if="testMessage"
+                role="status"
+              >{{ testMessage }}</span>
+            </div>
+          </template>
+          <p
+            v-else
+            class="hint"
+          >
+            Non configurées. Installe l'application ntfy sur ton téléphone, abonne-toi à un sujet difficile à
+            deviner, puis renseigne <code>JOBBOT_NTFY_TOPIC</code> dans <code>.env</code> et relance
+            <code>make dev</code>.
+          </p>
+        </fieldset>
         <fieldset>
           <legend><label for="budget">Plafond mensuel du coût de l'IA</label></legend>
           <p class="hint">
-            Au-delà, les notes sont mises en pause jusqu'au mois suivant (0.4).
+            Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
           </p>
           <div class="inline-field">
             <input

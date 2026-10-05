@@ -207,6 +207,8 @@ class Evaluation(Base):
     profile_hash: Mapped[str | None] = mapped_column(Text)
     scored_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     score_error: Mapped[str | None] = mapped_column(Text)
+    # Notification ntfy envoyée pour cette note (une seule fois par offre).
+    notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     evaluated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
