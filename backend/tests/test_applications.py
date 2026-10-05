@@ -186,16 +186,31 @@ async def test_month_list_and_summary(api: AsyncClient, rt: Runtime) -> None:
 
 async def test_identity_round_trip(api: AsyncClient) -> None:
     empty = (await api.get("/api/identity")).json()
-    assert empty == {"name": None, "address": None, "phone": None, "email": None}
+    assert empty == {
+        "name": None,
+        "street": None,
+        "postcode": None,
+        "city": None,
+        "phone": None,
+        "email": None,
+    }
     identity = {
         "name": "Jean Exemple",
-        "address": "Rue du Test 1\n1020 Renens",
+        "street": "Rue du Test 1",
+        "postcode": " 1020 ",
+        "city": "Renens",
         "phone": " +41 79 000 00 00 ",
         "email": "",
     }
     saved = (await api.put("/api/identity", json=identity)).json()
     assert saved["phone"] == "+41 79 000 00 00" and saved["email"] is None
+    assert saved["postcode"] == "1020"
     assert (await api.get("/api/identity")).json() == saved
+
+
+async def test_identity_rejects_bad_postcode(api: AsyncClient) -> None:
+    response = await api.put("/api/identity", json={"postcode": "10200"})
+    assert response.status_code == 422
 
 
 # --- Relances ------------------------------------------------------------------------

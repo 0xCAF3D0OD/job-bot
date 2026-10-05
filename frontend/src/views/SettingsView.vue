@@ -13,24 +13,21 @@ const form = ref<SettingsModel>({
 const loaded = ref(false);
 const saving = ref(false);
 const message = ref("");
-const identity = ref<{ name: string; address: string; phone: string; email: string }>({
-  name: "",
-  address: "",
-  phone: "",
-  email: "",
-});
+const IDENTITY_FIELDS = ["name", "street", "postcode", "city", "phone", "email"] as const;
+type IdentityForm = Record<(typeof IDENTITY_FIELDS)[number], string>;
+const identity = ref<IdentityForm>({ name: "", street: "", postcode: "", city: "", phone: "", email: "" });
 const identityMessage = ref("");
 
 async function saveIdentity(): Promise<void> {
-  const { data } = await api.PUT("/api/identity", {
-    body: {
-      name: identity.value.name || null,
-      address: identity.value.address || null,
-      phone: identity.value.phone || null,
-      email: identity.value.email || null,
-    },
-  });
-  identityMessage.value = data ? "Coordonnées enregistrées." : "Enregistrement refusé : vérifie les champs.";
+  const body = Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, identity.value[f].trim() || null]));
+  try {
+    const { data, response } = await api.PUT("/api/identity", { body });
+    if (data) identityMessage.value = "Coordonnées enregistrées.";
+    else if (response.status === 404) identityMessage.value = "L'API n'est pas à jour : relance make dev.";
+    else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres).";
+  } catch {
+    identityMessage.value = "API injoignable.";
+  }
 }
 const notifications = ref<{ configured: boolean; server: string } | null>(null);
 // Vrai si l'API n'a pas répondu (arrêtée, ou plus ancienne que l'interface).
@@ -61,12 +58,10 @@ onMounted(async () => {
   loaded.value = true;
   const who = await api.GET("/api/identity");
   if (who.data) {
-    identity.value = {
-      name: who.data.name ?? "",
-      address: who.data.address ?? "",
-      phone: who.data.phone ?? "",
-      email: who.data.email ?? "",
-    };
+    const loadedIdentity = who.data;
+    identity.value = Object.fromEntries(
+      IDENTITY_FIELDS.map((f) => [f, loadedIdentity[f] ?? ""]),
+    ) as IdentityForm;
   }
   try {
     const status = await api.GET("/api/notifications");
@@ -233,13 +228,33 @@ async function save(): Promise<void> {
                 data-test="identity-name"
               >
             </label>
-            <label class="wide">Adresse
-              <textarea
-                v-model="identity.address"
-                rows="2"
-                autocomplete="street-address"
-                placeholder="Rue et numéro&#10;NPA localité"
-              />
+            <label class="wide">Rue et numéro
+              <input
+                v-model="identity.street"
+                type="text"
+                autocomplete="address-line1"
+                data-test="identity-street"
+              >
+            </label>
+            <label>NPA
+              <input
+                v-model="identity.postcode"
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]{4}"
+                maxlength="4"
+                autocomplete="postal-code"
+                title="Quatre chiffres"
+                data-test="identity-postcode"
+              >
+            </label>
+            <label>Localité
+              <input
+                v-model="identity.city"
+                type="text"
+                autocomplete="address-level2"
+                data-test="identity-city"
+              >
             </label>
             <label>Téléphone
               <input

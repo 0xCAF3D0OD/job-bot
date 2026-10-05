@@ -826,8 +826,12 @@ export interface components {
         Identity: {
             /** Name */
             name?: string | null;
-            /** Address */
-            address?: string | null;
+            /** Street */
+            street?: string | null;
+            /** Postcode */
+            postcode?: string | null;
+            /** City */
+            city?: string | null;
             /** Phone */
             phone?: string | null;
             /** Email */

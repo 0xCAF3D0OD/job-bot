@@ -2502,17 +2502,41 @@
             ],
             "title": "Name"
           },
-          "address": {
+          "street": {
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 500
+                "maxLength": 300
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Address"
+            "title": "Street"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
           },
           "phone": {
             "anyOf": [
