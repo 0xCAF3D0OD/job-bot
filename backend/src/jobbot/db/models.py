@@ -67,6 +67,8 @@ class Source(StrEnum):
     JOBUP = "jobup"
     INDEED = "indeed"
     JOBROOM = "jobroom"
+    JOBSCH = "jobsch"
+    LINKEDIN = "linkedin"
     UNKNOWN = "unknown"
 
 
@@ -444,3 +446,29 @@ class Company(Base):
     # Recherche sur Internet (0.7.2), faute de correspondance sûre dans le registre.
     source_url: Mapped[str | None] = mapped_column(Text)
     web_looked_up_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SiteReader(StrEnum):
+    """Comment lire les alertes d'un site (docs/11 §2)."""
+
+    JOBUP = "jobup"  # analyseur intégré
+    INDEED = "indeed"  # analyseur intégré
+    AI = "ai"  # l'IA lit l'e-mail d'alerte
+
+
+class Site(Base):
+    """Un site dont les alertes sont suivies : intégré (jobup, Indeed) ou ajouté par Kevin."""
+
+    __tablename__ = "sites"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    # Identifiant court, repris dans searches.source et offer_links.source.
+    slug: Mapped[str] = mapped_column(Text, unique=True)
+    name: Mapped[str] = mapped_column(Text)
+    # Adresses d'expédition des alertes ou domaines (« noreply@jobs.ch », « jobs.ch »).
+    senders: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
+    url: Mapped[str | None] = mapped_column(Text)
+    reader: Mapped[str] = mapped_column(Text)
+    active: Mapped[bool] = mapped_column(default=True)
+    builtin: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

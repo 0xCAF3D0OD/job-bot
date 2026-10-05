@@ -123,5 +123,5 @@ async def test_counts_and_facets_follow_filters(api: AsyncClient) -> None:
 
 
 async def test_invalid_parameters(api: AsyncClient) -> None:
-    assert (await api.get("/api/offers", params={"sources": "monster"})).status_code == 422
+    assert (await api.get("/api/offers", params={"sources": "Monster!"})).status_code == 422
     assert (await api.get("/api/offers", params={"min_rate": 0})).status_code == 422

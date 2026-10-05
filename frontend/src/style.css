@@ -744,3 +744,8 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .apply-bar { position: sticky; top: 4.6rem; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; padding: 0.75rem 1rem; margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 6px 18px rgba(17, 17, 31, 0.06); }
 .apply-bar .spacer { flex: 1; }
 @media print { .apply-bar { display: none; } }
+.sites-list { list-style: none; margin: 0.5rem 0 1rem; padding: 0; display: grid; gap: 0.5rem; }
+.sites-list li { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 10px; }
+.sites-list li.paused { opacity: 0.6; }
+.site-main { display: grid; flex: 1; min-width: 12rem; }
+.site-stats { white-space: nowrap; }

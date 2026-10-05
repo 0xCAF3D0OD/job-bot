@@ -30,7 +30,7 @@ describe("SettingsView, notifications", () => {
           : { data: { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 } },
       ),
     );
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
     await flushPromises();
     expect(wrapper.find("[data-test=notifications-unknown]").text()).toContain("Relance make dev");
     expect(wrapper.text()).not.toContain("Non configurées");
@@ -38,7 +38,7 @@ describe("SettingsView, notifications", () => {
 
   it("non configurées : explique quoi faire", async () => {
     mockGet(false);
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
     await flushPromises();
     expect(wrapper.find("[data-test=notifications]").text()).toContain("JOBBOT_NTFY_TOPIC");
     expect(wrapper.find("[data-test=test-notification]").exists()).toBe(false);
@@ -47,7 +47,7 @@ describe("SettingsView, notifications", () => {
   it("configurées : envoie une notification de test", async () => {
     mockGet(true);
     POST.mockResolvedValue({ response: { status: 204 } });
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
     await flushPromises();
     await wrapper.find("[data-test=test-notification]").trigger("click");
     await flushPromises();
@@ -68,7 +68,7 @@ describe("SettingsView, date limite ORP", () => {
     );
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: {} } as never);
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
     await flushPromises();
     await wrapper.find("[data-test=due-day]").setValue(10);
     await wrapper.find("[data-test=settings-form]").trigger("submit");

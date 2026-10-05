@@ -4,7 +4,7 @@ import { onMounted, ref, watch } from "vue";
 import { api, type ParseStatus, type Search, type SearchDetail, type Source } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import { useCollect } from "../composables/useCollect";
-import { formatDateTime, parseStatusLabel, rateText, sourceLabel } from "../format";
+import { formatDateTime, parseStatusLabel, rateText, SITE_NAMES, sourceLabel } from "../format";
 
 const PAGE_SIZE = 50;
 
@@ -82,7 +82,7 @@ onMounted(() => void load());
           >
             <option value="">Tous</option>
             <option
-              v-for="(label, key) in sourceLabel"
+              v-for="(label, key) in SITE_NAMES"
               :key="key"
               :value="key"
             >{{ label }}</option>

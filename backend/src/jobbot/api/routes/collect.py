@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import ColumnElement, and_, func, or_, select
 
 from jobbot.core.normalize import normalize_text
@@ -16,7 +16,6 @@ from jobbot.db.models import (
     OfferStatus,
     ParseStatus,
     Search,
-    Source,
 )
 from jobbot.llm.scoring import profile_hash
 from jobbot.log import get_logger
@@ -24,6 +23,9 @@ from jobbot.runtime import Runtime
 from jobbot.scoring.service import active_profile
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.collect import COLLECT_JOB
+
+# Identifiant d'un site suivi (jobup, indeed, jobsch, linkedin…).
+SiteSlug = Annotated[str, Field(pattern=r"^[a-z0-9]{2,30}$")]
 
 router = APIRouter(prefix="/api", tags=["collect"])
 log = get_logger(__name__)
@@ -33,7 +35,8 @@ class SearchOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    source: Source
+    # Identifiant du site (jobup, indeed, jobsch, linkedin…), voir /api/sites.
+    source: str
     received_at: datetime
     subject: str | None
     alert_label: str | None
@@ -53,7 +56,8 @@ class SearchPage(BaseModel):
 class OfferLinkOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    source: Source
+    # Identifiant du site (jobup, indeed, jobsch, linkedin…), voir /api/sites.
+    source: str
     url: str
 
 
@@ -224,7 +228,7 @@ def _columns(offer: Offer) -> dict[str, object]:
 @router.get("/searches", operation_id="listSearches")
 async def list_searches(
     request: Request,
-    source: Source | None = None,
+    source: Annotated[str | None, Query(max_length=30)] = None,
     parse_status: ParseStatus | None = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -305,7 +309,7 @@ def _escape_like(term: str) -> str:
 
 def _filters(
     q: str | None,
-    sources: list[Source],
+    sources: list[str],
     cantons: list[str],
     min_rate: int | None,
     external_only: bool,
@@ -358,7 +362,7 @@ async def list_offers(
     view: Literal["to_review", "filtered_out", "later", "in_progress", "expired", "all"] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
     min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
-    sources: Annotated[list[Source], Query()] = [],  # noqa: B006
+    sources: Annotated[list[SiteSlug], Query(max_length=20)] = [],  # noqa: B006
     cantons: Annotated[list[str], Query(max_length=26)] = [],  # noqa: B006
     min_rate: Annotated[int | None, Query(ge=1, le=100)] = None,
     external_only: bool = False,

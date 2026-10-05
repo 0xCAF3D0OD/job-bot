@@ -150,7 +150,7 @@ def cmd_imap_sample(args: argparse.Namespace) -> int:
 
 def cmd_reparse(args: argparse.Namespace) -> int:
     from jobbot.collect.service import reparse
-    from jobbot.db.models import Source
+    from jobbot.db.models import ParseStatus
     from jobbot.runtime import Runtime
 
     settings = _settings()
@@ -158,8 +158,8 @@ def cmd_reparse(args: argparse.Namespace) -> int:
     async def run() -> int:
         runtime = Runtime.create(settings)
         try:
-            source = Source(args.source) if args.source else None
-            result = await reparse(runtime, source=source)
+            status = ParseStatus.UNRECOGNIZED if args.unrecognized else None
+            result = await reparse(runtime, source=args.source or None, parse_status=status)
         finally:
             await runtime.dispose()
         print(
@@ -216,7 +216,10 @@ def main(argv: list[str] | None = None) -> int:
     sample.add_argument("--limit", type=int, default=30)
     sample.set_defaults(func=cmd_imap_sample)
     reparse = sub.add_parser("reparse", help="réanalyse les copies brutes stockées")
-    reparse.add_argument("--source", choices=["jobup", "indeed", "jobroom", "unknown"])
+    reparse.add_argument("--source", help="identifiant du site (jobup, indeed, jobsch, linkedin…)")
+    reparse.add_argument(
+        "--unrecognized", action="store_true", help="seulement les alertes non reconnues"
+    )
     reparse.set_defaults(func=cmd_reparse)
     anon = sub.add_parser("anonymize-sample", help="jeux de test anonymisés")
     anon.add_argument("ids", nargs="+", type=int, help="identifiants d'alertes (journal)")

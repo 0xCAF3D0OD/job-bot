@@ -1,11 +1,18 @@
-import type { ParseStatus, Source } from "./api/client";
+import type { ParseStatus } from "./api/client";
 
-export const sourceLabel: Record<Source, string> = {
+export const SITE_NAMES: Record<string, string> = {
   jobup: "jobup",
   indeed: "Indeed",
   jobroom: "Job-Room",
+  jobsch: "jobs.ch",
+  linkedin: "LinkedIn",
   unknown: "inconnu",
 };
+
+// Nom affiché d'un site ; un site ajouté dans les Réglages garde son identifiant.
+export const sourceLabel: Record<string, string> = new Proxy(SITE_NAMES, {
+  get: (names, slug: string) => names[slug] ?? slug,
+});
 
 export const parseStatusLabel: Record<ParseStatus, string> = {
   parsed: "analysé",

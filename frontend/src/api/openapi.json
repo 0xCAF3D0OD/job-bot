@@ -106,7 +106,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/Source"
+                  "type": "string",
+                  "maxLength": 30
                 },
                 {
                   "type": "null"
@@ -328,8 +329,10 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/Source"
+                "type": "string",
+                "pattern": "^[a-z0-9]{2,30}$"
               },
+              "maxItems": 20,
               "default": [],
               "title": "Sources"
             }
@@ -2373,6 +2376,198 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sites": {
+      "get": {
+        "tags": [
+          "sites"
+        ],
+        "summary": "List Sites",
+        "operationId": "listSites",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SiteOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listsites"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "sites"
+        ],
+        "summary": "Add Site",
+        "description": "Nouveau site : ses alertes seront lues par l'IA.",
+        "operationId": "addSite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SiteOut"
+                  },
+                  "type": "array",
+                  "title": "Response Addsite"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sites/{site_id}": {
+      "patch": {
+        "tags": [
+          "sites"
+        ],
+        "summary": "Set Site Active",
+        "operationId": "setSiteActive",
+        "parameters": [
+          {
+            "name": "site_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Site Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteActive"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SiteOut"
+                  },
+                  "title": "Response Setsiteactive"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sites"
+        ],
+        "summary": "Delete Site",
+        "description": "Retire un site ajouté ; ses offres déjà collectées restent.",
+        "operationId": "deleteSite",
+        "parameters": [
+          {
+            "name": "site_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Site Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SiteOut"
+                  },
+                  "title": "Response Deletesite"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sites/reread": {
+      "post": {
+        "tags": [
+          "sites"
+        ],
+        "summary": "Reread Unrecognized",
+        "description": "Relit les alertes non reconnues (par exemple celles d'un site qu'on vient d'ajouter).",
+        "operationId": "rereadUnrecognized",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RereadOut"
                 }
               }
             }
@@ -4846,7 +5041,8 @@
       "OfferLinkOut": {
         "properties": {
           "source": {
-            "$ref": "#/components/schemas/Source"
+            "type": "string",
+            "title": "Source"
           },
           "url": {
             "type": "string",
@@ -5611,6 +5807,29 @@
         ],
         "title": "RegistryCandidate"
       },
+      "RereadOut": {
+        "properties": {
+          "examined": {
+            "type": "integer",
+            "title": "Examined"
+          },
+          "updated": {
+            "type": "integer",
+            "title": "Updated"
+          },
+          "new_offers": {
+            "type": "integer",
+            "title": "New Offers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "examined",
+          "updated",
+          "new_offers"
+        ],
+        "title": "RereadOut"
+      },
       "RescoreResponse": {
         "properties": {
           "result": {
@@ -5733,7 +5952,8 @@
             "title": "Id"
           },
           "source": {
-            "$ref": "#/components/schemas/Source"
+            "type": "string",
+            "title": "Source"
           },
           "received_at": {
             "type": "string",
@@ -6212,7 +6432,8 @@
             "title": "Id"
           },
           "source": {
-            "$ref": "#/components/schemas/Source"
+            "type": "string",
+            "title": "Source"
           },
           "received_at": {
             "type": "string",
@@ -6375,15 +6596,142 @@
         "type": "object",
         "title": "SettingsModel"
       },
-      "Source": {
-        "type": "string",
-        "enum": [
-          "jobup",
-          "indeed",
-          "jobroom",
-          "unknown"
+      "SiteActive": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active"
         ],
-        "title": "Source"
+        "title": "SiteActive"
+      },
+      "SiteIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "senders": {
+            "items": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Senders"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "senders"
+        ],
+        "title": "SiteIn"
+      },
+      "SiteOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "senders": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Senders"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "reader": {
+            "type": "string",
+            "enum": [
+              "jobup",
+              "indeed",
+              "ai"
+            ],
+            "title": "Reader"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "builtin": {
+            "type": "boolean",
+            "title": "Builtin"
+          },
+          "alerts": {
+            "type": "integer",
+            "title": "Alerts"
+          },
+          "last_alert_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Alert At"
+          },
+          "unrecognized": {
+            "type": "integer",
+            "title": "Unrecognized"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "senders",
+          "url",
+          "reader",
+          "active",
+          "builtin",
+          "alerts",
+          "last_alert_at",
+          "unrecognized"
+        ],
+        "title": "SiteOut"
       },
       "StatusResponse": {
         "properties": {
