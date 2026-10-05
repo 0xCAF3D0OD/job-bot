@@ -1,6 +1,6 @@
 # 14 — Page Offres : mise en page, tri des candidatures, logos (version 0.7.4)
 
-> Statut : **validé** le 2026-10-05. PR a (mise en page, pastilles, tri) livrée ; PR b (logos) à venir.
+> Statut : **validé** le 2026-10-05. livré : PR a (mise en page, pastilles, tri), PR b (logos).
 > Retours d'usage du 2026-10-05.
 
 ## 1. Mise en page de la page Offres
@@ -65,3 +65,12 @@ offers     + logo_url?   -- adresse d'origine relevée (page ou e-mail), avant t
 - **Écrans moyens** (moins de 1200 px de large) : le détail s'ouvre toujours par-dessus la liste, désormais avec un glissement depuis la droite.
 - **Tri « Dernière action »** : proposé seulement dans l'onglet En cours. En quittant l'onglet, le tri revient à « Récentes ». La date de passage « en préparation » n'est pas enregistrée : sans lettre ni CV, l'offre compte à sa date d'arrivée.
 - **Candidatures du même jour** : départagées par l'heure d'enregistrement.
+
+## Écarts avec la PR b
+
+- **Base** : une table `company_logos` (un logo par entreprise, nom normalisé) au lieu de colonnes dans `companies` ; `offers` reçoit `logo_url` et `company_website` (site lu sur l'annonce jobup) ; migration **0021**.
+- **E-mails d'alerte** : les images de l'e-mail sont numérotées comme les liens ; l'IA indique le numéro du logo de chaque offre (consignes `alert-v2`), elle ne peut pas inventer d'adresse.
+- **Icône du site** : la plus grande icône déclarée par la page d'accueil (souvent l'icône Apple, 180 px), sinon `/favicon.ico`.
+- **Rythme** : après la recherche d'adresse (tâche `enrich`), 25 entreprises au plus par passage, une requête toutes les 2 secondes ; une seule tentative par entreprise pendant 30 jours.
+- **Garde-fous** : https seulement, aucune adresse privée ou locale (vérifiée après résolution DNS, à chaque redirection), 200 Ko au plus, type d'image vérifié sur le contenu, SVG refusé s'il contient script, gestionnaire d'événement ou lien externe ; servi avec une politique de sécurité qui interdit tout chargement.
+- **Essai réel** : logo jobup de Moser Vernet (JPEG) et icône du site d'Infomaniak, affichés sur les cartes.

@@ -103,3 +103,18 @@ def no_registry_network(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     monkeypatch.setattr(uid, "search", fake_search)
     monkeypatch.setattr(registry_service, "sleep", no_sleep)
     return searched
+
+
+@pytest.fixture(autouse=True)
+def no_logo_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Aucun téléchargement de logo pendant les tests (un test peut remplacer _get)."""
+    from jobbot.logos import service as logos
+
+    async def refuse(*_args: object, **_kwargs: object) -> tuple[bytes, str]:
+        raise logos.Refused("réseau coupé pendant les tests")
+
+    async def no_sleep(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(logos, "_get", refuse)
+    monkeypatch.setattr(logos, "sleep", no_sleep)

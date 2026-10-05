@@ -148,6 +148,7 @@ async def ingest_offers(
                     location=raw.location,
                     rate_min=norm.rate_min,
                     rate_max=norm.rate_max,
+                    logo_url=raw.logo_url,
                     canton=canton_of(raw.location),
                     snippet=raw.snippet,
                     first_seen_at=seen_at,
@@ -173,6 +174,8 @@ async def ingest_offers(
             offer.seen_count += 1
             offer.first_seen_at = min(offer.first_seen_at, seen_at)
             offer.last_seen_at = max(offer.last_seen_at, seen_at)
+            if raw.logo_url and not offer.logo_url:
+                offer.logo_url = raw.logo_url
             if (
                 offer.expired_at is not None
                 and seen_at > offer.expired_at

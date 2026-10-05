@@ -447,6 +447,48 @@
         }
       }
     },
+    "/api/offers/{offer_id}/logo": {
+      "get": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Get Offer Logo",
+        "description": "Logo téléchargé par la plateforme ; le navigateur n'appelle aucun site tiers.",
+        "operationId": "getOfferLogo",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/*": {}
+            }
+          },
+          "404": {
+            "description": "Pas de logo"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/collect": {
       "post": {
         "tags": [
@@ -5349,6 +5391,11 @@
             ],
             "title": "Company Address Url"
           },
+          "has_logo": {
+            "type": "boolean",
+            "title": "Has Logo",
+            "default": false
+          },
           "filter_reasons": {
             "items": {
               "type": "string"
@@ -6363,6 +6410,11 @@
               }
             ],
             "title": "Company Address Url"
+          },
+          "has_logo": {
+            "type": "boolean",
+            "title": "Has Logo",
+            "default": false
           },
           "filter_reasons": {
             "items": {

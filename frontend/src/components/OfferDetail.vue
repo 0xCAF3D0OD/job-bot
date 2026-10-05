@@ -2,8 +2,9 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
-import { colorIndex, expiredText, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
+import { expiredText, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import CompanyLogo from "./CompanyLogo.vue";
 
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
 
@@ -123,10 +124,6 @@ watch(
     registryMessage.value = "";
   },
 );
-
-function initial(offer: Offer): string {
-  return (offer.company ?? offer.title).trim().charAt(0).toUpperCase() || "?";
-}
 </script>
 
 <template>
@@ -135,10 +132,10 @@ function initial(offer: Offer): string {
     data-test="offer-detail"
   >
     <div class="detail-top">
-      <span
-        :class="['logo', 'large', `c${colorIndex(offer.company ?? offer.title)}`]"
-        aria-hidden="true"
-      >{{ initial(offer) }}</span>
+      <CompanyLogo
+        :offer="offer"
+        large
+      />
       <div class="detail-top-actions">
         <div
           v-if="offer.status !== 'applied'"

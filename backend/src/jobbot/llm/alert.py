@@ -8,7 +8,7 @@ peut donc pas inventer d'adresse.
 import html as html_lib
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib import resources
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
@@ -21,8 +21,8 @@ from jobbot.llm.scoring import InvalidScore
 from jobbot.mail.message import ParsedEmail
 from jobbot.sources.base import ParsedAlert, RawOffer
 
-PROMPT_VERSION = "alert-v1"
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/alert-v1.md").read_text("utf-8")
+PROMPT_VERSION = "alert-v2"
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/alert-v2.md").read_text("utf-8")
 # Extraction simple : un petit modèle suffit (environ 0,01 $ par e-mail).
 MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 4_000
@@ -40,6 +40,7 @@ class ExtractedOffer(BaseModel):
     location: str | None = None
     rate: str | None = None
     link: int
+    logo: int | None = None
 
 
 class AlertOutput(BaseModel):
@@ -60,8 +61,9 @@ OUTPUT_SCHEMA: dict[str, Any] = {
                     "location": _NULLABLE,
                     "rate": _NULLABLE,
                     "link": {"type": "integer"},
+                    "logo": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
                 },
-                "required": ["title", "company", "location", "rate", "link"],
+                "required": ["title", "company", "location", "rate", "link", "logo"],
                 "additionalProperties": False,
             },
         }
@@ -71,10 +73,15 @@ OUTPUT_SCHEMA: dict[str, Any] = {
 }
 
 
+MAX_IMAGES = 80
+
+
 @dataclass(frozen=True)
 class AlertInput:
     text: str
     links: list[str]
+    # (adresse, texte alternatif) des images https de l'e-mail.
+    images: list[tuple[str, str]] = field(default_factory=list)
 
 
 def canonical(url: str) -> tuple[str, str | None]:
@@ -92,6 +99,7 @@ def canonical(url: str) -> tuple[str, str | None]:
 def prepare(email: ParsedEmail, hide: list[str]) -> AlertInput:
     """Texte et liens de l'e-mail, sans coordonnées ni noms à cacher."""
     links: dict[str, None] = {}
+    images: dict[str, str] = {}
     html_text = ""
     if email.html:
         soup = BeautifulSoup(email.html, "html.parser")
@@ -101,6 +109,11 @@ def prepare(email: ParsedEmail, hide: list[str]) -> AlertInput:
             href = str(anchor["href"]).strip()
             if href.startswith("http"):
                 links[href] = None
+        for img in soup.find_all("img", src=True):
+            src = str(img["src"]).strip()
+            # Les images minuscules (pixels de suivi) n'ont pas de place ici.
+            if src.startswith("https://") and str(img.get("width", "")) not in ("1", "0"):
+                images.setdefault(src, " ".join(str(img.get("alt", "")).split())[:80])
         html_text = soup.get_text(" ")
     text = html_lib.unescape(email.text or html_text)
     for url in _URL.findall(text):
@@ -111,15 +124,21 @@ def prepare(email: ParsedEmail, hide: list[str]) -> AlertInput:
         if name.strip():
             text = re.sub(re.escape(name.strip()), "[nom retiré]", text, flags=re.IGNORECASE)
     text = scrub(" ".join(text.split()))[:MAX_TEXT]
-    return AlertInput(text=text, links=list(links)[:MAX_LINKS])
+    return AlertInput(
+        text=text, links=list(links)[:MAX_LINKS], images=list(images.items())[:MAX_IMAGES]
+    )
 
 
 def request_params(alert: AlertInput, subject: str | None) -> dict[str, Any]:
     numbered = "\n".join(f"[{i}] {url}" for i, url in enumerate(alert.links, 1))
+    pictures = "\n".join(
+        f"[{i}] {url} ({alt or 'sans texte'})" for i, (url, alt) in enumerate(alert.images, 1)
+    )
     body = alert.text.replace("</email>", "</ email>")
     subject_line = scrub(subject or "")
     content = (
         f"<email>\nobjet : {subject_line}\n\n{body}\n</email>\n\n<liens>\n{numbered}\n</liens>"
+        f"\n\n<images>\n{pictures}\n</images>"
     )
     return {
         "model": MODEL,
@@ -145,6 +164,11 @@ def parse_output(text: str, alert: AlertInput, label: str | None) -> ParsedAlert
             continue
         seen.add(url)
         location = " ".join(x for x in (item.location, item.rate) if x) or None
+        logo = (
+            alert.images[item.logo - 1][0]
+            if item.logo and 1 <= item.logo <= len(alert.images)
+            else None
+        )
         offers.append(
             RawOffer(
                 title=item.title.strip()[:300],
@@ -152,6 +176,7 @@ def parse_output(text: str, alert: AlertInput, label: str | None) -> ParsedAlert
                 location=location[:300] if location else None,
                 url=url,
                 external_id=external_id,
+                logo_url=logo,
             )
         )
     return ParsedAlert(alert_label=label, offers=offers)

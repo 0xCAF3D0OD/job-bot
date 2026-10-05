@@ -3,13 +3,14 @@
 from datetime import datetime
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import ColumnElement, Time, and_, cast, func, or_, select
 
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import (
     Application,
+    CompanyLogo,
     Draft,
     Evaluation,
     Offer,
@@ -21,6 +22,7 @@ from jobbot.db.models import (
 )
 from jobbot.llm.scoring import profile_hash
 from jobbot.log import get_logger
+from jobbot.registry.service import name_key
 from jobbot.runtime import Runtime
 from jobbot.scoring.service import active_profile
 from jobbot.worker.queue import enqueue
@@ -93,6 +95,8 @@ class OfferOut(BaseModel):
     company_address: str | None = None
     company_address_source: Literal["page", "registry", "web", "letter", "manual"] | None = None
     company_address_url: str | None = None
+    # Logo de l'entreprise disponible sur /api/offers/{id}/logo (docs/14 §4).
+    has_logo: bool = False
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
     filter_reasons: list[str] = []
     # Note et résumé de l'IA (docs/06), absents tant que l'offre n'est pas notée.
@@ -466,8 +470,12 @@ async def list_offers(
     links, evaluations = await _links(runtime, ids), await _evaluations(runtime, ids)
     async with runtime.sessionmaker() as session:
         current_hash = profile_hash(await active_profile(session))
+    logos = await _logo_keys(runtime)
     return OfferPage(
-        items=[_offer_out(o, links[o.id], evaluations.get(o.id), current_hash) for o in offers],
+        items=[
+            _with_logo(_offer_out(o, links[o.id], evaluations.get(o.id), current_hash), logos)
+            for o in offers
+        ],
         total=total,
         counts=counts,
         facets=facets,
@@ -483,7 +491,53 @@ async def get_offer(request: Request, offer_id: int) -> OfferOut:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
         current_hash = profile_hash(await active_profile(session))
     links, evaluations = await _links(runtime, [offer_id]), await _evaluations(runtime, [offer_id])
-    return _offer_out(offer, links[offer_id], evaluations.get(offer_id), current_hash)
+    out = _offer_out(offer, links[offer_id], evaluations.get(offer_id), current_hash)
+    return _with_logo(out, await _logo_keys(runtime))
+
+
+async def _logo_keys(runtime: Runtime) -> set[str]:
+    async with runtime.sessionmaker() as session:
+        return set(
+            await session.scalars(
+                select(CompanyLogo.name_key).where(CompanyLogo.storage_key.is_not(None))
+            )
+        )
+
+
+def _with_logo(out: OfferOut, logos: set[str]) -> OfferOut:
+    if out.company and name_key(out.company) in logos:
+        out.has_logo = True
+    return out
+
+
+@router.get(
+    "/offers/{offer_id}/logo",
+    operation_id="getOfferLogo",
+    response_class=Response,
+    responses={200: {"content": {"image/*": {}}}, 404: {"description": "Pas de logo"}},
+)
+async def get_offer_logo(request: Request, offer_id: int) -> Response:
+    """Logo téléchargé par la plateforme ; le navigateur n'appelle aucun site tiers."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        company = await session.scalar(select(Offer.company).where(Offer.id == offer_id))
+        logo = await session.get(CompanyLogo, name_key(company)) if company else None
+    if logo is None or not logo.storage_key or not logo.media_type:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "pas de logo")
+    try:
+        data = runtime.storage.get(logo.storage_key)
+    except FileNotFoundError:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "pas de logo") from None
+    return Response(
+        data,
+        media_type=logo.media_type,
+        headers={
+            "Cache-Control": "private, max-age=86400",
+            # Un SVG ne doit rien exécuter, même ouvert directement.
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.post(

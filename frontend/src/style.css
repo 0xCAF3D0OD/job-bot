@@ -789,3 +789,5 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .columns-picker { display: grid; gap: 0.4rem; position: relative; }
 .columns-list { position: absolute; top: 1.8rem; left: 0; z-index: 15; width: 18rem; background: var(--surface); box-shadow: 0 12px 32px rgba(17, 17, 31, 0.12); }
+.logo.image { background: #fff; border: 1px solid var(--border); overflow: hidden; padding: 0.2rem; }
+.logo.image img { width: 100%; height: 100%; object-fit: contain; }

@@ -112,6 +112,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Offer Logo
+         * @description Logo téléchargé par la plateforme ; le navigateur n'appelle aucun site tiers.
+         */
+        get: operations["getOfferLogo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/collect": {
         parameters: {
             query?: never;
@@ -1731,6 +1751,11 @@ export interface components {
             /** Company Address Url */
             company_address_url?: string | null;
             /**
+             * Has Logo
+             * @default false
+             */
+            has_logo: boolean;
+            /**
              * Filter Reasons
              * @default []
              */
@@ -2066,6 +2091,11 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /**
+             * Has Logo
+             * @default false
+             */
+            has_logo: boolean;
             /**
              * Filter Reasons
              * @default []
@@ -2472,6 +2502,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["OfferOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOfferLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": unknown;
+                };
+            };
+            /** @description Pas de logo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

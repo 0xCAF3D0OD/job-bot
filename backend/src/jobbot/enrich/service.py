@@ -177,6 +177,19 @@ async def _set_address(runtime: Runtime, offer_id: int, address: str | None) -> 
         )
 
 
+async def _set_logo(runtime: Runtime, offer_id: int, logo: str | None, website: str | None) -> None:
+    """Logo et site de l'entreprise lus sur la page, s'ils ne sont pas déjà connus."""
+    values = {k: v for k, v in (("logo_url", logo), ("company_website", website)) if v}
+    if not values:
+        return
+    async with runtime.sessionmaker.begin() as session:
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            return
+        offer.logo_url = offer.logo_url or values.get("logo_url")
+        offer.company_website = offer.company_website or values.get("company_website")
+
+
 async def _expire(runtime: Runtime, offer_id: int, now: datetime) -> None:
     async with runtime.sessionmaker.begin() as session:
         await session.execute(
@@ -250,6 +263,7 @@ async def enrich(runtime: Runtime) -> EnrichResult:
             employment_type=parsed.employment_type,
         )
         await _set_address(runtime, offer_id, parsed.address)
+        await _set_logo(runtime, offer_id, parsed.logo, parsed.website)
     for offer_id, url in await _recheck_candidates(runtime, now, MAX_PER_RUN - len(candidates)):
         if not ALLOWED_URL.match(url):
             continue
@@ -269,7 +283,9 @@ async def enrich(runtime: Runtime) -> EnrichResult:
         if checked is not None and checked.status_code == 200:
             # Toujours en ligne : l'adresse, absente des lectures d'avant 0.7.1, est relevée.
             with suppress(PageNotParsable, ValueError):
-                await _set_address(runtime, offer_id, parse_jobup_page(checked.text, url).address)
+                found = parse_jobup_page(checked.text, url)
+                await _set_address(runtime, offer_id, found.address)
+                await _set_logo(runtime, offer_id, found.logo, found.website)
         # Toujours en ligne, ou réponse inattendue : on revérifiera dans 3 jours.
         async with runtime.sessionmaker.begin() as session:
             await session.execute(update(Offer).where(Offer.id == offer_id).values(checked_at=now))
