@@ -51,7 +51,7 @@ async def test_recheck_every_three_days(fresh: Runtime, web: FakeWeb) -> None:
     sent = await add(fresh, 4, status=OfferStatus.APPLIED)
     for offer_id in (still, removed, sent):
         await set_values(fresh, offer_id, enrich_status=EnrichStatus.OK, enriched_at=old)
-    await set_values(fresh, recent, enrich_status=EnrichStatus.OK, enriched_at=now)
+    await set_values(fresh, recent, enrich_status=EnrichStatus.OK, enriched_at=now, checked_at=now)
     web.responses[url(2)] = FetchResult(404, "", url(2))
 
     result = await enrich(fresh)
@@ -159,3 +159,14 @@ async def test_manual_flag_wins_over_detection(
         await api.patch(f"/api/offers/{sent}/expiry", json={"expired": True})
     ).status_code == 409
     assert (await api.patch("/api/offers/999999/expiry", json={"expired": True})).status_code == 404
+
+
+async def test_offers_read_before_logos_are_reread_once(fresh: Runtime, web: FakeWeb) -> None:
+    recent = await add(fresh, 1)
+    await set_values(fresh, recent, enrich_status=EnrichStatus.OK, enriched_at=datetime.now(UTC))
+    await enrich(fresh)
+    assert web.calls == [url(1)]  # lue hier, sans logo : relue tout de suite
+    assert (await get(fresh, recent)).checked_at is not None
+    web.calls.clear()
+    await enrich(fresh)
+    assert web.calls == []  # puis tous les 3 jours, comme les autres
