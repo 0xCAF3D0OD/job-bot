@@ -441,3 +441,21 @@ describe("étiquettes en mots-clés", () => {
     expect(cards[1]!.find("[data-test=summary]").text()).toContain("Phrase complète du poste");
   });
 });
+
+describe("tri « Dernière action »", () => {
+  it("devient le tri de l'onglet En cours, et disparaît en le quittant", async () => {
+    const wrapper = await mountAt("/offres");
+    expect(wrapper.text()).not.toContain("Dernière action");
+    const inProgress = wrapper.findAll(".status-list button").find((b) => b.text().startsWith("En cours"))!;
+    await inProgress.trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toMatchObject({ statut: "in_progress", tri: "activity" });
+    expect(lastQuery().sort).toBe("activity");
+    expect(wrapper.text()).toContain("Dernière action");
+
+    const toReview = wrapper.findAll(".status-list button").find((b) => b.text().startsWith("À examiner"))!;
+    await toReview.trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.tri).toBeUndefined();
+  });
+});

@@ -262,7 +262,8 @@
               "enum": [
                 "recent",
                 "popular",
-                "score"
+                "score",
+                "activity"
               ],
               "type": "string",
               "default": "recent",

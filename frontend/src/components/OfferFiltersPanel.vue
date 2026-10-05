@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 import type { FilterKey, OfferFacets, Source } from "../api/client";
 import type { OfferFilters, Sort, View } from "../composables/useOfferFilters";
-import { activeCount } from "../composables/useOfferFilters";
+import { activeCount, DEFAULT_FILTERS } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
 
 const props = defineProps<{
@@ -46,6 +46,20 @@ const SORTS: { value: Sort; label: string }[] = [
   { value: "recent", label: "Récentes" },
   { value: "popular", label: "Populaires" },
 ];
+
+// « Dernière action » n'a de sens que pour les offres en cours, où c'est le tri par défaut
+// (docs/14 §3) ; en quittant cet onglet, on revient au tri ordinaire.
+const sorts = computed(() =>
+  props.filters.view === "in_progress"
+    ? [{ value: "activity" as Sort, label: "Dernière action" }, ...SORTS]
+    : SORTS,
+);
+
+function selectView(view: View): void {
+  if (view === "in_progress") emit("update", { view, sort: "activity" });
+  else if (props.filters.sort === "activity") emit("update", { view, sort: DEFAULT_FILTERS.sort });
+  else emit("update", { view });
+}
 
 // Recherche : appliquée 300 ms après la dernière frappe.
 const search = ref(props.filters.q);
@@ -143,7 +157,7 @@ function onScore(event: Event): void {
           role="radio"
           :aria-checked="filters.view === entry.value"
           :data-test="`view-${entry.value}`"
-          @click="emit('update', { view: entry.value })"
+          @click="selectView(entry.value)"
         >
           <span>{{ entry.label }}</span>
           <span class="facet-count">{{ counts[entry.value] }}</span>
@@ -159,7 +173,7 @@ function onScore(event: Event): void {
         aria-label="Tri"
       >
         <button
-          v-for="entry in SORTS"
+          v-for="entry in sorts"
           :key="entry.value"
           type="button"
           role="radio"

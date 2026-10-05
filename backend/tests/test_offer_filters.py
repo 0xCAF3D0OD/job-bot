@@ -125,3 +125,65 @@ async def test_counts_and_facets_follow_filters(api: AsyncClient) -> None:
 async def test_invalid_parameters(api: AsyncClient) -> None:
     assert (await api.get("/api/offers", params={"sources": "Monster!"})).status_code == 422
     assert (await api.get("/api/offers", params={"min_rate": 0})).status_code == 422
+
+
+async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None:
+    from datetime import UTC, date, datetime, timedelta
+
+    from jobbot.db.models import Application, Draft, Offer, OfferStatus
+
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        offers = [
+            Offer(
+                fingerprint=f"act{n}",
+                title=title,
+                first_seen_at=now - timedelta(days=30 - n),
+                last_seen_at=now,
+                status=status,
+            )
+            for n, (title, status) in enumerate(
+                [
+                    ("Envoyée hier", OfferStatus.APPLIED),
+                    ("Lettre aujourd'hui", OfferStatus.PREPARING),
+                    ("Envoyée il y a 5 jours", OfferStatus.APPLIED),
+                    ("Préparation sans document", OfferStatus.PREPARING),
+                ]
+            )
+        ]
+        session.add_all(offers)
+        await session.flush()
+        session.add_all(
+            [
+                Application(
+                    offer_id=offers[0].id,
+                    sent_at=date.today() - timedelta(days=1),
+                    method="electronique",
+                    company="A",
+                    job_title="x",
+                    orp_month="2026-10",
+                ),
+                Application(
+                    offer_id=offers[2].id,
+                    sent_at=date.today() - timedelta(days=5),
+                    method="electronique",
+                    company="B",
+                    job_title="y",
+                    orp_month="2026-10",
+                ),
+                Draft(
+                    offer_id=offers[1].id,
+                    kind="letter",
+                    version=1,
+                    language="fr",
+                    content={"subject": "s", "paragraphs": []},
+                ),
+            ]
+        )
+    page = (await api.get("/api/offers", params={"view": "in_progress", "sort": "activity"})).json()
+    assert [o["title"] for o in page["items"]] == [
+        "Lettre aujourd'hui",
+        "Envoyée hier",
+        "Envoyée il y a 5 jours",
+        "Préparation sans document",
+    ]
