@@ -108,9 +108,12 @@ describe("OrpView", () => {
   });
 
   it("marquer comme remis puis annuler", async () => {
-    GET.mockResolvedValueOnce({ data: month() })
-      .mockResolvedValueOnce({ data: month({ state: "remis", submitted_at: "2026-11-03T09:00:00Z" }) })
-      .mockResolvedValue({ data: month() });
+    const months = [month(), month({ state: "remis", submitted_at: "2026-11-03T09:00:00Z" })];
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/orp-columns" ? { data: undefined } : { data: months.shift() ?? month() },
+      ),
+    );
     PUT.mockResolvedValue({ response: { status: 204 } });
     DELETE.mockResolvedValue({ response: { status: 204 } });
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -144,5 +147,28 @@ describe("OrpView", () => {
     await flushPromises();
     expect(router.currentRoute.value.query.mois).toBe("2026-09");
     expect(GET).toHaveBeenLastCalledWith("/api/orp", { params: { query: { month: "2026-09" } } });
+  });
+});
+
+
+describe("OrpView, colonnes", () => {
+  it("masque une colonne à l'écran et enregistre le choix", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/orp-columns" ? { visible: ["result", "url"] } : month() }),
+    );
+    PUT.mockResolvedValue({ data: { visible: ["result"] } });
+    const { wrapper } = await mountView();
+    const headers = () => wrapper.findAll(".orp-table th").map((th) => th.text());
+    expect(headers()).toEqual(["Date", "Entreprise", "Poste", "Résultat", "Lien", "Actions"]);
+    // La ligne sans adresse garde son « À compléter » même si la colonne adresse est masquée.
+    expect(wrapper.find("[data-test=complete]").exists()).toBe(true);
+
+    await wrapper.find("[data-test=columns]").trigger("click");
+    await wrapper.find("[data-test=column-url]").setValue(false);
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/orp-columns", { body: { visible: ["result"] } });
+    expect(headers()).not.toContain("Lien");
+    // Le PDF garde toutes les colonnes.
+    expect(wrapper.find(".orp-sheet").text()).toContain("Personne de contact, téléphone");
   });
 });

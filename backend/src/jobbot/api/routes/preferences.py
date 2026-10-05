@@ -196,6 +196,52 @@ async def put_offer_filters(request: Request, body: OfferFiltersVisible) -> Offe
     return body
 
 
+# --- Colonnes affichées dans le tableau ORP ----------------------------------------------
+
+OrpColumn = Literal["address", "contact", "rate", "method", "assigned", "result", "url"]
+ALL_ORP_COLUMNS: list[OrpColumn] = [
+    "address",
+    "contact",
+    "rate",
+    "method",
+    "assigned",
+    "result",
+    "url",
+]
+
+
+class OrpColumnsVisible(BaseModel):
+    """Colonnes affichées à l'écran ; date, entreprise et poste le sont toujours. Le PDF et
+    le CSV gardent toutes les colonnes, demandées par l'ORP."""
+
+    visible: list[OrpColumn]
+
+    @field_validator("visible")
+    @classmethod
+    def _ordered(cls, values: list[OrpColumn]) -> list[OrpColumn]:
+        return [key for key in ALL_ORP_COLUMNS if key in values]
+
+
+@router.get("/orp-columns", operation_id="getOrpColumns")
+async def get_orp_columns(request: Request) -> OrpColumnsVisible:
+    async with _runtime(request).sessionmaker() as session:
+        value = await session.scalar(
+            select(Setting.value).where(Setting.key == "orp_columns_visible")
+        )
+    return OrpColumnsVisible(visible=value if isinstance(value, list) else ALL_ORP_COLUMNS)
+
+
+@router.put("/orp-columns", operation_id="saveOrpColumns")
+async def put_orp_columns(request: Request, body: OrpColumnsVisible) -> OrpColumnsVisible:
+    async with _runtime(request).sessionmaker.begin() as session:
+        await session.execute(
+            insert(Setting)
+            .values(key="orp_columns_visible", value=body.visible)
+            .on_conflict_do_update(index_elements=["key"], set_={"value": body.visible})
+        )
+    return body
+
+
 # --- Notifications (0.4.0-c) -----------------------------------------------------------
 
 

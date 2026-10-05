@@ -116,11 +116,48 @@ async function copy(value: string, key: string): Promise<void> {
 
 const today = new Intl.DateTimeFormat("fr-CH").format(new Date());
 
+// Colonnes affichées à l'écran, enregistrées en base (le PDF et le CSV gardent tout).
+type OrpColumn = "address" | "contact" | "rate" | "method" | "assigned" | "result" | "url";
+const COLUMNS: { key: OrpColumn; label: string }[] = [
+  { key: "address", label: "Adresse de l'entreprise" },
+  { key: "contact", label: "Contact" },
+  { key: "rate", label: "Taux" },
+  { key: "method", label: "Mode" },
+  { key: "assigned", label: "Assignée par l'ORP" },
+  { key: "result", label: "Résultat" },
+  { key: "url", label: "Lien de la candidature" },
+];
+const visibleColumns = ref<OrpColumn[]>(COLUMNS.map((c) => c.key));
+const pickingColumns = ref(false);
+
+function show(column: OrpColumn): boolean {
+  return visibleColumns.value.includes(column);
+}
+
+async function toggleColumn(column: OrpColumn): Promise<void> {
+  visibleColumns.value = show(column)
+    ? visibleColumns.value.filter((c) => c !== column)
+    : COLUMNS.map((c) => c.key).filter((c) => c === column || show(c));
+  await api.PUT("/api/orp-columns", { body: { visible: visibleColumns.value } });
+}
+
+async function loadColumns(): Promise<void> {
+  try {
+    const { data: saved } = await api.GET("/api/orp-columns");
+    if (Array.isArray(saved?.visible)) visibleColumns.value = saved.visible;
+  } catch {
+    // Toutes les colonnes si l'API ne répond pas.
+  }
+}
+
 watch(
   () => route.query.mois,
   () => void load(),
 );
-onMounted(() => void load());
+onMounted(() => {
+  void load();
+  void loadColumns();
+});
 </script>
 
 <template>
@@ -242,6 +279,39 @@ onMounted(() => void load());
               data-test="with-searches"
             > Joindre le journal des recherches ({{ data.searches.length }})
           </label>
+          <div class="columns-picker">
+            <button
+              type="button"
+              class="link"
+              :aria-expanded="pickingColumns"
+              data-test="columns"
+              @click="pickingColumns = !pickingColumns"
+            >
+              Colonnes ({{ visibleColumns.length + 3 }} / {{ COLUMNS.length + 3 }})
+            </button>
+            <fieldset
+              v-if="pickingColumns"
+              class="customize-list columns-list"
+              data-test="columns-list"
+            >
+              <legend class="hint">
+                Date, entreprise et poste toujours affichés ; le PDF et le CSV gardent tout.
+              </legend>
+              <label
+                v-for="column in COLUMNS"
+                :key="column.key"
+                class="check"
+              >
+                <input
+                  type="checkbox"
+                  :checked="show(column.key)"
+                  :data-test="`column-${column.key}`"
+                  @change="toggleColumn(column.key)"
+                >
+                {{ column.label }}
+              </label>
+            </fieldset>
+          </div>
           <label class="check">
             <input
               v-model="jobRoom"
@@ -321,14 +391,26 @@ onMounted(() => void load());
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Entreprise, adresse</th>
-                <th>Contact</th>
+                <th>{{ show("address") ? "Entreprise, adresse" : "Entreprise" }}</th>
+                <th v-if="show('contact')">
+                  Contact
+                </th>
                 <th>Poste</th>
-                <th>Taux</th>
-                <th>Mode</th>
-                <th>ORP</th>
-                <th>Résultat</th>
-                <th>Lien</th>
+                <th v-if="show('rate')">
+                  Taux
+                </th>
+                <th v-if="show('method')">
+                  Mode
+                </th>
+                <th v-if="show('assigned')">
+                  ORP
+                </th>
+                <th v-if="show('result')">
+                  Résultat
+                </th>
+                <th v-if="show('url')">
+                  Lien
+                </th>
                 <th><span class="visually-hidden">Actions</span></th>
               </tr>
             </thead>
@@ -342,9 +424,9 @@ onMounted(() => void load());
                 <td>{{ row.date }}</td>
                 <td>
                   <strong>{{ row.company }}</strong><br>
-                  <span v-if="row.address">{{ row.address }}</span>
+                  <span v-if="row.address && show('address')">{{ row.address }}</span>
                   <button
-                    v-else
+                    v-else-if="!row.address"
                     type="button"
                     class="link danger"
                     data-test="complete"
@@ -353,13 +435,23 @@ onMounted(() => void load());
                     À compléter
                   </button>
                 </td>
-                <td>{{ [row.contact, row.phone].filter(Boolean).join(", ") || "—" }}</td>
+                <td v-if="show('contact')">
+                  {{ [row.contact, row.phone].filter(Boolean).join(", ") || "—" }}
+                </td>
                 <td>{{ row.job_title }}</td>
-                <td>{{ row.rate || "—" }}</td>
-                <td>{{ row.method }}</td>
-                <td>{{ row.assigned }}</td>
-                <td>{{ row.result }}</td>
-                <td>
+                <td v-if="show('rate')">
+                  {{ row.rate || "—" }}
+                </td>
+                <td v-if="show('method')">
+                  {{ row.method }}
+                </td>
+                <td v-if="show('assigned')">
+                  {{ row.assigned }}
+                </td>
+                <td v-if="show('result')">
+                  {{ row.result }}
+                </td>
+                <td v-if="show('url')">
                   <a
                     v-if="row.url?.startsWith('http')"
                     :href="row.url"

@@ -786,3 +786,6 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .status-pill.applied { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
 .status-pill.later, .status-pill.ignored, .status-pill.filtered_out { background: var(--band); color: var(--muted); border: 1px solid var(--border); }
 .status-pill.expired { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.columns-picker { display: grid; gap: 0.4rem; position: relative; }
+.columns-list { position: absolute; top: 1.8rem; left: 0; z-index: 15; width: 18rem; background: var(--surface); box-shadow: 0 12px 32px rgba(17, 17, 31, 0.12); }
