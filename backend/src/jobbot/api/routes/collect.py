@@ -101,6 +101,15 @@ class OfferOut(BaseModel):
     # Note faite avec un autre profil que l'actuel : à renoter.
     score_stale: bool = False
     score_error: str | None = None
+    # Étiquettes des cartes (docs/11 §3), vides pour une note antérieure à score-v2.
+    keywords_role: list[str] = []
+    keywords_asks: list["AskKeywordOut"] = []
+    keywords_offers: list[str] = []
+
+
+class AskKeywordOut(BaseModel):
+    text: str
+    covered: bool | None = None
 
 
 class ScorePoint(BaseModel):
@@ -181,6 +190,9 @@ def _evaluation_fields(
             "summary_asks": evaluation.summary_asks,
             "summary_offers": evaluation.summary_offers,
             "summary_partial": evaluation.summary_partial,
+            "keywords_role": evaluation.keywords_role or [],
+            "keywords_asks": evaluation.keywords_asks or [],
+            "keywords_offers": evaluation.keywords_offers or [],
             "strengths": evaluation.strengths,
             "gaps": evaluation.gaps,
             "scored_at": evaluation.scored_at,

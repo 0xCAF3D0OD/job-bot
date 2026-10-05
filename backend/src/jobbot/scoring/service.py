@@ -48,6 +48,7 @@ DIRECT_LIMIT = 20
 # Estimation prudente du coût d'une note, pour ne pas dépasser le plafond (docs/06 §3).
 ESTIMATE_USD = Decimal("0.03")
 TO_SCORE = (OfferStatus.NEW, OfferStatus.TO_REVIEW)
+KEPT_ASIDE = (OfferStatus.LATER, OfferStatus.PREPARING)
 
 # Remplaçable en test par un faux client.
 make_client = client_factory
@@ -145,13 +146,23 @@ async def candidates(
         Evaluation.prompt_version != PROMPT_VERSION,
         and_(Offer.description.is_not(None), Evaluation.summary_partial.is_(True)),
     ]
+    # Consignes changées (score-v2 : mots-clés) : les offres mises de côté ou en préparation
+    # sont aussi renotées, pour avoir leurs étiquettes (docs/11 §3).
+    kept_aside = and_(
+        Offer.status.in_(KEPT_ASIDE),
+        Evaluation.scored_at.is_not(None),
+        Evaluation.prompt_version != PROMPT_VERSION,
+    )
     if include_stale_profile:
         needs.append(Evaluation.profile_hash != current_hash)
         needs.append(Evaluation.score_error.is_not(None))
     rows = await session.scalars(
         select(Offer)
         .outerjoin(Evaluation, Evaluation.offer_id == Offer.id)
-        .where(Offer.status.in_(TO_SCORE), Offer.expired_at.is_(None), or_(*needs))
+        .where(
+            Offer.expired_at.is_(None),
+            or_(and_(Offer.status.in_(TO_SCORE), or_(*needs)), kept_aside),
+        )
         .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
     )
     pending = await _pending_batch_offers(session)
@@ -170,11 +181,12 @@ async def _store(
     hash_: str,
     partial: bool,
     error: str | None = None,
+    prompt_version: str = PROMPT_VERSION,
 ) -> None:
     now = datetime.now(UTC)
     values: dict[str, Any] = {
         "model": model,
-        "prompt_version": PROMPT_VERSION,
+        "prompt_version": prompt_version,
         "profile_hash": hash_,
         "score_error": error,
     }
@@ -187,6 +199,9 @@ async def _store(
             "summary_partial": partial,
             "strengths": [p.model_dump() for p in output.strengths],
             "gaps": [p.model_dump() for p in output.gaps],
+            "keywords_role": output.keywords_role,
+            "keywords_asks": [k.model_dump() for k in output.keywords_asks],
+            "keywords_offers": output.keywords_offers,
             "scored_at": now,
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre
@@ -259,6 +274,9 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                 if offer is None:
                     continue
                 partial = offer.description is None
+                if item.result is None and item.error in ("canceled", "expired"):
+                    # Lot annulé ou expiré : pas la faute de l'offre, elle sera renotée.
+                    continue
                 if item.result is None:
                     await _store(
                         session,
@@ -268,6 +286,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                         hash_=hash_,
                         partial=partial,
                         error=f"lot : {item.error}",
+                        prompt_version=batch.prompt_version,
                     )
                     result.failed += 1
                     continue
@@ -289,6 +308,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                         hash_=hash_,
                         partial=partial,
                         error=str(exc),
+                        prompt_version=batch.prompt_version,
                     )
                     result.failed += 1
                     continue
@@ -299,6 +319,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                     model=item.result.model,
                     hash_=hash_,
                     partial=partial,
+                    prompt_version=batch.prompt_version,
                 )
                 result.batch_collected += 1
             await session.execute(
@@ -331,7 +352,13 @@ async def _submit_batch(
             raise ScoringUnavailable(problem) from None
         raise
     async with runtime.sessionmaker.begin() as session:
-        session.add(LlmBatch(provider_batch_id=batch_id, offer_ids=[o.id for o in offers]))
+        session.add(
+            LlmBatch(
+                provider_batch_id=batch_id,
+                offer_ids=[o.id for o in offers],
+                prompt_version=PROMPT_VERSION,
+            )
+        )
     result.batch_submitted += len(offers)
     log.info("score_batch_submitted", batch_id=batch_id, offers=len(offers))
 

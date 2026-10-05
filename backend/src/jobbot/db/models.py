@@ -217,6 +217,10 @@ class Evaluation(Base):
     summary_partial: Mapped[bool] = mapped_column(default=False)
     strengths: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     gaps: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    # Étiquettes des cartes (docs/11 §3) ; keywords_asks : [{text, covered}].
+    keywords_role: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    keywords_asks: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    keywords_offers: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     model: Mapped[str | None] = mapped_column(Text)
     prompt_version: Mapped[str | None] = mapped_column(Text)
     profile_hash: Mapped[str | None] = mapped_column(Text)
@@ -318,6 +322,8 @@ class LlmBatch(Base):
     provider_batch_id: Mapped[str] = mapped_column(Text, unique=True)
     status: Mapped[str] = mapped_column(Text, default="in_progress")  # in_progress|ended|failed
     offer_ids: Mapped[list[int]] = mapped_column(ARRAY(BigInteger))
+    # Consignes avec lesquelles le lot a été envoyé (« score-v1 », « score-v2 »…).
+    prompt_version: Mapped[str] = mapped_column(Text, default="score-v1")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

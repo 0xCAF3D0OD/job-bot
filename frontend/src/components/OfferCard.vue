@@ -14,6 +14,12 @@ const logo = computed(() => `logo c${colorIndex(name.value)}`);
 // Sans résumé de l'IA : début du texte complet, sinon l'extrait de l'alerte.
 const excerpt = computed(() => props.offer.description ?? props.offer.snippet ?? null);
 const hasSummary = computed(() => Boolean(props.offer.summary_role));
+// Étiquettes courtes (docs/11 §3) ; les phrases restent pour les notes plus anciennes.
+const hasKeywords = computed(() =>
+  Boolean(
+    props.offer.keywords_role?.length || props.offer.keywords_asks?.length || props.offer.keywords_offers?.length,
+  ),
+);
 const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.source]).join(", "));
 </script>
 
@@ -53,8 +59,48 @@ const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.so
       v-if="offer.filter_reasons?.length"
       class="badge reason"
     >{{ offer.filter_reasons[0] }}</span>
+    <div
+      v-if="hasKeywords"
+      class="kw-rows"
+      data-test="keywords"
+    >
+      <div
+        v-if="offer.keywords_role?.length"
+        class="kw-row"
+      >
+        <span class="kw-label">Poste</span>
+        <span
+          v-for="word in offer.keywords_role"
+          :key="word"
+          class="kw"
+        >{{ word }}</span>
+      </div>
+      <div
+        v-if="offer.keywords_asks?.length"
+        class="kw-row"
+      >
+        <span class="kw-label">Demande</span>
+        <span
+          v-for="ask in offer.keywords_asks"
+          :key="ask.text"
+          :class="['kw', { gap: ask.covered === false }]"
+          :title="ask.covered === false ? 'Pas couvert par ton profil' : undefined"
+        >{{ ask.text }}</span>
+      </div>
+      <div
+        v-if="offer.keywords_offers?.length"
+        class="kw-row"
+      >
+        <span class="kw-label">Offre</span>
+        <span
+          v-for="word in offer.keywords_offers"
+          :key="word"
+          class="kw offer"
+        >{{ word }}</span>
+      </div>
+    </div>
     <dl
-      v-if="hasSummary"
+      v-else-if="hasSummary"
       class="summary"
       data-test="summary"
     >

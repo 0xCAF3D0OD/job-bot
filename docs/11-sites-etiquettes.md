@@ -1,6 +1,6 @@
 # 11 — Expiration signalée, sites ajoutés, étiquettes en mots-clés (version 0.7.0)
 
-> Statut : **validé** le 2026-10-05, sites retenus : **jobs.ch** et **LinkedIn**. PR a (expiration signalée) livrée ; PR b et c à venir.
+> Statut : **validé** le 2026-10-05, sites retenus : **jobs.ch** et **LinkedIn**. PR a (expiration signalée) et PR b (mots-clés) livrées ; PR c à venir.
 > Retours d'usage du 2026-10-05. S'appuie sur [10-ergonomie.md](10-ergonomie.md) §1 (offres expirées), [03-collecte-gmail.md](03-collecte-gmail.md) (alertes e-mail) et [06-note-ia.md](06-note-ia.md) (résumé).
 
 ## 1. Signaler une offre expirée (ou non)
@@ -89,3 +89,10 @@ sites         id, name, senders[], url, reader (jobup|indeed|jobroom|ai), active
 
 - **Migrations** : la 0014 ne contient que le choix de Kevin (`expiry_override`, `expiry_source = manual`). Les mots-clés et les sites auront leurs propres migrations (0015, 0016).
 - **Boutons** : « Signaler comme expirée » et « Pas expirée » sont dans la ligne d'actions du détail, à côté de « Plus tard » et « Ignorer ». Absents une fois la candidature envoyée.
+
+## Écarts avec la PR b
+
+- **Migration 0018** (et non 0014 comme prévu au §4, décalée par la 0.7.1 et la 0.7.2).
+- **Renotation** : automatique, par la tâche `score`, dès la mise à jour : toute note faite avec les anciennes consignes (« score-v1 ») est refaite, y compris pour les offres « plus tard » et « en préparation ». Au-delà de 20 offres, en lot à moitié prix.
+- **Lots** : chaque lot retient ses consignes. Une note d'un lot envoyé avant la mise à jour est gardée, puis refaite pour avoir ses mots-clés. Une offre d'un lot annulé ou expiré n'est plus marquée en erreur : elle est simplement renotée.
+- **Phrases** : une carte sans mots-clés (note ancienne) garde les trois phrases ; le détail les montre toujours.

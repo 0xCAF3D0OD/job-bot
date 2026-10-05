@@ -13,8 +13,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v1"
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v1.md").read_text("utf-8")
+PROMPT_VERSION = "score-v2"
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v2.md").read_text("utf-8")
+KEYWORD_LENGTH = 25
 MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
 
@@ -24,6 +25,12 @@ class Point(BaseModel):
     chunk_ids: list[int] = Field(default_factory=list)
 
 
+class AskKeyword(BaseModel):
+    text: str
+    # Exigence couverte par un bloc du profil ; None sans profil (docs/11 §3).
+    covered: bool | None = None
+
+
 class ScoreOutput(BaseModel):
     summary_role: str = Field(max_length=400)
     summary_asks: str = Field(max_length=400)
@@ -31,6 +38,10 @@ class ScoreOutput(BaseModel):
     score: int | None = Field(default=None, ge=0, le=100)
     strengths: list[Point] = Field(default_factory=list, max_length=6)
     gaps: list[Point] = Field(default_factory=list, max_length=6)
+    # Étiquettes des cartes (score-v2) ; recoupées à la réception.
+    keywords_role: list[str] = Field(default_factory=list)
+    keywords_asks: list[AskKeyword] = Field(default_factory=list)
+    keywords_offers: list[str] = Field(default_factory=list)
 
 
 # Schéma envoyé à l'API (sorties structurées) : seulement des types simples, les bornes
@@ -53,8 +64,32 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "score": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
         "strengths": {"type": "array", "items": _POINT_SCHEMA},
         "gaps": {"type": "array", "items": _POINT_SCHEMA},
+        "keywords_role": {"type": "array", "items": {"type": "string"}},
+        "keywords_asks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string"},
+                    "covered": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
+                },
+                "required": ["text", "covered"],
+                "additionalProperties": False,
+            },
+        },
+        "keywords_offers": {"type": "array", "items": {"type": "string"}},
     },
-    "required": ["summary_role", "summary_asks", "summary_offers", "score", "strengths", "gaps"],
+    "required": [
+        "summary_role",
+        "summary_asks",
+        "summary_offers",
+        "score",
+        "strengths",
+        "gaps",
+        "keywords_role",
+        "keywords_asks",
+        "keywords_offers",
+    ],
     "additionalProperties": False,
 }
 
@@ -135,15 +170,48 @@ class InvalidScore(ValueError):
     pass
 
 
+def _label(value: str) -> str:
+    return " ".join(value.split()).rstrip(".")[:KEYWORD_LENGTH].strip()
+
+
+def _keywords(values: list[str], limit: int) -> list[str]:
+    """Étiquettes courtes, sans doublon ni point final, dans l'ordre de l'IA."""
+    seen: dict[str, str] = {}
+    for value in values:
+        text = _label(value)
+        if text and text.casefold() not in seen:
+            seen[text.casefold()] = text
+    return list(seen.values())[:limit]
+
+
+def _asks(values: list[AskKeyword]) -> list[AskKeyword]:
+    seen: dict[str, AskKeyword] = {}
+    for value in values:
+        text = _label(value.text)
+        if text and text.casefold() not in seen:
+            seen[text.casefold()] = AskKeyword(text=text, covered=value.covered)
+    return list(seen.values())[:5]
+
+
 def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
     """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif."""
     try:
         output = ScoreOutput.model_validate(json.loads(text))
     except (json.JSONDecodeError, ValidationError) as exc:
         raise InvalidScore(f"réponse non conforme : {type(exc).__name__}") from exc
+    output = output.model_copy(
+        update={
+            "keywords_role": _keywords(output.keywords_role, 3),
+            "keywords_asks": _asks(output.keywords_asks),
+            "keywords_offers": _keywords(output.keywords_offers, 4),
+        }
+    )
     valid = {c.id for c in chunks}
     if not valid:
-        return output.model_copy(update={"score": None, "strengths": [], "gaps": []})
+        asks = [k.model_copy(update={"covered": None}) for k in output.keywords_asks]
+        return output.model_copy(
+            update={"score": None, "strengths": [], "gaps": [], "keywords_asks": asks}
+        )
 
     strengths = []
     for point in output.strengths:

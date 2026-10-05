@@ -1007,6 +1007,13 @@ export interface components {
             /** Interview At */
             interview_at?: string | null;
         };
+        /** AskKeywordOut */
+        AskKeywordOut: {
+            /** Text */
+            text: string;
+            /** Covered */
+            covered?: boolean | null;
+        };
         /** Body_uploadDocument */
         Body_uploadDocument: {
             /** File */
@@ -1671,6 +1678,21 @@ export interface components {
             score_stale: boolean;
             /** Score Error */
             score_error?: string | null;
+            /**
+             * Keywords Role
+             * @default []
+             */
+            keywords_role: string[];
+            /**
+             * Keywords Asks
+             * @default []
+             */
+            keywords_asks: components["schemas"]["AskKeywordOut"][];
+            /**
+             * Keywords Offers
+             * @default []
+             */
+            keywords_offers: string[];
         };
         /** OfferPage */
         OfferPage: {
@@ -1971,6 +1993,21 @@ export interface components {
             score_stale: boolean;
             /** Score Error */
             score_error?: string | null;
+            /**
+             * Keywords Role
+             * @default []
+             */
+            keywords_role: string[];
+            /**
+             * Keywords Asks
+             * @default []
+             */
+            keywords_asks: components["schemas"]["AskKeywordOut"][];
+            /**
+             * Keywords Offers
+             * @default []
+             */
+            keywords_offers: string[];
             /** Is First */
             is_first: boolean;
         };
