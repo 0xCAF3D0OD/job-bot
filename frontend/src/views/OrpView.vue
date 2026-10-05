@@ -329,6 +329,7 @@ onMounted(() => void load());
                 <th>ORP</th>
                 <th>Résultat</th>
                 <th>Lien</th>
+                <th><span class="visually-hidden">Actions</span></th>
               </tr>
             </thead>
             <tbody>
@@ -367,6 +368,16 @@ onMounted(() => void load());
                     class="link"
                   >ouvrir</a>
                   <span v-else>{{ row.url || "—" }}</span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="link"
+                    data-test="edit-row"
+                    @click="edit(row)"
+                  >
+                    Modifier
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -458,7 +469,7 @@ onMounted(() => void load());
 
   <ApplicationForm
     v-if="editing"
-    title="Compléter la candidature"
+    title="Modifier la candidature"
     :initial="editing.value"
     :with-status="true"
     :error="editError"
