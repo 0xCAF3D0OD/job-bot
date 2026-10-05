@@ -7,6 +7,7 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
+import { applicationBody } from "../applicationBody";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 
 const PAGE_SIZE = 50;
@@ -127,19 +128,7 @@ async function openApplication(): Promise<void> {
 
 async function saveApplication(value: ApplicationFormValue): Promise<void> {
   const { data, error } = await api.POST("/api/applications", {
-    body: {
-      offer_id: value.offer_id ?? null,
-      sent_at: value.sent_at,
-      method: value.method,
-      assigned_by_orp: value.assigned_by_orp,
-      company: value.company,
-      company_address: value.company_address || null,
-      contact_name: value.contact_name || null,
-      contact_phone: value.contact_phone || null,
-      job_title: value.job_title,
-      location: value.location || null,
-      rate_text: value.rate_text || null,
-    },
+    body: { ...applicationBody(value), offer_id: value.offer_id ?? null },
   });
   if (!data) {
     const detail = (error as { detail?: unknown } | undefined)?.detail;

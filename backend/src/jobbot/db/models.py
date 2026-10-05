@@ -369,6 +369,8 @@ class Application(Base):
     location: Mapped[str | None] = mapped_column(Text)
     # « plein temps » ou « temps partiel (80 %) », comme sur le formulaire ORP.
     rate_text: Mapped[str | None] = mapped_column(Text)
+    # Formulaire de candidature ou annonce (ou e-mail utilisé), demandé par l'ORP (docs/13).
+    application_url: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(Text, default=ApplicationStatus.EN_ATTENTE)
     status_reason: Mapped[str | None] = mapped_column(Text)
     status_at: Mapped[date | None] = mapped_column(Date)

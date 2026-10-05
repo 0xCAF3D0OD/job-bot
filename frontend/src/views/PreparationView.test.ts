@@ -158,3 +158,48 @@ describe("PreparationView", () => {
     expect(wrapper.find("[data-test=missing-identity]").text()).toContain("NPA, localité");
   });
 });
+
+describe("barre de candidature", () => {
+  it("postuler, télécharger, puis marquer comme envoyée sans quitter la page", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/offers/{offer_id}"
+            ? offer
+            : path === "/api/offers/{offer_id}/letters"
+              ? [letter(11, 1)]
+              : path === "/api/offers/{offer_id}/cvs"
+                ? [{ id: 31, version: 1, created_at: "2026-10-05T08:00:00Z", edited_at: null }]
+                : path === "/api/offers/{offer_id}/application-prefill"
+                  ? {
+                      offer_id: 7,
+                      sent_at: "2026-10-05",
+                      method: "electronique",
+                      assigned_by_orp: false,
+                      company: "Acme SA",
+                      job_title: "Ingénieur DevOps junior",
+                      application_url: "https://acme.example/jobs/1",
+                    }
+                  : [],
+      }),
+    );
+    POST.mockResolvedValue({ data: { id: 5, company: "Acme SA" } });
+    const wrapper = await mountView();
+    const bar = wrapper.find("[data-test=apply-bar]");
+    expect(bar.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");
+    expect(bar.find("[data-test=bar-letter]").attributes("href")).toBe("/api/letters/11/docx");
+    expect(bar.find("[data-test=bar-cv]").attributes("href")).toBe("/api/cvs/31/docx");
+
+    await bar.find("[data-test=mark-applied]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find<HTMLInputElement>("[data-test=application-url]").element.value).toBe(
+      "https://acme.example/jobs/1",
+    );
+    await wrapper.find("form.application-form").trigger("submit");
+    await flushPromises();
+    const [path, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    expect(path).toBe("/api/applications");
+    expect(opts.body).toMatchObject({ offer_id: 7, application_url: "https://acme.example/jobs/1" });
+    expect(wrapper.text()).toContain("Candidature chez Acme SA enregistrée");
+  });
+});

@@ -4,6 +4,8 @@ import { useRoute } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import { applicationBody } from "../applicationBody";
+import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import CvPanel from "../components/CvPanel.vue";
 import PageHero from "../components/PageHero.vue";
 import { expiredText } from "../format";
@@ -11,6 +13,46 @@ import { expiredText } from "../format";
 const route = useRoute();
 const offerId = Number(route.params.id);
 const tab = computed(() => (route.query.doc === "cv" ? "cv" : "letter"));
+
+// Barre « Postuler · Marquer comme envoyée · Télécharger » (docs/13 §1).
+const SITE_NAMES: Record<string, string> = { jobup: "jobup", indeed: "Indeed", jobroom: "Job-Room" };
+const applyLink = computed(() => {
+  const o = offer.value;
+  if (!o) return null;
+  if (o.apply_url) {
+    return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" };
+  }
+  const link = o.links[0];
+  return link ? { url: link.url, label: `Ouvrir l'annonce sur ${SITE_NAMES[link.source] ?? link.source}` } : null;
+});
+const currentCvId = ref<number | null>(null);
+const currentLetterId = computed(() => current(letters.value)?.id ?? null);
+const applying = ref<ApplicationFormValue | null>(null);
+const applyError = ref("");
+const applyNotice = ref("");
+
+async function openApplication(): Promise<void> {
+  applyError.value = "";
+  const { data } = await api.GET("/api/offers/{offer_id}/application-prefill", {
+    params: { path: { offer_id: offerId } },
+  });
+  if (data) applying.value = { ...data, status: "en_attente" };
+}
+
+async function saveApplication(value: ApplicationFormValue): Promise<void> {
+  const { data, error: err } = await api.POST("/api/applications", {
+    body: { ...applicationBody(value), offer_id: offerId },
+  });
+  if (!data) {
+    const message = (err as { detail?: unknown } | undefined)?.detail;
+    applyError.value = typeof message === "string" ? message : "Vérifie les champs obligatoires.";
+    return;
+  }
+  applying.value = null;
+  applyNotice.value = `Candidature chez ${data.company} enregistrée, avec ta lettre et ton CV.`;
+  const refreshed = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: offerId } } });
+  if (refreshed.data) offer.value = refreshed.data;
+}
 
 const offer = ref<Offer | null>(null);
 const letters = ref<Letter[]>([]);
@@ -67,6 +109,10 @@ async function load(): Promise<void> {
     return;
   }
   offer.value = o.data;
+  const cvs = await api.GET("/api/offers/{offer_id}/cvs", { params: { path: { offer_id: offerId } } });
+  const list = cvs.data ?? [];
+  const stamp = (c: (typeof list)[number]) => Date.parse(c.edited_at ?? c.created_at);
+  currentCvId.value = [...list].sort((a, b) => stamp(b) - stamp(a) || b.version - a.version)[0]?.id ?? null;
   letters.value = l.data ?? [];
   chunkTitles.value = Object.fromEntries((c.data ?? []).map((chunk) => [chunk.id, chunk.title]));
   select(current(letters.value));
@@ -189,6 +235,61 @@ onMounted(() => void load());
       >
         {{ expiredText(offer) }} Vérifie avant d'envoyer ta candidature.
       </p>
+      <div
+        v-if="offer"
+        class="apply-bar"
+        data-test="apply-bar"
+      >
+        <template v-if="offer.status === 'applied'">
+          <span class="badge new">Candidature envoyée</span>
+          <RouterLink
+            to="/candidatures"
+            class="link"
+          >
+            Voir le suivi
+          </RouterLink>
+        </template>
+        <template v-else>
+          <a
+            v-if="applyLink"
+            :href="applyLink.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="button-link primary-link"
+            data-test="apply"
+          >{{ applyLink.label }} <AppIcon name="chevron" /></a>
+          <button
+            type="button"
+            class="secondary small"
+            data-test="mark-applied"
+            @click="openApplication"
+          >
+            Marquer comme envoyée
+          </button>
+        </template>
+        <span class="spacer" />
+        <a
+          v-if="currentLetterId"
+          class="link"
+          :href="`/api/letters/${currentLetterId}/docx`"
+          download
+          data-test="bar-letter"
+        >Lettre (Word)</a>
+        <a
+          v-if="currentCvId"
+          class="link"
+          :href="`/api/cvs/${currentCvId}/docx`"
+          download
+          data-test="bar-cv"
+        >CV (Word)</a>
+      </div>
+      <p
+        v-if="applyNotice"
+        class="notice"
+        role="status"
+      >
+        {{ applyNotice }}
+      </p>
       <nav
         v-if="offer"
         class="prep-tabs"
@@ -213,6 +314,7 @@ onMounted(() => void load());
       <CvPanel
         v-if="offer && tab === 'cv'"
         :offer="offer"
+        @current="currentCvId = $event"
       />
 
       <div
@@ -427,21 +529,9 @@ onMounted(() => void load());
           </div>
 
           <div class="side-card">
-            <div
-              v-if="offer.apply_url"
-              class="actions"
-            >
-              <a
-                :href="offer.apply_url"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-test="apply"
-              >{{ offer.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" }}
-                <AppIcon name="chevron" /></a>
-            </div>
             <p class="hint">
-              Une fois envoyée, « Marquer comme envoyée » depuis l'offre l'ajoute aux Candidatures, avec cette
-              lettre.
+              Postule avec le bouton en haut de la page, puis « Marquer comme envoyée » : la candidature
+              rejoint le suivi avec cette lettre et ton CV.
             </p>
             <RouterLink
               :to="{ path: '/offres', query: { statut: 'in_progress' } }"
@@ -454,4 +544,14 @@ onMounted(() => void load());
       </div>
     </div>
   </section>
+
+  <ApplicationForm
+    v-if="applying"
+    title="Candidature envoyée"
+    :initial="applying"
+    :with-status="false"
+    :error="applyError"
+    @submit="saveApplication"
+    @close="applying = null"
+  />
 </template>

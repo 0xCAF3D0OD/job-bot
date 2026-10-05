@@ -1,6 +1,6 @@
 # 13 — Postuler depuis la préparation, lien de candidature pour l'ORP (version 0.7.3)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** et livré le 2026-10-05.
 > Retours d'usage du 2026-10-05. Complète [08-candidatures.md](08-candidatures.md) et [09-export-orp.md](09-export-orp.md).
 
 ## 1. Postuler sans quitter la préparation
@@ -42,3 +42,9 @@ La migration des sites (cadrage 11, PR c) passe en 0020.
 1. **Barre « Postuler · Télécharger · Marquer comme envoyée »** en haut de la préparation, dans les deux onglets (§1).
 2. **Lien de la candidature** enregistré, pré-rempli et modifiable, présent dans la page Candidatures, la page ORP, le CSV et le PDF (§2).
 3. **Une seule PR** pour les deux.
+
+## Écarts
+
+- **Télécharger** : la barre propose la lettre et le CV en Word ; le PDF reste dans l'onglet de chaque document (impression du navigateur, qui ne sait imprimer que la page affichée).
+- **Adresse de l'entreprise** dans « Marquer comme envoyée » : pré-remplie sur une ligne (« Rue 1, 1003 Lausanne »), car le champ ne garde pas les retours à la ligne ; l'en-tête de la lettre la remet sur deux lignes.
+- **Corps des requêtes** : un seul assemblage des champs d'une candidature côté interface (`applicationBody.ts`), pour qu'aucun formulaire n'oublie le lien.

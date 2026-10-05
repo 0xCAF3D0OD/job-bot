@@ -294,7 +294,17 @@ async def test_offer_address_manual_and_prefill(api: AsyncClient, rt: Runtime) -
     offer = (await api.get(f"/api/offers/{offer_id}")).json()
     assert offer["company_address_source"] == "manual"
     prefill = (await api.get(f"/api/offers/{offer_id}/application-prefill")).json()
-    assert prefill["company_address"] == "Rue du Port 2\n1201 Genève"
+    assert prefill["company_address"] == "Rue du Port 2, 1201 Genève"
     cleared = (await api.patch(f"/api/offers/{offer_id}/address", json={"address": ""})).json()
     assert cleared["company_address"] is None and cleared["company_address_source"] is None
     assert (await api.patch("/api/offers/999999/address", json={})).status_code == 404
+
+
+async def test_application_url_prefilled_from_offer(api: AsyncClient, rt: Runtime) -> None:
+    offer_id = await add_offer(rt, 1, apply_url="https://emploi.exemple.ch/postuler/1")
+    prefill = (await api.get(f"/api/offers/{offer_id}/application-prefill")).json()
+    assert prefill["application_url"] == "https://emploi.exemple.ch/postuler/1"
+    created = (
+        await api.post("/api/applications", json={**prefill, "application_url": " rh@exemple.ch "})
+    ).json()
+    assert created["application_url"] == "rh@exemple.ch"

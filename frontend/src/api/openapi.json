@@ -2532,6 +2532,18 @@
             ],
             "title": "Rate Text"
           },
+          "application_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Url"
+          },
           "offer_id": {
             "anyOf": [
               {
@@ -2650,6 +2662,18 @@
               }
             ],
             "title": "Rate Text"
+          },
+          "application_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Url"
           },
           "status": {
             "$ref": "#/components/schemas/ApplicationStatus",
@@ -2853,6 +2877,18 @@
             ],
             "title": "Rate Text"
           },
+          "application_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Url"
+          },
           "offer_id": {
             "type": "integer",
             "title": "Offer Id"
@@ -2966,6 +3002,18 @@
               }
             ],
             "title": "Rate Text"
+          },
+          "application_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Url"
           },
           "status": {
             "$ref": "#/components/schemas/ApplicationStatus",
@@ -5459,6 +5507,10 @@
             "type": "string",
             "title": "Result"
           },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
           "missing": {
             "items": {
               "type": "string"
@@ -5480,6 +5532,7 @@
           "method",
           "assigned",
           "result",
+          "url",
           "missing"
         ],
         "title": "OrpRowOut"
