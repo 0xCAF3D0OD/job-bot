@@ -138,6 +138,12 @@ class Offer(Base):
     canton: Mapped[str | None] = mapped_column(Text, index=True)
     enrich_attempts: Mapped[int] = mapped_column(default=0)
     enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Offre retirée (docs/10 §1) : page jobup introuvable (« page ») ou plus vue dans aucune
+    # alerte depuis 30 jours (« age », pour les sites qu'on ne peut pas vérifier).
+    expired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    expiry_source: Mapped[str | None] = mapped_column(Text)
+    # Dernière revérification de la page jobup.
+    checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class OfferLink(Base):

@@ -1345,6 +1345,8 @@ export interface components {
             later: number;
             /** In Progress */
             in_progress: number;
+            /** Expired */
+            expired: number;
             /** All */
             all: number;
         };
@@ -1409,6 +1411,10 @@ export interface components {
              * @enum {string}
              */
             enrich_status: "pending" | "ok" | "expired" | "failed" | "skipped";
+            /** Expired At */
+            expired_at?: string | null;
+            /** Expiry Source */
+            expiry_source?: ("page" | "age") | null;
             /**
              * Filter Reasons
              * @default []
@@ -1681,6 +1687,10 @@ export interface components {
              * @enum {string}
              */
             enrich_status: "pending" | "ok" | "expired" | "failed" | "skipped";
+            /** Expired At */
+            expired_at?: string | null;
+            /** Expiry Source */
+            expiry_source?: ("page" | "age") | null;
             /**
              * Filter Reasons
              * @default []
@@ -1953,7 +1963,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 sort?: "recent" | "popular" | "score";
-                view?: "to_review" | "filtered_out" | "later" | "in_progress" | "all";
+                view?: "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
                 q?: string | null;
                 min_score?: number | null;
                 sources?: components["schemas"]["Source"][];

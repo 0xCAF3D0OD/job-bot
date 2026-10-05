@@ -151,7 +151,7 @@ async def candidates(
     rows = await session.scalars(
         select(Offer)
         .outerjoin(Evaluation, Evaluation.offer_id == Offer.id)
-        .where(Offer.status.in_(TO_SCORE), or_(*needs))
+        .where(Offer.status.in_(TO_SCORE), Offer.expired_at.is_(None), or_(*needs))
         .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
     )
     pending = await _pending_batch_offers(session)

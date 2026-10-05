@@ -6,6 +6,7 @@ import { api, type Letter, type LetterLanguage, type Offer } from "../api/client
 import AppIcon from "../components/AppIcon.vue";
 import CvPanel from "../components/CvPanel.vue";
 import PageHero from "../components/PageHero.vue";
+import { expiredText } from "../format";
 
 const route = useRoute();
 const offerId = Number(route.params.id);
@@ -181,6 +182,13 @@ onMounted(() => void load());
         </RouterLink>
       </p>
 
+      <p
+        v-if="offer?.expired_at && offer.status !== 'applied'"
+        class="notice expired-notice"
+        data-test="expired"
+      >
+        {{ expiredText(offer) }} Vérifie avant d'envoyer ta candidature.
+      </p>
       <nav
         v-if="offer"
         class="prep-tabs"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Offer } from "../api/client";
-import { colorIndex, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
+import { colorIndex, expiredText, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
@@ -46,6 +46,13 @@ function initial(offer: Offer): string {
       <h2>{{ offer.title }}</h2>
       <span class="detail">{{ offer.company ?? "Entreprise non indiquée" }}</span>
     </div>
+    <p
+      v-if="offer.expired_at && offer.status !== 'applied'"
+      class="notice expired-notice"
+      data-test="expired"
+    >
+      {{ expiredText(offer) }}
+    </p>
     <div
       class="triage"
       data-test="triage"

@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select, text, update
 
 from jobbot.api.app import create_app
 from jobbot.collect import service
-from jobbot.db.models import JobRun, Offer, OfferLink, OfferSighting, Search, Source
+from jobbot.db.models import EnrichStatus, JobRun, Offer, OfferLink, OfferSighting, Search, Source
 from jobbot.mail.imap import FetchedEmail, MailboxError
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
@@ -174,6 +174,46 @@ async def test_same_offer_on_two_sites(collect_runtime: Runtime, mailbox: FakeMa
         ("indeed", "K1"),
     ]
     assert [s.is_first for s in sightings] == [True, False]
+
+
+@pytest.mark.usefixtures("parsers")
+async def test_expired_offer_seen_again_is_visible(
+    collect_runtime: Runtime, mailbox: FakeMailbox
+) -> None:
+    offer_line = ("Ingénieur système (h/f)", "Acme SA", "1003 Lausanne", "https://jobup/1", "J1")
+    mailbox.add(
+        make_email(
+            message_id="<a1@jobup.ch>",
+            sender="alerts@jobup.ch",
+            received_at=T0,
+            offers=[offer_line],
+        ),
+        "<a1@jobup.ch>",
+    )
+    await service.collect(collect_runtime)
+    async with collect_runtime.sessionmaker.begin() as session:
+        await session.execute(
+            update(Offer).values(
+                expired_at=T0 + timedelta(hours=1),
+                expiry_source="page",
+                enrich_status=EnrichStatus.EXPIRED,
+                enrich_attempts=1,
+            )
+        )
+    mailbox.add(
+        make_email(
+            message_id="<a2@jobup.ch>",
+            sender="alerts@jobup.ch",
+            received_at=T0 + timedelta(days=2),
+            offers=[offer_line],
+        ),
+        "<a2@jobup.ch>",
+    )
+    await service.collect(collect_runtime)
+    async with collect_runtime.sessionmaker() as session:
+        [offer] = (await session.scalars(select(Offer))).all()
+    assert (offer.expired_at, offer.expiry_source) == (None, None)
+    assert (offer.enrich_status, offer.enrich_attempts) == (EnrichStatus.PENDING, 0)
 
 
 @pytest.mark.usefixtures("parsers")

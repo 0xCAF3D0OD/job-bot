@@ -18,7 +18,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.filter import canton_of
 from jobbot.core.normalize import normalize_offer
-from jobbot.db.models import Offer, OfferLink, OfferSighting, ParseStatus, Search, Source
+from jobbot.db.models import (
+    EnrichStatus,
+    Offer,
+    OfferLink,
+    OfferSighting,
+    ParseStatus,
+    Search,
+    Source,
+)
 from jobbot.log import get_logger
 from jobbot.mail.imap import FetchedEmail, ImapMailbox, MailboxError
 from jobbot.mail.message import ParsedEmail, parse_email
@@ -150,6 +158,12 @@ async def ingest_offers(
             offer.seen_count += 1
             offer.first_seen_at = min(offer.first_seen_at, seen_at)
             offer.last_seen_at = max(offer.last_seen_at, seen_at)
+            if offer.expired_at is not None and seen_at > offer.expired_at:
+                # Réapparue dans une alerte (docs/10 §1) : de nouveau visible ; une page jobup
+                # introuvable sera relue.
+                offer.expired_at = offer.expiry_source = None
+                if offer.enrich_status == EnrichStatus.EXPIRED:
+                    offer.enrich_status, offer.enrich_attempts = EnrichStatus.PENDING, 0
 
         await session.execute(
             insert(OfferLink)

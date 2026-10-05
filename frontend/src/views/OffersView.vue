@@ -19,6 +19,7 @@ const counts = ref<Record<View, number>>({
   filtered_out: 0,
   later: 0,
   in_progress: 0,
+  expired: 0,
   all: 0,
 });
 const applying = ref<ApplicationFormValue | null>(null);

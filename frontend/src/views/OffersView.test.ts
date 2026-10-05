@@ -38,7 +38,7 @@ function page(items: unknown[]) {
     data: {
       items,
       total: items.length,
-      counts: { to_review: 5, filtered_out: 2, later: 0, in_progress: 0, all: 7 },
+      counts: { to_review: 5, filtered_out: 2, later: 0, in_progress: 0, expired: 3, all: 7 },
       facets: {
         sources: [
           { value: "indeed", count: 3 },
@@ -271,5 +271,18 @@ describe("tri et candidature", () => {
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 1, company: "Acme SA", rate_text: "plein temps ou temps partiel (80-100 %)" });
     expect(wrapper.text()).toContain("Candidature chez Acme SA enregistrée.");
+  });
+});
+
+describe("offres expirées", () => {
+  it("onglet Expirées et bandeau dans le détail", async () => {
+    mockOffers(
+      page([offer(4, "Ingénieur cloud", { expired_at: "2026-10-04T08:00:00Z", expiry_source: "age" })]),
+    );
+    const wrapper = await mountAt("/offres?statut=expired");
+    expect(lastQuery().view).toBe("expired");
+    expect(wrapper.text()).toContain("Expirées");
+    await wrapper.find("[data-test=offer]").trigger("click");
+    expect(wrapper.find("[data-test=expired]").text()).toContain("Probablement expirée");
   });
 });

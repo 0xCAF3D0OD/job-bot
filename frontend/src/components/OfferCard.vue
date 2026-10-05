@@ -20,7 +20,7 @@ const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.so
 <template>
   <button
     type="button"
-    :class="['job-card', { selected }]"
+    :class="['job-card', { selected, expired: offer.expired_at && offer.status !== 'applied' }]"
     :aria-pressed="selected"
     data-test="offer"
     @click="$emit('select')"
