@@ -243,7 +243,7 @@ onMounted(() => void load());
         data-test="apply-bar"
       >
         <template v-if="offer.status === 'applied'">
-          <span class="badge new">Candidature envoyée</span>
+          <span class="status-pill applied">Candidature envoyée</span>
           <RouterLink
             to="/candidatures"
             class="link"

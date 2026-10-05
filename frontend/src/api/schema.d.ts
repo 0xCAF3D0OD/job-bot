@@ -2418,7 +2418,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
-                sort?: "recent" | "popular" | "score";
+                sort?: "recent" | "popular" | "score" | "activity";
                 view?: "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
                 q?: string | null;
                 min_score?: number | null;
