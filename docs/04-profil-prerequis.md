@@ -1,6 +1,6 @@
 # 04 — Profil, prérequis et filtre (version 0.3.0)
 
-> Statut : **validé le 2026-10-05**. Partie a (prérequis, filtre, réglages) livrée ; partie b (documents, blocs) à suivre.
+> Statut : **validé le 2026-10-05**. Parties a (prérequis, filtre, réglages) et b (documents, blocs) livrées.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §3, §4 et §5. Interface dans le style de la maquette Hirace (PR #9).
 
 ## 1. Objectif
@@ -127,3 +127,10 @@ La PR a te sert tout de suite (tri des 204 offres). La PR b prépare la 0.4.
 - **Canton d'une ville sans canton** (jobup) : appris des autres offres qui l'indiquent (« Prilly, VD »). Si le canton reste inconnu et que tu acceptes des cantons, l'offre n'est pas écartée.
 - **Enregistrer les prérequis relance le filtre** automatiquement : un seul bouton « Enregistrer et refiltrer ».
 - **Onglet « À examiner »** : il contient aussi les offres pas encore passées par le filtre (statut `new`), pour qu'aucune offre ne soit cachée.
+
+## Écarts à la livraison (partie b)
+
+- **Type de document** vérifié sur le contenu (signature PDF, archive Word), pas seulement sur l'extension.
+- **Doublons** : un même fichier (même contenu) ne peut être déposé qu'une fois.
+- **Bouton « Ouvrir »** : affiche le fichier d'origine, en plus du texte extrait.
+- **Journalisation** : seuls l'identifiant et la taille d'un document sont journalisés, jamais son nom ni son contenu.
