@@ -240,6 +240,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents/{document_id}/propose-chunks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Propose Chunks
+         * @description L'IA lit le document et propose des blocs. Rien n'est enregistré : c'est l'interface
+         *     qui crée les blocs que Kevin accepte.
+         */
+        post: operations["proposeChunks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile-chunks": {
         parameters: {
             query?: never;
@@ -369,6 +390,18 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** ChunkProposal */
+        ChunkProposal: {
+            kind: components["schemas"]["ChunkKind"];
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+            /** Tags */
+            tags: string[];
+            /** Duplicate Of */
+            duplicate_of: number | null;
         };
         /** CollectResponse */
         CollectResponse: {
@@ -1388,6 +1421,49 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    proposeChunks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChunkProposal"][];
+                };
+            };
+            /** @description IA non configurée, budget atteint ou compte API indisponible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document sans texte lisible */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réponse de l'IA inutilisable */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

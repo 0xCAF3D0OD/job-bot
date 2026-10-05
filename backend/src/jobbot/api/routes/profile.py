@@ -6,9 +6,11 @@ seuls l'identifiant et la taille le sont.
 
 import hashlib
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Annotated
 
+import anthropic
 from fastapi import APIRouter, File, HTTPException, Request, Response, UploadFile, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
@@ -23,8 +25,13 @@ from jobbot.core.extract import (
     extract,
 )
 from jobbot.db.models import ChunkKind, Document, ProfileChunk
+from jobbot.llm import proposals
+from jobbot.llm.client import Refused
+from jobbot.llm.scoring import InvalidScore
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
+from jobbot.scoring import service as scoring_service
+from jobbot.scoring.service import account_problem, active_profile, budget_state, record_call
 
 router = APIRouter(prefix="/api", tags=["profile"])
 log = get_logger(__name__)
@@ -196,6 +203,87 @@ async def delete_document(request: Request, document_id: int) -> None:
         await session.delete(document)
     runtime.storage.delete(key)
     log.info("document_deleted", document_id=document_id)
+
+
+# --- Propositions de blocs par l'IA (0.4.1) ---------------------------------------------
+
+
+class ChunkProposal(BaseModel):
+    kind: ChunkKind
+    title: str
+    content: str
+    tags: list[str]
+    # Bloc existant qui dit déjà la même chose, s'il y en a un.
+    duplicate_of: int | None
+
+
+# Estimation prudente du coût d'une proposition (document de quelques pages).
+PROPOSAL_ESTIMATE_USD = Decimal("0.10")
+
+
+@router.post(
+    "/documents/{document_id}/propose-chunks",
+    operation_id="proposeChunks",
+    responses={
+        409: {"description": "IA non configurée, budget atteint ou compte API indisponible"},
+        422: {"description": "Document sans texte lisible"},
+        502: {"description": "Réponse de l'IA inutilisable"},
+    },
+)
+async def propose_chunks(request: Request, document_id: int) -> list[ChunkProposal]:
+    """L'IA lit le document et propose des blocs. Rien n'est enregistré : c'est l'interface
+    qui crée les blocs que Kevin accepte."""
+    runtime = _runtime(request)
+    settings = runtime.settings
+    if not settings.llm_configured:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT, "IA non configurée : renseigner JOBBOT_ANTHROPIC_API_KEY."
+        )
+    document = await _get_document(runtime, document_id)
+    if document.text_status != TextStatus.OK or not document.extracted_text.strip():
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "ce document n'a pas de texte lisible"
+        )
+    async with runtime.sessionmaker() as session:
+        existing = await active_profile(session)
+        spend, budget, rate = await budget_state(session, datetime.now(UTC))
+    if spend + PROPOSAL_ESTIMATE_USD * rate > budget:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "plafond mensuel de l'IA atteint : le relever dans les Réglages",
+        )
+
+    client = scoring_service.make_client(settings)
+    params = proposals.request_params(
+        settings.llm_model, settings.llm_effort, existing, document.extracted_text
+    )
+    try:
+        raw = await client.score(params)
+    except Refused:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, "l'IA a refusé de traiter ce document"
+        ) from None
+    except (anthropic.RateLimitError, anthropic.APIConnectionError):
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "IA momentanément indisponible, réessayer"
+        ) from None
+    except anthropic.APIStatusError as exc:
+        problem = account_problem(exc)
+        raise HTTPException(
+            status.HTTP_409_CONFLICT if problem else status.HTTP_502_BAD_GATEWAY,
+            problem or f"erreur de l'API ({exc.status_code})",
+        ) from None
+
+    async with runtime.sessionmaker.begin() as session:
+        await record_call(session, raw, offer_id=None, rate=rate, purpose="propose")
+    try:
+        result = proposals.parse_output(raw.text, existing)
+    except InvalidScore:
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, "réponse de l'IA inutilisable, réessayer"
+        ) from None
+    log.info("chunks_proposed", document_id=document_id, proposals=len(result))
+    return [ChunkProposal(**p.model_dump()) for p in result]
 
 
 # --- Blocs de profil ------------------------------------------------------------------

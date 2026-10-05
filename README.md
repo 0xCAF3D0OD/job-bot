@@ -15,6 +15,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.3.0 | Documents, blocs de profil, prérequis et réglages, filtre | livrée |
 | 0.3.1 | Lien de candidature et texte complet des offres jobup | livrée |
 | 0.4.0 | Page Offres avec filtres, note et résumé IA, notifications | filtres, note et résumé livrés ; notifications à venir |
+| 0.4.1 | Propositions de blocs de profil par l'IA depuis un document | livrée |
 | 0.5.0 | Lettre et CV, suivi des candidatures | à venir |
 | 0.6.0 | Export ORP et rappels | à venir |
 
