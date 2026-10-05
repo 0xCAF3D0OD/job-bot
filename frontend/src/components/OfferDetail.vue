@@ -15,6 +15,7 @@ const emit = defineEmits<{
   close: [];
   status: [status: "to_review" | "later" | "ignored" | "preparing"];
   applied: [];
+  expiry: [expired: boolean];
 }>();
 
 function initial(offer: Offer): string {
@@ -113,6 +114,24 @@ function initial(offer: Offer): string {
             Ignorer
           </button>
         </template>
+        <button
+          v-if="offer.expired_at"
+          type="button"
+          class="link"
+          data-test="not-expired"
+          @click="emit('expiry', false)"
+        >
+          Pas expirée
+        </button>
+        <button
+          v-else
+          type="button"
+          class="link"
+          data-test="flag-expired"
+          @click="emit('expiry', true)"
+        >
+          Signaler comme expirée
+        </button>
       </template>
     </div>
     <div class="actions">

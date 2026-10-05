@@ -315,3 +315,29 @@ describe("filtres au choix", () => {
     expect(wrapper.find("[data-test=filters]").text()).not.toContain("Les offres sans taux indiqué");
   });
 });
+
+describe("expiration signalée", () => {
+  it("signaler comme expirée puis « Pas expirée »", async () => {
+    PATCH.mockResolvedValue({ data: { id: 1 } });
+    const wrapper = await mountAt("/offres");
+    await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=flag-expired]").trigger("click");
+    await flushPromises();
+    expect(PATCH).toHaveBeenCalledWith("/api/offers/{offer_id}/expiry", {
+      params: { path: { offer_id: 1 } },
+      body: { expired: true },
+    });
+    expect(wrapper.text()).toContain("Offre signalée comme expirée.");
+
+    mockOffers(page([offer(5, "Ingénieur cloud", { expired_at: "2026-10-04T08:00:00Z", expiry_source: "manual" })]));
+    const expired = await mountAt("/offres?statut=expired");
+    await expired.find("[data-test=offer]").trigger("click");
+    expect(expired.find("[data-test=expired]").text()).toContain("Signalée expirée par toi");
+    await expired.find("[data-test=not-expired]").trigger("click");
+    await flushPromises();
+    expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/expiry", {
+      params: { path: { offer_id: 5 } },
+      body: { expired: false },
+    });
+  });
+});

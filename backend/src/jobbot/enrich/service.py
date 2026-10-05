@@ -120,6 +120,7 @@ async def _recheck_candidates(runtime: Runtime, now: datetime, room: int) -> lis
             .where(
                 Offer.status.in_(WATCHED),
                 Offer.expired_at.is_(None),
+                Offer.expiry_override.is_(None),
                 Offer.enrich_status == EnrichStatus.OK,
                 last_check < now - RECHECK_AFTER,
             )
@@ -137,6 +138,7 @@ async def expire_stale(runtime: Runtime, now: datetime) -> int:
             update(Offer)
             .where(
                 Offer.expired_at.is_(None),
+                Offer.expiry_override.is_(None),
                 Offer.status != OfferStatus.APPLIED,
                 Offer.last_seen_at < now - STALE_AFTER,
                 Offer.id.not_in(jobup_offers),
@@ -157,7 +159,12 @@ async def _expire(runtime: Runtime, offer_id: int, now: datetime) -> None:
     async with runtime.sessionmaker.begin() as session:
         await session.execute(
             update(Offer)
-            .where(Offer.id == offer_id, Offer.status != OfferStatus.APPLIED)
+            .where(
+                Offer.id == offer_id,
+                Offer.status != OfferStatus.APPLIED,
+                # « Pas expirée » selon Kevin : la page ne le contredit pas.
+                Offer.expiry_override.is_(None),
+            )
             .values(expired_at=now, expiry_source="page", checked_at=now)
         )
 

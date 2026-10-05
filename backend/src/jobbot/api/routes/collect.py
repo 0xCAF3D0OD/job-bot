@@ -80,7 +80,9 @@ class OfferOut(BaseModel):
     enrich_status: Literal["pending", "ok", "expired", "failed", "skipped"] = "pending"
     # Offre retirée : page introuvable, ou plus vue dans les alertes depuis 30 jours.
     expired_at: datetime | None = None
-    expiry_source: Literal["page", "age"] | None = None
+    expiry_source: Literal["page", "age", "manual"] | None = None
+    # Choix de Kevin, prioritaire sur la détection automatique.
+    expiry_override: Literal["expired", "alive"] | None = None
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
     filter_reasons: list[str] = []
     # Note et résumé de l'IA (docs/06), absents tant que l'offre n'est pas notée.

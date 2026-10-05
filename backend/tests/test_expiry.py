@@ -120,3 +120,42 @@ async def test_listing_hides_expired(api: AsyncClient, fresh: Runtime) -> None:
         1,
         2,
     )
+
+
+async def test_manual_flag_wins_over_detection(
+    api: AsyncClient, fresh: Runtime, web: FakeWeb
+) -> None:
+    old = datetime.now(UTC) - timedelta(days=40)
+    jobup = await add(fresh, 1)
+    indeed = await add(fresh, 2, source="indeed", url="https://ch.indeed.com/viewjob?jk=2")
+    sent = await add(fresh, 3, status=OfferStatus.APPLIED)
+    await set_values(fresh, jobup, enrich_status=EnrichStatus.OK, enriched_at=old)
+    await set_values(fresh, indeed, last_seen_at=old, expired_at=old, expiry_source="age")
+
+    # Signalée expirée par Kevin.
+    flagged = (await api.patch(f"/api/offers/{jobup}/expiry", json={"expired": True})).json()
+    assert (flagged["expiry_source"], flagged["expiry_override"]) == ("manual", "expired")
+    expired = (await api.get("/api/offers", params={"view": "expired"})).json()
+    assert sorted(o["id"] for o in expired["items"]) == [jobup, indeed]
+
+    # « Pas expirée » : de retour, et ni la page ni l'ancienneté ne la remarquent.
+    await api.patch(f"/api/offers/{jobup}/expiry", json={"expired": False})
+    revived = (await api.patch(f"/api/offers/{indeed}/expiry", json={"expired": False})).json()
+    assert revived == {
+        "id": indeed,
+        "expired_at": None,
+        "expiry_source": None,
+        "expiry_override": "alive",
+    }
+    web.responses[url(1)] = FetchResult(404, "", url(1))
+    await enrich(fresh)
+    assert web.calls == []
+    assert (await get(fresh, jobup)).expired_at is None
+    assert (await get(fresh, indeed)).expired_at is None
+    to_review = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    assert sorted(o["id"] for o in to_review["items"]) == [jobup, indeed]
+
+    assert (
+        await api.patch(f"/api/offers/{sent}/expiry", json={"expired": True})
+    ).status_code == 409
+    assert (await api.patch("/api/offers/999999/expiry", json={"expired": True})).status_code == 404

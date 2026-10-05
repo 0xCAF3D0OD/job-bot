@@ -217,6 +217,36 @@ async def test_expired_offer_seen_again_is_visible(
 
 
 @pytest.mark.usefixtures("parsers")
+async def test_offer_flagged_expired_by_kevin_stays_expired(
+    collect_runtime: Runtime, mailbox: FakeMailbox
+) -> None:
+    offer_line = ("Ingénieur système (h/f)", "Acme SA", "1003 Lausanne", "https://jobup/1", "J1")
+    for n, received in enumerate((T0, T0 + timedelta(days=2)), 1):
+        if n == 2:
+            async with collect_runtime.sessionmaker.begin() as session:
+                await session.execute(
+                    update(Offer).values(
+                        expired_at=T0 + timedelta(hours=1),
+                        expiry_source="manual",
+                        expiry_override="expired",
+                    )
+                )
+        mailbox.add(
+            make_email(
+                message_id=f"<a{n}@jobup.ch>",
+                sender="alerts@jobup.ch",
+                received_at=received,
+                offers=[offer_line],
+            ),
+            f"<a{n}@jobup.ch>",
+        )
+        await service.collect(collect_runtime)
+    async with collect_runtime.sessionmaker() as session:
+        [offer] = (await session.scalars(select(Offer))).all()
+    assert offer.expiry_source == "manual" and offer.expired_at is not None
+
+
+@pytest.mark.usefixtures("parsers")
 async def test_site_identifier_wins_over_changed_title(
     collect_runtime: Runtime, mailbox: FakeMailbox
 ) -> None:
