@@ -1,6 +1,6 @@
 # 10 — Offres expirées, prise en main et filtres au choix (version 0.6.1)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** le 2026-10-05. PR a (offres expirées) livrée ; PR b et c à venir.
 > Retours d'usage du 2026-10-05. Les rappels ORP (0.6.0-b) restent prévus, après cette version ou avant, à ton choix.
 
 ## 1. Offres expirées
@@ -88,3 +88,15 @@ settings   + offer_filters_visible (liste), onboarding_dismissed?
 6. **Menu** : Journal dans ORP, État dans Réglages (§2 c).
 7. **Filtres au choix** : cases à cocher, choix enregistré en base ; statut, recherche et tri toujours visibles (§3). Si tu pensais plutôt à autre chose (par exemple choisir les cantons proposés), dis-le-moi.
 8. **Trois PR**, les offres expirées d'abord (§5).
+
+## Précision demandée à la validation (PR b)
+
+Les prérequis ne sont **pas redemandés à chaque ouverture**. Ils sont saisis **une fois**, à la première utilisation (étape de la liste de démarrage). Ensuite, un bouton « Modifier ce que je cherche » les rouvre, **déjà remplis** avec les valeurs actuelles : on ne change que ce qui a bougé.
+
+## Écarts avec la PR a
+
+- **Redirection** : une page jobup qui renvoie ailleurs qu'une page d'offre (liste, accueil) compte comme expirée, au même titre qu'une réponse 404 ou 410. Le texte « offre plus disponible » n'est pas analysé : pas d'exemple de page pour le tester.
+- **Ancienneté** : la règle des 30 jours s'applique à toute offre sans lien jobup (aujourd'hui, Indeed), pas aux offres jobup, vérifiées par leur page.
+- **Réapparition** : une offre expirée revue dans une alerte redevient visible ; si sa page jobup était introuvable, elle est relue.
+- **Compteurs** : « Toutes » exclut les expirées, sauf celles en cours (en préparation ou envoyées).
+- Les 12 offres déjà repérées comme expirées sont reprises par la migration 0013.

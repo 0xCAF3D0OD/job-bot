@@ -55,7 +55,7 @@ async def get_scoring_status(request: Request) -> ScoringStatus:
             select(func.count())
             .select_from(Offer)
             .outerjoin(Evaluation, Evaluation.offer_id == Offer.id)
-            .where(Offer.status.in_(TO_SCORE))
+            .where(Offer.status.in_(TO_SCORE), Offer.expired_at.is_(None))
         )
         scored = await session.scalar(base.where(Evaluation.scored_at.is_not(None))) or 0
         unscored = (

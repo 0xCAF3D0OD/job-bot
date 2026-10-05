@@ -106,6 +106,7 @@ async def test_counts_and_facets_follow_filters(api: AsyncClient) -> None:
         "filtered_out": 0,
         "later": 0,
         "in_progress": 0,
+        "expired": 0,
         "all": 1,
     }
     # La facette des cantons ignore le filtre de canton : on peut élargir le choix.

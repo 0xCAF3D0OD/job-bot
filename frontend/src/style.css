@@ -685,3 +685,5 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
   .orp-sign { display: flex; justify-content: space-between; margin-top: 8mm; }
   .orp-annex { break-before: page; }
 }
+.expired-notice { border-color: var(--warn); color: var(--warn); margin: 0.5rem 0; }
+.job-card.expired { opacity: 0.6; }

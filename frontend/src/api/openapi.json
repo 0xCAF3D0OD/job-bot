@@ -278,6 +278,7 @@
                 "filtered_out",
                 "later",
                 "in_progress",
+                "expired",
                 "all"
               ],
               "type": "string",
@@ -4129,6 +4130,10 @@
             "type": "integer",
             "title": "In Progress"
           },
+          "expired": {
+            "type": "integer",
+            "title": "Expired"
+          },
           "all": {
             "type": "integer",
             "title": "All"
@@ -4140,6 +4145,7 @@
           "filtered_out",
           "later",
           "in_progress",
+          "expired",
           "all"
         ],
         "title": "OfferCounts"
@@ -4334,6 +4340,33 @@
             ],
             "title": "Enrich Status",
             "default": "pending"
+          },
+          "expired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expired At"
+          },
+          "expiry_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "page",
+                  "age"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Source"
           },
           "filter_reasons": {
             "items": {
@@ -5146,6 +5179,33 @@
             ],
             "title": "Enrich Status",
             "default": "pending"
+          },
+          "expired_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expired At"
+          },
+          "expiry_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "page",
+                  "age"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Source"
           },
           "filter_reasons": {
             "items": {

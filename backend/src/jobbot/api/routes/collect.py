@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import ColumnElement, func, or_, select
+from sqlalchemy import ColumnElement, and_, func, or_, select
 
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import (
@@ -78,6 +78,9 @@ class OfferOut(BaseModel):
     description: str | None = None
     employment_type: str | None = None
     enrich_status: Literal["pending", "ok", "expired", "failed", "skipped"] = "pending"
+    # Offre retirée : page introuvable, ou plus vue dans les alertes depuis 30 jours.
+    expired_at: datetime | None = None
+    expiry_source: Literal["page", "age"] | None = None
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
     filter_reasons: list[str] = []
     # Note et résumé de l'IA (docs/06), absents tant que l'offre n'est pas notée.
@@ -103,8 +106,10 @@ class OfferCounts(BaseModel):
     to_review: int
     filtered_out: int
     later: int
-    # En préparation ou candidature envoyée.
+    # En préparation ou candidature envoyée (expirées comprises : un bandeau le signale).
     in_progress: int
+    # Retirées par l'employeur ; exclues des autres compteurs.
+    expired: int
     all: int
 
 
@@ -311,15 +316,19 @@ IN_PROGRESS = (OfferStatus.PREPARING, OfferStatus.APPLIED)
 
 
 def _view_condition(view: str) -> ColumnElement[bool] | None:
+    """Une offre expirée n'apparaît que dans « Expirées », sauf si elle est en cours."""
+    live = Offer.expired_at.is_(None)
     if view == "to_review":
-        return Offer.status.in_(TO_REVIEW)
+        return and_(Offer.status.in_(TO_REVIEW), live)
     if view == "filtered_out":
-        return Offer.status == OfferStatus.FILTERED_OUT
+        return and_(Offer.status == OfferStatus.FILTERED_OUT, live)
     if view == "later":
-        return Offer.status == OfferStatus.LATER
+        return and_(Offer.status == OfferStatus.LATER, live)
     if view == "in_progress":
         return Offer.status.in_(IN_PROGRESS)
-    return None
+    if view == "expired":
+        return and_(Offer.expired_at.is_not(None), Offer.status.not_in(IN_PROGRESS))
+    return or_(live, Offer.status.in_(IN_PROGRESS))
 
 
 @router.get("/offers", operation_id="listOffers")
@@ -328,7 +337,7 @@ async def list_offers(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
     sort: Literal["recent", "popular", "score"] = "recent",
-    view: Literal["to_review", "filtered_out", "later", "in_progress", "all"] = "all",
+    view: Literal["to_review", "filtered_out", "later", "in_progress", "expired", "all"] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
     min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
     sources: Annotated[list[Source], Query()] = [],  # noqa: B006
@@ -366,13 +375,14 @@ async def list_offers(
         without_cantons.append(view_condition)
 
     async with runtime.sessionmaker() as session:
-        by_status = dict(
-            (
-                await session.execute(
-                    select(Offer.status, func.count()).where(*conditions).group_by(Offer.status)
-                )
-            ).all()
-        )
+        expired_flag = Offer.expired_at.is_not(None)
+        grouped = (
+            await session.execute(
+                select(Offer.status, expired_flag, func.count())
+                .where(*conditions)
+                .group_by(Offer.status, expired_flag)
+            )
+        ).all()
         offers = list(
             await session.scalars(
                 select(Offer).where(*listed).order_by(*order).limit(limit).offset(offset)
@@ -394,12 +404,17 @@ async def list_offers(
             )
         ).all()
 
+    live: dict[str, int] = {}
+    for offer_status, expired, count in grouped:
+        if not expired or offer_status in IN_PROGRESS:
+            live[offer_status] = live.get(offer_status, 0) + count
     counts = OfferCounts(
-        to_review=sum(by_status.get(s, 0) for s in TO_REVIEW),
-        filtered_out=by_status.get(OfferStatus.FILTERED_OUT, 0),
-        later=by_status.get(OfferStatus.LATER, 0),
-        in_progress=sum(by_status.get(s, 0) for s in IN_PROGRESS),
-        all=sum(by_status.values()),
+        to_review=sum(live.get(s, 0) for s in TO_REVIEW),
+        filtered_out=live.get(OfferStatus.FILTERED_OUT, 0),
+        later=live.get(OfferStatus.LATER, 0),
+        in_progress=sum(live.get(s, 0) for s in IN_PROGRESS),
+        expired=sum(c for s, e, c in grouped if e and s not in IN_PROGRESS),
+        all=sum(live.values()),
     )
     total = counts.model_dump().get(view, counts.all)
     facets = OfferFacets(
