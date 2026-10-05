@@ -15,6 +15,7 @@ PRICES: dict[str, tuple[Decimal, Decimal]] = {
 }
 _FALLBACK = max(PRICES.values())
 MILLION = Decimal(1_000_000)
+WEB_SEARCH_USD = Decimal("0.01")
 
 
 @dataclass(frozen=True)
@@ -23,16 +24,22 @@ class Usage:
     cache_read_tokens: int = 0
     cache_write_tokens: int = 0
     output_tokens: int = 0
+    # Recherches web de l'outil serveur (0,01 $ l'unité).
+    web_searches: int = 0
 
 
 def cost_usd(model: str, usage: Usage, *, batch: bool = False) -> Decimal:
-    price_in, price_out = PRICES.get(model, _FALLBACK)
+    # L'API renvoie parfois l'identifiant daté (« claude-haiku-4-5-20251001 »).
+    price_in, price_out = PRICES.get(
+        model, next((p for name, p in PRICES.items() if model.startswith(name)), _FALLBACK)
+    )
     total = (
         usage.input_tokens * price_in
         + usage.cache_write_tokens * price_in * Decimal("1.25")
         + usage.cache_read_tokens * price_in * Decimal("0.1")
         + usage.output_tokens * price_out
     ) / MILLION
+    total += Decimal(usage.web_searches) * WEB_SEARCH_USD
     if batch:
         total /= 2
     return total.quantize(Decimal("0.00001"))

@@ -59,6 +59,8 @@ def _raw(message: Any) -> RawResult:
             cache_read_tokens=usage.cache_read_input_tokens or 0,
             cache_write_tokens=usage.cache_creation_input_tokens or 0,
             output_tokens=usage.output_tokens or 0,
+            web_searches=getattr(getattr(usage, "server_tool_use", None), "web_search_requests", 0)
+            or 0,
         ),
     )
 

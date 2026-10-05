@@ -142,6 +142,7 @@ async def set_offer_address(
             raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
         offer.company_address = address or None
         offer.company_address_source = "manual" if address else None
+        offer.company_address_url = None
         return OfferAddressOut(
             id=offer.id,
             company_address=offer.company_address,

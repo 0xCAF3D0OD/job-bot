@@ -21,6 +21,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.6.1 | Offres expirées (a), prise en main (b), filtres au choix (c) | livrée |
 | 0.7.0 | Expiration signalée (a), mots-clés (b), sites ajoutés : jobs.ch, LinkedIn (c) | en cours (a) |
 | 0.7.1 | Détail allégé et adresse de l'annonce (a), registre IDE (b) | livrée |
+| 0.7.2 | Adresse cherchée sur Internet par l'IA | en cours |
 
 ## Lancer en local
 
