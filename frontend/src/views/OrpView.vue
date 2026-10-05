@@ -8,6 +8,7 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import JournalPanel from "../components/JournalPanel.vue";
 import PageHero from "../components/PageHero.vue";
 import { applicationUpdateBody } from "../applicationBody";
+import { printSheet } from "../composables/usePrint";
 import { formatMonth, shiftMonth, sourceLabel } from "../format";
 
 const route = useRoute();
@@ -61,7 +62,8 @@ function go(delta: number): void {
 }
 
 async function printPdf(): Promise<void> {
-  window.print();
+  const sheet = document.querySelector<HTMLElement>(".orp-sheet");
+  if (sheet) printSheet(sheet, { title: `Preuves ORP - ${month.value}`, landscape: true });
   await api.POST("/api/orp/{month}/exported", { params: { path: { month: month.value } } });
   await load();
 }

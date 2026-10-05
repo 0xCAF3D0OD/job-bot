@@ -615,14 +615,23 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
   .letter-sheet { padding: 1.6rem 1.3rem; }
   .letter-recipient, .letter-date { margin-left: 0; }
 }
+/* Impression (composables/usePrint.ts) : seule la copie placée dans #print-root est imprimée. */
+#print-root { display: none; }
+#print-root.measuring { display: block; position: fixed; left: -10000px; top: 0; visibility: hidden; }
+#print-root { padding: 14mm 16mm; box-decoration-break: clone; -webkit-box-decoration-break: clone; background: #fff; color: #000; }
+#print-root .print-sheet { position: static; border: 0; box-shadow: none; border-radius: 0; padding: 0; margin: 0; max-width: none; width: auto; }
+#print-root .letter-sheet { font-size: 11pt; }
+#print-root .cv-sheet { font-size: 9.5pt; }
+#print-root .screen-only { display: none !important; }
+#print-root .print-only { display: inline; }
+#print-root p.print-only { display: block; text-align: justify; }
+#print-root .chunk-refs { display: none; }
 @media print {
-  @page { size: A4; margin: 20mm 25mm; }
-  body * { visibility: hidden; }
-  .print-sheet, .print-sheet * { visibility: visible; }
-  .print-sheet { position: absolute; inset: 0 auto auto 0; border: 0; box-shadow: none; padding: 0; max-width: none; font-size: 11pt; }
-  .screen-only { display: none !important; }
-  .print-only { display: inline; }
-  p.print-only { display: block; text-align: justify; }
+  @page { size: A4; margin: 0; }
+  @page landscape { size: A4 landscape; margin: 0; }
+  body.printing > *:not(#print-root) { display: none !important; }
+  body.printing #print-root { display: block; }
+  #print-root.landscape { page: landscape; }
 }
 .button-link { display: inline-flex; align-items: center; padding: 0.5rem 0.9rem; font-size: 0.9rem; font-weight: 500; border-radius: 8px; border: 1px solid var(--border); color: var(--text); text-decoration: none; background: var(--surface); }
 .button-link:hover { border-color: var(--accent); color: var(--accent); }
@@ -655,7 +664,6 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .cv-block label { flex: 1; display: flex; gap: 0.4rem; align-items: flex-start; color: var(--text); font-size: 0.85rem; }
 .cv-block .move { padding: 0.1rem 0.4rem; font-size: 0.8rem; border-radius: 6px; }
 @media (max-width: 960px) { .cv-sheet { padding: 1.6rem 1.3rem; } }
-@media print { .cv-sheet { font-size: 9.5pt; } }
 .cv-item .kw { font-weight: 700; }
 
 /* Page ORP (docs/09) */
@@ -672,19 +680,16 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .job-room-card dt { color: var(--muted); }
 .job-room-card dd { margin: 0; display: flex; justify-content: space-between; gap: 0.5rem; }
 .orp-sheet { display: none; }
-@page orp { size: A4 landscape; margin: 12mm 12mm; }
-@media print {
-  .orp-sheet { display: block; page: orp; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
-  .orp-sheet h1 { font-size: 12pt; margin: 0 0 4mm; }
-  .orp-sheet h2 { font-size: 10.5pt; margin: 0 0 3mm; }
-  .orp-holder { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; margin-bottom: 4mm; }
-  .orp-sheet table { width: 100%; border-collapse: collapse; }
-  .orp-sheet th, .orp-sheet td { border: 0.5pt solid #444; padding: 1.2mm 1.5mm; text-align: left; vertical-align: top; }
-  .orp-sheet th { background: #eee; font-weight: 700; }
-  .orp-sheet tr { break-inside: avoid; }
-  .orp-sign { display: flex; justify-content: space-between; margin-top: 8mm; }
-  .orp-annex { break-before: page; }
-}
+#print-root .orp-sheet { display: block; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
+.orp-sheet h1 { font-size: 12pt; margin: 0 0 4mm; }
+.orp-sheet h2 { font-size: 10.5pt; margin: 0 0 3mm; }
+.orp-holder { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; margin-bottom: 4mm; }
+.orp-sheet table { width: 100%; border-collapse: collapse; }
+.orp-sheet th, .orp-sheet td { border: 0.5pt solid #444; padding: 1.2mm 1.5mm; text-align: left; vertical-align: top; }
+.orp-sheet th { background: #eee; font-weight: 700; }
+.orp-sheet tr { break-inside: avoid; }
+.orp-sign { display: flex; justify-content: space-between; margin-top: 8mm; }
+.orp-annex { break-before: page; }
 .expired-notice { border-color: var(--warn); color: var(--warn); margin: 0.5rem 0; }
 .job-card.expired { opacity: 0.6; }
 .criteria-summary ul { margin: 1rem 0 0.5rem; padding-left: 1.1rem; display: grid; gap: 0.4rem; }
@@ -740,7 +745,7 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .kw.offer { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
 .small-link { font-size: 0.8rem; margin-left: 0.35rem; }
 .orp-url { display: none; }
-@media print { .orp-url { display: block; font-size: 7pt; color: #333; word-break: break-all; } }
+#print-root .orp-url { display: block; font-size: 7pt; color: #333; word-break: break-all; }
 .apply-bar { position: sticky; top: 4.6rem; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; padding: 0.75rem 1rem; margin-bottom: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 6px 18px rgba(17, 17, 31, 0.06); }
 .apply-bar .spacer { flex: 1; }
 @media print { .apply-bar { display: none; } }

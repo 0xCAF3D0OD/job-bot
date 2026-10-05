@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
+import { printSheet } from "../composables/usePrint";
 import AppIcon from "./AppIcon.vue";
 
 const props = defineProps<{ offer: Offer }>();
@@ -157,7 +158,9 @@ function onInput(event: Event): void {
 }
 
 function print(): void {
-  window.print();
+  const sheet = document.querySelector<HTMLElement>(".cv-sheet");
+  const who = doc.value?.name ? ` - ${doc.value.name}` : "";
+  if (sheet) printSheet(sheet, { title: `CV${who} - ${props.offer.company ?? props.offer.title}` });
 }
 
 function versionLabel(cv: Cv): string {
