@@ -826,6 +826,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Sites */
+        get: operations["listSites"];
+        put?: never;
+        /**
+         * Add Site
+         * @description Nouveau site : ses alertes seront lues par l'IA.
+         */
+        post: operations["addSite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sites/{site_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Site
+         * @description Retire un site ajouté ; ses offres déjà collectées restent.
+         */
+        delete: operations["deleteSite"];
+        options?: never;
+        head?: never;
+        /** Set Site Active */
+        patch: operations["setSiteActive"];
+        trace?: never;
+    };
+    "/api/sites/reread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reread Unrecognized
+         * @description Relit les alertes non reconnues (par exemple celles d'un site qu'on vient d'ajouter).
+         */
+        post: operations["rereadUnrecognized"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1588,7 +1650,8 @@ export interface components {
         };
         /** OfferLinkOut */
         OfferLinkOut: {
-            source: components["schemas"]["Source"];
+            /** Source */
+            source: string;
             /** Url */
             url: string;
         };
@@ -1836,6 +1899,15 @@ export interface components {
             /** Canton */
             canton: string;
         };
+        /** RereadOut */
+        RereadOut: {
+            /** Examined */
+            examined: number;
+            /** Updated */
+            updated: number;
+            /** New Offers */
+            new_offers: number;
+        };
         /** RescoreResponse */
         RescoreResponse: {
             /**
@@ -1882,7 +1954,8 @@ export interface components {
         SearchDetail: {
             /** Id */
             id: number;
-            source: components["schemas"]["Source"];
+            /** Source */
+            source: string;
             /**
              * Received At
              * Format: date-time
@@ -2025,7 +2098,8 @@ export interface components {
         SearchOut: {
             /** Id */
             id: number;
-            source: components["schemas"]["Source"];
+            /** Source */
+            source: string;
             /**
              * Received At
              * Format: date-time
@@ -2084,11 +2158,48 @@ export interface components {
              */
             orp_due_day: number;
         };
-        /**
-         * Source
-         * @enum {string}
-         */
-        Source: "jobup" | "indeed" | "jobroom" | "unknown";
+        /** SiteActive */
+        SiteActive: {
+            /** Active */
+            active: boolean;
+        };
+        /** SiteIn */
+        SiteIn: {
+            /** Name */
+            name: string;
+            /** Senders */
+            senders: string[];
+            /** Url */
+            url?: string | null;
+        };
+        /** SiteOut */
+        SiteOut: {
+            /** Id */
+            id: number;
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Senders */
+            senders: string[];
+            /** Url */
+            url: string | null;
+            /**
+             * Reader
+             * @enum {string}
+             */
+            reader: "jobup" | "indeed" | "ai";
+            /** Active */
+            active: boolean;
+            /** Builtin */
+            builtin: boolean;
+            /** Alerts */
+            alerts: number;
+            /** Last Alert At */
+            last_alert_at: string | null;
+            /** Unrecognized */
+            unrecognized: number;
+        };
         /** StatusResponse */
         StatusResponse: {
             /** Version */
@@ -2213,7 +2324,7 @@ export interface operations {
     listSearches: {
         parameters: {
             query?: {
-                source?: components["schemas"]["Source"] | null;
+                source?: string | null;
                 parse_status?: components["schemas"]["ParseStatus"] | null;
                 limit?: number;
                 offset?: number;
@@ -2284,7 +2395,7 @@ export interface operations {
                 view?: "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
                 q?: string | null;
                 min_score?: number | null;
-                sources?: components["schemas"]["Source"][];
+                sources?: string[];
                 cantons?: string[];
                 min_rate?: number | null;
                 external_only?: boolean;
@@ -3906,6 +4017,145 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listSites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"][];
+                };
+            };
+        };
+    };
+    addSite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteSite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setSiteActive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SiteActive"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rereadUnrecognized: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RereadOut"];
                 };
             };
         };

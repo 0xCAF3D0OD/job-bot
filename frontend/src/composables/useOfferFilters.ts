@@ -30,7 +30,6 @@ export const DEFAULT_FILTERS: OfferFilters = {
 
 const VIEWS: View[] = ["to_review", "filtered_out", "later", "in_progress", "expired", "all"];
 const SORTS: Sort[] = ["recent", "popular", "score"];
-const SOURCES: Source[] = ["jobup", "indeed", "jobroom"];
 
 function list(value: LocationQuery[string] | undefined): string[] {
   const values = Array.isArray(value) ? value : value ? [value] : [];
@@ -51,7 +50,7 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     view: view && VIEWS.includes(view) ? view : DEFAULT_FILTERS.view,
     sort: sort && SORTS.includes(sort) ? sort : DEFAULT_FILTERS.sort,
     q: one(query.q) ?? "",
-    sources: list(query.site).filter((s): s is Source => SOURCES.includes(s as Source)),
+    sources: list(query.site).filter((s): s is Source => /^[a-z0-9]{2,30}$/.test(s)),
     cantons: list(query.canton).map((c) => c.toUpperCase()),
     minRate: Number.isInteger(rate) && rate >= 1 && rate <= 100 ? rate : null,
     minScore: Number.isInteger(score) && score >= 1 && score <= 100 ? score : null,

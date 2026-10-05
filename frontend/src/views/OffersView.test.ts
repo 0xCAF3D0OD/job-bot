@@ -110,7 +110,7 @@ describe("filtres dans l'adresse", () => {
       taux: "80",
       externe: "1",
     });
-    expect(fromQuery({ taux: "abc", site: "monster", statut: "?" })).toMatchObject({
+    expect(fromQuery({ taux: "abc", site: "Monster!", statut: "?" })).toMatchObject({
       minRate: null,
       sources: [],
       view: "to_review",

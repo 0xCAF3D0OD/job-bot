@@ -1,6 +1,6 @@
 # 11 — Expiration signalée, sites ajoutés, étiquettes en mots-clés (version 0.7.0)
 
-> Statut : **validé** le 2026-10-05, sites retenus : **jobs.ch** et **LinkedIn**. PR a (expiration signalée) et PR b (mots-clés) livrées ; PR c à venir.
+> Statut : **validé** le 2026-10-05, sites retenus : **jobs.ch** et **LinkedIn**. livré : PR a (expiration signalée), PR b (mots-clés), PR c (sites suivis).
 > Retours d'usage du 2026-10-05. S'appuie sur [10-ergonomie.md](10-ergonomie.md) §1 (offres expirées), [03-collecte-gmail.md](03-collecte-gmail.md) (alertes e-mail) et [06-note-ia.md](06-note-ia.md) (résumé).
 
 ## 1. Signaler une offre expirée (ou non)
@@ -96,3 +96,13 @@ sites         id, name, senders[], url, reader (jobup|indeed|jobroom|ai), active
 - **Renotation** : automatique, par la tâche `score`, dès la mise à jour : toute note faite avec les anciennes consignes (« score-v1 ») est refaite, y compris pour les offres « plus tard » et « en préparation ». Au-delà de 20 offres, en lot à moitié prix.
 - **Lots** : chaque lot retient ses consignes. Une note d'un lot envoyé avant la mise à jour est gardée, puis refaite pour avoir ses mots-clés. Une offre d'un lot annulé ou expiré n'est plus marquée en erreur : elle est simplement renotée.
 - **Phrases** : une carte sans mots-clés (note ancienne) garde les trois phrases ; le détail les montre toujours.
+
+## Écarts avec la PR c
+
+- **jobs.ch** est lu par l'IA (Claude Haiku 4.5), comme LinkedIn : sans exemple d'alerte jobs.ch, impossible de vérifier qu'elle a le même format que jobup. La lecture des **pages** jobs.ch (lien de candidature, texte complet, adresse, expiration) viendra avec un exemple ; en attendant, ses offres expirent par la règle des 30 jours.
+- **Modèle** : Haiku, et non Opus : environ **0,001 à 0,01 $ par e-mail** (essai : 0,0013 $ pour une alerte LinkedIn de 2 offres).
+- **Liens** : chaque lien de l'e-mail est numéroté et l'IA ne peut citer qu'un numéro ; les paramètres de suivi (qui peuvent t'identifier) sont retirés, et un lien LinkedIn devient `https://www.linkedin.com/jobs/view/<numéro>/`.
+- **Sites intégrés** : jobup et Indeed (non retirables, mais on peut les mettre en pause) ; **suggérés** et actifs : jobs.ch, LinkedIn ; **Job-Room** présent mais en pause.
+- **Alertes déjà reçues** : « Relire les alertes non reconnues » (Réglages) les traite, par exemple après l'ajout d'un site ; aussi en ligne de commande : `jobbot reparse --unrecognized`.
+- **Sans clé API ou au plafond** : l'alerte reste « non reconnue », gardée pour une relecture.
+- **Identifiants de site** libres (`[a-z0-9]{2,30}`) dans `searches.source` et `offer_links.source` (migration **0020**).

@@ -11,7 +11,9 @@ export type JobRun = Schemas["JobRunOut"];
 export type Search = Schemas["SearchOut"];
 export type SearchDetail = Schemas["SearchDetail"];
 export type Offer = Schemas["OfferOut"];
-export type Source = Schemas["Source"];
+// Identifiant d'un site suivi (jobup, indeed, jobsch, linkedin, ou ajouté dans les Réglages).
+export type Source = string;
+export type SiteOut = Schemas["SiteOut"];
 export type ParseStatus = Schemas["ParseStatus"];
 export type CriteriaIn = Schemas["CriteriaIn"];
 export type Keywords = Schemas["KeywordsOut"];

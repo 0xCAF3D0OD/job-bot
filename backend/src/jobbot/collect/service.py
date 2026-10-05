@@ -25,8 +25,9 @@ from jobbot.db.models import (
     OfferSighting,
     ParseStatus,
     Search,
-    Source,
+    SiteReader,
 )
+from jobbot.llm import alert as alert_llm
 from jobbot.log import get_logger
 from jobbot.mail.imap import FetchedEmail, ImapMailbox, MailboxError
 from jobbot.mail.message import ParsedEmail, parse_email
@@ -35,6 +36,7 @@ from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 from jobbot.sources.base import ParsedAlert, RawOffer
 from jobbot.sources.registry import detect_source, find_parser
+from jobbot.sources.sites import SiteData, load_sites, match_site, read_with_ai
 
 log = get_logger(__name__)
 
@@ -84,15 +86,28 @@ async def _known_message_ids(runtime: Runtime, ids: set[str]) -> set[str]:
         return set(rows)
 
 
-def _analyse(email: ParsedEmail) -> tuple[Source, ParseStatus, str | None, ParsedAlert, str | None]:
+async def _analyse(
+    runtime: Runtime, email: ParsedEmail, sites: list[SiteData]
+) -> tuple[str, ParseStatus, str | None, ParsedAlert, str | None]:
     """(site, statut, version de l'analyseur, alerte, erreur)."""
+    empty = ParsedAlert(None, [])
+    site = match_site(sites, email)
+    if site is not None and not site.active:
+        return site.slug, ParseStatus.UNRECOGNIZED, None, empty, "site en pause"
     parser = find_parser(email)
     if parser is None:
-        return detect_source(email), ParseStatus.UNRECOGNIZED, None, ParsedAlert(None, []), None
+        if site is not None and site.reader == SiteReader.AI:
+            reading = await read_with_ai(runtime, email, site)
+            version = (
+                None if reading.status == ParseStatus.UNRECOGNIZED else alert_llm.PROMPT_VERSION
+            )
+            return site.slug, reading.status, version, reading.alert, reading.error
+        source = site.slug if site is not None else detect_source(email)
+        return source, ParseStatus.UNRECOGNIZED, None, empty, None
     try:
         alert = parser.parse(email)
     except Exception as exc:
-        log.warning("parser_failed", source=parser.source.value, error=type(exc).__name__)
+        log.warning("parser_failed", source=parser.source, error=type(exc).__name__)
         error = f"{type(exc).__name__}: {exc}"[:500]
         return parser.source, ParseStatus.FAILED, parser.version, ParsedAlert(None, []), error
     status = ParseStatus.PARSED if alert.offers else ParseStatus.EMPTY
@@ -100,7 +115,7 @@ def _analyse(email: ParsedEmail) -> tuple[Source, ParseStatus, str | None, Parse
 
 
 async def _find_offer(
-    session: AsyncSession, source: Source, raw: RawOffer, fingerprint: str
+    session: AsyncSession, source: str, raw: RawOffer, fingerprint: str
 ) -> int | None:
     if raw.external_id:
         offer_id = await session.scalar(
@@ -114,7 +129,7 @@ async def _find_offer(
 
 
 async def ingest_offers(
-    session: AsyncSession, search: Search, source: Source, offers: list[RawOffer]
+    session: AsyncSession, search: Search, source: str, offers: list[RawOffer]
 ) -> int:
     """Rattache les offres à l'alerte ; renvoie le nombre d'offres nouvelles."""
     new_count = 0
@@ -177,7 +192,7 @@ async def ingest_offers(
         )
         if is_new:
             new_count += 1
-        COLLECT_OFFERS.labels(source=source.value, result="new" if is_new else "duplicate").inc()
+        COLLECT_OFFERS.labels(source=source, result="new" if is_new else "duplicate").inc()
     return new_count
 
 
@@ -186,7 +201,9 @@ async def ingest_email(
 ) -> Search | None:
     """Enregistre un e-mail et ses offres. None s'il était déjà connu."""
     email = parse_email(fetched.raw, fallback_received=datetime.now(UTC))
-    source, status, version, alert, error = _analyse(email)
+    async with runtime.sessionmaker() as session:
+        sites = await load_sites(session)
+    source, status, version, alert, error = await _analyse(runtime, email, sites)
     key = raw_key(email)
     runtime.storage.put(key, fetched.raw)
 
@@ -215,12 +232,12 @@ async def ingest_email(
         search = await session.get_one(Search, search_id)
         search.new_offers_count = await ingest_offers(session, search, source, alert.offers)
 
-    COLLECT_EMAILS.labels(source=source.value, parse_status=status.value).inc()
+    COLLECT_EMAILS.labels(source=source, parse_status=status).inc()
     log.info(
         "email_ingested",
         search_id=search.id,
-        source=source.value,
-        parse_status=status.value,
+        source=source,
+        parse_status=status,
         offers=search.results_count,
         new_offers=search.new_offers_count,
     )
@@ -274,7 +291,12 @@ class ReparseResult:
     missing_raw: int = 0
 
 
-async def reparse(runtime: Runtime, *, source: Source | None = None) -> ReparseResult:
+async def reparse(
+    runtime: Runtime,
+    *,
+    source: str | None = None,
+    parse_status: ParseStatus | None = None,
+) -> ReparseResult:
     """Réanalyse les copies brutes stockées, sans retourner dans la boîte.
 
     Ne touche que les alertes dont le résultat change : analyseur nouveau ou corrigé
@@ -285,6 +307,8 @@ async def reparse(runtime: Runtime, *, source: Source | None = None) -> ReparseR
     query = select(Search.id).order_by(Search.received_at, Search.id)
     if source is not None:
         query = query.where(Search.source == source)
+    if parse_status is not None:
+        query = query.where(Search.parse_status == parse_status)
     async with runtime.sessionmaker() as session:
         ids = list(await session.scalars(query))
 
@@ -298,7 +322,8 @@ async def reparse(runtime: Runtime, *, source: Source | None = None) -> ReparseR
                 result.missing_raw += 1
                 continue
             email = parse_email(raw, fallback_received=search.received_at)
-            new_source, status, version, alert, error = _analyse(email)
+            sites = await load_sites(session)
+            new_source, status, version, alert, error = await _analyse(runtime, email, sites)
             unchanged = version == search.parser_version and status == search.parse_status
             if unchanged or (version is None and status == ParseStatus.UNRECOGNIZED):
                 continue

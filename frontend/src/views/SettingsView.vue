@@ -4,6 +4,7 @@ import { nextTick, onMounted, ref } from "vue";
 import { api, type SettingsModel } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
+import SitesPanel from "../components/SitesPanel.vue";
 import StatusPanel from "../components/StatusPanel.vue";
 
 const form = ref<SettingsModel>({
@@ -212,6 +213,7 @@ async function save(): Promise<void> {
           >{{ message }}</span>
         </div>
       </form>
+      <SitesPanel class="settings-status" />
       <h2
         id="etat"
         class="section-title settings-status"
