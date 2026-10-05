@@ -414,3 +414,30 @@ describe("adresse par le registre IDE", () => {
     expect(wrapper.findAll("[data-test=choose-registry]")).toHaveLength(0);
   });
 });
+
+describe("étiquettes en mots-clés", () => {
+  it("affiche les pastilles, demandes non couvertes en orange ; sinon les phrases", async () => {
+    mockOffers(
+      page([
+        offer(1, "Ingénieur DevOps", {
+          score: 72,
+          summary_role: "Exploiter la plateforme",
+          keywords_role: ["DevOps", "AWS"],
+          keywords_asks: [
+            { text: "Kubernetes", covered: true },
+            { text: "allemand B2", covered: false },
+          ],
+          keywords_offers: ["80-100 %", "CDI"],
+        }),
+        offer(2, "Ancienne note", { score: 60, summary_role: "Phrase complète du poste", summary_asks: "x", summary_offers: "y" }),
+      ]),
+    );
+    const wrapper = await mountAt("/offres");
+    const cards = wrapper.findAll("[data-test=offer]");
+    const keywords = cards[0]!.find("[data-test=keywords]");
+    expect(keywords.text()).toContain("DevOps");
+    expect(keywords.find(".kw.gap").text()).toBe("allemand B2");
+    expect(keywords.findAll(".kw.offer").map((k) => k.text())).toEqual(["80-100 %", "CDI"]);
+    expect(cards[1]!.find("[data-test=summary]").text()).toContain("Phrase complète du poste");
+  });
+});

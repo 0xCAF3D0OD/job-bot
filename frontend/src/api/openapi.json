@@ -3016,6 +3016,30 @@
         ],
         "title": "ApplicationUpdate"
       },
+      "AskKeywordOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "covered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Covered"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "AskKeywordOut"
+      },
       "Body_uploadDocument": {
         "properties": {
           "file": {
@@ -5120,6 +5144,30 @@
               }
             ],
             "title": "Score Error"
+          },
+          "keywords_role": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords Role",
+            "default": []
+          },
+          "keywords_asks": {
+            "items": {
+              "$ref": "#/components/schemas/AskKeywordOut"
+            },
+            "type": "array",
+            "title": "Keywords Asks",
+            "default": []
+          },
+          "keywords_offers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords Offers",
+            "default": []
           }
         },
         "type": "object",
@@ -6056,6 +6104,30 @@
               }
             ],
             "title": "Score Error"
+          },
+          "keywords_role": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords Role",
+            "default": []
+          },
+          "keywords_asks": {
+            "items": {
+              "$ref": "#/components/schemas/AskKeywordOut"
+            },
+            "type": "array",
+            "title": "Keywords Asks",
+            "default": []
+          },
+          "keywords_offers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords Offers",
+            "default": []
           },
           "is_first": {
             "type": "boolean",

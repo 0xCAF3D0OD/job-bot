@@ -56,6 +56,12 @@ def answer(score: int | None = 78, strengths: list[dict[str, Any]] | None = None
             if strengths is not None
             else [{"text": "Linux solide", "chunk_ids": [1]}],
             "gaps": [{"text": "Pas d'Ansible", "chunk_ids": []}],
+            "keywords_role": ["Linux", "astreintes"],
+            "keywords_asks": [
+                {"text": "5 ans Linux", "covered": True},
+                {"text": "Ansible", "covered": False},
+            ],
+            "keywords_offers": ["80-100 %"],
         }
     )
 
@@ -222,7 +228,7 @@ async def test_direct_scoring_stores_note_and_cost(ai: Runtime, fake: FakeClient
     stored = await evaluation(ai, first)
     assert stored is not None and stored.score == 78 and stored.summary_partial is True
     assert stored.strengths == [{"text": "Linux solide", "chunk_ids": [1]}]
-    assert stored.prompt_version == "score-v1" and stored.model == "claude-opus-5"
+    assert stored.prompt_version == "score-v2" and stored.model == "claude-opus-5"
     assert await evaluation(ai, filtered) is None
     async with ai.sessionmaker() as session:
         calls = await session.scalar(select(func.count()).select_from(LlmCall))
@@ -391,3 +397,79 @@ async def test_account_problems_stop_without_blaming_offers(
     # L'offre reste à noter : une fois le crédit racheté, elle est notée.
     fake.responses = {}
     assert (await service.run_scoring(ai)).scored == 1
+
+
+def test_keywords_are_short_unique_and_capped() -> None:
+    body = json.loads(answer())
+    body["keywords_role"] = ["DevOps.", "devops", "AWS", "Kubernetes", "Terraform"]
+    body["keywords_asks"] = [
+        {"text": "une exigence beaucoup trop longue pour une carte", "covered": True},
+        {"text": "  Ansible  ", "covered": False},
+        {"text": "ansible", "covered": True},
+    ]
+    output = parse_output(json.dumps(body), [ProfileChunkData(1, "competence", "Linux", "Debian")])
+    assert output.keywords_role == ["DevOps", "AWS", "Kubernetes"]
+    assert [(k.text, k.covered) for k in output.keywords_asks] == [
+        ("une exigence beaucoup tro", True),
+        ("Ansible", False),
+    ]
+    # Sans profil, rien n'est dit « couvert ».
+    no_profile = parse_output(json.dumps(body), [])
+    assert all(k.covered is None for k in no_profile.keywords_asks)
+
+
+async def test_new_prompt_rescores_offers_kept_aside(ai: Runtime, fake: FakeClient) -> None:
+    later = await add_offer(ai, 1, status=OfferStatus.LATER)
+    async with ai.sessionmaker.begin() as session:
+        session.add(
+            Evaluation(
+                offer_id=later,
+                filter_passed=True,
+                filter_reasons=[],
+                criteria_hash="x",
+                score=60,
+                scored_at=datetime.now(UTC),
+                prompt_version="score-v1",
+                profile_hash="h",
+            )
+        )
+    await service.run_scoring(ai)
+    async with ai.sessionmaker() as session:
+        evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == later))
+        assert evaluation is not None and evaluation.prompt_version == "score-v2"
+        assert evaluation.keywords_asks == [
+            {"text": "5 ans Linux", "covered": True},
+            {"text": "Ansible", "covered": False},
+        ]
+
+
+async def test_old_prompt_batch_is_rescored_and_canceled_items_are_retried(
+    ai: Runtime, fake: FakeClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    old = await add_offer(ai, 1)
+    canceled = await add_offer(ai, 2)
+    fake.batches["batch-old"] = [(f"offer-{old}", {}), (f"offer-{canceled}", {})]
+    fake.ended.add("batch-old")
+    async with ai.sessionmaker.begin() as session:
+        session.add(
+            LlmBatch(
+                provider_batch_id="batch-old",
+                offer_ids=[old, canceled],
+                prompt_version="score-v1",
+            )
+        )
+
+    async def results(batch_id: str) -> AsyncIterator[BatchItem]:
+        yield BatchItem(f"offer-{old}", raw(), None)
+        yield BatchItem(f"offer-{canceled}", None, "canceled")
+
+    monkeypatch.setattr(fake, "batch_results", results)
+    calls_before = len(fake.calls)
+    await service.run_scoring(ai)
+    async with ai.sessionmaker() as session:
+        rows = {e.offer_id: e for e in await session.scalars(select(Evaluation))}
+    # La note du lot est gardée puis refaite avec les nouvelles consignes ; l'offre du lot
+    # annulé est notée comme une nouvelle, sans erreur.
+    assert rows[old].prompt_version == "score-v2" and rows[old].score_error is None
+    assert rows[canceled].score_error is None and rows[canceled].scored_at is not None
+    assert len(fake.calls) - calls_before == 2
