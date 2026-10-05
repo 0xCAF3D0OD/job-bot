@@ -554,6 +554,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/cvs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Cvs
+         * @description Toutes les versions, la plus récente d'abord.
+         */
+        get: operations["listCvs"];
+        put?: never;
+        /**
+         * Write Cv
+         * @description L'IA choisit et ordonne les blocs, et écrit le titre et le résumé.
+         */
+        post: operations["writeCv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cvs/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Edit Cv
+         * @description Retouches de Kevin : blocs cochés et leur ordre, titre, résumé.
+         */
+        put: operations["editCv"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cvs/{draft_id}/docx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Cv Docx */
+        get: operations["downloadCvDocx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -637,6 +698,8 @@ export interface components {
             offer_id: number | null;
             /** Letter Draft Id */
             letter_draft_id: number | null;
+            /** Cv Draft Id */
+            cv_draft_id: number | null;
             /** Orp Month */
             orp_month: string;
             /** Reminded At */
@@ -834,6 +897,122 @@ export interface components {
         CriteriaOut: {
             criteria: components["schemas"]["CriteriaIn"];
             keywords: components["schemas"]["KeywordsOut"];
+        };
+        /**
+         * CvBlock
+         * @description Un bloc de profil qui peut figurer dans le CV ; cochés d'abord, dans l'ordre du CV.
+         */
+        CvBlock: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /**
+             * Section
+             * @enum {string}
+             */
+            section: "experience" | "competence" | "formation" | "langues";
+            /** Selected */
+            selected: boolean;
+        };
+        /** CvDocumentOut */
+        CvDocumentOut: {
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "fr" | "en" | "de";
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
+            /** Contacts */
+            contacts: string[];
+            /** Summary Heading */
+            summary_heading: string;
+            /** Summary */
+            summary: string;
+            /** Sections */
+            sections: components["schemas"]["CvSectionOut"][];
+            /** Missing Identity */
+            missing_identity: string[];
+        };
+        /** CvEdit */
+        CvEdit: {
+            /** Headline */
+            headline: string;
+            /** Summary */
+            summary: string;
+            /** Chunk Ids */
+            chunk_ids: number[];
+            /** Keywords */
+            keywords?: string[] | null;
+        };
+        /** CvItemOut */
+        CvItemOut: {
+            /** Chunk Id */
+            chunk_id: number;
+            /** Title */
+            title: string | null;
+            /** Content */
+            content: components["schemas"]["SegmentOut"][];
+        };
+        /** CvOut */
+        CvOut: {
+            /** Id */
+            id: number;
+            /** Offer Id */
+            offer_id: number;
+            /** Version */
+            version: number;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "fr" | "en" | "de";
+            /** Headline */
+            headline: string;
+            /** Summary */
+            summary: string;
+            /** Chunk Ids */
+            chunk_ids: number[];
+            /** Keywords */
+            keywords: string[];
+            /** Instruction */
+            instruction: string | null;
+            /** Model */
+            model: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Edited At */
+            edited_at: string | null;
+            /** Blocks */
+            blocks: components["schemas"]["CvBlock"][];
+            document: components["schemas"]["CvDocumentOut"];
+        };
+        /** CvRequest */
+        CvRequest: {
+            /** Language */
+            language?: ("fr" | "en" | "de") | null;
+            /** Instruction */
+            instruction?: string | null;
+            /** Base Draft Id */
+            base_draft_id?: number | null;
+        };
+        /** CvSectionOut */
+        CvSectionOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "experience" | "competence" | "formation" | "langues";
+            /** Heading */
+            heading: string;
+            /** Items */
+            items: components["schemas"]["CvItemOut"][];
         };
         /** DatabaseStatus */
         DatabaseStatus: {
@@ -1419,6 +1598,13 @@ export interface components {
             items: components["schemas"]["SearchOut"][];
             /** Total */
             total: number;
+        };
+        /** SegmentOut */
+        SegmentOut: {
+            /** Text */
+            text: string;
+            /** Strong */
+            strong: boolean;
         };
         /** SettingsModel */
         SettingsModel: {
@@ -2652,6 +2838,159 @@ export interface operations {
         };
     };
     downloadLetterDocx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listCvs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CvOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    writeCv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CvRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CvOut"];
+                };
+            };
+            /** @description IA non configurée, profil vide, budget atteint ou compte indisponible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Réponse de l'IA inutilisable */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description IA momentanément indisponible */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    editCv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CvEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CvOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    downloadCvDocx: {
         parameters: {
             query?: never;
             header?: never;

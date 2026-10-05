@@ -1,6 +1,6 @@
 # 08 — Candidatures : lettre, CV adapté et suivi (version 0.5.0)
 
-> Statut : **validé** le 2026-10-05. PR a (tri, suivi, coordonnées, relance) et PR b (lettre) livrées ; PR c à venir.
+> Statut : **validé** le 2026-10-05. livré : PR a (tri, suivi, coordonnées, relance), PR b (lettre), PR c (CV adapté).
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2, §3 et §5 (`drafts`, `applications`), sur le profil en blocs (0.3) et la note IA (0.4). L'export ORP reste en 0.6, mais la 0.5 enregistre déjà tout ce dont il aura besoin.
 
 ## 1. Objectif
@@ -136,3 +136,13 @@ La PR a sert tout de suite : tu peux suivre les candidatures que tu envoies déj
 - **Formules** : l'appel (« Madame, Monsieur, »), la politesse finale et la ligne « Annexe : curriculum vitae » sont ajoutées par la plateforme, dans la langue de la lettre.
 - **Effort** : réglable par `JOBBOT_LLM_WRITING_EFFORT` (`medium` par défaut).
 - **Lettre envoyée** : la candidature retient la version qui compte au moment de « Marquer comme envoyée » ; la page Candidatures la propose en Word.
+
+## Écarts avec la PR c
+
+- **Onglet « CV adapté »** dans la page de préparation, à côté de la lettre.
+- **Formation et langues** sont toujours gardées, même si l'IA les omet. Le bloc de compétence dont le titre commence par « Langues » forme la rubrique Langues.
+- **Mots-clés** : l'IA en propose ; seuls ceux qui figurent tels quels dans les blocs choisis sont mis en gras.
+- **Langue** : le titre, le résumé et les intitulés de rubriques suivent la langue choisie ; le texte des blocs reste tel que tu l'as écrit.
+- **Coût** : environ 0,05 $ par CV (moins de texte produit que pour la lettre).
+- **Une page** : la mise en page ne coupe rien ; c'est la sélection des blocs qui garde le CV sur une page.
+- La candidature retient aussi le CV qui compte au moment de « Marquer comme envoyée ».

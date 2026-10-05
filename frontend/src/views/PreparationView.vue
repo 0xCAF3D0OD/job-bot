@@ -4,10 +4,12 @@ import { useRoute } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import CvPanel from "../components/CvPanel.vue";
 import PageHero from "../components/PageHero.vue";
 
 const route = useRoute();
 const offerId = Number(route.params.id);
+const tab = computed(() => (route.query.doc === "cv" ? "cv" : "letter"));
 
 const offer = ref<Offer | null>(null);
 const letters = ref<Letter[]>([]);
@@ -179,6 +181,32 @@ onMounted(() => void load());
         </RouterLink>
       </p>
 
+      <nav
+        v-if="offer"
+        class="prep-tabs"
+        aria-label="Documents"
+      >
+        <RouterLink
+          :to="{ query: {} }"
+          :class="{ active: tab === 'letter' }"
+          data-test="tab-letter"
+        >
+          Lettre de motivation
+        </RouterLink>
+        <RouterLink
+          :to="{ query: { doc: 'cv' } }"
+          :class="{ active: tab === 'cv' }"
+          data-test="tab-cv"
+        >
+          CV adapté
+        </RouterLink>
+      </nav>
+
+      <CvPanel
+        v-if="offer && tab === 'cv'"
+        :offer="offer"
+      />
+
       <div
         v-else-if="offer"
         class="prep-layout"
@@ -223,7 +251,7 @@ onMounted(() => void load());
 
           <article
             v-if="doc && draft"
-            class="letter-sheet"
+            class="letter-sheet print-sheet"
             :class="{ busy: writing }"
             :lang="doc.language"
             data-test="letter"
