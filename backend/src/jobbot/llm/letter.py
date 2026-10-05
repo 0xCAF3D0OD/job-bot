@@ -85,7 +85,7 @@ class Assessment:
     gaps: list[str]
 
 
-def _assessment_text(assessment: Assessment | None) -> str:
+def assessment_text(assessment: Assessment | None) -> str:
     if assessment is None or not (assessment.strengths or assessment.gaps):
         return ""
     lines = ["<evaluation>"]
@@ -112,7 +112,7 @@ def request_params(
     previous: dict[str, Any] | None = None,
     instruction: str | None = None,
 ) -> dict[str, Any]:
-    parts = [offer_message(offer), "\n\n", _assessment_text(assessment)]
+    parts = [offer_message(offer), "\n\n", assessment_text(assessment)]
     parts.append(f"<langue>{language or 'auto'}</langue>")
     if previous is not None:
         parts.append("\n\n" + _previous_text(previous))

@@ -1659,6 +1659,204 @@
           }
         }
       }
+    },
+    "/api/offers/{offer_id}/cvs": {
+      "get": {
+        "tags": [
+          "cvs"
+        ],
+        "summary": "List Cvs",
+        "description": "Toutes les versions, la plus récente d'abord.",
+        "operationId": "listCvs",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CvOut"
+                  },
+                  "title": "Response Listcvs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "cvs"
+        ],
+        "summary": "Write Cv",
+        "description": "L'IA choisit et ordonne les blocs, et écrit le titre et le résumé.",
+        "operationId": "writeCv",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CvRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CvOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA non configurée, profil vide, budget atteint ou compte indisponible"
+          },
+          "502": {
+            "description": "Réponse de l'IA inutilisable"
+          },
+          "503": {
+            "description": "IA momentanément indisponible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cvs/{draft_id}": {
+      "put": {
+        "tags": [
+          "cvs"
+        ],
+        "summary": "Edit Cv",
+        "description": "Retouches de Kevin : blocs cochés et leur ordre, titre, résumé.",
+        "operationId": "editCv",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CvEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CvOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cvs/{draft_id}/docx": {
+      "get": {
+        "tags": [
+          "cvs"
+        ],
+        "summary": "Download Cv Docx",
+        "operationId": "downloadCvDocx",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1936,6 +2134,17 @@
             ],
             "title": "Letter Draft Id"
           },
+          "cv_draft_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cv Draft Id"
+          },
           "orp_month": {
             "type": "string",
             "title": "Orp Month"
@@ -1966,6 +2175,7 @@
           "id",
           "offer_id",
           "letter_draft_id",
+          "cv_draft_id",
           "orp_month",
           "reminded_at",
           "created_at"
@@ -2563,6 +2773,373 @@
           "keywords"
         ],
         "title": "CriteriaOut"
+      },
+      "CvBlock": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "section": {
+            "type": "string",
+            "enum": [
+              "experience",
+              "competence",
+              "formation",
+              "langues"
+            ],
+            "title": "Section"
+          },
+          "selected": {
+            "type": "boolean",
+            "title": "Selected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "section",
+          "selected"
+        ],
+        "title": "CvBlock",
+        "description": "Un bloc de profil qui peut figurer dans le CV ; cochés d'abord, dans l'ordre du CV."
+      },
+      "CvDocumentOut": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en",
+              "de"
+            ],
+            "title": "Language"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "contacts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contacts"
+          },
+          "summary_heading": {
+            "type": "string",
+            "title": "Summary Heading"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/CvSectionOut"
+            },
+            "type": "array",
+            "title": "Sections"
+          },
+          "missing_identity": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Identity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "name",
+          "headline",
+          "contacts",
+          "summary_heading",
+          "summary",
+          "sections",
+          "missing_identity"
+        ],
+        "title": "CvDocumentOut"
+      },
+      "CvEdit": {
+        "properties": {
+          "headline": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Headline"
+          },
+          "summary": {
+            "type": "string",
+            "maxLength": 1500,
+            "title": "Summary"
+          },
+          "chunk_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "minItems": 1,
+            "title": "Chunk Ids"
+          },
+          "keywords": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                "type": "array",
+                "maxItems": 30
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keywords"
+          }
+        },
+        "type": "object",
+        "required": [
+          "headline",
+          "summary",
+          "chunk_ids"
+        ],
+        "title": "CvEdit"
+      },
+      "CvItemOut": {
+        "properties": {
+          "chunk_id": {
+            "type": "integer",
+            "title": "Chunk Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "content": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentOut"
+            },
+            "type": "array",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chunk_id",
+          "title",
+          "content"
+        ],
+        "title": "CvItemOut"
+      },
+      "CvOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "offer_id": {
+            "type": "integer",
+            "title": "Offer Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en",
+              "de"
+            ],
+            "title": "Language"
+          },
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "chunk_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Chunk Ids"
+          },
+          "keywords": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords"
+          },
+          "instruction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instruction"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "edited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited At"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/CvBlock"
+            },
+            "type": "array",
+            "title": "Blocks"
+          },
+          "document": {
+            "$ref": "#/components/schemas/CvDocumentOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "offer_id",
+          "version",
+          "language",
+          "headline",
+          "summary",
+          "chunk_ids",
+          "keywords",
+          "instruction",
+          "model",
+          "created_at",
+          "edited_at",
+          "blocks",
+          "document"
+        ],
+        "title": "CvOut"
+      },
+      "CvRequest": {
+        "properties": {
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "fr",
+                  "en",
+                  "de"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "instruction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instruction"
+          },
+          "base_draft_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Draft Id"
+          }
+        },
+        "type": "object",
+        "title": "CvRequest"
+      },
+      "CvSectionOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "experience",
+              "competence",
+              "formation",
+              "langues"
+            ],
+            "title": "Key"
+          },
+          "heading": {
+            "type": "string",
+            "title": "Heading"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CvItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "heading",
+          "items"
+        ],
+        "title": "CvSectionOut"
       },
       "DatabaseStatus": {
         "properties": {
@@ -4366,6 +4943,24 @@
           "total"
         ],
         "title": "SearchPage"
+      },
+      "SegmentOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "strong": {
+            "type": "boolean",
+            "title": "Strong"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "strong"
+        ],
+        "title": "SegmentOut"
       },
       "SettingsModel": {
         "properties": {

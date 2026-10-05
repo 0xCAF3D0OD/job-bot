@@ -18,11 +18,12 @@ from jobbot.db.models import (
     Application,
     ApplicationMethod,
     ApplicationStatus,
+    DraftKind,
     Offer,
     OfferStatus,
     Setting,
 )
-from jobbot.letters.service import IDENTITY_KEYS, current_letter, load_identity
+from jobbot.letters.service import IDENTITY_KEYS, current_draft, load_identity
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 
@@ -122,6 +123,7 @@ class ApplicationOut(ApplicationUpdate):
     id: int
     offer_id: int | None
     letter_draft_id: int | None
+    cv_draft_id: int | None
     orp_month: str
     reminded_at: datetime | None
     created_at: datetime
@@ -159,7 +161,7 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
     """Valeurs proposées pour « Marquer comme envoyée »."""
     async with _runtime(request).sessionmaker() as session:
         offer = await session.get(Offer, offer_id)
-        letter = await current_letter(session, offer_id)
+        letter = await current_draft(session, offer_id)
     if offer is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
     # Coordonnées de l'employeur relevées par l'IA dans l'annonce, pendant la rédaction.
@@ -226,13 +228,15 @@ async def create_application(request: Request, body: ApplicationIn) -> Applicati
                     "une candidature est déjà enregistrée pour cette offre",
                 )
             offer.status = OfferStatus.APPLIED
-            letter = await current_letter(session, body.offer_id)
+            letter = await current_draft(session, body.offer_id, DraftKind.LETTER)
+            cv = await current_draft(session, body.offer_id, DraftKind.CV)
         else:
-            letter = None
+            letter = cv = None
         application = Application(
             **body.model_dump(),
             orp_month=body.sent_at.strftime("%Y-%m"),
             letter_draft_id=letter.id if letter else None,
+            cv_draft_id=cv.id if cv else None,
         )
         session.add(application)
         await session.flush()

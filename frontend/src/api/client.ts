@@ -38,3 +38,5 @@ export type Identity = Schemas["Identity"];
 export type Letter = Schemas["LetterOut"];
 export type LetterParagraph = Schemas["LetterParagraph"];
 export type LetterLanguage = Letter["language"];
+export type Cv = Schemas["CvOut"];
+export type CvBlock = Schemas["CvBlock"];

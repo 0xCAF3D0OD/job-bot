@@ -618,8 +618,8 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 @media print {
   @page { size: A4; margin: 20mm 25mm; }
   body * { visibility: hidden; }
-  .letter-sheet, .letter-sheet * { visibility: visible; }
-  .letter-sheet { position: absolute; inset: 0 auto auto 0; border: 0; box-shadow: none; padding: 0; max-width: none; font-size: 11pt; }
+  .print-sheet, .print-sheet * { visibility: visible; }
+  .print-sheet { position: absolute; inset: 0 auto auto 0; border: 0; box-shadow: none; padding: 0; max-width: none; font-size: 11pt; }
   .screen-only { display: none !important; }
   .print-only { display: inline; }
   p.print-only { display: block; text-align: justify; }
@@ -627,3 +627,33 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .button-link { display: inline-flex; align-items: center; padding: 0.5rem 0.9rem; font-size: 0.9rem; font-weight: 500; border-radius: 8px; border: 1px solid var(--border); color: var(--text); text-decoration: none; background: var(--surface); }
 .button-link:hover { border-color: var(--accent); color: var(--accent); }
 .side-card .actions a { flex: 1; justify-content: center; }
+
+.prep-tabs { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+.prep-tabs a { padding: 0.6rem 1rem; color: var(--muted); text-decoration: none; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.prep-tabs a.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* CV adapté (docs/08 §4) */
+.cv-sheet {
+  background: #fff; color: #1a1a1a; border: 1px solid var(--border); border-radius: 6px;
+  box-shadow: 0 12px 32px rgba(17, 17, 31, 0.08); padding: 2.6rem 3rem;
+  font-family: Arial, Helvetica, sans-serif; font-size: 0.86rem; line-height: 1.45; max-width: 52rem; width: 100%; justify-self: center;
+}
+.cv-sheet.busy { opacity: 0.5; }
+.cv-name { font-size: 1.7rem; font-weight: 700; margin: 0; }
+.cv-headline { width: 100%; font: inherit; font-size: 1.05rem; color: #3a33c9; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.1rem 0.2rem; margin-left: -0.2rem; }
+.cv-contacts { color: #555566; font-size: 0.8rem; margin: 0.2rem 0 0.8rem; }
+.cv-sheet h3 { font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; color: #3a33c9; margin: 1.1rem 0 0.35rem; padding-bottom: 0.2rem; border-bottom: 1px solid #e3e2f5; }
+.cv-sheet textarea { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.15rem 0.2rem; resize: none; overflow: hidden; }
+.cv-sheet input:hover, .cv-sheet textarea:hover { border-color: #d5d5e0; }
+.cv-sheet input:focus, .cv-sheet textarea:focus { outline: none; border-color: var(--accent); background: #fafaff; }
+.cv-item { margin-bottom: 0.45rem; }
+.cv-item strong.cv-item-title { display: block; }
+.cv-item p { margin: 0; }
+.cv-blocks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; font-size: 0.85rem; }
+.cv-blocks .section-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--faint); margin-top: 0.4rem; }
+.cv-block { display: flex; align-items: center; gap: 0.4rem; }
+.cv-block label { flex: 1; display: flex; gap: 0.4rem; align-items: flex-start; color: var(--text); font-size: 0.85rem; }
+.cv-block .move { padding: 0.1rem 0.4rem; font-size: 0.8rem; border-radius: 6px; }
+@media (max-width: 960px) { .cv-sheet { padding: 1.6rem 1.3rem; } }
+@media print { .cv-sheet { font-size: 9.5pt; } }
+.cv-item .kw { font-weight: 700; }

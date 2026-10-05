@@ -251,6 +251,13 @@ onMounted(() => void load());
                 download
                 data-test="letter-docx"
               >Lettre</a>
+              <a
+                v-if="application.cv_draft_id"
+                class="link"
+                :href="`/api/cvs/${application.cv_draft_id}/docx`"
+                download
+                data-test="cv-docx"
+              >CV</a>
               <button
                 type="button"
                 class="link"

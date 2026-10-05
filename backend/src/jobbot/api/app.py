@@ -14,6 +14,7 @@ from jobbot.api.middleware import RequestContextMiddleware
 from jobbot.api.routes import (
     applications,
     collect,
+    cvs,
     letters,
     preferences,
     profile,
@@ -69,4 +70,5 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(scoring.router)
     app.include_router(applications.router)
     app.include_router(letters.router)
+    app.include_router(cvs.router)
     return app

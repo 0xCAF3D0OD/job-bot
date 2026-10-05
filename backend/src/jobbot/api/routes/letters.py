@@ -11,28 +11,19 @@ from typing import Annotated, Literal
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
-import anthropic
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import Application, Draft, DraftKind, Evaluation, Offer, OfferStatus
+from jobbot.api.routes import writing
+from jobbot.db.models import Application, Draft, DraftKind, Offer
 from jobbot.letters.document import Identity, LetterDocument, Recipient, assemble, to_docx
 from jobbot.letters.service import load_identity
 from jobbot.llm import letter as letter_llm
-from jobbot.llm.client import Refused
 from jobbot.llm.scoring import InvalidScore
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
-from jobbot.scoring import service as scoring_service
-from jobbot.scoring.service import (
-    account_problem,
-    active_profile,
-    budget_state,
-    offer_data,
-    record_call,
-)
 
 router = APIRouter(prefix="/api", tags=["letters"])
 log = get_logger(__name__)
@@ -154,10 +145,7 @@ async def _render(session: AsyncSession, draft: Draft) -> LetterOut:
 
 
 async def _get_draft(session: AsyncSession, draft_id: int) -> Draft:
-    draft = await session.get(Draft, draft_id)
-    if draft is None or draft.kind != DraftKind.LETTER:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "lettre introuvable")
-    return draft
+    return await writing.get_draft(session, draft_id, DraftKind.LETTER)
 
 
 @router.get("/offers/{offer_id}/letters", operation_id="listLetters")
@@ -190,107 +178,44 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
     """L'IA rédige une nouvelle version (quelques dizaines de secondes)."""
     runtime = _runtime(request)
     settings = runtime.settings
-    if not settings.llm_configured:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "IA non configurée : renseigner JOBBOT_ANTHROPIC_API_KEY."
-        )
-    async with runtime.sessionmaker() as session:
-        offer = await session.get(Offer, offer_id)
-        if offer is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
-        chunks = await active_profile(session)
-        if not chunks:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                "aucun bloc de profil actif : la lettre n'aurait rien à dire",
-            )
-        evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == offer_id))
-        previous = None
-        if body.base_draft_id is not None:
-            base = await _get_draft(session, body.base_draft_id)
-            if base.offer_id != offer_id:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, "lettre introuvable")
-            previous = base.content
-        elif body.instruction:
-            latest = await session.scalar(
-                select(Draft)
-                .where(Draft.offer_id == offer_id, Draft.kind == DraftKind.LETTER)
-                .order_by(Draft.version.desc())
-                .limit(1)
-            )
-            previous = latest.content if latest else None
-        spend, budget, rate = await budget_state(session, datetime.now(UTC))
-        data = offer_data(offer)
-    if spend + LETTER_ESTIMATE_USD * rate > budget:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            "plafond mensuel de l'IA atteint : le relever dans les Réglages",
-        )
-    assessment = None
-    if evaluation is not None:
-        assessment = letter_llm.Assessment(
-            strengths=[p["text"] for p in evaluation.strengths or []],
-            gaps=[p["text"] for p in evaluation.gaps or []],
-        )
+    instruction = (body.instruction or "").strip() or None
+    ctx = await writing.prepare(
+        runtime,
+        offer_id,
+        DraftKind.LETTER,
+        base_draft_id=body.base_draft_id,
+        instruction=instruction,
+        estimate_usd=LETTER_ESTIMATE_USD,
+    )
     params = letter_llm.request_params(
         settings.llm_model,
         settings.llm_writing_effort,
-        chunks,
-        data,
+        ctx.chunks,
+        ctx.offer,
         language=body.language,
-        assessment=assessment,
-        previous=previous,
-        instruction=(body.instruction or "").strip() or None,
+        assessment=ctx.assessment,
+        previous=ctx.previous,
+        instruction=instruction,
     )
-    client = scoring_service.make_client(settings)
+    raw = await writing.call(
+        runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
+    )
     try:
-        raw = await client.score(params)
-    except Refused:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, "l'IA a refusé de rédiger cette lettre"
-        ) from None
-    except (anthropic.RateLimitError, anthropic.APIConnectionError):
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "IA momentanément indisponible, réessayer"
-        ) from None
-    except anthropic.APIStatusError as exc:
-        problem = account_problem(exc)
-        raise HTTPException(
-            status.HTTP_409_CONFLICT if problem else status.HTTP_502_BAD_GATEWAY,
-            problem or f"erreur de l'API ({exc.status_code})",
-        ) from None
-
-    async with runtime.sessionmaker.begin() as session:
-        await record_call(session, raw, offer_id=offer_id, rate=rate, purpose="letter")
-    try:
-        output = letter_llm.parse_output(raw.text, chunks)
+        output = letter_llm.parse_output(raw.text, ctx.chunks)
     except InvalidScore:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, "réponse de l'IA inutilisable, réessayer"
-        ) from None
+        raise writing.unusable() from None
 
     async with runtime.sessionmaker.begin() as session:
-        version = await session.scalar(
-            select(func.coalesce(func.max(Draft.version), 0)).where(
-                Draft.offer_id == offer_id, Draft.kind == DraftKind.LETTER
-            )
-        )
-        draft = Draft(
-            offer_id=offer_id,
-            kind=DraftKind.LETTER,
-            version=(version or 0) + 1,
+        draft = await writing.add_version(
+            session,
+            offer_id,
+            DraftKind.LETTER,
             language=output.language,
             content=output.model_dump(exclude={"language"}),
-            instruction=(body.instruction or "").strip() or None,
+            instruction=instruction,
             model=raw.model,
             prompt_version=letter_llm.PROMPT_VERSION,
         )
-        session.add(draft)
-        offer = await session.get(Offer, offer_id)
-        if offer is not None and offer.status != OfferStatus.APPLIED:
-            offer.status = OfferStatus.PREPARING
-        await session.flush()
-        await session.refresh(draft)
         out = await _render(session, draft)
     log.info("letter_written", offer_id=offer_id, version=out.version, language=out.language)
     return out
