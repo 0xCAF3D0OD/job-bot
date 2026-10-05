@@ -23,24 +23,24 @@ Le statut actuel (« En préparation », « Plus tard », « Expirée ») est ra
 Elle sert à l'en-tête de la lettre et au formulaire ORP (colonne obligatoire). Trois sources, dans l'ordre :
 
 1. **L'annonce elle-même** (jobup, et jobs.ch ensuite). La page de l'offre contient l'adresse du lieu de travail (par exemple « Chemin Malombré 10, 1206 Genève »). La plateforme la lit déjà lentement pour le lien de candidature : l'adresse vient en plus, sans requête supplémentaire. Les offres déjà lues la reçoivent à leur prochaine revérification (tous les 3 jours).
-2. **Le registre du commerce (Zefix)**, service officiel et gratuit de la Confédération, pour les annonces sans page lisible (Indeed, LinkedIn) :
-   - recherche par nom d'entreprise ;
-   - retenue seulement si une seule entreprise active correspond, de préférence dans le canton de l'offre ;
+2. **Le registre IDE** (numéro d'identification des entreprises, Office fédéral de la statistique), service public **sans compte**, pour les annonces sans page lisible (Indeed, LinkedIn) :
+   - recherche par nom d'entreprise (testé : « Moser Vernet » renvoie « chemin Malombré 10, 1206 Genève ») ;
+   - retenue seulement si une seule entreprise active correspond, de préférence dans le canton ou la ville de l'offre ;
    - sinon, les 3 meilleures propositions te sont montrées, à choisir en un clic ;
-   - c'est l'adresse du **siège** : elle peut différer du lieu de travail, la mention « registre du commerce » l'indique.
+   - c'est l'adresse **inscrite au registre** (souvent le siège) : elle peut différer du lieu de travail, la mention « registre IDE » l'indique.
 3. **Le texte de l'annonce, lu par l'IA** pendant la rédaction de la lettre (déjà en place depuis la 0.5).
 
 Dans le détail, la ligne **« Adresse : … »** indique sa source (annonce, registre du commerce, lettre) et reste modifiable. Elle pré-remplit « Marquer comme envoyée », l'en-tête de la lettre et l'export ORP.
 
-**De ton côté, pour Zefix** : l'API officielle demande un compte gratuit, à demander sur le site de Zefix. Tu renseignes ensuite `JOBBOT_ZEFIX_USER` et `JOBBOT_ZEFIX_PASSWORD` dans `.env`. Ne me les donne pas dans la conversation. Sans compte, seules les sources 1 et 3 fonctionnent.
+**Aucun compte à créer** : le service public du registre IDE est ouvert, avec une limite de requêtes par minute.
 
-**Rythme** : une recherche Zefix par entreprise, au plus 30 par passage, mise en cache : une entreprise déjà trouvée n'est pas recherchée deux fois.
+**Rythme** : une recherche par entreprise, une requête toutes les 5 secondes, au plus 30 par passage, mise en cache : une entreprise déjà trouvée n'est pas recherchée deux fois. Accès sortant ajouté au contrat d'exploitation : `www.uid-wse.admin.ch` (HTTPS).
 
 ## 3. Base (migration 0015)
 
 ```
 offers     + company_address?, company_address_source? (page|registry|letter|manual)
-companies  name_key PRIMARY, uid?, address?, candidates JSONB, looked_up_at   -- cache Zefix
+companies  name_key PRIMARY, uid?, address?, candidates JSONB, looked_up_at   -- cache du registre IDE
 ```
 
 Les migrations prévues au cadrage 11 pour les mots-clés et les sites deviennent 0016 et 0017.
@@ -50,12 +50,11 @@ Les migrations prévues au cadrage 11 pour les mots-clés et les sites deviennen
 | PR | Contenu | Prérequis de ton côté |
 |---|---|---|
 | **0.7.1-a** | Détail réorganisé ; adresse lue sur la page jobup ; adresse modifiable | aucun |
-| **0.7.1-b** | Recherche dans le registre du commerce, choix parmi les propositions | compte Zefix (facultatif) |
+| **0.7.1-b** | Recherche dans le registre IDE, choix parmi les propositions | aucun |
 
 ## Points à valider
 
 1. **Détail en deux boutons et un menu « ⋯ »**, avec le statut en pastille (§1).
 2. **Adresse du lieu de travail** lue sur la page de l'annonce quand elle existe (§2.1).
-3. **Registre du commerce (Zefix)** pour les autres : adresse du siège, retenue seulement si la correspondance est sûre, sinon tu choisis (§2.2).
-4. **Compte Zefix gratuit** à créer de ton côté (facultatif) (§2).
-5. **Deux PR** (§4).
+3. **Registre IDE** (public, sans compte) pour les autres : adresse inscrite au registre, retenue seulement si la correspondance est sûre, sinon tu choisis (§2.2).
+4. **Deux PR** (§4).
