@@ -5,8 +5,9 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, or_, select
 
+from jobbot.core.normalize import normalize_text
 from jobbot.db.models import (
     Evaluation,
     Offer,
@@ -89,6 +90,7 @@ class OfferPage(BaseModel):
     items: list[OfferOut]
     total: int
     counts: OfferCounts
+    facets: "OfferFacets"
 
 
 class SearchOffer(OfferOut):
@@ -194,6 +196,75 @@ async def get_search(request: Request, search_id: int) -> SearchDetail:
     )
 
 
+class Facet(BaseModel):
+    value: str
+    count: int
+
+
+class OfferFacets(BaseModel):
+    """Valeurs disponibles pour les filtres, avec le nombre d'offres de chacune."""
+
+    sources: list[Facet]
+    cantons: list[Facet]
+
+
+# Accents retirés côté base, sans extension PostgreSQL (unaccent n'est pas toujours installé).
+_ACCENTED = "àâäáãåéèêëíìîïóòôöõúùûüçñÿ"
+_PLAIN = "aaaaaaeeeeiiiiooooouuuucny"
+
+
+def _searchable() -> ColumnElement[str]:
+    text = func.concat_ws(
+        " ",
+        Offer.title,
+        Offer.company,
+        Offer.location,
+        Offer.snippet,
+        Offer.employment_type,
+        Offer.description,
+    )
+    return func.translate(func.lower(text), _ACCENTED, _PLAIN)
+
+
+def _escape_like(term: str) -> str:
+    return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _filters(
+    q: str | None,
+    sources: list[Source],
+    cantons: list[str],
+    min_rate: int | None,
+    external_only: bool,
+) -> list[ColumnElement[bool]]:
+    """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7)."""
+    conditions: list[ColumnElement[bool]] = []
+    if q:
+        searchable = _searchable()
+        for term in normalize_text(q).split()[:8]:
+            conditions.append(searchable.like(f"%{_escape_like(term)}%", escape="\\"))
+    if sources:
+        conditions.append(
+            Offer.id.in_(select(OfferLink.offer_id).where(OfferLink.source.in_(sources)))
+        )
+    if cantons:
+        conditions.append(Offer.canton.in_([c.upper() for c in cantons]))
+    if min_rate is not None:
+        # Une offre sans taux connu reste visible.
+        conditions.append(or_(Offer.rate_max.is_(None), Offer.rate_max >= min_rate))
+    if external_only:
+        conditions.append(Offer.apply_kind == "external")
+    return conditions
+
+
+def _view_condition(view: str) -> ColumnElement[bool] | None:
+    if view == "to_review":
+        return Offer.status.in_(TO_REVIEW)
+    if view == "filtered_out":
+        return Offer.status == OfferStatus.FILTERED_OUT
+    return None
+
+
 @router.get("/offers", operation_id="listOffers")
 async def list_offers(
     request: Request,
@@ -201,25 +272,60 @@ async def list_offers(
     offset: Annotated[int, Query(ge=0)] = 0,
     sort: Literal["recent", "popular"] = "recent",
     view: Literal["to_review", "filtered_out", "all"] = "all",
+    q: Annotated[str | None, Query(max_length=200)] = None,
+    sources: Annotated[list[Source], Query()] = [],  # noqa: B006
+    cantons: Annotated[list[str], Query(max_length=26)] = [],  # noqa: B006
+    min_rate: Annotated[int | None, Query(ge=1, le=100)] = None,
+    external_only: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.
-    `view` : à examiner, écartées par le filtre, ou toutes."""
+    `view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des
+    filtres d'affichage ; les compteurs par statut et les facettes en tiennent compte."""
     runtime = _runtime(request)
     order = (
         (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc())
         if sort == "popular"
         else (Offer.first_seen_at.desc(), Offer.id.desc())
     )
-    query = select(Offer)
-    if view == "to_review":
-        query = query.where(Offer.status.in_(TO_REVIEW))
-    elif view == "filtered_out":
-        query = query.where(Offer.status == OfferStatus.FILTERED_OUT)
+    conditions = _filters(q, sources, cantons, min_rate, external_only)
+    view_condition = _view_condition(view)
+    listed = [*conditions, *([view_condition] if view_condition is not None else [])]
+    # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
+    without_sources = _filters(q, [], cantons, min_rate, external_only)
+    without_cantons = _filters(q, sources, [], min_rate, external_only)
+    if view_condition is not None:
+        without_sources.append(view_condition)
+        without_cantons.append(view_condition)
+
     async with runtime.sessionmaker() as session:
         by_status = dict(
-            (await session.execute(select(Offer.status, func.count()).group_by(Offer.status))).all()
+            (
+                await session.execute(
+                    select(Offer.status, func.count()).where(*conditions).group_by(Offer.status)
+                )
+            ).all()
         )
-        offers = list(await session.scalars(query.order_by(*order).limit(limit).offset(offset)))
+        offers = list(
+            await session.scalars(
+                select(Offer).where(*listed).order_by(*order).limit(limit).offset(offset)
+            )
+        )
+        source_rows = (
+            await session.execute(
+                select(OfferLink.source, func.count(func.distinct(OfferLink.offer_id)))
+                .join(Offer, Offer.id == OfferLink.offer_id)
+                .where(*without_sources)
+                .group_by(OfferLink.source)
+            )
+        ).all()
+        canton_rows = (
+            await session.execute(
+                select(Offer.canton, func.count())
+                .where(Offer.canton.is_not(None), *without_cantons)
+                .group_by(Offer.canton)
+            )
+        ).all()
+
     counts = OfferCounts(
         to_review=sum(by_status.get(s, 0) for s in TO_REVIEW),
         filtered_out=by_status.get(OfferStatus.FILTERED_OUT, 0),
@@ -228,12 +334,20 @@ async def list_offers(
     total = {"to_review": counts.to_review, "filtered_out": counts.filtered_out}.get(
         view, counts.all
     )
+    facets = OfferFacets(
+        sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],
+        cantons=[
+            Facet(value=str(v), count=c)
+            for v, c in sorted(canton_rows, key=lambda row: (-row[1], row[0]))
+        ],
+    )
     ids = [offer.id for offer in offers]
     links, reasons = await _links(runtime, ids), await _reasons(runtime, ids)
     return OfferPage(
         items=[_offer_out(o, links[o.id], reasons[o.id]) for o in offers],
         total=total,
         counts=counts,
+        facets=facets,
     )
 
 

@@ -53,6 +53,10 @@ async def test_filter_sets_statuses_and_reasons(fresh: Runtime) -> None:
     result = await run_filter(fresh)
 
     assert (result.examined, result.to_review, result.filtered_out) == (4, 3, 1)
+    async with fresh.sessionmaker() as session:
+        cantons = {o.title: o.canton for o in await session.scalars(select(Offer))}
+    # « Prilly » seul : canton appris de « Prilly, VD ».
+    assert cantons["Admin jobup"] == "VD" and cantons["Admin"] == "ZH"
     assert (await statuses(fresh))["Admin"] == "filtered_out"
     async with fresh.sessionmaker() as session:
         evaluation = await session.scalar(

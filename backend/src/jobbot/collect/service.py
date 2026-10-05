@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot.core.filter import canton_of
 from jobbot.core.normalize import normalize_offer
 from jobbot.db.models import Offer, OfferLink, OfferSighting, ParseStatus, Search, Source
 from jobbot.log import get_logger
@@ -124,6 +125,7 @@ async def ingest_offers(
                     location=raw.location,
                     rate_min=norm.rate_min,
                     rate_max=norm.rate_max,
+                    canton=canton_of(raw.location),
                     snippet=raw.snippet,
                     first_seen_at=seen_at,
                     last_seen_at=seen_at,

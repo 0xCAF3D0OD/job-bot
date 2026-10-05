@@ -82,7 +82,8 @@ export interface paths {
         /**
          * List Offers
          * @description `recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes.
-         *     `view` : à examiner, écartées par le filtre, ou toutes.
+         *     `view` : à examiner, écartées par le filtre, ou toutes. Les autres paramètres sont des
+         *     filtres d'affichage ; les compteurs par statut et les facettes en tiennent compte.
          */
         get: operations["listOffers"];
         put?: never;
@@ -428,6 +429,13 @@ export interface components {
          * @enum {string}
          */
         DocumentType: "pdf" | "docx" | "txt" | "md";
+        /** Facet */
+        Facet: {
+            /** Value */
+            value: string;
+            /** Count */
+            count: number;
+        };
         /** FilterResponse */
         FilterResponse: {
             /**
@@ -502,6 +510,16 @@ export interface components {
             /** All */
             all: number;
         };
+        /**
+         * OfferFacets
+         * @description Valeurs disponibles pour les filtres, avec le nombre d'offres de chacune.
+         */
+        OfferFacets: {
+            /** Sources */
+            sources: components["schemas"]["Facet"][];
+            /** Cantons */
+            cantons: components["schemas"]["Facet"][];
+        };
         /** OfferLinkOut */
         OfferLinkOut: {
             source: components["schemas"]["Source"];
@@ -566,6 +584,7 @@ export interface components {
             /** Total */
             total: number;
             counts: components["schemas"]["OfferCounts"];
+            facets: components["schemas"]["OfferFacets"];
         };
         /**
          * OfferStatus
@@ -887,6 +906,11 @@ export interface operations {
                 offset?: number;
                 sort?: "recent" | "popular";
                 view?: "to_review" | "filtered_out" | "all";
+                q?: string | null;
+                sources?: components["schemas"]["Source"][];
+                cantons?: string[];
+                min_rate?: number | null;
+                external_only?: boolean;
             };
             header?: never;
             path?: never;

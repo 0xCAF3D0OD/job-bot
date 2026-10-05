@@ -122,6 +122,8 @@ class Offer(Base):
     description: Mapped[str | None] = mapped_column(Text)
     employment_type: Mapped[str | None] = mapped_column(Text)
     enrich_status: Mapped[str] = mapped_column(Text, default="pending")
+    # Canton (« VD »), déduit du lieu ou appris des autres offres de la même ville.
+    canton: Mapped[str | None] = mapped_column(Text, index=True)
     enrich_attempts: Mapped[int] = mapped_column(default=0)
     enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

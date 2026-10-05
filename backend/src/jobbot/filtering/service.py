@@ -75,6 +75,11 @@ async def run_filter(runtime: Runtime) -> FilterResult:
         all_offers = list(await session.scalars(select(Offer)))
         city_cantons = _city_cantons(all_offers)
         for offer in all_offers:
+            # Canton tenu à jour pour toutes les offres (filtre par canton de la page Offres).
+            if offer.location:
+                offer.canton = canton_of(offer.location) or city_cantons.get(
+                    normalize_location(offer.location)
+                )
             if offer.status not in FILTERABLE:
                 continue
             evaluation = evaluate(

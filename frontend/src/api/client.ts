@@ -23,3 +23,4 @@ export type DocumentText = Schemas["DocumentText"];
 export type Chunk = Schemas["ChunkOut"];
 export type ChunkIn = Schemas["ChunkIn"];
 export type ChunkKind = Schemas["ChunkKind"];
+export type OfferFacets = Schemas["OfferFacets"];
