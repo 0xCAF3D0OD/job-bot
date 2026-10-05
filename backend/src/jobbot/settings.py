@@ -15,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 ENV_PREFIX = "JOBBOT_"
 
 # Variables dont la valeur peut être lue depuis un fichier (JOBBOT_<NOM>_FILE).
-SECRET_FIELDS = ("database_url", "imap_password", "anthropic_api_key")
+SECRET_FIELDS = ("database_url", "imap_password", "anthropic_api_key", "ntfy_topic")
 
 
 class Env(StrEnum):
@@ -71,6 +71,12 @@ class Settings(BaseSettings):
     llm_model: str = "claude-opus-5"
     llm_effort: Literal["low", "medium", "high"] = "low"
 
+    # Notifications ntfy (docs/06 §5). Sujet secret : quiconque le connaît lit les messages.
+    ntfy_url: str = "https://ntfy.sh"
+    ntfy_topic: SecretStr | None = None
+    # Adresse de l'interface, pour le lien des notifications.
+    public_url: str = "http://localhost:5173"
+
     @field_validator("database_url")
     @classmethod
     def _check_database_url(cls, value: SecretStr) -> SecretStr:
@@ -98,6 +104,11 @@ class Settings(BaseSettings):
     def llm_configured(self) -> bool:
         key = self.anthropic_api_key.get_secret_value() if self.anthropic_api_key else ""
         return bool(key.strip())
+
+    @property
+    def ntfy_configured(self) -> bool:
+        topic = self.ntfy_topic.get_secret_value() if self.ntfy_topic else ""
+        return bool(topic.strip())
 
     @property
     def sqlalchemy_url(self) -> str:
