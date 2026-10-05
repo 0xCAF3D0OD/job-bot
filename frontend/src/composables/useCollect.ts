@@ -18,11 +18,13 @@ export function useCollect() {
         message.value = "Une collecte attend déjà son tour.";
       } else if (data?.result === "queued") {
         message.value = "Collecte lancée. Le journal se met à jour d'ici une minute.";
+      } else if (response.status >= 500) {
+        message.value = `L'API ne répond pas (HTTP ${response.status}) : vérifie que make dev tourne, puis réessaie.`;
       } else {
-        message.value = "La collecte n'a pas pu être lancée.";
+        message.value = `La collecte n'a pas pu être lancée (HTTP ${response.status}).`;
       }
     } catch {
-      message.value = "API injoignable.";
+      message.value = "API injoignable : vérifie que make dev tourne, puis réessaie.";
     } finally {
       running.value = false;
     }
