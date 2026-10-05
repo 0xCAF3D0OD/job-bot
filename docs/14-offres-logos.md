@@ -1,6 +1,6 @@
 # 14 — Page Offres : mise en page, tri des candidatures, logos (version 0.7.4)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** le 2026-10-05. PR a (mise en page, pastilles, tri) livrée ; PR b (logos) à venir.
 > Retours d'usage du 2026-10-05.
 
 ## 1. Mise en page de la page Offres
@@ -59,3 +59,9 @@ offers     + logo_url?   -- adresse d'origine relevée (page ou e-mail), avant t
 3. **Tri « Dernière action »** par défaut dans l'onglet En cours (§3).
 4. **Logos** : annonce jobup, e-mails d'alerte, icône du site, sinon la lettre ; **téléchargés et servis par la plateforme**, pas chargés depuis des sites tiers (§4).
 5. **Deux PR** (§6).
+
+## Écarts avec la PR a
+
+- **Écrans moyens** (moins de 1200 px de large) : le détail s'ouvre toujours par-dessus la liste, désormais avec un glissement depuis la droite.
+- **Tri « Dernière action »** : proposé seulement dans l'onglet En cours. En quittant l'onglet, le tri revient à « Récentes ». La date de passage « en préparation » n'est pas enregistrée : sans lettre ni CV, l'offre compte à sa date d'arrivée.
+- **Candidatures du même jour** : départagées par l'heure d'enregistrement.

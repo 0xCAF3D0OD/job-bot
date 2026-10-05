@@ -5,10 +5,12 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import ColumnElement, and_, func, or_, select
+from sqlalchemy import ColumnElement, Time, and_, cast, func, or_, select
 
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import (
+    Application,
+    Draft,
     Evaluation,
     Offer,
     OfferLink,
@@ -358,7 +360,7 @@ async def list_offers(
     request: Request,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-    sort: Literal["recent", "popular", "score"] = "recent",
+    sort: Literal["recent", "popular", "score", "activity"] = "recent",
     view: Literal["to_review", "filtered_out", "later", "in_progress", "expired", "all"] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
     min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
@@ -377,9 +379,23 @@ async def list_offers(
         .where(Evaluation.offer_id == Offer.id, Evaluation.scored_at.is_not(None))
         .scalar_subquery()
     )
+    # Dernière action (docs/14 §3) : date d'envoi de la candidature (avec l'heure de
+    # l'enregistrement), sinon dernière lettre ou dernier CV, sinon arrivée de l'offre.
+    sent = (
+        select(func.max(Application.sent_at + cast(Application.created_at, Time)))
+        .where(Application.offer_id == Offer.id)
+        .scalar_subquery()
+    )
+    drafted = (
+        select(func.max(func.coalesce(Draft.edited_at, Draft.created_at)))
+        .where(Draft.offer_id == Offer.id)
+        .scalar_subquery()
+    )
+    activity = func.coalesce(sent, drafted, Offer.first_seen_at)
     order = {
         "popular": (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc()),
         "score": (score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
+        "activity": (activity.desc(), Offer.id.desc()),
     }.get(sort, (Offer.first_seen_at.desc(), Offer.id.desc()))
     conditions = _filters(q, sources, cantons, min_rate, external_only)
     if min_score is not None:
