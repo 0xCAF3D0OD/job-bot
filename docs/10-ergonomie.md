@@ -1,6 +1,6 @@
 # 10 — Offres expirées, prise en main et filtres au choix (version 0.6.1)
 
-> Statut : **validé** le 2026-10-05. PR a (offres expirées) livrée ; PR b et c à venir.
+> Statut : **validé** le 2026-10-05. PR a (offres expirées) et PR b (prise en main) livrées ; PR c à venir.
 > Retours d'usage du 2026-10-05. Les rappels ORP (0.6.0-b) restent prévus, après cette version ou avant, à ton choix.
 
 ## 1. Offres expirées
@@ -100,3 +100,11 @@ Les prérequis ne sont **pas redemandés à chaque ouverture**. Ils sont saisis 
 - **Réapparition** : une offre expirée revue dans une alerte redevient visible ; si sa page jobup était introuvable, elle est relue.
 - **Compteurs** : « Toutes » exclut les expirées, sauf celles en cours (en préparation ou envoyées).
 - Les 12 offres déjà repérées comme expirées sont reprises par la migration 0013.
+
+## Écarts avec la PR b
+
+- **Prérequis** : saisis une fois ; ensuite l'onglet « Ce que je cherche » montre un **résumé** et un bouton « Modifier ce que je cherche » qui ouvre le formulaire **pré-rempli** (avec « Annuler »).
+- **Point du jour** : la « prochaine collecte » n'est pas calculée ; la carte indique la dernière collecte réussie et le rythme (toutes les 2 heures en journée).
+- **Meilleures offres** : les trois offres à examiner les mieux notées, sans lien direct vers leur détail (la page Offres s'ouvre triée par note).
+- **Anciennes adresses** : `/prerequis`, `/journal` et `/etat` redirigent vers leur nouvelle place.
+- **Liste de démarrage** : « Masquer » l'enlève même s'il reste des étapes ; elle disparaît aussi d'elle-même quand tout est fait.

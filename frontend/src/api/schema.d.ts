@@ -690,6 +690,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Today */
+        get: operations["getToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Onboarding
+         * @description Masque (ou réaffiche) la liste de démarrage.
+         */
+        put: operations["setOnboarding"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -863,6 +900,16 @@ export interface components {
             /** File */
             file: string;
         };
+        /** ChecklistItem */
+        ChecklistItem: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "criteria" | "profile" | "identity" | "orp_target" | "notifications" | "imap";
+            /** Done */
+            done: boolean;
+        };
         /** ChunkIn */
         ChunkIn: {
             kind: components["schemas"]["ChunkKind"];
@@ -972,6 +1019,8 @@ export interface components {
         CriteriaOut: {
             criteria: components["schemas"]["CriteriaIn"];
             keywords: components["schemas"]["KeywordsOut"];
+            /** Saved At */
+            saved_at?: string | null;
         };
         /**
          * CvBlock
@@ -1481,6 +1530,11 @@ export interface components {
             id: number;
             status: components["schemas"]["OfferStatus"];
         };
+        /** OnboardingIn */
+        OnboardingIn: {
+            /** Dismissed */
+            dismissed: boolean;
+        };
         /**
          * OrpHolder
          * @description En-tête du formulaire : nom et adresse saisis dans les Réglages.
@@ -1809,6 +1863,29 @@ export interface components {
          * @enum {string}
          */
         TextStatus: "ok" | "empty" | "unreadable";
+        /** TodayOut */
+        TodayOut: {
+            /** Checklist */
+            checklist: components["schemas"]["ChecklistItem"][];
+            /** Checklist Dismissed */
+            checklist_dismissed: boolean;
+            /** To Review */
+            to_review: number;
+            /** Month */
+            month: string;
+            /** Month Count */
+            month_count: number;
+            /** Month Target */
+            month_target: number | null;
+            /** To Follow Up */
+            to_follow_up: number;
+            /** Orp Due Month */
+            orp_due_month: string | null;
+            /** Orp Due Date */
+            orp_due_date: string | null;
+            /** Last Collect At */
+            last_collect_at: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -3319,6 +3396,57 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getToday: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayOut"];
+                };
+            };
+        };
+    };
+    setOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

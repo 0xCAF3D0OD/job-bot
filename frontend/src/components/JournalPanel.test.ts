@@ -2,7 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useCollect } from "../composables/useCollect";
-import JournalView from "./JournalView.vue";
+import JournalView from "./JournalPanel.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();

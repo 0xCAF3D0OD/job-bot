@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 
 import { api, type SettingsModel } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
+import StatusPanel from "../components/StatusPanel.vue";
 
 const form = ref<SettingsModel>({
   orp_monthly_target: null,
@@ -13,22 +14,6 @@ const form = ref<SettingsModel>({
 const loaded = ref(false);
 const saving = ref(false);
 const message = ref("");
-const IDENTITY_FIELDS = ["name", "street", "postcode", "city", "phone", "email"] as const;
-type IdentityForm = Record<(typeof IDENTITY_FIELDS)[number], string>;
-const identity = ref<IdentityForm>({ name: "", street: "", postcode: "", city: "", phone: "", email: "" });
-const identityMessage = ref("");
-
-async function saveIdentity(): Promise<void> {
-  const body = Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, identity.value[f].trim() || null]));
-  try {
-    const { data, response } = await api.PUT("/api/identity", { body });
-    if (data) identityMessage.value = "Coordonnées enregistrées.";
-    else if (response.status === 404) identityMessage.value = "L'API n'est pas à jour : relance make dev.";
-    else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres).";
-  } catch {
-    identityMessage.value = "API injoignable.";
-  }
-}
 const notifications = ref<{ configured: boolean; server: string } | null>(null);
 // Vrai si l'API n'a pas répondu (arrêtée, ou plus ancienne que l'interface).
 const notificationsUnknown = ref(false);
@@ -56,12 +41,10 @@ onMounted(async () => {
   const { data } = await api.GET("/api/settings");
   if (data) form.value = data;
   loaded.value = true;
-  const who = await api.GET("/api/identity");
-  if (who.data) {
-    const loadedIdentity = who.data;
-    identity.value = Object.fromEntries(
-      IDENTITY_FIELDS.map((f) => [f, loadedIdentity[f] ?? ""]),
-    ) as IdentityForm;
+  // Arrivée par /etat (ancienne page) : la section est plus bas, sous le formulaire.
+  if (window.location.hash === "#etat") {
+    await nextTick();
+    document.getElementById("etat")?.scrollIntoView();
   }
   try {
     const status = await api.GET("/api/notifications");
@@ -91,7 +74,7 @@ async function save(): Promise<void> {
   <PageHero
     eyebrow="Réglages"
     title="Tes réglages"
-    subtitle="Objectif de l'ORP, notifications et budget de l'IA."
+    subtitle="Objectif de l'ORP, notifications, budget de l'IA et état technique de la plateforme."
   />
   <section class="band">
     <div class="container narrow">
@@ -208,85 +191,13 @@ async function save(): Promise<void> {
           >{{ message }}</span>
         </div>
       </form>
-      <form
-        v-if="loaded"
-        class="form-card identity-card"
-        data-test="identity-form"
-        @submit.prevent="saveIdentity"
+      <h2
+        id="etat"
+        class="section-title settings-status"
       >
-        <fieldset>
-          <legend>Mes coordonnées</legend>
-          <p class="hint">
-            Pour l'en-tête de tes lettres et de ton CV (0.5). Gardées dans ta base locale, jamais envoyées à l'IA.
-          </p>
-          <div class="form-grid">
-            <label class="wide">Nom et prénom
-              <input
-                v-model="identity.name"
-                type="text"
-                autocomplete="name"
-                data-test="identity-name"
-              >
-            </label>
-            <label class="wide">Rue et numéro
-              <input
-                v-model="identity.street"
-                type="text"
-                autocomplete="address-line1"
-                data-test="identity-street"
-              >
-            </label>
-            <label>NPA
-              <input
-                v-model="identity.postcode"
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]{4}"
-                maxlength="4"
-                autocomplete="postal-code"
-                title="Quatre chiffres"
-                data-test="identity-postcode"
-              >
-            </label>
-            <label>Localité
-              <input
-                v-model="identity.city"
-                type="text"
-                autocomplete="address-level2"
-                data-test="identity-city"
-              >
-            </label>
-            <label>Téléphone
-              <input
-                v-model="identity.phone"
-                type="tel"
-                autocomplete="tel"
-              >
-            </label>
-            <label>E-mail
-              <input
-                v-model="identity.email"
-                type="email"
-                autocomplete="email"
-              >
-            </label>
-          </div>
-        </fieldset>
-        <div class="form-actions">
-          <button
-            type="submit"
-            class="primary"
-            data-test="save-identity"
-          >
-            Enregistrer mes coordonnées <AppIcon name="chevron" />
-          </button>
-          <span
-            v-if="identityMessage"
-            role="status"
-            class="muted"
-          >{{ identityMessage }}</span>
-        </div>
-      </form>
+        État technique
+      </h2>
+      <StatusPanel />
     </div>
   </section>
 </template>

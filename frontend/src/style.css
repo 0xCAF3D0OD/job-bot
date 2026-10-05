@@ -687,3 +687,25 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 }
 .expired-notice { border-color: var(--warn); color: var(--warn); margin: 0.5rem 0; }
 .job-card.expired { opacity: 0.6; }
+.criteria-summary ul { margin: 1rem 0 0.5rem; padding-left: 1.1rem; display: grid; gap: 0.4rem; }
+.narrow-block { max-width: 46rem; }
+.settings-status { margin-top: 2rem; }
+.panel-actions { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
+
+/* Aujourd'hui (docs/10 §2 b) */
+.today { display: grid; gap: 1.25rem; }
+.checklist-head { display: flex; justify-content: space-between; align-items: center; }
+.checklist ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.checklist li { display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap; }
+.checklist li.done { color: var(--muted); text-decoration: line-through; }
+.checklist .tick { width: 1.2rem; height: 1.2rem; flex: none; border: 1.5px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.75rem; color: #fff; align-self: center; }
+.checklist li.done .tick { background: var(--ok); border-color: var(--ok); }
+.today-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
+.stat { display: grid; gap: 0.2rem; padding: 1.1rem 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; color: var(--text); text-decoration: none; }
+.stat strong { font-size: 1.6rem; font-weight: 700; }
+.stat span { color: var(--muted); font-size: 0.9rem; }
+.stat:hover { border-color: var(--accent); }
+.stat.warn strong { color: var(--warn); }
+.today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1rem; align-items: start; }
+.best-offers { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.best-offers li { display: flex; gap: 0.75rem; align-items: center; }

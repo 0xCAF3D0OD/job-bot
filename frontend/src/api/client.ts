@@ -42,3 +42,4 @@ export type Cv = Schemas["CvOut"];
 export type CvBlock = Schemas["CvBlock"];
 export type OrpMonth = Schemas["OrpMonthOut"];
 export type OrpRow = Schemas["OrpRowOut"];
+export type Today = Schemas["TodayOut"];

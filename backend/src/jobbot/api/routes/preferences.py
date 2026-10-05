@@ -1,11 +1,12 @@
 """Prérequis (filtre) et réglages, saisis dans l'interface (docs/04 §3 et §6)."""
 
+from datetime import datetime
 from typing import Annotated, Literal
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 
 from jobbot.core.filter import (
@@ -16,7 +17,7 @@ from jobbot.core.filter import (
     Criteria,
     Language,
 )
-from jobbot.db.models import Setting
+from jobbot.db.models import Criterion, Setting
 from jobbot.filtering.service import load_criteria, save_criteria
 from jobbot.notify import service as notify_service
 from jobbot.runtime import Runtime
@@ -62,6 +63,9 @@ class KeywordsOut(BaseModel):
 class CriteriaOut(BaseModel):
     criteria: CriteriaIn
     keywords: KeywordsOut
+    # Date du premier enregistrement ; None tant que Kevin ne les a jamais saisis : la page
+    # montre alors le formulaire, ensuite un résumé et un bouton « Modifier » (docs/10 §2).
+    saved_at: datetime | None = None
 
 
 class FilterResponse(BaseModel):
@@ -102,7 +106,8 @@ def _criteria_in(criteria: Criteria) -> CriteriaIn:
 async def get_criteria(request: Request) -> CriteriaOut:
     async with _runtime(request).sessionmaker() as session:
         criteria = await load_criteria(session)
-    return CriteriaOut(criteria=_criteria_in(criteria), keywords=_keywords())
+        saved_at = await session.scalar(select(func.min(Criterion.updated_at)))
+    return CriteriaOut(criteria=_criteria_in(criteria), keywords=_keywords(), saved_at=saved_at)
 
 
 @router.put("/criteria", operation_id="saveCriteria")
@@ -119,8 +124,9 @@ async def put_criteria(request: Request, body: CriteriaIn) -> CriteriaOut:
     )
     async with runtime.sessionmaker.begin() as session:
         await save_criteria(session, criteria)
+        saved_at = await session.scalar(select(func.min(Criterion.updated_at)))
     await enqueue(runtime.settings, FILTER_JOB)
-    return CriteriaOut(criteria=_criteria_in(criteria), keywords=_keywords())
+    return CriteriaOut(criteria=_criteria_in(criteria), keywords=_keywords(), saved_at=saved_at)
 
 
 @router.post("/filter", operation_id="startFilter", status_code=status.HTTP_202_ACCEPTED)

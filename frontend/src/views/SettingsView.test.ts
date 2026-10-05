@@ -30,7 +30,7 @@ describe("SettingsView, notifications", () => {
           : { data: { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 } },
       ),
     );
-    const wrapper = mount(SettingsView);
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
     await flushPromises();
     expect(wrapper.find("[data-test=notifications-unknown]").text()).toContain("Relance make dev");
     expect(wrapper.text()).not.toContain("Non configurées");
@@ -38,7 +38,7 @@ describe("SettingsView, notifications", () => {
 
   it("non configurées : explique quoi faire", async () => {
     mockGet(false);
-    const wrapper = mount(SettingsView);
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
     await flushPromises();
     expect(wrapper.find("[data-test=notifications]").text()).toContain("JOBBOT_NTFY_TOPIC");
     expect(wrapper.find("[data-test=test-notification]").exists()).toBe(false);
@@ -47,59 +47,11 @@ describe("SettingsView, notifications", () => {
   it("configurées : envoie une notification de test", async () => {
     mockGet(true);
     POST.mockResolvedValue({ response: { status: 204 } });
-    const wrapper = mount(SettingsView);
+    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true } } });
     await flushPromises();
     await wrapper.find("[data-test=test-notification]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/notifications/test");
     expect(wrapper.find("[data-test=notifications] [role=status]").text()).toContain("Notification envoyée");
-  });
-});
-
-describe("SettingsView, coordonnées", () => {
-  it("charge et enregistre les coordonnées", async () => {
-    GET.mockImplementation((path: string) =>
-      Promise.resolve({
-        data:
-          path === "/api/identity"
-            ? { name: "Camille Exemple", street: null, postcode: null, city: null, phone: null, email: null }
-            : path === "/api/notifications"
-              ? { configured: false, server: "https://ntfy.sh" }
-              : { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 },
-      }),
-    );
-    const { api } = await import("../api/client");
-    const put = vi.mocked(api.PUT).mockResolvedValue({ data: {} } as never);
-    const wrapper = mount(SettingsView);
-    await flushPromises();
-    const name = wrapper.find<HTMLInputElement>("[data-test=identity-name]");
-    expect(name.element.value).toBe("Camille Exemple");
-    await wrapper.find("[data-test=identity-street]").setValue("Rue du Test 1");
-    await wrapper.find("[data-test=identity-postcode]").setValue("1020");
-    await wrapper.find("[data-test=identity-city]").setValue("Renens");
-    await wrapper.find("[data-test=identity-form]").trigger("submit");
-    await flushPromises();
-    expect(put).toHaveBeenCalledWith("/api/identity", {
-      body: {
-        name: "Camille Exemple",
-        street: "Rue du Test 1",
-        postcode: "1020",
-        city: "Renens",
-        phone: null,
-        email: null,
-      },
-    });
-    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("enregistrées");
-  });
-
-  it("API pas à jour : demande de relancer make dev", async () => {
-    GET.mockResolvedValue({ data: undefined, response: { status: 404 } });
-    const { api } = await import("../api/client");
-    vi.mocked(api.PUT).mockResolvedValue({ data: undefined, response: { status: 404 } } as never);
-    const wrapper = mount(SettingsView);
-    await flushPromises();
-    await wrapper.find("[data-test=identity-form]").trigger("submit");
-    await flushPromises();
-    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("relance make dev");
   });
 });

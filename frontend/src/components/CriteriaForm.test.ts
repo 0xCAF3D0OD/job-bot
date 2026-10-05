@@ -1,7 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import CriteriaView from "./CriteriaView.vue";
+import CriteriaView from "./CriteriaForm.vue";
 
 const GET = vi.fn();
 const PUT = vi.fn();
@@ -51,5 +51,34 @@ describe("CriteriaView", () => {
       }),
     });
     expect(wrapper.find("[role=status]").text()).toContain("refiltrées");
+  });
+});
+
+describe("CriteriaForm, déjà saisis", () => {
+  it("montre un résumé, puis le formulaire pré-rempli sur « Modifier »", async () => {
+    GET.mockResolvedValue({
+      data: {
+        criteria: {
+          locations: ["VD", "Genève"],
+          remote_ok: true,
+          min_rate: 80,
+          excluded_types: ["stage"],
+          banned_words: [],
+          unspoken_languages: [],
+        },
+        keywords: { contract_types: {}, language_names: {}, requirement_words: [] },
+        saved_at: "2026-10-01T08:00:00Z",
+      },
+    });
+    const wrapper = mount(CriteriaView);
+    await flushPromises();
+    const summary = wrapper.find("[data-test=criteria-summary]");
+    expect(summary.text()).toContain("Lieux : VD, Genève, ou télétravail complet");
+    expect(summary.text()).toContain("80 % au moins");
+    expect(summary.text()).toContain("Exclus : stages");
+    expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);
+    await wrapper.find("[data-test=edit-criteria]").trigger("click");
+    expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=cancel-criteria]").exists()).toBe(true);
   });
 });
