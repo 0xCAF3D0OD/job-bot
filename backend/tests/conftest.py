@@ -83,3 +83,23 @@ async def offline_client() -> AsyncIterator[AsyncClient]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
     await runtime.dispose()
+
+
+@pytest.fixture(autouse=True)
+def no_registry_network(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Aucun appel au registre IDE pendant les tests ; les noms cherchés sont notés."""
+    from jobbot.registry import service as registry_service
+    from jobbot.registry import uid
+
+    searched: list[str] = []
+
+    async def fake_search(name: str) -> list[uid.RegistryCompany]:
+        searched.append(name)
+        return []
+
+    async def no_sleep(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(uid, "search", fake_search)
+    monkeypatch.setattr(registry_service, "sleep", no_sleep)
+    return searched

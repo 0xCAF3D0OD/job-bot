@@ -377,3 +377,40 @@ describe("détail allégé et adresse", () => {
     });
   });
 });
+
+describe("adresse par le registre IDE", () => {
+  it("propose les entreprises possibles puis enregistre le choix", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offers/{offer_id}/address-candidates"
+          ? {
+              data: {
+                chosen_uid: null,
+                candidates: [
+                  { uid: "CHE1", name: "Exemple SA", address: "Rue 1\n1206 Genève", canton: "GE" },
+                  { uid: "CHE2", name: "Exemple Sàrl", address: "Rue 2\n1206 Genève", canton: "GE" },
+                ],
+              },
+            }
+          : path === "/api/profile-chunks"
+            ? { data: [] }
+            : page([offer(1, "Ingénieur système")]),
+      ),
+    );
+    POST.mockResolvedValue({ data: { company_address: "Rue 2\n1206 Genève", company_address_source: "registry" } });
+    const wrapper = await mountAt("/offres");
+    await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=search-registry]").trigger("click");
+    await flushPromises();
+    const choices = wrapper.findAll("[data-test=choose-registry]");
+    expect(choices).toHaveLength(2);
+    expect(wrapper.find("[data-test=registry]").text()).toContain("Rue 2, 1206 Genève");
+    await choices[1]!.trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/address-candidates/choose", {
+      params: { path: { offer_id: 1 } },
+      body: { uid: "CHE2" },
+    });
+    expect(wrapper.findAll("[data-test=choose-registry]")).toHaveLength(0);
+  });
+});

@@ -44,3 +44,4 @@ export type OrpMonth = Schemas["OrpMonthOut"];
 export type OrpRow = Schemas["OrpRowOut"];
 export type Today = Schemas["TodayOut"];
 export type FilterKey = Schemas["OfferFiltersVisible"]["visible"][number];
+export type RegistryCandidate = Schemas["RegistryCandidate"];

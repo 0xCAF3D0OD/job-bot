@@ -414,3 +414,19 @@ class OrpMonth(Base):
     changed_after_submit: Mapped[bool] = mapped_column(default=False)
     # Rappels ntfy déjà envoyés (0.6.0-b) : {"under_target": date, "due": date, "eve": date}.
     reminders_sent: Mapped[Any] = mapped_column(JSONB, default=dict)
+
+
+class Company(Base):
+    """Recherche d'une entreprise dans le registre IDE, mise en cache (docs/12 §2.2)."""
+
+    __tablename__ = "companies"
+
+    # Nom normalisé, sans forme juridique : « moser vernet » pour « Moser Vernet & Cie SA ».
+    name_key: Mapped[str] = mapped_column(Text, primary_key=True)
+    uid: Mapped[str | None] = mapped_column(Text)
+    address: Mapped[str | None] = mapped_column(Text)
+    # Jusqu'à 3 propositions : {uid, name, street, zip_code, town, canton, active, address}.
+    candidates: Mapped[Any] = mapped_column(JSONB, default=list)
+    # « auto » : correspondance sûre ; « manual » : choisie par Kevin ; None : à choisir.
+    chosen_by: Mapped[str | None] = mapped_column(Text)
+    looked_up_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

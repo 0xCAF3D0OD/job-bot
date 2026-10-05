@@ -786,10 +786,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/address-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Address Candidates
+         * @description Propositions du registre IDE ; une recherche est faite si rien n'est en cache.
+         */
+        get: operations["getAddressCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{offer_id}/address-candidates/choose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Choose Address
+         * @description Kevin choisit une proposition : elle vaut pour toutes les offres de cette entreprise.
+         */
+        post: operations["chooseAddressCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddressCandidates */
+        AddressCandidates: {
+            /** Chosen Uid */
+            chosen_uid: string | null;
+            /** Candidates */
+            candidates: components["schemas"]["RegistryCandidate"][];
+        };
         /** ApplicationIn */
         ApplicationIn: {
             /**
@@ -968,6 +1015,18 @@ export interface components {
             key: "criteria" | "profile" | "identity" | "orp_target" | "notifications" | "imap";
             /** Done */
             done: boolean;
+        };
+        /** ChooseIn */
+        ChooseIn: {
+            /** Uid */
+            uid: string;
+        };
+        /** ChosenAddress */
+        ChosenAddress: {
+            /** Company Address */
+            company_address: string;
+            /** Company Address Source */
+            company_address_source: string;
         };
         /** ChunkIn */
         ChunkIn: {
@@ -1726,6 +1785,17 @@ export interface components {
          * @enum {string}
          */
         ParseStatus: "parsed" | "empty" | "unrecognized" | "failed";
+        /** RegistryCandidate */
+        RegistryCandidate: {
+            /** Uid */
+            uid: string;
+            /** Name */
+            name: string;
+            /** Address */
+            address: string;
+            /** Canton */
+            canton: string;
+        };
         /** RescoreResponse */
         RescoreResponse: {
             /**
@@ -3698,6 +3768,79 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getAddressCandidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressCandidates"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Registre IDE injoignable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    chooseAddressCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChooseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChosenAddress"];
+                };
             };
             /** @description Validation Error */
             422: {
