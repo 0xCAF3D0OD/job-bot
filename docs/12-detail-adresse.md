@@ -74,3 +74,22 @@ Les migrations prévues au cadrage 11 pour les mots-clés et les sites deviennen
 - **Comparaison des noms** : sans majuscules, accents ni formes juridiques (« Moser Vernet & Cie » = « Moser Vernet & Cie SA ») ; une entreprise radiée ou inactive est écartée.
 - **Choix** : il vaut pour toutes les offres de la même entreprise ; le cache dure 30 jours.
 - **Pas de recherche** pour une adresse saisie par toi ou lue sur l'annonce.
+
+## Complément 0.7.2 — recherche sur Internet (à valider)
+
+**Constat (2026-10-05)** : le registre IDE cherche le **nom légal**. Les annonces donnent souvent un nom commercial (« Clinique de La Source », « JEMS Group ») ou une entreprise étrangère (Broadcom, Red Hat, Chanel) : la recherche ne tranche pas, ou propose des homonymes sans rapport.
+
+**Proposition** : quand le registre ne trouve pas d'adresse sûre, l'IA cherche sur Internet :
+
+- elle reçoit seulement le **nom de l'entreprise** et la **ville de l'offre** (rien sur toi) ;
+- elle utilise l'outil de recherche web de Claude (2 recherches au plus) et rend l'adresse suisse la plus probable, avec la **page source** ;
+- l'adresse est retenue avec la mention « trouvée sur Internet » et le lien vers la source, pour que tu vérifies d'un clic ; si rien de fiable n'est trouvé, rien n'est rempli ;
+- priorité : saisie > annonce > registre IDE > Internet > lettre.
+
+**Coût** : environ 0,02 à 0,03 $ par entreprise (recherches web à 0,01 $ l'unité, plus le texte), une seule fois par entreprise grâce au cache. Pour tes quelque 60 entreprises actuelles : environ 1,50 $. Dans le plafond mensuel, enregistré dans `llm_calls` (`purpose = address`).
+
+**Sans clé API** : seul le registre IDE fonctionne, comme aujourd'hui.
+
+Points à valider :
+1. **Recherche web par l'IA** en dernier recours après le registre IDE, avec la source affichée.
+2. **Environ 1,50 $** pour les entreprises actuelles, puis quelques centimes par nouvelle entreprise.
