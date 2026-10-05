@@ -124,9 +124,13 @@ async def _recheck_candidates(runtime: Runtime, now: datetime, room: int) -> lis
                 Offer.expired_at.is_(None),
                 Offer.expiry_override.is_(None),
                 Offer.enrich_status == EnrichStatus.OK,
-                last_check < now - RECHECK_AFTER,
+                or_(
+                    last_check < now - RECHECK_AFTER,
+                    # Lues avant 0.7.4 : relues une fois tout de suite pour le logo et le site.
+                    and_(Offer.logo_url.is_(None), Offer.checked_at.is_(None)),
+                ),
             )
-            .order_by(last_check, Offer.id)
+            .order_by(Offer.checked_at.is_not(None), last_check, Offer.id)
             .limit(room)
         )
         return [(offer_id, url) for offer_id, url in rows]
@@ -257,6 +261,8 @@ async def enrich(runtime: Runtime) -> EnrichResult:
             offer_id,
             now,
             enrich_status=EnrichStatus.OK,
+            # Première lecture = première vérification (logo et site compris).
+            checked_at=now,
             apply_url=parsed.apply_url,
             apply_kind=parsed.apply_kind,
             description=parsed.description,
