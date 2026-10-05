@@ -60,19 +60,17 @@ function initial(offer: Offer): string {
         </RouterLink>
       </template>
       <template v-else>
-        <button
-          v-if="offer.status !== 'preparing'"
-          type="button"
-          class="secondary small"
-          data-test="prepare"
-          @click="emit('status', 'preparing')"
-        >
-          Préparer ma candidature
-        </button>
         <span
-          v-else
+          v-if="offer.status === 'preparing'"
           class="badge"
         >En préparation</span>
+        <RouterLink
+          :to="`/offres/${offer.id}/preparer`"
+          class="button-link"
+          data-test="prepare"
+        >
+          {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+        </RouterLink>
         <button
           type="button"
           class="primary small"

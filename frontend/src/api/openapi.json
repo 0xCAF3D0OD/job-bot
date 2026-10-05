@@ -400,6 +400,48 @@
         }
       }
     },
+    "/api/offers/{offer_id}": {
+      "get": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Get Offer",
+        "operationId": "getOffer",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/collect": {
       "post": {
         "tags": [
@@ -1419,6 +1461,204 @@
           }
         }
       }
+    },
+    "/api/offers/{offer_id}/letters": {
+      "get": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "List Letters",
+        "description": "Toutes les versions, la plus récente d'abord.",
+        "operationId": "listLetters",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LetterOut"
+                  },
+                  "title": "Response Listletters"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Write Letter",
+        "description": "L'IA rédige une nouvelle version (quelques dizaines de secondes).",
+        "operationId": "writeLetter",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LetterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA non configurée, profil vide, budget atteint ou compte indisponible"
+          },
+          "502": {
+            "description": "Réponse de l'IA inutilisable"
+          },
+          "503": {
+            "description": "IA momentanément indisponible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/letters/{draft_id}": {
+      "put": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Edit Letter",
+        "description": "Corrections de Kevin : la version modifiée devient celle qui compte.",
+        "operationId": "editLetter",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LetterEdit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/letters/{draft_id}/docx": {
+      "get": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Download Letter Docx",
+        "operationId": "downloadLetterDocx",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1685,6 +1925,17 @@
             ],
             "title": "Offer Id"
           },
+          "letter_draft_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Letter Draft Id"
+          },
           "orp_month": {
             "type": "string",
             "title": "Orp Month"
@@ -1714,6 +1965,7 @@
           "job_title",
           "id",
           "offer_id",
+          "letter_draft_id",
           "orp_month",
           "reminded_at",
           "created_at"
@@ -2440,6 +2692,45 @@
         ],
         "title": "DocumentType"
       },
+      "EmployerOut": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "contact_phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Phone"
+          }
+        },
+        "type": "object",
+        "title": "EmployerOut"
+      },
       "Facet": {
         "properties": {
           "value": {
@@ -2711,6 +3002,292 @@
           "anglais"
         ],
         "title": "Language"
+      },
+      "LetterDocumentOut": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en",
+              "de"
+            ],
+            "title": "Language"
+          },
+          "sender": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sender"
+          },
+          "place_date": {
+            "type": "string",
+            "title": "Place Date"
+          },
+          "recipient": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recipient"
+          },
+          "subject_line": {
+            "type": "string",
+            "title": "Subject Line"
+          },
+          "salutation": {
+            "type": "string",
+            "title": "Salutation"
+          },
+          "paragraphs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Paragraphs"
+          },
+          "closing": {
+            "type": "string",
+            "title": "Closing"
+          },
+          "signature": {
+            "type": "string",
+            "title": "Signature"
+          },
+          "enclosure": {
+            "type": "string",
+            "title": "Enclosure"
+          },
+          "missing_identity": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Identity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "sender",
+          "place_date",
+          "recipient",
+          "subject_line",
+          "salutation",
+          "paragraphs",
+          "closing",
+          "signature",
+          "enclosure",
+          "missing_identity"
+        ],
+        "title": "LetterDocumentOut",
+        "description": "La lettre telle qu'elle sera envoyée, en-tête compris."
+      },
+      "LetterEdit": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Subject"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/LetterParagraph"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Paragraphs"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "fr",
+                  "en",
+                  "de"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "paragraphs"
+        ],
+        "title": "LetterEdit"
+      },
+      "LetterOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "offer_id": {
+            "type": "integer",
+            "title": "Offer Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en",
+              "de"
+            ],
+            "title": "Language"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/LetterParagraph"
+            },
+            "type": "array",
+            "title": "Paragraphs"
+          },
+          "employer": {
+            "$ref": "#/components/schemas/EmployerOut"
+          },
+          "instruction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instruction"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "edited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited At"
+          },
+          "document": {
+            "$ref": "#/components/schemas/LetterDocumentOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "offer_id",
+          "version",
+          "language",
+          "subject",
+          "paragraphs",
+          "employer",
+          "instruction",
+          "model",
+          "created_at",
+          "edited_at",
+          "document"
+        ],
+        "title": "LetterOut"
+      },
+      "LetterParagraph": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "chunk_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Chunk Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "LetterParagraph"
+      },
+      "LetterRequest": {
+        "properties": {
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "fr",
+                  "en",
+                  "de"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "instruction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instruction"
+          },
+          "base_draft_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Draft Id"
+          }
+        },
+        "type": "object",
+        "title": "LetterRequest"
       },
       "MonthSummary": {
         "properties": {

@@ -11,6 +11,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Integer,
     Numeric,
     SmallInteger,
     Text,
@@ -355,4 +356,37 @@ class Application(Base):
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     orp_month: Mapped[str] = mapped_column(Text, index=True)
+    # Documents envoyés (docs/08 §5), retéléchargeables depuis la page Candidatures.
+    letter_draft_id: Mapped[int | None] = mapped_column(
+        ForeignKey("drafts.id", ondelete="SET NULL")
+    )
+    cv_draft_id: Mapped[int | None] = mapped_column(ForeignKey("drafts.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class DraftKind(StrEnum):
+    LETTER = "letter"
+    CV = "cv"
+
+
+class Draft(Base):
+    """Une version de lettre (ou de CV) préparée pour une offre (docs/08 §3).
+
+    `content` pour une lettre : {subject, paragraphs: [{text, chunk_ids}], employer: {...}}.
+    Les coordonnées de Kevin n'y sont jamais : elles sont ajoutées à l'affichage.
+    """
+
+    __tablename__ = "drafts"
+    __table_args__ = (UniqueConstraint("offer_id", "kind", "version"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"))
+    kind: Mapped[str] = mapped_column(Text)
+    version: Mapped[int] = mapped_column(Integer)
+    language: Mapped[str] = mapped_column(Text)
+    content: Mapped[Any] = mapped_column(JSONB)
+    instruction: Mapped[str | None] = mapped_column(Text)
+    model: Mapped[str | None] = mapped_column(Text)
+    prompt_version: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

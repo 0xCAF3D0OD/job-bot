@@ -4,6 +4,7 @@ Les coordonnées de Kevin servent à l'en-tête des documents (0.5.0-b) : elles 
 locale et ne sont jamais envoyées à l'IA.
 """
 
+from dataclasses import asdict
 from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo
@@ -21,6 +22,7 @@ from jobbot.db.models import (
     OfferStatus,
     Setting,
 )
+from jobbot.letters.service import IDENTITY_KEYS, current_letter, load_identity
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 
@@ -119,6 +121,7 @@ class ApplicationOut(ApplicationUpdate):
 
     id: int
     offer_id: int | None
+    letter_draft_id: int | None
     orp_month: str
     reminded_at: datetime | None
     created_at: datetime
@@ -156,11 +159,17 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
     """Valeurs proposées pour « Marquer comme envoyée »."""
     async with _runtime(request).sessionmaker() as session:
         offer = await session.get(Offer, offer_id)
+        letter = await current_letter(session, offer_id)
     if offer is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+    # Coordonnées de l'employeur relevées par l'IA dans l'annonce, pendant la rédaction.
+    employer = (letter.content.get("employer") if letter else None) or {}
     return ApplicationPrefill(
         offer_id=offer.id,
         sent_at=_today(),
+        company_address=employer.get("address"),
+        contact_name=employer.get("contact_name"),
+        contact_phone=employer.get("contact_phone"),
         company=offer.company or "Entreprise non indiquée",
         job_title=offer.title,
         location=offer.location,
@@ -217,7 +226,14 @@ async def create_application(request: Request, body: ApplicationIn) -> Applicati
                     "une candidature est déjà enregistrée pour cette offre",
                 )
             offer.status = OfferStatus.APPLIED
-        application = Application(**body.model_dump(), orp_month=body.sent_at.strftime("%Y-%m"))
+            letter = await current_letter(session, body.offer_id)
+        else:
+            letter = None
+        application = Application(
+            **body.model_dump(),
+            orp_month=body.sent_at.strftime("%Y-%m"),
+            letter_draft_id=letter.id if letter else None,
+        )
         session.add(application)
         await session.flush()
         await session.refresh(application)
@@ -265,15 +281,6 @@ async def delete_application(request: Request, application_id: int) -> None:
 
 # --- Coordonnées ----------------------------------------------------------------------
 
-IDENTITY_KEYS = {
-    "name": "identity_name",
-    "street": "identity_street",
-    "postcode": "identity_postcode",
-    "city": "identity_city",
-    "phone": "identity_phone",
-    "email": "identity_email",
-}
-
 
 class Identity(BaseModel):
     name: ShortText | None = None
@@ -300,13 +307,8 @@ class Identity(BaseModel):
 @router.get("/identity", operation_id="getIdentity")
 async def get_identity(request: Request) -> Identity:
     async with _runtime(request).sessionmaker() as session:
-        rows = {
-            s.key: s.value
-            for s in await session.scalars(
-                select(Setting).where(Setting.key.in_(IDENTITY_KEYS.values()))
-            )
-        }
-    return Identity(**{field: rows.get(key) for field, key in IDENTITY_KEYS.items()})
+        identity = await load_identity(session)
+    return Identity(**asdict(identity))
 
 
 @router.put("/identity", operation_id="saveIdentity")

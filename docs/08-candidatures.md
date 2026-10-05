@@ -1,6 +1,6 @@
 # 08 — Candidatures : lettre, CV adapté et suivi (version 0.5.0)
 
-> Statut : **validé** le 2026-10-05. PR a (tri, suivi, coordonnées, relance) livrée ; PR b et c à venir.
+> Statut : **validé** le 2026-10-05. PR a (tri, suivi, coordonnées, relance) et PR b (lettre) livrées ; PR c à venir.
 > S'appuie sur [01-cadrage.md](01-cadrage.md) §2, §3 et §5 (`drafts`, `applications`), sur le profil en blocs (0.3) et la note IA (0.4). L'export ORP reste en 0.6, mais la 0.5 enregistre déjà tout ce dont il aura besoin.
 
 ## 1. Objectif
@@ -127,3 +127,12 @@ La PR a sert tout de suite : tu peux suivre les candidatures que tu envoies déj
 - **Ajout manuel** : la page Candidatures permet aussi d'enregistrer une candidature envoyée hors plateforme (sans offre liée).
 - **Suppression** : supprimer une candidature remet l'offre « en préparation ».
 - **Relance** : la tâche `reminders` passe une fois par jour vers 9 h ; sans ntfy configuré, aucune candidature n'est marquée comme relancée.
+
+## Écarts avec la PR b
+
+- **Migration 0011** : table `drafts` et colonnes `letter_draft_id`, `cv_draft_id` des candidatures (prévues en 0010 dans le §7).
+- **Page de préparation** : `/offres/<id>/preparer`, ouverte par « Préparer ma candidature ». L'offre passe « en préparation » à la première lettre rédigée, pas à l'ouverture de la page.
+- **Adresse de l'employeur** : relevée par l'IA pendant la rédaction de la lettre (§5), puis proposée dans « Marquer comme envoyée ».
+- **Formules** : l'appel (« Madame, Monsieur, »), la politesse finale et la ligne « Annexe : curriculum vitae » sont ajoutées par la plateforme, dans la langue de la lettre.
+- **Effort** : réglable par `JOBBOT_LLM_WRITING_EFFORT` (`medium` par défaut).
+- **Lettre envoyée** : la candidature retient la version qui compte au moment de « Marquer comme envoyée » ; la page Candidatures la propose en Word.

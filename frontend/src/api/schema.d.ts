@@ -95,6 +95,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Offer */
+        get: operations["getOffer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/collect": {
         parameters: {
             query?: never;
@@ -476,6 +493,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/letters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Letters
+         * @description Toutes les versions, la plus récente d'abord.
+         */
+        get: operations["listLetters"];
+        put?: never;
+        /**
+         * Write Letter
+         * @description L'IA rédige une nouvelle version (quelques dizaines de secondes).
+         */
+        post: operations["writeLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/letters/{draft_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Edit Letter
+         * @description Corrections de Kevin : la version modifiée devient celle qui compte.
+         */
+        put: operations["editLetter"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/letters/{draft_id}/docx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Letter Docx */
+        get: operations["downloadLetterDocx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -557,6 +635,8 @@ export interface components {
             id: number;
             /** Offer Id */
             offer_id: number | null;
+            /** Letter Draft Id */
+            letter_draft_id: number | null;
             /** Orp Month */
             orp_month: string;
             /** Reminded At */
@@ -802,6 +882,15 @@ export interface components {
          * @enum {string}
          */
         DocumentType: "pdf" | "docx" | "txt" | "md";
+        /** EmployerOut */
+        EmployerOut: {
+            /** Address */
+            address?: string | null;
+            /** Contact Name */
+            contact_name?: string | null;
+            /** Contact Phone */
+            contact_phone?: string | null;
+        };
         /** Facet */
         Facet: {
             /** Value */
@@ -889,6 +978,93 @@ export interface components {
          * @enum {string}
          */
         Language: "allemand" | "italien" | "anglais";
+        /**
+         * LetterDocumentOut
+         * @description La lettre telle qu'elle sera envoyée, en-tête compris.
+         */
+        LetterDocumentOut: {
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "fr" | "en" | "de";
+            /** Sender */
+            sender: string[];
+            /** Place Date */
+            place_date: string;
+            /** Recipient */
+            recipient: string[];
+            /** Subject Line */
+            subject_line: string;
+            /** Salutation */
+            salutation: string;
+            /** Paragraphs */
+            paragraphs: string[];
+            /** Closing */
+            closing: string;
+            /** Signature */
+            signature: string;
+            /** Enclosure */
+            enclosure: string;
+            /** Missing Identity */
+            missing_identity: string[];
+        };
+        /** LetterEdit */
+        LetterEdit: {
+            /** Subject */
+            subject: string;
+            /** Paragraphs */
+            paragraphs: components["schemas"]["LetterParagraph"][];
+            /** Language */
+            language?: ("fr" | "en" | "de") | null;
+        };
+        /** LetterOut */
+        LetterOut: {
+            /** Id */
+            id: number;
+            /** Offer Id */
+            offer_id: number;
+            /** Version */
+            version: number;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "fr" | "en" | "de";
+            /** Subject */
+            subject: string;
+            /** Paragraphs */
+            paragraphs: components["schemas"]["LetterParagraph"][];
+            employer: components["schemas"]["EmployerOut"];
+            /** Instruction */
+            instruction: string | null;
+            /** Model */
+            model: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Edited At */
+            edited_at: string | null;
+            document: components["schemas"]["LetterDocumentOut"];
+        };
+        /** LetterParagraph */
+        LetterParagraph: {
+            /** Text */
+            text: string;
+            /** Chunk Ids */
+            chunk_ids?: number[];
+        };
+        /** LetterRequest */
+        LetterRequest: {
+            /** Language */
+            language?: ("fr" | "en" | "de") | null;
+            /** Instruction */
+            instruction?: string | null;
+            /** Base Draft Id */
+            base_draft_id?: number | null;
+        };
         /** MonthSummary */
         MonthSummary: {
             /** Month */
@@ -1454,6 +1630,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OfferPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferOut"];
                 };
             };
             /** @description Validation Error */
@@ -2309,6 +2516,159 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Identity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listLetters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LetterOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    writeLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LetterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LetterOut"];
+                };
+            };
+            /** @description IA non configurée, profil vide, budget atteint ou compte indisponible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Réponse de l'IA inutilisable */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description IA momentanément indisponible */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    editLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LetterEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LetterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    downloadLetterDocx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": unknown;
                 };
             };
             /** @description Validation Error */
