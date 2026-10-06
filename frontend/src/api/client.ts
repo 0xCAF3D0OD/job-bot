@@ -47,3 +47,5 @@ export type OrpRow = Schemas["OrpRowOut"];
 export type Today = Schemas["TodayOut"];
 export type FilterKey = Schemas["OfferFiltersVisible"]["visible"][number];
 export type RegistryCandidate = Schemas["RegistryCandidate"];
+export type Inbox = Schemas["Inbox"];
+export type InboxItem = Schemas["NotificationOut"];

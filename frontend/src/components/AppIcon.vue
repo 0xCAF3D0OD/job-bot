@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Icônes au trait, dessinées pour job-bot (style de la maquette, aucun fichier repris).
-defineProps<{ name: "pin" | "rate" | "globe" | "check" | "chevron" | "calendar" | "eye" }>();
+defineProps<{ name: "pin" | "rate" | "globe" | "check" | "chevron" | "calendar" | "eye" | "bell" }>();
 </script>
 
 <template>
@@ -55,6 +55,10 @@ defineProps<{ name: "pin" | "rate" | "globe" | "check" | "chevron" | "calendar" 
     </template>
     <template v-else-if="name === 'chevron'">
       <path d="M9 6l6 6-6 6" />
+    </template>
+    <template v-else-if="name === 'bell'">
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16z" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
     </template>
     <template v-else-if="name === 'calendar'">
       <rect

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppIcon from "./components/AppIcon.vue";
+import NotificationBell from "./components/NotificationBell.vue";
 import { useCollect } from "./composables/useCollect";
 import { navigation } from "./router";
 
@@ -32,15 +33,18 @@ const { message, running, collectNow } = useCollect();
           </li>
         </ul>
       </nav>
-      <button
-        type="button"
-        class="primary small"
-        :disabled="running"
-        data-test="collect-top"
-        @click="collectNow"
-      >
-        Collecter <AppIcon name="chevron" />
-      </button>
+      <div class="topbar-actions">
+        <NotificationBell />
+        <button
+          type="button"
+          class="primary small"
+          :disabled="running"
+          data-test="collect-top"
+          @click="collectNow"
+        >
+          Collecter <AppIcon name="chevron" />
+        </button>
+      </div>
     </div>
   </header>
   <p

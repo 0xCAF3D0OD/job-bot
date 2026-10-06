@@ -5,7 +5,8 @@
 - Dépense de l'IA à 80 % du plafond mensuel : une notification par mois.
 
 Envoi en JSON (UTF-8 sûr pour les accents), au serveur JOBBOT_NTFY_URL, sur le sujet
-secret JOBBOT_NTFY_TOPIC. Sans sujet, rien n'est envoyé.
+secret JOBBOT_NTFY_TOPIC. Sans sujet, rien ne part vers le téléphone ; chaque alerte est aussi
+enregistrée pour la cloche de la plateforme (docs/15 §1).
 """
 
 from collections.abc import Awaitable, Callable, Sequence
@@ -22,6 +23,7 @@ from jobbot.db.models import (
     Application,
     ApplicationStatus,
     Evaluation,
+    Notification,
     Offer,
     OfferStatus,
     Setting,
@@ -67,6 +69,21 @@ async def http_send(settings: Settings, message: Message) -> None:
 send: Callable[[Settings, Message], Awaitable[None]] = http_send
 
 
+async def deliver(runtime: Runtime, message: Message, *, kind: str, link: str) -> None:
+    """Une alerte : toujours dans la cloche (docs/15 §1), et sur le téléphone si ntfy est
+    configuré. Un échec de ntfy n'empêche pas l'alerte d'être dans la cloche."""
+    async with runtime.sessionmaker.begin() as session:
+        session.add(
+            Notification(kind=kind, title=message.title, message=message.message, link=link)
+        )
+    if not runtime.settings.ntfy_configured:
+        return
+    try:
+        await send(runtime.settings, message)
+    except httpx.HTTPError as exc:
+        log.warning("ntfy_send_failed", kind=kind, error=type(exc).__name__)
+
+
 def offers_message(
     settings: Settings, rows: Sequence[tuple[int, str, str | None, str | None]]
 ) -> Message:
@@ -106,9 +123,7 @@ async def _threshold(runtime: Runtime) -> int:
 
 async def notify_new_scores(runtime: Runtime) -> NotifyResult:
     settings = runtime.settings
-    if not settings.ntfy_configured:
-        return NotifyResult(configured=False)
-    result = NotifyResult()
+    result = NotifyResult(configured=settings.ntfy_configured)
     threshold = await _threshold(runtime)
     async with runtime.sessionmaker() as session:
         rows = (
@@ -125,8 +140,11 @@ async def notify_new_scores(runtime: Runtime) -> NotifyResult:
             )
         ).all()
     if rows:
-        await send(
-            settings, offers_message(settings, [(r[1] or 0, r[2], r[3], r[4]) for r in rows])
+        await deliver(
+            runtime,
+            offers_message(settings, [(r[1] or 0, r[2], r[3], r[4]) for r in rows]),
+            kind="offers",
+            link="/offres?tri=score",
         )
         async with runtime.sessionmaker.begin() as session:
             await session.execute(
@@ -159,8 +177,8 @@ async def _budget_alert(runtime: Runtime) -> bool:
         already = await session.scalar(select(Setting.value).where(Setting.key == BUDGET_ALERT_KEY))
     if budget <= 0 or spend < budget * BUDGET_ALERT_RATIO or already == month:
         return False
-    await send(
-        runtime.settings,
+    await deliver(
+        runtime,
         Message(
             title="Budget de l'IA presque atteint",
             message=f"{spend:.2f} CHF dépensés sur {budget:.2f} CHF ce mois-ci. "
@@ -169,6 +187,8 @@ async def _budget_alert(runtime: Runtime) -> bool:
             tags=["warning"],
             click=f"{runtime.settings.public_url.rstrip('/')}/reglages",
         ),
+        kind="budget",
+        link="/reglages",
     )
     async with runtime.sessionmaker.begin() as session:
         await session.execute(
@@ -197,11 +217,9 @@ REMIND_AFTER_DAYS = 10
 
 
 async def notify_reminders(runtime: Runtime, today: date | None = None) -> int:
-    """Candidatures en attente depuis 10 jours : une notification groupée, une seule fois
-    par candidature. Sans ntfy configuré, rien n'est marqué (le rappel reste à faire)."""
+    """Candidatures en attente depuis 10 jours : une alerte groupée, une seule fois par
+    candidature (cloche, et téléphone si ntfy est configuré)."""
     settings = runtime.settings
-    if not settings.ntfy_configured:
-        return 0
     today = today or datetime.now(UTC).date()
     limit = today - timedelta(days=REMIND_AFTER_DAYS)
     async with runtime.sessionmaker() as session:
@@ -223,14 +241,16 @@ async def notify_reminders(runtime: Runtime, today: date | None = None) -> int:
     ]
     if len(due) > MAX_LISTED:
         lines.append(f"… et {len(due) - MAX_LISTED} autre(s)")
-    await send(
-        settings,
+    await deliver(
+        runtime,
         Message(
             title=f"{len(due)} candidature(s) sans réponse depuis {REMIND_AFTER_DAYS} jours",
             message="Relancer ?\n" + "\n".join(lines),
             tags=["hourglass"],
             click=f"{settings.public_url.rstrip('/')}/candidatures",
         ),
+        kind="follow_up",
+        link="/candidatures",
     )
     async with runtime.sessionmaker.begin() as session:
         await session.execute(

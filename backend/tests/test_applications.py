@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text, update
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Application, Offer, OfferStatus, Setting
+from jobbot.db.models import Application, Notification, Offer, OfferStatus, Setting
 from jobbot.notify import service as notify
 from jobbot.notify.service import Message
 from jobbot.runtime import Runtime
@@ -24,7 +24,9 @@ NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 @pytest.fixture
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
     async with runtime.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE offers, searches, job_runs, applications CASCADE"))
+        await conn.execute(
+            text("TRUNCATE offers, searches, job_runs, applications, notifications CASCADE")
+        )
         await conn.execute(text("DELETE FROM settings WHERE key LIKE 'identity_%'"))
     yield runtime
 
@@ -248,18 +250,25 @@ async def test_reminders_once_after_ten_days(rt: Runtime, sent: list[Message]) -
     await add_application(rt, date(2026, 10, 15))  # trop récente
     await add_application(rt, date(2026, 10, 1), status="refus")  # déjà une réponse
 
-    without_ntfy = await notify.notify_reminders(rt, today)
-    assert without_ntfy == 0 and sent == []
+    # Sans ntfy : l'alerte est dans la cloche, rien ne part vers le téléphone.
+    assert await notify.notify_reminders(rt, today) == 1
+    assert sent == []
+    async with rt.sessionmaker() as session:
+        [bell] = (
+            await session.scalars(select(Notification).where(Notification.kind == "follow_up"))
+        ).all()
+    assert bell.link == "/candidatures" and bell.read_at is None
+    assert await notify.notify_reminders(rt, today) == 0  # une seule fois
 
     configured = Runtime.create(make_settings(ntfy_topic="sujet"))
     try:
+        await add_application(configured, date(2026, 10, 9))
         assert await notify.notify_reminders(configured, today) == 1
-        assert await notify.notify_reminders(configured, today) == 0
     finally:
         await configured.dispose()
     [message] = sent
     assert message.title == "1 candidature(s) sans réponse depuis 10 jours"
-    assert "Acme SA — Poste du 2026-10-08 (envoyée le 08.10)" in message.message
+    assert "Acme SA — Poste du 2026-10-09 (envoyée le 09.10)" in message.message
     async with rt.sessionmaker() as session:
         reminded = await session.scalar(
             select(Application.reminded_at).where(Application.id == old)

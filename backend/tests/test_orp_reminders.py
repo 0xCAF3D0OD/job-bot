@@ -4,9 +4,9 @@ from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import select, text
 
-from jobbot.db.models import Application, OrpMonth, Setting
+from jobbot.db.models import Application, Notification, OrpMonth, Setting
 from jobbot.notify import service as notify
 from jobbot.notify.orp import notify_orp
 from jobbot.notify.service import Message
@@ -31,7 +31,7 @@ def sent(monkeypatch: pytest.MonkeyPatch) -> list[Message]:
 async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(ntfy_topic="sujet-test"))
     async with runtime.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE applications, orp_months CASCADE"))
+        await conn.execute(text("TRUNCATE applications, orp_months, notifications CASCADE"))
         await conn.execute(
             text("DELETE FROM settings WHERE key IN ('orp_monthly_target', 'orp_due_day')")
         )
@@ -98,8 +98,13 @@ async def test_due_day_setting_and_no_ntfy(rt: Runtime, sent: list[Message]) -> 
     await notify_orp(rt, date(2026, 10, 1))
     assert sent[0].title.endswith("avant le 10 octobre")
 
+    # Sans ntfy : la veille de la date limite, l'alerte est dans la cloche seulement.
     silent = Runtime.create(make_settings())
     try:
-        assert await notify_orp(silent, date(2026, 10, 9)) == 0
+        assert await notify_orp(silent, date(2026, 10, 9)) == 1
     finally:
         await silent.dispose()
+    assert len(sent) == 1
+    async with rt.sessionmaker() as session:
+        links = list(await session.scalars(select(Notification.link).order_by(Notification.id)))
+    assert links == ["/orp?mois=2026-09", "/orp?mois=2026-09"]
