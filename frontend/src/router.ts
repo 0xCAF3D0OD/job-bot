@@ -10,6 +10,7 @@ import PreparationView from "./views/PreparationView.vue";
 import ProfileView from "./views/ProfileView.vue";
 import SettingsView from "./views/SettingsView.vue";
 import TodayView from "./views/TodayView.vue";
+import TrainingsView from "./views/TrainingsView.vue";
 
 export interface NavEntry {
   path: string;
@@ -27,6 +28,7 @@ export const navigation: NavEntry[] = [
   { path: "/candidatures", name: "applications", label: "Candidatures" },
   { path: "/orp", name: "orp", label: "ORP" },
   { path: "/actualites", name: "news", label: "Actualités" },
+  { path: "/formations", name: "trainings", label: "Formations" },
   { path: "/profil", name: "profile", label: "Profil" },
   { path: "/reglages", name: "settings", label: "Réglages" },
 ];
@@ -37,6 +39,7 @@ const views: Record<string, Component> = {
   applications: ApplicationsView,
   orp: OrpView,
   news: NewsView,
+  trainings: TrainingsView,
   profile: ProfileView,
   settings: SettingsView,
   today: TodayView,

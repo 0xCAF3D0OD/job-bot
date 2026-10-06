@@ -1162,6 +1162,78 @@ export interface paths {
         patch: operations["updateNewsSource"];
         trace?: never;
     };
+    "/api/trainings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Trainings */
+        get: operations["listTrainings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trainings/{training_id}/mark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mark Training */
+        put: operations["markTraining"];
+        post?: never;
+        /** Unmark Training */
+        delete: operations["unmarkTraining"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trainings/{training_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Review Training */
+        post: operations["reviewTraining"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trainings/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest Trainings
+         * @description Recherche de formations par l'IA (environ 0,02 à 0,05 $), dans le plafond mensuel.
+         */
+        post: operations["suggestTrainings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2710,6 +2782,11 @@ export interface components {
             worker: components["schemas"]["WorkerStatus"];
             collect: components["schemas"]["CollectStatus"];
         };
+        /** SuggestResult */
+        SuggestResult: {
+            /** Added */
+            added: number;
+        };
         /**
          * TextStatus
          * @enum {string}
@@ -2737,6 +2814,101 @@ export interface components {
             orp_due_date: string | null;
             /** Last Collect At */
             last_collect_at: string | null;
+        };
+        /** TrainingMarkIn */
+        TrainingMarkIn: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "interested" | "in_progress" | "done";
+            /** Progress */
+            progress?: string | null;
+            /** Done At */
+            done_at?: string | null;
+            /** Certified */
+            certified?: boolean | null;
+        };
+        /** TrainingMarkOut */
+        TrainingMarkOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "interested" | "in_progress" | "done";
+            /** Progress */
+            progress: string | null;
+            /** Done At */
+            done_at: string | null;
+            /** Certified */
+            certified: boolean | null;
+        };
+        /** TrainingOut */
+        TrainingOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Provider */
+            provider: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "certification" | "cours" | "parcours" | "atelier";
+            /**
+             * Format
+             * @enum {string}
+             */
+            format: "self_paced" | "live" | "in_person" | "exam" | "exam_online";
+            /** Language */
+            language: string;
+            /**
+             * Price
+             * @enum {string}
+             */
+            price: "free" | "paid";
+            /** Duration */
+            duration: string | null;
+            /** Level */
+            level: ("beginner" | "intermediate" | "advanced") | null;
+            /** Url */
+            url: string;
+            /** Tags */
+            tags: string[];
+            /** Description */
+            description: string | null;
+            /** Prep */
+            prep: string | null;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "catalog" | "ai";
+            /** Verified */
+            verified: boolean;
+            /** Matched */
+            matched: string[];
+            mark: components["schemas"]["TrainingMarkOut"] | null;
+        };
+        /** TrainingPage */
+        TrainingPage: {
+            /** Items */
+            items: components["schemas"]["TrainingOut"][];
+            /** Domain Keywords */
+            domain_keywords: string[];
+            /** Languages */
+            languages: string[];
+            /** Can Suggest */
+            can_suggest: boolean;
+        };
+        /**
+         * TrainingReview
+         * @description Suggestion de l'IA : la garder (vérifiée) ou l'écarter (ne plus la proposer).
+         */
+        TrainingReview: {
+            /** Keep */
+            keep: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -5205,6 +5377,161 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    listTrainings: {
+        parameters: {
+            query?: {
+                domain_only?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markTraining: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrainingMarkIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingMarkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmarkTraining: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reviewTraining: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrainingReview"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggestTrainings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestResult"];
+                };
+            };
+            /** @description IA indisponible, plafond atteint ou domaine vide */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

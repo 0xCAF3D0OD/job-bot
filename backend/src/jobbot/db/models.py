@@ -551,3 +551,47 @@ class NewsItem(Base):
     language: Mapped[str | None] = mapped_column(Text)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Training(Base):
+    """Formation du catalogue (docs/16 §5) : vérifiée (catalogue du dépôt) ou suggérée par l'IA."""
+
+    __tablename__ = "trainings"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str] = mapped_column(Text)
+    kind: Mapped[str] = mapped_column(Text)  # certification | cours | parcours | atelier
+    format: Mapped[str] = mapped_column(Text)  # self_paced | live | in_person | exam | exam_online
+    language: Mapped[str] = mapped_column(Text)
+    price: Mapped[str] = mapped_column(Text)  # free | paid
+    duration: Mapped[str | None] = mapped_column(Text)
+    level: Mapped[str | None] = mapped_column(Text)  # beginner | intermediate | advanced
+    url: Mapped[str] = mapped_column(Text, unique=True)
+    # Mots-clés de la formation (Kubernetes, CKA…), comparés à « Mon domaine ».
+    tags: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    description: Mapped[str | None] = mapped_column(Text)
+    prep: Mapped[str | None] = mapped_column(Text)
+    origin: Mapped[str] = mapped_column(Text)  # catalog | ai
+    # Suggestion de l'IA : à vérifier tant que Kevin ne l'a pas gardée ; écartée, elle reste
+    # en base pour ne pas être reproposée.
+    verified: Mapped[bool] = mapped_column(default=True)
+    dismissed: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TrainingMark(Base):
+    """Suivi d'une formation : intéressé, en cours (progression libre), terminée."""
+
+    __tablename__ = "training_marks"
+
+    training_id: Mapped[int] = mapped_column(
+        ForeignKey("trainings.id", ondelete="CASCADE"), primary_key=True
+    )
+    status: Mapped[str] = mapped_column(Text)  # interested | in_progress | done
+    progress: Mapped[str | None] = mapped_column(Text)
+    done_at: Mapped[date | None] = mapped_column(Date)
+    certified: Mapped[bool | None]
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

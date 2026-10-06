@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/news", tags=["news"])
 log = get_logger(__name__)
 Kind = Literal["articles", "videos"]
 SEEN_KEY = "news_seen_at"
-PREFERENCES_KEY = "news_preferences"
+PREFERENCES_KEY = domain.PREFERENCES_KEY
 # Pays : code ISO à deux lettres, ou INT pour international.
 Country = Annotated[str, Field(pattern=r"^([A-Z]{2}|INT)$")]
 Language = Annotated[str, Field(pattern=r"^[a-z]{2}$")]
