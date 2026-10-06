@@ -1,0 +1,435 @@
+{
+  "_comment": "Catalogue de formations (docs/16 §5.2), liens vérifiés le 2026-10-06. Prix et durées ne sont pas repris : ils changent souvent, la page officielle fait foi.",
+  "trainings": [
+    {
+      "title": "Certified Kubernetes Administrator (CKA)",
+      "provider": "The Linux Foundation / CNCF",
+      "kind": "certification",
+      "format": "exam_online",
+      "language": "en",
+      "price": "paid",
+      "url": "https://training.linuxfoundation.org/certification/certified-kubernetes-administrator-cka/",
+      "tags": [
+        "Kubernetes",
+        "CKA",
+        "DevOps",
+        "cloud natif"
+      ],
+      "description": "Certification de référence pour administrer un cluster Kubernetes. Examen pratique en ligne, sur un vrai cluster, en ligne de commande. Selon la page officielle, l'inscription comprend une seconde tentative et deux sessions du simulateur killer.sh.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": "« Kubernetes for the Absolute Beginners » puis « CKA » (KodeKloud), ou « Kubernetes Fundamentals » (LFS258) ; entraînement sur killer.sh et Killercoda."
+    },
+    {
+      "title": "Certified Kubernetes Application Developer (CKAD)",
+      "provider": "The Linux Foundation / CNCF",
+      "kind": "certification",
+      "format": "exam_online",
+      "language": "en",
+      "price": "paid",
+      "url": "https://training.linuxfoundation.org/certification/certified-kubernetes-application-developer-ckad/",
+      "tags": [
+        "Kubernetes",
+        "CKAD",
+        "DevOps"
+      ],
+      "description": "Certification orientée déploiement d'applications sur Kubernetes. Examen pratique en ligne.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": "Souvent passée après ou avant la CKA, les bases sont communes."
+    },
+    {
+      "title": "Certified Kubernetes Security Specialist (CKS)",
+      "provider": "The Linux Foundation / CNCF",
+      "kind": "certification",
+      "format": "exam_online",
+      "language": "en",
+      "price": "paid",
+      "url": "https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/",
+      "tags": [
+        "Kubernetes",
+        "CKS",
+        "sécurité",
+        "DevSecOps"
+      ],
+      "description": "Sécurité des clusters et des charges Kubernetes. Examen pratique en ligne ; la CKA est exigée avant de la passer.",
+      "level": "advanced",
+      "duration": null,
+      "prep": "Avoir la CKA."
+    },
+    {
+      "title": "Kubernetes and Cloud Native Associate (KCNA)",
+      "provider": "The Linux Foundation / CNCF",
+      "kind": "certification",
+      "format": "exam_online",
+      "language": "en",
+      "price": "paid",
+      "url": "https://training.linuxfoundation.org/certification/kubernetes-cloud-native-associate/",
+      "tags": [
+        "Kubernetes",
+        "KCNA",
+        "cloud natif"
+      ],
+      "description": "Certification d'entrée sur Kubernetes et l'écosystème cloud natif (questionnaire). Une première étape possible avant la CKA.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Linux Foundation Certified System Administrator (LFCS)",
+      "provider": "The Linux Foundation",
+      "kind": "certification",
+      "format": "exam_online",
+      "language": "en",
+      "price": "paid",
+      "url": "https://training.linuxfoundation.org/certification/linux-foundation-certified-sysadmin-lfcs/",
+      "tags": [
+        "Linux",
+        "administration système"
+      ],
+      "description": "Administration Linux en ligne de commande. Examen pratique en ligne.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": "« Introduction to Linux » (LFS101), gratuit."
+    },
+    {
+      "title": "Certifications HashiCorp (Terraform Associate)",
+      "provider": "HashiCorp",
+      "kind": "certification",
+      "format": "exam_online",
+      "language": "en",
+      "price": "paid",
+      "url": "https://developer.hashicorp.com/certifications",
+      "tags": [
+        "Terraform",
+        "infrastructure as code",
+        "DevOps"
+      ],
+      "description": "Terraform Associate valide les bases de l'infrastructure as code avec Terraform.",
+      "level": "beginner",
+      "duration": null,
+      "prep": "Tutoriels Terraform gratuits de HashiCorp."
+    },
+    {
+      "title": "AWS Certified Solutions Architect – Associate",
+      "provider": "Amazon Web Services",
+      "kind": "certification",
+      "format": "exam",
+      "language": "en",
+      "price": "paid",
+      "url": "https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+      "tags": [
+        "AWS",
+        "cloud",
+        "architecture"
+      ],
+      "description": "Concevoir des architectures sur AWS. Une des certifications cloud les plus demandées dans les annonces.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": "Parcours gratuits d'AWS Skill Builder."
+    },
+    {
+      "title": "AWS Certified DevOps Engineer – Professional",
+      "provider": "Amazon Web Services",
+      "kind": "certification",
+      "format": "exam",
+      "language": "en",
+      "price": "paid",
+      "url": "https://aws.amazon.com/certification/certified-devops-engineer-professional/",
+      "tags": [
+        "AWS",
+        "DevOps",
+        "CI/CD",
+        "cloud"
+      ],
+      "description": "Automatisation, CI/CD et exploitation sur AWS, niveau avancé.",
+      "level": "advanced",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Microsoft Certified: Azure Administrator Associate (AZ-104)",
+      "provider": "Microsoft",
+      "kind": "certification",
+      "format": "exam",
+      "language": "en",
+      "price": "paid",
+      "url": "https://learn.microsoft.com/en-us/credentials/certifications/azure-administrator/",
+      "tags": [
+        "Azure",
+        "cloud",
+        "administration"
+      ],
+      "description": "Administration des services Azure.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": "Parcours gratuits de Microsoft Learn."
+    },
+    {
+      "title": "Microsoft Certified: DevOps Engineer Expert (AZ-400)",
+      "provider": "Microsoft",
+      "kind": "certification",
+      "format": "exam",
+      "language": "en",
+      "price": "paid",
+      "url": "https://learn.microsoft.com/en-us/credentials/certifications/devops-engineer/",
+      "tags": [
+        "Azure",
+        "DevOps",
+        "CI/CD"
+      ],
+      "description": "DevOps sur Azure (Azure DevOps, GitHub). Demande une certification Azure associée au préalable.",
+      "level": "advanced",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Google Cloud Professional Cloud DevOps Engineer",
+      "provider": "Google Cloud",
+      "kind": "certification",
+      "format": "exam",
+      "language": "en",
+      "price": "paid",
+      "url": "https://cloud.google.com/learn/certification/cloud-devops-engineer",
+      "tags": [
+        "Google Cloud",
+        "GCP",
+        "DevOps",
+        "SRE"
+      ],
+      "description": "Fiabilité (SRE), CI/CD et exploitation sur Google Cloud.",
+      "level": "advanced",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "AWS Skill Builder",
+      "provider": "Amazon Web Services",
+      "kind": "parcours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "free",
+      "url": "https://skillbuilder.aws/",
+      "tags": [
+        "AWS",
+        "cloud"
+      ],
+      "description": "Centaines de cours AWS gratuits, dont la préparation aux certifications ; une offre payante ajoute des laboratoires.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Microsoft Learn",
+      "provider": "Microsoft",
+      "kind": "parcours",
+      "format": "self_paced",
+      "language": "fr",
+      "price": "free",
+      "url": "https://learn.microsoft.com/fr-fr/training/",
+      "tags": [
+        "Azure",
+        "cloud",
+        "DevOps"
+      ],
+      "description": "Parcours gratuits, souvent en français, dont la préparation aux examens Azure.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Google Skills (ex-Cloud Skills Boost)",
+      "provider": "Google Cloud",
+      "kind": "parcours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "free",
+      "url": "https://www.skills.google/",
+      "tags": [
+        "Google Cloud",
+        "GCP",
+        "cloud"
+      ],
+      "description": "Cours et laboratoires Google Cloud ; une partie est gratuite.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Introduction to Kubernetes (LFS158)",
+      "provider": "The Linux Foundation",
+      "kind": "cours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "free",
+      "url": "https://training.linuxfoundation.org/training/introduction-to-kubernetes/",
+      "tags": [
+        "Kubernetes",
+        "cloud natif"
+      ],
+      "description": "Cours d'introduction gratuit à Kubernetes.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Introduction to Linux (LFS101)",
+      "provider": "The Linux Foundation",
+      "kind": "cours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "free",
+      "url": "https://training.linuxfoundation.org/training/introduction-to-linux/",
+      "tags": [
+        "Linux",
+        "administration système"
+      ],
+      "description": "Cours d'introduction gratuit à Linux.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Tutoriels Kubernetes",
+      "provider": "Projet Kubernetes",
+      "kind": "cours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "free",
+      "url": "https://kubernetes.io/docs/tutorials/",
+      "tags": [
+        "Kubernetes",
+        "CKA"
+      ],
+      "description": "Tutoriels officiels ; la documentation Kubernetes est aussi celle qu'on peut consulter pendant l'examen CKA.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Tutoriels Terraform",
+      "provider": "HashiCorp",
+      "kind": "cours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "free",
+      "url": "https://developer.hashicorp.com/terraform/tutorials",
+      "tags": [
+        "Terraform",
+        "infrastructure as code"
+      ],
+      "description": "Tutoriels officiels gratuits, de la prise en main à la préparation de Terraform Associate.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Killercoda",
+      "provider": "Killercoda",
+      "kind": "atelier",
+      "format": "self_paced",
+      "language": "en",
+      "price": "free",
+      "url": "https://killercoda.com/",
+      "tags": [
+        "Kubernetes",
+        "CKA",
+        "Linux"
+      ],
+      "description": "Environnements Kubernetes et Linux dans le navigateur, avec des scénarios d'entraînement à la CKA.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Kubernetes Fundamentals (LFS258)",
+      "provider": "The Linux Foundation",
+      "kind": "cours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "paid",
+      "url": "https://training.linuxfoundation.org/training/kubernetes-fundamentals/",
+      "tags": [
+        "Kubernetes",
+        "CKA"
+      ],
+      "description": "Cours officiel de préparation à la CKA ; proposé aussi en lot avec l'examen.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "CKA Certification Course",
+      "provider": "KodeKloud",
+      "kind": "cours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "paid",
+      "url": "https://kodekloud.com/courses/cka-certification-course-certified-kubernetes-administrator",
+      "tags": [
+        "Kubernetes",
+        "CKA"
+      ],
+      "description": "Préparation à la CKA avec laboratoires dans le navigateur et examens blancs.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": "« Kubernetes for the Absolute Beginners » (KodeKloud)."
+    },
+    {
+      "title": "Kubernetes for the Absolute Beginners",
+      "provider": "KodeKloud",
+      "kind": "cours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "paid",
+      "url": "https://kodekloud.com/courses/kubernetes-for-the-absolute-beginners-hands-on-tutorial",
+      "tags": [
+        "Kubernetes",
+        "DevOps"
+      ],
+      "description": "Premiers pas sur Kubernetes, avec laboratoires.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "Simulateur killer.sh",
+      "provider": "Killer Shell",
+      "kind": "atelier",
+      "format": "self_paced",
+      "language": "en",
+      "price": "paid",
+      "url": "https://killer.sh/",
+      "tags": [
+        "Kubernetes",
+        "CKA",
+        "CKAD",
+        "CKS"
+      ],
+      "description": "Simulateur d'examen CKA, CKAD et CKS, plus difficile que l'examen réel ; deux sessions sont comprises avec l'inscription à l'examen selon la Linux Foundation.",
+      "level": "intermediate",
+      "duration": null,
+      "prep": null
+    },
+    {
+      "title": "A Cloud Guru (Pluralsight)",
+      "provider": "Pluralsight",
+      "kind": "parcours",
+      "format": "self_paced",
+      "language": "en",
+      "price": "paid",
+      "url": "https://www.pluralsight.com/cloud-guru",
+      "tags": [
+        "AWS",
+        "Azure",
+        "Google Cloud",
+        "Kubernetes",
+        "DevOps"
+      ],
+      "description": "Abonnement de cours et laboratoires cloud et DevOps, avec préparation aux certifications.",
+      "level": "beginner",
+      "duration": null,
+      "prep": null
+    }
+  ]
+}

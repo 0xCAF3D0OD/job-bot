@@ -296,6 +296,17 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
   .back { display: inline-flex; justify-self: start; }
 }
 
+/* Neuf entrées de menu depuis la 0.9 : plus serrées, puis sur une deuxième ligne défilante. */
+@media (max-width: 1240px) {
+  .nav { gap: 1.1rem; }
+  .nav a { font-size: 0.9rem; }
+}
+@media (max-width: 1000px) {
+  .topbar-inner { grid-template-columns: 1fr auto; }
+  .topbar nav { grid-column: 1 / -1; grid-row: 2; overflow-x: auto; }
+  .nav { justify-content: flex-start; flex-wrap: nowrap; white-space: nowrap; }
+}
+
 @media (max-width: 720px) {
   .topbar-inner { grid-template-columns: 1fr auto; padding: 0.75rem 1rem; }
   .topbar nav { grid-column: 1 / -1; grid-row: 2; }
@@ -338,7 +349,7 @@ input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
 .form-actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; padding-top: 1.5rem; }
 
 @media (prefers-color-scheme: dark) {
-  .badge.reason, .reasons { background: #3a2a1a; color: #f3b67a; }
+  .badge.reason, .reasons, .badge.warn { background: #3a2a1a; color: #f3b67a; }
 }
 
 @media (max-width: 720px) {
@@ -845,3 +856,22 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .catalog-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .catalog-filters select { padding: 0.3rem 0.4rem; font-size: 0.85rem; }
 .catalog-filters .link { margin-left: auto; }
+
+/* Formations (docs/16 §5) */
+.orp-note { margin: 0 0 1rem; padding: 0.8rem 1rem; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; background: var(--surface); font-size: 0.88rem; color: var(--muted); }
+.orp-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin-top: 0.4rem; }
+.news-filters select { padding: 0.35rem 0.5rem; font-size: 0.85rem; }
+.training-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); }
+.training-card { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.training-head { display: flex; justify-content: space-between; gap: 0.5rem; align-items: center; }
+.training-title { font-weight: 700; font-size: 1rem; line-height: 1.3; color: var(--text); text-decoration: none; }
+.training-title:hover { color: var(--accent); }
+.training-title mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 0.1em; }
+.training-facts { margin: 0; font-size: 0.8rem; color: var(--faint); }
+.training-text { margin: 0; font-size: 0.86rem; color: var(--muted); }
+.training-card .hint { margin: 0; font-size: 0.78rem; }
+.training-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: auto; }
+.training-actions .segmented { width: 100%; }
+.training-field { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; font-size: 0.82rem; }
+.training-field input[type="text"], .training-field input[type="date"] { padding: 0.25rem 0.4rem; font-size: 0.82rem; }
+.badge.warn { background: #fff1e4; color: #b4600f; }

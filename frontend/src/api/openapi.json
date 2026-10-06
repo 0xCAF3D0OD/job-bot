@@ -3296,6 +3296,204 @@
           }
         }
       }
+    },
+    "/api/trainings": {
+      "get": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "List Trainings",
+        "operationId": "listTrainings",
+        "parameters": [
+          {
+            "name": "domain_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Domain Only"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trainings/{training_id}/mark": {
+      "put": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Mark Training",
+        "operationId": "markTraining",
+        "parameters": [
+          {
+            "name": "training_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Training Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainingMarkIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingMarkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Unmark Training",
+        "operationId": "unmarkTraining",
+        "parameters": [
+          {
+            "name": "training_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Training Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trainings/{training_id}/review": {
+      "post": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Review Training",
+        "operationId": "reviewTraining",
+        "parameters": [
+          {
+            "name": "training_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Training Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainingReview"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trainings/suggest": {
+      "post": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Suggest Trainings",
+        "description": "Recherche de formations par l'IA (environ 0,02 à 0,05 $), dans le plafond mensuel.",
+        "operationId": "suggestTrainings",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible, plafond atteint ou domaine vide"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8189,6 +8387,19 @@
         ],
         "title": "StatusResponse"
       },
+      "SuggestResult": {
+        "properties": {
+          "added": {
+            "type": "integer",
+            "title": "Added"
+          }
+        },
+        "type": "object",
+        "required": [
+          "added"
+        ],
+        "title": "SuggestResult"
+      },
       "TextStatus": {
         "type": "string",
         "enum": [
@@ -8288,6 +8499,324 @@
           "last_collect_at"
         ],
         "title": "TodayOut"
+      },
+      "TrainingMarkIn": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "interested",
+              "in_progress",
+              "done"
+            ],
+            "title": "Status"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "certified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "TrainingMarkIn"
+      },
+      "TrainingMarkOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "interested",
+              "in_progress",
+              "done"
+            ],
+            "title": "Status"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "certified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "progress",
+          "done_at",
+          "certified"
+        ],
+        "title": "TrainingMarkOut"
+      },
+      "TrainingOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "certification",
+              "cours",
+              "parcours",
+              "atelier"
+            ],
+            "title": "Kind"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "self_paced",
+              "live",
+              "in_person",
+              "exam",
+              "exam_online"
+            ],
+            "title": "Format"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "price": {
+            "type": "string",
+            "enum": [
+              "free",
+              "paid"
+            ],
+            "title": "Price"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "beginner",
+                  "intermediate",
+                  "advanced"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "prep": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "catalog",
+              "ai"
+            ],
+            "title": "Origin"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "matched": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched"
+          },
+          "mark": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrainingMarkOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "provider",
+          "kind",
+          "format",
+          "language",
+          "price",
+          "duration",
+          "level",
+          "url",
+          "tags",
+          "description",
+          "prep",
+          "origin",
+          "verified",
+          "matched",
+          "mark"
+        ],
+        "title": "TrainingOut"
+      },
+      "TrainingPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TrainingOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "domain_keywords": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Domain Keywords"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "can_suggest": {
+            "type": "boolean",
+            "title": "Can Suggest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "domain_keywords",
+          "languages",
+          "can_suggest"
+        ],
+        "title": "TrainingPage"
+      },
+      "TrainingReview": {
+        "properties": {
+          "keep": {
+            "type": "boolean",
+            "title": "Keep"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keep"
+        ],
+        "title": "TrainingReview",
+        "description": "Suggestion de l'IA : la garder (vérifiée) ou l'écarter (ne plus la proposer)."
       },
       "ValidationError": {
         "properties": {

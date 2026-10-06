@@ -1,6 +1,6 @@
 # 16 — Actualités ciblées et catalogue de formations (version 0.9.0)
 
-> Statut : **validé** le 2026-10-06. livré : PR a (domaine, pays, langue, relevé immédiat), PR b (sources suggérées, veilles).
+> Statut : **validé** le 2026-10-06. livré : PR a (domaine, pays, langue, relevé immédiat), PR b (sources suggérées, veilles), PR c (formations).
 > Retours d'usage du 2026-10-06, après la 0.8.0-b. Complète [15-cloche-actualites.md](15-cloche-actualites.md) §2.
 
 ## 1. Page vide après la mise à jour
@@ -153,3 +153,19 @@ training_marks training_id PRIMARY, status (interested|in_progress|done), progre
 - **Réglages** : trois boutons, « Parcourir les suggestions » (filtres domaine, pays, langue), « Nouvelle veille », « Ajouter par adresse » ; la veille apparaît dans la liste des sources et se met en pause ou se retire comme les autres.
 - **Migration 0025** (`news_sources.query`).
 - **Essai réel** : xavki ajouté depuis les suggestions (15 vidéos) et la veille « Kubernetes emploi » (Suisse, français : 6 articles de moins de 60 jours), relevés aussitôt.
+
+## Écarts avec la PR c
+
+- **Catalogue** : 24 formations, liens vérifiés le 2026-10-06, dans `backend/src/jobbot/trainings/catalog.json`, recopié en base au démarrage de l'API (une fiche du catalogue est mise à jour par son adresse).
+  - *Certifications* : CKA, CKAD, CKS, KCNA, LFCS (Linux Foundation), Terraform Associate (HashiCorp), AWS Solutions Architect Associate et DevOps Engineer Professional, Azure AZ-104 et AZ-400, Google Cloud Professional Cloud DevOps Engineer.
+  - *Gratuits* : AWS Skill Builder, Microsoft Learn, Google Skills (ex-Cloud Skills Boost), LFS158 et LFS101 (Linux Foundation), tutoriels Kubernetes et Terraform, Killercoda.
+  - *Payants* : LFS258, deux cours KodeKloud, simulateur killer.sh, A Cloud Guru.
+  - *Écarté* : le cours CKA d'Udemy, dont la page refuse les lectures automatiques (impossible de vérifier le lien).
+- **Prix et durées** : non repris (ils changent souvent) ; seulement « gratuit » ou « payant », la page officielle fait foi. La durée n'apparaît que si une suggestion de l'IA l'a lue sur la page.
+- **Format** : « examen en ligne surveillé » (Linux Foundation, HashiCorp) ou « examen en centre ou en ligne » (AWS, Microsoft, Google) pour les certifications.
+- **« Mon domaine »** : celui des Actualités (Réglages → Actualités), comparé au titre, à la description, à la préparation et aux mots-clés de chaque fiche ; les plus proches d'abord, puis certifications, cours, parcours, ateliers. Une formation suivie reste visible même hors du domaine. Le choix « Mon domaine / Tout » de la page n'est pas enregistré (« Mon domaine » par défaut).
+- **Suggestions de l'IA** : Claude Haiku 4.5, recherche web de base (3 recherches au plus), langues des filtres des Actualités (à défaut français et anglais) ; l'IA reçoit aussi la liste des formations déjà connues pour ne pas les reproposer. Une suggestion écartée reste en base, masquée, et ne revient pas. Estimation pour le plafond : 0,06 $ par recherche.
+- **Mention ORP** : en tête de page, avec deux liens officiels vérifiés (arbeit.swiss : mesures relatives au marché du travail, adresses des offices cantonaux et des ORP), et rappelée sur chaque fiche payante.
+- **Menu** : neuf entrées ; en dessous de 1240 px de large elles se resserrent, en dessous de 1000 px elles passent sur une deuxième ligne qui défile.
+- **Migration 0026** (`trainings`, `training_marks`).
+- **Non essayé en réel** : la recherche par l'IA (l'instance de test n'a pas de clé API, et l'essai coûterait sur ton compte) ; elle est couverte par des tests avec une réponse simulée.
