@@ -2,6 +2,7 @@ import type { Component } from "vue";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
 import ApplicationsView from "./views/ApplicationsView.vue";
+import NewsView from "./views/NewsView.vue";
 import OffersView from "./views/OffersView.vue";
 import OrpView from "./views/OrpView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
@@ -25,6 +26,7 @@ export const navigation: NavEntry[] = [
   { path: "/offres", name: "offers", label: "Offres" },
   { path: "/candidatures", name: "applications", label: "Candidatures" },
   { path: "/orp", name: "orp", label: "ORP" },
+  { path: "/actualites", name: "news", label: "Actualités" },
   { path: "/profil", name: "profile", label: "Profil" },
   { path: "/reglages", name: "settings", label: "Réglages" },
 ];
@@ -34,6 +36,7 @@ const views: Record<string, Component> = {
   offers: OffersView,
   applications: ApplicationsView,
   orp: OrpView,
+  news: NewsView,
   profile: ProfileView,
   settings: SettingsView,
   today: TodayView,
