@@ -6,6 +6,7 @@ taille limitée). Les miniatures sont téléchargées et servies par la platefor
 
 import hashlib
 import re
+from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urljoin, urlsplit
@@ -18,7 +19,8 @@ from sqlalchemy.dialects.postgresql import insert
 from jobbot.db.models import NewsItem, NewsSource
 from jobbot.log import get_logger
 from jobbot.logos import service as logos
-from jobbot.news.feeds import Feed, FeedError, parse_feed
+from jobbot.news import language
+from jobbot.news.feeds import Feed, FeedError, FeedItem, parse_feed
 from jobbot.runtime import Runtime
 
 log = get_logger(__name__)
@@ -52,6 +54,35 @@ class ResolvedSource:
     name: str
     url: str
     feed_url: str
+    # Proposés à l'ajout, modifiables ensuite (docs/16 §3).
+    country: str | None = None
+    language: str | None = None
+
+
+_COUNTRY_TLD = {"ch": "CH", "fr": "FR", "be": "BE", "ca": "CA", "lu": "LU", "de": "DE", "at": "AT"}
+
+
+def guess_country(url: str) -> str:
+    """Pays d'après le domaine (.ch → CH) ; international pour YouTube et les .com."""
+    host = urlsplit(url).hostname or ""
+    return _COUNTRY_TLD.get(host.rsplit(".", 1)[-1], "INT")
+
+
+def feed_language(feed: Feed) -> str | None:
+    """Langue déclarée par le flux, sinon celle de la majorité de ses contenus."""
+    declared = language.from_feed(feed.language)
+    if declared:
+        return declared
+    found = [language.detect(f"{i.title} {i.summary or ''}") for i in feed.items[:20]]
+    counts = Counter(lang for lang in found if lang)
+    if not counts:
+        return None
+    best, count = counts.most_common(1)[0]
+    return best if count * 2 > len([f for f in found if f]) else None
+
+
+def item_language(item: FeedItem, fallback: str | None) -> str | None:
+    return language.detect(f"{item.title} {item.summary or ''}") or fallback
 
 
 async def resolve(url: str) -> ResolvedSource:
@@ -68,7 +99,9 @@ async def resolve(url: str) -> ResolvedSource:
                 feed = parse_feed(feed_data)
             except (logos.Refused, httpx.HTTPError, FeedError):
                 raise SourceError("chaîne YouTube introuvable") from None
-        return ResolvedSource("videos", feed.title or "YouTube", url, feed_url)
+        return ResolvedSource(
+            "videos", feed.title or "YouTube", url, feed_url, "INT", feed_language(feed)
+        )
     if not url.startswith("https://"):
         raise SourceError("adresse en https:// attendue")
     host = urlsplit(url).hostname or ""
@@ -81,7 +114,9 @@ async def resolve(url: str) -> ResolvedSource:
         try:
             feed = parse_feed(data)
             kind = "videos" if "youtube.com" in host else "articles"
-            return ResolvedSource(kind, feed.title or host, url, url)
+            return ResolvedSource(
+                kind, feed.title or host, url, url, guess_country(url), feed_language(feed)
+            )
         except FeedError:
             pass
         text = data.decode("utf-8", errors="replace")
@@ -111,7 +146,9 @@ async def resolve(url: str) -> ResolvedSource:
             feed = parse_feed(feed_data)
         except (logos.Refused, httpx.HTTPError, FeedError) as exc:
             raise SourceError(f"flux illisible ({exc})") from None
-    return ResolvedSource(kind, feed.title or host, url, feed_url)
+    return ResolvedSource(
+        kind, feed.title or host, url, feed_url, guess_country(url), feed_language(feed)
+    )
 
 
 @dataclass
@@ -162,6 +199,7 @@ async def fetch_news(runtime: Runtime) -> NewsResult:
                         .values(fetched_at=now, error=str(exc)[:300] or type(exc).__name__)
                     )
                 continue
+            fallback = language.from_feed(feed.language) or source.language
             entries = [i for i in feed.items if _matches(source, i.title, i.summary, i.author)][
                 :MAX_ITEMS_PER_SOURCE
             ]
@@ -187,6 +225,7 @@ async def fetch_news(runtime: Runtime) -> NewsResult:
                             summary=item.summary,
                             image_url=item.image_url,
                             image_key=image_key,
+                            language=item_language(item, fallback),
                             published_at=min(item.published_at, now),
                         )
                         .on_conflict_do_nothing(index_elements=["url"])
@@ -200,6 +239,7 @@ async def fetch_news(runtime: Runtime) -> NewsResult:
                     .values(fetched_at=now, error=None)
                 )
     await purge(runtime, now)
+    await _backfill_languages(runtime)
     log.info("news_finished", sources=result.sources, new=result.new_items, failed=result.failed)
     return result
 
@@ -217,3 +257,18 @@ async def purge(runtime: Runtime, now: datetime) -> None:
     for key in old:
         if key:
             runtime.storage.delete(key)
+
+
+async def _backfill_languages(runtime: Runtime) -> None:
+    """Contenus relevés avant la 0.9 : langue déduite du texte, sinon celle de la source."""
+    async with runtime.sessionmaker.begin() as session:
+        rows = (
+            await session.execute(
+                select(NewsItem, NewsSource.language)
+                .join(NewsSource, NewsSource.id == NewsItem.source_id)
+                .where(NewsItem.language.is_(None))
+                .limit(2000)
+            )
+        ).all()
+        for item, fallback in rows:
+            item.language = language.detect(f"{item.title} {item.summary or ''}") or fallback

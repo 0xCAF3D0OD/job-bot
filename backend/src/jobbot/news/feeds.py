@@ -34,6 +34,8 @@ class FeedItem:
 class Feed:
     title: str | None
     items: list[FeedItem]
+    # Langue déclarée par le flux (<language> en RSS, xml:lang en Atom), telle quelle.
+    language: str | None = None
 
 
 def _local(tag: str) -> str:
@@ -86,6 +88,7 @@ def parse_feed(data: bytes, now: datetime | None = None) -> Feed:
         if channel is None:
             raise FeedError("flux RSS sans canal")
         title = _text(_child(channel, "title")) or None
+        language = _text(_child(channel, "language")) or None
         for entry in (c for c in channel if _local(c.tag) == "item"):
             link = _text(_child(entry, "link"))
             description = _text(_child(entry, "description"))
@@ -121,6 +124,7 @@ def parse_feed(data: bytes, now: datetime | None = None) -> Feed:
             )
     elif _local(root.tag) == "feed":
         title = _text(_child(root, "title")) or None
+        language = root.get("{http://www.w3.org/XML/1998/namespace}lang")
         for entry in (c for c in root if _local(c.tag) == "entry"):
             link_el = next(
                 (
@@ -152,4 +156,4 @@ def parse_feed(data: bytes, now: datetime | None = None) -> Feed:
     else:
         raise FeedError("ni RSS ni Atom")
     kept = [i for i in items if i.title and i.url.startswith(("https://", "http://"))]
-    return Feed(title=clean(title), items=kept)
+    return Feed(title=clean(title), items=kept, language=language)

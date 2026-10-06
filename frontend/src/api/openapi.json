@@ -2801,6 +2801,54 @@
               "default": 40,
               "title": "Limit"
             }
+          },
+          {
+            "name": "domain_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Domain Only"
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
           }
         ],
         "responses": {
@@ -2810,6 +2858,88 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NewsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/refresh": {
+      "post": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Refresh News",
+        "description": "« Relever maintenant » : relevé de toutes les sources actives, en arrière-plan.",
+        "operationId": "refreshNews",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsRefresh"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/preferences": {
+      "get": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Get Preferences",
+        "operationId": "getNewsPreferences",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsPreferences"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Save Preferences",
+        "operationId": "saveNewsPreferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewsPreferences"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsPreferences"
                 }
               }
             }
@@ -2949,8 +3079,8 @@
         "tags": [
           "news"
         ],
-        "summary": "Set Source Active",
-        "operationId": "setNewsSourceActive",
+        "summary": "Update Source",
+        "operationId": "updateNewsSource",
         "parameters": [
           {
             "name": "source_id",
@@ -2967,7 +3097,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewsSourceActive"
+                "$ref": "#/components/schemas/NewsSourceUpdate"
               }
             }
           }
@@ -2982,7 +3112,7 @@
                   "items": {
                     "$ref": "#/components/schemas/NewsSourceOut"
                   },
-                  "title": "Response Setnewssourceactive"
+                  "title": "Response Updatenewssource"
                 }
               }
             }
@@ -5350,6 +5480,39 @@
             "type": "string",
             "format": "date-time",
             "title": "Published At"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "labour_market": {
+            "type": "boolean",
+            "title": "Labour Market"
+          },
+          "matched": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched"
           }
         },
         "type": "object",
@@ -5361,7 +5524,11 @@
           "url",
           "summary",
           "has_image",
-          "published_at"
+          "published_at",
+          "country",
+          "language",
+          "labour_market",
+          "matched"
         ],
         "title": "NewsItemOut"
       },
@@ -5381,28 +5548,107 @@
           "new_videos": {
             "type": "integer",
             "title": "New Videos"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "refreshing": {
+            "type": "boolean",
+            "title": "Refreshing"
+          },
+          "countries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Countries"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
           }
         },
         "type": "object",
         "required": [
           "items",
           "new_articles",
-          "new_videos"
+          "new_videos",
+          "fetched_at",
+          "refreshing",
+          "countries",
+          "languages"
         ],
         "title": "NewsPage"
       },
-      "NewsSourceActive": {
+      "NewsPreferences": {
         "properties": {
-          "active": {
+          "domain_keywords": {
+            "items": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Domain Keywords"
+          },
+          "domain_only": {
             "type": "boolean",
-            "title": "Active"
+            "title": "Domain Only"
+          },
+          "countries": {
+            "items": {
+              "type": "string",
+              "pattern": "^([A-Z]{2}|INT)$"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "title": "Countries"
+          },
+          "languages": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z]{2}$"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Languages"
           }
         },
         "type": "object",
         "required": [
-          "active"
+          "domain_keywords",
+          "domain_only",
+          "countries",
+          "languages"
         ],
-        "title": "NewsSourceActive"
+        "title": "NewsPreferences",
+        "description": "« Mon domaine » et filtres de la page, retenus d'une visite à l'autre (docs/16 §2-3)."
+      },
+      "NewsRefresh": {
+        "properties": {
+          "queued": {
+            "type": "boolean",
+            "title": "Queued"
+          }
+        },
+        "type": "object",
+        "required": [
+          "queued"
+        ],
+        "title": "NewsRefresh"
       },
       "NewsSourceIn": {
         "properties": {
@@ -5435,6 +5681,35 @@
               }
             ],
             "title": "Match"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([A-Z]{2}|INT)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "labour_market": {
+            "type": "boolean",
+            "title": "Labour Market",
+            "default": false
           }
         },
         "type": "object",
@@ -5484,6 +5759,32 @@
             "type": "boolean",
             "title": "Active"
           },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "labour_market": {
+            "type": "boolean",
+            "title": "Labour Market"
+          },
           "fetched_at": {
             "anyOf": [
               {
@@ -5517,10 +5818,74 @@
           "feed_url",
           "match",
           "active",
+          "country",
+          "language",
+          "labour_market",
           "fetched_at",
           "error"
         ],
         "title": "NewsSourceOut"
+      },
+      "NewsSourceUpdate": {
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([A-Z]{2}|INT)$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z]{2}$"
+              },
+              {
+                "type": "string",
+                "const": ""
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "labour_market": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labour Market"
+          }
+        },
+        "type": "object",
+        "title": "NewsSourceUpdate",
+        "description": "Champs à modifier ; ceux absents restent inchangés. Une valeur vide efface pays ou langue."
       },
       "NotificationOut": {
         "properties": {

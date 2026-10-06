@@ -1,21 +1,33 @@
-"""Actualités (docs/15 §2) : articles et vidéos, sources, nouveautés depuis la dernière visite."""
+"""Actualités (docs/15 §2, docs/16) : articles et vidéos, sources, filtres, nouveautés."""
 
 from datetime import UTC, datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
-from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import func, select
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.models import NewsItem, NewsSource, Setting
+from jobbot.log import get_logger
+from jobbot.news import domain
+from jobbot.news.language import LANGUAGES
 from jobbot.news.service import SourceError, resolve
 from jobbot.runtime import Runtime
+from jobbot.worker.queue import enqueue
+from jobbot.worker.tasks.news import NEWS_JOB
 
 router = APIRouter(prefix="/api/news", tags=["news"])
+log = get_logger(__name__)
 Kind = Literal["articles", "videos"]
 SEEN_KEY = "news_seen_at"
+PREFERENCES_KEY = "news_preferences"
+# Pays : code ISO à deux lettres, ou INT pour international.
+Country = Annotated[str, Field(pattern=r"^([A-Z]{2}|INT)$")]
+Language = Annotated[str, Field(pattern=r"^[a-z]{2}$")]
+# Fenêtre lue pour filtrer sur « Mon domaine » (le filtre se fait hors de la base).
+DOMAIN_WINDOW = 1500
 
 
 def _runtime(request: Request) -> Runtime:
@@ -32,6 +44,11 @@ class NewsItemOut(BaseModel):
     summary: str | None
     has_image: bool
     published_at: datetime
+    country: str | None
+    language: str | None
+    labour_market: bool
+    # Mots de « Mon domaine » trouvés dans le titre ou le résumé, pour les surligner.
+    matched: list[str]
 
 
 class NewsPage(BaseModel):
@@ -39,6 +56,12 @@ class NewsPage(BaseModel):
     # Nouveautés depuis la dernière visite de la page, par rubrique.
     new_articles: int
     new_videos: int
+    # Dernier relevé réussi d'une source active ; relevé en attente ou en cours.
+    fetched_at: datetime | None
+    refreshing: bool
+    # Valeurs présentes dans les sources actives, pour les listes de filtres.
+    countries: list[str]
+    languages: list[str]
 
 
 class NewsSourceOut(BaseModel):
@@ -51,18 +74,56 @@ class NewsSourceOut(BaseModel):
     feed_url: str
     match: str | None
     active: bool
+    country: str | None
+    language: str | None
+    labour_market: bool
     fetched_at: datetime | None
     error: str | None
 
 
 class NewsSourceIn(BaseModel):
+    # Adresse https, ou ID de chaîne YouTube (UC…).
     url: Annotated[str, Field(min_length=9, max_length=500)]
     name: Annotated[str, Field(max_length=80)] | None = None
     match: Annotated[str, Field(max_length=80)] | None = None
+    # Sans valeur : déduits du domaine et du flux.
+    country: Country | None = None
+    language: Language | None = None
+    labour_market: bool = False
 
 
-class NewsSourceActive(BaseModel):
-    active: bool
+class NewsSourceUpdate(BaseModel):
+    """Champs à modifier ; ceux absents restent inchangés. Une valeur vide efface pays ou langue."""
+
+    active: bool | None = None
+    country: Country | Literal[""] | None = None
+    language: Language | Literal[""] | None = None
+    labour_market: bool | None = None
+
+
+class NewsRefresh(BaseModel):
+    queued: bool
+
+
+class NewsPreferences(BaseModel):
+    """« Mon domaine » et filtres de la page, retenus d'une visite à l'autre (docs/16 §2-3)."""
+
+    domain_keywords: list[Annotated[str, Field(min_length=1, max_length=40)]] = Field(
+        max_length=domain.MAX_KEYWORDS
+    )
+    domain_only: bool
+    countries: list[Country] = Field(max_length=30)
+    languages: list[Language] = Field(max_length=len(LANGUAGES))
+
+    @field_validator("domain_keywords")
+    @classmethod
+    def _dedupe(cls, values: list[str]) -> list[str]:
+        seen: dict[str, str] = {}
+        for value in values:
+            stripped = value.strip()
+            if stripped and stripped.casefold() not in seen:
+                seen[stripped.casefold()] = stripped
+        return list(seen.values())
 
 
 async def _seen_at(session: AsyncSession) -> datetime | None:
@@ -70,22 +131,86 @@ async def _seen_at(session: AsyncSession) -> datetime | None:
     return datetime.fromisoformat(value) if isinstance(value, str) else None
 
 
+async def _save_setting(session: AsyncSession, key: str, value: Any) -> None:
+    await session.execute(
+        insert(Setting)
+        .values(key=key, value=value)
+        .on_conflict_do_update(index_elements=["key"], set_={"value": value})
+    )
+
+
+async def _preferences(runtime: Runtime) -> NewsPreferences:
+    """Réglages enregistrés ; à la première lecture, « Mon domaine » est pré-rempli depuis
+    les offres postulées ou bien notées, une seule fois."""
+    async with runtime.sessionmaker.begin() as session:
+        value = await session.scalar(select(Setting.value).where(Setting.key == PREFERENCES_KEY))
+        if isinstance(value, dict):
+            return NewsPreferences.model_validate(value)
+        preferences = NewsPreferences(
+            domain_keywords=await domain.suggest(session),
+            domain_only=False,
+            countries=[],
+            languages=[],
+        )
+        await _save_setting(session, PREFERENCES_KEY, preferences.model_dump())
+        return preferences
+
+
+async def _refreshing(session: AsyncSession) -> bool:
+    """Un relevé attend son tour ou tourne (file procrastinate, verrou du nom de la tâche)."""
+    found = await session.scalar(
+        text(
+            "SELECT 1 FROM procrastinate_jobs WHERE queueing_lock = :name"
+            " AND status IN ('todo', 'doing') LIMIT 1"
+        ).bindparams(name=NEWS_JOB)
+    )
+    return found is not None
+
+
+async def _enqueue_news(runtime: Runtime) -> bool:
+    """Met un relevé en file ; une erreur de file ne doit pas casser la page."""
+    try:
+        await enqueue(runtime.settings, NEWS_JOB)
+    except Exception:
+        log.exception("news_enqueue_failed")
+        return False
+    return True
+
+
 @router.get("", operation_id="listNews")
 async def list_news(
     request: Request,
     kind: Kind | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 40,
+    # Filtres (docs/16) : « Mon domaine », pays des sources, langue des contenus.
+    domain_only: bool = False,
+    country: Annotated[list[str] | None, Query()] = None,
+    language: Annotated[list[str] | None, Query()] = None,
 ) -> NewsPage:
-    async with _runtime(request).sessionmaker() as session:
+    runtime = _runtime(request)
+    preferences = await _preferences(runtime)
+    keywords = preferences.domain_keywords
+    async with runtime.sessionmaker() as session:
         query = (
-            select(NewsItem, NewsSource.kind, NewsSource.name)
+            select(NewsItem, NewsSource)
             .join(NewsSource, NewsSource.id == NewsItem.source_id)
             .order_by(NewsItem.published_at.desc(), NewsItem.id.desc())
-            .limit(limit)
+            .limit(DOMAIN_WINDOW if domain_only else limit)
         )
         if kind:
             query = query.where(NewsSource.kind == kind)
+        if country:
+            query = query.where(NewsSource.country.in_(country))
+        if language:
+            # Une langue inconnue n'est pas cachée : mieux vaut un contenu de trop.
+            query = query.where(or_(NewsItem.language.in_(language), NewsItem.language.is_(None)))
         rows = (await session.execute(query)).all()
+        found = [
+            (item, source, domain.matched(keywords, item.title, item.summary))
+            for item, source in rows
+        ]
+        if domain_only:
+            found = [row for row in found if row[2] or row[1].labour_market][:limit]
         seen = await _seen_at(session)
         counts = dict(
             (
@@ -97,34 +222,70 @@ async def list_news(
                 )
             ).all()
         )
+        active = list(await session.scalars(select(NewsSource).where(NewsSource.active.is_(True))))
+        languages = set(
+            await session.scalars(
+                select(NewsItem.language)
+                .join(NewsSource, NewsSource.id == NewsItem.source_id)
+                .where(NewsSource.active.is_(True), NewsItem.language.is_not(None))
+                .distinct()
+            )
+        )
+        refreshing = await _refreshing(session)
+    fetched = [s.fetched_at for s in active if s.fetched_at and not s.error]
+    # Page vide après la mise à jour : un premier relevé part tout de suite (docs/16 §1).
+    if active and not any(s.fetched_at for s in active) and not refreshing:
+        refreshing = await _enqueue_news(runtime)
     return NewsPage(
         items=[
             NewsItemOut(
                 id=item.id,
-                kind=item_kind,
-                source=name,
+                kind=source.kind,
+                source=source.name,
                 title=item.title,
                 url=item.url,
                 summary=item.summary,
                 has_image=bool(item.image_key),
                 published_at=item.published_at,
+                country=source.country,
+                language=item.language,
+                labour_market=source.labour_market,
+                matched=matches,
             )
-            for item, item_kind, name in rows
+            for item, source, matches in found
         ],
         new_articles=counts.get("articles", 0),
         new_videos=counts.get("videos", 0),
+        fetched_at=max(fetched) if fetched else None,
+        refreshing=refreshing,
+        countries=sorted({s.country for s in active if s.country}),
+        languages=sorted(language for language in languages if language),
     )
+
+
+@router.post("/refresh", operation_id="refreshNews")
+async def refresh_news(request: Request) -> NewsRefresh:
+    """« Relever maintenant » : relevé de toutes les sources actives, en arrière-plan."""
+    return NewsRefresh(queued=await _enqueue_news(_runtime(request)))
+
+
+@router.get("/preferences", operation_id="getNewsPreferences")
+async def get_preferences(request: Request) -> NewsPreferences:
+    return await _preferences(_runtime(request))
+
+
+@router.put("/preferences", operation_id="saveNewsPreferences")
+async def save_preferences(request: Request, body: NewsPreferences) -> NewsPreferences:
+    async with _runtime(request).sessionmaker.begin() as session:
+        await _save_setting(session, PREFERENCES_KEY, body.model_dump())
+    return body
 
 
 @router.post("/seen", operation_id="markNewsSeen", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_seen(request: Request) -> None:
     now = datetime.now(UTC).isoformat()
     async with _runtime(request).sessionmaker.begin() as session:
-        await session.execute(
-            insert(Setting)
-            .values(key=SEEN_KEY, value=now)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": now})
-        )
+        await _save_setting(session, SEEN_KEY, now)
 
 
 @router.get(
@@ -192,21 +353,33 @@ async def add_source(request: Request, body: NewsSourceIn) -> list[NewsSourceOut
                 url=found.url,
                 feed_url=found.feed_url,
                 match=(body.match or "").strip() or None,
+                country=body.country or found.country,
+                language=body.language or found.language,
+                labour_market=body.labour_market,
             )
         )
+    # Ses contenus arrivent tout de suite, sans attendre le relevé des 6 heures.
+    await _enqueue_news(runtime)
     return await _sources(runtime)
 
 
-@router.patch("/sources/{source_id}", operation_id="setNewsSourceActive")
-async def set_source_active(
-    request: Request, source_id: int, body: NewsSourceActive
+@router.patch("/sources/{source_id}", operation_id="updateNewsSource")
+async def update_source(
+    request: Request, source_id: int, body: NewsSourceUpdate
 ) -> list[NewsSourceOut]:
     runtime = _runtime(request)
     async with runtime.sessionmaker.begin() as session:
         source = await session.get(NewsSource, source_id)
         if source is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "source introuvable")
-        source.active = body.active
+        if body.active is not None:
+            source.active = body.active
+        if body.country is not None:
+            source.country = body.country or None
+        if body.language is not None:
+            source.language = body.language or None
+        if body.labour_market is not None:
+            source.labour_market = body.labour_market
     return await _sources(runtime)
 
 

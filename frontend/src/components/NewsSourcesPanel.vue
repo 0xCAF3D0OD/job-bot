@@ -1,27 +1,54 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-import { api, type NewsSource } from "../api/client";
+import { api, type NewsPreferences, type NewsSource } from "../api/client";
+import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import AppIcon from "./AppIcon.vue";
 
-// Sources des Actualités (docs/15 §2) : site, flux RSS ou chaîne YouTube.
+// Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
+const preferences = ref<NewsPreferences | null>(null);
+const keyword = ref("");
 const loaded = ref(false);
 const adding = ref(false);
-const form = ref({ url: "", name: "", match: "" });
+const form = ref({ url: "", name: "", match: "", country: "", language: "", labour_market: false });
 const message = ref("");
 const busy = ref(false);
 
 async function load(): Promise<void> {
-  const { data } = await api.GET("/api/news/sources");
-  sources.value = data ?? [];
+  const [list, prefs] = await Promise.all([api.GET("/api/news/sources"), api.GET("/api/news/preferences")]);
+  sources.value = Array.isArray(list.data) ? list.data : [];
+  preferences.value = Array.isArray(prefs.data?.domain_keywords) ? prefs.data : null;
   loaded.value = true;
 }
 
-async function toggle(source: NewsSource): Promise<void> {
+async function saveKeywords(keywords: string[]): Promise<void> {
+  if (!preferences.value) return;
+  const { data } = await api.PUT("/api/news/preferences", {
+    body: { ...preferences.value, domain_keywords: keywords },
+  });
+  if (data) preferences.value = data;
+}
+
+function addKeywords(): void {
+  const current = preferences.value?.domain_keywords ?? [];
+  // « DevOps, Kubernetes » : plusieurs mots-clés d'un coup, séparés par des virgules.
+  const added = keyword.value.split(",").map((k) => k.trim()).filter(Boolean);
+  keyword.value = "";
+  if (added.length) void saveKeywords([...current, ...added]);
+}
+
+function removeKeyword(value: string): void {
+  void saveKeywords((preferences.value?.domain_keywords ?? []).filter((k) => k !== value));
+}
+
+async function update(
+  source: NewsSource,
+  change: { active?: boolean; country?: string; language?: string; labour_market?: boolean },
+): Promise<void> {
   const { data } = await api.PATCH("/api/news/sources/{source_id}", {
     params: { path: { source_id: source.id } },
-    body: { active: !source.active },
+    body: change,
   });
   if (data) sources.value = data;
 }
@@ -39,7 +66,14 @@ async function add(): Promise<void> {
   message.value = "";
   try {
     const { data, error } = await api.POST("/api/news/sources", {
-      body: { url: form.value.url.trim(), name: form.value.name.trim() || null, match: form.value.match.trim() || null },
+      body: {
+        url: form.value.url.trim(),
+        name: form.value.name.trim() || null,
+        match: form.value.match.trim() || null,
+        country: form.value.country || null,
+        language: form.value.language || null,
+        labour_market: form.value.labour_market,
+      },
     });
     if (!data) {
       const detail = (error as { detail?: unknown } | undefined)?.detail;
@@ -48,12 +82,14 @@ async function add(): Promise<void> {
     }
     sources.value = data;
     adding.value = false;
-    form.value = { url: "", name: "", match: "" };
-    message.value = "Source ajoutée : ses nouveautés arriveront au prochain relevé (toutes les 6 heures).";
+    form.value = { url: "", name: "", match: "", country: "", language: "", labour_market: false };
+    message.value = "Source ajoutée : ses contenus arrivent dans quelques secondes.";
   } finally {
     busy.value = false;
   }
 }
+
+const value = (event: Event): string => (event.target as HTMLSelectElement).value;
 
 onMounted(() => void load());
 </script>
@@ -65,6 +101,59 @@ onMounted(() => void load());
     class="form-card sites-card"
     data-test="news-sources"
   >
+    <fieldset v-if="preferences">
+      <legend>Mon domaine</legend>
+      <p class="hint">
+        Mots-clés de ton métier : « Mon domaine », sur la page Actualités, ne garde que les contenus qui en
+        contiennent un (sans IA, sans coût). Les sources « marché de l'emploi » restent toujours visibles.
+      </p>
+      <ul
+        class="keyword-chips"
+        data-test="domain-keywords"
+      >
+        <li
+          v-for="item in preferences.domain_keywords"
+          :key="item"
+          class="chip"
+        >
+          {{ item }}
+          <button
+            type="button"
+            :aria-label="`Retirer ${item}`"
+            @click="removeKeyword(item)"
+          >
+            ×
+          </button>
+        </li>
+        <li
+          v-if="!preferences.domain_keywords.length"
+          class="hint"
+        >
+          Aucun mot-clé pour l'instant.
+        </li>
+      </ul>
+      <form
+        class="inline-form"
+        @submit.prevent="addKeywords"
+      >
+        <input
+          v-model="keyword"
+          type="text"
+          maxlength="200"
+          placeholder="DevOps, Kubernetes, CKA…"
+          aria-label="Mots-clés à ajouter"
+          data-test="domain-input"
+        >
+        <button
+          type="submit"
+          class="secondary small"
+          :disabled="!keyword.trim()"
+        >
+          Ajouter
+        </button>
+      </form>
+    </fieldset>
+
     <fieldset>
       <legend>Sources des Actualités</legend>
       <p class="hint">
@@ -84,12 +173,47 @@ onMounted(() => void load());
               {{ source.kind === "videos" ? "vidéos" : "articles" }}{{ source.match ? ` · filtre : ${source.match}` : "" }}
               <template v-if="source.error"> · <span class="danger">dernier relevé en échec</span></template>
             </span>
+            <span class="source-fields">
+              <select
+                :value="source.country ?? ''"
+                aria-label="Pays"
+                data-test="source-country"
+                @change="update(source, { country: value($event) })"
+              >
+                <option value="">pays ?</option>
+                <option
+                  v-for="(label, code) in COUNTRIES"
+                  :key="code"
+                  :value="code"
+                >{{ label }}</option>
+              </select>
+              <select
+                :value="source.language ?? ''"
+                aria-label="Langue"
+                @change="update(source, { language: value($event) })"
+              >
+                <option value="">langues mêlées</option>
+                <option
+                  v-for="(label, code) in LANGUAGES"
+                  :key="code"
+                  :value="code"
+                >{{ label }}</option>
+              </select>
+              <label class="check">
+                <input
+                  type="checkbox"
+                  :checked="source.labour_market"
+                  data-test="source-labour"
+                  @change="update(source, { labour_market: !source.labour_market })"
+                > marché de l'emploi
+              </label>
+            </span>
           </span>
           <label class="check">
             <input
               type="checkbox"
               :checked="source.active"
-              @change="toggle(source)"
+              @change="update(source, { active: !source.active })"
             > suivie
           </label>
           <button
@@ -128,6 +252,32 @@ onMounted(() => void load());
             type="text"
             placeholder="emploi"
           >
+        </label>
+        <label>Pays
+          <select v-model="form.country">
+            <option value="">d'après l'adresse</option>
+            <option
+              v-for="(label, code) in COUNTRIES"
+              :key="code"
+              :value="code"
+            >{{ label }}</option>
+          </select>
+        </label>
+        <label>Langue
+          <select v-model="form.language">
+            <option value="">d'après le flux</option>
+            <option
+              v-for="(label, code) in LANGUAGES"
+              :key="code"
+              :value="code"
+            >{{ label }}</option>
+          </select>
+        </label>
+        <label class="check wide">
+          <input
+            v-model="form.labour_market"
+            type="checkbox"
+          > Marché de l'emploi (toujours visible, même filtré sur « Mon domaine »)
         </label>
         <div class="form-actions wide">
           <button

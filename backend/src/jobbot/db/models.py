@@ -522,6 +522,11 @@ class NewsSource(Base):
     # Ne garder que les entrées dont l'auteur, le titre ou le texte contient ce texte.
     match: Mapped[str | None] = mapped_column(Text)
     active: Mapped[bool] = mapped_column(default=True)
+    # Pays (CH, FR, BE…, INT pour international) et langue (fr, de, en…) : filtres (docs/16 §3).
+    country: Mapped[str | None] = mapped_column(Text)
+    language: Mapped[str | None] = mapped_column(Text)
+    # Toujours visible, même filtré sur « Mon domaine » (docs/16 §2).
+    labour_market: Mapped[bool] = mapped_column(default=False)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -540,5 +545,7 @@ class NewsItem(Base):
     image_url: Mapped[str | None] = mapped_column(Text)
     # Miniature téléchargée par la plateforme (news/…), servie sans appel au site d'origine.
     image_key: Mapped[str | None] = mapped_column(Text)
+    # Langue du contenu, déduite du texte, sinon celle du flux ou de la source.
+    language: Mapped[str | None] = mapped_column(Text)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

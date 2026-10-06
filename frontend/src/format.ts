@@ -103,3 +103,14 @@ export function expiredText(offer: { expired_at?: string | null; expiry_source?:
     ? `Probablement expirée : plus vue dans aucune alerte depuis 30 jours (${day}).`
     : `Offre expirée le ${day} : l'annonce n'est plus en ligne.`;
 }
+
+// « il y a 2 h » : cloche des alertes, dernier relevé des Actualités.
+export function since(iso: string): string {
+  const minutes = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
+  if (minutes < 1) return "à l'instant";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `il y a ${hours} h`;
+  const days = Math.round(hours / 24);
+  return days === 1 ? "hier" : `il y a ${days} jours`;
+}

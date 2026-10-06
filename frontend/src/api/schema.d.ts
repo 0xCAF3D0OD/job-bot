@@ -994,6 +994,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/news/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh News
+         * @description « Relever maintenant » : relevé de toutes les sources actives, en arrière-plan.
+         */
+        post: operations["refreshNews"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/news/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Preferences */
+        get: operations["getNewsPreferences"];
+        /** Save Preferences */
+        put: operations["saveNewsPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/news/seen": {
         parameters: {
             query?: never;
@@ -1063,8 +1101,8 @@ export interface paths {
         delete: operations["deleteNewsSource"];
         options?: never;
         head?: never;
-        /** Set Source Active */
-        patch: operations["setNewsSourceActive"];
+        /** Update Source */
+        patch: operations["updateNewsSource"];
         trace?: never;
     };
 }
@@ -1788,6 +1826,14 @@ export interface components {
              * Format: date-time
              */
             published_at: string;
+            /** Country */
+            country: string | null;
+            /** Language */
+            language: string | null;
+            /** Labour Market */
+            labour_market: boolean;
+            /** Matched */
+            matched: string[];
         };
         /** NewsPage */
         NewsPage: {
@@ -1797,11 +1843,33 @@ export interface components {
             new_articles: number;
             /** New Videos */
             new_videos: number;
+            /** Fetched At */
+            fetched_at: string | null;
+            /** Refreshing */
+            refreshing: boolean;
+            /** Countries */
+            countries: string[];
+            /** Languages */
+            languages: string[];
         };
-        /** NewsSourceActive */
-        NewsSourceActive: {
-            /** Active */
-            active: boolean;
+        /**
+         * NewsPreferences
+         * @description « Mon domaine » et filtres de la page, retenus d'une visite à l'autre (docs/16 §2-3).
+         */
+        NewsPreferences: {
+            /** Domain Keywords */
+            domain_keywords: string[];
+            /** Domain Only */
+            domain_only: boolean;
+            /** Countries */
+            countries: string[];
+            /** Languages */
+            languages: string[];
+        };
+        /** NewsRefresh */
+        NewsRefresh: {
+            /** Queued */
+            queued: boolean;
         };
         /** NewsSourceIn */
         NewsSourceIn: {
@@ -1811,6 +1879,15 @@ export interface components {
             name?: string | null;
             /** Match */
             match?: string | null;
+            /** Country */
+            country?: string | null;
+            /** Language */
+            language?: string | null;
+            /**
+             * Labour Market
+             * @default false
+             */
+            labour_market: boolean;
         };
         /** NewsSourceOut */
         NewsSourceOut: {
@@ -1831,10 +1908,30 @@ export interface components {
             match: string | null;
             /** Active */
             active: boolean;
+            /** Country */
+            country: string | null;
+            /** Language */
+            language: string | null;
+            /** Labour Market */
+            labour_market: boolean;
             /** Fetched At */
             fetched_at: string | null;
             /** Error */
             error: string | null;
+        };
+        /**
+         * NewsSourceUpdate
+         * @description Champs à modifier ; ceux absents restent inchangés. Une valeur vide efface pays ou langue.
+         */
+        NewsSourceUpdate: {
+            /** Active */
+            active?: boolean | null;
+            /** Country */
+            country?: string | "" | null;
+            /** Language */
+            language?: string | "" | null;
+            /** Labour Market */
+            labour_market?: boolean | null;
         };
         /** NotificationOut */
         NotificationOut: {
@@ -4624,6 +4721,9 @@ export interface operations {
             query?: {
                 kind?: ("articles" | "videos") | null;
                 limit?: number;
+                domain_only?: boolean;
+                country?: string[] | null;
+                language?: string[] | null;
             };
             header?: never;
             path?: never;
@@ -4638,6 +4738,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NewsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refreshNews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsRefresh"];
+                };
+            };
+        };
+    };
+    getNewsPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsPreferences"];
+                };
+            };
+        };
+    };
+    saveNewsPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewsPreferences"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsPreferences"];
                 };
             };
             /** @description Validation Error */
@@ -4789,7 +4962,7 @@ export interface operations {
             };
         };
     };
-    setNewsSourceActive: {
+    updateNewsSource: {
         parameters: {
             query?: never;
             header?: never;
@@ -4800,7 +4973,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NewsSourceActive"];
+                "application/json": components["schemas"]["NewsSourceUpdate"];
             };
         };
         responses: {
