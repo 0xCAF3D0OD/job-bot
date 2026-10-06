@@ -166,16 +166,16 @@ def request_params(keywords: list[str], languages: list[str], known: list[str]) 
     }
 
 
-async def suggest(runtime: Runtime) -> int:
+async def suggest(runtime: Runtime, profile_id: int | None = None) -> int:
     """Demande des formations à l'IA ; renvoie le nombre de nouvelles fiches « à vérifier »."""
     settings = runtime.settings
     if not settings.llm_configured:
         raise SuggestUnavailable("IA non configurée (JOBBOT_ANTHROPIC_API_KEY)")
     async with runtime.sessionmaker() as session:
-        keywords = await domain.keywords(session)
+        keywords = await domain.keywords(session, profile_id)
         if not keywords:
             raise SuggestUnavailable("indique d'abord ton domaine dans Réglages → Actualités")
-        languages = await domain.languages(session)
+        languages = await domain.languages(session, profile_id)
         known = [f"{t.title} ({t.provider})" for t in await session.scalars(select(Training))]
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
     if spend + ESTIMATE_USD * rate > budget:

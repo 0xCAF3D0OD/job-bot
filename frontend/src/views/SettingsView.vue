@@ -5,6 +5,7 @@ import { api, type SettingsModel } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
+import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 import StatusPanel from "../components/StatusPanel.vue";
 
@@ -215,6 +216,7 @@ async function save(): Promise<void> {
         </div>
       </form>
       <SitesPanel class="settings-status" />
+      <ProfilesPanel class="settings-status" />
       <NewsSourcesPanel class="settings-status" />
       <h2
         id="etat"

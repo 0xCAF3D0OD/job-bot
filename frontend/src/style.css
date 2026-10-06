@@ -296,12 +296,12 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
   .back { display: inline-flex; justify-self: start; }
 }
 
-/* Neuf entrées de menu depuis la 0.9 : plus serrées, puis sur une deuxième ligne défilante. */
+/* Neuf entrées de menu depuis la 0.9 (et le sélecteur de profil en 0.10) : plus serrées, puis sur une deuxième ligne défilante. */
 @media (max-width: 1240px) {
   .nav { gap: 1.1rem; }
   .nav a { font-size: 0.9rem; }
 }
-@media (max-width: 1000px) {
+@media (max-width: 1180px) {
   .topbar-inner { grid-template-columns: 1fr auto; }
   .topbar nav { grid-column: 1 / -1; grid-row: 2; overflow-x: auto; }
   .nav { justify-content: flex-start; flex-wrap: nowrap; white-space: nowrap; }
@@ -875,3 +875,8 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .training-field { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; font-size: 0.82rem; }
 .training-field input[type="text"], .training-field input[type="date"] { padding: 0.25rem 0.4rem; font-size: 0.82rem; }
 .badge.warn { background: #fff1e4; color: #b4600f; }
+
+/* Profils d'essai (docs/17) */
+.profile-switcher select { padding: 0.3rem 0.45rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); max-width: 14rem; }
+.profile-banner { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; align-items: center; justify-content: center; padding: 0.5rem 1rem; background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-bottom: 1px solid var(--border); font-size: 0.86rem; color: var(--text); }
+.profile-banner span { color: var(--muted); }

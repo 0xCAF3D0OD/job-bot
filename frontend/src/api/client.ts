@@ -5,6 +5,26 @@ import type { components, paths } from "./schema";
 // Chemin relatif : aucune URL d'API n'est figée dans le build.
 export const api = createClient<paths>({ baseUrl: globalThis.location?.origin ?? "" });
 
+// Profil d'essai choisi (docs/17), retenu par le navigateur et envoyé à chaque requête.
+export const PROFILE_KEY = "jobbot-profile";
+export const PROFILE_HEADER = "X-Jobbot-Profile";
+
+export function storedProfile(): string | null {
+  try {
+    return globalThis.localStorage?.getItem(PROFILE_KEY) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+api.use({
+  onRequest({ request }) {
+    const profile = storedProfile();
+    if (profile) request.headers.set(PROFILE_HEADER, profile);
+    return request;
+  },
+});
+
 type Schemas = components["schemas"];
 export type StatusResponse = Schemas["StatusResponse"];
 export type JobRun = Schemas["JobRunOut"];
@@ -56,3 +76,5 @@ export type NewsPreferences = Schemas["NewsPreferences"];
 export type NewsCatalog = Schemas["NewsCatalog"];
 export type Training = Schemas["TrainingOut"];
 export type TrainingMark = Schemas["TrainingMarkOut"];
+export type Profile = Schemas["ProfileOut"];
+export type ProfileList = Schemas["ProfileList"];
