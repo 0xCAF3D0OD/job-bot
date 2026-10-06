@@ -14,7 +14,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import anthropic
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,7 +79,9 @@ async def sync_catalog(session: AsyncSession) -> None:
         await session.execute(
             insert(Training)
             .values(**values)
-            .on_conflict_do_update(index_elements=["url"], set_=fields)
+            .on_conflict_do_update(
+                index_elements=["url"], index_where=Training.profile_id.is_(None), set_=fields
+            )
         )
 
 
@@ -166,7 +168,7 @@ def request_params(keywords: list[str], languages: list[str], known: list[str]) 
     }
 
 
-async def suggest(runtime: Runtime, profile_id: int | None = None) -> int:
+async def suggest(runtime: Runtime, profile_id: int) -> int:
     """Demande des formations à l'IA ; renvoie le nombre de nouvelles fiches « à vérifier »."""
     settings = runtime.settings
     if not settings.llm_configured:
@@ -176,7 +178,15 @@ async def suggest(runtime: Runtime, profile_id: int | None = None) -> int:
         if not keywords:
             raise SuggestUnavailable("indique d'abord ton domaine dans Réglages → Actualités")
         languages = await domain.languages(session, profile_id)
-        known = [f"{t.title} ({t.provider})" for t in await session.scalars(select(Training))]
+        # Catalogue et suggestions déjà faites à ce profil (gardées ou écartées).
+        visible = await session.scalars(
+            select(Training).where(
+                or_(Training.profile_id.is_(None), Training.profile_id == profile_id)
+            )
+        )
+        known_rows = list(visible)
+        known = [f"{t.title} ({t.provider})" for t in known_rows]
+        catalog_urls = {t.url for t in known_rows if t.profile_id is None}
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
     if spend + ESTIMATE_USD * rate > budget:
         raise SuggestUnavailable("plafond mensuel de l'IA atteint")
@@ -194,10 +204,15 @@ async def suggest(runtime: Runtime, profile_id: int | None = None) -> int:
     async with runtime.sessionmaker.begin() as session:
         await record_call(session, raw, offer_id=None, rate=rate, purpose="training")
         for item in found:
+            if item.url in catalog_urls:
+                continue
             inserted = await session.scalar(
                 insert(Training)
-                .values(**item.__dict__, origin="ai", verified=False)
-                .on_conflict_do_nothing(index_elements=["url"])
+                .values(**item.__dict__, origin="ai", verified=False, profile_id=profile_id)
+                .on_conflict_do_nothing(
+                    index_elements=["profile_id", "url"],
+                    index_where=Training.profile_id.is_not(None),
+                )
                 .returning(Training.id)
             )
             added += inserted is not None

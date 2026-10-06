@@ -1,6 +1,6 @@
 # 17 — Profils d'essai pour les Actualités et les Formations (version 0.10.0)
 
-> Statut : **validé** le 2026-10-06 (option A). livré : PR a (profils, Actualités par profil).
+> Statut : **validé** le 2026-10-06 (option A). livré : PR a (profils, Actualités par profil), PR b (Formations par profil, mots-clés proposés).
 > Retours d'usage du 2026-10-06, après la 0.9.0 : tester plusieurs « sessions » pour juger si les Actualités et les Formations conviennent à d'autres chercheurs d'emploi.
 
 ## 1. Ce que je propose, et ce que je ne propose pas (encore)
@@ -84,3 +84,11 @@ training_marks    clé (profile_id, training_id) au lieu de training_id
 - **Menu** : avec le sélecteur, il passe sur une deuxième ligne en dessous de 1180 px de large.
 - **Migration 0027** : `profiles`, `profile_sources` ; les réglages `news_preferences` et `news_seen_at` passent au profil principal ; `news_sources.active` est remplacé par la pause par profil.
 - **Essai réel** : profil « Infirmière à Lausanne » (soins, infirmière, hôpital, santé, EMS) avec une veille « infirmière emploi » : 4 articles de son domaine en plus du marché de l'emploi, surtout français ; aucune formation du catalogue ne correspond. Comme prévu au §4, les catalogues devront s'ouvrir à d'autres domaines.
+
+## Écarts avec la PR b
+
+- **Suggestions de l'IA par profil** : une formation suggérée appartient au profil qui l'a demandée (gardée, écartée ou à vérifier) ; la même adresse peut être proposée à plusieurs profils. Une suggestion déjà dans le catalogue n'est pas recopiée.
+- **Suggestions et suivi existants** : passés au profil principal.
+- **Mots-clés proposés** : bouton « Proposer des mots-clés à partir du métier » à la création d'un profil, affiché seulement avec une clé API ; Claude Haiku 4.5, sans recherche web, enregistré dans `llm_calls` (`purpose = keywords`). Les mots-clés proposés restent modifiables avant la création.
+- **Migration 0028** (la connexion du cadrage 18 passe donc en 0029).
+- **Non essayé en réel** : la proposition de mots-clés par l'IA (pas de clé API sur l'instance de test) ; couverte par des tests avec une réponse simulée.

@@ -1,6 +1,6 @@
 # 18 — Page de connexion, Candidatures et ORP réunies (version 0.11.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-06 (Offres réservées aussi).
 > Retours d'usage du 2026-10-06, en validant le cadrage 17. Vient après la 0.10.0 (profils d'essai).
 
 ## 1. Page de connexion
@@ -39,7 +39,7 @@
 - Les anciens liens (`/orp`, notifications de la cloche, rappels ntfy) mènent à l'onglet Preuves ORP du bon mois.
 - Le menu passe à **huit entrées**.
 
-## 3. Base (migration 0028)
+## 3. Base (migration 0029)
 
 ```
 users      id, username UNIQUE, password_hash, created_at, password_changed_at

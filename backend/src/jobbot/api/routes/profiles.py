@@ -8,7 +8,7 @@ from sqlalchemy import func, select
 
 from jobbot.api.routes.news import Country, Language, NewsPreferences
 from jobbot.db.models import Profile, ProfileSource
-from jobbot.profiles import service
+from jobbot.profiles import keywords, service
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/profiles", tags=["profiles"])
@@ -45,6 +45,16 @@ class ProfileIn(BaseModel):
     )
     countries: list[Country] = Field(default_factory=list, max_length=30)
     languages: list[Language] = Field(default_factory=list, max_length=5)
+
+
+class ProfileKeywordsIn(BaseModel):
+    occupation: Annotated[str, Field(min_length=2, max_length=120)]
+
+
+class ProfileKeywords(BaseModel):
+    keywords: list[str]
+    # Possible seulement avec une clé API.
+    available: bool
 
 
 class ProfileUpdate(BaseModel):
@@ -106,6 +116,26 @@ async def create_profile(request: Request, body: ProfileIn) -> ProfileList:
             preferences.model_dump(),
         )
     return await _list(_runtime(request), request.headers.get(service.HEADER))
+
+
+@router.get("/keywords", operation_id="keywordsAvailable")
+async def keywords_available(request: Request) -> ProfileKeywords:
+    """Le bouton « Proposer des mots-clés » ne s'affiche qu'avec une clé API."""
+    return ProfileKeywords(keywords=[], available=_runtime(request).settings.llm_configured)
+
+
+@router.post(
+    "/keywords",
+    operation_id="proposeKeywords",
+    responses={409: {"description": "IA indisponible ou plafond atteint"}},
+)
+async def propose_keywords(request: Request, body: ProfileKeywordsIn) -> ProfileKeywords:
+    """Mots-clés « Mon domaine » proposés par l'IA à partir du métier (environ 0,001 $)."""
+    try:
+        found = await keywords.propose(_runtime(request), body.occupation)
+    except keywords.KeywordsUnavailable as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    return ProfileKeywords(keywords=found, available=True)
 
 
 @router.post(

@@ -1260,6 +1260,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profiles/keywords": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Keywords Available
+         * @description Le bouton « Proposer des mots-clés » ne s'affiche qu'avec une clé API.
+         */
+        get: operations["keywordsAvailable"];
+        put?: never;
+        /**
+         * Propose Keywords
+         * @description Mots-clés « Mon domaine » proposés par l'IA à partir du métier (environ 0,001 $).
+         */
+        post: operations["proposeKeywords"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profiles/{profile_id}/duplicate": {
         parameters: {
             query?: never;
@@ -2531,6 +2555,18 @@ export interface components {
             countries?: string[];
             /** Languages */
             languages?: string[];
+        };
+        /** ProfileKeywords */
+        ProfileKeywords: {
+            /** Keywords */
+            keywords: string[];
+            /** Available */
+            available: boolean;
+        };
+        /** ProfileKeywordsIn */
+        ProfileKeywordsIn: {
+            /** Occupation */
+            occupation: string;
         };
         /** ProfileList */
         ProfileList: {
@@ -5682,6 +5718,66 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProfileList"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    keywordsAvailable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileKeywords"];
+                };
+            };
+        };
+    };
+    proposeKeywords: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileKeywordsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileKeywords"];
+                };
+            };
+            /** @description IA indisponible ou plafond atteint */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

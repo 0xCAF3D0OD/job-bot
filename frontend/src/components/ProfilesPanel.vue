@@ -14,6 +14,31 @@ const busy = ref(false);
 const message = ref("");
 const empty = () => ({ name: "", occupation: "", keywords: "", languages: ["fr"] as string[], countries: ["CH"] as string[] });
 const form = ref(empty());
+const canPropose = ref(false);
+const proposing = ref(false);
+
+// Mots-clés proposés par l'IA à partir du métier (docs/17 §2), environ 0,001 $.
+async function propose(): Promise<void> {
+  proposing.value = true;
+  message.value = "";
+  try {
+    const { data, error } = await api.POST("/api/profiles/keywords", {
+      body: { occupation: form.value.occupation.trim() },
+    });
+    if (!data) {
+      const detail = (error as { detail?: unknown } | undefined)?.detail;
+      message.value = typeof detail === "string" ? `Proposition impossible : ${detail}.` : "Proposition impossible.";
+      return;
+    }
+    if (!data.keywords.length) {
+      message.value = "Aucun mot-clé proposé : précise le métier.";
+      return;
+    }
+    form.value.keywords = data.keywords.join(", ");
+  } finally {
+    proposing.value = false;
+  }
+}
 
 function apply(data: ProfileList | undefined): void {
   if (data) set(data);
@@ -69,7 +94,10 @@ function toggle(field: "languages" | "countries", value: string): void {
   form.value[field] = values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
 }
 
-onMounted(() => void load());
+onMounted(async () => {
+  await load();
+  canPropose.value = Boolean((await api.GET("/api/profiles/keywords")).data?.available);
+});
 </script>
 
 <template>
@@ -161,6 +189,7 @@ onMounted(() => void load());
             type="text"
             maxlength="120"
             placeholder="infirmière en soins généraux"
+            data-test="profile-occupation"
           >
         </label>
         <label class="wide">« Mon domaine » : mots-clés séparés par des virgules
@@ -172,6 +201,21 @@ onMounted(() => void load());
             data-test="profile-keywords"
           >
         </label>
+        <div
+          v-if="canPropose"
+          class="wide"
+        >
+          <button
+            type="button"
+            class="secondary small"
+            :disabled="proposing || form.occupation.trim().length < 2"
+            title="Claude Haiku reçoit seulement le métier ; environ 0,001 $"
+            data-test="propose-keywords"
+            @click="propose"
+          >
+            {{ proposing ? "Proposition…" : "Proposer des mots-clés à partir du métier" }}
+          </button>
+        </div>
         <div class="wide chip-group">
           <span class="chip-label">Langues</span>
           <button
