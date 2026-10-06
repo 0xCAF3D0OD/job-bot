@@ -7,7 +7,7 @@ taille limitée). Les miniatures sont téléchargées et servies par la platefor
 import hashlib
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urljoin, urlsplit
 
@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot.core.normalize import normalize_text
 from jobbot.db.models import NewsItem, NewsSource
 from jobbot.log import get_logger
 from jobbot.logos import service as logos
@@ -30,6 +31,7 @@ MAX_PAGE_BYTES = 1_500_000
 MAX_IMAGE_BYTES = 300_000
 MAX_ITEMS_PER_SOURCE = 30
 KEEP_FOR = timedelta(days=60)
+DEDUPE_FOR = timedelta(days=14)
 USER_AGENT = "job-bot/0.8 (usage personnel)"
 _YOUTUBE_ID = re.compile(r"(UC[\w-]{22})")
 _YOUTUBE_CHANNEL_URL = re.compile(
@@ -151,6 +153,15 @@ async def resolve(url: str) -> ResolvedSource:
     )
 
 
+def _from_search(item: FeedItem) -> FeedItem:
+    """Google Actualités : « Titre - Journal » devient le titre, le journal le résumé."""
+    publisher = item.author
+    title = item.title
+    if publisher and title.endswith(f" - {publisher}"):
+        title = title[: -len(publisher) - 3]
+    return replace(item, title=title, summary=publisher)
+
+
 @dataclass
 class NewsResult:
     sources: int = 0
@@ -183,7 +194,18 @@ async def fetch_news(runtime: Runtime) -> NewsResult:
     result = NewsResult()
     now = datetime.now(UTC)
     async with runtime.sessionmaker() as session:
-        sources = list(await session.scalars(select(NewsSource).where(NewsSource.active.is_(True))))
+        sources = list(
+            await session.scalars(
+                select(NewsSource).where(NewsSource.active.is_(True)).order_by(NewsSource.id)
+            )
+        )
+        # Même article dans plusieurs sources ou veilles : affiché une seule fois (docs/16 §4.2).
+        titles = {
+            normalize_text(title)
+            for title in await session.scalars(
+                select(NewsItem.title).where(NewsItem.published_at >= now - DEDUPE_FOR)
+            )
+        }
     async with _client() as client:
         for source in sources:
             result.sources += 1
@@ -200,9 +222,11 @@ async def fetch_news(runtime: Runtime) -> NewsResult:
                     )
                 continue
             fallback = language.from_feed(feed.language) or source.language
-            entries = [i for i in feed.items if _matches(source, i.title, i.summary, i.author)][
-                :MAX_ITEMS_PER_SOURCE
-            ]
+            entries = [
+                _from_search(i) if source.query else i
+                for i in feed.items
+                if _matches(source, i.title, i.summary, i.author)
+            ][:MAX_ITEMS_PER_SOURCE]
             async with runtime.sessionmaker() as session:
                 known = set(
                     await session.scalars(
@@ -210,8 +234,10 @@ async def fetch_news(runtime: Runtime) -> NewsResult:
                     )
                 )
             for item in entries:
-                if item.url in known or item.published_at < now - KEEP_FOR:
+                title_key = normalize_text(item.title)
+                if item.url in known or item.published_at < now - KEEP_FOR or title_key in titles:
                     continue
+                titles.add(title_key)
                 image_key = (
                     await _thumbnail(runtime, client, item.image_url) if item.image_url else None
                 )

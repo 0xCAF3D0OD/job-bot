@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.models import NewsItem, NewsSource, Setting
 from jobbot.log import get_logger
-from jobbot.news import domain
+from jobbot.news import catalog, domain
 from jobbot.news.language import LANGUAGES
 from jobbot.news.service import SourceError, resolve
 from jobbot.runtime import Runtime
@@ -77,6 +77,8 @@ class NewsSourceOut(BaseModel):
     country: str | None
     language: str | None
     labour_market: bool
+    # Veille par recherche : mots-clés suivis dans Google Actualités.
+    query: str | None
     fetched_at: datetime | None
     error: str | None
 
@@ -99,6 +101,34 @@ class NewsSourceUpdate(BaseModel):
     country: Country | Literal[""] | None = None
     language: Language | Literal[""] | None = None
     labour_market: bool | None = None
+
+
+class NewsSearchIn(BaseModel):
+    """Veille par recherche (docs/16 §4.2) : seuls ces trois champs partent chez Google."""
+
+    query: Annotated[str, Field(min_length=2, max_length=100)]
+    country: Country
+    language: Language
+
+
+class CatalogSourceOut(BaseModel):
+    id: str
+    name: str
+    kind: Kind
+    url: str
+    domains: list[str]
+    country: str
+    language: str | None
+    labour_market: bool
+    description: str
+    # Déjà dans tes sources (même flux).
+    added: bool
+
+
+class NewsCatalog(BaseModel):
+    # Identifiant → libellé (« devops » → « DevOps et Kubernetes »).
+    domains: dict[str, str]
+    sources: list[CatalogSourceOut]
 
 
 class NewsRefresh(BaseModel):
@@ -343,24 +373,105 @@ async def add_source(request: Request, body: NewsSourceIn) -> list[NewsSourceOut
         found = await resolve(body.url)
     except SourceError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    # Ses contenus arrivent tout de suite, sans attendre le relevé des 6 heures (dans _add).
+    return await _add(
+        runtime,
+        NewsSource(
+            kind=found.kind,
+            name=(body.name or "").strip() or found.name[:80],
+            url=found.url,
+            feed_url=found.feed_url,
+            match=(body.match or "").strip() or None,
+            country=body.country or found.country,
+            language=body.language or found.language,
+            labour_market=body.labour_market,
+        ),
+    )
+
+
+async def _add(runtime: Runtime, source: NewsSource) -> list[NewsSourceOut]:
     async with runtime.sessionmaker.begin() as session:
-        if await session.scalar(select(NewsSource.id).where(NewsSource.feed_url == found.feed_url)):
+        if await session.scalar(
+            select(NewsSource.id).where(NewsSource.feed_url == source.feed_url)
+        ):
             raise HTTPException(status.HTTP_409_CONFLICT, "cette source est déjà suivie")
-        session.add(
-            NewsSource(
-                kind=found.kind,
-                name=(body.name or "").strip() or found.name[:80],
-                url=found.url,
-                feed_url=found.feed_url,
-                match=(body.match or "").strip() or None,
-                country=body.country or found.country,
-                language=body.language or found.language,
-                labour_market=body.labour_market,
-            )
-        )
-    # Ses contenus arrivent tout de suite, sans attendre le relevé des 6 heures.
+        session.add(source)
     await _enqueue_news(runtime)
     return await _sources(runtime)
+
+
+@router.get("/catalog", operation_id="getNewsCatalog")
+async def get_catalog(request: Request) -> NewsCatalog:
+    """Sources suggérées, vérifiées, classées par domaine, pays et langue."""
+    found = catalog.load()
+    async with _runtime(request).sessionmaker() as session:
+        followed = set(await session.scalars(select(NewsSource.feed_url)))
+    return NewsCatalog(
+        domains=found.domains,
+        sources=[
+            CatalogSourceOut(
+                id=s.id,
+                name=s.name,
+                kind=s.kind,
+                url=s.url,
+                domains=s.domains,
+                country=s.country,
+                language=s.language,
+                labour_market=s.labour_market,
+                description=s.description,
+                added=s.feed_url in followed,
+            )
+            for s in found.sources
+        ],
+    )
+
+
+@router.post(
+    "/catalog/{catalog_id}",
+    operation_id="addNewsCatalogSource",
+    status_code=status.HTTP_201_CREATED,
+    responses={404: {"description": "Suggestion inconnue"}, 409: {"description": "Déjà suivie"}},
+)
+async def add_catalog_source(request: Request, catalog_id: str) -> list[NewsSourceOut]:
+    entry = catalog.load().get(catalog_id)
+    if entry is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "suggestion inconnue")
+    return await _add(
+        _runtime(request),
+        NewsSource(
+            kind=entry.kind,
+            name=entry.name,
+            url=entry.url,
+            feed_url=entry.feed_url,
+            match=entry.match,
+            country=entry.country,
+            language=entry.language,
+            labour_market=entry.labour_market,
+        ),
+    )
+
+
+@router.post(
+    "/searches",
+    operation_id="addNewsSearch",
+    status_code=status.HTTP_201_CREATED,
+    responses={409: {"description": "Veille déjà suivie"}},
+)
+async def add_search(request: Request, body: NewsSearchIn) -> list[NewsSourceOut]:
+    """Veille par recherche : mots-clés, pays et langue, relevés dans Google Actualités."""
+    query = " ".join(body.query.split())
+    return await _add(
+        _runtime(request),
+        NewsSource(
+            kind="articles",
+            name=f"Veille : {query}"[:80],
+            url="https://news.google.com/",
+            feed_url=catalog.search_feed(query, body.country, body.language),
+            country=body.country,
+            language=body.language,
+            query=query,
+        ),
+    )
 
 
 @router.patch("/sources/{source_id}", operation_id="updateNewsSource")

@@ -1,6 +1,6 @@
 # 16 — Actualités ciblées et catalogue de formations (version 0.9.0)
 
-> Statut : **validé** le 2026-10-06. livré : PR a (domaine, pays, langue, relevé immédiat).
+> Statut : **validé** le 2026-10-06. livré : PR a (domaine, pays, langue, relevé immédiat), PR b (sources suggérées, veilles).
 > Retours d'usage du 2026-10-06, après la 0.8.0-b. Complète [15-cloche-actualites.md](15-cloche-actualites.md) §2.
 
 ## 1. Page vide après la mise à jour
@@ -138,3 +138,18 @@ training_marks training_id PRIMARY, status (interested|in_progress|done), progre
 - **Sources de départ** : SECO marqué « marché de l'emploi » ; RTS et Le Temps en Suisse, français ; les deux chaînes YouTube en international, anglais.
 - **Filtres de la page** : listes Pays et Langue affichées seulement s'il y a au moins deux valeurs ; tous les filtres sont enregistrés (réglage `news_preferences`).
 - **Migration 0024**.
+
+## Écarts avec la PR b
+
+- **Catalogue** : 25 sources, toutes vérifiées le 2026-10-06 (le flux répond, contenu de moins de deux semaines), dans `backend/src/jobbot/news/catalog.json` (JSON plutôt que YAML : aucune dépendance de plus).
+  - *Marché de l'emploi* : SECO, RTS Économie, Le Temps Économie, France Travail (vidéos).
+  - *Actualité informatique* : ICTjournal (Suisse, français), Inside IT et Netzwoche (Suisse, allemand), Le Monde Informatique, IT-Connect, JDN.
+  - *DevOps et cloud* : blog Kubernetes, CNCF, AWS DevOps, AWS nouveautés, Azure, Google Cloud, The New Stack, HashiCorp, Docker.
+  - *Vidéos* : TechWorld with Nana, KodeKloud, CNCF, xavki, Cookie connecté (DevOps en français), Grafikart (développement web).
+- **Écartées** : l'OFS (dernier communiqué dans le flux il y a près de 3 ans), Swissinfo (page trop lourde, flux introuvable), InfoQ DevOps (flux arrêté), les chaînes Welcome to the Jungle, Apec et Cadremploi (inactives ou vides).
+- **Flux RSS 1.0** (Le Monde Informatique) désormais lus.
+- **Veilles** : le flux de Google Actualités est réservé à un usage personnel dans un lecteur de flux, ce qui est le cas ici. Pour « International », la recherche se fait sur l'édition américaine de Google Actualités. Titre sans le nom du journal, qui devient le résumé de la carte ; pas d'image. Le relevé garde les articles de moins de 60 jours.
+- **Doublons** : un article déjà relevé dans les 14 derniers jours (même titre, sans tenir compte des majuscules, accents et ponctuation), dans n'importe quelle source, n'est pas repris.
+- **Réglages** : trois boutons, « Parcourir les suggestions » (filtres domaine, pays, langue), « Nouvelle veille », « Ajouter par adresse » ; la veille apparaît dans la liste des sources et se met en pause ou se retire comme les autres.
+- **Migration 0025** (`news_sources.query`).
+- **Essai réel** : xavki ajouté depuis les suggestions (15 vidéos) et la veille « Kubernetes emploi » (Suisse, français : 6 articles de moins de 60 jours), relevés aussitôt.

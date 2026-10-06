@@ -1087,6 +1087,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/news/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Catalog
+         * @description Sources suggérées, vérifiées, classées par domaine, pays et langue.
+         */
+        get: operations["getNewsCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/news/catalog/{catalog_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Catalog Source */
+        post: operations["addNewsCatalogSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/news/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Search
+         * @description Veille par recherche : mots-clés, pays et langue, relevés dans Google Actualités.
+         */
+        post: operations["addNewsSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/news/sources/{source_id}": {
         parameters: {
             query?: never;
@@ -1305,6 +1362,32 @@ export interface components {
         Body_uploadDocument: {
             /** File */
             file: string;
+        };
+        /** CatalogSourceOut */
+        CatalogSourceOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "articles" | "videos";
+            /** Url */
+            url: string;
+            /** Domains */
+            domains: string[];
+            /** Country */
+            country: string;
+            /** Language */
+            language: string | null;
+            /** Labour Market */
+            labour_market: boolean;
+            /** Description */
+            description: string;
+            /** Added */
+            added: boolean;
         };
         /** ChecklistItem */
         ChecklistItem: {
@@ -1802,6 +1885,15 @@ export interface components {
             /** Target */
             target: number | null;
         };
+        /** NewsCatalog */
+        NewsCatalog: {
+            /** Domains */
+            domains: {
+                [key: string]: string;
+            };
+            /** Sources */
+            sources: components["schemas"]["CatalogSourceOut"][];
+        };
         /** NewsItemOut */
         NewsItemOut: {
             /** Id */
@@ -1871,6 +1963,18 @@ export interface components {
             /** Queued */
             queued: boolean;
         };
+        /**
+         * NewsSearchIn
+         * @description Veille par recherche (docs/16 §4.2) : seuls ces trois champs partent chez Google.
+         */
+        NewsSearchIn: {
+            /** Query */
+            query: string;
+            /** Country */
+            country: string;
+            /** Language */
+            language: string;
+        };
         /** NewsSourceIn */
         NewsSourceIn: {
             /** Url */
@@ -1914,6 +2018,8 @@ export interface components {
             language: string | null;
             /** Labour Market */
             labour_market: boolean;
+            /** Query */
+            query: string | null;
             /** Fetched At */
             fetched_at: string | null;
             /** Error */
@@ -4928,6 +5034,111 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getNewsCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsCatalog"];
+                };
+            };
+        };
+    };
+    addNewsCatalogSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                catalog_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsSourceOut"][];
+                };
+            };
+            /** @description Suggestion inconnue */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Déjà suivie */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    addNewsSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewsSearchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsSourceOut"][];
+                };
+            };
+            /** @description Veille déjà suivie */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

@@ -11,7 +11,7 @@ from sqlalchemy import select, text
 from jobbot.api.app import create_app
 from jobbot.db.models import Evaluation, NewsItem, NewsSource, Offer
 from jobbot.logos import service as logos
-from jobbot.news import domain, language
+from jobbot.news import catalog, domain, language
 from jobbot.news import service as news
 from jobbot.news.feeds import FeedError, parse_feed
 from jobbot.runtime import Runtime
@@ -357,3 +357,116 @@ async def test_domain_suggested_from_offers(runtime: Runtime) -> None:
         assert await domain.suggest(session) == ["DevOps", "Kubernetes", "AWS"]
     async with runtime.engine.begin() as conn:
         await conn.execute(text("TRUNCATE offers CASCADE"))
+
+
+def test_catalog_is_consistent() -> None:
+    found = catalog.load()
+    ids = [s.id for s in found.sources]
+    feeds = [s.feed_url for s in found.sources]
+    assert len(ids) == len(set(ids)) and len(feeds) == len(set(feeds))
+    for source in found.sources:
+        assert source.kind in ("articles", "videos")
+        assert source.feed_url.startswith("https://") and source.url.startswith("https://")
+        assert source.domains and set(source.domains) <= set(found.domains)
+        assert source.country == "INT" or len(source.country) == 2
+        assert source.description
+    # Les sources de départ (migration 0023) y figurent, pour s'afficher « suivie ».
+    assert {"seco", "rts-economie", "letemps-economie", "techworld-nana", "kodekloud"} <= set(ids)
+    assert catalog.search_feed("Kubernetes emploi", "CH", "fr") == (
+        "https://news.google.com/rss/search?q=Kubernetes+emploi&hl=fr&gl=CH&ceid=CH%3Afr"
+    )
+    assert "gl=US" in catalog.search_feed("CKA", "INT", "en")
+
+
+async def test_catalog_and_searches_api(rt: Runtime, settings: Settings, queued: list[str]) -> None:
+    app = create_app(settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        listed = (await api.get("/api/news/catalog")).json()
+        assert listed["domains"]["devops"] == "DevOps et Kubernetes"
+        by_id = {s["id"]: s for s in listed["sources"]}
+        assert by_id["seco"]["added"] and not by_id["xavki"]["added"]
+        added = await api.post("/api/news/catalog/xavki")
+        assert added.status_code == 201 and queued == ["news"]
+        xavki = next(s for s in added.json() if s["name"] == "xavki")
+        assert (xavki["kind"], xavki["country"], xavki["language"]) == ("videos", "INT", "fr")
+        assert (await api.post("/api/news/catalog/xavki")).status_code == 409
+        assert (await api.post("/api/news/catalog/inconnue")).status_code == 404
+        assert next(
+            s for s in (await api.get("/api/news/catalog")).json()["sources"] if s["id"] == "xavki"
+        )["added"]
+
+        search = await api.post(
+            "/api/news/searches",
+            json={"query": "  Kubernetes   emploi ", "country": "CH", "language": "fr"},
+        )
+        assert search.status_code == 201
+        veille = next(s for s in search.json() if s["query"])
+        assert veille["name"] == "Veille : Kubernetes emploi" and veille["country"] == "CH"
+        assert "q=Kubernetes+emploi" in veille["feed_url"]
+        duplicate = await api.post(
+            "/api/news/searches",
+            json={"query": "Kubernetes emploi", "country": "CH", "language": "fr"},
+        )
+        assert duplicate.status_code == 409
+        bad = await api.post(
+            "/api/news/searches", json={"query": "x", "country": "CH", "language": "fr"}
+        )
+        assert bad.status_code == 422
+    async with rt.engine.begin() as conn:
+        await conn.execute(
+            text("DELETE FROM news_sources WHERE name IN ('xavki') OR query IS NOT NULL")
+        )
+
+
+async def test_search_items_cleaned_and_deduplicated(
+    rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    google = """<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>
+<title>"CKA" - Google Actualités</title><language>fr</language>
+<item><title>Le chômage reste à 3 % - Le Temps</title>
+<link>https://news.google.com/rss/articles/abc?oc=5</link>
+<pubDate>Tue, 06 Oct 2026 09:00:00 GMT</pubDate>
+<source url="https://www.letemps.ch">Le Temps</source></item>
+<item><title>Réussir la CKA en 30 jours - IT-Connect</title>
+<link>https://news.google.com/rss/articles/def?oc=5</link>
+<pubDate>Tue, 06 Oct 2026 09:00:00 GMT</pubDate>
+<source url="https://www.it-connect.fr">IT-Connect</source></item>
+</channel></rss>""".encode()
+
+    async def fake_get(_client: Any, url: str, _limit: int) -> tuple[bytes, str]:
+        if url.endswith("rss"):
+            return RSS, url
+        if "news.google.com" in url:
+            return google, url
+        raise logos.Refused("inconnu")
+
+    monkeypatch.setattr(logos, "_get", fake_get)
+    async with rt.sessionmaker.begin() as session:
+        session.add_all(
+            [
+                NewsSource(
+                    kind="articles",
+                    name="Test RTS",
+                    url="https://x",
+                    feed_url="https://t.example/rss",
+                ),
+                NewsSource(
+                    kind="articles",
+                    name="Test veille",
+                    url="https://news.google.com/",
+                    feed_url=catalog.search_feed("CKA", "CH", "fr"),
+                    query="CKA",
+                ),
+            ]
+        )
+    await news.fetch_news(rt)
+    async with rt.sessionmaker() as session:
+        rows = (
+            await session.execute(
+                select(NewsItem.title, NewsItem.summary, NewsSource.name).join(NewsSource)
+            )
+        ).all()
+    found = {(title, name): summary for title, summary, name in rows}
+    # Le même article, déjà relevé par la RTS, n'est pas repris par la veille.
+    assert [name for title, name in found if title == "Le chômage reste à 3 %"] == ["Test RTS"]
+    assert found[("Réussir la CKA en 30 jours", "Test veille")] == "IT-Connect"

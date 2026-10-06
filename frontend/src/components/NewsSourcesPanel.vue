@@ -4,13 +4,16 @@ import { onMounted, ref } from "vue";
 import { api, type NewsPreferences, type NewsSource } from "../api/client";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import AppIcon from "./AppIcon.vue";
+import NewsCatalog from "./NewsCatalog.vue";
 
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
 const preferences = ref<NewsPreferences | null>(null);
 const keyword = ref("");
 const loaded = ref(false);
-const adding = ref(false);
+// Un seul formulaire ouvert à la fois : adresse, suggestions ou veille.
+const adding = ref<"" | "url" | "catalog" | "search">("");
+const search = ref({ query: "", country: "CH", language: "fr" });
 const form = ref({ url: "", name: "", match: "", country: "", language: "", labour_market: false });
 const message = ref("");
 const busy = ref(false);
@@ -81,12 +84,37 @@ async function add(): Promise<void> {
       return;
     }
     sources.value = data;
-    adding.value = false;
+    adding.value = "";
     form.value = { url: "", name: "", match: "", country: "", language: "", labour_market: false };
     message.value = "Source ajoutée : ses contenus arrivent dans quelques secondes.";
   } finally {
     busy.value = false;
   }
+}
+
+async function addSearch(): Promise<void> {
+  busy.value = true;
+  message.value = "";
+  try {
+    const { data, response } = await api.POST("/api/news/searches", {
+      body: { ...search.value, query: search.value.query.trim() },
+    });
+    if (!data) {
+      message.value = response.status === 409 ? "Cette veille existe déjà." : "Veille refusée : vérifie les mots-clés.";
+      return;
+    }
+    sources.value = data;
+    adding.value = "";
+    search.value = { ...search.value, query: "" };
+    message.value = "Veille ajoutée : ses articles arrivent dans quelques secondes.";
+  } finally {
+    busy.value = false;
+  }
+}
+
+function catalogAdded(list: NewsSource[]): void {
+  sources.value = list;
+  message.value = "Source ajoutée : ses contenus arrivent dans quelques secondes.";
 }
 
 const value = (event: Event): string => (event.target as HTMLSelectElement).value;
@@ -170,7 +198,8 @@ onMounted(() => void load());
           <span class="site-main">
             <strong>{{ source.name }}</strong>
             <span class="hint">
-              {{ source.kind === "videos" ? "vidéos" : "articles" }}{{ source.match ? ` · filtre : ${source.match}` : "" }}
+              <template v-if="source.query">veille Google Actualités : « {{ source.query }} »</template>
+              <template v-else>{{ source.kind === "videos" ? "vidéos" : "articles" }}{{ source.match ? ` · filtre : ${source.match}` : "" }}</template>
               <template v-if="source.error"> · <span class="danger">dernier relevé en échec</span></template>
             </span>
             <span class="source-fields">
@@ -225,8 +254,71 @@ onMounted(() => void load());
           </button>
         </li>
       </ul>
+      <NewsCatalog
+        v-if="adding === 'catalog'"
+        @added="catalogAdded"
+        @close="adding = ''"
+      />
       <form
-        v-if="adding"
+        v-else-if="adding === 'search'"
+        class="form-grid"
+        data-test="add-news-search"
+        @submit.prevent="addSearch"
+      >
+        <p class="hint wide">
+          Pour suivre un sujet plutôt qu'un site. La plateforme utilise le flux public de Google Actualités : Google
+          reçoit seulement ces mots-clés, le pays et la langue, rien sur toi. Les liens passent par Google Actualités
+          avant d'arriver sur l'article.
+        </p>
+        <label class="wide">Mots-clés
+          <input
+            v-model="search.query"
+            type="text"
+            minlength="2"
+            maxlength="100"
+            placeholder="Kubernetes emploi"
+            required
+            data-test="search-query"
+          >
+        </label>
+        <label>Pays
+          <select v-model="search.country">
+            <option
+              v-for="(label, code) in COUNTRIES"
+              :key="code"
+              :value="code"
+            >{{ label }}</option>
+          </select>
+        </label>
+        <label>Langue
+          <select v-model="search.language">
+            <option
+              v-for="(label, code) in LANGUAGES"
+              :key="code"
+              :value="code"
+            >{{ label }}</option>
+          </select>
+        </label>
+        <div class="form-actions wide">
+          <button
+            type="submit"
+            class="primary small"
+            :disabled="busy"
+            data-test="save-news-search"
+          >
+            Créer la veille <AppIcon name="chevron" />
+          </button>
+          <button
+            type="button"
+            class="link"
+            @click="adding = ''"
+          >
+            Annuler
+          </button>
+        </div>
+      </form>
+      <form
+        v-else-if="adding === 'url'"
         class="form-grid"
         data-test="add-news-source"
         @submit.prevent="add"
@@ -291,7 +383,7 @@ onMounted(() => void load());
           <button
             type="button"
             class="link"
-            @click="adding = false"
+            @click="adding = ''"
           >
             Annuler
           </button>
@@ -304,10 +396,26 @@ onMounted(() => void load());
         <button
           type="button"
           class="secondary small"
-          data-test="add-news"
-          @click="adding = true"
+          data-test="browse-catalog"
+          @click="adding = 'catalog'"
         >
-          Ajouter une source
+          Parcourir les suggestions
+        </button>
+        <button
+          type="button"
+          class="secondary small"
+          data-test="add-search"
+          @click="adding = 'search'"
+        >
+          Nouvelle veille
+        </button>
+        <button
+          type="button"
+          class="link"
+          data-test="add-news"
+          @click="adding = 'url'"
+        >
+          Ajouter par adresse
         </button>
       </div>
       <p

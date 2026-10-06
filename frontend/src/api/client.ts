@@ -53,3 +53,4 @@ export type NewsItem = Schemas["NewsItemOut"];
 export type NewsPage = Schemas["NewsPage"];
 export type NewsSource = Schemas["NewsSourceOut"];
 export type NewsPreferences = Schemas["NewsPreferences"];
+export type NewsCatalog = Schemas["NewsCatalog"];

@@ -841,3 +841,7 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .source-fields select { padding: 0.15rem 0.3rem; font-size: 0.8rem; }
 .inline-form { display: flex; gap: 0.5rem; align-items: center; }
 .inline-form input { flex: 1; min-width: 0; }
+.news-catalog { display: grid; gap: 0.6rem; margin-top: 0.6rem; }
+.catalog-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.catalog-filters select { padding: 0.3rem 0.4rem; font-size: 0.85rem; }
+.catalog-filters .link { margin-left: auto; }
