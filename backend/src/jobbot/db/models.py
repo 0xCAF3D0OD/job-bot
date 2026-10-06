@@ -501,7 +501,7 @@ class Notification(Base):
     kind: Mapped[str] = mapped_column(Text)
     title: Mapped[str] = mapped_column(Text)
     message: Mapped[str] = mapped_column(Text, default="")
-    # Page de la plateforme à ouvrir (« /orp?mois=2026-09 »).
+    # Page de la plateforme à ouvrir (« /candidatures?vue=orp&mois=2026-09 »).
     link: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True

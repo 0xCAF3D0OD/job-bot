@@ -1,53 +1,92 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
-import {
-  api,
-  type Application,
-  type ApplicationStatus,
-  type MonthSummary,
-} from "../api/client";
+import { api, type Application, type ApplicationStatus, type OrpMonth } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
+import ApplicationsTable from "../components/ApplicationsTable.vue";
+import JournalPanel from "../components/JournalPanel.vue";
+import OrpSheet from "../components/OrpSheet.vue";
 import PageHero from "../components/PageHero.vue";
-import { applicationBody } from "../applicationBody";
-import { applicationStatusLabel, formatMonth, methodLabel, shiftMonth } from "../format";
+import { applicationBody, applicationUpdateBody } from "../applicationBody";
+import { formatMonth, shiftMonth } from "../format";
 
-function currentMonth(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-}
+// Candidatures et preuves ORP réunies (docs/18 §2) : un en-tête commun pour le mois,
+// puis Suivi, Preuves ORP et Journal des recherches.
+type View = "suivi" | "orp" | "journal";
+const REMIND_AFTER_DAYS = 10;
 
-const month = ref(currentMonth());
-const items = ref<Application[]>([]);
-const summary = ref<MonthSummary | null>(null);
+const route = useRoute();
+const router = useRouter();
+const view = computed<View>(() =>
+  route.query.vue === "orp" ? "orp" : route.query.vue === "journal" ? "journal" : "suivi",
+);
+const orp = ref<OrpMonth | null>(null);
+const all = ref<Application[]>([]);
+const allMonths = ref(false);
 const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(null);
 const error = ref("");
 const loaded = ref(false);
 
-const progress = computed(() => {
-  if (!summary.value?.target) return null;
-  return Math.min(1, summary.value.count / summary.value.target);
+const month = computed(() => orp.value?.month ?? "");
+const items = computed(() =>
+  allMonths.value ? all.value : all.value.filter((a) => a.orp_month === month.value),
+);
+const progress = computed(() =>
+  orp.value?.target ? Math.min(1, orp.value.count / orp.value.target) : null,
+);
+const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric" });
+const stateLabel = computed(() => {
+  const d = orp.value;
+  if (!d) return "";
+  if (d.state === "remis" && d.submitted_at) return `Preuves remises le ${longDate.format(new Date(d.submitted_at))}`;
+  if (d.state === "a_remettre") return `Preuves à remettre avant le ${longDate.format(new Date(d.due_date))}`;
+  return `En cours · remise avant le ${longDate.format(new Date(d.due_date))}`;
 });
+// Sans réponse depuis 10 jours : à relancer (comme la page Aujourd'hui et ntfy).
+const toFollowUp = computed(() => {
+  const limit = new Date();
+  limit.setDate(limit.getDate() - REMIND_AFTER_DAYS);
+  const day = limit.toISOString().slice(0, 10);
+  return all.value.filter((a) => a.status === "en_attente" && a.sent_at <= day);
+});
+
+async function load(): Promise<void> {
+  const wanted = typeof route.query.mois === "string" ? route.query.mois : undefined;
+  const [sheet, list] = await Promise.all([
+    api.GET("/api/orp", { params: { query: { month: wanted } } }),
+    api.GET("/api/applications"),
+  ]);
+  orp.value = sheet.data ?? null;
+  all.value = list.data ?? [];
+  loaded.value = true;
+}
+
+function go(delta: number): void {
+  void router.push({ query: { ...route.query, mois: shiftMonth(month.value, delta) } });
+}
+
+function tabLink(target: View) {
+  const query: Record<string, string> = {};
+  if (target !== "suivi") query.vue = target;
+  if (typeof route.query.mois === "string") query.mois = route.query.mois;
+  return { query };
+}
 
 function today(): string {
   const now = new Date();
-  return `${currentMonth()}-${String(now.getDate()).padStart(2, "0")}`;
-}
-
-async function load(): Promise<void> {
-  const [list, sum] = await Promise.all([
-    api.GET("/api/applications", { params: { query: { month: month.value } } }),
-    api.GET("/api/applications/summary", { params: { query: { month: month.value } } }),
-  ]);
-  items.value = list.data ?? [];
-  summary.value = sum.data ?? null;
-  loaded.value = true;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
 function edit(application: Application): void {
   error.value = "";
   editing.value = { id: application.id, value: { ...application } };
+}
+
+function editById(id: number): void {
+  const application = all.value.find((a) => a.id === id);
+  if (application) edit(application);
 }
 
 function addManual(): void {
@@ -65,22 +104,14 @@ function addManual(): void {
   };
 }
 
-const body = applicationBody;
-
 async function save(value: ApplicationFormValue): Promise<void> {
   if (!editing.value) return;
   const result =
     editing.value.id === null
-      ? await api.POST("/api/applications", { body: { ...body(value), offer_id: null } })
+      ? await api.POST("/api/applications", { body: { ...applicationBody(value), offer_id: null } })
       : await api.PUT("/api/applications/{application_id}", {
           params: { path: { application_id: editing.value.id } },
-          body: {
-            ...body(value),
-            status: value.status ?? "en_attente",
-            status_reason: value.status_reason || null,
-            status_at: value.status_at ?? null,
-            interview_at: value.interview_at ?? null,
-          },
+          body: applicationUpdateBody(value),
         });
   if (!result.data) {
     error.value = "Vérifie les champs obligatoires (date, entreprise, poste).";
@@ -94,7 +125,7 @@ async function setStatus(application: Application, status: ApplicationStatus): P
   await api.PUT("/api/applications/{application_id}", {
     params: { path: { application_id: application.id } },
     body: {
-      ...body(application),
+      ...applicationBody(application),
       status,
       status_reason: application.status_reason ?? null,
       interview_at: application.interview_at ?? null,
@@ -113,167 +144,161 @@ async function remove(application: Application): Promise<void> {
   await load();
 }
 
-watch(month, () => void load());
+watch(
+  () => route.query.mois,
+  () => void load(),
+);
 onMounted(() => void load());
 </script>
 
 <template>
   <PageHero
     eyebrow="Candidatures"
-    title="Tes candidatures envoyées"
-    subtitle="Le suivi de chaque candidature, et le décompte du mois pour l'ORP."
+    title="Tes candidatures et tes preuves ORP"
+    subtitle="Le suivi de chaque candidature et le formulaire du mois, prêt à remettre à ton conseiller ou à recopier dans Job-Room."
   />
 
   <section class="band">
     <div class="container">
-      <div class="applications-head">
-        <div class="month-nav">
-          <button
-            type="button"
-            class="secondary small"
-            aria-label="Mois précédent"
-            data-test="prev-month"
-            @click="month = shiftMonth(month, -1)"
-          >
-            ←
-          </button>
-          <strong data-test="month">{{ formatMonth(month) }}</strong>
-          <button
-            type="button"
-            class="secondary small"
-            aria-label="Mois suivant"
-            @click="month = shiftMonth(month, 1)"
-          >
-            →
-          </button>
-        </div>
-        <div
-          v-if="summary"
-          class="month-goal"
-          data-test="goal"
+      <nav
+        class="prep-tabs"
+        aria-label="Candidatures"
+      >
+        <RouterLink
+          :to="tabLink('suivi')"
+          :class="{ active: view === 'suivi' }"
+          data-test="tab-suivi"
         >
-          <span><strong>{{ summary.count }}</strong>{{ summary.target ? ` / ${summary.target}` : "" }} candidature(s)</span>
+          Suivi
+        </RouterLink>
+        <RouterLink
+          :to="tabLink('orp')"
+          :class="{ active: view === 'orp' }"
+          data-test="tab-orp"
+        >
+          Preuves ORP
+          <span
+            v-if="orp?.incomplete"
+            class="tab-count"
+            :title="`${orp.incomplete} ligne(s) à compléter`"
+          >{{ orp.incomplete }}</span>
+        </RouterLink>
+        <RouterLink
+          :to="tabLink('journal')"
+          :class="{ active: view === 'journal' }"
+          data-test="tab-journal"
+        >
+          Journal des recherches
+        </RouterLink>
+      </nav>
+
+      <JournalPanel v-if="view === 'journal'" />
+      <template v-else-if="orp">
+        <div class="applications-head">
+          <div class="month-nav">
+            <button
+              type="button"
+              class="secondary small"
+              aria-label="Mois précédent"
+              data-test="prev-month"
+              @click="go(-1)"
+            >
+              ←
+            </button>
+            <strong data-test="month">{{ formatMonth(orp.month) }}</strong>
+            <button
+              type="button"
+              class="secondary small"
+              aria-label="Mois suivant"
+              data-test="next-month"
+              @click="go(1)"
+            >
+              →
+            </button>
+          </div>
           <div
-            v-if="progress !== null"
-            class="budget-bar"
-            role="progressbar"
-            :aria-valuenow="Math.round(progress * 100)"
-            aria-valuemin="0"
-            aria-valuemax="100"
+            class="month-goal"
+            data-test="goal"
           >
-            <span :style="{ width: `${progress * 100}%` }" />
+            <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }} candidature(s)</span>
+            <div
+              v-if="progress !== null"
+              class="budget-bar"
+              role="progressbar"
+              :aria-valuenow="Math.round(progress * 100)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <span :style="{ width: `${progress * 100}%` }" />
+            </div>
+            <span
+              v-else
+              class="hint"
+            >Objectif ORP à saisir dans les Réglages.</span>
           </div>
           <span
-            v-else
-            class="hint"
-          >Objectif ORP à saisir dans les Réglages.</span>
-        </div>
-        <button
-          type="button"
-          class="primary small"
-          data-test="add-application"
-          @click="addManual"
-        >
-          Ajouter une candidature <AppIcon name="chevron" />
-        </button>
-      </div>
-
-      <p
-        v-if="loaded && !items.length"
-        class="muted empty"
-      >
-        Aucune candidature en {{ formatMonth(month) }}. Depuis une offre, « Marquer comme envoyée » l'ajoute ici.
-      </p>
-      <table
-        v-else-if="items.length"
-        class="runs"
-      >
-        <thead>
-          <tr>
-            <th>Envoyée</th>
-            <th>Entreprise</th>
-            <th>Poste</th>
-            <th>Mode</th>
-            <th>Statut</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="application in items"
-            :key="application.id"
-            data-test="application"
+            :class="['badge', orp.state === 'remis' ? 'new' : '']"
+            data-test="state"
+          >{{ stateLabel }}</span>
+          <button
+            type="button"
+            class="primary small"
+            data-test="add-application"
+            @click="addManual"
           >
-            <td>{{ new Date(application.sent_at).toLocaleDateString("fr-CH") }}</td>
-            <td>
+            Ajouter une candidature <AppIcon name="chevron" />
+          </button>
+        </div>
+
+        <aside
+          v-if="toFollowUp.length"
+          class="follow-up"
+          data-test="follow-up"
+        >
+          <strong>À relancer ({{ toFollowUp.length }})</strong> : sans réponse depuis {{ REMIND_AFTER_DAYS }} jours ou plus.
+          <span class="follow-up-list">
+            <button
+              v-for="application in toFollowUp"
+              :key="application.id"
+              type="button"
+              class="link"
+              @click="edit(application)"
+            >
               {{ application.company }}
-              <span
-                v-if="application.assigned_by_orp"
-                class="badge"
-              >ORP</span>
-            </td>
-            <td>
-              {{ application.job_title }}
-              <a
-                v-if="application.application_url?.startsWith('http')"
-                :href="application.application_url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="link small-link"
-                data-test="application-link"
-              >Lien</a>
-            </td>
-            <td>{{ methodLabel[application.method ?? "electronique"] }}</td>
-            <td>
-              <select
-                :value="application.status"
-                :class="['status-select', application.status]"
-                :aria-label="`Statut de la candidature chez ${application.company}`"
-                data-test="status-select"
-                @change="setStatus(application, ($event.target as HTMLSelectElement).value as ApplicationStatus)"
-              >
-                <option
-                  v-for="(label, value) in applicationStatusLabel"
-                  :key="value"
-                  :value="value"
-                >
-                  {{ label }}
-                </option>
-              </select>
-            </td>
-            <td class="row-actions">
-              <a
-                v-if="application.letter_draft_id"
-                class="link"
-                :href="`/api/letters/${application.letter_draft_id}/docx`"
-                download
-                data-test="letter-docx"
-              >Lettre</a>
-              <a
-                v-if="application.cv_draft_id"
-                class="link"
-                :href="`/api/cvs/${application.cv_draft_id}/docx`"
-                download
-                data-test="cv-docx"
-              >CV</a>
-              <button
-                type="button"
-                class="link"
-                @click="edit(application)"
-              >
-                Modifier
-              </button>
-              <button
-                type="button"
-                class="link danger"
-                @click="remove(application)"
-              >
-                Supprimer
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </button>
+          </span>
+        </aside>
+
+        <template v-if="view === 'suivi'">
+          <label class="check all-months">
+            <input
+              v-model="allMonths"
+              type="checkbox"
+              data-test="all-months"
+            > Tous les mois
+          </label>
+          <p
+            v-if="loaded && !items.length"
+            class="muted empty"
+          >
+            Aucune candidature en {{ formatMonth(orp.month) }}. Depuis une offre, « Marquer comme envoyée » l'ajoute ici.
+          </p>
+          <ApplicationsTable
+            v-else
+            :items="items"
+            :show-month="allMonths"
+            @edit="edit"
+            @status="setStatus"
+            @remove="remove"
+          />
+        </template>
+        <OrpSheet
+          v-else
+          :data="orp"
+          @reload="load"
+          @edit="editById"
+        />
+      </template>
     </div>
   </section>
 

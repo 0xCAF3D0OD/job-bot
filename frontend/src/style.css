@@ -880,3 +880,9 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .profile-switcher select { padding: 0.3rem 0.45rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); max-width: 14rem; }
 .profile-banner { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; align-items: center; justify-content: center; padding: 0.5rem 1rem; background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-bottom: 1px solid var(--border); font-size: 0.86rem; color: var(--text); }
 .profile-banner span { color: var(--muted); }
+
+/* Candidatures et preuves ORP réunies (docs/18 §2) */
+.follow-up { margin: 0 0 1rem; padding: 0.6rem 0.9rem; border: 1px solid var(--border); border-left: 3px solid #e08a2e; border-radius: 10px; background: var(--surface); font-size: 0.88rem; color: var(--muted); }
+.follow-up strong { color: var(--text); }
+.follow-up-list { display: inline-flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; margin-left: 0.4rem; }
+.all-months { display: inline-flex; margin: 0 0 0.8rem; font-size: 0.88rem; }
