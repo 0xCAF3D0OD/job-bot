@@ -61,9 +61,7 @@ async def rt() -> AsyncIterator[Runtime]:
         await conn.execute(text("TRUNCATE trainings, llm_calls CASCADE"))
         await conn.execute(
             text(
-                "INSERT INTO settings (key, value)"
-                " VALUES ('news_preferences', CAST(:value AS jsonb))"
-                " ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value"
+                "UPDATE profiles SET preferences = CAST(:value AS jsonb) WHERE is_main"
             ).bindparams(
                 value=json.dumps(
                     {
@@ -78,7 +76,7 @@ async def rt() -> AsyncIterator[Runtime]:
     yield runtime
     async with runtime.engine.begin() as conn:
         await conn.execute(text("TRUNCATE trainings CASCADE"))
-        await conn.execute(text("DELETE FROM settings WHERE key = 'news_preferences'"))
+        await conn.execute(text("UPDATE profiles SET preferences = '{}'::jsonb WHERE is_main"))
     await runtime.dispose()
 
 
@@ -182,7 +180,7 @@ async def test_suggest_keep_and_dismiss(rt: Runtime, monkeypatch: pytest.MonkeyP
 
 async def test_suggest_unavailable(rt: Runtime) -> None:
     async with rt.engine.begin() as conn:
-        await conn.execute(text("DELETE FROM settings WHERE key = 'news_preferences'"))
+        await conn.execute(text("UPDATE profiles SET preferences = '{}'::jsonb WHERE is_main"))
     app = create_app(rt.settings, rt)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         response = await api.post("/api/trainings/suggest")

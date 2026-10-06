@@ -61,20 +61,38 @@ def test_parse_refuses_entities_and_garbage() -> None:
         parse_feed(b"<html>pas un flux</html>")
 
 
+RESET = [
+    "TRUNCATE news_items",
+    "DELETE FROM news_sources WHERE name LIKE 'Test %'",
+    "DELETE FROM profiles WHERE NOT is_main",
+    "UPDATE profiles SET preferences = '{}'::jsonb, news_seen_at = NULL WHERE is_main",
+]
+
+
 @pytest.fixture
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
     async with runtime.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE news_items"))
-        await conn.execute(text("UPDATE news_sources SET active = false"))
-        await conn.execute(text("DELETE FROM news_sources WHERE name LIKE 'Test %'"))
-        await conn.execute(
-            text("DELETE FROM settings WHERE key IN ('news_seen_at', 'news_preferences')")
-        )
+        for statement in RESET:
+            await conn.execute(text(statement))
+        # Les sources de départ restent suivies, en pause : seules celles du test sont relevées.
+        await conn.execute(text("UPDATE profile_sources SET active = false"))
     yield runtime
     async with runtime.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE news_items"))
-        await conn.execute(text("DELETE FROM news_sources WHERE name LIKE 'Test %'"))
-        await conn.execute(text("UPDATE news_sources SET active = true"))
+        for statement in RESET:
+            await conn.execute(text(statement))
+        await conn.execute(text("UPDATE profile_sources SET active = true"))
+
+
+async def follow_test_sources(rt: Runtime) -> None:
+    """Le profil principal suit les sources « Test … » ajoutées directement en base."""
+    async with rt.engine.begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO profile_sources (profile_id, source_id, active)"
+                " SELECT p.id, s.id, true FROM profiles p, news_sources s"
+                " WHERE p.is_main AND s.name LIKE 'Test %' ON CONFLICT DO NOTHING"
+            )
+        )
 
 
 async def test_fetch_filters_downloads_and_serves(
@@ -114,6 +132,7 @@ async def test_fetch_filters_downloads_and_serves(
                 ),
             ]
         )
+    await follow_test_sources(rt)
     result = await news.fetch_news(rt)
     assert (result.new_items, result.failed) == (2, 1)  # l'article agricole est filtré
     again = await news.fetch_news(rt)
@@ -281,6 +300,7 @@ async def test_filters_preferences_refresh(
                 ),
             ]
         )
+    await follow_test_sources(rt)
     app = create_app(settings, rt)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         preferences = (await api.get("/api/news/preferences")).json()
@@ -324,6 +344,7 @@ async def test_first_visit_triggers_fetch(
                 kind="articles", name="Test neuve", url="https://n", feed_url="https://t.example/n"
             )
         )
+    await follow_test_sources(rt)
     app = create_app(settings, rt)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         page = (await api.get("/api/news")).json()
@@ -459,6 +480,7 @@ async def test_search_items_cleaned_and_deduplicated(
                 ),
             ]
         )
+    await follow_test_sources(rt)
     await news.fetch_news(rt)
     async with rt.sessionmaker() as session:
         rows = (

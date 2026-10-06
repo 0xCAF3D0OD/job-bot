@@ -6,14 +6,14 @@ from typing import Annotated, Any, Literal
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, or_, select, text
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import NewsItem, NewsSource, Setting
+from jobbot.db.models import NewsItem, NewsSource, Profile, ProfileSource
 from jobbot.log import get_logger
 from jobbot.news import catalog, domain
 from jobbot.news.language import LANGUAGES
 from jobbot.news.service import SourceError, resolve
+from jobbot.profiles import service as profiles
 from jobbot.runtime import Runtime
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.news import NEWS_JOB
@@ -21,8 +21,6 @@ from jobbot.worker.tasks.news import NEWS_JOB
 router = APIRouter(prefix="/api/news", tags=["news"])
 log = get_logger(__name__)
 Kind = Literal["articles", "videos"]
-SEEN_KEY = "news_seen_at"
-PREFERENCES_KEY = domain.PREFERENCES_KEY
 # Pays : code ISO à deux lettres, ou INT pour international.
 Country = Annotated[str, Field(pattern=r"^([A-Z]{2}|INT)$")]
 Language = Annotated[str, Field(pattern=r"^[a-z]{2}$")]
@@ -156,34 +154,32 @@ class NewsPreferences(BaseModel):
         return list(seen.values())
 
 
-async def _seen_at(session: AsyncSession) -> datetime | None:
-    value = await session.scalar(select(Setting.value).where(Setting.key == SEEN_KEY))
-    return datetime.fromisoformat(value) if isinstance(value, str) else None
+async def _profile(request: Request) -> Profile:
+    """Profil choisi par le navigateur (docs/17), sinon le principal."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        return await profiles.resolve(session, request.headers.get(profiles.HEADER))
 
 
-async def _save_setting(session: AsyncSession, key: str, value: Any) -> None:
-    await session.execute(
-        insert(Setting)
-        .values(key=key, value=value)
-        .on_conflict_do_update(index_elements=["key"], set_={"value": value})
-    )
+def _followed(profile_id: int, *, active_only: bool = True) -> Any:
+    """Identifiants des sources suivies par le profil (sous-requête)."""
+    query = select(ProfileSource.source_id).where(ProfileSource.profile_id == profile_id)
+    return query.where(ProfileSource.active.is_(True)) if active_only else query
 
 
-async def _preferences(runtime: Runtime) -> NewsPreferences:
-    """Réglages enregistrés ; à la première lecture, « Mon domaine » est pré-rempli depuis
-    les offres postulées ou bien notées, une seule fois."""
+async def _preferences(runtime: Runtime, profile: Profile) -> NewsPreferences:
+    """Réglages du profil ; à la première lecture du profil principal, « Mon domaine » est
+    pré-rempli depuis les offres postulées ou bien notées, une seule fois."""
+    saved = profile.preferences if isinstance(profile.preferences, dict) else {}
+    if "domain_keywords" in saved or not profile.is_main:
+        return NewsPreferences.model_validate({**profiles.DEFAULT_PREFERENCES, **saved})
     async with runtime.sessionmaker.begin() as session:
-        value = await session.scalar(select(Setting.value).where(Setting.key == PREFERENCES_KEY))
-        if isinstance(value, dict):
-            return NewsPreferences.model_validate(value)
-        preferences = NewsPreferences(
-            domain_keywords=await domain.suggest(session),
-            domain_only=False,
-            countries=[],
-            languages=[],
+        preferences = NewsPreferences.model_validate(
+            {**profiles.DEFAULT_PREFERENCES, "domain_keywords": await domain.suggest(session)}
         )
-        await _save_setting(session, PREFERENCES_KEY, preferences.model_dump())
-        return preferences
+        stored = await session.get(Profile, profile.id)
+        if stored is not None:
+            stored.preferences = preferences.model_dump()
+    return preferences
 
 
 async def _refreshing(session: AsyncSession) -> bool:
@@ -218,12 +214,15 @@ async def list_news(
     language: Annotated[list[str] | None, Query()] = None,
 ) -> NewsPage:
     runtime = _runtime(request)
-    preferences = await _preferences(runtime)
+    profile = await _profile(request)
+    preferences = await _preferences(runtime, profile)
     keywords = preferences.domain_keywords
+    followed = _followed(profile.id)
     async with runtime.sessionmaker() as session:
         query = (
             select(NewsItem, NewsSource)
             .join(NewsSource, NewsSource.id == NewsItem.source_id)
+            .where(NewsSource.id.in_(followed))
             .order_by(NewsItem.published_at.desc(), NewsItem.id.desc())
             .limit(DOMAIN_WINDOW if domain_only else limit)
         )
@@ -241,23 +240,25 @@ async def list_news(
         ]
         if domain_only:
             found = [row for row in found if row[2] or row[1].labour_market][:limit]
-        seen = await _seen_at(session)
+        seen = profile.news_seen_at
         counts = dict(
             (
                 await session.execute(
                     select(NewsSource.kind, func.count())
                     .join(NewsItem, NewsItem.source_id == NewsSource.id)
-                    .where(NewsItem.created_at > (seen or datetime(1970, 1, 1, tzinfo=UTC)))
+                    .where(
+                        NewsSource.id.in_(followed),
+                        NewsItem.created_at > (seen or datetime(1970, 1, 1, tzinfo=UTC)),
+                    )
                     .group_by(NewsSource.kind)
                 )
             ).all()
         )
-        active = list(await session.scalars(select(NewsSource).where(NewsSource.active.is_(True))))
+        active = list(await session.scalars(select(NewsSource).where(NewsSource.id.in_(followed))))
         languages = set(
             await session.scalars(
                 select(NewsItem.language)
-                .join(NewsSource, NewsSource.id == NewsItem.source_id)
-                .where(NewsSource.active.is_(True), NewsItem.language.is_not(None))
+                .where(NewsItem.source_id.in_(followed), NewsItem.language.is_not(None))
                 .distinct()
             )
         )
@@ -301,21 +302,26 @@ async def refresh_news(request: Request) -> NewsRefresh:
 
 @router.get("/preferences", operation_id="getNewsPreferences")
 async def get_preferences(request: Request) -> NewsPreferences:
-    return await _preferences(_runtime(request))
+    return await _preferences(_runtime(request), await _profile(request))
 
 
 @router.put("/preferences", operation_id="saveNewsPreferences")
 async def save_preferences(request: Request, body: NewsPreferences) -> NewsPreferences:
+    profile = await _profile(request)
     async with _runtime(request).sessionmaker.begin() as session:
-        await _save_setting(session, PREFERENCES_KEY, body.model_dump())
+        stored = await session.get(Profile, profile.id)
+        if stored is not None:
+            stored.preferences = body.model_dump()
     return body
 
 
 @router.post("/seen", operation_id="markNewsSeen", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_seen(request: Request) -> None:
-    now = datetime.now(UTC).isoformat()
+    profile = await _profile(request)
     async with _runtime(request).sessionmaker.begin() as session:
-        await _save_setting(session, SEEN_KEY, now)
+        stored = await session.get(Profile, profile.id)
+        if stored is not None:
+            stored.news_seen_at = datetime.now(UTC)
 
 
 @router.get(
@@ -349,15 +355,31 @@ async def get_news_image(request: Request, item_id: int) -> Response:
     )
 
 
-async def _sources(runtime: Runtime) -> list[NewsSourceOut]:
+async def _sources(runtime: Runtime, profile_id: int) -> list[NewsSourceOut]:
+    """Sources suivies par le profil ; « active » est celle du profil (pause par profil)."""
     async with runtime.sessionmaker() as session:
-        rows = await session.scalars(select(NewsSource).order_by(NewsSource.kind, NewsSource.id))
-        return [NewsSourceOut.model_validate(s) for s in rows]
+        rows = (
+            await session.execute(
+                select(NewsSource, ProfileSource.active)
+                .join(ProfileSource, ProfileSource.source_id == NewsSource.id)
+                .where(ProfileSource.profile_id == profile_id)
+                .order_by(NewsSource.kind, NewsSource.id)
+            )
+        ).all()
+    return [
+        NewsSourceOut.model_validate(
+            {
+                **{c: getattr(s, c) for c in NewsSourceOut.model_fields if c != "active"},
+                "active": active,
+            }
+        )
+        for s, active in rows
+    ]
 
 
 @router.get("/sources", operation_id="listNewsSources")
 async def list_sources(request: Request) -> list[NewsSourceOut]:
-    return await _sources(_runtime(request))
+    return await _sources(_runtime(request), (await _profile(request)).id)
 
 
 @router.post(
@@ -368,14 +390,13 @@ async def list_sources(request: Request) -> list[NewsSourceOut]:
 )
 async def add_source(request: Request, body: NewsSourceIn) -> list[NewsSourceOut]:
     """Site, flux RSS ou chaîne YouTube : le flux est trouvé et vérifié avant l'ajout."""
-    runtime = _runtime(request)
     try:
         found = await resolve(body.url)
     except SourceError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     # Ses contenus arrivent tout de suite, sans attendre le relevé des 6 heures (dans _add).
     return await _add(
-        runtime,
+        request,
         NewsSource(
             kind=found.kind,
             name=(body.name or "").strip() or found.name[:80],
@@ -389,23 +410,39 @@ async def add_source(request: Request, body: NewsSourceIn) -> list[NewsSourceOut
     )
 
 
-async def _add(runtime: Runtime, source: NewsSource) -> list[NewsSourceOut]:
+async def _add(request: Request, source: NewsSource) -> list[NewsSourceOut]:
+    """Le profil suit la source ; une source déjà connue (suivie par un autre profil) est
+    réutilisée, avec ses contenus déjà relevés."""
+    runtime = _runtime(request)
+    profile = await _profile(request)
     async with runtime.sessionmaker.begin() as session:
-        if await session.scalar(
-            select(NewsSource.id).where(NewsSource.feed_url == source.feed_url)
-        ):
+        existing = await session.scalar(
+            select(NewsSource).where(NewsSource.feed_url == source.feed_url)
+        )
+        if existing is None:
+            session.add(source)
+            await session.flush()
+            existing = source
+        elif await session.get(ProfileSource, (profile.id, existing.id)) is not None:
             raise HTTPException(status.HTTP_409_CONFLICT, "cette source est déjà suivie")
-        session.add(source)
+        await profiles.subscribe(session, profile.id, existing.id)
     await _enqueue_news(runtime)
-    return await _sources(runtime)
+    return await _sources(runtime, profile.id)
 
 
 @router.get("/catalog", operation_id="getNewsCatalog")
 async def get_catalog(request: Request) -> NewsCatalog:
     """Sources suggérées, vérifiées, classées par domaine, pays et langue."""
     found = catalog.load()
+    profile = await _profile(request)
     async with _runtime(request).sessionmaker() as session:
-        followed = set(await session.scalars(select(NewsSource.feed_url)))
+        followed = set(
+            await session.scalars(
+                select(NewsSource.feed_url).where(
+                    NewsSource.id.in_(_followed(profile.id, active_only=False))
+                )
+            )
+        )
     return NewsCatalog(
         domains=found.domains,
         sources=[
@@ -437,7 +474,7 @@ async def add_catalog_source(request: Request, catalog_id: str) -> list[NewsSour
     if entry is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "suggestion inconnue")
     return await _add(
-        _runtime(request),
+        request,
         NewsSource(
             kind=entry.kind,
             name=entry.name,
@@ -461,7 +498,7 @@ async def add_search(request: Request, body: NewsSearchIn) -> list[NewsSourceOut
     """Veille par recherche : mots-clés, pays et langue, relevés dans Google Actualités."""
     query = " ".join(body.query.split())
     return await _add(
-        _runtime(request),
+        request,
         NewsSource(
             kind="articles",
             name=f"Veille : {query}"[:80],
@@ -479,27 +516,44 @@ async def update_source(
     request: Request, source_id: int, body: NewsSourceUpdate
 ) -> list[NewsSourceOut]:
     runtime = _runtime(request)
+    profile = await _profile(request)
     async with runtime.sessionmaker.begin() as session:
         source = await session.get(NewsSource, source_id)
-        if source is None:
+        subscription = await session.get(ProfileSource, (profile.id, source_id))
+        if source is None or subscription is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "source introuvable")
+        # La pause vaut pour ce profil ; pays, langue et « marché de l'emploi » décrivent la
+        # source elle-même, pour tous les profils.
         if body.active is not None:
-            source.active = body.active
+            subscription.active = body.active
         if body.country is not None:
             source.country = body.country or None
         if body.language is not None:
             source.language = body.language or None
         if body.labour_market is not None:
             source.labour_market = body.labour_market
-    return await _sources(runtime)
+    return await _sources(runtime, profile.id)
 
 
 @router.delete("/sources/{source_id}", operation_id="deleteNewsSource")
 async def delete_source(request: Request, source_id: int) -> list[NewsSourceOut]:
+    """Le profil ne suit plus la source ; suivie par personne, elle est effacée avec ses
+    contenus."""
     runtime = _runtime(request)
+    profile = await _profile(request)
     async with runtime.sessionmaker.begin() as session:
-        source = await session.get(NewsSource, source_id)
-        if source is None:
+        subscription = await session.get(ProfileSource, (profile.id, source_id))
+        if subscription is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "source introuvable")
-        await session.delete(source)
-    return await _sources(runtime)
+        await session.delete(subscription)
+        await session.flush()
+        others = await session.scalar(
+            select(func.count())
+            .select_from(ProfileSource)
+            .where(ProfileSource.source_id == source_id)
+        )
+        if not others:
+            source = await session.get(NewsSource, source_id)
+            if source is not None:
+                await session.delete(source)
+    return await _sources(runtime, profile.id)

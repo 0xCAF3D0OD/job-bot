@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from jobbot.db.models import Training, TrainingMark
 from jobbot.news import domain
+from jobbot.profiles import service as profiles
 from jobbot.runtime import Runtime
 from jobbot.trainings import service
 from jobbot.trainings.service import SuggestUnavailable
@@ -99,8 +100,10 @@ async def _ensure_catalog(runtime: Runtime) -> None:
 async def list_trainings(request: Request, domain_only: bool = False) -> TrainingPage:
     runtime = _runtime(request)
     await _ensure_catalog(runtime)
-    async with runtime.sessionmaker() as session:
-        keywords = await domain.keywords(session)
+    async with runtime.sessionmaker.begin() as session:
+        # « Mon domaine » du profil choisi (docs/17) ; le suivi par profil vient en 0.10.0-b.
+        profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
+        keywords = await domain.keywords(session, profile.id)
         rows = (
             await session.execute(
                 select(Training, TrainingMark)
@@ -213,7 +216,9 @@ async def suggest_trainings(request: Request) -> SuggestResult:
     runtime = _runtime(request)
     await _ensure_catalog(runtime)
     try:
-        added = await service.suggest(runtime)
+        async with runtime.sessionmaker.begin() as session:
+            profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
+        added = await service.suggest(runtime, profile.id)
     except SuggestUnavailable as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
     return SuggestResult(added=added)

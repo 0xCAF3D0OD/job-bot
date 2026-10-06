@@ -3,12 +3,15 @@ import { onMounted } from "vue";
 
 import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
+import ProfileSwitcher from "./components/ProfileSwitcher.vue";
 import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
+import { useProfiles } from "./composables/useProfiles";
 import { navigation } from "./router";
 
 const { message, running, collectNow } = useCollect();
 const { count: newsCount, start: startNewsCount } = useNewsCount();
+const { current: profile, main: mainProfile, choose } = useProfiles();
 onMounted(() => startNewsCount());
 </script>
 
@@ -44,6 +47,7 @@ onMounted(() => startNewsCount());
         </ul>
       </nav>
       <div class="topbar-actions">
+        <ProfileSwitcher />
         <NotificationBell />
         <button
           type="button"
@@ -57,6 +61,24 @@ onMounted(() => startNewsCount());
       </div>
     </div>
   </header>
+  <div
+    v-if="profile && !profile.is_main"
+    class="profile-banner"
+    role="status"
+    data-test="profile-banner"
+  >
+    <strong>Profil d'essai : {{ profile.name }}</strong>
+    <span>Seules les Actualités et les Formations suivent ce profil ; les autres pages restent les tiennes.</span>
+    <button
+      v-if="mainProfile"
+      type="button"
+      class="link"
+      data-test="profile-back"
+      @click="choose(mainProfile.id)"
+    >
+      Revenir à {{ mainProfile.name }}
+    </button>
+  </div>
   <p
     v-if="message"
     class="toast"

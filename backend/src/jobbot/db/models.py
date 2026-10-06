@@ -521,7 +521,6 @@ class NewsSource(Base):
     feed_url: Mapped[str] = mapped_column(Text, unique=True)
     # Ne garder que les entrées dont l'auteur, le titre ou le texte contient ce texte.
     match: Mapped[str | None] = mapped_column(Text)
-    active: Mapped[bool] = mapped_column(default=True)
     # Pays (CH, FR, BE…, INT pour international) et langue (fr, de, en…) : filtres (docs/16 §3).
     country: Mapped[str | None] = mapped_column(Text)
     language: Mapped[str | None] = mapped_column(Text)
@@ -595,3 +594,36 @@ class TrainingMark(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class Profile(Base):
+    """Profil d'essai (docs/17) : « Mon domaine », filtres et sources des Actualités.
+
+    Le profil principal est celui de Kevin ; les autres sont fictifs, pour juger si les
+    Actualités et les Formations conviennent à d'autres chercheurs d'emploi.
+    """
+
+    __tablename__ = "profiles"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(Text)
+    occupation: Mapped[str | None] = mapped_column(Text)
+    is_main: Mapped[bool] = mapped_column(default=False)
+    # domain_keywords, domain_only, countries, languages (docs/16 §2-3).
+    preferences: Mapped[Any] = mapped_column(JSONB, nullable=False, default=dict)
+    news_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProfileSource(Base):
+    """Source d'actualités suivie par un profil ; une source sans abonné actif n'est pas relevée."""
+
+    __tablename__ = "profile_sources"
+
+    profile_id: Mapped[int] = mapped_column(
+        ForeignKey("profiles.id", ondelete="CASCADE"), primary_key=True
+    )
+    source_id: Mapped[int] = mapped_column(
+        ForeignKey("news_sources.id", ondelete="CASCADE"), primary_key=True
+    )
+    active: Mapped[bool] = mapped_column(default=True)

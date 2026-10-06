@@ -10,7 +10,8 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.normalize import normalize_text
-from jobbot.db.models import Application, Evaluation, Setting
+from jobbot.db.models import Application, Evaluation, Profile
+from jobbot.profiles.service import main_profile
 
 MAX_KEYWORDS = 30
 PREFILL = 8
@@ -41,24 +42,23 @@ async def suggest(session: AsyncSession) -> list[str]:
     return [labels[key] for key, _ in counts.most_common(PREFILL)]
 
 
-PREFERENCES_KEY = "news_preferences"
-
-
-async def _preferences(session: AsyncSession) -> dict[str, object]:
-    value = await session.scalar(select(Setting.value).where(Setting.key == PREFERENCES_KEY))
+async def _preferences(session: AsyncSession, profile_id: int | None) -> dict[str, object]:
+    profile = await session.get(Profile, profile_id) if profile_id else await main_profile(session)
+    value = profile.preferences if profile is not None else None
     return value if isinstance(value, dict) else {}
 
 
-async def keywords(session: AsyncSession) -> list[str]:
-    """« Mon domaine » enregistré (Réglages → Actualités), sinon la suggestion du profil."""
-    saved = (await _preferences(session)).get("domain_keywords")
+async def keywords(session: AsyncSession, profile_id: int | None = None) -> list[str]:
+    """« Mon domaine » du profil (Réglages → Actualités) ; à défaut, la suggestion du profil
+    de candidature (offres postulées ou bien notées)."""
+    saved = (await _preferences(session, profile_id)).get("domain_keywords")
     if isinstance(saved, list):
         return [k for k in saved if isinstance(k, str)]
     return await suggest(session)
 
 
-async def languages(session: AsyncSession) -> list[str]:
+async def languages(session: AsyncSession, profile_id: int | None = None) -> list[str]:
     """Langues choisies dans les filtres des Actualités ; à défaut, français et anglais."""
-    saved = (await _preferences(session)).get("languages")
+    saved = (await _preferences(session, profile_id)).get("languages")
     chosen = [k for k in saved if isinstance(k, str)] if isinstance(saved, list) else []
     return chosen or ["fr", "en"]

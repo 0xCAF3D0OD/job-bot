@@ -17,7 +17,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from jobbot.core.normalize import normalize_text
-from jobbot.db.models import NewsItem, NewsSource
+from jobbot.db.models import NewsItem, NewsSource, ProfileSource
 from jobbot.log import get_logger
 from jobbot.logos import service as logos
 from jobbot.news import language
@@ -196,7 +196,14 @@ async def fetch_news(runtime: Runtime) -> NewsResult:
     async with runtime.sessionmaker() as session:
         sources = list(
             await session.scalars(
-                select(NewsSource).where(NewsSource.active.is_(True)).order_by(NewsSource.id)
+                # Seules les sources suivies (et pas en pause) par au moins un profil.
+                select(NewsSource)
+                .where(
+                    NewsSource.id.in_(
+                        select(ProfileSource.source_id).where(ProfileSource.active.is_(True))
+                    )
+                )
+                .order_by(NewsSource.id)
             )
         )
         # Même article dans plusieurs sources ou veilles : affiché une seule fois (docs/16 §4.2).
