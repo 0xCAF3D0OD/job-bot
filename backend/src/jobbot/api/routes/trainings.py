@@ -5,10 +5,11 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import Training, TrainingMark
+from jobbot.db.models import Profile, Training, TrainingMark
 from jobbot.news import domain
 from jobbot.profiles import service as profiles
 from jobbot.runtime import Runtime
@@ -101,14 +102,21 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
     runtime = _runtime(request)
     await _ensure_catalog(runtime)
     async with runtime.sessionmaker.begin() as session:
-        # « Mon domaine » du profil choisi (docs/17) ; le suivi par profil vient en 0.10.0-b.
+        # « Mon domaine », suggestions et suivi du profil choisi (docs/17 §4).
         profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
         keywords = await domain.keywords(session, profile.id)
         rows = (
             await session.execute(
                 select(Training, TrainingMark)
-                .outerjoin(TrainingMark, TrainingMark.training_id == Training.id)
-                .where(Training.dismissed.is_(False))
+                .outerjoin(
+                    TrainingMark,
+                    (TrainingMark.training_id == Training.id)
+                    & (TrainingMark.profile_id == profile.id),
+                )
+                .where(
+                    Training.dismissed.is_(False),
+                    or_(Training.profile_id.is_(None), Training.profile_id == profile.id),
+                )
             )
         ).all()
     items: list[TrainingOut] = []
@@ -161,13 +169,21 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
     )
 
 
+async def _visible(session: AsyncSession, request: Request, training_id: int) -> Profile:
+    """Profil choisi, si la formation lui est visible (catalogue ou sa propre suggestion)."""
+    profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
+    training = await session.get(Training, training_id)
+    if training is None or training.profile_id not in (None, profile.id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "formation introuvable")
+    return profile
+
+
 @router.put("/{training_id}/mark", operation_id="markTraining")
 async def mark_training(
     request: Request, training_id: int, body: TrainingMarkIn
 ) -> TrainingMarkOut:
     async with _runtime(request).sessionmaker.begin() as session:
-        if await session.get(Training, training_id) is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "formation introuvable")
+        profile = await _visible(session, request, training_id)
         values = {
             "status": body.status,
             "progress": (body.progress or "").strip() or None
@@ -178,8 +194,8 @@ async def mark_training(
         }
         await session.execute(
             insert(TrainingMark)
-            .values(training_id=training_id, **values)
-            .on_conflict_do_update(index_elements=["training_id"], set_=values)
+            .values(profile_id=profile.id, training_id=training_id, **values)
+            .on_conflict_do_update(index_elements=["profile_id", "training_id"], set_=values)
         )
     return TrainingMarkOut(**values)
 
@@ -189,7 +205,8 @@ async def mark_training(
 )
 async def unmark_training(request: Request, training_id: int) -> None:
     async with _runtime(request).sessionmaker.begin() as session:
-        mark = await session.get(TrainingMark, training_id)
+        profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
+        mark = await session.get(TrainingMark, (profile.id, training_id))
         if mark is not None:
             await session.delete(mark)
 
@@ -199,8 +216,9 @@ async def unmark_training(request: Request, training_id: int) -> None:
 )
 async def review_training(request: Request, training_id: int, body: TrainingReview) -> None:
     async with _runtime(request).sessionmaker.begin() as session:
+        profile = await profiles.resolve(session, request.headers.get(profiles.HEADER))
         training = await session.get(Training, training_id)
-        if training is None or training.origin != "ai":
+        if training is None or training.origin != "ai" or training.profile_id != profile.id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "suggestion introuvable")
         training.verified = body.keep
         training.dismissed = not body.keep

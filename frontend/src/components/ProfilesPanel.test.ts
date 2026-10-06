@@ -20,7 +20,9 @@ const nurse = { id: 2, name: "Infirmière", occupation: "infirmière", is_main: 
 
 describe("ProfilesPanel", () => {
   it("création d'un profil d'essai avec domaine, langues et pays", async () => {
-    GET.mockResolvedValue({ data: { current_id: 1, items: [main] } });
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: false } : { current_id: 1, items: [main] } }),
+    );
     POST.mockResolvedValue({ data: { current_id: 1, items: [main, nurse] } });
     const wrapper = mount(ProfilesPanel);
     await flushPromises();
@@ -34,6 +36,23 @@ describe("ProfilesPanel", () => {
     });
     expect(wrapper.findAll("[data-test=profile]")).toHaveLength(2);
     expect(wrapper.findAll("[data-test=profile-delete]")).toHaveLength(1);
+    expect(wrapper.find("[data-test=propose-keywords]").exists()).toBe(false);
+  });
+
+  it("mots-clés proposés par l'IA à partir du métier", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: true } : { current_id: 1, items: [main] } }),
+    );
+    POST.mockResolvedValue({ data: { keywords: ["infirmière", "EMS"], available: true } });
+    const wrapper = mount(ProfilesPanel);
+    await flushPromises();
+    await wrapper.find("[data-test=add-profile-open]").trigger("click");
+    expect(wrapper.find("[data-test=propose-keywords]").attributes("disabled")).toBeDefined();
+    await wrapper.find("[data-test=profile-occupation]").setValue("infirmière");
+    await wrapper.find("[data-test=propose-keywords]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/profiles/keywords", { body: { occupation: "infirmière" } });
+    expect((wrapper.find("[data-test=profile-keywords]").element as HTMLInputElement).value).toBe("infirmière, EMS");
   });
 
   it("le sélecteur retient le profil choisi et recharge la page", async () => {

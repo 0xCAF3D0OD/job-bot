@@ -1,5 +1,6 @@
 """Profils d'essai (docs/17) : Actualités par profil, création, duplication, suppression."""
 
+import json
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 
@@ -193,3 +194,48 @@ async def test_news_follow_the_profile(api: AsyncClient, runtime: Runtime) -> No
             )
         )
     assert count == 1
+
+
+async def test_keywords_proposed_from_occupation(
+    runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from jobbot.llm.client import RawResult
+    from jobbot.llm.pricing import Usage
+    from jobbot.profiles import keywords
+    from jobbot.scoring import service as scoring
+
+    from .conftest import make_settings
+
+    calls: list[dict] = []
+
+    class Fake:
+        async def score(self, params: dict) -> RawResult:
+            calls.append(params)
+            found = ["infirmière", "Infirmière", "EMS", 3, "soins infirmiers"]
+            text_ = f"<reponse>{json.dumps({'keywords': found})}</reponse>"
+            return RawResult(text_, keywords.MODEL, Usage(300, 0, 0, 60), "end_turn")
+
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Fake())
+    rt = Runtime.create(make_settings(anthropic_api_key="sk-test"))
+    try:
+        app = create_app(rt.settings, rt)
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+            assert (await api.get("/api/profiles/keywords")).json()["available"]
+            proposed = await api.post(
+                "/api/profiles/keywords", json={"occupation": "infirmière <b>"}
+            )
+        assert proposed.json() == {
+            "keywords": ["infirmière", "EMS", "soins infirmiers"],
+            "available": True,
+        }
+        assert calls[0]["messages"][0]["content"] == "<metier>infirmière b</metier>"
+        assert "tools" not in calls[0]
+    finally:
+        await rt.dispose()
+
+
+async def test_keywords_without_api_key(api: AsyncClient) -> None:
+    assert not (await api.get("/api/profiles/keywords")).json()["available"]
+    assert (
+        await api.post("/api/profiles/keywords", json={"occupation": "infirmière"})
+    ).status_code == 409

@@ -186,3 +186,51 @@ async def test_suggest_unavailable(rt: Runtime) -> None:
         response = await api.post("/api/trainings/suggest")
     # Sans offre notée ni mots-clés enregistrés : rien à chercher.
     assert response.status_code == 409 and "domaine" in response.json()["detail"]
+
+
+async def test_trainings_follow_the_profile(rt: Runtime, monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = FakeClient(answer([GOOD]))
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: fake)
+    app = create_app(rt.settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        created = await api.post(
+            "/api/profiles", json={"name": "Test infirmière", "domain_keywords": ["soins"]}
+        )
+        nurse = {
+            "X-Jobbot-Profile": str(
+                next(p["id"] for p in created.json()["items"] if not p["is_main"])
+            )
+        }
+        main_items = (await api.get("/api/trainings")).json()["items"]
+        cka = main_items[0]["id"]
+        await api.put(f"/api/trainings/{cka}/mark", json={"status": "interested"})
+
+        # Suivi par profil : l'intérêt du profil principal n'apparaît pas chez l'infirmière.
+        nurse_page = (await api.get("/api/trainings", headers=nurse)).json()
+        assert nurse_page["domain_keywords"] == ["soins"]
+        assert next(t for t in nurse_page["items"] if t["id"] == cka)["mark"] is None
+
+        # Suggestion faite pour l'infirmière : visible chez elle seulement.
+        assert (await api.post("/api/trainings/suggest", headers=nurse)).json() == {"added": 1}
+        assert "soins" in fake.calls[0]["messages"][0]["content"]
+        nurse_ai = [
+            t
+            for t in (await api.get("/api/trainings", headers=nurse)).json()["items"]
+            if t["origin"] == "ai"
+        ]
+        assert [t["url"] for t in nurse_ai] == [GOOD["url"]]
+        assert all(
+            t["origin"] == "catalog" for t in (await api.get("/api/trainings")).json()["items"]
+        )
+        # Le profil principal ne peut ni la suivre ni la trier.
+        suggestion = nurse_ai[0]["id"]
+        assert (
+            await api.put(f"/api/trainings/{suggestion}/mark", json={"status": "done"})
+        ).status_code == 404
+        assert (
+            await api.post(f"/api/trainings/{suggestion}/review", json={"keep": True})
+        ).status_code == 404
+        # La même formation peut aussi être proposée au profil principal.
+        assert (await api.post("/api/trainings/suggest")).json() == {"added": 1}
+    async with rt.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM profiles WHERE NOT is_main"))

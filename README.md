@@ -26,8 +26,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.7.4 | Page Offres (transition, tri), logos des entreprises | livrée |
 | 0.8.0 | Cloche des alertes (a), Actualités (b) | livrée |
 | 0.9.0 | Actualités ciblées (a), sources suggérées et veilles (b), formations (c) | livrée |
-| 0.10.0 | Profils d'essai : Actualités (a), Formations (b) | en cours (a) |
-| 0.11.0 | Connexion (a), Candidatures et ORP réunies (b) | cadrage à valider |
+| 0.10.0 | Profils d'essai : Actualités (a), Formations (b) | livrée |
+| 0.11.0 | Connexion (a), Candidatures et ORP réunies (b) | cadrage validé |
 
 ## Lancer en local
 

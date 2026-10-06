@@ -566,12 +566,15 @@ class Training(Base):
     price: Mapped[str] = mapped_column(Text)  # free | paid
     duration: Mapped[str | None] = mapped_column(Text)
     level: Mapped[str | None] = mapped_column(Text)  # beginner | intermediate | advanced
-    url: Mapped[str] = mapped_column(Text, unique=True)
+    # Unique par profil (docs/17) : une fois dans le catalogue, une fois par profil au plus.
+    url: Mapped[str] = mapped_column(Text)
     # Mots-clés de la formation (Kubernetes, CKA…), comparés à « Mon domaine ».
     tags: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     description: Mapped[str | None] = mapped_column(Text)
     prep: Mapped[str | None] = mapped_column(Text)
     origin: Mapped[str] = mapped_column(Text)  # catalog | ai
+    # Suggestion de l'IA : profil qui l'a demandée ; vide pour le catalogue.
+    profile_id: Mapped[int | None] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
     # Suggestion de l'IA : à vérifier tant que Kevin ne l'a pas gardée ; écartée, elle reste
     # en base pour ne pas être reproposée.
     verified: Mapped[bool] = mapped_column(default=True)
@@ -584,6 +587,9 @@ class TrainingMark(Base):
 
     __tablename__ = "training_marks"
 
+    profile_id: Mapped[int] = mapped_column(
+        ForeignKey("profiles.id", ondelete="CASCADE"), primary_key=True
+    )
     training_id: Mapped[int] = mapped_column(
         ForeignKey("trainings.id", ondelete="CASCADE"), primary_key=True
     )

@@ -3557,6 +3557,71 @@
         }
       }
     },
+    "/api/profiles/keywords": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Keywords Available",
+        "description": "Le bouton « Proposer des mots-clés » ne s'affiche qu'avec une clé API.",
+        "operationId": "keywordsAvailable",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileKeywords"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Propose Keywords",
+        "description": "Mots-clés « Mon domaine » proposés par l'IA à partir du métier (environ 0,001 $).",
+        "operationId": "proposeKeywords",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileKeywordsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileKeywords"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible ou plafond atteint"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/profiles/{profile_id}/duplicate": {
       "post": {
         "tags": [
@@ -7652,6 +7717,42 @@
           "name"
         ],
         "title": "ProfileIn"
+      },
+      "ProfileKeywords": {
+        "properties": {
+          "keywords": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "keywords",
+          "available"
+        ],
+        "title": "ProfileKeywords"
+      },
+      "ProfileKeywordsIn": {
+        "properties": {
+          "occupation": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Occupation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "occupation"
+        ],
+        "title": "ProfileKeywordsIn"
       },
       "ProfileList": {
         "properties": {
