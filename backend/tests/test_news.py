@@ -9,8 +9,9 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
-from jobbot.db.models import NewsSource
+from jobbot.db.models import Evaluation, NewsItem, NewsSource, Offer
 from jobbot.logos import service as logos
+from jobbot.news import domain, language
 from jobbot.news import service as news
 from jobbot.news.feeds import FeedError, parse_feed
 from jobbot.runtime import Runtime
@@ -66,7 +67,9 @@ async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
         await conn.execute(text("TRUNCATE news_items"))
         await conn.execute(text("UPDATE news_sources SET active = false"))
         await conn.execute(text("DELETE FROM news_sources WHERE name LIKE 'Test %'"))
-        await conn.execute(text("DELETE FROM settings WHERE key = 'news_seen_at'"))
+        await conn.execute(
+            text("DELETE FROM settings WHERE key IN ('news_seen_at', 'news_preferences')")
+        )
     yield runtime
     async with runtime.engine.begin() as conn:
         await conn.execute(text("TRUNCATE news_items"))
@@ -147,6 +150,13 @@ async def test_sources_api(
         raise news.SourceError("aucun flux RSS annoncé par cette page")
 
     monkeypatch.setattr("jobbot.api.routes.news.resolve", fake_resolve)
+    queued: list[str] = []
+
+    async def fake_enqueue(_settings: Settings, name: str) -> bool:
+        queued.append(name)
+        return True
+
+    monkeypatch.setattr("jobbot.api.routes.news.enqueue", fake_enqueue)
     app = create_app(settings, rt)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         defaults = (await api.get("/api/news/sources")).json()
@@ -154,7 +164,7 @@ async def test_sources_api(
         added = await api.post("/api/news/sources", json={"url": "https://www.youtube.com/@test"})
         assert added.status_code == 201
         source = next(s for s in added.json() if s["name"] == "Test chaîne")
-        assert source["kind"] == "videos"
+        assert source["kind"] == "videos" and queued == ["news"]  # relevé tout de suite
         duplicate = await api.post(
             "/api/news/sources", json={"url": "https://www.youtube.com/@test"}
         )
@@ -192,3 +202,158 @@ async def test_resolve_youtube(monkeypatch: pytest.MonkeyPatch) -> None:
         assert pages == [source.feed_url]  # aucune page lue, seulement le flux
     with pytest.raises(news.SourceError, match="ID de la chaîne"):
         await news.resolve("https://www.youtube.com/@KodeKloud")
+
+
+@pytest.fixture
+def queued(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    """Relevés mis en file par l'API (sans file réelle)."""
+    calls: list[str] = []
+
+    async def fake_enqueue(_settings: Settings, name: str) -> bool:
+        calls.append(name)
+        return True
+
+    monkeypatch.setattr("jobbot.api.routes.news.enqueue", fake_enqueue)
+    return calls
+
+
+def test_language_and_domain() -> None:
+    assert language.detect("Le chômage reste stable en septembre selon le SECO") == "fr"
+    assert language.detect("Die Arbeitslosigkeit ist im September nicht gestiegen") == "de"
+    assert language.detect("How to pass the CKA exam in your first try") == "en"
+    assert language.detect("Kubernetes CKA") is None
+    assert language.from_feed("fr-CH") == "fr" and language.from_feed("xx") is None
+    keywords = ["DevOps", "CI/CD", "Kubernetes", "SRE"]
+    assert domain.matched(keywords, "Pipeline ci-cd et kubernetes", None) == [
+        "CI/CD",
+        "Kubernetes",
+    ]
+    assert domain.matched(keywords, "Kubernetesque", "SREnity") == []
+
+
+async def test_filters_preferences_refresh(
+    rt: Runtime, settings: Settings, queued: list[str]
+) -> None:
+    now = datetime.now(UTC)
+    async with rt.sessionmaker.begin() as session:
+        seco = NewsSource(
+            kind="articles",
+            name="Test SECO",
+            url="https://a",
+            feed_url="https://t.example/seco",
+            country="CH",
+            labour_market=True,
+            fetched_at=now,
+        )
+        tech = NewsSource(
+            kind="articles",
+            name="Test tech",
+            url="https://b",
+            feed_url="https://t.example/tech",
+            country="INT",
+            language="en",
+            fetched_at=now,
+        )
+        session.add_all([seco, tech])
+        await session.flush()
+        session.add_all(
+            [
+                NewsItem(
+                    source_id=seco.id,
+                    title="Chômage : 2,8 % en septembre",
+                    url="https://t.example/1",
+                    language="fr",
+                    published_at=now,
+                ),
+                NewsItem(
+                    source_id=tech.id,
+                    title="Kubernetes 1.40 released",
+                    url="https://t.example/2",
+                    language="en",
+                    published_at=now,
+                ),
+                NewsItem(
+                    source_id=tech.id,
+                    title="New phone review",
+                    url="https://t.example/3",
+                    language="en",
+                    published_at=now,
+                ),
+            ]
+        )
+    app = create_app(settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        preferences = (await api.get("/api/news/preferences")).json()
+        assert preferences["domain_only"] is False
+        saved = await api.put(
+            "/api/news/preferences",
+            json={**preferences, "domain_keywords": ["kubernetes", "Kubernetes", " CKA "]},
+        )
+        assert saved.json()["domain_keywords"] == ["kubernetes", "CKA"]
+
+        page = (await api.get("/api/news")).json()
+        assert len(page["items"]) == 3 and page["fetched_at"] and not page["refreshing"]
+        assert page["countries"] == ["CH", "INT"] and page["languages"] == ["en", "fr"]
+        mine = (await api.get("/api/news", params={"domain_only": True})).json()["items"]
+        # Le SECO reste (marché de l'emploi), l'article Kubernetes est trouvé et surligné.
+        assert {i["title"] for i in mine} == {
+            "Chômage : 2,8 % en septembre",
+            "Kubernetes 1.40 released",
+        }
+        assert next(i for i in mine if i["title"].startswith("Kube"))["matched"] == ["kubernetes"]
+        swiss = (await api.get("/api/news", params={"country": ["CH"]})).json()["items"]
+        assert [i["source"] for i in swiss] == ["Test SECO"]
+        french = (await api.get("/api/news", params={"language": ["fr"]})).json()["items"]
+        assert [i["language"] for i in french] == ["fr"]
+
+        changed = await api.patch(
+            f"/api/news/sources/{tech.id}", json={"country": "", "labour_market": True}
+        )
+        updated = next(s for s in changed.json() if s["id"] == tech.id)
+        assert updated["country"] is None and updated["labour_market"] and updated["active"]
+        assert (await api.post("/api/news/refresh")).json() == {"queued": True}
+        assert queued == ["news"]
+
+
+async def test_first_visit_triggers_fetch(
+    rt: Runtime, settings: Settings, queued: list[str]
+) -> None:
+    async with rt.sessionmaker.begin() as session:
+        session.add(
+            NewsSource(
+                kind="articles", name="Test neuve", url="https://n", feed_url="https://t.example/n"
+            )
+        )
+    app = create_app(settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        page = (await api.get("/api/news")).json()
+    assert page["refreshing"] and page["fetched_at"] is None and queued == ["news"]
+
+
+async def test_domain_suggested_from_offers(runtime: Runtime) -> None:
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        offers = [
+            Offer(fingerprint=f"o{n}", title=f"Poste {n}", first_seen_at=now, last_seen_at=now)
+            for n in range(3)
+        ]
+        session.add_all(offers)
+        await session.flush()
+        keywords = [["DevOps", "Kubernetes"], ["devops", "AWS"], ["Comptabilité"]]
+        scores = [85, 72, 30]  # la dernière, mal notée, ne compte pas
+        session.add_all(
+            Evaluation(
+                offer_id=offer.id,
+                filter_passed=True,
+                criteria_hash="x",
+                score=score,
+                keywords_role=words,
+            )
+            for offer, words, score in zip(offers, keywords, scores, strict=True)
+        )
+    async with runtime.sessionmaker() as session:
+        assert await domain.suggest(session) == ["DevOps", "Kubernetes", "AWS"]
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))

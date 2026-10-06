@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api, type Inbox, type InboxItem } from "../api/client";
+import { since } from "../format";
 import AppIcon from "./AppIcon.vue";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
@@ -25,15 +26,6 @@ async function refresh(): Promise<void> {
   }
 }
 
-function since(iso: string): string {
-  const minutes = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
-  if (minutes < 1) return "à l'instant";
-  if (minutes < 60) return `il y a ${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `il y a ${hours} h`;
-  const days = Math.round(hours / 24);
-  return days === 1 ? "hier" : `il y a ${days} jours`;
-}
 
 async function select(item: InboxItem): Promise<void> {
   open.value = false;
