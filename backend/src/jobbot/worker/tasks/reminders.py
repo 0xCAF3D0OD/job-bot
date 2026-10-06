@@ -1,6 +1,7 @@
 """Rappels quotidiens : relance des candidatures sans réponse (docs/08 §5) et preuves ORP
 (objectif, remise, veille de la date limite ; docs/09 §5)."""
 
+from jobbot.notify.inbox import purge
 from jobbot.notify.orp import notify_orp
 from jobbot.notify.service import notify_reminders
 from jobbot.runtime import Runtime
@@ -13,3 +14,4 @@ REMINDERS_JOB = "reminders"
 @register(REMINDERS_JOB, cron="0 * * * *", active_hours=(9, 9))
 async def reminders_job(runtime: Runtime, ctx: RunContext) -> None:
     ctx.items_out = await notify_reminders(runtime) + await notify_orp(runtime)
+    await purge(runtime)  # alertes de la cloche de plus de 90 jours

@@ -1,6 +1,6 @@
 # 15 — Cloche des alertes et onglet Actualités (version 0.8.0)
 
-> Statut : **à valider**. Aucun code avant accord.
+> Statut : **validé** le 2026-10-06, sources proposées retenues. PR a (cloche) livrée ; PR b (Actualités) à venir.
 > Retours d'usage du 2026-10-06.
 
 ## 1. La cloche : les alertes du téléphone, aussi dans la plateforme
@@ -65,3 +65,11 @@ news_items     id, source_id, title, url UNIQUE, summary?, image_key?, published
 3. **Onglet Actualités** : articles sur le marché de l'emploi et vidéos YouTube, depuis des **flux publics**, sans coût (§2).
 4. **Sources de départ** : dis-moi lesquelles garder, et quelles chaînes YouTube ajouter (§2).
 5. **Deux PR**, la cloche d'abord (§4).
+
+## Écarts avec la PR a
+
+- **Migrations** : la 0022 ne crée que `notifications` ; les tables des actualités viendront avec la PR b (0023).
+- **Sans ntfy** : les relances, rappels ORP et alertes de notes sont désormais **marqués comme faits** une fois dans la cloche (avant, ils restaient en attente faute de téléphone).
+- **Collecte en échec** : au plus une alerte toutes les 6 heures ; le message dit la cause (connexion refusée, Gmail injoignable) sans jamais reprendre de secret.
+- **Échec de ntfy** : l'alerte reste dans la cloche, l'erreur est notée dans les journaux.
+- **Nettoyage** : les alertes de plus de 90 jours sont effacées par la tâche quotidienne `reminders`.

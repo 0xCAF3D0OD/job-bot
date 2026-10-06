@@ -23,6 +23,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.7.1 | Détail allégé et adresse de l'annonce (a), registre IDE (b) | livrée |
 | 0.7.2 | Adresse cherchée sur Internet par l'IA | livrée |
 | 0.7.3 | Postuler depuis la préparation, lien de candidature pour l'ORP | livrée |
+| 0.7.4 | Page Offres (transition, tri), logos des entreprises | livrée |
+| 0.8.0 | Cloche des alertes (a), Actualités (b) | en cours (a) |
 
 ## Lancer en local
 

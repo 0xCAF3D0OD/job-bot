@@ -1,6 +1,7 @@
 """Collecte des alertes e-mail (docs/03-collecte-gmail.md)."""
 
 from jobbot.collect.service import collect
+from jobbot.notify.inbox import collect_failed
 from jobbot.runtime import Runtime
 from jobbot.worker.jobs import RunContext, execute, register
 from jobbot.worker.tasks.enrich import ENRICH_JOB
@@ -15,7 +16,12 @@ COLLECT_ACTIVE_HOURS = (7, 21)
 
 @register(COLLECT_JOB, cron=COLLECT_CRON, active_hours=COLLECT_ACTIVE_HOURS)
 async def collect_job(runtime: Runtime, ctx: RunContext) -> None:
-    result = await collect(runtime, ctx.run_id)
+    try:
+        result = await collect(runtime, ctx.run_id)
+    except Exception as exc:
+        # Visible dans la cloche (docs/15 §1) ; l'échec reste enregistré dans le journal.
+        await collect_failed(runtime, exc)
+        raise
     ctx.items_in = result.fetched
     ctx.items_out = result.new_offers
     # Les nouvelles offres passent aussitôt par le filtre, puis les offres jobup retenues

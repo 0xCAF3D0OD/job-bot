@@ -3,8 +3,8 @@
 - le 25 du mois, si les candidatures sont sous l'objectif ;
 - le 1er du mois suivant, puis la veille de la date limite si le mois n'est pas remis.
 
-Chaque rappel n'est envoyé qu'une fois par mois (orp_months.reminders_sent). Sans ntfy
-configuré, rien n'est marqué : le rappel reste à faire.
+Chaque rappel n'est envoyé qu'une fois par mois (orp_months.reminders_sent) : dans la cloche,
+et sur le téléphone si ntfy est configuré.
 """
 
 from datetime import UTC, date, datetime, timedelta
@@ -54,8 +54,6 @@ async def _mark(runtime: Runtime, month: str, sent: dict[str, Any], key: str, da
 async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
     """Envoie les rappels ORP dus aujourd'hui ; renvoie le nombre de notifications."""
     settings = runtime.settings
-    if not settings.ntfy_configured:
-        return 0
     today = today or datetime.now(UTC).astimezone(LOCAL_TZ).date()
     current = f"{today:%Y-%m}"
     previous = shift_month(current, -1)
@@ -80,14 +78,16 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
         and not (current_record and current_record.submitted_at)
     ):
         days_left = (_last_day(current) - today).days + 1
-        await notify.send(
-            settings,
+        await notify.deliver(
+            runtime,
             notify.Message(
                 title=f"{now_counts.count} / {target} candidatures en {month_name(current)}",
                 message=f"Il reste {days_left} jour(s) pour atteindre l'objectif.",
                 tags=["dart"],
                 click=f"{base}/offres",
             ),
+            kind="orp_target",
+            link="/offres",
         )
         await _mark(runtime, current, current_sent, "under_target", today)
         sent_count += 1
@@ -107,8 +107,8 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
                 if key == "eve"
                 else f"Preuves de {month_name(previous)} à remettre avant le {_long(deadline)}"
             )
-            await notify.send(
-                settings,
+            await notify.deliver(
+                runtime,
                 notify.Message(
                     title=title,
                     message=details + ". PDF, CSV ou saisie Job-Room depuis la page ORP.",
@@ -116,6 +116,8 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
                     tags=["calendar"],
                     click=f"{base}/orp?mois={previous}",
                 ),
+                kind="orp_due",
+                link=f"/orp?mois={previous}",
             )
             await _mark(runtime, previous, previous_sent, key, today)
             sent_count += 1

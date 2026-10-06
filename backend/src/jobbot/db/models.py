@@ -489,3 +489,21 @@ class CompanyLogo(Base):
     media_type: Mapped[str | None] = mapped_column(Text)
     source: Mapped[str | None] = mapped_column(Text)
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class Notification(Base):
+    """Alerte de la cloche (docs/15 §1) : la même que sur le téléphone, gardée 90 jours."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    # offers, follow_up, orp_target, orp_due, budget, collect_failed
+    kind: Mapped[str] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    message: Mapped[str] = mapped_column(Text, default="")
+    # Page de la plateforme à ouvrir (« /orp?mois=2026-09 »).
+    link: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
