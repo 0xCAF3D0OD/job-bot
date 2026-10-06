@@ -1,6 +1,6 @@
 # 18 — Page de connexion, Candidatures et ORP réunies (version 0.11.0)
 
-> Statut : **validé** le 2026-10-06 (Offres réservées aussi).
+> Statut : **validé** le 2026-10-06 (Offres réservées aussi). livré : PR b (Candidatures et ORP réunies), avancée avant la PR a à ta demande.
 > Retours d'usage du 2026-10-06, en validant le cadrage 17. Vient après la 0.10.0 (profils d'essai).
 
 ## 1. Page de connexion
@@ -60,3 +60,13 @@ sessions   token_hash PRIMARY, user_id, created_at, last_seen_at, expires_at, us
 3. **Session de 30 jours**, déconnexion, protections (§1).
 4. **Une page Candidatures** avec les onglets **Suivi** et **Preuves ORP** sur le même mois ; ORP retiré du menu (§2).
 5. **Deux PR**, après la 0.10.0 (§4).
+
+## Écarts avec la PR b
+
+- **Ordre** : livrée avant la connexion (PR a), à ta demande ; les deux sont indépendantes.
+- **Trois onglets** : Suivi, Preuves ORP et **Journal des recherches** (qui était un onglet de la page ORP).
+- **Mois par défaut** : celui de la page ORP d'avant (le mois précédent tant que ses preuves ne sont pas remises et qu'il contient des candidatures, sinon le mois en cours), pour les deux onglets.
+- **En-tête commun** : mois, compteur, état des preuves, bouton « Ajouter une candidature » ; l'onglet Preuves ORP affiche le nombre de lignes à compléter.
+- **À relancer** : les candidatures « en attente » envoyées il y a 10 jours ou plus, tous mois confondus ; un clic ouvre la candidature.
+- **Liens** : `/orp` et `/journal` redirigent vers la page Candidatures (onglet et mois conservés) ; les nouveaux rappels ORP et alertes de la cloche pointent directement sur `/candidatures?vue=orp&mois=…`.
+- **Menu** : huit entrées.

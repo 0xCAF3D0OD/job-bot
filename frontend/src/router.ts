@@ -4,7 +4,6 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 import ApplicationsView from "./views/ApplicationsView.vue";
 import NewsView from "./views/NewsView.vue";
 import OffersView from "./views/OffersView.vue";
-import OrpView from "./views/OrpView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
 import PreparationView from "./views/PreparationView.vue";
 import ProfileView from "./views/ProfileView.vue";
@@ -21,12 +20,12 @@ export interface NavEntry {
   description?: string;
 }
 
-// Menu (docs/10 §2 c) : le Journal est un onglet de la page ORP, l'État une section des Réglages.
+// Menu (docs/10 §2 c, docs/18 §2) : preuves ORP et journal sont des onglets de la page
+// Candidatures, l'État une section des Réglages.
 export const navigation: NavEntry[] = [
   { path: "/aujourdhui", name: "today", label: "Aujourd'hui" },
   { path: "/offres", name: "offers", label: "Offres" },
   { path: "/candidatures", name: "applications", label: "Candidatures" },
-  { path: "/orp", name: "orp", label: "ORP" },
   { path: "/actualites", name: "news", label: "Actualités" },
   { path: "/formations", name: "trainings", label: "Formations" },
   { path: "/profil", name: "profile", label: "Profil" },
@@ -37,7 +36,6 @@ export const navigation: NavEntry[] = [
 const views: Record<string, Component> = {
   offers: OffersView,
   applications: ApplicationsView,
-  orp: OrpView,
   news: NewsView,
   trainings: TrainingsView,
   profile: ProfileView,
@@ -49,7 +47,18 @@ const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/aujourdhui" },
   // Anciennes adresses (avant 0.6.1).
   { path: "/prerequis", redirect: "/profil" },
-  { path: "/journal", redirect: { path: "/orp", query: { onglet: "journal" } } },
+  { path: "/journal", redirect: { path: "/candidatures", query: { vue: "journal" } } },
+  // Page ORP réunie aux Candidatures (0.11) : les liens des alertes et des rappels y mènent.
+  {
+    path: "/orp",
+    redirect: (to) => ({
+      path: "/candidatures",
+      query: {
+        vue: to.query.onglet === "journal" ? "journal" : "orp",
+        ...(typeof to.query.mois === "string" ? { mois: to.query.mois } : {}),
+      },
+    }),
+  },
   { path: "/etat", redirect: { path: "/reglages", hash: "#etat" } },
   ...navigation.map(
     (entry): RouteRecordRaw => ({

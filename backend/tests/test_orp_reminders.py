@@ -75,7 +75,7 @@ async def test_due_then_eve_then_nothing_once_submitted(rt: Runtime, sent: list[
     assert await notify_orp(rt, date(2026, 10, 1)) == 1
     assert sent[0].title == "Preuves de septembre à remettre avant le 5 octobre"
     assert sent[0].message.startswith("2 candidature(s), 1 ligne(s) à compléter.")
-    assert sent[0].click and sent[0].click.endswith("/orp?mois=2026-09")
+    assert sent[0].click and sent[0].click.endswith("/candidatures?vue=orp&mois=2026-09")
     assert await notify_orp(rt, date(2026, 10, 2)) == 0
     assert await notify_orp(rt, date(2026, 10, 4)) == 1
     assert sent[1].title == "Demain : preuves de septembre à remettre" and sent[1].priority == 4
@@ -107,4 +107,4 @@ async def test_due_day_setting_and_no_ntfy(rt: Runtime, sent: list[Message]) -> 
     assert len(sent) == 1
     async with rt.sessionmaker() as session:
         links = list(await session.scalars(select(Notification.link).order_by(Notification.id)))
-    assert links == ["/orp?mois=2026-09", "/orp?mois=2026-09"]
+    assert links == ["/candidatures?vue=orp&mois=2026-09"] * 2

@@ -135,7 +135,7 @@ onMounted(() => void load());
           <span>à relancer (sans réponse depuis 10 jours)</span>
         </RouterLink>
         <RouterLink
-          to="/orp"
+          :to="{ path: '/candidatures', query: { vue: 'orp' } }"
           :class="['stat', { warn: today.orp_due_month }]"
           data-test="stat-orp"
         >
