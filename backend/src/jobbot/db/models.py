@@ -527,6 +527,8 @@ class NewsSource(Base):
     language: Mapped[str | None] = mapped_column(Text)
     # Toujours visible, même filtré sur « Mon domaine » (docs/16 §2).
     labour_market: Mapped[bool] = mapped_column(default=False)
+    # Veille par recherche (docs/16 §4.2) : mots-clés suivis dans Google Actualités.
+    query: Mapped[str | None] = mapped_column(Text)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

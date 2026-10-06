@@ -119,7 +119,25 @@ def parse_feed(data: bytes, now: datetime | None = None) -> Feed:
                     published_at=_date(_text(_child(entry, "pubDate"))) or now,
                     author=_text(_child(entry, "author"))
                     or _text(_child(entry, "creator"))
+                    or _text(_child(entry, "source"))  # Google Actualités : le journal
                     or None,
+                )
+            )
+    elif _local(root.tag) == "RDF":
+        # RSS 1.0 : les articles sont à côté du canal, la date en dc:date.
+        channel = _child(root, "channel")
+        title = _text(_child(channel, "title")) if channel is not None else None
+        language = _text(_child(channel, "language")) if channel is not None else None
+        for entry in (c for c in root if _local(c.tag) == "item"):
+            description = _text(_child(entry, "description"))
+            items.append(
+                FeedItem(
+                    title=clean(_text(_child(entry, "title"))) or "",
+                    url=_text(_child(entry, "link")),
+                    summary=clean(description),
+                    image_url=m.group(1) if (m := _IMG.search(description)) else None,
+                    published_at=_date(_text(_child(entry, "date"))) or now,
+                    author=_text(_child(entry, "creator")) or None,
                 )
             )
     elif _local(root.tag) == "feed":

@@ -3074,6 +3074,129 @@
         }
       }
     },
+    "/api/news/catalog": {
+      "get": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Get Catalog",
+        "description": "Sources suggérées, vérifiées, classées par domaine, pays et langue.",
+        "operationId": "getNewsCatalog",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/catalog/{catalog_id}": {
+      "post": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Add Catalog Source",
+        "operationId": "addNewsCatalogSource",
+        "parameters": [
+          {
+            "name": "catalog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Catalog Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NewsSourceOut"
+                  },
+                  "title": "Response Addnewscatalogsource"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Suggestion inconnue"
+          },
+          "409": {
+            "description": "Déjà suivie"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/searches": {
+      "post": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Add Search",
+        "description": "Veille par recherche : mots-clés, pays et langue, relevés dans Google Actualités.",
+        "operationId": "addNewsSearch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewsSearchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NewsSourceOut"
+                  },
+                  "type": "array",
+                  "title": "Response Addnewssearch"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Veille déjà suivie"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/news/sources/{source_id}": {
       "patch": {
         "tags": [
@@ -3895,6 +4018,78 @@
           "file"
         ],
         "title": "Body_uploadDocument"
+      },
+      "CatalogSourceOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "articles",
+              "videos"
+            ],
+            "title": "Kind"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Domains"
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "labour_market": {
+            "type": "boolean",
+            "title": "Labour Market"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "added": {
+            "type": "boolean",
+            "title": "Added"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "url",
+          "domains",
+          "country",
+          "language",
+          "labour_market",
+          "description",
+          "added"
+        ],
+        "title": "CatalogSourceOut"
       },
       "ChecklistItem": {
         "properties": {
@@ -5435,6 +5630,30 @@
         ],
         "title": "MonthSummary"
       },
+      "NewsCatalog": {
+        "properties": {
+          "domains": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Domains"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogSourceOut"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "domains",
+          "sources"
+        ],
+        "title": "NewsCatalog"
+      },
       "NewsItemOut": {
         "properties": {
           "id": {
@@ -5650,6 +5869,34 @@
         ],
         "title": "NewsRefresh"
       },
+      "NewsSearchIn": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Query"
+          },
+          "country": {
+            "type": "string",
+            "pattern": "^([A-Z]{2}|INT)$",
+            "title": "Country"
+          },
+          "language": {
+            "type": "string",
+            "pattern": "^[a-z]{2}$",
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "country",
+          "language"
+        ],
+        "title": "NewsSearchIn",
+        "description": "Veille par recherche (docs/16 §4.2) : seuls ces trois champs partent chez Google."
+      },
       "NewsSourceIn": {
         "properties": {
           "url": {
@@ -5785,6 +6032,17 @@
             "type": "boolean",
             "title": "Labour Market"
           },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
           "fetched_at": {
             "anyOf": [
               {
@@ -5821,6 +6079,7 @@
           "country",
           "language",
           "labour_market",
+          "query",
           "fetched_at",
           "error"
         ],

@@ -1,0 +1,395 @@
+{
+  "_comment": "Sources suggérées des Actualités (docs/16 §4.1), vérifiées le 2026-10-06 : le flux répond et contient des contenus récents. Données publiques, sans donnée personnelle.",
+  "domains": {
+    "emploi": "Marché et recherche d'emploi",
+    "informatique": "Actualité informatique",
+    "devops": "DevOps et Kubernetes",
+    "cloud": "Cloud",
+    "developpement": "Développement"
+  },
+  "sources": [
+    {
+      "id": "seco",
+      "name": "SECO — marché du travail",
+      "kind": "articles",
+      "url": "https://www.seco.admin.ch",
+      "feed_url": "https://www.newsd.admin.ch/newsd/feeds/rss?lang=fr&org-nr=703",
+      "domains": [
+        "emploi"
+      ],
+      "country": "CH",
+      "language": null,
+      "labour_market": true,
+      "match": "Staatssekretariat für Wirtschaft",
+      "description": "Chiffres mensuels du chômage et communiqués du Secrétariat d'État à l'économie."
+    },
+    {
+      "id": "rts-economie",
+      "name": "RTS Info — Économie",
+      "kind": "articles",
+      "url": "https://www.rts.ch/info/economie/",
+      "feed_url": "https://www.rts.ch/info/economie/?format=rss/news",
+      "domains": [
+        "emploi"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Actualité économique suisse et romande."
+    },
+    {
+      "id": "letemps-economie",
+      "name": "Le Temps — Économie",
+      "kind": "articles",
+      "url": "https://www.letemps.ch/economie",
+      "feed_url": "https://www.letemps.ch/economie.rss",
+      "domains": [
+        "emploi"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Économie, entreprises et emploi en Suisse."
+    },
+    {
+      "id": "france-travail",
+      "name": "France Travail",
+      "kind": "videos",
+      "url": "https://www.youtube.com/channel/UCIV-NTLRUBzAY404qiQ1OYw",
+      "feed_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCIV-NTLRUBzAY404qiQ1OYw",
+      "domains": [
+        "emploi"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Vidéos du service public de l'emploi français : CV, entretiens, métiers."
+    },
+    {
+      "id": "ictjournal",
+      "name": "ICTjournal",
+      "kind": "articles",
+      "url": "https://www.ictjournal.ch",
+      "feed_url": "https://www.ictjournal.ch/rss.xml",
+      "domains": [
+        "informatique"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Magazine romand de l'informatique d'entreprise."
+    },
+    {
+      "id": "inside-it",
+      "name": "Inside IT",
+      "kind": "articles",
+      "url": "https://www.inside-it.ch",
+      "feed_url": "https://www.inside-it.ch/rss.xml",
+      "domains": [
+        "informatique"
+      ],
+      "country": "CH",
+      "language": "de",
+      "labour_market": false,
+      "match": null,
+      "description": "Actualité informatique suisse (en allemand)."
+    },
+    {
+      "id": "netzwoche",
+      "name": "Netzwoche",
+      "kind": "articles",
+      "url": "https://www.netzwoche.ch",
+      "feed_url": "https://www.netzwoche.ch/rss.xml",
+      "domains": [
+        "informatique"
+      ],
+      "country": "CH",
+      "language": "de",
+      "labour_market": false,
+      "match": null,
+      "description": "Actualité du secteur informatique suisse (en allemand)."
+    },
+    {
+      "id": "lemondeinformatique",
+      "name": "Le Monde Informatique",
+      "kind": "articles",
+      "url": "https://www.lemondeinformatique.fr",
+      "feed_url": "https://www.lemondeinformatique.fr/flux-rss/thematique/toutes-les-actualites/rss.xml",
+      "domains": [
+        "informatique"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Actualité informatique professionnelle."
+    },
+    {
+      "id": "it-connect",
+      "name": "IT-Connect",
+      "kind": "articles",
+      "url": "https://www.it-connect.fr",
+      "feed_url": "https://www.it-connect.fr/feed/",
+      "domains": [
+        "informatique",
+        "devops"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Tutoriels et actualité pour administrateurs système et DevOps."
+    },
+    {
+      "id": "jdn",
+      "name": "JDN",
+      "kind": "articles",
+      "url": "https://www.journaldunet.com",
+      "feed_url": "https://www.journaldunet.com/rss/",
+      "domains": [
+        "informatique"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Journal du Net : économie numérique, tech, management."
+    },
+    {
+      "id": "kubernetes-blog",
+      "name": "Blog Kubernetes",
+      "kind": "articles",
+      "url": "https://kubernetes.io/blog/",
+      "feed_url": "https://kubernetes.io/feed.xml",
+      "domains": [
+        "devops"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Annonces et articles officiels du projet Kubernetes."
+    },
+    {
+      "id": "cncf",
+      "name": "CNCF",
+      "kind": "articles",
+      "url": "https://www.cncf.io",
+      "feed_url": "https://www.cncf.io/feed/",
+      "domains": [
+        "devops",
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Cloud Native Computing Foundation : projets cloud natifs, certifications (CKA, CKAD)."
+    },
+    {
+      "id": "aws-devops",
+      "name": "AWS — DevOps",
+      "kind": "articles",
+      "url": "https://aws.amazon.com/blogs/devops/",
+      "feed_url": "https://aws.amazon.com/blogs/devops/feed/",
+      "domains": [
+        "devops",
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Blog AWS consacré au DevOps et à la productivité des développeurs."
+    },
+    {
+      "id": "aws-news",
+      "name": "AWS — nouveautés",
+      "kind": "articles",
+      "url": "https://aws.amazon.com/blogs/aws/",
+      "feed_url": "https://aws.amazon.com/blogs/aws/feed/",
+      "domains": [
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Annonces des nouveaux services AWS."
+    },
+    {
+      "id": "azure",
+      "name": "Microsoft Azure",
+      "kind": "articles",
+      "url": "https://azure.microsoft.com/en-us/blog/",
+      "feed_url": "https://azure.microsoft.com/en-us/blog/feed/",
+      "domains": [
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Blog officiel d'Azure."
+    },
+    {
+      "id": "google-cloud",
+      "name": "Google Cloud",
+      "kind": "articles",
+      "url": "https://cloud.google.com/blog",
+      "feed_url": "https://cloudblog.withgoogle.com/rss/",
+      "domains": [
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Blog officiel de Google Cloud."
+    },
+    {
+      "id": "thenewstack",
+      "name": "The New Stack",
+      "kind": "articles",
+      "url": "https://thenewstack.io",
+      "feed_url": "https://thenewstack.io/feed/",
+      "domains": [
+        "devops",
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Actualité DevOps, Kubernetes et cloud natif."
+    },
+    {
+      "id": "hashicorp",
+      "name": "HashiCorp",
+      "kind": "articles",
+      "url": "https://www.hashicorp.com/blog",
+      "feed_url": "https://www.hashicorp.com/blog/feed.xml",
+      "domains": [
+        "devops",
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Terraform, Vault et outils d'infrastructure as code."
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "kind": "articles",
+      "url": "https://www.docker.com/blog/",
+      "feed_url": "https://www.docker.com/blog/feed/",
+      "domains": [
+        "devops"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Blog officiel de Docker."
+    },
+    {
+      "id": "techworld-nana",
+      "name": "TechWorld with Nana",
+      "kind": "videos",
+      "url": "https://www.youtube.com/@TechWorldwithNana",
+      "feed_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCdngmbVKX1Tgre699-XLlUA",
+      "domains": [
+        "devops"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "DevOps, Kubernetes, CI/CD : cours et explications."
+    },
+    {
+      "id": "kodekloud",
+      "name": "KodeKloud",
+      "kind": "videos",
+      "url": "https://www.youtube.com/@KodeKloud",
+      "feed_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSWj8mqQCcrcBlXPi4ThRDQ",
+      "domains": [
+        "devops",
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Kubernetes, préparation CKA, Linux et cloud."
+    },
+    {
+      "id": "cncf-videos",
+      "name": "CNCF (vidéos)",
+      "kind": "videos",
+      "url": "https://www.youtube.com/channel/UCvqbFHwN-nwalWPjPUKpvTA",
+      "feed_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCvqbFHwN-nwalWPjPUKpvTA",
+      "domains": [
+        "devops",
+        "cloud"
+      ],
+      "country": "INT",
+      "language": "en",
+      "labour_market": false,
+      "match": null,
+      "description": "Conférences KubeCon et présentations des projets cloud natifs."
+    },
+    {
+      "id": "xavki",
+      "name": "xavki",
+      "kind": "videos",
+      "url": "https://www.youtube.com/channel/UCs_AZuYXi6NA9tkdbhjItHQ",
+      "feed_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCs_AZuYXi6NA9tkdbhjItHQ",
+      "domains": [
+        "devops"
+      ],
+      "country": "INT",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "DevOps en français : Kubernetes, Ansible, Terraform, supervision."
+    },
+    {
+      "id": "cookie-connecte",
+      "name": "Cookie connecté",
+      "kind": "videos",
+      "url": "https://www.youtube.com/channel/UC5cs06DgLFeyLIF_II7lWCQ",
+      "feed_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5cs06DgLFeyLIF_II7lWCQ",
+      "domains": [
+        "devops",
+        "informatique"
+      ],
+      "country": "INT",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Infrastructure, DevOps et métiers de l'informatique, en français."
+    },
+    {
+      "id": "grafikart",
+      "name": "Grafikart",
+      "kind": "videos",
+      "url": "https://www.youtube.com/channel/UCj_iGliGCkLcHSZ8eqVNPDQ",
+      "feed_url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCj_iGliGCkLcHSZ8eqVNPDQ",
+      "domains": [
+        "developpement"
+      ],
+      "country": "INT",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Développement web en français."
+    }
+  ]
+}
