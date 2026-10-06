@@ -507,3 +507,38 @@ class Notification(Base):
         DateTime(timezone=True), server_default=func.now(), index=True
     )
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class NewsSource(Base):
+    """Source d'actualités (docs/15 §2) : flux RSS d'un site ou d'une chaîne YouTube."""
+
+    __tablename__ = "news_sources"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    kind: Mapped[str] = mapped_column(Text)  # articles | videos
+    name: Mapped[str] = mapped_column(Text)
+    url: Mapped[str] = mapped_column(Text)
+    feed_url: Mapped[str] = mapped_column(Text, unique=True)
+    # Ne garder que les entrées dont l'auteur, le titre ou le texte contient ce texte.
+    match: Mapped[str | None] = mapped_column(Text)
+    active: Mapped[bool] = mapped_column(default=True)
+    fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class NewsItem(Base):
+    """Article ou vidéo relevé dans une source, gardé 60 jours."""
+
+    __tablename__ = "news_items"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    source_id: Mapped[int] = mapped_column(ForeignKey("news_sources.id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(Text)
+    url: Mapped[str] = mapped_column(Text, unique=True)
+    summary: Mapped[str | None] = mapped_column(Text)
+    image_url: Mapped[str | None] = mapped_column(Text)
+    # Miniature téléchargée par la plateforme (news/…), servie sans appel au site d'origine.
+    image_key: Mapped[str | None] = mapped_column(Text)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

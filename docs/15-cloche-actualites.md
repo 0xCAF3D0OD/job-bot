@@ -1,6 +1,6 @@
 # 15 — Cloche des alertes et onglet Actualités (version 0.8.0)
 
-> Statut : **validé** le 2026-10-06, sources proposées retenues. PR a (cloche) livrée ; PR b (Actualités) à venir.
+> Statut : **validé** le 2026-10-06, sources proposées retenues. livré : PR a (cloche), PR b (Actualités).
 > Retours d'usage du 2026-10-06.
 
 ## 1. La cloche : les alertes du téléphone, aussi dans la plateforme
@@ -73,3 +73,13 @@ news_items     id, source_id, title, url UNIQUE, summary?, image_key?, published
 - **Collecte en échec** : au plus une alerte toutes les 6 heures ; le message dit la cause (connexion refusée, Gmail injoignable) sans jamais reprendre de secret.
 - **Échec de ntfy** : l'alerte reste dans la cloche, l'erreur est notée dans les journaux.
 - **Nettoyage** : les alertes de plus de 90 jours sont effacées par la tâche quotidienne `reminders`.
+
+## Écarts avec la PR b
+
+- **Sources de départ** : SECO (flux officiel des communiqués de la Confédération, filtré sur l'auteur « Staatssekretariat für Wirtschaft » : il mêle allemand et français), RTS Info — Économie, Le Temps — Économie, TechWorld with Nana, KodeKloud. Le **magazine de conseils de jobup / jobs.ch** est écarté : ses pages refusent les lectures automatiques (erreur 403), et je ne contourne pas cette protection.
+- **Filtre par source** : facultatif, « ne garder que ce qui contient » (titre, résumé ou auteur).
+- **Chaînes YouTube** : à ajouter par leur **ID** (« UC… ») ou leur adresse `/channel/UC…`. Une adresse `youtube.com/@nom` mène, depuis la Suisse, à une page de consentement aux cookies que la plateforme n'accepte pas à ta place ; le message d'erreur explique où copier l'ID.
+- **Base** : migration **0023** (`news_sources`, `news_items`) ; le compteur « nouveautés » repose sur la date de ta dernière visite (réglage `news_seen_at`), pas sur un champ par contenu.
+- **Compteur** : sur l'entrée « Actualités » du menu (mis à jour toutes les 5 minutes) et sur chaque onglet de la page ; la visite le remet à zéro.
+- **Rythme** : tâche `news`, toutes les 6 heures ; 30 éléments au plus par source et par relevé ; miniatures de 300 Ko au plus, avec les mêmes garde-fous que les logos ; les articles RTS et Le Temps ont aussi leur image.
+- **Essai réel** : 98 contenus relevés sur les 5 sources, sans échec.

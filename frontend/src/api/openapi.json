@@ -2761,6 +2761,288 @@
           }
         }
       }
+    },
+    "/api/news": {
+      "get": {
+        "tags": [
+          "news"
+        ],
+        "summary": "List News",
+        "operationId": "listNews",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "articles",
+                    "videos"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 40,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/seen": {
+      "post": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Mark Seen",
+        "operationId": "markNewsSeen",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/news/items/{item_id}/image": {
+      "get": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Get News Image",
+        "operationId": "getNewsImage",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/*": {}
+            }
+          },
+          "404": {
+            "description": "Pas de miniature"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/sources": {
+      "get": {
+        "tags": [
+          "news"
+        ],
+        "summary": "List Sources",
+        "operationId": "listNewsSources",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NewsSourceOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listnewssources"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Add Source",
+        "description": "Site, flux RSS ou chaîne YouTube : le flux est trouvé et vérifié avant l'ajout.",
+        "operationId": "addNewsSource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewsSourceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NewsSourceOut"
+                  },
+                  "type": "array",
+                  "title": "Response Addnewssource"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Aucun flux lisible à cette adresse"
+          }
+        }
+      }
+    },
+    "/api/news/sources/{source_id}": {
+      "patch": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Set Source Active",
+        "operationId": "setNewsSourceActive",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewsSourceActive"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NewsSourceOut"
+                  },
+                  "title": "Response Setnewssourceactive"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "news"
+        ],
+        "summary": "Delete Source",
+        "operationId": "deleteNewsSource",
+        "parameters": [
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NewsSourceOut"
+                  },
+                  "title": "Response Deletenewssource"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5022,6 +5304,223 @@
           "target"
         ],
         "title": "MonthSummary"
+      },
+      "NewsItemOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "articles",
+              "videos"
+            ],
+            "title": "Kind"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "has_image": {
+            "type": "boolean",
+            "title": "Has Image"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "source",
+          "title",
+          "url",
+          "summary",
+          "has_image",
+          "published_at"
+        ],
+        "title": "NewsItemOut"
+      },
+      "NewsPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NewsItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "new_articles": {
+            "type": "integer",
+            "title": "New Articles"
+          },
+          "new_videos": {
+            "type": "integer",
+            "title": "New Videos"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "new_articles",
+          "new_videos"
+        ],
+        "title": "NewsPage"
+      },
+      "NewsSourceActive": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active"
+        ],
+        "title": "NewsSourceActive"
+      },
+      "NewsSourceIn": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 9,
+            "title": "Url"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "match": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "NewsSourceIn"
+      },
+      "NewsSourceOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "articles",
+              "videos"
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "feed_url": {
+            "type": "string",
+            "title": "Feed Url"
+          },
+          "match": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "url",
+          "feed_url",
+          "match",
+          "active",
+          "fetched_at",
+          "error"
+        ],
+        "title": "NewsSourceOut"
       },
       "NotificationOut": {
         "properties": {

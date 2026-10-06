@@ -49,3 +49,6 @@ export type FilterKey = Schemas["OfferFiltersVisible"]["visible"][number];
 export type RegistryCandidate = Schemas["RegistryCandidate"];
 export type Inbox = Schemas["Inbox"];
 export type InboxItem = Schemas["NotificationOut"];
+export type NewsItem = Schemas["NewsItemOut"];
+export type NewsPage = Schemas["NewsPage"];
+export type NewsSource = Schemas["NewsSourceOut"];

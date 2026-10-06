@@ -1,10 +1,15 @@
 <script setup lang="ts">
+import { onMounted } from "vue";
+
 import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
+import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { navigation } from "./router";
 
 const { message, running, collectNow } = useCollect();
+const { count: newsCount, start: startNewsCount } = useNewsCount();
+onMounted(() => startNewsCount());
 </script>
 
 <template>
@@ -29,6 +34,11 @@ const { message, running, collectNow } = useCollect();
           >
             <RouterLink :to="entry.path">
               {{ entry.label }}
+              <span
+                v-if="entry.name === 'news' && newsCount"
+                class="nav-count"
+                data-test="news-count"
+              >{{ newsCount }}</span>
             </RouterLink>
           </li>
         </ul>
