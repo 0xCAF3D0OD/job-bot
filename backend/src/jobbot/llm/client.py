@@ -104,3 +104,39 @@ class AnthropicScoreClient:
 
 def client_factory(settings: Settings) -> ScoreClient:
     return AnthropicScoreClient(settings)
+
+
+# --- Assistant (docs/24) : réponses au fil de l'écriture ----------------------------------
+
+
+@dataclass(frozen=True)
+class ChatTurn:
+    """Fin d'un tour : les blocs de la réponse (renvoyés tels quels à l'API pour la suite)."""
+
+    content: list[dict[str, Any]]
+    raw: RawResult
+
+
+class ChatClient(Protocol):
+    def stream(self, params: dict[str, Any]) -> AsyncIterator[str | ChatTurn]:
+        """Le texte au fil de l'eau, puis un `ChatTurn` en dernier."""
+        ...
+
+
+class AnthropicChatClient:
+    def __init__(self, settings: Settings) -> None:
+        key = settings.anthropic_api_key.get_secret_value() if settings.anthropic_api_key else ""
+        self._client = anthropic.AsyncAnthropic(api_key=key, timeout=120.0, max_retries=2)
+
+    async def stream(self, params: dict[str, Any]) -> AsyncIterator[str | ChatTurn]:
+        async with self._client.messages.stream(**params) as stream:
+            async for event in stream:
+                if event.type == "text":
+                    yield event.text
+            message = await stream.get_final_message()
+        content = [block.model_dump(mode="json", exclude_none=True) for block in message.content]
+        yield ChatTurn(content, _raw(message))
+
+
+def chat_client_factory(settings: Settings) -> ChatClient:
+    return AnthropicChatClient(settings)
