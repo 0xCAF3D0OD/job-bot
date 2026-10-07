@@ -15,6 +15,7 @@ const form = ref<SettingsModel>({
   notify_score_threshold: 70,
   llm_monthly_budget_chf: 10,
   orp_due_day: 5,
+  employer_search_threshold: 70,
 });
 const loaded = ref(false);
 const saving = ref(false);
@@ -161,6 +162,26 @@ const SECTIONS = [
               <input
                 id="threshold"
                 v-model.number="form.notify_score_threshold"
+                type="number"
+                min="0"
+                max="100"
+                required
+              >
+              <span>/ 100</span>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend><label for="employer-threshold">Recherche de l'annonce chez l'employeur</label></legend>
+            <p class="hint">
+              Pour les offres Indeed, LinkedIn et jobs.ch notées au moins à ce score, la plateforme cherche l'annonce
+              sur le site de l'employeur (son site, son outil de recrutement, puis Internet par l'IA : environ 0,02 à
+              0,03 $ quand l'IA est nécessaire). En dessous, bouton « Chercher l'offre chez l'employeur » dans le
+              détail.
+            </p>
+            <div class="inline-field">
+              <input
+                id="employer-threshold"
+                v-model.number="form.employer_search_threshold"
                 type="number"
                 min="0"
                 max="100"

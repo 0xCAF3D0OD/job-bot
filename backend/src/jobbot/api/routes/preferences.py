@@ -78,6 +78,8 @@ class SettingsModel(BaseModel):
     llm_monthly_budget_chf: float = Field(default=10, ge=0, le=1000)
     # Jour de remise des preuves ORP du mois précédent (docs/09 §5).
     orp_due_day: int = Field(default=5, ge=2, le=28)
+    # Recherche automatique de l'annonce chez l'employeur dès cette note (docs/20 §2.1).
+    employer_search_threshold: int = Field(default=70, ge=0, le=100)
 
 
 def _runtime(request: Request) -> Runtime:

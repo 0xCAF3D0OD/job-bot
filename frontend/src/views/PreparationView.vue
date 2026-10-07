@@ -21,6 +21,8 @@ const SITE_NAMES: Record<string, string> = { jobup: "jobup", indeed: "Indeed", j
 const applyLink = computed(() => {
   const o = offer.value;
   if (!o) return null;
+  // Annonce trouvée chez l'employeur (docs/20 §2) : c'est là qu'on postule.
+  if (o.employer_url) return { url: o.employer_url, label: "Postuler chez l'employeur" };
   if (o.apply_url) {
     return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" };
   }

@@ -57,6 +57,7 @@ def test_scheduler_can_be_disabled(settings: Settings) -> None:
     periodic = enabled.periodic_registry.periodic_tasks.values()
     assert sorted(t.periodic_id for t in periodic) == [
         "collect",
+        "employer",
         "heartbeat",
         "news",
         "reminders",

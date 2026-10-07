@@ -23,6 +23,43 @@ const emit = defineEmits<{
   changed: [];
 }>();
 
+// Annonce chez l'employeur (docs/20 §2) : lien vérifié, ou recherche à la demande.
+const PROXY_HOSTS = ["jobup.ch", "jobs.ch", "indeed.", "linkedin.com", "glassdoor.", "jobscout24.", "job-room.ch"];
+const EMPLOYER_SOURCES: Record<string, string> = {
+  site: "sur son site",
+  ats: "via son outil de recrutement",
+  web: "sur Internet",
+};
+const employerBusy = ref(false);
+const employerMessage = ref("");
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+// Lien vers l'employeur déjà donné par l'annonce jobup : rien à chercher.
+const employerKnown = computed(() => {
+  const url = props.offer.apply_url;
+  return props.offer.apply_kind === "external" && !!url && !PROXY_HOSTS.some((h) => url.includes(h));
+});
+
+async function findEmployer(): Promise<void> {
+  employerBusy.value = true;
+  employerMessage.value = "";
+  try {
+    const { data, error } = await api.POST("/api/offers/{offer_id}/employer", {
+      params: { path: { offer_id: props.offer.id } },
+    });
+    if (!data) {
+      const detail = (error as { detail?: unknown } | undefined)?.detail;
+      employerMessage.value = typeof detail === "string" ? `Recherche impossible : ${detail}.` : "Recherche impossible.";
+      return;
+    }
+    if (!data.employer_url && data.employer_status === "not_found") {
+      employerMessage.value = "Pas trouvée chez l'employeur : l'annonce n'y est peut-être pas publiée.";
+    }
+    emit("changed");
+  } finally {
+    employerBusy.value = false;
+  }
+}
+
 // Registre IDE (docs/12 §2.2) : propositions quand le nom ne suffit pas à trancher.
 const searching = ref(false);
 const proposals = ref<RegistryCandidate[]>([]);
@@ -374,6 +411,13 @@ watch(
     </div>
     <div class="actions">
       <a
+        v-if="offer.employer_url"
+        :href="offer.employer_url"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-test="employer"
+      >Voir chez l'employeur <AppIcon name="chevron" /></a>
+      <a
         v-if="offer.apply_url"
         :href="offer.apply_url"
         target="_blank"
@@ -390,6 +434,37 @@ watch(
         rel="noopener noreferrer"
       >Voir sur {{ sourceLabel[link.source] }} <AppIcon name="chevron" /></a>
     </div>
+    <p
+      v-if="!employerKnown"
+      class="hint employer-line"
+      data-test="employer-line"
+    >
+      <template v-if="offer.employer_url && offer.employer_checked_at">
+        Annonce trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
+        {{ shortDate.format(new Date(offer.employer_checked_at)) }}.
+      </template>
+      <template v-else-if="offer.employer_status === 'agency'">
+        Annonce d'agence : employeur non indiqué.
+      </template>
+      <template v-else>
+        <template v-if="offer.employer_status === 'not_found' || offer.employer_status === 'gone'">
+          {{ offer.employer_status === "gone" ? "L'annonce a disparu du site de l'employeur." : "Pas trouvée chez l'employeur." }}
+        </template>
+        <button
+          type="button"
+          class="link"
+          :disabled="employerBusy"
+          data-test="find-employer"
+          @click="findEmployer"
+        >
+          {{ employerBusy ? "Recherche en cours (jusqu'à 30 s)…" : offer.employer_checked_at ? "Chercher à nouveau" : "Chercher l'offre chez l'employeur" }}
+        </button>
+      </template>
+      <span
+        v-if="employerMessage"
+        role="status"
+      > {{ employerMessage }}</span>
+    </p>
     <section
       v-if="offer.summary_role"
       class="ai-block"

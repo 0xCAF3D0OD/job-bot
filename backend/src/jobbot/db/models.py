@@ -155,6 +155,12 @@ class Offer(Base):
     # (docs/14 §4) ; le logo lui-même est téléchargé une fois par entreprise.
     logo_url: Mapped[str | None] = mapped_column(Text)
     company_website: Mapped[str | None] = mapped_column(Text)
+    # Annonce chez l'employeur (docs/20 §2) : adresse vérifiée, d'où elle vient
+    # (site | ats | web), résultat de la recherche (found | not_found | agency | gone).
+    employer_url: Mapped[str | None] = mapped_column(Text)
+    employer_url_source: Mapped[str | None] = mapped_column(Text)
+    employer_status: Mapped[str | None] = mapped_column(Text)
+    employer_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Dernière revérification de la page jobup.
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -452,6 +458,10 @@ class Company(Base):
     # Recherche sur Internet (0.7.2), faute de correspondance sûre dans le registre.
     source_url: Mapped[str | None] = mapped_column(Text)
     web_looked_up_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Page carrières et outil de recrutement reconnu (« greenhouse:gitlab »), docs/20 §2.
+    careers_url: Mapped[str | None] = mapped_column(Text)
+    ats: Mapped[str | None] = mapped_column(Text)
+    careers_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class SiteReader(StrEnum):

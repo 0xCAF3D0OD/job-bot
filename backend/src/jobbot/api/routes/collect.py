@@ -20,6 +20,7 @@ from jobbot.db.models import (
     ParseStatus,
     Search,
 )
+from jobbot.employer import service as employer_service
 from jobbot.llm.scoring import profile_hash
 from jobbot.log import get_logger
 from jobbot.registry.service import name_key
@@ -95,6 +96,12 @@ class OfferOut(BaseModel):
     company_address: str | None = None
     company_address_source: Literal["page", "registry", "web", "letter", "manual"] | None = None
     company_address_url: str | None = None
+    # Annonce chez l'employeur (docs/20 §2) : adresse vérifiée et sa source
+    # (site, outil de recrutement, Internet) ; résultat de la recherche.
+    employer_url: str | None = None
+    employer_url_source: Literal["site", "ats", "web"] | None = None
+    employer_status: Literal["found", "not_found", "agency", "gone"] | None = None
+    employer_checked_at: datetime | None = None
     # Logo de l'entreprise disponible sur /api/offers/{id}/logo (docs/14 §4).
     has_logo: bool = False
     # Raisons d'exclusion données par le filtre (vide si l'offre passe ou n'est pas filtrée).
@@ -508,6 +515,25 @@ def _with_logo(out: OfferOut, logos: set[str]) -> OfferOut:
     if out.company and name_key(out.company) in logos:
         out.has_logo = True
     return out
+
+
+@router.post(
+    "/offers/{offer_id}/employer",
+    operation_id="findEmployerOffer",
+    responses={409: {"description": "IA indisponible ou plafond atteint"}},
+)
+async def find_employer_offer(request: Request, offer_id: int) -> OfferOut:
+    """« Chercher l'offre chez l'employeur » (docs/20 §2) : site, outil de recrutement,
+    puis Internet ; peut prendre une trentaine de secondes."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        if await session.get(Offer, offer_id) is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+    try:
+        await employer_service.find(runtime, offer_id)
+    except employer_service.EmployerUnavailable as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    return await get_offer(request, offer_id)
 
 
 @router.get(
