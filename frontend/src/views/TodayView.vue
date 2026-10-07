@@ -203,6 +203,17 @@ onMounted(() => void load());
         </RouterLink>
       </div>
       <p
+        v-for="item in today.interviews_to_review"
+        :key="`${item.application_id}-${item.interview_on}`"
+        class="notice"
+        data-test="interview-to-review"
+      >
+        Comment s'est passé ton entretien chez {{ item.company }} ?
+        <RouterLink :to="item.link">
+          Faire le point
+        </RouterLink>
+      </p>
+      <p
         v-if="today.alerts_waiting"
         class="notice"
         data-test="alerts-waiting"

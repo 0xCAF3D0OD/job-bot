@@ -1064,3 +1064,15 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
   .suivi-calendar .day { min-height: 3.6rem; }
   .day-marks .mark { display: none; }
 }
+
+/* Retour d'entretien (docs/23) */
+.interview-form fieldset { border: none; padding: 0; margin: 0 0 1rem; display: grid; gap: 0.6rem; }
+.interview-form legend { font-weight: 600; margin-bottom: 0.4rem; }
+.choice-row { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+.choice-label { font-size: 0.85rem; color: var(--muted); min-width: 9rem; }
+.score-chip { min-width: 2.2rem; justify-content: center; }
+.question-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+.question-list li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.interview-summary { margin: 0; font-size: 0.82rem; color: var(--muted); }
+.interview-actions { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.86rem; }
+.day-marks .mark.next { background: color-mix(in srgb, var(--ok) 16%, transparent); color: #127a63; }

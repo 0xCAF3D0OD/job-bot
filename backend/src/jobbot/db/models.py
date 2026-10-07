@@ -379,6 +379,8 @@ class Application(Base):
     contact_phone: Mapped[str | None] = mapped_column(Text)
     # Demandé par le formulaire de saisie de Job-Room.
     contact_email: Mapped[str | None] = mapped_column(Text)
+    # Date d'entretien pour laquelle le rappel « fais le point » est parti (docs/23 §1).
+    interview_reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     job_title: Mapped[str] = mapped_column(Text)
     location: Mapped[str | None] = mapped_column(Text)
     # « plein temps » ou « temps partiel (80 %) », comme sur le formulaire ORP.
@@ -699,3 +701,43 @@ class AlertSetup(Base):
     )
     site: Mapped[str] = mapped_column(Text, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Interview(Base):
+    """Retour d'entretien (docs/23) : déroulé, ressenti, questions, enseignements, suite."""
+
+    __tablename__ = "interviews"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    application_id: Mapped[int] = mapped_column(
+        ForeignKey("applications.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str | None] = mapped_column(Text)
+    held_at: Mapped[date | None] = mapped_column(Date)
+    format: Mapped[str | None] = mapped_column(Text)
+    duration: Mapped[str | None] = mapped_column(Text)
+    interviewers: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    people_count: Mapped[int | None] = mapped_column(SmallInteger)
+    rating: Mapped[int] = mapped_column(SmallInteger)
+    stress: Mapped[int | None] = mapped_column(SmallInteger)
+    interest: Mapped[str | None] = mapped_column(Text)
+    outlook: Mapped[str | None] = mapped_column(Text)
+    # [{text, difficult}]
+    questions: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    salary_asked: Mapped[bool | None]
+    salary_answer: Mapped[str | None] = mapped_column(Text)
+    went_well: Mapped[str | None] = mapped_column(Text)
+    went_badly: Mapped[str | None] = mapped_column(Text)
+    to_prepare: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    my_questions: Mapped[str | None] = mapped_column(Text)
+    missed_questions: Mapped[str | None] = mapped_column(Text)
+    learned: Mapped[str | None] = mapped_column(Text)
+    warnings: Mapped[str | None] = mapped_column(Text)
+    next_step: Mapped[str | None] = mapped_column(Text)
+    next_step_at: Mapped[date | None] = mapped_column(Date)
+    thanks: Mapped[str | None] = mapped_column(Text)
+    employer_feedback: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )

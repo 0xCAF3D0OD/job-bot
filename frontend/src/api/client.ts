@@ -90,3 +90,5 @@ export type ProfileList = Schemas["ProfileList"];
 export type Me = Schemas["Me"];
 export type AlertsPage = Schemas["AlertsPage"];
 export type AlertSearch = Schemas["AlertSearchOut"];
+export type Interview = Schemas["InterviewOut"];
+export type InterviewIn = Schemas["InterviewIn"];

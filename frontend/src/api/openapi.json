@@ -4189,6 +4189,187 @@
           }
         }
       }
+    },
+    "/api/applications/{application_id}/interviews": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "List Interviews",
+        "operationId": "listInterviews",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InterviewOut"
+                  },
+                  "title": "Response Listinterviews"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Add Interview",
+        "operationId": "addInterview",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InterviewIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interviews/{interview_id}": {
+      "put": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Update Interview",
+        "operationId": "updateInterview",
+        "parameters": [
+          {
+            "name": "interview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Interview Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InterviewIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Delete Interview",
+        "operationId": "deleteInterview",
+        "parameters": [
+          {
+            "name": "interview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Interview Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4858,6 +5039,14 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "interviews": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewOut"
+            },
+            "type": "array",
+            "title": "Interviews",
+            "default": []
           }
         },
         "type": "object",
@@ -6360,6 +6549,719 @@
           "items"
         ],
         "title": "Inbox"
+      },
+      "InterviewIn": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "rh",
+                  "manager",
+                  "technique",
+                  "test",
+                  "final",
+                  "autre"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "held_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held At"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sur_place",
+                  "visio",
+                  "telephone"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "moins_30",
+                  "30_60",
+                  "plus_60"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "interviewers": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "rh",
+                "manager",
+                "equipe",
+                "direction"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Interviewers"
+          },
+          "people_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 30.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "People Count"
+          },
+          "rating": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating"
+          },
+          "stress": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stress"
+          },
+          "interest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "more",
+                  "same",
+                  "less"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest"
+          },
+          "outlook": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "unsure",
+                  "negative"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outlook"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewQuestion"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Questions"
+          },
+          "salary_asked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Asked"
+          },
+          "salary_answer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Answer"
+          },
+          "went_well": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Went Well"
+          },
+          "went_badly": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Went Badly"
+          },
+          "to_prepare": {
+            "items": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "To Prepare"
+          },
+          "my_questions": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Questions"
+          },
+          "missed_questions": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missed Questions"
+          },
+          "learned": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Learned"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warnings"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "rien",
+                  "entretien",
+                  "reponse",
+                  "test"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step"
+          },
+          "next_step_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step At"
+          },
+          "thanks": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sent",
+                  "no",
+                  "todo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thanks"
+          },
+          "employer_feedback": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Feedback"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "title": "InterviewIn",
+        "description": "Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2)."
+      },
+      "InterviewOut": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "rh",
+                  "manager",
+                  "technique",
+                  "test",
+                  "final",
+                  "autre"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "held_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held At"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sur_place",
+                  "visio",
+                  "telephone"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "moins_30",
+                  "30_60",
+                  "plus_60"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "interviewers": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "rh",
+                "manager",
+                "equipe",
+                "direction"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Interviewers"
+          },
+          "people_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 30.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "People Count"
+          },
+          "rating": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating"
+          },
+          "stress": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stress"
+          },
+          "interest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "more",
+                  "same",
+                  "less"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interest"
+          },
+          "outlook": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "unsure",
+                  "negative"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outlook"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewQuestion"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Questions"
+          },
+          "salary_asked": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Asked"
+          },
+          "salary_answer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Answer"
+          },
+          "went_well": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Went Well"
+          },
+          "went_badly": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Went Badly"
+          },
+          "to_prepare": {
+            "items": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "To Prepare"
+          },
+          "my_questions": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Questions"
+          },
+          "missed_questions": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missed Questions"
+          },
+          "learned": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Learned"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warnings"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "rien",
+                  "entretien",
+                  "reponse",
+                  "test"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step"
+          },
+          "next_step_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step At"
+          },
+          "thanks": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sent",
+                  "no",
+                  "todo"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thanks"
+          },
+          "employer_feedback": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Feedback"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating",
+          "id",
+          "application_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "InterviewOut"
+      },
+      "InterviewQuestion": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "difficult": {
+            "type": "boolean",
+            "title": "Difficult",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "InterviewQuestion"
+      },
+      "InterviewToReview": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "interview_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Interview On"
+          },
+          "link": {
+            "type": "string",
+            "title": "Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "company",
+          "interview_on",
+          "link"
+        ],
+        "title": "InterviewToReview",
+        "description": "Entretien passé sans retour (docs/23 §1)."
       },
       "JobRoomFieldOut": {
         "properties": {
@@ -9925,6 +10827,14 @@
             "type": "integer",
             "title": "Alerts Waiting",
             "default": 0
+          },
+          "interviews_to_review": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewToReview"
+            },
+            "type": "array",
+            "title": "Interviews To Review",
+            "default": []
           }
         },
         "type": "object",
