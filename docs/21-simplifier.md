@@ -1,6 +1,6 @@
 # 21 — Simplifier : moins de texte, un chemin clair (version 0.14.0)
 
-> Statut : **validé** le 2026-10-07. livré : PR a (textes, « Comment ça marche »).
+> Statut : **validé** le 2026-10-07. livré : PR a (textes, « Comment ça marche »), PR b (Alertes).
 > Retours d'usage du 2026-10-07 : « trop d'informations, l'utilisateur peut être perdu ; moi-même je le suis quand je parcours la plateforme ».
 
 ## 1. Le constat
@@ -82,3 +82,11 @@ Aucune fonction n'est supprimée : seuls l'ordre, les textes et ce qui est visib
 - **Jargon technique** retiré de l'écran (`JOBBOT_…`, `.env`, `make dev`) : l'écran dit « réglage d'installation, voir le README », et le README a une nouvelle section **« Réglages d'installation »**. Seule exception : la page de connexion, quand aucun compte n'existe, garde la commande `jobbot set-password` (sans elle, impossible de se connecter).
 - **« Comment ça marche »** : cinq étapes cochées automatiquement (au moins une alerte lue, une offre triée, une candidature envoyée, une réponse suivie, un mois de preuves remis), chacune avec son lien et l'endroit où la faire ; masquable. « Pour bien démarrer » reste en dessous pour la configuration.
 - Les pages Alertes, détail d'une offre, Preuves ORP, Réglages et Profil seront réorganisées dans les PR b et c.
+
+## Écarts avec la PR b
+
+- **Quand l'assistant s'affiche** : tant qu'aucune alerte n'est ni créée ni reçue ; ensuite le résumé, avec « Ajouter des alertes avec l'assistant » pour le relancer.
+- **Étape 2** : un site à la fois, avec un bouton « Ouvrir … » par recherche ; « C'est fait, site suivant » note l'alerte créée pour toutes les recherches sur ce site ; « Passer ce site » ne note rien.
+- **Résumé** : un point par recherche — vert (reçue, avec les sites), orange (créée depuis 3 jours sans rien reçu), violet pâle (créée, en attente du premier envoi), gris (à créer) ; l'aide au transfert (boîte, dossier, expéditeurs) n'apparaît que pour les sites en orange.
+- **« Gérer mes alertes »** ouvre le tableau complet ; « ← Retour au résumé ».
+- **Alertes reçues** : repliées (« Voir les alertes reçues »), chargées seulement à l'ouverture.

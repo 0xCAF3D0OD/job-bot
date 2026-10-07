@@ -981,3 +981,21 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .journey li.done a { color: var(--muted); }
 .journey .tick { width: 1.2rem; height: 1.2rem; flex: none; border: 1.5px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.75rem; color: #fff; align-self: center; }
 .journey li.done .tick { background: var(--ok); border-color: var(--ok); }
+
+/* Alertes : assistant et résumé (docs/21 §4) */
+.wizard { display: grid; gap: 0.8rem; padding: 1.4rem; max-width: 46rem; }
+.wizard h2 { margin: 0; font-size: 1.3rem; }
+.wizard-step { margin: 0; font-size: 0.8rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.wizard-links { display: grid; gap: 0.5rem; justify-items: start; }
+.wizard .inline-form input { min-width: 0; }
+.alerts-summary { display: grid; gap: 0.8rem; padding: 1.2rem 1.4rem; }
+.summary-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.summary-head p { margin: 0; }
+.summary-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.summary-list li { display: flex; gap: 0.6rem; align-items: baseline; }
+.summary-list .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--border); flex: none; align-self: center; }
+.summary-list .ok .dot { background: var(--ok); }
+.summary-list .late .dot { background: #e08a2e; }
+.summary-list .pending .dot { background: color-mix(in srgb, var(--accent) 55%, var(--surface)); }
+.journal-toggle { margin-top: 1.5rem; }
+.journal-toggle > summary { cursor: pointer; color: var(--accent); font-weight: 500; margin-bottom: 0.8rem; }
