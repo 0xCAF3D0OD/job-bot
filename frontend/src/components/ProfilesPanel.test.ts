@@ -57,7 +57,7 @@ describe("ProfilesPanel", () => {
     expect((wrapper.find("[data-test=profile-keywords]").element as HTMLInputElement).value).toBe("infirmière, EMS");
   });
 
-  it("menu du compte : Profil, Réglages, profil affiché retenu, rechargement", async () => {
+  it("menu du compte : profil affiché retenu, rechargement", async () => {
     GET.mockResolvedValue({ data: { current_id: 1, items: [main, nurse] } });
     const reload = vi.fn();
     vi.stubGlobal("location", { ...window.location, reload });
@@ -66,8 +66,7 @@ describe("ProfilesPanel", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=account-panel]").exists()).toBe(false);
     await wrapper.find("[data-test=account-menu]").trigger("click");
-    const panel = wrapper.find("[data-test=account-panel]");
-    expect(panel.findAll("a").map((a) => a.text())).toEqual(["Profil", "Réglages"]);
+    expect(wrapper.find("[data-test=account-panel]").findAll("a")).toHaveLength(0);
     await wrapper.find("[data-test=profile-switcher]").setValue("2");
     expect(localStorage.getItem("jobbot-profile")).toBe("2");
     expect(reload).toHaveBeenCalled();

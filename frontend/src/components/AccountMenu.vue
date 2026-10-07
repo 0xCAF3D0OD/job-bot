@@ -4,17 +4,16 @@ import { useRouter } from "vue-router";
 
 import { useAuth } from "../composables/useAuth";
 import { useProfiles } from "../composables/useProfiles";
-import { navigation } from "../router";
 import AppIcon from "./AppIcon.vue";
 
-// Menu du compte : Profil, Réglages, profil affiché, déconnexion. Garde la barre du haut
-// sur une seule ligne.
+// Menu du compte (docs/19 §1) : profil affiché (profils d'essai) et déconnexion.
 const router = useRouter();
 const { me, logout } = useAuth();
 const { list, current, load, choose } = useProfiles();
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
-const entries = computed(() => navigation.filter((e) => e.account));
+// Rien à proposer (un seul profil, connexion désactivée) : pas d'icône.
+const visible = computed(() => Boolean(me.value?.auth_enabled || (list.value && list.value.items.length > 1)));
 
 function onChange(event: Event): void {
   choose(Number((event.target as HTMLSelectElement).value));
@@ -47,6 +46,7 @@ onUnmounted(() => {
 
 <template>
   <div
+    v-if="visible"
     ref="root"
     class="account-menu"
   >
@@ -73,15 +73,6 @@ onUnmounted(() => {
       >
         Connecté : <strong>{{ me.username }}</strong>
       </p>
-      <RouterLink
-        v-for="entry in entries"
-        :key="entry.name"
-        :to="entry.path"
-        role="menuitem"
-        @click="open = false"
-      >
-        {{ entry.label }}
-      </RouterLink>
       <label
         v-if="list && list.items.length > 1"
         class="account-profile"

@@ -91,7 +91,7 @@ async def test_grouped_notification_once_per_offer(rt: Runtime, sent: list[Messa
         "88 · Offre 2 — Acme SA (Lausanne, VD)",
         "72 · Offre 1 — Acme SA (Lausanne, VD)",
     ]
-    assert message.priority == 4 and message.click == "http://jobbot.local/offres?tri=score"
+    assert message.priority == 4 and message.click == "http://jobbot.local/candidatures/offres?tri=score"
 
     assert (await service.notify_new_scores(rt)).offers == 0
     # Une note basse déjà vue ne ressort pas si le seuil baisse ensuite.

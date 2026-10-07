@@ -196,11 +196,8 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
 <template>
   <section class="offers-page">
+    <!-- Titre et onglets : en-tête de la rubrique Candidatures (docs/19 §2). -->
     <div class="offers-heading">
-      <div>
-        <span class="eyebrow">Offres</span>
-        <h1>Les offres pour toi</h1>
-      </div>
       <button
         type="button"
         class="secondary filters-toggle"

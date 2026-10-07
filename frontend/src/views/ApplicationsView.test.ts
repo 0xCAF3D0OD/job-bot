@@ -84,16 +84,20 @@ function mockApi(orpMonth: () => unknown = () => month(), applications: unknown[
   );
 }
 
-async function mountView(path = "/candidatures") {
+// Onglets de la rubrique Candidatures (docs/19 §2) : la vue vient de la route.
+async function mountView(path = "/candidatures/suivi") {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: "/candidatures", component: ApplicationsView },
+      { path: "/candidatures/suivi", component: ApplicationsView, props: { view: "suivi" } },
+      { path: "/candidatures/preuves", component: ApplicationsView, props: { view: "orp" } },
+      { path: "/candidatures/journal", component: ApplicationsView, props: { view: "journal" } },
       { path: "/:any(.*)*", component: { template: "<div />" } },
     ],
   });
   await router.push(path);
-  const wrapper = mount(ApplicationsView, { global: { plugins: [router] } });
+  const view = path.includes("preuves") ? "orp" : path.includes("journal") ? "journal" : "suivi";
+  const wrapper = mount(ApplicationsView, { props: { view }, global: { plugins: [router] } });
   await flushPromises();
   return { wrapper, router };
 }
@@ -104,7 +108,6 @@ describe("Candidatures, page réunie", () => {
     mockApi(() => month(), [application, old]);
     const { wrapper } = await mountView();
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves à remettre");
-    expect(wrapper.find("[data-test=tab-orp]").text()).toContain("1");
     expect(wrapper.find("[data-test=follow-up]").text()).toContain("Ancienne SA");
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
     await wrapper.find("[data-test=all-months]").setValue(true);
@@ -114,9 +117,9 @@ describe("Candidatures, page réunie", () => {
   it("onglet Journal des recherches", async () => {
     mockApi();
     GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/orp" ? month() : path === "/api/searches" ? { items: [], total: 0 } : [] }));
-    const { wrapper } = await mountView("/candidatures?vue=journal");
+    const { wrapper } = await mountView("/candidatures/journal");
     expect(wrapper.find("[data-test=month]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=tab-journal]").classes()).toContain("active");
+    expect(wrapper.find("[data-test=goal]").exists()).toBe(false);
   });
 });
 
@@ -179,7 +182,7 @@ describe("Candidatures, onglet Suivi", () => {
 describe("Candidatures, onglet Preuves ORP", () => {
   it("affiche le mois, l'état et les lignes à compléter", async () => {
     mockApi();
-    const { wrapper } = await mountView("/candidatures?vue=orp");
+    const { wrapper } = await mountView("/candidatures/preuves");
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: undefined } } });
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves à remettre avant le 5 novembre 2026");
     expect(wrapper.findAll("[data-test=orp-row]")).toHaveLength(2);
@@ -194,7 +197,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
   it("compléter une ligne ouvre la candidature et l'enregistre", async () => {
     mockApi(() => month(), [{ ...application, id: 2, sent_at: "2026-10-02", status: "refus" }]);
     PUT.mockResolvedValue({ data: { id: 2 } });
-    const { wrapper } = await mountView("/candidatures?vue=orp");
+    const { wrapper } = await mountView("/candidatures/preuves");
     // Chaque ligne se modifie ; « À compléter » ouvre le même formulaire.
     expect(wrapper.findAll("[data-test=edit-row]")).toHaveLength(2);
     await wrapper.find("[data-test=complete]").trigger("click");
@@ -215,7 +218,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     PUT.mockResolvedValue({ response: { status: 204 } });
     DELETE.mockResolvedValue({ response: { status: 204 } });
     vi.spyOn(window, "confirm").mockReturnValue(true);
-    const { wrapper } = await mountView("/candidatures?vue=orp");
+    const { wrapper } = await mountView("/candidatures/preuves");
     await wrapper.find("[data-test=submit]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
@@ -229,7 +232,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi();
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
-    const { wrapper } = await mountView("/candidatures?vue=orp");
+    const { wrapper } = await mountView("/candidatures/preuves");
     await wrapper.find("[data-test=job-room]").setValue(true);
     expect(wrapper.findAll("[data-test=job-room-row]")).toHaveLength(2);
     await wrapper.findAll("[data-test=copy]")[1]!.trigger("click");
@@ -240,10 +243,10 @@ describe("Candidatures, onglet Preuves ORP", () => {
 
   it("navigation de mois : passe par l'URL", async () => {
     mockApi();
-    const { wrapper, router } = await mountView("/candidatures?vue=orp");
+    const { wrapper, router } = await mountView("/candidatures/preuves");
     await wrapper.find("[data-test=prev-month]").trigger("click");
     await flushPromises();
-    expect(router.currentRoute.value.query).toEqual({ vue: "orp", mois: "2026-09" });
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/preuves?mois=2026-09");
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: "2026-09" } } });
   });
 });
@@ -253,7 +256,7 @@ describe("Candidatures, colonnes des preuves", () => {
   it("masque une colonne à l'écran et enregistre le choix", async () => {
     mockApi(() => month(), [], { visible: ["result", "url"] });
     PUT.mockResolvedValue({ data: { visible: ["result"] } });
-    const { wrapper } = await mountView("/candidatures?vue=orp");
+    const { wrapper } = await mountView("/candidatures/preuves");
     const headers = () => wrapper.findAll(".orp-table th").map((th) => th.text());
     expect(headers()).toEqual(["Date", "Entreprise", "Poste", "Résultat", "Lien", "Actions"]);
     // La ligne sans adresse garde son « À compléter » même si la colonne adresse est masquée.

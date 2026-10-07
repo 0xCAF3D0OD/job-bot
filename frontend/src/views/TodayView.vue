@@ -111,7 +111,7 @@ onMounted(() => void load());
 
       <div class="today-stats">
         <RouterLink
-          to="/offres"
+          to="/candidatures/offres"
           class="stat"
           data-test="stat-review"
         >
@@ -119,7 +119,7 @@ onMounted(() => void load());
           <span>offre(s) à examiner</span>
         </RouterLink>
         <RouterLink
-          to="/candidatures"
+          to="/candidatures/suivi"
           class="stat"
           data-test="stat-month"
         >
@@ -127,7 +127,7 @@ onMounted(() => void load());
           <span>candidature(s) en {{ formatMonth(today.month) }}</span>
         </RouterLink>
         <RouterLink
-          to="/candidatures"
+          to="/candidatures/suivi"
           :class="['stat', { warn: today.to_follow_up }]"
           data-test="stat-follow-up"
         >
@@ -135,7 +135,7 @@ onMounted(() => void load());
           <span>à relancer (sans réponse depuis 10 jours)</span>
         </RouterLink>
         <RouterLink
-          :to="{ path: '/candidatures', query: { vue: 'orp' } }"
+          to="/candidatures/preuves"
           :class="['stat', { warn: today.orp_due_month }]"
           data-test="stat-orp"
         >
@@ -175,7 +175,7 @@ onMounted(() => void load());
             </li>
           </ul>
           <RouterLink
-            :to="{ path: '/offres', query: { tri: 'score' } }"
+            :to="{ path: '/candidatures/offres', query: { tri: 'score' } }"
             class="link"
           >
             Voir toutes les offres

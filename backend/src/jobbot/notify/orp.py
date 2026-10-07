@@ -84,10 +84,10 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
                 title=f"{now_counts.count} / {target} candidatures en {month_name(current)}",
                 message=f"Il reste {days_left} jour(s) pour atteindre l'objectif.",
                 tags=["dart"],
-                click=f"{base}/offres",
+                click=f"{base}/candidatures/offres",
             ),
             kind="orp_target",
-            link="/offres",
+            link="/candidatures/offres",
         )
         await _mark(runtime, current, current_sent, "under_target", today)
         sent_count += 1
@@ -114,10 +114,10 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
                     message=details + ". PDF, CSV ou saisie Job-Room depuis la page ORP.",
                     priority=4 if key == "eve" else 3,
                     tags=["calendar"],
-                    click=f"{base}/candidatures?vue=orp&mois={previous}",
+                    click=f"{base}/candidatures/preuves?mois={previous}",
                 ),
                 kind="orp_due",
-                link=f"/candidatures?vue=orp&mois={previous}",
+                link=f"/candidatures/preuves?mois={previous}",
             )
             await _mark(runtime, previous, previous_sent, key, today)
             sent_count += 1

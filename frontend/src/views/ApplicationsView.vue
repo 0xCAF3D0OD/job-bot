@@ -8,20 +8,18 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import ApplicationsTable from "../components/ApplicationsTable.vue";
 import JournalPanel from "../components/JournalPanel.vue";
 import OrpSheet from "../components/OrpSheet.vue";
-import PageHero from "../components/PageHero.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { formatMonth, shiftMonth } from "../format";
 
-// Candidatures et preuves ORP réunies (docs/18 §2) : un en-tête commun pour le mois,
-// puis Suivi, Preuves ORP et Journal des recherches.
+// Suivi, Preuves ORP et Journal des recherches : onglets de la rubrique Candidatures
+// (docs/18 §2, docs/19 §2), avec un en-tête commun pour le mois.
 type View = "suivi" | "orp" | "journal";
+const props = defineProps<{ view: View }>();
 const REMIND_AFTER_DAYS = 10;
 
 const route = useRoute();
 const router = useRouter();
-const view = computed<View>(() =>
-  route.query.vue === "orp" ? "orp" : route.query.vue === "journal" ? "journal" : "suivi",
-);
+const view = computed<View>(() => props.view);
 const orp = ref<OrpMonth | null>(null);
 const all = ref<Application[]>([]);
 const allMonths = ref(false);
@@ -67,12 +65,6 @@ function go(delta: number): void {
   void router.push({ query: { ...route.query, mois: shiftMonth(month.value, delta) } });
 }
 
-function tabLink(target: View) {
-  const query: Record<string, string> = {};
-  if (target !== "suivi") query.vue = target;
-  if (typeof route.query.mois === "string") query.mois = route.query.mois;
-  return { query };
-}
 
 function today(): string {
   const now = new Date();
@@ -152,46 +144,8 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <PageHero
-    eyebrow="Candidatures"
-    title="Tes candidatures et tes preuves ORP"
-    subtitle="Le suivi de chaque candidature et le formulaire du mois, prêt à remettre à ton conseiller ou à recopier dans Job-Room."
-  />
-
-  <section class="band">
-    <div class="container">
-      <nav
-        class="prep-tabs"
-        aria-label="Candidatures"
-      >
-        <RouterLink
-          :to="tabLink('suivi')"
-          :class="{ active: view === 'suivi' }"
-          data-test="tab-suivi"
-        >
-          Suivi
-        </RouterLink>
-        <RouterLink
-          :to="tabLink('orp')"
-          :class="{ active: view === 'orp' }"
-          data-test="tab-orp"
-        >
-          Preuves ORP
-          <span
-            v-if="orp?.incomplete"
-            class="tab-count"
-            :title="`${orp.incomplete} ligne(s) à compléter`"
-          >{{ orp.incomplete }}</span>
-        </RouterLink>
-        <RouterLink
-          :to="tabLink('journal')"
-          :class="{ active: view === 'journal' }"
-          data-test="tab-journal"
-        >
-          Journal des recherches
-        </RouterLink>
-      </nav>
-
+  <section class="jobs-body">
+    <div>
       <JournalPanel v-if="view === 'journal'" />
       <template v-else-if="orp">
         <div class="applications-head">

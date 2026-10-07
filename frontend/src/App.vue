@@ -20,10 +20,8 @@ const route = useRoute();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 // Sans connexion : seulement les Actualités dans le menu (docs/18 §1).
-// Profil et Réglages sont dans le menu du compte (une seule ligne de liens).
-const menu = computed(() =>
-  loggedIn.value ? navigation.filter((e) => !e.account) : navigation.filter((e) => PUBLIC_ROUTES.has(e.name)),
-);
+// Six entrées (docs/19 §1) ; sans connexion, seulement les Actualités (docs/18 §1).
+const menu = computed(() => (loggedIn.value ? navigation : navigation.filter((e) => PUBLIC_ROUTES.has(e.name))));
 
 function onUnauthorized(): void {
   expired();

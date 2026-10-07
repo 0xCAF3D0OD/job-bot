@@ -102,7 +102,7 @@ def offers_message(
         message="\n".join(lines),
         priority=4 if best >= 85 else 3,
         tags=["briefcase"],
-        click=f"{settings.public_url.rstrip('/')}/offres?tri=score",
+        click=f"{settings.public_url.rstrip('/')}/candidatures/offres?tri=score",
     )
 
 
@@ -144,7 +144,7 @@ async def notify_new_scores(runtime: Runtime) -> NotifyResult:
             runtime,
             offers_message(settings, [(r[1] or 0, r[2], r[3], r[4]) for r in rows]),
             kind="offers",
-            link="/offres?tri=score",
+            link="/candidatures/offres?tri=score",
         )
         async with runtime.sessionmaker.begin() as session:
             await session.execute(
@@ -206,7 +206,7 @@ async def send_test(settings: Settings) -> None:
             title="job-bot : notification de test",
             message="Les notifications fonctionnent. Tu seras prévenu des offres bien notées.",
             tags=["white_check_mark"],
-            click=f"{settings.public_url.rstrip('/')}/offres",
+            click=f"{settings.public_url.rstrip('/')}/candidatures/offres",
         ),
     )
 
@@ -247,10 +247,10 @@ async def notify_reminders(runtime: Runtime, today: date | None = None) -> int:
             title=f"{len(due)} candidature(s) sans réponse depuis {REMIND_AFTER_DAYS} jours",
             message="Relancer ?\n" + "\n".join(lines),
             tags=["hourglass"],
-            click=f"{settings.public_url.rstrip('/')}/candidatures",
+            click=f"{settings.public_url.rstrip('/')}/candidatures/suivi",
         ),
         kind="follow_up",
-        link="/candidatures",
+        link="/candidatures/suivi",
     )
     async with runtime.sessionmaker.begin() as session:
         await session.execute(

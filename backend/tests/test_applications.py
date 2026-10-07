@@ -257,7 +257,7 @@ async def test_reminders_once_after_ten_days(rt: Runtime, sent: list[Message]) -
         [bell] = (
             await session.scalars(select(Notification).where(Notification.kind == "follow_up"))
         ).all()
-    assert bell.link == "/candidatures" and bell.read_at is None
+    assert bell.link == "/candidatures/suivi" and bell.read_at is None
     assert await notify.notify_reminders(rt, today) == 0  # une seule fois
 
     configured = Runtime.create(make_settings(ntfy_topic="sujet"))

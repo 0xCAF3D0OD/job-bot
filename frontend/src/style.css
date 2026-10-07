@@ -903,3 +903,18 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .account-name { margin: 0 0 0.3rem; padding: 0.3rem 0.6rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.82rem; color: var(--muted); }
 .account-profile { display: grid; gap: 0.25rem; padding: 0.5rem 0.6rem; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 0.2rem 0; }
 .account-profile select { padding: 0.3rem 0.4rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+
+/* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
+.jobs-head { max-width: 88rem; margin: 0 auto; padding: 1.75rem 1.5rem 0; }
+.jobs-head h1 { font-size: 2rem; margin: 0.6rem 0 1rem; }
+.jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
+.jobs-tabs a { white-space: nowrap; }
+.jobs-head + .offers-page { padding-top: 1.25rem; }
+.jobs-head + .offers-page .offers-heading { margin-bottom: 0; }
+.jobs-body { max-width: 88rem; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+@media (max-width: 720px) {
+  .jobs-head { padding: 1.25rem 1rem 0; }
+  .jobs-head h1 { font-size: 1.6rem; }
+  .jobs-body { padding: 1.25rem 1rem 3rem; }
+  .jobs-head + .offers-page .offers-heading { margin-bottom: 1rem; }
+}
