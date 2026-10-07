@@ -53,8 +53,12 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
     await wrapper.find("[data-test=find-employer]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/employer", { params: { path: { offer_id: 4 } } });
-    expect(wrapper.text()).toContain("Pas trouvée chez l'employeur");
     expect(wrapper.emitted("changed")).toHaveLength(1);
+    // L'offre rechargée affiche l'état, une seule fois.
+    await wrapper.setProps({ offer: offer({ employer_status: "not_found", employer_checked_at: "2026-10-07T08:00:00Z" }) as never });
+    const line = wrapper.find("[data-test=employer-line]");
+    expect(line.text().match(/Pas trouvée/g)).toHaveLength(1);
+    expect(line.find("[data-test=find-employer]").text()).toBe("Chercher à nouveau");
   });
 
   it("agence, ou lien employeur déjà donné par jobup", async () => {

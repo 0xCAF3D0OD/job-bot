@@ -51,9 +51,7 @@ async function findEmployer(): Promise<void> {
       employerMessage.value = typeof detail === "string" ? `Recherche impossible : ${detail}.` : "Recherche impossible.";
       return;
     }
-    if (!data.employer_url && data.employer_status === "not_found") {
-      employerMessage.value = "Pas trouvée chez l'employeur : l'annonce n'y est peut-être pas publiée.";
-    }
+    // L'état (« Pas trouvée… », lien trouvé) s'affiche avec l'offre rechargée : pas de second message.
     emit("changed");
   } finally {
     employerBusy.value = false;
@@ -439,17 +437,14 @@ watch(
       class="hint employer-line"
       data-test="employer-line"
     >
-      <template v-if="offer.employer_url && offer.employer_checked_at">
-        Annonce trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
-        {{ shortDate.format(new Date(offer.employer_checked_at)) }}.
-      </template>
-      <template v-else-if="offer.employer_status === 'agency'">
-        Annonce d'agence : employeur non indiqué.
-      </template>
+      <span
+        v-if="offer.employer_url && offer.employer_checked_at"
+      >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
+        {{ shortDate.format(new Date(offer.employer_checked_at)) }}.</span>
+      <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
       <template v-else>
-        <template v-if="offer.employer_status === 'not_found' || offer.employer_status === 'gone'">
-          {{ offer.employer_status === "gone" ? "L'annonce a disparu du site de l'employeur." : "Pas trouvée chez l'employeur." }}
-        </template>
+        <span v-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
+        <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
         <button
           type="button"
           class="link"
@@ -463,7 +458,7 @@ watch(
       <span
         v-if="employerMessage"
         role="status"
-      > {{ employerMessage }}</span>
+      >{{ employerMessage }}</span>
     </p>
     <section
       v-if="offer.summary_role"
