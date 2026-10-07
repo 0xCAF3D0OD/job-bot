@@ -1,6 +1,7 @@
 """Rappels quotidiens : relance des candidatures sans réponse (docs/08 §5) et preuves ORP
 (objectif, remise, veille de la date limite ; docs/09 §5)."""
 
+from jobbot.assistant import service as assistant
 from jobbot.notify.inbox import purge
 from jobbot.notify.interviews import notify_interviews
 from jobbot.notify.orp import notify_orp
@@ -20,3 +21,4 @@ async def reminders_job(runtime: Runtime, ctx: RunContext) -> None:
         + await notify_interviews(runtime)  # « fais le point » le lendemain (docs/23)
     )
     await purge(runtime)  # alertes de la cloche de plus de 90 jours
+    await assistant.purge(runtime)  # discussions de l'assistant de plus de 30 jours

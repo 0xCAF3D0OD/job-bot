@@ -741,3 +741,32 @@ class Interview(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+
+class ChatConversation(Base):
+    """Discussion avec l'assistant (docs/24 §4), gardée 30 jours après la dernière réplique."""
+
+    __tablename__ = "chat_conversations"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+
+
+class ChatMessage(Base):
+    """Réplique d'une discussion : texte seulement (les lectures de données ne sont pas gardées)."""
+
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    conversation_id: Mapped[int] = mapped_column(
+        ForeignKey("chat_conversations.id", ondelete="CASCADE"), index=True
+    )
+    role: Mapped[str] = mapped_column(Text)  # user | assistant
+    content: Mapped[str] = mapped_column(Text)
+    # Page ouverte au moment de la question (/candidatures/suivi…).
+    page: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

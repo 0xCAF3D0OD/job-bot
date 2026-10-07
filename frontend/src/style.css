@@ -1092,3 +1092,38 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .coaching dd { margin: 0; color: var(--muted); }
 .preparation-sheet { display: grid; gap: 0.9rem; }
 .preparation-sheet section p { margin: 0; font-size: 0.9rem; }
+
+/* --- Assistant (docs/24) --- */
+.assistant-fab { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 25; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.1rem; border-radius: 999px; background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; box-shadow: 0 10px 28px rgba(99, 91, 255, 0.35); }
+.assistant-fab:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.assistant-fab-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 3px rgb(255 255 255 / 30%); }
+.assistant-panel { position: fixed; right: 1rem; bottom: 1rem; top: 5.2rem; z-index: 25; width: min(26rem, calc(100vw - 2rem)); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 18px 48px rgba(17, 17, 31, 0.18); overflow: hidden; }
+.assistant-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--divider); }
+.assistant-head-actions { display: flex; align-items: center; gap: 0.75rem; }
+.assistant-close { border: 0; background: none; font-size: 1.4rem; line-height: 1; padding: 0 0.2rem; color: var(--muted); cursor: pointer; }
+.assistant-body { flex: 1; overflow-y: auto; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.7rem; }
+.assistant-intro { font-size: 0.9rem; }
+.assistant-suggestions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.assistant-suggestions .chip { text-align: left; }
+.assistant-label { margin: 0.4rem 0 0.2rem; font-size: 0.78rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.assistant-recent { display: grid; gap: 0.15rem; }
+.assistant-recent-item { display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.45rem 0.55rem; border: 0; border-radius: 8px; background: none; text-align: left; font-size: 0.88rem; cursor: pointer; color: var(--text); }
+.assistant-recent-item:hover { background: var(--panel); }
+.assistant-recent-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assistant-line { max-width: 92%; font-size: 0.92rem; line-height: 1.5; }
+.assistant-line p { margin: 0 0 0.45rem; }
+.assistant-line p:last-child { margin-bottom: 0; }
+.assistant-line ul, .assistant-line ol { margin: 0 0 0.45rem; padding-left: 1.2rem; }
+.assistant-line.user { align-self: flex-end; background: var(--accent-soft); padding: 0.5rem 0.75rem; border-radius: 14px 14px 4px 14px; }
+.assistant-line.assistant { align-self: flex-start; }
+.assistant-line.error { color: var(--down); }
+.assistant-plain { white-space: pre-wrap; }
+.assistant-copy { margin: 0 0 0.45rem; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); padding: 0.55rem 0.7rem; }
+.assistant-copy pre { margin: 0 0 0.3rem; white-space: pre-wrap; font-family: inherit; font-size: 0.88rem; }
+.assistant-status { font-size: 0.85rem; }
+.assistant-form { display: flex; gap: 0.5rem; align-items: flex-end; padding: 0.7rem 0.9rem; border-top: 1px solid var(--divider); }
+.assistant-form textarea { flex: 1; resize: none; font: inherit; font-size: 0.92rem; }
+@media (max-width: 640px) {
+  .assistant-panel { inset: 0; width: auto; border-radius: 0; border: 0; z-index: 35; }
+  .assistant-fab { right: 0.9rem; bottom: 0.9rem; }
+}

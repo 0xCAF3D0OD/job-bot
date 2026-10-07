@@ -14,6 +14,7 @@ from jobbot.api.middleware import RequestContextMiddleware
 from jobbot.api.routes import (
     alerts,
     applications,
+    assistant,
     auth,
     collect,
     cvs,
@@ -78,6 +79,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
         return {"version": settings.version, "migration_head": head_revision()}
 
     app.include_router(auth.router)
+    app.include_router(assistant.router)
     app.include_router(status.router)
     app.include_router(collect.router)
     app.include_router(preferences.router)

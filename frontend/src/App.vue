@@ -7,6 +7,7 @@ import { UNAUTHORIZED_EVENT } from "./api/client";
 import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
+import AssistantPanel from "./components/AssistantPanel.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useNewsCount } from "./composables/useNewsCount";
@@ -133,4 +134,5 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
   <main>
     <RouterView />
   </main>
+  <AssistantPanel v-if="loggedIn" />
 </template>
