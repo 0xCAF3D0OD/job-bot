@@ -56,11 +56,13 @@ describe("Mes enseignements (docs/23 §3)", () => {
     expect(wrapper.find("[data-test=coaching]").text()).toContain("Prépare un exemple chiffré");
   });
 
-  it("aucun entretien : rien d'affiché", async () => {
+  it("aucun entretien : la section reste visible et explique comment la remplir", async () => {
     GET.mockResolvedValue({ data: insights({ count: 0 }) });
     const wrapper = mount(InterviewInsights);
     await flushPromises();
-    expect(wrapper.find("[data-test=insights]").exists()).toBe(false);
+    expect(wrapper.find("summary").text()).toBe("Mes enseignements");
+    expect(wrapper.find("[data-test=insights-empty]").text()).toContain("Faire le point sur l'entretien");
+    expect(wrapper.find("[data-test=coach]").exists()).toBe(false);
   });
 });
 
