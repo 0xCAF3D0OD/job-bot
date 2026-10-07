@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
-import type { Application, ApplicationStatus, OrpRow } from "../api/client";
+import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { applicationStatusLabel } from "../format";
+import { KINDS, NEXT_STEPS } from "../interviewLabels";
 
 // Carte d'une candidature (docs/22 §4) : statut, ce qui manque pour l'ORP, documents,
 // copie pour Job-Room de cette seule candidature.
@@ -11,7 +12,28 @@ const emit = defineEmits<{
   status: [application: Application, status: ApplicationStatus];
   edit: [application: Application];
   remove: [application: Application];
+  // Retour d'entretien (docs/23) : à créer (null) ou à revoir.
+  interview: [application: Application, interview: Interview | null];
 }>();
+
+// Dernier retour d'entretien, et retour attendu pour l'entretien passé (docs/23 §1, §3).
+const latest = computed<Interview | null>(() => props.application.interviews?.at(-1) ?? null);
+const needsFeedback = computed(() => {
+  const at = props.application.interview_at;
+  if (props.application.status !== "entretien" || !at) return false;
+  const day = new Date(at).toISOString().slice(0, 10);
+  return day <= new Date().toISOString().slice(0, 10) && !props.application.interviews?.some((i) => i.held_at === day);
+});
+const summary = computed(() => {
+  const i = latest.value;
+  if (!i) return "";
+  const parts = [(i.kind && KINDS[i.kind]) || "Entretien", `ressenti ${i.rating}/5`];
+  if (i.next_step && i.next_step !== "rien") {
+    const when = i.next_step_at ? ` avant le ${new Date(`${i.next_step_at}T12:00:00`).toLocaleDateString("fr-CH")}` : "";
+    parts.push(`suite : ${(NEXT_STEPS[i.next_step] ?? "").toLowerCase()}${when}`);
+  }
+  return parts.join(" · ");
+});
 
 const jobRoom = ref(false);
 const menuOpen = ref(false);
@@ -120,6 +142,45 @@ const onStatus = (event: Event): void =>
       </select>
     </label>
 
+    <p
+      v-if="summary"
+      class="interview-summary"
+      data-test="interview-summary"
+    >
+      {{ summary }}
+    </p>
+    <p
+      v-if="application.status === 'entretien' || latest"
+      class="interview-actions"
+    >
+      <button
+        v-if="needsFeedback || (application.status === 'entretien' && !latest)"
+        type="button"
+        class="link"
+        data-test="interview-feedback"
+        @click="emit('interview', application, null)"
+      >
+        Faire le point sur l'entretien
+      </button>
+      <template v-if="latest">
+        <button
+          type="button"
+          class="link"
+          data-test="interview-open"
+          @click="emit('interview', application, latest)"
+        >
+          Voir le retour
+        </button>
+        <button
+          v-if="!needsFeedback"
+          type="button"
+          class="link"
+          @click="emit('interview', application, null)"
+        >
+          Ajouter un autre entretien
+        </button>
+      </template>
+    </p>
     <p
       v-if="orpRow?.missing.length"
       class="notice card-missing"

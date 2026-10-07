@@ -2,11 +2,19 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api, type Application, type ApplicationStatus, type OrpMonth } from "../api/client";
+import {
+  api,
+  type Application,
+  type ApplicationStatus,
+  type Interview,
+  type InterviewIn,
+  type OrpMonth,
+} from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
+import InterviewForm from "../components/InterviewForm.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
@@ -25,7 +33,8 @@ const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(n
 const error = ref("");
 const loaded = ref(false);
 const busy = ref(false);
-const selectedDay = ref<string | null>(null);
+// ?jour=AAAA-MM-JJ (lien du rappel « fais le point », docs/23 §1) : le jour s'ouvre d'emblée.
+const selectedDay = ref<string | null>(typeof route.query.jour === "string" ? route.query.jour : null);
 const layout = ref<"calendar" | "list">(readLayout());
 
 function readLayout(): "calendar" | "list" {
@@ -72,7 +81,10 @@ const dayCards = computed(() => {
   const day = selectedDay.value;
   if (!day) return [];
   return all.value.filter(
-    (a) => a.sent_at === day || (a.interview_at && new Date(a.interview_at).toISOString().slice(0, 10) === day),
+    (a) =>
+      a.sent_at === day ||
+      (a.interview_at && new Date(a.interview_at).toISOString().slice(0, 10) === day) ||
+      a.interviews?.some((i) => i.next_step_at === day),
   );
 });
 
@@ -198,6 +210,44 @@ async function remove(application: Application): Promise<void> {
   await api.DELETE("/api/applications/{application_id}", {
     params: { path: { application_id: application.id } },
   });
+  await load();
+}
+
+// Retour d'entretien (docs/23) : formulaire ouvert depuis une carte.
+const interviewing = ref<{ application: Application; interview: Interview | null } | null>(null);
+const interviewError = ref("");
+
+function openInterview(application: Application, interview: Interview | null): void {
+  interviewError.value = "";
+  interviewing.value = { application, interview };
+}
+
+function interviewDay(application: Application): string | null {
+  return application.interview_at ? new Date(application.interview_at).toISOString().slice(0, 10) : null;
+}
+
+async function saveInterview(value: InterviewIn): Promise<void> {
+  const current = interviewing.value;
+  if (!current) return;
+  const result = current.interview
+    ? await api.PUT("/api/interviews/{interview_id}", { params: { path: { interview_id: current.interview.id } }, body: value })
+    : await api.POST("/api/applications/{application_id}/interviews", {
+        params: { path: { application_id: current.application.id } },
+        body: value,
+      });
+  if (!result.data) {
+    interviewError.value = "Retour non enregistré : indique au moins ton ressenti global.";
+    return;
+  }
+  interviewing.value = null;
+  await load();
+}
+
+async function removeInterview(): Promise<void> {
+  const current = interviewing.value;
+  if (!current?.interview || !window.confirm("Supprimer ce retour d'entretien ?")) return;
+  await api.DELETE("/api/interviews/{interview_id}", { params: { path: { interview_id: current.interview.id } } });
+  interviewing.value = null;
   await load();
 }
 
@@ -391,6 +441,7 @@ onMounted(() => void load());
               @status="setStatus"
               @edit="edit"
               @remove="remove"
+              @interview="openInterview"
             />
           </div>
         </aside>
@@ -435,6 +486,17 @@ onMounted(() => void load());
     </template>
   </section>
 
+  <InterviewForm
+    v-if="interviewing"
+    :company="interviewing.application.company"
+    :initial="interviewing.interview"
+    :held-at="interviewing.interview?.held_at ?? interviewDay(interviewing.application)"
+    :with-employer-feedback="['refus', 'engagement'].includes(interviewing.application.status ?? '')"
+    :error="interviewError"
+    @submit="saveInterview"
+    @remove="removeInterview"
+    @close="interviewing = null"
+  />
   <ApplicationForm
     v-if="editing"
     :title="editing.id === null ? 'Ajouter une candidature' : 'Modifier la candidature'"

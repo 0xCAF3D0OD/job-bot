@@ -14,12 +14,14 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot.api.routes.interviews import InterviewOut
 from jobbot.api.routes.orp import mark_changed
 from jobbot.db.models import (
     Application,
     ApplicationMethod,
     ApplicationStatus,
     DraftKind,
+    Interview,
     Offer,
     OfferLink,
     OfferStatus,
@@ -212,6 +214,8 @@ class ApplicationOut(ApplicationUpdate):
     orp_month: str
     reminded_at: datetime | None
     created_at: datetime
+    # Retours d'entretien (docs/23), dans l'ordre des entretiens ; remplis par la liste.
+    interviews: list["InterviewOut"] = []
 
 
 class ApplicationPrefill(ApplicationBase):
@@ -285,7 +289,18 @@ async def list_applications(
     if month:
         query = query.where(Application.orp_month == month)
     async with _runtime(request).sessionmaker() as session:
-        return [ApplicationOut.model_validate(a) for a in await session.scalars(query)]
+        applications = list(await session.scalars(query))
+        interviews: dict[int, list[InterviewOut]] = {}
+        for row in await session.scalars(
+            select(Interview)
+            .where(Interview.application_id.in_([a.id for a in applications]))
+            .order_by(Interview.held_at.nulls_last(), Interview.id)
+        ):
+            interviews.setdefault(row.application_id, []).append(InterviewOut.model_validate(row))
+    return [
+        ApplicationOut.model_validate(a).model_copy(update={"interviews": interviews.get(a.id, [])})
+        for a in applications
+    ]
 
 
 @router.get("/applications/summary", operation_id="getApplicationsSummary")

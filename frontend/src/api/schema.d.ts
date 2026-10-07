@@ -1491,6 +1491,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/interviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Interviews */
+        get: operations["listInterviews"];
+        put?: never;
+        /** Add Interview */
+        post: operations["addInterview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interviews/{interview_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Interview */
+        put: operations["updateInterview"];
+        post?: never;
+        /** Delete Interview */
+        delete: operations["deleteInterview"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1673,6 +1709,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Interviews
+             * @default []
+             */
+            interviews: components["schemas"]["InterviewOut"][];
         };
         /** ApplicationPrefill */
         ApplicationPrefill: {
@@ -2140,6 +2181,152 @@ export interface components {
             unread: number;
             /** Items */
             items: components["schemas"]["NotificationOut"][];
+        };
+        /**
+         * InterviewIn
+         * @description Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2).
+         */
+        InterviewIn: {
+            /** Kind */
+            kind?: ("rh" | "manager" | "technique" | "test" | "final" | "autre") | null;
+            /** Held At */
+            held_at?: string | null;
+            /** Format */
+            format?: ("sur_place" | "visio" | "telephone") | null;
+            /** Duration */
+            duration?: ("moins_30" | "30_60" | "plus_60") | null;
+            /** Interviewers */
+            interviewers?: ("rh" | "manager" | "equipe" | "direction")[];
+            /** People Count */
+            people_count?: number | null;
+            /** Rating */
+            rating: number;
+            /** Stress */
+            stress?: number | null;
+            /** Interest */
+            interest?: ("more" | "same" | "less") | null;
+            /** Outlook */
+            outlook?: ("positive" | "unsure" | "negative") | null;
+            /** Questions */
+            questions?: components["schemas"]["InterviewQuestion"][];
+            /** Salary Asked */
+            salary_asked?: boolean | null;
+            /** Salary Answer */
+            salary_answer?: string | null;
+            /** Went Well */
+            went_well?: string | null;
+            /** Went Badly */
+            went_badly?: string | null;
+            /** To Prepare */
+            to_prepare?: string[];
+            /** My Questions */
+            my_questions?: string | null;
+            /** Missed Questions */
+            missed_questions?: string | null;
+            /** Learned */
+            learned?: string | null;
+            /** Warnings */
+            warnings?: string | null;
+            /** Next Step */
+            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            /** Next Step At */
+            next_step_at?: string | null;
+            /** Thanks */
+            thanks?: ("sent" | "no" | "todo") | null;
+            /** Employer Feedback */
+            employer_feedback?: string | null;
+        };
+        /** InterviewOut */
+        InterviewOut: {
+            /** Kind */
+            kind?: ("rh" | "manager" | "technique" | "test" | "final" | "autre") | null;
+            /** Held At */
+            held_at?: string | null;
+            /** Format */
+            format?: ("sur_place" | "visio" | "telephone") | null;
+            /** Duration */
+            duration?: ("moins_30" | "30_60" | "plus_60") | null;
+            /** Interviewers */
+            interviewers?: ("rh" | "manager" | "equipe" | "direction")[];
+            /** People Count */
+            people_count?: number | null;
+            /** Rating */
+            rating: number;
+            /** Stress */
+            stress?: number | null;
+            /** Interest */
+            interest?: ("more" | "same" | "less") | null;
+            /** Outlook */
+            outlook?: ("positive" | "unsure" | "negative") | null;
+            /** Questions */
+            questions?: components["schemas"]["InterviewQuestion"][];
+            /** Salary Asked */
+            salary_asked?: boolean | null;
+            /** Salary Answer */
+            salary_answer?: string | null;
+            /** Went Well */
+            went_well?: string | null;
+            /** Went Badly */
+            went_badly?: string | null;
+            /** To Prepare */
+            to_prepare?: string[];
+            /** My Questions */
+            my_questions?: string | null;
+            /** Missed Questions */
+            missed_questions?: string | null;
+            /** Learned */
+            learned?: string | null;
+            /** Warnings */
+            warnings?: string | null;
+            /** Next Step */
+            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            /** Next Step At */
+            next_step_at?: string | null;
+            /** Thanks */
+            thanks?: ("sent" | "no" | "todo") | null;
+            /** Employer Feedback */
+            employer_feedback?: string | null;
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** InterviewQuestion */
+        InterviewQuestion: {
+            /** Text */
+            text: string;
+            /**
+             * Difficult
+             * @default false
+             */
+            difficult: boolean;
+        };
+        /**
+         * InterviewToReview
+         * @description Entretien passé sans retour (docs/23 §1).
+         */
+        InterviewToReview: {
+            /** Application Id */
+            application_id: number;
+            /** Company */
+            company: string;
+            /**
+             * Interview On
+             * Format: date
+             */
+            interview_on: string;
+            /** Link */
+            link: string;
         };
         /** JobRoomFieldOut */
         JobRoomFieldOut: {
@@ -3280,6 +3467,11 @@ export interface components {
              * @default 0
              */
             alerts_waiting: number;
+            /**
+             * Interviews To Review
+             * @default []
+             */
+            interviews_to_review: components["schemas"]["InterviewToReview"][];
         };
         /** TrainingMarkIn */
         TrainingMarkIn: {
@@ -6573,6 +6765,136 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AlertsPage"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listInterviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    addInterview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateInterview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                interview_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteInterview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                interview_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

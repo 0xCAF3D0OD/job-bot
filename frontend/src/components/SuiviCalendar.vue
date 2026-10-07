@@ -51,6 +51,12 @@ const interviews = computed(() => {
   for (const a of props.applications) if (a.interview_at) set.add(iso(new Date(a.interview_at)));
   return set;
 });
+// Prochaine étape annoncée en entretien (docs/23 §3) : « réponse attendue », etc.
+const nextSteps = computed(() => {
+  const set = new Set<string>();
+  for (const a of props.applications) for (const i of a.interviews ?? []) if (i.next_step_at) set.add(i.next_step_at);
+  return set;
+});
 const reminders = computed(() => {
   const set = new Set<string>();
   for (const a of props.applications) if (a.status === "en_attente") set.add(addDays(a.sent_at, REMIND_AFTER_DAYS));
@@ -63,6 +69,7 @@ function label(day: string): string {
   if (sent.length) parts.push(`${sent.length} candidature(s)`);
   if (interviews.value.has(day)) parts.push("entretien");
   if (reminders.value.has(day)) parts.push("à relancer");
+  if (nextSteps.value.has(day)) parts.push("suite attendue");
   return parts.join(", ");
 }
 </script>
@@ -128,6 +135,11 @@ function label(day: string): string {
               class="mark remind"
               data-test="mark-remind"
             >relancer</span>
+            <span
+              v-if="nextSteps.has(day)"
+              class="mark next"
+              data-test="mark-next"
+            >suite attendue</span>
           </span>
         </button>
       </template>

@@ -25,6 +25,7 @@ from jobbot.db.models import (
     Setting,
 )
 from jobbot.letters.service import load_identity
+from jobbot.notify import interviews as interview_reminders
 from jobbot.orp.service import load_due_day
 from jobbot.runtime import Runtime
 from jobbot.worker.tasks.collect import COLLECT_JOB
@@ -47,6 +48,15 @@ class JourneyStep(BaseModel):
     done: bool
 
 
+class InterviewToReview(BaseModel):
+    """Entretien passé sans retour (docs/23 §1)."""
+
+    application_id: int
+    company: str
+    interview_on: date
+    link: str
+
+
 class TodayOut(BaseModel):
     # Démarrage : affiché tant qu'une étape manque, sauf si Kevin l'a masqué.
     checklist: list[ChecklistItem]
@@ -66,6 +76,7 @@ class TodayOut(BaseModel):
     last_collect_at: datetime | None
     # Alertes créées sur un site depuis 3 jours sans rien avoir envoyé (docs/20 §1.4).
     alerts_waiting: int = 0
+    interviews_to_review: list[InterviewToReview] = []
 
 
 class OnboardingIn(BaseModel):
@@ -177,6 +188,15 @@ async def get_today(request: Request) -> TodayOut:
                 > 0,
             ),
         ]
+        interviews_to_review = [
+            InterviewToReview(
+                application_id=p.application_id,
+                company=p.company,
+                interview_on=p.interview_on,
+                link=p.link,
+            )
+            for p in await interview_reminders.to_review(session, today)
+        ]
         alerts_waiting = await alert_service.waiting(session)
         last_collect_at = await session.scalar(
             select(func.max(JobRun.finished_at)).where(
@@ -212,6 +232,7 @@ async def get_today(request: Request) -> TodayOut:
         orp_due_date=due_date(due_month, due_day) if due_month else None,
         last_collect_at=last_collect_at,
         alerts_waiting=alerts_waiting,
+        interviews_to_review=interviews_to_review,
     )
 
 
