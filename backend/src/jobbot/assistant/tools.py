@@ -86,6 +86,16 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "candidature",
+        "description": "Une candidature par son id : poste, entreprise, date, statut, relance, "
+        "entretien, ce qui manque pour l'ORP, l'offre liée et les retours d'entretien.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"id": {"type": "integer"}},
+            "required": ["id"],
+        },
+    },
+    {
         "name": "preuves_orp",
         "description": "Les preuves ORP d'un mois : nombre de candidatures, objectif, lignes à "
         "compléter, date limite de remise, état de la remise.",
@@ -136,6 +146,7 @@ LABELS = {
     "offres_a_examiner": "les offres à examiner",
     "offre": "l'offre",
     "candidatures": "tes candidatures",
+    "candidature": "la candidature",
     "preuves_orp": "tes preuves ORP",
     "alertes": "tes alertes",
     "retours_entretien": "tes retours d'entretien",
@@ -327,6 +338,62 @@ async def _applications(session: AsyncSession, _profile: int, params: dict[str, 
     }
 
 
+async def _application(session: AsyncSession, _profile: int, params: dict[str, Any]) -> Any:
+    application_id = params.get("id")
+    if not isinstance(application_id, int) or isinstance(application_id, bool):
+        raise ToolInputError("id : l'identifiant entier de la candidature")
+    a = await session.get(Application, application_id)
+    if a is None:
+        return {"erreur": f"aucune candidature {application_id}"}
+    interviews = await session.scalars(
+        select(Interview)
+        .where(Interview.application_id == a.id)
+        .order_by(Interview.held_at.nulls_last(), Interview.id)
+    )
+    limit = _today() - timedelta(days=REMIND_AFTER_DAYS)
+    return {
+        "id": a.id,
+        "entreprise": a.company,
+        "poste": a.job_title,
+        "lieu": a.location,
+        "taux": a.rate_text,
+        "envoyee_le": _day(a.sent_at),
+        "mode": a.method,
+        "mois_orp": a.orp_month,
+        "statut": a.status,
+        "motif_du_statut": a.status_reason,
+        "entretien": _day(a.interview_at),
+        "relancee_le": _day(a.reminded_at),
+        "a_relancer": a.status == ApplicationStatus.EN_ATTENTE and a.sent_at <= limit,
+        "ligne_orp_incomplete": not (a.company_address or "").strip(),
+        "offre_id": a.offer_id,
+        "lettre_envoyee": a.letter_draft_id is not None,
+        "cv_envoye": a.cv_draft_id is not None,
+        "retours_entretien": [
+            {
+                "date": _day(i.held_at),
+                "type": i.kind,
+                "ressenti": i.rating,
+                "stress": i.stress,
+                "questions": [
+                    {"texte": q.get("text"), "difficile": bool(q.get("difficult"))}
+                    for q in i.questions or []
+                ],
+                "a_marche": i.went_well,
+                "n_a_pas_marche": i.went_badly,
+                "a_preparer": i.to_prepare,
+                "appris": i.learned,
+                "points_d_attention": i.warnings,
+                "suite": i.next_step,
+                "suite_avant": _day(i.next_step_at),
+                "remerciement": i.thanks,
+                "retour_employeur": i.employer_feedback,
+            }
+            for i in interviews
+        ],
+    }
+
+
 async def _orp(session: AsyncSession, _profile: int, params: dict[str, Any]) -> Any:
     month = _month(params)
     counts = await month_counts(session, month)
@@ -458,6 +525,7 @@ _TOOLS: dict[str, Tool] = {
     "offres_a_examiner": _offers_to_review,
     "offre": _offer,
     "candidatures": _applications,
+    "candidature": _application,
     "preuves_orp": _orp,
     "alertes": _alerts,
     "retours_entretien": _interviews,

@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
+import { useAssistant } from "../composables/useAssistant";
 import { applicationStatusLabel } from "../format";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 
@@ -60,6 +61,12 @@ async function copy(value: string, key: string): Promise<void> {
   }
 }
 
+const assistant = useAssistant();
+function askAssistant(): void {
+  const a = props.application;
+  assistant.askAbout({ applicationId: a.id, label: `candidature ${a.job_title} chez ${a.company}` });
+}
+
 function act(action: () => void): void {
   menuOpen.value = false;
   action();
@@ -100,6 +107,16 @@ const onStatus = (event: Event): void =>
           class="menu"
           role="menu"
         >
+          <li v-if="assistant.available.value">
+            <button
+              type="button"
+              role="menuitem"
+              data-test="card-ask"
+              @click="act(askAssistant)"
+            >
+              Demander à l'assistant
+            </button>
+          </li>
           <li>
             <button
               type="button"

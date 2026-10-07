@@ -2355,6 +2355,20 @@ export interface components {
              */
             result: "queued" | "already_queued";
         };
+        /**
+         * FocusIn
+         * @description Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché.
+         */
+        FocusIn: {
+            /** Offer Id */
+            offer_id?: number | null;
+            /** Application Id */
+            application_id?: number | null;
+            /** Day */
+            day?: string | null;
+            /** Month */
+            month?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -3333,6 +3347,7 @@ export interface components {
             text: string;
             /** Page */
             page?: string | null;
+            focus?: components["schemas"]["FocusIn"] | null;
         };
         /** QuestionStatOut */
         QuestionStatOut: {

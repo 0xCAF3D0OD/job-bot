@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Request, status
@@ -45,11 +45,21 @@ class ConversationDetail(ConversationOut):
     messages: list[ChatMessageOut]
 
 
+class FocusIn(BaseModel):
+    """Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché."""
+
+    offer_id: int | None = None
+    application_id: int | None = None
+    day: date | None = None
+    month: Annotated[str, Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$")] | None = None
+
+
 class QuestionIn(BaseModel):
     conversation_id: int | None = None
     text: Annotated[str, Field(min_length=1, max_length=4000)]
     # Chemin de la page ouverte (/candidatures/suivi?jour=…), sans domaine.
     page: Annotated[str, Field(max_length=300)] | None = None
+    focus: FocusIn | None = None
 
     @field_validator("text")
     @classmethod
@@ -144,6 +154,7 @@ async def ask(request: Request, body: QuestionIn) -> StreamingResponse:
         conversation_id=body.conversation_id,
         text=body.text,
         page=body.page,
+        focus=service.Focus(**body.focus.model_dump()) if body.focus else None,
         profile_id=profile.id,
     )
     # Les refus (IA absente, plafond, discussion introuvable) avant tout envoi : erreur HTTP.

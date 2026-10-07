@@ -20,6 +20,7 @@ import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
+import { useAssistant } from "../composables/useAssistant";
 import { formatMonth, shiftMonth } from "../format";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
@@ -274,6 +275,28 @@ watch(
   () => void load(),
 );
 onMounted(() => void load());
+
+// Le mois affiché et le jour choisi : ce dont parle l'assistant (docs/24 §2.2).
+const assistant = useAssistant();
+watch(
+  [month, selectedDay],
+  ([m, day]) => {
+    if (!m) return;
+    const label = day
+      ? new Date(`${day}T12:00:00`).toLocaleDateString("fr-CH", { day: "numeric", month: "long" })
+      : formatMonth(m);
+    assistant.setFocus({ month: m, day: day ?? undefined, label });
+  },
+  { immediate: true },
+);
+// Lien de l'assistant vers un jour, la page étant déjà ouverte.
+watch(
+  () => route.query.jour,
+  (jour) => {
+    if (typeof jour === "string") selectedDay.value = jour;
+  },
+);
+onUnmounted(() => assistant.setFocus(null));
 </script>
 
 <template>

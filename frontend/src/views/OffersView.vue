@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
@@ -8,6 +9,7 @@ import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import { applicationBody } from "../applicationBody";
+import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 
@@ -35,6 +37,28 @@ const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
+const route = useRoute();
+const router = useRouter();
+const assistant = useAssistant();
+
+// L'offre ouverte est l'élément dont parle l'assistant (docs/24 §2.2).
+watch(selected, (offer) => {
+  assistant.setFocus(offer ? { offerId: offer.id, label: `offre ${offer.title}${offer.company ? ` chez ${offer.company}` : ""}` } : null);
+  if (!offer && route.query.offre) void router.replace({ query: { ...route.query, offre: undefined } });
+});
+
+// Lien de l'assistant : /candidatures/offres?offre=12 ouvre l'offre, même hors de la liste.
+async function openFromQuery(): Promise<void> {
+  const id = Number(route.query.offre);
+  if (!Number.isInteger(id) || id <= 0) return;
+  if (!items.value.some((o) => o.id === id)) {
+    const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
+    if (!data) return;
+    items.value = [data, ...items.value];
+  }
+  selectedId.value = id;
+}
+watch(() => route.query.offre, () => void openFromQuery());
 let requestId = 0;
 
 async function load(append = false): Promise<void> {
@@ -189,11 +213,14 @@ async function loadChunkTitles(): Promise<void> {
 
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
-  void load();
+  void load().then(openFromQuery);
   void loadChunkTitles();
   void loadVisibility();
 });
-onUnmounted(() => window.removeEventListener("keydown", onKeydown));
+onUnmounted(() => {
+  window.removeEventListener("keydown", onKeydown);
+  assistant.setFocus(null);
+});
 </script>
 
 <template>

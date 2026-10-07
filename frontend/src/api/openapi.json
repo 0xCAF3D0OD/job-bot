@@ -6890,6 +6890,59 @@
         ],
         "title": "FilterResponse"
       },
+      "FocusIn": {
+        "properties": {
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          },
+          "month": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        },
+        "type": "object",
+        "title": "FocusIn",
+        "description": "Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -10301,6 +10354,16 @@
               }
             ],
             "title": "Page"
+          },
+          "focus": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FocusIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
