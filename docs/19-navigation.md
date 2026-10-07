@@ -103,3 +103,8 @@ Aucune migration : seule l'interface change.
 
 - **Aujourd'hui** : bloc **Candidatures** (compteurs, **candidatures commencées** avec « Continuer », mieux notées, collecte), **Comprendre le marché** (les 3 dernières actualités de « Mon domaine », à défaut les 3 dernières), **Progresser** (formations en cours, et une formation vérifiée de ton domaine pas encore suivie). La liste « Pour bien démarrer » reste en tête tant qu'elle n'est pas terminée.
 - **Réglages** : sommaire à gauche (en haut sur petit écran) ; « Enregistrer » dans les sections Recherche d'emploi et IA (il enregistre tous les réglages de la page) ; « Mon domaine » reste avec les sources des Actualités ; la section Connexion indique quand la connexion est désactivée.
+
+## Complément du 2026-10-07 : revenir aux offres
+
+- Page **Préparer ma candidature** : un lien **« ← Retour aux offres »** toujours visible en haut.
+- Une fois la candidature **marquée comme envoyée** : bouton **« Revenir aux offres »** dans la barre (à côté de « Voir le suivi ») et lien dans le message de confirmation.
