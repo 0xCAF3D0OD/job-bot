@@ -2,7 +2,7 @@
 import { ref } from "vue";
 
 import type { Application, ApplicationStatus, OrpRow } from "../api/client";
-import { applicationStatusLabel, methodLabel } from "../format";
+import { applicationStatusLabel } from "../format";
 
 // Carte d'une candidature (docs/22 §4) : statut, ce qui manque pour l'ORP, documents,
 // copie pour Job-Room de cette seule candidature.
@@ -17,6 +17,7 @@ const jobRoom = ref(false);
 const menuOpen = ref(false);
 const copied = ref("");
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
 async function copy(value: string, key: string): Promise<void> {
   try {
@@ -52,7 +53,7 @@ const onStatus = (event: Event): void =>
           class="badge"
         >ORP</span>
         <p class="muted">
-          {{ application.job_title }}{{ application.location ? ` · ${application.location}` : "" }}
+          {{ application.job_title }} · {{ shortDate.format(new Date(application.sent_at)) }}
         </p>
       </div>
       <div class="more-menu">
@@ -94,11 +95,11 @@ const onStatus = (event: Event): void =>
       </div>
     </header>
 
-    <p class="card-facts">
-      Envoyée le {{ longDate.format(new Date(application.sent_at)) }} · {{ methodLabel[application.method ?? "electronique"] }}
-      <template v-if="application.interview_at">
-        · entretien le {{ longDate.format(new Date(application.interview_at)) }}
-      </template>
+    <p
+      v-if="application.interview_at"
+      class="card-facts"
+    >
+      Entretien le {{ longDate.format(new Date(application.interview_at)) }}
     </p>
 
     <label class="card-status">

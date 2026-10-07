@@ -331,3 +331,27 @@ describe("Suivi en calendrier (docs/22)", () => {
     expect(wrapper.find("[data-test=calendar]").exists()).toBe(false);
   });
 });
+
+describe("Panneau défilant (retour d'usage du 2026-10-07)", () => {
+  it("estompe en haut ou en bas selon ce qu'il reste à voir", async () => {
+    localStorage.setItem("jobbot-suivi-vue", "calendar");
+    const many = [1, 2, 3, 4, 5].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
+    mockApi(() => month(), many);
+    const { wrapper } = await mountView();
+    const scroll = wrapper.find("[data-test=panel-scroll]");
+    const el = scroll.element as HTMLElement;
+    Object.defineProperty(el, "clientHeight", { configurable: true, value: 400 });
+    Object.defineProperty(el, "scrollHeight", { configurable: true, value: 900 });
+    el.scrollTop = 0;
+    await scroll.trigger("scroll");
+    expect(scroll.classes()).toContain("fade-bottom");
+    expect(scroll.classes()).not.toContain("fade-top");
+    el.scrollTop = 250;
+    await scroll.trigger("scroll");
+    expect(scroll.classes()).toEqual(expect.arrayContaining(["fade-top", "fade-bottom"]));
+    el.scrollTop = 500;
+    await scroll.trigger("scroll");
+    expect(scroll.classes()).toContain("fade-top");
+    expect(scroll.classes()).not.toContain("fade-bottom");
+  });
+});

@@ -66,3 +66,9 @@ Une seule PR (**0.15.0**), sans migration : l'API fournit déjà tout (candidatu
 - **Formulaire ORP** : le tableau complet, le PDF, le CSV, le journal joint et la saisie Job-Room de tout le mois sont repliés sous « Formulaire ORP du mois » (le PDF fonctionne même replié).
 - **Vue Calendrier / Liste** retenue par le navigateur (`localStorage`) ; calendrier par défaut.
 - **Adresses** : `/candidatures/preuves`, `/orp` et `/candidatures?vue=orp` mènent à `/candidatures/suivi` (avec le mois) ; les rappels ORP pointent sur la nouvelle adresse.
+
+## Complément du 2026-10-07 : panneau défilant
+
+- Le panneau des cartes prend **la hauteur du calendrier** (écran large) ; la liste défile à l'intérieur, environ quatre cartes visibles.
+- **Estompage** : en bas tant que d'autres cartes suivent, en haut dès qu'on a défilé ; aucun en haut de la liste.
+- Carte plus compacte : poste et date d'envoi sur une ligne, l'entretien seulement s'il y en a un. Sur téléphone, le panneau passe sous le calendrier, limité à 70 % de la hauteur de l'écran.

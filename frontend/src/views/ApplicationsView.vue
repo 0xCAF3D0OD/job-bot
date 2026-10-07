@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Application, type ApplicationStatus, type OrpMonth } from "../api/client";
@@ -75,6 +75,45 @@ const dayCards = computed(() => {
     (a) => a.sent_at === day || (a.interview_at && new Date(a.interview_at).toISOString().slice(0, 10) === day),
   );
 });
+
+// Cartes du panneau : celles du jour choisi, sinon celles à relancer.
+const panelCards = computed(() => (selectedDay.value ? dayCards.value : toFollowUp.value));
+
+// Hauteur du panneau = hauteur du calendrier (écran large) ; estompage selon le défilement.
+const calendarBox = ref<HTMLElement | null>(null);
+const panelScroll = ref<HTMLElement | null>(null);
+const panelHeight = ref<number | null>(null);
+const atTop = ref(true);
+const atBottom = ref(true);
+let observer: ResizeObserver | null = null;
+
+function measure(): void {
+  const wide = globalThis.matchMedia?.("(min-width: 901px)").matches ?? true;
+  panelHeight.value = wide && calendarBox.value ? calendarBox.value.offsetHeight || null : null;
+}
+
+function onPanelScroll(): void {
+  const el = panelScroll.value;
+  if (!el) return;
+  atTop.value = el.scrollTop <= 2;
+  atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+}
+
+watch(calendarBox, (el) => {
+  observer?.disconnect();
+  if (el && typeof ResizeObserver !== "undefined") {
+    observer = new ResizeObserver(measure);
+    observer.observe(el);
+  }
+  measure();
+});
+// Nouvelles cartes (jour choisi, mois) : retour en haut, estompage recalculé.
+watch(panelCards, async () => {
+  await nextTick();
+  if (panelScroll.value) panelScroll.value.scrollTop = 0;
+  onPanelScroll();
+});
+onUnmounted(() => observer?.disconnect());
 
 async function load(): Promise<void> {
   const wanted = typeof route.query.mois === "string" ? route.query.mois : undefined;
@@ -302,23 +341,28 @@ onMounted(() => void load());
         v-if="layout === 'calendar'"
         class="suivi-grid"
       >
-        <SuiviCalendar
-          :month="orp.month"
-          :applications="all"
-          :incomplete="incomplete"
-          :selected="selectedDay"
-          @select="selectedDay = selectedDay === $event ? null : $event"
-        />
+        <div ref="calendarBox">
+          <SuiviCalendar
+            :month="orp.month"
+            :applications="all"
+            :incomplete="incomplete"
+            :selected="selectedDay"
+            @select="selectedDay = selectedDay === $event ? null : $event"
+          />
+        </div>
+        <!-- Panneau à la hauteur du calendrier, liste défilante estompée en haut et en bas
+             tant qu'il reste des cartes de ce côté (retour d'usage du 2026-10-07). -->
         <aside
           class="suivi-panel"
+          :style="panelHeight ? { height: `${panelHeight}px` } : undefined"
           data-test="day-panel"
         >
-          <template v-if="selectedDay">
-            <h3>{{ dayTitle.format(new Date(`${selectedDay}T12:00:00`)) }}</h3>
-            <p
-              v-if="!dayCards.length"
-              class="hint"
-            >
+          <h3>{{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : "À relancer" }}</h3>
+          <p
+            v-if="!panelCards.length"
+            class="hint"
+          >
+            <template v-if="selectedDay">
               Aucune candidature ce jour-là.
               <button
                 type="button"
@@ -327,27 +371,20 @@ onMounted(() => void load());
               >
                 En ajouter une
               </button>
-            </p>
-            <ApplicationCard
-              v-for="application in dayCards"
-              :key="application.id"
-              :application="application"
-              :orp-row="rowsById.get(application.id) ?? null"
-              @status="setStatus"
-              @edit="edit"
-              @remove="remove"
-            />
-          </template>
-          <template v-else>
-            <h3>À relancer</h3>
-            <p
-              v-if="!toFollowUp.length"
-              class="hint"
-            >
+            </template>
+            <template v-else>
               Rien à relancer. Clique sur un jour pour voir ses candidatures.
-            </p>
+            </template>
+          </p>
+          <div
+            v-else
+            ref="panelScroll"
+            :class="['panel-scroll', { 'fade-top': !atTop, 'fade-bottom': !atBottom }]"
+            data-test="panel-scroll"
+            @scroll="onPanelScroll"
+          >
             <ApplicationCard
-              v-for="application in toFollowUp"
+              v-for="application in panelCards"
               :key="application.id"
               :application="application"
               :orp-row="rowsById.get(application.id) ?? null"
@@ -355,7 +392,7 @@ onMounted(() => void load());
               @edit="edit"
               @remove="remove"
             />
-          </template>
+          </div>
         </aside>
       </div>
 
