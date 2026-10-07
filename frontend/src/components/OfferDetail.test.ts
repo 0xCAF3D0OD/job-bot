@@ -67,3 +67,24 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
     expect(known.find("[data-test=employer-line]").exists()).toBe(false);
   });
 });
+
+describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
+  it("Préparer et Postuler, l'entreprise repliée, chercher chez l'employeur dans ⋯", async () => {
+    const wrapper = await mountDetail(offer());
+    expect(wrapper.find("[data-test=prepare]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=apply]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    expect(wrapper.find("[data-test=apply]").text()).toContain("Postuler sur Indeed");
+    const company = wrapper.find("[data-test=company-section]");
+    expect(company.attributes("open")).toBeUndefined();
+    expect(company.find("[data-test=address]").exists()).toBe(true);
+    await wrapper.find("[data-test=more]").trigger("click");
+    expect(wrapper.find("[data-test=menu-find-employer]").exists()).toBe(true);
+  });
+
+  it("annonce trouvée chez l'employeur : « Postuler chez l'employeur »", async () => {
+    const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/jobs/2", employer_status: "found" }));
+    const button = wrapper.find("[data-test=employer]");
+    expect(button.attributes("href")).toBe("https://exemple.ch/jobs/2");
+    expect(button.text()).toContain("Postuler chez l'employeur");
+  });
+});

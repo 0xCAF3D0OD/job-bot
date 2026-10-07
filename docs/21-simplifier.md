@@ -1,6 +1,6 @@
 # 21 — Simplifier : moins de texte, un chemin clair (version 0.14.0)
 
-> Statut : **validé** le 2026-10-07. livré : PR a (textes, « Comment ça marche »), PR b (Alertes).
+> Statut : **validé** le 2026-10-07. livré : PR a (textes, « Comment ça marche »), PR b (Alertes), PR c (offre, Preuves ORP, Réglages, Profil).
 > Retours d'usage du 2026-10-07 : « trop d'informations, l'utilisateur peut être perdu ; moi-même je le suis quand je parcours la plateforme ».
 
 ## 1. Le constat
@@ -90,3 +90,11 @@ Aucune fonction n'est supprimée : seuls l'ordre, les textes et ce qui est visib
 - **Résumé** : un point par recherche — vert (reçue, avec les sites), orange (créée depuis 3 jours sans rien reçu), violet pâle (créée, en attente du premier envoi), gris (à créer) ; l'aide au transfert (boîte, dossier, expéditeurs) n'apparaît que pour les sites en orange.
 - **« Gérer mes alertes »** ouvre le tableau complet ; « ← Retour au résumé ».
 - **Alertes reçues** : repliées (« Voir les alertes reçues »), chargées seulement à l'ouverture.
+
+## Écarts avec la PR c
+
+- **Détail d'une offre** : en haut, **« Préparer ma candidature »** et **« Postuler »** (chez l'employeur si l'annonce y a été trouvée, sinon sur jobup ou le site d'origine) ; dessous, en liens discrets, « J'ai postulé : marquer comme envoyée » et « Voir sur Indeed… ». La section repliée **« Entreprise »** contient l'adresse (modifier, chercher) et l'annonce chez l'employeur ; « Chercher l'offre chez l'employeur » est aussi dans le menu « ⋯ ».
+- **Preuves ORP** : une action selon le moment — « Compléter N ligne(s) » (ouvre la première), puis **« Marquer comme remis »** (et non « Télécharger le PDF » : tu remets par Job-Room) ; à côté, toujours, « Recopier dans Job-Room » et « Télécharger le PDF ». CSV, journal joint et colonnes dans **« Plus d'options »**. Le lien « complète tes coordonnées » mène au Profil.
+- **Diagnostic** : page `/reglages/diagnostic` (lien en bas des Réglages) ; `/etat`, `/reglages#etat` et l'alerte « collecte en échec » de la cloche y mènent.
+- **Profil** : « Il manque : ta rue, ton NPA » (coordonnées), « Il manque ton CV » ou « Il manque tes blocs de profil » (parcours), « Aucun lieu indiqué » (ce que je cherche).
+- **Intègre la PR #72** (ligne « chez l'employeur » lisible).

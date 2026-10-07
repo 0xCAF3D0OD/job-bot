@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { api, type OrpMonth, type OrpRow, type Source } from "../api/client";
 import AppIcon from "./AppIcon.vue";
@@ -46,6 +46,9 @@ async function submit(done: boolean): Promise<void> {
     busy.value = false;
   }
 }
+
+// Première ligne à compléter : l'action proposée tant qu'il en reste.
+const firstIncomplete = computed(() => props.data.rows.find((r) => r.missing.length) ?? null);
 
 function edit(row: OrpRow): void {
   emit("edit", row.application_id);
@@ -120,99 +123,125 @@ onMounted(async () => {
       v-if="!data.holder.name"
       class="notice"
     >
-      Ton nom n'est pas saisi : <RouterLink to="/reglages">
+      Ton nom n'est pas saisi : <RouterLink to="/profil?onglet=coordonnees">
         complète tes coordonnées
       </RouterLink> pour l'en-tête du PDF.
     </p>
 
-    <div class="orp-actions">
-      <button
-        type="button"
-        class="primary small"
-        :disabled="!data.count"
-        data-test="pdf"
-        @click="printPdf"
-      >
-        Télécharger en PDF <AppIcon name="chevron" />
-      </button>
-      <div class="actions">
-        <a
-          v-if="data.count"
-          class="secondary"
-          :href="`/api/orp/${data.month}/csv`"
-          download
-          data-test="csv"
-        >CSV (Excel)</a>
-      </div>
-      <label class="check">
-        <input
-          v-model="withSearches"
-          type="checkbox"
-          data-test="with-searches"
-        > Joindre le journal des recherches ({{ data.searches.length }})
-      </label>
-      <div class="columns-picker">
+    <!-- Une seule action à la fois selon le moment (docs/21 §6) ; le reste dans « Plus d'options ». -->
+    <div
+      v-if="data.count"
+      class="orp-next"
+      data-test="orp-next"
+    >
+      <template v-if="data.state === 'remis'">
+        <span>Preuves de ce mois remises.</span>
         <button
           type="button"
           class="link"
-          :aria-expanded="pickingColumns"
-          data-test="columns"
-          @click="pickingColumns = !pickingColumns"
+          :disabled="busy"
+          data-test="cancel-submit"
+          @click="submit(false)"
         >
-          Colonnes ({{ visibleColumns.length + 3 }} / {{ COLUMNS.length + 3 }})
+          Annuler la remise
         </button>
-        <fieldset
-          v-if="pickingColumns"
-          class="customize-list columns-list"
-          data-test="columns-list"
+      </template>
+      <button
+        v-else-if="firstIncomplete"
+        type="button"
+        class="primary small"
+        data-test="complete-next"
+        @click="edit(firstIncomplete)"
+      >
+        Compléter {{ data.incomplete }} ligne(s) <AppIcon name="chevron" />
+      </button>
+      <template v-else>
+        <button
+          type="button"
+          class="primary small"
+          :disabled="busy"
+          data-test="submit"
+          @click="submit(true)"
         >
-          <legend class="hint">
-            Date, entreprise et poste toujours affichés ; le PDF et le CSV gardent tout.
-          </legend>
-          <label
-            v-for="column in COLUMNS"
-            :key="column.key"
-            class="check"
-          >
-            <input
-              type="checkbox"
-              :checked="show(column.key)"
-              :data-test="`column-${column.key}`"
-              @change="toggleColumn(column.key)"
-            >
-            {{ column.label }}
-          </label>
-        </fieldset>
-      </div>
-      <label class="check">
-        <input
-          v-model="jobRoom"
-          type="checkbox"
+          Marquer comme remis <AppIcon name="chevron" />
+        </button>
+        <span class="hint">une fois saisies dans Job-Room ou le PDF envoyé</span>
+      </template>
+      <span class="orp-next-links">
+        <button
+          type="button"
+          class="link"
+          :aria-pressed="jobRoom"
           data-test="job-room"
-        > Saisie Job-Room
-      </label>
-      <span class="spacer" />
-      <button
-        v-if="data.state !== 'remis'"
-        type="button"
-        class="secondary small"
-        :disabled="busy || !data.count"
-        data-test="submit"
-        @click="submit(true)"
-      >
-        Marquer comme remis
-      </button>
-      <button
-        v-else
-        type="button"
-        class="link"
-        :disabled="busy"
-        data-test="cancel-submit"
-        @click="submit(false)"
-      >
-        Annuler la remise
-      </button>
+          @click="jobRoom = !jobRoom"
+        >
+          {{ jobRoom ? "Revenir au tableau" : "Recopier dans Job-Room" }}
+        </button>
+        <button
+          type="button"
+          class="link"
+          data-test="pdf"
+          @click="printPdf"
+        >
+          Télécharger le PDF
+        </button>
+      </span>
     </div>
+    <details
+      v-if="data.count"
+      class="more-options"
+      data-test="more-options"
+    >
+      <summary>Plus d'options</summary>
+      <div class="more-options-body">
+        <a
+          class="link"
+          :href="`/api/orp/${data.month}/csv`"
+          download
+          data-test="csv"
+        >Télécharger en CSV (Excel)</a>
+        <label class="check">
+          <input
+            v-model="withSearches"
+            type="checkbox"
+            data-test="with-searches"
+          > Joindre au PDF le journal des recherches ({{ data.searches.length }})
+        </label>
+        <div class="columns-picker">
+          <button
+            type="button"
+            class="link"
+            :aria-expanded="pickingColumns"
+            data-test="columns"
+            @click="pickingColumns = !pickingColumns"
+          >
+            Colonnes affichées ({{ visibleColumns.length + 3 }} / {{ COLUMNS.length + 3 }})
+          </button>
+          <fieldset
+            v-if="pickingColumns"
+            class="customize-list columns-list"
+            data-test="columns-list"
+          >
+            <legend class="hint">
+              Date, entreprise et poste toujours affichés ; le PDF et le CSV gardent tout.
+            </legend>
+            <label
+              v-for="column in COLUMNS"
+              :key="column.key"
+              class="check"
+            >
+              <input
+                type="checkbox"
+                :checked="show(column.key)"
+                :data-test="`column-${column.key}`"
+                @change="toggleColumn(column.key)"
+              >
+              {{ column.label }}
+            </label>
+          </fieldset>
+        </div>
+      </div>
+    </details>
 
     <p
       v-if="!data.count"

@@ -999,3 +999,17 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .summary-list .pending .dot { background: color-mix(in srgb, var(--accent) 55%, var(--surface)); }
 .journal-toggle { margin-top: 1.5rem; }
 .journal-toggle > summary { cursor: pointer; color: var(--accent); font-weight: 500; margin-bottom: 0.8rem; }
+
+/* Détail d'une offre : l'essentiel en haut, l'entreprise repliée (docs/21 §5) */
+.offer-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0.4rem 0 0.8rem; font-size: 0.88rem; }
+.company-section { margin: 1rem 0; border-top: 1px solid var(--border); padding-top: 0.8rem; }
+.company-section > summary { cursor: pointer; color: var(--accent); font-weight: 500; font-size: 0.92rem; }
+.company-section > .address-line, .company-section > .employer-line { margin-top: 0.6rem; }
+
+/* Preuves ORP : une action à la fois (docs/21 §6) */
+.orp-next { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0.8rem 0; }
+.orp-next-links { display: inline-flex; gap: 1rem; margin-left: auto; }
+.more-options { margin: 0 0 1rem; font-size: 0.9rem; }
+.more-options > summary { cursor: pointer; color: var(--accent); width: fit-content; }
+.more-options-body { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center; margin-top: 0.6rem; }
+.diagnostic-link { margin-top: 1.5rem; font-size: 0.9rem; }
