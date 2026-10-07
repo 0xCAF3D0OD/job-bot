@@ -20,6 +20,8 @@ export interface NavEntry {
   // Version du cadrage (docs/01-cadrage.md §11) qui livre la page.
   since?: string;
   description?: string;
+  // Dans le menu du compte (icône en haut à droite) plutôt que dans la barre.
+  account?: boolean;
 }
 
 // Menu (docs/10 §2 c, docs/18 §2) : preuves ORP et journal sont des onglets de la page
@@ -30,8 +32,8 @@ export const navigation: NavEntry[] = [
   { path: "/candidatures", name: "applications", label: "Candidatures" },
   { path: "/actualites", name: "news", label: "Actualités" },
   { path: "/formations", name: "trainings", label: "Formations" },
-  { path: "/profil", name: "profile", label: "Profil" },
-  { path: "/reglages", name: "settings", label: "Réglages" },
+  { path: "/profil", name: "profile", label: "Profil", account: true },
+  { path: "/reglages", name: "settings", label: "Réglages", account: true },
 ];
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.

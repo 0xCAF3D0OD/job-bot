@@ -82,3 +82,8 @@ sessions   token_hash PRIMARY, user_id, created_at, last_seen_at, expires_at, us
 - **`JOBBOT_AUTH_ENABLED=false`** rouvre tout, seulement pour un essai local (les tests l'utilisent).
 - **Migration 0029**.
 - **Essai réel** (base de test, compte d'essai) : sans connexion, `/candidatures` mène à la connexion puis y revient ; l'API refuse `/api/orp` (401) et sert `/api/news` ; « Se déconnecter » ramène aux Actualités.
+
+## Complément du 2026-10-07 : barre du haut sur une seule ligne
+
+- **Constat** : avec sept liens, le sélecteur de profil, la cloche, « Collecter » et « Se déconnecter », la barre passait sur deux lignes ; elle était en plus limitée à 70rem de large, même sur grand écran.
+- **Correction** : **Profil**, **Réglages**, le **profil affiché** (profils d'essai) et **Se déconnecter** passent dans un **menu du compte** (icône à droite de « Collecter »). La barre garde Aujourd'hui, Offres, Candidatures, Actualités, Formations, la cloche et « Collecter », sur une ligne, jusqu'à 84rem de large. Si la place manque, les liens défilent horizontalement au lieu de passer à la ligne ; sur téléphone (moins de 720 px), ils restent sur une deuxième ligne défilante.
