@@ -13,6 +13,7 @@ from typing import Any
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from jobbot.auth import service
+from jobbot.extension import service as extension_service
 from jobbot.log import get_logger
 
 log = get_logger(__name__)
@@ -29,6 +30,8 @@ PUBLIC_READ = [
 ]
 PUBLIC_ANY = [re.compile(r"^/api/auth/")]
 PROFILE_HEADER = b"x-jobbot-profile"
+# Routes de l'extension du navigateur (docs/25) : jeton obligatoire, connexion ou non.
+EXTENSION_PREFIX = "/api/extension/"
 
 
 def is_public(method: str, path: str) -> bool:
@@ -52,6 +55,11 @@ def cookie_token(headers: dict[str, str]) -> str | None:
         return None
     morsel = jar.get(service.COOKIE)
     return morsel.value if morsel else None
+
+
+def bearer_token(headers: dict[str, str]) -> str | None:
+    value = headers.get("authorization", "")
+    return value[7:].strip() or None if value.lower().startswith("bearer ") else None
 
 
 def cross_site(method: str, headers: dict[str, str]) -> bool:
@@ -111,6 +119,9 @@ class AuthMiddleware:
             return
         method: str = scope.get("method", "GET")
         headers = _headers(scope)
+        if path.startswith(EXTENSION_PREFIX):
+            await self._extension(scope, receive, send, headers)
+            return
         if cross_site(method, headers):
             log.warning("cross_site_refused", path=path, origin=headers.get("origin"))
             await _json(send, 403, "requête refusée : elle ne vient pas de la plateforme")
@@ -142,3 +153,20 @@ class AuthMiddleware:
             await send(message)
 
         await self.app(scope, receive, send_with_cookie)
+
+    async def _extension(
+        self, scope: Scope, receive: Receive, send: Send, headers: dict[str, str]
+    ) -> None:
+        """Extension : le jeton remplace le cookie. Un jeton n'est jamais joint d'office par
+        le navigateur : pas de risque de requête forgée par un autre site."""
+        runtime: Any = scope["app"].state.runtime
+        async with runtime.sessionmaker.begin() as session:
+            found = await extension_service.authenticate(session, bearer_token(headers))
+        if found is None:
+            await _json(send, 401, "jeton de l'extension absent ou révoqué")
+            return
+        state = scope.setdefault("state", {})
+        state["user"] = None
+        state["extension_token"] = found.id
+        scope["headers"] = [(k, v) for k, v in scope["headers"] if k != PROFILE_HEADER]
+        await self.app(scope, receive, send)

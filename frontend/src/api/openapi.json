@@ -246,7 +246,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/QuestionIn"
+                "$ref": "#/components/schemas/jobbot__api__routes__assistant__QuestionIn"
               }
             }
           },
@@ -258,6 +258,382 @@
             "content": {
               "text/event-stream": {}
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/me": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Me",
+        "description": "Vérifie le jeton au moment de relier l'extension.",
+        "operationId": "extensionMe",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionMe"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/match": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Match",
+        "operationId": "extensionMatch",
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2000,
+              "title": "Url"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/offers/{offer_id}": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Fill",
+        "operationId": "extensionFill",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FillOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/offers/{offer_id}/letter.pdf": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Letter Pdf",
+        "operationId": "extensionLetterPdf",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/offers/{offer_id}/cv.pdf": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Cv Pdf",
+        "operationId": "extensionCvPdf",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/offers/{offer_id}/sent": {
+      "post": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Sent",
+        "description": "« J'ai envoyé » : comme « Marquer comme envoyée », avec l'adresse du formulaire.",
+        "operationId": "extensionSent",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/answer": {
+      "post": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Answer",
+        "operationId": "extensionAnswer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/jobbot__api__routes__extension__QuestionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension-tokens": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "List Tokens",
+        "operationId": "listExtensionTokens",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TokenOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listextensiontokens"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Create Token",
+        "operationId": "createExtensionToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension-tokens/{token_id}": {
+      "delete": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Revoke Token",
+        "operationId": "revokeExtensionToken",
+        "parameters": [
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Token Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -5044,6 +5420,19 @@
         ],
         "title": "AlertsPage"
       },
+      "AnswerOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "AnswerOut"
+      },
       "ApplicationIn": {
         "properties": {
           "sent_at": {
@@ -6933,6 +7322,24 @@
         "type": "object",
         "title": "EmployerOut"
       },
+      "ExtensionMe": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform",
+          "version"
+        ],
+        "title": "ExtensionMe"
+      },
       "Facet": {
         "properties": {
           "value": {
@@ -6950,6 +7357,195 @@
           "count"
         ],
         "title": "Facet"
+      },
+      "FillIdentity": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "street": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Street"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "linkedin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkedin"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "availability": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability"
+          },
+          "salary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary"
+          },
+          "permit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "street",
+          "postcode",
+          "city",
+          "phone",
+          "email",
+          "linkedin",
+          "website",
+          "availability",
+          "salary",
+          "permit"
+        ],
+        "title": "FillIdentity"
+      },
+      "FillOut": {
+        "properties": {
+          "offer": {
+            "$ref": "#/components/schemas/OfferBrief"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/FillIdentity"
+          },
+          "letter_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Letter Text"
+          },
+          "has_letter": {
+            "type": "boolean",
+            "title": "Has Letter"
+          },
+          "has_cv": {
+            "type": "boolean",
+            "title": "Has Cv"
+          },
+          "letter_filename": {
+            "type": "string",
+            "title": "Letter Filename"
+          },
+          "cv_filename": {
+            "type": "string",
+            "title": "Cv Filename"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offer",
+          "identity",
+          "letter_text",
+          "has_letter",
+          "has_cv",
+          "letter_filename",
+          "cv_filename"
+        ],
+        "title": "FillOut",
+        "description": "Tout ce que l'extension met dans le formulaire (docs/25 §3.2)."
       },
       "FilterResponse": {
         "properties": {
@@ -8503,6 +9099,33 @@
         ],
         "title": "LoginIn"
       },
+      "MatchOut": {
+        "properties": {
+          "offer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/OfferBrief"
+            },
+            "type": "array",
+            "title": "Choices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offer",
+          "choices"
+        ],
+        "title": "MatchOut"
+      },
       "Me": {
         "properties": {
           "authenticated": {
@@ -9246,6 +9869,41 @@
           "company_address_source"
         ],
         "title": "OfferAddressOut"
+      },
+      "OfferBrief": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "applied": {
+            "type": "boolean",
+            "title": "Applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "company",
+          "applied"
+        ],
+        "title": "OfferBrief"
       },
       "OfferCounts": {
         "properties": {
@@ -10462,54 +11120,6 @@
         "type": "object",
         "title": "ProfileUpdate"
       },
-      "QuestionIn": {
-        "properties": {
-          "conversation_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Conversation Id"
-          },
-          "text": {
-            "type": "string",
-            "maxLength": 4000,
-            "minLength": 1,
-            "title": "Text"
-          },
-          "page": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 300
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Page"
-          },
-          "focus": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FocusIn"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "text"
-        ],
-        "title": "QuestionIn"
-      },
       "QuestionStatOut": {
         "properties": {
           "text": {
@@ -11371,6 +11981,42 @@
         ],
         "title": "SegmentOut"
       },
+      "SentIn": {
+        "properties": {
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "title": "SentIn"
+      },
+      "SentOut": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "orp_month": {
+            "type": "string",
+            "title": "Orp Month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "orp_month"
+        ],
+        "title": "SentOut"
+      },
       "SettingsModel": {
         "properties": {
           "orp_monthly_target": {
@@ -11723,6 +12369,98 @@
           "last_collect_at"
         ],
         "title": "TodayOut"
+      },
+      "TokenCreated": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "last_used_at",
+          "token"
+        ],
+        "title": "TokenCreated"
+      },
+      "TokenIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "default": "Mon navigateur"
+          }
+        },
+        "type": "object",
+        "title": "TokenIn"
+      },
+      "TokenOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "last_used_at"
+        ],
+        "title": "TokenOut"
       },
       "TrainingMarkIn": {
         "properties": {
@@ -12112,6 +12850,74 @@
           "stale_after_seconds"
         ],
         "title": "WorkerStatus"
+      },
+      "jobbot__api__routes__assistant__QuestionIn": {
+        "properties": {
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "focus": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FocusIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "QuestionIn"
+      },
+      "jobbot__api__routes__extension__QuestionIn": {
+        "properties": {
+          "offer_id": {
+            "type": "integer",
+            "title": "Offer Id"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 2,
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offer_id",
+          "question"
+        ],
+        "title": "QuestionIn"
       }
     }
   }
