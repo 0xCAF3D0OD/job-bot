@@ -50,6 +50,12 @@ class Identity:
     city: str | None = None
     phone: str | None = None
     email: str | None = None
+    # Pour les formulaires en ligne (docs/25) ; LinkedIn figure aussi sur le CV.
+    linkedin: str | None = None
+    website: str | None = None
+    availability: str | None = None
+    salary: str | None = None
+    permit: str | None = None
 
     @property
     def missing(self) -> list[str]:

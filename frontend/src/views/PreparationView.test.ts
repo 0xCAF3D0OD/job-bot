@@ -110,6 +110,7 @@ describe("PreparationView", () => {
       "Candidature au poste d'ingénieur DevOps junior",
     );
     expect(wrapper.find("[data-test=docx]").attributes("href")).toBe("/api/letters/11/docx");
+    expect(wrapper.find("[data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf");
   });
 
   it("la version modifiée en dernier est celle affichée ; les corrections s'enregistrent", async () => {
@@ -189,8 +190,8 @@ describe("barre de candidature", () => {
     expect(wrapper.find("[data-test=back-to-offers]").attributes("href")).toBe("/candidatures/offres");
     const bar = wrapper.find("[data-test=apply-bar]");
     expect(bar.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");
-    expect(bar.find("[data-test=bar-letter]").attributes("href")).toBe("/api/letters/11/docx");
-    expect(bar.find("[data-test=bar-cv]").attributes("href")).toBe("/api/cvs/31/docx");
+    expect(bar.find("[data-test=bar-letter]").attributes("href")).toBe("/api/letters/11/pdf");
+    expect(bar.find("[data-test=bar-cv]").attributes("href")).toBe("/api/cvs/31/pdf");
 
     await bar.find("[data-test=mark-applied]").trigger("click");
     await flushPromises();

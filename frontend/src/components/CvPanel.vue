@@ -2,7 +2,6 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
-import { printSheet } from "../composables/usePrint";
 import AppIcon from "./AppIcon.vue";
 
 const props = defineProps<{ offer: Offer }>();
@@ -155,12 +154,6 @@ function resizeAll(): void {
 function onInput(event: Event): void {
   if (event.target instanceof HTMLTextAreaElement) resize(event.target);
   dirty.value = true;
-}
-
-function print(): void {
-  const sheet = document.querySelector<HTMLElement>(".cv-sheet");
-  const who = doc.value?.name ? ` - ${doc.value.name}` : "";
-  if (sheet) printSheet(sheet, { title: `CV${who} - ${props.offer.company ?? props.offer.title}` });
 }
 
 function versionLabel(cv: Cv): string {
@@ -386,18 +379,16 @@ onMounted(() => void load());
         >
           {{ dirty ? "Enregistrer le titre et le résumé" : "Aucune modification" }}
         </button>
-        <button
-          type="button"
-          class="secondary"
-          :disabled="dirty"
-          @click="print"
-        >
-          Télécharger en PDF
-        </button>
         <div
           v-if="!dirty"
           class="actions"
         >
+          <a
+            class="secondary"
+            :href="`/api/cvs/${selected.id}/pdf`"
+            download
+            data-test="cv-pdf"
+          >Télécharger en PDF</a>
           <a
             class="secondary"
             :href="`/api/cvs/${selected.id}/docx`"
@@ -405,8 +396,11 @@ onMounted(() => void load());
             data-test="cv-docx"
           >Télécharger en Word</a>
         </div>
-        <p class="hint">
-          PDF : choisis « Enregistrer au format PDF » dans la fenêtre d'impression.
+        <p
+          v-if="dirty"
+          class="hint"
+        >
+          Enregistre d'abord tes modifications pour les télécharger.
         </p>
       </div>
 

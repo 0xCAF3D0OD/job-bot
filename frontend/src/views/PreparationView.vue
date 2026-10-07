@@ -7,10 +7,10 @@ import AppIcon from "../components/AppIcon.vue";
 import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import CvPanel from "../components/CvPanel.vue";
+import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { printSheet } from "../composables/usePrint";
 import { expiredText } from "../format";
 
 const route = useRoute();
@@ -32,6 +32,9 @@ const applyLink = computed(() => {
 });
 const currentCvId = ref<number | null>(null);
 const currentLetterId = computed(() => current(letters.value)?.id ?? null);
+// Corps de la lettre, pour les formulaires qui le demandent en texte (docs/25 §5).
+const currentLetterText = computed(() => current(letters.value)?.paragraphs.map((p) => p.text).join("\n\n") ?? null);
+const sheetOpen = ref(false);
 const applying = ref<ApplicationFormValue | null>(null);
 const applyError = ref("");
 const applyNotice = ref("");
@@ -178,11 +181,6 @@ async function save(): Promise<void> {
   }
 }
 
-function print(): void {
-  const sheet = document.querySelector<HTMLElement>(".letter-sheet");
-  if (sheet) printSheet(sheet, { title: `Lettre - ${offer.value?.company ?? offer.value?.title ?? "candidature"}` });
-}
-
 function edited(): void {
   dirty.value = true;
 }
@@ -298,18 +296,34 @@ onMounted(() => void load());
         <a
           v-if="currentLetterId"
           class="link"
-          :href="`/api/letters/${currentLetterId}/docx`"
+          :href="`/api/letters/${currentLetterId}/pdf`"
           download
           data-test="bar-letter"
-        >Lettre (Word)</a>
+        >Lettre (PDF)</a>
         <a
           v-if="currentCvId"
           class="link"
-          :href="`/api/cvs/${currentCvId}/docx`"
+          :href="`/api/cvs/${currentCvId}/pdf`"
           download
           data-test="bar-cv"
-        >CV (Word)</a>
+        >CV (PDF)</a>
+        <button
+          v-if="offer.status !== 'applied'"
+          type="button"
+          class="link"
+          :aria-expanded="sheetOpen"
+          data-test="bar-sheet"
+          @click="sheetOpen = !sheetOpen"
+        >
+          {{ sheetOpen ? "Masquer la fiche" : "Fiche pour le formulaire" }}
+        </button>
       </div>
+      <FormSheet
+        v-if="offer && sheetOpen && offer.status !== 'applied'"
+        :letter-text="currentLetterText"
+        :letter-id="currentLetterId"
+        :cv-id="currentCvId"
+      />
       <p
         v-if="applyNotice"
         class="notice"
@@ -508,19 +522,16 @@ onMounted(() => void load());
             >
               {{ dirty ? "Enregistrer mes modifications" : "Aucune modification" }}
             </button>
-            <button
-              type="button"
-              class="secondary"
-              :disabled="dirty"
-              data-test="print"
-              @click="print"
-            >
-              Télécharger en PDF
-            </button>
             <div
               v-if="!dirty"
               class="actions"
             >
+              <a
+                class="secondary"
+                :href="`/api/letters/${selected.id}/pdf`"
+                download
+                data-test="pdf"
+              >Télécharger en PDF</a>
               <a
                 class="secondary"
                 :href="`/api/letters/${selected.id}/docx`"
@@ -533,9 +544,6 @@ onMounted(() => void load());
               class="hint"
             >
               Enregistre d'abord tes modifications pour les télécharger.
-            </p>
-            <p class="hint">
-              PDF : choisis « Enregistrer au format PDF » dans la fenêtre d'impression.
             </p>
           </div>
 

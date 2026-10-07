@@ -816,6 +816,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/letters/{draft_id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Letter Pdf
+         * @description La même lettre en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).
+         */
+        get: operations["downloadLetterPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/cvs": {
         parameters: {
             query?: never;
@@ -869,6 +889,26 @@ export interface paths {
         };
         /** Download Cv Docx */
         get: operations["downloadCvDocx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cvs/{draft_id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Cv Pdf
+         * @description Le même CV en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).
+         */
+        get: operations["downloadCvPdf"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2388,6 +2428,16 @@ export interface components {
             phone?: string | null;
             /** Email */
             email?: string | null;
+            /** Linkedin */
+            linkedin?: string | null;
+            /** Website */
+            website?: string | null;
+            /** Availability */
+            availability?: string | null;
+            /** Salary */
+            salary?: string | null;
+            /** Permit */
+            permit?: string | null;
         };
         /** Inbox */
         Inbox: {
@@ -5598,6 +5648,37 @@ export interface operations {
             };
         };
     };
+    downloadLetterPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listCvs: {
         parameters: {
             query?: never;
@@ -5738,6 +5819,37 @@ export interface operations {
                 };
                 content: {
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    downloadCvPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
                 };
             };
             /** @description Validation Error */

@@ -2249,6 +2249,45 @@
         }
       }
     },
+    "/api/letters/{draft_id}/pdf": {
+      "get": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Download Letter Pdf",
+        "description": "La même lettre en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).",
+        "operationId": "downloadLetterPdf",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/cvs": {
       "get": {
         "tags": [
@@ -2432,6 +2471,45 @@
             "description": "Successful Response",
             "content": {
               "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cvs/{draft_id}/pdf": {
+      "get": {
+        "tags": [
+          "cvs"
+        ],
+        "summary": "Download Cv Pdf",
+        "description": "Le même CV en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).",
+        "operationId": "downloadCvPdf",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {}
             }
           },
           "422": {
@@ -7029,6 +7107,66 @@
               }
             ],
             "title": "Email"
+          },
+          "linkedin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkedin"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "availability": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Availability"
+          },
+          "salary": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary"
+          },
+          "permit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permit"
           }
         },
         "type": "object",
