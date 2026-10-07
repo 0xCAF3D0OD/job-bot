@@ -223,6 +223,14 @@ onMounted(() => void load());
 
   <section class="band">
     <div class="container">
+      <!-- Toujours visible : revenir aux offres à tout moment (retour d'usage du 2026-10-07). -->
+      <RouterLink
+        to="/candidatures/offres"
+        class="back-link"
+        data-test="back-to-offers"
+      >
+        ← Retour aux offres
+      </RouterLink>
       <p
         v-if="notFound"
         class="notice error"
@@ -246,6 +254,13 @@ onMounted(() => void load());
       >
         <template v-if="offer.status === 'applied'">
           <span class="status-pill applied">Candidature envoyée</span>
+          <RouterLink
+            to="/candidatures/offres"
+            class="button-link primary-link"
+            data-test="next-offers"
+          >
+            Revenir aux offres <AppIcon name="chevron" />
+          </RouterLink>
           <RouterLink
             to="/candidatures/suivi"
             class="link"
@@ -293,6 +308,13 @@ onMounted(() => void load());
         role="status"
       >
         {{ applyNotice }}
+        <RouterLink
+          to="/candidatures/offres"
+          class="link"
+          data-test="notice-offers"
+        >
+          Revenir aux offres
+        </RouterLink>
       </p>
       <nav
         v-if="offer"

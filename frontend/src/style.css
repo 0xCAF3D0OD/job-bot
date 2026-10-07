@@ -946,3 +946,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .job-room-step { margin-top: 0.7rem; }
 .job-room-step h4 { margin: 0 0 0.3rem; font-size: 0.82rem; color: var(--faint); font-weight: 600; }
 .job-room-choice { color: var(--accent); }
+
+/* Préparation : retour aux offres toujours visible */
+.back-link { display: inline-flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem; color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+.back-link:hover { color: var(--accent); }

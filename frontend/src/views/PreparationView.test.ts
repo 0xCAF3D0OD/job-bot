@@ -185,6 +185,8 @@ describe("barre de candidature", () => {
     );
     POST.mockResolvedValue({ data: { id: 5, company: "Acme SA" } });
     const wrapper = await mountView();
+    // Retour aux offres toujours possible.
+    expect(wrapper.find("[data-test=back-to-offers]").attributes("href")).toBe("/candidatures/offres");
     const bar = wrapper.find("[data-test=apply-bar]");
     expect(bar.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");
     expect(bar.find("[data-test=bar-letter]").attributes("href")).toBe("/api/letters/11/docx");
@@ -201,5 +203,7 @@ describe("barre de candidature", () => {
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 7, application_url: "https://acme.example/jobs/1" });
     expect(wrapper.text()).toContain("Candidature chez Acme SA enregistrée");
+    // Une fois envoyée : revenir aux offres en un clic.
+    expect(wrapper.find("[data-test=notice-offers]").attributes("href")).toBe("/candidatures/offres");
   });
 });
