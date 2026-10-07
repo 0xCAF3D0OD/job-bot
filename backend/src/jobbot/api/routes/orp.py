@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime, time
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Path, Query, Request, Response, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,6 +39,16 @@ def _today() -> date:
     return datetime.now(UTC).astimezone(LOCAL_TZ).date()
 
 
+class JobRoomFieldOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    step: str
+    label: str
+    value: str
+    # Case à cocher ou bouton à choisir dans Job-Room, plutôt qu'un texte à coller.
+    choice: bool
+
+
 class OrpRowOut(BaseModel):
     application_id: int
     date: str
@@ -53,6 +63,8 @@ class OrpRowOut(BaseModel):
     result: str
     url: str
     missing: list[str]
+    # Champs dans l'ordre du formulaire de saisie de Job-Room.
+    job_room: list[JobRoomFieldOut]
 
 
 class OrpSearchOut(BaseModel):
@@ -108,6 +120,7 @@ async def _rows(session: AsyncSession, month: str) -> list[OrpRow]:
                 company_address=a.company_address,
                 contact_name=a.contact_name,
                 contact_phone=a.contact_phone,
+                contact_email=a.contact_email,
                 job_title=a.job_title,
                 rate_text=a.rate_text,
                 method=a.method,
@@ -187,7 +200,15 @@ async def get_orp_month(
         count=len(rows),
         target=int(target) if target else None,
         incomplete=sum(1 for r in rows if r.missing),
-        rows=[OrpRowOut(**r.__dict__) for r in rows],
+        rows=[
+            OrpRowOut(
+                **{
+                    **r.__dict__,
+                    "job_room": [JobRoomFieldOut.model_validate(f) for f in r.job_room],
+                }
+            )
+            for r in rows
+        ],
         submitted_at=submitted_at,
         exported_at=record.exported_at if record else None,
         changed_after_submit=bool(record and record.changed_after_submit),

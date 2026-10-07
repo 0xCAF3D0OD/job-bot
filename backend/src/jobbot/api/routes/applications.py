@@ -162,6 +162,7 @@ class ApplicationBase(BaseModel):
     company_address: ShortText | None = None
     contact_name: ShortText | None = None
     contact_phone: ShortText | None = None
+    contact_email: Annotated[str, Field(max_length=200)] | None = None
     job_title: Annotated[str, Field(min_length=1, max_length=300)]
     location: ShortText | None = None
     rate_text: ShortText | None = None
@@ -180,6 +181,7 @@ class ApplicationBase(BaseModel):
         "company_address",
         "contact_name",
         "contact_phone",
+        "contact_email",
         "location",
         "rate_text",
         "application_url",

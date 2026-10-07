@@ -1432,6 +1432,8 @@ export interface components {
             contact_name?: string | null;
             /** Contact Phone */
             contact_phone?: string | null;
+            /** Contact Email */
+            contact_email?: string | null;
             /** Job Title */
             job_title: string;
             /** Location */
@@ -1471,6 +1473,8 @@ export interface components {
             contact_name?: string | null;
             /** Contact Phone */
             contact_phone?: string | null;
+            /** Contact Email */
+            contact_email?: string | null;
             /** Job Title */
             job_title: string;
             /** Location */
@@ -1527,6 +1531,8 @@ export interface components {
             contact_name?: string | null;
             /** Contact Phone */
             contact_phone?: string | null;
+            /** Contact Email */
+            contact_email?: string | null;
             /** Job Title */
             job_title: string;
             /** Location */
@@ -1565,6 +1571,8 @@ export interface components {
             contact_name?: string | null;
             /** Contact Phone */
             contact_phone?: string | null;
+            /** Contact Email */
+            contact_email?: string | null;
             /** Job Title */
             job_title: string;
             /** Location */
@@ -1967,6 +1975,17 @@ export interface components {
             unread: number;
             /** Items */
             items: components["schemas"]["NotificationOut"][];
+        };
+        /** JobRoomFieldOut */
+        JobRoomFieldOut: {
+            /** Step */
+            step: string;
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+            /** Choice */
+            choice: boolean;
         };
         /** JobRunOut */
         JobRunOut: {
@@ -2612,6 +2631,8 @@ export interface components {
             url: string;
             /** Missing */
             missing: string[];
+            /** Job Room */
+            job_room: components["schemas"]["JobRoomFieldOut"][];
         };
         /** OrpSearchOut */
         OrpSearchOut: {

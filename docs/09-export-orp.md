@@ -115,3 +115,19 @@ Les candidatures ne changent pas : `orp_month` existe déjà.
 - **Rappel de remise** : envoyé au premier passage du mois (le 1er en général, plus tard si la plateforme était arrêtée), tant que la date limite n'est pas passée ; puis un rappel la veille, en priorité haute.
 - **Mois remis** : plus aucun rappel. Le rappel du 25 ne part pas sans objectif saisi.
 - Le jour réglé sert aussi à l'échéance affichée sur les pages ORP et Aujourd'hui.
+
+## Complément du 2026-10-07 : ordre du formulaire Job-Room
+
+Capture du formulaire de saisie fournie par Kevin. La « Saisie Job-Room » de l'onglet Preuves ORP suit désormais ses étapes et ses champs, dans le même ordre :
+
+1. **Quand avez-vous postulé ?** Date (jj.mm.aaaa).
+2. **Comment avez-vous postulé ?** à cocher : Par voie électronique, Par lettre, Contact personnel ou Par téléphone.
+3. **Auprès de quelle entreprise ?** Entreprise, Rue, N°, Numéro de case postale, Pays (Suisse), NPA / Lieu, Personne contactée, Courriel, Numéro de téléphone.
+4. **Pour quel poste ?** Désignation du poste, Lien vers le formulaire en ligne.
+5. **Assignation par l'ORP ?** à cocher : Oui ou Non.
+6. **Taux d'occupation** à cocher : A plein temps ou A temps partiel.
+7. **Résultat** à cocher : En suspens, Engagement, Réponse négative ; « Entretien d'embauche + En suspens » pour une candidature au statut entretien.
+
+- **Adresse découpée** automatiquement (rue, n°, case postale, NPA et lieu) à partir de l'adresse saisie sur une ou deux lignes (« Chemin Malombré 10, 1206 Genève », « 12, rue de Lausanne », « Case postale 123 »).
+- **Courriel du contact** : nouveau champ de la candidature (migration **0030**), repris dans Job-Room ; le PDF et le CSV ne changent pas (le formulaire papier ne le demande pas).
+- Les champs à cocher sont affichés « à cocher : … » sans bouton « Copier ».

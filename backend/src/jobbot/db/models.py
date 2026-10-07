@@ -371,6 +371,8 @@ class Application(Base):
     company_address: Mapped[str | None] = mapped_column(Text)
     contact_name: Mapped[str | None] = mapped_column(Text)
     contact_phone: Mapped[str | None] = mapped_column(Text)
+    # Demandé par le formulaire de saisie de Job-Room.
+    contact_email: Mapped[str | None] = mapped_column(Text)
     job_title: Mapped[str] = mapped_column(Text)
     location: Mapped[str | None] = mapped_column(Text)
     # « plein temps » ou « temps partiel (80 %) », comme sur le formulaire ORP.

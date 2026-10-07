@@ -32,6 +32,13 @@ const row = (id: number, extra: Record<string, unknown> = {}) => ({
   result: "en suspens",
   url: "https://emploi.exemple.ch/postuler/1",
   missing: [],
+  job_room: [
+    { step: "Quand avez-vous postulé ?", label: "Date", value: "02.10.2026", choice: false },
+    { step: "Comment avez-vous postulé ?", label: "Mode", value: "Par voie électronique", choice: true },
+    { step: "Auprès de quelle entreprise ?", label: "Entreprise", value: "Acme SA", choice: false },
+    { step: "Auprès de quelle entreprise ?", label: "Rue", value: "Avenue de l'Exemple", choice: false },
+    { step: "Résultat", label: "Résultat", value: "En suspens", choice: true },
+  ],
   ...extra,
 });
 
@@ -235,6 +242,16 @@ describe("Candidatures, onglet Preuves ORP", () => {
     const { wrapper } = await mountView("/candidatures/preuves");
     await wrapper.find("[data-test=job-room]").setValue(true);
     expect(wrapper.findAll("[data-test=job-room-row]")).toHaveLength(2);
+    // Une section par étape du formulaire Job-Room ; les choix sont à cocher, pas à copier.
+    const first = wrapper.findAll("[data-test=job-room-row]")[0]!;
+    expect(first.findAll("h4").map((h) => h.text())).toEqual([
+      "Quand avez-vous postulé ?",
+      "Comment avez-vous postulé ?",
+      "Auprès de quelle entreprise ?",
+      "Résultat",
+    ]);
+    expect(first.find("[data-test=job-room-choice]").text()).toBe("à cocher : Par voie électronique");
+    expect(first.findAll("[data-test=copy]")).toHaveLength(3);
     await wrapper.findAll("[data-test=copy]")[1]!.trigger("click");
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("Acme SA");

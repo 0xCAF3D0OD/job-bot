@@ -941,3 +941,8 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .today-list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 .today-list a strong { color: var(--text); }
 .today-list a:hover strong { color: var(--accent); }
+
+/* Saisie Job-Room : une section par étape de leur formulaire */
+.job-room-step { margin-top: 0.7rem; }
+.job-room-step h4 { margin: 0 0 0.3rem; font-size: 0.82rem; color: var(--faint); font-weight: 600; }
+.job-room-choice { color: var(--accent); }

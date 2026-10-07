@@ -21,6 +21,7 @@ const form = ref<ApplicationFormValue>({
   company_address: props.initial.company_address ?? "",
   contact_name: props.initial.contact_name ?? "",
   contact_phone: props.initial.contact_phone ?? "",
+  contact_email: props.initial.contact_email ?? "",
   location: props.initial.location ?? "",
   rate_text: props.initial.rate_text ?? "",
   application_url: props.initial.application_url ?? "",
@@ -96,6 +97,14 @@ const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, s
           <input
             v-model="form.contact_phone"
             type="text"
+          >
+        </label>
+        <label>Courriel du contact
+          <input
+            v-model="form.contact_email"
+            type="email"
+            maxlength="200"
+            data-test="contact-email"
           >
         </label>
         <label>Lieu
