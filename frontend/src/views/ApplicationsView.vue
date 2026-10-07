@@ -4,36 +4,56 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api, type Application, type ApplicationStatus, type OrpMonth } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
 import OrpSheet from "../components/OrpSheet.vue";
+import SuiviCalendar from "../components/SuiviCalendar.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { formatMonth, shiftMonth } from "../format";
 
-// Suivi et Preuves ORP : onglets de la rubrique Candidatures
-// (docs/18 §2, docs/19 §2), avec un en-tête commun pour le mois.
-type View = "suivi" | "orp";
-const props = defineProps<{ view: View }>();
+// Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
 const REMIND_AFTER_DAYS = 10;
+const VIEW_KEY = "jobbot-suivi-vue";
 
 const route = useRoute();
 const router = useRouter();
-const view = computed<View>(() => props.view);
 const orp = ref<OrpMonth | null>(null);
 const all = ref<Application[]>([]);
 const allMonths = ref(false);
 const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(null);
 const error = ref("");
 const loaded = ref(false);
+const busy = ref(false);
+const selectedDay = ref<string | null>(null);
+const layout = ref<"calendar" | "list">(readLayout());
+
+function readLayout(): "calendar" | "list" {
+  try {
+    return localStorage.getItem(VIEW_KEY) === "list" ? "list" : "calendar";
+  } catch {
+    return "calendar";
+  }
+}
+
+function setLayout(value: "calendar" | "list"): void {
+  layout.value = value;
+  try {
+    localStorage.setItem(VIEW_KEY, value);
+  } catch {
+    // Choix retenu jusqu'au rechargement seulement.
+  }
+}
 
 const month = computed(() => orp.value?.month ?? "");
-const items = computed(() =>
-  allMonths.value ? all.value : all.value.filter((a) => a.orp_month === month.value),
-);
-const progress = computed(() =>
-  orp.value?.target ? Math.min(1, orp.value.count / orp.value.target) : null,
-);
+const monthItems = computed(() => all.value.filter((a) => a.orp_month === month.value));
+const items = computed(() => (allMonths.value ? all.value : monthItems.value));
+const rowsById = computed(() => new Map((orp.value?.rows ?? []).map((r) => [r.application_id, r])));
+const incomplete = computed(() => new Set((orp.value?.rows ?? []).filter((r) => r.missing.length).map((r) => r.application_id)));
+const firstIncomplete = computed(() => monthItems.value.find((a) => incomplete.value.has(a.id)) ?? null);
+const progress = computed(() => (orp.value?.target ? Math.min(1, orp.value.count / orp.value.target) : null));
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric" });
+const dayTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
 const stateLabel = computed(() => {
   const d = orp.value;
   if (!d) return "";
@@ -41,12 +61,19 @@ const stateLabel = computed(() => {
   if (d.state === "a_remettre") return `Preuves à remettre avant le ${longDate.format(new Date(d.due_date))}`;
   return `En cours · remise avant le ${longDate.format(new Date(d.due_date))}`;
 });
-// Sans réponse depuis 10 jours : à relancer (comme la page Aujourd'hui et ntfy).
 const toFollowUp = computed(() => {
   const limit = new Date();
   limit.setDate(limit.getDate() - REMIND_AFTER_DAYS);
   const day = limit.toISOString().slice(0, 10);
   return all.value.filter((a) => a.status === "en_attente" && a.sent_at <= day);
+});
+// Cartes du jour choisi : envoyées ce jour-là ou entretien ce jour-là.
+const dayCards = computed(() => {
+  const day = selectedDay.value;
+  if (!day) return [];
+  return all.value.filter(
+    (a) => a.sent_at === day || (a.interview_at && new Date(a.interview_at).toISOString().slice(0, 10) === day),
+  );
 });
 
 async function load(): Promise<void> {
@@ -61,9 +88,9 @@ async function load(): Promise<void> {
 }
 
 function go(delta: number): void {
+  selectedDay.value = null;
   void router.push({ query: { ...route.query, mois: shiftMonth(month.value, delta) } });
 }
-
 
 function today(): string {
   const now = new Date();
@@ -85,7 +112,7 @@ function addManual(): void {
   editing.value = {
     id: null,
     value: {
-      sent_at: today(),
+      sent_at: selectedDay.value ?? today(),
       method: "electronique",
       assigned_by_orp: false,
       company: "",
@@ -135,6 +162,19 @@ async function remove(application: Application): Promise<void> {
   await load();
 }
 
+async function submit(done: boolean): Promise<void> {
+  if (!orp.value || (!done && !window.confirm("Annuler la remise de ce mois ?"))) return;
+  busy.value = true;
+  try {
+    const params = { params: { path: { month: orp.value.month } } };
+    if (done) await api.PUT("/api/orp/{month}/submission", params);
+    else await api.DELETE("/api/orp/{month}/submission", params);
+    await load();
+  } finally {
+    busy.value = false;
+  }
+}
+
 watch(
   () => route.query.mois,
   () => void load(),
@@ -144,114 +184,218 @@ onMounted(() => void load());
 
 <template>
   <section class="jobs-body">
-    <div>
-      <template v-if="orp">
-        <div class="applications-head">
-          <div class="month-nav">
-            <button
-              type="button"
-              class="secondary small"
-              aria-label="Mois précédent"
-              data-test="prev-month"
-              @click="go(-1)"
-            >
-              ←
-            </button>
-            <strong data-test="month">{{ formatMonth(orp.month) }}</strong>
-            <button
-              type="button"
-              class="secondary small"
-              aria-label="Mois suivant"
-              data-test="next-month"
-              @click="go(1)"
-            >
-              →
-            </button>
-          </div>
-          <div
-            class="month-goal"
-            data-test="goal"
-          >
-            <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }} candidature(s)</span>
-            <div
-              v-if="progress !== null"
-              class="budget-bar"
-              role="progressbar"
-              :aria-valuenow="Math.round(progress * 100)"
-              aria-valuemin="0"
-              aria-valuemax="100"
-            >
-              <span :style="{ width: `${progress * 100}%` }" />
-            </div>
-            <span
-              v-else
-              class="hint"
-            >Objectif ORP à saisir dans les Réglages.</span>
-          </div>
-          <span
-            :class="['badge', orp.state === 'remis' ? 'new' : '']"
-            data-test="state"
-          >{{ stateLabel }}</span>
+    <template v-if="orp">
+      <div class="applications-head">
+        <div class="month-nav">
           <button
             type="button"
-            class="primary small"
-            data-test="add-application"
-            @click="addManual"
+            class="secondary small"
+            aria-label="Mois précédent"
+            data-test="prev-month"
+            @click="go(-1)"
           >
-            Ajouter une candidature <AppIcon name="chevron" />
+            ←
+          </button>
+          <strong data-test="month">{{ formatMonth(orp.month) }}</strong>
+          <button
+            type="button"
+            class="secondary small"
+            aria-label="Mois suivant"
+            data-test="next-month"
+            @click="go(1)"
+          >
+            →
           </button>
         </div>
-
-        <aside
-          v-if="toFollowUp.length"
-          class="follow-up"
-          data-test="follow-up"
+        <div
+          class="month-goal"
+          data-test="goal"
         >
-          <strong>À relancer ({{ toFollowUp.length }})</strong> : sans réponse depuis {{ REMIND_AFTER_DAYS }} jours ou plus.
-          <span class="follow-up-list">
-            <button
+          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }} candidature(s)</span>
+          <div
+            v-if="progress !== null"
+            class="budget-bar"
+            role="progressbar"
+            :aria-valuenow="Math.round(progress * 100)"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <span :style="{ width: `${progress * 100}%` }" />
+          </div>
+          <span
+            v-else
+            class="hint"
+          >Objectif ORP à saisir dans les Réglages.</span>
+        </div>
+        <span
+          :class="['badge', orp.state === 'remis' ? 'new' : '']"
+          data-test="state"
+        >{{ stateLabel }}</span>
+        <!-- Une action ORP à la fois (docs/22 §2). -->
+        <template v-if="orp.count">
+          <button
+            v-if="orp.state === 'remis'"
+            type="button"
+            class="link"
+            :disabled="busy"
+            data-test="cancel-submit"
+            @click="submit(false)"
+          >
+            Annuler la remise
+          </button>
+          <button
+            v-else-if="firstIncomplete"
+            type="button"
+            class="primary small"
+            data-test="complete-next"
+            @click="edit(firstIncomplete)"
+          >
+            Compléter {{ orp.incomplete }} ligne(s) <AppIcon name="chevron" />
+          </button>
+          <button
+            v-else
+            type="button"
+            class="primary small"
+            :disabled="busy"
+            data-test="submit"
+            @click="submit(true)"
+          >
+            Marquer comme remis <AppIcon name="chevron" />
+          </button>
+        </template>
+        <button
+          type="button"
+          class="secondary small"
+          data-test="add-application"
+          @click="addManual"
+        >
+          Ajouter une candidature
+        </button>
+      </div>
+
+      <div
+        class="segmented layout-switch"
+        role="radiogroup"
+        aria-label="Affichage"
+      >
+        <button
+          type="button"
+          role="radio"
+          :aria-checked="layout === 'calendar'"
+          data-test="layout-calendar"
+          @click="setLayout('calendar')"
+        >
+          Calendrier
+        </button>
+        <button
+          type="button"
+          role="radio"
+          :aria-checked="layout === 'list'"
+          data-test="layout-list"
+          @click="setLayout('list')"
+        >
+          Liste
+        </button>
+      </div>
+
+      <div
+        v-if="layout === 'calendar'"
+        class="suivi-grid"
+      >
+        <SuiviCalendar
+          :month="orp.month"
+          :applications="all"
+          :incomplete="incomplete"
+          :selected="selectedDay"
+          @select="selectedDay = selectedDay === $event ? null : $event"
+        />
+        <aside
+          class="suivi-panel"
+          data-test="day-panel"
+        >
+          <template v-if="selectedDay">
+            <h3>{{ dayTitle.format(new Date(`${selectedDay}T12:00:00`)) }}</h3>
+            <p
+              v-if="!dayCards.length"
+              class="hint"
+            >
+              Aucune candidature ce jour-là.
+              <button
+                type="button"
+                class="link"
+                @click="addManual"
+              >
+                En ajouter une
+              </button>
+            </p>
+            <ApplicationCard
+              v-for="application in dayCards"
+              :key="application.id"
+              :application="application"
+              :orp-row="rowsById.get(application.id) ?? null"
+              @status="setStatus"
+              @edit="edit"
+              @remove="remove"
+            />
+          </template>
+          <template v-else>
+            <h3>À relancer</h3>
+            <p
+              v-if="!toFollowUp.length"
+              class="hint"
+            >
+              Rien à relancer. Clique sur un jour pour voir ses candidatures.
+            </p>
+            <ApplicationCard
               v-for="application in toFollowUp"
               :key="application.id"
-              type="button"
-              class="link"
-              @click="edit(application)"
-            >
-              {{ application.company }}
-            </button>
-          </span>
+              :application="application"
+              :orp-row="rowsById.get(application.id) ?? null"
+              @status="setStatus"
+              @edit="edit"
+              @remove="remove"
+            />
+          </template>
         </aside>
+      </div>
 
-        <template v-if="view === 'suivi'">
-          <label class="check all-months">
-            <input
-              v-model="allMonths"
-              type="checkbox"
-              data-test="all-months"
-            > Tous les mois
-          </label>
-          <p
-            v-if="loaded && !items.length"
-            class="muted empty"
-          >
-            Aucune candidature en {{ formatMonth(orp.month) }}. Depuis une offre, « Marquer comme envoyée » l'ajoute ici.
-          </p>
-          <ApplicationsTable
-            v-else
-            :items="items"
-            :show-month="allMonths"
-            @edit="edit"
-            @status="setStatus"
-            @remove="remove"
-          />
-        </template>
-        <OrpSheet
+      <template v-else>
+        <label class="check all-months">
+          <input
+            v-model="allMonths"
+            type="checkbox"
+            data-test="all-months"
+          > Tous les mois
+        </label>
+        <p
+          v-if="loaded && !items.length"
+          class="muted empty"
+        >
+          Aucune candidature en {{ formatMonth(orp.month) }}. Depuis une offre, « Marquer comme envoyée » l'ajoute ici.
+        </p>
+        <ApplicationsTable
           v-else
+          :items="items"
+          :show-month="allMonths"
+          @edit="edit"
+          @status="setStatus"
+          @remove="remove"
+        />
+      </template>
+
+      <details
+        class="orp-details"
+        data-test="orp-details"
+      >
+        <summary>Formulaire ORP du mois : tableau, PDF, CSV, saisie Job-Room</summary>
+        <OrpSheet
           :data="orp"
+          embedded
           @reload="load"
           @edit="editById"
         />
-      </template>
-    </div>
+      </details>
+    </template>
   </section>
 
   <ApplicationForm

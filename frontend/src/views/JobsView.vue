@@ -8,17 +8,16 @@ import type { JobsTab } from "../router";
 // Rubrique Candidatures (docs/19 §2) : quatre onglets toujours visibles sous le titre.
 const route = useRoute();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
-const counts = ref({ offres: 0, suivi: 0, preuves: 0, alertes: 0 });
+const counts = ref({ offres: 0, suivi: 0, alertes: 0 });
 
 const TABS: { key: JobsTab; label: string; path: string; title: string; hint: string }[] = [
   { key: "offres", label: "Offres", path: "/candidatures/offres", title: "Les offres pour toi", hint: "à examiner" },
-  { key: "suivi", label: "Suivi", path: "/candidatures/suivi", title: "Tes candidatures", hint: "à relancer" },
   {
-    key: "preuves",
-    label: "Preuves ORP",
-    path: "/candidatures/preuves",
-    title: "Preuves de recherches d'emploi",
-    hint: "ligne(s) à compléter",
+    key: "suivi",
+    label: "Suivi",
+    path: "/candidatures/suivi",
+    title: "Tes candidatures et tes preuves ORP",
+    hint: "à relancer ou à compléter",
   },
   {
     key: "alertes",
@@ -43,8 +42,8 @@ async function refresh(): Promise<void> {
   const [today, orp] = await Promise.all([api.GET("/api/today"), api.GET("/api/orp")]);
   counts.value = {
     offres: today.data?.to_review ?? 0,
-    suivi: today.data?.to_follow_up ?? 0,
-    preuves: orp.data?.incomplete ?? 0,
+    // Suivi : à relancer, plus les lignes ORP à compléter (docs/22 §1).
+    suivi: (today.data?.to_follow_up ?? 0) + (orp.data?.incomplete ?? 0),
     alertes: today.data?.alerts_waiting ?? 0,
   };
 }

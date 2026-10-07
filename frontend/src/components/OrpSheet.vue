@@ -7,7 +7,8 @@ import { printSheet } from "../composables/usePrint";
 import { formatMonth, sourceLabel } from "../format";
 
 // Preuves ORP du mois (docs/09), onglet de la page Candidatures (docs/18 §2).
-const props = defineProps<{ data: OrpMonth }>();
+// embedded : dans l'onglet Suivi (docs/22 §2), les actions de remise sont dans la barre du mois.
+const props = defineProps<{ data: OrpMonth; embedded?: boolean }>();
 const emit = defineEmits<{ reload: []; edit: [applicationId: number] }>();
 
 const withSearches = ref(false);
@@ -134,38 +135,40 @@ onMounted(async () => {
       class="orp-next"
       data-test="orp-next"
     >
-      <template v-if="data.state === 'remis'">
-        <span>Preuves de ce mois remises.</span>
+      <template v-if="!embedded">
+        <template v-if="data.state === 'remis'">
+          <span>Preuves de ce mois remises.</span>
+          <button
+            type="button"
+            class="link"
+            :disabled="busy"
+            data-test="cancel-submit"
+            @click="submit(false)"
+          >
+            Annuler la remise
+          </button>
+        </template>
         <button
-          type="button"
-          class="link"
-          :disabled="busy"
-          data-test="cancel-submit"
-          @click="submit(false)"
-        >
-          Annuler la remise
-        </button>
-      </template>
-      <button
-        v-else-if="firstIncomplete"
-        type="button"
-        class="primary small"
-        data-test="complete-next"
-        @click="edit(firstIncomplete)"
-      >
-        Compléter {{ data.incomplete }} ligne(s) <AppIcon name="chevron" />
-      </button>
-      <template v-else>
-        <button
+          v-else-if="firstIncomplete"
           type="button"
           class="primary small"
-          :disabled="busy"
-          data-test="submit"
-          @click="submit(true)"
+          data-test="complete-next"
+          @click="edit(firstIncomplete)"
         >
-          Marquer comme remis <AppIcon name="chevron" />
+          Compléter {{ data.incomplete }} ligne(s) <AppIcon name="chevron" />
         </button>
-        <span class="hint">une fois saisies dans Job-Room ou le PDF envoyé</span>
+        <template v-else>
+          <button
+            type="button"
+            class="primary small"
+            :disabled="busy"
+            data-test="submit"
+            @click="submit(true)"
+          >
+            Marquer comme remis <AppIcon name="chevron" />
+          </button>
+          <span class="hint">une fois saisies dans Job-Room ou le PDF envoyé</span>
+        </template>
       </template>
       <span class="orp-next-links">
         <button

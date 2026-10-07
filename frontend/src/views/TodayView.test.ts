@@ -155,7 +155,7 @@ describe("Comment ça marche (docs/21 §3)", () => {
     expect(card.findAll("li")).toHaveLength(5);
     expect(wrapper.find("[data-test=journey-alerts]").classes()).toContain("done");
     expect(wrapper.find("[data-test=journey-apply]").classes()).not.toContain("done");
-    expect(wrapper.find("[data-test=journey-orp] a").attributes("href")).toBe("/candidatures/preuves");
+    expect(wrapper.find("[data-test=journey-orp] a").attributes("href")).toBe("/candidatures/suivi");
     expect(wrapper.find("[data-test=journey-alerts]").text()).toContain("Candidatures › Alertes");
     await wrapper.find("[data-test=dismiss-journey]").trigger("click");
     expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: true } });

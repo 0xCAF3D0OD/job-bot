@@ -38,7 +38,7 @@ export const navigation: NavEntry[] = [
 ];
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
-export type JobsTab = "offres" | "suivi" | "preuves" | "alertes";
+export type JobsTab = "offres" | "suivi" | "alertes";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, Component> = {
@@ -66,7 +66,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/orp",
     redirect: (to) => ({
-      path: to.query.onglet === "journal" ? "/candidatures/alertes" : "/candidatures/preuves",
+      path: to.query.onglet === "journal" ? "/candidatures/alertes" : "/candidatures/suivi",
       query: keepMonth(to.query),
     }),
   },
@@ -91,15 +91,16 @@ const routes: RouteRecordRaw[] = [
         path: "",
         redirect: (to) => {
           const query = keepMonth(to.query);
-          if (to.query.vue === "orp") return { path: "/candidatures/preuves", query };
+          if (to.query.vue === "orp") return { path: "/candidatures/suivi", query };
           if (to.query.vue === "journal") return { path: "/candidatures/alertes" };
           if (query.mois) return { path: "/candidatures/suivi", query };
           return { path: "/candidatures/offres" };
         },
       },
       { path: "offres", name: "offers", component: OffersView, meta: { tab: "offres" } },
-      { path: "suivi", name: "applications", component: ApplicationsView, props: { view: "suivi" }, meta: { tab: "suivi" } },
-      { path: "preuves", name: "orp", component: ApplicationsView, props: { view: "orp" }, meta: { tab: "preuves" } },
+      { path: "suivi", name: "applications", component: ApplicationsView, meta: { tab: "suivi" } },
+      // Preuves ORP fondues dans le Suivi (docs/22 §1) : les anciens liens y mènent, avec le mois.
+      { path: "preuves", redirect: (to) => ({ path: "/candidatures/suivi", query: to.query }) },
       // Mes alertes et alertes reçues (docs/20 §1) ; l'ancien « Journal des recherches ».
       { path: "alertes", name: "alerts", component: AlertsView, meta: { tab: "alertes" } },
       { path: "journal", redirect: "/candidatures/alertes" },

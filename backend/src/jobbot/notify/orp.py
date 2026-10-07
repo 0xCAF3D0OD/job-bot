@@ -114,10 +114,10 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
                     message=details + ". PDF, CSV ou saisie Job-Room depuis la page ORP.",
                     priority=4 if key == "eve" else 3,
                     tags=["calendar"],
-                    click=f"{base}/candidatures/preuves?mois={previous}",
+                    click=f"{base}/candidatures/suivi?mois={previous}",
                 ),
                 kind="orp_due",
-                link=f"/candidatures/preuves?mois={previous}",
+                link=f"/candidatures/suivi?mois={previous}",
             )
             await _mark(runtime, previous, previous_sent, key, today)
             sent_count += 1
