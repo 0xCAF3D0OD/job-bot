@@ -967,7 +967,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .alert-form label { display: grid; gap: 0.3rem; font-size: 0.88rem; }
 .alert-form .form-actions { grid-column: 1 / -1; padding-top: 0; }
 @media (max-width: 720px) { .alert-form { grid-template-columns: 1fr; } }
-.employer-line { margin: 0.4rem 0 0; }
+.employer-line { margin: 0.4rem 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; }
 
 /* « En savoir plus » (docs/21 §2) */
 .more-info { font-size: 0.85rem; color: var(--muted); }
