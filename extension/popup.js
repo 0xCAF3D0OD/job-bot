@@ -1,5 +1,6 @@
 // Panneau de l'extension (docs/25 §3.1) : candidature reconnue, « Remplir le formulaire »,
 // questions libres, « J'ai envoyé ». Le jeton reste dans le stockage local du navigateur.
+// Chrome, Edge, Brave et Firefox (128 et plus) : même code, API `chrome.*` à promesses.
 
 const $ = (id) => document.getElementById(id);
 const show = (id, on = true) => ($(id).hidden = !on);
@@ -42,27 +43,77 @@ async function base64(path) {
 
 // --- Relier ------------------------------------------------------------------------------
 
+function setupError(error) {
+  const offline = error.message === "Failed to fetch" || error.name === "TypeError";
+  say("setup-error", offline ? "Plateforme injoignable à cette adresse." : error.message);
+}
+
 async function link() {
   say("setup-error", "");
   try {
     const base = origin($("base").value);
     const token = $("token").value.trim();
     if (!token.startsWith("jbx_")) throw new Error("Le jeton commence par « jbx_ ».");
-    const granted = await chrome.permissions.request({ origins: [`${base}/*`] });
-    if (!granted) throw new Error("Autorisation refusée : l'extension ne peut pas joindre ta plateforme.");
     config = { base, token };
-    await call("/api/extension/me");
-    await chrome.storage.local.set(config);
-    await start();
+    // Enregistré en même temps que la demande d'autorisation : Firefox ferme souvent le
+    // panneau pendant cette demande, et on reprend à la réouverture (« Autoriser l'accès »).
+    // La demande part sans attendre : Firefox l'exige dans le geste même du clic.
+    const saving = chrome.storage.local.set(config);
+    const asking = requestAccess();
+    await saving;
+    await connect(await asking);
   } catch (error) {
-    say("setup-error", error.message === "Failed to fetch" ? "Plateforme injoignable à cette adresse." : error.message);
+    setupError(error);
   }
+}
+
+// Autorisation par hôte, sans le port : Firefox refuse un port dans le motif demandé, et un
+// motif sans port couvre tous les ports, dans Firefox comme dans Chrome.
+function accessPattern() {
+  const url = new URL(config.base);
+  return `${url.protocol}//${url.hostname}/*`;
+}
+
+function requestAccess() {
+  return chrome.permissions.request({ origins: [accessPattern()] });
+}
+
+async function connect(granted) {
+  if (!granted) throw new Error("Autorisation refusée : l'extension ne peut pas joindre ta plateforme.");
+  await call("/api/extension/me");
+  await start();
+}
+
+async function authorize() {
+  say("setup-error", "");
+  try {
+    await connect(await requestAccess());
+  } catch (error) {
+    setupError(error);
+  }
+}
+
+async function permitted() {
+  return chrome.permissions.contains({ origins: [accessPattern()] });
+}
+
+function showAuthorize() {
+  show("main", false);
+  show("setup");
+  $("base").value = config.base;
+  $("token").value = config.token;
+  show("fields", false);
+  show("link", false);
+  show("authorize");
 }
 
 async function unlink() {
   await chrome.storage.local.remove(["base", "token"]);
   config = { base: "", token: "" };
   show("main", false);
+  show("authorize", false);
+  show("fields");
+  show("link");
   show("setup");
 }
 
@@ -88,9 +139,13 @@ function renderOffer(offer) {
 }
 
 async function start() {
+  if (!(await permitted())) {
+    showAuthorize();
+    return;
+  }
   show("setup", false);
   show("main");
-  [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  tab = await targetTab();
   if (!tab?.url?.startsWith("http")) {
     say("error", "Ouvre le formulaire de l'employeur dans cet onglet, puis clique à nouveau sur l'icône.");
     return;
@@ -119,8 +174,21 @@ async function start() {
     }
     $("fill").disabled = !offerId;
   } catch (error) {
-    say("error", error.message === "Failed to fetch" ? "Plateforme injoignable." : error.message);
+    say("error", error.name === "TypeError" ? "Plateforme injoignable." : error.message);
   }
+}
+
+// Onglet à remplir : celui d'où le panneau est ouvert. `?onglet=<début de l'adresse>` désigne
+// un autre onglet quand popup.html est ouvert dans un onglet (tests automatiques, dépannage).
+async function targetTab() {
+  const wanted = new URLSearchParams(location.search).get("onglet");
+  if (wanted) {
+    const tabs = await chrome.tabs.query({});
+    const found = tabs.find((t) => t.url?.startsWith(wanted));
+    if (found) return found;
+  }
+  const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return active;
 }
 
 // --- Remplir -----------------------------------------------------------------------------
@@ -252,6 +320,7 @@ async function sent() {
 }
 
 $("link").addEventListener("click", link);
+$("authorize").addEventListener("click", authorize);
 $("unlink").addEventListener("click", unlink);
 $("fill").addEventListener("click", fill);
 $("sent").addEventListener("click", sent);

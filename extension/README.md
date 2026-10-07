@@ -10,13 +10,27 @@ questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune c
 2. **Charger l'extension non empaquetée** → choisis ce dossier `extension/`.
 3. Épingle l'icône job-bot dans la barre du navigateur.
 
+## Installer (Firefox 128 et plus)
+
+- **Pour essayer** : ouvre `about:debugging#/runtime/this-firefox` → **Charger un module
+  complémentaire temporaire…** → choisis `extension/manifest.json`. Firefox l'enlève à chaque
+  redémarrage : recharge-la, puis relie-la à nouveau.
+- **Pour la garder** : Firefox n'installe durablement qu'une extension signée par Mozilla. La
+  signature est gratuite et l'extension reste privée (non publiée) :
+  1. crée un compte sur addons.mozilla.org, puis tes clés dans « Outils › Gérer les clés
+     d'API » (garde-les pour toi) ;
+  2. dans ce dossier : `npx web-ext sign --channel=unlisted --api-key=… --api-secret=…` ;
+  3. ouvre le fichier `.xpi` produit (dossier `web-ext-artifacts/`) dans Firefox.
+
 ## Relier à ta plateforme
 
 1. Sur la plateforme : **Réglages › Extension du navigateur › Créer un jeton** ; copie-le
    (il n'est montré qu'une fois).
 2. Clique sur l'icône job-bot : colle l'adresse de ta plateforme (en `https://`, ou
    `http://localhost:…` sur ta machine) et le jeton, puis **Relier**. Le navigateur demande
-   l'autorisation de joindre cette adresse, et seulement celle-ci.
+   l'autorisation de joindre cette adresse, et seulement celle-ci. Si le panneau se ferme
+   pendant cette demande (fréquent dans Firefox), rouvre-le : **Autoriser l'accès à ma
+   plateforme** reprend là où tu en étais.
 
 ## Utiliser
 

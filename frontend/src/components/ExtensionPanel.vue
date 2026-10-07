@@ -69,8 +69,10 @@ onMounted(load);
       </p>
       <MoreInfo label="Comment l'installer">
         <ol class="extension-steps">
-          <li>Dans Chrome, Edge ou Brave : <code>chrome://extensions</code>, active le mode développeur.</li>
-          <li>« Charger l'extension non empaquetée » → le dossier <code>extension/</code> du dépôt.</li>
+          <li>
+            Chrome, Edge ou Brave : <code>chrome://extensions</code>, mode développeur, « Charger l'extension non
+            empaquetée » → le dossier <code>extension/</code> du dépôt. Firefox : voir <code>extension/README.md</code>.
+          </li>
           <li>Crée un jeton ci-dessous, puis clique sur l'icône job-bot : colle <code>{{ origin }}</code> et le jeton.</li>
         </ol>
       </MoreInfo>

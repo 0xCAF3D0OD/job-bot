@@ -26,3 +26,6 @@ coverage/
 .idea/
 .vscode/
 *.swp
+
+# Extension signée par Mozilla (docs/25, 0.18.1)
+extension/web-ext-artifacts/

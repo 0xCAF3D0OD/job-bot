@@ -14,13 +14,16 @@
     <!-- Relier l'extension à la plateforme, une fois. -->
     <section id="setup" hidden>
       <p class="hint">Relie l'extension à ta plateforme : crée un jeton dans Réglages › Extension du navigateur.</p>
-      <label>Adresse de ta plateforme
-        <input id="base" type="text" inputmode="url" placeholder="https://jobbot.exemple.ch">
-      </label>
-      <label>Jeton
-        <input id="token" type="password" autocomplete="off" placeholder="jbx_…">
-      </label>
+      <div id="fields">
+        <label>Adresse de ta plateforme
+          <input id="base" type="text" inputmode="url" placeholder="https://jobbot.exemple.ch">
+        </label>
+        <label>Jeton
+          <input id="token" type="password" autocomplete="off" placeholder="jbx_…">
+        </label>
+      </div>
       <button id="link" class="primary" type="button">Relier</button>
+      <button id="authorize" class="primary" type="button" hidden>Autoriser l'accès à ma plateforme</button>
       <p id="setup-error" class="error" hidden></p>
     </section>
 
