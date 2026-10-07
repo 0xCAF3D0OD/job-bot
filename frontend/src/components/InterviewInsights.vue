@@ -41,14 +41,28 @@ onMounted(() => void load());
 
 <template>
   <details
-    v-if="data && data.count"
+    v-if="data"
     class="insights"
     data-test="insights"
   >
     <summary>
-      Mes enseignements · {{ data.count }} entretien(s), ressenti moyen {{ data.average_rating }}/5
+      Mes enseignements<template v-if="data.count">
+        · {{ data.count }} entretien(s), ressenti moyen {{ data.average_rating }}/5
+      </template>
     </summary>
-    <div class="insights-grid">
+    <!-- Toujours visible (retour d'usage du 2026-10-07) : dit comment la remplir. -->
+    <p
+      v-if="!data.count"
+      class="hint"
+      data-test="insights-empty"
+    >
+      Rien pour l'instant. Après un entretien, passe la candidature au statut « Entretien » (avec sa date), puis
+      clique sur « Faire le point sur l'entretien » dans sa carte : tes enseignements se construiront ici.
+    </p>
+    <div
+      v-if="data.count"
+      class="insights-grid"
+    >
       <section v-if="data.questions.length">
         <h4>Les questions qui reviennent</h4>
         <ul data-test="insight-questions">
@@ -128,7 +142,10 @@ onMounted(() => void load());
         </ul>
       </section>
     </div>
-    <div class="insights-ai">
+    <div
+      v-if="data.count"
+      class="insights-ai"
+    >
       <InterviewCoaching
         v-if="data.coaching"
         :coaching="data.coaching"
