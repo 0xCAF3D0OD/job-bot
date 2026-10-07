@@ -16,7 +16,7 @@ async function saveIdentity(): Promise<void> {
   try {
     const { data, response } = await api.PUT("/api/identity", { body });
     if (data) identityMessage.value = "Coordonnées enregistrées.";
-    else if (response.status === 404) identityMessage.value = "L'API n'est pas à jour : relance make dev.";
+    else if (response.status === 404) identityMessage.value = "La plateforme n'est pas à jour : redémarre-la.";
     else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres).";
   } catch {
     identityMessage.value = "API injoignable.";

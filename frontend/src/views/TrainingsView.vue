@@ -123,7 +123,7 @@ onMounted(() => void load());
   <PageHero
     eyebrow="Formations"
     title="Se former dans son domaine"
-    subtitle="Certifications et cours en ligne, choisis selon « Mon domaine ». Les liens mènent aux pages officielles, qui font foi pour les prix et les dates."
+    subtitle="Certifications et cours en ligne pour ton domaine."
   />
   <section class="band">
     <div class="container">

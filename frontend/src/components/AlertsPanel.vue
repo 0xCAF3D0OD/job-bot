@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import MoreInfo from "./MoreInfo.vue";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
 // ouvre la recherche déjà remplie ; l'alerte se crée sur le site, avec l'adresse de son choix.
@@ -96,11 +97,15 @@ onMounted(() => void load());
       Mes alertes
     </h2>
     <p class="hint">
-      Pour chaque recherche, ouvre le site : la recherche est déjà remplie. Sur le site, clique sur son bouton
-      d'alerte (« Créer une alerte », « Activer l'alerte »…) et donne l'adresse e-mail de ton choix, puis reviens
-      cocher « J'ai créé l'alerte ». La plateforme ne crée pas l'alerte à ta place : il faudrait se connecter à tes
-      comptes sur ces sites.
+      « Ouvrir » affiche la recherche sur le site : crée l'alerte là-bas, puis coche « J'ai créé l'alerte ».
     </p>
+    <MoreInfo>
+      <p>
+        Sur le site, le bouton s'appelle souvent « Créer une alerte » ou « Activer l'alerte » ; donne l'adresse e-mail
+        de ton choix. La plateforme ne peut pas créer l'alerte à ta place : il faudrait se connecter à tes comptes sur
+        ces sites.
+      </p>
+    </MoreInfo>
     <p
       class="notice"
       data-test="mailbox"
@@ -110,15 +115,13 @@ onMounted(() => void load());
         Les alertes doivent y arriver.
       </template>
       <template v-else>
-        La collecte n'est pas encore branchée : renseigne <code>JOBBOT_IMAP_USER</code> et
-        <code>JOBBOT_IMAP_PASSWORD</code> dans <code>.env</code>.
+        La lecture de ta boîte mail n'est pas encore branchée (réglage d'installation, voir le README).
       </template>
     </p>
     <details class="forwarding">
       <summary>Tu as donné une autre adresse sur le site ?</summary>
       <p class="hint">
-        Fais suivre ces e-mails vers la boîte lue, avec un filtre sur l'expéditeur, puis range-les dans le dossier
-        lu. Adresses d'expédition des alertes :
+        Fais-les suivre vers la boîte lue avec un filtre sur l'expéditeur :
       </p>
       <ul>
         <li

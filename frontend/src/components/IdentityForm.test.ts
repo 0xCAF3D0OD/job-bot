@@ -45,7 +45,7 @@ describe("IdentityForm", () => {
     expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("enregistrées");
   });
 
-  it("API pas à jour : demande de relancer make dev", async () => {
+  it("plateforme pas à jour : demande de la redémarrer", async () => {
     GET.mockResolvedValue({ data: undefined, response: { status: 404 } });
     const { api } = await import("../api/client");
     vi.mocked(api.PUT).mockResolvedValue({ data: undefined, response: { status: 404 } } as never);
@@ -53,6 +53,6 @@ describe("IdentityForm", () => {
     await flushPromises();
     await wrapper.find("[data-test=identity-form]").trigger("submit");
     await flushPromises();
-    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("relance make dev");
+    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("redémarre-la");
   });
 });

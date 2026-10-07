@@ -100,7 +100,7 @@ onUnmounted(() => clearTimeout(poll));
   <PageHero
     eyebrow="Actualités"
     title="Le marché de l'emploi, et de quoi progresser"
-    subtitle="Articles récents sur l'emploi et vidéos choisies, filtrés selon ton domaine. Les sources se gèrent dans les Réglages."
+    subtitle="L'emploi et ton domaine : articles et vidéos récents."
   />
   <section class="band">
     <div class="container">

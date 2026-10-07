@@ -44,7 +44,7 @@ onMounted(() => void load());
   <PageHero
     eyebrow="Connexion"
     title="Se connecter"
-    subtitle="Les Actualités restent ouvertes ; tes offres, candidatures, preuves ORP, formations et réglages demandent ta connexion."
+    subtitle="Les Actualités sont ouvertes ; le reste demande ta connexion."
   />
   <section class="band">
     <div class="container narrow">

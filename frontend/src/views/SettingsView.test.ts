@@ -32,7 +32,7 @@ describe("SettingsView, notifications", () => {
     );
     const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
     await flushPromises();
-    expect(wrapper.find("[data-test=notifications-unknown]").text()).toContain("Relance make dev");
+    expect(wrapper.find("[data-test=notifications-unknown]").text()).toContain("ne répond pas");
     expect(wrapper.text()).not.toContain("Non configurées");
   });
 
@@ -40,7 +40,7 @@ describe("SettingsView, notifications", () => {
     mockGet(false);
     const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
     await flushPromises();
-    expect(wrapper.find("[data-test=notifications]").text()).toContain("JOBBOT_NTFY_TOPIC");
+    expect(wrapper.find("[data-test=notifications]").text()).toContain("réglage d'installation");
     expect(wrapper.find("[data-test=test-notification]").exists()).toBe(false);
   });
 

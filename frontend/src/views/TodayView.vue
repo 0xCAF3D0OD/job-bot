@@ -18,12 +18,25 @@ const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: str
   notifications: {
     label: "Recevoir les notifications sur ton téléphone",
     to: "/reglages",
-    hint: "JOBBOT_NTFY_TOPIC dans .env",
+    hint: "réglage d'installation, voir le README",
   },
   imap: {
     label: "Brancher la collecte sur ta boîte Gmail",
-    hint: "JOBBOT_IMAP_USER et JOBBOT_IMAP_PASSWORD dans .env",
+    hint: "réglage d'installation, voir le README",
   },
+};
+
+// « Comment ça marche » (docs/21 §3) : le chemin en cinq étapes, avec où les faire.
+const JOURNEY: Record<Today["journey"][number]["key"], { label: string; to: string; where: string }> = {
+  alerts: { label: "Créer mes alertes sur les sites d'emploi", to: "/candidatures/alertes", where: "Candidatures › Alertes" },
+  triage: { label: "Trier les offres reçues", to: "/candidatures/offres", where: "Candidatures › Offres" },
+  apply: {
+    label: "Préparer lettre et CV, puis postuler",
+    to: "/candidatures/offres",
+    where: "« Préparer ma candidature » sur une offre",
+  },
+  follow: { label: "Suivre les réponses et relancer", to: "/candidatures/suivi", where: "Candidatures › Suivi" },
+  orp: { label: "Remettre les preuves à l'ORP chaque mois", to: "/candidatures/preuves", where: "Candidatures › Preuves ORP" },
 };
 
 const today = ref<Today | null>(null);
@@ -80,6 +93,11 @@ async function load(): Promise<void> {
   void loadTrainings().catch(() => undefined);
 }
 
+async function dismissJourney(): Promise<void> {
+  await api.PUT("/api/journey", { body: { dismissed: true } });
+  await load();
+}
+
 async function dismiss(): Promise<void> {
   await api.PUT("/api/onboarding", { body: { dismissed: true } });
   await load();
@@ -99,6 +117,40 @@ onMounted(() => void load());
       v-if="today"
       class="container today"
     >
+      <article
+        v-if="!today.journey_dismissed && today.journey.length"
+        class="side-card journey"
+        data-test="journey"
+      >
+        <div class="checklist-head">
+          <h2>Comment ça marche</h2>
+          <button
+            type="button"
+            class="link"
+            data-test="dismiss-journey"
+            @click="dismissJourney"
+          >
+            Masquer
+          </button>
+        </div>
+        <ol>
+          <li
+            v-for="step in today.journey"
+            :key="step.key"
+            :class="{ done: step.done }"
+            :data-test="`journey-${step.key}`"
+          >
+            <span
+              class="tick"
+              aria-hidden="true"
+            >{{ step.done ? "✓" : "" }}</span>
+            <RouterLink :to="JOURNEY[step.key].to">
+              {{ JOURNEY[step.key].label }}
+            </RouterLink>
+            <span class="hint">· {{ JOURNEY[step.key].where }}</span>
+          </li>
+        </ol>
+      </article>
       <article
         v-if="showChecklist"
         class="side-card checklist"

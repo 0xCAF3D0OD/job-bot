@@ -916,6 +916,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/journey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Journey
+         * @description Masque (ou réaffiche) « Comment ça marche ».
+         */
+        put: operations["setJourney"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/address-candidates": {
         parameters: {
             query?: never;
@@ -2164,6 +2184,19 @@ export interface components {
          */
         JobRunStatus: "running" | "success" | "failure";
         /**
+         * JourneyStep
+         * @description Une étape de « Comment ça marche » (docs/21 §3), cochée d'après les données.
+         */
+        JourneyStep: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "alerts" | "triage" | "apply" | "follow" | "orp";
+            /** Done */
+            done: boolean;
+        };
+        /**
          * KeywordsOut
          * @description Mots-clés cherchés par le filtre, affichés sous chaque case du formulaire.
          */
@@ -3216,6 +3249,16 @@ export interface components {
             checklist: components["schemas"]["ChecklistItem"][];
             /** Checklist Dismissed */
             checklist_dismissed: boolean;
+            /**
+             * Journey
+             * @default []
+             */
+            journey: components["schemas"]["JourneyStep"][];
+            /**
+             * Journey Dismissed
+             * @default false
+             */
+            journey_dismissed: boolean;
             /** To Review */
             to_review: number;
             /** Month */
@@ -5257,6 +5300,37 @@ export interface operations {
         };
     };
     setOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setJourney: {
         parameters: {
             query?: never;
             header?: never;

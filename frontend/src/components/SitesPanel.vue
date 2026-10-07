@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import MoreInfo from "./MoreInfo.vue";
 
 // Sites dont les alertes sont suivies (docs/11 §2).
 const sites = ref<SiteOut[]>([]);
@@ -87,9 +88,14 @@ onMounted(() => void load());
     <fieldset>
       <legend>Sites suivis</legend>
       <p class="hint">
-        Les alertes de ces sites arrivent dans ton libellé Gmail. jobup et Indeed ont un lecteur intégré ; les autres
-        sont lues par l'IA (environ 0,01 $ par e-mail, tes coordonnées retirées).
+        Les sites dont la plateforme lit les e-mails d'alerte.
       </p>
+      <MoreInfo>
+        <p>
+          jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA (environ 0,01 $ par e-mail, tes
+          coordonnées retirées).
+        </p>
+      </MoreInfo>
       <ul class="sites-list">
         <li
           v-for="site in sites"

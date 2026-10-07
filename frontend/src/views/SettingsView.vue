@@ -90,7 +90,7 @@ const SECTIONS = [
   <PageHero
     eyebrow="Réglages"
     title="Tes réglages"
-    subtitle="Comment la plateforme fonctionne : recherche d'emploi, actualités, notifications, IA, profils d'essai, connexion."
+    subtitle="Ce que tu peux régler."
   />
   <section class="band">
     <div class="settings-layout">
@@ -136,8 +136,7 @@ const SECTIONS = [
           <fieldset>
             <legend><label for="due-day">Date limite de remise des preuves</label></legend>
             <p class="hint">
-              Jour du mois suivant où ton conseiller attend les preuves (souvent le 5). Rappels : le 25 si tu es
-              sous l'objectif, le 1er, puis la veille de cette date si le mois n'est pas marqué remis.
+              Jour du mois suivant où ton conseiller attend les preuves (souvent le 5).
             </p>
             <div class="inline-field">
               <span>le</span>
@@ -173,10 +172,7 @@ const SECTIONS = [
           <fieldset>
             <legend><label for="employer-threshold">Recherche de l'annonce chez l'employeur</label></legend>
             <p class="hint">
-              Pour les offres Indeed, LinkedIn et jobs.ch notées au moins à ce score, la plateforme cherche l'annonce
-              sur le site de l'employeur (son site, son outil de recrutement, puis Internet par l'IA : environ 0,02 à
-              0,03 $ quand l'IA est nécessaire). En dessous, bouton « Chercher l'offre chez l'employeur » dans le
-              détail.
+              Dès cette note, l'annonce est cherchée automatiquement chez l'employeur (≈ 0,02 $ si l'IA est nécessaire).
             </p>
             <div class="inline-field">
               <input
@@ -230,8 +226,7 @@ const SECTIONS = [
             <legend>Notifications</legend>
             <template v-if="notifications?.configured">
               <p class="hint">
-                Envoyées par {{ notifications.server }} pour les nouvelles offres notées au moins au seuil (section « Recherche d'emploi »),
-                et quand la dépense de l'IA atteint 80 % du plafond.
+                Sur ton téléphone ({{ notifications.server }}) : offres bien notées, et IA à 80 % du plafond.
               </p>
               <div class="inline-field">
                 <button
@@ -254,16 +249,13 @@ const SECTIONS = [
               class="notice error"
               data-test="notifications-unknown"
             >
-              Impossible de vérifier : l'API ne répond pas à cette question. Elle est peut-être arrêtée, ou plus
-              ancienne que l'interface. Relance <code>make dev</code>.
+              Impossible de vérifier pour l'instant : la plateforme ne répond pas. Réessaie dans un moment.
             </p>
             <p
               v-else
               class="hint"
             >
-              Non configurées. Installe l'application ntfy sur ton téléphone, abonne-toi à un sujet difficile à
-              deviner, puis renseigne <code>JOBBOT_NTFY_TOPIC</code> dans <code>.env</code> et relance
-              <code>make dev</code>.
+              Non configurées (application ntfy sur ton téléphone ; réglage d'installation, voir le README).
             </p>
           </fieldset>
         </div>
