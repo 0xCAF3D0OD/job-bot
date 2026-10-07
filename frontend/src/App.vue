@@ -8,6 +8,7 @@ import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import { useAuth } from "./composables/useAuth";
+import { useJobsMemory } from "./composables/useJobsMemory";
 import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { useProfiles } from "./composables/useProfiles";
@@ -19,6 +20,7 @@ const { current: profile, main: mainProfile, choose } = useProfiles();
 const route = useRoute();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
+const { last: lastJobsPage } = useJobsMemory();
 // Sans connexion : seulement les Actualités dans le menu (docs/18 §1).
 // Six entrées (docs/19 §1) ; sans connexion, seulement les Actualités (docs/18 §1).
 const menu = computed(() => (loggedIn.value ? navigation : navigation.filter((e) => PUBLIC_ROUTES.has(e.name))));
@@ -59,7 +61,10 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
             v-for="entry in menu"
             :key="entry.name"
           >
-            <RouterLink :to="entry.path">
+            <RouterLink
+              :to="entry.name === 'jobs' ? lastJobsPage : entry.path"
+              :class="{ 'router-link-active': entry.name === 'jobs' && route.path.startsWith('/candidatures') }"
+            >
               {{ entry.label }}
               <span
                 v-if="entry.name === 'news' && newsCount"

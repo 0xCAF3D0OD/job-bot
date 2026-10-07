@@ -73,160 +73,251 @@ async function save(): Promise<void> {
     saving.value = false;
   }
 }
+// Sommaire (docs/19 §4) : les sections dans l'ordre de la page.
+const SECTIONS = [
+  { id: "recherche", label: "Recherche d'emploi" },
+  { id: "actualites", label: "Actualités" },
+  { id: "notifications", label: "Notifications" },
+  { id: "ia", label: "IA" },
+  { id: "profils", label: "Profils d'essai" },
+  { id: "connexion", label: "Connexion" },
+  { id: "etat", label: "État technique" },
+];
 </script>
 
 <template>
   <PageHero
     eyebrow="Réglages"
     title="Tes réglages"
-    subtitle="Objectif de l'ORP, notifications, budget de l'IA et état technique de la plateforme."
+    subtitle="Comment la plateforme fonctionne : recherche d'emploi, actualités, notifications, IA, profils d'essai, connexion."
   />
   <section class="band">
-    <div class="container narrow">
-      <form
-        v-if="loaded"
-        class="form-card"
-        data-test="settings-form"
-        @submit.prevent="save"
+    <div class="settings-layout">
+      <nav
+        class="settings-toc"
+        aria-label="Sections des réglages"
       >
-        <fieldset>
-          <legend><label for="orp">Objectif mensuel de l'ORP</label></legend>
-          <p class="hint">
-            Nombre de candidatures demandé par ton conseiller. Vide si tu ne le connais pas encore.
-          </p>
-          <div class="inline-field">
-            <input
-              id="orp"
-              v-model.number="form.orp_monthly_target"
-              type="number"
-              min="1"
-              max="100"
-            >
-            <span>candidatures par mois</span>
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend><label for="due-day">Date limite de remise des preuves</label></legend>
-          <p class="hint">
-            Jour du mois suivant où ton conseiller attend les preuves (souvent le 5). Rappels : le 25 si tu es
-            sous l'objectif, le 1er, puis la veille de cette date si le mois n'est pas marqué remis.
-          </p>
-          <div class="inline-field">
-            <span>le</span>
-            <input
-              id="due-day"
-              v-model.number="form.orp_due_day"
-              type="number"
-              min="2"
-              max="28"
-              required
-              data-test="due-day"
-            >
-            <span>du mois suivant</span>
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend><label for="threshold">Seuil de notification</label></legend>
-          <p class="hint">
-            Tu es prévenu des nouvelles offres notées au moins à ce score.
-          </p>
-          <div class="inline-field">
-            <input
-              id="threshold"
-              v-model.number="form.notify_score_threshold"
-              type="number"
-              min="0"
-              max="100"
-              required
-            >
-            <span>/ 100</span>
-          </div>
-        </fieldset>
-        <fieldset data-test="notifications">
-          <legend>Notifications</legend>
-          <template v-if="notifications?.configured">
+        <a
+          v-for="section in SECTIONS"
+          :key="section.id"
+          :href="`#${section.id}`"
+        >{{ section.label }}</a>
+      </nav>
+      <div class="settings-sections">
+        <h2
+          id="recherche"
+          class="section-title"
+        >
+          Recherche d'emploi
+        </h2>
+        <form
+          v-if="loaded"
+          class="form-card"
+          data-test="settings-form"
+          @submit.prevent="save"
+        >
+          <fieldset>
+            <legend><label for="orp">Objectif mensuel de l'ORP</label></legend>
             <p class="hint">
-              Envoyées par {{ notifications.server }} pour les nouvelles offres notées au moins au seuil ci-dessus,
-              et quand la dépense de l'IA atteint 80 % du plafond.
+              Nombre de candidatures demandé par ton conseiller. Vide si tu ne le connais pas encore.
             </p>
             <div class="inline-field">
-              <button
-                type="button"
-                class="secondary small"
-                :disabled="testing"
-                data-test="test-notification"
-                @click="sendTest"
+              <input
+                id="orp"
+                v-model.number="form.orp_monthly_target"
+                type="number"
+                min="1"
+                max="100"
               >
-                Envoyer une notification de test
-              </button>
-              <span
-                v-if="testMessage"
-                role="status"
-              >{{ testMessage }}</span>
+              <span>candidatures par mois</span>
             </div>
-          </template>
-          <p
-            v-else-if="notificationsUnknown"
-            class="notice error"
-            data-test="notifications-unknown"
-          >
-            Impossible de vérifier : l'API ne répond pas à cette question. Elle est peut-être arrêtée, ou plus
-            ancienne que l'interface. Relance <code>make dev</code>.
-          </p>
-          <p
-            v-else
-            class="hint"
-          >
-            Non configurées. Installe l'application ntfy sur ton téléphone, abonne-toi à un sujet difficile à
-            deviner, puis renseigne <code>JOBBOT_NTFY_TOPIC</code> dans <code>.env</code> et relance
-            <code>make dev</code>.
-          </p>
-        </fieldset>
-        <fieldset>
-          <legend><label for="budget">Plafond mensuel du coût de l'IA</label></legend>
-          <p class="hint">
-            Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
-          </p>
-          <div class="inline-field">
-            <input
-              id="budget"
-              v-model.number="form.llm_monthly_budget_chf"
-              type="number"
-              min="0"
-              max="1000"
-              step="0.5"
-              required
+          </fieldset>
+          <fieldset>
+            <legend><label for="due-day">Date limite de remise des preuves</label></legend>
+            <p class="hint">
+              Jour du mois suivant où ton conseiller attend les preuves (souvent le 5). Rappels : le 25 si tu es
+              sous l'objectif, le 1er, puis la veille de cette date si le mois n'est pas marqué remis.
+            </p>
+            <div class="inline-field">
+              <span>le</span>
+              <input
+                id="due-day"
+                v-model.number="form.orp_due_day"
+                type="number"
+                min="2"
+                max="28"
+                required
+                data-test="due-day"
+              >
+              <span>du mois suivant</span>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend><label for="threshold">Seuil de notification des offres</label></legend>
+            <p class="hint">
+              Tu es prévenu des nouvelles offres notées au moins à ce score.
+            </p>
+            <div class="inline-field">
+              <input
+                id="threshold"
+                v-model.number="form.notify_score_threshold"
+                type="number"
+                min="0"
+                max="100"
+                required
+              >
+              <span>/ 100</span>
+            </div>
+          </fieldset>
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="primary"
+              :disabled="saving"
+              data-test="save-settings"
             >
-            <span>CHF</span>
+              Enregistrer <AppIcon name="chevron" />
+            </button>
+            <span
+              v-if="message"
+              role="status"
+              class="muted"
+            >{{ message }}</span>
           </div>
-        </fieldset>
-        <div class="form-actions">
-          <button
-            type="submit"
-            class="primary"
-            :disabled="saving"
-            data-test="save-settings"
-          >
-            Enregistrer <AppIcon name="chevron" />
-          </button>
-          <span
-            v-if="message"
-            role="status"
-            class="muted"
-          >{{ message }}</span>
+        </form>
+        <SitesPanel class="settings-status" />
+
+        <h2
+          id="actualites"
+          class="section-title"
+        >
+          Actualités
+        </h2>
+        <NewsSourcesPanel />
+
+        <h2
+          id="notifications"
+          class="section-title"
+        >
+          Notifications
+        </h2>
+        <div
+          v-if="loaded"
+          class="form-card"
+        >
+          <fieldset data-test="notifications">
+            <legend>Notifications</legend>
+            <template v-if="notifications?.configured">
+              <p class="hint">
+                Envoyées par {{ notifications.server }} pour les nouvelles offres notées au moins au seuil (section « Recherche d'emploi »),
+                et quand la dépense de l'IA atteint 80 % du plafond.
+              </p>
+              <div class="inline-field">
+                <button
+                  type="button"
+                  class="secondary small"
+                  :disabled="testing"
+                  data-test="test-notification"
+                  @click="sendTest"
+                >
+                  Envoyer une notification de test
+                </button>
+                <span
+                  v-if="testMessage"
+                  role="status"
+                >{{ testMessage }}</span>
+              </div>
+            </template>
+            <p
+              v-else-if="notificationsUnknown"
+              class="notice error"
+              data-test="notifications-unknown"
+            >
+              Impossible de vérifier : l'API ne répond pas à cette question. Elle est peut-être arrêtée, ou plus
+              ancienne que l'interface. Relance <code>make dev</code>.
+            </p>
+            <p
+              v-else
+              class="hint"
+            >
+              Non configurées. Installe l'application ntfy sur ton téléphone, abonne-toi à un sujet difficile à
+              deviner, puis renseigne <code>JOBBOT_NTFY_TOPIC</code> dans <code>.env</code> et relance
+              <code>make dev</code>.
+            </p>
+          </fieldset>
         </div>
-      </form>
-      <SitesPanel class="settings-status" />
-      <ProfilesPanel class="settings-status" />
-      <SessionPanel class="settings-status" />
-      <NewsSourcesPanel class="settings-status" />
-      <h2
-        id="etat"
-        class="section-title settings-status"
-      >
-        État technique
-      </h2>
-      <StatusPanel />
+
+        <h2
+          id="ia"
+          class="section-title"
+        >
+          IA
+        </h2>
+        <form
+          v-if="loaded"
+          class="form-card"
+          data-test="budget-form"
+          @submit.prevent="save"
+        >
+          <fieldset>
+            <legend><label for="budget">Plafond mensuel du coût de l'IA</label></legend>
+            <p class="hint">
+              Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
+            </p>
+            <div class="inline-field">
+              <input
+                id="budget"
+                v-model.number="form.llm_monthly_budget_chf"
+                type="number"
+                min="0"
+                max="1000"
+                step="0.5"
+                required
+              >
+              <span>CHF</span>
+            </div>
+          </fieldset>
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="primary"
+              :disabled="saving"
+              data-test="save-budget"
+            >
+              Enregistrer <AppIcon name="chevron" />
+            </button>
+            <span
+              v-if="message"
+              role="status"
+              class="muted"
+            >{{ message }}</span>
+          </div>
+        </form>
+
+        <h2
+          id="profils"
+          class="section-title"
+        >
+          Profils d'essai
+        </h2>
+        <ProfilesPanel />
+
+        <h2
+          id="connexion"
+          class="section-title"
+        >
+          Connexion
+        </h2>
+        <SessionPanel />
+
+        <h2
+          id="etat"
+          class="section-title"
+        >
+          État technique
+        </h2>
+        <StatusPanel />
+      </div>
     </div>
   </section>
 </template>

@@ -1,6 +1,6 @@
 # 19 — Navigation par grandes catégories (version 0.12.0)
 
-> Statut : **validé** le 2026-10-07 (rubrique « Candidatures »). livré : PR a (menu, rubrique Candidatures).
+> Statut : **validé** le 2026-10-07 (rubrique « Candidatures »). livré : PR a (menu, rubrique Candidatures), PR b (Aujourd'hui, Réglages, retour à la candidature commencée).
 > Retours d'usage du 2026-10-07 : réunir Offres et Candidatures ; ranger la plateforme par catégories claires.
 
 ## 1. Six entrées, une par question
@@ -89,3 +89,17 @@ Aucune migration : seule l'interface change.
 - **Anciennes adresses** : `/offres`, `/offres/<id>/preparer`, `/orp`, `/journal`, `/candidatures?vue=…` et `/candidatures?mois=…` redirigent ; les alertes de la cloche et les rappels ntfy pointent sur les nouvelles adresses.
 - **Menu du compte** : seulement le profil affiché et la déconnexion ; l'icône n'apparaît pas s'il n'y a rien à proposer (un seul profil, connexion désactivée).
 - **Contient la PR #65** (barre sur une ligne) : la fusionner avant, ou la fermer après celle-ci.
+
+## Complément du 2026-10-07 : retrouver la candidature commencée
+
+**Demande** : en quittant la préparation d'une candidature pour un autre onglet, revenir ensuite sur « Candidatures » doit ramener à cette candidature ; le bouton « Continuer la candidature » reste.
+
+- Le lien **Candidatures** du menu (et « Ouvrir les candidatures » sur Aujourd'hui) mène à la **dernière page visitée dans la rubrique** : la préparation commencée, ou l'onglet quitté (avec son mois).
+- Une fois la candidature **marquée comme envoyée**, le lien ramène au **Suivi**.
+- Gardé dans le navigateur (`localStorage`) ; sinon, les Offres.
+- « Continuer la candidature » / « Reprendre la lettre » dans le détail d'une offre ne changent pas.
+
+## Écarts avec la PR b
+
+- **Aujourd'hui** : bloc **Candidatures** (compteurs, **candidatures commencées** avec « Continuer », mieux notées, collecte), **Comprendre le marché** (les 3 dernières actualités de « Mon domaine », à défaut les 3 dernières), **Progresser** (formations en cours, et une formation vérifiée de ton domaine pas encore suivie). La liste « Pour bien démarrer » reste en tête tant qu'elle n'est pas terminée.
+- **Réglages** : sommaire à gauche (en haut sur petit écran) ; « Enregistrer » dans les sections Recherche d'emploi et IA (il enregistre tous les réglages de la page) ; « Mon domaine » reste avec les sources des Actualités ; la section Connexion indique quand la connexion est désactivée.

@@ -8,6 +8,7 @@ import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import { applicationBody } from "../applicationBody";
+import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 
 const PAGE_SIZE = 50;
@@ -136,6 +137,7 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
     return;
   }
   applying.value = null;
+  if (data.offer_id) useJobsMemory().sent(data.offer_id);
   notice.value = `Candidature chez ${data.company} enregistrée.`;
   await load();
 }

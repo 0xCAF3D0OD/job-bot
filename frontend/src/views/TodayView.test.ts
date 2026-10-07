@@ -92,3 +92,48 @@ describe("TodayView", () => {
     expect(PUT).toHaveBeenCalledWith("/api/onboarding", { body: { dismissed: true } });
   });
 });
+
+describe("TodayView par catégories (docs/19 §3)", () => {
+  it("candidatures commencées, actualités du domaine, formations", async () => {
+    GET.mockImplementation((path: string, opts?: { params?: { query?: Record<string, unknown> } }) => {
+      const query = opts?.params?.query ?? {};
+      if (path === "/api/today") return Promise.resolve({ data: today() });
+      if (path === "/api/offers" && query.view === "in_progress")
+        return Promise.resolve({
+          data: {
+            items: [
+              { id: 7, title: "SRE", company: "Beta SA", status: "preparing" },
+              { id: 8, title: "Envoyée", company: "Gamma", status: "applied" },
+            ],
+          },
+        });
+      if (path === "/api/offers") return Promise.resolve({ data: { items: [] } });
+      if (path === "/api/news")
+        // « Mon domaine » ne trouve rien : les dernières actualités tout court.
+        return Promise.resolve({
+          data: {
+            items: query.domain_only
+              ? []
+              : [{ id: 1, title: "Chômage stable", url: "https://x.example/1", source: "SECO", published_at: "2026-10-06T08:00:00Z", matched: [] }],
+          },
+        });
+      return Promise.resolve({
+        data: {
+          items: [
+            { id: 3, title: "CKA", provider: "Linux Foundation", verified: true, url: "https://t.example", mark: { status: "in_progress", progress: "module 4/12" } },
+            { id: 4, title: "Terraform Associate", provider: "HashiCorp", verified: true, url: "https://h.example", mark: null },
+          ],
+        },
+      });
+    });
+    const wrapper = await mountView();
+    const preparing = wrapper.find("[data-test=preparing]");
+    expect(preparing.text()).toContain("SRE");
+    expect(preparing.text()).not.toContain("Envoyée");
+    expect(preparing.find("a").attributes("href")).toBe("/candidatures/offres/7/preparer");
+    expect(wrapper.find("[data-test=today-news]").text()).toContain("Chômage stable");
+    const trainings = wrapper.find("[data-test=today-trainings]").text();
+    expect(trainings).toContain("module 4/12");
+    expect(wrapper.find("[data-test=training-idea]").text()).toContain("Terraform Associate");
+  });
+});
