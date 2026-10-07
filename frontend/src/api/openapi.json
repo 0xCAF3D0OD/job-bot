@@ -4370,6 +4370,114 @@
           }
         }
       }
+    },
+    "/api/interviews/insights": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Get Insights",
+        "operationId": "getInterviewInsights",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interviews/insights/prepared": {
+      "put": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Set Prepared",
+        "description": "Coche (ou décoche) un point « à préparer ».",
+        "operationId": "setInterviewPrepared",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreparedIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interviews/coach": {
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Coach Interviews",
+        "description": "Pistes de l'IA (environ 0,03 $), à partir des retours et des blocs de profil seulement.",
+        "operationId": "coachInterviews",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoachIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible, plafond atteint ou aucun retour"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5705,6 +5813,76 @@
         ],
         "title": "ChunkProposal"
       },
+      "CoachIn": {
+        "properties": {
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          }
+        },
+        "type": "object",
+        "title": "CoachIn"
+      },
+      "CoachingOut": {
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          },
+          "pistes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Pistes"
+          },
+          "answers": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Answers"
+          },
+          "questions_to_ask": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Questions To Ask"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created_at",
+          "application_id",
+          "pistes",
+          "answers",
+          "questions_to_ask"
+        ],
+        "title": "CoachingOut"
+      },
       "CollectResponse": {
         "properties": {
           "result": {
@@ -6549,6 +6727,95 @@
           "items"
         ],
         "title": "Inbox"
+      },
+      "InsightsOut": {
+        "properties": {
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "average_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Rating"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionStatOut"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "went_well": {
+            "items": {
+              "$ref": "#/components/schemas/NoteOut"
+            },
+            "type": "array",
+            "title": "Went Well"
+          },
+          "went_badly": {
+            "items": {
+              "$ref": "#/components/schemas/NoteOut"
+            },
+            "type": "array",
+            "title": "Went Badly"
+          },
+          "to_prepare": {
+            "items": {
+              "$ref": "#/components/schemas/PrepareItem"
+            },
+            "type": "array",
+            "title": "To Prepare"
+          },
+          "missed_questions": {
+            "items": {
+              "$ref": "#/components/schemas/NoteOut"
+            },
+            "type": "array",
+            "title": "Missed Questions"
+          },
+          "employer_feedback": {
+            "items": {
+              "$ref": "#/components/schemas/NoteOut"
+            },
+            "type": "array",
+            "title": "Employer Feedback"
+          },
+          "coaching": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CoachingOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "can_coach": {
+            "type": "boolean",
+            "title": "Can Coach"
+          }
+        },
+        "type": "object",
+        "required": [
+          "count",
+          "average_rating",
+          "questions",
+          "went_well",
+          "went_badly",
+          "to_prepare",
+          "missed_questions",
+          "employer_feedback",
+          "coaching",
+          "can_coach"
+        ],
+        "title": "InsightsOut"
       },
       "InterviewIn": {
         "properties": {
@@ -8352,6 +8619,37 @@
         "title": "NewsSourceUpdate",
         "description": "Champs à modifier ; ceux absents restent inchangés. Une valeur vide efface pays ou langue."
       },
+      "NoteOut": {
+        "properties": {
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "held_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held At"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company",
+          "held_at",
+          "text"
+        ],
+        "title": "NoteOut"
+      },
       "NotificationOut": {
         "properties": {
           "id": {
@@ -9470,6 +9768,44 @@
         ],
         "title": "ParseStatus"
       },
+      "PrepareItem": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "done"
+        ],
+        "title": "PrepareItem"
+      },
+      "PreparedIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "done"
+        ],
+        "title": "PreparedIn"
+      },
       "ProfileIn": {
         "properties": {
           "name": {
@@ -9660,6 +9996,29 @@
         },
         "type": "object",
         "title": "ProfileUpdate"
+      },
+      "QuestionStatOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "difficult": {
+            "type": "integer",
+            "title": "Difficult"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "count",
+          "difficult"
+        ],
+        "title": "QuestionStatOut"
       },
       "RegistryCandidate": {
         "properties": {

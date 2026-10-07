@@ -14,7 +14,14 @@ const emit = defineEmits<{
   remove: [application: Application];
   // Retour d'entretien (docs/23) : à créer (null) ou à revoir.
   interview: [application: Application, interview: Interview | null];
+  // Fiche de préparation avant un entretien prévu (docs/23 §3).
+  prepare: [application: Application];
 }>();
+
+const upcoming = computed(() => {
+  const at = props.application.interview_at;
+  return !!at && new Date(at).getTime() > Date.now();
+});
 
 // Dernier retour d'entretien, et retour attendu pour l'entretien passé (docs/23 §1, §3).
 const latest = computed<Interview | null>(() => props.application.interviews?.at(-1) ?? null);
@@ -154,7 +161,16 @@ const onStatus = (event: Event): void =>
       class="interview-actions"
     >
       <button
-        v-if="needsFeedback || (application.status === 'entretien' && !latest)"
+        v-if="upcoming"
+        type="button"
+        class="link"
+        data-test="interview-prepare"
+        @click="emit('prepare', application)"
+      >
+        Préparer l'entretien
+      </button>
+      <button
+        v-if="!upcoming && (needsFeedback || (application.status === 'entretien' && !latest))"
         type="button"
         class="link"
         data-test="interview-feedback"

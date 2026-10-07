@@ -1,6 +1,6 @@
 # 23 — Retour d'entretien (version 0.16.0)
 
-> Statut : **validé** le 2026-10-07. livré : PR a (formulaire, résumé, rappel, suite dans le calendrier).
+> Statut : **validé** le 2026-10-07. livré : PR a (formulaire, résumé, rappel, suite dans le calendrier), PR b (enseignements, préparation, IA).
 > Retours d'usage du 2026-10-07 : après un entretien, répondre à quelques questions pour comprendre ce qui a bien ou mal fonctionné, et garder un constat.
 
 ## 1. Quand et où
@@ -98,3 +98,10 @@ interviews  id, application_id, kind, held_at?, format?, duration?, interviewers
 - **Calendrier** : repère vert « suite attendue » à la date de la prochaine étape ; la carte apparaît aussi ce jour-là.
 - **Migration 0033** (`interviews`, `applications.interview_reminded_at`).
 - « Mes enseignements », la fiche de préparation et les pistes de l'IA viennent avec la PR b.
+
+## Écarts avec la PR b
+
+- **« Mes enseignements »** : section repliée sous le calendrier du Suivi, affichée dès le premier retour : questions qui reviennent (les difficiles d'abord), « À préparer » à cocher (gardé sur la plateforme), ce qui a marché et ce qui n'a pas marché (avec l'entreprise), questions regrettées, retours des employeurs ; nombre d'entretiens et ressenti moyen.
+- **« Préparer l'entretien »** : sur la carte quand l'entretien est à venir (à la place de « Faire le point ») ; reprend le résumé de l'offre, tes entretiens précédents chez cet employeur, les questions difficiles déjà rencontrées, ce qui reste à préparer et des questions à poser.
+- **IA** : Claude Sonnet 5 (environ 0,03 $), bouton « Demander des pistes à l'IA » (enseignements) ou « Pistes de l'IA pour cet entretien » (fiche) ; elle reçoit tes 15 derniers retours, tes blocs de profil et, pour un entretien prévu, le poste et l'entreprise ; jamais ton nom ni tes coordonnées. Les dernières pistes sont gardées et réaffichées (`llm_calls`, `purpose = coach`).
+- **Non essayé en réel** : l'appel à l'IA (pas de clé sur l'instance de test) ; couvert par des tests avec une réponse simulée.

@@ -1076,3 +1076,19 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .interview-summary { margin: 0; font-size: 0.82rem; color: var(--muted); }
 .interview-actions { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; font-size: 0.86rem; }
 .day-marks .mark.next { background: color-mix(in srgb, var(--ok) 16%, transparent); color: #127a63; }
+
+/* Mes enseignements et préparation (docs/23 §3) */
+.insights { margin-top: 1.5rem; }
+.insights > summary { cursor: pointer; color: var(--accent); font-weight: 500; margin-bottom: 0.8rem; }
+.insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem 1.5rem; }
+.insights-grid h4, .preparation-sheet h4, .coaching h4 { margin: 0 0 0.4rem; font-size: 0.92rem; }
+.insights-grid ul, .preparation-sheet ul, .coaching ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.prepare-list { list-style: none; padding-left: 0 !important; }
+.prepare-list .done { text-decoration: line-through; color: var(--muted); }
+.insights-ai { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; margin-top: 1rem; }
+.coaching { flex-basis: 100%; display: grid; gap: 0.6rem; padding: 0.9rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+.coaching dl { margin: 0; display: grid; gap: 0.5rem; font-size: 0.9rem; }
+.coaching dt { font-weight: 600; }
+.coaching dd { margin: 0; color: var(--muted); }
+.preparation-sheet { display: grid; gap: 0.9rem; }
+.preparation-sheet section p { margin: 0; font-size: 0.9rem; }

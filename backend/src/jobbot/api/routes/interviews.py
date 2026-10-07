@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 
 from jobbot.db.models import Application, Interview
+from jobbot.interviews import service
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["interviews"])
@@ -147,3 +148,100 @@ async def delete_interview(request: Request, interview_id: int) -> None:
         interview = await session.get(Interview, interview_id)
         if interview is not None:
             await session.delete(interview)
+
+
+# --- Enseignements et conseils (docs/23 §3) ----------------------------------------------
+
+
+class QuestionStatOut(BaseModel):
+    text: str
+    count: int
+    difficult: int
+
+
+class NoteOut(BaseModel):
+    company: str
+    held_at: date | None
+    text: str
+
+
+class PrepareItem(BaseModel):
+    text: str
+    done: bool
+
+
+class CoachingOut(BaseModel):
+    created_at: datetime
+    application_id: int | None
+    pistes: list[str]
+    answers: list[dict[str, str]]
+    questions_to_ask: list[str]
+
+
+class InsightsOut(BaseModel):
+    count: int
+    average_rating: float | None
+    # Les questions difficiles d'abord, puis les plus fréquentes.
+    questions: list[QuestionStatOut]
+    went_well: list[NoteOut]
+    went_badly: list[NoteOut]
+    to_prepare: list[PrepareItem]
+    missed_questions: list[NoteOut]
+    employer_feedback: list[NoteOut]
+    coaching: CoachingOut | None
+    can_coach: bool
+
+
+class PreparedIn(BaseModel):
+    text: Annotated[str, Field(min_length=1, max_length=200)]
+    done: bool
+
+
+class CoachIn(BaseModel):
+    # Prochain entretien à préparer, facultatif.
+    application_id: int | None = None
+
+
+async def _insights(runtime: Runtime) -> InsightsOut:
+    async with runtime.sessionmaker() as session:
+        found = await service.insights(session)
+        coaching = await service.last_coaching(session)
+    return InsightsOut(
+        count=found.count,
+        average_rating=found.average_rating,
+        questions=[QuestionStatOut(**q.__dict__) for q in found.questions],
+        went_well=[NoteOut(**n.__dict__) for n in found.went_well],
+        went_badly=[NoteOut(**n.__dict__) for n in found.went_badly],
+        to_prepare=[PrepareItem(text=t, done=d) for t, d in found.to_prepare],
+        missed_questions=[NoteOut(**n.__dict__) for n in found.missed_questions],
+        employer_feedback=[NoteOut(**n.__dict__) for n in found.employer_feedback],
+        coaching=CoachingOut(**coaching.__dict__) if coaching else None,
+        can_coach=runtime.settings.llm_configured,
+    )
+
+
+@router.get("/interviews/insights", operation_id="getInterviewInsights")
+async def get_insights(request: Request) -> InsightsOut:
+    return await _insights(_runtime(request))
+
+
+@router.put("/interviews/insights/prepared", operation_id="setInterviewPrepared")
+async def set_prepared(request: Request, body: PreparedIn) -> InsightsOut:
+    """Coche (ou décoche) un point « à préparer »."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        await service.set_prepared(session, body.text, body.done)
+    return await _insights(_runtime(request))
+
+
+@router.post(
+    "/interviews/coach",
+    operation_id="coachInterviews",
+    responses={409: {"description": "IA indisponible, plafond atteint ou aucun retour"}},
+)
+async def coach_interviews(request: Request, body: CoachIn) -> InsightsOut:
+    """Pistes de l'IA (environ 0,03 $), à partir des retours et des blocs de profil seulement."""
+    try:
+        await service.coach(_runtime(request), body.application_id)
+    except service.CoachUnavailable as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    return await _insights(_runtime(request))
