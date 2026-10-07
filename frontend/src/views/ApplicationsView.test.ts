@@ -1,5 +1,5 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import ApplicationsView from "./ApplicationsView.vue";
@@ -16,7 +16,13 @@ vi.mock("../api/client", () => ({
     DELETE: (...a: unknown[]) => DELETE(...a),
   },
 }));
-afterEach(() => vi.resetAllMocks());
+// La vue liste par défaut ici : ces tests portent sur la liste et la feuille ORP ;
+// le calendrier a ses propres tests (docs/22).
+beforeEach(() => localStorage.setItem("jobbot-suivi-vue", "list"));
+afterEach(() => {
+  vi.resetAllMocks();
+  localStorage.clear();
+});
 
 const row = (id: number, extra: Record<string, unknown> = {}) => ({
   application_id: id,
@@ -114,7 +120,6 @@ describe("Candidatures, page réunie", () => {
     mockApi(() => month(), [application, old]);
     const { wrapper } = await mountView();
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves à remettre");
-    expect(wrapper.find("[data-test=follow-up]").text()).toContain("Ancienne SA");
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
     await wrapper.find("[data-test=all-months]").setValue(true);
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(2);
@@ -292,5 +297,37 @@ describe("Candidatures, colonnes des preuves", () => {
     expect(headers()).not.toContain("Lien");
     // Le PDF garde toutes les colonnes.
     expect(wrapper.find(".orp-sheet").text()).toContain("Personne de contact, téléphone");
+  });
+});
+
+describe("Suivi en calendrier (docs/22)", () => {
+  it("pastilles par jour, cartes au clic, à relancer par défaut, copie Job-Room", async () => {
+    localStorage.setItem("jobbot-suivi-vue", "calendar");
+    const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08", interview_at: null };
+    const sent = { ...application, id: 2, sent_at: "2026-10-02", interview_at: "2026-10-20T09:00:00Z" };
+    mockApi(() => month(), [sent, old]);
+    PUT.mockResolvedValue({ data: sent });
+    const { wrapper } = await mountView();
+    // Sans jour choisi : les candidatures à relancer.
+    expect(wrapper.find("[data-test=day-panel]").text()).toContain("À relancer");
+    expect(wrapper.find("[data-test=day-panel]").text()).toContain("Ancienne SA");
+    // Le 2 octobre : une pastille, avec le point rouge de la ligne ORP à compléter (ligne 2).
+    const day = wrapper.find("[data-test=day-2026-10-02]");
+    expect(day.findAll(".dot")).toHaveLength(1);
+    expect(day.find(".dot").classes()).toContain("incomplete");
+    expect(wrapper.find("[data-test=day-2026-10-20] [data-test=mark-interview]").exists()).toBe(true);
+    await day.trigger("click");
+    const cards = wrapper.findAll("[data-test=day-panel] [data-test=application-card]");
+    expect(cards).toHaveLength(1);
+    expect(cards[0]!.find("[data-test=card-missing]").text()).toContain("adresse de l'entreprise");
+    await cards[0]!.find("[data-test=card-job-room]").trigger("click");
+    expect(cards[0]!.find("[data-test=card-job-room-fields]").text()).toContain("Par voie électronique");
+    await cards[0]!.find("[data-test=card-status]").setValue("entretien");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 2 } } }));
+    // Calendrier / Liste, retenu.
+    await wrapper.find("[data-test=layout-list]").trigger("click");
+    expect(localStorage.getItem("jobbot-suivi-vue")).toBe("list");
+    expect(wrapper.find("[data-test=calendar]").exists()).toBe(false);
   });
 });

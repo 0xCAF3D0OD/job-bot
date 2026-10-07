@@ -36,7 +36,7 @@ const JOURNEY: Record<Today["journey"][number]["key"], { label: string; to: stri
     where: "« Préparer ma candidature » sur une offre",
   },
   follow: { label: "Suivre les réponses et relancer", to: "/candidatures/suivi", where: "Candidatures › Suivi" },
-  orp: { label: "Remettre les preuves à l'ORP chaque mois", to: "/candidatures/preuves", where: "Candidatures › Preuves ORP" },
+  orp: { label: "Remettre les preuves à l'ORP chaque mois", to: "/candidatures/suivi", where: "Candidatures › Suivi" },
 };
 
 const today = ref<Today | null>(null);
@@ -238,7 +238,7 @@ onMounted(() => void load());
           <span>à relancer (sans réponse depuis 10 jours)</span>
         </RouterLink>
         <RouterLink
-          to="/candidatures/preuves"
+          to="/candidatures/suivi"
           :class="['stat', { warn: today.orp_due_month }]"
           data-test="stat-orp"
         >

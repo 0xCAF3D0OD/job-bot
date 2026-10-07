@@ -1013,3 +1013,47 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .more-options > summary { cursor: pointer; color: var(--accent); width: fit-content; }
 .more-options-body { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center; margin-top: 0.6rem; }
 .diagnostic-link { margin-top: 1.5rem; font-size: 0.9rem; }
+
+/* Suivi en calendrier (docs/22) */
+.layout-switch { width: 14rem; margin: 0 0 1rem; }
+.suivi-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr); gap: 1.25rem; align-items: start; }
+.suivi-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; }
+.suivi-calendar .weekday { font-size: 0.75rem; color: var(--faint); text-align: center; padding-bottom: 0.2rem; }
+.suivi-calendar .day { min-height: 5.2rem; display: flex; flex-direction: column; align-items: stretch; gap: 0.25rem; padding: 0.35rem 0.4rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.suivi-calendar .day.empty { border: none; background: transparent; cursor: default; }
+.suivi-calendar .day.today { border-color: var(--accent); }
+.suivi-calendar .day.selected { outline: 2px solid var(--accent); outline-offset: -1px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.suivi-calendar .day-number { font-size: 0.8rem; color: var(--muted); }
+.suivi-calendar .day.busy .day-number { color: var(--text); font-weight: 600; }
+.day-dots { display: flex; flex-wrap: wrap; gap: 0.2rem; align-items: center; }
+.day-dots .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #8b93a7; position: relative; }
+.day-dots .dot.relancee { background: var(--warn); }
+.day-dots .dot.entretien { background: var(--accent); }
+.day-dots .dot.refus { background: var(--down); }
+.day-dots .dot.engagement { background: var(--ok); }
+.day-dots .dot.sans_reponse { background: #c4c8d2; }
+.day-dots .dot.incomplete::after { content: ""; position: absolute; top: -2px; right: -2px; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: var(--down); border: 1px solid var(--surface); }
+.day-dots .more { font-size: 0.7rem; color: var(--muted); }
+.day-marks { display: grid; gap: 0.1rem; margin-top: auto; }
+.day-marks .mark { font-size: 0.65rem; border-radius: 4px; padding: 0 0.25rem; width: fit-content; }
+.day-marks .mark.interview { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+.day-marks .mark.remind { background: color-mix(in srgb, var(--warn) 18%, transparent); color: #b4600f; }
+.suivi-panel { display: grid; gap: 0.8rem; }
+.suivi-panel h3 { margin: 0; font-size: 1rem; }
+.application-card { display: grid; gap: 0.45rem; padding: 0.9rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.application-card header { display: flex; justify-content: space-between; gap: 0.5rem; align-items: flex-start; }
+.application-card header p { margin: 0.1rem 0 0; font-size: 0.86rem; }
+.card-facts { margin: 0; font-size: 0.8rem; color: var(--faint); }
+.card-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+.card-missing { margin: 0; font-size: 0.82rem; }
+.card-links { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin: 0; font-size: 0.86rem; }
+.card-job-room { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.7rem; margin: 0; font-size: 0.82rem; }
+.card-job-room dt { color: var(--faint); }
+.card-job-room dd { margin: 0; display: flex; gap: 0.5rem; justify-content: space-between; }
+.orp-details { margin-top: 1.5rem; }
+.orp-details > summary { cursor: pointer; color: var(--accent); font-weight: 500; margin-bottom: 0.8rem; }
+@media (max-width: 900px) {
+  .suivi-grid { grid-template-columns: 1fr; }
+  .suivi-calendar .day { min-height: 3.6rem; }
+  .day-marks .mark { display: none; }
+}
