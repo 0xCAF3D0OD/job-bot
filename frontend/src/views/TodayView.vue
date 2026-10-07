@@ -150,6 +150,16 @@ onMounted(() => void load());
           Ouvrir les candidatures
         </RouterLink>
       </div>
+      <p
+        v-if="today.alerts_waiting"
+        class="notice"
+        data-test="alerts-waiting"
+      >
+        {{ today.alerts_waiting }} alerte(s) créée(s) depuis 3 jours n'ont encore rien envoyé.
+        <RouterLink to="/candidatures/alertes">
+          Vérifier mes alertes
+        </RouterLink>
+      </p>
       <div class="today-stats">
         <RouterLink
           to="/candidatures/offres"

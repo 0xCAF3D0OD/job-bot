@@ -950,3 +950,20 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 /* Préparation : retour aux offres toujours visible */
 .back-link { display: inline-flex; align-items: center; gap: 0.3rem; margin-bottom: 1rem; color: var(--muted); text-decoration: none; font-size: 0.9rem; }
 .back-link:hover { color: var(--accent); }
+
+/* Mes alertes (docs/20 §1) */
+.alerts-panel { display: grid; gap: 0.8rem; }
+.alerts-panel .section-title.first { margin-top: 0; }
+.alerts-table td { vertical-align: top; }
+.alert-cell { min-width: 9rem; }
+.alert-cell .link { display: inline-flex; align-items: center; gap: 0.2rem; }
+.alert-cell .alert-status { display: block; font-size: 0.78rem; color: var(--faint); margin: 0.15rem 0; }
+.alert-cell.received .alert-status { color: #2f8f5b; font-weight: 600; }
+.alert-cell.created .alert-status { color: #b4600f; }
+.alert-cell .check { font-size: 0.78rem; }
+.forwarding { font-size: 0.88rem; }
+.forwarding summary { cursor: pointer; color: var(--accent); }
+.alert-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; padding: 1rem; }
+.alert-form label { display: grid; gap: 0.3rem; font-size: 0.88rem; }
+.alert-form .form-actions { grid-column: 1 / -1; padding-top: 0; }
+@media (max-width: 720px) { .alert-form { grid-template-columns: 1fr; } }
