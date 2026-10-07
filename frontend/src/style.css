@@ -65,7 +65,7 @@ a { color: var(--accent); }
 
 .topbar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); }
 .topbar-inner {
-  max-width: 70rem;
+  max-width: 84rem;
   margin: 0 auto;
   padding: 0.9rem 1.5rem;
   display: grid;
@@ -81,7 +81,8 @@ a { color: var(--accent); }
   background: var(--accent);
   box-shadow: inset 0 -0.45rem 0 0 color-mix(in srgb, var(--accent) 55%, #fff);
 }
-.nav { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; gap: 1.75rem; flex-wrap: wrap; }
+.topbar nav { min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.nav { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; gap: 1.75rem; flex-wrap: nowrap; white-space: nowrap; }
 .nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; padding: 0.25rem 0; border-bottom: 2px solid transparent; }
 .nav a:hover { color: var(--text); }
 .nav a.router-link-active { color: var(--text); font-weight: 500; border-bottom-color: var(--accent); }
@@ -296,15 +297,11 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
   .back { display: inline-flex; justify-self: start; }
 }
 
-/* Neuf entrées de menu depuis la 0.9 (et le sélecteur de profil en 0.10) : plus serrées, puis sur une deuxième ligne défilante. */
-@media (max-width: 1240px) {
+/* Barre du haut sur une seule ligne : liens principaux, puis cloche, Collecter et menu du compte.
+   Si la place manque, les liens défilent horizontalement plutôt que de passer à la ligne. */
+@media (max-width: 1100px) {
   .nav { gap: 1.1rem; }
   .nav a { font-size: 0.9rem; }
-}
-@media (max-width: 1180px) {
-  .topbar-inner { grid-template-columns: 1fr auto; }
-  .topbar nav { grid-column: 1 / -1; grid-row: 2; overflow-x: auto; }
-  .nav { justify-content: flex-start; flex-wrap: nowrap; white-space: nowrap; }
 }
 
 @media (max-width: 720px) {
@@ -894,3 +891,30 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .login-form input { font: inherit; padding: 0.55rem 0.7rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .login-form .form-actions { padding-top: 0.3rem; }
 pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; background: var(--band); border: 1px solid var(--border); overflow-x: auto; font-size: 0.85rem; }
+
+/* Menu du compte : Profil, Réglages, profil affiché, déconnexion */
+.account-menu { position: relative; }
+.icon-button { border-radius: 999px; width: 2.4rem; height: 2.4rem; padding: 0; justify-content: center; }
+.icon-button .icon { width: 1.15rem; height: 1.15rem; }
+.account-panel { position: absolute; right: 0; top: 2.9rem; z-index: 40; min-width: 15rem; display: grid; gap: 0.15rem; padding: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 16px 40px rgba(17, 17, 31, 0.16); }
+.account-panel > a, .account-panel > .link { display: block; padding: 0.5rem 0.6rem; border-radius: 8px; color: var(--text); text-decoration: none; text-align: left; font-size: 0.92rem; }
+.account-panel > a:hover, .account-panel > .link:hover { background: var(--band); }
+.account-panel > a.router-link-active { color: var(--accent); }
+.account-name { margin: 0 0 0.3rem; padding: 0.3rem 0.6rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.82rem; color: var(--muted); }
+.account-profile { display: grid; gap: 0.25rem; padding: 0.5rem 0.6rem; font-size: 0.82rem; color: var(--muted); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 0.2rem 0; }
+.account-profile select { padding: 0.3rem 0.4rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+
+/* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
+.jobs-head { max-width: 88rem; margin: 0 auto; padding: 1.75rem 1.5rem 0; }
+.jobs-head h1 { font-size: 2rem; margin: 0.6rem 0 1rem; }
+.jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
+.jobs-tabs a { white-space: nowrap; }
+.jobs-head + .offers-page { padding-top: 1.25rem; }
+.jobs-head + .offers-page .offers-heading { margin-bottom: 0; }
+.jobs-body { max-width: 88rem; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+@media (max-width: 720px) {
+  .jobs-head { padding: 1.25rem 1rem 0; }
+  .jobs-head h1 { font-size: 1.6rem; }
+  .jobs-body { padding: 1.25rem 1rem 3rem; }
+  .jobs-head + .offers-page .offers-heading { margin-bottom: 1rem; }
+}

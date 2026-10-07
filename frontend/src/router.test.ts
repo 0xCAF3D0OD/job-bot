@@ -15,9 +15,10 @@ describe("routes réservées (docs/18 §1)", () => {
     const { router } = await import("./router");
     await router.push("/actualites");
     expect(router.currentRoute.value.name).toBe("news");
-    await router.push("/candidatures?vue=orp");
+    // Ancienne adresse : redirigée vers l'onglet, puis vers la connexion.
+    await router.push("/candidatures?vue=orp&mois=2026-09");
     expect(router.currentRoute.value.name).toBe("login");
-    expect(router.currentRoute.value.query.suite).toBe("/candidatures?vue=orp");
+    expect(router.currentRoute.value.query.suite).toBe("/candidatures/preuves?mois=2026-09");
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("login");
   });
@@ -28,6 +29,15 @@ describe("routes réservées (docs/18 §1)", () => {
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("trainings");
     await router.push("/connexion?suite=/offres");
-    expect(router.currentRoute.value.fullPath).toBe("/offres");
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres");
+    // Rubrique Candidatures (docs/19 §2) : /candidatures ouvre les Offres, anciens liens redirigés.
+    await router.push("/candidatures");
+    expect(router.currentRoute.value.name).toBe("offers");
+    await router.push("/orp?mois=2026-09");
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/preuves?mois=2026-09");
+    await router.push("/offres/12/preparer");
+    expect(router.currentRoute.value.name).toBe("preparation");
+    await router.push("/candidatures?mois=2026-08");
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/suivi?mois=2026-08");
   });
 });

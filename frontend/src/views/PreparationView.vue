@@ -225,7 +225,7 @@ onMounted(() => void load());
         v-if="notFound"
         class="notice error"
       >
-        Cette offre n'existe plus. <RouterLink to="/offres">
+        Cette offre n'existe plus. <RouterLink to="/candidatures/offres">
           Retour aux offres
         </RouterLink>
       </p>
@@ -245,7 +245,7 @@ onMounted(() => void load());
         <template v-if="offer.status === 'applied'">
           <span class="status-pill applied">Candidature envoyée</span>
           <RouterLink
-            to="/candidatures"
+            to="/candidatures/suivi"
             class="link"
           >
             Voir le suivi
@@ -536,7 +536,7 @@ onMounted(() => void load());
               rejoint le suivi avec cette lettre et ton CV.
             </p>
             <RouterLink
-              :to="{ path: '/offres', query: { statut: 'in_progress' } }"
+              :to="{ path: '/candidatures/offres', query: { statut: 'in_progress' } }"
               class="link"
             >
               Retour aux offres en cours

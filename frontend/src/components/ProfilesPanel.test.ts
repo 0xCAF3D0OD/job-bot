@@ -1,14 +1,16 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import ProfileSwitcher from "./ProfileSwitcher.vue";
+import { createMemoryHistory, createRouter } from "vue-router";
+
+import AccountMenu from "./AccountMenu.vue";
 import ProfilesPanel from "./ProfilesPanel.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();
 vi.mock("../api/client", () => ({
   PROFILE_KEY: "jobbot-profile",
-  api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a) },
+  api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), use: vi.fn() },
 }));
 afterEach(() => {
   vi.resetAllMocks();
@@ -55,12 +57,16 @@ describe("ProfilesPanel", () => {
     expect((wrapper.find("[data-test=profile-keywords]").element as HTMLInputElement).value).toBe("infirmière, EMS");
   });
 
-  it("le sélecteur retient le profil choisi et recharge la page", async () => {
+  it("menu du compte : profil affiché retenu, rechargement", async () => {
     GET.mockResolvedValue({ data: { current_id: 1, items: [main, nurse] } });
     const reload = vi.fn();
     vi.stubGlobal("location", { ...window.location, reload });
-    const wrapper = mount(ProfileSwitcher);
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    const wrapper = mount(AccountMenu, { global: { plugins: [router] } });
     await flushPromises();
+    expect(wrapper.find("[data-test=account-panel]").exists()).toBe(false);
+    await wrapper.find("[data-test=account-menu]").trigger("click");
+    expect(wrapper.find("[data-test=account-panel]").findAll("a")).toHaveLength(0);
     await wrapper.find("[data-test=profile-switcher]").setValue("2");
     expect(localStorage.getItem("jobbot-profile")).toBe("2");
     expect(reload).toHaveBeenCalled();

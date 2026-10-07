@@ -233,7 +233,7 @@ watch(
         >{{ statusLabel }}</span>
         <RouterLink
           v-if="offer.status === 'applied'"
-          to="/candidatures"
+          to="/candidatures/suivi"
           class="link"
         >
           Voir le suivi
@@ -357,7 +357,7 @@ watch(
       data-test="triage"
     >
       <RouterLink
-        :to="`/offres/${offer.id}/preparer`"
+        :to="`/candidatures/offres/${offer.id}/preparer`"
         class="button-link primary-link"
         data-test="prepare"
       >

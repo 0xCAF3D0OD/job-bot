@@ -6,7 +6,7 @@ import { UNAUTHORIZED_EVENT } from "./api/client";
 
 import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
-import ProfileSwitcher from "./components/ProfileSwitcher.vue";
+import AccountMenu from "./components/AccountMenu.vue";
 import { useAuth } from "./composables/useAuth";
 import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
@@ -18,8 +18,9 @@ const { count: newsCount, start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
 const route = useRoute();
 const router = useRouter();
-const { me, loggedIn, load, logout, expired } = useAuth();
+const { me, loggedIn, load, expired } = useAuth();
 // Sans connexion : seulement les Actualités dans le menu (docs/18 §1).
+// Six entrées (docs/19 §1) ; sans connexion, seulement les Actualités (docs/18 §1).
 const menu = computed(() => (loggedIn.value ? navigation : navigation.filter((e) => PUBLIC_ROUTES.has(e.name))));
 
 function onUnauthorized(): void {
@@ -29,10 +30,6 @@ function onUnauthorized(): void {
   }
 }
 
-async function signOut(): Promise<void> {
-  await logout();
-  await router.push({ name: "news" });
-}
 
 onMounted(async () => {
   window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
@@ -77,7 +74,6 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
         v-if="loggedIn"
         class="topbar-actions"
       >
-        <ProfileSwitcher />
         <NotificationBell />
         <button
           type="button"
@@ -88,16 +84,7 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
         >
           Collecter <AppIcon name="chevron" />
         </button>
-        <button
-          v-if="me?.auth_enabled"
-          type="button"
-          class="link small-link"
-          :title="me.username ? `Connecté : ${me.username}` : undefined"
-          data-test="logout"
-          @click="signOut"
-        >
-          Se déconnecter
-        </button>
+        <AccountMenu />
       </div>
       <div
         v-else-if="me"
