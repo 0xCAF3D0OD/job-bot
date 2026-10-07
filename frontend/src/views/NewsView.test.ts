@@ -1,5 +1,6 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import { highlight } from "../newsLabels";
@@ -15,7 +16,12 @@ vi.mock("../api/client", () => ({
     PUT: (...a: unknown[]) => PUT(...a),
   },
 }));
-afterEach(() => vi.resetAllMocks());
+const loggedIn = ref(true);
+vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ loggedIn }) }));
+afterEach(() => {
+  vi.resetAllMocks();
+  loggedIn.value = true;
+});
 
 const item = (id: number, kind: string, extra: Record<string, unknown> = {}) => ({
   id,
@@ -129,6 +135,17 @@ describe("NewsView", () => {
     await vi.advanceTimersByTimeAsync(4_000);
     expect(newsCalls().length).toBe(before + 1);
     vi.useRealTimers();
+  });
+
+  it("sans connexion : lecture seule, rien n'est enregistré", async () => {
+    loggedIn.value = false;
+    mockApi(pageOf([item(1, "articles")], { new_articles: 3 }));
+    const { wrapper } = await mountView();
+    expect(POST).not.toHaveBeenCalledWith("/api/news/seen");
+    await wrapper.find("[data-test=filter-domain]").trigger("click");
+    await flushPromises();
+    expect(PUT).not.toHaveBeenCalled();
+    expect(newsCalls().at(-1)![1].params.query.domain_only).toBe(true);
   });
 });
 

@@ -1,6 +1,6 @@
 # 18 — Page de connexion, Candidatures et ORP réunies (version 0.11.0)
 
-> Statut : **validé** le 2026-10-06 (Offres réservées aussi). livré : PR b (Candidatures et ORP réunies), avancée avant la PR a à ta demande.
+> Statut : **validé** le 2026-10-06 (Offres réservées aussi). livré : PR b (Candidatures et ORP réunies), puis PR a (connexion).
 > Retours d'usage du 2026-10-06, en validant le cadrage 17. Vient après la 0.10.0 (profils d'essai).
 
 ## 1. Page de connexion
@@ -70,3 +70,15 @@ sessions   token_hash PRIMARY, user_id, created_at, last_seen_at, expires_at, us
 - **À relancer** : les candidatures « en attente » envoyées il y a 10 jours ou plus, tous mois confondus ; un clic ouvre la candidature.
 - **Liens** : `/orp` et `/journal` redirigent vers la page Candidatures (onglet et mois conservés) ; les nouveaux rappels ORP et alertes de la cloche pointent directement sur `/candidatures?vue=orp&mois=…`.
 - **Menu** : huit entrées.
+
+## Écarts avec la PR a
+
+- **Ouvert sans connexion** : la page Actualités en lecture (profil principal, filtres non enregistrés, nouveautés non marquées comme vues) et la page de connexion ; le menu ne montre alors que les Actualités et un bouton « Se connecter ».
+- **Session prolongée** au plus une fois par jour (un passage en base par requête, une écriture par jour).
+- **Cookie `Secure`** partout sauf sur `localhost` (le tunnel est en HTTPS).
+- **Requêtes d'un autre site** : contrôle par l'en-tête `Sec-Fetch-Site` des navigateurs, à défaut par `Origin`.
+- **Limitation des essais** : en mémoire de l'API, par adresse et par identifiant ; remise à zéro au redémarrage.
+- **Mot de passe** : 12 caractères au moins ; changer de mot de passe ferme toutes les sessions.
+- **`JOBBOT_AUTH_ENABLED=false`** rouvre tout, seulement pour un essai local (les tests l'utilisent).
+- **Migration 0029**.
+- **Essai réel** (base de test, compte d'essai) : sans connexion, `/candidatures` mène à la connexion puis y revient ; l'API refuse `/api/orp` (401) et sert `/api/news` ; « Se déconnecter » ramène aux Actualités.

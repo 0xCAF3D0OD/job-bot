@@ -1,18 +1,45 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { computed, onMounted, onUnmounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
+import { UNAUTHORIZED_EVENT } from "./api/client";
 
 import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import ProfileSwitcher from "./components/ProfileSwitcher.vue";
+import { useAuth } from "./composables/useAuth";
 import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { useProfiles } from "./composables/useProfiles";
-import { navigation } from "./router";
+import { navigation, PUBLIC_ROUTES } from "./router";
 
 const { message, running, collectNow } = useCollect();
 const { count: newsCount, start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
-onMounted(() => startNewsCount());
+const route = useRoute();
+const router = useRouter();
+const { me, loggedIn, load, logout, expired } = useAuth();
+// Sans connexion : seulement les Actualités dans le menu (docs/18 §1).
+const menu = computed(() => (loggedIn.value ? navigation : navigation.filter((e) => PUBLIC_ROUTES.has(e.name))));
+
+function onUnauthorized(): void {
+  expired();
+  if (!PUBLIC_ROUTES.has(String(route.name))) {
+    void router.push({ name: "login", query: { suite: route.fullPath } });
+  }
+}
+
+async function signOut(): Promise<void> {
+  await logout();
+  await router.push({ name: "news" });
+}
+
+onMounted(async () => {
+  window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  await load();
+  startNewsCount();
+});
+onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized));
 </script>
 
 <template>
@@ -32,7 +59,7 @@ onMounted(() => startNewsCount());
       <nav aria-label="Navigation principale">
         <ul class="nav">
           <li
-            v-for="entry in navigation"
+            v-for="entry in menu"
             :key="entry.name"
           >
             <RouterLink :to="entry.path">
@@ -46,7 +73,10 @@ onMounted(() => startNewsCount());
           </li>
         </ul>
       </nav>
-      <div class="topbar-actions">
+      <div
+        v-if="loggedIn"
+        class="topbar-actions"
+      >
         <ProfileSwitcher />
         <NotificationBell />
         <button
@@ -58,11 +88,33 @@ onMounted(() => startNewsCount());
         >
           Collecter <AppIcon name="chevron" />
         </button>
+        <button
+          v-if="me?.auth_enabled"
+          type="button"
+          class="link small-link"
+          :title="me.username ? `Connecté : ${me.username}` : undefined"
+          data-test="logout"
+          @click="signOut"
+        >
+          Se déconnecter
+        </button>
+      </div>
+      <div
+        v-else-if="me"
+        class="topbar-actions"
+      >
+        <RouterLink
+          :to="{ name: 'login', query: route.name === 'login' ? route.query : { suite: route.fullPath } }"
+          class="button-link primary-link"
+          data-test="login-link"
+        >
+          Se connecter
+        </RouterLink>
       </div>
     </div>
   </header>
   <div
-    v-if="profile && !profile.is_main"
+    v-if="loggedIn && profile && !profile.is_main"
     class="profile-banner"
     role="status"
     data-test="profile-banner"

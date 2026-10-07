@@ -6,6 +6,7 @@ import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
+import SessionPanel from "../components/SessionPanel.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 import StatusPanel from "../components/StatusPanel.vue";
 
@@ -217,6 +218,7 @@ async function save(): Promise<void> {
       </form>
       <SitesPanel class="settings-status" />
       <ProfilesPanel class="settings-status" />
+      <SessionPanel class="settings-status" />
       <NewsSourcesPanel class="settings-status" />
       <h2
         id="etat"
