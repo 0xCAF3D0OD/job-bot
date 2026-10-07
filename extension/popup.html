@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <title>job-bot</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header>
+      <span class="mark" aria-hidden="true"></span>
+      <strong>job-bot</strong>
+    </header>
+
+    <!-- Relier l'extension à la plateforme, une fois. -->
+    <section id="setup" hidden>
+      <p class="hint">Relie l'extension à ta plateforme : crée un jeton dans Réglages › Extension du navigateur.</p>
+      <label>Adresse de ta plateforme
+        <input id="base" type="text" inputmode="url" placeholder="https://jobbot.exemple.ch">
+      </label>
+      <label>Jeton
+        <input id="token" type="password" autocomplete="off" placeholder="jbx_…">
+      </label>
+      <button id="link" class="primary" type="button">Relier</button>
+      <p id="setup-error" class="error" hidden></p>
+    </section>
+
+    <!-- Sur le formulaire de l'employeur. -->
+    <section id="main" hidden>
+      <div id="offer"></div>
+      <select id="choices" hidden aria-label="Candidature"></select>
+      <button id="fill" class="primary" type="button" disabled>Remplir le formulaire</button>
+      <div id="report" hidden></div>
+      <div id="questions" hidden></div>
+      <div id="frames" hidden></div>
+      <button id="sent" class="secondary" type="button" hidden>J'ai envoyé ma candidature</button>
+      <p id="message" class="hint" hidden></p>
+      <p id="error" class="error" hidden></p>
+      <footer>
+        <span class="hint">Rien n'est envoyé à ta place.</span>
+        <button id="unlink" class="link" type="button">Délier</button>
+      </footer>
+    </section>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

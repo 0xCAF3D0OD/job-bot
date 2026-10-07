@@ -1,6 +1,6 @@
 # 25 — Remplir le formulaire de l'employeur (version 0.18.0)
 
-> Statut : **validé** le 2026-10-07, avec la consigne de garder l'interface simple. livré : PR a (PDF, champs pour les formulaires, fiche à copier).
+> Statut : **validé** le 2026-10-07, avec la consigne de garder l'interface simple. livré : PR a (PDF, champs pour les formulaires, fiche à copier), PR b (extension du navigateur).
 > Retours d'usage du 2026-10-07 : après la comparaison avec Jobright, reprendre l'idée du remplissage des formulaires de candidature, sans envoi automatique.
 
 ## 1. Le constat
@@ -105,3 +105,16 @@ extension_tokens    id, name, token_hash, created_at, last_used_at?, revoked_at?
 - **Fiche pour le formulaire** : un lien dans la barre de la préparation l'ouvre sous la barre ; valeurs remplies seulement (prénom et nom séparés, pays « Suisse »), corps de la lettre en texte, liens vers les PDF, et « compléter dans Profil » s'il manque nom, e-mail ou téléphone.
 - **Jetons de l'extension** : reportés à la PR b, avec l'extension qui s'en sert (un réglage sans usage alourdirait les Réglages). Pas de migration dans cette PR.
 - Nouvelle dépendance : `reportlab` (licence BSD).
+
+## Écarts avec la PR b
+
+- **Extension** dans `extension/` (Manifest V3, sans étape de construction), installée en mode développeur ; mode d'emploi dans `extension/README.md` et, replié, dans Réglages.
+- **Réglages › Extension du navigateur** : « Créer un jeton » (montré une fois, à copier), liste des jetons avec leur dernière utilisation, « Révoquer ». **Migration 0035** (`extension_tokens`, seule l'empreinte du jeton est gardée).
+- **Relier** : dans l'extension, l'adresse de la plateforme (`https://…` ou `http://localhost:…`) et le jeton ; le navigateur demande l'accès à cette seule adresse. « Délier » oublie le jeton.
+- **Candidature reconnue** : même site que l'annonce chez l'employeur, le lien pour postuler ou un lien de l'offre, et l'un des chemins prolonge l'autre (`…/jobs/123` et `…/jobs/123/apply`) ; sinon, choix parmi les 10 offres en préparation.
+- **Champs** : l'attribut d'autocomplétion du site d'abord, puis l'étiquette (français, allemand, anglais) ; un seul champ « Nom » reçoit le nom complet, s'il n'y a pas de champ prénom. Pays : « Suisse » (ou Schweiz, Switzerland selon la langue de la page) ; dans une liste, l'option Suisse. Jamais de mot de passe, de case à cocher ni de bouton radio ; un champ déjà rempli n'est pas touché.
+- **Pièces jointes** : le CV et la lettre en PDF, selon l'étiquette du champ (« CV », « Lettre de motivation »…) ; sinon le CV dans le premier champ de fichier.
+- **Questions libres** : les zones de texte non reconnues apparaissent dans le panneau avec « Proposer une réponse » ; la réponse (Claude Haiku, `purpose = form`) est insérée dans le champ, à relire. L'IA reçoit la question, l'offre, la lettre et les blocs de profil, jamais les coordonnées.
+- **Formulaire dans un cadre d'un autre site** (Greenhouse, Lever… intégrés à la page) : le panneau propose de l'ouvrir dans son propre onglet, où l'extension peut agir.
+- **Outils de recrutement** : pas de réglage propre à chaque outil pour l'instant ; la reconnaissance générique (autocomplétion, étiquettes) les couvre en partie. Les réglages par outil viendront, vérifiés un par un, à partir des formulaires réels où elle échoue.
+- **Non essayé en réel** : l'extension installée dans Chrome (le navigateur de test ne charge pas d'extension) et la réponse de l'IA (pas de clé). Vérifié : l'API de l'extension avec un vrai jeton, et le script de remplissage dans le navigateur sur un formulaire de démonstration, avec les données et le PDF rendus par l'API ; tests automatiques du script, des routes et des jetons.

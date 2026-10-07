@@ -1152,3 +1152,9 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .identity-more summary { cursor: pointer; font-weight: 500; font-size: 0.92rem; }
 .identity-more .form-grid { margin-top: 0.7rem; }
 @media (max-width: 640px) { .form-sheet dl { grid-template-columns: 1fr; } .form-sheet dt { margin-top: 0.3rem; } }
+.extension-steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+.extension-token { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem; margin-top: 0.6rem; padding: 0.6rem 0.75rem; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent-soft); }
+.extension-token code { overflow-wrap: anywhere; font-size: 0.82rem; }
+.extension-token .hint { flex-basis: 100%; }
+.extension-tokens { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.3rem; font-size: 0.9rem; }
+.extension-tokens li { display: flex; justify-content: space-between; gap: 0.75rem; }

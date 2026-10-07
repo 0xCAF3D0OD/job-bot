@@ -148,6 +148,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/extension/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Me
+         * @description Vérifie le jeton au moment de relier l'extension.
+         */
+        get: operations["extensionMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Match */
+        get: operations["extensionMatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/offers/{offer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fill */
+        get: operations["extensionFill"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/offers/{offer_id}/letter.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Letter Pdf */
+        get: operations["extensionLetterPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/offers/{offer_id}/cv.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cv Pdf */
+        get: operations["extensionCvPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/offers/{offer_id}/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sent
+         * @description « J'ai envoyé » : comme « Marquer comme envoyée », avec l'adresse du formulaire.
+         */
+        post: operations["extensionSent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer */
+        post: operations["extensionAnswer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tokens */
+        get: operations["listExtensionTokens"];
+        put?: never;
+        /** Create Token */
+        post: operations["createExtensionToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension-tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Token */
+        delete: operations["revokeExtensionToken"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -1781,6 +1941,11 @@ export interface components {
             /** Searches */
             searches: components["schemas"]["AlertSearchOut"][];
         };
+        /** AnswerOut */
+        AnswerOut: {
+            /** Text */
+            text: string;
+        };
         /** ApplicationIn */
         ApplicationIn: {
             /**
@@ -2380,12 +2545,62 @@ export interface components {
             /** Contact Phone */
             contact_phone?: string | null;
         };
+        /** ExtensionMe */
+        ExtensionMe: {
+            /** Platform */
+            platform: string;
+            /** Version */
+            version: string;
+        };
         /** Facet */
         Facet: {
             /** Value */
             value: string;
             /** Count */
             count: number;
+        };
+        /** FillIdentity */
+        FillIdentity: {
+            /** Name */
+            name: string | null;
+            /** Street */
+            street: string | null;
+            /** Postcode */
+            postcode: string | null;
+            /** City */
+            city: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Email */
+            email: string | null;
+            /** Linkedin */
+            linkedin: string | null;
+            /** Website */
+            website: string | null;
+            /** Availability */
+            availability: string | null;
+            /** Salary */
+            salary: string | null;
+            /** Permit */
+            permit: string | null;
+        };
+        /**
+         * FillOut
+         * @description Tout ce que l'extension met dans le formulaire (docs/25 §3.2).
+         */
+        FillOut: {
+            offer: components["schemas"]["OfferBrief"];
+            identity: components["schemas"]["FillIdentity"];
+            /** Letter Text */
+            letter_text: string | null;
+            /** Has Letter */
+            has_letter: boolean;
+            /** Has Cv */
+            has_cv: boolean;
+            /** Letter Filename */
+            letter_filename: string;
+            /** Cv Filename */
+            cv_filename: string;
         };
         /** FilterResponse */
         FilterResponse: {
@@ -2784,6 +2999,12 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MatchOut */
+        MatchOut: {
+            offer: components["schemas"]["OfferBrief"] | null;
+            /** Choices */
+            choices: components["schemas"]["OfferBrief"][];
+        };
         /** Me */
         Me: {
             /** Authenticated */
@@ -3007,6 +3228,17 @@ export interface components {
             company_address: string | null;
             /** Company Address Source */
             company_address_source: string | null;
+        };
+        /** OfferBrief */
+        OfferBrief: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /** Applied */
+            applied: boolean;
         };
         /** OfferCounts */
         OfferCounts: {
@@ -3389,16 +3621,6 @@ export interface components {
             /** Occupation */
             occupation?: string | null;
         };
-        /** QuestionIn */
-        QuestionIn: {
-            /** Conversation Id */
-            conversation_id?: number | null;
-            /** Text */
-            text: string;
-            /** Page */
-            page?: string | null;
-            focus?: components["schemas"]["FocusIn"] | null;
-        };
         /** QuestionStatOut */
         QuestionStatOut: {
             /** Text */
@@ -3671,6 +3893,18 @@ export interface components {
             /** Strong */
             strong: boolean;
         };
+        /** SentIn */
+        SentIn: {
+            /** Url */
+            url?: string | null;
+        };
+        /** SentOut */
+        SentOut: {
+            /** Application Id */
+            application_id: number;
+            /** Orp Month */
+            orp_month: string;
+        };
         /** SettingsModel */
         SettingsModel: {
             /** Orp Monthly Target */
@@ -3801,6 +4035,44 @@ export interface components {
              */
             interviews_to_review: components["schemas"]["InterviewToReview"][];
         };
+        /** TokenCreated */
+        TokenCreated: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Token */
+            token: string;
+        };
+        /** TokenIn */
+        TokenIn: {
+            /**
+             * Name
+             * @default Mon navigateur
+             */
+            name: string;
+        };
+        /** TokenOut */
+        TokenOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Used At */
+            last_used_at: string | null;
+        };
         /** TrainingMarkIn */
         TrainingMarkIn: {
             /**
@@ -3917,6 +4189,23 @@ export interface components {
             last_heartbeat_at: string | null;
             /** Stale After Seconds */
             stale_after_seconds: number;
+        };
+        /** QuestionIn */
+        jobbot__api__routes__assistant__QuestionIn: {
+            /** Conversation Id */
+            conversation_id?: number | null;
+            /** Text */
+            text: string;
+            /** Page */
+            page?: string | null;
+            focus?: components["schemas"]["FocusIn"] | null;
+        };
+        /** QuestionIn */
+        jobbot__api__routes__extension__QuestionIn: {
+            /** Offer Id */
+            offer_id: number;
+            /** Question */
+            question: string;
         };
     };
     responses: never;
@@ -4169,7 +4458,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QuestionIn"];
+                "application/json": components["schemas"]["jobbot__api__routes__assistant__QuestionIn"];
             };
         };
         responses: {
@@ -4181,6 +4470,300 @@ export interface operations {
                 content: {
                     "text/event-stream": unknown;
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionMe"];
+                };
+            };
+        };
+    };
+    extensionMatch: {
+        parameters: {
+            query: {
+                url: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionFill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FillOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionLetterPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionCvPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionSent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionAnswer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["jobbot__api__routes__extension__QuestionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnswerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listExtensionTokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenOut"][];
+                };
+            };
+        };
+    };
+    createExtensionToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenCreated"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revokeExtensionToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

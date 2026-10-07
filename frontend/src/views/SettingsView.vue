@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { api, type SettingsModel } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
+import ExtensionPanel from "../components/ExtensionPanel.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
@@ -84,6 +85,7 @@ const SECTIONS = [
   { id: "ia", label: "IA" },
   { id: "profils", label: "Profils d'essai" },
   { id: "connexion", label: "Connexion" },
+  { id: "extension", label: "Extension" },
 ];
 </script>
 
@@ -323,6 +325,14 @@ const SECTIONS = [
           Connexion
         </h2>
         <SessionPanel />
+
+        <h2
+          id="extension"
+          class="section-title"
+        >
+          Extension du navigateur
+        </h2>
+        <ExtensionPanel />
 
         <p class="diagnostic-link">
           <RouterLink
