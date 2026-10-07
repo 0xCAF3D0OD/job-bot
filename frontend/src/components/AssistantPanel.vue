@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT } from "../api/client";
 import type { components } from "../api/schema";
 import { blocks, readEvents } from "../assistantText";
+import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssistant";
 
 type Conversation = components["schemas"]["ConversationOut"];
 type Line = { role: "user" | "assistant"; content: string; error?: boolean };
 
-// Suggestions de départ ; celles propres à chaque page viendront avec la PR b (docs/24 §6).
-const SUGGESTIONS = ["Que faire aujourd'hui ?", "Où en suis-je pour l'ORP ce mois-ci ?", "Comment créer mes alertes ?"];
-
 const route = useRoute();
-const available = ref(false);
-const open = ref(false);
+const { available, open, focus, fresh, check, setFocus } = useAssistant();
+const suggestions = computed(() => suggestionsFor(String(route.name ?? ""), focus.value));
 const lines = ref<Line[]>([]);
 const conversationId = ref<number | null>(null);
 const recent = ref<Conversation[]>([]);
@@ -26,22 +24,27 @@ const scroller = ref<HTMLElement | null>(null);
 const input = ref<HTMLTextAreaElement | null>(null);
 let controller: AbortController | null = null;
 
-onMounted(async () => {
-  const { data } = await api.GET("/api/assistant/status");
-  available.value = Boolean(data?.available);
-});
+onMounted(() => void check());
 
 async function loadRecent(): Promise<void> {
   const { data } = await api.GET("/api/assistant/conversations");
   recent.value = data ?? [];
 }
 
-async function toggle(): Promise<void> {
-  open.value = !open.value;
-  if (!open.value) return;
+watch(open, async (value) => {
+  if (!value) return;
   if (!conversationId.value) await loadRecent();
   await nextTick();
   input.value?.focus();
+});
+// Raccourci « Demander à l'assistant » : nouvelle discussion sur l'élément choisi.
+watch(fresh, () => {
+  if (lines.value.length && !busy.value) startOver();
+});
+
+function followLink(): void {
+  // Sur téléphone, le panneau couvre la page : on le ferme pour la montrer.
+  if (globalThis.matchMedia?.("(max-width: 640px)").matches) open.value = false;
 }
 
 function scrollDown(): void {
@@ -52,7 +55,10 @@ function scrollDown(): void {
 watch(() => lines.value.length, scrollDown);
 
 function onKey(event: KeyboardEvent): void {
-  if (event.key === "Escape") open.value = false;
+  if (event.key !== "Escape") return;
+  // Ne ferme que le panneau, pas l'offre ouverte derrière.
+  event.stopPropagation();
+  open.value = false;
 }
 
 async function resume(conversation: Conversation): Promise<void> {
@@ -100,7 +106,12 @@ async function send(text: string = draft.value): Promise<void> {
       headers,
       credentials: "same-origin",
       signal: controller.signal,
-      body: JSON.stringify({ conversation_id: conversationId.value, text: question, page: route.fullPath }),
+      body: JSON.stringify({
+        conversation_id: conversationId.value,
+        text: question,
+        page: route.path,
+        focus: focusBody(focus.value),
+      }),
     });
     if (response.status === 401) globalThis.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     if (!response.ok || !response.body) {
@@ -175,7 +186,7 @@ function day(value: string): string {
       class="assistant-fab"
       aria-label="Ouvrir l'assistant"
       data-test="assistant-open"
-      @click="toggle"
+      @click="open = true"
     >
       <span
         class="assistant-fab-dot"
@@ -236,7 +247,7 @@ function day(value: string): string {
           </p>
           <div class="assistant-suggestions">
             <button
-              v-for="suggestion in SUGGESTIONS"
+              v-for="suggestion in suggestions"
               :key="suggestion"
               type="button"
               class="chip"
@@ -294,7 +305,21 @@ function day(value: string): string {
                     v-for="(part, p) in row"
                     :key="p"
                   >
-                    <strong v-if="part.bold">{{ part.text }}</strong>
+                    <RouterLink
+                      v-if="part.href && !part.external"
+                      :to="part.href"
+                      data-test="assistant-link"
+                      @click="followLink"
+                    >
+                      {{ part.text }}
+                    </RouterLink>
+                    <a
+                      v-else-if="part.href"
+                      :href="part.href"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >{{ part.text }}</a>
+                    <strong v-else-if="part.bold">{{ part.text }}</strong>
                     <template v-else>
                       {{ part.text }}
                     </template>
@@ -313,7 +338,21 @@ function day(value: string): string {
                     v-for="(part, p) in item"
                     :key="p"
                   >
-                    <strong v-if="part.bold">{{ part.text }}</strong>
+                    <RouterLink
+                      v-if="part.href && !part.external"
+                      :to="part.href"
+                      data-test="assistant-link"
+                      @click="followLink"
+                    >
+                      {{ part.text }}
+                    </RouterLink>
+                    <a
+                      v-else-if="part.href"
+                      :href="part.href"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >{{ part.text }}</a>
+                    <strong v-else-if="part.bold">{{ part.text }}</strong>
                     <template v-else>
                       {{ part.text }}
                     </template>
@@ -346,6 +385,21 @@ function day(value: string): string {
         </p>
       </div>
 
+      <p
+        v-if="focus?.label"
+        class="assistant-focus"
+        data-test="assistant-focus"
+      >
+        <span>À propos de : {{ focus.label }}</span>
+        <button
+          type="button"
+          class="assistant-close"
+          aria-label="Ne plus parler de cet élément"
+          @click="setFocus(null)"
+        >
+          ×
+        </button>
+      </p>
       <form
         class="assistant-form"
         @submit.prevent="send()"

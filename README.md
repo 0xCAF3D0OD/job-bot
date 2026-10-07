@@ -33,7 +33,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.14.0 | Simplifier : textes et « Comment ça marche » (a), Alertes (b), offre, ORP, Réglages, Profil (c) | livrée |
 | 0.15.0 | Suivi et preuves ORP en un onglet, en calendrier | livrée |
 | 0.16.0 | Retour d'entretien : formulaire (a), enseignements et préparation (b) | livrée |
-| 0.17.0 | Assistant : discussion et lecture des données (a), contexte de la page et raccourcis (b) | en cours |
+| 0.17.0 | Assistant : discussion et lecture des données (a), contexte de la page et raccourcis (b) | livrée |
 
 ## Lancer en local
 

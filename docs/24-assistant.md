@@ -1,6 +1,6 @@
 # 24 — Assistant : discuter avec la plateforme (version 0.17.0)
 
-> Statut : **validé** le 2026-10-07. livré : PR a (panneau, discussion, fonctions de lecture).
+> Statut : **validé** le 2026-10-07. livré : PR a (panneau, discussion, fonctions de lecture), PR b (contexte de la page, suggestions, liens, raccourcis).
 > Retours d'usage du 2026-10-07 : un petit chatbot qui comprend le contexte de la plateforme, pour discuter et obtenir des informations cohérentes avec ses données.
 
 ## 1. Ce qu'on voit
@@ -88,3 +88,14 @@ chat_messages       id, conversation_id, role (user|assistant), content, page?, 
 - **Conservation** : la tâche quotidienne `reminders` supprime les discussions sans réplique depuis 30 jours.
 - **API** : `/api/assistant/status`, `/api/assistant/conversations` (liste, détail, suppression), `POST /api/assistant/messages` (flux SSE). **Migration 0034**.
 - **Non essayé en réel** : l'appel à l'IA (pas de clé sur l'instance de test) ; vérifié dans le navigateur avec une IA simulée qui appelle vraiment la fonction « situation », et couvert par des tests.
+
+## Écarts avec la PR b
+
+- **Élément choisi** envoyé avec chaque question : l'offre ouverte (Offres, Préparation), le mois affiché et le jour choisi (Suivi), ou l'élément d'un raccourci. Il s'affiche au-dessus du champ (« À propos de : offre SRE chez Exemple SA »), avec × pour l'oublier. La plateforme y joint seulement le titre et l'entreprise ; l'IA lit le détail avec ses fonctions.
+- **Nouvelle fonction** « candidature » (une candidature, avec ses retours d'entretien ; jamais les coordonnées du contact) : 11 fonctions en tout.
+- **Suggestions** : trois par page (Aujourd'hui, Offres, Suivi, Alertes, Actualités, Formations, Profil, Réglages, Diagnostic, Préparation), et d'autres quand une offre, une candidature ou un jour est choisi.
+- **Liens** : seulement vers les pages de la plateforme (liste fermée dans le guide) et, pour une actualité ou une formation, vers une adresse https ; toute autre adresse reste du texte. `/candidatures/offres?offre=ID` ouvre l'offre (même hors de la liste affichée) ; `/candidatures/suivi?mois=…&jour=…` ouvre le jour. Sur téléphone, suivre un lien ferme le panneau.
+- **Raccourcis** « Demander à l'assistant » : en haut du détail d'une offre, et dans le menu « ⋯ » d'une carte de candidature ; ils ouvrent une nouvelle discussion sur cet élément.
+- **Panneau** au-dessus du détail d'une offre ; Échap ferme le panneau seulement.
+- **Guide** passé en `assistant-v2.md` (page ouverte, liens, raccourcis).
+- **Non essayé en réel** : l'appel à l'IA ; vérifié dans le navigateur avec une IA simulée (contexte reçu, liens suivis, raccourcis), et couvert par des tests.

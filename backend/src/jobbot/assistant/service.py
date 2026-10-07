@@ -6,7 +6,7 @@ Seul le texte des répliques est gardé, 30 jours ; les 20 dernières répliques
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from importlib import resources
 from typing import Any
@@ -16,7 +16,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.assistant import tools
-from jobbot.db.models import ChatConversation, ChatMessage
+from jobbot.db.models import Application, ChatConversation, ChatMessage, Offer
 from jobbot.llm.client import ChatTurn, chat_client_factory
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -33,7 +33,7 @@ KEEP = timedelta(days=30)
 # Estimation prudente d'un tour (question + données lues), pour respecter le plafond.
 ESTIMATE_USD = Decimal("0.02")
 TITLE_LENGTH = 60
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v1.md").read_text("utf-8")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v2.md").read_text("utf-8")
 
 # Remplaçable en test par un faux client.
 make_chat_client = chat_client_factory
@@ -69,6 +69,41 @@ def _params(messages: list[dict[str, Any]]) -> dict[str, Any]:
         "tools": _tools(),
         "messages": messages,
     }
+
+
+@dataclass(frozen=True)
+class Focus:
+    """Élément choisi sur la page (docs/24 §2.2) : une offre, une candidature, un jour, un mois."""
+
+    offer_id: int | None = None
+    application_id: int | None = None
+    day: date | None = None
+    month: str | None = None
+
+
+async def describe(session: AsyncSession, page: str | None, focus: Focus | None) -> str | None:
+    """Ligne de contexte jointe à la question : la page et l'élément choisi, avec leur id.
+
+    Seulement des repères (titre, entreprise) : l'IA lit le détail avec ses fonctions.
+    """
+    parts = [page] if page else []
+    if focus:
+        if focus.offer_id and (offer := await session.get(Offer, focus.offer_id)):
+            parts.append(
+                f"offre choisie : id {offer.id}, « {offer.title} » chez {offer.company or '?'}"
+            )
+        if focus.application_id and (
+            application := await session.get(Application, focus.application_id)
+        ):
+            parts.append(
+                f"candidature choisie : id {application.id}, « {application.job_title} » "
+                f"chez {application.company}"
+            )
+        if focus.day:
+            parts.append(f"jour choisi dans le calendrier : {focus.day.isoformat()}")
+        if focus.month:
+            parts.append(f"mois affiché : {focus.month}")
+    return " ; ".join(parts)[:500] or None
 
 
 def _user_text(text: str, page: str | None) -> str:
@@ -107,6 +142,7 @@ async def answer(
     text: str,
     page: str | None,
     profile_id: int,
+    focus: Focus | None = None,
 ) -> AsyncIterator[Event]:
     """Enregistre la question, fait répondre l'IA au fil de l'eau, enregistre la réponse."""
     settings = runtime.settings
@@ -127,12 +163,13 @@ async def answer(
                 raise AssistantUnavailable("discussion introuvable")
             conversation = found
             conversation.updated_at = now
+        context = await describe(session, page, focus)
         session.add(
             ChatMessage(
                 conversation_id=conversation.id,
                 role="user",
                 content=text,
-                page=page,
+                page=context,
                 created_at=now,
             )
         )

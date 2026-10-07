@@ -5,6 +5,7 @@ import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { expiredText, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
+import { useAssistant } from "../composables/useAssistant";
 
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
 
@@ -141,6 +142,12 @@ const ADDRESS_SOURCE: Record<string, string> = {
 // Menu « ⋯ » : les actions rares, hors de la vue principale (docs/12 §1).
 const menuOpen = ref(false);
 const menuRoot = ref<HTMLElement | null>(null);
+const assistant = useAssistant();
+function askAssistant(): void {
+  const o = props.offer;
+  assistant.askAbout({ offerId: o.id, label: `offre ${o.title}${o.company ? ` chez ${o.company}` : ""}` });
+}
+
 function act(action: () => void): void {
   menuOpen.value = false;
   action();
@@ -183,6 +190,15 @@ watch(
         large
       />
       <div class="detail-top-actions">
+        <button
+          v-if="assistant.available.value"
+          type="button"
+          class="link detail-ask"
+          data-test="ask-assistant"
+          @click="askAssistant"
+        >
+          Demander à l'assistant
+        </button>
         <div
           v-if="offer.status !== 'applied'"
           ref="menuRoot"

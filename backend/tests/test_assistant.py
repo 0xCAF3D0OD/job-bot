@@ -249,3 +249,65 @@ async def test_purge_after_30_days(runtime: Runtime) -> None:
     async with runtime.sessionmaker() as session:
         assert list(await session.scalars(select(ChatConversation.title))) == ["récente"]
     await reset(runtime)
+
+
+async def test_focus_describes_chosen_element(
+    client: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch, llm: None
+) -> None:
+    await reset(runtime)
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        offer = Offer(
+            fingerprint="assistant-focus",
+            title="SRE",
+            company="Exemple SA",
+            status="to_review",
+            first_seen_at=now,
+            last_seen_at=now,
+        )
+        session.add(offer)
+        await session.flush()
+        application = Application(
+            sent_at=date(2026, 10, 2),
+            method="electronique",
+            company="Autre SA",
+            job_title="DevOps",
+            orp_month="2026-10",
+            contact_email="secret@example.ch",
+        )
+        session.add(application)
+        await session.flush()
+        offer_id, application_id = offer.id, application.id
+    fake = FakeChat([turn([{"type": "text", "text": "Oui."}], "end_turn")])
+    monkeypatch.setattr(service, "make_chat_client", lambda _settings: fake)
+    response = await client.post(
+        "/api/assistant/messages",
+        json={
+            "text": "Et celle-ci ?",
+            "page": "/candidatures/offres",
+            "focus": {
+                "offer_id": offer_id,
+                "application_id": application_id,
+                "day": "2026-10-02",
+                "month": "2026-10",
+            },
+        },
+    )
+    assert response.status_code == 200
+    content = fake.calls[0]["messages"][0]["content"]
+    assert content.startswith("[Page ouverte : /candidatures/offres ; offre choisie : id ")
+    assert f"id {offer_id}, « SRE » chez Exemple SA" in content
+    assert f"candidature choisie : id {application_id}" in content
+    assert "jour choisi dans le calendrier : 2026-10-02" in content
+    assert "mois affiché : 2026-10" in content and content.endswith("]\nEt celle-ci ?")
+    bad = await client.post(
+        "/api/assistant/messages", json={"text": "?", "focus": {"month": "2026-13"}}
+    )
+    assert bad.status_code == 422
+
+    async with runtime.sessionmaker() as session:
+        detail, error = await tools.run(session, 1, "candidature", {"id": application_id})
+        assert not error and json.loads(detail)["poste"] == "DevOps"
+        assert "secret@" not in detail
+        assert (await tools.run(session, 1, "candidature", {"id": 0}))[0].startswith('{"erreur"')
+    await reset(runtime)

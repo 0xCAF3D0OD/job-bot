@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer } from "../api/client";
@@ -8,6 +8,7 @@ import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import CvPanel from "../components/CvPanel.vue";
 import PageHero from "../components/PageHero.vue";
+import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { printSheet } from "../composables/usePrint";
 import { expiredText } from "../format";
@@ -60,6 +61,11 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
 }
 
 const offer = ref<Offer | null>(null);
+const assistant = useAssistant();
+watch(offer, (o) => {
+  if (o) assistant.setFocus({ offerId: o.id, label: `préparation : ${o.title}${o.company ? ` chez ${o.company}` : ""}` });
+});
+onUnmounted(() => assistant.setFocus(null));
 const letters = ref<Letter[]>([]);
 const chunkTitles = ref<Record<number, string>>({});
 const selectedId = ref<number | null>(null);

@@ -1,7 +1,7 @@
 // Mise en forme des réponses de l'assistant (docs/24) : paragraphes, listes, gras et blocs
 // à copier. Pas de HTML interprété : le texte est découpé puis affiché par le gabarit.
 
-export type Inline = { text: string; bold: boolean };
+export type Inline = { text: string; bold: boolean; href?: string; external?: boolean };
 export type Block =
   | { kind: "p"; lines: Inline[][] }
   | { kind: "list"; ordered: boolean; items: Inline[][] }
@@ -9,13 +9,36 @@ export type Block =
 
 const ITEM = /^\s*(?:[-*•]|(\d+)[.)])\s+(.*)$/;
 
-export function inline(text: string): Inline[] {
+// Chemins de la plateforme que l'assistant peut proposer (docs/24, guide « Liens »).
+const INTERNAL = /^\/(aujourdhui|candidatures(\/(offres|suivi|alertes))?|candidatures\/offres\/\d+\/preparer|actualites|formations|profil|reglages(\/diagnostic)?)(\?[\w=&%.-]*)?$/;
+const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+
+function emphasis(text: string): Inline[] {
   const parts = text.split("**");
   // Un « ** » orphelin (réponse en cours d'écriture) reste du texte simple.
   if (parts.length % 2 === 0) return [{ text: text.replaceAll("`", ""), bold: false }];
   return parts
     .map((part, index) => ({ text: part.replaceAll("`", ""), bold: index % 2 === 1 }))
     .filter((part) => part.text);
+}
+
+export function link(label: string, target: string): Inline {
+  if (INTERNAL.test(target)) return { text: label, bold: false, href: target };
+  if (/^https:\/\/[^\s"'<>]+$/.test(target)) return { text: label, bold: false, href: target, external: true };
+  // Adresse inconnue : seulement le texte.
+  return { text: label, bold: false };
+}
+
+export function inline(text: string): Inline[] {
+  const found: Inline[] = [];
+  let last = 0;
+  for (const match of text.matchAll(LINK)) {
+    found.push(...emphasis(text.slice(last, match.index)));
+    found.push(link((match[1] ?? "").replaceAll("**", ""), match[2] ?? ""));
+    last = (match.index ?? 0) + match[0].length;
+  }
+  found.push(...emphasis(text.slice(last)));
+  return found;
 }
 
 export function blocks(text: string): Block[] {
