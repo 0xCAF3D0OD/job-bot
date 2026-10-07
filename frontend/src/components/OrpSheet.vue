@@ -15,20 +15,17 @@ const jobRoom = ref(false);
 const copied = ref("");
 const busy = ref(false);
 
-// Champs dans l'ordre du formulaire de saisie, pour les recopier un à un dans Job-Room.
-const FIELDS: [keyof OrpRow, string][] = [
-  ["date", "Date"],
-  ["company", "Entreprise"],
-  ["address", "Adresse"],
-  ["contact", "Personne de contact"],
-  ["phone", "Téléphone"],
-  ["job_title", "Poste"],
-  ["rate", "Taux"],
-  ["method", "Mode"],
-  ["assigned", "Assignée par l'ORP"],
-  ["result", "Résultat"],
-  ["url", "Lien de la candidature"],
-];
+// Champs groupés par étape du formulaire de saisie de Job-Room (ordre fourni par le serveur,
+// d'après le formulaire du 2026-10-07).
+function steps(row: OrpRow): { step: string; fields: OrpRow["job_room"] }[] {
+  const groups: { step: string; fields: OrpRow["job_room"] }[] = [];
+  for (const item of row.job_room) {
+    const last = groups.at(-1);
+    if (last?.step === item.step) last.fields.push(item);
+    else groups.push({ step: item.step, fields: [item] });
+  }
+  return groups;
+}
 
 async function printPdf(): Promise<void> {
   const sheet = document.querySelector<HTMLElement>(".orp-sheet");
@@ -235,26 +232,38 @@ onMounted(async () => {
         data-test="job-room-row"
       >
         <h3>{{ index + 1 }}. {{ row.company }} — {{ row.job_title }}</h3>
-        <dl>
-          <template
-            v-for="[key, label] in FIELDS"
-            :key="key"
-          >
-            <dt>{{ label }}</dt>
-            <dd>
-              <span>{{ row[key] || "—" }}</span>
-              <button
-                v-if="row[key]"
-                type="button"
-                class="link"
-                data-test="copy"
-                @click="copy(String(row[key]), `${row.application_id}-${key}`)"
-              >
-                {{ copied === `${row.application_id}-${key}` ? "Copié" : "Copier" }}
-              </button>
-            </dd>
-          </template>
-        </dl>
+        <section
+          v-for="group in steps(row)"
+          :key="group.step"
+          class="job-room-step"
+        >
+          <h4>{{ group.step }}</h4>
+          <dl>
+            <template
+              v-for="item in group.fields"
+              :key="item.label"
+            >
+              <dt>{{ item.label }}</dt>
+              <dd>
+                <span
+                  v-if="item.choice"
+                  class="job-room-choice"
+                  data-test="job-room-choice"
+                >{{ item.value ? `à cocher : ${item.value}` : "—" }}</span>
+                <span v-else>{{ item.value || "—" }}</span>
+                <button
+                  v-if="item.value && !item.choice"
+                  type="button"
+                  class="link"
+                  data-test="copy"
+                  @click="copy(item.value, `${row.application_id}-${item.label}`)"
+                >
+                  {{ copied === `${row.application_id}-${item.label}` ? "Copié" : "Copier" }}
+                </button>
+              </dd>
+            </template>
+          </dl>
+        </section>
       </article>
     </div>
 

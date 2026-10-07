@@ -3978,6 +3978,18 @@
             ],
             "title": "Contact Phone"
           },
+          "contact_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Email"
+          },
           "job_title": {
             "type": "string",
             "maxLength": 300,
@@ -4108,6 +4120,18 @@
               }
             ],
             "title": "Contact Phone"
+          },
+          "contact_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Email"
           },
           "job_title": {
             "type": "string",
@@ -4323,6 +4347,18 @@
             ],
             "title": "Contact Phone"
           },
+          "contact_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Email"
+          },
           "job_title": {
             "type": "string",
             "maxLength": 300,
@@ -4448,6 +4484,18 @@
               }
             ],
             "title": "Contact Phone"
+          },
+          "contact_email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Email"
           },
           "job_title": {
             "type": "string",
@@ -5726,6 +5774,34 @@
           "items"
         ],
         "title": "Inbox"
+      },
+      "JobRoomFieldOut": {
+        "properties": {
+          "step": {
+            "type": "string",
+            "title": "Step"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "choice": {
+            "type": "boolean",
+            "title": "Choice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "step",
+          "label",
+          "value",
+          "choice"
+        ],
+        "title": "JobRoomFieldOut"
       },
       "JobRunOut": {
         "properties": {
@@ -7750,6 +7826,13 @@
             },
             "type": "array",
             "title": "Missing"
+          },
+          "job_room": {
+            "items": {
+              "$ref": "#/components/schemas/JobRoomFieldOut"
+            },
+            "type": "array",
+            "title": "Job Room"
           }
         },
         "type": "object",
@@ -7766,7 +7849,8 @@
           "assigned",
           "result",
           "url",
-          "missing"
+          "missing",
+          "job_room"
         ],
         "title": "OrpRowOut"
       },

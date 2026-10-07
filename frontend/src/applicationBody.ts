@@ -11,6 +11,7 @@ export function applicationBody(value: ApplicationFormValue) {
     company_address: value.company_address || null,
     contact_name: value.contact_name || null,
     contact_phone: value.contact_phone || null,
+    contact_email: value.contact_email || null,
     job_title: value.job_title,
     location: value.location || null,
     rate_text: value.rate_text || null,
