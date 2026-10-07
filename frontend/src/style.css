@@ -1038,13 +1038,19 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .day-marks .mark { font-size: 0.65rem; border-radius: 4px; padding: 0 0.25rem; width: fit-content; }
 .day-marks .mark.interview { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 .day-marks .mark.remind { background: color-mix(in srgb, var(--warn) 18%, transparent); color: #b4600f; }
-.suivi-panel { display: grid; gap: 0.8rem; }
+.suivi-panel { display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: 0.7rem; padding: 0.2rem 0.2rem 0.4rem 0; scrollbar-width: thin; }
+/* Estompage : en haut seulement si des cartes sont au-dessus, en bas si d'autres suivent. */
+.panel-scroll.fade-top { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); }
+.panel-scroll.fade-bottom { -webkit-mask-image: linear-gradient(to top, transparent 0, #000 3rem); mask-image: linear-gradient(to top, transparent 0, #000 3rem); }
+.panel-scroll.fade-top.fade-bottom { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); }
 .suivi-panel h3 { margin: 0; font-size: 1rem; }
-.application-card { display: grid; gap: 0.45rem; padding: 0.9rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.application-card { display: grid; gap: 0.3rem; padding: 0.7rem 0.85rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
 .application-card header { display: flex; justify-content: space-between; gap: 0.5rem; align-items: flex-start; }
 .application-card header p { margin: 0.1rem 0 0; font-size: 0.86rem; }
 .card-facts { margin: 0; font-size: 0.8rem; color: var(--faint); }
-.card-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+.card-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+.card-status select { padding: 0.15rem 0.4rem; font-size: 0.82rem; }
 .card-missing { margin: 0; font-size: 0.82rem; }
 .card-links { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; margin: 0; font-size: 0.86rem; }
 .card-job-room { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.7rem; margin: 0; font-size: 0.82rem; }
@@ -1054,6 +1060,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .orp-details > summary { cursor: pointer; color: var(--accent); font-weight: 500; margin-bottom: 0.8rem; }
 @media (max-width: 900px) {
   .suivi-grid { grid-template-columns: 1fr; }
+  .panel-scroll { max-height: 70vh; }
   .suivi-calendar .day { min-height: 3.6rem; }
   .day-marks .mark { display: none; }
 }
