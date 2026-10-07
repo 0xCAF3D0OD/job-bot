@@ -543,6 +543,52 @@
         }
       }
     },
+    "/api/offers/{offer_id}/employer": {
+      "post": {
+        "tags": [
+          "collect"
+        ],
+        "summary": "Find Employer Offer",
+        "description": "« Chercher l'offre chez l'employeur » (docs/20 §2) : site, outil de recrutement,\npuis Internet ; peut prendre une trentaine de secondes.",
+        "operationId": "findEmployerOffer",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfferOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible ou plafond atteint"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/logo": {
       "get": {
         "tags": [
@@ -7875,6 +7921,62 @@
             ],
             "title": "Company Address Url"
           },
+          "employer_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Url"
+          },
+          "employer_url_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "site",
+                  "ats",
+                  "web"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Url Source"
+          },
+          "employer_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "found",
+                  "not_found",
+                  "agency",
+                  "gone"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Status"
+          },
+          "employer_checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Checked At"
+          },
           "has_logo": {
             "type": "boolean",
             "title": "Has Logo",
@@ -9094,6 +9196,62 @@
             ],
             "title": "Company Address Url"
           },
+          "employer_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Url"
+          },
+          "employer_url_source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "site",
+                  "ats",
+                  "web"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Url Source"
+          },
+          "employer_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "found",
+                  "not_found",
+                  "agency",
+                  "gone"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Status"
+          },
+          "employer_checked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Checked At"
+          },
           "has_logo": {
             "type": "boolean",
             "title": "Has Logo",
@@ -9413,6 +9571,13 @@
             "minimum": 2.0,
             "title": "Orp Due Day",
             "default": 5
+          },
+          "employer_search_threshold": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Employer Search Threshold",
+            "default": 70
           }
         },
         "type": "object",

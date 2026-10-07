@@ -151,12 +151,14 @@ async def test_api_settings(api: AsyncClient) -> None:
         "notify_score_threshold": 70,
         "llm_monthly_budget_chf": 10,
         "orp_due_day": 5,
+        "employer_search_threshold": 70,
     }
     new = {
         "orp_monthly_target": 8,
         "notify_score_threshold": 75,
         "llm_monthly_budget_chf": 5,
         "orp_due_day": 10,
+        "employer_search_threshold": 70,
     }
     assert (await api.put("/api/settings", json=new)).json() == new
     assert (await api.get("/api/settings")).json() == new

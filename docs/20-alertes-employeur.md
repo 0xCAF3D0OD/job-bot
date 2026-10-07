@@ -1,6 +1,6 @@
 # 20 — Mes alertes et « Voir l'offre chez l'employeur » (version 0.13.0)
 
-> Statut : **validé** le 2026-10-07. livré : PR a (Mes alertes).
+> Statut : **validé** le 2026-10-07. livré : PR a (Mes alertes), PR b (offre chez l'employeur).
 > Retours d'usage du 2026-10-07 : créer ses alertes plus facilement, vers l'adresse de son choix ; trouver l'annonce chez l'employeur plutôt que sur une plateforme intermédiaire.
 
 ## 1. Mes alertes
@@ -99,3 +99,16 @@ settings         + employer_search_threshold (défaut 70)
 - **Rappel** : sur Aujourd'hui et en pastille de l'onglet Alertes, pour une alerte « créée » depuis 3 jours sans rien reçu.
 - **API** : `/api/alert-searches` (`/api/alerts/refresh`, le bouton « Collecter », existait déjà).
 - **Migration 0031** (`alert_searches`, `alert_setups`) ; les champs de « Voir l'offre chez l'employeur » viendront avec la PR b (0032).
+
+## Écarts avec la PR b
+
+- **Outils de recrutement pris en charge** : Greenhouse, Lever, SmartRecruiters et Personio, dont la liste publique des postes a été vérifiée le 2026-10-07. **Recruitee** (adresse publique introuvable) et **Workday** (liste accessible seulement par une requête de recherche) sont écartés pour l'instant.
+- **Constat sur cinq vrais sites** (Scandit, On, Proton, Nexthink, Beekeeper) : la page carrières est bien trouvée, mais la liste des postes est construite par le navigateur ou confiée à un autre outil (par exemple Eightfold). Le chemin gratuit trouvera donc surtout les entreprises qui affichent leurs postes dans la page, ou qui utilisent l'un des quatre outils ; **le plus souvent, c'est la recherche par l'IA qui trouvera l'annonce**.
+- **Page carrières** : liens « Emplois », « Carrières », « Jobs »… sur le même site (sous-domaines compris) ou vers un outil reconnu, avec un pas de plus au besoin (page carrières → liste des postes).
+- **Titre** : comparé sans « (H/F) », « m/w/d » ni taux ; 75 % des mots du titre doivent se retrouver.
+- **Une annonce trouvée par l'outil de recrutement** est prise telle quelle (la liste vient de l'employeur) ; celle trouvée sur le site ou par l'IA doit contenir le titre et le nom de l'entreprise.
+- **Agences** : liste de 20 agences connues et formules « pour notre client », « für unseren Kunden », « on behalf of our client ».
+- **Tâche `employer`** : chaque heure de 7 h à 21 h, 6 offres au plus par passage ; au plafond de l'IA, elle continue sans IA. Revérification des liens trouvés tous les 3 jours (lien retiré si la page ne répond plus).
+- **Lien de candidature** : l'annonce chez l'employeur devient le lien « Postuler chez l'employeur » de la préparation et le lien pré-rempli de « Marquer comme envoyée ».
+- **Migration 0032**.
+- **Non essayé en réel** : la recherche par l'IA (pas de clé API sur l'instance de test) ; couverte par des tests avec une réponse simulée.

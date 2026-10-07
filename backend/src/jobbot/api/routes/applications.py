@@ -272,7 +272,7 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
         job_title=offer.title,
         location=offer.location,
         rate_text=_rate_text(offer),
-        application_url=offer.apply_url or first_link,
+        application_url=offer.employer_url or offer.apply_url or first_link,
     )
 
 

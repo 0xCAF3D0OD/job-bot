@@ -183,6 +183,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/employer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Find Employer Offer
+         * @description « Chercher l'offre chez l'employeur » (docs/20 §2) : site, outil de recrutement,
+         *     puis Internet ; peut prendre une trentaine de secondes.
+         */
+        post: operations["findEmployerOffer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/logo": {
         parameters: {
             query?: never;
@@ -2585,6 +2606,14 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Employer Url */
+            employer_url?: string | null;
+            /** Employer Url Source */
+            employer_url_source?: ("site" | "ats" | "web") | null;
+            /** Employer Status */
+            employer_status?: ("found" | "not_found" | "agency" | "gone") | null;
+            /** Employer Checked At */
+            employer_checked_at?: string | null;
             /**
              * Has Logo
              * @default false
@@ -2982,6 +3011,14 @@ export interface components {
             company_address_source?: ("page" | "registry" | "web" | "letter" | "manual") | null;
             /** Company Address Url */
             company_address_url?: string | null;
+            /** Employer Url */
+            employer_url?: string | null;
+            /** Employer Url Source */
+            employer_url_source?: ("site" | "ats" | "web") | null;
+            /** Employer Status */
+            employer_status?: ("found" | "not_found" | "agency" | "gone") | null;
+            /** Employer Checked At */
+            employer_checked_at?: string | null;
             /**
              * Has Logo
              * @default false
@@ -3105,6 +3142,11 @@ export interface components {
              * @default 5
              */
             orp_due_day: number;
+            /**
+             * Employer Search Threshold
+             * @default 70
+             */
+            employer_search_threshold: number;
         };
         /** SiteActive */
         SiteActive: {
@@ -3613,6 +3655,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["OfferOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    findEmployerOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OfferOut"];
+                };
+            };
+            /** @description IA indisponible ou plafond atteint */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

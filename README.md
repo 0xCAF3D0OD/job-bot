@@ -29,7 +29,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.10.0 | Profils d'essai : Actualités (a), Formations (b) | livrée |
 | 0.11.0 | Connexion (a), Candidatures et ORP réunies (b) | livrée |
 | 0.12.0 | Navigation par catégories : menu et rubrique Candidatures (a), Aujourd'hui et Réglages (b) | livrée |
-| 0.13.0 | Mes alertes (a), Voir l'offre chez l'employeur (b) | en cours (a) |
+| 0.13.0 | Mes alertes (a), Voir l'offre chez l'employeur (b) | livrée |
 
 ## Lancer en local
 
