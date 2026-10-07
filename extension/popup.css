@@ -51,3 +51,6 @@ button.link:hover { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--
 a { color: var(--accent); text-decoration: none; }
 a:hover { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); border-radius: 3px; }
 footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem; padding-top: 0.6rem; border-top: 1px solid var(--border); font-size: 12px; }
+#fields { display: grid; gap: 0.6rem; }
+/* « hidden » l'emporte sur les display ci-dessus (sections, champs). */
+[hidden] { display: none !important; }

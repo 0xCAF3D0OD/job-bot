@@ -1,6 +1,6 @@
 # 25 — Remplir le formulaire de l'employeur (version 0.18.0)
 
-> Statut : **validé** le 2026-10-07, avec la consigne de garder l'interface simple. livré : PR a (PDF, champs pour les formulaires, fiche à copier), PR b (extension du navigateur).
+> Statut : **validé** le 2026-10-07, avec la consigne de garder l'interface simple. livré : PR a (PDF, champs pour les formulaires, fiche à copier), PR b (extension du navigateur), 0.18.1 (Firefox).
 > Retours d'usage du 2026-10-07 : après la comparaison avec Jobright, reprendre l'idée du remplissage des formulaires de candidature, sans envoi automatique.
 
 ## 1. Le constat
@@ -118,3 +118,13 @@ extension_tokens    id, name, token_hash, created_at, last_used_at?, revoked_at?
 - **Formulaire dans un cadre d'un autre site** (Greenhouse, Lever… intégrés à la page) : le panneau propose de l'ouvrir dans son propre onglet, où l'extension peut agir.
 - **Outils de recrutement** : pas de réglage propre à chaque outil pour l'instant ; la reconnaissance générique (autocomplétion, étiquettes) les couvre en partie. Les réglages par outil viendront, vérifiés un par un, à partir des formulaires réels où elle échoue.
 - **Non essayé en réel** : l'extension installée dans Chrome (le navigateur de test ne charge pas d'extension) et la réponse de l'IA (pas de clé). Vérifié : l'API de l'extension avec un vrai jeton, et le script de remplissage dans le navigateur sur un formulaire de démonstration, avec les données et le PDF rendus par l'API ; tests automatiques du script, des routes et des jetons.
+
+## Complément 0.18.1 : Firefox
+
+- **Manifeste** : identifiant Firefox (`job-bot@jobbot.app`), Firefox 128 au moins, et déclaration « aucune donnée collectée » ; vérifié sans erreur par l'outil de Mozilla (`web-ext lint`). Chrome ignore ces lignes.
+- **Relier** : l'adresse et le jeton sont enregistrés en même temps que la demande d'autorisation, qui part dans le geste même du clic (Firefox l'exige). Si le panneau se ferme pendant la demande, ou si elle est refusée, la réouverture propose **« Autoriser l'accès à ma plateforme »**, sans ressaisir le jeton.
+- **Autorisation par hôte**, sans le port (`http://localhost/*`, `https://jobbot.exemple.ch/*`) : Firefox refuse un port dans le motif demandé.
+- **Correction** : les écrans « Relier » et principal pouvaient s'afficher ensemble (le style des sections l'emportait sur « masqué ») ; corrigé pour tous les navigateurs.
+- **Installation** : module temporaire (`about:debugging`) pour essayer ; pour la garder, signature privée gratuite par Mozilla (`web-ext sign --channel=unlisted`, avec tes clés), pas de publication.
+- **Essayé en réel dans Firefox 157** (sans fenêtre, piloté automatiquement) : relier et accepter l'autorisation, candidature reconnue, formulaire de démonstration rempli (10 champs dont la lettre PDF jointe, « Disponibilité » obligatoire en orange, question libre proposée, consentement non coché), « J'ai envoyé » enregistré, puis autorisation refusée et reprise par « Autoriser l'accès ».
+- **Pour les tests** : `popup.html?onglet=<début d'adresse>` désigne l'onglet à remplir quand le panneau est ouvert dans un onglet.
