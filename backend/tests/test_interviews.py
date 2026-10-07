@@ -12,15 +12,15 @@ from jobbot.runtime import Runtime
 
 async def add_application(runtime: Runtime, **extra: object) -> int:
     async with runtime.sessionmaker.begin() as session:
+        values: dict[str, object] = {"company": "Exemple SA", **extra}
         application = Application(
             sent_at=date(2026, 10, 2),
             method="electronique",
-            company="Exemple SA",
             job_title="Ingénieur DevOps",
             orp_month="2026-10",
             status="entretien",
             interview_at=datetime(2026, 10, 6, 9, 0, tzinfo=UTC),
-            **extra,
+            **values,
         )
         session.add(application)
         await session.flush()
@@ -101,3 +101,76 @@ async def test_reminder_the_day_after(runtime: Runtime, client: AsyncClient) -> 
     )
     assert (await client.get("/api/today")).json()["interviews_to_review"] == []
     await reset(runtime)
+
+
+async def test_insights_prepared_and_coach(
+    client: AsyncClient, runtime: Runtime, monkeypatch
+) -> None:  # type: ignore[no-untyped-def]
+    from jobbot.interviews import service
+    from jobbot.llm.client import RawResult
+    from jobbot.llm.pricing import Usage
+    from jobbot.scoring import service as scoring
+
+    await reset(runtime)
+    first = await add_application(runtime)
+    second = await add_application(runtime, company="Autre SA")
+    await client.post(
+        f"/api/applications/{first}/interviews",
+        json={
+            "rating": 2,
+            "questions": [
+                {"text": "Vos points faibles ?", "difficult": True},
+                {"text": "Présentez-vous"},
+            ],
+            "went_badly": "Réponse floue sur Kubernetes",
+            "to_prepare": ["Exemple chiffré de projet"],
+        },
+    )
+    await client.post(
+        f"/api/applications/{second}/interviews",
+        json={"rating": 4, "questions": [{"text": "présentez-vous"}], "went_well": "Bonne démo"},
+    )
+    insights = (await client.get("/api/interviews/insights")).json()
+    assert insights["count"] == 2 and insights["average_rating"] == 3.0
+    assert [(q["text"], q["count"], q["difficult"]) for q in insights["questions"]] == [
+        ("Vos points faibles ?", 1, 1),
+        ("Présentez-vous", 2, 0),
+    ]
+    assert insights["went_well"][0]["company"] == "Autre SA"
+    assert insights["to_prepare"] == [{"text": "Exemple chiffré de projet", "done": False}]
+    checked = await client.put(
+        "/api/interviews/insights/prepared",
+        json={"text": "exemple chiffré de projet", "done": True},
+    )
+    assert checked.json()["to_prepare"][0]["done"] is True
+
+    # Conseils de l'IA : sans clé, refusé ; avec une réponse simulée, gardés.
+    assert (await client.post("/api/interviews/coach", json={})).status_code == 409
+    calls: list[dict] = []
+
+    class Fake:
+        async def score(self, params: dict) -> RawResult:
+            calls.append(params)
+            text_ = (
+                '<reponse>{"pistes": ["Prépare un exemple chiffré"], '
+                '"answers": [{"question": "Vos points faibles ?", "answer": "Je…"}], '
+                '"questions_to_ask": ["Quelle équipe ?"]}</reponse>'
+            )
+            return RawResult(text_, service.MODEL, Usage(4000, 0, 0, 800), "end_turn")
+
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Fake())
+    monkeypatch.setattr(type(runtime.settings), "llm_configured", property(lambda _self: True))
+    coached = await client.post("/api/interviews/coach", json={"application_id": first})
+    assert coached.status_code == 200
+    coaching = coached.json()["coaching"]
+    assert (
+        coaching["pistes"] == ["Prépare un exemple chiffré"] and coaching["application_id"] == first
+    )
+    content = calls[0]["messages"][0]["content"]
+    assert "Vos points faibles ?" in content and "<prochain>" in content
+    assert "Exemple SA" in content  # le prochain entretien nomme l'entreprise, pas toi
+    await reset(runtime)
+    async with runtime.engine.begin() as conn:
+        await conn.execute(
+            text("DELETE FROM settings WHERE key IN ('interview_prepared', 'interview_coaching')")
+        )

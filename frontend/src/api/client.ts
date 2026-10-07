@@ -92,3 +92,4 @@ export type AlertsPage = Schemas["AlertsPage"];
 export type AlertSearch = Schemas["AlertSearchOut"];
 export type Interview = Schemas["InterviewOut"];
 export type InterviewIn = Schemas["InterviewIn"];
+export type InterviewInsights = Schemas["InsightsOut"];

@@ -15,6 +15,8 @@ import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
 import InterviewForm from "../components/InterviewForm.vue";
+import InterviewInsights from "../components/InterviewInsights.vue";
+import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
@@ -215,6 +217,8 @@ async function remove(application: Application): Promise<void> {
 
 // Retour d'entretien (docs/23) : formulaire ouvert depuis une carte.
 const interviewing = ref<{ application: Application; interview: Interview | null } | null>(null);
+const preparing = ref<Application | null>(null);
+const insightsPanel = ref<InstanceType<typeof InterviewInsights> | null>(null);
 const interviewError = ref("");
 
 function openInterview(application: Application, interview: Interview | null): void {
@@ -241,6 +245,7 @@ async function saveInterview(value: InterviewIn): Promise<void> {
   }
   interviewing.value = null;
   await load();
+  await insightsPanel.value?.load();
 }
 
 async function removeInterview(): Promise<void> {
@@ -442,6 +447,7 @@ onMounted(() => void load());
               @edit="edit"
               @remove="remove"
               @interview="openInterview"
+              @prepare="preparing = $event"
             />
           </div>
         </aside>
@@ -471,6 +477,8 @@ onMounted(() => void load());
         />
       </template>
 
+      <InterviewInsights ref="insightsPanel" />
+
       <details
         class="orp-details"
         data-test="orp-details"
@@ -486,6 +494,11 @@ onMounted(() => void load());
     </template>
   </section>
 
+  <InterviewPreparation
+    v-if="preparing"
+    :application="preparing"
+    @close="preparing = null"
+  />
   <InterviewForm
     v-if="interviewing"
     :company="interviewing.application.company"

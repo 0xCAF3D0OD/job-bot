@@ -1527,6 +1527,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interviews/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Insights */
+        get: operations["getInterviewInsights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interviews/insights/prepared": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Prepared
+         * @description Coche (ou décoche) un point « à préparer ».
+         */
+        put: operations["setInterviewPrepared"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interviews/coach": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Coach Interviews
+         * @description Pistes de l'IA (environ 0,03 $), à partir des retours et des blocs de profil seulement.
+         */
+        post: operations["coachInterviews"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1919,6 +1976,29 @@ export interface components {
             /** Duplicate Of */
             duplicate_of: number | null;
         };
+        /** CoachIn */
+        CoachIn: {
+            /** Application Id */
+            application_id?: number | null;
+        };
+        /** CoachingOut */
+        CoachingOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Application Id */
+            application_id: number | null;
+            /** Pistes */
+            pistes: string[];
+            /** Answers */
+            answers: {
+                [key: string]: string;
+            }[];
+            /** Questions To Ask */
+            questions_to_ask: string[];
+        };
         /** CollectResponse */
         CollectResponse: {
             /**
@@ -2181,6 +2261,28 @@ export interface components {
             unread: number;
             /** Items */
             items: components["schemas"]["NotificationOut"][];
+        };
+        /** InsightsOut */
+        InsightsOut: {
+            /** Count */
+            count: number;
+            /** Average Rating */
+            average_rating: number | null;
+            /** Questions */
+            questions: components["schemas"]["QuestionStatOut"][];
+            /** Went Well */
+            went_well: components["schemas"]["NoteOut"][];
+            /** Went Badly */
+            went_badly: components["schemas"]["NoteOut"][];
+            /** To Prepare */
+            to_prepare: components["schemas"]["PrepareItem"][];
+            /** Missed Questions */
+            missed_questions: components["schemas"]["NoteOut"][];
+            /** Employer Feedback */
+            employer_feedback: components["schemas"]["NoteOut"][];
+            coaching: components["schemas"]["CoachingOut"] | null;
+            /** Can Coach */
+            can_coach: boolean;
         };
         /**
          * InterviewIn
@@ -2672,6 +2774,15 @@ export interface components {
             /** Labour Market */
             labour_market?: boolean | null;
         };
+        /** NoteOut */
+        NoteOut: {
+            /** Company */
+            company: string;
+            /** Held At */
+            held_at: string | null;
+            /** Text */
+            text: string;
+        };
         /** NotificationOut */
         NotificationOut: {
             /** Id */
@@ -3026,6 +3137,20 @@ export interface components {
          * @enum {string}
          */
         ParseStatus: "parsed" | "empty" | "unrecognized" | "failed";
+        /** PrepareItem */
+        PrepareItem: {
+            /** Text */
+            text: string;
+            /** Done */
+            done: boolean;
+        };
+        /** PreparedIn */
+        PreparedIn: {
+            /** Text */
+            text: string;
+            /** Done */
+            done: boolean;
+        };
         /** ProfileIn */
         ProfileIn: {
             /** Name */
@@ -3079,6 +3204,15 @@ export interface components {
             name?: string | null;
             /** Occupation */
             occupation?: string | null;
+        };
+        /** QuestionStatOut */
+        QuestionStatOut: {
+            /** Text */
+            text: string;
+            /** Count */
+            count: number;
+            /** Difficult */
+            difficult: number;
         };
         /** RegistryCandidate */
         RegistryCandidate: {
@@ -6891,6 +7025,99 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getInterviewInsights: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsOut"];
+                };
+            };
+        };
+    };
+    setInterviewPrepared: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreparedIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    coachInterviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CoachIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsOut"];
+                };
+            };
+            /** @description IA indisponible, plafond atteint ou aucun retour */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
