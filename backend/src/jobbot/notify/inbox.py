@@ -40,10 +40,10 @@ async def collect_failed(runtime: Runtime, exc: BaseException) -> bool:
             message=reason,
             priority=4,
             tags=["warning"],
-            click=f"{runtime.settings.public_url.rstrip('/')}/reglages#etat",
+            click=f"{runtime.settings.public_url.rstrip('/')}/reglages/diagnostic",
         ),
         kind="collect_failed",
-        link="/reglages#etat",
+        link="/reglages/diagnostic",
     )
     return True
 

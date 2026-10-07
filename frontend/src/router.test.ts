@@ -44,5 +44,8 @@ describe("routes réservées (docs/18 §1)", () => {
     expect(router.currentRoute.value.name).toBe("alerts");
     await router.push("/candidatures/journal");
     expect(router.currentRoute.value.name).toBe("alerts");
+    // État technique devenu la page Diagnostic (docs/21 §6).
+    await router.push("/etat");
+    expect(router.currentRoute.value.name).toBe("diagnostic");
   });
 });

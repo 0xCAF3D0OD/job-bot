@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import AppIcon from "./AppIcon.vue";
@@ -25,6 +25,15 @@ async function saveIdentity(): Promise<void> {
 
 const loaded = ref(false);
 
+// Ce qui manque pour l'en-tête des lettres et des preuves ORP (docs/21 §6).
+const REQUIRED: [keyof IdentityForm, string][] = [
+  ["name", "ton nom"],
+  ["street", "ta rue"],
+  ["postcode", "ton NPA"],
+  ["city", "ta localité"],
+];
+const missing = computed(() => REQUIRED.filter(([key]) => !identity.value[key].trim()).map(([, label]) => label));
+
 onMounted(async () => {
   const who = await api.GET("/api/identity");
   if (who.data) {
@@ -46,8 +55,15 @@ onMounted(async () => {
   >
     <fieldset>
       <legend>Mes coordonnées</legend>
+      <p
+        v-if="missing.length"
+        class="notice"
+        data-test="identity-missing"
+      >
+        Il manque : {{ missing.join(", ") }}.
+      </p>
       <p class="hint">
-        Pour l'en-tête de tes lettres et de ton CV (0.5). Gardées dans ta base locale, jamais envoyées à l'IA.
+        Gardées sur ta plateforme, jamais envoyées à l'IA.
       </p>
       <div class="form-grid">
         <label class="wide">Nom et prénom

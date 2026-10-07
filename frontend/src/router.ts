@@ -4,6 +4,7 @@ import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import AlertsView from "./views/AlertsView.vue";
+import DiagnosticView from "./views/DiagnosticView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
 import JobsView from "./views/JobsView.vue";
 import LoginView from "./views/LoginView.vue";
@@ -69,7 +70,7 @@ const routes: RouteRecordRaw[] = [
       query: keepMonth(to.query),
     }),
   },
-  { path: "/etat", redirect: { path: "/reglages", hash: "#etat" } },
+  { path: "/etat", redirect: "/reglages/diagnostic" },
   ...navigation
     .filter((entry) => entry.name !== "jobs")
     .map(
@@ -104,6 +105,8 @@ const routes: RouteRecordRaw[] = [
       { path: "journal", redirect: "/candidatures/alertes" },
     ],
   },
+  // Diagnostic technique, sorti des Réglages (docs/21 §6).
+  { path: "/reglages/diagnostic", name: "diagnostic", component: DiagnosticView },
   // Connexion (docs/18 §1).
   { path: "/connexion", name: "login", component: LoginView },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).

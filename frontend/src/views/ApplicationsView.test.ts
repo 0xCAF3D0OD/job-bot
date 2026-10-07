@@ -193,6 +193,18 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(wrapper.find(".orp-sheet .orp-url").text()).toBe("https://emploi.exemple.ch/postuler/1");
   });
 
+  it("une action à la fois : compléter tant qu'une ligne manque", async () => {
+    // La ligne 2 (sans adresse) correspond à la candidature 2.
+    mockApi(() => month(), [{ ...application, id: 2 }]);
+    const { wrapper } = await mountView("/candidatures/preuves");
+    expect(wrapper.find("[data-test=complete-next]").text()).toContain("Compléter 1 ligne(s)");
+    expect(wrapper.find("[data-test=submit]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=more-options]").attributes("open")).toBeUndefined();
+    await wrapper.find("[data-test=complete-next]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("form.application-form").exists()).toBe(true);
+  });
+
   it("compléter une ligne ouvre la candidature et l'enregistre", async () => {
     mockApi(() => month(), [{ ...application, id: 2, sent_at: "2026-10-02", status: "refus" }]);
     PUT.mockResolvedValue({ data: { id: 2 } });
@@ -212,8 +224,10 @@ describe("Candidatures, onglet Preuves ORP", () => {
   });
 
   it("marquer comme remis puis annuler", async () => {
-    const months = [month(), month({ state: "remis", submitted_at: "2026-11-03T09:00:00Z" })];
-    mockApi(() => months.shift() ?? month());
+    // Toutes les lignes complètes : « Marquer comme remis » est l'action proposée.
+    const complete = { incomplete: 0, rows: [row(1), row(2)] };
+    const months = [month(complete), month({ ...complete, state: "remis", submitted_at: "2026-11-03T09:00:00Z" })];
+    mockApi(() => months.shift() ?? month(complete));
     PUT.mockResolvedValue({ response: { status: 204 } });
     DELETE.mockResolvedValue({ response: { status: 204 } });
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -232,7 +246,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     const { wrapper } = await mountView("/candidatures/preuves");
-    await wrapper.find("[data-test=job-room]").setValue(true);
+    await wrapper.find("[data-test=job-room]").trigger("click");
     expect(wrapper.findAll("[data-test=job-room-row]")).toHaveLength(2);
     // Une section par étape du formulaire Job-Room ; les choix sont à cocher, pas à copier.
     const first = wrapper.findAll("[data-test=job-room-row]")[0]!;

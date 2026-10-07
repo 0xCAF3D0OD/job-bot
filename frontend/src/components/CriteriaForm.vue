@@ -95,6 +95,13 @@ onMounted(() => void load());
 <template>
   <div class="panel">
     <p
+      v-if="loaded && !failed && !form.locations.length && !form.remote_ok"
+      class="notice"
+      data-test="criteria-missing"
+    >
+      Aucun lieu indiqué : les offres de toute la Suisse passent le filtre.
+    </p>
+    <p
       v-if="failed"
       class="notice error"
     >

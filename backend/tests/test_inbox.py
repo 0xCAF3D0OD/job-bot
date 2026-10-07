@@ -46,7 +46,7 @@ async def test_collect_failure_alert_is_throttled_and_safe(rt: Runtime) -> None:
     assert await inbox.collect_failed(rt, error) is False  # pas plus d'une toutes les 6 h
     async with rt.sessionmaker() as session:
         [alert] = (await session.scalars(select(Notification))).all()
-    assert alert.kind == "collect_failed" and alert.link == "/reglages#etat"
+    assert alert.kind == "collect_failed" and alert.link == "/reglages/diagnostic"
     assert "secret" not in alert.message and "mot de passe" in alert.message
 
 

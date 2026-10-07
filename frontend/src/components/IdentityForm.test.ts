@@ -56,3 +56,12 @@ describe("IdentityForm", () => {
     expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("redémarre-la");
   });
 });
+
+describe("IdentityForm, ce qui manque (docs/21 §6)", () => {
+  it("annonce les champs manquants de l'en-tête", async () => {
+    GET.mockResolvedValue({ data: { name: "Camille Exemple", street: null, postcode: null, city: "Lausanne", phone: null, email: null } });
+    const wrapper = mount(IdentityForm);
+    await flushPromises();
+    expect(wrapper.find("[data-test=identity-missing]").text()).toBe("Il manque : ta rue, ton NPA.");
+  });
+});

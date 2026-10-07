@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
@@ -8,7 +9,6 @@ import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import SitesPanel from "../components/SitesPanel.vue";
-import StatusPanel from "../components/StatusPanel.vue";
 
 const form = ref<SettingsModel>({
   orp_monthly_target: null,
@@ -47,10 +47,10 @@ onMounted(async () => {
   const { data } = await api.GET("/api/settings");
   if (data) form.value = data;
   loaded.value = true;
-  // Arrivée par /etat (ancienne page) : la section est plus bas, sous le formulaire.
+  // Ancien lien vers l'état technique : il a maintenant sa page (docs/21 §6).
   if (window.location.hash === "#etat") {
-    await nextTick();
-    document.getElementById("etat")?.scrollIntoView();
+    await router.replace("/reglages/diagnostic");
+    return;
   }
   try {
     const status = await api.GET("/api/notifications");
@@ -74,6 +74,8 @@ async function save(): Promise<void> {
     saving.value = false;
   }
 }
+const router = useRouter();
+
 // Sommaire (docs/19 §4) : les sections dans l'ordre de la page.
 const SECTIONS = [
   { id: "recherche", label: "Recherche d'emploi" },
@@ -82,7 +84,6 @@ const SECTIONS = [
   { id: "ia", label: "IA" },
   { id: "profils", label: "Profils d'essai" },
   { id: "connexion", label: "Connexion" },
-  { id: "etat", label: "État technique" },
 ];
 </script>
 
@@ -323,13 +324,14 @@ const SECTIONS = [
         </h2>
         <SessionPanel />
 
-        <h2
-          id="etat"
-          class="section-title"
-        >
-          État technique
-        </h2>
-        <StatusPanel />
+        <p class="diagnostic-link">
+          <RouterLink
+            to="/reglages/diagnostic"
+            data-test="diagnostic-link"
+          >
+            Diagnostic technique (collecte, IA, tâches) →
+          </RouterLink>
+        </p>
       </div>
     </div>
   </section>

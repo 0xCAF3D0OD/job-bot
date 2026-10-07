@@ -197,15 +197,35 @@ function onKeydown(event: KeyboardEvent): void {
   proposal.value = null;
 }
 
+// Ce qui manque à l'IA pour noter et rédiger (docs/21 §6), affiché en premier.
+const ready = ref(false);
+const missingProfile = computed(() => {
+  if (!ready.value) return "";
+  if (!documents.value.length) return "Il manque ton CV : dépose-le ci-dessous.";
+  if (!chunks.value.some((c) => c.active)) {
+    return "Il manque tes blocs de profil : « Proposer des blocs » les prépare à partir de ton CV.";
+  }
+  return "";
+});
+
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
-  void Promise.all([loadDocuments(), loadChunks()]);
+  void Promise.all([loadDocuments(), loadChunks()]).then(() => {
+    ready.value = true;
+  });
 });
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
   <div class="panel">
+    <p
+      v-if="missingProfile"
+      class="notice"
+      data-test="profile-missing"
+    >
+      {{ missingProfile }}
+    </p>
     <p
       v-if="message"
       class="notice"

@@ -53,13 +53,38 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
     await wrapper.find("[data-test=find-employer]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/employer", { params: { path: { offer_id: 4 } } });
-    expect(wrapper.text()).toContain("Pas trouvée chez l'employeur");
     expect(wrapper.emitted("changed")).toHaveLength(1);
+    // L'offre rechargée affiche l'état, une seule fois.
+    await wrapper.setProps({ offer: offer({ employer_status: "not_found", employer_checked_at: "2026-10-07T08:00:00Z" }) as never });
+    const line = wrapper.find("[data-test=employer-line]");
+    expect(line.text().match(/Pas trouvée/g)).toHaveLength(1);
+    expect(line.find("[data-test=find-employer]").text()).toBe("Chercher à nouveau");
   });
 
   it("agence, ou lien employeur déjà donné par jobup", async () => {
     expect((await mountDetail(offer({ employer_status: "agency" }))).text()).toContain("employeur non indiqué");
     const known = await mountDetail(offer({ apply_kind: "external", apply_url: "https://exemple.ch/postuler" }));
     expect(known.find("[data-test=employer-line]").exists()).toBe(false);
+  });
+});
+
+describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
+  it("Préparer et Postuler, l'entreprise repliée, chercher chez l'employeur dans ⋯", async () => {
+    const wrapper = await mountDetail(offer());
+    expect(wrapper.find("[data-test=prepare]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=apply]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    expect(wrapper.find("[data-test=apply]").text()).toContain("Postuler sur Indeed");
+    const company = wrapper.find("[data-test=company-section]");
+    expect(company.attributes("open")).toBeUndefined();
+    expect(company.find("[data-test=address]").exists()).toBe(true);
+    await wrapper.find("[data-test=more]").trigger("click");
+    expect(wrapper.find("[data-test=menu-find-employer]").exists()).toBe(true);
+  });
+
+  it("annonce trouvée chez l'employeur : « Postuler chez l'employeur »", async () => {
+    const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/jobs/2", employer_status: "found" }));
+    const button = wrapper.find("[data-test=employer]");
+    expect(button.attributes("href")).toBe("https://exemple.ch/jobs/2");
+    expect(button.text()).toContain("Postuler chez l'employeur");
   });
 });
