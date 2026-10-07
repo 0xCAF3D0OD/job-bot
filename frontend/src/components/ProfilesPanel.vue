@@ -103,12 +103,11 @@ onMounted(async () => {
 <template>
   <div
     v-if="list"
-    id="profils"
     class="form-card sites-card"
     data-test="profiles-panel"
   >
     <fieldset>
-      <legend>Profils d'essai</legend>
+      <legend>Tes profils</legend>
       <p class="hint">
         Des chercheurs d'emploi fictifs, pour voir si les Actualités et les Formations leur conviennent. Un profil d'essai
         a son propre « Mon domaine », ses filtres et ses sources ; tes offres, candidatures et preuves ORP ne changent

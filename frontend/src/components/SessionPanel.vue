@@ -17,12 +17,11 @@ async function everywhere(): Promise<void> {
 <template>
   <div
     v-if="me?.auth_enabled && me.authenticated"
-    id="connexion"
     class="form-card sites-card"
     data-test="session-panel"
   >
     <fieldset>
-      <legend>Connexion</legend>
+      <legend>Ton compte</legend>
       <p class="hint">
         Connecté en tant que <strong>{{ me.username }}</strong>. Une session dure 30 jours et se prolonge à l'usage.
         Pour changer le mot de passe : <code>cd backend && uv run jobbot set-password</code> (toutes les sessions sont
@@ -40,4 +39,12 @@ async function everywhere(): Promise<void> {
       </div>
     </fieldset>
   </div>
+  <p
+    v-else-if="me && !me.auth_enabled"
+    class="hint"
+    data-test="auth-disabled"
+  >
+    Connexion désactivée (<code>JOBBOT_AUTH_ENABLED=false</code>) : toutes les pages sont ouvertes. À n'utiliser que
+    pour un essai sur ta machine.
+  </p>
 </template>

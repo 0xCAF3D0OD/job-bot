@@ -2,6 +2,7 @@ import type { Component } from "vue";
 import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw } from "vue-router";
 
 import { useAuth } from "./composables/useAuth";
+import { useJobsMemory } from "./composables/useJobsMemory";
 import ApplicationsView from "./views/ApplicationsView.vue";
 import JobsView from "./views/JobsView.vue";
 import LoginView from "./views/LoginView.vue";
@@ -126,4 +127,9 @@ router.beforeEach(async (to) => {
   }
   if (loggedIn.value || PUBLIC_ROUTES.has(String(to.name))) return true;
   return { name: "login", query: { suite: to.fullPath } };
+});
+
+// Retour à la dernière page de la rubrique Candidatures depuis le menu (docs/19).
+router.afterEach((to) => {
+  useJobsMemory().remember(to.fullPath);
 });

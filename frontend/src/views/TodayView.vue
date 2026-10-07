@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 
-import { api, type Offer, type Today } from "../api/client";
+import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
+import { useJobsMemory } from "../composables/useJobsMemory";
 import { formatMonth, scoreLevel } from "../format";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
@@ -27,7 +28,14 @@ const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: str
 
 const today = ref<Today | null>(null);
 const best = ref<Offer[]>([]);
+// Blocs par catégorie (docs/19 §3).
+const preparing = ref<Offer[]>([]);
+const news = ref<NewsItem[]>([]);
+const trainingsInProgress = ref<Training[]>([]);
+const trainingIdea = ref<Training | null>(null);
 const { message, running, collectNow } = useCollect();
+// Comme le menu : retour à la candidature commencée ou à l'onglet quitté.
+const { last: lastJobsPage } = useJobsMemory();
 
 const steps = computed(() => today.value?.checklist ?? []);
 const doneCount = computed(() => steps.value.filter((s) => s.done).length);
@@ -39,13 +47,37 @@ const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "nume
 );
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
+async function loadNews(): Promise<void> {
+  // Les dernières de « Mon domaine » ; à défaut (domaine vide ou rien de neuf), les dernières tout court.
+  const mine = await api.GET("/api/news", { params: { query: { limit: 3, domain_only: true } } });
+  const items = (mine.data?.items ?? []).filter((i) => i.matched.length);
+  if (items.length) {
+    news.value = items;
+    return;
+  }
+  const all = await api.GET("/api/news", { params: { query: { limit: 3 } } });
+  news.value = all.data?.items ?? [];
+}
+
+async function loadTrainings(): Promise<void> {
+  const { data } = await api.GET("/api/trainings", { params: { query: { domain_only: true } } });
+  const items = data?.items ?? [];
+  trainingsInProgress.value = items.filter((t) => t.mark?.status === "in_progress").slice(0, 3);
+  trainingIdea.value = items.find((t) => !t.mark && t.verified) ?? null;
+}
+
 async function load(): Promise<void> {
-  const [day, offers] = await Promise.all([
+  const [day, offers, current] = await Promise.all([
     api.GET("/api/today"),
     api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } }),
+    api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 20 } } }),
   ]);
   today.value = day.data ?? null;
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
+  preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 3);
+  // Actualités et formations : chargées à part, une panne n'empêche pas le reste.
+  void loadNews().catch(() => undefined);
+  void loadTrainings().catch(() => undefined);
 }
 
 async function dismiss(): Promise<void> {
@@ -109,6 +141,15 @@ onMounted(() => void load());
         </ul>
       </article>
 
+      <div class="today-section-head">
+        <h2>Candidatures</h2>
+        <RouterLink
+          :to="lastJobsPage"
+          class="link"
+        >
+          Ouvrir les candidatures
+        </RouterLink>
+      </div>
       <div class="today-stats">
         <RouterLink
           to="/candidatures/offres"
@@ -151,6 +192,30 @@ onMounted(() => void load());
       </div>
 
       <div class="today-grid">
+        <article
+          v-if="preparing.length"
+          class="side-card"
+          data-test="preparing"
+        >
+          <h2>Candidatures commencées</h2>
+          <ul class="today-list">
+            <li
+              v-for="offer in preparing"
+              :key="offer.id"
+            >
+              <span>
+                <strong>{{ offer.title }}</strong><br>
+                <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
+              </span>
+              <RouterLink
+                :to="`/candidatures/offres/${offer.id}/preparer`"
+                class="link"
+              >
+                Continuer
+              </RouterLink>
+            </li>
+          </ul>
+        </article>
         <article class="side-card">
           <h2>Les mieux notées à examiner</h2>
           <p
@@ -207,6 +272,97 @@ onMounted(() => void load());
           >{{ message }}</span>
         </article>
       </div>
+
+      <div class="today-section-head">
+        <h2>Comprendre le marché</h2>
+        <RouterLink
+          to="/actualites"
+          class="link"
+        >
+          Toutes les actualités
+        </RouterLink>
+      </div>
+      <article
+        class="side-card"
+        data-test="today-news"
+      >
+        <p
+          v-if="!news.length"
+          class="hint"
+        >
+          Pas encore d'actualités : elles sont relevées toutes les 6 heures.
+        </p>
+        <ul
+          v-else
+          class="today-list"
+        >
+          <li
+            v-for="item in news"
+            :key="item.id"
+          >
+            <span>
+              <a
+                :href="item.url"
+                target="_blank"
+                rel="noopener noreferrer"
+              ><strong>{{ item.title }}</strong></a><br>
+              <span class="muted">{{ item.source }} · {{ longDate.format(new Date(item.published_at)) }}</span>
+            </span>
+          </li>
+        </ul>
+      </article>
+
+      <div class="today-section-head">
+        <h2>Progresser</h2>
+        <RouterLink
+          to="/formations"
+          class="link"
+        >
+          Toutes les formations
+        </RouterLink>
+      </div>
+      <article
+        class="side-card"
+        data-test="today-trainings"
+      >
+        <ul
+          v-if="trainingsInProgress.length || trainingIdea"
+          class="today-list"
+        >
+          <li
+            v-for="training in trainingsInProgress"
+            :key="training.id"
+          >
+            <span>
+              <strong>{{ training.title }}</strong><br>
+              <span class="muted">En cours{{ training.mark?.progress ? ` · ${training.mark.progress}` : "" }} · {{ training.provider }}</span>
+            </span>
+          </li>
+          <li
+            v-if="trainingIdea"
+            data-test="training-idea"
+          >
+            <span>
+              <strong>{{ trainingIdea.title }}</strong><br>
+              <span class="muted">À découvrir, dans ton domaine · {{ trainingIdea.provider }}</span>
+            </span>
+            <a
+              :href="trainingIdea.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="link"
+            >Voir</a>
+          </li>
+        </ul>
+        <p
+          v-else
+          class="hint"
+        >
+          Aucune formation suivie : marque celles qui t'intéressent dans <RouterLink to="/formations">
+            Formations
+          </RouterLink>.
+        </p>
+      </article>
     </div>
   </section>
 </template>

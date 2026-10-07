@@ -918,3 +918,26 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
   .jobs-body { padding: 1.25rem 1rem 3rem; }
   .jobs-head + .offers-page .offers-heading { margin-bottom: 1rem; }
 }
+
+/* Réglages regroupés (docs/19 §4) : sommaire à gauche, sections à droite */
+.settings-layout { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem; display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 2rem; align-items: start; }
+.settings-toc { position: sticky; top: 6rem; display: grid; gap: 0.2rem; padding-top: 0.4rem; }
+.settings-toc a { padding: 0.35rem 0.6rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+.settings-toc a:hover { background: var(--surface); color: var(--text); }
+.settings-sections { display: grid; gap: 1rem; min-width: 0; }
+.settings-sections > .section-title { margin: 1.5rem 0 0; scroll-margin-top: 6rem; }
+.settings-sections > .section-title:first-child { margin-top: 0; }
+@media (max-width: 860px) {
+  .settings-layout { grid-template-columns: 1fr; gap: 1rem; padding: 0 1rem; }
+  .settings-toc { position: static; display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .settings-toc a { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 0.82rem; }
+}
+.settings-sections .settings-status { margin-top: 0; }
+
+/* Aujourd'hui par catégories (docs/19 §3) */
+.today-section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin: 1.75rem 0 0.75rem; }
+.today-section-head h2 { font-size: 1.25rem; margin: 0; }
+.today-list { list-style: none; margin: 0 0 0.6rem; padding: 0; display: grid; gap: 0.7rem; }
+.today-list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.today-list a strong { color: var(--text); }
+.today-list a:hover strong { color: var(--accent); }

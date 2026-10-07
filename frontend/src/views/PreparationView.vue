@@ -8,6 +8,7 @@ import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import CvPanel from "../components/CvPanel.vue";
 import PageHero from "../components/PageHero.vue";
+import { useJobsMemory } from "../composables/useJobsMemory";
 import { printSheet } from "../composables/usePrint";
 import { expiredText } from "../format";
 
@@ -50,6 +51,7 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
     return;
   }
   applying.value = null;
+  useJobsMemory().sent(offerId);
   applyNotice.value = `Candidature chez ${data.company} enregistrée, avec ta lettre et ton CV.`;
   const refreshed = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: offerId } } });
   if (refreshed.data) offer.value = refreshed.data;

@@ -125,7 +125,6 @@ onMounted(() => void load());
 <template>
   <div
     v-if="loaded"
-    id="actualites"
     class="form-card sites-card"
     data-test="news-sources"
   >
