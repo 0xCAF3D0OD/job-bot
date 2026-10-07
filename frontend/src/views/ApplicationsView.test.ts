@@ -98,12 +98,11 @@ async function mountView(path = "/candidatures/suivi") {
     routes: [
       { path: "/candidatures/suivi", component: ApplicationsView, props: { view: "suivi" } },
       { path: "/candidatures/preuves", component: ApplicationsView, props: { view: "orp" } },
-      { path: "/candidatures/journal", component: ApplicationsView, props: { view: "journal" } },
       { path: "/:any(.*)*", component: { template: "<div />" } },
     ],
   });
   await router.push(path);
-  const view = path.includes("preuves") ? "orp" : path.includes("journal") ? "journal" : "suivi";
+  const view = path.includes("preuves") ? "orp" : "suivi";
   const wrapper = mount(ApplicationsView, { props: { view }, global: { plugins: [router] } });
   await flushPromises();
   return { wrapper, router };
@@ -121,13 +120,6 @@ describe("Candidatures, page réunie", () => {
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(2);
   });
 
-  it("onglet Journal des recherches", async () => {
-    mockApi();
-    GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/orp" ? month() : path === "/api/searches" ? { items: [], total: 0 } : [] }));
-    const { wrapper } = await mountView("/candidatures/journal");
-    expect(wrapper.find("[data-test=month]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=goal]").exists()).toBe(false);
-  });
 });
 
 describe("Candidatures, onglet Suivi", () => {

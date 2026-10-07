@@ -3,6 +3,7 @@ import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw
 
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
+import AlertsView from "./views/AlertsView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
 import JobsView from "./views/JobsView.vue";
 import LoginView from "./views/LoginView.vue";
@@ -24,7 +25,7 @@ export interface NavEntry {
   description?: string;
 }
 
-// Menu (docs/19 §1) : une entrée par question. Offres, suivi, preuves ORP et journal sont
+// Menu (docs/19 §1) : une entrée par question. Offres, suivi, preuves ORP et alertes sont
 // des onglets de la rubrique Candidatures ; l'État est une section des Réglages.
 export const navigation: NavEntry[] = [
   { path: "/aujourdhui", name: "today", label: "Aujourd'hui" },
@@ -36,7 +37,7 @@ export const navigation: NavEntry[] = [
 ];
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
-export type JobsTab = "offres" | "suivi" | "preuves" | "journal";
+export type JobsTab = "offres" | "suivi" | "preuves" | "alertes";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, Component> = {
@@ -60,11 +61,11 @@ const routes: RouteRecordRaw[] = [
     path: "/offres/:id(\\d+)/preparer",
     redirect: (to) => ({ path: `/candidatures/offres/${String(to.params.id)}/preparer` }),
   },
-  { path: "/journal", redirect: "/candidatures/journal" },
+  { path: "/journal", redirect: "/candidatures/alertes" },
   {
     path: "/orp",
     redirect: (to) => ({
-      path: to.query.onglet === "journal" ? "/candidatures/journal" : "/candidatures/preuves",
+      path: to.query.onglet === "journal" ? "/candidatures/alertes" : "/candidatures/preuves",
       query: keepMonth(to.query),
     }),
   },
@@ -90,7 +91,7 @@ const routes: RouteRecordRaw[] = [
         redirect: (to) => {
           const query = keepMonth(to.query);
           if (to.query.vue === "orp") return { path: "/candidatures/preuves", query };
-          if (to.query.vue === "journal") return { path: "/candidatures/journal" };
+          if (to.query.vue === "journal") return { path: "/candidatures/alertes" };
           if (query.mois) return { path: "/candidatures/suivi", query };
           return { path: "/candidatures/offres" };
         },
@@ -98,7 +99,9 @@ const routes: RouteRecordRaw[] = [
       { path: "offres", name: "offers", component: OffersView, meta: { tab: "offres" } },
       { path: "suivi", name: "applications", component: ApplicationsView, props: { view: "suivi" }, meta: { tab: "suivi" } },
       { path: "preuves", name: "orp", component: ApplicationsView, props: { view: "orp" }, meta: { tab: "preuves" } },
-      { path: "journal", name: "journal", component: ApplicationsView, props: { view: "journal" }, meta: { tab: "journal" } },
+      // Mes alertes et alertes reçues (docs/20 §1) ; l'ancien « Journal des recherches ».
+      { path: "alertes", name: "alerts", component: AlertsView, meta: { tab: "alertes" } },
+      { path: "journal", redirect: "/candidatures/alertes" },
     ],
   },
   // Connexion (docs/18 §1).

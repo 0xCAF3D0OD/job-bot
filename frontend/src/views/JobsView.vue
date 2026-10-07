@@ -8,7 +8,7 @@ import type { JobsTab } from "../router";
 // Rubrique Candidatures (docs/19 §2) : quatre onglets toujours visibles sous le titre.
 const route = useRoute();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
-const counts = ref({ offres: 0, suivi: 0, preuves: 0 });
+const counts = ref({ offres: 0, suivi: 0, preuves: 0, alertes: 0 });
 
 const TABS: { key: JobsTab; label: string; path: string; title: string; hint: string }[] = [
   { key: "offres", label: "Offres", path: "/candidatures/offres", title: "Les offres pour toi", hint: "à examiner" },
@@ -20,7 +20,13 @@ const TABS: { key: JobsTab; label: string; path: string; title: string; hint: st
     title: "Preuves de recherches d'emploi",
     hint: "ligne(s) à compléter",
   },
-  { key: "journal", label: "Journal des recherches", path: "/candidatures/journal", title: "Journal des recherches", hint: "" },
+  {
+    key: "alertes",
+    label: "Alertes",
+    path: "/candidatures/alertes",
+    title: "Tes alertes emploi",
+    hint: "alerte(s) créée(s) sans rien envoyé",
+  },
 ];
 const current = computed(() => TABS.find((t) => t.key === tab.value) ?? TABS[0]!);
 
@@ -30,7 +36,7 @@ function link(path: string) {
 }
 
 function badge(key: JobsTab): number {
-  return key === "journal" ? 0 : counts.value[key];
+  return counts.value[key];
 }
 
 async function refresh(): Promise<void> {
@@ -39,6 +45,7 @@ async function refresh(): Promise<void> {
     offres: today.data?.to_review ?? 0,
     suivi: today.data?.to_follow_up ?? 0,
     preuves: orp.data?.incomplete ?? 0,
+    alertes: today.data?.alerts_waiting ?? 0,
   };
 }
 

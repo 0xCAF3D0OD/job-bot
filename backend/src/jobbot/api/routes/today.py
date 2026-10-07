@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot.alerts import service as alert_service
 from jobbot.core.orp import LOCAL_TZ, due_date, shift_month
 from jobbot.db.models import (
     Application,
@@ -52,6 +53,8 @@ class TodayOut(BaseModel):
     orp_due_month: str | None
     orp_due_date: date | None
     last_collect_at: datetime | None
+    # Alertes créées sur un site depuis 3 jours sans rien avoir envoyé (docs/20 §1.4).
+    alerts_waiting: int = 0
 
 
 class OnboardingIn(BaseModel):
@@ -113,6 +116,7 @@ async def get_today(request: Request) -> TodayOut:
         )
         previous_record = await session.get(OrpMonth, previous)
         due_day = await load_due_day(session)
+        alerts_waiting = await alert_service.waiting(session)
         last_collect_at = await session.scalar(
             select(func.max(JobRun.finished_at)).where(
                 JobRun.job == COLLECT_JOB, JobRun.status == JobRunStatus.SUCCESS
@@ -144,6 +148,7 @@ async def get_today(request: Request) -> TodayOut:
         orp_due_month=due_month,
         orp_due_date=due_date(due_month, due_day) if due_month else None,
         last_collect_at=last_collect_at,
+        alerts_waiting=alerts_waiting,
     )
 
 

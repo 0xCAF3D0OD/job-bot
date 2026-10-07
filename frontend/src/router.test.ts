@@ -39,5 +39,10 @@ describe("routes réservées (docs/18 §1)", () => {
     expect(router.currentRoute.value.name).toBe("preparation");
     await router.push("/candidatures?mois=2026-08");
     expect(router.currentRoute.value.fullPath).toBe("/candidatures/suivi?mois=2026-08");
+    // Journal des recherches devenu l'onglet Alertes (docs/20 §1).
+    await router.push("/journal");
+    expect(router.currentRoute.value.name).toBe("alerts");
+    await router.push("/candidatures/journal");
+    expect(router.currentRoute.value.name).toBe("alerts");
   });
 });

@@ -665,3 +665,27 @@ class UserSession(Base):
     )
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     user_agent: Mapped[str | None] = mapped_column(Text)
+
+
+class AlertSearch(Base):
+    """Recherche à suivre par une alerte e-mail (docs/20 §1) : des mots et un lieu."""
+
+    __tablename__ = "alert_searches"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    terms: Mapped[str] = mapped_column(Text)
+    location: Mapped[str | None] = mapped_column(Text)
+    active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AlertSetup(Base):
+    """« J'ai créé l'alerte » : la recherche est suivie sur ce site."""
+
+    __tablename__ = "alert_setups"
+
+    search_id: Mapped[int] = mapped_column(
+        ForeignKey("alert_searches.id", ondelete="CASCADE"), primary_key=True
+    )
+    site: Mapped[str] = mapped_column(Text, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

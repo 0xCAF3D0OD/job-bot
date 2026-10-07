@@ -6,14 +6,13 @@ import { api, type Application, type ApplicationStatus, type OrpMonth } from "..
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
-import JournalPanel from "../components/JournalPanel.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { formatMonth, shiftMonth } from "../format";
 
-// Suivi, Preuves ORP et Journal des recherches : onglets de la rubrique Candidatures
+// Suivi et Preuves ORP : onglets de la rubrique Candidatures
 // (docs/18 §2, docs/19 §2), avec un en-tête commun pour le mois.
-type View = "suivi" | "orp" | "journal";
+type View = "suivi" | "orp";
 const props = defineProps<{ view: View }>();
 const REMIND_AFTER_DAYS = 10;
 
@@ -146,8 +145,7 @@ onMounted(() => void load());
 <template>
   <section class="jobs-body">
     <div>
-      <JournalPanel v-if="view === 'journal'" />
-      <template v-else-if="orp">
+      <template v-if="orp">
         <div class="applications-head">
           <div class="month-nav">
             <button

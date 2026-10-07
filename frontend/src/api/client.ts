@@ -88,3 +88,5 @@ export type TrainingMark = Schemas["TrainingMarkOut"];
 export type Profile = Schemas["ProfileOut"];
 export type ProfileList = Schemas["ProfileList"];
 export type Me = Schemas["Me"];
+export type AlertsPage = Schemas["AlertsPage"];
+export type AlertSearch = Schemas["AlertSearchOut"];

@@ -1393,6 +1393,63 @@ export interface paths {
         patch: operations["updateProfile"];
         trace?: never;
     };
+    "/api/alert-searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Alert Searches */
+        get: operations["listAlertSearches"];
+        put?: never;
+        /** Add Alert Search */
+        post: operations["addAlertSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alert-searches/{search_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Alert Search */
+        delete: operations["deleteAlertSearch"];
+        options?: never;
+        head?: never;
+        /** Update Alert Search */
+        patch: operations["updateAlertSearch"];
+        trace?: never;
+    };
+    "/api/alert-searches/{search_id}/sites/{site}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Alert Created
+         * @description « J'ai créé l'alerte » sur ce site.
+         */
+        put: operations["markAlertCreated"];
+        post?: never;
+        /** Unmark Alert Created */
+        delete: operations["unmarkAlertCreated"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1409,6 +1466,73 @@ export interface components {
             web_source_url?: string | null;
             /** Web Unavailable */
             web_unavailable?: string | null;
+        };
+        /** AlertCell */
+        AlertCell: {
+            /** Site */
+            site: string;
+            /** Url */
+            url: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "received" | "created" | "todo";
+            /** Received At */
+            received_at: string | null;
+            /** Created At */
+            created_at: string | null;
+        };
+        /** AlertSearchIn */
+        AlertSearchIn: {
+            /** Terms */
+            terms: string;
+            /** Location */
+            location?: string | null;
+        };
+        /** AlertSearchOut */
+        AlertSearchOut: {
+            /** Id */
+            id: number;
+            /** Terms */
+            terms: string;
+            /** Location */
+            location: string | null;
+            /** Active */
+            active: boolean;
+            /** Cells */
+            cells: components["schemas"]["AlertCell"][];
+        };
+        /** AlertSearchUpdate */
+        AlertSearchUpdate: {
+            /** Terms */
+            terms?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Active */
+            active?: boolean | null;
+        };
+        /** AlertSite */
+        AlertSite: {
+            /** Slug */
+            slug: string;
+            /** Name */
+            name: string;
+            /** Senders */
+            senders: string[];
+            /** Prefilled */
+            prefilled: boolean;
+        };
+        /** AlertsPage */
+        AlertsPage: {
+            /** Mailbox */
+            mailbox: string | null;
+            /** Folder */
+            folder: string | null;
+            /** Sites */
+            sites: components["schemas"]["AlertSite"][];
+            /** Searches */
+            searches: components["schemas"]["AlertSearchOut"][];
         };
         /** ApplicationIn */
         ApplicationIn: {
@@ -3066,6 +3190,11 @@ export interface components {
             orp_due_date: string | null;
             /** Last Collect At */
             last_collect_at: string | null;
+            /**
+             * Alerts Waiting
+             * @default 0
+             */
+            alerts_waiting: number;
         };
         /** TrainingMarkIn */
         TrainingMarkIn: {
@@ -6106,6 +6235,189 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listAlertSearches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsPage"];
+                };
+            };
+        };
+    };
+    addAlertSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertSearchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteAlertSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateAlertSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertSearchUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markAlertCreated: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+                site: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmarkAlertCreated: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+                site: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsPage"];
                 };
             };
             /** @description Validation Error */
