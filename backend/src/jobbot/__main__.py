@@ -9,6 +9,7 @@ openapi      écrit le schéma OpenAPI de l'API sur la sortie standard (sans bas
 imap-sample  copie les derniers e-mails de la boîte dans <stockage>/samples (lecture seule)
 reparse      réanalyse les copies brutes stockées (après un analyseur nouveau ou corrigé)
 anonymize-sample ID…  fait des jeux de test anonymisés à partir d'alertes stockées
+set-password crée le compte de connexion ou change son mot de passe (saisie masquée)
 """
 
 import argparse
@@ -201,6 +202,67 @@ def cmd_anonymize_sample(args: argparse.Namespace) -> int:
     return asyncio.run(run())
 
 
+def cmd_set_password(args: argparse.Namespace) -> int:
+    """Le mot de passe est saisi au clavier, sans écho ; il n'apparaît ni à l'écran, ni dans
+    l'historique du terminal, ni dans les journaux. Les sessions ouvertes sont fermées."""
+    import getpass
+
+    from sqlalchemy import func, select
+
+    from jobbot.auth import passwords, service
+    from jobbot.db.models import User
+    from jobbot.runtime import Runtime
+
+    settings = _settings()
+
+    async def existing_username() -> str:
+        runtime = Runtime.create(settings)
+        try:
+            async with runtime.sessionmaker() as session:
+                return await session.scalar(select(User.username).order_by(User.id)) or ""
+        finally:
+            await runtime.dispose()
+
+    # Saisies au clavier hors de la boucle asynchrone.
+    default = args.username or asyncio.run(existing_username())
+    username = (input(f"Identifiant [{default}] : ") or default).strip()
+    if not username:
+        print("Identifiant vide : rien n'est changé.", file=sys.stderr)
+        return 1
+    password = getpass.getpass("Nouveau mot de passe : ")
+    if problem := passwords.check_strength(password):
+        print(f"Mot de passe refusé : {problem}.", file=sys.stderr)
+        return 1
+    if getpass.getpass("Encore une fois : ") != password:
+        print("Les deux saisies diffèrent : rien n'est changé.", file=sys.stderr)
+        return 1
+    password_hash = passwords.hash_password(password)
+
+    async def save() -> tuple[bool, int]:
+        runtime = Runtime.create(settings)
+        try:
+            async with runtime.sessionmaker.begin() as session:
+                user = await session.scalar(
+                    select(User).where(func.lower(User.username) == username.lower())
+                )
+                created = user is None
+                if user is None:
+                    user = User(username=username, password_hash=password_hash)
+                    session.add(user)
+                    await session.flush()
+                else:
+                    user.password_hash = password_hash
+                    user.password_changed_at = func.now()
+                return created, await service.end_all_sessions(session, user.id)
+        finally:
+            await runtime.dispose()
+
+    created, closed = asyncio.run(save())
+    what = "Compte créé" if created else "Mot de passe changé"
+    print(f"{what} pour « {username} » ; {closed} session(s) fermée(s).")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="job-bot")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -225,6 +287,9 @@ def main(argv: list[str] | None = None) -> int:
     anon.add_argument("ids", nargs="+", type=int, help="identifiants d'alertes (journal)")
     anon.add_argument("--out", required=True, help="dossier de sortie")
     anon.set_defaults(func=cmd_anonymize_sample)
+    password = sub.add_parser("set-password", help="compte de connexion (saisie masquée)")
+    password.add_argument("--username", help="identifiant (par défaut : le compte existant)")
+    password.set_defaults(func=cmd_set_password)
     args = parser.parse_args(argv)
     code: int = args.func(args)
     return code

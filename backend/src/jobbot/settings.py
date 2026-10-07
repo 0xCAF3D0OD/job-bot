@@ -79,6 +79,10 @@ class Settings(BaseSettings):
     # Adresse de l'interface, pour le lien des notifications.
     public_url: str = "http://localhost:5173"
 
+    # Connexion (docs/18 §1) : sans session, l'API ne sert que les Actualités.
+    # false seulement pour un essai local : toutes les pages redeviennent ouvertes.
+    auth_enabled: bool = True
+
     @field_validator("database_url")
     @classmethod
     def _check_database_url(cls, value: SecretStr) -> SecretStr:

@@ -32,6 +32,7 @@ def make_settings(**overrides: object) -> Settings:
         "enrich_enabled": False,  # aucun accès réseau réel depuis les tests
         "anthropic_api_key": None,  # aucun appel à l'IA réelle depuis les tests
         "ntfy_topic": None,  # aucune notification réelle depuis les tests
+        "auth_enabled": False,  # la connexion a ses propres tests (test_auth.py)
         "_env_file": None,
     }
     values.update(overrides)

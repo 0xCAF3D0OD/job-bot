@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 
 import { api, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
 import PageHero from "../components/PageHero.vue";
+import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
 import { since } from "../format";
 import { countryLabel, highlight, languageLabel } from "../newsLabels";
@@ -20,6 +21,7 @@ const preferences = ref<NewsPreferences | null>(null);
 const counts = ref({ articles: 0, videos: 0 });
 const loaded = ref(false);
 const { reset } = useNewsCount();
+const { loggedIn } = useAuth();
 let poll: ReturnType<typeof setTimeout> | undefined;
 let polls = 0;
 
@@ -45,7 +47,8 @@ async function load(): Promise<void> {
   if (!loaded.value) {
     counts.value = { articles: data.new_articles, videos: data.new_videos };
     // La visite remet les compteurs à zéro (pour la prochaine fois).
-    await api.POST("/api/news/seen");
+    // Sans connexion, rien n'est enregistré (docs/18 §1).
+    if (loggedIn.value) await api.POST("/api/news/seen");
     reset();
   }
   loaded.value = true;
@@ -73,7 +76,7 @@ async function savePreferences(change: Partial<NewsPreferences>): Promise<void> 
   if (!preferences.value) return;
   preferences.value = { ...preferences.value, ...change };
   await load();
-  await api.PUT("/api/news/preferences", { body: preferences.value });
+  if (loggedIn.value) await api.PUT("/api/news/preferences", { body: preferences.value });
 }
 
 function toggle(list: "countries" | "languages", value: string): void {

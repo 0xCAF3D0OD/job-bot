@@ -17,11 +17,20 @@ export function storedProfile(): string | null {
   }
 }
 
+// Session expirée ou fermée ailleurs : la page de connexion prend le relais (docs/18 §1).
+export const UNAUTHORIZED_EVENT = "jobbot:unauthorized";
+
 api.use({
   onRequest({ request }) {
     const profile = storedProfile();
     if (profile) request.headers.set(PROFILE_HEADER, profile);
     return request;
+  },
+  onResponse({ request, response }) {
+    if (response.status === 401 && !new URL(request.url).pathname.startsWith("/api/auth/")) {
+      globalThis.dispatchEvent?.(new Event(UNAUTHORIZED_EVENT));
+    }
+    return response;
   },
 });
 
@@ -78,3 +87,4 @@ export type Training = Schemas["TrainingOut"];
 export type TrainingMark = Schemas["TrainingMarkOut"];
 export type Profile = Schemas["ProfileOut"];
 export type ProfileList = Schemas["ProfileList"];
+export type Me = Schemas["Me"];

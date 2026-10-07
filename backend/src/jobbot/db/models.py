@@ -633,3 +633,33 @@ class ProfileSource(Base):
         ForeignKey("news_sources.id", ondelete="CASCADE"), primary_key=True
     )
     active: Mapped[bool] = mapped_column(default=True)
+
+
+class User(Base):
+    """Compte de connexion (docs/18 §1) ; un seul pour l'instant, créé par `jobbot set-password`."""
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(Text, unique=True)
+    # scrypt$n$r$p$sel$empreinte (base64) : jamais le mot de passe en clair.
+    password_hash: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    password_changed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class UserSession(Base):
+    """Session ouverte par une connexion ; le cookie porte le jeton, la base son empreinte."""
+
+    __tablename__ = "sessions"
+
+    token_hash: Mapped[str] = mapped_column(Text, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    user_agent: Mapped[str | None] = mapped_column(Text)

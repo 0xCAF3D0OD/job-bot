@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from jobbot.api.middleware import RequestContextMiddleware
 from jobbot.api.routes import (
     applications,
+    auth,
     collect,
     cvs,
     inbox,
@@ -29,6 +30,7 @@ from jobbot.api.routes import (
     today,
     trainings,
 )
+from jobbot.auth.middleware import AuthMiddleware
 from jobbot.db.schema import head_revision
 from jobbot.health import health_router
 from jobbot.runtime import Runtime
@@ -56,6 +58,8 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     )
     app.state.runtime = runtime
 
+    # Ajouté avant le contexte de requête : celui-ci l'enveloppe et journalise aussi les refus.
+    app.add_middleware(AuthMiddleware)
     app.add_middleware(RequestContextMiddleware)
     if settings.cors_origins:
         app.add_middleware(
@@ -71,6 +75,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     async def version() -> dict[str, str | None]:
         return {"version": settings.version, "migration_head": head_revision()}
 
+    app.include_router(auth.router)
     app.include_router(status.router)
     app.include_router(collect.router)
     app.include_router(preferences.router)

@@ -1,7 +1,9 @@
 import type { Component } from "vue";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
+import { useAuth } from "./composables/useAuth";
 import ApplicationsView from "./views/ApplicationsView.vue";
+import LoginView from "./views/LoginView.vue";
 import NewsView from "./views/NewsView.vue";
 import OffersView from "./views/OffersView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
@@ -68,6 +70,8 @@ const routes: RouteRecordRaw[] = [
       props: views[entry.name] ? false : { entry },
     }),
   ),
+  // Connexion (docs/18 §1).
+  { path: "/connexion", name: "login", component: LoginView },
   // Hors menu : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   { path: "/:pathMatch(.*)*", redirect: "/aujourdhui" },
@@ -77,4 +81,19 @@ export const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior: (to) => (to.hash ? { el: to.hash, top: 80 } : { top: 0 }),
+});
+
+// Ouvert sans connexion : les Actualités et la page de connexion (docs/18 §1).
+export const PUBLIC_ROUTES = new Set(["news", "login"]);
+
+router.beforeEach(async (to) => {
+  const { loggedIn, load } = useAuth();
+  await load();
+  if (to.name === "login") {
+    if (!loggedIn.value) return true;
+    const wanted = typeof to.query.suite === "string" ? to.query.suite : "";
+    return wanted.startsWith("/") && !wanted.startsWith("//") ? wanted : "/aujourdhui";
+  }
+  if (loggedIn.value || PUBLIC_ROUTES.has(String(to.name))) return true;
+  return { name: "login", query: { suite: to.fullPath } };
 });
