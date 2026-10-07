@@ -8,7 +8,7 @@
 | Menu | La question | Contenu |
 |---|---|---|
 | **Aujourd'hui** | Où j'en suis ? | page d'accueil après connexion (§3) |
-| **Trouver du travail** | Que faire pour trouver un emploi ? | Offres, Candidatures, Preuves ORP, Journal des recherches (§2) |
+| **Candidatures** | Que faire pour trouver un emploi ? | Offres, Suivi, Preuves ORP, Journal des recherches (§2) |
 | **Actualités** | Comment évolue le marché ? | inchangé |
 | **Formations** | Que puis-je améliorer ? | inchangé |
 | **Profil** | Qui suis-je ? | Ce que je cherche, Mon parcours, Mes coordonnées (inchangé) |
@@ -18,21 +18,23 @@
 - **Profil** et **Réglages** reviennent dans la barre. Le menu du compte (icône) ne garde que le **profil affiché** (profils d'essai) et **Se déconnecter**.
 - Sans connexion : toujours seulement les Actualités.
 
-## 2. « Trouver du travail » : une rubrique, quatre onglets
+## 2. « Candidatures » : une rubrique, quatre onglets
+
+Nom retenu par Kevin (plutôt que « Trouver du travail ») ; « Jobs » reste possible si tu le préfères. L'onglet de suivi s'appelle donc **Suivi**, pour ne pas répéter « Candidatures ».
 
 Sous le titre de la rubrique, quatre onglets toujours visibles :
 
 | Onglet | Aujourd'hui dans | Pastille |
 |---|---|---|
 | **Offres** | page Offres | nombre d'offres à examiner |
-| **Candidatures** | Candidatures › Suivi | nombre à relancer |
+| **Suivi** | Candidatures › Suivi | nombre à relancer |
 | **Preuves ORP** | Candidatures › Preuves ORP | lignes à compléter |
 | **Journal des recherches** | Candidatures › Journal | — |
 
 - **Offres** garde sa mise en page (filtres à gauche, détail qui entre par la droite).
-- **Candidatures** et **Preuves ORP** partagent l'en-tête du mois (mois, « 14 / 20 », état des preuves, « Ajouter une candidature »), comme aujourd'hui.
-- « Marquer comme envoyée » depuis une offre et « Préparer ma candidature » ne changent pas ; après l'envoi, un lien « Voir dans Candidatures » ouvre l'onglet.
-- **Adresses** : `/emploi/offres`, `/emploi/candidatures`, `/emploi/preuves`, `/emploi/journal`. Les anciennes (`/offres`, `/candidatures`, `/orp`, `/journal`, liens des alertes et rappels) redirigent vers le bon onglet, avec le mois.
+- **Suivi** et **Preuves ORP** partagent l'en-tête du mois (mois, « 14 / 20 », état des preuves, « Ajouter une candidature »), comme aujourd'hui.
+- « Marquer comme envoyée » depuis une offre et « Préparer ma candidature » ne changent pas ; après l'envoi, un lien « Voir le suivi » ouvre l'onglet.
+- **Adresses** : `/candidatures/offres`, `/candidatures/suivi`, `/candidatures/preuves`, `/candidatures/journal` ; `/candidatures` seul ouvre les Offres. Les anciennes (`/offres`, `/orp`, `/journal`, `/candidatures?vue=…`, liens des alertes et rappels) redirigent vers le bon onglet, avec le mois.
 
 ## 3. Aujourd'hui, la page d'accueil
 
@@ -40,7 +42,7 @@ Un bloc par catégorie, chacun avec un lien vers sa rubrique :
 
 | Bloc | Contenu |
 |---|---|
-| **Trouver du travail** | offres à examiner (les 3 mieux notées), candidatures à relancer, preuves du mois (« 14 / 20, à remettre avant le 5 ») |
+| **Candidatures** | offres à examiner (les 3 mieux notées), candidatures à relancer, preuves du mois (« 14 / 20, à remettre avant le 5 ») |
 | **Comprendre le marché** | les 3 dernières actualités de ton domaine |
 | **Progresser** | formations en cours, et une formation de ton domaine pas encore suivie |
 | **Pour bien démarrer** | la liste actuelle, tant qu'elle n'est pas terminée |
@@ -65,15 +67,15 @@ Rien n'est supprimé : seuls l'ordre et les titres changent.
 
 | PR | Contenu |
 |---|---|
-| **0.12.0-a** | Menu à six entrées, rubrique « Trouver du travail » à quatre onglets, redirections |
+| **0.12.0-a** | Menu à six entrées, rubrique « Candidatures » à quatre onglets, redirections |
 | **0.12.0-b** | Page Aujourd'hui par catégories, Réglages regroupés |
 
 Aucune migration : seule l'interface change.
 
 ## Points à valider
 
-1. **Six entrées** : Aujourd'hui, Trouver du travail, Actualités, Formations, Profil, Réglages ; menu du compte réduit au profil affiché et à la déconnexion (§1).
-2. **« Trouver du travail »** avec quatre onglets : Offres, Candidatures, Preuves ORP, Journal des recherches (§2).
+1. **Six entrées** : Aujourd'hui, Candidatures, Actualités, Formations, Profil, Réglages ; menu du compte réduit au profil affiché et à la déconnexion (§1).
+2. **« Candidatures »** (ou « Jobs ») avec quatre onglets : Offres, Suivi, Preuves ORP, Journal des recherches (§2).
 3. **Aujourd'hui** en blocs par catégorie (§3).
 4. **Réglages** regroupés par thème, avec sommaire (§4).
 5. **Deux PR** ; la PR #65 (barre sur une ligne) peut être fusionnée avant, la PR a ajuste le menu du compte (§5).
