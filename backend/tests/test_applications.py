@@ -27,7 +27,9 @@ async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
         await conn.execute(
             text("TRUNCATE offers, searches, job_runs, applications, notifications CASCADE")
         )
-        await conn.execute(text("DELETE FROM settings WHERE key LIKE 'identity_%'"))
+        await conn.execute(
+            text("DELETE FROM settings WHERE key LIKE 'identity_%' OR key LIKE 'apply_%'")
+        )
     yield runtime
 
 
@@ -195,6 +197,11 @@ async def test_identity_round_trip(api: AsyncClient) -> None:
         "city": None,
         "phone": None,
         "email": None,
+        "linkedin": None,
+        "website": None,
+        "availability": None,
+        "salary": None,
+        "permit": None,
     }
     identity = {
         "name": "Jean Exemple",
@@ -203,16 +210,23 @@ async def test_identity_round_trip(api: AsyncClient) -> None:
         "city": "Renens",
         "phone": " +41 79 000 00 00 ",
         "email": "",
+        "linkedin": " linkedin.com/in/jean-exemple ",
+        "availability": "dès le 1er novembre",
+        "salary": "CHF 95'000 par an",
+        "permit": "Suisse",
     }
     saved = (await api.put("/api/identity", json=identity)).json()
     assert saved["phone"] == "+41 79 000 00 00" and saved["email"] is None
     assert saved["postcode"] == "1020"
+    assert saved["linkedin"] == "https://linkedin.com/in/jean-exemple"
+    assert saved["website"] is None and saved["permit"] == "Suisse"
     assert (await api.get("/api/identity")).json() == saved
 
 
 async def test_identity_rejects_bad_postcode(api: AsyncClient) -> None:
     response = await api.put("/api/identity", json={"postcode": "10200"})
     assert response.status_code == 422
+    assert (await api.put("/api/identity", json={"website": "pas une adresse"})).status_code == 422
 
 
 # --- Relances ------------------------------------------------------------------------

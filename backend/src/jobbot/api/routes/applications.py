@@ -410,11 +410,40 @@ class Identity(BaseModel):
     city: ShortText | None = None
     phone: ShortText | None = None
     email: ShortText | None = None
+    # Pour les formulaires en ligne (docs/25), facultatifs.
+    linkedin: Annotated[str, Field(max_length=300)] | None = None
+    website: Annotated[str, Field(max_length=300)] | None = None
+    availability: ShortText | None = None
+    salary: ShortText | None = None
+    permit: ShortText | None = None
 
-    @field_validator("name", "street", "postcode", "city", "phone", "email")
+    @field_validator(
+        "name",
+        "street",
+        "postcode",
+        "city",
+        "phone",
+        "email",
+        "linkedin",
+        "website",
+        "availability",
+        "salary",
+        "permit",
+    )
     @classmethod
     def _strip(cls, value: str | None) -> str | None:
         return _clean(value)
+
+    @field_validator("linkedin", "website")
+    @classmethod
+    def _url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not value.startswith(("http://", "https://")):
+            value = "https://" + value
+        if " " in value or "." not in value:
+            raise ValueError("adresse web attendue")
+        return value
 
     @field_validator("postcode")
     @classmethod

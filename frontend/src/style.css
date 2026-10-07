@@ -1138,3 +1138,17 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .assistant-focus span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .assistant-focus .assistant-close { font-size: 1.1rem; }
 .detail-ask { white-space: nowrap; }
+
+/* --- Fiche pour le formulaire (docs/25 §5) --- */
+.form-sheet { margin: -0.4rem 0 1rem; padding: 0.9rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.form-sheet .hint { margin-bottom: 0.5rem; }
+.form-sheet-files { display: flex; gap: 1rem; margin: 0 0 0.6rem; }
+.form-sheet dl { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: 0.35rem 1rem; margin: 0; font-size: 0.9rem; }
+.form-sheet dt { color: var(--muted); }
+.form-sheet dd { margin: 0; display: flex; gap: 0.75rem; align-items: baseline; justify-content: space-between; min-width: 0; }
+.form-sheet dd span { overflow-wrap: anywhere; }
+.form-sheet-long { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.identity-more { margin-top: 0.9rem; }
+.identity-more summary { cursor: pointer; font-weight: 500; font-size: 0.92rem; }
+.identity-more .form-grid { margin-top: 0.7rem; }
+@media (max-width: 640px) { .form-sheet dl { grid-template-columns: 1fr; } .form-sheet dt { margin-top: 0.3rem; } }

@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 from docx import Document as read_docx
 from httpx import ASGITransport, AsyncClient
+from pypdf import PdfReader
 from sqlalchemy import select, text, update
 
 from jobbot.api.app import create_app
@@ -172,6 +173,12 @@ async def test_edit_application_and_docx(api: AsyncClient, rt: Runtime, fake: Fa
     assert paragraphs[0] == "Jean Exemple" and "Résumé corrigé." in paragraphs
     assert paragraphs.index("Stage web") < paragraphs.index("Stage DevOps — Acme (2024-2025)")
     assert "EXPÉRIENCES" in paragraphs
+
+    pdf = await api.get(f"/api/cvs/{cv['id']}/pdf")
+    assert pdf.status_code == 200 and "CV%20-%20Acme%20SA.pdf" in pdf.headers["content-disposition"]
+    text_ = " ".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf.content)).pages)
+    assert "Jean Exemple" in text_ and "Résumé corrigé." in text_ and "EXPÉRIENCES" in text_
+    assert text_.index("Stage web") < text_.index("Stage DevOps")
 
 
 async def test_new_version_and_errors(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:

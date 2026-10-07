@@ -18,6 +18,7 @@ from jobbot.api.routes import writing
 from jobbot.db.models import Draft, DraftKind, Offer
 from jobbot.letters.cv_document import CvDocument, assemble_cv, cv_to_docx, section_of
 from jobbot.letters.document import Identity
+from jobbot.letters.pdf import cv_to_pdf
 from jobbot.letters.service import load_identity
 from jobbot.llm import cv as cv_llm
 from jobbot.llm.scoring import InvalidScore, ProfileChunkData
@@ -267,5 +268,28 @@ async def download_cv_docx(request: Request, draft_id: int) -> Response:
     return Response(
         cv_to_docx(document),
         media_type=DOCX_TYPE,
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+    )
+
+
+@router.get(
+    "/cvs/{draft_id}/pdf",
+    operation_id="downloadCvPdf",
+    response_class=Response,
+    responses={200: {"content": {"application/pdf": {}}}},
+)
+async def download_cv_pdf(request: Request, draft_id: int) -> Response:
+    """Le même CV en PDF, à joindre aux formulaires en ligne (docs/25 §3.4)."""
+    async with _runtime(request).sessionmaker() as session:
+        draft = await writing.get_draft(session, draft_id, DraftKind.CV)
+        offer = await session.get(Offer, draft.offer_id)
+        assert offer is not None
+        chunks = _eligible(await active_profile(session))
+        document = _document(draft, chunks, await load_identity(session))
+    company = "".join(c for c in (offer.company or "employeur") if c.isalnum() or c in " -")
+    filename = f"CV - {company.strip()[:60]}.pdf"
+    return Response(
+        cv_to_pdf(document, title=filename[:-4]),
+        media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )

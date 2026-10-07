@@ -40,6 +40,11 @@ describe("IdentityForm", () => {
         city: "Renens",
         phone: null,
         email: null,
+        linkedin: null,
+        website: null,
+        availability: null,
+        salary: null,
+        permit: null,
       },
     });
     expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("enregistrées");

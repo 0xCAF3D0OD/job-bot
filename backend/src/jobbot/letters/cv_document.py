@@ -73,6 +73,13 @@ class CvDocument:
     missing_identity: list[str] = field(default_factory=list)
 
 
+def short_url(url: str | None) -> str | None:
+    """« https://www.linkedin.com/in/x/ » devient « linkedin.com/in/x » sur le CV."""
+    if not url:
+        return None
+    return re.sub(r"^https?://(www\.)?", "", url.strip()).rstrip("/") or None
+
+
 def section_of(chunk: ProfileChunkData) -> str:
     return "langues" if is_language_block(chunk) else chunk.kind
 
@@ -124,7 +131,9 @@ def assemble_cv(
         language=language,
         name=identity.name or "",
         headline=headline,
-        contacts=[x for x in (address, identity.phone, identity.email) if x],
+        contacts=[
+            x for x in (address, identity.phone, identity.email, short_url(identity.linkedin)) if x
+        ],
         summary_heading=headings["summary"],
         summary=summary,
         sections=[CvSection(key, headings[key], grouped[key]) for key in ORDER if grouped[key]],

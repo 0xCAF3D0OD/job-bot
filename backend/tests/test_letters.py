@@ -11,6 +11,7 @@ import httpx2
 import pytest
 from docx import Document as read_docx
 from httpx import ASGITransport, AsyncClient
+from pypdf import PdfReader
 from sqlalchemy import select, text, update
 
 from jobbot.api.app import create_app
@@ -86,7 +87,9 @@ async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(anthropic_api_key="sk-test"))
     async with runtime.engine.begin() as conn:
         await conn.execute(text("TRUNCATE offers, profile_chunks, llm_calls, applications CASCADE"))
-        await conn.execute(text("DELETE FROM settings WHERE key LIKE 'identity_%'"))
+        await conn.execute(
+            text("DELETE FROM settings WHERE key LIKE 'identity_%' OR key LIKE 'apply_%'")
+        )
     yield runtime
     async with runtime.sessionmaker.begin() as session:
         await session.execute(
@@ -249,6 +252,14 @@ async def test_edit_then_application_and_docx(
     paragraphs = [p.text for p in read_docx(io.BytesIO(response.content)).paragraphs]
     assert "Objet : Candidature" in paragraphs and "Texte corrigé." in paragraphs
     assert any("Jean Exemple" in p for p in paragraphs)
+
+    pdf = await api.get(f"/api/letters/{first['id']}/pdf")
+    assert pdf.status_code == 200 and pdf.headers["content-type"] == "application/pdf"
+    assert "Lettre%20-%20Acme%20SA.pdf" in pdf.headers["content-disposition"]
+    text_ = " ".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf.content)).pages)
+    assert "Objet : Candidature" in text_ and "Texte corrigé." in text_
+    assert "Jean Exemple" in text_
+    assert (await api.get("/api/letters/999999/pdf")).status_code == 404
 
 
 async def test_errors(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:

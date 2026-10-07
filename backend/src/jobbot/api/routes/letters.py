@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jobbot.api.routes import writing
 from jobbot.db.models import Application, Draft, DraftKind, Offer
 from jobbot.letters.document import Identity, LetterDocument, Recipient, assemble, to_docx
+from jobbot.letters.pdf import letter_to_pdf
 from jobbot.letters.service import load_identity
 from jobbot.llm import letter as letter_llm
 from jobbot.llm.scoring import InvalidScore
@@ -268,5 +269,29 @@ async def download_letter_docx(request: Request, draft_id: int) -> Response:
     return Response(
         to_docx(document),
         media_type=DOCX_TYPE,
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
+    )
+
+
+@router.get(
+    "/letters/{draft_id}/pdf",
+    operation_id="downloadLetterPdf",
+    response_class=Response,
+    responses={200: {"content": {"application/pdf": {}}}},
+)
+async def download_letter_pdf(request: Request, draft_id: int) -> Response:
+    """La même lettre en PDF, à joindre aux formulaires en ligne (docs/25 §3.4)."""
+    async with _runtime(request).sessionmaker() as session:
+        draft = await _get_draft(session, draft_id)
+        offer = await session.get(Offer, draft.offer_id)
+        assert offer is not None
+        document = _document(
+            await load_identity(session), await _recipient(session, offer, draft), draft
+        )
+    company = "".join(c for c in (offer.company or "employeur") if c.isalnum() or c in " -")
+    filename = f"Lettre - {company.strip()[:60]}.pdf"
+    return Response(
+        letter_to_pdf(document, title=filename[:-4]),
+        media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )

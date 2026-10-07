@@ -6,9 +6,16 @@ import AppIcon from "./AppIcon.vue";
 
 // Coordonnées pour l'en-tête des lettres, du CV et du formulaire ORP : base locale seulement,
 // jamais envoyées à l'IA.
-const IDENTITY_FIELDS = ["name", "street", "postcode", "city", "phone", "email"] as const;
+// Les cinq derniers servent aux formulaires en ligne des employeurs (docs/25), facultatifs.
+const IDENTITY_FIELDS = [
+  "name", "street", "postcode", "city", "phone", "email",
+  "linkedin", "website", "availability", "salary", "permit",
+] as const;
 type IdentityForm = Record<(typeof IDENTITY_FIELDS)[number], string>;
-const identity = ref<IdentityForm>({ name: "", street: "", postcode: "", city: "", phone: "", email: "" });
+const identity = ref<IdentityForm>(Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, ""])) as IdentityForm);
+const formFilled = computed(() =>
+  (["linkedin", "website", "availability", "salary", "permit"] as const).filter((f) => identity.value[f].trim()).length,
+);
 const identityMessage = ref("");
 
 async function saveIdentity(): Promise<void> {
@@ -17,7 +24,7 @@ async function saveIdentity(): Promise<void> {
     const { data, response } = await api.PUT("/api/identity", { body });
     if (data) identityMessage.value = "Coordonnées enregistrées.";
     else if (response.status === 404) identityMessage.value = "La plateforme n'est pas à jour : redémarre-la.";
-    else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres).";
+    else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres) et les adresses web.";
   } catch {
     identityMessage.value = "API injoignable.";
   }
@@ -117,6 +124,62 @@ onMounted(async () => {
           >
         </label>
       </div>
+      <details
+        class="identity-more"
+        data-test="identity-more"
+      >
+        <summary>
+          Pour les formulaires en ligne
+          <span class="muted">· facultatif{{ formFilled ? ` · ${formFilled} / 5` : "" }}</span>
+        </summary>
+        <div class="form-grid">
+          <label>LinkedIn
+            <input
+              v-model="identity.linkedin"
+              type="text"
+              inputmode="url"
+              placeholder="linkedin.com/in/…"
+              data-test="identity-linkedin"
+            >
+          </label>
+          <label>Site personnel
+            <input
+              v-model="identity.website"
+              type="text"
+              inputmode="url"
+              placeholder="facultatif"
+            >
+          </label>
+          <label>Disponibilité
+            <input
+              v-model="identity.availability"
+              type="text"
+              placeholder="dès le 1er novembre, 1 mois de préavis…"
+            >
+          </label>
+          <label>Prétentions salariales
+            <input
+              v-model="identity.salary"
+              type="text"
+              placeholder="CHF 90'000 par an"
+            >
+          </label>
+          <label>Permis de travail
+            <input
+              v-model="identity.permit"
+              type="text"
+              list="identity-permits"
+              placeholder="Suisse, permis C, B…"
+            >
+          </label>
+          <datalist id="identity-permits">
+            <option value="Nationalité suisse" />
+            <option value="Permis C" />
+            <option value="Permis B" />
+            <option value="Permis G (frontalier)" />
+          </datalist>
+        </div>
+      </details>
     </fieldset>
     <div class="form-actions">
       <button

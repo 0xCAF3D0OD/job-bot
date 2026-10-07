@@ -13,6 +13,11 @@ IDENTITY_KEYS = {
     "city": "identity_city",
     "phone": "identity_phone",
     "email": "identity_email",
+    "linkedin": "identity_linkedin",
+    "website": "identity_website",
+    "availability": "apply_availability",
+    "salary": "apply_salary",
+    "permit": "apply_permit",
 }
 
 
