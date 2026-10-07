@@ -968,3 +968,16 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .alert-form .form-actions { grid-column: 1 / -1; padding-top: 0; }
 @media (max-width: 720px) { .alert-form { grid-template-columns: 1fr; } }
 .employer-line { margin: 0.4rem 0 0; }
+
+/* « En savoir plus » (docs/21 §2) */
+.more-info { font-size: 0.85rem; color: var(--muted); }
+.more-info summary { cursor: pointer; color: var(--accent); width: fit-content; }
+.more-info-body { margin-top: 0.35rem; display: grid; gap: 0.35rem; }
+.more-info-body p { margin: 0; }
+
+/* « Comment ça marche » (docs/21 §3), même allure que « Pour bien démarrer » */
+.journey ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.journey li { display: flex; gap: 0.6rem; align-items: baseline; flex-wrap: wrap; }
+.journey li.done a { color: var(--muted); }
+.journey .tick { width: 1.2rem; height: 1.2rem; flex: none; border: 1.5px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.75rem; color: #fff; align-self: center; }
+.journey li.done .tick { background: var(--ok); border-color: var(--ok); }

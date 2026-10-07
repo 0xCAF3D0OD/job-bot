@@ -26,6 +26,14 @@ function today(extra: Record<string, unknown> = {}) {
       { key: "imap", done: false },
     ],
     checklist_dismissed: false,
+    journey: [
+      { key: "alerts", done: true },
+      { key: "triage", done: true },
+      { key: "apply", done: false },
+      { key: "follow", done: false },
+      { key: "orp", done: false },
+    ],
+    journey_dismissed: false,
     to_review: 12,
     month: "2026-10",
     month_count: 3,
@@ -63,7 +71,7 @@ describe("TodayView", () => {
     const checklist = wrapper.find("[data-test=checklist]");
     expect(checklist.text()).toContain("4 / 6");
     expect(wrapper.find("[data-test=step-identity] a").attributes("href")).toBe("/profil?onglet=coordonnees");
-    expect(wrapper.find("[data-test=step-imap]").text()).toContain("JOBBOT_IMAP_USER");
+    expect(wrapper.find("[data-test=step-imap]").text()).toContain("réglage d'installation");
     expect(wrapper.find("[data-test=step-criteria] a").exists()).toBe(false);
   });
 
@@ -135,5 +143,21 @@ describe("TodayView par catégories (docs/19 §3)", () => {
     const trainings = wrapper.find("[data-test=today-trainings]").text();
     expect(trainings).toContain("module 4/12");
     expect(wrapper.find("[data-test=training-idea]").text()).toContain("Terraform Associate");
+  });
+});
+
+describe("Comment ça marche (docs/21 §3)", () => {
+  it("cinq étapes cochées, avec où les faire, masquables", async () => {
+    mockGet(today());
+    PUT.mockResolvedValue({});
+    const wrapper = await mountView();
+    const card = wrapper.find("[data-test=journey]");
+    expect(card.findAll("li")).toHaveLength(5);
+    expect(wrapper.find("[data-test=journey-alerts]").classes()).toContain("done");
+    expect(wrapper.find("[data-test=journey-apply]").classes()).not.toContain("done");
+    expect(wrapper.find("[data-test=journey-orp] a").attributes("href")).toBe("/candidatures/preuves");
+    expect(wrapper.find("[data-test=journey-alerts]").text()).toContain("Candidatures › Alertes");
+    await wrapper.find("[data-test=dismiss-journey]").trigger("click");
+    expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: true } });
   });
 });

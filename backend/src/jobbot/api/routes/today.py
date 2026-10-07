@@ -21,6 +21,7 @@ from jobbot.db.models import (
     OfferStatus,
     OrpMonth,
     ProfileChunk,
+    Search,
     Setting,
 )
 from jobbot.letters.service import load_identity
@@ -39,10 +40,20 @@ class ChecklistItem(BaseModel):
     done: bool
 
 
+class JourneyStep(BaseModel):
+    """Une étape de « Comment ça marche » (docs/21 §3), cochée d'après les données."""
+
+    key: Literal["alerts", "triage", "apply", "follow", "orp"]
+    done: bool
+
+
 class TodayOut(BaseModel):
     # Démarrage : affiché tant qu'une étape manque, sauf si Kevin l'a masqué.
     checklist: list[ChecklistItem]
     checklist_dismissed: bool
+    # « Comment ça marche » : le chemin en cinq étapes (docs/21 §3).
+    journey: list[JourneyStep] = []
+    journey_dismissed: bool = False
     to_review: int
     month: str
     month_count: int
@@ -88,7 +99,9 @@ async def get_today(request: Request) -> TodayOut:
             s.key: s.value
             for s in await session.scalars(
                 select(Setting).where(
-                    Setting.key.in_(("orp_monthly_target", "onboarding_dismissed"))
+                    Setting.key.in_(
+                        ("orp_monthly_target", "onboarding_dismissed", "journey_dismissed")
+                    )
                 )
             )
         }
@@ -116,6 +129,54 @@ async def get_today(request: Request) -> TodayOut:
         )
         previous_record = await session.get(OrpMonth, previous)
         due_day = await load_due_day(session)
+        journey = [
+            JourneyStep(
+                key="alerts",
+                done=await count(
+                    select(func.count()).select_from(Search).where(Search.parse_status == "parsed")
+                )
+                > 0,
+            ),
+            JourneyStep(
+                key="triage",
+                done=await count(
+                    select(func.count())
+                    .select_from(Offer)
+                    .where(
+                        Offer.status.in_(
+                            (
+                                OfferStatus.LATER,
+                                OfferStatus.IGNORED,
+                                OfferStatus.PREPARING,
+                                OfferStatus.APPLIED,
+                            )
+                        )
+                    )
+                )
+                > 0,
+            ),
+            JourneyStep(
+                key="apply", done=await count(select(func.count()).select_from(Application)) > 0
+            ),
+            JourneyStep(
+                key="follow",
+                done=await count(
+                    select(func.count())
+                    .select_from(Application)
+                    .where(Application.status != ApplicationStatus.EN_ATTENTE)
+                )
+                > 0,
+            ),
+            JourneyStep(
+                key="orp",
+                done=await count(
+                    select(func.count())
+                    .select_from(OrpMonth)
+                    .where(OrpMonth.submitted_at.is_not(None))
+                )
+                > 0,
+            ),
+        ]
         alerts_waiting = await alert_service.waiting(session)
         last_collect_at = await session.scalar(
             select(func.max(JobRun.finished_at)).where(
@@ -140,6 +201,8 @@ async def get_today(request: Request) -> TodayOut:
     return TodayOut(
         checklist=checklist,
         checklist_dismissed=bool(values.get("onboarding_dismissed")),
+        journey=journey,
+        journey_dismissed=bool(values.get("journey_dismissed")),
         to_review=to_review,
         month=month,
         month_count=month_count,
@@ -159,5 +222,16 @@ async def set_onboarding(request: Request, body: OnboardingIn) -> None:
         await session.execute(
             insert(Setting)
             .values(key="onboarding_dismissed", value=body.dismissed)
+            .on_conflict_do_update(index_elements=["key"], set_={"value": body.dismissed})
+        )
+
+
+@router.put("/journey", operation_id="setJourney", status_code=status.HTTP_204_NO_CONTENT)
+async def set_journey(request: Request, body: OnboardingIn) -> None:
+    """Masque (ou réaffiche) « Comment ça marche »."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        await session.execute(
+            insert(Setting)
+            .values(key="journey_dismissed", value=body.dismissed)
             .on_conflict_do_update(index_elements=["key"], set_={"value": body.dismissed})
         )

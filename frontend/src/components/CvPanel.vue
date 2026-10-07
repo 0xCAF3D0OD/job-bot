@@ -204,8 +204,7 @@ onMounted(() => void load());
       >
         <p>Aucun CV adapté pour cette offre.</p>
         <p class="hint">
-          L'IA choisit et ordonne tes blocs de profil pour cette offre, et écrit un titre et un résumé de 2 ou 3
-          lignes (≈ 0,05 $). Le texte de tes expériences n'est pas réécrit.
+          L'IA choisit tes blocs de profil et écrit un titre et un court résumé (≈ 0,05 $).
         </p>
       </div>
       <div

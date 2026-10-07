@@ -2529,6 +2529,41 @@
         }
       }
     },
+    "/api/journey": {
+      "put": {
+        "tags": [
+          "today"
+        ],
+        "summary": "Set Journey",
+        "description": "Masque (ou réaffiche) « Comment ça marche ».",
+        "operationId": "setJourney",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/address-candidates": {
       "get": {
         "tags": [
@@ -6446,6 +6481,32 @@
         ],
         "title": "JobRunStatus"
       },
+      "JourneyStep": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "alerts",
+              "triage",
+              "apply",
+              "follow",
+              "orp"
+            ],
+            "title": "Key"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "done"
+        ],
+        "title": "JourneyStep",
+        "description": "Une étape de « Comment ça marche » (docs/21 §3), cochée d'après les données."
+      },
       "KeywordsOut": {
         "properties": {
           "contract_types": {
@@ -9784,6 +9845,19 @@
           "checklist_dismissed": {
             "type": "boolean",
             "title": "Checklist Dismissed"
+          },
+          "journey": {
+            "items": {
+              "$ref": "#/components/schemas/JourneyStep"
+            },
+            "type": "array",
+            "title": "Journey",
+            "default": []
+          },
+          "journey_dismissed": {
+            "type": "boolean",
+            "title": "Journey Dismissed",
+            "default": false
           },
           "to_review": {
             "type": "integer",

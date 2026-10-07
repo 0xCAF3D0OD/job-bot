@@ -52,7 +52,7 @@ defineExpose({ load });
       <div>
         <h2>Intelligence artificielle</h2>
         <span class="detail">
-          {{ status.configured ? `${status.model}, effort bas` : "Non configurée : renseigne JOBBOT_ANTHROPIC_API_KEY dans .env." }}
+          {{ status.configured ? `${status.model}, effort bas` : "Non configurée (réglage d'installation, voir le README)." }}
         </span>
       </div>
       <button

@@ -30,6 +30,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.11.0 | Connexion (a), Candidatures et ORP réunies (b) | livrée |
 | 0.12.0 | Navigation par catégories : menu et rubrique Candidatures (a), Aujourd'hui et Réglages (b) | livrée |
 | 0.13.0 | Mes alertes (a), Voir l'offre chez l'employeur (b) | livrée |
+| 0.14.0 | Simplifier : textes et « Comment ça marche » (a), Alertes (b), offre, ORP, Réglages, Profil (c) | en cours (a) |
 
 ## Lancer en local
 
@@ -69,6 +70,20 @@ L'interface est sur http://localhost:5173 (page Aujourd'hui), l'API sur http://1
 | `make lint` | ruff, mypy, eslint |
 | `make openapi` | régénère le contrat OpenAPI et les types TypeScript du frontend |
 | `make check-openapi` | échoue si les types du frontend ne correspondent plus au backend |
+
+## Réglages d'installation
+
+L'interface renvoie ici pour ce qui se règle sur l'ordinateur qui fait tourner la plateforme, dans le fichier `.env` à la racine (créé par `make setup` à partir de `.env.example`), puis `make dev` relancé. Ne mets jamais ces valeurs dans le dépôt.
+
+| Pour | Réglage |
+|---|---|
+| Créer le compte de connexion, ou changer son mot de passe | `cd backend && uv run jobbot set-password` (saisie masquée ; ferme les sessions ouvertes) |
+| Lire les e-mails d'alerte | `JOBBOT_IMAP_USER`, `JOBBOT_IMAP_PASSWORD` (mot de passe d'application Gmail), `JOBBOT_IMAP_FOLDER` |
+| Noter les offres et rédiger avec l'IA | `JOBBOT_ANTHROPIC_API_KEY` |
+| Notifications sur le téléphone (application ntfy) | `JOBBOT_NTFY_TOPIC` : un sujet difficile à deviner, auquel tu t'abonnes dans l'application |
+| Essai local sans connexion | `JOBBOT_AUTH_ENABLED=false` |
+
+La liste complète est dans [docs/exploitation.md](docs/exploitation.md) (section Configuration).
 
 ## Organisation
 

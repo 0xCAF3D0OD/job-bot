@@ -22,9 +22,9 @@ const tab = computed<Tab>(() => {
 });
 const SUBTITLES: Record<Tab, string> = {
   recherche:
-    "Tes prérequis : les offres qui ne les respectent pas passent dans « Écartées ». Une information absente de l'offre ne l'écarte jamais.",
-  parcours: "Tes documents et tes blocs de profil : la seule source de l'IA pour noter les offres et rédiger.",
-  coordonnees: "Pour l'en-tête de tes lettres, de ton CV et du formulaire ORP. Jamais envoyées à l'IA.",
+    "Tes prérequis : une offre qui ne les respecte pas passe dans « Écartées ».",
+  parcours: "Ton CV et tes blocs de profil, la base de l'IA pour noter et rédiger.",
+  coordonnees: "Pour l'en-tête de tes lettres, de ton CV et des preuves ORP (jamais envoyées à l'IA).",
 };
 </script>
 

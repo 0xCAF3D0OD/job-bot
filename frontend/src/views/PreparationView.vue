@@ -375,8 +375,7 @@ onMounted(() => void load());
           >
             <p>Aucune lettre pour cette offre.</p>
             <p class="hint">
-              L'IA rédige l'objet et le corps à partir de tes blocs de profil (≈ 0,10 $). Tes coordonnées ne
-              lui sont pas envoyées : la plateforme les ajoute à l'en-tête.
+              L'IA rédige la lettre à partir de tes blocs de profil (≈ 0,10 $), sans tes coordonnées.
             </p>
           </div>
           <div

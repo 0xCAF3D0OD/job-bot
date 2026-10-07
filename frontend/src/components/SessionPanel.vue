@@ -2,6 +2,7 @@
 import { useRouter } from "vue-router";
 
 import { useAuth } from "../composables/useAuth";
+import MoreInfo from "./MoreInfo.vue";
 
 // Connexion (docs/18 §1) : compte connecté, « Se déconnecter partout ».
 const router = useRouter();
@@ -23,10 +24,14 @@ async function everywhere(): Promise<void> {
     <fieldset>
       <legend>Ton compte</legend>
       <p class="hint">
-        Connecté en tant que <strong>{{ me.username }}</strong>. Une session dure 30 jours et se prolonge à l'usage.
-        Pour changer le mot de passe : <code>cd backend && uv run jobbot set-password</code> (toutes les sessions sont
-        alors fermées).
+        Connecté en tant que <strong>{{ me.username }}</strong> ; la session dure 30 jours.
       </p>
+      <MoreInfo>
+        <p>
+          Le mot de passe se change sur l'ordinateur qui fait tourner la plateforme (voir le README) ; toutes les
+          sessions sont alors fermées.
+        </p>
+      </MoreInfo>
       <div class="form-actions">
         <button
           type="button"
@@ -44,7 +49,6 @@ async function everywhere(): Promise<void> {
     class="hint"
     data-test="auth-disabled"
   >
-    Connexion désactivée (<code>JOBBOT_AUTH_ENABLED=false</code>) : toutes les pages sont ouvertes. À n'utiliser que
-    pour un essai sur ta machine.
+    Connexion désactivée sur cette installation : toutes les pages sont ouvertes.
   </p>
 </template>

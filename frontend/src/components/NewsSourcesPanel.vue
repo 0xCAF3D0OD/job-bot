@@ -5,6 +5,7 @@ import { api, type NewsPreferences, type NewsSource } from "../api/client";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import AppIcon from "./AppIcon.vue";
 import NewsCatalog from "./NewsCatalog.vue";
+import MoreInfo from "./MoreInfo.vue";
 
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
@@ -131,8 +132,7 @@ onMounted(() => void load());
     <fieldset v-if="preferences">
       <legend>Mon domaine</legend>
       <p class="hint">
-        Mots-clés de ton métier : « Mon domaine », sur la page Actualités, ne garde que les contenus qui en
-        contiennent un (sans IA, sans coût). Les sources « marché de l'emploi » restent toujours visibles.
+        Les mots-clés de ton métier, pour filtrer Actualités et Formations.
       </p>
       <ul
         class="keyword-chips"
@@ -184,9 +184,15 @@ onMounted(() => void load());
     <fieldset>
       <legend>Sources des Actualités</legend>
       <p class="hint">
-        Flux publics, relevés toutes les 6 heures, sans coût. Colle l'adresse d'un site ou d'un flux RSS ; pour
-        YouTube, l'ID de la chaîne (sur la chaîne : « … plus » → « Partager la chaîne » → « Copier l'ID de la chaîne »).
+        Relevées toutes les 6 heures, sans coût.
       </p>
+      <MoreInfo>
+        <p>
+          Pour ajouter une source : l'adresse d'un site ou d'un flux RSS ; pour YouTube, l'ID de la chaîne (sur la chaîne :
+          « … plus » → « Partager la chaîne » → « Copier l'ID de la chaîne »). Les sources « marché de l'emploi » restent
+          visibles même filtrées sur « Mon domaine ».
+        </p>
+      </MoreInfo>
       <ul class="sites-list">
         <li
           v-for="source in sources"
@@ -265,9 +271,7 @@ onMounted(() => void load());
         @submit.prevent="addSearch"
       >
         <p class="hint wide">
-          Pour suivre un sujet plutôt qu'un site. La plateforme utilise le flux public de Google Actualités : Google
-          reçoit seulement ces mots-clés, le pays et la langue, rien sur toi. Les liens passent par Google Actualités
-          avant d'arriver sur l'article.
+          Suivre un sujet dans Google Actualités (seuls les mots-clés, le pays et la langue y sont envoyés).
         </p>
         <label class="wide">Mots-clés
           <input
