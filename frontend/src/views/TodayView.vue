@@ -139,10 +139,6 @@ onMounted(() => void load());
             :class="{ done: step.done }"
             :data-test="`journey-${step.key}`"
           >
-            <span
-              class="tick"
-              aria-hidden="true"
-            >{{ step.done ? "✓" : "" }}</span>
             <RouterLink :to="JOURNEY[step.key].to">
               {{ JOURNEY[step.key].label }}
             </RouterLink>
