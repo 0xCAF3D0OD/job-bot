@@ -16,6 +16,16 @@ const emit = defineEmits<{ select: [day: string] }>();
 
 const REMIND_AFTER_DAYS = 10;
 const MAX_DOTS = 3;
+// Un symbole par statut en plus de la couleur (docs/28 §3.1) : lisible même en noir et blanc.
+const SYMBOLS: Record<string, string> = {
+  en_attente: "",
+  relancee: "↻",
+  entretien: "◆",
+  refus: "✕",
+  engagement: "✓",
+  sans_reponse: "–",
+};
+const LEGEND = ["en_attente", "relancee", "entretien", "refus", "engagement", "sans_reponse"] as const;
 const WEEKDAYS = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
 
 function iso(date: Date): string {
@@ -66,7 +76,10 @@ const reminders = computed(() => {
 function label(day: string): string {
   const sent = sentOn.value.get(day) ?? [];
   const parts = [`${Number(day.slice(8))}`];
-  if (sent.length) parts.push(`${sent.length} candidature(s)`);
+  if (sent.length) {
+    const statuses = sent.map((a) => applicationStatusLabel[a.status ?? "en_attente"].toLowerCase());
+    parts.push(`${sent.length} candidature(s) : ${statuses.join(", ")}`);
+  }
   if (interviews.value.has(day)) parts.push("entretien");
   if (reminders.value.has(day)) parts.push("à relancer");
   if (nextSteps.value.has(day)) parts.push("suite attendue");
@@ -75,74 +88,102 @@ function label(day: string): string {
 </script>
 
 <template>
-  <div
-    class="suivi-calendar"
-    role="grid"
-    aria-label="Candidatures du mois"
-    data-test="calendar"
-  >
+  <div class="suivi-calendar-wrap">
     <div
-      v-for="name in WEEKDAYS"
-      :key="name"
-      class="weekday"
-      role="columnheader"
+      class="suivi-calendar"
+      role="grid"
+      aria-label="Candidatures du mois"
+      data-test="calendar"
     >
-      {{ name }}
-    </div>
-    <template
-      v-for="(week, w) in weeks"
-      :key="w"
-    >
-      <template
-        v-for="(day, d) in week"
-        :key="`${w}-${d}`"
+      <div
+        v-for="name in WEEKDAYS"
+        :key="name"
+        class="weekday"
+        role="columnheader"
       >
-        <span
-          v-if="!day"
-          class="day empty"
-        />
-        <button
-          v-else
-          type="button"
-          role="gridcell"
-          :class="['day', { today: day === today, selected: day === selected, busy: sentOn.get(day)?.length }]"
-          :aria-label="label(day)"
-          :aria-pressed="day === selected"
-          :data-test="`day-${day}`"
-          @click="emit('select', day)"
+        {{ name }}
+      </div>
+      <template
+        v-for="(week, w) in weeks"
+        :key="w"
+      >
+        <template
+          v-for="(day, d) in week"
+          :key="`${w}-${d}`"
         >
-          <span class="day-number">{{ Number(day.slice(8)) }}</span>
-          <span class="day-dots">
-            <span
-              v-for="application in (sentOn.get(day) ?? []).slice(0, MAX_DOTS)"
-              :key="application.id"
-              :class="['dot', application.status, { incomplete: incomplete.has(application.id) }]"
-              :title="`${application.company} · ${applicationStatusLabel[application.status ?? 'en_attente']}`"
-            />
-            <span
-              v-if="(sentOn.get(day)?.length ?? 0) > MAX_DOTS"
-              class="more"
-            >+{{ sentOn.get(day)!.length - MAX_DOTS }}</span>
-          </span>
-          <span class="day-marks">
-            <span
-              v-if="interviews.has(day)"
-              class="mark interview"
-              data-test="mark-interview"
-            >entretien</span>
-            <span
-              v-if="reminders.has(day)"
-              class="mark remind"
-              data-test="mark-remind"
-            >relancer</span>
-            <span
-              v-if="nextSteps.has(day)"
-              class="mark next"
-              data-test="mark-next"
-            >suite attendue</span>
-          </span>
-        </button>
+          <span
+            v-if="!day"
+            class="day empty"
+          />
+          <button
+            v-else
+            type="button"
+            role="gridcell"
+            :class="['day', { today: day === today, selected: day === selected, busy: sentOn.get(day)?.length }]"
+            :aria-label="label(day)"
+            :aria-pressed="day === selected"
+            :data-test="`day-${day}`"
+            @click="emit('select', day)"
+          >
+            <span class="day-number">{{ Number(day.slice(8)) }}</span>
+            <span class="day-dots">
+              <span
+                v-for="application in (sentOn.get(day) ?? []).slice(0, MAX_DOTS)"
+                :key="application.id"
+                :class="['dot', application.status, { incomplete: incomplete.has(application.id) }]"
+                :title="`${application.company} · ${applicationStatusLabel[application.status ?? 'en_attente']}`"
+                aria-hidden="true"
+              >{{ SYMBOLS[application.status ?? "en_attente"] }}</span>
+              <span
+                v-if="(sentOn.get(day)?.length ?? 0) > MAX_DOTS"
+                class="more"
+              >+{{ sentOn.get(day)!.length - MAX_DOTS }}</span>
+            </span>
+            <span class="day-marks">
+              <span
+                v-if="interviews.has(day)"
+                class="mark interview"
+                data-test="mark-interview"
+              >entretien</span>
+              <span
+                v-if="reminders.has(day)"
+                class="mark remind"
+                data-test="mark-remind"
+              >relancer</span>
+              <span
+                v-if="nextSteps.has(day)"
+                class="mark next"
+                data-test="mark-next"
+              >suite attendue</span>
+            </span>
+          </button>
+        </template>
       </template>
-    </template>
+    </div>
+    <details
+      class="suivi-legend"
+      data-test="suivi-legend"
+    >
+      <summary>Légende</summary>
+      <ul>
+        <li
+          v-for="status in LEGEND"
+          :key="status"
+        >
+          <span
+            :class="['dot', status]"
+            aria-hidden="true"
+          >{{ SYMBOLS[status] }}</span>
+          {{ applicationStatusLabel[status] }}
+        </li>
+        <li>
+          <span
+            class="dot en_attente incomplete"
+            aria-hidden="true"
+          />
+          à compléter pour l'ORP
+        </li>
+      </ul>
+    </details>
   </div>
 </template>
