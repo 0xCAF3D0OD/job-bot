@@ -1,6 +1,7 @@
 """« Comment ça marche » (docs/21 §3) : étapes cochées d'après les données."""
 
 from datetime import UTC, date, datetime
+from typing import Any
 
 from httpx import AsyncClient
 from sqlalchemy import text
@@ -13,7 +14,10 @@ async def test_journey_steps(client: AsyncClient, runtime: Runtime) -> None:
     async with runtime.engine.begin() as conn:
         await conn.execute(text("TRUNCATE offers, applications, searches, orp_months CASCADE"))
         await conn.execute(text("DELETE FROM settings WHERE key = 'journey_dismissed'"))
-    steps = lambda page: {s["key"]: s["done"] for s in page["journey"]}  # noqa: E731
+
+    def steps(page: dict[str, Any]) -> dict[str, bool]:
+        return {s["key"]: s["done"] for s in page["journey"]}
+
     page = (await client.get("/api/today")).json()
     assert steps(page) == dict.fromkeys(["alerts", "triage", "apply", "follow", "orp"], False)
     assert page["journey_dismissed"] is False

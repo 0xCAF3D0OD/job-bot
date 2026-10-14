@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -184,10 +185,10 @@ async def test_answer(
         await client.post("/api/extension/answer", json=question, headers=auth)
     ).status_code == 409
 
-    calls: list[dict] = []
+    calls: list[dict[str, Any]] = []
 
     class Fake:
-        async def score(self, params: dict) -> RawResult:
+        async def score(self, params: dict[str, Any]) -> RawResult:
             calls.append(params)
             return RawResult("« Parce que… »", service.MODEL, Usage(900, 0, 0, 80), "end_turn")
 

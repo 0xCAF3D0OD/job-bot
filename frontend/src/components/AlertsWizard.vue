@@ -20,6 +20,16 @@ const sites = computed(() =>
 );
 const site = computed(() => sites.value[siteIndex.value] ?? null);
 
+// Même recherche en télétravail (docs/26 §5) : une fois par mots, le lieu ne compte pas.
+const remoteLinks = computed(() => {
+  const seen = new Map<string, string>();
+  for (const search of searches.value) {
+    const url = search.cells.find((c) => c.site === site.value?.slug)?.remote_url;
+    if (url && !seen.has(search.terms)) seen.set(search.terms, url);
+  }
+  return [...seen.entries()].map(([terms, url]) => ({ terms, url }));
+});
+
 function cellUrl(searchId: number): string | null {
   const search = searches.value.find((s) => s.id === searchId);
   return search?.cells.find((c) => c.site === site.value?.slug)?.url ?? null;
@@ -156,6 +166,15 @@ function nextSite(): void {
           >Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}
             <AppIcon name="chevron" /></a>
         </template>
+        <a
+          v-for="link in remoteLinks"
+          :key="link.terms"
+          :href="link.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="button-link"
+          data-test="wizard-open-remote"
+        >Ouvrir {{ site.name }} en télétravail : {{ link.terms }} <AppIcon name="chevron" /></a>
       </div>
       <div class="form-actions">
         <button

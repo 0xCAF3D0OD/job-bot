@@ -43,6 +43,20 @@ def search_url(site: Site, terms: str, location: str | None) -> str | None:
     return base + urlencode(query)
 
 
+# Recherche en télétravail (docs/26 §5) : seulement là où le site l'offre par l'adresse.
+# LinkedIn : f_WT=2 (télétravail), lieu « Switzerland » pour les postes ouverts depuis la Suisse.
+REMOTE_SEARCH_URLS: dict[str, str] = {
+    "linkedin": "https://www.linkedin.com/jobs/search/?",
+}
+
+
+def remote_search_url(site: Site, terms: str) -> str | None:
+    if site.slug not in REMOTE_SEARCH_URLS:
+        return None
+    query = {"keywords": terms, "location": "Switzerland", "f_WT": "2"}
+    return REMOTE_SEARCH_URLS[site.slug] + urlencode(query)
+
+
 def is_canton(value: str) -> bool:
     """« VD », « GE » : un code de canton n'est pas un lieu de recherche utile sur les sites."""
     return len(value) == 2 and value.isalpha() and value.isupper()

@@ -3421,6 +3421,32 @@
         }
       }
     },
+    "/api/sites/suggestions": {
+      "get": {
+        "tags": [
+          "sites"
+        ],
+        "summary": "List Suggestions",
+        "description": "Sites d'offres en télétravail pas encore ajoutés.",
+        "operationId": "listSiteSuggestions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SiteSuggestion"
+                  },
+                  "type": "array",
+                  "title": "Response Listsitesuggestions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/sites/{site_id}": {
       "patch": {
         "tags": [
@@ -5281,6 +5307,17 @@
               }
             ],
             "title": "Created At"
+          },
+          "remote_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote Url"
           }
         },
         "type": "object",
@@ -5857,6 +5894,22 @@
             "type": "array",
             "title": "Interviews",
             "default": []
+          },
+          "remote_full": {
+            "type": "boolean",
+            "title": "Remote Full",
+            "default": false
+          },
+          "remote_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote Region"
           }
         },
         "type": "object",
@@ -12394,6 +12447,38 @@
           "unrecognized"
         ],
         "title": "SiteOut"
+      },
+      "SiteSuggestion": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "senders": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Senders"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "senders",
+          "url",
+          "note"
+        ],
+        "title": "SiteSuggestion",
+        "description": "Site d'offres en télétravail proposé en un clic (docs/26 §5)."
       },
       "StatusResponse": {
         "properties": {

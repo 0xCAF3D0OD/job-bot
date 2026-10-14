@@ -216,3 +216,21 @@ async def test_sites_api(rt: Runtime) -> None:
         assert (await api.delete(f"/api/sites/{jobup['id']}")).status_code == 409
         remaining = (await api.delete(f"/api/sites/{added['id']}")).json()
         assert all(s["slug"] != "jobscout24" for s in remaining)
+
+
+async def test_remote_site_suggestions(rt: Runtime) -> None:
+    """Sites d'offres en télétravail proposés (docs/26 §5), retirés une fois ajoutés."""
+    app = create_app(rt.settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        names = [s["name"] for s in (await api.get("/api/sites/suggestions")).json()]
+        assert names == ["Remotive", "Himalayas", "EU Remote Jobs"]
+        remotive = (await api.get("/api/sites/suggestions")).json()[0]
+        added = await api.post(
+            "/api/sites",
+            json={k: remotive[k] for k in ("name", "senders", "url")},
+        )
+        assert added.status_code == 201
+        assert [s["name"] for s in (await api.get("/api/sites/suggestions")).json()] == [
+            "Himalayas",
+            "EU Remote Jobs",
+        ]

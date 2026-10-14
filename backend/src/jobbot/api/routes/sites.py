@@ -62,6 +62,40 @@ class SiteIn(BaseModel):
         return value or None
 
 
+class SiteSuggestion(BaseModel):
+    """Site d'offres en télétravail proposé en un clic (docs/26 §5)."""
+
+    name: str
+    senders: list[str]
+    url: str
+    note: str
+
+
+# Vérifiés le 2026-10-14 : alertes par e-mail gratuites et pays acceptés indiqués par offre.
+# Les adresses d'expédition sont les domaines des sites (sous-domaines compris) ; la
+# première alerte reçue confirme qu'elles sont bonnes (page des alertes).
+REMOTE_SITES: list[SiteSuggestion] = [
+    SiteSuggestion(
+        name="Remotive",
+        senders=["remotive.com", "remotive.io"],
+        url="https://remotive.com/remote-jobs",
+        note="« Create Custom Job Alert » sur la liste des offres, sans compte.",
+    ),
+    SiteSuggestion(
+        name="Himalayas",
+        senders=["himalayas.app"],
+        url="https://himalayas.app/jobs",
+        note="Alertes personnalisées après inscription ; pays acceptés indiqués par offre.",
+    ),
+    SiteSuggestion(
+        name="EU Remote Jobs",
+        senders=["euremotejobs.com"],
+        url="https://euremotejobs.com",
+        note="Offres sur les fuseaux horaires européens, Suisse comprise ; lettre d'information.",
+    ),
+]
+
+
 class SiteActive(BaseModel):
     active: bool
 
@@ -119,6 +153,14 @@ async def _list(runtime: Runtime) -> list[SiteOut]:
 @router.get("/sites", operation_id="listSites")
 async def list_sites(request: Request) -> list[SiteOut]:
     return await _list(_runtime(request))
+
+
+@router.get("/sites/suggestions", operation_id="listSiteSuggestions")
+async def list_suggestions(request: Request) -> list[SiteSuggestion]:
+    """Sites d'offres en télétravail pas encore ajoutés."""
+    async with _runtime(request).sessionmaker() as session:
+        names = {n.casefold() for n in await session.scalars(select(Site.name))}
+    return [s for s in REMOTE_SITES if s.name.casefold() not in names]
 
 
 @router.post("/sites", operation_id="addSite", status_code=status.HTTP_201_CREATED)
