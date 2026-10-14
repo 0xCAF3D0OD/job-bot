@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
+import { email, postcode, webAddress, type Check } from "../validators";
 import AppIcon from "./AppIcon.vue";
 
 // Coordonnées pour l'en-tête des lettres, du CV et du formulaire ORP : base locale seulement,
@@ -18,7 +19,36 @@ const formFilled = computed(() =>
 );
 const identityMessage = ref("");
 
+// Vérification en quittant chaque champ (docs/29 §4) ; à l'enregistrement, tout est revérifié
+// et le premier champ en erreur reçoit le curseur.
+const CHECKS: Partial<Record<keyof IdentityForm, Check>> = {
+  postcode,
+  email,
+  linkedin: webAddress,
+  website: webAddress,
+};
+const errors = ref<Partial<Record<keyof IdentityForm, string>>>({});
+
+function check(field: keyof IdentityForm): void {
+  const message = CHECKS[field]?.(identity.value[field]) ?? null;
+  const next = { ...errors.value };
+  if (message) next[field] = message;
+  else delete next[field];
+  errors.value = next;
+}
+
+function clearIfFixed(field: keyof IdentityForm): void {
+  if (errors.value[field]) check(field);
+}
+
 async function saveIdentity(): Promise<void> {
+  (Object.keys(CHECKS) as (keyof IdentityForm)[]).forEach(check);
+  const first = (Object.keys(CHECKS) as (keyof IdentityForm)[]).find((f) => errors.value[f]);
+  if (first) {
+    document.getElementById(`identity-${first}`)?.focus();
+    identityMessage.value = "Corrige le champ signalé.";
+    return;
+  }
   const body = Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, identity.value[f].trim() || null]));
   try {
     const { data, response } = await api.PUT("/api/identity", { body });
@@ -91,15 +121,24 @@ onMounted(async () => {
         </label>
         <label>NPA
           <input
+            id="identity-postcode"
             v-model="identity.postcode"
             type="text"
             inputmode="numeric"
-            pattern="[0-9]{4}"
             maxlength="4"
             autocomplete="postal-code"
-            title="Quatre chiffres"
             data-test="identity-postcode"
+            :aria-invalid="Boolean(errors.postcode)"
+            :aria-describedby="errors.postcode ? 'identity-postcode-error' : undefined"
+            @blur="check('postcode')"
+            @input="clearIfFixed('postcode')"
           >
+          <span
+            v-if="errors.postcode"
+            id="identity-postcode-error"
+            class="field-error"
+            data-test="error-postcode"
+          >{{ errors.postcode }}</span>
         </label>
         <label>Localité
           <input
@@ -118,10 +157,21 @@ onMounted(async () => {
         </label>
         <label>E-mail
           <input
+            id="identity-email"
             v-model="identity.email"
             type="email"
             autocomplete="email"
+            :aria-invalid="Boolean(errors.email)"
+            :aria-describedby="errors.email ? 'identity-email-error' : undefined"
+            @blur="check('email')"
+            @input="clearIfFixed('email')"
           >
+          <span
+            v-if="errors.email"
+            id="identity-email-error"
+            class="field-error"
+            data-test="error-email"
+          >{{ errors.email }}</span>
         </label>
       </div>
       <details
@@ -135,20 +185,42 @@ onMounted(async () => {
         <div class="form-grid">
           <label>LinkedIn
             <input
+              id="identity-linkedin"
               v-model="identity.linkedin"
               type="text"
               inputmode="url"
               placeholder="linkedin.com/in/…"
               data-test="identity-linkedin"
+              :aria-invalid="Boolean(errors.linkedin)"
+              :aria-describedby="errors.linkedin ? 'identity-linkedin-error' : undefined"
+              @blur="check('linkedin')"
+              @input="clearIfFixed('linkedin')"
             >
+            <span
+              v-if="errors.linkedin"
+              id="identity-linkedin-error"
+              class="field-error"
+              data-test="error-linkedin"
+            >{{ errors.linkedin }}</span>
           </label>
           <label>Site personnel
             <input
+              id="identity-website"
               v-model="identity.website"
               type="text"
               inputmode="url"
               placeholder="facultatif"
+              :aria-invalid="Boolean(errors.website)"
+              :aria-describedby="errors.website ? 'identity-website-error' : undefined"
+              @blur="check('website')"
+              @input="clearIfFixed('website')"
             >
+            <span
+              v-if="errors.website"
+              id="identity-website-error"
+              class="field-error"
+              data-test="error-website"
+            >{{ errors.website }}</span>
           </label>
           <label>Disponibilité
             <input

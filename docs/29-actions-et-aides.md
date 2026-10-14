@@ -1,6 +1,6 @@
 # 29 — Une action principale par page, aides visibles (version 0.22.0)
 
-> Statut : **validé** le 2026-10-14. livré : PR a (une action principale par page).
+> Statut : **validé** le 2026-10-14. livré : PR a (une action principale par page), PR b (aides visibles).
 > Suite de la comparaison avec le guide [Clay — UI elements](https://clay.global/blog/ux-guide/ui-elements) (2026-10-14) : le point 1 (un seul bouton principal par page) et les points respectés en partie (infobulles, boutons désactivés, vérification des saisies, libellés).
 
 ## 1. Un seul bouton principal par page
@@ -101,3 +101,12 @@ Sans migration ni changement d'API.
 - **Détail d'une offre** : « Enregistrer » l'adresse de l'entreprise en contour.
 - **Réglages** : tous les boutons en contour (sections, sites, profils, sources, « Renoter »).
 - **Formulaires en fenêtre** (ajouter une candidature, retour d'entretien) : leur « Enregistrer » reste plein, seule action de la fenêtre.
+
+## Écarts avec la PR b
+
+- **Aide « ? »** (nouveau composant) : s'ouvre au clic, au toucher ou à Entrée, se ferme avec Échap ou un clic ailleurs ; texte annoncé aux lecteurs d'écran. Utilisée pour les mots de « Mon domaine » (Actualités, Formations).
+- **Coûts de l'IA en clair** à côté des boutons : « L'IA cherche sur Internet, environ 0,02 à 0,05 $ » (Formations), « L'IA reçoit seulement le métier ; environ 0,001 $ » (profils d'essai).
+- **Infobulles retirées** : « Ouvrir la recherche sur … » et « La même recherche en télétravail sur … » (remplacées par un libellé lu par les lecteurs d'écran), « Pas couvert par ton profil » (déjà dit par le ✗). **Gardées pour la souris** (l'information existe ailleurs) : note d'une offre (le détail l'explique), pastilles du calendrier, date exacte d'une tâche, pastilles des onglets.
+- **Boutons rendus actifs, avec explication** : Envoyer (Assistant), Enregistrer d'un retour d'entretien (« Indique ton ressenti global »), Continuer de l'assistant des alertes, Ajouter un mot-clé et Ajouter (listes de mots), Ajouter des blocs proposés, Proposer des mots-clés (profils d'essai), Chercher d'autres formations. **Gardés grisés** : pendant un traitement, « Effacer tout (0) », « Aucune modification », flèches de déplacement en bout de liste, « Mon domaine » sans domaine (la raison est écrite sous les filtres).
+- **Vérification en quittant le champ** : NPA, e-mail, LinkedIn et site personnel (coordonnées) ; adresse du site et adresses d'expédition (sites suivis) ; courriel du contact (candidature). À l'envoi, le premier champ en erreur reçoit le curseur. Les dates de « suite attendue » ne sont pas bloquées dans le passé : un retour saisi en retard doit rester possible.
+- **Loupe** devant la recherche des offres.

@@ -34,12 +34,21 @@ async function saveKeywords(keywords: string[]): Promise<void> {
   if (data) preferences.value = data;
 }
 
+// Bouton toujours actif (docs/29 §3) : sans mot-clé, il le dit et rend la main au champ.
+const keywordHint = ref("");
+
 function addKeywords(): void {
   const current = preferences.value?.domain_keywords ?? [];
   // « DevOps, Kubernetes » : plusieurs mots-clés d'un coup, séparés par des virgules.
   const added = keyword.value.split(",").map((k) => k.trim()).filter(Boolean);
+  if (!added.length) {
+    keywordHint.value = "Écris un mot-clé, par exemple DevOps.";
+    document.querySelector<HTMLInputElement>("[data-test=domain-input]")?.focus();
+    return;
+  }
+  keywordHint.value = "";
   keyword.value = "";
-  if (added.length) void saveKeywords([...current, ...added]);
+  void saveKeywords([...current, ...added]);
 }
 
 function removeKeyword(value: string): void {
@@ -174,11 +183,15 @@ onMounted(() => void load());
         <button
           type="submit"
           class="secondary small"
-          :disabled="!keyword.trim()"
         >
           Ajouter
         </button>
       </form>
+      <span
+        v-if="keywordHint"
+        class="field-error"
+        role="status"
+      >{{ keywordHint }}</span>
     </fieldset>
 
     <fieldset>

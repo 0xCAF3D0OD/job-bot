@@ -35,6 +35,11 @@ function duplicateTitle(id: number | null): string | null {
 }
 
 async function save(): Promise<void> {
+  // Bouton toujours actif (docs/29 §3) : sans bloc coché, il le dit.
+  if (!selectedCount.value) {
+    error.value = "Coche au moins un bloc à ajouter.";
+    return;
+  }
   saving.value = true;
   error.value = "";
   let created = 0;
@@ -125,7 +130,7 @@ async function save(): Promise<void> {
         <button
           type="submit"
           class="primary"
-          :disabled="saving || !selectedCount"
+          :disabled="saving"
           data-test="add-proposals"
         >
           Ajouter {{ selectedCount }} bloc(s) <AppIcon name="chevron" />

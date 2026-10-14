@@ -88,9 +88,18 @@ async function erase(): Promise<void> {
   startOver();
 }
 
+// « Envoyer » reste actif (docs/29 §3) : sans question, il rend la main au champ.
+const emptyHint = ref(false);
+
 async function send(text: string = draft.value): Promise<void> {
   const question = text.trim();
-  if (!question || busy.value) return;
+  if (busy.value) return;
+  if (!question) {
+    emptyHint.value = true;
+    input.value?.focus();
+    return;
+  }
+  emptyHint.value = false;
   draft.value = "";
   busy.value = true;
   lines.value.push({ role: "user", content: question });
@@ -400,6 +409,13 @@ function day(value: string): string {
           ×
         </button>
       </p>
+      <p
+        v-if="emptyHint && !draft.trim()"
+        class="field-error assistant-empty"
+        role="status"
+      >
+        Écris ta question.
+      </p>
       <form
         class="assistant-form"
         @submit.prevent="send()"
@@ -417,7 +433,7 @@ function day(value: string): string {
         <button
           type="submit"
           class="primary small"
-          :disabled="busy || !draft.trim()"
+          :disabled="busy"
           data-test="assistant-send"
         >
           Envoyer

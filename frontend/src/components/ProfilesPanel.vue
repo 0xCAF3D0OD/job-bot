@@ -19,6 +19,11 @@ const proposing = ref(false);
 
 // Mots-clés proposés par l'IA à partir du métier (docs/17 §2), environ 0,001 $.
 async function propose(): Promise<void> {
+  // Bouton toujours actif (docs/29 §3) : sans métier, il le dit.
+  if (form.value.occupation.trim().length < 2) {
+    message.value = "Indique d'abord le métier (deux lettres au moins).";
+    return;
+  }
   proposing.value = true;
   message.value = "";
   try {
@@ -205,13 +210,13 @@ onMounted(async () => {
           <button
             type="button"
             class="secondary small"
-            :disabled="proposing || form.occupation.trim().length < 2"
-            title="Claude Haiku reçoit seulement le métier ; environ 0,001 $"
+            :disabled="proposing"
             data-test="propose-keywords"
             @click="propose"
           >
             {{ proposing ? "Proposition…" : "Proposer des mots-clés à partir du métier" }}
           </button>
+          <span class="hint"> L'IA reçoit seulement le métier ; environ 0,001 $.</span>
         </div>
         <div class="wide chip-group">
           <span class="chip-label">Langues</span>

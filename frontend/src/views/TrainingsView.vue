@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
+import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, LEVELS, ORP_LINKS, PRICES, STATUSES } from "../trainingLabels";
@@ -96,6 +97,11 @@ async function review(training: Training, keep: boolean): Promise<void> {
 }
 
 async function suggest(): Promise<void> {
+  // Bouton toujours actif (docs/29 §3) : sans domaine, il dit quoi faire.
+  if (!hasDomain.value) {
+    message.value = "Définis d'abord ton domaine dans Réglages › Actualités.";
+    return;
+  }
   suggesting.value = true;
   message.value = "";
   try {
@@ -183,7 +189,6 @@ onMounted(() => void load());
             role="radio"
             :aria-checked="domainOnly && hasDomain"
             :disabled="!hasDomain"
-            :title="hasDomain ? keywords.join(' · ') : 'Définis ton domaine dans Réglages → Actualités'"
             data-test="filter-domain"
             @click="setDomain(true)"
           >
@@ -199,6 +204,11 @@ onMounted(() => void load());
             Tout
           </button>
         </div>
+        <HelpTip
+          v-if="hasDomain"
+          :text="`Mon domaine : ${keywords.join(', ')}. À modifier dans Réglages › Actualités.`"
+          label="Mots de Mon domaine"
+        />
         <select
           v-model="kind"
           aria-label="Type"
@@ -254,13 +264,13 @@ onMounted(() => void load());
           <button
             type="button"
             class="secondary small"
-            :disabled="suggesting || !hasDomain"
-            :title="hasDomain ? 'Claude Haiku cherche sur Internet, environ 0,02 à 0,05 $' : 'Définis d\'abord ton domaine'"
+            :disabled="suggesting"
             data-test="suggest"
             @click="suggest"
           >
             {{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}
           </button>
+          <span class="hint">L'IA cherche sur Internet, environ 0,02 à 0,05 $.</span>
         </span>
       </div>
       <p

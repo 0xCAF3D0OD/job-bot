@@ -68,6 +68,17 @@ async function siteDone(): Promise<void> {
   nextSite();
 }
 
+// Bouton toujours actif (docs/29 §3) : sans recherche, il explique.
+const searchHint = ref("");
+function continueToSites(): void {
+  if (!searches.value.length) {
+    searchHint.value = "Ajoute au moins une recherche pour continuer.";
+    return;
+  }
+  searchHint.value = "";
+  step.value = 2;
+}
+
 function nextSite(): void {
   if (siteIndex.value + 1 < sites.value.length) siteIndex.value += 1;
   else step.value = 3;
@@ -136,12 +147,16 @@ function nextSite(): void {
         <button
           type="button"
           class="primary"
-          :disabled="!searches.length"
           data-test="wizard-next"
-          @click="step = 2"
+          @click="continueToSites"
         >
           Continuer <AppIcon name="chevron" />
         </button>
+        <span
+          v-if="searchHint"
+          class="field-error"
+          role="status"
+        >{{ searchHint }}</span>
       </div>
     </template>
 

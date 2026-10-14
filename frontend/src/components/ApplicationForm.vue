@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { ApplicationStatus, ApplicationUpdate } from "../api/client";
 import { applicationStatusLabel, methodLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import { email, useChecks } from "../validators";
 
 export type ApplicationFormValue = ApplicationUpdate & { offer_id?: number | null };
 
@@ -27,6 +28,11 @@ const form = ref<ApplicationFormValue>({
   application_url: props.initial.application_url ?? "",
   status_reason: props.initial.status_reason ?? "",
 });
+const { errors, check, clearIfFixed, validate } = useChecks(
+  { contact_email: email },
+  (field) => form.value[field] ?? "",
+  "application",
+);
 const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, string][];
 </script>
 
@@ -38,7 +44,7 @@ const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, s
     <form
       class="form-card editor application-form"
       data-test="application-form"
-      @submit.prevent="emit('submit', form)"
+      @submit.prevent="validate() && emit('submit', form)"
     >
       <h3>{{ title }}</h3>
       <p class="hint">
@@ -101,11 +107,22 @@ const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, s
         </label>
         <label>Courriel du contact
           <input
+            id="application-contact_email"
             v-model="form.contact_email"
-            type="email"
+            type="text"
+            inputmode="email"
             maxlength="200"
             data-test="contact-email"
+            :aria-invalid="Boolean(errors.contact_email)"
+            :aria-describedby="errors.contact_email ? 'application-contact_email-error' : undefined"
+            @blur="check('contact_email')"
+            @input="clearIfFixed('contact_email')"
           >
+          <span
+            v-if="errors.contact_email"
+            id="application-contact_email-error"
+            class="field-error"
+          >{{ errors.contact_email }}</span>
         </label>
         <label>Lieu
           <input
