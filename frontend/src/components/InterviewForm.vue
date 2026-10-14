@@ -65,8 +65,16 @@ function toggleInterviewer(key: string): void {
   form.value.interviewers = (list.includes(key) ? list.filter((k) => k !== key) : [...list, key]) as typeof form.value.interviewers;
 }
 
+// Ressenti global obligatoire (docs/23 §1) : le bouton reste actif et le rappelle (docs/29 §3).
+const ratingMissing = ref(false);
+
 function submit(): void {
-  if (!form.value.rating) return;
+  if (!form.value.rating) {
+    ratingMissing.value = true;
+    document.querySelector<HTMLElement>("[data-test=rating-1]")?.focus();
+    return;
+  }
+  ratingMissing.value = false;
   const f = form.value;
   emit("submit", {
     ...f,
@@ -171,6 +179,12 @@ function submit(): void {
         <legend>Ton ressenti</legend>
         <div class="choice-row">
           <span class="choice-label">Globalement *</span>
+          <span
+            v-if="ratingMissing && !form.rating"
+            class="field-error"
+            role="status"
+            data-test="rating-missing"
+          >Indique ton ressenti global, de 1 à 5.</span>
           <button
             v-for="n in 5"
             :key="n"
@@ -431,7 +445,6 @@ function submit(): void {
         <button
           type="submit"
           class="primary"
-          :disabled="!form.rating"
           data-test="save-interview"
         >
           Enregistrer

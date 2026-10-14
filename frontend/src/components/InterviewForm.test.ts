@@ -9,7 +9,11 @@ describe("InterviewForm (docs/23 §2)", () => {
     const wrapper = mount(InterviewForm, {
       props: { company: "Exemple SA", initial: null, heldAt: "2026-10-06", withEmployerFeedback: false, error: "" },
     });
-    expect(wrapper.find("[data-test=save-interview]").attributes("disabled")).toBeDefined();
+    // Bouton actif (docs/29 §3) : sans ressenti, il le rappelle au lieu d'être grisé.
+    expect(wrapper.find("[data-test=save-interview]").attributes("disabled")).toBeUndefined();
+    await wrapper.find("form").trigger("submit");
+    expect(wrapper.find("[data-test=rating-missing]").text()).toContain("ressenti global");
+    expect(wrapper.emitted("save")).toBeUndefined();
     await wrapper.find("[data-test=kind-technique]").trigger("click");
     await wrapper.find("[data-test=rating-4]").trigger("click");
     await wrapper.findAll("[data-test=suggested-question]")[1]!.trigger("click"); // « Pourquoi ce poste ? »

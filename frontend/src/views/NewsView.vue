@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
+import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
@@ -147,7 +148,6 @@ onUnmounted(() => clearTimeout(poll));
             role="radio"
             :aria-checked="preferences.domain_only && hasDomain"
             :disabled="!hasDomain"
-            :title="hasDomain ? preferences.domain_keywords.join(' · ') : 'Définis ton domaine dans les Réglages'"
             data-test="filter-domain"
             @click="savePreferences({ domain_only: true })"
           >
@@ -163,6 +163,11 @@ onUnmounted(() => clearTimeout(poll));
             Tout
           </button>
         </div>
+        <HelpTip
+          v-if="hasDomain"
+          :text="`Mon domaine : ${preferences.domain_keywords.join(', ')}. À modifier dans Réglages › Actualités.`"
+          label="Mots de Mon domaine"
+        />
         <div
           v-if="page.countries.length > 1"
           class="chip-group"

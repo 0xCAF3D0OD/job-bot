@@ -1338,3 +1338,17 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .nav a, .prep-tabs a { border-radius: 0; }
 .nav a.router-link-active { color: var(--accent-text); font-weight: 600; }
 .journey li.done a, .journey li.done .hint { color: var(--muted); }
+
+/* --- Aides visibles (docs/29 §2-§5) --- */
+.field-error { display: block; margin-top: 0.25rem; font-size: 0.82rem; font-weight: 500; color: var(--down-text); }
+input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--down); }
+.help-tip { position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
+.help-tip-button { width: 1.25rem; height: 1.25rem; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 0.75rem; font-weight: 600; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.help-tip-button:hover, .help-tip-button[aria-expanded="true"] { color: var(--accent-text); border-color: var(--accent); }
+.help-tip-text > span { position: absolute; top: calc(100% + 0.4rem); left: 50%; transform: translateX(-50%); z-index: 20; width: max-content; max-width: 16rem; padding: 0.5rem 0.65rem; border-radius: 10px; background: var(--text); color: var(--bg); font-size: 0.82rem; line-height: 1.4; font-weight: 400; white-space: normal; box-shadow: 0 8px 24px rgb(17 17 31 / 18%); }
+@media (pointer: coarse) { .help-tip-button::before { content: ""; position: absolute; inset: -0.75rem; } .help-tip-button { position: relative; } }
+.filters-search-wrap { position: relative; display: block; }
+.filters-search-wrap .icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.filters-panel .filters-search-wrap input[type="search"] { padding-left: 2.1rem; }
+.assistant-empty { margin: 0; padding: 0.3rem 0.9rem 0; }
+.form-grid > label { align-self: start; }

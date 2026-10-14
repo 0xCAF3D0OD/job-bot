@@ -5,6 +5,7 @@ import type { FilterKey, OfferFacets, Source } from "../api/client";
 import type { OfferFilters, Remote, Sort, View } from "../composables/useOfferFilters";
 import { activeCount, DEFAULT_FILTERS } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
+import AppIcon from "./AppIcon.vue";
 import ScoreCurve from "./ScoreCurve.vue";
 
 const props = defineProps<{
@@ -137,15 +138,19 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
     class="filters-panel"
     data-test="filters"
   >
-    <input
-      id="offer-search"
-      v-model="search"
-      class="filters-search"
-      type="search"
-      aria-label="Recherche"
-      placeholder="Titre, entreprise, mot-clé…"
-      data-test="search"
-    >
+    <!-- Recherche : loupe devant, libellé lu par les lecteurs d'écran (docs/29 §5). -->
+    <span class="filters-search-wrap">
+      <AppIcon name="search" />
+      <input
+        id="offer-search"
+        v-model="search"
+        class="filters-search"
+        type="search"
+        aria-label="Recherche"
+        placeholder="Titre, entreprise, mot-clé…"
+        data-test="search"
+      >
+    </span>
 
     <div class="filter-card">
       <button

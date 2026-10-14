@@ -2,11 +2,16 @@
 import { ref } from "vue";
 
 const model = defineModel<string[]>({ required: true });
-defineProps<{ id: string; placeholder?: string }>();
+const props = defineProps<{ id: string; placeholder?: string }>();
 
 const draft = ref("");
 
 function add(): void {
+  // Bouton toujours actif (docs/29 §3) : vide, il rend la main au champ.
+  if (!draft.value.trim()) {
+    document.getElementById(props.id)?.focus();
+    return;
+  }
   for (const part of draft.value.split(",")) {
     const value = part.trim();
     if (value && !model.value.some((v) => v.toLowerCase() === value.toLowerCase())) {
@@ -53,7 +58,6 @@ function remove(value: string): void {
       <button
         type="button"
         class="secondary small"
-        :disabled="!draft.trim()"
         @click="add"
       >
         Ajouter

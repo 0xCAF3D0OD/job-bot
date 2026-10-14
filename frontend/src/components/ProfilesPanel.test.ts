@@ -49,7 +49,9 @@ describe("ProfilesPanel", () => {
     const wrapper = mount(ProfilesPanel);
     await flushPromises();
     await wrapper.find("[data-test=add-profile-open]").trigger("click");
-    expect(wrapper.find("[data-test=propose-keywords]").attributes("disabled")).toBeDefined();
+    // Bouton actif (docs/29 §3) : sans métier, il explique au clic.
+    await wrapper.find("[data-test=propose-keywords]").trigger("click");
+    expect(wrapper.text()).toContain("Indique d'abord le métier");
     await wrapper.find("[data-test=profile-occupation]").setValue("infirmière");
     await wrapper.find("[data-test=propose-keywords]").trigger("click");
     await flushPromises();

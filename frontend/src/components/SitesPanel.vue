@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { api, type SiteOut } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import MoreInfo from "./MoreInfo.vue";
+import { secureAddress, senders, useChecks } from "../validators";
 
 // Sites dont les alertes sont suivies (docs/11 §2).
 const sites = ref<SiteOut[]>([]);
@@ -13,6 +14,11 @@ const suggestions = ref<Suggestion[]>([]);
 const loaded = ref(false);
 const adding = ref(false);
 const form = ref({ name: "", senders: "", url: "" });
+const { errors, check, clearIfFixed, validate } = useChecks(
+  { url: secureAddress, senders },
+  (field) => form.value[field],
+  "site",
+);
 const message = ref("");
 const busy = ref(false);
 
@@ -53,6 +59,7 @@ async function remove(site: SiteOut): Promise<void> {
 
 async function add(): Promise<void> {
   message.value = "";
+  if (!validate()) return;
   const senders = form.value.senders.split(/[\s,;]+/).filter(Boolean);
   const { data, error } = await api.POST("/api/sites", {
     body: { name: form.value.name.trim(), senders, url: form.value.url.trim() || null },
@@ -201,19 +208,39 @@ onMounted(() => void load());
         </label>
         <label>Adresse du site
           <input
+            id="site-url"
             v-model="form.url"
             type="text"
             placeholder="https://www.jobscout24.ch"
+            :aria-invalid="Boolean(errors.url)"
+            :aria-describedby="errors.url ? 'site-url-error' : undefined"
+            @blur="check('url')"
+            @input="clearIfFixed('url')"
           >
+          <span
+            v-if="errors.url"
+            id="site-url-error"
+            class="field-error"
+          >{{ errors.url }}</span>
         </label>
         <label class="wide">Adresse(s) d'expédition des alertes
           <input
+            id="site-senders"
             v-model="form.senders"
             type="text"
             placeholder="alerts@jobscout24.ch ou jobscout24.ch"
-            required
             data-test="site-senders"
+            :aria-invalid="Boolean(errors.senders)"
+            :aria-describedby="errors.senders ? 'site-senders-error' : undefined"
+            @blur="check('senders')"
+            @input="clearIfFixed('senders')"
           >
+          <span
+            v-if="errors.senders"
+            id="site-senders-error"
+            class="field-error"
+            data-test="error-senders"
+          >{{ errors.senders }}</span>
         </label>
         <div class="form-actions wide">
           <button
