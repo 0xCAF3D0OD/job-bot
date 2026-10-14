@@ -1356,3 +1356,15 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
    (retour du 2026-10-14). */
 .journey .tick { align-self: center; }
 .journey li.done .tick { background: var(--ok); border-color: var(--ok); }
+
+/* Aujourd'hui (retour du 2026-10-14) : deux menus déroulants côte à côte, même hauteur, ouverts
+   ou fermés ensemble ; la collecte tient en une ligne près du titre « Candidatures ». */
+.today-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1rem; align-items: stretch; }
+.today-fold { display: flex; flex-direction: column; gap: 0.75rem; }
+.today-fold-head { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.today-fold-head::after { content: "›"; margin-left: auto; color: var(--muted); font-size: 1.2rem; line-height: 1; transition: transform 0.15s; }
+.today-fold.open .today-fold-head::after { transform: rotate(90deg); }
+.today-fold-head h2 { margin: 0; font-size: 1rem; }
+.today-fold-count { min-width: 1.5rem; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 0.8rem; font-weight: 600; text-align: center; }
+.today-fold-more { margin-top: auto; }
+.today-collect { margin-left: auto; margin-right: 1rem; color: var(--muted); font-size: 0.85rem; }
