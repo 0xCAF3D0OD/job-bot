@@ -35,6 +35,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.16.0 | Retour d'entretien : formulaire (a), enseignements et préparation (b) | livrée |
 | 0.17.0 | Assistant : discussion et lecture des données (a), contexte de la page et raccourcis (b) | livrée |
 | 0.18.0 | Remplir le formulaire de l'employeur : PDF et fiche à copier (a), extension du navigateur (b) | livrée |
+| 0.19.0 | Télétravail : repérage, règle et filtre (a), sites d'offres à distance (b) | en cours |
 
 ## Lancer en local
 

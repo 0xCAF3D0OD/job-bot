@@ -228,3 +228,42 @@ async def test_sort_by_day_then_score(api: AsyncClient, runtime: Runtime) -> Non
         "Lundi matin, 60",
         "Lundi midi, sans note",
     ]
+
+
+async def test_remote_filter_and_label(api: AsyncClient, runtime: Runtime) -> None:
+    """« Au moins partiel » et « complet » (docs/26 §4) ; un lieu « Remote » compte comme
+    complet avant même la notation."""
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))
+    rows = [("Partiel", "Lausanne", "hybrid", 2), ("Complet", "Genève", "full", None),
+            ("Sur site", "Vevey", "onsite", None), ("Lieu remote", "Remote, Europe", None, None)]  # fmt: skip
+    async with runtime.sessionmaker.begin() as session:
+        for n, (title, location, remote, days) in enumerate(rows):
+            offer = Offer(
+                fingerprint=f"remote{n}",
+                title=title,
+                location=location,
+                first_seen_at=NOW + timedelta(minutes=n),
+                last_seen_at=NOW,
+                status=OfferStatus.TO_REVIEW,
+            )
+            session.add(offer)
+            await session.flush()
+            if remote:
+                session.add(
+                    Evaluation(
+                        offer_id=offer.id,
+                        filter_passed=True,
+                        criteria_hash="x",
+                        remote=remote,
+                        remote_days=days,
+                    )
+                )
+    assert sorted(await titles(api, remote="partial")) == ["Complet", "Lieu remote", "Partiel"]
+    assert sorted(await titles(api, remote="full")) == ["Complet", "Lieu remote"]
+    body = (await api.get("/api/offers", params={"view": "to_review"})).json()
+    by_title = {o["title"]: o for o in body["items"]}
+    assert (by_title["Partiel"]["remote"], by_title["Partiel"]["remote_days"]) == ("hybrid", 2)
+    assert (
+        by_title["Lieu remote"]["remote"] == "full" and by_title["Sur site"]["remote"] == "onsite"
+    )

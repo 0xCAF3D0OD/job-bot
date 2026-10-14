@@ -60,7 +60,7 @@ describe("CriteriaForm, déjà saisis", () => {
       data: {
         criteria: {
           locations: ["VD", "Genève"],
-          remote_ok: true,
+          remote_policy: "from_switzerland",
           min_rate: 80,
           excluded_types: ["stage"],
           banned_words: [],
@@ -73,7 +73,8 @@ describe("CriteriaForm, déjà saisis", () => {
     const wrapper = mount(CriteriaView);
     await flushPromises();
     const summary = wrapper.find("[data-test=criteria-summary]");
-    expect(summary.text()).toContain("Lieux : VD, Genève, ou télétravail complet");
+    expect(summary.text()).toContain("Lieux : VD, Genève");
+    expect(summary.text()).toContain("Télétravail complet : accepté s'il est ouvert depuis la Suisse");
     expect(summary.text()).toContain("80 % au moins");
     expect(summary.text()).toContain("Exclus : stages");
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);

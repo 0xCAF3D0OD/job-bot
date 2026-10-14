@@ -6,7 +6,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, select, text
 
 from jobbot.api.app import create_app
-from jobbot.core.filter import ContractType, Criteria
+from jobbot.core.filter import ContractType, Criteria, RemotePolicy
 from jobbot.db.models import Evaluation, Offer, OfferStatus
 from jobbot.filtering.service import load_criteria, run_filter, save_criteria
 from jobbot.runtime import Runtime
@@ -92,7 +92,9 @@ async def test_manual_statuses_are_never_touched(fresh: Runtime) -> None:
 
 
 async def test_criteria_round_trip(fresh: Runtime) -> None:
-    criteria = Criteria(locations=("VD", "Genève"), remote_ok=True, min_rate=80)
+    criteria = Criteria(
+        locations=("VD", "Genève"), remote_policy=RemotePolicy.FROM_SWITZERLAND, min_rate=80
+    )
     async with fresh.sessionmaker.begin() as session:
         await save_criteria(session, criteria)
     async with fresh.sessionmaker() as session:
@@ -128,7 +130,7 @@ async def test_api_criteria_save_and_refilter(api: AsyncClient) -> None:
 
     body = {
         "locations": ["VD", " Genève ", "vd"],
-        "remote_ok": True,
+        "remote_policy": "from_switzerland",
         "min_rate": 80,
         "excluded_types": ["stage"],
         "banned_words": ["vente"],
@@ -193,9 +195,24 @@ async def test_api_offer_views(api: AsyncClient, fresh: Runtime) -> None:
 
 async def test_api_offer_filters(api: AsyncClient, fresh: Runtime) -> None:
     async with fresh.engine.begin() as conn:
-        await conn.execute(text("DELETE FROM settings WHERE key = 'offer_filters_visible'"))
+        await conn.execute(
+            text(
+                "DELETE FROM settings WHERE key IN ('offer_filters_visible', 'offer_filters_known')"
+            )
+        )
     default = (await api.get("/api/offer-filters")).json()
-    assert default == {"visible": ["score", "sources", "cantons", "rate", "external"]}
+    assert default == {"visible": ["score", "remote", "sources", "cantons", "rate", "external"]}
+    # Liste choisie avant l'arrivée du télétravail : le nouveau filtre y apparaît.
+    async with fresh.engine.begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO settings (key, value) VALUES "
+                '(\'offer_filters_visible\', \'["score", "cantons", "rate"]\')'
+            )
+        )
+    assert (await api.get("/api/offer-filters")).json() == {
+        "visible": ["score", "remote", "cantons", "rate"]
+    }
     saved = (
         await api.put("/api/offer-filters", json={"visible": ["rate", "score", "rate"]})
     ).json()
@@ -204,7 +221,11 @@ async def test_api_offer_filters(api: AsyncClient, fresh: Runtime) -> None:
     assert (await api.put("/api/offer-filters", json={"visible": []})).json() == {"visible": []}
     assert (await api.put("/api/offer-filters", json={"visible": ["salaire"]})).status_code == 422
     async with fresh.engine.begin() as conn:
-        await conn.execute(text("DELETE FROM settings WHERE key = 'offer_filters_visible'"))
+        await conn.execute(
+            text(
+                "DELETE FROM settings WHERE key IN ('offer_filters_visible', 'offer_filters_known')"
+            )
+        )
 
 
 async def test_api_orp_columns(api: AsyncClient, fresh: Runtime) -> None:

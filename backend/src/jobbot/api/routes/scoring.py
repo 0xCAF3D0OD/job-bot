@@ -9,11 +9,12 @@ from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select
 
 from jobbot.db.models import Evaluation, JobRun, JobRunStatus, LlmBatch, Offer
-from jobbot.llm.scoring import PROMPT_VERSION, profile_hash
+from jobbot.llm.scoring import COMPATIBLE_VERSIONS, profile_hash
 from jobbot.runtime import Runtime
+from jobbot.scoring import remote
 from jobbot.scoring.service import TO_SCORE, active_profile, budget_state
 from jobbot.worker.queue import enqueue
-from jobbot.worker.tasks.score import RESCORE_JOB, SCORE_JOB
+from jobbot.worker.tasks.score import REMOTE_JOB, RESCORE_JOB, SCORE_JOB
 
 router = APIRouter(prefix="/api", tags=["scoring"])
 
@@ -64,7 +65,7 @@ async def get_scoring_status(request: Request) -> ScoringStatus:
                     or_(
                         Evaluation.id.is_(None),
                         and_(Evaluation.scored_at.is_(None), Evaluation.score_error.is_(None)),
-                        Evaluation.prompt_version != PROMPT_VERSION,
+                        Evaluation.prompt_version.not_in(COMPATIBLE_VERSIONS),
                     )
                 )
             )
@@ -108,6 +109,36 @@ async def get_scoring_status(request: Request) -> ScoringStatus:
         pending_batches=pending,
         last_error=latest.error if latest and latest.status == JobRunStatus.FAILURE else None,
     )
+
+
+class RemoteStatus(BaseModel):
+    """Offres à examiner déjà notées dont le télétravail n'est pas relevé (docs/26 §2)."""
+
+    pending: int
+    estimate_usd: Decimal
+
+
+@router.get("/scoring/remote", operation_id="getRemoteStatus")
+async def get_remote_status(request: Request) -> RemoteStatus:
+    async with _runtime(request).sessionmaker() as session:
+        pending = await remote.pending_count(session)
+    return RemoteStatus(
+        pending=pending, estimate_usd=(Decimal("0.001") * pending).quantize(Decimal("0.01"))
+    )
+
+
+@router.post(
+    "/scoring/remote",
+    operation_id="startRemoteRead",
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={409: {"description": "IA non configurée"}},
+)
+async def start_remote_read(request: Request) -> RescoreResponse:
+    runtime = _runtime(request)
+    if not runtime.settings.llm_configured:
+        raise HTTPException(status.HTTP_409_CONFLICT, "IA non configurée")
+    queued = await enqueue(runtime.settings, REMOTE_JOB)
+    return RescoreResponse(result="queued" if queued else "already_queued")
 
 
 @router.post(

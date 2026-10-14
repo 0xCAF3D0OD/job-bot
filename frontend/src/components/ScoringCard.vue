@@ -5,6 +5,8 @@ import { api, type ScoringStatus } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 
 const status = ref<ScoringStatus | null>(null);
+// Offres déjà notées dont le télétravail n'est pas relevé (docs/26 §2).
+const remote = ref<{ pending: number; estimate_usd: string } | null>(null);
 const message = ref("");
 const busy = ref(false);
 
@@ -18,6 +20,8 @@ async function load(): Promise<void> {
   try {
     const { data } = await api.GET("/api/scoring");
     status.value = data ?? null;
+    const pending = await api.GET("/api/scoring/remote");
+    remote.value = pending.data ?? null;
   } catch {
     status.value = null; // API injoignable : les voyants de la page le signalent déjà
   }
@@ -33,6 +37,21 @@ async function rescore(): Promise<void> {
         : data?.result === "already_queued"
           ? "Une renotation attend déjà son tour."
           : "Renotation lancée, en lot : les notes arrivent d'ici une heure environ.";
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function readRemote(): Promise<void> {
+  busy.value = true;
+  try {
+    const { data, response } = await api.POST("/api/scoring/remote");
+    message.value =
+      response.status === 409
+        ? "IA non configurée."
+        : data?.result === "already_queued"
+          ? "Une relecture attend déjà son tour."
+          : "Relecture lancée : le télétravail apparaît sur les offres d'ici quelques minutes.";
   } finally {
     busy.value = false;
   }
@@ -112,6 +131,21 @@ defineExpose({ load });
       <div><dt>Lots en cours</dt><dd>{{ status.pending_batches }}</dd></div>
       <div><dt>Échecs</dt><dd>{{ status.failed }}</dd></div>
     </dl>
+    <p
+      v-if="status.configured && remote?.pending"
+      class="remote-read"
+      data-test="remote-read"
+    >
+      <span>Télétravail pas encore relevé sur {{ remote.pending }} offre(s) à examiner, notées avant.</span>
+      <button
+        type="button"
+        class="link"
+        :disabled="busy"
+        @click="readRemote"
+      >
+        Relire ({{ Number(remote.estimate_usd) >= 0.01 ? `environ ${remote.estimate_usd.replace(".", ",")} $` : "moins de 0,01 $" }})
+      </button>
+    </p>
     <p
       v-if="message"
       role="status"

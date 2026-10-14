@@ -1023,6 +1023,26 @@
               "default": false,
               "title": "External Only"
             }
+          },
+          {
+            "name": "remote",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "partial",
+                    "full"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Remote"
+            }
           }
         ],
         "responses": {
@@ -1904,6 +1924,49 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/scoring/remote": {
+      "get": {
+        "tags": [
+          "scoring"
+        ],
+        "summary": "Get Remote Status",
+        "operationId": "getRemoteStatus",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoteStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "scoring"
+        ],
+        "summary": "Start Remote Read",
+        "operationId": "startRemoteRead",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RescoreResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA non configurée"
           }
         }
       }
@@ -6715,10 +6778,9 @@
             "maxItems": 100,
             "title": "Locations"
           },
-          "remote_ok": {
-            "type": "boolean",
-            "title": "Remote Ok",
-            "default": false
+          "remote_policy": {
+            "$ref": "#/components/schemas/RemotePolicy",
+            "default": "refuse"
           },
           "min_rate": {
             "anyOf": [
@@ -10039,6 +10101,7 @@
               "type": "string",
               "enum": [
                 "score",
+                "remote",
                 "sources",
                 "cantons",
                 "rate",
@@ -10491,6 +10554,56 @@
             "type": "array",
             "title": "Keywords Offers",
             "default": []
+          },
+          "remote": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "onsite",
+                  "hybrid",
+                  "full",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote"
+          },
+          "remote_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote Days"
+          },
+          "remote_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote Region"
+          },
+          "remote_from_switzerland": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote From Switzerland"
           }
         },
         "type": "object",
@@ -11172,6 +11285,36 @@
         ],
         "title": "RegistryCandidate"
       },
+      "RemotePolicy": {
+        "type": "string",
+        "enum": [
+          "refuse",
+          "from_switzerland",
+          "anywhere"
+        ],
+        "title": "RemotePolicy",
+        "description": "Télétravail complet (docs/26 §3) : refusé hors de tes lieux, accepté s'il est ouvert\ndepuis la Suisse (un poste réservé à d'autres pays est écarté), ou accepté partout."
+      },
+      "RemoteStatus": {
+        "properties": {
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
+          "estimate_usd": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Estimate Usd"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pending",
+          "estimate_usd"
+        ],
+        "title": "RemoteStatus",
+        "description": "Offres à examiner déjà notées dont le télétravail n'est pas relevé (docs/26 §2)."
+      },
       "RereadOut": {
         "properties": {
           "examined": {
@@ -11827,6 +11970,56 @@
             "type": "array",
             "title": "Keywords Offers",
             "default": []
+          },
+          "remote": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "onsite",
+                  "hybrid",
+                  "full",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote"
+          },
+          "remote_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote Days"
+          },
+          "remote_region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote Region"
+          },
+          "remote_from_switzerland": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote From Switzerland"
           },
           "is_first": {
             "type": "boolean",

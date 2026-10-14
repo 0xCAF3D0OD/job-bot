@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
-import { expiredText, formatDate, rateText, scoreLevel, sourceLabel } from "../format";
+import { expiredText, formatDate, rateText, remoteText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import { useAssistant } from "../composables/useAssistant";
@@ -586,6 +586,12 @@ watch(
       <li>
         <AppIcon name="check" /><strong>Taux.</strong>
         <span>{{ rateText(offer.rate_min, offer.rate_max) || "non indiqué" }}</span>
+      </li>
+      <li v-if="remoteText(offer)">
+        <AppIcon name="check" /><strong>Télétravail.</strong>
+        <span>
+          {{ remoteText(offer) }}{{ offer.remote_from_switzerland === false ? " : pas ouvert depuis la Suisse" : "" }}
+        </span>
       </li>
       <li v-if="offer.employment_type">
         <AppIcon name="check" /><strong>Type.</strong>

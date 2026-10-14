@@ -9,12 +9,15 @@ import json
 from dataclasses import dataclass
 from html import escape
 from importlib import resources
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v2"
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v2.md").read_text("utf-8")
+PROMPT_VERSION = "score-v3"
+# score-v3 n'ajoute que le télétravail (docs/26) : une note score-v2 reste valable, elle n'est
+# pas refaite (les offres à examiner peuvent être relues à part, sur demande).
+COMPATIBLE_VERSIONS = ("score-v2", "score-v3")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v3.md").read_text("utf-8")
 KEYWORD_LENGTH = 25
 MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
@@ -42,6 +45,11 @@ class ScoreOutput(BaseModel):
     keywords_role: list[str] = Field(default_factory=list)
     keywords_asks: list[AskKeyword] = Field(default_factory=list)
     keywords_offers: list[str] = Field(default_factory=list)
+    # Télétravail (score-v3, docs/26 §2) ; absent d'une réponse score-v2 (lot en cours).
+    remote: Literal["onsite", "hybrid", "full", "unknown"] | None = None
+    remote_days: int | None = Field(default=None, ge=1, le=5)
+    remote_region: str | None = Field(default=None, max_length=60)
+    remote_from_switzerland: bool | None = None
 
 
 # Schéma envoyé à l'API (sorties structurées) : seulement des types simples, les bornes
@@ -78,6 +86,10 @@ OUTPUT_SCHEMA: dict[str, Any] = {
             },
         },
         "keywords_offers": {"type": "array", "items": {"type": "string"}},
+        "remote": {"type": "string", "enum": ["onsite", "hybrid", "full", "unknown"]},
+        "remote_days": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
+        "remote_region": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "remote_from_switzerland": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
     },
     "required": [
         "summary_role",
@@ -89,6 +101,10 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "keywords_role",
         "keywords_asks",
         "keywords_offers",
+        "remote",
+        "remote_days",
+        "remote_region",
+        "remote_from_switzerland",
     ],
     "additionalProperties": False,
 }
@@ -193,6 +209,29 @@ def _asks(values: list[AskKeyword]) -> list[AskKeyword]:
     return list(seen.values())[:5]
 
 
+def remote_fields(output: "ScoreOutput | RemoteOutput") -> dict[str, Any]:
+    """Télétravail cohérent : jours seulement pour un poste partiel, région et accès depuis la
+    Suisse seulement pour un poste entièrement à distance."""
+    remote = output.remote
+    full = remote == "full"
+    region = " ".join((output.remote_region or "").split())[:60] if full else ""
+    return {
+        "remote": remote,
+        "remote_days": output.remote_days if remote == "hybrid" else None,
+        "remote_region": region or None,
+        "remote_from_switzerland": output.remote_from_switzerland if full else None,
+    }
+
+
+class RemoteOutput(BaseModel):
+    """Relecture du seul télétravail d'une offre déjà notée (remote-v1, docs/26 §2)."""
+
+    remote: Literal["onsite", "hybrid", "full", "unknown"]
+    remote_days: int | None = Field(default=None, ge=1, le=5)
+    remote_region: str | None = Field(default=None, max_length=60)
+    remote_from_switzerland: bool | None = None
+
+
 def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
     """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif."""
     try:
@@ -201,6 +240,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
         raise InvalidScore(f"réponse non conforme : {type(exc).__name__}") from exc
     output = output.model_copy(
         update={
+            **remote_fields(output),
             "keywords_role": _keywords(output.keywords_role, 3),
             "keywords_asks": _asks(output.keywords_asks),
             "keywords_offers": _keywords(output.keywords_offers, 4),

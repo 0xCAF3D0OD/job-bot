@@ -28,6 +28,7 @@ from jobbot.db.models import (
 from jobbot.llm.client import BatchItem, RawResult, Refused, ScoreClient, client_factory
 from jobbot.llm.pricing import cost_usd
 from jobbot.llm.scoring import (
+    COMPATIBLE_VERSIONS,
     PROMPT_VERSION,
     InvalidScore,
     OfferData,
@@ -143,7 +144,7 @@ async def candidates(
     needs = [
         Evaluation.id.is_(None),
         and_(Evaluation.scored_at.is_(None), Evaluation.score_error.is_(None)),
-        Evaluation.prompt_version != PROMPT_VERSION,
+        Evaluation.prompt_version.not_in(COMPATIBLE_VERSIONS),
         and_(Offer.description.is_not(None), Evaluation.summary_partial.is_(True)),
     ]
     # Consignes changées (score-v2 : mots-clés) : les offres mises de côté ou en préparation
@@ -151,7 +152,7 @@ async def candidates(
     kept_aside = and_(
         Offer.status.in_(KEPT_ASIDE),
         Evaluation.scored_at.is_not(None),
-        Evaluation.prompt_version != PROMPT_VERSION,
+        Evaluation.prompt_version.not_in(COMPATIBLE_VERSIONS),
     )
     if include_stale_profile:
         needs.append(Evaluation.profile_hash != current_hash)
@@ -202,6 +203,10 @@ async def _store(
             "keywords_role": output.keywords_role,
             "keywords_asks": [k.model_dump() for k in output.keywords_asks],
             "keywords_offers": output.keywords_offers,
+            "remote": output.remote,
+            "remote_days": output.remote_days,
+            "remote_region": output.remote_region,
+            "remote_from_switzerland": output.remote_from_switzerland,
             "scored_at": now,
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre

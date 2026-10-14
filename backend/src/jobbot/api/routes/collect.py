@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import ColumnElement, Time, and_, cast, func, or_, select
 
+from jobbot.core.filter import remote_location
 from jobbot.core.normalize import normalize_text
 from jobbot.core.orp import LOCAL_TZ
 from jobbot.db.models import (
@@ -123,6 +124,11 @@ class OfferOut(BaseModel):
     keywords_role: list[str] = []
     keywords_asks: list["AskKeywordOut"] = []
     keywords_offers: list[str] = []
+    # Télétravail (docs/26 §2) : relevé par l'IA à la notation, ou annoncé par le lieu.
+    remote: Literal["onsite", "hybrid", "full", "unknown"] | None = None
+    remote_days: int | None = None
+    remote_region: str | None = None
+    remote_from_switzerland: bool | None = None
 
 
 class AskKeywordOut(BaseModel):
@@ -225,8 +231,23 @@ def _offer_out(
     evaluation: Evaluation | None = None,
     current_hash: str | None = None,
 ) -> OfferOut:
+    remote: dict[str, object] = {}
+    if evaluation is not None and evaluation.remote:
+        remote = {
+            "remote": evaluation.remote,
+            "remote_days": evaluation.remote_days,
+            "remote_region": evaluation.remote_region,
+            "remote_from_switzerland": evaluation.remote_from_switzerland,
+        }
+    elif remote_location(offer.location):
+        remote = {"remote": "full"}
     return OfferOut.model_validate(
-        {**_columns(offer), "links": links, **_evaluation_fields(evaluation, current_hash)}
+        {
+            **_columns(offer),
+            "links": links,
+            **_evaluation_fields(evaluation, current_hash),
+            **remote,
+        }
     )
 
 
@@ -321,15 +342,32 @@ def _escape_like(term: str) -> str:
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+REMOTE_WORDS = ("remote", "home office", "homeoffice", "teletravail", "télétravail")
+
+
+def _remote_condition(remote: str | None) -> ColumnElement[bool] | None:
+    """`partial` : au moins partiel (partiel ou complet) ; `full` : entièrement à distance.
+    Un lieu « Remote » compte comme complet, même avant la notation."""
+    if remote is None:
+        return None
+    wanted = ("hybrid", "full") if remote == "partial" else ("full",)
+    by_ai = Offer.id.in_(select(Evaluation.offer_id).where(Evaluation.remote.in_(wanted)))
+    by_location = or_(*(Offer.location.ilike(f"%{word}%") for word in REMOTE_WORDS))
+    return or_(by_ai, by_location)
+
+
 def _filters(
     q: str | None,
     sources: list[str],
     cantons: list[str],
     min_rate: int | None,
     external_only: bool,
+    remote: str | None = None,
 ) -> list[ColumnElement[bool]]:
     """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7)."""
     conditions: list[ColumnElement[bool]] = []
+    if (remote_filter := _remote_condition(remote)) is not None:
+        conditions.append(remote_filter)
     if q:
         searchable = _searchable()
         for term in normalize_text(q).split()[:8]:
@@ -380,6 +418,7 @@ async def list_offers(
     cantons: Annotated[list[str], Query(max_length=26)] = [],  # noqa: B006
     min_rate: Annotated[int | None, Query(ge=1, le=100)] = None,
     external_only: bool = False,
+    remote: Literal["partial", "full"] | None = None,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
@@ -412,14 +451,14 @@ async def list_offers(
         "score": (score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
         "activity": (activity.desc(), Offer.id.desc()),
     }.get(sort, (Offer.first_seen_at.desc(), Offer.id.desc()))
-    conditions = _filters(q, sources, cantons, min_rate, external_only)
+    conditions = _filters(q, sources, cantons, min_rate, external_only, remote)
     if min_score is not None:
         conditions.append(score >= min_score)
     view_condition = _view_condition(view)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
-    without_sources = _filters(q, [], cantons, min_rate, external_only)
-    without_cantons = _filters(q, sources, [], min_rate, external_only)
+    without_sources = _filters(q, [], cantons, min_rate, external_only, remote)
+    without_cantons = _filters(q, sources, [], min_rate, external_only, remote)
     if min_score is not None:
         without_sources.append(score >= min_score)
         without_cantons.append(score >= min_score)

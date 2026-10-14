@@ -7,7 +7,15 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.core.filter import ContractType, Criteria, Language, OfferFacts, canton_of, evaluate
+from jobbot.core.filter import (
+    ContractType,
+    Criteria,
+    Language,
+    OfferFacts,
+    RemotePolicy,
+    canton_of,
+    evaluate,
+)
 from jobbot.core.normalize import normalize_location
 from jobbot.db.models import Criterion, Evaluation, Offer, OfferStatus
 from jobbot.log import get_logger
@@ -24,7 +32,7 @@ async def load_criteria(session: AsyncSession) -> Criteria:
     rows = {c.kind: c.value for c in await session.scalars(select(Criterion))}
     return Criteria(
         locations=tuple(rows.get("locations", [])),
-        remote_ok=bool(rows.get("remote_ok", False)),
+        remote_policy=RemotePolicy(rows.get("remote_policy") or RemotePolicy.REFUSE),
         min_rate=rows.get("min_rate"),
         excluded_types=tuple(ContractType(v) for v in rows.get("excluded_types", [])),
         banned_words=tuple(rows.get("banned_words", [])),
@@ -35,7 +43,7 @@ async def load_criteria(session: AsyncSession) -> Criteria:
 async def save_criteria(session: AsyncSession, criteria: Criteria) -> None:
     values: dict[str, Any] = {
         "locations": list(criteria.locations),
-        "remote_ok": criteria.remote_ok,
+        "remote_policy": criteria.remote_policy.value,
         "min_rate": criteria.min_rate,
         "excluded_types": [t.value for t in criteria.excluded_types],
         "banned_words": list(criteria.banned_words),
@@ -73,6 +81,20 @@ async def run_filter(runtime: Runtime) -> FilterResult:
         criteria = await load_criteria(session)
         digest = criteria.digest()
         all_offers = list(await session.scalars(select(Offer)))
+        # Télétravail relevé à la notation : la règle « ouvert depuis la Suisse » en dépend.
+        remote = {
+            row.offer_id: row
+            for row in (
+                await session.execute(
+                    select(
+                        Evaluation.offer_id,
+                        Evaluation.remote,
+                        Evaluation.remote_region,
+                        Evaluation.remote_from_switzerland,
+                    )
+                )
+            ).all()
+        }
         city_cantons = _city_cantons(all_offers)
         for offer in all_offers:
             # Canton tenu à jour pour toutes les offres (filtre par canton de la page Offres).
@@ -95,6 +117,11 @@ async def run_filter(runtime: Runtime) -> FilterResult:
                     ),
                     rate_min=offer.rate_min,
                     rate_max=offer.rate_max,
+                    remote=getattr(remote.get(offer.id), "remote", None),
+                    remote_region=getattr(remote.get(offer.id), "remote_region", None),
+                    remote_from_switzerland=getattr(
+                        remote.get(offer.id), "remote_from_switzerland", None
+                    ),
                 ),
                 criteria,
                 city_cantons,

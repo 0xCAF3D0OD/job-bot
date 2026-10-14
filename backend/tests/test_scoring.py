@@ -13,6 +13,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select, text, update
 
 from jobbot.api.app import create_app
+from jobbot.core.filter import Criteria, RemotePolicy
 from jobbot.db.models import (
     Evaluation,
     LlmBatch,
@@ -22,18 +23,21 @@ from jobbot.db.models import (
     ProfileChunk,
     Setting,
 )
+from jobbot.filtering.service import save_criteria
 from jobbot.llm.client import BatchItem, RawResult, Refused
 from jobbot.llm.pricing import Usage, cost_usd
 from jobbot.llm.scoring import (
+    OUTPUT_SCHEMA,
     InvalidScore,
     OfferData,
     ProfileChunkData,
     offer_message,
     parse_output,
+    profile_hash,
     request_params,
 )
 from jobbot.runtime import Runtime
-from jobbot.scoring import service
+from jobbot.scoring import remote, service
 from jobbot.settings import Settings
 
 from .conftest import make_settings
@@ -228,7 +232,7 @@ async def test_direct_scoring_stores_note_and_cost(ai: Runtime, fake: FakeClient
     stored = await evaluation(ai, first)
     assert stored is not None and stored.score == 78 and stored.summary_partial is True
     assert stored.strengths == [{"text": "Linux solide", "chunk_ids": [1]}]
-    assert stored.prompt_version == "score-v2" and stored.model == "claude-opus-5"
+    assert stored.prompt_version == "score-v3" and stored.model == "claude-opus-5"
     assert await evaluation(ai, filtered) is None
     async with ai.sessionmaker() as session:
         calls = await session.scalar(select(func.count()).select_from(LlmCall))
@@ -436,7 +440,7 @@ async def test_new_prompt_rescores_offers_kept_aside(ai: Runtime, fake: FakeClie
     await service.run_scoring(ai)
     async with ai.sessionmaker() as session:
         evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == later))
-        assert evaluation is not None and evaluation.prompt_version == "score-v2"
+        assert evaluation is not None and evaluation.prompt_version == "score-v3"
         assert evaluation.keywords_asks == [
             {"text": "5 ans Linux", "covered": True},
             {"text": "Ansible", "covered": False},
@@ -470,6 +474,121 @@ async def test_old_prompt_batch_is_rescored_and_canceled_items_are_retried(
         rows = {e.offer_id: e for e in await session.scalars(select(Evaluation))}
     # La note du lot est gardée puis refaite avec les nouvelles consignes ; l'offre du lot
     # annulé est notée comme une nouvelle, sans erreur.
-    assert rows[old].prompt_version == "score-v2" and rows[old].score_error is None
+    assert rows[old].prompt_version == "score-v3" and rows[old].score_error is None
     assert rows[canceled].score_error is None and rows[canceled].scored_at is not None
     assert len(fake.calls) - calls_before == 2
+
+
+# --- Télétravail (docs/26) --------------------------------------------------------------
+
+
+def test_remote_fields_are_kept_consistent() -> None:
+    data = json.loads(answer())
+    data |= {
+        "remote": "hybrid",
+        "remote_days": 2,
+        "remote_region": "Europe",  # sans objet pour un poste partiel : retiré
+        "remote_from_switzerland": True,
+    }
+    output = parse_output(json.dumps(data), CHUNKS)
+    assert (output.remote, output.remote_days, output.remote_region) == ("hybrid", 2, None)
+    assert output.remote_from_switzerland is None
+    data |= {
+        "remote": "full",
+        "remote_days": 3,
+        "remote_region": " US   only ",
+        "remote_from_switzerland": False,
+    }
+    output = parse_output(json.dumps(data), CHUNKS)
+    assert (output.remote_days, output.remote_region, output.remote_from_switzerland) == (
+        None,
+        "US only",
+        False,
+    )
+    # Réponse score-v2 (lot envoyé avant la mise à jour) : pas de télétravail, pas d'erreur.
+    assert parse_output(answer(), CHUNKS).remote is None
+    assert "remote_from_switzerland" in OUTPUT_SCHEMA["required"]
+
+
+async def test_score_v2_notes_are_not_redone(ai: Runtime, fake: FakeClient) -> None:
+    """score-v3 n'ajoute que le télétravail : une note score-v2 reste, rien n'est renoté."""
+    offer = await add_offer(ai, 1)
+    async with ai.sessionmaker.begin() as session:
+        session.add(
+            Evaluation(
+                offer_id=offer,
+                filter_passed=True,
+                filter_reasons=[],
+                criteria_hash="x",
+                score=60,
+                scored_at=datetime.now(UTC),
+                prompt_version="score-v2",
+                profile_hash=profile_hash(CHUNKS),
+            )
+        )
+    async with ai.sessionmaker() as session:
+        assert (
+            await service.candidates(session, profile_hash(CHUNKS), include_stale_profile=False)
+            == []
+        )
+
+
+async def test_remote_read_fills_scored_offers_and_refilters(ai: Runtime, fake: FakeClient) -> None:
+    us_only = await add_offer(ai, 1, location="Remote")
+    europe = await add_offer(ai, 2)
+    later = await add_offer(ai, 3, status=OfferStatus.LATER)
+    async with ai.sessionmaker.begin() as session:
+        for offer_id in (us_only, europe, later):
+            session.add(
+                Evaluation(
+                    offer_id=offer_id,
+                    filter_passed=True,
+                    filter_reasons=[],
+                    criteria_hash="x",
+                    score=70,
+                    scored_at=datetime.now(UTC),
+                    prompt_version="score-v2",
+                    profile_hash=profile_hash(CHUNKS),
+                )
+            )
+        await save_criteria(session, Criteria(remote_policy=RemotePolicy.FROM_SWITZERLAND))
+    async with ai.sessionmaker() as session:
+        assert await remote.pending_count(session) == 2  # « plus tard » : pas relue
+
+    answers = {
+        us_only: {
+            "remote": "full",
+            "remote_days": None,
+            "remote_region": "US only",
+            "remote_from_switzerland": False,
+        },
+        europe: {
+            "remote": "hybrid",
+            "remote_days": 2,
+            "remote_region": None,
+            "remote_from_switzerland": None,
+        },
+    }
+    calls: list[dict[str, Any]] = []
+
+    async def score(params: dict[str, Any]) -> RawResult:
+        calls.append(params)
+        offer_id = us_only if "Offre 1" in params["messages"][0]["content"] else europe
+        return RawResult(
+            json.dumps(answers[offer_id]), remote.MODEL, Usage(500, 0, 0, 40), "end_turn"
+        )
+
+    fake.score = score  # type: ignore[method-assign]
+    result = await remote.run_remote(ai)
+    assert (result.read, result.failed) == (2, 0)
+    assert all(c["model"] == "claude-haiku-4-5" for c in calls)
+    first, second = await evaluation(ai, us_only), await evaluation(ai, europe)
+    assert first is not None and first.remote_region == "US only"
+    assert second is not None and (second.remote, second.remote_days) == ("hybrid", 2)
+    async with ai.sessionmaker() as session:
+        status = await session.scalar(select(Offer.status).where(Offer.id == us_only))
+        purposes = list(await session.scalars(select(LlmCall.purpose)))
+        assert await remote.pending_count(session) == 0
+    assert status == OfferStatus.FILTERED_OUT and purposes == ["remote", "remote"]
+    async with ai.sessionmaker.begin() as session:
+        await save_criteria(session, Criteria())

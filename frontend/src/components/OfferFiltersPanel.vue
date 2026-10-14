@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 
 import type { FilterKey, OfferFacets, Source } from "../api/client";
-import type { OfferFilters, Sort, View } from "../composables/useOfferFilters";
+import type { OfferFilters, Remote, Sort, View } from "../composables/useOfferFilters";
 import { activeCount, DEFAULT_FILTERS } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
 
@@ -21,6 +21,7 @@ const emit = defineEmits<{
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "score", label: "Note minimale" },
+  { key: "remote", label: "Télétravail" },
   { key: "sources", label: "Sites" },
   { key: "cantons", label: "Cantons" },
   { key: "rate", label: "Taux minimum" },
@@ -40,6 +41,11 @@ const VIEWS: { value: View; label: string }[] = [
   { value: "filtered_out", label: "Écartées" },
   { value: "expired", label: "Expirées" },
   { value: "all", label: "Toutes" },
+];
+const REMOTE: { value: Remote | null; label: string }[] = [
+  { value: null, label: "Tous" },
+  { value: "partial", label: "Au moins partiel" },
+  { value: "full", label: "Complet" },
 ];
 const SORTS: { value: Sort; label: string }[] = [
   { value: "day", label: "Par jour" },
@@ -211,6 +217,30 @@ function onScore(event: Event): void {
         v-if="filters.minScore"
         class="hint"
       >Les offres pas encore notées sont masquées.</span>
+    </div>
+
+    <div
+      v-if="visible.includes('remote')"
+      class="filter-group"
+    >
+      <span class="filter-title">Télétravail</span>
+      <div
+        class="segmented"
+        role="radiogroup"
+        aria-label="Télétravail"
+      >
+        <button
+          v-for="entry in REMOTE"
+          :key="String(entry.value)"
+          type="button"
+          role="radio"
+          :aria-checked="filters.remote === entry.value"
+          :data-test="`remote-${entry.value ?? 'all'}`"
+          @click="emit('update', { remote: entry.value })"
+        >
+          {{ entry.label }}
+        </button>
+      </div>
     </div>
 
     <div

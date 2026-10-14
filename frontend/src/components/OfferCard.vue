@@ -2,7 +2,7 @@
 import { computed } from "vue";
 
 import type { Offer } from "../api/client";
-import { formatDate, rateText, scoreLevel, sourceLabel } from "../format";
+import { formatDate, rateText, remoteText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 
@@ -114,6 +114,11 @@ const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.so
       <span v-if="rateText(offer.rate_min, offer.rate_max)">
         <AppIcon name="rate" />{{ rateText(offer.rate_min, offer.rate_max) }}
       </span>
+      <span
+        v-if="remoteText(offer)"
+        :class="['meta-remote', { excluded: offer.remote_from_switzerland === false }]"
+        data-test="remote"
+      >{{ remoteText(offer) }}</span>
       <span><AppIcon name="globe" />{{ sites }}</span>
       <span
         v-if="offer.apply_kind === 'external'"

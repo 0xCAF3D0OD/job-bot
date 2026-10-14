@@ -114,3 +114,14 @@ export function since(iso: string): string {
   const days = Math.round(hours / 24);
   return days === 1 ? "hier" : `il y a ${days} jours`;
 }
+
+// Télétravail d'une offre (docs/26 §2) : « Télétravail 2 j », « 100 % télétravail · Europe ».
+export function remoteText(offer: {
+  remote?: string | null;
+  remote_days?: number | null;
+  remote_region?: string | null;
+}): string | null {
+  if (offer.remote === "hybrid") return offer.remote_days ? `Télétravail ${offer.remote_days} j` : "Télétravail partiel";
+  if (offer.remote === "full") return offer.remote_region ? `100 % télétravail · ${offer.remote_region}` : "100 % télétravail";
+  return null;
+}
