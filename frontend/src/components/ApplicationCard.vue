@@ -4,6 +4,8 @@ import { computed, ref } from "vue";
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { useAssistant } from "../composables/useAssistant";
 import { applicationStatusLabel } from "../format";
+import { contactName, toFollowUp } from "../contactLabels";
+import ContactsPanel from "./ContactsPanel.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 
 // Carte d'une candidature (docs/22 §4) : statut, ce qui manque pour l'ORP, documents,
@@ -17,6 +19,8 @@ const emit = defineEmits<{
   interview: [application: Application, interview: Interview | null];
   // Fiche de préparation avant un entretien prévu (docs/23 §3).
   prepare: [application: Application];
+  // Contact ajouté, répondu ou retiré (docs/31 §4) : la liste se recharge.
+  changed: [];
 }>();
 
 const upcoming = computed(() => {
@@ -44,6 +48,10 @@ const summary = computed(() => {
 });
 
 const jobRoom = ref(false);
+// Contacts dans l'entreprise (docs/31 §4) : repliés sous la carte.
+const contactsOpen = ref(false);
+const contacts = computed(() => props.application.contacts ?? []);
+const contactsDue = computed(() => contacts.value.filter((c) => toFollowUp(c)));
 const menuOpen = ref(false);
 const copied = ref("");
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
@@ -274,7 +282,30 @@ const onStatus = (event: Event): void =>
       >
         {{ jobRoom ? "Fermer Job-Room" : "Copier pour Job-Room" }}
       </button>
+      <button
+        type="button"
+        class="link"
+        :aria-expanded="contactsOpen"
+        data-test="card-contacts"
+        @click="contactsOpen = !contactsOpen"
+      >
+        {{ contactsOpen ? "Fermer les contacts" : contacts.length ? `Contacts (${contacts.length})` : "Contacts" }}
+      </button>
     </p>
+    <p
+      v-if="contactsDue.length && !contactsOpen"
+      class="card-facts contact-due-line"
+      data-test="card-contact-due"
+    >
+      Sans réponse depuis 7 jours : relancer {{ contactsDue.map(contactName).join(", ") }} ?
+    </p>
+    <ContactsPanel
+      v-if="contactsOpen"
+      bare
+      :application-id="application.id"
+      :company="application.company"
+      @changed="emit('changed')"
+    />
 
     <dl
       v-if="jobRoom && orpRow"

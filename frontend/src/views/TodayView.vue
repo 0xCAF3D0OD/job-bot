@@ -241,6 +241,16 @@ onMounted(() => void load());
         </RouterLink>
       </p>
       <p
+        v-if="today.contacts_to_follow_up"
+        class="notice"
+        data-test="contacts-to-follow-up"
+      >
+        {{ today.contacts_to_follow_up }} prise(s) de contact sans réponse depuis 7 jours.
+        <RouterLink to="/candidatures/suivi">
+          Relancer
+        </RouterLink>
+      </p>
+      <p
         v-if="today.alerts_waiting"
         class="notice"
         data-test="alerts-waiting"

@@ -1026,6 +1026,21 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .company-section > summary { cursor: pointer; color: var(--accent); font-weight: 500; font-size: 0.92rem; }
 .company-section > .address-line, .company-section > .employer-line { margin-top: 0.6rem; }
 
+/* Contacts dans l'entreprise (docs/31) */
+.contacts-section > .hint { margin-top: 0.6rem; }
+.contacts-searches { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; margin: 0.4rem 0 0.6rem; }
+.contacts-list { list-style: none; margin: 0.4rem 0 0.6rem; padding: 0; display: grid; gap: 0.6rem; }
+.contacts-list > li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.8rem; font-size: 0.9rem; }
+.contacts-list .muted { margin-left: 0.4rem; font-size: 0.85rem; }
+.contact-state { font-size: 0.85rem; }
+.contact-state.answered { color: var(--ok-text); }
+.contact-state.due, .contact-due-line { color: var(--warn-text); }
+.contact-actions { display: inline-flex; gap: 0.9rem; margin-left: auto; }
+.contact-form { display: flex; flex-wrap: wrap; align-items: end; gap: 0.6rem 0.9rem; width: 100%; margin: 0.4rem 0 0.6rem; }
+.contact-form label { display: grid; gap: 0.2rem; font-size: 0.85rem; }
+.contact-form > div { display: inline-flex; align-items: center; gap: 0.8rem; }
+.application-card .contacts-section { border-top: 1px solid var(--border); padding-top: 0.4rem; }
+
 /* Preuves ORP : une action à la fois (docs/21 §6) */
 .orp-next { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0.8rem 0; }
 .orp-next-links { display: inline-flex; gap: 1rem; margin-left: auto; }

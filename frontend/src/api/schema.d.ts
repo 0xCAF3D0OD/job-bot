@@ -308,6 +308,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Offer Contacts */
+        get: operations["getOfferContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{application_id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Application Contacts */
+        get: operations["getApplicationContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Contact */
+        post: operations["addContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Contact */
+        put: operations["updateContact"];
+        post?: never;
+        /** Delete Contact */
+        delete: operations["deleteContact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -2096,6 +2165,11 @@ export interface components {
             remote_full: boolean;
             /** Remote Region */
             remote_region?: string | null;
+            /**
+             * Contacts
+             * @default []
+             */
+            contacts: components["schemas"]["ContactOut"][];
         };
         /** ApplicationPrefill */
         ApplicationPrefill: {
@@ -2363,6 +2437,77 @@ export interface components {
             last_failure_at: string | null;
             /** Last Error */
             last_error: string | null;
+        };
+        /** ContactIn */
+        ContactIn: {
+            /** Offer Id */
+            offer_id?: number | null;
+            /** Application Id */
+            application_id?: number | null;
+            /** Name */
+            name?: string | null;
+            /**
+             * Role
+             * @default recruiter
+             * @enum {string}
+             */
+            role: "recruiter" | "manager" | "team" | "alumni" | "other";
+            /**
+             * Channel
+             * @default linkedin_invite
+             * @enum {string}
+             */
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            /**
+             * Contacted On
+             * Format: date
+             */
+            contacted_on: string;
+            /** Answered On */
+            answered_on?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** ContactOut */
+        ContactOut: {
+            /** Id */
+            id: number;
+            /** Offer Id */
+            offer_id: number | null;
+            /** Application Id */
+            application_id: number | null;
+            /** Name */
+            name: string | null;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "recruiter" | "manager" | "team" | "alumni" | "other";
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            /**
+             * Contacted On
+             * Format: date
+             */
+            contacted_on: string;
+            /** Answered On */
+            answered_on: string | null;
+            /** Note */
+            note: string | null;
+        };
+        /** ContactsPage */
+        ContactsPage: {
+            /** Company */
+            company: string;
+            /** Searches */
+            searches: components["schemas"]["SearchLinkOut"][];
+            /** Website */
+            website: string | null;
+            /** Contacts */
+            contacts: components["schemas"]["ContactOut"][];
         };
         /**
          * ContractType
@@ -3820,6 +3965,18 @@ export interface components {
             /** Offers */
             offers: components["schemas"]["SearchOffer"][];
         };
+        /** SearchLinkOut */
+        SearchLinkOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "recruiting" | "team" | "alumni";
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
         /** SearchOffer */
         SearchOffer: {
             /** Id */
@@ -4152,6 +4309,11 @@ export interface components {
              * @default 0
              */
             alerts_waiting: number;
+            /**
+             * Contacts To Follow Up
+             * @default 0
+             */
+            contacts_to_follow_up: number;
             /**
              * Interviews To Review
              * @default []
@@ -4876,6 +5038,165 @@ export interface operations {
             header?: never;
             path: {
                 token_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOfferContacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getApplicationContacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    addContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: number;
             };
             cookie?: never;
         };

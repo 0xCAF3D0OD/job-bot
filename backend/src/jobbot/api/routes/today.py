@@ -9,10 +9,12 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 
 from jobbot.alerts import service as alert_service
+from jobbot.contacts import service as contact_service
 from jobbot.core.orp import LOCAL_TZ, due_date, shift_month
 from jobbot.db.models import (
     Application,
     ApplicationStatus,
+    Contact,
     Criterion,
     Document,
     JobRun,
@@ -76,6 +78,8 @@ class TodayOut(BaseModel):
     last_collect_at: datetime | None
     # Alertes créées sur un site depuis 3 jours sans rien avoir envoyé (docs/20 §1.4).
     alerts_waiting: int = 0
+    # Prises de contact sans réponse depuis 7 jours (docs/31 §4).
+    contacts_to_follow_up: int = 0
     interviews_to_review: list[InterviewToReview] = []
 
 
@@ -199,6 +203,14 @@ async def get_today(request: Request) -> TodayOut:
             for p in await interview_reminders.to_review(session, today)
         ]
         alerts_waiting = await alert_service.waiting(session)
+        contacts_to_follow_up = await count(
+            select(func.count())
+            .select_from(Contact)
+            .where(
+                Contact.answered_on.is_(None),
+                Contact.contacted_on <= today - contact_service.FOLLOW_UP_AFTER,
+            )
+        )
         last_collect_at = await session.scalar(
             select(func.max(JobRun.finished_at)).where(
                 JobRun.job == COLLECT_JOB, JobRun.status == JobRunStatus.SUCCESS
@@ -233,6 +245,7 @@ async def get_today(request: Request) -> TodayOut:
         orp_due_date=due_date(due_month, due_day) if due_month else None,
         last_collect_at=last_collect_at,
         alerts_waiting=alerts_waiting,
+        contacts_to_follow_up=contacts_to_follow_up,
         interviews_to_review=interviews_to_review,
     )
 
