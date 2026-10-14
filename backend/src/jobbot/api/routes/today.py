@@ -122,6 +122,7 @@ async def get_today(request: Request) -> TodayOut:
             .where(
                 Offer.status.in_((OfferStatus.NEW, OfferStatus.TO_REVIEW)),
                 Offer.expired_at.is_(None),
+                Offer.duplicate_of.is_(None),
             )
         )
         month_count = await count(

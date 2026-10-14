@@ -163,6 +163,12 @@ class Offer(Base):
     employer_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Dernière revérification de la page jobup.
     checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Offres douteuses (docs/30) : doublon rattaché à l'offre gardée (caché des listes), et
+    # première apparition de l'annonce, doublons compris (« annonce permanente »).
+    duplicate_of: Mapped[int | None] = mapped_column(
+        ForeignKey("offers.id", ondelete="SET NULL"), index=True
+    )
+    seen_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class OfferLink(Base):
@@ -240,6 +246,8 @@ class Evaluation(Base):
     remote_days: Mapped[int | None] = mapped_column(SmallInteger)
     remote_region: Mapped[str | None] = mapped_column(Text)
     remote_from_switzerland: Mapped[bool | None]
+    # Signes d'arnaque relevés par l'IA à la notation (docs/30 §2) : [{reason, excerpt}].
+    scam_signals: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     model: Mapped[str | None] = mapped_column(Text)
     prompt_version: Mapped[str | None] = mapped_column(Text)
     profile_hash: Mapped[str | None] = mapped_column(Text)

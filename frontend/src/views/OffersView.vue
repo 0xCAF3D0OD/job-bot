@@ -110,6 +110,7 @@ async function load(append = false): Promise<void> {
           max_score: f.maxScore ?? undefined,
           external_only: f.externalOnly || undefined,
           remote: f.remote ?? undefined,
+          hide_doubtful: f.hideDoubtful || undefined,
         },
       },
     });

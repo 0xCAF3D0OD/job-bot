@@ -232,7 +232,7 @@ async def test_direct_scoring_stores_note_and_cost(ai: Runtime, fake: FakeClient
     stored = await evaluation(ai, first)
     assert stored is not None and stored.score == 78 and stored.summary_partial is True
     assert stored.strengths == [{"text": "Linux solide", "chunk_ids": [1]}]
-    assert stored.prompt_version == "score-v3" and stored.model == "claude-opus-5"
+    assert stored.prompt_version == "score-v4" and stored.model == "claude-opus-5"
     assert await evaluation(ai, filtered) is None
     async with ai.sessionmaker() as session:
         calls = await session.scalar(select(func.count()).select_from(LlmCall))
@@ -440,7 +440,7 @@ async def test_new_prompt_rescores_offers_kept_aside(ai: Runtime, fake: FakeClie
     await service.run_scoring(ai)
     async with ai.sessionmaker() as session:
         evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == later))
-        assert evaluation is not None and evaluation.prompt_version == "score-v3"
+        assert evaluation is not None and evaluation.prompt_version == "score-v4"
         assert evaluation.keywords_asks == [
             {"text": "5 ans Linux", "covered": True},
             {"text": "Ansible", "covered": False},
@@ -474,7 +474,7 @@ async def test_old_prompt_batch_is_rescored_and_canceled_items_are_retried(
         rows = {e.offer_id: e for e in await session.scalars(select(Evaluation))}
     # La note du lot est gardée puis refaite avec les nouvelles consignes ; l'offre du lot
     # annulé est notée comme une nouvelle, sans erreur.
-    assert rows[old].prompt_version == "score-v3" and rows[old].score_error is None
+    assert rows[old].prompt_version == "score-v4" and rows[old].score_error is None
     assert rows[canceled].score_error is None and rows[canceled].scored_at is not None
     assert len(fake.calls) - calls_before == 2
 

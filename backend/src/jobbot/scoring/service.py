@@ -162,6 +162,8 @@ async def candidates(
         .outerjoin(Evaluation, Evaluation.offer_id == Offer.id)
         .where(
             Offer.expired_at.is_(None),
+            # Un doublon n'est pas noté : son offre gardée l'est (docs/30 §3).
+            Offer.duplicate_of.is_(None),
             or_(and_(Offer.status.in_(TO_SCORE), or_(*needs)), kept_aside),
         )
         .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
@@ -207,6 +209,7 @@ async def _store(
             "remote_days": output.remote_days,
             "remote_region": output.remote_region,
             "remote_from_switzerland": output.remote_from_switzerland,
+            "scam_signals": [signal.model_dump() for signal in output.scam_signals],
             "scored_at": now,
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre

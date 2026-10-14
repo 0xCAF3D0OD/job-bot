@@ -18,6 +18,7 @@ from jobbot.core.filter import (
 )
 from jobbot.core.normalize import normalize_location
 from jobbot.db.models import Criterion, Evaluation, Offer, OfferStatus
+from jobbot.filtering.duplicates import group_duplicates
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 
@@ -78,6 +79,8 @@ class FilterResult:
 async def run_filter(runtime: Runtime) -> FilterResult:
     result = FilterResult()
     async with runtime.sessionmaker.begin() as session:
+        # Doublons regroupés avant le filtre (docs/30 §2).
+        await group_duplicates(session)
         criteria = await load_criteria(session)
         digest = criteria.digest()
         all_offers = list(await session.scalars(select(Offer)))

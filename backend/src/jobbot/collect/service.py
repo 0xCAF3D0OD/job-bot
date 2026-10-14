@@ -152,6 +152,7 @@ async def ingest_offers(
                     canton=canton_of(raw.location),
                     snippet=raw.snippet,
                     first_seen_at=seen_at,
+                    seen_since=seen_at,
                     last_seen_at=seen_at,
                 )
                 .on_conflict_do_nothing(index_elements=["fingerprint"])

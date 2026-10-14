@@ -31,6 +31,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "cantons", label: "Cantons" },
   { key: "rate", label: "Taux minimum (%)" },
   { key: "external", label: "Candidature chez l'employeur" },
+  { key: "doubtful", label: "Offres à vérifier" },
 ];
 const customizing = ref(false);
 
@@ -129,7 +130,9 @@ const sourcesValue = computed(() =>
     : "tous",
 );
 const cantonsValue = computed(() => (props.filters.cantons.length ? props.filters.cantons.join(", ") : "tous"));
-const showPost = computed(() => ["remote", "rate", "external"].some((k) => props.visible.includes(k as FilterKey)));
+const showPost = computed(() =>
+  ["remote", "rate", "external", "doubtful"].some((k) => props.visible.includes(k as FilterKey)),
+);
 const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visible.includes(k as FilterKey)));
 </script>
 
@@ -292,6 +295,19 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
           :checked="filters.externalOnly"
           data-test="external-only"
           @change="emit('update', { externalOnly: !filters.externalOnly })"
+        >
+      </label>
+      <label
+        v-if="visible.includes('doubtful')"
+        class="filter-row filter-switch"
+      >
+        <span>Masquer les offres à vérifier</span>
+        <input
+          type="checkbox"
+          role="switch"
+          :checked="filters.hideDoubtful"
+          data-test="hide-doubtful"
+          @change="emit('update', { hideDoubtful: !filters.hideDoubtful })"
         >
       </label>
     </div>

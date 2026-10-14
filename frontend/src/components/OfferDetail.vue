@@ -578,6 +578,23 @@ watch(
     >
       L'annonce n'est plus en ligne sur jobup.
     </p>
+    <div
+      v-if="offer.doubts?.length"
+      class="doubts"
+      data-test="doubts"
+    >
+      <strong>À vérifier</strong>
+      <ul>
+        <li
+          v-for="doubt in offer.doubts"
+          :key="doubt.text"
+          :class="doubt.kind"
+        >
+          {{ doubt.text }}
+          <q v-if="doubt.excerpt">{{ doubt.excerpt }}</q>
+        </li>
+      </ul>
+    </div>
     <ul class="checks">
       <li>
         <AppIcon name="check" /><strong>Lieu.</strong>

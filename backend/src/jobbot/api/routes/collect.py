@@ -1,6 +1,6 @@
 """Journal des recherches, offres collectées et lancement manuel de la collecte."""
 
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
@@ -129,6 +129,14 @@ class OfferOut(BaseModel):
     remote_days: int | None = None
     remote_region: str | None = None
     remote_from_switzerland: bool | None = None
+    # Signaux « à vérifier » (docs/30 §2) : annonce permanente, employeur caché, arnaque possible.
+    doubts: list["DoubtOut"] = []
+
+
+class DoubtOut(BaseModel):
+    kind: Literal["permanent", "hidden_employer", "scam"]
+    text: str
+    excerpt: str | None = None
 
 
 class AskKeywordOut(BaseModel):
@@ -178,16 +186,62 @@ def _runtime(request: Request) -> Runtime:
 
 
 async def _links(runtime: Runtime, offer_ids: list[int]) -> dict[int, list[OfferLinkOut]]:
+    """Liens de chaque offre, avec ceux de ses doublons (docs/30 §3), sans répétition."""
     links: dict[int, list[OfferLinkOut]] = {i: [] for i in offer_ids}
     if not offer_ids:
         return links
     async with runtime.sessionmaker() as session:
-        rows = await session.scalars(
-            select(OfferLink).where(OfferLink.offer_id.in_(offer_ids)).order_by(OfferLink.id)
+        rows = await session.execute(
+            select(OfferLink, func.coalesce(Offer.duplicate_of, Offer.id))
+            .join(Offer, Offer.id == OfferLink.offer_id)
+            .where(or_(Offer.id.in_(offer_ids), Offer.duplicate_of.in_(offer_ids)))
+            .order_by(OfferLink.id)
         )
-        for link in rows:
-            links[link.offer_id].append(OfferLinkOut.model_validate(link))
+        for link, owner in rows:
+            target = owner if owner in links else link.offer_id
+            out = OfferLinkOut.model_validate(link)
+            if target in links and all(
+                (x.source, x.url) != (out.source, out.url) for x in links[target]
+            ):
+                links[target].append(out)
     return links
+
+
+PERMANENT_AFTER = timedelta(days=30)
+
+
+def _doubts(offer: Offer, evaluation: Evaluation | None) -> list["DoubtOut"]:
+    """Signaux « à vérifier » (docs/30 §2) ; rien n'est écarté pour autant."""
+    found: list[DoubtOut] = []
+    since = offer.seen_since or offer.first_seen_at
+    age = datetime.now(UTC) - since
+    if offer.expired_at is None and age > PERMANENT_AFTER:
+        found.append(
+            DoubtOut(
+                kind="permanent",
+                text=f"Annonce permanente : vue dans les alertes depuis {age.days} jours.",
+            )
+        )
+    if not (offer.company or "").strip():
+        found.append(
+            DoubtOut(kind="hidden_employer", text="Employeur caché : aucune entreprise indiquée.")
+        )
+    elif offer.employer_status == "agency":
+        found.append(
+            DoubtOut(
+                kind="hidden_employer",
+                text="Employeur caché : annonce d'agence, employeur non nommé.",
+            )
+        )
+    for signal in (evaluation.scam_signals if evaluation else None) or []:
+        found.append(
+            DoubtOut(
+                kind="scam",
+                text=f"Arnaque possible : {signal.get('reason', '')}",
+                excerpt=signal.get("excerpt") or None,
+            )
+        )
+    return found
 
 
 async def _evaluations(runtime: Runtime, offer_ids: list[int]) -> dict[int, Evaluation]:
@@ -247,6 +301,7 @@ def _offer_out(
             "links": links,
             **_evaluation_fields(evaluation, current_hash),
             **remote,
+            "doubts": _doubts(offer, evaluation),
         }
     )
 
@@ -346,6 +401,24 @@ def _escape_like(term: str) -> str:
     return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+def _doubtful() -> ColumnElement[bool]:
+    """Les mêmes signaux que `_doubts`, en SQL, pour « Masquer les offres à vérifier »."""
+    scam = Offer.id.in_(
+        select(Evaluation.offer_id).where(func.jsonb_array_length(Evaluation.scam_signals) > 0)
+    )
+    permanent = and_(
+        Offer.expired_at.is_(None),
+        func.coalesce(Offer.seen_since, Offer.first_seen_at) < func.now() - PERMANENT_AFTER,
+    )
+    hidden = or_(
+        Offer.company.is_(None),
+        func.btrim(Offer.company) == "",
+        # Valeur vide : ni vrai ni faux en SQL ; ramenée à « pas une agence ».
+        func.coalesce(Offer.employer_status, "") == "agency",
+    )
+    return or_(scam, permanent, hidden)
+
+
 REMOTE_WORDS = ("remote", "home office", "homeoffice", "teletravail", "télétravail")
 
 
@@ -367,9 +440,13 @@ def _filters(
     min_rate: int | None,
     external_only: bool,
     remote: str | None = None,
+    hide_doubtful: bool = False,
 ) -> list[ColumnElement[bool]]:
-    """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7)."""
-    conditions: list[ColumnElement[bool]] = []
+    """Filtres d'affichage : ils changent ce que l'on voit, n'écartent rien (docs/06 §7).
+    Un doublon n'apparaît jamais : son offre gardée porte tous ses liens (docs/30 §3)."""
+    conditions: list[ColumnElement[bool]] = [Offer.duplicate_of.is_(None)]
+    if hide_doubtful:
+        conditions.append(_doubtful().is_(False))
     if (remote_filter := _remote_condition(remote)) is not None:
         conditions.append(remote_filter)
     if q:
@@ -424,6 +501,7 @@ async def list_offers(
     min_rate: Annotated[int | None, Query(ge=1, le=100)] = None,
     external_only: bool = False,
     remote: Literal["partial", "full"] | None = None,
+    hide_doubtful: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
@@ -456,7 +534,7 @@ async def list_offers(
         "score": (score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
         "activity": (activity.desc(), Offer.id.desc()),
     }.get(sort, (Offer.first_seen_at.desc(), Offer.id.desc()))
-    conditions = _filters(q, sources, cantons, min_rate, external_only, remote)
+    conditions = _filters(q, sources, cantons, min_rate, external_only, remote, hide_doubtful)
     # Sans le filtre de note : base de la courbe des notes.
     without_score = [*conditions]
     if min_score is not None:
@@ -466,8 +544,8 @@ async def list_offers(
     view_condition = _view_condition(view)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
-    without_sources = _filters(q, [], cantons, min_rate, external_only, remote)
-    without_cantons = _filters(q, sources, [], min_rate, external_only, remote)
+    without_sources = _filters(q, [], cantons, min_rate, external_only, remote, hide_doubtful)
+    without_cantons = _filters(q, sources, [], min_rate, external_only, remote, hide_doubtful)
     for bound in (
         *([score >= min_score] if min_score is not None else []),
         *([score <= max_score] if max_score is not None else []),
