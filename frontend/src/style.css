@@ -1352,3 +1352,7 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .filters-panel .filters-search-wrap input[type="search"] { padding-left: 2.1rem; }
 .assistant-empty { margin: 0; padding: 0.3rem 0.9rem 0; }
 .form-grid > label { align-self: start; }
+/* « Comment ça marche » : pastille verte pleine pour une étape faite, cercle vide sinon, sans coche
+   (retour du 2026-10-14). */
+.journey .tick { align-self: center; }
+.journey li.done .tick { background: var(--ok); border-color: var(--ok); }

@@ -139,6 +139,14 @@ onMounted(() => void load());
             :class="{ done: step.done }"
             :data-test="`journey-${step.key}`"
           >
+            <span
+              class="tick"
+              aria-hidden="true"
+            />
+            <span
+              v-if="step.done"
+              class="visually-hidden"
+            >Fait : </span>
             <RouterLink :to="JOURNEY[step.key].to">
               {{ JOURNEY[step.key].label }}
             </RouterLink>
