@@ -99,31 +99,21 @@ function onScore(min: number | null, max: number | null): void {
   emit("update", { minScore: min, maxScore: max });
 }
 
-// Cartes (docs/27) : une ligne par filtre, « nom · valeur · › » ; un clic ouvre le choix
-// dans le même panneau, « ‹ Retour » y revient.
+// Cartes (docs/27) : une ligne par filtre, « nom · valeur · › » ; un clic déplie le choix
+// sous la ligne, un seul à la fois : ouvrir un autre filtre (ou recliquer) referme le premier.
 type Page = "view" | "sort" | "remote" | "rate" | "sources" | "cantons";
 const page = ref<Page | null>(null);
-const PAGE_TITLES: Record<Page, string> = {
-  view: "Statut",
-  sort: "Tri",
-  remote: "Télétravail",
-  rate: "Taux minimum (%)",
-  sources: "Sites",
-  cantons: "Cantons",
-};
 
 function open(next: Page): void {
-  page.value = next;
+  page.value = page.value === next ? null : next;
 }
 
 function choose(patch: Partial<OfferFilters>): void {
   emit("update", patch);
-  page.value = null;
 }
 
 function chooseView(view: View): void {
   selectView(view);
-  page.value = null;
 }
 
 const viewValue = computed(() => {
@@ -147,189 +137,103 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
     class="filters-panel"
     data-test="filters"
   >
-    <template v-if="page === null">
-      <input
-        id="offer-search"
-        v-model="search"
-        class="filters-search"
-        type="search"
-        aria-label="Recherche"
-        placeholder="Titre, entreprise, mot-clé…"
-        data-test="search"
-      >
+    <input
+      id="offer-search"
+      v-model="search"
+      class="filters-search"
+      type="search"
+      aria-label="Recherche"
+      placeholder="Titre, entreprise, mot-clé…"
+      data-test="search"
+    >
 
-      <div class="filter-card">
+    <div class="filter-card">
+      <button
+        type="button"
+        class="filter-row"
+        :aria-expanded="page === 'view'"
+        data-test="row-view"
+        @click="open('view')"
+      >
+        <span>Statut</span><span class="filter-row-value">{{ viewValue }}</span>
+      </button>
+      <div
+        v-if="page === 'view'"
+        class="filter-drop"
+      >
         <button
+          v-for="entry in VIEWS"
+          :key="entry.value"
           type="button"
-          class="filter-row"
-          data-test="row-view"
-          @click="open('view')"
+          class="filter-row filter-option"
+          role="radio"
+          :aria-checked="filters.view === entry.value"
+          :data-test="`view-${entry.value}`"
+          @click="chooseView(entry.value)"
         >
-          <span>Statut</span><span class="filter-row-value">{{ viewValue }}</span>
-        </button>
-        <button
-          type="button"
-          class="filter-row"
-          data-test="row-sort"
-          @click="open('sort')"
-        >
-          <span>Tri</span><span class="filter-row-value">{{ sortValue }}</span>
+          <span>{{ entry.label }}</span><span class="facet-count">{{ counts[entry.value] }}</span>
         </button>
       </div>
-
-      <div
-        v-if="visible.includes('score')"
-        class="filter-card filter-card-body"
+      <button
+        type="button"
+        class="filter-row"
+        :aria-expanded="page === 'sort'"
+        data-test="row-sort"
+        @click="open('sort')"
       >
-        <span class="filter-card-title">Note</span>
-        <ScoreCurve
-          :bins="facets.scores ?? []"
-          :min="filters.minScore"
-          :max="filters.maxScore"
-          :unscored="facets.unscored ?? 0"
-          @change="onScore"
-        />
-      </div>
-
+        <span>Tri</span><span class="filter-row-value">{{ sortValue }}</span>
+      </button>
       <div
-        v-if="showPost"
-        class="filter-card"
+        v-if="page === 'sort'"
+        class="filter-drop"
       >
         <button
-          v-if="visible.includes('remote')"
+          v-for="entry in sorts"
+          :key="entry.value"
+          type="button"
+          class="filter-row filter-option"
+          role="radio"
+          :aria-checked="filters.sort === entry.value"
+          :data-test="`sort-${entry.value}`"
+          @click="choose({ sort: entry.value })"
+        >
+          <span>{{ entry.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-if="visible.includes('score')"
+      class="filter-card filter-card-body"
+    >
+      <span class="filter-card-title">Note</span>
+      <ScoreCurve
+        :bins="facets.scores ?? []"
+        :min="filters.minScore"
+        :max="filters.maxScore"
+        :unscored="facets.unscored ?? 0"
+        @change="onScore"
+      />
+    </div>
+
+    <div
+      v-if="showPost"
+      class="filter-card"
+    >
+      <template v-if="visible.includes('remote')">
+        <button
           type="button"
           class="filter-row"
+          :aria-expanded="page === 'remote'"
           data-test="row-remote"
           @click="open('remote')"
         >
           <span>Télétravail</span><span class="filter-row-value">{{ remoteValue }}</span>
         </button>
-        <button
-          v-if="visible.includes('rate')"
-          type="button"
-          class="filter-row"
-          data-test="row-rate"
-          @click="open('rate')"
+        <div
+          v-if="page === 'remote'"
+          class="filter-drop"
         >
-          <span>Taux minimum (%)</span><span class="filter-row-value">{{ filters.minRate ?? "tous" }}</span>
-        </button>
-        <label
-          v-if="visible.includes('external')"
-          class="filter-row filter-switch"
-        >
-          <span>Chez l'employeur uniquement</span>
-          <input
-            type="checkbox"
-            role="switch"
-            :checked="filters.externalOnly"
-            data-test="external-only"
-            @change="emit('update', { externalOnly: !filters.externalOnly })"
-          >
-        </label>
-      </div>
-
-      <div
-        v-if="showOrigin"
-        class="filter-card"
-      >
-        <button
-          v-if="visible.includes('sources')"
-          type="button"
-          class="filter-row"
-          data-test="row-sources"
-          @click="open('sources')"
-        >
-          <span>Sites</span><span class="filter-row-value">{{ sourcesValue }}</span>
-        </button>
-        <button
-          v-if="visible.includes('cantons')"
-          type="button"
-          class="filter-row"
-          data-test="row-cantons"
-          @click="open('cantons')"
-        >
-          <span>Cantons</span><span class="filter-row-value">{{ cantonsValue }}</span>
-        </button>
-      </div>
-
-      <div class="filter-customize">
-        <button
-          type="button"
-          class="link"
-          :aria-expanded="customizing"
-          data-test="customize"
-          @click="customizing = !customizing"
-        >
-          {{ customizing ? "Terminer" : "Personnaliser les filtres" }}
-        </button>
-        <fieldset
-          v-if="customizing"
-          class="customize-list"
-          data-test="customize-list"
-        >
-          <legend class="hint">
-            Filtres affichés (statut, recherche et tri le sont toujours)
-          </legend>
-          <label
-            v-for="entry in FILTERS"
-            :key="entry.key"
-            class="check"
-          >
-            <input
-              type="checkbox"
-              :checked="visible.includes(entry.key)"
-              :data-test="`show-${entry.key}`"
-              @change="toggleVisible(entry.key)"
-            >
-            {{ entry.label }}
-          </label>
-        </fieldset>
-      </div>
-    </template>
-
-    <template v-else>
-      <div class="filter-page-head">
-        <button
-          type="button"
-          class="link"
-          data-test="filter-back"
-          @click="page = null"
-        >
-          ‹ Retour
-        </button>
-        <strong>{{ PAGE_TITLES[page] }}</strong>
-      </div>
-
-      <div class="filter-card">
-        <template v-if="page === 'view'">
-          <button
-            v-for="entry in VIEWS"
-            :key="entry.value"
-            type="button"
-            class="filter-row filter-option"
-            role="radio"
-            :aria-checked="filters.view === entry.value"
-            :data-test="`view-${entry.value}`"
-            @click="chooseView(entry.value)"
-          >
-            <span>{{ entry.label }}</span><span class="facet-count">{{ counts[entry.value] }}</span>
-          </button>
-        </template>
-        <template v-else-if="page === 'sort'">
-          <button
-            v-for="entry in sorts"
-            :key="entry.value"
-            type="button"
-            class="filter-row filter-option"
-            role="radio"
-            :aria-checked="filters.sort === entry.value"
-            :data-test="`sort-${entry.value}`"
-            @click="choose({ sort: entry.value })"
-          >
-            <span>{{ entry.label }}</span>
-          </button>
-        </template>
-        <template v-else-if="page === 'remote'">
           <button
             v-for="entry in REMOTE"
             :key="String(entry.value)"
@@ -342,12 +246,22 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
           >
             <span>{{ entry.label }}</span>
           </button>
-        </template>
-        <div
-          v-else-if="page === 'rate'"
-          class="filter-card-body"
+        </div>
+      </template>
+      <template v-if="visible.includes('rate')">
+        <button
+          type="button"
+          class="filter-row"
+          :aria-expanded="page === 'rate'"
+          data-test="row-rate"
+          @click="open('rate')"
         >
-          <span class="filter-card-title">{{ filters.minRate ?? "tous" }}</span>
+          <span>Taux minimum (%)</span><span class="filter-row-value">{{ filters.minRate ?? "tous" }}</span>
+        </button>
+        <div
+          v-if="page === 'rate'"
+          class="filter-drop filter-card-body"
+        >
           <input
             id="offer-rate"
             type="range"
@@ -361,50 +275,121 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
           >
           <span class="hint">Les offres sans taux indiqué restent visibles.</span>
         </div>
-        <template v-else-if="page === 'sources' || page === 'cantons'">
-          <button
-            type="button"
-            class="filter-row filter-option-clear"
-            :disabled="page === 'sources' ? !filters.sources.length : !filters.cantons.length"
-            @click="emit('update', page === 'sources' ? { sources: [] } : { cantons: [] })"
+      </template>
+      <label
+        v-if="visible.includes('external')"
+        class="filter-row filter-switch"
+      >
+        <span>Chez l'employeur uniquement</span>
+        <input
+          type="checkbox"
+          role="switch"
+          :checked="filters.externalOnly"
+          data-test="external-only"
+          @change="emit('update', { externalOnly: !filters.externalOnly })"
+        >
+      </label>
+    </div>
+
+    <div
+      v-if="showOrigin"
+      class="filter-card"
+    >
+      <template v-if="visible.includes('sources')">
+        <button
+          type="button"
+          class="filter-row"
+          :aria-expanded="page === 'sources'"
+          data-test="row-sources"
+          @click="open('sources')"
+        >
+          <span>Sites</span><span class="filter-row-value">{{ sourcesValue }}</span>
+        </button>
+        <div
+          v-if="page === 'sources'"
+          class="filter-drop"
+        >
+          <label
+            v-for="facet in facets.sources"
+            :key="facet.value"
+            class="filter-row filter-check"
           >
-            <span class="link">Tout décocher</span>
-          </button>
-          <template v-if="page === 'sources'">
-            <label
-              v-for="facet in facets.sources"
-              :key="facet.value"
-              class="filter-row filter-check"
+            <input
+              type="checkbox"
+              :checked="filters.sources.includes(facet.value as Source)"
+              :data-test="`source-${facet.value}`"
+              @change="emit('update', { sources: toggle(filters.sources, facet.value as Source) })"
             >
-              <input
-                type="checkbox"
-                :checked="filters.sources.includes(facet.value as Source)"
-                :data-test="`source-${facet.value}`"
-                @change="emit('update', { sources: toggle(filters.sources, facet.value as Source) })"
-              >
-              <span>{{ sourceLabel[facet.value as Source] ?? facet.value }}</span>
-              <span class="facet-count">{{ facet.count }}</span>
-            </label>
-          </template>
-          <template v-else>
-            <label
-              v-for="facet in facets.cantons"
-              :key="facet.value"
-              class="filter-row filter-check"
+            <span>{{ sourceLabel[facet.value as Source] ?? facet.value }}</span>
+            <span class="facet-count">{{ facet.count }}</span>
+          </label>
+        </div>
+      </template>
+      <template v-if="visible.includes('cantons')">
+        <button
+          type="button"
+          class="filter-row"
+          :aria-expanded="page === 'cantons'"
+          data-test="row-cantons"
+          @click="open('cantons')"
+        >
+          <span>Cantons</span><span class="filter-row-value">{{ cantonsValue }}</span>
+        </button>
+        <div
+          v-if="page === 'cantons'"
+          class="filter-drop"
+        >
+          <label
+            v-for="facet in facets.cantons"
+            :key="facet.value"
+            class="filter-row filter-check"
+          >
+            <input
+              type="checkbox"
+              :checked="filters.cantons.includes(facet.value)"
+              :data-test="`canton-${facet.value}`"
+              @change="emit('update', { cantons: toggle(filters.cantons, facet.value) })"
             >
-              <input
-                type="checkbox"
-                :checked="filters.cantons.includes(facet.value)"
-                :data-test="`canton-${facet.value}`"
-                @change="emit('update', { cantons: toggle(filters.cantons, facet.value) })"
-              >
-              <span>{{ facet.value }}</span>
-              <span class="facet-count">{{ facet.count }}</span>
-            </label>
-          </template>
-        </template>
-      </div>
-    </template>
+            <span>{{ facet.value }}</span>
+            <span class="facet-count">{{ facet.count }}</span>
+          </label>
+        </div>
+      </template>
+    </div>
+
+    <div class="filter-customize">
+      <button
+        type="button"
+        class="link"
+        :aria-expanded="customizing"
+        data-test="customize"
+        @click="customizing = !customizing"
+      >
+        {{ customizing ? "Terminer" : "Personnaliser les filtres" }}
+      </button>
+      <fieldset
+        v-if="customizing"
+        class="customize-list"
+        data-test="customize-list"
+      >
+        <legend class="hint">
+          Filtres affichés (statut, recherche et tri le sont toujours)
+        </legend>
+        <label
+          v-for="entry in FILTERS"
+          :key="entry.key"
+          class="check"
+        >
+          <input
+            type="checkbox"
+            :checked="visible.includes(entry.key)"
+            :data-test="`show-${entry.key}`"
+            @change="toggleVisible(entry.key)"
+          >
+          {{ entry.label }}
+        </label>
+      </fieldset>
+    </div>
 
     <div class="filters-footer">
       <button

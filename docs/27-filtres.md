@@ -67,3 +67,9 @@ Une seule PR (**0.20.0**), sans migration.
 - **Pages de choix** : « ‹ Retour » et le titre ; Statut, Tri et Télétravail reviennent seuls après un choix ; Sites et Cantons gardent la page ouverte (plusieurs cases), avec « Tout décocher ».
 - **Note** : `?note=60-90` (minimum seul : `?note=60` ; maximum seul : `?note=0-50`). Les offres pas encore notées sont masquées dès qu'une borne est posée, et la ligne sous la courbe le dit.
 - **Téléphone** : panneau par le bas avec poignée et ×, boutons « Effacer tout (n) » et « Afficher N offres » collés en bas ; **ordinateur** : colonne de filtres un peu plus large (18rem), « Effacer tout (n) » seul en bas.
+
+## Complément du 2026-10-14 : trait vertical et filtres dépliés
+
+- **Ordinateur** : plus de fond gris derrière les filtres ; un **trait vertical** les sépare de la liste, arrêté à quelques pixels du haut et du bas de la fenêtre (la colonne de filtres reste à l'écran pendant le défilement).
+- **Un filtre se déplie vers le bas**, sous sa ligne (la flèche › pivote) ; **ouvrir un autre filtre referme le premier**, recliquer sur la ligne aussi. Un choix (statut, tri, télétravail) laisse le filtre ouvert, la valeur se met à jour sur la ligne. Plus de page « ‹ Retour ».
+- Téléphone : panneau par le bas inchangé, avec les mêmes filtres dépliés.

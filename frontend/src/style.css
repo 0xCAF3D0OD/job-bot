@@ -1235,3 +1235,21 @@ button.filter-row:not(.filter-option):not(.filter-option-clear)::after { content
   .filters-footer { grid-template-columns: 1fr 1fr; position: sticky; bottom: 0; padding-top: 0.5rem; background: var(--band); }
   .filters-done { display: block; }
 }
+
+/* Filtres (retour du 2026-10-14) : pas de fond gris ; un trait vertical sépare les filtres de la
+   liste, arrêté à quelques pixels du haut et du bas de la fenêtre (la colonne suit le défilement).
+   Un filtre se déplie sous sa ligne, un seul à la fois. */
+@media (min-width: 861px) {
+  .filters-column {
+    position: sticky; top: 4.6rem; height: calc(100vh - 4.6rem); max-height: none; overflow: auto;
+    padding: 0.75rem 1.25rem 0.75rem 0;
+    background: linear-gradient(var(--border), var(--border)) no-repeat right 0 top 0.75rem / 1px calc(100% - 1.5rem);
+  }
+  .filters-panel { background: none; border: 0; padding: 0; }
+  .offers-grid:not(.has-selection) .filters-column { margin-right: 0.5rem; }
+}
+button.filter-row[aria-expanded]::after { transition: transform 0.15s; }
+button.filter-row[aria-expanded="true"]::after { transform: rotate(90deg); }
+.filter-drop { border-top: 1px solid var(--divider); background: var(--panel); }
+.filter-drop .filter-row { padding-left: 1.3rem; font-size: 0.9rem; }
+.filter-drop .filter-row:hover { background: var(--band); }

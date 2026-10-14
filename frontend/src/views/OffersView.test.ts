@@ -133,19 +133,18 @@ describe("OffersView", () => {
 
   it("un clic sur un filtre met à jour l'adresse et recharge", async () => {
     const wrapper = await mountAt("/offres");
-    // Cartes (docs/27) : la ligne ouvre le choix dans le même panneau.
+    // Cartes (docs/27) : la ligne déplie le choix dessous ; un autre filtre le replie.
     expect(wrapper.find("[data-test=row-view]").text()).toContain("À examiner");
     await wrapper.find("[data-test=row-cantons]").trigger("click");
     await wrapper.find("[data-test=canton-VD]").trigger("change");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ canton: ["VD"] });
     expect(lastQuery()).toMatchObject({ cantons: ["VD"] });
-    await wrapper.find("[data-test=filter-back]").trigger("click");
     expect(wrapper.find("[data-test=row-cantons]").text()).toContain("VD");
 
     await wrapper.find("[data-test=row-sources]").trigger("click");
+    expect(wrapper.find("[data-test=canton-VD]").exists()).toBe(false); // un seul ouvert
     await wrapper.find("[data-test=source-indeed]").trigger("change");
-    await wrapper.find("[data-test=filter-back]").trigger("click");
     await wrapper.find("[data-test=row-view]").trigger("click");
     expect(wrapper.find("[data-test=view-filtered_out]").text()).toContain("2");
     await wrapper.find("[data-test=view-all]").trigger("click");
@@ -461,7 +460,6 @@ describe("tri « Dernière action »", () => {
     expect(lastQuery().sort).toBe("activity");
     expect(wrapper.find("[data-test=row-sort]").text()).toContain("Dernière action");
 
-    await wrapper.find("[data-test=row-view]").trigger("click");
     await wrapper.find("[data-test=view-to_review]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query.tri).toBeUndefined();
