@@ -1253,3 +1253,24 @@ button.filter-row[aria-expanded="true"]::after { transform: rotate(90deg); }
 .filter-drop { border-top: 1px solid var(--divider); background: var(--panel); }
 .filter-drop .filter-row { padding-left: 1.3rem; font-size: 0.9rem; }
 .filter-drop .filter-row:hover { background: var(--band); }
+
+:root { --hover-bold: 0 0 0.6px currentColor, 0 0 0.6px currentColor; }
+/* Survols (retour du 2026-10-14) : plus de fond ni de halo autour des liens et des lignes de
+   menu, qui faisaient étriqué. Au survol, le texte prend la couleur principale ; l'élément
+   choisi est en gras, de la même couleur. Les filtres des offres gardent leur survol. */
+a:where(:not([class]), [class=""], .back-link, .hint):hover,
+.link:hover,
+button.link:hover:not(:disabled) { background: none; box-shadow: none; color: var(--accent-strong); text-shadow: var(--hover-bold); }
+.link.danger:hover { background: none; box-shadow: none; color: #c4373b; text-shadow: var(--hover-bold); }
+.more-menu .menu button:hover,
+.account-panel > a:hover,
+.account-panel > .link:hover,
+.settings-toc a:hover,
+.assistant-recent-item:hover,
+.status-list button:hover,
+.bell-item:not(.unread):hover { background: none; color: var(--accent); text-shadow: var(--hover-bold); }
+.bell-item:hover .bell-title { color: var(--accent); }
+.account-panel > a.router-link-active,
+.more-menu .menu button[aria-checked="true"],
+.status-list button[aria-checked="true"] { background: none; color: var(--accent); font-weight: 600; }
+.more-menu .menu button.danger:hover { color: var(--down); }
