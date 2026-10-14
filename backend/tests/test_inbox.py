@@ -8,7 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Notification
+from jobbot.db.models import JobRun, JobRunStatus, Notification
 from jobbot.mail.imap import MailboxError
 from jobbot.notify import inbox
 from jobbot.notify import service as notify
@@ -48,6 +48,27 @@ async def test_collect_failure_alert_is_throttled_and_safe(rt: Runtime) -> None:
         [alert] = (await session.scalars(select(Notification))).all()
     assert alert.kind == "collect_failed" and alert.link == "/reglages/diagnostic"
     assert "secret" not in alert.message and "mot de passe" in alert.message
+
+
+async def test_network_cut_alerts_only_when_it_lasts(rt: Runtime, clean_job_runs: None) -> None:
+    """Coupure réseau isolée : rien ; deuxième échec de suite : alerte ; collecte rétablie :
+    l'alerte est marquée lue."""
+    cut = MailboxError("connection", "connexion IMAP interrompue (ConnectionResetError)")
+    async with rt.sessionmaker.begin() as session:
+        session.add(JobRun(job="collect", status=JobRunStatus.SUCCESS))
+    assert await inbox.collect_failed(rt, cut) is False
+    async with rt.sessionmaker.begin() as session:
+        session.add(JobRun(job="collect", status=JobRunStatus.FAILURE))
+        session.add(JobRun(job="score", status=JobRunStatus.SUCCESS))  # autre tâche : ignorée
+    assert await inbox.collect_failed(rt, cut) is True
+    async with rt.sessionmaker() as session:
+        [alert] = (await session.scalars(select(Notification))).all()
+    assert "injoignable" in alert.message and alert.read_at is None
+
+    assert await inbox.collect_recovered(rt) == 1
+    assert await inbox.collect_recovered(rt) == 0
+    async with rt.sessionmaker() as session:
+        assert (await session.scalar(select(Notification.read_at))) is not None
 
 
 async def test_purge_old_alerts(rt: Runtime) -> None:
