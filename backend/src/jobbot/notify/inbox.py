@@ -2,9 +2,9 @@
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 
-from jobbot.db.models import Notification
+from jobbot.db.models import JobRun, JobRunStatus, Notification
 from jobbot.mail.imap import MailboxError
 from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
@@ -18,8 +18,31 @@ _REASONS = {
 }
 
 
+COLLECT_JOB = "collect"
+
+
+async def _previous_failed(runtime: Runtime) -> bool:
+    """La collecte terminée juste avant celle-ci a-t-elle aussi échoué ?"""
+    async with runtime.sessionmaker() as session:
+        status = await session.scalar(
+            select(JobRun.status)
+            .where(JobRun.job == COLLECT_JOB, JobRun.status != JobRunStatus.RUNNING)
+            .order_by(JobRun.started_at.desc(), JobRun.id.desc())
+            .limit(1)
+        )
+    return status == JobRunStatus.FAILURE
+
+
 async def collect_failed(runtime: Runtime, exc: BaseException) -> bool:
-    """Alerte « collecte en échec », au plus une toutes les 6 heures. Jamais de secret."""
+    """Alerte « collecte en échec », au plus une toutes les 6 heures. Jamais de secret.
+
+    Une coupure réseau isolée (veille, changement de Wi-Fi) se rattrape au passage suivant :
+    l'alerte n'arrive qu'au deuxième échec de suite. Un refus de connexion (mot de passe,
+    adresse) ne se répare pas tout seul : alerte dès le premier échec.
+    """
+    kind = getattr(exc, "kind", "") if isinstance(exc, MailboxError) else ""
+    if kind == "connection" and not await _previous_failed(runtime):
+        return False
     since = datetime.now(UTC) - COLLECT_ALERT_EVERY
     async with runtime.sessionmaker() as session:
         recent = await session.scalar(
@@ -29,7 +52,6 @@ async def collect_failed(runtime: Runtime, exc: BaseException) -> bool:
         )
     if recent:
         return False
-    kind = getattr(exc, "kind", "") if isinstance(exc, MailboxError) else ""
     reason = _REASONS.get(
         kind, f"Erreur inattendue ({type(exc).__name__}) : voir l'état technique."
     )
@@ -46,6 +68,18 @@ async def collect_failed(runtime: Runtime, exc: BaseException) -> bool:
         link="/reglages/diagnostic",
     )
     return True
+
+
+async def collect_recovered(runtime: Runtime) -> int:
+    """Collecte rétablie : les alertes « collecte en échec » encore non lues sont marquées
+    lues, la cloche ne signale plus un problème réglé."""
+    async with runtime.sessionmaker.begin() as session:
+        result = await session.execute(
+            update(Notification)
+            .where(Notification.kind == "collect_failed", Notification.read_at.is_(None))
+            .values(read_at=datetime.now(UTC))
+        )
+        return int(getattr(result, "rowcount", 0) or 0)
 
 
 async def purge(runtime: Runtime) -> int:

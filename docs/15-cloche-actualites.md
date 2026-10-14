@@ -83,3 +83,11 @@ news_items     id, source_id, title, url UNIQUE, summary?, image_key?, published
 - **Compteur** : sur l'entrée « Actualités » du menu (mis à jour toutes les 5 minutes) et sur chaque onglet de la page ; la visite le remet à zéro.
 - **Rythme** : tâche `news`, toutes les 6 heures ; 30 éléments au plus par source et par relevé ; miniatures de 300 Ko au plus, avec les mêmes garde-fous que les logos ; les articles RTS et Le Temps ont aussi leur image.
 - **Essai réel** : 98 contenus relevés sur les 5 sources, sans échec.
+
+## Complément du 2026-10-14 : alerte « collecte en échec » plus juste
+
+- Retour d'usage : 7 alertes « La collecte des alertes a échoué » restaient dans la cloche alors que la collecte remarchait (coupures réseau isolées entre le 9 et le 12 octobre, rattrapées au passage suivant).
+- **Coupure réseau** (Gmail injoignable) : alerte seulement au **deuxième échec de suite** ; une coupure isolée se rattrape seule au passage suivant, sans perte d'alerte.
+- **Refus de connexion** (adresse, mot de passe d'application) ou erreur inattendue : alerte dès le premier échec, comme avant.
+- **Collecte rétablie** : les alertes « collecte en échec » encore non lues sont marquées lues automatiquement. La notification ntfy déjà envoyée, elle, reste sur le téléphone.
+- Toujours au plus une alerte toutes les 6 heures.
