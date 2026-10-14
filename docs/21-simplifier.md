@@ -98,3 +98,10 @@ Aucune fonction n'est supprimée : seuls l'ordre, les textes et ce qui est visib
 - **Diagnostic** : page `/reglages/diagnostic` (lien en bas des Réglages) ; `/etat`, `/reglages#etat` et l'alerte « collecte en échec » de la cloche y mènent.
 - **Profil** : « Il manque : ta rue, ton NPA » (coordonnées), « Il manque ton CV » ou « Il manque tes blocs de profil » (parcours), « Aucun lieu indiqué » (ce que je cherche).
 - **Intègre la PR #72** (ligne « chez l'employeur » lisible).
+
+## Complément du 2026-10-14 : survols plus naturels
+
+- Retour d'usage : les survols (fond et halo autour des liens et des lignes de menu) faisaient étriqué sur les côtés.
+- **Au survol**, plus de fond ni de halo : le texte prend la couleur principale, un peu plus soutenue, et s'épaissit légèrement (sans décaler la mise en page). Liens de texte, menus « ⋯ », menu du compte, sommaire des Réglages, cloche, discussions de l'assistant.
+- **Élément choisi** (statut sélectionné, page ouverte dans le menu du compte) : en **gras**, de la couleur principale.
+- Inchangés : les filtres des offres, les boutons et les cartes (bordure au survol).
