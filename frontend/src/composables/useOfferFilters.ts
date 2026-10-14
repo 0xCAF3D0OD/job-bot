@@ -17,6 +17,8 @@ export interface OfferFilters {
   cantons: string[];
   minRate: number | null;
   minScore: number | null;
+  // Note maximale (docs/27 §3), avec ?note=60-90 ; null : jusqu'à 100.
+  maxScore: number | null;
   externalOnly: boolean;
   remote: Remote | null;
 }
@@ -30,6 +32,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   cantons: [],
   minRate: null,
   minScore: null,
+  maxScore: null,
   externalOnly: false,
   remote: null,
 };
@@ -51,7 +54,9 @@ export function fromQuery(query: LocationQuery): OfferFilters {
   const view = one(query.statut) as View | undefined;
   const sort = one(query.tri) as Sort | undefined;
   const rate = Number(one(query.taux));
-  const score = Number(one(query.note));
+  const [scoreLow, scoreHigh] = (one(query.note) ?? "").split("-");
+  const score = Number(scoreLow);
+  const scoreMax = scoreHigh === undefined || scoreHigh === "" ? NaN : Number(scoreHigh);
   return {
     view: view && VIEWS.includes(view) ? view : DEFAULT_FILTERS.view,
     sort: sort && SORTS.includes(sort) ? sort : DEFAULT_FILTERS.sort,
@@ -60,6 +65,7 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     cantons: list(query.canton).map((c) => c.toUpperCase()),
     minRate: Number.isInteger(rate) && rate >= 1 && rate <= 100 ? rate : null,
     minScore: Number.isInteger(score) && score >= 1 && score <= 100 ? score : null,
+    maxScore: Number.isInteger(scoreMax) && scoreMax >= 0 && scoreMax <= 99 ? scoreMax : null,
     externalOnly: one(query.externe) === "1",
     remote: one(query.teletravail) === "complet" ? "full" : one(query.teletravail) === "partiel" ? "partial" : null,
   };
@@ -73,7 +79,9 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   if (filters.sources.length) query.site = [...filters.sources];
   if (filters.cantons.length) query.canton = [...filters.cantons];
   if (filters.minRate !== null) query.taux = String(filters.minRate);
-  if (filters.minScore !== null) query.note = String(filters.minScore);
+  if (filters.minScore !== null || filters.maxScore !== null) {
+    query.note = `${filters.minScore ?? 0}${filters.maxScore !== null ? `-${filters.maxScore}` : ""}`;
+  }
   if (filters.externalOnly) query.externe = "1";
   if (filters.remote) query.teletravail = filters.remote === "full" ? "complet" : "partiel";
   return query;
@@ -86,7 +94,7 @@ export function activeCount(filters: OfferFilters): number {
     filters.sources.length +
     filters.cantons.length +
     (filters.minRate !== null ? 1 : 0) +
-    (filters.minScore !== null ? 1 : 0) +
+    (filters.minScore !== null || filters.maxScore !== null ? 1 : 0) +
     (filters.externalOnly ? 1 : 0) +
     (filters.remote ? 1 : 0)
   );

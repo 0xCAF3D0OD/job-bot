@@ -968,6 +968,24 @@
             }
           },
           {
+            "name": "max_score",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 99,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Score"
+            }
+          },
+          {
             "name": "sources",
             "in": "query",
             "required": false,
@@ -10137,6 +10155,19 @@
             },
             "type": "array",
             "title": "Cantons"
+          },
+          "scores": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Scores",
+            "default": []
+          },
+          "unscored": {
+            "type": "integer",
+            "title": "Unscored",
+            "default": 0
           }
         },
         "type": "object",
