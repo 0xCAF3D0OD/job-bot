@@ -66,7 +66,9 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 
 /* --- Barre du haut : logo à gauche, liens centrés, bouton violet à droite --- */
 
-.topbar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); }
+/* Au-dessus des barres collantes de la page (barre « Postuler », 10) et du bouton Assistant
+   (25) : la cloche et le menu du compte s'ouvrent par-dessus ; sous les fenêtres (30). */
+.topbar { position: sticky; top: 0; z-index: 26; background: var(--bg); border-bottom: 1px solid var(--border); }
 .topbar-inner {
   max-width: 84rem;
   margin: 0 auto;
