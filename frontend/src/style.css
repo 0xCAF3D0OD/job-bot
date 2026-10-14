@@ -1331,3 +1331,10 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .day-dots { gap: 0.45rem; row-gap: 0.4rem; padding-top: 0.2rem; }
 .suivi-legend li { gap: 0.55rem; }
 .suivi-legend .dot.incomplete { margin-right: 0.35rem; }
+
+/* Finitions du 2026-10-14 : onglets soulignés bien droits (le soulignement suivait l'arrondi des
+   liens), page ouverte dans le menu en gras de la couleur principale, « Comment ça marche »
+   sans coches (une étape faite est seulement grisée). */
+.nav a, .prep-tabs a { border-radius: 0; }
+.nav a.router-link-active { color: var(--accent-text); font-weight: 600; }
+.journey li.done a, .journey li.done .hint { color: var(--muted); }
