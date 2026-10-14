@@ -105,3 +105,8 @@ Aucune fonction n'est supprimée : seuls l'ordre, les textes et ce qui est visib
 - **Au survol**, plus de fond ni de halo : le texte prend la couleur principale, un peu plus soutenue, et s'épaissit légèrement (sans décaler la mise en page). Liens de texte, menus « ⋯ », menu du compte, sommaire des Réglages, cloche, discussions de l'assistant.
 - **Élément choisi** (statut sélectionné, page ouverte dans le menu du compte) : en **gras**, de la couleur principale.
 - Inchangés : les filtres des offres, les boutons et les cartes (bordure au survol).
+
+## Complément du 2026-10-14 : Aujourd'hui symétrique
+
+- **« Candidatures commencées »** et **« Les mieux notées à examiner »** : deux menus déroulants côte à côte, **même hauteur**, ouverts ou fermés ensemble (choix retenu par le navigateur), chacun avec son nombre, 5 éléments au plus et son lien en bas, aligné sur l'autre. « Candidatures commencées » reste affichée sans candidature (« Aucune candidature en préparation »).
+- **Collecte** : la carte disparaît ; une ligne discrète à côté du titre « Candidatures » dit quand a eu lieu la dernière collecte (« Collecte il y a 2 h »).

@@ -46,6 +46,26 @@ const news = ref<NewsItem[]>([]);
 const trainingsInProgress = ref<Training[]>([]);
 const trainingIdea = ref<Training | null>(null);
 const { message } = useCollect();
+
+// Les deux menus déroulants s'ouvrent et se ferment ensemble (même hauteur), choix retenu.
+const FOLDS_KEY = "jobbot-today-folds";
+function readFolds(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(FOLDS_KEY) !== "closed";
+  } catch {
+    return true;
+  }
+}
+const foldsOpen = ref(readFolds());
+function toggleFolds(): void {
+  foldsOpen.value = !foldsOpen.value;
+  try {
+    globalThis.localStorage?.setItem(FOLDS_KEY, foldsOpen.value ? "open" : "closed");
+  } catch {
+    // Stockage indisponible : le choix vaut pour cette visite.
+  }
+}
+
 // Comme le menu : retour à la candidature commencée ou à l'onglet quitté.
 const { last: lastJobsPage } = useJobsMemory();
 
@@ -198,6 +218,10 @@ onMounted(() => void load());
 
       <div class="today-section-head">
         <h2>Candidatures</h2>
+        <span
+          class="today-collect"
+          data-test="last-collect"
+        >{{ message || (today.last_collect_at ? `Collecte ${sinceText(today.last_collect_at)}` : "Pas encore de collecte") }}</span>
         <RouterLink
           :to="lastJobsPage"
           class="link"
@@ -267,77 +291,100 @@ onMounted(() => void load());
         </RouterLink>
       </div>
 
-      <div class="today-grid">
-        <article
-          v-if="preparing.length"
-          class="side-card"
+      <!-- Deux menus déroulants côte à côte, de même hauteur, ouverts ou fermés ensemble
+           (retour du 2026-10-14) ; le choix est retenu par le navigateur. -->
+      <div class="today-pair">
+        <section
+          :class="['side-card', 'today-fold', { open: foldsOpen }]"
           data-test="preparing"
         >
-          <h2>Candidatures commencées</h2>
-          <ul class="today-list">
-            <li
-              v-for="offer in preparing"
-              :key="offer.id"
+          <button
+            type="button"
+            class="today-fold-head"
+            :aria-expanded="foldsOpen"
+            @click="toggleFolds"
+          >
+            <h2>Candidatures commencées</h2>
+            <span class="today-fold-count">{{ preparing.length }}</span>
+          </button>
+          <template v-if="foldsOpen">
+            <p
+              v-if="!preparing.length"
+              class="hint"
             >
-              <span>
-                <strong>{{ offer.title }}</strong><br>
-                <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
-              </span>
-              <RouterLink
-                :to="`/candidatures/offres/${offer.id}/preparer`"
-                class="link"
+              Aucune candidature en préparation.
+            </p>
+            <ul
+              v-else
+              class="today-list"
+            >
+              <li
+                v-for="offer in preparing.slice(0, 5)"
+                :key="offer.id"
               >
-                Continuer
-              </RouterLink>
-            </li>
-          </ul>
-        </article>
-        <article class="side-card">
-          <h2>Les mieux notées à examiner</h2>
-          <p
-            v-if="!best.length"
-            class="hint"
-          >
-            Aucune offre notée en attente.
-          </p>
-          <ul
-            v-else
-            class="best-offers"
-          >
-            <li
-              v-for="offer in best"
-              :key="offer.id"
+                <span>
+                  <strong>{{ offer.title }}</strong><br>
+                  <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
+                </span>
+                <RouterLink
+                  :to="`/candidatures/offres/${offer.id}/preparer`"
+                  class="link"
+                >
+                  Continuer
+                </RouterLink>
+              </li>
+            </ul>
+            <RouterLink
+              :to="{ path: '/candidatures/offres', query: { statut: 'in_progress' } }"
+              class="link today-fold-more"
             >
-              <span :class="['score', scoreLevel(offer.score!)]">{{ offer.score }}</span>
-              <span>
-                <strong>{{ offer.title }}</strong><br>
-                <span class="muted">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
-              </span>
-            </li>
-          </ul>
-          <RouterLink
-            :to="{ path: '/candidatures/offres', query: { tri: 'score' } }"
-            class="link"
+              Voir les candidatures en cours
+            </RouterLink>
+          </template>
+        </section>
+        <section
+          :class="['side-card', 'today-fold', { open: foldsOpen }]"
+          data-test="best"
+        >
+          <button
+            type="button"
+            class="today-fold-head"
+            :aria-expanded="foldsOpen"
+            @click="toggleFolds"
           >
-            Voir toutes les offres
-          </RouterLink>
-        </article>
-        <article class="side-card">
-          <h2>Collecte</h2>
-          <p class="hint">
-            {{
-              today.last_collect_at
-                ? `Dernière collecte réussie ${sinceText(today.last_collect_at)}.`
-                : "Aucune collecte réussie pour l'instant."
-            }}
-            Automatique toutes les 2 heures en journée ; « Collecter », en haut, relève tout de suite.
-          </p>
-          <span
-            v-if="message"
-            class="hint"
-            role="status"
-          >{{ message }}</span>
-        </article>
+            <h2>Les mieux notées à examiner</h2>
+            <span class="today-fold-count">{{ best.length }}</span>
+          </button>
+          <template v-if="foldsOpen">
+            <p
+              v-if="!best.length"
+              class="hint"
+            >
+              Aucune offre notée en attente.
+            </p>
+            <ul
+              v-else
+              class="best-offers"
+            >
+              <li
+                v-for="offer in best.slice(0, 5)"
+                :key="offer.id"
+              >
+                <span :class="['score', scoreLevel(offer.score!)]">{{ offer.score }}</span>
+                <span>
+                  <strong>{{ offer.title }}</strong><br>
+                  <span class="muted">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
+                </span>
+              </li>
+            </ul>
+            <RouterLink
+              :to="{ path: '/candidatures/offres', query: { tri: 'score' } }"
+              class="link today-fold-more"
+            >
+              Voir toutes les offres
+            </RouterLink>
+          </template>
+        </section>
       </div>
 
       <div class="today-section-head">
