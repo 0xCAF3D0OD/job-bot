@@ -271,3 +271,41 @@ async def test_remote_filter_and_label(api: AsyncClient, runtime: Runtime) -> No
     assert (
         by_title["Lieu remote"]["remote"] == "full" and by_title["Sur site"]["remote"] == "onsite"
     )
+
+
+async def test_score_range_and_curve(api: AsyncClient, runtime: Runtime) -> None:
+    """Note entre deux bornes, et courbe des notes sans le filtre de note (docs/27 §3)."""
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))
+    async with runtime.sessionmaker.begin() as session:
+        for n, score in enumerate([42, 63, 64, 88, 100, None]):
+            offer = Offer(
+                fingerprint=f"curve{n}",
+                title=f"Note {score}",
+                first_seen_at=NOW + timedelta(minutes=n),
+                last_seen_at=NOW,
+                status=OfferStatus.TO_REVIEW,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=True,
+                    criteria_hash="x",
+                    score=score,
+                    scored_at=NOW if score is not None else None,
+                )
+            )
+    assert sorted(await titles(api, min_score=60, max_score=90)) == [
+        "Note 63",
+        "Note 64",
+        "Note 88",
+    ]
+    body = (
+        await api.get("/api/offers", params={"view": "to_review", "min_score": 60, "max_score": 90})
+    ).json()
+    curve = body["facets"]["scores"]
+    assert len(curve) == 20 and sum(curve) == 5  # tout, sans le filtre de note
+    assert curve[8] == 1 and curve[12] == 2 and curve[17] == 1 and curve[19] == 1
+    assert body["facets"]["unscored"] == 1

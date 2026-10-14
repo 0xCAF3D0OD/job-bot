@@ -3324,6 +3324,16 @@ export interface components {
             sources: components["schemas"]["Facet"][];
             /** Cantons */
             cantons: components["schemas"]["Facet"][];
+            /**
+             * Scores
+             * @default []
+             */
+            scores: number[];
+            /**
+             * Unscored
+             * @default 0
+             */
+            unscored: number;
         };
         /**
          * OfferFiltersVisible
@@ -4993,6 +5003,7 @@ export interface operations {
                 view?: "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
                 q?: string | null;
                 min_score?: number | null;
+                max_score?: number | null;
                 sources?: string[];
                 cantons?: string[];
                 min_rate?: number | null;

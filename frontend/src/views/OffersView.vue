@@ -29,7 +29,7 @@ const counts = ref<Record<View, number>>({
 const applying = ref<ApplicationFormValue | null>(null);
 const applyError = ref("");
 const notice = ref("");
-const facets = ref<OfferFacets>({ sources: [], cantons: [] });
+const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0 });
 const loading = ref(false);
 const failed = ref(false);
 const selectedId = ref<number | null>(null);
@@ -107,6 +107,7 @@ async function load(append = false): Promise<void> {
           cantons: f.cantons.length ? f.cantons : undefined,
           min_rate: f.minRate ?? undefined,
           min_score: f.minScore ?? undefined,
+          max_score: f.maxScore ?? undefined,
           external_only: f.externalOnly || undefined,
           remote: f.remote ?? undefined,
         },
@@ -270,6 +271,10 @@ onUnmounted(() => {
     <div :class="['offers-grid', { 'has-selection': selected }]">
       <aside :class="['filters-column', { open: filtersOpen }]">
         <div class="filters-sheet-head">
+          <span
+            class="sheet-grabber"
+            aria-hidden="true"
+          />
           <strong>Filtres</strong>
           <button
             type="button"
@@ -285,17 +290,12 @@ onUnmounted(() => {
           :counts="counts"
           :facets="facets"
           :visible="visibleFilters"
+          :total="total"
           @update="update"
           @reset="reset"
           @visibility="setVisibility"
+          @done="filtersOpen = false"
         />
-        <button
-          type="button"
-          class="primary sheet-done"
-          @click="filtersOpen = false"
-        >
-          Voir {{ total }} offre(s)
-        </button>
       </aside>
 
       <div class="offers-list">

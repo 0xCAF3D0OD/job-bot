@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import ColumnElement, Time, and_, cast, func, or_, select
+from sqlalchemy import ColumnElement, Time, and_, case, cast, func, or_, select
 
 from jobbot.core.filter import remote_location
 from jobbot.core.normalize import normalize_text
@@ -318,6 +318,10 @@ class OfferFacets(BaseModel):
 
     sources: list[Facet]
     cantons: list[Facet]
+    # Courbe des notes (docs/27 §3) : nombre d'offres notées par tranche de 5 points
+    # (0-4, 5-9… 95-100), sans le filtre de note lui-même ; et les offres pas encore notées.
+    scores: list[int] = []
+    unscored: int = 0
 
 
 # Accents retirés côté base, sans extension PostgreSQL (unaccent n'est pas toujours installé).
@@ -414,6 +418,7 @@ async def list_offers(
     view: Literal["to_review", "filtered_out", "later", "in_progress", "expired", "all"] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
     min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
+    max_score: Annotated[int | None, Query(ge=0, le=99)] = None,
     sources: Annotated[list[SiteSlug], Query(max_length=20)] = [],  # noqa: B006
     cantons: Annotated[list[str], Query(max_length=26)] = [],  # noqa: B006
     min_rate: Annotated[int | None, Query(ge=1, le=100)] = None,
@@ -452,16 +457,25 @@ async def list_offers(
         "activity": (activity.desc(), Offer.id.desc()),
     }.get(sort, (Offer.first_seen_at.desc(), Offer.id.desc()))
     conditions = _filters(q, sources, cantons, min_rate, external_only, remote)
+    # Sans le filtre de note : base de la courbe des notes.
+    without_score = [*conditions]
     if min_score is not None:
         conditions.append(score >= min_score)
+    if max_score is not None:
+        conditions.append(score <= max_score)
     view_condition = _view_condition(view)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
     without_sources = _filters(q, [], cantons, min_rate, external_only, remote)
     without_cantons = _filters(q, sources, [], min_rate, external_only, remote)
-    if min_score is not None:
-        without_sources.append(score >= min_score)
-        without_cantons.append(score >= min_score)
+    for bound in (
+        *([score >= min_score] if min_score is not None else []),
+        *([score <= max_score] if max_score is not None else []),
+    ):
+        without_sources.append(bound)
+        without_cantons.append(bound)
+    if view_condition is not None:
+        without_score.append(view_condition)
     if view_condition is not None:
         without_sources.append(view_condition)
         without_cantons.append(view_condition)
@@ -488,6 +502,13 @@ async def list_offers(
                 .group_by(OfferLink.source)
             )
         ).all()
+        # LEAST ignore les valeurs vides : une offre non notée reste hors des tranches.
+        bucket = case((score.is_(None), None), else_=func.least(score / 5, 19))
+        score_rows = (
+            await session.execute(
+                select(bucket, func.count()).where(*without_score).group_by(bucket)
+            )
+        ).all()
         canton_rows = (
             await session.execute(
                 select(Offer.canton, func.count())
@@ -509,7 +530,16 @@ async def list_offers(
         all=sum(live.values()),
     )
     total = counts.model_dump().get(view, counts.all)
+    histogram = [0] * 20
+    unscored = 0
+    for index, count in score_rows:
+        if index is None:
+            unscored += count
+        else:
+            histogram[int(index)] += count
     facets = OfferFacets(
+        scores=histogram,
+        unscored=unscored,
         sources=[Facet(value=str(v), count=c) for v, c in sorted(source_rows)],
         cantons=[
             Facet(value=str(v), count=c)

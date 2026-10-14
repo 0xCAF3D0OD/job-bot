@@ -133,13 +133,21 @@ describe("OffersView", () => {
 
   it("un clic sur un filtre met à jour l'adresse et recharge", async () => {
     const wrapper = await mountAt("/offres");
-    expect(wrapper.find("[data-test=view-filtered_out]").text()).toContain("2");
-    await wrapper.find("[data-test=canton-VD]").trigger("click");
+    // Cartes (docs/27) : la ligne ouvre le choix dans le même panneau.
+    expect(wrapper.find("[data-test=row-view]").text()).toContain("À examiner");
+    await wrapper.find("[data-test=row-cantons]").trigger("click");
+    await wrapper.find("[data-test=canton-VD]").trigger("change");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ canton: ["VD"] });
     expect(lastQuery()).toMatchObject({ cantons: ["VD"] });
+    await wrapper.find("[data-test=filter-back]").trigger("click");
+    expect(wrapper.find("[data-test=row-cantons]").text()).toContain("VD");
 
+    await wrapper.find("[data-test=row-sources]").trigger("click");
     await wrapper.find("[data-test=source-indeed]").trigger("change");
+    await wrapper.find("[data-test=filter-back]").trigger("click");
+    await wrapper.find("[data-test=row-view]").trigger("click");
+    expect(wrapper.find("[data-test=view-filtered_out]").text()).toContain("2");
     await wrapper.find("[data-test=view-all]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ canton: ["VD"], site: ["indeed"], statut: "all" });
@@ -446,15 +454,15 @@ describe("tri « Dernière action »", () => {
   it("devient le tri de l'onglet En cours, et disparaît en le quittant", async () => {
     const wrapper = await mountAt("/offres");
     expect(wrapper.text()).not.toContain("Dernière action");
-    const inProgress = wrapper.findAll(".status-list button").find((b) => b.text().startsWith("En cours"))!;
-    await inProgress.trigger("click");
+    await wrapper.find("[data-test=row-view]").trigger("click");
+    await wrapper.find("[data-test=view-in_progress]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toMatchObject({ statut: "in_progress", tri: "activity" });
     expect(lastQuery().sort).toBe("activity");
-    expect(wrapper.text()).toContain("Dernière action");
+    expect(wrapper.find("[data-test=row-sort]").text()).toContain("Dernière action");
 
-    const toReview = wrapper.findAll(".status-list button").find((b) => b.text().startsWith("À examiner"))!;
-    await toReview.trigger("click");
+    await wrapper.find("[data-test=row-view]").trigger("click");
+    await wrapper.find("[data-test=view-to_review]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query.tri).toBeUndefined();
   });
