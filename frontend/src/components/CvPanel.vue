@@ -4,7 +4,8 @@ import { computed, nextTick, onMounted, ref } from "vue";
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 
-const props = defineProps<{ offer: Offer }>();
+// `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
+const props = defineProps<{ offer: Offer; primary?: boolean }>();
 // Version affichée, pour le lien « CV (Word) » de la barre de la page.
 const emit = defineEmits<{ current: [id: number | null] }>();
 
@@ -298,7 +299,7 @@ onMounted(() => void load());
         </label>
         <button
           type="button"
-          class="primary"
+          :class="primary ? 'primary' : 'secondary'"
           :disabled="writing"
           data-test="write-cv"
           @click="write"

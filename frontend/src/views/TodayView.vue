@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
-import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
@@ -46,7 +45,7 @@ const preparing = ref<Offer[]>([]);
 const news = ref<NewsItem[]>([]);
 const trainingsInProgress = ref<Training[]>([]);
 const trainingIdea = ref<Training | null>(null);
-const { message, running, collectNow } = useCollect();
+const { message } = useCollect();
 // Comme le menu : retour à la candidature commencée ou à l'onglet quitté.
 const { last: lastJobsPage } = useJobsMemory();
 
@@ -327,17 +326,8 @@ onMounted(() => void load());
                 ? `Dernière collecte réussie ${sinceText(today.last_collect_at)}.`
                 : "Aucune collecte réussie pour l'instant."
             }}
-            Automatique toutes les 2 heures en journée.
+            Automatique toutes les 2 heures en journée ; « Collecter », en haut, relève tout de suite.
           </p>
-          <button
-            type="button"
-            class="primary small"
-            :disabled="running"
-            data-test="collect-today"
-            @click="collectNow"
-          >
-            Collecter maintenant <AppIcon name="chevron" />
-          </button>
           <span
             v-if="message"
             class="hint"

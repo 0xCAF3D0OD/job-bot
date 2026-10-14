@@ -151,7 +151,7 @@ onMounted(async () => {
         <button
           v-else-if="firstIncomplete"
           type="button"
-          class="primary small"
+          class="secondary small"
           data-test="complete-next"
           @click="edit(firstIncomplete)"
         >
@@ -160,7 +160,7 @@ onMounted(async () => {
         <template v-else>
           <button
             type="button"
-            class="primary small"
+            class="secondary small"
             :disabled="busy"
             data-test="submit"
             @click="submit(true)"

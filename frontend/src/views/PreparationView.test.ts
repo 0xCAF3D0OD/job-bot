@@ -192,6 +192,9 @@ describe("barre de candidature", () => {
     expect(bar.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");
     expect(bar.find("[data-test=bar-letter]").attributes("href")).toBe("/api/letters/11/pdf");
     expect(bar.find("[data-test=bar-cv]").attributes("href")).toBe("/api/cvs/31/pdf");
+    // Lettre et CV prêts : « Postuler » est le seul bouton plein (docs/29 §1.3).
+    expect(bar.find("[data-test=apply]").classes()).toContain("primary-link");
+    expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
 
     await bar.find("[data-test=mark-applied]").trigger("click");
     await flushPromises();

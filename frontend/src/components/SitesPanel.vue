@@ -218,7 +218,7 @@ onMounted(() => void load());
         <div class="form-actions wide">
           <button
             type="submit"
-            class="primary small"
+            class="secondary small"
             data-test="save-site"
           >
             Ajouter <AppIcon name="chevron" />

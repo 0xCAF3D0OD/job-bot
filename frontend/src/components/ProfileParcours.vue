@@ -37,6 +37,11 @@ const EMPTY_CHUNK: ChunkForm = {
 
 const documents = ref<DocumentOut[]>([]);
 const chunks = ref<Chunk[]>([]);
+// Un seul bouton plein (docs/29 §1.3) : tant qu'il n'y a aucun bloc, « Proposer des blocs » sur
+// le premier document lisible ; ensuite, aucun d'office.
+const firstReadable = computed(() =>
+  chunks.value.length ? null : (documents.value.find((d) => d.text_status === "ok")?.id ?? null),
+);
 const openText = ref<DocumentText | null>(null);
 const openDocument = computed(() => documents.value.find((d) => d.id === openText.value?.id) ?? null);
 const textBox = ref<HTMLElement | null>(null);
@@ -284,7 +289,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
               <button
                 v-if="doc.text_status === 'ok'"
                 type="button"
-                class="primary small"
+                :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
                 :disabled="proposing !== null"
                 :data-test="`propose-${doc.id}`"
                 @click="propose(doc)"
@@ -325,7 +330,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           <h3>{{ openDocument?.filename }}</h3>
           <button
             type="button"
-            class="primary small"
+            class="secondary small"
             :disabled="openText.text_status !== 'ok'"
             data-test="chunk-from-selection"
             @click="chunkFromSelection"
@@ -354,7 +359,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       </h2>
       <button
         type="button"
-        class="primary"
+        class="secondary"
         data-test="new-chunk"
         @click="newChunk()"
       >
