@@ -305,7 +305,7 @@ onMounted(() => void load());
         <div class="form-actions wide">
           <button
             type="submit"
-            class="primary small"
+            class="secondary small"
             :disabled="busy"
             data-test="save-news-search"
           >
@@ -377,7 +377,7 @@ onMounted(() => void load());
         <div class="form-actions wide">
           <button
             type="submit"
-            class="primary small"
+            class="secondary small"
             :disabled="busy"
             data-test="save-news-source"
           >

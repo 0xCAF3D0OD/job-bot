@@ -83,7 +83,7 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
         <NotificationBell />
         <button
           type="button"
-          class="primary small"
+          class="secondary small"
           :disabled="running"
           data-test="collect-top"
           @click="collectNow"

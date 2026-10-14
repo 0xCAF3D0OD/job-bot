@@ -77,7 +77,7 @@ defineExpose({ load });
       <button
         v-if="status.configured && status.stale"
         type="button"
-        class="primary small"
+        class="secondary small"
         :disabled="busy"
         data-test="rescore"
         @click="rescore"

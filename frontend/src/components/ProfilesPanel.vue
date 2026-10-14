@@ -242,7 +242,7 @@ onMounted(async () => {
         <div class="form-actions wide">
           <button
             type="submit"
-            class="primary small"
+            class="secondary small"
             :disabled="busy"
             data-test="save-profile"
           >

@@ -516,7 +516,7 @@ watch(
           <div>
             <button
               type="submit"
-              class="primary small"
+              class="secondary small"
               data-test="save-address"
             >
               Enregistrer

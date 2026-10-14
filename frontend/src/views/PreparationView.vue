@@ -35,6 +35,10 @@ const currentLetterId = computed(() => current(letters.value)?.id ?? null);
 // Corps de la lettre, pour les formulaires qui le demandent en texte (docs/25 §5).
 const currentLetterText = computed(() => current(letters.value)?.paragraphs.map((p) => p.text).join("\n\n") ?? null);
 const sheetOpen = ref(false);
+// Un seul bouton plein (docs/29 §1.3) : la prochaine étape — la lettre, puis le CV, puis postuler.
+const nextStep = computed<"letter" | "cv" | "apply">(() =>
+  !currentLetterId.value ? "letter" : !currentCvId.value ? "cv" : "apply",
+);
 const applying = ref<ApplicationFormValue | null>(null);
 const applyError = ref("");
 const applyNotice = ref("");
@@ -280,7 +284,7 @@ onMounted(() => void load());
             :href="applyLink.url"
             target="_blank"
             rel="noopener noreferrer"
-            class="button-link primary-link"
+            :class="['button-link', { 'primary-link': nextStep === 'apply' }]"
             data-test="apply"
           >{{ applyLink.label }} <AppIcon name="chevron" /></a>
           <button
@@ -362,6 +366,7 @@ onMounted(() => void load());
       <CvPanel
         v-if="offer && tab === 'cv'"
         :offer="offer"
+        :primary="nextStep === 'cv'"
         @current="currentCvId = $event"
       />
 
@@ -498,7 +503,7 @@ onMounted(() => void load());
             </label>
             <button
               type="button"
-              class="primary"
+              :class="nextStep === 'letter' ? 'primary' : 'secondary'"
               :disabled="writing"
               data-test="write"
               @click="write"

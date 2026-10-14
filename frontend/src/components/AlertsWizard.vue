@@ -161,7 +161,7 @@ function nextSite(): void {
             :href="cellUrl(search.id)!"
             target="_blank"
             rel="noopener noreferrer"
-            class="button-link primary-link"
+            class="button-link"
             data-test="wizard-open"
           >Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}
             <AppIcon name="chevron" /></a>

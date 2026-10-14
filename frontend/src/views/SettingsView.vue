@@ -192,7 +192,7 @@ const SECTIONS = [
           <div class="form-actions">
             <button
               type="submit"
-              class="primary"
+              class="secondary"
               :disabled="saving"
               data-test="save-settings"
             >
@@ -296,7 +296,7 @@ const SECTIONS = [
           <div class="form-actions">
             <button
               type="submit"
-              class="primary"
+              class="secondary"
               :disabled="saving"
               data-test="save-budget"
             >
