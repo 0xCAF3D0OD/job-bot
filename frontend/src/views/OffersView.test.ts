@@ -443,7 +443,8 @@ describe("étiquettes en mots-clés", () => {
     const cards = wrapper.findAll("[data-test=offer]");
     const keywords = cards[0]!.find("[data-test=keywords]");
     expect(keywords.text()).toContain("DevOps");
-    expect(keywords.find(".kw.gap").text()).toBe("allemand B2");
+    // Un ✗ en plus de l'orange, et le sens pour les lecteurs d'écran (docs/28 §3.2).
+    expect(keywords.find(".kw.gap").text()).toBe("✗ Pas couvert par ton profil : allemand B2");
     expect(keywords.findAll(".kw.offer").map((k) => k.text())).toEqual(["80-100 %", "CDI"]);
     expect(cards[1]!.find("[data-test=summary]").text()).toContain("Phrase complète du poste");
   });

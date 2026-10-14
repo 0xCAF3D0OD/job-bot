@@ -37,6 +37,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.18.0 | Remplir le formulaire de l'employeur : PDF et fiche à copier (a), extension du navigateur (b) | livrée |
 | 0.19.0 | Télétravail : repérage, règle et filtre (a), sites d'offres à distance (b) | livrée |
 | 0.20.0 | Filtres des offres en cartes, courbe des notes | livrée |
+| 0.21.0 | Accessibilité : contraste, couleur seule, zones de clic | livrée |
 
 ## Lancer en local
 

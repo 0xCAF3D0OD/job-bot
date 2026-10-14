@@ -80,7 +80,10 @@ const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.so
           :key="ask.text"
           :class="['kw', { gap: ask.covered === false }]"
           :title="ask.covered === false ? 'Pas couvert par ton profil' : undefined"
-        >{{ ask.text }}</span>
+        ><template v-if="ask.covered === false"><span
+          aria-hidden="true"
+          class="kw-missing"
+        >✗ </span><span class="visually-hidden">Pas couvert par ton profil : </span></template>{{ ask.text }}</span>
       </div>
       <div
         v-if="offer.keywords_offers?.length"
