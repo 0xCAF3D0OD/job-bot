@@ -2,7 +2,15 @@
 
 import pytest
 
-from jobbot.core.filter import ContractType, Criteria, Language, OfferFacts, canton_of, evaluate
+from jobbot.core.filter import (
+    ContractType,
+    Criteria,
+    Language,
+    OfferFacts,
+    RemotePolicy,
+    canton_of,
+    evaluate,
+)
 
 
 def rules(
@@ -45,13 +53,41 @@ def test_cities_only_excludes_other_known_cities() -> None:
     ]
 
 
-@pytest.mark.parametrize(("remote_ok", "excluded"), [(True, False), (False, True)])
-def test_full_remote(remote_ok: bool, excluded: bool) -> None:
+@pytest.mark.parametrize(
+    ("policy", "excluded"),
+    [
+        (RemotePolicy.FROM_SWITZERLAND, False),
+        (RemotePolicy.ANYWHERE, False),
+        (RemotePolicy.REFUSE, True),
+    ],
+)
+def test_full_remote(policy: RemotePolicy, excluded: bool) -> None:
     facts = OfferFacts("Cloud Consultant", location="Home Office")
-    criteria = Criteria(locations=("VD",), remote_ok=remote_ok)
+    criteria = Criteria(locations=("VD",), remote_policy=policy)
     assert ("remote" in rules(facts, criteria)) is excluded
     # Sans lieux saisis, le télétravail n'est pas filtré.
-    assert rules(facts, Criteria(remote_ok=remote_ok)) == []
+    assert rules(facts, Criteria(remote_policy=policy)) == []
+
+
+def test_remote_region_from_switzerland() -> None:
+    """Télétravail complet réservé à d'autres pays : écarté seulement « depuis la Suisse »,
+    même sans lieux saisis ; sans précision dans l'annonce, l'offre reste."""
+    us_only = OfferFacts(
+        "SRE", location="New York", remote="full", remote_region="US only",
+        remote_from_switzerland=False,
+    )  # fmt: skip
+    swiss = Criteria(remote_policy=RemotePolicy.FROM_SWITZERLAND)
+    assert rules(us_only, swiss) == ["remote_region"]
+    assert rules(
+        us_only, Criteria(locations=("VD",), remote_policy=RemotePolicy.FROM_SWITZERLAND)
+    ) == ["remote_region"]
+    assert rules(us_only, Criteria(remote_policy=RemotePolicy.ANYWHERE)) == []
+    europe = OfferFacts("SRE", remote="full", remote_region="Europe", remote_from_switzerland=True)
+    unknown = OfferFacts("SRE", location="Remote", remote_from_switzerland=None)
+    hybrid = OfferFacts("SRE", location="Lausanne", remote="hybrid")
+    assert rules(europe, swiss) == rules(unknown, swiss) == rules(hybrid, swiss) == []
+    reason = evaluate(us_only, swiss).reasons[0].message
+    assert "US only" in reason and "Suisse" in reason
 
 
 @pytest.mark.parametrize(

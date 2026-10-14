@@ -233,6 +233,13 @@ class Evaluation(Base):
     keywords_role: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     keywords_asks: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     keywords_offers: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    # Télétravail relevé par l'IA (docs/26 §2) : onsite | hybrid | full | unknown ; jours par
+    # semaine (partiel) ; d'où on peut travailler (« Europe », « US only ») et si c'est ouvert
+    # depuis la Suisse (None : non précisé).
+    remote: Mapped[str | None] = mapped_column(Text)
+    remote_days: Mapped[int | None] = mapped_column(SmallInteger)
+    remote_region: Mapped[str | None] = mapped_column(Text)
+    remote_from_switzerland: Mapped[bool | None]
     model: Mapped[str | None] = mapped_column(Text)
     prompt_version: Mapped[str | None] = mapped_column(Text)
     profile_hash: Mapped[str | None] = mapped_column(Text)

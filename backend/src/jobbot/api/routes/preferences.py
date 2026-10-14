@@ -16,6 +16,7 @@ from jobbot.core.filter import (
     ContractType,
     Criteria,
     Language,
+    RemotePolicy,
 )
 from jobbot.db.models import Criterion, Setting
 from jobbot.filtering.service import load_criteria, save_criteria
@@ -40,7 +41,8 @@ def _clean(values: list[str]) -> list[str]:
 
 class CriteriaIn(BaseModel):
     locations: list[ShortText] = Field(default_factory=list, max_length=100)
-    remote_ok: bool = False
+    # Télétravail complet (docs/26 §3) : refusé, ouvert depuis la Suisse, ou partout.
+    remote_policy: RemotePolicy = RemotePolicy.REFUSE
     min_rate: int | None = Field(default=None, ge=1, le=100)
     excluded_types: list[ContractType] = Field(default_factory=list)
     banned_words: list[ShortText] = Field(default_factory=list, max_length=100)
@@ -98,7 +100,7 @@ def _keywords() -> KeywordsOut:
 def _criteria_in(criteria: Criteria) -> CriteriaIn:
     return CriteriaIn(
         locations=list(criteria.locations),
-        remote_ok=criteria.remote_ok,
+        remote_policy=criteria.remote_policy,
         min_rate=criteria.min_rate,
         excluded_types=list(criteria.excluded_types),
         banned_words=list(criteria.banned_words),
@@ -120,7 +122,7 @@ async def put_criteria(request: Request, body: CriteriaIn) -> CriteriaOut:
     runtime = _runtime(request)
     criteria = Criteria(
         locations=tuple(body.locations),
-        remote_ok=body.remote_ok,
+        remote_policy=body.remote_policy,
         min_rate=body.min_rate,
         excluded_types=tuple(body.excluded_types),
         banned_words=tuple(body.banned_words),
@@ -162,8 +164,10 @@ async def put_settings(request: Request, body: SettingsModel) -> SettingsModel:
 
 # --- Filtres affichés sur la page Offres (docs/10 §3) -----------------------------------
 
-FilterKey = Literal["score", "sources", "cantons", "rate", "external"]
-ALL_FILTERS: list[FilterKey] = ["score", "sources", "cantons", "rate", "external"]
+FilterKey = Literal["score", "remote", "sources", "cantons", "rate", "external"]
+ALL_FILTERS: list[FilterKey] = ["score", "remote", "sources", "cantons", "rate", "external"]
+# Filtres ajoutés après la personnalisation (docs/10 §3) : visibles chez qui l'avait faite.
+ADDED_LATER: list[FilterKey] = ["remote"]
 
 
 class OfferFiltersVisible(BaseModel):
@@ -183,8 +187,17 @@ async def get_offer_filters(request: Request) -> OfferFiltersVisible:
         value = await session.scalar(
             select(Setting.value).where(Setting.key == "offer_filters_visible")
         )
+        known = await session.scalar(
+            select(Setting.value).where(Setting.key == "offer_filters_known")
+        )
     # Par défaut, tous les filtres, comme avant.
-    return OfferFiltersVisible(visible=value if isinstance(value, list) else ALL_FILTERS)
+    if not isinstance(value, list):
+        return OfferFiltersVisible(visible=ALL_FILTERS)
+    # Un filtre ajouté depuis ton choix (« Télétravail », docs/26 §4) apparaît : tu ne l'avais
+    # pas masqué. Les listes enregistrées avant cette règle connaissaient les filtres d'avant.
+    seen = known if isinstance(known, list) else [f for f in ALL_FILTERS if f not in ADDED_LATER]
+    added = [f for f in ALL_FILTERS if f not in seen]
+    return OfferFiltersVisible(visible=[*value, *added])
 
 
 @router.put("/offer-filters", operation_id="saveOfferFilters")
@@ -194,6 +207,11 @@ async def put_offer_filters(request: Request, body: OfferFiltersVisible) -> Offe
             insert(Setting)
             .values(key="offer_filters_visible", value=body.visible)
             .on_conflict_do_update(index_elements=["key"], set_={"value": body.visible})
+        )
+        await session.execute(
+            insert(Setting)
+            .values(key="offer_filters_known", value=ALL_FILTERS)
+            .on_conflict_do_update(index_elements=["key"], set_={"value": ALL_FILTERS})
         )
     return body
 
@@ -240,6 +258,11 @@ async def put_orp_columns(request: Request, body: OrpColumnsVisible) -> OrpColum
             insert(Setting)
             .values(key="orp_columns_visible", value=body.visible)
             .on_conflict_do_update(index_elements=["key"], set_={"value": body.visible})
+        )
+        await session.execute(
+            insert(Setting)
+            .values(key="offer_filters_known", value=ALL_FILTERS)
+            .on_conflict_do_update(index_elements=["key"], set_={"value": ALL_FILTERS})
         )
     return body
 

@@ -6,6 +6,9 @@ import type { Source } from "../api/client";
 export type View = "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
 export type Sort = "day" | "recent" | "popular" | "score" | "activity";
 
+// Télétravail (docs/26 §4) : au moins partiel, ou complet.
+export type Remote = "partial" | "full";
+
 export interface OfferFilters {
   view: View;
   sort: Sort;
@@ -15,6 +18,7 @@ export interface OfferFilters {
   minRate: number | null;
   minScore: number | null;
   externalOnly: boolean;
+  remote: Remote | null;
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
@@ -27,6 +31,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   minRate: null,
   minScore: null,
   externalOnly: false,
+  remote: null,
 };
 
 const VIEWS: View[] = ["to_review", "filtered_out", "later", "in_progress", "expired", "all"];
@@ -56,6 +61,7 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     minRate: Number.isInteger(rate) && rate >= 1 && rate <= 100 ? rate : null,
     minScore: Number.isInteger(score) && score >= 1 && score <= 100 ? score : null,
     externalOnly: one(query.externe) === "1",
+    remote: one(query.teletravail) === "complet" ? "full" : one(query.teletravail) === "partiel" ? "partial" : null,
   };
 }
 
@@ -69,6 +75,7 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   if (filters.minRate !== null) query.taux = String(filters.minRate);
   if (filters.minScore !== null) query.note = String(filters.minScore);
   if (filters.externalOnly) query.externe = "1";
+  if (filters.remote) query.teletravail = filters.remote === "full" ? "complet" : "partiel";
   return query;
 }
 
@@ -80,7 +87,8 @@ export function activeCount(filters: OfferFilters): number {
     filters.cantons.length +
     (filters.minRate !== null ? 1 : 0) +
     (filters.minScore !== null ? 1 : 0) +
-    (filters.externalOnly ? 1 : 0)
+    (filters.externalOnly ? 1 : 0) +
+    (filters.remote ? 1 : 0)
   );
 }
 

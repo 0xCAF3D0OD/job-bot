@@ -108,6 +108,7 @@ async function load(append = false): Promise<void> {
           min_rate: f.minRate ?? undefined,
           min_score: f.minScore ?? undefined,
           external_only: f.externalOnly || undefined,
+          remote: f.remote ?? undefined,
         },
       },
     });

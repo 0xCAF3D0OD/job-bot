@@ -746,6 +746,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/scoring/remote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Remote Status */
+        get: operations["getRemoteStatus"];
+        put?: never;
+        /** Start Remote Read */
+        post: operations["startRemoteRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rescore": {
         parameters: {
             query?: never;
@@ -2352,11 +2370,8 @@ export interface components {
         CriteriaIn: {
             /** Locations */
             locations?: string[];
-            /**
-             * Remote Ok
-             * @default false
-             */
-            remote_ok: boolean;
+            /** @default refuse */
+            remote_policy: components["schemas"]["RemotePolicy"];
             /** Min Rate */
             min_rate?: number | null;
             /** Excluded Types */
@@ -3287,7 +3302,7 @@ export interface components {
          */
         OfferFiltersVisible: {
             /** Visible */
-            visible: ("score" | "sources" | "cantons" | "rate" | "external")[];
+            visible: ("score" | "remote" | "sources" | "cantons" | "rate" | "external")[];
         };
         /** OfferLinkOut */
         OfferLinkOut: {
@@ -3418,6 +3433,14 @@ export interface components {
              * @default []
              */
             keywords_offers: string[];
+            /** Remote */
+            remote?: ("onsite" | "hybrid" | "full" | "unknown") | null;
+            /** Remote Days */
+            remote_days?: number | null;
+            /** Remote Region */
+            remote_region?: string | null;
+            /** Remote From Switzerland */
+            remote_from_switzerland?: boolean | null;
         };
         /** OfferPage */
         OfferPage: {
@@ -3641,6 +3664,23 @@ export interface components {
             /** Canton */
             canton: string;
         };
+        /**
+         * RemotePolicy
+         * @description Télétravail complet (docs/26 §3) : refusé hors de tes lieux, accepté s'il est ouvert
+         *     depuis la Suisse (un poste réservé à d'autres pays est écarté), ou accepté partout.
+         * @enum {string}
+         */
+        RemotePolicy: "refuse" | "from_switzerland" | "anywhere";
+        /**
+         * RemoteStatus
+         * @description Offres à examiner déjà notées dont le télétravail n'est pas relevé (docs/26 §2).
+         */
+        RemoteStatus: {
+            /** Pending */
+            pending: number;
+            /** Estimate Usd */
+            estimate_usd: string;
+        };
         /** RereadOut */
         RereadOut: {
             /** Examined */
@@ -3846,6 +3886,14 @@ export interface components {
              * @default []
              */
             keywords_offers: string[];
+            /** Remote */
+            remote?: ("onsite" | "hybrid" | "full" | "unknown") | null;
+            /** Remote Days */
+            remote_days?: number | null;
+            /** Remote Region */
+            remote_region?: string | null;
+            /** Remote From Switzerland */
+            remote_from_switzerland?: boolean | null;
             /** Is First */
             is_first: boolean;
         };
@@ -4906,6 +4954,7 @@ export interface operations {
                 cantons?: string[];
                 min_rate?: number | null;
                 external_only?: boolean;
+                remote?: ("partial" | "full") | null;
             };
             header?: never;
             path?: never;
@@ -5686,6 +5735,53 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ScoringStatus"];
                 };
+            };
+        };
+    };
+    getRemoteStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RemoteStatus"];
+                };
+            };
+        };
+    };
+    startRemoteRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RescoreResponse"];
+                };
+            };
+            /** @description IA non configurée */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

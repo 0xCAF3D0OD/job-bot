@@ -1164,3 +1164,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .offer-day { grid-column: 1 / -1; margin-top: 0.4rem; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
 .offer-day::first-letter { text-transform: uppercase; }
 .offer-day:first-child { margin-top: 0; }
+/* Télétravail sur la carte (docs/26 §2) ; barré s'il n'est pas ouvert depuis la Suisse. */
+.meta-remote { color: var(--accent); font-weight: 500; }
+.meta-remote.excluded { color: var(--muted); text-decoration: line-through; }
+.remote-read { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.75rem; margin: 0.6rem 0 0; font-size: 0.88rem; color: var(--muted); }

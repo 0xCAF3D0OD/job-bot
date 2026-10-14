@@ -2,6 +2,9 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type ContractType, type CriteriaIn, type Keywords, type Language } from "../api/client";
+import type { components } from "../api/schema";
+
+type RemotePolicy = components["schemas"]["RemotePolicy"];
 import AppIcon from "./AppIcon.vue";
 import TagInput from "./TagInput.vue";
 
@@ -17,12 +20,23 @@ const LANGUAGES: { value: Language; label: string }[] = [
   { value: "anglais", label: "Anglais" },
 ];
 
+// Télétravail complet (docs/26 §3) : trois positions, la phrase reste courte.
+const REMOTE_POLICIES: { value: RemotePolicy; label: string; summary: string }[] = [
+  { value: "refuse", label: "Refusé", summary: "Télétravail complet : refusé hors de tes lieux" },
+  {
+    value: "from_switzerland",
+    label: "Si ouvert depuis la Suisse",
+    summary: "Télétravail complet : accepté s'il est ouvert depuis la Suisse",
+  },
+  { value: "anywhere", label: "Partout", summary: "Télétravail complet : accepté partout" },
+];
+
 // Tous les champs sont présents dans le formulaire, même ceux que l'API rend facultatifs.
 type CriteriaForm = Required<CriteriaIn>;
 
 const EMPTY: CriteriaForm = {
   locations: [],
-  remote_ok: false,
+  remote_policy: "refuse",
   min_rate: null,
   excluded_types: [],
   banned_words: [],
@@ -45,9 +59,10 @@ const summary = computed(() => {
   const lines: string[] = [];
   lines.push(
     f.locations.length
-      ? `Lieux : ${f.locations.join(", ")}${f.remote_ok ? ", ou télétravail complet" : ""}`
+      ? `Lieux : ${f.locations.join(", ")}`
       : "Lieux : partout",
   );
+  lines.push(REMOTE_POLICIES.find((p) => p.value === f.remote_policy)?.summary ?? "");
   lines.push(f.min_rate ? `Taux d'activité : ${f.min_rate} % au moins` : "Taux d'activité : tous");
   const types = CONTRACTS.filter((c) => f.excluded_types.includes(c.value)).map((c) => c.label.toLowerCase());
   lines.push(types.length ? `Exclus : ${types.join(", ")}` : "Aucun type d'offre exclu");
@@ -95,7 +110,7 @@ onMounted(() => void load());
 <template>
   <div class="panel">
     <p
-      v-if="loaded && !failed && !form.locations.length && !form.remote_ok"
+      v-if="loaded && !failed && !form.locations.length"
       class="notice"
       data-test="criteria-missing"
     >
@@ -152,13 +167,30 @@ onMounted(() => void load());
           v-model="form.locations"
           placeholder="Lausanne, VD…"
         />
-        <label class="check">
-          <input
-            v-model="form.remote_ok"
-            type="checkbox"
+      </fieldset>
+
+      <fieldset>
+        <legend>Télétravail complet</legend>
+        <div
+          class="segmented"
+          role="radiogroup"
+          aria-label="Télétravail complet"
+        >
+          <button
+            v-for="policy in REMOTE_POLICIES"
+            :key="policy.value"
+            type="button"
+            role="radio"
+            :aria-checked="form.remote_policy === policy.value"
+            :data-test="`remote-policy-${policy.value}`"
+            @click="form.remote_policy = policy.value"
           >
-          Accepter le télétravail complet, même hors de ces lieux
-        </label>
+            {{ policy.label }}
+          </button>
+        </div>
+        <p class="hint">
+          « Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »).
+        </p>
       </fieldset>
 
       <fieldset>

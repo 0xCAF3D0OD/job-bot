@@ -22,6 +22,15 @@ class ContractType(StrEnum):
     FREELANCE = "freelance"
 
 
+class RemotePolicy(StrEnum):
+    """Télétravail complet (docs/26 §3) : refusé hors de tes lieux, accepté s'il est ouvert
+    depuis la Suisse (un poste réservé à d'autres pays est écarté), ou accepté partout."""
+
+    REFUSE = "refuse"
+    FROM_SWITZERLAND = "from_switzerland"
+    ANYWHERE = "anywhere"
+
+
 class Language(StrEnum):
     GERMAN = "allemand"
     ITALIAN = "italien"
@@ -32,7 +41,7 @@ class Language(StrEnum):
 class Criteria:
     # Communes et/ou cantons acceptés (« Lausanne », « VD »). Vide : pas de règle de lieu.
     locations: tuple[str, ...] = ()
-    remote_ok: bool = False
+    remote_policy: RemotePolicy = RemotePolicy.REFUSE
     min_rate: int | None = None
     excluded_types: tuple[ContractType, ...] = ()
     banned_words: tuple[str, ...] = ()
@@ -43,7 +52,7 @@ class Criteria:
         payload = json.dumps(
             {
                 "locations": sorted(self.locations),
-                "remote_ok": self.remote_ok,
+                "remote_policy": self.remote_policy.value,
                 "min_rate": self.min_rate,
                 "excluded_types": sorted(self.excluded_types),
                 "banned_words": sorted(self.banned_words),
@@ -98,7 +107,7 @@ _CANTONS = {
 
 @dataclass(frozen=True)
 class Reason:
-    rule: str  # locations | remote | min_rate | contract | banned_word | language
+    rule: str  # locations | remote | remote_region | min_rate | contract | banned_word | language
     message: str
 
 
@@ -110,6 +119,10 @@ class OfferFacts:
     snippet: str | None = None
     rate_min: int | None = None
     rate_max: int | None = None
+    # Télétravail relevé par l'IA à la notation (docs/26 §2), inconnu avant.
+    remote: str | None = None
+    remote_region: str | None = None
+    remote_from_switzerland: bool | None = None
 
 
 @dataclass
@@ -131,15 +144,36 @@ def _contains(text: str, phrase: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", text) is not None
 
 
+def remote_location(location: str | None) -> bool:
+    """Le lieu de l'offre annonce un poste à distance (« Remote », « Home office »)."""
+    return bool(location and _REMOTE.search(normalize_text(location)))
+
+
+def _full_remote(facts: OfferFacts) -> bool:
+    if facts.remote == "full":
+        return True
+    return bool(facts.location and _REMOTE.search(normalize_text(facts.location)))
+
+
+def _check_remote_region(facts: OfferFacts, criteria: Criteria) -> Reason | None:
+    """Télétravail complet réservé à d'autres pays : écarté si tu ne l'acceptes qu'ouvert
+    depuis la Suisse. Sans précision dans l'annonce, l'offre reste (règle d'or)."""
+    if criteria.remote_policy is not RemotePolicy.FROM_SWITZERLAND or not _full_remote(facts):
+        return None
+    if facts.remote_from_switzerland is not False:
+        return None
+    region = facts.remote_region or "un autre pays"
+    return Reason("remote_region", f"Télétravail réservé : {region}, pas ouvert depuis la Suisse")
+
+
 def _check_location(
     facts: OfferFacts, criteria: Criteria, city_cantons: dict[str, str]
 ) -> Reason | None:
     # Sans lieux saisis, aucune règle de lieu, télétravail compris.
     if not facts.location or not criteria.locations:
         return None
-    normalized = normalize_text(facts.location)
-    if _REMOTE.search(normalized):
-        if criteria.remote_ok:
+    if _full_remote(facts):
+        if criteria.remote_policy is not RemotePolicy.REFUSE:
             return None
         return Reason("remote", f"Lieu : télétravail complet ({facts.location}), non accepté")
 
@@ -180,6 +214,8 @@ def evaluate(
     text = normalize_text(f"{facts.title} {facts.snippet or ''}")
 
     if reason := _check_location(facts, criteria, city_cantons or {}):
+        reasons.append(reason)
+    if reason := _check_remote_region(facts, criteria):
         reasons.append(reason)
     if reason := _check_rate(facts, criteria):
         reasons.append(reason)
