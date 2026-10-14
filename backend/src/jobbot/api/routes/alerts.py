@@ -8,7 +8,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from jobbot.alerts import service
+from jobbot.core.filter import RemotePolicy
 from jobbot.db.models import AlertSearch, AlertSetup, Site
+from jobbot.filtering.service import load_criteria
 from jobbot.runtime import Runtime
 
 # /api/alerts/refresh (bouton « Collecter ») existe déjà : préfixe distinct.
@@ -30,6 +32,8 @@ class AlertCell(BaseModel):
     status: Literal["received", "created", "todo"]
     received_at: datetime | None
     created_at: datetime | None
+    # Même recherche en télétravail (docs/26 §5), si tu l'acceptes et si le site le permet.
+    remote_url: str | None = None
 
 
 class AlertSearchOut(BaseModel):
@@ -82,6 +86,17 @@ async def _page(runtime: Runtime) -> AlertsPage:
             )
         )
         rows = [(s, await service.cells(session, s, sites)) for s in searches]
+        accepts_remote = (await load_criteria(session)).remote_policy is not RemotePolicy.REFUSE
+    by_slug = {s.slug: s for s in sites}
+
+    def cell(search: AlertSearch, found: service.Cell) -> AlertCell:
+        remote = (
+            service.remote_search_url(by_slug[found.site], search.terms)
+            if accepts_remote and found.site in by_slug
+            else None
+        )
+        return AlertCell(**found.__dict__, remote_url=remote)
+
     return AlertsPage(
         mailbox=settings.imap_user or None if settings.imap_configured else None,
         folder=settings.imap_folder if settings.imap_configured else None,
@@ -100,7 +115,7 @@ async def _page(runtime: Runtime) -> AlertsPage:
                 terms=s.terms,
                 location=s.location,
                 active=s.active,
-                cells=[AlertCell(**c.__dict__) for c in found],
+                cells=[cell(s, c) for c in found],
             )
             for s, found in rows
         ],

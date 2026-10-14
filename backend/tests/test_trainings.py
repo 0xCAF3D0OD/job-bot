@@ -92,7 +92,7 @@ def test_catalog_is_consistent() -> None:
 
 
 def test_parse_answer_keeps_only_valid() -> None:
-    bad = [
+    bad: list[Any] = [
         {**GOOD, "url": "http://non-securise.example"},
         {**GOOD, "kind": "masterclass"},
         {**GOOD, "title": ""},

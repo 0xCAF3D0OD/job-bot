@@ -21,6 +21,7 @@ from jobbot.db.models import (
     ApplicationMethod,
     ApplicationStatus,
     DraftKind,
+    Evaluation,
     Interview,
     Offer,
     OfferLink,
@@ -216,6 +217,9 @@ class ApplicationOut(ApplicationUpdate):
     created_at: datetime
     # Retours d'entretien (docs/23), dans l'ordre des entretiens ; remplis par la liste.
     interviews: list["InterviewOut"] = []
+    # Poste entièrement à distance (docs/26 §6), d'après la note de l'offre ; rempli par la liste.
+    remote_full: bool = False
+    remote_region: str | None = None
 
 
 class ApplicationPrefill(ApplicationBase):
@@ -297,8 +301,25 @@ async def list_applications(
             .order_by(Interview.held_at.nulls_last(), Interview.id)
         ):
             interviews.setdefault(row.application_id, []).append(InterviewOut.model_validate(row))
+        remote = {
+            offer_id: region
+            for offer_id, region in (
+                await session.execute(
+                    select(Evaluation.offer_id, Evaluation.remote_region).where(
+                        Evaluation.offer_id.in_([a.offer_id for a in applications if a.offer_id]),
+                        Evaluation.remote == "full",
+                    )
+                )
+            ).all()
+        }
     return [
-        ApplicationOut.model_validate(a).model_copy(update={"interviews": interviews.get(a.id, [])})
+        ApplicationOut.model_validate(a).model_copy(
+            update={
+                "interviews": interviews.get(a.id, []),
+                "remote_full": a.offer_id in remote,
+                "remote_region": remote.get(a.offer_id) if a.offer_id else None,
+            }
+        )
         for a in applications
     ]
 

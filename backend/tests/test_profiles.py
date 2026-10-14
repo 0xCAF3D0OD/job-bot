@@ -3,6 +3,7 @@
 import json
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -135,7 +136,7 @@ async def test_news_follow_the_profile(api: AsyncClient, runtime: Runtime) -> No
         )
         shared_id, own_id = shared.id, own.id
 
-    def titles(page: dict) -> set[str]:
+    def titles(page: dict[str, Any]) -> set[str]:
         return {i["title"] for i in page["items"]}
 
     main_page = (await api.get("/api/news", params={"limit": 100})).json()
@@ -206,10 +207,10 @@ async def test_keywords_proposed_from_occupation(
 
     from .conftest import make_settings
 
-    calls: list[dict] = []
+    calls: list[dict[str, Any]] = []
 
     class Fake:
-        async def score(self, params: dict) -> RawResult:
+        async def score(self, params: dict[str, Any]) -> RawResult:
             calls.append(params)
             found = ["infirmière", "Infirmière", "EMS", 3, "soins infirmiers"]
             text_ = f"<reponse>{json.dumps({'keywords': found})}</reponse>"

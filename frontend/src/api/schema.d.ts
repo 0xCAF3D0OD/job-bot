@@ -1288,6 +1288,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sites/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Suggestions
+         * @description Sites d'offres en télétravail pas encore ajoutés.
+         */
+        get: operations["listSiteSuggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sites/{site_id}": {
         parameters: {
             query?: never;
@@ -1907,6 +1927,8 @@ export interface components {
             received_at: string | null;
             /** Created At */
             created_at: string | null;
+            /** Remote Url */
+            remote_url?: string | null;
         };
         /** AlertSearchIn */
         AlertSearchIn: {
@@ -2067,6 +2089,13 @@ export interface components {
              * @default []
              */
             interviews: components["schemas"]["InterviewOut"][];
+            /**
+             * Remote Full
+             * @default false
+             */
+            remote_full: boolean;
+            /** Remote Region */
+            remote_region?: string | null;
         };
         /** ApplicationPrefill */
         ApplicationPrefill: {
@@ -4019,6 +4048,20 @@ export interface components {
             last_alert_at: string | null;
             /** Unrecognized */
             unrecognized: number;
+        };
+        /**
+         * SiteSuggestion
+         * @description Site d'offres en télétravail proposé en un clic (docs/26 §5).
+         */
+        SiteSuggestion: {
+            /** Name */
+            name: string;
+            /** Senders */
+            senders: string[];
+            /** Url */
+            url: string;
+            /** Note */
+            note: string;
         };
         /** StatusResponse */
         StatusResponse: {
@@ -6895,6 +6938,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listSiteSuggestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteSuggestion"][];
                 };
             };
         };

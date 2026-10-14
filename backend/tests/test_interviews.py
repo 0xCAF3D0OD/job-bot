@@ -1,7 +1,9 @@
 """Retour d'entretien (docs/23) : formulaire, liste avec la candidature, rappel du lendemain."""
 
 from datetime import UTC, date, datetime
+from typing import Any
 
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import select, text
 
@@ -104,8 +106,8 @@ async def test_reminder_the_day_after(runtime: Runtime, client: AsyncClient) -> 
 
 
 async def test_insights_prepared_and_coach(
-    client: AsyncClient, runtime: Runtime, monkeypatch
-) -> None:  # type: ignore[no-untyped-def]
+    client: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
     from jobbot.interviews import service
     from jobbot.llm.client import RawResult
     from jobbot.llm.pricing import Usage
@@ -146,10 +148,10 @@ async def test_insights_prepared_and_coach(
 
     # Conseils de l'IA : sans clé, refusé ; avec une réponse simulée, gardés.
     assert (await client.post("/api/interviews/coach", json={})).status_code == 409
-    calls: list[dict] = []
+    calls: list[dict[str, Any]] = []
 
     class Fake:
-        async def score(self, params: dict) -> RawResult:
+        async def score(self, params: dict[str, Any]) -> RawResult:
             calls.append(params)
             text_ = (
                 '<reponse>{"pistes": ["Prépare un exemple chiffré"], '

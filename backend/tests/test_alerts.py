@@ -2,13 +2,14 @@
 
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text, update
 
 from jobbot.api.app import create_app
-from jobbot.core.filter import Criteria
+from jobbot.core.filter import Criteria, RemotePolicy
 from jobbot.db.models import AlertSetup, Search
 from jobbot.filtering.service import save_criteria
 from jobbot.runtime import Runtime
@@ -89,7 +90,7 @@ async def test_status_and_crud(api: AsyncClient, runtime: Runtime) -> None:
     for search in page["searches"][1:]:
         await api.delete(f"/api/alert-searches/{search['id']}")
 
-    def cell(page: dict, site: str) -> dict:
+    def cell(page: dict[str, Any], site: str) -> dict[str, Any]:
         return next(c for c in page["searches"][0]["cells"] if c["site"] == site)
 
     assert cell(page, "jobup")["status"] == "todo"
@@ -128,3 +129,23 @@ async def test_status_and_crud(api: AsyncClient, runtime: Runtime) -> None:
     assert after["active"] is False and after["location"] == "Sion"
     unmarked = (await api.delete(f"/api/alert-searches/{devops['id']}/sites/jobup")).json()
     assert cell(unmarked, "jobup")["status"] == "received"  # l'alerte reçue compte toujours
+
+
+async def test_remote_search_link_follows_policy(api: AsyncClient, runtime: Runtime) -> None:
+    """Lien « en télétravail » (docs/26 §5) : LinkedIn seulement, et seulement si tu acceptes
+    le télétravail complet."""
+
+    def remote_urls(page: dict[str, Any]) -> dict[str, str | None]:
+        return {c["site"]: c["remote_url"] for c in page["searches"][0]["cells"]}
+
+    page = (await api.get("/api/alert-searches")).json()
+    assert set(remote_urls(page).values()) == {None}
+    async with runtime.sessionmaker.begin() as session:
+        await save_criteria(
+            session,
+            Criteria(locations=("Lausanne",), remote_policy=RemotePolicy.FROM_SWITZERLAND),
+        )
+    urls = remote_urls((await api.get("/api/alert-searches")).json())
+    assert urls["jobup"] is None
+    linkedin = urls["linkedin"]
+    assert linkedin is not None and "f_WT=2" in linkedin and "location=Switzerland" in linkedin

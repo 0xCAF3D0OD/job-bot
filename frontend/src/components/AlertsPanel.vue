@@ -180,6 +180,15 @@ onMounted(() => void load());
                 class="link"
                 :title="`Ouvrir la recherche sur ${siteName(cell.site)}`"
               >Ouvrir <AppIcon name="chevron" /></a>
+              <a
+                v-if="cell.remote_url && cell.status !== 'received'"
+                :href="cell.remote_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link"
+                data-test="cell-remote"
+                :title="`La même recherche en télétravail sur ${siteName(cell.site)}`"
+              >en télétravail</a>
               <span class="alert-status">{{ statusText(cell) }}</span>
               <label
                 v-if="cell.status !== 'received'"

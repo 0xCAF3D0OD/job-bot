@@ -1,6 +1,6 @@
 # 26 — Les offres en télétravail (version 0.19.0)
 
-> Statut : **validé** le 2026-10-14. livré : PR a (repérage, règle, filtre).
+> Statut : **validé** le 2026-10-14. livré : PR a (repérage, règle, filtre), PR b (sites, alertes, rappel ORP).
 > Retours d'usage du 2026-10-14 : trouver les postes en télétravail (comme ceux qu'affiche Jobright), accessibles depuis la Suisse.
 
 ## 1. Le constat
@@ -81,3 +81,10 @@ criteria     remote_ok (bool) → remote_policy (refuse|from_switzerland|anywher
 - **Filtre « Télétravail »** (Tous · Au moins partiel · Complet), `?teletravail=partiel|complet`. Il apparaît aussi chez qui avait déjà personnalisé ses filtres : un filtre ajouté depuis n'est pas considéré comme masqué.
 - **Migration 0036** : colonnes de télétravail dans `evaluations`, critère `remote_policy` (contrainte des critères mise à jour).
 - **Non essayé en réel** : l'appel à l'IA (pas de clé sur l'instance de test) ; couvert par des tests avec réponses simulées.
+
+## Écarts avec la PR b
+
+- **Sites proposés** dans Réglages › Sites suivis, sous la liste : **Remotive**, **Himalayas** et **EU Remote Jobs**, chacun avec « Ajouter » (lu par l'IA, adresses d'expédition = domaines du site, sous-domaines compris). Vérifiés le 2026-10-14 : alertes par e-mail et pays acceptés indiqués par offre. **We Work Remotely** n'est pas proposé : son site refuse les lectures automatiques, je n'ai pas pu le vérifier ; il reste ajoutable à la main (« Ajouter un site »). La première alerte reçue confirme les adresses d'expédition (page Alertes).
+- **Recherche en télétravail** : seulement **LinkedIn** (télétravail, lieu « Switzerland »), dont l'adresse de recherche le permet ; lien « en télétravail » à côté de « Ouvrir » (tableau des alertes) et bouton « Ouvrir LinkedIn en télétravail » dans l'assistant, une fois par mots. Affiché seulement si tu acceptes le télétravail complet. Pour jobup et jobs.ch, le filtre « Télétravail » se coche sur le site avant de créer l'alerte (leur adresse de recherche n'a pas pu être vérifiée).
+- **Rappel ORP** : sur la carte d'une candidature à un poste entièrement à distance hors de Suisse, une ligne « 100 % télétravail · Europe : si l'employeur est à l'étranger, vérifie contrat et assurances sociales avec ton conseiller ORP ».
+- **Correction** : typage des tests remis au propre (`make lint` vérifie aussi les tests ; 14 erreurs venues des PR précédentes), ligne trop longue d'un test de la PR a.

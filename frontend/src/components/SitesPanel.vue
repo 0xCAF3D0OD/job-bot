@@ -7,6 +7,9 @@ import MoreInfo from "./MoreInfo.vue";
 
 // Sites dont les alertes sont suivies (docs/11 §2).
 const sites = ref<SiteOut[]>([]);
+// Sites d'offres en télétravail proposés en un clic (docs/26 §5).
+type Suggestion = { name: string; senders: string[]; url: string; note: string };
+const suggestions = ref<Suggestion[]>([]);
 const loaded = ref(false);
 const adding = ref(false);
 const form = ref({ name: "", senders: "", url: "" });
@@ -30,6 +33,8 @@ async function load(): Promise<void> {
   const { data } = await api.GET("/api/sites");
   sites.value = data ?? [];
   loaded.value = true;
+  const proposed = await api.GET("/api/sites/suggestions");
+  suggestions.value = proposed.data ?? [];
 }
 
 async function toggle(site: SiteOut): Promise<void> {
@@ -60,6 +65,20 @@ async function add(): Promise<void> {
   adding.value = false;
   form.value = { name: "", senders: "", url: "" };
   message.value = "Site ajouté : ses prochaines alertes seront lues par l'IA.";
+}
+
+async function addSuggestion(suggestion: Suggestion): Promise<void> {
+  message.value = "";
+  const { data, error } = await api.POST("/api/sites", {
+    body: { name: suggestion.name, senders: suggestion.senders, url: suggestion.url },
+  });
+  if (!data) {
+    message.value = detail(error, "Ajout refusé.");
+    return;
+  }
+  sites.value = data;
+  suggestions.value = suggestions.value.filter((s) => s.name !== suggestion.name);
+  message.value = `${suggestion.name} ajouté : crée ton alerte sur le site, ses e-mails seront lus par l'IA.`;
 }
 
 async function reread(): Promise<void> {
@@ -131,6 +150,39 @@ onMounted(() => void load());
           </button>
         </li>
       </ul>
+
+      <div
+        v-if="suggestions.length"
+        class="site-suggestions"
+        data-test="site-suggestions"
+      >
+        <p class="hint">
+          Offres en télétravail, avec les pays acceptés indiqués :
+        </p>
+        <ul>
+          <li
+            v-for="suggestion in suggestions"
+            :key="suggestion.name"
+          >
+            <span>
+              <a
+                :href="suggestion.url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >{{ suggestion.name }}</a>
+              <span class="muted"> · {{ suggestion.note }}</span>
+            </span>
+            <button
+              type="button"
+              class="link"
+              :data-test="`suggest-${suggestion.name}`"
+              @click="addSuggestion(suggestion)"
+            >
+              Ajouter
+            </button>
+          </li>
+        </ul>
+      </div>
 
       <form
         v-if="adding"

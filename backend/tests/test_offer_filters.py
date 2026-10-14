@@ -235,8 +235,12 @@ async def test_remote_filter_and_label(api: AsyncClient, runtime: Runtime) -> No
     complet avant même la notation."""
     async with runtime.engine.begin() as conn:
         await conn.execute(text("TRUNCATE offers CASCADE"))
-    rows = [("Partiel", "Lausanne", "hybrid", 2), ("Complet", "Genève", "full", None),
-            ("Sur site", "Vevey", "onsite", None), ("Lieu remote", "Remote, Europe", None, None)]  # fmt: skip
+    rows = [
+        ("Partiel", "Lausanne", "hybrid", 2),
+        ("Complet", "Genève", "full", None),
+        ("Sur site", "Vevey", "onsite", None),
+        ("Lieu remote", "Remote, Europe", None, None),
+    ]
     async with runtime.sessionmaker.begin() as session:
         for n, (title, location, remote, days) in enumerate(rows):
             offer = Offer(

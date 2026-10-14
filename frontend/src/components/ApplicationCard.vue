@@ -61,6 +61,11 @@ async function copy(value: string, key: string): Promise<void> {
   }
 }
 
+// Télétravail complet hors de Suisse (docs/26 §6) : rappel pour l'ORP, pas un avis officiel.
+const remoteAbroad = computed(
+  () => props.application.remote_full && !/suisse|switzerland|schweiz/i.test(props.application.remote_region ?? ""),
+);
+
 const assistant = useAssistant();
 function askAssistant(): void {
   const a = props.application;
@@ -146,6 +151,15 @@ const onStatus = (event: Event): void =>
       class="card-facts"
     >
       Entretien le {{ longDate.format(new Date(application.interview_at)) }}
+    </p>
+
+    <p
+      v-if="remoteAbroad"
+      class="card-facts remote-orp"
+      data-test="remote-orp"
+    >
+      100 % télétravail{{ application.remote_region ? ` · ${application.remote_region}` : "" }} : si l'employeur est à
+      l'étranger, vérifie contrat et assurances sociales avec ton conseiller ORP.
     </p>
 
     <label class="card-status">
