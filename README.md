@@ -39,6 +39,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.20.0 | Filtres des offres en cartes, courbe des notes | livrée |
 | 0.21.0 | Accessibilité : contraste, couleur seule, zones de clic | livrée |
 | 0.22.0 | Une action principale par page (a), aides visibles (b) | livrée |
+| 0.23.0 | Repérer les offres douteuses : doublons, annonces permanentes, employeur caché, arnaques | livrée |
 
 ## Lancer en local
 

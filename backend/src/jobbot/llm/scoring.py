@@ -13,11 +13,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v3"
-# score-v3 n'ajoute que le télétravail (docs/26) : une note score-v2 reste valable, elle n'est
-# pas refaite (les offres à examiner peuvent être relues à part, sur demande).
-COMPATIBLE_VERSIONS = ("score-v2", "score-v3")
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v3.md").read_text("utf-8")
+PROMPT_VERSION = "score-v4"
+# score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30) : une
+# note plus ancienne reste valable, elle n'est pas refaite.
+COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v4.md").read_text("utf-8")
 KEYWORD_LENGTH = 25
 MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
@@ -32,6 +32,11 @@ class AskKeyword(BaseModel):
     text: str
     # Exigence couverte par un bloc du profil ; None sans profil (docs/11 §3).
     covered: bool | None = None
+
+
+class ScamSignal(BaseModel):
+    reason: str = Field(max_length=200)
+    excerpt: str = Field(default="", max_length=400)
 
 
 class ScoreOutput(BaseModel):
@@ -50,6 +55,8 @@ class ScoreOutput(BaseModel):
     remote_days: int | None = Field(default=None, ge=1, le=5)
     remote_region: str | None = Field(default=None, max_length=60)
     remote_from_switzerland: bool | None = None
+    # Signes d'arnaque (score-v4, docs/30 §2) ; absents d'une réponse plus ancienne.
+    scam_signals: list[ScamSignal] = Field(default_factory=list)
 
 
 # Schéma envoyé à l'API (sorties structurées) : seulement des types simples, les bornes
@@ -90,6 +97,15 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "remote_days": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
         "remote_region": {"anyOf": [{"type": "string"}, {"type": "null"}]},
         "remote_from_switzerland": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
+        "scam_signals": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"reason": {"type": "string"}, "excerpt": {"type": "string"}},
+                "required": ["reason", "excerpt"],
+                "additionalProperties": False,
+            },
+        },
     },
     "required": [
         "summary_role",
@@ -105,6 +121,7 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "remote_days",
         "remote_region",
         "remote_from_switzerland",
+        "scam_signals",
     ],
     "additionalProperties": False,
 }
@@ -241,6 +258,14 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
     output = output.model_copy(
         update={
             **remote_fields(output),
+            "scam_signals": [
+                ScamSignal(
+                    reason=" ".join(s.reason.split())[:100],
+                    excerpt=" ".join(s.excerpt.split())[:150],
+                )
+                for s in output.scam_signals
+                if s.reason.strip()
+            ][:3],
             "keywords_role": _keywords(output.keywords_role, 3),
             "keywords_asks": _asks(output.keywords_asks),
             "keywords_offers": _keywords(output.keywords_offers, 4),

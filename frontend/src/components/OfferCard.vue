@@ -121,6 +121,12 @@ const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.so
         :class="['meta-remote', { excluded: offer.remote_from_switzerland === false }]"
         data-test="remote"
       >{{ remoteText(offer) }}</span>
+      <span
+        v-if="offer.doubts?.length"
+        :class="['meta-doubt', { scam: offer.doubts.some((d) => d.kind === 'scam') }]"
+        :title="offer.doubts.map((d) => d.text).join(' ')"
+        data-test="doubt"
+      >{{ offer.doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier" }}<span class="visually-hidden"> : {{ offer.doubts.map((d) => d.text).join(" ") }}</span></span>
       <span><AppIcon name="globe" />{{ sites }}</span>
       <span
         v-if="offer.apply_kind === 'external'"

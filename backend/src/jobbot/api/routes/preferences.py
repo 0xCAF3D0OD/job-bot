@@ -164,10 +164,18 @@ async def put_settings(request: Request, body: SettingsModel) -> SettingsModel:
 
 # --- Filtres affichés sur la page Offres (docs/10 §3) -----------------------------------
 
-FilterKey = Literal["score", "remote", "sources", "cantons", "rate", "external"]
-ALL_FILTERS: list[FilterKey] = ["score", "remote", "sources", "cantons", "rate", "external"]
+FilterKey = Literal["score", "remote", "sources", "cantons", "rate", "external", "doubtful"]
+ALL_FILTERS: list[FilterKey] = [
+    "score",
+    "remote",
+    "sources",
+    "cantons",
+    "rate",
+    "external",
+    "doubtful",
+]
 # Filtres ajoutés après la personnalisation (docs/10 §3) : visibles chez qui l'avait faite.
-ADDED_LATER: list[FilterKey] = ["remote"]
+ADDED_LATER: list[FilterKey] = ["remote", "doubtful"]
 
 
 class OfferFiltersVisible(BaseModel):

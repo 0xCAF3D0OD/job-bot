@@ -1061,6 +1061,16 @@
               ],
               "title": "Remote"
             }
+          },
+          {
+            "name": "hide_doubtful",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Hide Doubtful"
+            }
           }
         ],
         "responses": {
@@ -7417,6 +7427,40 @@
         ],
         "title": "DocumentType"
       },
+      "DoubtOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "permanent",
+              "hidden_employer",
+              "scam"
+            ],
+            "title": "Kind"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "text"
+        ],
+        "title": "DoubtOut"
+      },
       "EmployerOut": {
         "properties": {
           "address": {
@@ -10189,7 +10233,8 @@
                 "sources",
                 "cantons",
                 "rate",
-                "external"
+                "external",
+                "doubtful"
               ]
             },
             "type": "array",
@@ -10688,6 +10733,14 @@
               }
             ],
             "title": "Remote From Switzerland"
+          },
+          "doubts": {
+            "items": {
+              "$ref": "#/components/schemas/DoubtOut"
+            },
+            "type": "array",
+            "title": "Doubts",
+            "default": []
           }
         },
         "type": "object",
@@ -12104,6 +12157,14 @@
               }
             ],
             "title": "Remote From Switzerland"
+          },
+          "doubts": {
+            "items": {
+              "$ref": "#/components/schemas/DoubtOut"
+            },
+            "type": "array",
+            "title": "Doubts",
+            "default": []
           },
           "is_first": {
             "type": "boolean",

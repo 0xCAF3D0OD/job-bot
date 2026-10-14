@@ -21,6 +21,8 @@ export interface OfferFilters {
   maxScore: number | null;
   externalOnly: boolean;
   remote: Remote | null;
+  // Offres « à vérifier » masquées (docs/30 §3), ?verifier=masquer.
+  hideDoubtful: boolean;
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
@@ -35,6 +37,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   maxScore: null,
   externalOnly: false,
   remote: null,
+  hideDoubtful: false,
 };
 
 const VIEWS: View[] = ["to_review", "filtered_out", "later", "in_progress", "expired", "all"];
@@ -68,6 +71,7 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     maxScore: Number.isInteger(scoreMax) && scoreMax >= 0 && scoreMax <= 99 ? scoreMax : null,
     externalOnly: one(query.externe) === "1",
     remote: one(query.teletravail) === "complet" ? "full" : one(query.teletravail) === "partiel" ? "partial" : null,
+    hideDoubtful: one(query.verifier) === "masquer",
   };
 }
 
@@ -84,6 +88,7 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   }
   if (filters.externalOnly) query.externe = "1";
   if (filters.remote) query.teletravail = filters.remote === "full" ? "complet" : "partiel";
+  if (filters.hideDoubtful) query.verifier = "masquer";
   return query;
 }
 
@@ -96,7 +101,8 @@ export function activeCount(filters: OfferFilters): number {
     (filters.minRate !== null ? 1 : 0) +
     (filters.minScore !== null || filters.maxScore !== null ? 1 : 0) +
     (filters.externalOnly ? 1 : 0) +
-    (filters.remote ? 1 : 0)
+    (filters.remote ? 1 : 0) +
+    (filters.hideDoubtful ? 1 : 0)
   );
 }
 

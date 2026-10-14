@@ -2580,6 +2580,18 @@ export interface components {
          * @enum {string}
          */
         DocumentType: "pdf" | "docx" | "txt" | "md";
+        /** DoubtOut */
+        DoubtOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "permanent" | "hidden_employer" | "scam";
+            /** Text */
+            text: string;
+            /** Excerpt */
+            excerpt?: string | null;
+        };
         /** EmployerOut */
         EmployerOut: {
             /** Address */
@@ -3341,7 +3353,7 @@ export interface components {
          */
         OfferFiltersVisible: {
             /** Visible */
-            visible: ("score" | "remote" | "sources" | "cantons" | "rate" | "external")[];
+            visible: ("score" | "remote" | "sources" | "cantons" | "rate" | "external" | "doubtful")[];
         };
         /** OfferLinkOut */
         OfferLinkOut: {
@@ -3480,6 +3492,11 @@ export interface components {
             remote_region?: string | null;
             /** Remote From Switzerland */
             remote_from_switzerland?: boolean | null;
+            /**
+             * Doubts
+             * @default []
+             */
+            doubts: components["schemas"]["DoubtOut"][];
         };
         /** OfferPage */
         OfferPage: {
@@ -3933,6 +3950,11 @@ export interface components {
             remote_region?: string | null;
             /** Remote From Switzerland */
             remote_from_switzerland?: boolean | null;
+            /**
+             * Doubts
+             * @default []
+             */
+            doubts: components["schemas"]["DoubtOut"][];
             /** Is First */
             is_first: boolean;
         };
@@ -5009,6 +5031,7 @@ export interface operations {
                 min_rate?: number | null;
                 external_only?: boolean;
                 remote?: ("partial" | "full") | null;
+                hide_doubtful?: boolean;
             };
             header?: never;
             path?: never;

@@ -1368,3 +1368,12 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .today-fold-count { min-width: 1.5rem; padding: 0.05rem 0.45rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 0.8rem; font-weight: 600; text-align: center; }
 .today-fold-more { margin-top: auto; }
 .today-collect { margin-left: auto; margin-right: 1rem; color: var(--muted); font-size: 0.85rem; }
+
+/* Offres à vérifier (docs/30 §3) : étiquette sur la carte, détail des signaux. */
+.meta-doubt { padding: 0.05rem 0.5rem; border-radius: 999px; background: var(--band); border: 1px solid var(--border); color: var(--muted); font-size: 0.78rem; font-weight: 500; }
+.meta-doubt.scam { background: color-mix(in srgb, var(--warn) 12%, transparent); border-color: color-mix(in srgb, var(--warn) 45%, transparent); color: var(--warn-text); }
+.doubts { margin: 0.25rem 0 0.75rem; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 12px; background: var(--band); font-size: 0.9rem; }
+.doubts ul { margin: 0.35rem 0 0; padding-left: 1.1rem; display: grid; gap: 0.3rem; }
+.doubts li.scam { color: var(--warn-text); }
+.doubts q { display: block; color: var(--muted); font-style: italic; }
+.job-meta .meta-doubt::before { content: none; }

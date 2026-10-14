@@ -201,7 +201,9 @@ async def test_api_offer_filters(api: AsyncClient, fresh: Runtime) -> None:
             )
         )
     default = (await api.get("/api/offer-filters")).json()
-    assert default == {"visible": ["score", "remote", "sources", "cantons", "rate", "external"]}
+    assert default == {
+        "visible": ["score", "remote", "sources", "cantons", "rate", "external", "doubtful"]
+    }
     # Liste choisie avant l'arrivée du télétravail : le nouveau filtre y apparaît.
     async with fresh.engine.begin() as conn:
         await conn.execute(
@@ -211,7 +213,7 @@ async def test_api_offer_filters(api: AsyncClient, fresh: Runtime) -> None:
             )
         )
     assert (await api.get("/api/offer-filters")).json() == {
-        "visible": ["score", "remote", "cantons", "rate"]
+        "visible": ["score", "remote", "cantons", "rate", "doubtful"]
     }
     saved = (
         await api.put("/api/offer-filters", json={"visible": ["rate", "score", "rate"]})
