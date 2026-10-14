@@ -1158,3 +1158,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .extension-token .hint { flex-basis: 100%; }
 .extension-tokens { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.3rem; font-size: 0.9rem; }
 .extension-tokens li { display: flex; justify-content: space-between; gap: 0.75rem; }
+/* Tri « Par jour » : intertitre de jour dans la liste des offres. */
+.offer-day { grid-column: 1 / -1; margin-top: 0.4rem; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+.offer-day::first-letter { text-transform: uppercase; }
+.offer-day:first-child { margin-top: 0; }

@@ -9,7 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Offer, OfferLink, OfferStatus
+from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
@@ -186,4 +186,45 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
         "Envoyée hier",
         "Envoyée il y a 5 jours",
         "Préparation sans document",
+    ]
+
+
+async def test_sort_by_day_then_score(api: AsyncClient, runtime: Runtime) -> None:
+    """Par jour (heure suisse), le plus récent d'abord ; dans un jour, la mieux notée d'abord."""
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE offers CASCADE"))
+    # 5 oct. 23 h 30 en Suisse = 21 h 30 UTC : encore le 5 ; 6 oct. 00 h 30 = 22 h 30 UTC le 5.
+    rows = [
+        ("Lundi matin, 60", datetime(2026, 10, 5, 6, 0, tzinfo=UTC), 60),
+        ("Lundi soir, 90", datetime(2026, 10, 5, 21, 30, tzinfo=UTC), 90),
+        ("Lundi midi, sans note", datetime(2026, 10, 5, 10, 0, tzinfo=UTC), None),
+        ("Mardi 0 h 30, 40", datetime(2026, 10, 5, 22, 30, tzinfo=UTC), 40),
+        ("Mardi, 75", datetime(2026, 10, 6, 9, 0, tzinfo=UTC), 75),
+    ]
+    async with runtime.sessionmaker.begin() as session:
+        for n, (title, seen, score) in enumerate(rows):
+            offer = Offer(
+                fingerprint=f"day{n}",
+                title=title,
+                first_seen_at=seen,
+                last_seen_at=seen,
+                status=OfferStatus.TO_REVIEW,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=True,
+                    criteria_hash="x",
+                    score=score,
+                    scored_at=seen if score is not None else None,
+                )
+            )
+    assert await titles(api, sort="day") == [
+        "Mardi, 75",
+        "Mardi 0 h 30, 40",
+        "Lundi soir, 90",
+        "Lundi matin, 60",
+        "Lundi midi, sans note",
     ]

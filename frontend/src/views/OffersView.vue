@@ -37,6 +37,34 @@ const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
+
+// Tri « Par jour » : un intertitre avant la première offre de chaque jour (heure suisse).
+const dayKey = (iso: string): string => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" });
+function dayLabel(key: string): string {
+  const today = dayKey(new Date().toISOString());
+  const yesterday = dayKey(new Date(Date.now() - 86_400_000).toISOString());
+  if (key === today) return "Aujourd'hui";
+  if (key === yesterday) return "Hier";
+  return new Date(`${key}T12:00:00`).toLocaleDateString("fr-CH", { weekday: "long", day: "numeric", month: "long" });
+}
+const dayCounts = computed(() => {
+  const counts = new Map<string, number>();
+  for (const offer of items.value) {
+    const key = dayKey(offer.first_seen_at);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+});
+function dayHeader(index: number): string | null {
+  if (filters.value.sort !== "day") return null;
+  const offer = items.value[index];
+  if (!offer) return null;
+  const key = dayKey(offer.first_seen_at);
+  const previous = items.value[index - 1];
+  if (previous && dayKey(previous.first_seen_at) === key) return null;
+  const count = dayCounts.value.get(key) ?? 0;
+  return `${dayLabel(key)} · ${count} offre${count > 1 ? "s" : ""}`;
+}
 const route = useRoute();
 const router = useRouter();
 const assistant = useAssistant();
@@ -301,16 +329,25 @@ onUnmounted(() => {
           </button>
         </p>
         <ul class="offer-cards">
-          <li
-            v-for="offer in items"
+          <template
+            v-for="(offer, index) in items"
             :key="offer.id"
           >
-            <OfferCard
-              :offer="offer"
-              :selected="offer.id === selectedId"
-              @select="selectedId = offer.id"
-            />
-          </li>
+            <li
+              v-if="dayHeader(index)"
+              class="offer-day"
+              data-test="offer-day"
+            >
+              {{ dayHeader(index) }}
+            </li>
+            <li>
+              <OfferCard
+                :offer="offer"
+                :selected="offer.id === selectedId"
+                @select="selectedId = offer.id"
+              />
+            </li>
+          </template>
         </ul>
         <button
           v-if="items.length < total"

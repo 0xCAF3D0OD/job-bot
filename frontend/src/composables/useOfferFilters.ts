@@ -4,7 +4,7 @@ import { useRoute, useRouter, type LocationQuery } from "vue-router";
 import type { Source } from "../api/client";
 
 export type View = "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
-export type Sort = "recent" | "popular" | "score" | "activity";
+export type Sort = "day" | "recent" | "popular" | "score" | "activity";
 
 export interface OfferFilters {
   view: View;
@@ -19,7 +19,8 @@ export interface OfferFilters {
 
 export const DEFAULT_FILTERS: OfferFilters = {
   view: "to_review",
-  sort: "recent",
+  // Par jour, la mieux notée d'abord dans chaque jour (retour d'usage du 2026-10-14).
+  sort: "day",
   q: "",
   sources: [],
   cantons: [],
@@ -29,7 +30,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
 };
 
 const VIEWS: View[] = ["to_review", "filtered_out", "later", "in_progress", "expired", "all"];
-const SORTS: Sort[] = ["recent", "popular", "score", "activity"];
+const SORTS: Sort[] = ["day", "recent", "popular", "score", "activity"];
 
 function list(value: LocationQuery[string] | undefined): string[] {
   const values = Array.isArray(value) ? value : value ? [value] : [];

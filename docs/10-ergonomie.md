@@ -113,3 +113,10 @@ Les prérequis ne sont **pas redemandés à chaque ouverture**. Ils sont saisis 
 
 - Choix enregistré dans le réglage `offer_filters_visible` (API `GET` / `PUT /api/offer-filters`), pas dans `PUT /api/settings`, pour ne pas réécrire les autres réglages.
 - Liste de démarrage : les étapes faites ne sont plus barrées, la pastille suffit (retour du 2026-10-05).
+
+## Complément du 2026-10-14 : tri « Par jour »
+
+- Retour d'usage : traiter les offres jour par jour, la mieux notée en haut de chaque jour.
+- **Nouveau tri « Par jour »**, désormais **tri par défaut** de Candidatures › Offres : jour de réception (heure suisse), le plus récent d'abord ; dans un même jour, la note la plus haute d'abord, les offres pas encore notées en dernier.
+- **Intertitre** avant chaque jour : « Aujourd'hui · 3 offres », « Hier · 2 offres », « lundi 12 octobre · … » (nombre d'offres affichées).
+- « Note », « Récentes » et « Populaires » restent disponibles ; le tri choisi reste dans l'adresse (`?tri=`).

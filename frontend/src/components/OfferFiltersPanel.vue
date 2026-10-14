@@ -42,6 +42,7 @@ const VIEWS: { value: View; label: string }[] = [
   { value: "all", label: "Toutes" },
 ];
 const SORTS: { value: Sort; label: string }[] = [
+  { value: "day", label: "Par jour" },
   { value: "score", label: "Note" },
   { value: "recent", label: "Récentes" },
   { value: "popular", label: "Populaires" },

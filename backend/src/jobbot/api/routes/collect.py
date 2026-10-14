@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import ColumnElement, Time, and_, cast, func, or_, select
 
 from jobbot.core.normalize import normalize_text
+from jobbot.core.orp import LOCAL_TZ
 from jobbot.db.models import (
     Application,
     CompanyLogo,
@@ -371,7 +372,7 @@ async def list_offers(
     request: Request,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
-    sort: Literal["recent", "popular", "score", "activity"] = "recent",
+    sort: Literal["recent", "day", "popular", "score", "activity"] = "recent",
     view: Literal["to_review", "filtered_out", "later", "in_progress", "expired", "all"] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
     min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
@@ -403,7 +404,10 @@ async def list_offers(
         .scalar_subquery()
     )
     activity = func.coalesce(sent, drafted, Offer.first_seen_at)
+    # Jour de réception, heure suisse : les offres d'un même jour, la mieux notée d'abord.
+    day = func.date(func.timezone(LOCAL_TZ.key, Offer.first_seen_at))
     order = {
+        "day": (day.desc(), score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
         "popular": (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc()),
         "score": (score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
         "activity": (activity.desc(), Offer.id.desc()),
