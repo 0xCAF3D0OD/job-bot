@@ -16,15 +16,9 @@ const emit = defineEmits<{ select: [day: string] }>();
 
 const REMIND_AFTER_DAYS = 10;
 const MAX_DOTS = 3;
-// Un symbole par statut en plus de la couleur (docs/28 §3.1) : lisible même en noir et blanc.
-const SYMBOLS: Record<string, string> = {
-  en_attente: "",
-  relancee: "↻",
-  entretien: "◆",
-  refus: "✕",
-  engagement: "✓",
-  sans_reponse: "–",
-};
+// Statut par la couleur seule (choix du 2026-10-14) : blanc en attente, orange relancée,
+// violet entretien, rouge refus, vert clair engagement, gris sans réponse ; légende dessous et
+// statuts lus par les lecteurs d'écran.
 const LEGEND = ["en_attente", "relancee", "entretien", "refus", "engagement", "sans_reponse"] as const;
 const WEEKDAYS = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
 
@@ -133,7 +127,7 @@ function label(day: string): string {
                 :class="['dot', application.status, { incomplete: incomplete.has(application.id) }]"
                 :title="`${application.company} · ${applicationStatusLabel[application.status ?? 'en_attente']}`"
                 aria-hidden="true"
-              >{{ SYMBOLS[application.status ?? "en_attente"] }}</span>
+              />
               <span
                 v-if="(sentOn.get(day)?.length ?? 0) > MAX_DOTS"
                 class="more"
@@ -173,7 +167,7 @@ function label(day: string): string {
           <span
             :class="['dot', status]"
             aria-hidden="true"
-          >{{ SYMBOLS[status] }}</span>
+          />
           {{ applicationStatusLabel[status] }}
         </li>
         <li>

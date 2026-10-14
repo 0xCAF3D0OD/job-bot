@@ -82,3 +82,8 @@ Une seule PR (**0.21.0**), sans migration et sans changement d'API.
 - **Calendrier** : pastilles un peu plus grandes (pour le symbole), « En attente » en cercle vide ; description lue par les lecteurs d'écran enrichie des statuts du jour (« 2 candidature(s) : en attente, entretien »). Légende repliable sous le calendrier, avec le « ! » à compléter.
 - **✗** devant une exigence non couverte, et « Pas couvert par ton profil : » lu par les lecteurs d'écran.
 - **Zones de clic** : seulement si le navigateur annonce un écran tactile (`pointer: coarse`) ; zone invisible de 44 px autour des liens texte et des ×, pastilles de 44 px de haut, cases à cocher et interrupteur plus grands, poignées de la courbe à 28 px, plus d'écart entre « Nouvelle discussion » et « Effacer ».
+
+## Complément du 2026-10-14 : calendrier sans symboles
+
+- Retour d'usage : les symboles dans les pastilles ne plaisent pas. Ils sont retirés ; **une couleur par statut** : **blanc** (bordure grise) en attente, **orange** relancée, **violet** entretien, **rouge** refus, **vert clair** engagement, **gris** sans réponse.
+- Restent : le **« ! »** d'une ligne ORP à compléter, la **légende** repliable sous le calendrier, et les statuts du jour lus par les lecteurs d'écran. C'est le choix assumé de la couleur seule dans les pastilles, compensée par la légende et les cartes du jour (statut écrit).
