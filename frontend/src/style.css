@@ -1287,21 +1287,20 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .more-menu .menu button.danger:hover { color: var(--down-text); }
 
 /* --- Accessibilité (docs/28) --- */
-/* §3.1 Calendrier : un symbole par statut en plus de la couleur ; « ! » pour une ligne ORP à
-   compléter ; légende repliable sous le calendrier. */
+/* Calendrier : une couleur par statut (sans symbole, choix du 2026-10-14) ; « ! » pour une ligne
+   ORP à compléter ; légende repliable sous le calendrier. */
 .day-dots .dot, .suivi-legend .dot {
-  width: 1.05rem; height: 1.05rem; border-radius: 50%; background: #5f6577; color: #fff;
-  display: inline-flex; align-items: center; justify-content: center; position: relative;
-  font-size: 0.7rem; font-weight: 700; line-height: 1; flex: none;
+  width: 0.85rem; height: 0.85rem; border-radius: 50%; background: #c4c8d2; position: relative; flex: none;
+  display: inline-block; border: 1px solid transparent;
 }
-.day-dots .dot.en_attente, .suivi-legend .dot.en_attente { background: var(--surface); border: 2px solid #5f6577; }
-.day-dots .dot.relancee, .suivi-legend .dot.relancee { background: var(--warn-text); }
-.day-dots .dot.entretien, .suivi-legend .dot.entretien { background: var(--accent-text); font-size: 0.6rem; }
-.day-dots .dot.refus, .suivi-legend .dot.refus { background: var(--down-text); }
-.day-dots .dot.engagement, .suivi-legend .dot.engagement { background: var(--ok-text); }
-.day-dots .dot.sans_reponse, .suivi-legend .dot.sans_reponse { background: #d5d8e0; color: #3b3f4c; }
+.day-dots .dot.en_attente, .suivi-legend .dot.en_attente { background: #fff; border-color: #8b93a7; }
+.day-dots .dot.relancee, .suivi-legend .dot.relancee { background: var(--orange); }
+.day-dots .dot.entretien, .suivi-legend .dot.entretien { background: var(--accent); }
+.day-dots .dot.refus, .suivi-legend .dot.refus { background: var(--down); }
+.day-dots .dot.engagement, .suivi-legend .dot.engagement { background: var(--mint); }
+.day-dots .dot.sans_reponse, .suivi-legend .dot.sans_reponse { background: #c4c8d2; }
 .day-dots .dot.incomplete::after, .suivi-legend .dot.incomplete::after {
-  content: "!"; position: absolute; top: -0.35rem; right: -0.4rem; width: 0.75rem; height: 0.75rem;
+  content: "!"; position: absolute; top: -0.4rem; right: -0.45rem; width: 0.75rem; height: 0.75rem;
   border-radius: 50%; background: var(--down-text); color: #fff; border: 1px solid var(--surface);
   font-size: 0.55rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
