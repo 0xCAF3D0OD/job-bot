@@ -7,11 +7,10 @@ import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
-import HelpTip from "./HelpTip.vue";
 import SidePanel from "./SidePanel.vue";
-import { CONTACTS_HELP } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
 
+import HoverNote from "./HoverNote.vue";
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
 
 function sources(ids: number[]): string {
@@ -339,7 +338,11 @@ watch(
       class="panel-section"
       data-test="section-for-you"
     >
-      <h3>Pour toi</h3>
+      <h3>
+        <HoverNote text="Résumé et note par l'IA : elle compare l'annonce à tes blocs de profil actifs. Les points forts citent le bloc d'où ils viennent.">
+          Pour toi
+        </HoverNote>
+      </h3>
       <template v-if="offer.summary_role">
         <div
           class="ai-head"
@@ -354,10 +357,6 @@ watch(
             <div><dt>Demande</dt><dd>{{ offer.summary_asks }}</dd></div>
             <div><dt>Offre</dt><dd>{{ offer.summary_offers }}</dd></div>
           </dl>
-          <HelpTip
-            label="Aide : résumé et note"
-            text="Résumé et note par l'IA : elle compare l'annonce à tes blocs de profil actifs. Les points forts citent le bloc d'où ils viennent."
-          />
         </div>
         <p
           v-if="scoreNote"
@@ -441,10 +440,6 @@ watch(
     >
       <div class="panel-section-head">
         <h3>Entreprise</h3>
-        <HelpTip
-          label="Aide : entreprise"
-          text="L'adresse sert au formulaire ORP ; l'annonce chez l'employeur évite de passer par un site d'emploi."
-        />
       </div>
       <div
         class="address-line"
@@ -595,7 +590,6 @@ watch(
       v-if="offer.company"
       :open="contactsOpen"
       :title="`Contacts chez ${offer.company}`"
-      :help="CONTACTS_HELP"
       @close="contactsOpen = false"
     >
       <ContactsPanel

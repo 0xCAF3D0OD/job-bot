@@ -3,7 +3,6 @@ import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
-import HelpTip from "./HelpTip.vue";
 import MoreInfo from "./MoreInfo.vue";
 
 // Tes dates dans ton agenda (docs/40 §2) : une adresse d'abonnement à jeton secret,
@@ -75,10 +74,6 @@ onMounted(load);
     <fieldset>
       <legend>
         Abonnement d'agenda
-        <HelpTip
-          text="Entretiens, suites attendues, remise des preuves ORP et relances arrivent dans ton agenda, tenus à jour. Seuls l'entreprise, le poste et la date y figurent."
-          label="Aide : abonnement d'agenda"
-        />
       </legend>
       <MoreInfo label="Comment l'ajouter">
         <ul class="extension-steps">

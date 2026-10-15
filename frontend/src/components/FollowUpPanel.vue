@@ -2,7 +2,6 @@
 import { computed, ref } from "vue";
 
 import { api, type Application } from "../api/client";
-import HelpTip from "./HelpTip.vue";
 
 // Relancer une candidature (docs/38) : un court message (IA ou modèle simple), à copier ou à
 // ouvrir dans ta messagerie ; rien n'est envoyé par la plateforme. Puis « Marquer comme relancée ».
@@ -129,10 +128,6 @@ async function markDone(): Promise<void> {
         >
           {{ copied ? "Copié" : "Copier" }}
         </button>
-        <HelpTip
-          label="Aide : relance"
-          text="Rien n'est envoyé par la plateforme : tu relis et tu envoies toi-même. L'IA ne reçoit ni ton nom ni tes coordonnées ; la signature est ajoutée ici. Une relance n'est pas une preuve ORP."
-        />
       </div>
     </template>
     <p

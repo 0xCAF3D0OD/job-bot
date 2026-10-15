@@ -3,7 +3,6 @@ import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
-import HelpTip from "./HelpTip.vue";
 
 // Candidature spontanée (docs/39 §1) : entreprise, poste visé, « Pourquoi elle » ; puis, au
 // choix, l'adresse au registre du commerce ; enfin la préparation habituelle (lettre, CV).
@@ -111,10 +110,6 @@ function prepare(): void {
     </label>
     <label>
       <span>Pourquoi elle
-        <HelpTip
-          label="Aide : pourquoi elle"
-          text="Deux ou trois lignes avec tes mots : ce que fait l'entreprise, ce qui t'attire, une personne rencontrée. La lettre s'en sert pour son ouverture."
-        />
       </span>
       <textarea
         v-model="form.reason"
@@ -166,10 +161,6 @@ function prepare(): void {
         >
           {{ searching ? "Recherche…" : "Chercher l'adresse au registre" }}
         </button>
-        <HelpTip
-          label="Aide : registre du commerce"
-          text="Le registre du commerce (IDE) est consulté gratuitement. S'il ne trouve rien, l'IA cherche l'adresse sur Internet (environ 0,02 $)."
-        />
       </span>
       <ul
         v-if="candidates.length"

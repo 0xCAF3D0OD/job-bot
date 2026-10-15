@@ -2,7 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
-import HelpTip from "./HelpTip.vue";
+import MoreMenu from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
 
 function escape(target: Element): KeyboardEvent {
@@ -16,25 +16,25 @@ afterEach(() => {
 });
 
 describe("SidePanel (docs/32 §2.2)", () => {
-  it("Échap ferme la bulle « ? » ouverte dans le panneau, pas le panneau", async () => {
+  it("Échap ferme le menu « ⋯ » ouvert dans le panneau, pas le panneau", async () => {
     const wrapper = mount(SidePanel, {
-      props: { open: true, title: "Candidature spontanée" },
-      slots: { default: () => h(HelpTip, { text: "Deux ou trois lignes.", label: "Aide : pourquoi elle" }) },
+      props: { open: true, title: "Candidature" },
+      slots: { default: () => h(MoreMenu, { items: [{ label: "Modifier", test: "edit", run: () => undefined }] }) },
       attachTo: document.body,
     });
     await flushPromises();
-    const button = document.querySelector<HTMLButtonElement>("[data-test=help-tip]")!;
-    button.click();
+    document.querySelector<HTMLButtonElement>("[data-test=more]")!.click();
     await flushPromises();
-    expect(document.querySelector("[data-test=help-tip-text]")).not.toBeNull();
+    const item = document.querySelector<HTMLButtonElement>("[data-test=edit]")!;
+    expect(item).not.toBeNull();
 
-    const first = escape(button);
+    const first = escape(item);
     await flushPromises();
-    expect(document.querySelector("[data-test=help-tip-text]")).toBeNull();
+    expect(document.querySelector("[data-test=edit]")).toBeNull();
     expect(first.defaultPrevented).toBe(true);
     expect(wrapper.emitted("close")).toBeUndefined();
 
-    escape(button);
+    escape(document.querySelector("[data-test=more]")!);
     expect(wrapper.emitted("close")).toHaveLength(1);
     wrapper.unmount();
   });

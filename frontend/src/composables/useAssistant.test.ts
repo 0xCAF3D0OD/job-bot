@@ -13,7 +13,9 @@ describe("useAssistant", () => {
     expect(suggestionsFor("offers", null)[0]).toBe("Lesquelles postuler en priorité ?");
     expect(suggestionsFor("offers", { offerId: 1 })[0]).toBe("Explique-moi la note de cette offre");
     expect(suggestionsFor("applications", { month: "2026-10", day: "2026-10-02" })[0]).toBe("Qu'ai-je envoyé ce jour-là ?");
-    expect(suggestionsFor("inconnue", null)).toHaveLength(3);
+    // « Comment ça marche ici ? » remplace les « ? » des pages (docs/53).
+    expect(suggestionsFor("inconnue", null)).toHaveLength(4);
+    expect(suggestionsFor("settings", null).at(-1)).toBe("Comment ça marche ici ?");
   });
 
   it("un raccourci ouvre le panneau sur l'élément", () => {

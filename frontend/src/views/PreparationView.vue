@@ -10,7 +10,6 @@ import ContactsPanel from "../components/ContactsPanel.vue";
 import CvPanel from "../components/CvPanel.vue";
 import OfferBrief from "../components/OfferBrief.vue";
 import FormSheet from "../components/FormSheet.vue";
-import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
@@ -534,10 +533,6 @@ onMounted(() => void load());
           <div class="side-card">
             <h2>
               {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
-              <HelpTip
-                text="L'IA rédige la lettre à partir de tes blocs de profil, sans tes coordonnées ; la consigne ajuste la version affichée."
-                label="Aide : rédiger la lettre"
-              />
             </h2>
             <label>Langue
               <select

@@ -4,7 +4,6 @@ import { onMounted, ref } from "vue";
 import { api, type Profile, type ProfileList } from "../api/client";
 import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
-import HelpTip from "./HelpTip.vue";
 import { plural } from "../format";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
@@ -115,10 +114,6 @@ onMounted(async () => {
     <fieldset>
       <legend>
         Tes profils
-        <HelpTip
-          text="Des profils fictifs pour tester Actualités et Formations ; tes candidatures ne changent pas. Pour proposer des mots-clés, l'IA reçoit seulement le métier."
-          label="Aide : profils d'essai"
-        />
       </legend>
       <ul class="sites-list">
         <li

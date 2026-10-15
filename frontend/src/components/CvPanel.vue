@@ -2,7 +2,6 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
-import HelpTip from "./HelpTip.vue";
 import OfferBrief from "./OfferBrief.vue";
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
@@ -275,10 +274,6 @@ onMounted(() => void load());
       <div class="side-card">
         <h2>
           {{ selected ? "Nouvelle version" : "Préparer le CV" }}
-          <HelpTip
-            text="L'IA choisit tes blocs de profil et écrit un titre et un court résumé ; la consigne ajuste la version affichée."
-            label="Aide : préparer le CV"
-          />
         </h2>
         <label>Langue du titre et du résumé
           <select
@@ -325,10 +320,6 @@ onMounted(() => void load());
       >
         <h2>
           Blocs du CV
-          <HelpTip
-            text="Coche, décoche et ordonne tes blocs : le CV se met à jour aussitôt. Garde-le sur une page."
-            label="Aide : blocs du CV"
-          />
         </h2>
         <ul class="cv-blocks">
           <template

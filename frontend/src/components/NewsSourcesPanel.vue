@@ -4,9 +4,9 @@ import { computed, onMounted, ref } from "vue";
 import { api, type NewsPreferences, type NewsSource } from "../api/client";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import NewsCatalog from "./NewsCatalog.vue";
-import HelpTip from "./HelpTip.vue";
 import SidePanel from "./SidePanel.vue";
 
+import HoverNote from "./HoverNote.vue";
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
 const preferences = ref<NewsPreferences | null>(null);
@@ -162,10 +162,6 @@ onMounted(() => void load());
     <fieldset v-if="preferences">
       <legend>
         Mon domaine
-        <HelpTip
-          text="Les mots-clés de ton métier, pour filtrer Actualités et Formations."
-          label="Aide : mon domaine"
-        />
       </legend>
       <ul
         class="keyword-chips"
@@ -221,10 +217,6 @@ onMounted(() => void load());
     <fieldset>
       <legend>
         Sources des Actualités
-        <HelpTip
-          text="Relevées toutes les 6 heures, sans coût. Avec « Mon domaine », les sources « marché de l'emploi » gardent leurs articles sur l'emploi (chômage, salaires, embauches)."
-          label="Aide : sources des Actualités"
-        />
       </legend>
       <ul class="calm-list">
         <li
@@ -313,11 +305,10 @@ onMounted(() => void load());
               :checked="opened.labour_market"
               data-test="source-labour"
               @change="update(opened, { labour_market: !opened.labour_market })"
-            > Marché de l'emploi
-            <HelpTip
-              text="Avec « Mon domaine », une source « marché de l'emploi » garde ses articles sur l'emploi (chômage, salaires, embauches)."
-              label="Aide : marché de l'emploi"
-            />
+            >
+            <HoverNote text="Avec « Mon domaine », une source « marché de l'emploi » garde ses articles sur l'emploi (chômage, salaires, embauches).">
+              Marché de l'emploi
+            </HoverNote>
           </label>
           <p class="calm-panel-foot">
             <button
@@ -344,10 +335,6 @@ onMounted(() => void load());
       >
         <label class="wide">
           <span>Mots-clés
-            <HelpTip
-              text="Le sujet est suivi dans Google Actualités ; seuls les mots-clés, le pays et la langue y sont envoyés."
-              label="Aide : veille Google Actualités"
-            />
           </span>
           <input
             v-model="search.query"
@@ -402,12 +389,9 @@ onMounted(() => void load());
         @submit.prevent="add"
       >
         <label class="wide">
-          <span>Adresse du site, du flux RSS, ou ID de chaîne YouTube
-            <HelpTip
-              text="Pour YouTube, l'ID se trouve sur la chaîne : « … plus », puis « Partager la chaîne », puis « Copier l'ID de la chaîne »."
-              label="Aide : ID de chaîne YouTube"
-            />
-          </span>
+          <HoverNote text="Pour YouTube, l'ID se trouve sur la chaîne : « … plus », puis « Partager la chaîne », puis « Copier l'ID de la chaîne ».">
+            Adresse du site, du flux RSS, ou ID de chaîne YouTube
+          </HoverNote>
           <input
             v-model="form.url"
             type="text"

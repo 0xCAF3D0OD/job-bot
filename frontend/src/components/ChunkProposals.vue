@@ -2,7 +2,6 @@
 import { computed, ref } from "vue";
 
 import { api, type Chunk, type ChunkKind, type ChunkProposal } from "../api/client";
-import HelpTip from "./HelpTip.vue";
 import { plural } from "../format";
 
 const props = defineProps<{
@@ -80,10 +79,6 @@ async function save(): Promise<void> {
     >
       <h3>
         Blocs proposés pour « {{ documentName }} »
-        <HelpTip
-          label="Aide : blocs proposés"
-          text="Relis et corrige chaque bloc, puis coche ceux à ajouter. Ceux qui ressemblent à un bloc existant sont décochés."
-        />
       </h3>
       <ul class="proposal-list">
         <li

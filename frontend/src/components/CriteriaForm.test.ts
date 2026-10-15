@@ -2,7 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import CriteriaView from "./CriteriaForm.vue";
-import HelpTip from "./HelpTip.vue";
+import HoverNote from "./HoverNote.vue";
 
 const GET = vi.fn();
 const PUT = vi.fn();
@@ -34,8 +34,9 @@ describe("CriteriaView", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("VD");
-    const typesHelp = wrapper.findAllComponents(HelpTip).find((h) => h.props("label") === "Aide : types d'offres");
-    expect(typesHelp?.props("text")).toContain("Stages : stage, internship…");
+    // Description au survol du libellé (docs/53), plus de « ? ».
+    const typesNote = wrapper.findAllComponents(HoverNote).find((h) => h.text().includes("Types d'offres exclus"));
+    expect(typesNote?.props("text")).toContain("Stages : stage, internship…");
 
     const locationInput = wrapper.find("#locations");
     await locationInput.setValue("Genève");

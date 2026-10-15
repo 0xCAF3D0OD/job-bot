@@ -4,7 +4,6 @@ import { useRoute } from "vue-router";
 
 import { api, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
 import DomainField from "../components/DomainField.vue";
-import HelpTip from "../components/HelpTip.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
@@ -263,11 +262,6 @@ onUnmounted(() => {
             Tout
           </button>
         </div>
-        <HelpTip
-          v-if="hasDomain"
-          :text="`Mon domaine : ${preferences.domain_keywords.join(', ')}. À modifier dans Réglages › Actualités.`"
-          label="Mots de Mon domaine"
-        />
         <div
           v-if="canFilter"
           ref="filtersRoot"

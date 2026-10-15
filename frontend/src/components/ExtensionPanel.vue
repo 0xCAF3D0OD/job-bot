@@ -3,7 +3,6 @@ import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
-import HelpTip from "./HelpTip.vue";
 import MoreInfo from "./MoreInfo.vue";
 
 // Extension du navigateur (docs/25 §4) : un jeton révocable la relie à la plateforme.
@@ -66,10 +65,6 @@ onMounted(load);
     <fieldset>
       <legend>
         Extension du navigateur
-        <HelpTip
-          text="Elle remplit le formulaire de l'employeur avec tes données ; tu vérifies et tu envoies toi-même."
-          label="Aide : extension du navigateur"
-        />
       </legend>
       <MoreInfo label="Comment l'installer">
         <ol class="extension-steps">
