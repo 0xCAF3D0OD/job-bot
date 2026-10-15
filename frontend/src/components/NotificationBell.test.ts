@@ -25,7 +25,7 @@ const item = (id: number, extra: Record<string, unknown> = {}) => ({
 async function mountBell() {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
   await router.push("/");
-  const wrapper = mount(NotificationBell, { global: { plugins: [router] }, attachTo: document.body });
+  const wrapper = mount(NotificationBell, { global: { plugins: [router], stubs: { teleport: true } }, attachTo: document.body });
   await flushPromises();
   return { wrapper, router };
 }

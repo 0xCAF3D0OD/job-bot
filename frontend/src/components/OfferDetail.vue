@@ -306,7 +306,14 @@ watch(
           data-test="close-detail"
           @click="$emit('close')"
         >
-          ×
+          <span
+            class="close-x"
+            aria-hidden="true"
+          >×</span>
+          <span
+            class="close-back"
+            aria-hidden="true"
+          >← Offres</span>
         </button>
       </div>
     </div>
@@ -340,7 +347,7 @@ watch(
     <!-- L'essentiel d'abord (docs/21 §5) : préparer, postuler ; l'annonce d'origine en lien discret. -->
     <div
       v-if="offer.status !== 'applied'"
-      class="triage"
+      class="triage mobile-dock"
       data-test="triage"
     >
       <RouterLink

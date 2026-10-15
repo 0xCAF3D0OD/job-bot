@@ -1,6 +1,6 @@
 # 33 — La plateforme sur téléphone (version 0.26.0)
 
-> Statut : **validé** le 2026-10-15. livré : PR a (menu burger, rien ne déborde, en-tête compact).
+> Statut : **validé** le 2026-10-15. livré : PR a (menu burger, rien ne déborde, en-tête compact), PR b (action en bas, fiches ORP, Assistant en rond, écran d'accueil, cloche en carte).
 > Retour d'usage du 2026-10-15 : adapter l'interface au téléphone, avec un menu « burger » pour gagner de la place, et les indispensables du mobile.
 
 ## 1. Le constat (iPhone, 375 px de large)
@@ -98,3 +98,16 @@ Sans migration ni changement d'API. Chaque PR est vérifiée à 375 px (iPhone),
 ## Complément du 2026-10-15 : la cloche sur téléphone
 
 - Retour d'usage : le panneau des alertes dépassait à gauche de l'écran (il s'alignait sur la cloche, qui n'est plus au bord depuis que ☰ est à sa droite). Sous 820 px, il prend maintenant **toute la largeur**, juste sous la barre du haut, et défile s'il est long.
+
+## Écarts avec la PR b
+
+- **Action principale en bas** (sous 820 px) : ce sont les boutons de la page eux-mêmes qui sont fixés en bas, sans doublon. Détail d'une offre : « Préparer ma candidature » et « Postuler sur … » ; préparation : « Postuler sur … » et « Marquer comme envoyée » (« Rédiger la lettre » reste dans sa carte, à côté du choix de la langue) ; Suivi : « Compléter N ligne(s) » ou « Marquer comme remis ». Deux actions sont côte à côte quand elles tiennent, sinon chacune sur toute la largeur. La bulle d'information et l'Assistant passent au-dessus de la barre ; le bas de page laisse la place.
+- **Détail d'une offre** : il s'ouvrait déjà en plein écran sous 1200 px ; sur téléphone, le × devient **« ← Offres »**. **Filtres** : déjà en plein écran, avec en bas « Afficher N offres » (libellé gardé).
+- **Formulaire ORP du mois** en fiches sous 820 px : date, entreprise (ou « À compléter »), puis une ligne par colonne affichée (« Poste : … »), « Modifier » en bas à droite ; une fiche à compléter a un bord orange.
+- **Assistant** : un rond de 48 px avec la pastille menthe ; son nom reste lu par les lecteurs d'écran.
+- **Écran d'accueil** : manifeste, icônes (le rond violet du logo, version « maskable » pour Android), couleur de barre d'état claire ou sombre selon le thème, ouverture sur Aujourd'hui ; la barre du haut évite l'encoche de l'iPhone.
+- **Lignes dépliables** : le titre passe avant le résumé, qui s'abrège (« Plus d'options » ne passe plus sur deux lignes).
+
+## Complément du 2026-10-15 : la cloche en carte sous la barre
+
+- Retour d'usage : la liste des alertes s'ouvre maintenant comme une **carte sous la barre du haut**, à sa largeur, qui **pousse la page vers le bas** (sur ordinateur comme sur téléphone) au lieu de flotter par-dessus. Elle reste visible en défilant (elle fait partie de la barre), défile si elle est longue, et se ferme avec Échap, un clic ailleurs ou la cloche.

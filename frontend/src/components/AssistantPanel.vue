@@ -201,7 +201,7 @@ function day(value: string): string {
         class="assistant-fab-dot"
         aria-hidden="true"
       />
-      Assistant
+      <span class="assistant-fab-label">Assistant</span>
     </button>
     <aside
       v-else

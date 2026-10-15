@@ -112,6 +112,11 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
         </RouterLink>
       </div>
     </div>
+    <!-- Carte des alertes (cloche), sous la barre et à sa largeur. -->
+    <div
+      id="bell-drop"
+      class="bell-drop"
+    />
   </header>
   <div
     v-if="loggedIn && profile && !profile.is_main"

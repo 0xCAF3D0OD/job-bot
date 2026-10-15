@@ -13,6 +13,9 @@ const router = useRouter();
 const inbox = ref<Inbox>({ unread: 0, items: [] });
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
+// La carte s'ouvre sous la barre du haut, à sa largeur, et pousse la page vers le bas
+// (retour du 2026-10-15) : elle est rendue dans #bell-drop, au pied de la barre.
+const panel = ref<HTMLElement | null>(null);
 let timer: ReturnType<typeof setInterval> | undefined;
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
@@ -49,7 +52,8 @@ async function readAll(): Promise<void> {
 }
 
 function onDocumentClick(event: MouseEvent): void {
-  if (open.value && root.value && !root.value.contains(event.target as Node)) open.value = false;
+  const target = event.target as Node;
+  if (open.value && !root.value?.contains(target) && !panel.value?.contains(target)) open.value = false;
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -89,51 +93,58 @@ onUnmounted(() => {
         data-test="bell-badge"
       >{{ badge }}</span>
     </button>
-    <div
-      v-if="open"
-      class="bell-panel"
-      role="dialog"
-      aria-label="Alertes"
-      data-test="bell-panel"
+    <Teleport
+      to="#bell-drop"
+      defer
     >
-      <div class="bell-head">
-        <strong>Alertes</strong>
-        <button
-          v-if="inbox.unread"
-          type="button"
-          class="link"
-          data-test="read-all"
-          @click="readAll"
+      <Transition name="bell-drop">
+        <div
+          v-if="open"
+          class="bell-panel"
+          role="dialog"
+          aria-label="Alertes"
+          data-test="bell-panel"
         >
-          Tout marquer comme lu
-        </button>
-      </div>
-      <p
-        v-if="!inbox.items.length"
-        class="hint bell-empty"
-      >
-        Aucune alerte pour l'instant.
-      </p>
-      <ul v-else>
-        <li
-          v-for="item in inbox.items"
-          :key="item.id"
-        >
-          <button
-            type="button"
-            :class="['bell-item', { unread: !item.read_at }]"
-            data-test="bell-item"
-            @click="select(item)"
+          <div class="bell-head">
+            <strong>Alertes</strong>
+            <button
+              v-if="inbox.unread"
+              type="button"
+              class="link"
+              data-test="read-all"
+              @click="readAll"
+            >
+              Tout marquer comme lu
+            </button>
+          </div>
+          <p
+            v-if="!inbox.items.length"
+            class="hint bell-empty"
           >
-            <span class="bell-title">{{ item.title }}</span>
-            <span
-              v-if="item.message"
-              class="bell-text"
-            >{{ item.message.split("\n")[0] }}</span>
-            <span class="bell-time">{{ since(item.created_at) }}</span>
-          </button>
-        </li>
-      </ul>
-    </div>
+            Aucune alerte pour l'instant.
+          </p>
+          <ul v-else>
+            <li
+              v-for="item in inbox.items"
+              :key="item.id"
+            >
+              <button
+                type="button"
+                :class="['bell-item', { unread: !item.read_at }]"
+                data-test="bell-item"
+                @click="select(item)"
+              >
+                <span class="bell-title">{{ item.title }}</span>
+                <span
+                  v-if="item.message"
+                  class="bell-text"
+                >{{ item.message.split("\n")[0] }}</span>
+                <span class="bell-time">{{ since(item.created_at) }}</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

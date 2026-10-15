@@ -362,25 +362,31 @@ onUnmounted(() => assistant.setFocus(null));
           >
             Annuler la remise
           </button>
-          <button
-            v-else-if="firstIncomplete"
-            type="button"
-            class="primary small"
-            data-test="complete-next"
-            @click="edit(firstIncomplete)"
-          >
-            Compléter {{ orp.incomplete }} ligne(s) <AppIcon name="chevron" />
-          </button>
-          <button
+          <!-- Sur téléphone, l'action du moment est fixée en bas de l'écran (docs/33 §3.2). -->
+          <div
             v-else
-            type="button"
-            class="primary small"
-            :disabled="busy"
-            data-test="submit"
-            @click="submit(true)"
+            class="mobile-dock"
           >
-            Marquer comme remis <AppIcon name="chevron" />
-          </button>
+            <button
+              v-if="firstIncomplete"
+              type="button"
+              class="primary small"
+              data-test="complete-next"
+              @click="edit(firstIncomplete)"
+            >
+              Compléter {{ orp.incomplete }} ligne(s) <AppIcon name="chevron" />
+            </button>
+            <button
+              v-else
+              type="button"
+              class="primary small"
+              :disabled="busy"
+              data-test="submit"
+              @click="submit(true)"
+            >
+              Marquer comme remis <AppIcon name="chevron" />
+            </button>
+          </div>
         </template>
         <button
           type="button"
