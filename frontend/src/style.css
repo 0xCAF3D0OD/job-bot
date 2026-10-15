@@ -73,7 +73,8 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 .muted { color: var(--muted); margin: 0; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
-.container { max-width: 70rem; margin: 0 auto; padding: 0 1.5rem; }
+:root { --page-width: 80rem; }
+.container { max-width: var(--page-width); margin: 0 auto; padding: 0 1.5rem; }
 
 /* --- Barre du haut : logo à gauche, liens centrés, bouton violet à droite --- */
 
@@ -120,7 +121,9 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   text-transform: uppercase;
 }
 
-.band { background: var(--band); padding: 3rem 0 4rem; border-top: 1px solid var(--divider); }
+.band { background: var(--band); padding: 1.5rem 0 4rem; border-top: 1px solid var(--divider); }
+/* Candidatures : ses vues ont leurs propres marges, dans la même bande grise (docs/43 n° 1). */
+.jobs-band { padding: 0; }
 .plain { padding: 0 0 4rem; }
 
 /* --- Boutons --- */
@@ -451,7 +454,7 @@ p.badge.reason { margin: 0; }
 
 /* --- Page Offres : filtres toujours visibles (0.4.0-a) --- */
 
-.offers-page { max-width: 88rem; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+.offers-page { max-width: var(--page-width); margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
 .offers-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
 .offers-heading h1 { font-size: 2rem; margin-top: 0.6rem; }
 .filters-toggle { display: none; }
@@ -714,7 +717,7 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .job-room-card h3 { overflow-wrap: anywhere; }
 .orp-sheet { display: none; }
 #print-root .orp-sheet { display: block; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
-.orp-sheet h1 { font-size: 12pt; margin: 0 0 4mm; }
+.orp-sheet .orp-sheet-title { font-size: 12pt; margin: 0 0 4mm; }
 .orp-sheet h2 { font-size: 10.5pt; margin: 0 0 3mm; }
 .orp-holder { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 8mm; margin-bottom: 4mm; }
 .orp-sheet table { width: 100%; border-collapse: collapse; }
@@ -918,22 +921,22 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .account-profile select { padding: 0.3rem 0.4rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 
 /* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
-.jobs-head { max-width: 88rem; margin: 0 auto; padding: 1.75rem 1.5rem 0; }
+.jobs-head { max-width: var(--page-width); margin: 0 auto; padding: 1.75rem 1.5rem 0; }
 .jobs-head h1 { font-size: 2rem; margin: 0.6rem 0 1rem; }
 .jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
 .jobs-tabs a { white-space: nowrap; }
-.jobs-head + .offers-page { padding-top: 1.25rem; }
-.jobs-head + .offers-page .offers-heading { margin-bottom: 0; }
-.jobs-body { max-width: 88rem; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+.jobs-band > .offers-page { padding-top: 1.5rem; }
+.jobs-band > .offers-page .offers-heading { margin-bottom: 0; }
+.jobs-body { max-width: var(--page-width); margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
 @media (max-width: 720px) {
   .jobs-head { padding: 1.25rem 1rem 0; }
   .jobs-head h1 { font-size: 1.6rem; }
   .jobs-body { padding: 1.25rem 1rem 3rem; }
-  .jobs-head + .offers-page .offers-heading { margin-bottom: 1rem; }
+  .jobs-band > .offers-page .offers-heading { margin-bottom: 1rem; }
 }
 
 /* Réglages regroupés (docs/19 §4) : sommaire à gauche, sections à droite */
-.settings-layout { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem; display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 2rem; align-items: start; }
+.settings-layout { max-width: var(--page-width); margin: 0 auto; padding: 0 1.5rem; display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 2rem; align-items: start; }
 .settings-toc { position: sticky; top: 6rem; display: grid; gap: 0.2rem; padding-top: 0.4rem; }
 .settings-toc a { padding: 0.35rem 0.6rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.9rem; }
 .settings-toc a:hover { background: var(--surface); color: var(--text); }
@@ -1080,7 +1083,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .panel-scroll.fade-top { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); }
 .panel-scroll.fade-bottom { -webkit-mask-image: linear-gradient(to top, transparent 0, #000 3rem); mask-image: linear-gradient(to top, transparent 0, #000 3rem); }
 .panel-scroll.fade-top.fade-bottom { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); }
-.suivi-panel h3 { margin: 0; font-size: 1rem; }
+.suivi-panel .suivi-panel-title { margin: 0; font-size: 1rem; }
 .application-card { display: grid; gap: 0.3rem; padding: 0.7rem 0.85rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
 .application-card header { display: flex; justify-content: space-between; gap: 0.5rem; align-items: flex-start; }
 .application-card header p { margin: 0.1rem 0 0; font-size: 0.86rem; }
@@ -1751,3 +1754,13 @@ html.side-open { overflow: hidden; }
   .prep-tabs a { padding: 0.6rem 0.6rem; }
   .prep-tabs .tab-count { margin-left: 0.2rem; }
 }
+
+/* Un seul en-tête pour toutes les pages (docs/43 n° 1) : celui de Candidatures, titre à
+   gauche, onglets dessous, sur la même largeur que le contenu. */
+.page-head .page-head-sub { margin: -0.6rem 0 1rem; color: var(--muted); font-size: 0.95rem; }
+.page-head:not(:has(.prep-tabs)) { padding-bottom: 0.4rem; }
+.jobs-head .prep-tabs { margin-bottom: 0; border-bottom: 0; }
+@media (max-width: 820px) {
+  .page-head .page-head-sub { display: none; }
+}
+.offer-day-title { margin: 0; font: inherit; color: inherit; }

@@ -556,7 +556,6 @@ onMounted(() => void load());
                 v-if="!writing"
                 class="cost"
               >· 0,10 $</span>
-              <AppIcon name="chevron" />
             </button>
           </div>
 

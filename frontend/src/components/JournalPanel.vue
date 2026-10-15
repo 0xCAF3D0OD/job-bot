@@ -2,9 +2,8 @@
 import { onMounted, ref, watch } from "vue";
 
 import { api, type ParseStatus, type Search, type SearchDetail, type Source } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import { useCollect } from "../composables/useCollect";
-import { formatDateTime, parseStatusLabel, rateText, SITE_NAMES, sourceLabel } from "../format";
+import { SITE_NAMES, formatDateTime, parseStatusLabel, plural, rateText, sourceLabel } from "../format";
 
 const PAGE_SIZE = 50;
 
@@ -68,7 +67,7 @@ onMounted(() => void load());
       data-test="collect"
       @click="collectNow"
     >
-      Collecter maintenant <AppIcon name="chevron" />
+      Collecter maintenant
     </button>
   </div>
   <div class="panel">
@@ -103,7 +102,7 @@ onMounted(() => void load());
           </select>
         </label>
       </div>
-      <span class="count">{{ total }} alerte(s)</span>
+      <span class="count">{{ plural(total, "alerte", "alertes") }}</span>
     </div>
 
     <p
@@ -211,7 +210,7 @@ onMounted(() => void load());
       :disabled="loading"
       @click="load(true)"
     >
-      Afficher plus <AppIcon name="chevron" />
+      Afficher plus
     </button>
   </div>
 </template>

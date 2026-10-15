@@ -17,6 +17,7 @@ import asyncio
 import json
 import sys
 
+from jobbot.core.plural import plural
 from jobbot.log import configure_logging, get_logger
 from jobbot.settings import ConfigError, Settings, load_settings
 
@@ -145,7 +146,8 @@ def cmd_imap_sample(args: argparse.Namespace) -> int:
     storage = create_storage(settings)
     for email in emails:
         storage.put(f"samples/{email.uid:08d}.eml", email.raw)
-    print(f"{len(emails)} e-mail(s) copié(s) dans {settings.storage_path / 'samples'}")
+    copied = plural(len(emails), "e-mail copié", "e-mails copiés")
+    print(f"{copied} dans {settings.storage_path / 'samples'}")
     return 0
 
 
@@ -164,8 +166,10 @@ def cmd_reparse(args: argparse.Namespace) -> int:
         finally:
             await runtime.dispose()
         print(
-            f"{result.examined} alerte(s) examinée(s), {result.updated} mise(s) à jour, "
-            f"{result.new_offers} nouvelle(s) offre(s), {result.missing_raw} copie(s) manquante(s)"
+            f"{plural(result.examined, 'alerte examinée', 'alertes examinées')}, "
+            f"{plural(result.updated, 'mise à jour', 'mises à jour')}, "
+            f"{plural(result.new_offers, 'nouvelle offre', 'nouvelles offres')}, "
+            f"{plural(result.missing_raw, 'copie manquante', 'copies manquantes')}"
         )
         return 0
 
@@ -259,7 +263,7 @@ def cmd_set_password(args: argparse.Namespace) -> int:
 
     created, closed = asyncio.run(save())
     what = "Compte créé" if created else "Mot de passe changé"
-    print(f"{what} pour « {username} » ; {closed} session(s) fermée(s).")
+    print(f"{what} pour « {username} » ; {plural(closed, 'session fermée', 'sessions fermées')}.")
     return 0
 
 

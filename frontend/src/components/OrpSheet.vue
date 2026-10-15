@@ -6,7 +6,7 @@ import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import HelpTip from "./HelpTip.vue";
 import { printSheet } from "../composables/usePrint";
-import { formatMonth, sourceLabel } from "../format";
+import { formatMonth, plural, sourceLabel } from "../format";
 
 // Preuves ORP du mois (docs/09), onglet de la page Candidatures (docs/18 §2).
 // embedded : dans l'onglet Suivi (docs/22 §2), les actions de remise sont dans la barre du mois.
@@ -120,7 +120,7 @@ onMounted(async () => {
       class="notice"
       data-test="incomplete"
     >
-      {{ data.incomplete }} ligne(s) à compléter : il manque l'adresse de l'entreprise.
+      {{ plural(data.incomplete, "ligne", "lignes") }} à compléter : il manque l'adresse de l'entreprise.
     </p>
     <p
       v-if="!data.holder.name"
@@ -157,7 +157,7 @@ onMounted(async () => {
           data-test="complete-next"
           @click="edit(firstIncomplete)"
         >
-          Compléter {{ data.incomplete }} ligne(s) <AppIcon name="chevron" />
+          Compléter {{ plural(data.incomplete, "ligne", "lignes") }} <AppIcon name="chevron" />
         </button>
         <template v-else>
           <button
@@ -167,7 +167,7 @@ onMounted(async () => {
             data-test="submit"
             @click="submit(true)"
           >
-            Marquer comme remis <AppIcon name="chevron" />
+            Marquer comme remis
           </button>
           <HelpTip
             text="À faire une fois les candidatures saisies dans Job-Room ou le PDF envoyé à ton ORP."
@@ -429,7 +429,9 @@ onMounted(async () => {
       class="orp-sheet print-sheet"
       aria-hidden="true"
     >
-      <h1>Preuves des recherches personnelles effectuées en vue de trouver un emploi</h1>
+      <h2 class="orp-sheet-title">
+        Preuves des recherches personnelles effectuées en vue de trouver un emploi
+      </h2>
       <div class="orp-holder">
         <span>Nom et prénom : <strong>{{ data.holder.name }}</strong></span>
         <span>Adresse : {{ data.holder.address }}</span>

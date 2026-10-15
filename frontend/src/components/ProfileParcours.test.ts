@@ -145,7 +145,7 @@ describe("propositions de blocs", () => {
     expect(proposals).toHaveLength(2);
     expect(proposals[0]?.text()).toContain("ressemble à : Kubernetes");
     expect((proposals[0]?.find("input[type=checkbox]").element as HTMLInputElement).checked).toBe(false);
-    expect(wrapper.find("[data-test=add-proposals]").text()).toContain("Ajouter 1 bloc(s)");
+    expect(wrapper.find("[data-test=add-proposals]").text()).toContain("Ajouter 1 bloc");
 
     await proposals[1]?.find("input[type=text]").setValue("Projets 42 Lausanne");
     await wrapper.find("[data-test=proposals]").trigger("submit");
@@ -156,7 +156,7 @@ describe("propositions de blocs", () => {
       body: expect.objectContaining({ title: "Projets 42 Lausanne", kind: "experience", document_id: 4 }),
     });
     expect(wrapper.find("[data-test=proposals]").exists()).toBe(false);
-    expect(wrapper.find("[role=status]").text()).toContain("1 bloc(s) ajouté(s)");
+    expect(wrapper.find("[role=status]").text()).toContain("1 bloc ajouté");
   });
 
   it("explique un refus de l'API", async () => {

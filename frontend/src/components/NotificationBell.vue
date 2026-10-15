@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api, type Inbox, type InboxItem } from "../api/client";
-import { since } from "../format";
+import { plural, since } from "../format";
 import AppIcon from "./AppIcon.vue";
 import { usePhone } from "../composables/usePhone";
 import PushTransition from "./PushTransition.vue";
@@ -85,7 +85,7 @@ onUnmounted(() => {
     <button
       type="button"
       class="bell-button"
-      :aria-label="inbox.unread ? `Alertes, ${inbox.unread} non lue(s)` : 'Alertes'"
+      :aria-label="inbox.unread ? `Alertes, ${plural(inbox.unread, 'non lue', 'non lues')}` : 'Alertes'"
       :aria-expanded="open"
       data-test="bell"
       @click="toggle"

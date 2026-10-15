@@ -14,6 +14,7 @@ import TrainingCardBody from "../components/TrainingCardBody.vue";
 import { usePhone } from "../composables/usePhone";
 import { highlight, languageLabel } from "../newsLabels";
 import { KINDS, ORP_LINKS, PRICES, STATUSES } from "../trainingLabels";
+import { plural } from "../format";
 
 // Formations (docs/16 §5) : catalogue vérifié, suggestions de l'IA sur demande, suivi.
 type Status = "interested" | "in_progress" | "done";
@@ -132,7 +133,7 @@ async function suggest(): Promise<void> {
       return;
     }
     message.value = data.added
-      ? `${data.added} formation(s) proposée(s), marquées « à vérifier » : garde-les ou écarte-les.`
+      ? `${plural(data.added, "formation proposée, marquée", "formations proposées, marquées")} « à vérifier » : garde-les ou écarte-les.`
       : "Rien de nouveau trouvé cette fois.";
     await load();
   } finally {
@@ -156,33 +157,33 @@ onMounted(() => void load());
     eyebrow="Formations"
     title="Se former dans son domaine"
     subtitle="Certifications et cours en ligne pour ton domaine."
-  />
+  >
+    <nav
+      class="prep-tabs"
+      aria-label="Formations"
+    >
+      <RouterLink
+        :to="{ query: {} }"
+        :class="{ active: tab === 'catalog' }"
+        data-test="tab-catalog"
+      >
+        Catalogue
+      </RouterLink>
+      <RouterLink
+        :to="{ query: { onglet: 'miennes' } }"
+        :class="{ active: tab === 'mine' }"
+        data-test="tab-mine"
+      >
+        Mes formations
+        <span
+          v-if="mineCount"
+          class="tab-count"
+        >{{ mineCount }}</span>
+      </RouterLink>
+    </nav>
+  </PageHero>
   <section class="band">
     <div class="container">
-      <nav
-        class="prep-tabs"
-        aria-label="Formations"
-      >
-        <RouterLink
-          :to="{ query: {} }"
-          :class="{ active: tab === 'catalog' }"
-          data-test="tab-catalog"
-        >
-          Catalogue
-        </RouterLink>
-        <RouterLink
-          :to="{ query: { onglet: 'miennes' } }"
-          :class="{ active: tab === 'mine' }"
-          data-test="tab-mine"
-        >
-          Mes formations
-          <span
-            v-if="mineCount"
-            class="tab-count"
-          >{{ mineCount }}</span>
-        </RouterLink>
-      </nav>
-
       <component
         :is="phone ? DisclosureRow : 'aside'"
         :class="phone ? 'orp-note-row' : 'orp-note'"

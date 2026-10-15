@@ -25,7 +25,7 @@ import SuiviCalendar from "../components/SuiviCalendar.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
-import { formatMonth, shiftMonth } from "../format";
+import { formatMonth, plural, shiftMonth } from "../format";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
 const REMIND_AFTER_DAYS = 10;
@@ -345,7 +345,7 @@ onUnmounted(() => assistant.setFocus(null));
           class="month-goal"
           data-test="goal"
         >
-          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }}<span :class="{ 'goal-unit': orp.target }"> candidature(s)</span></span>
+          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }}<span :class="{ 'goal-unit': orp.target }"> {{ orp.count === 1 ? "candidature" : "candidatures" }}</span></span>
           <div
             v-if="progress !== null"
             class="budget-bar"
@@ -389,7 +389,7 @@ onUnmounted(() => assistant.setFocus(null));
               data-test="complete-next"
               @click="edit(firstIncomplete)"
             >
-              Compléter {{ orp.incomplete }} ligne(s) <AppIcon name="chevron" />
+              Compléter {{ plural(orp.incomplete, "ligne", "lignes") }} <AppIcon name="chevron" />
             </button>
             <button
               v-else
@@ -399,7 +399,7 @@ onUnmounted(() => assistant.setFocus(null));
               data-test="submit"
               @click="submit(true)"
             >
-              Marquer comme remis <AppIcon name="chevron" />
+              Marquer comme remis
             </button>
           </div>
         </template>
@@ -458,14 +458,14 @@ onUnmounted(() => assistant.setFocus(null));
           :style="panelHeight ? { height: `${panelHeight}px` } : undefined"
           data-test="day-panel"
         >
-          <h3>
+          <h2 class="suivi-panel-title">
             {{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : "À relancer" }}
             <HelpTip
               v-if="!selectedDay"
               text="Les candidatures à relancer s'affichent ici. Clique sur un jour du calendrier pour voir ses candidatures."
               label="Aide : à relancer"
             />
-          </h3>
+          </h2>
           <p
             v-if="!panelCards.length"
             class="hint"
@@ -543,7 +543,7 @@ onUnmounted(() => assistant.setFocus(null));
         <DisclosureRow
           class="orp-details"
           title="Formulaire ORP du mois"
-          :value="incomplete.size ? `${incomplete.size} ligne(s) à compléter` : 'tableau, PDF, CSV, Job-Room'"
+          :value="incomplete.size ? `${plural(incomplete.size, 'ligne', 'lignes')} à compléter` : 'tableau, PDF, CSV, Job-Room'"
           group="suivi"
           data-test="orp-details"
         >

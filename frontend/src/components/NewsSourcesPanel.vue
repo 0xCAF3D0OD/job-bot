@@ -3,7 +3,6 @@ import { onMounted, ref } from "vue";
 
 import { api, type NewsPreferences, type NewsSource } from "../api/client";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
-import AppIcon from "./AppIcon.vue";
 import NewsCatalog from "./NewsCatalog.vue";
 import HelpTip from "./HelpTip.vue";
 
@@ -324,7 +323,7 @@ onMounted(() => void load());
             :disabled="busy"
             data-test="save-news-search"
           >
-            Créer la veille <AppIcon name="chevron" />
+            Créer la veille
           </button>
           <button
             type="button"
@@ -402,7 +401,7 @@ onMounted(() => void load());
             :disabled="busy"
             data-test="save-news-source"
           >
-            {{ busy ? "Vérification…" : "Ajouter" }} <AppIcon name="chevron" />
+            {{ busy ? "Vérification…" : "Ajouter" }}
           </button>
           <button
             type="button"

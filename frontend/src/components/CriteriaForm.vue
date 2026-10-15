@@ -5,7 +5,6 @@ import { api, type ContractType, type CriteriaIn, type Keywords, type Language }
 import type { components } from "../api/schema";
 
 type RemotePolicy = components["schemas"]["RemotePolicy"];
-import AppIcon from "./AppIcon.vue";
 import HelpTip from "./HelpTip.vue";
 import TagInput from "./TagInput.vue";
 
@@ -301,7 +300,7 @@ onMounted(() => void load());
           :disabled="saving"
           data-test="save-criteria"
         >
-          Enregistrer et refiltrer <AppIcon name="chevron" />
+          Enregistrer et refiltrer
         </button>
         <button
           v-if="savedAt"

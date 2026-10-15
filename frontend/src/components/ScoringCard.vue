@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type ScoringStatus } from "../api/client";
-import AppIcon from "./AppIcon.vue";
+import { plural } from "../format";
 
 const status = ref<ScoringStatus | null>(null);
 // Offres déjà notées dont le télétravail n'est pas relevé (docs/26 §2).
@@ -82,7 +82,7 @@ defineExpose({ load });
         data-test="rescore"
         @click="rescore"
       >
-        Renoter {{ status.stale }} offre(s) <AppIcon name="chevron" />
+        Renoter {{ plural(status.stale, "offre", "offres") }}
       </button>
     </div>
 
@@ -136,7 +136,7 @@ defineExpose({ load });
       class="remote-read"
       data-test="remote-read"
     >
-      <span>Télétravail pas encore relevé sur {{ remote.pending }} offre(s) à examiner, notées avant.</span>
+      <span>Télétravail pas encore relevé sur {{ plural(remote.pending, "offre", "offres") }} à examiner, notées avant.</span>
       <button
         type="button"
         class="link"

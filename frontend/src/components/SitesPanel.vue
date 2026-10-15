@@ -2,9 +2,9 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import HelpTip from "./HelpTip.vue";
 import { secureAddress, senders, useChecks } from "../validators";
+import { plural } from "../format";
 
 // Sites dont les alertes sont suivies (docs/11 §2).
 const sites = ref<SiteOut[]>([]);
@@ -94,7 +94,7 @@ async function reread(): Promise<void> {
   try {
     const { data } = await api.POST("/api/sites/reread");
     message.value = data
-      ? `${data.updated} alerte(s) relue(s), ${data.new_offers} nouvelle(s) offre(s).`
+      ? `${plural(data.updated, "alerte relue", "alertes relues")}, ${plural(data.new_offers, "nouvelle offre", "nouvelles offres", "aucune nouvelle offre")}.`
       : "La relecture a échoué.";
     await load();
   } finally {
@@ -133,7 +133,7 @@ onMounted(() => void load());
             </span>
           </span>
           <span class="hint site-stats">
-            {{ site.alerts }} alerte(s){{ site.last_alert_at ? ` · dernière le ${dateFormat.format(new Date(site.last_alert_at))}` : "" }}
+            {{ plural(site.alerts, "alerte", "alertes", "aucune alerte") }}{{ site.last_alert_at ? ` · dernière le ${dateFormat.format(new Date(site.last_alert_at))}` : "" }}
           </span>
           <label class="check">
             <input
@@ -220,7 +220,7 @@ onMounted(() => void load());
             class="field-error"
           >{{ errors.url }}</span>
         </label>
-        <label class="wide">Adresse(s) d'expédition des alertes
+        <label class="wide">Adresses d'expédition des alertes
           <input
             id="site-senders"
             v-model="form.senders"
@@ -245,7 +245,7 @@ onMounted(() => void load());
             class="secondary small"
             data-test="save-site"
           >
-            Ajouter <AppIcon name="chevron" />
+            Ajouter
           </button>
           <button
             type="button"

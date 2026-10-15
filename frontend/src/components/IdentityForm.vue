@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import { email, postcode, webAddress, type Check } from "../validators";
-import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import HelpTip from "./HelpTip.vue";
 
@@ -262,7 +261,7 @@ onMounted(async () => {
         class="primary"
         data-test="save-identity"
       >
-        Enregistrer mes coordonnées <AppIcon name="chevron" />
+        Enregistrer mes coordonnées
       </button>
       <span
         v-if="identityMessage"

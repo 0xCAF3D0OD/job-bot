@@ -34,24 +34,25 @@ const SUBTITLES: Record<Tab, string> = {
     eyebrow="Profil"
     title="Toi et ta recherche"
     :subtitle="SUBTITLES[tab]"
-  />
+  >
+    <nav
+      class="prep-tabs"
+      aria-label="Profil"
+    >
+      <RouterLink
+        v-for="entry in TABS"
+        :key="entry.key"
+        :to="{ query: entry.key === 'recherche' ? {} : { onglet: entry.key } }"
+        :class="{ active: tab === entry.key }"
+        :data-test="`tab-${entry.key}`"
+      >
+        <span class="label-long">{{ entry.label }}</span>
+        <span class="label-short">{{ entry.short }}</span>
+      </RouterLink>
+    </nav>
+  </PageHero>
   <section class="band">
     <div class="container">
-      <nav
-        class="prep-tabs"
-        aria-label="Profil"
-      >
-        <RouterLink
-          v-for="entry in TABS"
-          :key="entry.key"
-          :to="{ query: entry.key === 'recherche' ? {} : { onglet: entry.key } }"
-          :class="{ active: tab === entry.key }"
-          :data-test="`tab-${entry.key}`"
-        >
-          <span class="label-long">{{ entry.label }}</span>
-          <span class="label-short">{{ entry.short }}</span>
-        </RouterLink>
-      </nav>
       <div
         v-if="tab === 'recherche'"
         class="narrow-block"

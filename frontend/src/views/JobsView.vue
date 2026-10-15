@@ -27,7 +27,7 @@ const TABS: { key: JobsTab; label: string; path: string; title: string; short: s
     path: "/candidatures/alertes",
     title: "Tes alertes emploi",
     short: "Tes alertes",
-    hint: "alerte(s) créée(s) sans rien envoyé",
+    hint: "alertes créées sans rien envoyé",
   },
   {
     key: "bilan",
@@ -96,5 +96,7 @@ onMounted(() => void refresh());
       </RouterLink>
     </nav>
   </div>
-  <RouterView />
+  <section class="band jobs-band">
+    <RouterView />
+  </section>
 </template>

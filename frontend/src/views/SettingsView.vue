@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
-import AppIcon from "../components/AppIcon.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
@@ -226,7 +225,7 @@ const SECTIONS = [
                 :disabled="saving"
                 data-test="save-settings"
               >
-                Enregistrer <AppIcon name="chevron" />
+                Enregistrer
               </button>
               <span
                 v-if="message"
@@ -337,7 +336,7 @@ const SECTIONS = [
                 :disabled="saving"
                 data-test="save-budget"
               >
-                Enregistrer <AppIcon name="chevron" />
+                Enregistrer
               </button>
               <span
                 v-if="message"

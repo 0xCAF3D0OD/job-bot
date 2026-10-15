@@ -55,7 +55,7 @@ describe("SitesPanel", () => {
 
     await wrapper.find("[data-test=reread]").trigger("click");
     await flushPromises();
-    expect(wrapper.text()).toContain("3 alerte(s) relue(s), 7 nouvelle(s) offre(s)");
+    expect(wrapper.text()).toContain("3 alertes relues, 7 nouvelles offres");
 
     await wrapper.find("[data-test=add-site]").trigger("click");
     await wrapper.find("[data-test=site-name]").setValue("JobScout24");

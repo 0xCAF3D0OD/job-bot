@@ -65,7 +65,7 @@ async def test_under_target_from_the_25th(rt: Runtime, sent: list[Message]) -> N
     assert await notify_orp(rt, date(2026, 10, 24)) == 0
     assert await notify_orp(rt, date(2026, 10, 25)) == 1
     assert sent[0].title == "3 / 20 candidatures en octobre"
-    assert "Il reste 7 jour(s)" in sent[0].message
+    assert "Il reste 7 jours" in sent[0].message
     assert await notify_orp(rt, date(2026, 10, 26)) == 0  # une seule fois
 
 
@@ -74,7 +74,7 @@ async def test_due_then_eve_then_nothing_once_submitted(rt: Runtime, sent: list[
     await add(rt, date(2026, 9, 10), address=None)
     assert await notify_orp(rt, date(2026, 10, 1)) == 1
     assert sent[0].title == "Preuves de septembre à remettre avant le 5 octobre"
-    assert sent[0].message.startswith("2 candidature(s), 1 ligne(s) à compléter.")
+    assert sent[0].message.startswith("2 candidatures, 1 ligne à compléter.")
     assert sent[0].click and sent[0].click.endswith("/candidatures/suivi?mois=2026-09")
     assert await notify_orp(rt, date(2026, 10, 2)) == 0
     assert await notify_orp(rt, date(2026, 10, 4)) == 1

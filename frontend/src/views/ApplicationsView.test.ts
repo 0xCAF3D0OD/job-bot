@@ -190,7 +190,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: undefined } } });
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves à remettre avant le 5 novembre 2026");
     expect(wrapper.findAll("[data-test=orp-row]")).toHaveLength(2);
-    expect(wrapper.find("[data-test=incomplete]").text()).toContain("1 ligne(s)");
+    expect(wrapper.find("[data-test=incomplete]").text()).toContain("1 ligne");
     expect(wrapper.find("[data-test=csv]").attributes("href")).toBe("/api/orp/2026-10/csv");
     // La version imprimée reprend l'en-tête et laisse le n° AVS à remplir.
     expect(wrapper.find(".orp-sheet").text()).toContain("N° AVS : ____");
@@ -202,7 +202,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     // La ligne 2 (sans adresse) correspond à la candidature 2.
     mockApi(() => month(), [{ ...application, id: 2 }]);
     const { wrapper } = await mountView("/candidatures/preuves");
-    expect(wrapper.find("[data-test=complete-next]").text()).toContain("Compléter 1 ligne(s)");
+    expect(wrapper.find("[data-test=complete-next]").text()).toContain("Compléter 1 ligne");
     expect(wrapper.find("[data-test=submit]").exists()).toBe(false);
     expect(wrapper.find("[data-test=more-options]").attributes("open")).toBeUndefined();
     await wrapper.find("[data-test=complete-next]").trigger("click");

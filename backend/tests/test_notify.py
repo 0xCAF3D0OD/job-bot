@@ -86,7 +86,7 @@ async def test_grouped_notification_once_per_offer(rt: Runtime, sent: list[Messa
 
     assert result.offers == 2
     [message] = sent
-    assert message.title == "2 nouvelle(s) offre(s) pour toi (jusqu'à 88/100)"
+    assert message.title == "2 nouvelles offres pour toi (jusqu'à 88/100)"
     assert message.message.splitlines() == [
         "88 · Offre 2 — Acme SA (Lausanne, VD)",
         "72 · Offre 1 — Acme SA (Lausanne, VD)",
@@ -115,7 +115,7 @@ def test_long_list_is_truncated() -> None:
     rows = [(90 - i, f"Offre {i}", None, None) for i in range(11)]
     message = service.offers_message(settings, rows)
     lines = message.message.splitlines()
-    assert len(lines) == service.MAX_LISTED + 1 and lines[-1] == "… et 3 autre(s)"
+    assert len(lines) == service.MAX_LISTED + 1 and lines[-1] == "… et 3 autres"
 
 
 async def test_budget_alert_once_per_month(rt: Runtime, sent: list[Message]) -> None:

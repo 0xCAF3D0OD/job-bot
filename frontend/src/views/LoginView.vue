@@ -2,7 +2,6 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import AppIcon from "../components/AppIcon.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAuth } from "../composables/useAuth";
@@ -104,7 +103,7 @@ onMounted(() => void load());
             :disabled="busy"
             data-test="login-submit"
           >
-            {{ busy ? "Connexion…" : "Se connecter" }} <AppIcon name="chevron" />
+            {{ busy ? "Connexion…" : "Se connecter" }}
           </button>
         </div>
       </form>

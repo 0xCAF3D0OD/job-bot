@@ -47,7 +47,7 @@ function argumentText(offers: number, matched: string[], examples: { title: stri
   const asked = matched.length ? matched.join(" ou ") : "ce que la formation apporte";
   const samples = examples.map((e) => `« ${e.title} »${e.company ? ` chez ${e.company}` : ""}`);
   const sample = samples.length ? `, par exemple ${samples.join(" et ")}` : "";
-  return `Elle répond à ce que demandent les offres de mon domaine : sur les 90 derniers jours, ${offers} offre(s) que j'ai reçue(s) demandaient ${asked}${sample}.`;
+  return `Elle répond à ce que demandent les offres de mon domaine : sur les 90 derniers jours, ${offers === 1 ? "1 offre que j'ai reçue demandait" : `${offers} offres que j'ai reçues demandaient`} ${asked}${sample}.`;
 }
 
 async function prepareRequest(): Promise<void> {
