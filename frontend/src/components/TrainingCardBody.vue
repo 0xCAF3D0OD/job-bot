@@ -27,6 +27,84 @@ const saving = ref(false);
 const error = ref("");
 const block = reactive({ title: "", content: "", tags: "" });
 const monthYear = new Intl.DateTimeFormat("fr-CH", { month: "long", year: "numeric" });
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+
+// Demande de financement à l'ORP (docs/37 §2) : un texte sans IA, avec l'argument tiré de
+// tes offres, à copier ; puis le suivi (demandée, acceptée, refusée).
+type Funding = NonNullable<NonNullable<Training["mark"]>["funding_status"]>;
+const FUNDING_LABELS: Record<Funding, string> = {
+  requested: "Financement demandé",
+  accepted: "Financement accepté",
+  refused: "Financement refusé",
+};
+const letter = ref("");
+const preparing = ref(false);
+const copied = ref(false);
+const fundingError = ref("");
+
+function argumentText(offers: number, matched: string[], examples: { title: string; company: string | null }[]): string {
+  if (!offers) return "";
+  const asked = matched.length ? matched.join(" ou ") : "ce que la formation apporte";
+  const samples = examples.map((e) => `« ${e.title} »${e.company ? ` chez ${e.company}` : ""}`);
+  const sample = samples.length ? `, par exemple ${samples.join(" et ")}` : "";
+  return `Elle répond à ce que demandent les offres de mon domaine : sur les 90 derniers jours, ${offers} offre(s) que j'ai reçue(s) demandaient ${asked}${sample}.`;
+}
+
+async function prepareRequest(): Promise<void> {
+  preparing.value = true;
+  fundingError.value = "";
+  try {
+    const { data } = await api.GET("/api/trainings/{training_id}/funding-request", {
+      params: { path: { training_id: props.training.id } },
+    });
+    if (!data) {
+      fundingError.value = "Préparation impossible pour l'instant.";
+      return;
+    }
+    const t = props.training;
+    const facts = [FORMATS[t.format] ?? t.format, `en ${languageLabel(t.language)}`].join(", ");
+    letter.value = [
+      "Bonjour [nom du conseiller],",
+      `Je souhaite suivre la formation « ${t.title} » (${t.provider}, ${facts}) : ${t.url}`,
+      argumentText(data.offers, data.matched, data.examples),
+      `Coût : [montant]. Durée : ${t.duration ?? "[durée]"}.`,
+      "Pourriez-vous me dire si elle peut être prise en charge au titre des mesures relatives au marché du travail ?",
+      data.sender ?? "[ton prénom et nom]",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  } finally {
+    preparing.value = false;
+  }
+}
+
+async function copyLetter(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(letter.value);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 1500);
+  } catch {
+    copied.value = false;
+  }
+}
+
+async function setFunding(status: Funding | null): Promise<void> {
+  fundingError.value = "";
+  const { data } = await api.PUT("/api/trainings/{training_id}/funding", {
+    params: { path: { training_id: props.training.id } },
+    body: { status },
+  });
+  if (!data) {
+    fundingError.value = "Enregistrement impossible.";
+    return;
+  }
+  if (status === "requested") letter.value = "";
+  emit("linked", data);
+}
+
+function day(value: string): string {
+  return shortDate.format(new Date(`${value}T12:00:00`));
+}
 
 function startDraft(): void {
   const t = props.training;
@@ -69,6 +147,11 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
 <template>
   <div class="training-head">
     <span class="news-meta">{{ KINDS[training.kind] }} · {{ training.provider }}</span>
+    <span
+      v-if="training.mark?.funding_status"
+      :class="['badge', training.mark.funding_status === 'refused' ? 'warn' : 'new']"
+      data-test="funding-badge"
+    >{{ FUNDING_LABELS[training.mark.funding_status] }}</span>
     <span
       v-if="!training.verified"
       class="badge warn"
@@ -183,6 +266,96 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
         @change="emit('mark', 'done', { certified: !(training.mark.certified ?? false) })"
       > certificat obtenu
     </label>
+  </div>
+  <div
+    v-if="training.price === 'paid' && training.mark"
+    class="training-funding"
+    data-test="training-funding"
+  >
+    <template v-if="!training.mark.funding_status">
+      <button
+        v-if="!letter"
+        type="button"
+        class="secondary small"
+        :disabled="preparing"
+        data-test="prepare-funding"
+        @click="prepareRequest"
+      >
+        {{ preparing ? "Préparation…" : "Préparer la demande à l'ORP" }}
+      </button>
+      <template v-else>
+        <textarea
+          v-model="letter"
+          rows="10"
+          aria-label="Demande de financement à ton conseiller ORP"
+          data-test="funding-letter"
+        />
+        <div class="training-actions">
+          <button
+            type="button"
+            class="link"
+            data-test="funding-copy"
+            @click="copyLetter"
+          >
+            {{ copied ? "Copié" : "Copier" }}
+          </button>
+          <button
+            type="button"
+            class="secondary small"
+            data-test="funding-requested"
+            @click="setFunding('requested')"
+          >
+            Marquer comme demandée
+          </button>
+          <HelpTip
+            label="Aide : demande de financement"
+            text="Rien n'est envoyé : copie le texte dans un e-mail ou dans Job-Room. Complète ce qui est entre crochets. Un rappel arrive après 14 jours sans réponse."
+          />
+        </div>
+      </template>
+    </template>
+    <div
+      v-else
+      class="training-actions"
+    >
+      <span
+        v-if="training.mark.funding_status === 'requested' && training.mark.funding_requested_at"
+        class="muted"
+      >Demandée le {{ day(training.mark.funding_requested_at) }}</span>
+      <template v-if="training.mark.funding_status === 'requested'">
+        <button
+          type="button"
+          class="secondary small"
+          data-test="funding-accepted"
+          @click="setFunding('accepted')"
+        >
+          Acceptée
+        </button>
+        <button
+          type="button"
+          class="secondary small"
+          data-test="funding-refused"
+          @click="setFunding('refused')"
+        >
+          Refusée
+        </button>
+      </template>
+      <button
+        type="button"
+        class="link"
+        data-test="funding-reset"
+        @click="setFunding(null)"
+      >
+        {{ training.mark.funding_status === "requested" ? "Retirer la demande" : "Modifier" }}
+      </button>
+    </div>
+    <p
+      v-if="fundingError"
+      class="notice error"
+      role="alert"
+    >
+      {{ fundingError }}
+    </p>
   </div>
   <div
     v-if="training.mark?.status === 'done'"

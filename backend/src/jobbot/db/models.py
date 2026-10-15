@@ -630,6 +630,10 @@ class TrainingMark(Base):
     chunk_id: Mapped[int | None] = mapped_column(
         ForeignKey("profile_chunks.id", ondelete="SET NULL")
     )
+    # Demande de financement à l'ORP (docs/37 §2) : requested | accepted | refused.
+    funding_status: Mapped[str | None] = mapped_column(Text)
+    funding_requested_at: Mapped[date | None] = mapped_column(Date)
+    funding_reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

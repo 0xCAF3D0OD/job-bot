@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -10,12 +11,20 @@ from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
 from jobbot.api.routes import trainings as routes
-from jobbot.db.models import LlmCall, ProfileChunk, Training
+from jobbot.db.models import (
+    Evaluation,
+    LlmCall,
+    Notification,
+    Offer,
+    ProfileChunk,
+    Training,
+    TrainingMark,
+)
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
-from jobbot.trainings import service
+from jobbot.trainings import funding, service
 
 from .conftest import make_settings
 
@@ -127,6 +136,8 @@ async def test_catalog_filter_and_marks(rt: Runtime) -> None:
             "done_at": None,
             "certified": None,
             "chunk_id": None,
+            "funding_status": None,
+            "funding_requested_at": None,
         }
         done = await api.put(
             f"/api/trainings/{aws['id']}/mark",
@@ -290,3 +301,73 @@ async def test_finished_training_becomes_a_profile_block(rt: Runtime) -> None:
         await conn.execute(
             text("DELETE FROM profile_chunks WHERE id = :id").bindparams(id=chunk_id)
         )
+
+
+async def test_funding_request_argument_status_and_reminder(rt: Runtime) -> None:
+    now = datetime.now(UTC)
+    async with rt.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE offers, notifications CASCADE"))
+    async with rt.sessionmaker.begin() as session:
+        for key, title, company, asks, days in [
+            ("f1", "Ingénieur DevOps", "Consort Group", ["Kubernetes", "AWS"], 2),
+            ("f2", "Cloud Engineer", "Swisscom", ["Certification CKA"], 10),
+            ("f3", "Comptable", "Fiduciaire SA", ["Excel"], 3),
+            ("f4", "SRE", "Ancienne SA", ["Kubernetes"], 200),
+        ]:
+            offer = Offer(
+                fingerprint=key,
+                title=title,
+                company=company,
+                status="to_review",
+                first_seen_at=now - timedelta(days=days),
+                last_seen_at=now,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=True,
+                    criteria_hash="x",
+                    keywords_asks=[{"text": a, "covered": False} for a in asks],
+                )
+            )
+    app = create_app(rt.settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        cka = (await api.get("/api/trainings")).json()["items"][0]
+        found = (await api.get(f"/api/trainings/{cka['id']}/funding-request")).json()
+        # 90 derniers jours seulement ; la plus récente d'abord.
+        assert found["offers"] == 2
+        assert [e["company"] for e in found["examples"]] == ["Consort Group", "Swisscom"]
+        assert set(found["matched"]) <= set(cka["tags"]) and found["matched"]
+
+        url = f"/api/trainings/{cka['id']}/funding"
+        assert (await api.put(url, json={"status": "requested"})).status_code == 409
+        await api.put(f"/api/trainings/{cka['id']}/mark", json={"status": "interested"})
+        asked = (await api.put(url, json={"status": "requested"})).json()
+        assert asked["funding_status"] == "requested" and asked["funding_requested_at"]
+
+        # Relance : une fois, 14 jours après la demande.
+        assert await funding.notify_funding(rt) == 0
+        async with rt.sessionmaker.begin() as session:
+            mark = await session.scalar(
+                select(TrainingMark).where(TrainingMark.training_id == cka["id"])
+            )
+            assert mark is not None
+            mark.funding_requested_at = date.today() - timedelta(days=15)
+        assert await funding.notify_funding(rt) == 1
+        assert await funding.notify_funding(rt) == 0
+        async with rt.sessionmaker() as session:
+            [alert] = (await session.scalars(select(Notification))).all()
+        assert alert.kind == "training_funding" and cka["title"] in alert.title
+
+        accepted = (await api.put(url, json={"status": "accepted"})).json()
+        assert accepted["funding_status"] == "accepted"
+        listed = next(
+            t for t in (await api.get("/api/trainings")).json()["items"] if t["id"] == cka["id"]
+        )
+        assert listed["mark"]["funding_status"] == "accepted"
+        cleared = (await api.put(url, json={"status": None})).json()
+        assert cleared["funding_status"] is None and cleared["funding_requested_at"] is None
+    async with rt.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE offers, notifications CASCADE"))

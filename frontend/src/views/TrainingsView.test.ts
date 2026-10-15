@@ -169,4 +169,30 @@ describe("TrainingsView", () => {
     expect(POST.mock.calls[0]![1].body.tags).toEqual(["Kubernetes", "CKA"]);
     expect(wrapper.find("[data-test=in-profile]").exists()).toBe(true);
   });
+
+  it("financement ORP : texte avec l'argument tiré des offres, puis demandée et acceptée", async () => {
+    const interested = { status: "interested", progress: null, done_at: null, certified: null, chunk_id: null, funding_status: null, funding_requested_at: null };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/trainings/{training_id}/funding-request"
+          ? { data: { offers: 12, matched: ["Kubernetes", "CKA"], examples: [{ title: "Ingénieur DevOps", company: "Consort Group" }], sender: "Camille Exemple" } }
+          : { data: page([training(1, { mark: interested, duration: "2 h d'examen" })]) },
+      ),
+    );
+    PUT.mockResolvedValueOnce({ data: { ...interested, funding_status: "requested", funding_requested_at: "2026-10-15" } });
+    const wrapper = await mountView();
+    await wrapper.find("[data-test=prepare-funding]").trigger("click");
+    await flushPromises();
+    const text = (wrapper.find("[data-test=funding-letter]").element as HTMLTextAreaElement).value;
+    expect(text).toContain("« Certified Kubernetes Administrator (CKA) » (The Linux Foundation / CNCF");
+    expect(text).toContain("12 offre(s) que j'ai reçue(s) demandaient Kubernetes ou CKA, par exemple « Ingénieur DevOps » chez Consort Group.");
+    expect(text).toContain("Coût : [montant]. Durée : 2 h d'examen.");
+    expect(text.trim().endsWith("Camille Exemple")).toBe(true);
+
+    await wrapper.find("[data-test=funding-requested]").trigger("click");
+    await flushPromises();
+    expect(PUT.mock.calls[0]![1].body).toEqual({ status: "requested" });
+    expect(wrapper.find("[data-test=funding-badge]").text()).toBe("Financement demandé");
+    expect(wrapper.find("[data-test=training-funding]").text()).toContain("Demandée le 15 oct.");
+  });
 });

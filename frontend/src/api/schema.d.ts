@@ -1768,6 +1768,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trainings/{training_id}/funding-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Funding Request */
+        get: operations["trainingFundingRequest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trainings/{training_id}/funding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Funding */
+        put: operations["setTrainingFunding"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profiles": {
         parameters: {
             query?: never;
@@ -2862,6 +2896,32 @@ export interface components {
             day?: string | null;
             /** Month */
             month?: string | null;
+        };
+        /** FundingExample */
+        FundingExample: {
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+        };
+        /** FundingIn */
+        FundingIn: {
+            /** Status */
+            status: ("requested" | "accepted" | "refused") | null;
+        };
+        /**
+         * FundingRequest
+         * @description De quoi écrire la demande : l'argument tiré de tes offres et ton nom.
+         */
+        FundingRequest: {
+            /** Offers */
+            offers: number;
+            /** Matched */
+            matched: string[];
+            /** Examples */
+            examples: components["schemas"]["FundingExample"][];
+            /** Sender */
+            sender: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4463,6 +4523,10 @@ export interface components {
             certified: boolean | null;
             /** Chunk Id */
             chunk_id?: number | null;
+            /** Funding Status */
+            funding_status?: ("requested" | "accepted" | "refused") | null;
+            /** Funding Requested At */
+            funding_requested_at?: string | null;
         };
         /** TrainingOut */
         TrainingOut: {
@@ -8143,6 +8207,72 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingMarkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trainingFundingRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundingRequest"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setTrainingFunding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FundingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
