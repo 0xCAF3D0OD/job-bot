@@ -53,9 +53,13 @@ function periodOf(iso: string): keyof typeof PERIOD_LABELS {
   if (dayKey(iso) === dayKey(new Date().toISOString())) return "today";
   return Date.now() - new Date(iso).getTime() < 7 * 86_400_000 ? "week" : "older";
 }
+// Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans intertitre, et
+// comptée dans aucun groupe (sinon « Plus ancien » apparaissait deux fois).
+const pinnedId = ref<number | null>(null);
 const periodCounts = computed(() => {
   const counts = new Map<string, number>();
   for (const offer of items.value) {
+    if (offer.id === pinnedId.value) continue;
     const key = periodOf(offer.first_seen_at);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
@@ -64,9 +68,9 @@ const periodCounts = computed(() => {
 function dayHeader(index: number): string | null {
   if (filters.value.sort !== "day") return null;
   const offer = items.value[index];
-  if (!offer) return null;
+  if (!offer || offer.id === pinnedId.value) return null;
   const key = periodOf(offer.first_seen_at);
-  const previous = items.value[index - 1];
+  const previous = items.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
   if (previous && periodOf(previous.first_seen_at) === key) return null;
   return `${PERIOD_LABELS[key]} · ${plural(periodCounts.value.get(key) ?? 0, "offre", "offres")}`;
 }
@@ -88,6 +92,7 @@ async function openFromQuery(): Promise<void> {
     const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
     if (!data) return;
     items.value = [data, ...items.value];
+    pinnedId.value = id;
   }
   selectedId.value = id;
 }
@@ -122,6 +127,7 @@ async function load(append = false): Promise<void> {
     if (current !== requestId) return; // une requête plus récente est partie entre-temps
     if (!data) throw new Error("réponse vide");
     items.value = append ? [...items.value, ...data.items] : data.items;
+    if (!append) pinnedId.value = null;
     total.value = data.total;
     counts.value = data.counts;
     facets.value = data.facets;

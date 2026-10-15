@@ -489,3 +489,24 @@ describe("Offres, revue des pages (docs/43)", () => {
     expect(wrapper.find("[data-test=reset]").exists()).toBe(false);
   });
 });
+
+describe("Offres, offre ouverte par un lien (docs/43, complément)", () => {
+  it("posée en tête sans intertitre, hors des groupes", async () => {
+    const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offers/{offer_id}"
+          ? { data: offer(9, "En préparation", { status: "preparing", first_seen_at: ago(40) }) }
+          : path === "/api/profile-chunks"
+            ? { data: [] }
+            : page([offer(1, "Récente", { first_seen_at: ago(2) }), offer(2, "Ancienne", { first_seen_at: ago(20) })]),
+      ),
+    );
+    const wrapper = await mountAt("/offres?offre=9");
+    expect(wrapper.findAll("[data-test=offer]")[0]!.text()).toContain("En préparation");
+    expect(wrapper.findAll("[data-test=offer-day]").map((h) => h.text())).toEqual([
+      "Cette semaine · 1 offre",
+      "Plus ancien · 1 offre",
+    ]);
+  });
+});
