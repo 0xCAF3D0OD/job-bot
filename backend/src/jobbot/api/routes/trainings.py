@@ -9,7 +9,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import Profile, Training, TrainingMark
+from jobbot.db.models import ChunkKind, Profile, ProfileChunk, Training, TrainingMark
 from jobbot.news import domain
 from jobbot.profiles import service as profiles
 from jobbot.runtime import Runtime
@@ -39,6 +39,8 @@ class TrainingMarkOut(BaseModel):
     progress: str | None
     done_at: date | None
     certified: bool | None
+    # Bloc de profil créé depuis la formation (docs/37 §1).
+    chunk_id: int | None = None
 
 
 class TrainingOut(BaseModel):
@@ -154,6 +156,7 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
                     progress=mark.progress,
                     done_at=mark.done_at,
                     certified=mark.certified,
+                    chunk_id=mark.chunk_id,
                 )
                 if mark
                 else None,
@@ -192,12 +195,13 @@ async def mark_training(
             "done_at": body.done_at if body.status == "done" else None,
             "certified": body.certified if body.status == "done" else None,
         }
-        await session.execute(
+        chunk_id = await session.scalar(
             insert(TrainingMark)
             .values(profile_id=profile.id, training_id=training_id, **values)
             .on_conflict_do_update(index_elements=["profile_id", "training_id"], set_=values)
+            .returning(TrainingMark.chunk_id)
         )
-    return TrainingMarkOut(**values)
+    return TrainingMarkOut(**values, chunk_id=chunk_id)
 
 
 @router.delete(
@@ -240,3 +244,55 @@ async def suggest_trainings(request: Request) -> SuggestResult:
     except SuggestUnavailable as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
     return SuggestResult(added=added)
+
+
+class ProfileBlockIn(BaseModel):
+    """Bloc « formation » proposé depuis une formation terminée, relu avant l'envoi."""
+
+    title: Annotated[str, Field(min_length=1, max_length=200)]
+    content: Annotated[str, Field(min_length=1, max_length=20_000)]
+    tags: list[Annotated[str, Field(min_length=1, max_length=40)]] = Field(
+        default_factory=list, max_length=20
+    )
+
+
+@router.post(
+    "/{training_id}/profile-block",
+    operation_id="addTrainingToProfile",
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_to_profile(
+    request: Request, training_id: int, body: ProfileBlockIn
+) -> TrainingMarkOut:
+    """Une formation terminée entre dans Mon parcours (docs/37 §1). Rien n'est renoté :
+    les notes existantes sont « faites avec un ancien profil » jusqu'à « Renoter »."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        profile = await _visible(session, request, training_id)
+        if not profile.is_main:
+            # Les blocs servent aux lettres et aux CV : ils appartiennent au profil principal.
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "les blocs de profil appartiennent au profil principal"
+            )
+        mark = await session.get(TrainingMark, (profile.id, training_id))
+        if mark is None or mark.status != "done":
+            raise HTTPException(status.HTTP_409_CONFLICT, "formation pas encore terminée")
+        tags: dict[str, str] = {}
+        for tag in body.tags:
+            if cleaned := tag.strip():
+                tags.setdefault(cleaned.casefold(), cleaned)
+        chunk = ProfileChunk(
+            kind=ChunkKind.FORMATION,
+            title=body.title.strip(),
+            content=body.content.strip(),
+            tags=list(tags.values()),
+        )
+        session.add(chunk)
+        await session.flush()
+        mark.chunk_id = chunk.id
+        return TrainingMarkOut(
+            status=mark.status,
+            progress=mark.progress,
+            done_at=mark.done_at,
+            certified=mark.certified,
+            chunk_id=chunk.id,
+        )

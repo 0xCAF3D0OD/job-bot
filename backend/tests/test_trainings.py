@@ -10,7 +10,7 @@ from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
 from jobbot.api.routes import trainings as routes
-from jobbot.db.models import LlmCall, Training
+from jobbot.db.models import LlmCall, ProfileChunk, Training
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
@@ -126,6 +126,7 @@ async def test_catalog_filter_and_marks(rt: Runtime) -> None:
             "progress": "module 4/12",
             "done_at": None,
             "certified": None,
+            "chunk_id": None,
         }
         done = await api.put(
             f"/api/trainings/{aws['id']}/mark",
@@ -234,3 +235,58 @@ async def test_trainings_follow_the_profile(rt: Runtime, monkeypatch: pytest.Mon
         assert (await api.post("/api/trainings/suggest")).json() == {"added": 1}
     async with rt.engine.begin() as conn:
         await conn.execute(text("DELETE FROM profiles WHERE NOT is_main"))
+
+
+async def test_finished_training_becomes_a_profile_block(rt: Runtime) -> None:
+    app = create_app(rt.settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        cka = (await api.get("/api/trainings")).json()["items"][0]
+        block = {
+            "title": " Certified Kubernetes Administrator (CNCF) ",
+            "content": "Certification obtenue en septembre 2026.",
+            "tags": ["Kubernetes", "kubernetes", " CKA "],
+        }
+        url = f"/api/trainings/{cka['id']}/profile-block"
+        # Pas encore terminée : rien n'est créé.
+        await api.put(f"/api/trainings/{cka['id']}/mark", json={"status": "in_progress"})
+        assert (await api.post(url, json=block)).status_code == 409
+
+        await api.put(
+            f"/api/trainings/{cka['id']}/mark",
+            json={"status": "done", "done_at": "2026-09-30", "certified": True},
+        )
+        added = await api.post(url, json=block)
+        assert added.status_code == 201
+        chunk_id = added.json()["chunk_id"]
+        async with rt.sessionmaker() as session:
+            chunk = await session.get(ProfileChunk, chunk_id)
+            assert chunk is not None
+            assert (chunk.kind, chunk.title, chunk.tags) == (
+                "formation",
+                "Certified Kubernetes Administrator (CNCF)",
+                ["Kubernetes", "CKA"],
+            )
+        # Le lien reste après un nouveau marquage, et apparaît dans la liste.
+        again = await api.put(
+            f"/api/trainings/{cka['id']}/mark", json={"status": "done", "certified": True}
+        )
+        assert again.json()["chunk_id"] == chunk_id
+        listed = next(
+            t for t in (await api.get("/api/trainings")).json()["items"] if t["id"] == cka["id"]
+        )
+        assert listed["mark"]["chunk_id"] == chunk_id
+
+        # Profil d'essai : les blocs appartiennent au profil principal.
+        created = await api.post("/api/profiles", json={"name": "Test", "domain_keywords": []})
+        trial = {
+            "X-Jobbot-Profile": str(
+                next(p["id"] for p in created.json()["items"] if not p["is_main"])
+            )
+        }
+        await api.put(f"/api/trainings/{cka['id']}/mark", json={"status": "done"}, headers=trial)
+        assert (await api.post(url, json=block, headers=trial)).status_code == 409
+    async with rt.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM profiles WHERE NOT is_main"))
+        await conn.execute(
+            text("DELETE FROM profile_chunks WHERE id = :id").bindparams(id=chunk_id)
+        )
