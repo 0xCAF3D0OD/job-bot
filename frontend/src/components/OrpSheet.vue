@@ -347,8 +347,10 @@ onMounted(async () => {
             :class="{ incomplete: row.missing.length }"
             data-test="orp-row"
           >
-            <td>{{ row.date }}</td>
-            <td>
+            <td class="orp-cell-date">
+              {{ row.date }}
+            </td>
+            <td class="orp-cell-company">
               <strong>{{ row.company }}</strong><br>
               <span v-if="row.address && show('address')">{{ row.address }}</span>
               <button
@@ -361,23 +363,43 @@ onMounted(async () => {
                 À compléter
               </button>
             </td>
-            <td v-if="show('contact')">
+            <td
+              v-if="show('contact')"
+              data-label="Contact"
+            >
               {{ [row.contact, row.phone].filter(Boolean).join(", ") || "—" }}
             </td>
-            <td>{{ row.job_title }}</td>
-            <td v-if="show('rate')">
+            <td data-label="Poste">
+              {{ row.job_title }}
+            </td>
+            <td
+              v-if="show('rate')"
+              data-label="Taux"
+            >
               {{ row.rate || "—" }}
             </td>
-            <td v-if="show('method')">
+            <td
+              v-if="show('method')"
+              data-label="Mode"
+            >
               {{ row.method }}
             </td>
-            <td v-if="show('assigned')">
+            <td
+              v-if="show('assigned')"
+              data-label="ORP"
+            >
               {{ row.assigned }}
             </td>
-            <td v-if="show('result')">
+            <td
+              v-if="show('result')"
+              data-label="Résultat"
+            >
               {{ row.result }}
             </td>
-            <td v-if="show('url')">
+            <td
+              v-if="show('url')"
+              data-label="Lien"
+            >
               <a
                 v-if="row.url?.startsWith('http')"
                 :href="row.url"
@@ -387,7 +409,7 @@ onMounted(async () => {
               >ouvrir</a>
               <span v-else>{{ row.url || "—" }}</span>
             </td>
-            <td>
+            <td class="orp-cell-actions">
               <button
                 type="button"
                 class="link"

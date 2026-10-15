@@ -285,7 +285,11 @@ onMounted(() => void load());
             Voir le suivi
           </RouterLink>
         </template>
-        <template v-else>
+        <!-- Sur téléphone, Postuler et « Marquer comme envoyée » sont fixés en bas (docs/33 §3.2). -->
+        <div
+          v-else
+          class="mobile-dock"
+        >
           <a
             v-if="applyLink"
             :href="applyLink.url"
@@ -302,7 +306,7 @@ onMounted(() => void load());
           >
             Marquer comme envoyée
           </button>
-        </template>
+        </div>
         <span class="spacer" />
         <a
           v-if="currentLetterId"
