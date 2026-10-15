@@ -1501,5 +1501,7 @@ button, .button-link { max-width: 100%; }
   .hero .eyebrow, .hero-subtitle { display: none; }
   .hero h1 { font-size: 1.6rem; }
   input, select, textarea { font-size: 16px; }
+  /* Cloche : la ☰ est à sa droite, le panneau prend la largeur de l'écran sous la barre. */
+  .bell-panel { position: fixed; top: 3.9rem; left: 0.75rem; right: 0.75rem; width: auto; max-height: calc(100dvh - 5rem); }
 }
 html.side-open { overflow: hidden; }

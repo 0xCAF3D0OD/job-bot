@@ -94,3 +94,7 @@ Sans migration ni changement d'API. Chaque PR est vérifiée à 375 px (iPhone),
 - Retour d'usage : le trait violet de la page en cours se courbait en haut et en bas (les liens ont des coins arrondis, qui courbaient sa bordure). C'est désormais un **trait droit** posé à côté du lien. Même correction pour la bulle d'information et la note du formulaire ORP (côté gauche droit, coins arrondis à droite seulement).
 - La **barre de défilement** de la page restait visible à côté du menu : tant qu'un panneau latéral est ouvert (menu, Contacts, Entreprise, Fiche), la page derrière **ne défile plus**.
 - Le compte, dans le menu, n'a plus les traits du petit menu d'ordinateur.
+
+## Complément du 2026-10-15 : la cloche sur téléphone
+
+- Retour d'usage : le panneau des alertes dépassait à gauche de l'écran (il s'alignait sur la cloche, qui n'est plus au bord depuis que ☰ est à sa droite). Sous 820 px, il prend maintenant **toute la largeur**, juste sous la barre du haut, et défile s'il est long.
