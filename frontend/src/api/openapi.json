@@ -2770,6 +2770,90 @@
         }
       }
     },
+    "/api/applications/{application_id}/follow-up/draft": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Draft Follow Up",
+        "operationId": "draftFollowUp",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowUpDraftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/{application_id}/follow-up": {
+      "post": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Mark Followed Up",
+        "operationId": "markFollowedUp",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/letters": {
       "get": {
         "tags": [
@@ -6308,6 +6392,18 @@
             ],
             "title": "Reminded At"
           },
+          "followed_up_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Followed Up At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -7877,8 +7973,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "en",
-                  "de"
+                  "de",
+                  "en"
                 ]
               },
               {
@@ -8441,6 +8537,51 @@
         "type": "object",
         "title": "FocusIn",
         "description": "Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché."
+      },
+      "FollowUpDraftOut": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "de",
+              "en"
+            ],
+            "title": "Language"
+          },
+          "ai": {
+            "type": "boolean",
+            "title": "Ai"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "text",
+          "language",
+          "ai",
+          "reason"
+        ],
+        "title": "FollowUpDraftOut"
       },
       "FundingExample": {
         "properties": {
@@ -9812,8 +9953,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "en",
-                  "de"
+                  "de",
+                  "en"
                 ]
               },
               {
@@ -9957,8 +10098,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "en",
-                  "de"
+                  "de",
+                  "en"
                 ]
               },
               {

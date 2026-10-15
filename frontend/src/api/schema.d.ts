@@ -1019,6 +1019,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/follow-up/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft Follow Up */
+        post: operations["draftFollowUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{application_id}/follow-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Followed Up */
+        post: operations["markFollowedUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/letters": {
         parameters: {
             query?: never;
@@ -2220,6 +2254,8 @@ export interface components {
             orp_month: string;
             /** Reminded At */
             reminded_at: string | null;
+            /** Followed Up At */
+            followed_up_at?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -2732,7 +2768,7 @@ export interface components {
         /** CvRequest */
         CvRequest: {
             /** Language */
-            language?: ("fr" | "en" | "de") | null;
+            language?: ("fr" | "de" | "en") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */
@@ -2896,6 +2932,22 @@ export interface components {
             day?: string | null;
             /** Month */
             month?: string | null;
+        };
+        /** FollowUpDraftOut */
+        FollowUpDraftOut: {
+            /** Subject */
+            subject: string;
+            /** Text */
+            text: string;
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "fr" | "de" | "en";
+            /** Ai */
+            ai: boolean;
+            /** Reason */
+            reason: string | null;
         };
         /** FundingExample */
         FundingExample: {
@@ -3242,7 +3294,7 @@ export interface components {
             /** Paragraphs */
             paragraphs: components["schemas"]["LetterParagraph"][];
             /** Language */
-            language?: ("fr" | "en" | "de") | null;
+            language?: ("fr" | "de" | "en") | null;
         };
         /** LetterOut */
         LetterOut: {
@@ -3285,7 +3337,7 @@ export interface components {
         /** LetterRequest */
         LetterRequest: {
             /** Language */
-            language?: ("fr" | "en" | "de") | null;
+            language?: ("fr" | "de" | "en") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */
@@ -6734,6 +6786,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Identity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draftFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowUpDraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markFollowedUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
                 };
             };
             /** @description Validation Error */

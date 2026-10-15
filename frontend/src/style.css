@@ -1657,3 +1657,11 @@ html.side-open { overflow: hidden; }
 .training-block-form input, .training-block-form textarea { width: 100%; font: inherit; }
 .training-funding { display: grid; gap: 0.6rem; justify-items: start; }
 .training-funding textarea { width: 100%; font: inherit; font-size: 0.9rem; }
+
+/* Relancer une candidature (docs/38) */
+.follow-up-line { color: var(--warn-text); }
+.follow-up { display: grid; gap: 0.8rem; justify-items: start; }
+.follow-up .muted { margin: 0; }
+.follow-up-field { display: grid; gap: 0.25rem; width: 100%; font-size: 0.85rem; }
+.follow-up-field input, .follow-up-field textarea { width: 100%; font: inherit; }
+.follow-up-actions { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }
