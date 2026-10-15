@@ -11,6 +11,7 @@ import JobsView from "./views/JobsView.vue";
 import LoginView from "./views/LoginView.vue";
 import NewsView from "./views/NewsView.vue";
 import OffersView from "./views/OffersView.vue";
+import NotFoundView from "./views/NotFoundView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
 import PreparationView from "./views/PreparationView.vue";
 import ProfileView from "./views/ProfileView.vue";
@@ -54,7 +55,7 @@ function keepMonth(query: LocationQuery): Record<string, string> {
   return typeof query.mois === "string" ? { mois: query.mois } : {};
 }
 
-const routes: RouteRecordRaw[] = [
+export const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/aujourdhui" },
   // Anciennes adresses : liens des alertes, des rappels ntfy, marque-pages.
   { path: "/prerequis", redirect: "/profil" },
@@ -115,7 +116,8 @@ const routes: RouteRecordRaw[] = [
   { path: "/connexion", name: "login", component: LoginView },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/candidatures/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
-  { path: "/:pathMatch(.*)*", redirect: "/aujourdhui" },
+  // Adresse inconnue (docs/59 §5) : une page qui le dit.
+  { path: "/:pathMatch(.*)*", name: "not-found", component: NotFoundView },
 ];
 
 export const router = createRouter({

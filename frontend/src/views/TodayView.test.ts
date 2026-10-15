@@ -268,16 +268,12 @@ describe("Aujourd'hui, revue des pages (docs/43)", () => {
     expect(gauge.attributes("href")).toContain("/candidatures/suivi?mois=");
   });
 
-  it("prise en main : l'étape à faire en grand, avec son illustration (docs/58)", async () => {
+  it("prise en main : l'étape à faire mise en avant, coches dessinées (docs/59)", async () => {
     mockGet(today());
     const wrapper = await mountView();
-    const next = wrapper.find("[data-test=checklist-next]");
-    expect(next.text()).toContain("Étape 3 sur 6");
-    expect(next.text()).toContain("Saisir tes coordonnées");
-    expect(next.attributes("href")).toBe("/profil?onglet=coordonnees");
-    expect(next.find("[data-illustration=profile]").exists()).toBe(true);
-    const journey = wrapper.find("[data-test=journey-next]");
-    expect(journey.text()).toContain("Préparer lettre et CV");
-    expect(journey.find("[data-illustration=message-sent]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=step-identity]").classes()).toContain("next");
+    expect(wrapper.find("[data-test=step-imap]").classes()).not.toContain("next");
+    expect(wrapper.find("[data-test=step-criteria] .tick-svg").exists()).toBe(true);
+    expect(wrapper.find("[data-test=journey-apply]").classes()).toContain("next");
   });
 });

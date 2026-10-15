@@ -5,6 +5,7 @@ import { api, type OrpMonth, type OrpRow, type Source } from "../api/client";
 import DisclosureRow from "./DisclosureRow.vue";
 import { printSheet } from "../composables/usePrint";
 import { formatMonth, plural, sourceLabel } from "../format";
+import CopyLabel from "./CopyLabel.vue";
 
 // Preuves ORP du mois (docs/09), onglet de la page Candidatures (docs/18 §2).
 // embedded : dans l'onglet Suivi (docs/22 §2), les actions de remise sont dans la barre du mois.
@@ -290,7 +291,7 @@ onMounted(async () => {
                   data-test="copy"
                   @click="copy(item.value, `${row.application_id}-${item.label}`)"
                 >
-                  {{ copied === `${row.application_id}-${item.label}` ? "Copié" : "Copier" }}
+                  <CopyLabel :done="copied === `${row.application_id}-${item.label}`" />
                 </button>
               </dd>
             </template>

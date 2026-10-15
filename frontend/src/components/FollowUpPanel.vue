@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 
 import { api, type Application } from "../api/client";
+import CopyLabel from "./CopyLabel.vue";
 
 // Relancer une candidature (docs/38) : un court message (IA ou modèle simple), à copier ou à
 // ouvrir dans ta messagerie ; rien n'est envoyé par la plateforme. Puis « Marquer comme relancée ».
@@ -126,7 +127,7 @@ async function markDone(): Promise<void> {
           data-test="follow-up-copy"
           @click="copy"
         >
-          {{ copied ? "Copié" : "Copier" }}
+          <CopyLabel :done="copied" />
         </button>
       </div>
     </template>

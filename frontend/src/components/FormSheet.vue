@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Identity } from "../api/client";
+import CopyLabel from "./CopyLabel.vue";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
 // ligne de l'employeur, dans l'ordre habituel de ces formulaires.
@@ -101,7 +102,7 @@ async function copy(label: string, value: string): Promise<void> {
             data-test="sheet-copy"
             @click="copy(label, value)"
           >
-            {{ copied === label ? "Copié" : "Copier" }}
+            <CopyLabel :done="copied === label" />
           </button>
         </dd>
       </template>

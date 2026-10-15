@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from "vue";
 
 import { api, type Contact, type ContactIn, type ContactsPage } from "../api/client";
 import { CHANNELS, contactName, isoDay, ROLES, toFollowUp } from "../contactLabels";
+import CopyLabel from "./CopyLabel.vue";
 
 // Contacts dans l'entreprise (docs/31) : recherches LinkedIn déjà remplies, ouvertes dans
 // un nouvel onglet, et suivi des prises de contact. Rien n'est lu sur LinkedIn. Affiché dans
@@ -278,7 +279,7 @@ onMounted(() => void load());
               data-test="contact-copy"
               @click="copyMessage"
             >
-              {{ copied ? "Copié" : "Copier" }}
+              <CopyLabel :done="copied" />
             </button>
           </p>
         </template>

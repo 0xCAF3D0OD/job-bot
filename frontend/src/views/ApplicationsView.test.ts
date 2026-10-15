@@ -269,7 +269,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     await wrapper.findAll("[data-test=copy]")[1]!.trigger("click");
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("Acme SA");
-    expect(wrapper.findAll("[data-test=copy]")[1]!.text()).toBe("Copié");
+    expect(wrapper.findAll("[data-test=copy]")[1]!.text()).toBe("✓ Copié");
   });
 
   it("navigation de mois : passe par l'URL", async () => {

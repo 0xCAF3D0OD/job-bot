@@ -9,7 +9,6 @@ import AccountMenu from "./components/AccountMenu.vue";
 import MobileMenu from "./components/MobileMenu.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
-import Illustration from "./components/Illustration.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useNewsCount } from "./composables/useNewsCount";
@@ -23,8 +22,8 @@ const { message, running, failed, collectNow } = useCollect();
 const { count: newsCount, start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
 const route = useRoute();
-// Fichier en préparation (docs/58 §3.2) : l'illustration si ça tarde.
-const { state: fileState } = useFileDownloads();
+// Fichiers préparés : le retour sur le lien lui-même (docs/59 §4).
+useFileDownloads();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 const { last: lastJobsPage } = useJobsMemory();
@@ -148,18 +147,5 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
   <main>
     <RouterView />
   </main>
-  <div
-    v-if="fileState !== 'idle'"
-    :class="['toast', 'file-toast', { failed: fileState === 'failed' }]"
-    role="status"
-    data-test="file-toast"
-  >
-    <Illustration
-      v-if="fileState === 'preparing'"
-      name="processing"
-      size="small"
-    />
-    <span>{{ fileState === "preparing" ? "Je prépare ton fichier…" : "Téléchargement impossible pour l'instant : réessaie dans un moment." }}</span>
-  </div>
   <AssistantPanel v-if="loggedIn" />
 </template>

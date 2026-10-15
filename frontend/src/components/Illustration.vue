@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
 
-// Illustration unDraw animée (docs/58) : insérée dans la page pour prendre les couleurs du
-// thème (feuille de style, `.illu [fill=…]`). Chargée seulement quand elle s'affiche.
+// Illustration unDraw des pages vides (docs/58, docs/59 §5) : insérée dans la page pour prendre
+// les couleurs du thème (feuille de style, `.illu [fill=…]`) ; son animation joue une fois.
+// Chargée seulement quand elle s'affiche.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
 const props = withDefaults(defineProps<{ name: IllustrationName; label?: string; size?: "small" | "medium" | "large" }>(), {
   label: "",
@@ -26,22 +27,7 @@ watch(() => props.name, draw);
 </script>
 
 <script lang="ts">
-export type IllustrationName =
-  | "ai-generated-document"
-  | "certification"
-  | "date-picker"
-  | "done"
-  | "loading-ui"
-  | "lock-screen-notifications"
-  | "mailbox"
-  | "message-sent"
-  | "mobile-inbox"
-  | "my-resume"
-  | "online-connection"
-  | "processing"
-  | "profile"
-  | "settings"
-  | "stepping-up";
+export type IllustrationName = "chat-bot" | "date-picker" | "mobile-inbox" | "newsfeed" | "page-eaten" | "stepping-up";
 </script>
 
 <template>

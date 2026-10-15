@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import MoreInfo from "./MoreInfo.vue";
+import CopyLabel from "./CopyLabel.vue";
 
 // Extension du navigateur (docs/25 §4) : un jeton révocable la relie à la plateforme.
 type Token = components["schemas"]["TokenOut"];
@@ -86,7 +87,7 @@ onMounted(load);
           class="link"
           @click="copy"
         >
-          {{ copied ? "Copié" : "Copier" }}
+          <CopyLabel :done="copied" />
         </button>
         <p class="hint">
           Montré une seule fois : colle-le maintenant dans l'extension.
