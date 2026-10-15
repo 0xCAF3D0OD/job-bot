@@ -2,7 +2,6 @@
 import { computed, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 
 // Assistant des alertes (docs/21 §4) : un écran à la fois, tant qu'aucune alerte n'est en place.
 const props = defineProps<{ page: AlertsPage }>();
@@ -147,7 +146,7 @@ function nextSite(): void {
           data-test="wizard-next"
           @click="continueToSites"
         >
-          Continuer <AppIcon name="chevron" />
+          Continuer
         </button>
         <span
           v-if="searchHint"
@@ -175,8 +174,7 @@ function nextSite(): void {
             rel="noopener noreferrer"
             class="button-link"
             data-test="wizard-open"
-          >Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}
-            <AppIcon name="chevron" /></a>
+          >Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}</a>
         </template>
         <a
           v-for="link in remoteLinks"
@@ -186,7 +184,7 @@ function nextSite(): void {
           rel="noopener noreferrer"
           class="button-link"
           data-test="wizard-open-remote"
-        >Ouvrir {{ site.name }} en télétravail : {{ link.terms }} <AppIcon name="chevron" /></a>
+        >Ouvrir {{ site.name }} en télétravail : {{ link.terms }}</a>
       </div>
       <div class="form-actions">
         <button
@@ -196,7 +194,7 @@ function nextSite(): void {
           data-test="wizard-site-done"
           @click="siteDone"
         >
-          C'est fait, site suivant <AppIcon name="chevron" />
+          C'est fait, site suivant
         </button>
         <button
           type="button"

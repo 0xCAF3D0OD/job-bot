@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
 import CompanyLogo from "../components/CompanyLogo.vue";
@@ -12,7 +13,6 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
-import { useJobsMemory } from "../composables/useJobsMemory";
 import { formatMonth, localDate, plural, scoreLevel } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 
@@ -65,7 +65,8 @@ const sentWeek = computed(() => today.value?.week?.map((d) => d.applications) ??
 const sum = (values: number[]): number => values.reduce((n, v) => n + v, 0);
 
 // Comme le menu : retour à la candidature commencée ou à l'onglet quitté.
-const { last: lastJobsPage } = useJobsMemory();
+const router = useRouter();
+const offerLink = (id: number) => ({ path: "/candidatures/offres", query: { offre: id } });
 
 // Le plus urgent en tête (docs/43 n° 30) : entretien aujourd'hui ou demain, remise ORP dans
 // moins de 5 jours.
@@ -223,12 +224,6 @@ useDataChanged(load);
           class="today-collect"
           data-test="last-collect"
         >{{ message || (today.last_collect_at ? `Collecte ${sinceText(today.last_collect_at)}` : "Pas encore de collecte") }}</span>
-        <RouterLink
-          :to="lastJobsPage"
-          class="link"
-        >
-          Ouvrir les candidatures ›
-        </RouterLink>
       </p>
 
       <!-- Tableau de bord (docs/54) : quatre tuiles et la semaine, puis les offres et l'ORP. -->
@@ -335,19 +330,24 @@ useDataChanged(load);
                   <th class="dash-col-date">
                     Reçue
                   </th>
-                  <th><span class="visually-hidden">Ouvrir</span></th>
                 </tr>
               </thead>
               <tbody>
                 <tr
                   v-for="offer in best"
                   :key="offer.id"
+                  class="row-link"
+                  @click="router.push(offerLink(offer.id))"
                 >
                   <td>
                     <span class="dash-offer">
                       <CompanyLogo :offer="offer" />
                       <span>
-                        <strong>{{ offer.title }}</strong>
+                        <RouterLink
+                          :to="offerLink(offer.id)"
+                          class="row-link-title"
+                          @click.stop
+                        ><strong>{{ offer.title }}</strong></RouterLink>
                         <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
                       </span>
                     </span>
@@ -358,15 +358,6 @@ useDataChanged(load);
                   </td>
                   <td class="dash-col-date muted">
                     {{ offer.first_seen_at ? shortDate.format(new Date(offer.first_seen_at)) : "—" }}
-                  </td>
-                  <td>
-                    <RouterLink
-                      :to="{ path: '/candidatures/offres', query: { offre: offer.id } }"
-                      class="link"
-                      :aria-label="`Ouvrir ${offer.title}`"
-                    >
-                      ›
-                    </RouterLink>
                   </td>
                 </tr>
               </tbody>
@@ -390,23 +381,21 @@ useDataChanged(load);
                 <tr
                   v-for="offer in preparing"
                   :key="offer.id"
+                  class="row-link"
+                  @click="router.push(`/candidatures/offres/${offer.id}/preparer`)"
                 >
                   <td>
                     <span class="dash-offer">
                       <CompanyLogo :offer="offer" />
                       <span>
-                        <strong>{{ offer.title }}</strong>
+                        <RouterLink
+                          :to="`/candidatures/offres/${offer.id}/preparer`"
+                          class="row-link-title"
+                          @click.stop
+                        ><strong>{{ offer.title }}</strong></RouterLink>
                         <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
                       </span>
                     </span>
-                  </td>
-                  <td class="dash-col-action">
-                    <RouterLink
-                      :to="`/candidatures/offres/${offer.id}/preparer`"
-                      class="link"
-                    >
-                      Continuer ›
-                    </RouterLink>
                   </td>
                 </tr>
               </tbody>
@@ -428,15 +417,14 @@ useDataChanged(load);
         >
           <header class="dash-card-head">
             <h2>
-              <span class="dash-bubble small"><AppIcon name="book" /></span>
-              Progresser
+              <RouterLink
+                to="/formations"
+                class="dash-title-link"
+              >
+                <span class="dash-bubble small"><AppIcon name="book" /></span>
+                Progresser
+              </RouterLink>
             </h2>
-            <RouterLink
-              to="/formations"
-              class="link"
-            >
-              Formations ›
-            </RouterLink>
           </header>
           <ul
             v-if="trainingsInProgress.length || trainingIdea"
@@ -447,7 +435,7 @@ useDataChanged(load);
               :key="training.id"
             >
               <span>
-                <strong>{{ training.title }}</strong><br>
+                <RouterLink to="/formations"><strong>{{ training.title }}</strong></RouterLink><br>
                 <span class="muted">En cours{{ training.mark?.progress ? ` · ${training.mark.progress}` : "" }} · {{ training.provider }}</span>
               </span>
             </li>
@@ -456,15 +444,13 @@ useDataChanged(load);
               data-test="training-idea"
             >
               <span>
-                <strong>{{ trainingIdea.title }}</strong><br>
+                <a
+                  :href="trainingIdea.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                ><strong>{{ trainingIdea.title }}</strong></a><br>
                 <span class="muted">À découvrir, dans ton domaine · {{ trainingIdea.provider }}</span>
               </span>
-              <a
-                :href="trainingIdea.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="link"
-              >Voir</a>
             </li>
           </ul>
           <p
@@ -483,15 +469,14 @@ useDataChanged(load);
         >
           <header class="dash-card-head">
             <h2>
-              <span class="dash-bubble small"><AppIcon name="news" /></span>
-              Comprendre le marché
+              <RouterLink
+                to="/actualites"
+                class="dash-title-link"
+              >
+                <span class="dash-bubble small"><AppIcon name="news" /></span>
+                Comprendre le marché
+              </RouterLink>
             </h2>
-            <RouterLink
-              to="/actualites"
-              class="link"
-            >
-              Actualités ›
-            </RouterLink>
           </header>
           <ul class="today-list">
             <li

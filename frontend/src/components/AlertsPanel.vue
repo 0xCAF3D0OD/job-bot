@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
@@ -171,7 +170,7 @@ onMounted(() => void load());
                 target="_blank"
                 rel="noopener noreferrer"
                 class="link"
-              >Ouvrir <AppIcon name="chevron" /></a>
+              >Ouvrir</a>
               <a
                 v-if="cell.remote_url && cell.status !== 'received'"
                 :href="cell.remote_url"

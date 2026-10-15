@@ -3,7 +3,6 @@ import { computed, reactive, ref } from "vue";
 
 import { api, type Training } from "../api/client";
 import { highlight, languageLabel } from "../newsLabels";
-import AppIcon from "./AppIcon.vue";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 
 // Contenu d'une formation (docs/16 §5). Deux présentations (docs/44) : la carte du catalogue,
@@ -179,7 +178,7 @@ const stateText = computed(() => {
     target="_blank"
     rel="noopener noreferrer"
     data-test="official-page"
-  >Page officielle <AppIcon name="chevron" /></a>
+  >Page officielle</a>
   <a
     v-else
     class="training-title"
@@ -257,7 +256,7 @@ const stateText = computed(() => {
         data-test="manage"
         @click="emit('manage')"
       >
-        Gérer <AppIcon name="chevron" />
+        Gérer
       </button>
     </template>
   </div>

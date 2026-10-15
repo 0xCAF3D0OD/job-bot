@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/56-revue-0.42-0.45.md](docs/56-revue-0.42-0.45.md) (0.45.1)
+- Version en cours : [docs/57-clic-direct.md](docs/57-clic-direct.md) (0.45.2)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
 ## Versions
@@ -68,6 +68,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.44.0 | Aujourd'hui en tableau de bord : quatre tuiles à pictogramme, la semaine en barres, les offres en tableau, la jauge de l'objectif ORP | livrée |
 | 0.45.0 | Le Bilan dans le style du tableau de bord : quatre tuiles, le parcours en barres, candidatures et réponses par mois, comparaisons en barres, résumé ORP visible | livrée |
 | 0.45.1 | Revue : guide de l'assistant à jour (Aujourd'hui, Bilan), suggestions du Bilan, ménage de la feuille de style | livrée |
+| 0.45.2 | Clic direct : l'élément entier ouvre son contenu avec un survol, plus de « › » ni de « Continuer › » | livrée |
 
 ## Lancer en local
 

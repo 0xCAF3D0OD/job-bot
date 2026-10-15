@@ -251,4 +251,20 @@ describe("Aujourd'hui, revue des pages (docs/43)", () => {
     await table.find("[data-test=tab-preparing]").trigger("click");
     expect(shown()).toBe(true);
   });
+
+  it("clic direct : la ligne ouvre l'offre, la jauge le Suivi du mois, sans « › » (docs/57)", async () => {
+    mockGet(today());
+    const wrapper = await mountView();
+    const router = wrapper.vm.$router;
+    expect(wrapper.find("[data-test=best]").text()).not.toContain("›");
+    expect(wrapper.text()).not.toContain("Continuer ›");
+    const row = wrapper.find("[data-test=best] tr.row-link");
+    await row.trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.path).toBe("/candidatures/offres");
+    expect(router.currentRoute.value.query.offre).toBeDefined();
+    const gauge = wrapper.find("[data-test=orp-gauge]");
+    expect(gauge.element.tagName).toBe("A");
+    expect(gauge.attributes("href")).toContain("/candidatures/suivi?mois=");
+  });
 });

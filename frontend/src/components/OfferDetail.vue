@@ -3,7 +3,6 @@ import { computed, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { expiredText, formatDate, rateText, remoteText, scoreLevel, sourceLabel } from "../format";
-import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -330,7 +329,7 @@ watch(
         rel="noopener noreferrer"
         class="button-link"
         :data-test="offer.employer_url ? 'employer' : 'apply'"
-      >{{ postLink.label }} <AppIcon name="chevron" /></a>
+      >{{ postLink.label }}</a>
     </div>
 
     <section
@@ -582,7 +581,7 @@ watch(
           data-test="open-contacts"
           @click="contactsOpen = true"
         >
-          Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }} ›
+          Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }}
         </button>
       </p>
     </section>
@@ -646,7 +645,7 @@ watch(
           target="_blank"
           rel="noopener noreferrer"
           class="link"
-        >Voir sur {{ sourceLabel[link.source] }} ›</a>
+        >Voir sur {{ sourceLabel[link.source] }}</a>
       </p>
     </section>
   </article>
