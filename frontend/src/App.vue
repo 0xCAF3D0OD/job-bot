@@ -7,6 +7,7 @@ import { UNAUTHORIZED_EVENT } from "./api/client";
 import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
+import MobileMenu from "./components/MobileMenu.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
 import { useAuth } from "./composables/useAuth";
@@ -45,7 +46,7 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
 </script>
 
 <template>
-  <header class="topbar">
+  <header :class="['topbar', { 'has-burger': loggedIn }]">
     <div class="topbar-inner">
       <RouterLink
         to="/"
@@ -85,7 +86,7 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
         <NotificationBell />
         <button
           type="button"
-          class="secondary small"
+          class="secondary small collect-top"
           :disabled="running"
           data-test="collect-top"
           @click="collectNow"
@@ -93,6 +94,10 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
           Collecter <AppIcon name="chevron" />
         </button>
         <AccountMenu />
+        <MobileMenu
+          :menu="menu"
+          :news-count="newsCount"
+        />
       </div>
       <div
         v-else-if="me"

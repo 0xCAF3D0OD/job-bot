@@ -171,7 +171,7 @@ onMounted(() => void load());
             <RouterLink :to="JOURNEY[step.key].to">
               {{ JOURNEY[step.key].label }}
             </RouterLink>
-            <span class="hint">· {{ JOURNEY[step.key].where }}</span>
+            <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
           </li>
         </ol>
       </article>
@@ -212,7 +212,7 @@ onMounted(() => void load());
             <span
               v-if="!step.done && STEPS[step.key].hint"
               class="hint"
-            >· {{ STEPS[step.key].hint }}</span>
+            >{{ STEPS[step.key].hint }}</span>
           </li>
         </ul>
       </article>
