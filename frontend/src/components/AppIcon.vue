@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Icônes au trait, dessinées pour jobA1 (style de la maquette, aucun fichier repris).
-// Pictogrammes des bulles d'Aujourd'hui (docs/54) : inbox, send, refresh, file, trend, book, news.
+// Pictogrammes des bulles d'Aujourd'hui (docs/54) : inbox, send, refresh, file, trend, book, news ;
+// du Bilan (docs/55) : reply, clock, star.
 defineProps<{
   name:
     | "pin"
@@ -19,7 +20,10 @@ defineProps<{
     | "file"
     | "trend"
     | "book"
-    | "news";
+    | "news"
+    | "reply"
+    | "clock"
+    | "star";
 }>();
 </script>
 
@@ -128,6 +132,21 @@ defineProps<{
     <template v-else-if="name === 'book'">
       <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
       <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5" />
+    </template>
+    <template v-else-if="name === 'reply'">
+      <path d="M4 5h16v11H9l-5 4z" />
+      <path d="M8 9.5h8M8 12.5h5" />
+    </template>
+    <template v-else-if="name === 'clock'">
+      <circle
+        cx="12"
+        cy="12"
+        r="8.5"
+      />
+      <path d="M12 7.5V12l3 2" />
+    </template>
+    <template v-else-if="name === 'star'">
+      <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
     </template>
     <template v-else-if="name === 'news'">
       <rect

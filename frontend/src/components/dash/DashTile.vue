@@ -3,10 +3,10 @@ import AppIcon from "../AppIcon.vue";
 import Sparkline from "./Sparkline.vue";
 
 // Tuile d'Aujourd'hui (docs/54 §2) : pictogramme dans une bulle, nom, courbe ; en bas, une
-// petite tendance et le grand chiffre. Toute la tuile mène à sa page.
+// petite tendance et le grand chiffre. Toute la tuile mène à sa page, si elle en a une (Bilan).
 type Icon = InstanceType<typeof AppIcon>["$props"]["name"];
 defineProps<{
-  to: string | Record<string, unknown>;
+  to?: string | Record<string, unknown>;
   icon: Icon;
   label: string;
   value: string;
@@ -18,9 +18,10 @@ defineProps<{
 </script>
 
 <template>
-  <RouterLink
-    :to="to"
-    :class="['dash-tile', tone]"
+  <component
+    :is="to ? 'RouterLink' : 'div'"
+    v-bind="to ? { to } : {}"
+    :class="['dash-tile', tone, { static: !to }]"
   >
     <span class="dash-tile-head">
       <span class="dash-bubble">
@@ -46,5 +47,5 @@ defineProps<{
       <strong class="dash-value">{{ value }}</strong>
       <slot />
     </span>
-  </RouterLink>
+  </component>
 </template>

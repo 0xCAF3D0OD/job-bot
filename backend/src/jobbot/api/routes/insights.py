@@ -46,6 +46,13 @@ class ComparisonOut(BaseModel):
     groups: list[GroupOut]
 
 
+class BucketOut(BaseModel):
+    # Premier jour du mois, ou de la semaine (coupée au mois choisi).
+    start: date
+    applications: int
+    responses: int
+
+
 class SearchReportOut(BaseModel):
     start: date | None
     end: date
@@ -56,6 +63,11 @@ class SearchReportOut(BaseModel):
     headline: str | None
     # Pour un mois choisi : le résumé à copier pour le rendez-vous ORP (docs/42 §3).
     orp_summary: str | None
+    # « Par mois » (docs/55) : mois de la période, ou semaines d'un mois choisi.
+    unit: Literal["month", "week"] = "month"
+    buckets: list[BucketOut] = []
+    # Entretiens encore à venir, parmi les candidatures de la période.
+    interviews_upcoming: int = 0
 
 
 def _runtime(request: Request) -> Runtime:
@@ -84,7 +96,9 @@ async def get_insights(
         # Les 3 derniers mois : le mois en cours et les deux précédents.
         start, end = date.fromisoformat(f"{shift_month(current, -2)}-01"), today
     async with _runtime(request).sessionmaker() as session:
-        found = await service.insights(session, start, end)
+        found = await service.insights(
+            session, start, end, "week" if period == "month" else "month"
+        )
         summary = await service.orp_summary(session, month) if period == "month" and month else None
     return SearchReportOut(
         start=start,
@@ -110,4 +124,7 @@ async def get_insights(
         ],
         headline=found.headline,
         orp_summary=summary,
+        unit="week" if found.unit == "week" else "month",
+        buckets=[BucketOut(**vars(b)) for b in found.buckets],
+        interviews_upcoming=found.interviews_upcoming,
     )

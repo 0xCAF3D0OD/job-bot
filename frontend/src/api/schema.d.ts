@@ -2521,6 +2521,18 @@ export interface components {
             /** File */
             file: string;
         };
+        /** BucketOut */
+        BucketOut: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Applications */
+            applications: number;
+            /** Responses */
+            responses: number;
+        };
         /** CalendarTokenCreated */
         CalendarTokenCreated: {
             /** Id */
@@ -4662,6 +4674,22 @@ export interface components {
             headline: string | null;
             /** Orp Summary */
             orp_summary: string | null;
+            /**
+             * Unit
+             * @default month
+             * @enum {string}
+             */
+            unit: "month" | "week";
+            /**
+             * Buckets
+             * @default []
+             */
+            buckets: components["schemas"]["BucketOut"][];
+            /**
+             * Interviews Upcoming
+             * @default 0
+             */
+            interviews_upcoming: number;
         };
         /** SegmentOut */
         SegmentOut: {

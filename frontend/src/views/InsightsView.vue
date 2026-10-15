@@ -4,11 +4,14 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import AppIcon from "../components/AppIcon.vue";
+import DashTile from "../components/dash/DashTile.vue";
+import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import PushTransition from "../components/PushTransition.vue";
-import { formatMonth, shiftMonth } from "../format";
+import { formatMonth, plural, shiftMonth } from "../format";
 
-// Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP.
+// Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP ;
+// présenté comme le tableau d'Aujourd'hui (docs/55) : tuiles, barres, cartes à bulles.
 type Insights = components["schemas"]["SearchReportOut"];
 type Period = "recent" | "month" | "all";
 
@@ -16,7 +19,6 @@ const route = useRoute();
 const router = useRouter();
 const insights = ref<Insights | null>(null);
 const error = ref("");
-const summaryOpen = ref(false);
 const copied = ref(false);
 
 function currentMonth(): string {
@@ -35,12 +37,10 @@ function choose(next: Period): void {
   const query: Record<string, string> = {};
   if (next === "month") query.mois = month.value;
   if (next === "all") query.periode = "tout";
-  summaryOpen.value = false;
   void router.push({ query });
 }
 
 function go(delta: number): void {
-  summaryOpen.value = false;
   void router.push({ query: { mois: shiftMonth(month.value, delta) } });
 }
 
@@ -58,19 +58,49 @@ async function load(): Promise<void> {
 }
 
 const STEPS = [
-  { key: "received", label: "offres reçues", to: "/candidatures/offres" },
-  { key: "retained", label: "retenues", to: "/candidatures/offres" },
-  { key: "applications", label: "candidatures", to: "/candidatures/suivi" },
-  { key: "responses", label: "réponses", to: "/candidatures/suivi" },
-  { key: "interviews", label: "entretiens", to: "/candidatures/suivi" },
-  { key: "engagements", label: "engagement", to: "/candidatures/suivi" },
+  { key: "received", label: "Offres reçues", to: "/candidatures/offres" },
+  { key: "retained", label: "Retenues", to: "/candidatures/offres" },
+  { key: "applications", label: "Candidatures", to: "/candidatures/suivi" },
+  { key: "responses", label: "Réponses", to: "/candidatures/suivi" },
+  { key: "interviews", label: "Entretiens", to: "/candidatures/suivi" },
+  { key: "engagements", label: "Engagement", to: "/candidatures/suivi" },
 ] as const;
 
-const delayText = computed(() => {
-  const d = insights.value?.delay;
-  if (!d) return "";
-  const range = d.shortest === d.longest ? "" : ` (de ${d.shortest} à ${d.longest})`;
-  return `Réponse en ${d.typical} jour${d.typical > 1 ? "s" : ""} d'habitude${range}.`;
+const SUIVI = "/candidatures/suivi";
+const ICONS: Record<string, InstanceType<typeof AppIcon>["$props"]["name"]> = {
+  source: "globe",
+  score: "star",
+  contact: "user",
+  follow_up: "refresh",
+};
+
+// Les barres du parcours, à l'échelle de la plus longue (les offres reçues).
+const funnelMax = computed(() => Math.max(1, ...STEPS.map((step) => insights.value?.funnel[step.key] ?? 0)));
+function funnelWidth(n: number): string {
+  return `${Math.max(n ? 2 : 0, (n / funnelMax.value) * 100)}%`;
+}
+function rate(responses: number, total: number): string {
+  return `${total ? Math.max(responses ? 3 : 0, (responses / total) * 100) : 0}%`;
+}
+
+const tiles = computed(() => {
+  const r = insights.value;
+  if (!r) return null;
+  const f = r.funnel;
+  const share = f.applications ? `${Math.round((f.responses / f.applications) * 100)} % des envois` : "aucun envoi";
+  return {
+    applications: `sur ${plural(f.retained, "offre retenue", "offres retenues")}`,
+    responses: share,
+    interviews: r.interviews_upcoming
+      ? `dont ${r.interviews_upcoming} à venir`
+      : `sur ${plural(f.responses, "réponse", "réponses")}`,
+    delay: r.delay ? `${r.delay.typical} j` : "—",
+    delayRange: !r.delay
+      ? "pas encore de réponse"
+      : r.delay.shortest === r.delay.longest
+        ? "de réponse, d'habitude"
+        : `de réponse, de ${r.delay.shortest} à ${r.delay.longest} j`,
+  };
 });
 
 async function copy(): Promise<void> {
@@ -160,35 +190,89 @@ onMounted(() => void load());
 
     <LoadingBlocks
       v-if="!insights && !error"
-      :heights="['5rem', '10rem', '10rem']"
+      :heights="['11rem', '16rem', '12rem']"
     />
-    <template v-if="insights">
-      <ol
-        class="insights-funnel"
-        aria-label="Ton parcours"
-        data-test="funnel"
+    <div
+      v-if="insights && tiles"
+      class="bilan"
+    >
+      <div
+        class="bilan-tiles"
+        data-test="bilan-tiles"
       >
-        <li
-          v-for="step in STEPS"
-          :key="step.key"
+        <DashTile
+          :to="SUIVI"
+          icon="send"
+          label="Candidatures"
+          :value="String(insights.funnel.applications)"
+          :trend="tiles.applications"
+          tone="accent"
+          data-test="tile-applications"
+        />
+        <DashTile
+          :to="SUIVI"
+          icon="reply"
+          label="Réponses"
+          :value="String(insights.funnel.responses)"
+          :trend="tiles.responses"
+          data-test="tile-responses"
+        />
+        <DashTile
+          :to="SUIVI"
+          icon="calendar"
+          label="Entretiens"
+          :value="String(insights.funnel.interviews)"
+          :trend="tiles.interviews"
+          data-test="tile-interviews"
+        />
+        <DashTile
+          icon="clock"
+          label="Délai"
+          :value="tiles.delay"
+          :trend="tiles.delayRange"
+          data-test="delay"
+        />
+      </div>
+
+      <div class="dash-row bilan-mid">
+        <section
+          class="dash-card"
+          data-test="funnel"
         >
-          <RouterLink
-            :to="step.to"
-            class="insights-step"
-            :data-test="`funnel-${step.key}`"
+          <header class="dash-card-head">
+            <h2>Ton parcours</h2>
+          </header>
+          <ol
+            class="bilan-funnel"
+            aria-label="Ton parcours"
           >
-            <strong>{{ insights.funnel[step.key] }}</strong>
-            <span>{{ step.label }}</span>
-          </RouterLink>
-        </li>
-      </ol>
-      <p
-        v-if="delayText"
-        class="hint insights-delay"
-        data-test="delay"
-      >
-        {{ delayText }}
-      </p>
+            <li
+              v-for="step in STEPS"
+              :key="step.key"
+            >
+              <RouterLink
+                :to="step.to"
+                class="bilan-step"
+                :data-test="`funnel-${step.key}`"
+              >
+                <span class="bilan-step-label">{{ step.label }}</span>
+                <span class="bilan-track">
+                  <span
+                    class="bilan-bar"
+                    :style="{ width: funnelWidth(insights.funnel[step.key]) }"
+                  />
+                </span>
+                <strong>{{ insights.funnel[step.key] }}</strong>
+              </RouterLink>
+            </li>
+          </ol>
+        </section>
+        <PeriodChart
+          v-if="insights.buckets.length"
+          :buckets="insights.buckets"
+          :unit="insights.unit"
+        />
+      </div>
 
       <p
         v-if="insights.funnel.applications === 0"
@@ -200,34 +284,50 @@ onMounted(() => void load());
       <template v-else>
         <p
           v-if="insights.headline"
-          class="insights-headline"
+          class="bilan-headline"
           data-test="headline"
         >
-          {{ insights.headline }}
+          <span class="dash-bubble small"><AppIcon name="trend" /></span>
+          <span>{{ insights.headline }}</span>
         </p>
 
-        <div class="insights-grid">
+        <div class="bilan-compare">
           <section
             v-for="comparison in insights.comparisons"
             :key="comparison.key"
-            class="insights-card"
+            class="dash-card"
             :data-test="`comparison-${comparison.key}`"
           >
-            <h2>{{ comparison.title }}</h2>
-            <ul v-if="comparison.groups.length">
+            <header class="dash-card-head">
+              <h2>
+                <span class="dash-bubble small"><AppIcon :name="ICONS[comparison.key] ?? 'search'" /></span>
+                {{ comparison.title }}
+              </h2>
+            </header>
+            <ul
+              v-if="comparison.groups.length"
+              class="bilan-groups"
+            >
               <li
                 v-for="group in comparison.groups"
                 :key="group.key"
                 :class="{ few: !group.enough }"
                 :data-test="`group-${group.key}`"
               >
-                <span class="insights-label">{{ group.label }}</span>
-                <span class="insights-count">
-                  {{ group.responses }} sur {{ group.total }}
+                <span class="bilan-group-label">{{ group.label }}</span>
+                <span
+                  class="bilan-track"
+                  aria-hidden="true"
+                >
+                  <span
+                    class="bilan-bar"
+                    :style="{ width: rate(group.responses, group.total) }"
+                  />
                 </span>
+                <span class="bilan-count">{{ group.responses }} sur {{ group.total }}</span>
                 <span
                   v-if="!group.enough"
-                  class="insights-few"
+                  class="bilan-few"
                 >trop peu pour conclure</span>
               </li>
             </ul>
@@ -239,42 +339,32 @@ onMounted(() => void load());
             </p>
           </section>
         </div>
-        <p class="hint insights-note">
+        <p class="hint bilan-note">
           Réponses sur candidatures envoyées. Un refus est une réponse ; « Sans réponse » n'en est pas une.
         </p>
       </template>
 
-      <div
+      <section
         v-if="period === 'month' && insights.orp_summary"
-        class="insights-summary"
+        class="dash-card bilan-summary"
+        data-test="orp-summary"
       >
-        <button
-          type="button"
-          class="secondary small"
-          :aria-expanded="summaryOpen"
-          data-test="orp-summary-toggle"
-          @click="summaryOpen = !summaryOpen"
-        >
-          Résumé pour l'ORP
-        </button>
-        <PushTransition>
-          <div
-            v-if="summaryOpen"
-            class="insights-summary-body"
-            data-test="orp-summary"
+        <header class="dash-card-head">
+          <h2>
+            <span class="dash-bubble small"><AppIcon name="file" /></span>
+            Résumé pour l'ORP
+          </h2>
+          <button
+            type="button"
+            class="secondary small"
+            data-test="orp-summary-copy"
+            @click="copy"
           >
-            <p>{{ insights.orp_summary }}</p>
-            <button
-              type="button"
-              class="link"
-              data-test="orp-summary-copy"
-              @click="copy"
-            >
-              {{ copied ? "Copié" : "Copier" }}
-            </button>
-          </div>
-        </PushTransition>
-      </div>
-    </template>
+            {{ copied ? "Copié" : "Copier" }}
+          </button>
+        </header>
+        <p>{{ insights.orp_summary }}</p>
+      </section>
+    </div>
   </section>
 </template>

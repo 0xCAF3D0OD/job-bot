@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from jobbot.api.app import create_app
 from jobbot.db.models import Application, Contact, Evaluation, Offer, OfferLink
-from jobbot.insights.service import Comparison, Group, headline
+from jobbot.insights.service import Comparison, Facts, Group, buckets, headline
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
@@ -130,6 +130,11 @@ async def test_insights_and_orp_summary(api: AsyncClient, runtime: Runtime) -> N
         "Les offres de jobup obtiennent plus souvent une réponse (4 sur 6, contre 0 sur 5)."
     )
     assert found["orp_summary"] is None
+    # Par mois (docs/55) : le mois en cours et les deux précédents, toutes les candidatures.
+    assert found["unit"] == "month" and len(found["buckets"]) == 3
+    assert sum(b["applications"] for b in found["buckets"]) == 13
+    assert sum(b["responses"] for b in found["buckets"]) == 5
+    assert found["interviews_upcoming"] == 0
 
     month = (await api.get("/api/insights", params={"period": "month", "month": MONTH})).json()
     summary = month["orp_summary"]
@@ -165,3 +170,25 @@ def test_headline_needs_enough_and_a_clear_gap() -> None:
         headline([clear])
         == "Les avec obtiennent plus souvent une réponse (4 sur 6, contre 2 sur 10)."
     )
+
+
+def test_buckets_by_month_and_by_week() -> None:
+    def fact(sent: date, status: str = "en_attente") -> Facts:
+        return Facts(Application(sent_at=sent, status=status), "jobup", None, False)
+
+    facts = [
+        fact(date(2026, 8, 3), "refus"),
+        fact(date(2026, 10, 1)),
+        fact(date(2026, 10, 12), "entretien"),
+    ]
+    months = buckets(facts, date(2026, 8, 1), date(2026, 10, 15), "month")
+    assert [(b.start, b.applications, b.responses) for b in months] == [
+        (date(2026, 8, 1), 1, 1),
+        (date(2026, 9, 1), 0, 0),
+        (date(2026, 10, 1), 2, 1),
+    ]
+    # « Tout » commence au mois de la première candidature.
+    assert buckets(facts, None, date(2026, 10, 15), "month")[0].start == date(2026, 8, 1)
+    # Un mois : semaines du lundi, la première coupée au 1er (jeudi 1er octobre 2026).
+    weeks = buckets(facts[1:], date(2026, 10, 1), date(2026, 10, 15), "week")
+    assert [(b.start.day, b.applications) for b in weeks] == [(1, 1), (5, 0), (12, 1)]

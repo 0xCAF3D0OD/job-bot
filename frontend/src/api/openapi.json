@@ -7222,6 +7222,30 @@
         ],
         "title": "Body_uploadDocument"
       },
+      "BucketOut": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "applications": {
+            "type": "integer",
+            "title": "Applications"
+          },
+          "responses": {
+            "type": "integer",
+            "title": "Responses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "applications",
+          "responses"
+        ],
+        "title": "BucketOut"
+      },
       "CalendarTokenCreated": {
         "properties": {
           "id": {
@@ -14147,6 +14171,28 @@
               }
             ],
             "title": "Orp Summary"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "month",
+              "week"
+            ],
+            "title": "Unit",
+            "default": "month"
+          },
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/BucketOut"
+            },
+            "type": "array",
+            "title": "Buckets",
+            "default": []
+          },
+          "interviews_upcoming": {
+            "type": "integer",
+            "title": "Interviews Upcoming",
+            "default": 0
           }
         },
         "type": "object",
