@@ -3,15 +3,15 @@
 import json
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import delete, select
 
-from jobbot.assistant import service
-from jobbot.db.models import ChatConversation, ChatMessage
+from jobbot.assistant import actions, service
+from jobbot.db.models import ChatAction, ChatConversation, ChatMessage
 from jobbot.profiles import service as profiles
 from jobbot.runtime import Runtime
 
@@ -41,8 +41,25 @@ class ChatMessageOut(BaseModel):
     created_at: datetime
 
 
+class ChatActionOut(BaseModel):
+    """Proposition de l'assistant (docs/52) et son état."""
+
+    id: int
+    kind: Literal["offer_status", "offer_expiry", "application_status"]
+    label: str
+    state: Literal["proposed", "done", "undone", "declined", "stale"]
+    created_at: datetime
+    # Pourquoi rien n'a été fait (proposition qui ne vaut plus, annulation impossible).
+    note: str | None = None
+
+
+def _action_out(action: ChatAction, note: str | None = None) -> ChatActionOut:
+    return ChatActionOut.model_validate(actions.as_dict(action) | {"note": note})
+
+
 class ConversationDetail(ConversationOut):
     messages: list[ChatMessageOut]
+    actions: list[ChatActionOut]
 
 
 class FocusIn(BaseModel):
@@ -103,6 +120,11 @@ async def get_conversation(request: Request, conversation_id: int) -> Conversati
             .where(ChatMessage.conversation_id == conversation_id)
             .order_by(ChatMessage.id)
         )
+        proposals = await session.scalars(
+            select(ChatAction)
+            .where(ChatAction.conversation_id == conversation_id)
+            .order_by(ChatAction.id)
+        )
         return ConversationDetail(
             id=conversation.id,
             title=conversation.title,
@@ -111,6 +133,7 @@ async def get_conversation(request: Request, conversation_id: int) -> Conversati
                 ChatMessageOut(id=m.id, role=m.role, content=m.content, created_at=m.created_at)
                 for m in rows
             ],
+            actions=[_action_out(a) for a in proposals],
         )
 
 
@@ -173,3 +196,39 @@ async def ask(request: Request, body: QuestionIn) -> StreamingResponse:
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+# --- Propositions (docs/52) : seul un clic de Kevin les fait ---------------------------
+
+
+async def _decide(request: Request, action_id: int, decision: str) -> ChatActionOut:
+    async with _runtime(request).sessionmaker.begin() as session:
+        action = await session.get(ChatAction, action_id, with_for_update=True)
+        if action is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "proposition introuvable")
+        try:
+            if decision == "confirm":
+                await actions.confirm(session, action)
+            elif decision == "undo":
+                await actions.undo(session, action)
+            else:
+                await actions.decline(action)
+        except actions.ActionRefused as exc:
+            # L'état « stale » éventuel est gardé ; le reste de la base n'a pas bougé.
+            return _action_out(action, note=str(exc))
+        return _action_out(action)
+
+
+@router.post("/actions/{action_id}/confirm", operation_id="confirmAssistantAction")
+async def confirm_action(request: Request, action_id: int) -> ChatActionOut:
+    return await _decide(request, action_id, "confirm")
+
+
+@router.post("/actions/{action_id}/undo", operation_id="undoAssistantAction")
+async def undo_action(request: Request, action_id: int) -> ChatActionOut:
+    return await _decide(request, action_id, "undo")
+
+
+@router.post("/actions/{action_id}/decline", operation_id="declineAssistantAction")
+async def decline_action(request: Request, action_id: int) -> ChatActionOut:
+    return await _decide(request, action_id, "decline")

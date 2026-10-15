@@ -801,6 +801,30 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class ChatAction(Base):
+    """Action proposée par l'assistant (docs/52) : faite seulement sur confirmation de Kevin.
+
+    `previous` garde l'état d'avant pour « Annuler ».
+    """
+
+    __tablename__ = "chat_actions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    conversation_id: Mapped[int] = mapped_column(
+        ForeignKey("chat_conversations.id", ondelete="CASCADE"), index=True
+    )
+    # offer_status | offer_expiry | application_status
+    kind: Mapped[str] = mapped_column(Text)
+    target_id: Mapped[int] = mapped_column(BigInteger)
+    value: Mapped[str] = mapped_column(Text)
+    previous: Mapped[Any] = mapped_column(JSONB)
+    label: Mapped[str] = mapped_column(Text)
+    # proposed | done | undone | declined | stale
+    state: Mapped[str] = mapped_column(Text, server_default="proposed")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class CalendarToken(Base):
     """Abonnement d'agenda (docs/40) : jeton secret révocable ; seule son empreinte est gardée."""
 

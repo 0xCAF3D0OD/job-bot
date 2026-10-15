@@ -16,6 +16,7 @@ import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { plural } from "../format";
+import { useDataChanged } from "../composables/useDataChanged";
 
 const PAGE_SIZE = 50;
 
@@ -261,6 +262,7 @@ onMounted(() => {
   void loadChunkTitles();
   void loadVisibility();
 });
+useDataChanged(() => load());
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown);
   assistant.setFocus(null);

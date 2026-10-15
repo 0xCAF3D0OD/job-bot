@@ -15,7 +15,7 @@ import anthropic
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.assistant import tools
+from jobbot.assistant import actions, tools
 from jobbot.db.models import Application, ChatConversation, ChatMessage, Offer
 from jobbot.llm.client import ChatTurn, chat_client_factory
 from jobbot.log import get_logger
@@ -33,7 +33,7 @@ KEEP = timedelta(days=30)
 # Estimation prudente d'un tour (question + données lues), pour respecter le plafond.
 ESTIMATE_USD = Decimal("0.02")
 TITLE_LENGTH = 60
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v2.md").read_text("utf-8")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v3.md").read_text("utf-8")
 
 # Remplaçable en test par un faux client.
 make_chat_client = chat_client_factory
@@ -57,7 +57,7 @@ def _title(text: str) -> str:
 
 
 def _tools() -> list[dict[str, Any]]:
-    return [{**tool, "eager_input_streaming": True} for tool in tools.TOOLS]
+    return [{**tool, "eager_input_streaming": True} for tool in [*tools.TOOLS, actions.TOOL]]
 
 
 def _params(messages: list[dict[str, Any]]) -> dict[str, Any]:
@@ -135,6 +135,23 @@ def _api_messages(rows: list[ChatMessage]) -> list[dict[str, Any]]:
     return messages
 
 
+async def _propose(
+    runtime: Runtime, conversation_id: int, params: Any, already: int
+) -> tuple[str, bool, dict[str, Any] | None]:
+    """Outil `proposer_action` : rend (résultat pour l'IA, erreur ?, proposition affichée)."""
+    async with runtime.sessionmaker.begin() as session:
+        try:
+            action = await actions.propose(session, conversation_id, params, already)
+        except actions.ActionRefused as exc:
+            return f"proposition impossible : {exc}", True, None
+        shown = actions.as_dict(action)
+    return (
+        f"proposition affichée, en attente de la confirmation de la personne : {shown['label']}",
+        False,
+        shown,
+    )
+
+
 async def answer(
     runtime: Runtime,
     *,
@@ -179,6 +196,7 @@ async def answer(
     yield Event("conversation", {"id": conversation_id, "title": conversation.title})
 
     client = make_chat_client(settings)
+    proposed = 0
     written: list[str] = []
     problem: str | None = None
     for _ in range(MAX_ROUNDS):
@@ -211,8 +229,19 @@ async def answer(
                     if block.get("type") != "tool_use":
                         continue
                     name = str(block.get("name"))
-                    yield Event("tool", {"name": name, "label": tools.LABELS.get(name, name)})
-                    output, error = await tools.run(session, profile_id, name, block.get("input"))
+                    if name == actions.NAME:
+                        # Proposition (docs/52) : enregistrée et montrée, jamais exécutée ici.
+                        output, error, proposal = await _propose(
+                            runtime, conversation_id, block.get("input"), proposed
+                        )
+                        if proposal is not None:
+                            proposed += 1
+                            yield Event("action", proposal)
+                    else:
+                        yield Event("tool", {"name": name, "label": tools.LABELS.get(name, name)})
+                        output, error = await tools.run(
+                            session, profile_id, name, block.get("input")
+                        )
                     result = {"type": "tool_result", "tool_use_id": block["id"], "content": output}
                     results.append(result | {"is_error": True} if error else result)
             messages.append({"role": "user", "content": results})
