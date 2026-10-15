@@ -10,6 +10,7 @@ import CvPanel from "../components/CvPanel.vue";
 import OfferBrief from "../components/OfferBrief.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
+import AiWriting from "../components/AiWriting.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { expiredText } from "../format";
@@ -444,13 +445,10 @@ onMounted(() => void load());
           >
             <p>Aucune lettre pour cette offre.</p>
           </div>
-          <div
+          <AiWriting
             v-else-if="writing && !selected"
-            class="empty-detail prep-empty"
-            role="status"
-          >
-            Rédaction en cours, compte une trentaine de secondes…
-          </div>
+            kind="letter"
+          />
 
           <article
             v-if="doc && draft"

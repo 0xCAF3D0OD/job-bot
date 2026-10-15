@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type Application, type InterviewInsights, type Offer } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
+import AiWriting from "./AiWriting.vue";
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
 // rencontrées, ce qui reste à préparer, les questions à poser ; pistes de l'IA à la demande.
@@ -146,6 +147,10 @@ onMounted(async () => {
       >
         {{ message }}
       </p>
+      <AiWriting
+        v-if="busy"
+        kind="coaching"
+      />
       <div class="form-actions">
         <button
           v-if="insights?.can_coach && insights.count"

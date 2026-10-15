@@ -267,4 +267,17 @@ describe("Aujourd'hui, revue des pages (docs/43)", () => {
     expect(gauge.element.tagName).toBe("A");
     expect(gauge.attributes("href")).toContain("/candidatures/suivi?mois=");
   });
+
+  it("prise en main : l'étape à faire en grand, avec son illustration (docs/58)", async () => {
+    mockGet(today());
+    const wrapper = await mountView();
+    const next = wrapper.find("[data-test=checklist-next]");
+    expect(next.text()).toContain("Étape 3 sur 6");
+    expect(next.text()).toContain("Saisir tes coordonnées");
+    expect(next.attributes("href")).toBe("/profil?onglet=coordonnees");
+    expect(next.find("[data-illustration=profile]").exists()).toBe(true);
+    const journey = wrapper.find("[data-test=journey-next]");
+    expect(journey.text()).toContain("Préparer lettre et CV");
+    expect(journey.find("[data-illustration=message-sent]").exists()).toBe(true);
+  });
 });

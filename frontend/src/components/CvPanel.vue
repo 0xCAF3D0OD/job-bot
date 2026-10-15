@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import OfferBrief from "./OfferBrief.vue";
+import AiWriting from "./AiWriting.vue";
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
 const props = defineProps<{ offer: Offer; primary?: boolean }>();
@@ -198,13 +199,10 @@ onMounted(() => void load());
       >
         <p>Aucun CV adapté pour cette offre.</p>
       </div>
-      <div
+      <AiWriting
         v-else-if="writing && !selected"
-        class="empty-detail prep-empty"
-        role="status"
-      >
-        Préparation du CV en cours…
-      </div>
+        kind="cv"
+      />
 
       <article
         v-if="doc && selected"

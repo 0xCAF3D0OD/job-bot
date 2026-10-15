@@ -9,6 +9,7 @@ import DashTile from "../components/dash/DashTile.vue";
 import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
+import { useLoadingGate } from "../composables/useLoadingGate";
 
 // Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP ;
 // présenté comme le tableau d'Aujourd'hui (docs/55) : tuiles, barres, cartes à bulles.
@@ -19,6 +20,7 @@ const route = useRoute();
 const router = useRouter();
 const insights = ref<Insights | null>(null);
 const error = ref("");
+const { ready: loadReady, illustrated: loadIllustrated } = useLoadingGate(() => !!insights.value);
 const copied = ref(false);
 
 function currentMonth(): string {
@@ -189,11 +191,12 @@ onMounted(() => void load());
     </p>
 
     <LoadingBlocks
-      v-if="!insights && !error"
+      v-if="!loadReady && !error"
       :heights="['11rem', '16rem', '12rem']"
+      :illustrated="loadIllustrated"
     />
     <div
-      v-if="insights && tiles"
+      v-if="loadReady && insights && tiles"
       class="bilan"
     >
       <div

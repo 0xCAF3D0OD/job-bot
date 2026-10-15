@@ -11,6 +11,7 @@ import PageHero from "../components/PageHero.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
 import { usePhone } from "../composables/usePhone";
+import { useLoadingGate } from "../composables/useLoadingGate";
 import { since } from "../format";
 import { countryLabel, languageLabel } from "../newsLabels";
 
@@ -30,6 +31,7 @@ const page = ref<NewsPage | null>(null);
 const preferences = ref<NewsPreferences | null>(null);
 const counts = ref({ jobs: 0, economy: 0, videos: 0 });
 const loaded = ref(false);
+const { ready: loadReady, illustrated: loadIllustrated } = useLoadingGate(() => loaded.value);
 const { reset } = useNewsCount();
 const { loggedIn } = useAuth();
 let poll: ReturnType<typeof setTimeout> | undefined;
@@ -345,7 +347,8 @@ onUnmounted(() => {
       </PushTransition>
 
       <LoadingBlocks
-        v-if="!loaded"
+        v-if="!loadReady"
+        :illustrated="loadIllustrated"
         :heights="phone ? ['14rem', '5rem', '5rem'] : ['22rem', '6rem', '6rem']"
       />
 

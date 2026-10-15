@@ -2,12 +2,15 @@
 import { computed, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
+import Illustration, { type IllustrationName } from "./Illustration.vue";
 
 // Assistant des alertes (docs/21 §4) : un écran à la fois, tant qu'aucune alerte n'est en place.
 const props = defineProps<{ page: AlertsPage }>();
 const emit = defineEmits<{ updated: [page: AlertsPage]; done: [] }>();
 
 const step = ref<1 | 2 | 3>(1);
+// Une illustration par étape (docs/58 §3.1) : tes recherches, le site, c'est prêt.
+const WIZARD_ILLUSTRATIONS: IllustrationName[] = ["mailbox", "online-connection", "done"];
 const siteIndex = ref(0);
 const form = ref({ terms: "", location: "" });
 const busy = ref(false);
@@ -89,6 +92,11 @@ function nextSite(): void {
     class="form-card wizard"
     data-test="alerts-wizard"
   >
+    <Illustration
+      :name="WIZARD_ILLUSTRATIONS[step - 1]!"
+      size="small"
+      class="wizard-illu"
+    />
     <p class="wizard-step">
       Étape {{ step }} sur 3
     </p>

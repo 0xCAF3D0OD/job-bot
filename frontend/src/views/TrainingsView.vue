@@ -11,6 +11,7 @@ import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
 import TrainingCardBody from "../components/TrainingCardBody.vue";
 import { usePhone } from "../composables/usePhone";
+import { useLoadingGate } from "../composables/useLoadingGate";
 import { highlight, languageLabel } from "../newsLabels";
 import { KINDS, ORP_LINKS, PRICES, STATUSES } from "../trainingLabels";
 import { plural } from "../format";
@@ -26,6 +27,7 @@ const keywords = ref<string[]>([]);
 const languages = ref<string[]>([]);
 const canSuggest = ref(false);
 const loaded = ref(false);
+const { ready: loadReady, illustrated: loadIllustrated } = useLoadingGate(() => loaded.value);
 const domainOnly = ref(true);
 const kind = ref("");
 const price = ref("");
@@ -215,7 +217,7 @@ onMounted(() => void load());
       </component>
 
       <div
-        v-if="loaded"
+        v-if="loadReady"
         class="news-filters"
       >
         <div
@@ -341,13 +343,14 @@ onMounted(() => void load());
         />
       </PushTransition>
       <LoadingBlocks
-        v-if="!loaded"
+        v-if="!loadReady"
+        :illustrated="loadIllustrated"
         :columns="phone ? 1 : 3"
         :heights="['16rem', '16rem', '16rem']"
       />
 
       <p
-        v-if="loaded && !shown.length"
+        v-if="loadReady && !shown.length"
         class="muted empty"
       >
         {{ tab === "mine" ? "Aucune formation suivie : marque une formation « Intéressé » dans le catalogue." : "Aucune formation avec ces filtres." }}
