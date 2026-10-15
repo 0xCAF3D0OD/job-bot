@@ -426,9 +426,9 @@ async def update_application(
         values = body.model_dump()
         if values["status"] != application.status and values["status_at"] is None:
             values["status_at"] = _today()
-        # Passée à la main en « Relancée » : la date de cette relance (docs/38) ; effacée
-        # quand elle quitte ce statut, pour ne pas proposer « Sans réponse » trop tôt.
-        if values["status"] != ApplicationStatus.RELANCEE:
+        # Passée à la main en « Relancée » : la date de cette relance (docs/38). Effacée au
+        # retour en « En attente » ; gardée après une réponse, le bilan s'en sert (docs/42).
+        if values["status"] == ApplicationStatus.EN_ATTENTE:
             application.followed_up_at = None
         elif application.status != ApplicationStatus.RELANCEE or not application.followed_up_at:
             application.followed_up_at = values["status_at"] or _today()

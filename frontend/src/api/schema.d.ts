@@ -1416,6 +1416,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Insights */
+        get: operations["getInsights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/address-candidates": {
         parameters: {
             query?: never;
@@ -2660,6 +2677,18 @@ export interface components {
             /** Last Error */
             last_error: string | null;
         };
+        /** ComparisonOut */
+        ComparisonOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "source" | "score" | "contact" | "follow_up";
+            /** Title */
+            title: string;
+            /** Groups */
+            groups: components["schemas"]["GroupOut"][];
+        };
         /** ContactIn */
         ContactIn: {
             /** Offer Id */
@@ -2913,6 +2942,15 @@ export interface components {
             /** Error */
             error: string | null;
         };
+        /** DelayOut */
+        DelayOut: {
+            /** Typical */
+            typical: number;
+            /** Shortest */
+            shortest: number;
+            /** Longest */
+            longest: number;
+        };
         /** DocumentOut */
         DocumentOut: {
             /** Id */
@@ -3088,6 +3126,34 @@ export interface components {
             examples: components["schemas"]["FundingExample"][];
             /** Sender */
             sender: string | null;
+        };
+        /** FunnelOut */
+        FunnelOut: {
+            /** Received */
+            received: number;
+            /** Retained */
+            retained: number;
+            /** Applications */
+            applications: number;
+            /** Responses */
+            responses: number;
+            /** Interviews */
+            interviews: number;
+            /** Engagements */
+            engagements: number;
+        };
+        /** GroupOut */
+        GroupOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Responses */
+            responses: number;
+            /** Total */
+            total: number;
+            /** Enough */
+            enough: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -4463,6 +4529,24 @@ export interface components {
             items: components["schemas"]["SearchOut"][];
             /** Total */
             total: number;
+        };
+        /** SearchReportOut */
+        SearchReportOut: {
+            /** Start */
+            start: string | null;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            funnel: components["schemas"]["FunnelOut"];
+            delay: components["schemas"]["DelayOut"] | null;
+            /** Comparisons */
+            comparisons: components["schemas"]["ComparisonOut"][];
+            /** Headline */
+            headline: string | null;
+            /** Orp Summary */
+            orp_summary: string | null;
         };
         /** SegmentOut */
         SegmentOut: {
@@ -7736,6 +7820,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getInsights: {
+        parameters: {
+            query?: {
+                period?: "recent" | "month" | "all";
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchReportOut"];
+                };
             };
             /** @description Validation Error */
             422: {

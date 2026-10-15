@@ -5,10 +5,10 @@ import { useRoute } from "vue-router";
 import { api } from "../api/client";
 import type { JobsTab } from "../router";
 
-// Rubrique Candidatures (docs/19 §2) : quatre onglets toujours visibles sous le titre.
+// Rubrique Candidatures (docs/19 §2, docs/42) : quatre onglets toujours visibles sous le titre.
 const route = useRoute();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
-const counts = ref({ offres: 0, suivi: 0, alertes: 0 });
+const counts = ref({ offres: 0, suivi: 0, alertes: 0, bilan: 0 });
 
 // `short` : le titre sur téléphone, sur une ligne (docs/36 §2).
 const TABS: { key: JobsTab; label: string; path: string; title: string; short: string; hint: string }[] = [
@@ -29,6 +29,14 @@ const TABS: { key: JobsTab; label: string; path: string; title: string; short: s
     short: "Tes alertes",
     hint: "alerte(s) créée(s) sans rien envoyé",
   },
+  {
+    key: "bilan",
+    label: "Bilan",
+    path: "/candidatures/bilan",
+    title: "Ce qui marche dans ta recherche",
+    short: "Ton bilan",
+    hint: "",
+  },
 ];
 const current = computed(() => TABS.find((t) => t.key === tab.value) ?? TABS[0]!);
 
@@ -48,6 +56,7 @@ async function refresh(): Promise<void> {
     // Suivi : à relancer, plus les lignes ORP à compléter (docs/22 §1).
     suivi: (today.data?.to_follow_up ?? 0) + (orp.data?.incomplete ?? 0),
     alertes: today.data?.alerts_waiting ?? 0,
+    bilan: 0,
   };
 }
 
