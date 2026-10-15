@@ -7,6 +7,7 @@ import { useAuth } from "../composables/useAuth";
 import AppIcon from "../components/AppIcon.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
+import AgendaPanel from "../components/AgendaPanel.vue";
 import ExtensionPanel from "../components/ExtensionPanel.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
@@ -92,6 +93,7 @@ const summary = computed(() => ({
   profils: "profils fictifs",
   connexion: me.value?.auth_enabled ? (me.value.username ?? "") : "désactivée",
   extension: "jetons",
+  agenda: "abonnement",
 }));
 
 // Sommaire (docs/19 §4) : les sections dans l'ordre de la page.
@@ -102,6 +104,7 @@ const SECTIONS = [
   { id: "ia", label: "IA" },
   { id: "profils", label: "Profils d'essai" },
   { id: "connexion", label: "Connexion" },
+  { id: "agenda", label: "Agenda" },
   { id: "extension", label: "Extension" },
 ];
 </script>
@@ -359,6 +362,14 @@ const SECTIONS = [
           :value="summary.connexion"
         >
           <SessionPanel />
+        </SettingsSection>
+
+        <SettingsSection
+          id="agenda"
+          title="Agenda"
+          :value="summary.agenda"
+        >
+          <AgendaPanel />
         </SettingsSection>
 
         <SettingsSection

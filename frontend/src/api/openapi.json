@@ -940,6 +940,159 @@
         }
       }
     },
+    "/api/applications/{application_id}/interview.ics": {
+      "get": {
+        "tags": [
+          "agenda"
+        ],
+        "summary": "Interview File",
+        "operationId": "downloadInterviewEvent",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/calendar": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agenda/tokens": {
+      "get": {
+        "tags": [
+          "agenda"
+        ],
+        "summary": "List Tokens",
+        "operationId": "listCalendarTokens",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarTokenOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listcalendartokens"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "agenda"
+        ],
+        "summary": "Create Token",
+        "operationId": "createCalendarToken",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarTokenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarTokenCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agenda/tokens/{token_id}": {
+      "delete": {
+        "tags": [
+          "agenda"
+        ],
+        "summary": "Revoke Token",
+        "operationId": "revokeCalendarToken",
+        "parameters": [
+          {
+            "name": "token_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Token Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/status": {
       "get": {
         "tags": [
@@ -6858,6 +7011,109 @@
         ],
         "title": "Body_uploadDocument"
       },
+      "CalendarTokenCreated": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "last_used_at",
+          "url"
+        ],
+        "title": "CalendarTokenCreated"
+      },
+      "CalendarTokenIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 60,
+            "title": "Name",
+            "default": "Mon agenda"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
+          }
+        },
+        "type": "object",
+        "title": "CalendarTokenIn"
+      },
+      "CalendarTokenOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "last_used_at"
+        ],
+        "title": "CalendarTokenOut"
+      },
       "CatalogSourceOut": {
         "properties": {
           "id": {
@@ -8019,8 +8275,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "de",
-                  "en"
+                  "en",
+                  "de"
                 ]
               },
               {
@@ -9999,8 +10255,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "de",
-                  "en"
+                  "en",
+                  "de"
                 ]
               },
               {
@@ -10144,8 +10400,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "de",
-                  "en"
+                  "en",
+                  "de"
                 ]
               },
               {

@@ -411,6 +411,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/interview.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Interview File */
+        get: operations["downloadInterviewEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agenda/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tokens */
+        get: operations["listCalendarTokens"];
+        put?: never;
+        /** Create Token */
+        post: operations["createCalendarToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agenda/tokens/{token_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Token */
+        delete: operations["revokeCalendarToken"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -2401,6 +2453,46 @@ export interface components {
             /** File */
             file: string;
         };
+        /** CalendarTokenCreated */
+        CalendarTokenCreated: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Url */
+            url: string;
+        };
+        /** CalendarTokenIn */
+        CalendarTokenIn: {
+            /**
+             * Name
+             * @default Mon agenda
+             */
+            name: string;
+            /** Origin */
+            origin?: string | null;
+        };
+        /** CalendarTokenOut */
+        CalendarTokenOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Used At */
+            last_used_at: string | null;
+        };
         /** CatalogSourceOut */
         CatalogSourceOut: {
             /** Id */
@@ -2790,7 +2882,7 @@ export interface components {
         /** CvRequest */
         CvRequest: {
             /** Language */
-            language?: ("fr" | "de" | "en") | null;
+            language?: ("fr" | "en" | "de") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */
@@ -3316,7 +3408,7 @@ export interface components {
             /** Paragraphs */
             paragraphs: components["schemas"]["LetterParagraph"][];
             /** Language */
-            language?: ("fr" | "de" | "en") | null;
+            language?: ("fr" | "en" | "de") | null;
         };
         /** LetterOut */
         LetterOut: {
@@ -3359,7 +3451,7 @@ export interface components {
         /** LetterRequest */
         LetterRequest: {
             /** Language */
-            language?: ("fr" | "de" | "en") | null;
+            language?: ("fr" | "en" | "de") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */
@@ -5516,6 +5608,121 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SpontaneousOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    downloadInterviewEvent: {
+        parameters: {
+            query?: {
+                origin?: string | null;
+            };
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listCalendarTokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarTokenOut"][];
+                };
+            };
+        };
+    };
+    createCalendarToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarTokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarTokenCreated"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revokeCalendarToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
