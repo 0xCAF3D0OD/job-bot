@@ -326,7 +326,7 @@ const onStatus = (event: Event): void =>
           :href="application.application_url"
           target="_blank"
           rel="noopener noreferrer"
-        >Lien de candidature ›</a>
+        >Lien de candidature</a>
       </p>
     </section>
 

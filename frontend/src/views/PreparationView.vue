@@ -3,7 +3,6 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer } from "../api/client";
-import AppIcon from "../components/AppIcon.vue";
 import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ContactsPanel from "../components/ContactsPanel.vue";
@@ -311,7 +310,7 @@ onMounted(() => void load());
           class="button-link primary-link"
           data-test="next-offers"
         >
-          Revenir aux offres <AppIcon name="chevron" />
+          Revenir aux offres
         </RouterLink>
         <RouterLink
           to="/candidatures/suivi"
@@ -358,7 +357,7 @@ onMounted(() => void load());
                   rel="noopener noreferrer"
                   class="button-link primary-link"
                   data-test="apply"
-                >{{ applyLink.label }} <AppIcon name="chevron" /></a>
+                >{{ applyLink.label }}</a>
               </div>
             </section>
             <section

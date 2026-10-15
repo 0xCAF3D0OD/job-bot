@@ -1164,7 +1164,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .filter-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; width: 100%; padding: 0.75rem 0.9rem; border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: 0.93rem; text-align: left; cursor: pointer; }
 .filter-row + .filter-row { border-top: 1px solid var(--divider); }
 .filter-row:hover { background: var(--panel); }
-button.filter-row:not(.filter-option)::after { content: "›"; color: var(--faint); font-size: 1.1rem; line-height: 1; margin-left: -0.35rem; }
+button.filter-row[aria-expanded]:not(.filter-option)::after { content: "›"; color: var(--faint); font-size: 1.1rem; line-height: 1; margin-left: -0.35rem; }
 .filter-row-value { margin-left: auto; color: var(--muted); font-size: 0.86rem; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
 .filter-option[aria-checked="true"] { color: var(--accent); font-weight: 500; }
 .filter-option[aria-checked="true"]::after { content: "✓"; color: var(--accent); }
@@ -1983,3 +1983,18 @@ html.side-open { overflow: hidden; }
   .bilan-groups li { grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr) 4rem; column-gap: 0.6rem; }
   .bilan-headline { border-radius: 20px; padding: 0.8rem 1rem; }
 }
+
+/* Clic direct (docs/57) : l'élément entier ouvre son contenu, le survol le montre ; pas de « › ». */
+.row-link { cursor: pointer; transition: background 0.15s; }
+.row-link:hover, .row-link:focus-within { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.row-link-title { color: inherit; text-decoration: none; }
+.row-link:hover .row-link-title strong, .row-link-title:focus-visible strong { color: var(--accent); }
+.dash-offers .row-link td:first-child { padding-left: 0.6rem; border-radius: 12px 0 0 12px; }
+.dash-offers .row-link td:last-child { padding-right: 0.6rem; border-radius: 0 12px 12px 0; }
+.dash-offers th:first-child { padding-left: 0.6rem; }
+.dash-offers th:last-child { padding-right: 0.6rem; }
+.dash-link { color: var(--text); text-decoration: none; transition: border-color 0.15s; }
+.dash-link:hover, .dash-link:focus-visible { border-color: var(--accent); }
+.dash-title-link { display: inline-flex; align-items: center; gap: 0.6rem; color: inherit; text-decoration: none; }
+.dash-title-link:hover, .dash-title-link:focus-visible { color: var(--accent); }
+.today-list a { color: inherit; text-decoration: none; }

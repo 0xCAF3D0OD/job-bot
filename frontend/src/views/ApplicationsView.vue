@@ -11,7 +11,6 @@ import {
   type OrpMonth,
 } from "../api/client";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationPanel from "../components/ApplicationPanel.vue";
@@ -449,7 +448,7 @@ onUnmounted(() => assistant.setFocus(null));
             data-test="complete-next"
             @click="edit(firstIncomplete)"
           >
-            Compléter {{ plural(orp.incomplete, "ligne", "lignes") }} <AppIcon name="chevron" />
+            Compléter {{ plural(orp.incomplete, "ligne", "lignes") }}
           </button>
           <button
             v-else

@@ -43,18 +43,14 @@ const short = (month: string): string => formatMonth(month).split(" ")[0] ?? mon
 </script>
 
 <template>
-  <section
-    class="dash-card orp-gauge"
+  <RouterLink
+    :to="{ path: '/candidatures/suivi', query: { mois: month } }"
+    class="dash-card dash-link orp-gauge"
     data-test="orp-gauge"
   >
     <header class="dash-card-head">
       <h2>Objectif ORP</h2>
-      <RouterLink
-        to="/candidatures/suivi"
-        class="link"
-      >
-        {{ formatMonth(month) }} ›
-      </RouterLink>
+      <span class="muted">{{ formatMonth(month) }}</span>
     </header>
     <div class="gauge">
       <svg
@@ -91,5 +87,5 @@ const short = (month: string): string => formatMonth(month).split(" ")[0] ?? mon
         <span>{{ result(item.count).text }}</span>
       </li>
     </ul>
-  </section>
+  </RouterLink>
 </template>

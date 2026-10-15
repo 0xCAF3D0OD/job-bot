@@ -95,7 +95,7 @@ function run(): void {
         :data-test="`card-step-${step.key}`"
         @click="run"
       >
-        {{ step.action }} ›
+        {{ step.action }}
       </button>
     </p>
     <SidePanel

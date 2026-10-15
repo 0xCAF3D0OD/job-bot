@@ -4,7 +4,6 @@ import { useRoute, useRouter } from "vue-router";
 
 import { UNAUTHORIZED_EVENT } from "./api/client";
 
-import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import MobileMenu from "./components/MobileMenu.vue";
@@ -91,7 +90,7 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
           data-test="collect-top"
           @click="collectNow"
         >
-          Collecter <AppIcon name="chevron" />
+          Collecter
         </button>
         <AccountMenu />
         <MobileMenu

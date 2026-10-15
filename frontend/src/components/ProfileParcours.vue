@@ -319,7 +319,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
             :href="`/api/documents/${openDocument.id}/file`"
             target="_blank"
             rel="noopener noreferrer"
-          >Ouvrir le fichier ›</a>
+          >Ouvrir le fichier</a>
           <button
             type="button"
             class="link"
@@ -409,7 +409,6 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           <span class="chunk-content">{{ chunk.content }}</span>
           <span class="chunk-foot">
             <span>{{ chunkFoot(chunk) }}<template v-if="!chunk.active"> · inactif</template></span>
-            <span aria-hidden="true">›</span>
           </span>
         </button>
       </li>

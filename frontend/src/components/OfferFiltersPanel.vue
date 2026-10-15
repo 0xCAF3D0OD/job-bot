@@ -101,7 +101,7 @@ function onScore(min: number | null, max: number | null): void {
   emit("update", { minScore: min, maxScore: max });
 }
 
-// Cartes (docs/27) : une ligne par filtre, « nom · valeur · › » ; un clic déplie le choix
+// Cartes (docs/27) : une ligne par filtre, « nom · valeur », la flèche qui tourne ; un clic déplie le choix
 // sous la ligne, un seul à la fois : ouvrir un autre filtre (ou recliquer) referme le premier.
 type Page = "view" | "sort" | "remote" | "rate" | "sources" | "cantons";
 const page = ref<Page | null>(null);

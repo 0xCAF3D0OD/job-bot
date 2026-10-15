@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type OrpMonth, type OrpRow, type Source } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import { printSheet } from "../composables/usePrint";
 import { formatMonth, plural, sourceLabel } from "../format";
@@ -156,7 +155,7 @@ onMounted(async () => {
           data-test="complete-next"
           @click="edit(firstIncomplete)"
         >
-          Compléter {{ plural(data.incomplete, "ligne", "lignes") }} <AppIcon name="chevron" />
+          Compléter {{ plural(data.incomplete, "ligne", "lignes") }}
         </button>
         <template v-else>
           <button
