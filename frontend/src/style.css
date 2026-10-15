@@ -1665,3 +1665,14 @@ html.side-open { overflow: hidden; }
 .follow-up-field { display: grid; gap: 0.25rem; width: 100%; font-size: 0.85rem; }
 .follow-up-field input, .follow-up-field textarea { width: 100%; font: inherit; }
 .follow-up-actions { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }
+
+/* Candidatures spontanées (docs/39) */
+.spontaneous-open { margin-left: auto; }
+.spontaneous-badge { margin: 0 0 0.2rem; }
+.spontaneous-form { display: grid; gap: 0.75rem; justify-items: start; }
+.spontaneous-form label { display: grid; gap: 0.25rem; width: 100%; font-size: 0.88rem; }
+.spontaneous-form input, .spontaneous-form textarea { width: 100%; font: inherit; }
+.spontaneous-form .muted, .spontaneous-form p { margin: 0; }
+.spontaneous-search { display: inline-flex; align-items: center; }
+.spontaneous-candidates { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; width: 100%; }
+.spontaneous-candidates li { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; font-size: 0.88rem; }

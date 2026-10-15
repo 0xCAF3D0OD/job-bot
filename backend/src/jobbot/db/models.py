@@ -16,6 +16,7 @@ from sqlalchemy import (
     SmallInteger,
     Text,
     UniqueConstraint,
+    false,
     func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
@@ -155,6 +156,9 @@ class Offer(Base):
     # (docs/14 §4) ; le logo lui-même est téléchargé une fois par entreprise.
     logo_url: Mapped[str | None] = mapped_column(Text)
     company_website: Mapped[str | None] = mapped_column(Text)
+    # Candidature spontanée (docs/39) : offre créée par toi, sans annonce ; jamais notée.
+    spontaneous: Mapped[bool] = mapped_column(default=False, server_default=false())
+    spontaneous_reason: Mapped[str | None] = mapped_column(Text)
     # Annonce chez l'employeur (docs/20 §2) : adresse vérifiée, d'où elle vient
     # (site | ats | web), résultat de la recherche (found | not_found | agency | gone).
     employer_url: Mapped[str | None] = mapped_column(Text)

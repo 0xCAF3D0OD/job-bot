@@ -899,6 +899,47 @@
         }
       }
     },
+    "/api/offers/spontaneous": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Create Spontaneous",
+        "operationId": "createSpontaneousApplication",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpontaneousIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpontaneousOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/status": {
       "get": {
         "tags": [
@@ -6440,6 +6481,11 @@
             "type": "array",
             "title": "Contacts",
             "default": []
+          },
+          "spontaneous": {
+            "type": "boolean",
+            "title": "Spontaneous",
+            "default": false
           }
         },
         "type": "object",
@@ -11696,6 +11742,11 @@
             "type": "array",
             "title": "Doubts",
             "default": []
+          },
+          "spontaneous": {
+            "type": "boolean",
+            "title": "Spontaneous",
+            "default": false
           }
         },
         "type": "object",
@@ -13182,6 +13233,11 @@
             "title": "Doubts",
             "default": []
           },
+          "spontaneous": {
+            "type": "boolean",
+            "title": "Spontaneous",
+            "default": false
+          },
           "is_first": {
             "type": "boolean",
             "title": "Is First"
@@ -13587,6 +13643,60 @@
         ],
         "title": "SiteSuggestion",
         "description": "Site d'offres en télétravail proposé en un clic (docs/26 §5)."
+      },
+      "SpontaneousIn": {
+        "properties": {
+          "company": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Company"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 1500,
+            "minLength": 1,
+            "title": "Reason"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company",
+          "title",
+          "reason"
+        ],
+        "title": "SpontaneousIn"
+      },
+      "SpontaneousOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "SpontaneousOut"
       },
       "StatusResponse": {
         "properties": {
