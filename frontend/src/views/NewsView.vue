@@ -8,7 +8,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
 import PageHero from "../components/PageHero.vue";
-import Illustration from "../components/Illustration.vue";
+import IllustratedSide from "../components/IllustratedSide.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
 import { usePhone } from "../composables/usePhone";
@@ -350,11 +350,12 @@ onUnmounted(() => {
         :heights="phone ? ['14rem', '5rem', '5rem'] : ['22rem', '6rem', '6rem']"
       />
 
-      <div
+      <IllustratedSide
         v-else-if="!items.length"
         class="empty-state empty"
+        name="newsfeed"
+        phone="small"
       >
-        <Illustration name="newsfeed" />
         <p>
           <template v-if="page?.refreshing">
             Premier relevé en cours : les contenus arrivent dans quelques secondes.
@@ -369,7 +370,7 @@ onUnmounted(() => {
             </RouterLink>
           </template>
         </p>
-      </div>
+      </IllustratedSide>
       <div
         v-else
         :class="['news-modules', tab === 'videos' ? 'videos' : 'articles']"

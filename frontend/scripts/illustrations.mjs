@@ -16,11 +16,22 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const ILLUSTRATIONS = [
+  "certification",
   "chat-bot",
   "date-picker",
+  "done",
+  "handshake-deal",
+  "lock-screen-notifications",
+  "login",
+  "mailbox",
+  "message-sent",
   "mobile-inbox",
+  "my-resume",
   "newsfeed",
+  "online-connection",
   "page-eaten",
+  "profile",
+  "settings",
   "stepping-up",
 ];
 

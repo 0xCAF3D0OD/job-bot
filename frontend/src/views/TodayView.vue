@@ -11,6 +11,8 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import AppIcon from "../components/AppIcon.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
+import IllustratedSide from "../components/IllustratedSide.vue";
+import type { IllustrationName } from "../components/Illustration.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { formatMonth, localDate, plural, scoreLevel } from "../format";
@@ -107,6 +109,22 @@ const warn = computed<"orp" | "follow-up" | null>(() => {
 });
 
 const steps = computed(() => today.value?.checklist ?? []);
+// L'illustration de l'étape à faire, à gauche de la liste sur ordinateur (docs/60 §2.2).
+const STEP_ILLUSTRATIONS: Record<Today["checklist"][number]["key"], IllustrationName> = {
+  criteria: "settings",
+  profile: "my-resume",
+  identity: "profile",
+  orp_target: "stepping-up",
+  notifications: "lock-screen-notifications",
+  imap: "online-connection",
+};
+const JOURNEY_ILLUSTRATIONS: Record<Today["journey"][number]["key"], IllustrationName> = {
+  alerts: "mailbox",
+  triage: "mobile-inbox",
+  apply: "message-sent",
+  follow: "date-picker",
+  orp: "certification",
+};
 // L'étape à faire, mise en avant dans la liste (docs/59 §5).
 const nextStep = computed(() => steps.value.find((s) => !s.done) ?? null);
 const nextJourney = computed(() => today.value?.journey.find((s) => !s.done) ?? null);
@@ -521,31 +539,36 @@ useDataChanged(load);
             Masquer
           </button>
         </div>
-        <ol>
-          <li
-            v-for="step in today.journey"
-            :key="step.key"
-            :class="{ done: step.done, next: step === nextJourney }"
-            :data-test="`journey-${step.key}`"
-          >
-            <span
-              class="tick"
-              aria-hidden="true"
-            ><svg
-              v-if="step.done"
-              class="tick-svg"
-              viewBox="0 0 12 12"
-            ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
-            <span
-              v-if="step.done"
-              class="visually-hidden"
-            >Fait : </span>
-            <RouterLink :to="JOURNEY[step.key].to">
-              {{ JOURNEY[step.key].label }}
-            </RouterLink>
-            <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
-          </li>
-        </ol>
+        <component
+          :is="nextJourney ? IllustratedSide : 'div'"
+          v-bind="nextJourney ? { name: JOURNEY_ILLUSTRATIONS[nextJourney.key] } : {}"
+        >
+          <ol>
+            <li
+              v-for="step in today.journey"
+              :key="step.key"
+              :class="{ done: step.done, next: step === nextJourney }"
+              :data-test="`journey-${step.key}`"
+            >
+              <span
+                class="tick"
+                aria-hidden="true"
+              ><svg
+                v-if="step.done"
+                class="tick-svg"
+                viewBox="0 0 12 12"
+              ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
+              <span
+                v-if="step.done"
+                class="visually-hidden"
+              >Fait : </span>
+              <RouterLink :to="JOURNEY[step.key].to">
+                {{ JOURNEY[step.key].label }}
+              </RouterLink>
+              <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
+            </li>
+          </ol>
+        </component>
       </component>
       <component
         :is="DisclosureRow"
@@ -567,34 +590,39 @@ useDataChanged(load);
             Masquer
           </button>
         </div>
-        <ul>
-          <li
-            v-for="step in steps"
-            :key="step.key"
-            :class="{ done: step.done, next: step === nextStep }"
-            :data-test="`step-${step.key}`"
-          >
-            <span
-              class="tick"
-              aria-hidden="true"
-            ><svg
-              v-if="step.done"
-              class="tick-svg"
-              viewBox="0 0 12 12"
-            ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
-            <RouterLink
-              v-if="!step.done && STEPS[step.key].to"
-              :to="STEPS[step.key].to!"
+        <component
+          :is="nextStep ? IllustratedSide : 'div'"
+          v-bind="nextStep ? { name: STEP_ILLUSTRATIONS[nextStep.key] } : {}"
+        >
+          <ul>
+            <li
+              v-for="step in steps"
+              :key="step.key"
+              :class="{ done: step.done, next: step === nextStep }"
+              :data-test="`step-${step.key}`"
             >
-              {{ STEPS[step.key].label }}
-            </RouterLink>
-            <span v-else>{{ STEPS[step.key].label }}</span>
-            <span
-              v-if="!step.done && STEPS[step.key].hint"
-              class="hint"
-            >{{ STEPS[step.key].hint }}</span>
-          </li>
-        </ul>
+              <span
+                class="tick"
+                aria-hidden="true"
+              ><svg
+                v-if="step.done"
+                class="tick-svg"
+                viewBox="0 0 12 12"
+              ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
+              <RouterLink
+                v-if="!step.done && STEPS[step.key].to"
+                :to="STEPS[step.key].to!"
+              >
+                {{ STEPS[step.key].label }}
+              </RouterLink>
+              <span v-else>{{ STEPS[step.key].label }}</span>
+              <span
+                v-if="!step.done && STEPS[step.key].hint"
+                class="hint"
+              >{{ STEPS[step.key].hint }}</span>
+            </li>
+          </ul>
+        </component>
       </component>
     </div>
     <div

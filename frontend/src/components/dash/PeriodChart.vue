@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import type { components } from "../../api/schema";
 import { localDate, plural } from "../../format";
+import { firstTime } from "../../composables/useIntro";
 
 // « Par mois » du Bilan (docs/55 §2) : candidatures et réponses en barres doubles, mois par
 // mois (ou semaine par semaine pour un mois choisi) ; la valeur dans une bulle au survol,
@@ -30,6 +31,8 @@ const max = computed(() => Math.max(1, ...props.buckets.map((b) => b.application
 function height(n: number): string {
   return `${Math.max(n ? 6 : 2, (n / max.value) * 100)}%`;
 }
+// Les barres montent à la première ouverture (docs/60 §3).
+const intro = firstTime("period-chart");
 </script>
 
 <template>
@@ -45,7 +48,7 @@ function height(n: number): string {
       </p>
     </header>
     <ol
-      class="bar-chart period-bars"
+      :class="['bar-chart', 'period-bars', { intro }]"
       :style="{ gridTemplateColumns: `repeat(${buckets.length}, minmax(0, 1fr))` }"
     >
       <li

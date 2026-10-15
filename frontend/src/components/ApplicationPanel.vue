@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../applicationState";
@@ -12,9 +12,18 @@ import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 import CopyLabel from "./CopyLabel.vue";
+import EngagementMoment from "./EngagementMoment.vue";
 
 // Panneau d'une candidature (docs/46 §3) : Statut, Entretiens, Pour l'ORP, Documents, Contacts.
 const props = defineProps<{ application: Application; orpRow?: OrpRow | null }>();
+// Passée en Engagement pendant que le panneau est ouvert : le moment de fête (docs/60 §2.1).
+const celebrate = ref(false);
+watch(
+  () => [props.application.id, props.application.status] as const,
+  ([id, status], before) => {
+    celebrate.value = !!before && before[0] === id && before[1] !== "engagement" && status === "engagement";
+  },
+);
 const emit = defineEmits<{
   status: [application: Application, status: ApplicationStatus];
   edit: [application: Application];
@@ -113,6 +122,10 @@ const onStatus = (event: Event): void =>
       />
     </div>
 
+    <EngagementMoment
+      v-if="celebrate"
+      :company="application.company"
+    />
     <section
       class="panel-section"
       data-test="section-status"

@@ -184,7 +184,7 @@ describe("barre de candidature", () => {
                   : [],
       }),
     );
-    POST.mockResolvedValue({ data: { id: 5, company: "Acme SA" } });
+    POST.mockResolvedValue({ data: { id: 5, company: "Acme SA", orp_month: "2026-10" } });
     const letterTab = await mountView();
     // Trois onglets numérotés (docs/47) : lettre et CV faits, cochés ; plus de barre du haut.
     expect(letterTab.find("[data-test=tab-letter]").text()).toContain("✓");
@@ -220,7 +220,7 @@ describe("barre de candidature", () => {
     const [path, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 7, application_url: "https://acme.example/jobs/1" });
-    expect(wrapper.text()).toContain("Candidature chez Acme SA enregistrée");
+    expect(wrapper.find("[data-test=sent-moment]").text()).toContain("Candidature envoyée chez Acme SA.");
     // Une fois envoyée : revenir aux offres en un clic.
     expect(wrapper.find("[data-test=notice-offers]").attributes("href")).toBe("/candidatures/offres");
   });

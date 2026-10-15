@@ -11,9 +11,10 @@ import OfferBrief from "../components/OfferBrief.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
+import IllustratedSide from "../components/IllustratedSide.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { expiredText } from "../format";
+import { expiredText, ofMonth } from "../format";
 
 const route = useRoute();
 const offerId = Number(route.params.id);
@@ -43,7 +44,8 @@ const nextStep = computed<"letter" | "cv" | "apply">(() =>
 );
 const applying = ref<ApplicationFormValue | null>(null);
 const applyError = ref("");
-const applyNotice = ref("");
+// Le moment « candidature envoyée » (docs/60 §2.1) : où elle compte pour l'ORP.
+const sent = ref<{ company: string; month: string; count: number | null; target: number | null } | null>(null);
 
 async function openApplication(): Promise<void> {
   applyError.value = "";
@@ -64,7 +66,9 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
   }
   applying.value = null;
   useJobsMemory().sent(offerId);
-  applyNotice.value = `Candidature chez ${data.company} enregistrée, avec ta lettre et ton CV.`;
+  sent.value = { company: data.company, month: data.orp_month, count: null, target: null };
+  const orp = await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null);
+  if (orp?.data && sent.value) sent.value = { ...sent.value, count: orp.data.count, target: orp.data.target ?? null };
   const refreshed = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: offerId } } });
   if (refreshed.data) offer.value = refreshed.data;
 }
@@ -324,20 +328,7 @@ onMounted(() => void load());
           Voir le suivi
         </RouterLink>
       </div>
-      <p
-        v-if="applyNotice"
-        class="notice"
-        role="status"
-      >
-        {{ applyNotice }}
-        <RouterLink
-          to="/candidatures/offres"
-          class="link"
-          data-test="notice-offers"
-        >
-          Revenir aux offres
-        </RouterLink>
-      </p>
+
 
       <!-- ③ Postuler (docs/47 §2) : dans l'ordre où on le fait ; les contacts à côté. -->
       <div
@@ -346,7 +337,31 @@ onMounted(() => void load());
         data-test="apply-steps"
       >
         <div class="apply-steps">
-          <template v-if="offer.status !== 'applied'">
+          <IllustratedSide
+            v-if="sent"
+            name="message-sent"
+            phone="small"
+            class="moment"
+            data-test="sent-moment"
+          >
+            <h3>Candidature envoyée chez {{ sent.company }}.</h3>
+            <p v-if="sent.count !== null">
+              Comptée dans tes preuves ORP {{ ofMonth(sent.month) }} :
+              <strong>{{ sent.count }}{{ sent.target ? ` sur ${sent.target}` : "" }}</strong>.
+            </p>
+            <p class="moment-links">
+              <RouterLink :to="{ path: '/candidatures/suivi', query: { mois: sent.month } }">
+                Voir dans le Suivi
+              </RouterLink>
+              <RouterLink
+                to="/candidatures/offres"
+                data-test="notice-offers"
+              >
+                Retour aux offres
+              </RouterLink>
+            </p>
+          </IllustratedSide>
+          <template v-else-if="offer.status !== 'applied'">
             <!-- Numéros par compteur CSS : sur téléphone, « Postuler » est fixé en bas et sa
                  section disparaît, les étapes se renumérotent (docs/51 n° 4). -->
             <section class="panel-section apply-step apply-step-post">
@@ -391,6 +406,7 @@ onMounted(() => void load());
               </button>
             </section>
           </template>
+
           <p
             v-else
             class="hint"

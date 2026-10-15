@@ -11,7 +11,7 @@ import SidePanel from "../components/SidePanel.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
-import Illustration from "../components/Illustration.vue";
+import IllustratedSide from "../components/IllustratedSide.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
@@ -76,6 +76,14 @@ function dayHeader(index: number): string | null {
   if (previous && periodOf(previous.first_seen_at) === key) return null;
   return `${PERIOD_LABELS[key]} · ${plural(periodCounts.value.get(key) ?? 0, "offre", "offres")}`;
 }
+// Une liste à plat (titres de jour et cartes) pour que chaque carte s'anime seule (docs/60 §3).
+const rows = computed(() =>
+  items.value.flatMap((offer, index) => {
+    const day = dayHeader(index);
+    const card = { key: `offer-${offer.id}`, day: null as string | null, offer };
+    return day ? [{ key: `day-${offer.id}`, day, offer: null }, card] : [card];
+  }),
+);
 const route = useRoute();
 const router = useRouter();
 const assistant = useAssistant();
@@ -151,8 +159,26 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
     notice.value = "Changement refusé.";
     return;
   }
-  // L'offre quitte la vue actuelle si elle n'y a plus sa place : on recharge.
+  // L'offre quitte la vue actuelle si elle n'y a plus sa place : on recharge ; sa carte
+  // s'efface et les suivantes remontent (docs/60 §3), avec « Annuler » dans le message.
   if (status !== "preparing") selectedId.value = null;
+  const previous = offer.status;
+  undo.value =
+    status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")
+      ? { id: offer.id, status: previous }
+      : null;
+  notice.value = undo.value ? `Passée en ${STATUS_TEXT[status]}.` : "";
+  await load();
+}
+
+const STATUS_TEXT: Record<string, string> = { later: "Plus tard", ignored: "Ignorées", to_review: "À examiner" };
+const undo = ref<{ id: number; status: "to_review" | "later" | "ignored" } | null>(null);
+async function undoStatus(): Promise<void> {
+  const last = undo.value;
+  if (!last) return;
+  undo.value = null;
+  notice.value = "";
+  await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: last.id } }, body: { status: last.status } });
   await load();
 }
 
@@ -328,6 +354,15 @@ onUnmounted(() => {
           role="status"
         >
           {{ notice }}
+          <button
+            v-if="undo"
+            type="button"
+            class="link"
+            data-test="undo-status"
+            @click="undoStatus"
+          >
+            Annuler
+          </button>
         </p>
         <!-- « Candidature spontanée » sur la ligne du nombre d'offres (docs/43 n° 11). -->
         <div class="list-count-row">
@@ -349,12 +384,13 @@ onUnmounted(() => {
         >
           Impossible de charger les offres.
         </p>
-        <div
+        <IllustratedSide
           v-else-if="!loading && items.length === 0"
           class="empty-state empty"
           data-test="offers-empty"
+          name="mobile-inbox"
+          phone="small"
         >
-          <Illustration name="mobile-inbox" />
           <p>
             Aucune offre ne correspond.
             <button
@@ -366,30 +402,32 @@ onUnmounted(() => {
               Effacer les filtres
             </button>
           </p>
-        </div>
-        <ul class="offer-cards">
-          <template
-            v-for="(offer, index) in items"
-            :key="offer.id"
+        </IllustratedSide>
+        <TransitionGroup
+          tag="ul"
+          name="card"
+          class="offer-cards"
+        >
+          <li
+            v-for="row in rows"
+            :key="row.key"
+            :class="{ 'offer-day': row.day }"
+            :data-test="row.day ? 'offer-day' : undefined"
           >
-            <li
-              v-if="dayHeader(index)"
-              class="offer-day"
-              data-test="offer-day"
+            <h2
+              v-if="row.day"
+              class="offer-day-title"
             >
-              <h2 class="offer-day-title">
-                {{ dayHeader(index) }}
-              </h2>
-            </li>
-            <li>
-              <OfferCard
-                :offer="offer"
-                :selected="offer.id === selectedId"
-                @select="selectedId = offer.id"
-              />
-            </li>
-          </template>
-        </ul>
+              {{ row.day }}
+            </h2>
+            <OfferCard
+              v-else-if="row.offer"
+              :offer="row.offer"
+              :selected="row.offer.id === selectedId"
+              @select="selectedId = row.offer.id"
+            />
+          </li>
+        </TransitionGroup>
         <button
           v-if="items.length < total"
           type="button"
