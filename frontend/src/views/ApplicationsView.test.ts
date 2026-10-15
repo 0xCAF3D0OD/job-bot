@@ -331,7 +331,7 @@ describe("Suivi en calendrier (docs/22)", () => {
     const panel = wrapper.find("[data-test=application-panel]");
     expect(panel.find("[data-test=card-missing]").text()).toContain("adresse de l'entreprise");
     expect(panel.find("[data-test=card-job-room-fields]").text()).toContain("Par voie électronique");
-    const titles = panel.findAll(".offer-section h3").map((h) => h.text());
+    const titles = panel.findAll(".panel-section h3").map((h) => h.text());
     expect(titles).toEqual(["Statut", "Entretiens", "Pour l'ORP", "Contacts"]);
     await panel.find("[data-test=panel-status]").setValue("entretien");
     await flushPromises();

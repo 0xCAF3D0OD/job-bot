@@ -316,7 +316,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         class="calm-panel"
         data-test="document-text"
       >
-        <p class="offer-section-links">
+        <p class="panel-section-links">
           <a
             v-if="openDocument"
             class="link"

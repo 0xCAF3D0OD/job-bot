@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, ref } from "vue";
 
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../applicationState";
@@ -8,6 +8,7 @@ import { applicationStatusLabel } from "../format";
 import { contactName, toFollowUp } from "../contactLabels";
 import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpPanel from "./FollowUpPanel.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 
@@ -70,23 +71,17 @@ async function copy(value: string, key: string): Promise<void> {
   }
 }
 
-// « ⋯ » : Modifier, Supprimer, Demander à l'assistant.
-const menuOpen = ref(false);
-const menuRoot = ref<HTMLElement | null>(null);
+// « ⋯ » (docs/50 §1) : Modifier, Demander à l'assistant, Supprimer.
 const assistant = useAssistant();
 function askAssistant(): void {
   const a = props.application;
   assistant.askAbout({ applicationId: a.id, label: `candidature ${a.job_title} chez ${a.company}` });
 }
-function act(action: () => void): void {
-  menuOpen.value = false;
-  action();
-}
-function onDocumentClick(event: MouseEvent): void {
-  if (menuOpen.value && menuRoot.value && !menuRoot.value.contains(event.target as Node)) menuOpen.value = false;
-}
-onMounted(() => document.addEventListener("click", onDocumentClick));
-onUnmounted(() => document.removeEventListener("click", onDocumentClick));
+const menuItems = computed<MoreMenuItem[]>(() => [
+  { label: "Modifier", test: "panel-edit", run: () => emit("edit", props.application) },
+  ...(assistant.available.value ? [{ label: "Demander à l'assistant", test: "panel-ask", run: askAssistant }] : []),
+  { label: "Supprimer", test: "panel-remove", danger: true, run: () => emit("remove", props.application) },
+]);
 
 const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric" });
 const onStatus = (event: Event): void =>
@@ -110,62 +105,15 @@ const onStatus = (event: Event): void =>
           class="badge spontaneous-badge"
         >Spontanée</span>
       </p>
-      <div
-        ref="menuRoot"
-        class="more-menu"
-      >
-        <button
-          type="button"
-          class="more-button"
-          aria-label="Plus d'actions"
-          :aria-expanded="menuOpen"
-          data-test="panel-more"
-          @click="menuOpen = !menuOpen"
-        >
-          ⋯
-        </button>
-        <ul
-          v-if="menuOpen"
-          class="menu"
-          role="menu"
-        >
-          <li>
-            <button
-              type="button"
-              role="menuitem"
-              data-test="panel-edit"
-              @click="act(() => emit('edit', application))"
-            >
-              Modifier
-            </button>
-          </li>
-          <li v-if="assistant.available.value">
-            <button
-              type="button"
-              role="menuitem"
-              data-test="panel-ask"
-              @click="act(askAssistant)"
-            >
-              Demander à l'assistant
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              role="menuitem"
-              class="danger"
-              data-test="panel-remove"
-              @click="act(() => emit('remove', application))"
-            >
-              Supprimer
-            </button>
-          </li>
-        </ul>
-      </div>
+      <MoreMenu
+        :items="menuItems"
+        label="Actions sur la candidature"
+        test-id="panel-more"
+      />
     </div>
 
     <section
-      class="offer-section"
+      class="panel-section"
       data-test="section-status"
     >
       <h3>Statut</h3>
@@ -230,7 +178,7 @@ const onStatus = (event: Event): void =>
 
     <section
       v-if="hasInterviews"
-      class="offer-section"
+      class="panel-section"
       data-test="section-interviews"
     >
       <h3>Entretiens</h3>
@@ -247,7 +195,7 @@ const onStatus = (event: Event): void =>
       >
         {{ summary }}
       </p>
-      <p class="offer-section-links">
+      <p class="panel-section-links">
         <button
           v-if="upcoming"
           type="button"
@@ -296,7 +244,7 @@ const onStatus = (event: Event): void =>
 
     <section
       v-if="orpRow || remoteAbroad"
-      class="offer-section"
+      class="panel-section"
       data-test="section-orp"
     >
       <h3>Pour l'ORP</h3>
@@ -355,11 +303,11 @@ const onStatus = (event: Event): void =>
 
     <section
       v-if="hasDocuments"
-      class="offer-section"
+      class="panel-section"
       data-test="section-documents"
     >
       <h3>Documents</h3>
-      <p class="offer-section-links">
+      <p class="panel-section-links">
         <a
           v-if="application.letter_draft_id"
           class="link"
@@ -383,7 +331,7 @@ const onStatus = (event: Event): void =>
     </section>
 
     <section
-      class="offer-section"
+      class="panel-section"
       data-test="section-contacts"
     >
       <h3>Contacts</h3>

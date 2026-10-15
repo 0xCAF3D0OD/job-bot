@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { expiredText, formatDate, rateText, remoteText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HelpTip from "./HelpTip.vue";
 import SidePanel from "./SidePanel.vue";
 import { CONTACTS_HELP } from "../contactLabels";
@@ -188,9 +189,7 @@ const ADDRESS_SOURCE: Record<string, string> = {
   manual: "saisie par toi",
 };
 
-// Menu « ⋯ » : les actions rares, hors de la vue principale (docs/12 §1).
-const menuOpen = ref(false);
-const menuRoot = ref<HTMLElement | null>(null);
+// Menu « ⋯ » : les actions rares, hors de la vue principale (docs/12 §1, docs/45, docs/50 §1).
 const assistant = useAssistant();
 function askAssistant(): void {
   const o = props.offer;
@@ -207,16 +206,29 @@ const scoreNote = computed(() => {
     .filter(Boolean)
     .join(" ");
 });
-const showMenu = computed(() => props.offer.status !== "applied" || assistant.available.value);
-function act(action: () => void): void {
-  menuOpen.value = false;
-  action();
-}
-function onDocumentClick(event: MouseEvent): void {
-  if (menuOpen.value && menuRoot.value && !menuRoot.value.contains(event.target as Node)) menuOpen.value = false;
-}
-onMounted(() => document.addEventListener("click", onDocumentClick));
-onUnmounted(() => document.removeEventListener("click", onDocumentClick));
+const menuItems = computed<MoreMenuItem[]>(() => {
+  const o = props.offer;
+  const items: MoreMenuItem[] = [];
+  if (o.status !== "applied") {
+    items.push({ label: "J'ai postulé", test: "mark-applied", run: () => emit("applied") });
+    if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
+      items.push({ label: "Remettre à examiner", test: "back-to-review", run: () => emit("status", "to_review") });
+    } else {
+      items.push({ label: "Plus tard", test: "later", run: () => emit("status", "later") });
+      items.push({ label: "Ignorer", test: "ignore", run: () => emit("status", "ignored") });
+    }
+    items.push(
+      o.expired_at
+        ? { label: "Pas expirée", test: "not-expired", run: () => emit("expiry", false) }
+        : { label: "Signaler comme expirée", test: "flag-expired", run: () => emit("expiry", true) },
+    );
+    if (!employerKnown.value && !o.employer_url && o.employer_status !== "agency") {
+      items.push({ label: "Chercher chez l'employeur", test: "menu-find-employer", run: () => void findEmployer() });
+    }
+  }
+  if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", run: askAssistant });
+  return items;
+});
 
 const editingAddress = ref(false);
 const addressDraft = ref("");
@@ -232,7 +244,6 @@ watch(
   () => props.offer.id,
   () => {
     editingAddress.value = false;
-    menuOpen.value = false;
     proposals.value = [];
     registryMessage.value = "";
   },
@@ -251,113 +262,11 @@ watch(
         large
       />
       <div class="detail-top-actions">
-        <!-- Tout sauf les deux actions principales, dans « ⋯ » (docs/45). -->
-        <div
-          v-if="showMenu"
-          ref="menuRoot"
-          class="more-menu"
-        >
-          <button
-            type="button"
-            class="more-button"
-            aria-label="Plus d'actions"
-            :aria-expanded="menuOpen"
-            data-test="more"
-            @click="menuOpen = !menuOpen"
-          >
-            ⋯
-          </button>
-          <ul
-            v-if="menuOpen"
-            class="menu"
-            role="menu"
-          >
-            <li v-if="offer.status !== 'applied'">
-              <button
-                type="button"
-                role="menuitem"
-                data-test="mark-applied"
-                @click="act(() => emit('applied'))"
-              >
-                J'ai postulé
-              </button>
-            </li>
-            <template v-if="offer.status !== 'applied'">
-              <li v-if="offer.status === 'later' || offer.status === 'ignored' || offer.status === 'preparing'">
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-test="back-to-review"
-                  @click="act(() => emit('status', 'to_review'))"
-                >
-                  Remettre à examiner
-                </button>
-              </li>
-              <template v-else>
-                <li>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    data-test="later"
-                    @click="act(() => emit('status', 'later'))"
-                  >
-                    Plus tard
-                  </button>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    data-test="ignore"
-                    @click="act(() => emit('status', 'ignored'))"
-                  >
-                    Ignorer
-                  </button>
-                </li>
-              </template>
-              <li>
-                <button
-                  v-if="offer.expired_at"
-                  type="button"
-                  role="menuitem"
-                  data-test="not-expired"
-                  @click="act(() => emit('expiry', false))"
-                >
-                  Pas expirée
-                </button>
-                <button
-                  v-else
-                  type="button"
-                  role="menuitem"
-                  data-test="flag-expired"
-                  @click="act(() => emit('expiry', true))"
-                >
-                  Signaler comme expirée
-                </button>
-              </li>
-              <li v-if="!employerKnown && !offer.employer_url && offer.employer_status !== 'agency'">
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-test="menu-find-employer"
-                  @click="act(findEmployer)"
-                >
-                  Chercher chez l'employeur
-                </button>
-              </li>
-            </template>
-            <li v-if="assistant.available.value">
-              <button
-                type="button"
-                role="menuitem"
-                data-test="ask-assistant"
-                @click="act(askAssistant)"
-              >
-                Demander à l'assistant
-              </button>
-            </li>
-          </ul>
-        </div>
+        <!-- Tout sauf les deux actions principales, dans « ⋯ » (docs/45, docs/50 §1). -->
+        <MoreMenu
+          v-if="menuItems.length"
+          :items="menuItems"
+        />
         <button
           type="button"
           class="close"
@@ -427,7 +336,7 @@ watch(
 
     <section
       v-if="offer.summary_role || offer.score_error"
-      class="offer-section"
+      class="panel-section"
       data-test="section-for-you"
     >
       <h3>Pour toi</h3>
@@ -501,7 +410,7 @@ watch(
     </section>
 
     <section
-      class="offer-section"
+      class="panel-section"
       data-test="section-facts"
     >
       <h3>À savoir</h3>
@@ -527,10 +436,10 @@ watch(
     </section>
 
     <section
-      class="offer-section"
+      class="panel-section"
       data-test="company-section"
     >
-      <div class="offer-section-head">
+      <div class="panel-section-head">
         <h3>Entreprise</h3>
         <HelpTip
           label="Aide : entreprise"
@@ -669,7 +578,7 @@ watch(
       </p>
       <p
         v-if="offer.company"
-        class="offer-section-links"
+        class="panel-section-links"
       >
         <button
           type="button"
@@ -697,7 +606,7 @@ watch(
     </SidePanel>
 
     <section
-      class="offer-section"
+      class="panel-section"
       data-test="section-ad"
     >
       <h3>Annonce</h3>
@@ -734,7 +643,7 @@ watch(
       </p>
       <p
         v-if="otherLinks.length"
-        class="offer-section-links"
+        class="panel-section-links"
       >
         <a
           v-for="link in otherLinks"
