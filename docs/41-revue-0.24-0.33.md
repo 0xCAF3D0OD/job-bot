@@ -1,6 +1,6 @@
 # 41 — Revue des versions 0.24 à 0.33 (version 0.33.1)
 
-> Statut : **validé** le 2026-10-15. Livré : PR a.
+> Statut : **validé** le 2026-10-15. Livré : PR a, PR b.
 > Dix versions livrées en peu de temps (contacts, allègement, téléphone, actualités, formations, relances, candidatures spontanées, agenda). Revue en lecture seule du serveur, de l'interface, des tests et de la documentation, le 2026-10-15. Chaque point retenu a été relu dans le code ; les plus visibles ont été vérifiés une seconde fois.
 
 **Rien de grave côté sécurité** : pas de contournement de la connexion, jeton d'agenda bien protégé (empreinte seule, révocable), aucune injection, et les promesses de confidentialité tiennent (ni nom ni coordonnées envoyés à l'IA ; ni adresse ni contact dans l'agenda).
@@ -66,3 +66,12 @@ Sur ce qui protège vraiment : la **ligne ORP** d'une candidature spontanée (co
 - **Contacts** : « Retirer » demande confirmation ; un échec de chargement, d'ajout ou de retrait s'affiche.
 - **Migration 0044** : spontanées expirées « par âge » remises à zéro ; relances sans date reprennent la date d'envoi.
 - **Vérifié** dans le navigateur (téléphone et ordinateur) : panneau « Relancer » au bon style, Échap bulle puis panneau, focus rendu, cloche qui reste ouverte au toucher dans la carte, bulle de Réglages entière. Modèle simple affiché sans IA.
+
+## Écarts avec la PR b
+
+- **Tests ajoutés** : ligne ORP d'une candidature spontanée complète ; plafond de l'IA atteint (relance → modèle gratuit, contact → refus, aucun appel) ; agenda sans le mois ORP déjà remis ; « Sans réponse » proposé 14 jours après la relance, pas 13 (liste et carte).
+- **Ordre des tests** : ton identité saisie par les tests des relances et des contacts est effacée après eux ; le catalogue de formations est rechargé avant chaque test (un test qui vide la table ne laisse plus les suivants sans catalogue). Le test du plafond rend au réglage sa valeur.
+- **Exploitation** : version 0.33.1 ; route publique de l'agenda (seule à exposer pour Google et Outlook), jetons `jba_…` et table `calendar_tokens` ; rappels de contact (7 j) et de financement (14 j) ; appels à l'IA complétés ; table `contacts` dans les données personnelles. Aucune nouvelle variable d'environnement depuis 0.11.
+- **README** : « Version en cours » pointe ce document ; Job-Room dit tel qu'il est (pas d'analyseur dédié, site en pause), sans contradiction avec l'introduction.
+- **Nom** : jobA1 dans les docs 25 et 33 là où tu le vois (icône, extension) et dans l'exemple d'adresse de l'extension. L'identifiant Firefox de l'extension (`job-bot@jobbot.app`) **ne change pas** : le changer ferait d'elle une autre extension à réinstaller. Les anciens documents de cadrage gardent « job-bot » (historique), comme le libellé Gmail `job-bot`.
+- **Doc 14** : l'ancien brouillon « à valider » (`14-offres-mise-en-page.md`) est supprimé ; `14-offres-logos.md` reste la version validée.

@@ -2,10 +2,10 @@
 
 > **Less searching. More living.** (anciennement job-bot : le dépôt, le paquet `jobbot`, la commande `jobbot` et les variables `JOBBOT_*` gardent leur nom technique.)
 
-Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup, Indeed, Job-Room), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
+Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/03-collecte-gmail.md](docs/03-collecte-gmail.md) (0.2.0)
+- Version en cours : [docs/41-revue-0.24-0.33.md](docs/41-revue-0.24-0.33.md) (0.33.1)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
 ## Versions
@@ -13,7 +13,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | Version | Contenu | État |
 |---|---|---|
 | 0.1.0 | Squelette : API, worker, base, page État | livrée |
-| 0.2.0 | Collecte Gmail, journal des recherches, dédoublonnage | collecte, analyseurs Indeed et jobup livrés ; Job-Room à venir |
+| 0.2.0 | Collecte Gmail, journal des recherches, dédoublonnage | livrée (analyseurs jobup et Indeed) ; Job-Room : pas d'analyseur dédié, présent en pause dans les sites (docs/11) |
 | 0.3.0 | Documents, blocs de profil, prérequis et réglages, filtre | livrée |
 | 0.3.1 | Lien de candidature et texte complet des offres jobup | livrée |
 | 0.4.0 | Page Offres avec filtres, note et résumé IA, notifications | livrée |
@@ -52,7 +52,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.31.0 | Relancer une candidature : message rédigé (ou modèle), messagerie, date de relance, « Sans réponse » après 14 jours | livrée |
 | 0.32.0 | Candidatures spontanées : sans annonce, préparées comme une offre (lettre adaptée, CV, adresse au registre), ligne ORP habituelle | livrée |
 | 0.33.0 | Tes dates dans ton agenda : fichier par entretien, abonnement (entretiens, suites, remise ORP, relances) | livrée |
-| 0.33.1 | Revue 0.24 à 0.33 : corrections (spontanée expirée, Échap, cloche, relances, agenda, IA indisponible…) | livrée (a) |
+| 0.33.1 | Revue 0.24 à 0.33 : corrections (spontanée expirée, Échap, cloche, relances, agenda, IA indisponible…) | livrée |
 
 ## Lancer en local
 

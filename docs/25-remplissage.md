@@ -10,7 +10,7 @@
 
 ## 2. Le principe
 
-- **job-bot remplit, tu vérifies, tu envoies.** La plateforme n'envoie **jamais** une candidature à ta place : le bouton « Envoyer » du site reste le tien.
+- **jobA1 remplit, tu vérifies, tu envoies.** La plateforme n'envoie **jamais** une candidature à ta place : le bouton « Envoyer » du site reste le tien.
 - **Pas d'envoi en masse** : une candidature à la fois, celle que tu as préparée.
 - Rien ne se fait sans ton clic, ni sur un site que tu n'as pas ouvert toi-même.
 
@@ -21,7 +21,7 @@ Un site d'employeur ne laisse pas une autre page remplir ses champs. Il faut don
 ### 3.1 Sur le formulaire
 
 1. Tu ouvres le formulaire depuis « Postuler » (ou directement sur le site).
-2. Tu cliques sur l'icône **job-bot** dans la barre du navigateur.
+2. Tu cliques sur l'icône **jobA1** dans la barre du navigateur.
 3. Un petit panneau s'ouvre :
    - **la candidature reconnue** (« SRE chez Exemple SA », d'après l'adresse de la page ; sinon, tu choisis parmi tes offres en préparation) ;
    - un bouton **« Remplir le formulaire »**.

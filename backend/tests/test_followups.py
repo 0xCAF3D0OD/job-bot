@@ -29,6 +29,8 @@ async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient
         yield client
     async with runtime.engine.begin() as conn:
         await conn.execute(text(TRUNCATE))
+        # Ton identité saisie par le test ne reste pas pour les suivants.
+        await conn.execute(text("DELETE FROM settings WHERE key LIKE 'identity_%'"))
 
 
 async def add(runtime: Runtime, description: str) -> int:
