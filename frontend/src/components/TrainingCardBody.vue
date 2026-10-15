@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 
 import { api, type Training } from "../api/client";
 import { highlight, languageLabel } from "../newsLabels";
+import AppIcon from "./AppIcon.vue";
 import HelpTip from "./HelpTip.vue";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 
-// Contenu d'une formation (docs/16 §5) : la carte du catalogue sur ordinateur, la fiche en
-// plein écran sur téléphone (docs/34 §2).
+// Contenu d'une formation (docs/16 §5). Deux présentations (docs/44) : la carte du catalogue,
+// calme (description sur 3 lignes, une ligne en bas : « Suivre », ou l'état et « Gérer ») ;
+// le panneau latéral, avec tout le suivi en trois sections (Mon suivi, Financement ORP,
+// Mon profil).
 export type TrainingStatus = "interested" | "in_progress" | "done";
 export type MarkExtra = { progress?: string | null; done_at?: string | null; certified?: boolean | null };
 type Status = TrainingStatus;
 
-const props = defineProps<{ training: Training }>();
+const props = withDefaults(defineProps<{ training: Training; variant?: "card" | "panel" }>(), { variant: "card" });
 const emit = defineEmits<{
+  // Carte : « Suivre » ou « Gérer » ouvre le panneau latéral.
+  manage: [];
   mark: [status: Status | null, extra?: MarkExtra];
   review: [keep: boolean];
   // Bloc de profil créé (docs/37 §1) : le suivi renvoyé, avec le lien vers le bloc.
@@ -142,6 +147,15 @@ async function save(): Promise<void> {
 }
 
 const inputValue = (event: Event): string => (event.target as HTMLInputElement).value;
+
+// La pastille d'état de la carte : « En cours · module 6/12 », « Terminée · certificat ».
+const stateText = computed(() => {
+  const mark = props.training.mark;
+  if (!mark) return "";
+  const detail =
+    mark.status === "in_progress" ? mark.progress : mark.status === "done" && mark.certified ? "certificat" : null;
+  return detail ? `${STATUSES[mark.status]} · ${detail}` : (STATUSES[mark.status] ?? "");
+});
 </script>
 
 <template>
@@ -158,7 +172,17 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
       data-test="unverified"
     >à vérifier</span>
   </div>
+  <!-- Panneau : le titre est déjà en tête ; ici, le lien vers la page officielle. -->
   <a
+    v-if="variant === 'panel'"
+    class="link"
+    :href="training.url"
+    target="_blank"
+    rel="noopener noreferrer"
+    data-test="official-page"
+  >Page officielle <AppIcon name="chevron" /></a>
+  <a
+    v-else
     class="training-title"
     :href="training.url"
     target="_blank"
@@ -178,12 +202,12 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
   </p>
   <p
     v-if="training.description"
-    class="training-text"
+    :class="['training-text', { clamped: variant === 'card' }]"
   >
     {{ training.description }}
   </p>
   <p
-    v-if="training.prep"
+    v-if="training.prep && variant === 'panel'"
     class="training-text"
   >
     <strong>Préparation conseillée :</strong> {{ training.prep }}
@@ -209,227 +233,276 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
       Écarter
     </button>
   </div>
-  <div class="training-actions">
-    <div
-      class="segmented"
-      role="radiogroup"
-      aria-label="Suivi"
-    >
-      <button
-        v-for="(label, key) in STATUSES"
-        :key="key"
-        type="button"
-        role="radio"
-        :aria-checked="training.mark?.status === key"
-        :data-test="`mark-${key}`"
-        @click="emit('mark', training.mark?.status === key ? null : (key as Status))"
-      >
-        {{ label }}
-      </button>
-    </div>
-  </div>
-  <label
-    v-if="training.mark?.status === 'in_progress'"
-    class="training-field"
-  >Progression
-    <input
-      type="text"
-      maxlength="80"
-      placeholder="module 4/12"
-      :value="training.mark.progress ?? ''"
-      data-test="progress"
-      @change="emit('mark', 'in_progress', { progress: inputValue($event) })"
-    >
-  </label>
   <div
-    v-if="training.mark?.status === 'done'"
-    class="training-field"
+    v-if="variant === 'card'"
+    class="training-foot"
+    data-test="training-foot"
   >
-    <label>Terminée le
-      <input
-        type="date"
-        :value="training.mark.done_at ?? ''"
-        @change="emit('mark', 'done', { done_at: inputValue($event) || null })"
-      >
-    </label>
-    <label class="check">
-      <input
-        type="checkbox"
-        :checked="training.mark.certified ?? false"
-        data-test="certified"
-        @change="emit('mark', 'done', { certified: !(training.mark.certified ?? false) })"
-      > certificat obtenu
-    </label>
-  </div>
-  <div
-    v-if="training.price === 'paid' && training.mark"
-    class="training-funding"
-    data-test="training-funding"
-  >
-    <template v-if="!training.mark.funding_status">
-      <button
-        v-if="!letter"
-        type="button"
-        class="secondary small"
-        :disabled="preparing"
-        data-test="prepare-funding"
-        @click="prepareRequest"
-      >
-        {{ preparing ? "Préparation…" : "Préparer la demande à l'ORP" }}
-      </button>
-      <template v-else>
-        <textarea
-          v-model="letter"
-          rows="10"
-          aria-label="Demande de financement à ton conseiller ORP"
-          data-test="funding-letter"
-        />
-        <div class="training-actions">
-          <button
-            type="button"
-            class="link"
-            data-test="funding-copy"
-            @click="copyLetter"
-          >
-            {{ copied ? "Copié" : "Copier" }}
-          </button>
-          <button
-            type="button"
-            class="secondary small"
-            data-test="funding-requested"
-            @click="setFunding('requested')"
-          >
-            Marquer comme demandée
-          </button>
-          <HelpTip
-            label="Aide : demande de financement"
-            text="Rien n'est envoyé : copie le texte dans un e-mail ou dans Job-Room. Complète ce qui est entre crochets. Un rappel arrive après 14 jours sans réponse."
-          />
-        </div>
-      </template>
-    </template>
-    <div
-      v-else
-      class="training-actions"
+    <button
+      v-if="!training.mark"
+      type="button"
+      class="secondary small"
+      data-test="follow"
+      @click="emit('manage')"
     >
+      Suivre
+    </button>
+    <template v-else>
       <span
-        v-if="training.mark.funding_status === 'requested' && training.mark.funding_requested_at"
-        class="muted"
-      >Demandée le {{ day(training.mark.funding_requested_at) }}</span>
-      <template v-if="training.mark.funding_status === 'requested'">
-        <button
-          type="button"
-          class="secondary small"
-          data-test="funding-accepted"
-          @click="setFunding('accepted')"
-        >
-          Acceptée
-        </button>
-        <button
-          type="button"
-          class="secondary small"
-          data-test="funding-refused"
-          @click="setFunding('refused')"
-        >
-          Refusée
-        </button>
-      </template>
+        class="training-state"
+        data-test="training-state"
+      >{{ stateText }}</span>
       <button
         type="button"
         class="link"
-        data-test="funding-reset"
-        @click="setFunding(null)"
+        data-test="manage"
+        @click="emit('manage')"
       >
-        {{ training.mark.funding_status === "requested" ? "Retirer la demande" : "Modifier" }}
+        Gérer <AppIcon name="chevron" />
       </button>
-    </div>
-    <p
-      v-if="fundingError"
-      class="notice error"
-      role="alert"
-    >
-      {{ fundingError }}
-    </p>
+    </template>
   </div>
-  <div
-    v-if="training.mark?.status === 'done'"
-    class="training-profile"
-    data-test="training-profile"
-  >
-    <RouterLink
-      v-if="training.mark.chunk_id"
-      to="/profil?onglet=parcours"
-      class="link"
-      data-test="in-profile"
+  <template v-else>
+    <section
+      class="training-panel-section"
+      data-test="section-follow"
     >
-      Dans ton profil
-    </RouterLink>
-    <button
-      v-else-if="!drafting"
-      type="button"
-      class="secondary small"
-      data-test="add-to-profile"
-      @click="startDraft"
-    >
-      Ajouter à mon profil
-    </button>
-    <form
-      v-else
-      class="training-block-form"
-      data-test="block-form"
-      @submit.prevent="save"
-    >
-      <label>Titre du bloc
-        <input
-          v-model="block.title"
-          maxlength="200"
-          required
-          data-test="block-title"
-        >
-      </label>
-      <label>Texte
-        <textarea
-          v-model="block.content"
-          rows="4"
-          maxlength="20000"
-          required
-          data-test="block-content"
-        />
-      </label>
-      <label>Mots-clés (séparés par des virgules)
-        <input
-          v-model="block.tags"
-          data-test="block-tags"
-        >
-      </label>
-      <p
-        v-if="error"
-        class="notice error"
-        role="alert"
-      >
-        {{ error }}
-      </p>
+      <h3>Mon suivi</h3>
       <div class="training-actions">
-        <button
-          type="submit"
-          class="secondary small"
-          :disabled="saving"
-          data-test="block-save"
+        <div
+          class="segmented"
+          role="radiogroup"
+          aria-label="Suivi"
         >
-          Enregistrer dans mon profil
-        </button>
-        <button
-          type="button"
-          class="link"
-          @click="drafting = false"
-        >
-          Annuler
-        </button>
-        <HelpTip
-          label="Aide : bloc de profil"
-          text="Le bloc rejoint Mon parcours et sert aux lettres, aux CV et à la note des offres. Les notes existantes ne sont refaites qu'avec « Renoter » (Réglages › IA)."
-        />
+          <button
+            v-for="(label, key) in STATUSES"
+            :key="key"
+            type="button"
+            role="radio"
+            :aria-checked="training.mark?.status === key"
+            :data-test="`mark-${key}`"
+            @click="emit('mark', training.mark?.status === key ? null : (key as Status))"
+          >
+            {{ label }}
+          </button>
+        </div>
       </div>
-    </form>
-  </div>
+      <label
+        v-if="training.mark?.status === 'in_progress'"
+        class="training-field"
+      >Progression
+        <input
+          type="text"
+          maxlength="80"
+          placeholder="module 4/12"
+          :value="training.mark.progress ?? ''"
+          data-test="progress"
+          @change="emit('mark', 'in_progress', { progress: inputValue($event) })"
+        >
+      </label>
+      <div
+        v-if="training.mark?.status === 'done'"
+        class="training-field"
+      >
+        <label>Terminée le
+          <input
+            type="date"
+            :value="training.mark.done_at ?? ''"
+            @change="emit('mark', 'done', { done_at: inputValue($event) || null })"
+          >
+        </label>
+        <label class="check">
+          <input
+            type="checkbox"
+            :checked="training.mark.certified ?? false"
+            data-test="certified"
+            @change="emit('mark', 'done', { certified: !(training.mark.certified ?? false) })"
+          > certificat obtenu
+        </label>
+      </div>
+    </section>
+    <section
+      v-if="training.price === 'paid' && training.mark"
+      class="training-panel-section"
+      data-test="section-funding"
+    >
+      <h3>Financement ORP</h3>
+      <div
+        class="training-funding"
+        data-test="training-funding"
+      >
+        <template v-if="!training.mark.funding_status">
+          <button
+            v-if="!letter"
+            type="button"
+            class="secondary small"
+            :disabled="preparing"
+            data-test="prepare-funding"
+            @click="prepareRequest"
+          >
+            {{ preparing ? "Préparation…" : "Préparer la demande à l'ORP" }}
+          </button>
+          <template v-else>
+            <textarea
+              v-model="letter"
+              rows="10"
+              aria-label="Demande de financement à ton conseiller ORP"
+              data-test="funding-letter"
+            />
+            <div class="training-actions">
+              <button
+                type="button"
+                class="link"
+                data-test="funding-copy"
+                @click="copyLetter"
+              >
+                {{ copied ? "Copié" : "Copier" }}
+              </button>
+              <button
+                type="button"
+                class="secondary small"
+                data-test="funding-requested"
+                @click="setFunding('requested')"
+              >
+                Marquer comme demandée
+              </button>
+              <HelpTip
+                label="Aide : demande de financement"
+                text="Rien n'est envoyé : copie le texte dans un e-mail ou dans Job-Room. Complète ce qui est entre crochets. Un rappel arrive après 14 jours sans réponse."
+              />
+            </div>
+          </template>
+        </template>
+        <div
+          v-else
+          class="training-actions"
+        >
+          <span
+            v-if="training.mark.funding_status === 'requested' && training.mark.funding_requested_at"
+            class="muted"
+          >Demandée le {{ day(training.mark.funding_requested_at) }}</span>
+          <template v-if="training.mark.funding_status === 'requested'">
+            <button
+              type="button"
+              class="secondary small"
+              data-test="funding-accepted"
+              @click="setFunding('accepted')"
+            >
+              Acceptée
+            </button>
+            <button
+              type="button"
+              class="secondary small"
+              data-test="funding-refused"
+              @click="setFunding('refused')"
+            >
+              Refusée
+            </button>
+          </template>
+          <button
+            type="button"
+            class="link"
+            data-test="funding-reset"
+            @click="setFunding(null)"
+          >
+            {{ training.mark.funding_status === "requested" ? "Retirer la demande" : "Modifier" }}
+          </button>
+        </div>
+        <p
+          v-if="fundingError"
+          class="notice error"
+          role="alert"
+        >
+          {{ fundingError }}
+        </p>
+      </div>
+    </section>
+    <section
+      v-if="training.mark?.status === 'done'"
+      class="training-panel-section"
+      data-test="section-profile"
+    >
+      <h3>Mon profil</h3>
+      <div
+        class="training-profile"
+        data-test="training-profile"
+      >
+        <RouterLink
+          v-if="training.mark.chunk_id"
+          to="/profil?onglet=parcours"
+          class="link"
+          data-test="in-profile"
+        >
+          Dans ton profil
+        </RouterLink>
+        <button
+          v-else-if="!drafting"
+          type="button"
+          class="secondary small"
+          data-test="add-to-profile"
+          @click="startDraft"
+        >
+          Ajouter à mon profil
+        </button>
+        <form
+          v-else
+          class="training-block-form"
+          data-test="block-form"
+          @submit.prevent="save"
+        >
+          <label>Titre du bloc
+            <input
+              v-model="block.title"
+              maxlength="200"
+              required
+              data-test="block-title"
+            >
+          </label>
+          <label>Texte
+            <textarea
+              v-model="block.content"
+              rows="4"
+              maxlength="20000"
+              required
+              data-test="block-content"
+            />
+          </label>
+          <label>Mots-clés (séparés par des virgules)
+            <input
+              v-model="block.tags"
+              data-test="block-tags"
+            >
+          </label>
+          <p
+            v-if="error"
+            class="notice error"
+            role="alert"
+          >
+            {{ error }}
+          </p>
+          <div class="training-actions">
+            <button
+              type="submit"
+              class="secondary small"
+              :disabled="saving"
+              data-test="block-save"
+            >
+              Enregistrer dans mon profil
+            </button>
+            <button
+              type="button"
+              class="link"
+              @click="drafting = false"
+            >
+              Annuler
+            </button>
+            <HelpTip
+              label="Aide : bloc de profil"
+              text="Le bloc rejoint Mon parcours et sert aux lettres, aux CV et à la note des offres. Les notes existantes ne sont refaites qu'avec « Renoter » (Réglages › IA)."
+            />
+          </div>
+        </form>
+      </div>
+    </section>
+  </template>
 </template>

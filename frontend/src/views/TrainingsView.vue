@@ -34,15 +34,19 @@ const suggesting = ref(false);
 const message = ref("");
 
 const hasDomain = computed(() => keywords.value.length > 0);
-const shown = computed(() =>
-  items.value.filter(
+// « Mes formations » (docs/44 §3) : en cours d'abord, puis intéressé, puis terminées.
+const MINE_ORDER: Record<string, number> = { in_progress: 0, interested: 1, done: 2 };
+const shown = computed(() => {
+  const found = items.value.filter(
     (t) =>
       (tab.value === "mine" ? t.mark !== null : true) &&
       (!kind.value || t.kind === kind.value) &&
       (!price.value || t.price === price.value) &&
       (!language.value || t.language === language.value),
-  ),
-);
+  );
+  if (tab.value !== "mine") return found;
+  return [...found].sort((a, b) => (MINE_ORDER[a.mark!.status] ?? 9) - (MINE_ORDER[b.mark!.status] ?? 9));
+});
 // Deux groupes titrés, comme les sections des Actualités (docs/43 n° 21).
 const sections = computed(() =>
   [
@@ -417,9 +421,8 @@ onMounted(() => void load());
             >
               <TrainingCardBody
                 :training="training"
-                @mark="(status, extra) => mark(training, status, extra)"
+                @manage="openId = training.id"
                 @review="(keep) => review(training, keep)"
-                @linked="(linked) => replace({ ...training, mark: linked })"
               />
             </li>
           </ul>
@@ -427,8 +430,9 @@ onMounted(() => void load());
       </template>
     </div>
   </section>
+  <!-- Le suivi dans le panneau latéral, sur ordinateur comme sur téléphone (docs/44 §2). -->
   <SidePanel
-    v-if="phone && opened"
+    v-if="opened"
     open
     :title="opened.title"
     @close="openId = null"
@@ -436,6 +440,7 @@ onMounted(() => void load());
     <div class="training-card training-sheet">
       <TrainingCardBody
         :training="opened"
+        variant="panel"
         @mark="(status, extra) => mark(opened!, status, extra)"
         @review="(keep) => { review(opened!, keep); if (!keep) openId = null; }"
         @linked="(linked) => replace({ ...opened!, mark: linked })"

@@ -50,9 +50,15 @@ const page = (items: unknown[], extra: Record<string, unknown> = {}) => ({
 async function mountView(path = "/formations") {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: TrainingsView }] });
   await router.push(path);
-  const wrapper = mount(TrainingsView, { global: { plugins: [router] } });
+  const wrapper = mount(TrainingsView, { global: { plugins: [router], stubs: { teleport: true } } });
   await flushPromises();
   return wrapper;
+}
+
+// Le suivi se fait dans le panneau latéral (docs/44 §2) : « Suivre » ou « Gérer » l'ouvre.
+async function openPanel(wrapper: Awaited<ReturnType<typeof mountView>>): Promise<void> {
+  await wrapper.find("[data-test=follow], [data-test=manage]").trigger("click");
+  await flushPromises();
 }
 
 describe("TrainingsView", () => {
@@ -85,6 +91,8 @@ describe("TrainingsView", () => {
     );
     DELETE.mockResolvedValue({});
     const wrapper = await mountView();
+    expect(wrapper.find("[data-test=mark-in_progress]").exists()).toBe(false);
+    await openPanel(wrapper);
     await wrapper.find("[data-test=mark-in_progress]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/trainings/{training_id}/mark", {
@@ -94,6 +102,8 @@ describe("TrainingsView", () => {
     await wrapper.find("[data-test=progress]").setValue("module 4/12");
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body.progress).toBe("module 4/12");
+    // Sur la carte, une seule ligne : l'état et « Gérer ».
+    expect(wrapper.find("[data-test=training] [data-test=training-state]").text()).toBe("En cours · module 4/12");
     expect(wrapper.find("[data-test=tab-mine]").text()).toContain("1");
     await wrapper.find("[data-test=mark-in_progress]").trigger("click");
     await flushPromises();
@@ -124,6 +134,8 @@ describe("TrainingsView", () => {
     GET.mockResolvedValue({ data: page([training(1, { mark: { status: "done", progress: null, done_at: "2026-09-30", certified: true } }), training(2)]) });
     const wrapper = await mountView("/formations?onglet=miennes");
     expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);
+    expect(wrapper.find("[data-test=training-state]").text()).toBe("Terminée · certificat");
+    await openPanel(wrapper);
     expect((wrapper.find("[data-test=certified]").element as HTMLInputElement).checked).toBe(true);
   });
 
@@ -159,6 +171,8 @@ describe("TrainingsView", () => {
     GET.mockResolvedValue({ data: page([training(1, { mark: done })]) });
     POST.mockResolvedValue({ data: { ...done, chunk_id: 42 } });
     const wrapper = await mountView();
+    await openPanel(wrapper);
+    expect(wrapper.find("[data-test=section-profile] h3").text()).toBe("Mon profil");
     await wrapper.find("[data-test=add-to-profile]").trigger("click");
     expect((wrapper.find("[data-test=block-title]").element as HTMLInputElement).value).toBe(
       "Certified Kubernetes Administrator (CKA) (The Linux Foundation / CNCF)",
@@ -184,6 +198,8 @@ describe("TrainingsView", () => {
     );
     PUT.mockResolvedValueOnce({ data: { ...interested, funding_status: "requested", funding_requested_at: "2026-10-15" } });
     const wrapper = await mountView();
+    await openPanel(wrapper);
+    expect(wrapper.find("[data-test=section-funding] h3").text()).toBe("Financement ORP");
     await wrapper.find("[data-test=prepare-funding]").trigger("click");
     await flushPromises();
     const text = (wrapper.find("[data-test=funding-letter]").element as HTMLTextAreaElement).value;
