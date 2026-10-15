@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
 import HelpTip from "./HelpTip.vue";
+import SidePanel from "./SidePanel.vue";
 import { secureAddress, senders, useChecks } from "../validators";
 import { plural } from "../format";
 
@@ -54,7 +55,18 @@ async function toggle(site: SiteOut): Promise<void> {
 async function remove(site: SiteOut): Promise<void> {
   if (!window.confirm(`Ne plus suivre ${site.name} ? Les offres déjà collectées restent.`)) return;
   const { data } = await api.DELETE("/api/sites/{site_id}", { params: { path: { site_id: site.id } } });
-  if (data) sites.value = data;
+  if (data) {
+    sites.value = data;
+    openId.value = null;
+  }
+}
+
+// Lignes calmes (docs/48 §3) : le détail et « Retirer » dans le panneau.
+const openId = ref<number | null>(null);
+const opened = computed(() => sites.value.find((s) => s.id === openId.value) ?? null);
+function stats(site: SiteOut): string {
+  const last = site.last_alert_at ? ` · dernière le ${dateFormat.format(new Date(site.last_alert_at))}` : "";
+  return `${plural(site.alerts, "alerte", "alertes", "aucune alerte")}${last}`;
 }
 
 async function add(): Promise<void> {
@@ -119,46 +131,88 @@ onMounted(() => void load());
           label="Aide : sites suivis"
         />
       </legend>
-      <ul class="sites-list">
+      <ul class="calm-list">
         <li
           v-for="site in sites"
           :key="site.id"
           :class="{ paused: !site.active }"
           data-test="site"
         >
-          <span class="site-main">
+          <button
+            type="button"
+            class="calm-row"
+            :data-test="`open-${site.slug}`"
+            @click="openId = site.id"
+          >
             <strong>{{ site.name }}</strong>
             <span class="hint">
-              {{ site.reader === "ai" ? "lu par l'IA" : "lecteur intégré" }} · {{ site.senders.join(", ") }}
+              {{ site.reader === "ai" ? "lu par l'IA" : "lecteur intégré" }} · {{ stats(site) }}
             </span>
-          </span>
-          <span class="hint site-stats">
-            {{ plural(site.alerts, "alerte", "alertes", "aucune alerte") }}{{ site.last_alert_at ? ` · dernière le ${dateFormat.format(new Date(site.last_alert_at))}` : "" }}
-          </span>
-          <label class="check">
+          </button>
+          <label class="filter-switch calm-switch">
+            <span class="visually-hidden">{{ site.name }} suivi</span>
             <input
               type="checkbox"
+              role="switch"
               :checked="site.active"
               :data-test="`active-${site.slug}`"
               @change="toggle(site)"
-            > suivi
+            >
           </label>
-          <button
-            v-if="!site.builtin"
-            type="button"
-            class="link danger"
-            :data-test="`remove-${site.slug}`"
-            @click="remove(site)"
-          >
-            Retirer
-          </button>
-          <!-- Sites intégrés : la colonne reste, vide, pour aligner les cases (docs/43 n° 26). -->
-          <span
-            v-else
-            aria-hidden="true"
-          />
         </li>
       </ul>
+      <SidePanel
+        v-if="opened"
+        open
+        :title="opened.name"
+        @close="openId = null"
+      >
+        <div
+          class="calm-panel"
+          data-test="site-panel"
+        >
+          <dl class="summary-rows">
+            <div>
+              <dt>Lecture</dt>
+              <dd>{{ opened.reader === "ai" ? "par l'IA (environ 0,01 $ par e-mail)" : "lecteur intégré" }}</dd>
+            </div>
+            <div>
+              <dt>E-mails de</dt>
+              <dd>{{ opened.senders.join(", ") }}</dd>
+            </div>
+            <div>
+              <dt>Alertes reçues</dt>
+              <dd>{{ stats(opened) }}</dd>
+            </div>
+            <div v-if="opened.unrecognized">
+              <dt>Non reconnues</dt>
+              <dd>{{ opened.unrecognized }}</dd>
+            </div>
+          </dl>
+          <label class="filter-switch calm-panel-switch">
+            <span>Suivi</span>
+            <input
+              type="checkbox"
+              role="switch"
+              :checked="opened.active"
+              @change="toggle(opened)"
+            >
+          </label>
+          <p
+            v-if="!opened.builtin"
+            class="calm-panel-foot"
+          >
+            <button
+              type="button"
+              class="link danger"
+              :data-test="`remove-${opened.slug}`"
+              @click="remove(opened)"
+            >
+              Retirer ce site
+            </button>
+          </p>
+        </div>
+      </SidePanel>
 
       <div
         v-if="suggestions.length"

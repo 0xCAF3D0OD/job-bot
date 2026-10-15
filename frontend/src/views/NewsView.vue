@@ -367,7 +367,7 @@ onUnmounted(() => {
         </template>
         <template v-else>
           Rien pour l'instant.
-          <RouterLink to="/reglages#actualites">
+          <RouterLink to="/reglages?rubrique=actualites">
             Gérer les sources
           </RouterLink>
         </template>
