@@ -250,6 +250,14 @@ def test_language_and_domain() -> None:
     assert domain.matched(keywords, "Kubernetesque", "SREnity") == []
 
 
+def test_labour_market_sources_keep_only_job_news() -> None:
+    assert domain.about_jobs("La situation sur le marché du travail en septembre", None)
+    assert domain.about_jobs("Prévisions conjoncturelles", "")
+    assert domain.about_jobs("Die Lage auf dem Arbeitsmarkt")
+    assert not domain.about_jobs("SECO: Ordonnance instituant des mesures envers l'Iran")
+    assert not domain.about_jobs("Le climat de consommation est stable")
+
+
 async def test_filters_preferences_refresh(
     rt: Runtime, settings: Settings, queued: list[str]
 ) -> None:
@@ -285,6 +293,13 @@ async def test_filters_preferences_refresh(
                     published_at=now,
                 ),
                 NewsItem(
+                    source_id=seco.id,
+                    title="Sanctions : ordonnance instituant des mesures envers l'Iran",
+                    url="https://t.example/4",
+                    language="fr",
+                    published_at=now,
+                ),
+                NewsItem(
                     source_id=tech.id,
                     title="Kubernetes 1.40 released",
                     url="https://t.example/2",
@@ -312,19 +327,20 @@ async def test_filters_preferences_refresh(
         assert saved.json()["domain_keywords"] == ["kubernetes", "CKA"]
 
         page = (await api.get("/api/news")).json()
-        assert len(page["items"]) == 3 and page["fetched_at"] and not page["refreshing"]
+        assert len(page["items"]) == 4 and page["fetched_at"] and not page["refreshing"]
         assert page["countries"] == ["CH", "INT"] and page["languages"] == ["en", "fr"]
         mine = (await api.get("/api/news", params={"domain_only": True})).json()["items"]
-        # Le SECO reste (marché de l'emploi), l'article Kubernetes est trouvé et surligné.
+        # Le SECO reste quand il parle d'emploi (pas ses sanctions), l'article Kubernetes est
+        # trouvé et surligné.
         assert {i["title"] for i in mine} == {
             "Chômage : 2,8 % en septembre",
             "Kubernetes 1.40 released",
         }
         assert next(i for i in mine if i["title"].startswith("Kube"))["matched"] == ["kubernetes"]
         swiss = (await api.get("/api/news", params={"country": ["CH"]})).json()["items"]
-        assert [i["source"] for i in swiss] == ["Test SECO"]
+        assert {i["source"] for i in swiss} == {"Test SECO"}
         french = (await api.get("/api/news", params={"language": ["fr"]})).json()["items"]
-        assert [i["language"] for i in french] == ["fr"]
+        assert {i["language"] for i in french} == {"fr"}
 
         changed = await api.patch(
             f"/api/news/sources/{tech.id}", json={"country": "", "labour_market": True}

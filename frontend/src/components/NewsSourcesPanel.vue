@@ -201,7 +201,7 @@ onMounted(() => void load());
       <legend>
         Sources des Actualités
         <HelpTip
-          text="Relevées toutes les 6 heures, sans coût. Les sources « marché de l'emploi » restent visibles même filtrées sur « Mon domaine »."
+          text="Relevées toutes les 6 heures, sans coût. Avec « Mon domaine », les sources « marché de l'emploi » gardent leurs articles sur l'emploi (chômage, salaires, embauches)."
           label="Aide : sources des Actualités"
         />
       </legend>

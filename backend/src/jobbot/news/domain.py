@@ -4,6 +4,7 @@ La comparaison ignore majuscules, accents et ponctuation, et se fait mot à mot 
 « CI/CD » trouve « ci-cd », « Kubernetes » ne trouve pas « Kubernetesque ».
 """
 
+import re
 from collections import Counter
 
 from sqlalchemy import or_, select
@@ -15,12 +16,27 @@ from jobbot.profiles.service import main_profile
 
 MAX_KEYWORDS = 30
 PREFILL = 8
+# Sources « marché de l'emploi » (le SECO publie aussi sanctions et ordonnances) : avec
+# « Mon domaine », seuls leurs articles qui parlent d'emploi restent (retour du 2026-10-15).
+# Débuts de mots, sur le texte normalisé (minuscules, sans accents), en français, allemand
+# et anglais.
+_JOBS = re.compile(
+    r"\b(chomag|emploi|travail|main d oeuvre|salair|conjonctur|embauch|recrut|licenci|"
+    r"apprenti|frontalier|postes? vacants|places? vacantes|arbeitsmarkt|arbeitslos|"
+    r"beschaftig|erwerbs|stellenangebot|offene stellen|unemploy|labou?r market|employment|"
+    r"jobs?\b|hiring|workforce|wages?\b)"
+)
 
 
 def matched(keywords: list[str], *texts: str | None) -> list[str]:
     """Mots-clés présents dans les textes, dans l'ordre de la liste."""
     haystack = f" {normalize_text(' '.join(t for t in texts if t))} "
     return [k for k in keywords if (needle := normalize_text(k)) and f" {needle} " in haystack]
+
+
+def about_jobs(*texts: str | None) -> bool:
+    """Le texte parle-t-il d'emploi (chômage, salaires, embauches, conjoncture…) ?"""
+    return bool(_JOBS.search(normalize_text(" ".join(t for t in texts if t))))
 
 
 async def suggest(session: AsyncSession) -> list[str]:

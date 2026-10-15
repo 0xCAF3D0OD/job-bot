@@ -169,3 +169,8 @@ training_marks training_id PRIMARY, status (interested|in_progress|done), progre
 - **Menu** : neuf entrées ; en dessous de 1240 px de large elles se resserrent, en dessous de 1000 px elles passent sur une deuxième ligne qui défile.
 - **Migration 0026** (`trainings`, `training_marks`).
 - **Non essayé en réel** : la recherche par l'IA (l'instance de test n'a pas de clé API, et l'essai coûterait sur ton compte) ; elle est couverte par des tests avec une réponse simulée.
+
+## Complément du 2026-10-15 : sources « marché de l'emploi » et « Mon domaine »
+
+- Retour d'usage : avec « Mon domaine », le SECO affichait aussi ses ordonnances de sanctions (Iran, Irak), sans rapport avec l'emploi. Une source « marché de l'emploi » passait le filtre sans condition.
+- Désormais, avec « Mon domaine », ses articles ne restent que s'ils **parlent d'emploi** : chômage, emploi, travail, main-d'œuvre, salaires, conjoncture, embauches, recrutement, licenciements, apprentissage, frontaliers, postes vacants (et leurs équivalents en allemand et en anglais), cherchés dans le titre et le résumé, sans IA. En « Tout », rien ne change.
