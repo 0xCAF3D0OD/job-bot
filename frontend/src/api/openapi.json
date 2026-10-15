@@ -3810,6 +3810,71 @@
         }
       }
     },
+    "/api/insights": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Insights",
+        "operationId": "getInsights",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "recent",
+                "month",
+                "all"
+              ],
+              "type": "string",
+              "default": "recent",
+              "title": "Period"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/address-candidates": {
       "get": {
         "tags": [
@@ -7585,6 +7650,38 @@
         ],
         "title": "CollectStatus"
       },
+      "ComparisonOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "source",
+              "score",
+              "contact",
+              "follow_up"
+            ],
+            "title": "Key"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupOut"
+            },
+            "type": "array",
+            "title": "Groups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "title",
+          "groups"
+        ],
+        "title": "ComparisonOut"
+      },
       "ContactIn": {
         "properties": {
           "offer_id": {
@@ -8398,6 +8495,29 @@
         ],
         "title": "DatabaseStatus"
       },
+      "DelayOut": {
+        "properties": {
+          "typical": {
+            "type": "integer",
+            "title": "Typical"
+          },
+          "shortest": {
+            "type": "integer",
+            "title": "Shortest"
+          },
+          "longest": {
+            "type": "integer",
+            "title": "Longest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "typical",
+          "shortest",
+          "longest"
+        ],
+        "title": "DelayOut"
+      },
       "DocumentOut": {
         "properties": {
           "id": {
@@ -8976,6 +9096,77 @@
         ],
         "title": "FundingRequest",
         "description": "De quoi écrire la demande : l'argument tiré de tes offres et ton nom."
+      },
+      "FunnelOut": {
+        "properties": {
+          "received": {
+            "type": "integer",
+            "title": "Received"
+          },
+          "retained": {
+            "type": "integer",
+            "title": "Retained"
+          },
+          "applications": {
+            "type": "integer",
+            "title": "Applications"
+          },
+          "responses": {
+            "type": "integer",
+            "title": "Responses"
+          },
+          "interviews": {
+            "type": "integer",
+            "title": "Interviews"
+          },
+          "engagements": {
+            "type": "integer",
+            "title": "Engagements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "received",
+          "retained",
+          "applications",
+          "responses",
+          "interviews",
+          "engagements"
+        ],
+        "title": "FunnelOut"
+      },
+      "GroupOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "responses": {
+            "type": "integer",
+            "title": "Responses"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "enough": {
+            "type": "boolean",
+            "title": "Enough"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "responses",
+          "total",
+          "enough"
+        ],
+        "title": "GroupOut"
       },
       "HTTPValidationError": {
         "properties": {
@@ -13629,6 +13820,80 @@
           "total"
         ],
         "title": "SearchPage"
+      },
+      "SearchReportOut": {
+        "properties": {
+          "start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "funnel": {
+            "$ref": "#/components/schemas/FunnelOut"
+          },
+          "delay": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DelayOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "comparisons": {
+            "items": {
+              "$ref": "#/components/schemas/ComparisonOut"
+            },
+            "type": "array",
+            "title": "Comparisons"
+          },
+          "headline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headline"
+          },
+          "orp_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orp Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "funnel",
+          "delay",
+          "comparisons",
+          "headline",
+          "orp_summary"
+        ],
+        "title": "SearchReportOut"
       },
       "SegmentOut": {
         "properties": {

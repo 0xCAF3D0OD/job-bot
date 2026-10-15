@@ -4,6 +4,7 @@ import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import AlertsView from "./views/AlertsView.vue";
+import InsightsView from "./views/InsightsView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
 import JobsView from "./views/JobsView.vue";
@@ -38,7 +39,7 @@ export const navigation: NavEntry[] = [
 ];
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
-export type JobsTab = "offres" | "suivi" | "alertes";
+export type JobsTab = "offres" | "suivi" | "alertes" | "bilan";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, Component> = {
@@ -104,6 +105,8 @@ const routes: RouteRecordRaw[] = [
       // Mes alertes et alertes reçues (docs/20 §1) ; l'ancien « Journal des recherches ».
       { path: "alertes", name: "alerts", component: AlertsView, meta: { tab: "alertes" } },
       { path: "journal", redirect: "/candidatures/alertes" },
+      // Ce qui marche dans ta recherche (docs/42).
+      { path: "bilan", name: "insights", component: InsightsView, meta: { tab: "bilan" } },
     ],
   },
   // Diagnostic technique, sorti des Réglages (docs/21 §6).
