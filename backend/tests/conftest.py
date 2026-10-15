@@ -12,6 +12,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, text
 
 from jobbot.api.app import create_app
+from jobbot.api.routes import trainings as trainings_routes
 from jobbot.db.schema import upgrade
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
@@ -53,6 +54,12 @@ def migrated_database(settings: Settings) -> Iterator[None]:
     engine.dispose()
     upgrade(settings)
     yield
+
+
+@pytest.fixture(autouse=True)
+def catalog_resync() -> None:
+    """Un test qui vide la table des formations ne laisse pas les suivants sans catalogue."""
+    trainings_routes._synced = False
 
 
 @pytest.fixture(scope="session")

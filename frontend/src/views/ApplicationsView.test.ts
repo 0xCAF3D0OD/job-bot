@@ -330,6 +330,25 @@ describe("Suivi en calendrier (docs/22)", () => {
     expect(localStorage.getItem("jobbot-suivi-vue")).toBe("list");
     expect(wrapper.find("[data-test=calendar]").exists()).toBe(false);
   });
+
+  it("relancée : « Sans réponse » proposé 14 jours après la relance, pas avant", async () => {
+    localStorage.setItem("jobbot-suivi-vue", "calendar");
+    const ago = (days: number): string => {
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    const base = { ...application, status: "relancee", sent_at: ago(30), interview_at: null };
+    const silent = { ...base, id: 4, company: "Muette SA", followed_up_at: ago(14) };
+    const recent = { ...base, id: 5, company: "Récente SA", followed_up_at: ago(13) };
+    mockApi(() => month(), [silent, recent]);
+    const { wrapper } = await mountView();
+    const panel = wrapper.find("[data-test=day-panel]");
+    expect(panel.text()).toContain("Muette SA");
+    expect(panel.text()).not.toContain("Récente SA");
+    expect(panel.find("[data-test=card-no-answer]").exists()).toBe(true);
+    expect(panel.find("[data-test=card-follow-up]").exists()).toBe(false);
+  });
 });
 
 describe("Panneau défilant (retour d'usage du 2026-10-07)", () => {

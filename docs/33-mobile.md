@@ -59,7 +59,7 @@ Sur un écran de moins de **820 px** de large (téléphone, tablette en hauteur)
 
 ### 3.5 Sur l'écran d'accueil
 
-- La plateforme peut être **ajoutée à l'écran d'accueil** (« Sur l'écran d'accueil » dans Safari, « Installer » dans Chrome) : icône job-bot, nom court, s'ouvre sans la barre du navigateur, couleur de la barre d'état assortie.
+- La plateforme peut être **ajoutée à l'écran d'accueil** (« Sur l'écran d'accueil » dans Safari, « Installer » dans Chrome) : icône jobA1, nom court, s'ouvre sans la barre du navigateur, couleur de la barre d'état assortie.
 - Pas de mode hors ligne : la plateforme reste en ligne (les données sont sur ton serveur).
 
 ## 4. Livraison en deux PR
