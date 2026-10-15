@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import DisclosureRow from "./DisclosureRow.vue";
 
 import type { Application } from "../api/client";
 import { applicationStatusLabel } from "../format";
@@ -154,11 +155,12 @@ function label(day: string): string {
         </template>
       </template>
     </div>
-    <details
+    <DisclosureRow
       class="suivi-legend"
+      title="Légende"
+      :value="`${LEGEND.length} statuts`"
       data-test="suivi-legend"
     >
-      <summary>Légende</summary>
       <ul>
         <li
           v-for="status in LEGEND"
@@ -178,6 +180,6 @@ function label(day: string): string {
           à compléter pour l'ORP
         </li>
       </ul>
-    </details>
+    </DisclosureRow>
   </div>
 </template>

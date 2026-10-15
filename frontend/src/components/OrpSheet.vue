@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type OrpMonth, type OrpRow, type Source } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 import { printSheet } from "../composables/usePrint";
 import { formatMonth, sourceLabel } from "../format";
 
@@ -190,12 +191,13 @@ onMounted(async () => {
         </button>
       </span>
     </div>
-    <details
+    <DisclosureRow
       v-if="data.count"
       class="more-options"
+      title="Plus d'options"
+      value="CSV, journal des recherches, colonnes"
       data-test="more-options"
     >
-      <summary>Plus d'options</summary>
       <div class="more-options-body">
         <a
           class="link"
@@ -244,7 +246,7 @@ onMounted(async () => {
           </fieldset>
         </div>
       </div>
-    </details>
+    </DisclosureRow>
 
     <p
       v-if="!data.count"

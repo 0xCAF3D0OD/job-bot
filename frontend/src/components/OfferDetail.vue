@@ -6,6 +6,8 @@ import { expiredText, formatDate, rateText, remoteText, scoreLevel, sourceLabel 
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
+import SidePanel from "./SidePanel.vue";
+import { CONTACTS_HELP } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
 
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
@@ -16,6 +18,18 @@ function sources(ids: number[]): string {
     .filter(Boolean)
     .join(", ");
 }
+// Entreprise et contacts dans le panneau latéral (docs/32 §2.2) : la fiche ne s'allonge plus.
+const companyOpen = ref(false);
+const contactsOpen = ref(false);
+const contactsCount = ref(0);
+watch(
+  () => props.offer.id,
+  () => {
+    companyOpen.value = false;
+    contactsOpen.value = false;
+    contactsCount.value = 0;
+  },
+);
 const emit = defineEmits<{
   close: [];
   status: [status: "to_review" | "later" | "ignored" | "preparing"];
@@ -362,6 +376,25 @@ watch(
         rel="noopener noreferrer"
         class="link"
       >Voir sur {{ sourceLabel[link.source] }}</a>
+      <button
+        type="button"
+        class="link"
+        :aria-expanded="companyOpen"
+        data-test="open-company"
+        @click="companyOpen = true"
+      >
+        Entreprise
+      </button>
+      <button
+        v-if="offer.company"
+        type="button"
+        class="link"
+        :aria-expanded="contactsOpen"
+        data-test="open-contacts"
+        @click="contactsOpen = true"
+      >
+        Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }}
+      </button>
     </p>
     <section
       v-if="offer.summary_role"
@@ -425,148 +458,161 @@ watch(
     >
       Note impossible : {{ offer.score_error }}
     </p>
-    <details
-      class="company-section"
-      data-test="company-section"
+    <SidePanel
+      :open="companyOpen"
+      :title="offer.company ?? 'Entreprise'"
+      help="L'adresse sert au formulaire ORP ; l'annonce chez l'employeur évite de passer par un site d'emploi."
+      @close="companyOpen = false"
     >
-      <summary>Entreprise : adresse, annonce chez l'employeur</summary>
       <div
-        class="address-line"
-        data-test="address"
+        class="company-section"
+        data-test="company-section"
       >
-        <template v-if="!editingAddress">
-          <span class="muted">Adresse :</span>
-          <span v-if="offer.company_address">
-            {{ offer.company_address.split("\n").join(", ") }}
-            <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
-            <a
-              v-if="offer.company_address_source === 'web' && offer.company_address_url"
-              :href="offer.company_address_url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="hint"
-              data-test="address-source"
-            > (vérifier la source)</a>
-          </span>
-          <span
-            v-else
-            class="hint"
-          >inconnue</span>
-          <button
-            type="button"
-            class="link"
-            data-test="edit-address"
-            @click="startAddress"
-          >
-            {{ offer.company_address ? "Modifier" : "Ajouter" }}
-          </button>
-          <button
-            v-if="offer.company && offer.company_address_source !== 'manual' && offer.company_address_source !== 'page'"
-            type="button"
-            class="link"
-            :disabled="searching"
-            data-test="search-registry"
-            @click="searchRegistry"
-          >
-            {{ searching ? "Recherche…" : "Chercher l'adresse" }}
-          </button>
-        </template>
         <div
-          v-if="registryMessage || proposals.length"
-          class="registry-proposals"
-          data-test="registry"
+          class="address-line"
+          data-test="address"
         >
-          <p
-            v-if="registryMessage"
-            class="hint"
-          >
-            {{ registryMessage }}
-          </p>
-          <ul v-if="proposals.length">
-            <li
-              v-for="proposal in proposals"
-              :key="proposal.uid"
-            >
-              <span>
-                <strong>{{ proposal.name }}</strong><br>
-                <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
-              </span>
-              <button
-                type="button"
-                class="secondary small"
-                data-test="choose-registry"
-                @click="chooseRegistry(proposal.uid)"
-              >
-                Choisir
-              </button>
-            </li>
-          </ul>
-        </div>
-        <form
-          v-if="editingAddress"
-          class="address-form"
-          @submit.prevent="saveAddress"
-        >
-          <textarea
-            v-model="addressDraft"
-            rows="2"
-            placeholder="Rue et numéro&#10;NPA localité"
-            aria-label="Adresse de l'entreprise"
-            data-test="address-input"
-          />
-          <div>
-            <button
-              type="submit"
-              class="secondary small"
-              data-test="save-address"
-            >
-              Enregistrer
-            </button>
+          <template v-if="!editingAddress">
+            <span class="muted">Adresse :</span>
+            <span v-if="offer.company_address">
+              {{ offer.company_address.split("\n").join(", ") }}
+              <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
+              <a
+                v-if="offer.company_address_source === 'web' && offer.company_address_url"
+                :href="offer.company_address_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="hint"
+                data-test="address-source"
+              > (vérifier la source)</a>
+            </span>
+            <span
+              v-else
+              class="hint"
+            >inconnue</span>
             <button
               type="button"
               class="link"
-              @click="editingAddress = false"
+              data-test="edit-address"
+              @click="startAddress"
             >
-              Annuler
+              {{ offer.company_address ? "Modifier" : "Ajouter" }}
             </button>
-          </div>
-        </form>
-      </div>
-      <p
-        v-if="!employerKnown"
-        class="hint employer-line"
-        data-test="employer-line"
-      >
-        <span
-          v-if="offer.employer_url && offer.employer_checked_at"
-        >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
-          {{ shortDate.format(new Date(offer.employer_checked_at)) }}.</span>
-        <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
-        <template v-else>
-          <span v-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
-          <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
-          <button
-            type="button"
-            class="link"
-            :disabled="employerBusy"
-            data-test="find-employer"
-            @click="findEmployer"
+            <button
+              v-if="offer.company && offer.company_address_source !== 'manual' && offer.company_address_source !== 'page'"
+              type="button"
+              class="link"
+              :disabled="searching"
+              data-test="search-registry"
+              @click="searchRegistry"
+            >
+              {{ searching ? "Recherche…" : "Chercher l'adresse" }}
+            </button>
+          </template>
+          <div
+            v-if="registryMessage || proposals.length"
+            class="registry-proposals"
+            data-test="registry"
           >
-            {{ employerBusy ? "Recherche en cours (jusqu'à 30 s)…" : offer.employer_checked_at ? "Chercher à nouveau" : "Chercher l'offre chez l'employeur" }}
-          </button>
-        </template>
-        <span
-          v-if="employerMessage"
-          role="status"
-        >{{ employerMessage }}</span>
-      </p>
-    </details>
-    <ContactsPanel
+            <p
+              v-if="registryMessage"
+              class="hint"
+            >
+              {{ registryMessage }}
+            </p>
+            <ul v-if="proposals.length">
+              <li
+                v-for="proposal in proposals"
+                :key="proposal.uid"
+              >
+                <span>
+                  <strong>{{ proposal.name }}</strong><br>
+                  <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
+                </span>
+                <button
+                  type="button"
+                  class="secondary small"
+                  data-test="choose-registry"
+                  @click="chooseRegistry(proposal.uid)"
+                >
+                  Choisir
+                </button>
+              </li>
+            </ul>
+          </div>
+          <form
+            v-if="editingAddress"
+            class="address-form"
+            @submit.prevent="saveAddress"
+          >
+            <textarea
+              v-model="addressDraft"
+              rows="2"
+              placeholder="Rue et numéro&#10;NPA localité"
+              aria-label="Adresse de l'entreprise"
+              data-test="address-input"
+            />
+            <div>
+              <button
+                type="submit"
+                class="secondary small"
+                data-test="save-address"
+              >
+                Enregistrer
+              </button>
+              <button
+                type="button"
+                class="link"
+                @click="editingAddress = false"
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+        <p
+          v-if="!employerKnown"
+          class="hint employer-line"
+          data-test="employer-line"
+        >
+          <span
+            v-if="offer.employer_url && offer.employer_checked_at"
+          >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
+            {{ shortDate.format(new Date(offer.employer_checked_at)) }}.</span>
+          <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
+          <template v-else>
+            <span v-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
+            <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
+            <button
+              type="button"
+              class="link"
+              :disabled="employerBusy"
+              data-test="find-employer"
+              @click="findEmployer"
+            >
+              {{ employerBusy ? "Recherche en cours (jusqu'à 30 s)…" : offer.employer_checked_at ? "Chercher à nouveau" : "Chercher l'offre chez l'employeur" }}
+            </button>
+          </template>
+          <span
+            v-if="employerMessage"
+            role="status"
+          >{{ employerMessage }}</span>
+        </p>
+      </div>
+    </SidePanel>
+    <SidePanel
       v-if="offer.company"
-      :key="offer.id"
-      :offer-id="offer.id"
-      :company="offer.company"
-    />
+      :open="contactsOpen"
+      :title="`Contacts chez ${offer.company}`"
+      :help="CONTACTS_HELP"
+      @close="contactsOpen = false"
+    >
+      <ContactsPanel
+        :key="offer.id"
+        :offer-id="offer.id"
+        @count="contactsCount = $event"
+      />
+    </SidePanel>
     <ul
       v-if="offer.filter_reasons?.length"
       class="reasons"

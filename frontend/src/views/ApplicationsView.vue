@@ -11,6 +11,7 @@ import {
   type OrpMonth,
 } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
@@ -501,20 +502,26 @@ onUnmounted(() => assistant.setFocus(null));
         />
       </template>
 
-      <InterviewInsights ref="insightsPanel" />
-
-      <details
-        class="orp-details"
-        data-test="orp-details"
-      >
-        <summary>Formulaire ORP du mois : tableau, PDF, CSV, saisie Job-Room</summary>
-        <OrpSheet
-          :data="orp"
-          embedded
-          @reload="load"
-          @edit="editById"
+      <div class="disclosure-list suivi-more">
+        <InterviewInsights
+          ref="insightsPanel"
+          group="suivi"
         />
-      </details>
+        <DisclosureRow
+          class="orp-details"
+          title="Formulaire ORP du mois"
+          :value="incomplete.size ? `${incomplete.size} ligne(s) à compléter` : 'tableau, PDF, CSV, Job-Room'"
+          group="suivi"
+          data-test="orp-details"
+        >
+          <OrpSheet
+            :data="orp"
+            embedded
+            @reload="load"
+            @edit="editById"
+          />
+        </DisclosureRow>
+      </div>
     </template>
   </section>
 

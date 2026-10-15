@@ -8,6 +8,8 @@ import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ContactsPanel from "../components/ContactsPanel.vue";
 import CvPanel from "../components/CvPanel.vue";
+import SidePanel from "../components/SidePanel.vue";
+import { CONTACTS_HELP } from "../contactLabels";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAssistant } from "../composables/useAssistant";
@@ -69,6 +71,9 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
 }
 
 const offer = ref<Offer | null>(null);
+// Contacts dans le panneau latéral (docs/32 §2.2) : la page reste compacte.
+const contactsOpen = ref(false);
+const contactsCount = ref(0);
 const assistant = useAssistant();
 watch(offer, (o) => {
   if (o) assistant.setFocus({ offerId: o.id, label: `préparation : ${o.title}${o.company ? ` chez ${o.company}` : ""}` });
@@ -313,27 +318,51 @@ onMounted(() => void load());
           data-test="bar-cv"
         >CV (PDF)</a>
         <button
+          v-if="offer.company"
+          type="button"
+          class="link"
+          :aria-expanded="contactsOpen"
+          data-test="bar-contacts"
+          @click="contactsOpen = true"
+        >
+          Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }}
+        </button>
+        <button
           v-if="offer.status !== 'applied'"
           type="button"
           class="link"
           :aria-expanded="sheetOpen"
           data-test="bar-sheet"
-          @click="sheetOpen = !sheetOpen"
+          @click="sheetOpen = true"
         >
-          {{ sheetOpen ? "Masquer la fiche" : "Fiche pour le formulaire" }}
+          Fiche pour le formulaire
         </button>
       </div>
-      <FormSheet
-        v-if="offer && sheetOpen && offer.status !== 'applied'"
-        :letter-text="currentLetterText"
-        :letter-id="currentLetterId"
-        :cv-id="currentCvId"
-      />
-      <ContactsPanel
+      <SidePanel
+        v-if="offer && offer.status !== 'applied'"
+        :open="sheetOpen"
+        title="Fiche pour le formulaire"
+        help="À recopier dans le formulaire en ligne de l'employeur ; joins le CV et la lettre en PDF."
+        @close="sheetOpen = false"
+      >
+        <FormSheet
+          :letter-text="currentLetterText"
+          :letter-id="currentLetterId"
+          :cv-id="currentCvId"
+        />
+      </SidePanel>
+      <SidePanel
         v-if="offer?.company"
-        :offer-id="offer.id"
-        :company="offer.company"
-      />
+        :open="contactsOpen"
+        :title="`Contacts chez ${offer.company}`"
+        :help="CONTACTS_HELP"
+        @close="contactsOpen = false"
+      >
+        <ContactsPanel
+          :offer-id="offer.id"
+          @count="contactsCount = $event"
+        />
+      </SidePanel>
       <p
         v-if="applyNotice"
         class="notice"
@@ -578,19 +607,6 @@ onMounted(() => void load());
                 </button>
               </li>
             </ul>
-          </div>
-
-          <div class="side-card">
-            <p class="hint">
-              Postule avec le bouton en haut de la page, puis « Marquer comme envoyée » : la candidature
-              rejoint le suivi avec cette lettre et ton CV.
-            </p>
-            <RouterLink
-              :to="{ path: '/candidatures/offres', query: { statut: 'in_progress' } }"
-              class="link"
-            >
-              Retour aux offres en cours
-            </RouterLink>
           </div>
         </aside>
       </div>

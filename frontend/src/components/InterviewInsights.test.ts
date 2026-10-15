@@ -45,7 +45,7 @@ describe("Mes enseignements (docs/23 §3)", () => {
     POST.mockResolvedValue({ data: insights({ coaching }) });
     const wrapper = mount(InterviewInsights);
     await flushPromises();
-    expect(wrapper.find("summary").text()).toContain("2 entretien(s), ressenti moyen 3/5");
+    expect(wrapper.find(".disclosure-row").text()).toContain("2 entretien(s) · ressenti 3/5");
     expect(wrapper.find("[data-test=insight-questions]").text()).toContain("difficile 1×");
     await wrapper.find("[data-test=prepare-item]").setValue(true);
     await flushPromises();
@@ -60,7 +60,7 @@ describe("Mes enseignements (docs/23 §3)", () => {
     GET.mockResolvedValue({ data: insights({ count: 0 }) });
     const wrapper = mount(InterviewInsights);
     await flushPromises();
-    expect(wrapper.find("summary").text()).toBe("Mes enseignements");
+    expect(wrapper.find(".disclosure-value").text()).toBe("aucun entretien");
     expect(wrapper.find("[data-test=insights-empty]").text()).toContain("Faire le point sur l'entretien");
     expect(wrapper.find("[data-test=coach]").exists()).toBe(false);
   });

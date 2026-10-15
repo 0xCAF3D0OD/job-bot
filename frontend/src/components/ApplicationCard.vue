@@ -4,8 +4,9 @@ import { computed, ref } from "vue";
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { useAssistant } from "../composables/useAssistant";
 import { applicationStatusLabel } from "../format";
-import { contactName, toFollowUp } from "../contactLabels";
+import { CONTACTS_HELP, contactName, toFollowUp } from "../contactLabels";
 import ContactsPanel from "./ContactsPanel.vue";
+import SidePanel from "./SidePanel.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 
 // Carte d'une candidature (docs/22 §4) : statut, ce qui manque pour l'ORP, documents,
@@ -48,7 +49,7 @@ const summary = computed(() => {
 });
 
 const jobRoom = ref(false);
-// Contacts dans l'entreprise (docs/31 §4) : repliés sous la carte.
+// Contacts dans l'entreprise (docs/31 §4), dans le panneau latéral (docs/32 §2.2).
 const contactsOpen = ref(false);
 const contacts = computed(() => props.application.contacts ?? []);
 const contactsDue = computed(() => contacts.value.filter((c) => toFollowUp(c)));
@@ -287,25 +288,30 @@ const onStatus = (event: Event): void =>
         class="link"
         :aria-expanded="contactsOpen"
         data-test="card-contacts"
-        @click="contactsOpen = !contactsOpen"
+        @click="contactsOpen = true"
       >
-        {{ contactsOpen ? "Fermer les contacts" : contacts.length ? `Contacts (${contacts.length})` : "Contacts" }}
+        Contacts{{ contacts.length ? ` · ${contacts.length}` : "" }}
       </button>
     </p>
     <p
-      v-if="contactsDue.length && !contactsOpen"
+      v-if="contactsDue.length"
       class="card-facts contact-due-line"
       data-test="card-contact-due"
     >
       Sans réponse depuis 7 jours : relancer {{ contactsDue.map(contactName).join(", ") }} ?
     </p>
-    <ContactsPanel
+    <SidePanel
       v-if="contactsOpen"
-      bare
-      :application-id="application.id"
-      :company="application.company"
-      @changed="emit('changed')"
-    />
+      open
+      :title="`Contacts chez ${application.company}`"
+      :help="CONTACTS_HELP"
+      @close="contactsOpen = false"
+    >
+      <ContactsPanel
+        :application-id="application.id"
+        @changed="emit('changed')"
+      />
+    </SidePanel>
 
     <dl
       v-if="jobRoom && orpRow"

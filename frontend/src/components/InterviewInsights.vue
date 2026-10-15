@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 
 import { api, type InterviewInsights } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 
 // « Mes enseignements » (docs/23 §3) : tous les retours d'entretien, regroupés, sans IA ;
 // les pistes de l'IA seulement à la demande.
@@ -40,16 +41,13 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <details
+  <DisclosureRow
     v-if="data"
     class="insights"
+    title="Mes enseignements"
+    :value="data.count ? `${data.count} entretien(s) · ressenti ${data.average_rating}/5` : 'aucun entretien'"
     data-test="insights"
   >
-    <summary>
-      Mes enseignements<template v-if="data.count">
-        · {{ data.count }} entretien(s), ressenti moyen {{ data.average_rating }}/5
-      </template>
-    </summary>
     <!-- Toujours visible (retour d'usage du 2026-10-07) : dit comment la remplir. -->
     <p
       v-if="!data.count"
@@ -169,5 +167,5 @@ onMounted(() => void load());
         {{ message }}
       </p>
     </div>
-  </details>
+  </DisclosureRow>
 </template>

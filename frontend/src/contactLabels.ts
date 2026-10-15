@@ -32,3 +32,10 @@ export function toFollowUp(contact: Contact, today = new Date()): boolean {
 export function contactName(contact: Contact): string {
   return contact.name || ROLES[contact.role].toLowerCase();
 }
+
+// Explication du panneau, derrière son « ? » (docs/32 §1).
+export const CONTACTS_HELP =
+  "Recherches LinkedIn déjà remplies, ouvertes dans un nouvel onglet : rien n'est lu ni envoyé à ta place. " +
+  "Pour le message, l'IA reçoit le poste, le rôle choisi et ton profil, jamais de nom : remplace « [Prénom] » " +
+  "et « [ton prénom] ». Une prise de contact ne compte pas pour l'ORP ; un rappel arrive dans la cloche après " +
+  "7 jours sans réponse.";

@@ -84,6 +84,6 @@ describe("AlertsPanel (docs/20 §1)", () => {
     await wrapper.find("[data-test=pause]").trigger("click");
     await flushPromises();
     expect(wrapper.findAll("[data-test=alert-search]")).toHaveLength(0);
-    expect(wrapper.text()).toContain("Recherches mises de côté (1)");
+    expect(wrapper.text()).toContain("Recherches mises de côté1");
   });
 });
