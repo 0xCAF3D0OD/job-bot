@@ -62,3 +62,4 @@ Une seule PR (**0.27.0**), sans migration ni changement d'API. Vérifiée à 375
 - **Réglages** : résumés réellement disponibles sur la page : « objectif 10 / mois · alerte dès 70 », « mots-clés et sources », « actives / non configurées », « plafond 10 CHF / mois », « profils fictifs », le nom du compte ou « désactivée », « jetons ». Les exemples du cadrage (communes, dépenses du mois, nombre de sources) demanderaient des appels en plus : pas fait.
 - **Aujourd'hui** : « Comment ça marche » et « Pour bien démarrer » sont en bas de page, repliés, une seule ouverte à la fois ; « Masquer » reste dedans.
 - **Ordinateur** : vérifié inchangé à 1280 px (cartes et encadré des Formations, sommaire et titres des Réglages, blocs d'Aujourd'hui).
+- **Largeurs vérifiées** : 393 px (téléphone) et 1280 px (ordinateur) seulement ; 375 et 768 px, prévus au §5, n'ont pas été passés en revue.
