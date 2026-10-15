@@ -5,6 +5,7 @@ import { applicationStatusLabel, formatMonth, methodLabel } from "../format";
 // Suivi des candidatures (docs/08), onglet de la page Candidatures (docs/18 §2).
 defineProps<{ items: Application[]; showMonth: boolean }>();
 const emit = defineEmits<{
+  open: [application: Application];
   edit: [application: Application];
   status: [application: Application, status: ApplicationStatus];
   remove: [application: Application];
@@ -37,7 +38,15 @@ const emit = defineEmits<{
           ><br>ORP : {{ formatMonth(application.orp_month) }}</span>
         </td>
         <td>
-          {{ application.company }}
+          <!-- Le nom ouvre le panneau de la candidature (docs/46 §5). -->
+          <button
+            type="button"
+            class="link table-open"
+            data-test="table-open"
+            @click="emit('open', application)"
+          >
+            {{ application.company }}
+          </button>
           <span
             v-if="application.assigned_by_orp"
             class="badge"

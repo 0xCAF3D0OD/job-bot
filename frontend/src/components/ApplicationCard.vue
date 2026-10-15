@@ -2,114 +2,55 @@
 import { computed, ref } from "vue";
 
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
-import { useAssistant } from "../composables/useAssistant";
+import { nextStep } from "../applicationState";
 import { applicationStatusLabel } from "../format";
-import { CONTACTS_HELP, contactName, toFollowUp } from "../contactLabels";
-import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import SidePanel from "./SidePanel.vue";
-import { KINDS, NEXT_STEPS } from "../interviewLabels";
 
-// Carte d'une candidature (docs/22 §4) : statut, ce qui manque pour l'ORP, documents,
-// copie pour Job-Room de cette seule candidature.
+// Carte d'une candidature (docs/46 §2) : qui, quoi, le statut, et une seule prochaine étape.
+// Le reste (statut, entretiens, ORP, documents, contacts) est dans le panneau.
 const props = defineProps<{ application: Application; orpRow?: OrpRow | null }>();
 const emit = defineEmits<{
+  open: [application: Application];
   status: [application: Application, status: ApplicationStatus];
   edit: [application: Application];
-  remove: [application: Application];
-  // Retour d'entretien (docs/23) : à créer (null) ou à revoir.
   interview: [application: Application, interview: Interview | null];
-  // Fiche de préparation avant un entretien prévu (docs/23 §3).
   prepare: [application: Application];
-  // Contact ajouté, répondu ou retiré (docs/31 §4) : la liste se recharge.
   changed: [];
 }>();
 
-// Lien vers la plateforme dans l'événement d'agenda (docs/40 §1).
-const origin = globalThis.location?.origin ?? "";
-const upcoming = computed(() => {
-  const at = props.application.interview_at;
-  return !!at && new Date(at).getTime() > Date.now();
-});
+const step = computed(() => nextStep(props.application, props.orpRow));
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
-// Dernier retour d'entretien, et retour attendu pour l'entretien passé (docs/23 §1, §3).
-const latest = computed<Interview | null>(() => props.application.interviews?.at(-1) ?? null);
-const needsFeedback = computed(() => {
-  const at = props.application.interview_at;
-  if (props.application.status !== "entretien" || !at) return false;
-  const day = new Date(at).toISOString().slice(0, 10);
-  return day <= new Date().toISOString().slice(0, 10) && !props.application.interviews?.some((i) => i.held_at === day);
-});
-const summary = computed(() => {
-  const i = latest.value;
-  if (!i) return "";
-  const parts = [(i.kind && KINDS[i.kind]) || "Entretien", `ressenti ${i.rating}/5`];
-  if (i.next_step && i.next_step !== "rien") {
-    const when = i.next_step_at ? ` avant le ${new Date(`${i.next_step_at}T12:00:00`).toLocaleDateString("fr-CH")}` : "";
-    parts.push(`suite : ${(NEXT_STEPS[i.next_step] ?? "").toLowerCase()}${when}`);
-  }
-  return parts.join(" · ");
-});
-
-const jobRoom = ref(false);
-// Contacts dans l'entreprise (docs/31 §4), dans le panneau latéral (docs/32 §2.2).
-const contactsOpen = ref(false);
-
-// Relance (docs/38) : proposée 10 jours après l'envoi ; « Sans réponse » 14 jours après la relance.
+// Relance (docs/38) : son panneau s'ouvre depuis la carte.
 const followUpOpen = ref(false);
-function daysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-const followUpDue = computed(() => props.application.status === "en_attente" && props.application.sent_at <= daysAgo(10));
-const noAnswerDue = computed(
-  () =>
-    props.application.status === "relancee" &&
-    !!props.application.followed_up_at &&
-    props.application.followed_up_at <= daysAgo(14),
-);
 function onFollowedUp(): void {
   followUpOpen.value = false;
   emit("changed");
 }
-const contacts = computed(() => props.application.contacts ?? []);
-const contactsDue = computed(() => contacts.value.filter((c) => toFollowUp(c)));
-const menuOpen = ref(false);
-const copied = ref("");
-const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
-async function copy(value: string, key: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(value);
-    copied.value = key;
-    setTimeout(() => {
-      if (copied.value === key) copied.value = "";
-    }, 1500);
-  } catch {
-    copied.value = "";
+function run(): void {
+  const a = props.application;
+  switch (step.value.key) {
+    case "prepare":
+      emit("prepare", a);
+      break;
+    case "feedback":
+      emit("interview", a, null);
+      break;
+    case "follow-up":
+      followUpOpen.value = true;
+      break;
+    case "no-answer":
+      emit("status", a, "sans_reponse");
+      break;
+    case "complete":
+      emit("edit", a);
+      break;
+    default:
+      emit("open", a);
   }
 }
-
-// Télétravail complet hors de Suisse (docs/26 §6) : rappel pour l'ORP, pas un avis officiel.
-const remoteAbroad = computed(
-  () => props.application.remote_full && !/suisse|switzerland|schweiz/i.test(props.application.remote_region ?? ""),
-);
-
-const assistant = useAssistant();
-function askAssistant(): void {
-  const a = props.application;
-  assistant.askAbout({ applicationId: a.id, label: `candidature ${a.job_title} chez ${a.company}` });
-}
-
-function act(action: () => void): void {
-  menuOpen.value = false;
-  action();
-}
-
-const onStatus = (event: Event): void =>
-  emit("status", props.application, (event.target as HTMLSelectElement).value as ApplicationStatus);
 </script>
 
 <template>
@@ -117,9 +58,14 @@ const onStatus = (event: Event): void =>
     class="application-card"
     data-test="application-card"
   >
-    <header>
-      <div>
-        <strong>{{ application.company }}</strong>
+    <button
+      type="button"
+      class="application-card-main"
+      data-test="card-open"
+      @click="emit('open', application)"
+    >
+      <strong class="application-card-company">
+        {{ application.company }}
         <span
           v-if="application.assigned_by_orp"
           class="badge"
@@ -129,121 +75,27 @@ const onStatus = (event: Event): void =>
           class="badge spontaneous-badge"
           data-test="card-spontaneous"
         >Spontanée</span>
-        <p class="muted">
-          {{ application.job_title }} · {{ shortDate.format(new Date(application.sent_at)) }}
-        </p>
-      </div>
-      <div class="more-menu">
-        <button
-          type="button"
-          class="close"
-          aria-label="Plus d'actions"
-          :aria-expanded="menuOpen"
-          @click="menuOpen = !menuOpen"
-        >
-          ⋯
-        </button>
-        <ul
-          v-if="menuOpen"
-          class="menu"
-          role="menu"
-        >
-          <li v-if="assistant.available.value">
-            <button
-              type="button"
-              role="menuitem"
-              data-test="card-ask"
-              @click="act(askAssistant)"
-            >
-              Demander à l'assistant
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              role="menuitem"
-              data-test="card-edit"
-              @click="act(() => emit('edit', application))"
-            >
-              Modifier
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              role="menuitem"
-              class="danger"
-              @click="act(() => emit('remove', application))"
-            >
-              Supprimer
-            </button>
-          </li>
-        </ul>
-      </div>
-    </header>
-
-    <p
-      v-if="application.interview_at"
-      class="card-facts"
-    >
-      Entretien le {{ longDate.format(new Date(application.interview_at)) }}
-    </p>
-
-    <p
-      v-if="remoteAbroad"
-      class="card-facts remote-orp"
-      data-test="remote-orp"
-    >
-      100 % télétravail{{ application.remote_region ? ` · ${application.remote_region}` : "" }} : si l'employeur est à
-      l'étranger, vérifie contrat et assurances sociales avec ton conseiller ORP.
-    </p>
-
-    <label class="card-status">
-      Statut
-      <select
-        :value="application.status"
-        :class="['status-select', application.status]"
+      </strong>
+      <span class="muted">{{ application.job_title }} · {{ shortDate.format(new Date(application.sent_at)) }}</span>
+      <span
+        class="app-status"
         data-test="card-status"
-        @change="onStatus"
       >
-        <option
-          v-for="(text, value) in applicationStatusLabel"
-          :key="value"
-          :value="value"
-        >
-          {{ text }}
-        </option>
-      </select>
-    </label>
-
+        <span :class="['dot', application.status]" />{{ applicationStatusLabel[application.status] }}
+      </span>
+    </button>
     <p
-      v-if="followUpDue"
-      class="card-facts follow-up-line"
-      data-test="card-follow-up"
+      :class="['application-card-foot', step.key]"
+      data-test="card-step"
     >
-      Sans réponse depuis 10 jours.
+      <span>{{ step.text }}</span>
       <button
         type="button"
         class="link"
-        data-test="card-follow-up-open"
-        @click="followUpOpen = true"
+        :data-test="`card-step-${step.key}`"
+        @click="run"
       >
-        Relancer
-      </button>
-    </p>
-    <p
-      v-else-if="noAnswerDue"
-      class="card-facts follow-up-line"
-      data-test="card-no-answer"
-    >
-      Pas de réponse depuis la relance.
-      <button
-        type="button"
-        class="link"
-        data-test="card-no-answer-set"
-        @click="emit('status', application, 'sans_reponse')"
-      >
-        Passer en Sans réponse
+        {{ step.action }} ›
       </button>
     </p>
     <SidePanel
@@ -257,164 +109,5 @@ const onStatus = (event: Event): void =>
         @done="onFollowedUp"
       />
     </SidePanel>
-    <p
-      v-if="summary"
-      class="interview-summary"
-      data-test="interview-summary"
-    >
-      {{ summary }}
-    </p>
-    <p
-      v-if="application.status === 'entretien' || latest"
-      class="interview-actions"
-    >
-      <button
-        v-if="upcoming"
-        type="button"
-        class="link"
-        data-test="interview-prepare"
-        @click="emit('prepare', application)"
-      >
-        Préparer l'entretien
-      </button>
-      <a
-        v-if="upcoming"
-        class="link"
-        :href="`/api/applications/${application.id}/interview.ics?origin=${encodeURIComponent(origin)}`"
-        download
-        data-test="interview-calendar"
-      >Ajouter à mon agenda</a>
-      <button
-        v-if="!upcoming && (needsFeedback || (application.status === 'entretien' && !latest))"
-        type="button"
-        class="link"
-        data-test="interview-feedback"
-        @click="emit('interview', application, null)"
-      >
-        Faire le point sur l'entretien
-      </button>
-      <template v-if="latest">
-        <button
-          type="button"
-          class="link"
-          data-test="interview-open"
-          @click="emit('interview', application, latest)"
-        >
-          Voir le retour
-        </button>
-        <button
-          v-if="!needsFeedback"
-          type="button"
-          class="link"
-          @click="emit('interview', application, null)"
-        >
-          Ajouter un autre entretien
-        </button>
-      </template>
-    </p>
-    <p
-      v-if="orpRow?.missing.length"
-      class="notice card-missing"
-      data-test="card-missing"
-    >
-      Pour l'ORP, il manque : {{ orpRow.missing.join(", ") }}.
-      <button
-        type="button"
-        class="link"
-        data-test="card-complete"
-        @click="emit('edit', application)"
-      >
-        Compléter
-      </button>
-    </p>
-
-    <p class="card-links">
-      <a
-        v-if="application.letter_draft_id"
-        class="link"
-        :href="`/api/letters/${application.letter_draft_id}/docx`"
-        download
-      >Lettre</a>
-      <a
-        v-if="application.cv_draft_id"
-        class="link"
-        :href="`/api/cvs/${application.cv_draft_id}/docx`"
-        download
-      >CV</a>
-      <a
-        v-if="application.application_url?.startsWith('http')"
-        class="link"
-        :href="application.application_url"
-        target="_blank"
-        rel="noopener noreferrer"
-      >Lien de candidature</a>
-      <button
-        v-if="orpRow"
-        type="button"
-        class="link"
-        :aria-expanded="jobRoom"
-        data-test="card-job-room"
-        @click="jobRoom = !jobRoom"
-      >
-        {{ jobRoom ? "Fermer Job-Room" : "Copier pour Job-Room" }}
-      </button>
-      <button
-        type="button"
-        class="link"
-        :aria-expanded="contactsOpen"
-        data-test="card-contacts"
-        @click="contactsOpen = true"
-      >
-        Contacts{{ contacts.length ? ` · ${contacts.length}` : "" }}
-      </button>
-    </p>
-    <p
-      v-if="contactsDue.length"
-      class="card-facts contact-due-line"
-      data-test="card-contact-due"
-    >
-      Sans réponse depuis 7 jours : relancer {{ contactsDue.map(contactName).join(", ") }} ?
-    </p>
-    <SidePanel
-      v-if="contactsOpen"
-      open
-      :title="`Contacts chez ${application.company}`"
-      :help="CONTACTS_HELP"
-      @close="contactsOpen = false"
-    >
-      <ContactsPanel
-        :application-id="application.id"
-        @changed="emit('changed')"
-      />
-    </SidePanel>
-
-    <dl
-      v-if="jobRoom && orpRow"
-      class="card-job-room"
-      data-test="card-job-room-fields"
-    >
-      <template
-        v-for="item in orpRow.job_room"
-        :key="item.label"
-      >
-        <dt>{{ item.label }}</dt>
-        <dd>
-          <span
-            v-if="item.choice"
-            class="job-room-choice"
-          >{{ item.value ? `à cocher : ${item.value}` : "—" }}</span>
-          <span v-else>{{ item.value || "—" }}</span>
-          <button
-            v-if="item.value && !item.choice"
-            type="button"
-            class="link"
-            data-test="card-copy"
-            @click="copy(item.value, item.label)"
-          >
-            {{ copied === item.label ? "Copié" : "Copier" }}
-          </button>
-        </dd>
-      </template>
-    </dl>
   </article>
 </template>

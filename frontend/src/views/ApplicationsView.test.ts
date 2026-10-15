@@ -109,7 +109,10 @@ async function mountView(path = "/candidatures/suivi") {
   });
   await router.push(path);
   const view = path.includes("preuves") ? "orp" : "suivi";
-  const wrapper = mount(ApplicationsView, { props: { view }, global: { plugins: [router] } });
+  const wrapper = mount(ApplicationsView, {
+    props: { view },
+    global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } },
+  });
   await flushPromises();
   return { wrapper, router };
 }
@@ -319,10 +322,18 @@ describe("Suivi en calendrier (docs/22)", () => {
     await day.trigger("click");
     const cards = wrapper.findAll("[data-test=day-panel] [data-test=application-card]");
     expect(cards).toHaveLength(1);
-    expect(cards[0]!.find("[data-test=card-missing]").text()).toContain("adresse de l'entreprise");
-    await cards[0]!.find("[data-test=card-job-room]").trigger("click");
-    expect(cards[0]!.find("[data-test=card-job-room-fields]").text()).toContain("Par voie électronique");
-    await cards[0]!.find("[data-test=card-status]").setValue("entretien");
+    // Carte calme (docs/46) : pastille de statut, une seule prochaine étape (l'entretien à venir).
+    expect(cards[0]!.find("[data-test=card-status]").text()).toBe("En attente");
+    expect(cards[0]!.find("[data-test=card-step-prepare]").exists()).toBe(true);
+    expect(cards[0]!.find("[data-test=card-missing]").exists()).toBe(false);
+    // Le panneau : statut, ORP (Job-Room déplié), contacts.
+    await cards[0]!.find("[data-test=card-open]").trigger("click");
+    const panel = wrapper.find("[data-test=application-panel]");
+    expect(panel.find("[data-test=card-missing]").text()).toContain("adresse de l'entreprise");
+    expect(panel.find("[data-test=card-job-room-fields]").text()).toContain("Par voie électronique");
+    const titles = panel.findAll(".offer-section h3").map((h) => h.text());
+    expect(titles).toEqual(["Statut", "Entretiens", "Pour l'ORP", "Contacts"]);
+    await panel.find("[data-test=panel-status]").setValue("entretien");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 2 } } }));
     // Calendrier / Liste, retenu.
@@ -346,8 +357,44 @@ describe("Suivi en calendrier (docs/22)", () => {
     const panel = wrapper.find("[data-test=day-panel]");
     expect(panel.text()).toContain("Muette SA");
     expect(panel.text()).not.toContain("Récente SA");
-    expect(panel.find("[data-test=card-no-answer]").exists()).toBe(true);
-    expect(panel.find("[data-test=card-follow-up]").exists()).toBe(false);
+    expect(panel.find("[data-test=card-step-no-answer]").exists()).toBe(true);
+    expect(panel.find("[data-test=card-step-follow-up]").exists()).toBe(false);
+    // « Sans réponse › » passe la candidature en Sans réponse.
+    PUT.mockResolvedValue({ data: silent });
+    await panel.find("[data-test=card-step-no-answer]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith(
+      "/api/applications/{application_id}",
+      expect.objectContaining({ body: expect.objectContaining({ status: "sans_reponse" }) }),
+    );
+  });
+});
+
+describe("Suivi, une carte et un panneau (docs/46)", () => {
+  it("la prochaine étape suit l'ordre : relance, puis ORP, sinon Gérer ; la liste ouvre le panneau", async () => {
+    localStorage.setItem("jobbot-suivi-vue", "calendar");
+    const ago = (days: number): string => {
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+    const late = { ...application, id: 2, company: "Lente SA", sent_at: ago(12), interview_at: null };
+    mockApi(() => month(), [late]);
+    const { wrapper } = await mountView();
+    const card = wrapper.find("[data-test=day-panel] [data-test=application-card]");
+    expect(card.find("[data-test=card-step]").text()).toContain("Sans réponse depuis 10 jours");
+    await card.find("[data-test=card-step-follow-up]").trigger("click");
+    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
+    expect(wrapper.text()).toContain("Relancer Lente SA");
+
+    await wrapper.find("[data-test=layout-list]").trigger("click");
+    await wrapper.find("[data-test=table-open]").trigger("click");
+    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(true);
+    await wrapper.find("[data-test=panel-more]").trigger("click");
+    await wrapper.find("[data-test=panel-edit]").trigger("click");
+    // Le formulaire prend la place du panneau.
+    expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
+    expect(wrapper.find("form.application-form").exists()).toBe(true);
   });
 });
 
