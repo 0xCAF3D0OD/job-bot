@@ -11,6 +11,7 @@ import CvPanel from "../components/CvPanel.vue";
 import SidePanel from "../components/SidePanel.vue";
 import { CONTACTS_HELP } from "../contactLabels";
 import FormSheet from "../components/FormSheet.vue";
+import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
@@ -434,9 +435,6 @@ onMounted(() => void load());
             data-test="no-letter"
           >
             <p>Aucune lettre pour cette offre.</p>
-            <p class="hint">
-              L'IA rédige la lettre à partir de tes blocs de profil (≈ 0,10 $), sans tes coordonnées.
-            </p>
           </div>
           <div
             v-else-if="writing && !selected"
@@ -513,7 +511,13 @@ onMounted(() => void load());
 
         <aside class="prep-side">
           <div class="side-card">
-            <h2>{{ selected ? "Nouvelle version" : "Rédiger la lettre" }}</h2>
+            <h2>
+              {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
+              <HelpTip
+                text="L'IA rédige la lettre à partir de tes blocs de profil, sans tes coordonnées ; la consigne ajuste la version affichée."
+                label="Aide : rédiger la lettre"
+              />
+            </h2>
             <label>Langue
               <select
                 v-model="language"
@@ -543,7 +547,11 @@ onMounted(() => void load());
               data-test="write"
               @click="write"
             >
-              {{ writing ? "Rédaction…" : selected ? "Rédiger une nouvelle version" : "Rédiger la lettre" }}
+              {{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}
+              <span
+                v-if="!writing"
+                class="cost"
+              >· 0,10 $</span>
               <AppIcon name="chevron" />
             </button>
           </div>

@@ -52,7 +52,7 @@ describe("SettingsView, notifications", () => {
     await wrapper.find("[data-test=test-notification]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/notifications/test");
-    expect(wrapper.find("[data-test=notifications] [role=status]").text()).toContain("Notification envoyée");
+    expect(wrapper.find("[data-test=notifications] [role=status]:not(.help-tip-text)").text()).toContain("Notification envoyée");
   });
 });
 

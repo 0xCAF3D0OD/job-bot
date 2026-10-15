@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { api, type OrpMonth, type OrpRow, type Source } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
+import HelpTip from "./HelpTip.vue";
 import { printSheet } from "../composables/usePrint";
 import { formatMonth, sourceLabel } from "../format";
 
@@ -168,7 +169,10 @@ onMounted(async () => {
           >
             Marquer comme remis <AppIcon name="chevron" />
           </button>
-          <span class="hint">une fois saisies dans Job-Room ou le PDF envoyé</span>
+          <HelpTip
+            text="À faire une fois les candidatures saisies dans Job-Room ou le PDF envoyé à ton ORP."
+            label="Aide : marquer comme remis"
+          />
         </template>
       </template>
       <span class="orp-next-links">
@@ -227,8 +231,12 @@ onMounted(async () => {
             class="customize-list columns-list"
             data-test="columns-list"
           >
-            <legend class="hint">
-              Date, entreprise et poste toujours affichés ; le PDF et le CSV gardent tout.
+            <legend>
+              Colonnes
+              <HelpTip
+                text="Date, entreprise et poste restent toujours affichés ; le PDF et le CSV gardent toutes les colonnes."
+                label="Aide : colonnes"
+              />
             </legend>
             <label
               v-for="column in COLUMNS"

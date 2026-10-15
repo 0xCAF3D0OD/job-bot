@@ -12,7 +12,7 @@ const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "lo
     data-test="coaching"
   >
     <p class="hint">
-      Pistes de l'IA du {{ dateFormat.format(new Date(coaching.created_at)) }}, d'après tes retours et ton profil.
+      Pistes de l'IA du {{ dateFormat.format(new Date(coaching.created_at)) }}.
     </p>
     <ul v-if="coaching.pistes.length">
       <li

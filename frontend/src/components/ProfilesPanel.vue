@@ -5,6 +5,7 @@ import { api, type Profile, type ProfileList } from "../api/client";
 import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import AppIcon from "./AppIcon.vue";
+import HelpTip from "./HelpTip.vue";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
 // Actualités et les Formations leur conviennent.
@@ -112,10 +113,13 @@ onMounted(async () => {
     data-test="profiles-panel"
   >
     <fieldset>
-      <legend>Tes profils</legend>
-      <p class="hint">
-        Des profils fictifs pour tester Actualités et Formations ; tes candidatures ne changent pas.
-      </p>
+      <legend>
+        Tes profils
+        <HelpTip
+          text="Des profils fictifs pour tester Actualités et Formations ; tes candidatures ne changent pas. Pour proposer des mots-clés, l'IA reçoit seulement le métier."
+          label="Aide : profils d'essai"
+        />
+      </legend>
       <ul class="sites-list">
         <li
           v-for="profile in list.items"
@@ -214,9 +218,9 @@ onMounted(async () => {
             data-test="propose-keywords"
             @click="propose"
           >
-            {{ proposing ? "Proposition…" : "Proposer des mots-clés à partir du métier" }}
+            {{ proposing ? "Proposition…" : "Proposer des mots-clés" }}
+            <span class="cost">· 0,001 $</span>
           </button>
-          <span class="hint"> L'IA reçoit seulement le métier ; environ 0,001 $.</span>
         </div>
         <div class="wide chip-group">
           <span class="chip-label">Langues</span>

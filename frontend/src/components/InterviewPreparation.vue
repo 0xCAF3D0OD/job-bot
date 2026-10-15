@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Application, type InterviewInsights, type Offer } from "../api/client";
+import HelpTip from "./HelpTip.vue";
 import InterviewCoaching from "./InterviewCoaching.vue";
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
@@ -133,7 +134,7 @@ onMounted(async () => {
         v-if="insights && !insights.count"
         class="hint"
       >
-        Après tes premiers entretiens, cette fiche reprendra tes retours (questions difficiles, points à préparer).
+        Aucun retour d'entretien pour l'instant.
       </p>
       <InterviewCoaching
         v-if="coaching"
@@ -155,8 +156,17 @@ onMounted(async () => {
           data-test="prep-coach"
           @click="coach"
         >
-          {{ busy ? "Analyse en cours…" : "Pistes de l'IA pour cet entretien (≈ 0,03 $)" }}
+          {{ busy ? "Analyse en cours…" : "Pistes de l'IA" }}
+          <span
+            v-if="!busy"
+            class="cost"
+          >· 0,03 $</span>
         </button>
+        <HelpTip
+          v-if="insights?.can_coach && insights.count"
+          text="Pistes pour cet entretien : l'IA ne reçoit que tes retours d'entretien, tes blocs de profil et le poste visé, jamais tes coordonnées."
+          label="Aide : pistes de l'IA"
+        />
         <button
           type="button"
           class="primary small"

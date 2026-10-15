@@ -5,7 +5,7 @@ import { api, type NewsPreferences, type NewsSource } from "../api/client";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import AppIcon from "./AppIcon.vue";
 import NewsCatalog from "./NewsCatalog.vue";
-import MoreInfo from "./MoreInfo.vue";
+import HelpTip from "./HelpTip.vue";
 
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
@@ -139,10 +139,13 @@ onMounted(() => void load());
     data-test="news-sources"
   >
     <fieldset v-if="preferences">
-      <legend>Mon domaine</legend>
-      <p class="hint">
-        Les mots-clés de ton métier, pour filtrer Actualités et Formations.
-      </p>
+      <legend>
+        Mon domaine
+        <HelpTip
+          text="Les mots-clés de ton métier, pour filtrer Actualités et Formations."
+          label="Aide : mon domaine"
+        />
+      </legend>
       <ul
         class="keyword-chips"
         data-test="domain-keywords"
@@ -195,17 +198,13 @@ onMounted(() => void load());
     </fieldset>
 
     <fieldset>
-      <legend>Sources des Actualités</legend>
-      <p class="hint">
-        Relevées toutes les 6 heures, sans coût.
-      </p>
-      <MoreInfo>
-        <p>
-          Pour ajouter une source : l'adresse d'un site ou d'un flux RSS ; pour YouTube, l'ID de la chaîne (sur la chaîne :
-          « … plus » → « Partager la chaîne » → « Copier l'ID de la chaîne »). Les sources « marché de l'emploi » restent
-          visibles même filtrées sur « Mon domaine ».
-        </p>
-      </MoreInfo>
+      <legend>
+        Sources des Actualités
+        <HelpTip
+          text="Relevées toutes les 6 heures, sans coût. Les sources « marché de l'emploi » restent visibles même filtrées sur « Mon domaine »."
+          label="Aide : sources des Actualités"
+        />
+      </legend>
       <ul class="sites-list">
         <li
           v-for="source in sources"
@@ -283,10 +282,13 @@ onMounted(() => void load());
         data-test="add-news-search"
         @submit.prevent="addSearch"
       >
-        <p class="hint wide">
-          Suivre un sujet dans Google Actualités (seuls les mots-clés, le pays et la langue y sont envoyés).
-        </p>
-        <label class="wide">Mots-clés
+        <label class="wide">
+          <span>Mots-clés
+            <HelpTip
+              text="Le sujet est suivi dans Google Actualités ; seuls les mots-clés, le pays et la langue y sont envoyés."
+              label="Aide : veille Google Actualités"
+            />
+          </span>
           <input
             v-model="search.query"
             type="text"
@@ -339,7 +341,13 @@ onMounted(() => void load());
         data-test="add-news-source"
         @submit.prevent="add"
       >
-        <label class="wide">Adresse du site, du flux RSS, ou ID de chaîne YouTube
+        <label class="wide">
+          <span>Adresse du site, du flux RSS, ou ID de chaîne YouTube
+            <HelpTip
+              text="Pour YouTube, l'ID se trouve sur la chaîne : « … plus », puis « Partager la chaîne », puis « Copier l'ID de la chaîne »."
+              label="Aide : ID de chaîne YouTube"
+            />
+          </span>
           <input
             v-model="form.url"
             type="text"
@@ -385,7 +393,7 @@ onMounted(() => void load());
           <input
             v-model="form.labour_market"
             type="checkbox"
-          > Marché de l'emploi (toujours visible, même filtré sur « Mon domaine »)
+          > Marché de l'emploi
         </label>
         <div class="form-actions wide">
           <button

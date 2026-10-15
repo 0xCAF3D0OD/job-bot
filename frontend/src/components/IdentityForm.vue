@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import { email, postcode, webAddress, type Check } from "../validators";
 import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
+import HelpTip from "./HelpTip.vue";
 
 // Coordonnées pour l'en-tête des lettres, du CV et du formulaire ORP : base locale seulement,
 // jamais envoyées à l'IA.
@@ -92,16 +93,19 @@ onMounted(async () => {
     @submit.prevent="saveIdentity"
   >
     <fieldset>
-      <legend>Mes coordonnées</legend>
+      <legend>
+        Mes coordonnées
+        <HelpTip
+          text="Gardées sur ta plateforme, jamais envoyées à l'IA."
+          label="Aide : mes coordonnées"
+        />
+      </legend>
       <p
         v-if="missing.length"
         class="notice"
         data-test="identity-missing"
       >
         Il manque : {{ missing.join(", ") }}.
-      </p>
-      <p class="hint">
-        Gardées sur ta plateforme, jamais envoyées à l'IA.
       </p>
       <div class="form-grid">
         <label class="wide">Nom et prénom

@@ -12,6 +12,7 @@ import {
 } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
+import HelpTip from "../components/HelpTip.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
@@ -436,7 +437,14 @@ onUnmounted(() => assistant.setFocus(null));
           :style="panelHeight ? { height: `${panelHeight}px` } : undefined"
           data-test="day-panel"
         >
-          <h3>{{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : "À relancer" }}</h3>
+          <h3>
+            {{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : "À relancer" }}
+            <HelpTip
+              v-if="!selectedDay"
+              text="Les candidatures à relancer s'affichent ici. Clique sur un jour du calendrier pour voir ses candidatures."
+              label="Aide : à relancer"
+            />
+          </h3>
           <p
             v-if="!panelCards.length"
             class="hint"
@@ -452,7 +460,7 @@ onUnmounted(() => assistant.setFocus(null));
               </button>
             </template>
             <template v-else>
-              Rien à relancer. Clique sur un jour pour voir ses candidatures.
+              Rien à relancer.
             </template>
           </p>
           <div
@@ -490,7 +498,11 @@ onUnmounted(() => assistant.setFocus(null));
           v-if="loaded && !items.length"
           class="muted empty"
         >
-          Aucune candidature en {{ formatMonth(orp.month) }}. Depuis une offre, « Marquer comme envoyée » l'ajoute ici.
+          Aucune candidature en {{ formatMonth(orp.month) }}.
+          <HelpTip
+            text="Depuis une offre, « Marquer comme envoyée » l'ajoute ici."
+            label="Aide : ajouter une candidature"
+          />
         </p>
         <ApplicationsTable
           v-else

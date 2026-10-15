@@ -96,9 +96,6 @@ function nextSite(): void {
 
     <template v-if="step === 1">
       <h2>Que veux-tu recevoir ?</h2>
-      <p class="hint">
-        Une recherche = des mots et un lieu. Garde celles qui te conviennent.
-      </p>
       <ul class="keyword-chips">
         <li
           v-for="search in searches"
