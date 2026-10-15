@@ -4,7 +4,9 @@ import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
 import DisclosureRow from "../components/DisclosureRow.vue";
+import DomainField from "../components/DomainField.vue";
 import HelpTip from "../components/HelpTip.vue";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
 import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
@@ -61,8 +63,21 @@ async function load(): Promise<void> {
   }
 }
 
+// Sans domaine, « Mon domaine » ouvre le champ sur place (docs/43 n° 4).
+const domainFieldOpen = ref(false);
+
 function setDomain(value: boolean): void {
+  if (value && !hasDomain.value) {
+    domainFieldOpen.value = !domainFieldOpen.value;
+    return;
+  }
   domainOnly.value = value;
+  void load();
+}
+
+function onDomainSaved(): void {
+  domainFieldOpen.value = false;
+  domainOnly.value = true;
   void load();
 }
 
@@ -104,7 +119,7 @@ async function review(training: Training, keep: boolean): Promise<void> {
 async function suggest(): Promise<void> {
   // Bouton toujours actif (docs/29 §3) : sans domaine, il dit quoi faire.
   if (!hasDomain.value) {
-    message.value = "Définis d'abord ton domaine dans Réglages › Actualités.";
+    message.value = "Définis d'abord ton domaine : bouton « Mon domaine ».";
     return;
   }
   suggesting.value = true;
@@ -205,7 +220,7 @@ onMounted(() => void load());
             type="button"
             role="radio"
             :aria-checked="domainOnly && hasDomain"
-            :disabled="!hasDomain"
+            :aria-expanded="hasDomain ? undefined : domainFieldOpen"
             data-test="filter-domain"
             @click="setDomain(true)"
           >
@@ -321,15 +336,17 @@ onMounted(() => void load());
       >
         {{ message }}
       </p>
-      <p
-        v-if="loaded && !hasDomain"
-        class="hint"
-      >
-        Pour filtrer selon ton domaine (DevOps, Kubernetes…), indique tes mots-clés dans
-        <RouterLink to="/reglages#actualites">
-          Réglages → Actualités
-        </RouterLink>.
-      </p>
+      <PushTransition>
+        <DomainField
+          v-if="domainFieldOpen && !hasDomain"
+          @saved="onDomainSaved"
+        />
+      </PushTransition>
+      <LoadingBlocks
+        v-if="!loaded"
+        :columns="phone ? 1 : 3"
+        :heights="['16rem', '16rem', '16rem']"
+      />
 
       <p
         v-if="loaded && !shown.length"

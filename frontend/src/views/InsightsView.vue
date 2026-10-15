@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PushTransition from "../components/PushTransition.vue";
 import { formatMonth, shiftMonth } from "../format";
 
@@ -157,6 +158,10 @@ onMounted(() => void load());
       {{ error }}
     </p>
 
+    <LoadingBlocks
+      v-if="!insights && !error"
+      :heights="['5rem', '10rem', '10rem']"
+    />
     <template v-if="insights">
       <ol
         class="insights-funnel"

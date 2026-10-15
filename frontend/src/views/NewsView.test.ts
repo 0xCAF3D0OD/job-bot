@@ -129,15 +129,16 @@ describe("NewsView", () => {
   });
 
   it("articles, compteurs de nouveautés, visite enregistrée", async () => {
-    mockApi(pageOf([item(1, "articles")], { new_articles: 3, new_videos: 2 }));
+    mockApi(pageOf([item(1, "articles")], { new_articles: 4, new_jobs: 3, new_economy: 1, new_videos: 2 }));
     const { wrapper } = await mountView();
-    expect(newsCalls()[0]![1].params.query).toMatchObject({ kind: "articles", limit: 60, domain_only: false });
+    expect(newsCalls()[0]![1].params.query).toMatchObject({ kind: "articles", topic: "jobs", limit: 60, domain_only: false });
     const cards = wrapper.findAll("[data-test=news-item]");
     expect(cards).toHaveLength(1);
     expect(cards[0]!.attributes("target")).toBe("_blank");
     expect(cards[0]!.attributes("rel")).toContain("noopener");
     expect(cards[0]!.find("img").exists()).toBe(false);
     expect(wrapper.find("[data-test=tab-articles]").text()).toContain("3");
+    expect(wrapper.find("[data-test=tab-economy]").text()).toContain("1");
     expect(POST).toHaveBeenCalledWith("/api/news/seen");
     expect(wrapper.text()).toContain("Relevé il y a 2 h");
   });
@@ -167,11 +168,45 @@ describe("NewsView", () => {
     expect(newsCalls().at(-1)![1].params.query.language).toEqual(["fr"]);
   });
 
-  it("sans mots-clés : « Mon domaine » désactivé, lien vers les Réglages", async () => {
+  it("sans mots-clés : « Mon domaine » ouvre le champ sur place (docs/43 n° 4)", async () => {
     mockApi(pageOf([]), prefs({ domain_keywords: [] }));
+    PUT.mockImplementation((_path: string, { body }: { body: unknown }) => Promise.resolve({ data: body }));
     const { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=filter-domain]").attributes("disabled")).toBeDefined();
-    expect(wrapper.text()).toContain("Réglages → Actualités");
+    expect(wrapper.text()).not.toContain("Réglages → Actualités");
+    await wrapper.find("[data-test=filter-domain]").trigger("click");
+    await wrapper.find("[data-test=domain-field-input]").setValue("DevOps, Kubernetes");
+    await wrapper.find("[data-test=domain-field]").trigger("submit");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/news/preferences", {
+      body: expect.objectContaining({ domain_keywords: ["DevOps", "Kubernetes"], domain_only: true }),
+    });
+    expect(wrapper.find("[data-test=domain-field]").exists()).toBe(false);
+    expect(newsCalls().at(-1)![1].params.query.domain_only).toBe(true);
+  });
+
+  it("économie : l'autre onglet des articles (docs/43 n° 16)", async () => {
+    mockApi(pageOf([item(1, "articles")]));
+    await mountView("/actualites?rubrique=economie");
+    expect(newsCalls()[0]![1].params.query).toMatchObject({ kind: "articles", topic: "economy" });
+  });
+
+  it("téléphone : 10 contenus, puis « Voir plus » (docs/43 n° 17)", async () => {
+    const original = globalThis.matchMedia;
+    globalThis.matchMedia = ((query: string) =>
+      ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
+    try {
+      mockApi(pageOf(Array.from({ length: 20 }, (_, n) => item(n + 1, "articles"))));
+      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: NewsView }] });
+      await router.push("/actualites");
+      const wrapper = mount(NewsView, { global: { plugins: [router], stubs: { teleport: true } } });
+      await flushPromises();
+      expect(wrapper.findAll("[data-test=news-item]")).toHaveLength(10);
+      await wrapper.find("[data-test=news-more]").trigger("click");
+      expect(wrapper.findAll("[data-test=news-item]")).toHaveLength(20);
+      expect(wrapper.find("[data-test=news-more]").exists()).toBe(false);
+    } finally {
+      globalThis.matchMedia = original;
+    }
   });
 
   it("relever maintenant, puis mise à jour pendant le relevé", async () => {

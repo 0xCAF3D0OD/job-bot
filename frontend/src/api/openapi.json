@@ -4363,6 +4363,26 @@
               ],
               "title": "Language"
             }
+          },
+          {
+            "name": "topic",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "jobs",
+                    "economy"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Topic"
+            }
           }
         ],
         "responses": {
@@ -10955,6 +10975,16 @@
             "type": "integer",
             "title": "New Videos"
           },
+          "new_jobs": {
+            "type": "integer",
+            "title": "New Jobs",
+            "default": 0
+          },
+          "new_economy": {
+            "type": "integer",
+            "title": "New Economy",
+            "default": 0
+          },
           "fetched_at": {
             "anyOf": [
               {
@@ -14376,6 +14406,14 @@
             "type": "array",
             "title": "Interviews To Review",
             "default": []
+          },
+          "upcoming_interviews": {
+            "items": {
+              "$ref": "#/components/schemas/UpcomingInterview"
+            },
+            "type": "array",
+            "title": "Upcoming Interviews",
+            "default": []
           }
         },
         "type": "object",
@@ -14841,6 +14879,31 @@
         ],
         "title": "TrainingReview",
         "description": "Suggestion de l'IA : la garder (vérifiée) ou l'écarter (ne plus la proposer)."
+      },
+      "UpcomingInterview": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "company",
+          "at"
+        ],
+        "title": "UpcomingInterview",
+        "description": "Entretien aujourd'hui ou demain : en tête d'Aujourd'hui (docs/43 n° 30)."
       },
       "ValidationError": {
         "properties": {

@@ -508,3 +508,54 @@ async def test_search_items_cleaned_and_deduplicated(
     # Le même article, déjà relevé par la RTS, n'est pas repris par la veille.
     assert [name for title, name in found if title == "Le chômage reste à 3 %"] == ["Test RTS"]
     assert found[("Réussir la CKA en 30 jours", "Test veille")] == "IT-Connect"
+
+
+async def test_topics_split_jobs_and_economy(rt: Runtime, settings: Settings) -> None:
+    """« Marché de l'emploi » : l'emploi et ton domaine ; « Économie » : le reste (docs/43)."""
+    now = datetime.now(UTC)
+    async with rt.sessionmaker.begin() as session:
+        source = NewsSource(
+            kind="articles",
+            name="Test économie",
+            url="https://e",
+            feed_url="https://t.example/eco",
+            fetched_at=now,
+        )
+        session.add(source)
+        await session.flush()
+        for n, title in enumerate(
+            [
+                "Le chômage recule en Suisse romande",
+                "Kubernetes : la fondation publie sa feuille de route",
+                "Lindt relève ses prix en Europe",
+                "Credit Suisse : les bonus confisqués",
+            ]
+        ):
+            session.add(
+                NewsItem(
+                    source_id=source.id,
+                    title=title,
+                    url=f"https://t.example/eco/{n}",
+                    published_at=now,
+                )
+            )
+    await follow_test_sources(rt)
+    app = create_app(settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        preferences = (await api.get("/api/news/preferences")).json()
+        await api.put(
+            "/api/news/preferences", json={**preferences, "domain_keywords": ["Kubernetes"]}
+        )
+        jobs = (await api.get("/api/news", params={"kind": "articles", "topic": "jobs"})).json()
+        assert {i["title"] for i in jobs["items"]} == {
+            "Le chômage recule en Suisse romande",
+            "Kubernetes : la fondation publie sa feuille de route",
+        }
+        assert (jobs["new_jobs"], jobs["new_economy"]) == (2, 2)
+        economy = (
+            await api.get("/api/news", params={"kind": "articles", "topic": "economy"})
+        ).json()
+        assert {i["title"] for i in economy["items"]} == {
+            "Lindt relève ses prix en Europe",
+            "Credit Suisse : les bonus confisqués",
+        }
