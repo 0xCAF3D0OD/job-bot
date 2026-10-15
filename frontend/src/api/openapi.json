@@ -272,6 +272,132 @@
         }
       }
     },
+    "/api/assistant/actions/{action_id}/confirm": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Confirm Action",
+        "operationId": "confirmAssistantAction",
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatActionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assistant/actions/{action_id}/undo": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Undo Action",
+        "operationId": "undoAssistantAction",
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatActionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assistant/actions/{action_id}/decline": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Decline Action",
+        "operationId": "declineAssistantAction",
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Action Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatActionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/extension/me": {
       "get": {
         "tags": [
@@ -7271,6 +7397,64 @@
         ],
         "title": "CatalogSourceOut"
       },
+      "ChatActionOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "offer_status",
+              "offer_expiry",
+              "application_status"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "proposed",
+              "done",
+              "undone",
+              "declined",
+              "stale"
+            ],
+            "title": "State"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "state",
+          "created_at"
+        ],
+        "title": "ChatActionOut",
+        "description": "Proposition de l'assistant (docs/52) et son état."
+      },
       "ChatMessageOut": {
         "properties": {
           "id": {
@@ -7974,6 +8158,13 @@
             },
             "type": "array",
             "title": "Messages"
+          },
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/ChatActionOut"
+            },
+            "type": "array",
+            "title": "Actions"
           }
         },
         "type": "object",
@@ -7981,7 +8172,8 @@
           "id",
           "title",
           "updated_at",
-          "messages"
+          "messages",
+          "actions"
         ],
         "title": "ConversationDetail"
       },

@@ -1,0 +1,130 @@
+import { flushPromises, mount } from "@vue/test-utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createMemoryHistory, createRouter } from "vue-router";
+
+import { useAssistant } from "../composables/useAssistant";
+import { DATA_CHANGED_EVENT } from "../composables/useDataChanged";
+import AssistantPanel from "./AssistantPanel.vue";
+
+const GET = vi.fn();
+const POST = vi.fn();
+vi.mock("../api/client", async (original) => ({
+  ...(await original<typeof import("../api/client")>()),
+  api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), DELETE: vi.fn() },
+}));
+afterEach(() => {
+  vi.resetAllMocks();
+  vi.unstubAllGlobals();
+});
+
+const proposal = {
+  id: 7,
+  kind: "offer_status",
+  label: "Passer « Cloud Architect » (Jura Data SA) en Plus tard",
+  state: "proposed",
+  created_at: "2026-10-15T10:00:00Z",
+};
+
+// Réponse SSE minimale : un seul morceau, lu par getReader().
+function stream(...events: [string, unknown][]) {
+  const body = events.map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`).join("");
+  let sent = false;
+  return {
+    ok: true,
+    status: 200,
+    body: {
+      getReader: () => ({
+        read: () => {
+          if (sent) return Promise.resolve({ done: true, value: undefined });
+          sent = true;
+          return Promise.resolve({ done: false, value: new TextEncoder().encode(body) });
+        },
+      }),
+    },
+  };
+}
+
+async function mountPanel() {
+  GET.mockImplementation((path: string) =>
+    Promise.resolve({ data: path === "/api/assistant/status" ? { available: true, model: "x" } : [] }),
+  );
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+  await router.push("/candidatures/offres");
+  const assistant = useAssistant();
+  assistant.available.value = true;
+  assistant.open.value = true;
+  const wrapper = mount(AssistantPanel, { global: { plugins: [router] } });
+  await flushPromises();
+  return wrapper;
+}
+
+describe("AssistantPanel, propositions (docs/52)", () => {
+  it("affiche la proposition, la fait sur « Confirmer », puis propose « Annuler »", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve(
+          stream(
+            ["conversation", { id: 3, title: "Trie" }],
+            ["text", { text: "Je te propose de la mettre de côté." }],
+            ["action", proposal],
+            ["done", {}],
+          ),
+        ),
+      ),
+    );
+    const changed = vi.fn();
+    globalThis.addEventListener(DATA_CHANGED_EVENT, changed);
+    const wrapper = await mountPanel();
+    await wrapper.find("[data-test=assistant-input]").setValue("Trie mes offres");
+    await wrapper.find("form.assistant-form").trigger("submit");
+    // Le flux se lit en plusieurs tours de boucle.
+    for (let i = 0; i < 50 && !wrapper.find("[data-test=assistant-action]").exists(); i++) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await flushPromises();
+    }
+
+    const card = wrapper.find("[data-test=assistant-action]");
+    expect(card.text()).toContain("Passer « Cloud Architect » (Jura Data SA) en Plus tard");
+    expect(POST).not.toHaveBeenCalled();
+
+    POST.mockResolvedValue({ data: { ...proposal, state: "done", note: null } });
+    await card.find("[data-test=assistant-action-confirm]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/assistant/actions/{action_id}/confirm", { params: { path: { action_id: 7 } } });
+    expect(wrapper.find("[data-test=assistant-action]").text()).toContain("Fait.");
+    expect(wrapper.find("[data-test=assistant-action-undo]").exists()).toBe(true);
+    expect(changed).toHaveBeenCalledOnce();
+    globalThis.removeEventListener(DATA_CHANGED_EVENT, changed);
+  });
+
+  it("une discussion rouverte remet chaque proposition sous sa réponse, avec son état", async () => {
+    const wrapper = await mountPanel();
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data: path.endsWith("{conversation_id}")
+          ? {
+              id: 3,
+              title: "Trie",
+              updated_at: "2026-10-15T10:01:00Z",
+              messages: [
+                { id: 1, role: "user", content: "Trie", created_at: "2026-10-15T09:59:00Z" },
+                { id: 2, role: "assistant", content: "Voilà.", created_at: "2026-10-15T10:00:30Z" },
+              ],
+              actions: [{ ...proposal, state: "stale", note: null }],
+            }
+          : [{ id: 3, title: "Trie", updated_at: "2026-10-15T10:01:00Z" }],
+      }),
+    );
+    // Discussions récentes rechargées, puis « Trie » rouverte.
+    useAssistant().open.value = false;
+    await flushPromises();
+    useAssistant().open.value = true;
+    await flushPromises();
+    await wrapper.find("[data-test=assistant-recent]").trigger("click");
+    await flushPromises();
+    const lines = wrapper.findAll(".assistant-line");
+    expect(lines[1]!.find("[data-test=assistant-action]").text()).toContain("rien n'a été changé");
+    expect(wrapper.find("[data-test=assistant-action-confirm]").exists()).toBe(false);
+  });
+});

@@ -28,6 +28,7 @@ import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
 import { formatMonth, plural, shiftMonth } from "../format";
+import { useDataChanged } from "../composables/useDataChanged";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
 const REMIND_AFTER_DAYS = 10;
@@ -311,6 +312,7 @@ watch(
   () => void load(),
 );
 onMounted(() => void load());
+useDataChanged(load);
 
 // Le mois affiché et le jour choisi : ce dont parle l'assistant (docs/24 §2.2).
 const assistant = useAssistant();

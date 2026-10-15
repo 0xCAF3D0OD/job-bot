@@ -2,14 +2,16 @@
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
-import { api, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT } from "../api/client";
+import { api, type ChatAction, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT } from "../api/client";
 import type { components } from "../api/schema";
 import { blocks, readEvents } from "../assistantText";
 import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssistant";
+import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
 
 type Conversation = components["schemas"]["ConversationOut"];
-type Line = { role: "user" | "assistant"; content: string; error?: boolean };
+// Propositions de l'assistant (docs/52) : affichées sous sa réponse, faites sur un clic.
+type Line = { role: "user" | "assistant"; content: string; error?: boolean; actions?: ChatAction[] };
 
 const route = useRoute();
 const { available, open, focus, fresh, check, setFocus } = useAssistant();
@@ -68,7 +70,17 @@ async function resume(conversation: Conversation): Promise<void> {
   });
   if (!data) return;
   conversationId.value = data.id;
-  lines.value = data.messages.map((m) => ({ role: m.role === "user" ? "user" : "assistant", content: m.content }));
+  const rows: Line[] = data.messages.map((m) => ({
+    role: m.role === "user" ? "user" : "assistant",
+    content: m.content,
+  }));
+  // Chaque proposition va sous la réponse qui l'a faite : la première écrite après elle.
+  for (const action of data.actions) {
+    const index = data.messages.findIndex((m) => m.role === "assistant" && m.created_at >= action.created_at);
+    const line = rows[index >= 0 ? index : rows.length - 1];
+    if (line) (line.actions ??= []).push(action);
+  }
+  lines.value = rows;
   scrollDown();
 }
 
@@ -146,6 +158,10 @@ async function send(text: string = draft.value): Promise<void> {
           reply.content += String(data.text ?? "");
           scrollDown();
         } else if (event === "tool") reading.value = String(data.label ?? "");
+        else if (event === "action") {
+          (reply.actions ??= []).push(data as unknown as ChatAction);
+          scrollDown();
+        }
         else if (event === "error") {
           lines.value.push({ role: "assistant", content: String(data.message ?? ""), error: true });
         }
@@ -157,7 +173,7 @@ async function send(text: string = draft.value): Promise<void> {
       reply.error = true;
     }
   } finally {
-    if (!reply.content) lines.value.splice(lines.value.indexOf(reply), 1);
+    if (!reply.content && !reply.actions?.length) lines.value.splice(lines.value.indexOf(reply), 1);
     busy.value = false;
     reading.value = null;
     controller = null;
@@ -194,6 +210,36 @@ async function copy(text: string, index: number): Promise<void> {
     copied.value = null;
   }
 }
+
+// « Confirmer », « Non merci », « Annuler » : seul un clic change quelque chose (docs/52).
+const deciding = ref<number | null>(null);
+const DECISIONS = {
+  confirm: "/api/assistant/actions/{action_id}/confirm",
+  decline: "/api/assistant/actions/{action_id}/decline",
+  undo: "/api/assistant/actions/{action_id}/undo",
+} as const;
+
+async function decide(action: ChatAction, decision: keyof typeof DECISIONS): Promise<void> {
+  deciding.value = action.id;
+  try {
+    const { data } = await api.POST(DECISIONS[decision], { params: { path: { action_id: action.id } } });
+    if (!data) {
+      action.note = "Impossible pour l'instant, réessaie.";
+      return;
+    }
+    Object.assign(action, data);
+    if (!data.note && decision !== "decline") announceDataChanged();
+  } finally {
+    deciding.value = null;
+  }
+}
+
+const DONE_TEXT: Record<string, string> = {
+  done: "Fait.",
+  undone: "Annulé : remis comme avant.",
+  declined: "Laissé tel quel.",
+  stale: "Plus à faire : rien n'a été changé.",
+};
 
 function day(value: string): string {
   return new Date(value).toLocaleDateString("fr-CH", { day: "numeric", month: "short" });
@@ -265,7 +311,7 @@ function day(value: string): string {
         <template v-if="!lines.length">
           <p class="muted assistant-intro">
             Pose une question sur la plateforme ou sur tes données : offres, candidatures, preuves ORP, entretiens.
-            L'assistant lit et conseille, il ne modifie rien.
+            L'assistant lit et conseille ; il peut te proposer un changement, que tu confirmes d'un clic.
           </p>
           <div class="assistant-suggestions">
             <button
@@ -397,6 +443,63 @@ function day(value: string): string {
               </div>
             </template>
           </template>
+          <div
+            v-for="action in line.actions ?? []"
+            :key="action.id"
+            :class="['assistant-action', action.state]"
+            data-test="assistant-action"
+          >
+            <p class="assistant-action-label">
+              {{ action.label }}
+            </p>
+            <div
+              v-if="action.state === 'proposed'"
+              class="assistant-action-buttons"
+            >
+              <button
+                type="button"
+                class="secondary small"
+                :disabled="deciding === action.id"
+                data-test="assistant-action-decline"
+                @click="decide(action, 'decline')"
+              >
+                Non merci
+              </button>
+              <button
+                type="button"
+                class="primary small"
+                :disabled="deciding === action.id"
+                data-test="assistant-action-confirm"
+                @click="decide(action, 'confirm')"
+              >
+                Confirmer
+              </button>
+            </div>
+            <p
+              v-if="action.state === 'proposed' && action.note"
+              class="hint"
+              role="status"
+            >
+              {{ action.note }}
+            </p>
+            <p
+              v-else-if="action.state !== 'proposed'"
+              class="assistant-action-state"
+              role="status"
+            >
+              <span>{{ action.note ?? DONE_TEXT[action.state] }}</span>
+              <button
+                v-if="action.state === 'done'"
+                type="button"
+                class="link"
+                :disabled="deciding === action.id"
+                data-test="assistant-action-undo"
+                @click="decide(action, 'undo')"
+              >
+                Annuler
+              </button>
+            </p>
+          </div>
         </div>
         <p
           v-if="busy"

@@ -10,6 +10,7 @@ import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { formatMonth, plural, scoreLevel } from "../format";
+import { useDataChanged } from "../composables/useDataChanged";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
 const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: string; hint?: string }> = {
@@ -167,6 +168,7 @@ async function dismiss(): Promise<void> {
 }
 
 onMounted(() => void load());
+useDataChanged(load);
 </script>
 
 <template>
