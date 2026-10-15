@@ -3,7 +3,7 @@ import { computed } from "vue";
 import DisclosureRow from "./DisclosureRow.vue";
 
 import type { Application } from "../api/client";
-import { applicationStatusLabel, plural } from "../format";
+import { applicationStatusLabel, localDate, plural } from "../format";
 
 // Calendrier du mois (docs/22 §3) : une pastille par candidature envoyée, repères entretien
 // et relance, point rouge si la ligne ORP est à compléter.
@@ -28,8 +28,9 @@ function iso(date: Date): string {
 }
 
 function addDays(day: string, n: number): string {
-  const [y, m, d] = day.split("-").map(Number);
-  return iso(new Date(y!, m! - 1, d! + n));
+  const date = localDate(day);
+  date.setDate(date.getDate() + n);
+  return iso(date);
 }
 
 const today = iso(new Date());

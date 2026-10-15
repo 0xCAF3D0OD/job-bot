@@ -83,6 +83,12 @@ export const applicationStatusLabel: Record<
 const monthFormat = new Intl.DateTimeFormat("fr-CH", { month: "long", year: "numeric", timeZone: "UTC" });
 
 /** « 2026-10 » → « octobre 2026 ». */
+// « 2026-10-15 » en date locale, à minuit (sans le décalage UTC de `new Date("2026-10-15")`).
+export function localDate(day: string): Date {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(y ?? 2000, (m ?? 1) - 1, d ?? 1);
+}
+
 export function formatMonth(month: string): string {
   const [year, m] = month.split("-").map(Number);
   return monthFormat.format(new Date(Date.UTC(year ?? 2000, (m ?? 1) - 1, 1)));

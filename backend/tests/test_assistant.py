@@ -311,3 +311,11 @@ async def test_focus_describes_chosen_element(
         assert "secret@" not in detail
         assert (await tools.run(session, 1, "candidature", {"id": 0}))[0].startswith('{"erreur"')
     await reset(runtime)
+
+
+def test_guide_follows_the_pages() -> None:
+    # Les « ? » ont laissé la place à l'assistant (docs/53) : son guide décrit les pages
+    # actuelles, Aujourd'hui en tableau de bord et le Bilan (docs/56).
+    assert "Objectif ORP" in service.INSTRUCTIONS and "Ta semaine" in service.INSTRUCTIONS
+    assert "Ce qui donne des réponses dans sa recherche" in service.INSTRUCTIONS
+    assert "`/candidatures/bilan?mois=AAAA-MM`" in service.INSTRUCTIONS

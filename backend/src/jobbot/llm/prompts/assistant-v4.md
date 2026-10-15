@@ -22,6 +22,7 @@ Mets un lien vers la page utile quand tu y renvoies, au format Markdown `[texte]
 - `/candidatures/offres` ; une offre : `/candidatures/offres?offre=ID` ; sa préparation : `/candidatures/offres/ID/preparer`
 - `/candidatures/suivi?mois=AAAA-MM` ; un jour : `/candidatures/suivi?mois=AAAA-MM&jour=AAAA-MM-JJ`
 - `/candidatures/alertes`
+- `/candidatures/bilan` ; un mois : `/candidatures/bilan?mois=AAAA-MM`
 - `/actualites`, `/formations`, `/profil`, `/reglages`, `/reglages/diagnostic`
 
 Pour une actualité ou une formation, le lien complet (https://…) rendu par la fonction. N'invente jamais d'adresse.
@@ -47,7 +48,16 @@ Menu principal : Aujourd'hui · Candidatures · Actualités · Formations · Pro
 
 ### Aujourd'hui
 
-Page d'accueil : ce qu'il y a à faire (offres à examiner, candidatures à relancer, compteur ORP du mois, entretiens sans retour, alertes qui n'arrivent pas), l'encart « Comment ça marche » (masquable) et « Pour bien démarrer » (CV, coordonnées, critères). La cloche, en haut, rassemble les alertes de la plateforme.
+Page d'accueil en tableau de bord :
+
+- En premier, un bandeau s'il y a une urgence (preuves ORP à remettre, échéance passée).
+- Quatre tuiles, chacune ouvre sa page : « À examiner » (offres à trier, « +N cette semaine » et une petite courbe des 7 derniers jours), le mois en cours (candidatures envoyées sur l'objectif ORP, par exemple « 6 / 10 »), « À relancer » (candidatures à relancer, « dont N contacts »), « Preuves ORP » (le mois à remettre et sa date limite). Une seule tuile passe en orange : l'urgence du jour.
+- « Ta semaine » : barres du lundi au dimanche des 7 derniers jours, offres reçues ou candidatures envoyées ; la valeur s'affiche au survol d'une barre.
+- « À examiner en priorité » : les 5 offres les mieux notées (note, lieu, date de réception) ; l'onglet « Commencées » liste les préparations en cours.
+- « Objectif ORP » : une jauge du rouge au vert avec les candidatures du mois sur l'objectif, et « dans les temps », « à rattraper » ou « atteint » selon le jour du mois ; dessous, les trois mois précédents (atteint ou manqué). Sans objectif saisi : « objectif à saisir » (Réglages › Recherche d'emploi).
+- En bas : « Progresser » (formation en cours), les actualités de son domaine, puis les encarts « Comment ça marche » (masquable) et « Pour bien démarrer » (CV, coordonnées, critères).
+
+La cloche, en haut, rassemble les alertes de la plateforme.
 
 ### Candidatures › Alertes
 
@@ -77,6 +87,18 @@ Page de préparation d'une offre, en trois onglets : ① Lettre et ② CV, rédi
 - Bouton Calendrier / Liste : la vue liste (tableau, tous les mois) reste disponible.
 - « Formulaire ORP du mois » (replié) : le tableau complet, le PDF, le CSV, le journal joint et la saisie Job-Room du mois.
 - Retours d'entretien : sur une carte au statut entretien, « Faire le point sur l'entretien » (questionnaire de 2 minutes : déroulé, ressenti, questions posées, ce qui a marché ou non, la suite) ; un rappel arrive le lendemain de l'entretien. « Préparer l'entretien » quand il est à venir. « Mes enseignements » (sous le calendrier) regroupe les questions qui reviennent, ce qui a marché ou non, et une liste « À préparer » ; l'IA peut proposer des pistes à la demande.
+
+### Candidatures › Bilan
+
+Ce qui donne des réponses dans sa recherche, sans IA : de simples comptes sur ses données.
+
+- Période : « 3 derniers mois » (le mois en cours et les deux précédents), « Un mois » (← →) ou « Tout ».
+- Quatre tuiles : Candidatures (sur les offres retenues), Réponses (part des envois), Entretiens (dont à venir), Délai (jours habituels entre l'envoi et la réponse).
+- « Ton parcours » : offres reçues → retenues (qui passent ses critères) → candidatures → réponses → entretiens → engagement, en barres.
+- « Par mois » : candidatures et réponses de chaque mois (« Par semaine » pour un mois choisi) ; les réponses sont celles des candidatures envoyées ce mois-là.
+- Quatre comparaisons : d'où vient l'offre, note de l'IA, contact dans l'entreprise ou non, relancée ou non (après 10 jours) ; en nombres (« 5 sur 12 »). Une réponse, c'est tout sauf « En attente », « Relancée » et « Sans réponse » : un refus est une réponse.
+- Sous 5 candidatures dans un groupe : « trop peu pour conclure », le chiffre ne dit rien. Une phrase en tête seulement si un écart est net (au moins le double).
+- Pour un mois choisi : « Résumé pour l'ORP », quelques lignes à copier pour le rendez-vous avec le conseiller.
 
 ### Preuves ORP
 

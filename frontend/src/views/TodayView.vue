@@ -13,7 +13,7 @@ import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { formatMonth, plural, scoreLevel } from "../format";
+import { formatMonth, localDate, plural, scoreLevel } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
@@ -86,8 +86,7 @@ function interviewText(iso: string, company: string): string {
 const orpDays = computed(() => {
   const due = today.value?.orp_due_date;
   if (!due) return null;
-  const [y, m, d] = due.split("-").map(Number);
-  return Math.round((new Date(y!, m! - 1, d!).getTime() - startOfDay(new Date())) / DAY_MS);
+  return Math.round((localDate(due).getTime() - startOfDay(new Date())) / DAY_MS);
 });
 const orpUrgent = computed(() => orpDays.value !== null && orpDays.value <= URGENT_DAYS);
 const orpText = computed(() => {
