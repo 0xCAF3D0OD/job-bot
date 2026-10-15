@@ -1,12 +1,11 @@
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted } from "vue";
 
-import { ILLUSTRATE_AFTER_MS, ILLUSTRATION_MIN_MS } from "./useLoadingGate";
-
-// Fichiers préparés par la plateforme (docs/58 §3.2) : PDF, Word, export ORP, agenda. Les liens
+// Fichiers préparés par la plateforme (docs/59 §4) : PDF, Word, export ORP, agenda. Les liens
 // `<a download href="/api/…">` restent tels quels ; un seul écouteur les télécharge lui-même pour
-// savoir quand le fichier est prêt. S'il tarde plus de 0,4 s, l'illustration « processing »
-// s'affiche (au moins 0,6 s), puis le fichier est enregistré comme avant.
-export type FileState = "idle" | "preparing" | "failed";
+// que le retour soit sur le lien : « Préparation… » pendant la préparation, puis « ✓ PDF · 84 Ko »
+// 2 secondes, ou « Réessayer » (feuille de style, `a[download][data-file]`).
+const DONE_MS = 2000;
+const FAILED_MS = 4000;
 
 export function fileName(disposition: string | null, href: string): string {
   const star = disposition?.match(/filename\*=UTF-8''([^;]+)/i);
@@ -14,6 +13,12 @@ export function fileName(disposition: string | null, href: string): string {
   const plain = disposition?.match(/filename="?([^";]+)"?/i);
   if (plain?.[1]) return plain[1];
   return new URL(href, window.location.origin).pathname.split("/").pop() || "fichier";
+}
+
+export function fileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} Mo`;
 }
 
 function save(blob: Blob, name: string): void {
@@ -27,45 +32,37 @@ function save(blob: Blob, name: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function useFileDownloads() {
-  const state = ref<FileState>("idle");
-  let busy = false;
+function mark(link: HTMLAnchorElement, state: "preparing" | "done" | "failed" | null, size = ""): void {
+  if (state) link.dataset.file = state;
+  else delete link.dataset.file;
+  link.dataset.size = size;
+}
 
-  async function download(href: string): Promise<void> {
-    busy = true;
-    let shownAt = 0;
-    const timer = setTimeout(() => {
-      state.value = "preparing";
-      shownAt = Date.now();
-    }, ILLUSTRATE_AFTER_MS);
-    try {
-      const response = await fetch(href, { credentials: "same-origin" });
-      if (!response.ok) throw new Error(String(response.status));
-      const blob = await response.blob();
-      clearTimeout(timer);
-      if (shownAt) await new Promise((r) => setTimeout(r, Math.max(0, ILLUSTRATION_MIN_MS - (Date.now() - shownAt))));
-      save(blob, fileName(response.headers.get("content-disposition"), href));
-      state.value = "idle";
-    } catch {
-      clearTimeout(timer);
-      state.value = "failed";
-      setTimeout(() => (state.value = "idle"), 4000);
-    } finally {
-      busy = false;
-    }
+export async function download(link: HTMLAnchorElement): Promise<void> {
+  const href = link.getAttribute("href") ?? "";
+  mark(link, "preparing");
+  try {
+    const response = await fetch(href, { credentials: "same-origin" });
+    if (!response.ok) throw new Error(String(response.status));
+    const blob = await response.blob();
+    save(blob, fileName(response.headers.get("content-disposition"), href));
+    mark(link, "done", fileSize(blob.size));
+    setTimeout(() => link.dataset.file === "done" && mark(link, null), DONE_MS);
+  } catch {
+    mark(link, "failed");
+    setTimeout(() => link.dataset.file === "failed" && mark(link, null), FAILED_MS);
   }
+}
 
+export function useFileDownloads(): void {
   function onClick(event: MouseEvent): void {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const link = (event.target as Element | null)?.closest?.("a[download]");
     if (!(link instanceof HTMLAnchorElement)) return;
-    const href = link.getAttribute("href") ?? "";
-    if (!href.startsWith("/api/") || busy) return;
+    if (!(link.getAttribute("href") ?? "").startsWith("/api/") || link.dataset.file === "preparing") return;
     event.preventDefault();
-    void download(href);
+    void download(link);
   }
-
   onMounted(() => document.addEventListener("click", onClick));
   onUnmounted(() => document.removeEventListener("click", onClick));
-  return { state };
 }

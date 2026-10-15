@@ -138,6 +138,8 @@ async function load(): Promise<void> {
   select(current(letters.value));
 }
 
+// Le texte qui vient d'arriver de l'IA apparaît ligne à ligne (docs/59 §4).
+const fresh = ref(false);
 async function write(): Promise<void> {
   if (dirty.value && !window.confirm("Tu as des modifications non enregistrées dans cette version. Rédiger quand même une nouvelle version ?")) {
     return;
@@ -160,6 +162,8 @@ async function write(): Promise<void> {
     letters.value = [data, ...letters.value];
     instruction.value = "";
     select(data);
+    fresh.value = true;
+    setTimeout(() => (fresh.value = false), 1000);
   } catch {
     error.value = "API injoignable.";
   } finally {
@@ -453,7 +457,7 @@ onMounted(() => void load());
           <article
             v-if="doc && draft"
             class="letter-sheet print-sheet"
-            :class="{ busy: writing }"
+            :class="{ 'fresh-lines': fresh, busy: writing }"
             :lang="doc.language"
             data-test="letter"
           >

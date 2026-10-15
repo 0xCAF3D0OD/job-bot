@@ -4,6 +4,7 @@ import { computed, reactive, ref } from "vue";
 import { api, type Training } from "../api/client";
 import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
+import CopyLabel from "./CopyLabel.vue";
 
 // Contenu d'une formation (docs/16 §5). Deux présentations (docs/44) : la carte du catalogue,
 // calme (description sur 3 lignes, une ligne en bas : « Suivre », ou l'état et « Gérer ») ;
@@ -354,7 +355,7 @@ const stateText = computed(() => {
                 data-test="funding-copy"
                 @click="copyLetter"
               >
-                {{ copied ? "Copié" : "Copier" }}
+                <CopyLabel :done="copied" />
               </button>
               <button
                 type="button"

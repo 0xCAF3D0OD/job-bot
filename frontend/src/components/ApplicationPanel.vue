@@ -11,6 +11,7 @@ import FollowUpPanel from "./FollowUpPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
+import CopyLabel from "./CopyLabel.vue";
 
 // Panneau d'une candidature (docs/46 §3) : Statut, Entretiens, Pour l'ORP, Documents, Contacts.
 const props = defineProps<{ application: Application; orpRow?: OrpRow | null }>();
@@ -294,7 +295,7 @@ const onStatus = (event: Event): void =>
               data-test="card-copy"
               @click="copy(item.value, item.label)"
             >
-              {{ copied === item.label ? "Copié" : "Copier" }}
+              <CopyLabel :done="copied === item.label" />
             </button>
           </dd>
         </template>

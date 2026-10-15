@@ -8,10 +8,10 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
 import PageHero from "../components/PageHero.vue";
+import Illustration from "../components/Illustration.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
 import { usePhone } from "../composables/usePhone";
-import { useLoadingGate } from "../composables/useLoadingGate";
 import { since } from "../format";
 import { countryLabel, languageLabel } from "../newsLabels";
 
@@ -31,7 +31,6 @@ const page = ref<NewsPage | null>(null);
 const preferences = ref<NewsPreferences | null>(null);
 const counts = ref({ jobs: 0, economy: 0, videos: 0 });
 const loaded = ref(false);
-const { ready: loadReady, illustrated: loadIllustrated } = useLoadingGate(() => loaded.value);
 const { reset } = useNewsCount();
 const { loggedIn } = useAuth();
 let poll: ReturnType<typeof setTimeout> | undefined;
@@ -347,28 +346,30 @@ onUnmounted(() => {
       </PushTransition>
 
       <LoadingBlocks
-        v-if="!loadReady"
-        :illustrated="loadIllustrated"
+        v-if="!loaded"
         :heights="phone ? ['14rem', '5rem', '5rem'] : ['22rem', '6rem', '6rem']"
       />
 
-      <p
+      <div
         v-else-if="!items.length"
-        class="muted empty"
+        class="empty-state empty"
       >
-        <template v-if="page?.refreshing">
-          Premier relevé en cours : les contenus arrivent dans quelques secondes.
-        </template>
-        <template v-else-if="preferences?.domain_only || preferences?.countries.length || preferences?.languages.length">
-          Rien avec ces filtres pour l'instant.
-        </template>
-        <template v-else>
-          Rien pour l'instant.
-          <RouterLink to="/reglages?rubrique=actualites">
-            Gérer les sources
-          </RouterLink>
-        </template>
-      </p>
+        <Illustration name="newsfeed" />
+        <p>
+          <template v-if="page?.refreshing">
+            Premier relevé en cours : les contenus arrivent dans quelques secondes.
+          </template>
+          <template v-else-if="preferences?.domain_only || preferences?.countries.length || preferences?.languages.length">
+            Rien avec ces filtres pour l'instant.
+          </template>
+          <template v-else>
+            Rien pour l'instant.
+            <RouterLink to="/reglages?rubrique=actualites">
+              Gérer les sources
+            </RouterLink>
+          </template>
+        </p>
+      </div>
       <div
         v-else
         :class="['news-modules', tab === 'videos' ? 'videos' : 'articles']"

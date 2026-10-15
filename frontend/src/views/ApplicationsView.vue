@@ -22,12 +22,12 @@ import InterviewInsights from "../components/InterviewInsights.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
+import Illustration from "../components/Illustration.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
 import { formatMonth, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
-import { useLoadingGate } from "../composables/useLoadingGate";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
 const REMIND_AFTER_DAYS = 10;
@@ -37,7 +37,6 @@ const VIEW_KEY = "jobbot-suivi-vue";
 const route = useRoute();
 const router = useRouter();
 const orp = ref<OrpMonth | null>(null);
-const { ready: loadReady, illustrated: loadIllustrated } = useLoadingGate(() => !!orp.value);
 const all = ref<Application[]>([]);
 const allMonths = ref(false);
 const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(null);
@@ -339,7 +338,7 @@ onUnmounted(() => assistant.setFocus(null));
 
 <template>
   <section class="jobs-body">
-    <template v-if="orp && loadReady">
+    <template v-if="orp">
       <div class="applications-head">
         <div class="month-nav">
           <button
@@ -537,12 +536,13 @@ onUnmounted(() => assistant.setFocus(null));
             data-test="all-months"
           > Tous les mois
         </label>
-        <p
+        <div
           v-if="loaded && !items.length"
-          class="muted empty"
+          class="empty-state empty"
         >
-          Aucune candidature en {{ formatMonth(orp.month) }}.
-        </p>
+          <Illustration name="date-picker" />
+          <p>Aucune candidature en {{ formatMonth(orp.month) }}.</p>
+        </div>
         <ApplicationsTable
           v-else
           :items="items"
@@ -578,7 +578,6 @@ onUnmounted(() => assistant.setFocus(null));
     <LoadingBlocks
       v-else
       :heights="['3rem', '22rem']"
-      :illustrated="loadIllustrated"
     />
   </section>
 

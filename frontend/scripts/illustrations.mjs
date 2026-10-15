@@ -8,26 +8,19 @@
 // - couleurs en minuscules, pour que la feuille de style les reprenne au thème
 //   (`.illu [fill="#6c63ff"]`, docs/58 §2) ;
 // - classes et animations préfixées par le nom (`a-<nom>-…`), pour ne pas se mêler entre
-//   illustrations ; le « réduire les animations » limité à l'illustration.
+//   illustrations ; le « réduire les animations » limité à l'illustration ;
+// - animations jouées **une seule fois** à l'apparition (docs/59 §5) : la boucle devient un
+//   passage, qui finit sur l'image d'origine.
 // Aucune forme n'est touchée : le script s'arrête si un tracé ou une forme diffère.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const ILLUSTRATIONS = [
-  "ai-generated-document",
-  "certification",
+  "chat-bot",
   "date-picker",
-  "done",
-  "loading-ui",
-  "lock-screen-notifications",
-  "mailbox",
-  "message-sent",
   "mobile-inbox",
-  "my-resume",
-  "online-connection",
-  "processing",
-  "profile",
-  "settings",
+  "newsfeed",
+  "page-eaten",
   "stepping-up",
 ];
 
@@ -53,7 +46,10 @@ function prepare(svg, name) {
   let out = svg
     .replace(/<svg\b[^>]*>/, (tag) => tag.replace(/\s(width|height|role|artist|source)="[^"]*"/g, ""))
     .replace(/(fill|stroke|stop-color)="(#[0-9a-fA-F]{3,6})"/g, (_m, attr, hex) => `${attr}="${hex.toLowerCase()}"`)
-    .replace(/<style>([\s\S]*?)<\/style>/g, (_m, css) => `<style>${prefix(css).replace(/\*\s*\{/g, ".illu * {")}</style>`)
+    .replace(
+      /<style>([\s\S]*?)<\/style>/g,
+      (_m, css) => `<style>${prefix(css).replace(/\*\s*\{/g, ".illu * {").replace(/\binfinite\b/g, "1")}</style>`,
+    )
     .replace(/\sclass="([^"]*)"/g, (_m, names) => ` class="${prefix(names)}"`)
     .replace(/\sstyle="([^"]*)"/g, (_m, css) => ` style="${prefix(css)}"`);
   out = out.replace(/<\?xml[^>]*>\s*/, "").trim() + "\n";

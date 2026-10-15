@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import MoreInfo from "./MoreInfo.vue";
+import CopyLabel from "./CopyLabel.vue";
 
 // Tes dates dans ton agenda (docs/40 §2) : une adresse d'abonnement à jeton secret,
 // révocable ; ton agenda la relit tout seul.
@@ -94,7 +95,10 @@ onMounted(load);
           class="link"
           @click="copy"
         >
-          {{ copied ? "Copié" : "Copier l'adresse" }}
+          <CopyLabel
+            :done="copied"
+            label="Copier l'adresse"
+          />
         </button>
         <p class="hint">
           Montrée une seule fois : colle-la maintenant dans ton agenda.

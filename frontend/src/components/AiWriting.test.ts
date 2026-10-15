@@ -5,15 +5,17 @@ import AiWriting from "./AiWriting.vue";
 
 afterEach(() => vi.useRealTimers());
 
-describe("AiWriting (docs/58 §3.2)", () => {
-  it("une phrase qui change toutes les 4 secondes, la dernière reste", async () => {
+describe("AiWriting (docs/59 §4)", () => {
+  it("une barre d'étapes qui avance, la dernière reste en cours", async () => {
     vi.useFakeTimers();
     const wrapper = mount(AiWriting, { props: { kind: "letter" } });
-    expect(wrapper.text()).toContain("Je lis l'offre…");
-    await vi.advanceTimersByTimeAsync(4000);
-    expect(wrapper.text()).toContain("Je choisis tes expériences…");
+    const current = () => wrapper.find("[aria-current=step]").text();
+    expect(current()).toBe("Lire l'offre");
+    await vi.advanceTimersByTimeAsync(7000);
+    expect(current()).toBe("Choisir tes expériences");
+    expect(wrapper.find("li.done").text()).toBe("✓ Lire l'offre");
     await vi.advanceTimersByTimeAsync(60000);
-    expect(wrapper.text()).toContain("Je relis…");
+    expect(current()).toBe("Relire");
     expect(wrapper.attributes("role")).toBe("status");
   });
 });

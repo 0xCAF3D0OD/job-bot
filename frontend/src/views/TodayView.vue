@@ -8,7 +8,6 @@ import DashTile from "../components/dash/DashTile.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
 import WeekChart from "../components/dash/WeekChart.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import Illustration, { type IllustrationName } from "../components/Illustration.vue";
 import AppIcon from "../components/AppIcon.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
@@ -16,60 +15,38 @@ import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { formatMonth, localDate, plural, scoreLevel } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
-import { useLoadingGate } from "../composables/useLoadingGate";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
-// Chaque étape a son illustration (docs/58 §3.1), montrée en grand pour l'étape à faire.
-const STEPS: Record<
-  Today["checklist"][number]["key"],
-  { label: string; to?: string; hint?: string; illustration: IllustrationName }
-> = {
-  criteria: { label: "Dire ce que tu cherches (lieux, taux, types d'offres)", to: "/profil", illustration: "settings" },
-  profile: { label: "Déposer ton CV et créer tes blocs de profil", to: "/profil?onglet=parcours", illustration: "my-resume" },
-  identity: { label: "Saisir tes coordonnées (nom, adresse)", to: "/profil?onglet=coordonnees", illustration: "profile" },
-  orp_target: { label: "Indiquer l'objectif mensuel de ton conseiller ORP", to: "/reglages", illustration: "stepping-up" },
+const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: string; hint?: string }> = {
+  criteria: { label: "Dire ce que tu cherches (lieux, taux, types d'offres)", to: "/profil" },
+  profile: { label: "Déposer ton CV et créer tes blocs de profil", to: "/profil?onglet=parcours" },
+  identity: { label: "Saisir tes coordonnées (nom, adresse)", to: "/profil?onglet=coordonnees" },
+  orp_target: { label: "Indiquer l'objectif mensuel de ton conseiller ORP", to: "/reglages" },
   notifications: {
     label: "Recevoir les notifications sur ton téléphone",
     to: "/reglages",
     hint: "réglage d'installation, voir le README",
-    illustration: "lock-screen-notifications",
   },
   imap: {
     label: "Brancher la collecte sur ta boîte Gmail",
     hint: "réglage d'installation, voir le README",
-    illustration: "online-connection",
   },
 };
 
 // « Comment ça marche » (docs/21 §3) : le chemin en cinq étapes, avec où les faire.
-const JOURNEY: Record<
-  Today["journey"][number]["key"],
-  { label: string; to: string; where: string; illustration: IllustrationName }
-> = {
-  alerts: {
-    label: "Créer mes alertes sur les sites d'emploi",
-    to: "/candidatures/alertes",
-    where: "Candidatures › Alertes",
-    illustration: "mailbox",
-  },
-  triage: { label: "Trier les offres reçues", to: "/candidatures/offres", where: "Candidatures › Offres", illustration: "mobile-inbox" },
+const JOURNEY: Record<Today["journey"][number]["key"], { label: string; to: string; where: string }> = {
+  alerts: { label: "Créer mes alertes sur les sites d'emploi", to: "/candidatures/alertes", where: "Candidatures › Alertes" },
+  triage: { label: "Trier les offres reçues", to: "/candidatures/offres", where: "Candidatures › Offres" },
   apply: {
     label: "Préparer lettre et CV, puis postuler",
     to: "/candidatures/offres",
     where: "« Préparer ma candidature » sur une offre",
-    illustration: "message-sent",
   },
-  follow: { label: "Suivre les réponses et relancer", to: "/candidatures/suivi", where: "Candidatures › Suivi", illustration: "date-picker" },
-  orp: {
-    label: "Remettre les preuves à l'ORP chaque mois",
-    to: "/candidatures/suivi",
-    where: "Candidatures › Suivi",
-    illustration: "certification",
-  },
+  follow: { label: "Suivre les réponses et relancer", to: "/candidatures/suivi", where: "Candidatures › Suivi" },
+  orp: { label: "Remettre les preuves à l'ORP chaque mois", to: "/candidatures/suivi", where: "Candidatures › Suivi" },
 };
 
 const today = ref<Today | null>(null);
-const { ready: loadReady, illustrated: loadIllustrated } = useLoadingGate(() => !!today.value);
 const best = ref<Offer[]>([]);
 // Blocs par catégorie (docs/19 §3).
 const preparing = ref<Offer[]>([]);
@@ -130,6 +107,7 @@ const warn = computed<"orp" | "follow-up" | null>(() => {
 });
 
 const steps = computed(() => today.value?.checklist ?? []);
+// L'étape à faire, mise en avant dans la liste (docs/59 §5).
 const nextStep = computed(() => steps.value.find((s) => !s.done) ?? null);
 const nextJourney = computed(() => today.value?.journey.find((s) => !s.done) ?? null);
 const journeyDone = computed(() => today.value?.journey.filter((s) => s.done).length ?? 0);
@@ -197,7 +175,7 @@ useDataChanged(load);
   />
   <section class="band">
     <div
-      v-if="today && loadReady"
+      v-if="today"
       class="container today"
     >
       <!-- Le plus urgent en tête (docs/43 n° 30). -->
@@ -543,30 +521,21 @@ useDataChanged(load);
             Masquer
           </button>
         </div>
-        <RouterLink
-          v-if="nextJourney"
-          :to="JOURNEY[nextJourney.key].to"
-          class="onboard-next"
-          data-test="journey-next"
-        >
-          <Illustration :name="JOURNEY[nextJourney.key].illustration" />
-          <span class="onboard-next-text">
-            <span class="hint">Étape {{ today.journey.indexOf(nextJourney) + 1 }} sur {{ today.journey.length }}</span>
-            <strong>{{ JOURNEY[nextJourney.key].label }}</strong>
-            <span class="hint">{{ JOURNEY[nextJourney.key].where }}</span>
-          </span>
-        </RouterLink>
         <ol>
           <li
             v-for="step in today.journey"
             :key="step.key"
-            :class="{ done: step.done }"
+            :class="{ done: step.done, next: step === nextJourney }"
             :data-test="`journey-${step.key}`"
           >
             <span
               class="tick"
               aria-hidden="true"
-            />
+            ><svg
+              v-if="step.done"
+              class="tick-svg"
+              viewBox="0 0 12 12"
+            ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
             <span
               v-if="step.done"
               class="visually-hidden"
@@ -598,34 +567,21 @@ useDataChanged(load);
             Masquer
           </button>
         </div>
-        <component
-          :is="STEPS[nextStep.key].to ? 'RouterLink' : 'div'"
-          v-if="nextStep"
-          v-bind="STEPS[nextStep.key].to ? { to: STEPS[nextStep.key].to } : {}"
-          class="onboard-next"
-          data-test="checklist-next"
-        >
-          <Illustration :name="STEPS[nextStep.key].illustration" />
-          <span class="onboard-next-text">
-            <span class="hint">Étape {{ steps.indexOf(nextStep) + 1 }} sur {{ steps.length }}</span>
-            <strong>{{ STEPS[nextStep.key].label }}</strong>
-            <span
-              v-if="STEPS[nextStep.key].hint"
-              class="hint"
-            >{{ STEPS[nextStep.key].hint }}</span>
-          </span>
-        </component>
         <ul>
           <li
             v-for="step in steps"
             :key="step.key"
-            :class="{ done: step.done }"
+            :class="{ done: step.done, next: step === nextStep }"
             :data-test="`step-${step.key}`"
           >
             <span
               class="tick"
               aria-hidden="true"
-            >{{ step.done ? "✓" : "" }}</span>
+            ><svg
+              v-if="step.done"
+              class="tick-svg"
+              viewBox="0 0 12 12"
+            ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
             <RouterLink
               v-if="!step.done && STEPS[step.key].to"
               :to="STEPS[step.key].to!"
@@ -645,10 +601,7 @@ useDataChanged(load);
       v-else
       class="container today"
     >
-      <LoadingBlocks
-        :heights="['7rem', '7rem', '12rem']"
-        :illustrated="loadIllustrated"
-      />
+      <LoadingBlocks :heights="['7rem', '7rem', '12rem']" />
     </div>
   </section>
 </template>

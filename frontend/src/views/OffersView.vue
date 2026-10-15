@@ -11,6 +11,7 @@ import SidePanel from "../components/SidePanel.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
+import Illustration from "../components/Illustration.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
@@ -348,20 +349,24 @@ onUnmounted(() => {
         >
           Impossible de charger les offres.
         </p>
-        <p
+        <div
           v-else-if="!loading && items.length === 0"
-          class="muted empty"
+          class="empty-state empty"
+          data-test="offers-empty"
         >
-          Aucune offre ne correspond.
-          <button
-            v-if="activeCount(filters)"
-            type="button"
-            class="link"
-            @click="reset"
-          >
-            Effacer les filtres
-          </button>
-        </p>
+          <Illustration name="mobile-inbox" />
+          <p>
+            Aucune offre ne correspond.
+            <button
+              v-if="activeCount(filters)"
+              type="button"
+              class="link"
+              @click="reset"
+            >
+              Effacer les filtres
+            </button>
+          </p>
+        </div>
         <ul class="offer-cards">
           <template
             v-for="(offer, index) in items"

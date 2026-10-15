@@ -8,6 +8,8 @@ import { blocks, readEvents } from "../assistantText";
 import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssistant";
 import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
+import CopyLabel from "./CopyLabel.vue";
+import Illustration from "./Illustration.vue";
 
 type Conversation = components["schemas"]["ConversationOut"];
 // Propositions de l'assistant (docs/52) : affichées sous sa réponse, faites sur un clic.
@@ -309,6 +311,10 @@ function day(value: string): string {
         aria-live="polite"
       >
         <template v-if="!lines.length">
+          <Illustration
+            name="chat-bot"
+            class="assistant-illu"
+          />
           <p class="muted assistant-intro">
             Pose une question sur la plateforme ou sur tes données : offres, candidatures, preuves ORP, entretiens.
             L'assistant lit et conseille ; il peut te proposer un changement, que tu confirmes d'un clic.
@@ -438,7 +444,7 @@ function day(value: string): string {
                   data-test="assistant-copy"
                   @click="copy(block.text, index * 100 + b)"
                 >
-                  {{ copied === index * 100 + b ? "Copié" : "Copier" }}
+                  <CopyLabel :done="copied === index * 100 + b" />
                 </button>
               </div>
             </template>

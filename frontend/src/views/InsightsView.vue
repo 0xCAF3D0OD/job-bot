@@ -9,7 +9,8 @@ import DashTile from "../components/dash/DashTile.vue";
 import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
-import { useLoadingGate } from "../composables/useLoadingGate";
+import CopyLabel from "../components/CopyLabel.vue";
+import Illustration from "../components/Illustration.vue";
 
 // Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP ;
 // présenté comme le tableau d'Aujourd'hui (docs/55) : tuiles, barres, cartes à bulles.
@@ -20,7 +21,6 @@ const route = useRoute();
 const router = useRouter();
 const insights = ref<Insights | null>(null);
 const error = ref("");
-const { ready: loadReady, illustrated: loadIllustrated } = useLoadingGate(() => !!insights.value);
 const copied = ref(false);
 
 function currentMonth(): string {
@@ -191,12 +191,11 @@ onMounted(() => void load());
     </p>
 
     <LoadingBlocks
-      v-if="!loadReady && !error"
+      v-if="!insights && !error"
       :heights="['11rem', '16rem', '12rem']"
-      :illustrated="loadIllustrated"
     />
     <div
-      v-if="loadReady && insights && tiles"
+      v-if="insights && tiles"
       class="bilan"
     >
       <div
@@ -277,13 +276,14 @@ onMounted(() => void load());
         />
       </div>
 
-      <p
+      <div
         v-if="insights.funnel.applications === 0"
-        class="hint"
+        class="empty-state"
         data-test="insights-empty"
       >
-        Pas encore de candidature sur cette période : le bilan se remplit au fil de tes envois.
-      </p>
+        <Illustration name="stepping-up" />
+        <p>Pas encore de candidature sur cette période : le bilan se remplit au fil de tes envois.</p>
+      </div>
       <template v-else>
         <p
           v-if="insights.headline"
@@ -363,7 +363,7 @@ onMounted(() => void load());
             data-test="orp-summary-copy"
             @click="copy"
           >
-            {{ copied ? "Copié" : "Copier" }}
+            <CopyLabel :done="copied" />
           </button>
         </header>
         <p>{{ insights.orp_summary }}</p>

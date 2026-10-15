@@ -1,23 +1,34 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
 
-import Illustration from "./Illustration.vue";
-
-// L'IA rédige (docs/58 §3.2) : 10 à 30 secondes ; l'illustration animée et une phrase qui
-// change toutes les 4 secondes, au lieu d'un texte d'attente immobile.
+// L'IA rédige (docs/59 §4) : la seule vraie attente de la plateforme (10 à 30 s). Une barre
+// d'étapes, l'étape en cours en violet, les faites cochées ; elle avance avec le temps
+// habituel de chaque étape et s'arrête sur la dernière jusqu'à l'arrivée du texte.
 const props = defineProps<{ kind: "letter" | "cv" | "coaching" }>();
 
-const PHRASES: Record<typeof props.kind, string[]> = {
-  letter: ["Je lis l'offre…", "Je choisis tes expériences…", "J'écris la lettre…", "Je relis…"],
-  cv: ["Je lis l'offre…", "Je choisis ce qui compte pour ce poste…", "Je mets en forme ton CV…", "Je relis…"],
-  coaching: ["Je relis tes retours d'entretien…", "Je cherche ce qui revient…", "Je prépare des pistes…"],
+const STEPS: Record<typeof props.kind, { labels: string[]; everyMs: number; hint: string }> = {
+  letter: {
+    labels: ["Lire l'offre", "Choisir tes expériences", "Rédiger", "Relire"],
+    everyMs: 7000,
+    hint: "Une trentaine de secondes.",
+  },
+  cv: {
+    labels: ["Lire l'offre", "Choisir ce qui compte", "Mettre en forme", "Relire"],
+    everyMs: 6000,
+    hint: "Une vingtaine de secondes.",
+  },
+  coaching: {
+    labels: ["Relire tes retours", "Chercher ce qui revient", "Préparer des pistes"],
+    everyMs: 3000,
+    hint: "Quelques secondes.",
+  },
 };
-const index = ref(0);
+const current = ref(0);
 let timer: ReturnType<typeof setInterval> | undefined;
 onMounted(() => {
   timer = setInterval(() => {
-    index.value = Math.min(index.value + 1, PHRASES[props.kind].length - 1);
-  }, 4000);
+    current.value = Math.min(current.value + 1, STEPS[props.kind].labels.length - 1);
+  }, STEPS[props.kind].everyMs);
 });
 onUnmounted(() => clearInterval(timer));
 </script>
@@ -28,12 +39,21 @@ onUnmounted(() => clearInterval(timer));
     role="status"
     data-test="ai-writing"
   >
-    <Illustration name="ai-generated-document" />
-    <p class="ai-writing-text">
-      {{ PHRASES[kind][index] }}
-    </p>
+    <ol
+      class="ai-steps"
+      :style="{ '--ai-steps': STEPS[kind].labels.length }"
+    >
+      <li
+        v-for="(label, index) in STEPS[kind].labels"
+        :key="label"
+        :class="{ done: index < current, current: index === current }"
+        :aria-current="index === current ? 'step' : undefined"
+      >
+        {{ index < current ? `✓ ${label}` : label }}
+      </li>
+    </ol>
     <p class="hint">
-      {{ kind === "coaching" ? "Quelques secondes." : "Compte une trentaine de secondes." }}
+      {{ STEPS[kind].hint }}
     </p>
   </div>
 </template>
