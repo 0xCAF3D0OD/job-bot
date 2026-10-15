@@ -4720,6 +4720,100 @@
         }
       }
     },
+    "/api/trainings/{training_id}/funding-request": {
+      "get": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Funding Request",
+        "operationId": "trainingFundingRequest",
+        "parameters": [
+          {
+            "name": "training_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Training Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundingRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trainings/{training_id}/funding": {
+      "put": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Set Funding",
+        "operationId": "setTrainingFunding",
+        "parameters": [
+          {
+            "name": "training_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Training Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FundingIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingMarkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/profiles": {
       "get": {
         "tags": [
@@ -8347,6 +8441,98 @@
         "type": "object",
         "title": "FocusIn",
         "description": "Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché."
+      },
+      "FundingExample": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "company"
+        ],
+        "title": "FundingExample"
+      },
+      "FundingIn": {
+        "properties": {
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "requested",
+                  "accepted",
+                  "refused"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "FundingIn"
+      },
+      "FundingRequest": {
+        "properties": {
+          "offers": {
+            "type": "integer",
+            "title": "Offers"
+          },
+          "matched": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Matched"
+          },
+          "examples": {
+            "items": {
+              "$ref": "#/components/schemas/FundingExample"
+            },
+            "type": "array",
+            "title": "Examples"
+          },
+          "sender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sender"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offers",
+          "matched",
+          "examples",
+          "sender"
+        ],
+        "title": "FundingRequest",
+        "description": "De quoi écrire la demande : l'argument tiré de tes offres et ton nom."
       },
       "HTTPValidationError": {
         "properties": {
@@ -13635,6 +13821,34 @@
               }
             ],
             "title": "Chunk Id"
+          },
+          "funding_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "requested",
+                  "accepted",
+                  "refused"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funding Status"
+          },
+          "funding_requested_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funding Requested At"
           }
         },
         "type": "object",

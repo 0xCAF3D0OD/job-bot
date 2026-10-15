@@ -1,6 +1,6 @@
 # 37 — Formations : vers ton profil et vers l'ORP (version 0.30.0)
 
-> Statut : **validé** le 2026-10-15. livré : PR a (formation terminée vers le profil).
+> Statut : **validé** le 2026-10-15. livré : PR a (formation terminée vers le profil), PR b (demande de financement à l'ORP).
 > Idée notée dans docs/16 (« pour plus tard ») : une formation terminée peut nourrir tes lettres et tes CV, et une formation payante se finance surtout **avec l'accord de l'ORP**. Aujourd'hui, la page Formations s'arrête au suivi (intéressé, en cours, terminée).
 
 ## 1. Une formation terminée entre dans ton profil
@@ -83,3 +83,11 @@ Sur ordinateur comme sur téléphone (dans la fiche en plein écran, docs/34).
 - **Profil d'essai** : l'ajout est refusé (« les blocs de profil appartiennent au profil principal ») : les blocs servent aux lettres et aux CV de ton profil.
 - **« Dans ton profil »** mène à Profil › Parcours. Si le bloc est supprimé plus tard, le lien disparaît et « Ajouter à mon profil » revient.
 - **Vérifié** dans le navigateur (formation marquée terminée, bloc relu et enregistré, bloc visible dans Mon parcours) ; données de démonstration supprimées ensuite.
+
+## Écarts avec la PR b
+
+- **Migration 0040** : `funding_status`, `funding_requested_at`, `funding_reminded_at` sur `training_marks`.
+- **Quand** : la section « Préparer la demande à l'ORP » apparaît pour une formation **payante déjà suivie** (intéressé, en cours ou terminée) ; sans suivi, l'avertissement « Financement possible seulement avec l'accord préalable de ton conseiller ORP » reste seul.
+- **Argument** : jusqu'à trois mots-clés de la formation, les plus demandés dans les exigences des offres des 90 derniers jours (doublons exclus), et jusqu'à trois exemples, du plus récent au plus ancien. Exemple réel sur l'instance de test : « 2 offre(s) que j'ai reçue(s) demandaient AWS ou CI/CD ou DevOps, par exemple « Ingénieur DevOps » chez Consort Group et « Cloud Engineer » chez Swisscom ».
+- **Durée** reprise de la formation quand elle est connue, sinon « [durée] » ; le montant reste toujours « [montant] ».
+- **Suivi** : « Marquer comme demandée » (date du jour), puis « Acceptée » ou « Refusée » ; « Retirer la demande » ou « Modifier » remet à zéro. Pastille dans l'en-tête de la fiche. Rappel dans la cloche après 14 jours, une seule fois, lien vers « Mes formations ».
