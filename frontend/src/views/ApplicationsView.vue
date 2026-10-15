@@ -27,6 +27,7 @@ import { formatMonth, shiftMonth } from "../format";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
 const REMIND_AFTER_DAYS = 10;
+const NO_ANSWER_DAYS = 14;
 const VIEW_KEY = "jobbot-suivi-vue";
 
 const route = useRoute();
@@ -75,11 +76,22 @@ const stateLabel = computed(() => {
   if (d.state === "a_remettre") return `Preuves à remettre avant le ${longDate.format(new Date(d.due_date))}`;
   return `En cours · remise avant le ${longDate.format(new Date(d.due_date))}`;
 });
+// À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours ;
+// les plus anciennes d'abord.
 const toFollowUp = computed(() => {
   const limit = new Date();
   limit.setDate(limit.getDate() - REMIND_AFTER_DAYS);
   const day = limit.toISOString().slice(0, 10);
-  return all.value.filter((a) => a.status === "en_attente" && a.sent_at <= day);
+  const noAnswer = new Date();
+  noAnswer.setDate(noAnswer.getDate() - NO_ANSWER_DAYS);
+  const after = noAnswer.toISOString().slice(0, 10);
+  return all.value
+    .filter(
+      (a) =>
+        (a.status === "en_attente" && a.sent_at <= day) ||
+        (a.status === "relancee" && !!a.followed_up_at && a.followed_up_at <= after),
+    )
+    .sort((a, b) => a.sent_at.localeCompare(b.sent_at));
 });
 // Cartes du jour choisi : envoyées ce jour-là ou entretien ce jour-là.
 const dayCards = computed(() => {

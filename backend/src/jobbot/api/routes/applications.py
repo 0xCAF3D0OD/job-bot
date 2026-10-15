@@ -30,6 +30,7 @@ from jobbot.db.models import (
     OfferStatus,
     Setting,
 )
+from jobbot.followups import service as followups
 from jobbot.letters.service import IDENTITY_KEYS, current_draft, load_identity
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -216,6 +217,8 @@ class ApplicationOut(ApplicationUpdate):
     cv_draft_id: int | None
     orp_month: str
     reminded_at: datetime | None
+    # Date de la relance (docs/38).
+    followed_up_at: date | None = None
     created_at: datetime
     # Retours d'entretien (docs/23), dans l'ordre des entretiens ; remplis par la liste.
     interviews: list["InterviewOut"] = []
@@ -412,6 +415,9 @@ async def update_application(
         values = body.model_dump()
         if values["status"] != application.status and values["status_at"] is None:
             values["status_at"] = _today()
+        # Passée à la main en « Relancée » : la date de la relance (docs/38).
+        if values["status"] == ApplicationStatus.RELANCEE and application.followed_up_at is None:
+            application.followed_up_at = values["status_at"] or _today()
         for key, value in values.items():
             setattr(application, key, value)
         application.orp_month = body.sent_at.strftime("%Y-%m")
@@ -512,3 +518,41 @@ async def put_identity(request: Request, body: Identity) -> Identity:
                 .on_conflict_do_update(index_elements=["key"], set_={"value": value})
             )
     return body
+
+
+# --- Relancer une candidature (docs/38) ----------------------------------------------------
+
+
+class FollowUpDraftOut(BaseModel):
+    subject: str
+    text: str
+    language: Literal["fr", "de", "en"]
+    # Faux : modèle simple, sans IA ; `reason` dit pourquoi.
+    ai: bool
+    reason: str | None
+
+
+@router.post("/applications/{application_id}/follow-up/draft", operation_id="draftFollowUp")
+async def draft_follow_up(request: Request, application_id: int) -> FollowUpDraftOut:
+    result = await followups.draft(_runtime(request), application_id)
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+    return FollowUpDraftOut(
+        subject=result.subject,
+        text=result.text,
+        language=result.language,
+        ai=result.ai,
+        reason=result.reason,
+    )
+
+
+@router.post("/applications/{application_id}/follow-up", operation_id="markFollowedUp")
+async def mark_followed_up(request: Request, application_id: int) -> ApplicationOut:
+    async with _runtime(request).sessionmaker.begin() as session:
+        application = await session.get(Application, application_id)
+        if application is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+        await followups.mark_followed_up(session, application)
+        await session.flush()
+        await session.refresh(application)
+        return ApplicationOut.model_validate(application)

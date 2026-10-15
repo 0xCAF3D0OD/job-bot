@@ -6,6 +6,7 @@ import { useAssistant } from "../composables/useAssistant";
 import { applicationStatusLabel } from "../format";
 import { CONTACTS_HELP, contactName, toFollowUp } from "../contactLabels";
 import ContactsPanel from "./ContactsPanel.vue";
+import FollowUpPanel from "./FollowUpPanel.vue";
 import SidePanel from "./SidePanel.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 
@@ -51,6 +52,25 @@ const summary = computed(() => {
 const jobRoom = ref(false);
 // Contacts dans l'entreprise (docs/31 §4), dans le panneau latéral (docs/32 §2.2).
 const contactsOpen = ref(false);
+
+// Relance (docs/38) : proposée 10 jours après l'envoi ; « Sans réponse » 14 jours après la relance.
+const followUpOpen = ref(false);
+function daysAgo(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+const followUpDue = computed(() => props.application.status === "en_attente" && props.application.sent_at <= daysAgo(10));
+const noAnswerDue = computed(
+  () =>
+    props.application.status === "relancee" &&
+    !!props.application.followed_up_at &&
+    props.application.followed_up_at <= daysAgo(14),
+);
+function onFollowedUp(): void {
+  followUpOpen.value = false;
+  emit("changed");
+}
 const contacts = computed(() => props.application.contacts ?? []);
 const contactsDue = computed(() => contacts.value.filter((c) => toFollowUp(c)));
 const menuOpen = ref(false);
@@ -189,6 +209,47 @@ const onStatus = (event: Event): void =>
       </select>
     </label>
 
+    <p
+      v-if="followUpDue"
+      class="card-facts follow-up-line"
+      data-test="card-follow-up"
+    >
+      Sans réponse depuis 10 jours.
+      <button
+        type="button"
+        class="link"
+        data-test="card-follow-up-open"
+        @click="followUpOpen = true"
+      >
+        Relancer
+      </button>
+    </p>
+    <p
+      v-else-if="noAnswerDue"
+      class="card-facts follow-up-line"
+      data-test="card-no-answer"
+    >
+      Pas de réponse depuis la relance.
+      <button
+        type="button"
+        class="link"
+        data-test="card-no-answer-set"
+        @click="emit('status', application, 'sans_reponse')"
+      >
+        Passer en Sans réponse
+      </button>
+    </p>
+    <SidePanel
+      v-if="followUpOpen"
+      open
+      :title="`Relancer ${application.company}`"
+      @close="followUpOpen = false"
+    >
+      <FollowUpPanel
+        :application="application"
+        @done="onFollowedUp"
+      />
+    </SidePanel>
     <p
       v-if="summary"
       class="interview-summary"

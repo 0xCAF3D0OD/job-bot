@@ -405,6 +405,8 @@ class Application(Base):
     status: Mapped[str] = mapped_column(Text, default=ApplicationStatus.EN_ATTENTE)
     status_reason: Mapped[str | None] = mapped_column(Text)
     status_at: Mapped[date | None] = mapped_column(Date)
+    # Date de la relance (docs/38) : « Sans réponse » proposé 14 jours après.
+    followed_up_at: Mapped[date | None] = mapped_column(Date)
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     orp_month: Mapped[str] = mapped_column(Text, index=True)
