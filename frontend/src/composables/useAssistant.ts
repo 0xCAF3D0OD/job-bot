@@ -72,6 +72,7 @@ export function suggestionsFor(page: string, value: AssistantFocus | null): stri
     today: ["Que faire aujourd'hui ?", "Qui relancer cette semaine ?", "Où en suis-je pour l'ORP ce mois-ci ?"],
     offers: ["Lesquelles postuler en priorité ?", "Pourquoi certaines offres sont-elles mal notées ?", "Comment fonctionne la note ?"],
     applications: ["Où en suis-je ce mois pour l'ORP ?", "Qui relancer cette semaine ?", "Que retenir de mes entretiens ?"],
+    insights: ["Qu'est-ce qui marche le mieux pour moi ?", "Pourquoi « trop peu pour conclure » ?", "Prépare mon résumé pour l'ORP"],
     alerts: ["Mes alertes arrivent-elles bien ?", "Comment créer une alerte sur un site ?", "Quelles recherches ajouter ?"],
     news: ["Que retenir des dernières actualités ?", "Comment ajouter une source ?", "Comment filtrer sur mon domaine ?"],
     trainings: ["Quelle formation me serait la plus utile ?", "Où en sont mes formations ?", "Comment fonctionnent les suggestions ?"],

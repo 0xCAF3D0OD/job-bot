@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 
 import type { components } from "../../api/schema";
-import { plural } from "../../format";
+import { localDate, plural } from "../../format";
 
 // « Par mois » du Bilan (docs/55 §2) : candidatures et réponses en barres doubles, mois par
 // mois (ou semaine par semaine pour un mois choisi) ; la valeur dans une bulle au survol,
@@ -15,16 +15,12 @@ const monthShort = new Intl.DateTimeFormat("fr-CH", { month: "short" });
 const monthLong = new Intl.DateTimeFormat("fr-CH", { month: "long", year: "numeric" });
 const dayMonth = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
-function local(day: string): Date {
-  const [y, m, d] = day.split("-").map(Number);
-  return new Date(y!, m! - 1, d!);
-}
 function short(bucket: Bucket): string {
-  const day = local(bucket.start);
+  const day = localDate(bucket.start);
   return props.unit === "week" ? dayMonth.format(day).replace(".", "") : monthShort.format(day).replace(".", "");
 }
 function long(bucket: Bucket): string {
-  const day = local(bucket.start);
+  const day = localDate(bucket.start);
   return props.unit === "week" ? `semaine du ${dayMonth.format(day)}` : monthLong.format(day);
 }
 function counts(bucket: Bucket): string {
@@ -49,7 +45,7 @@ function height(n: number): string {
       </p>
     </header>
     <ol
-      class="week-bars period-bars"
+      class="bar-chart period-bars"
       :style="{ gridTemplateColumns: `repeat(${buckets.length}, minmax(0, 1fr))` }"
     >
       <li
@@ -64,22 +60,22 @@ function height(n: number): string {
         @focus="active = index"
         @blur="active = null"
       >
-        <span class="week-bar-track period-track">
+        <span class="bar-track period-track">
           <span
             v-if="active === index"
-            class="week-tip"
+            class="bar-tip"
             aria-hidden="true"
           ><small>{{ long(bucket) }}</small>{{ counts(bucket) }}</span>
           <span
-            class="week-bar"
+            class="bar-fill"
             :style="{ height: height(bucket.applications) }"
           />
           <span
-            class="week-bar answered"
+            class="bar-fill answered"
             :style="{ height: height(bucket.responses) }"
           />
         </span>
-        <span class="week-day">{{ short(bucket) }}</span>
+        <span class="bar-label">{{ short(bucket) }}</span>
       </li>
     </ol>
   </section>

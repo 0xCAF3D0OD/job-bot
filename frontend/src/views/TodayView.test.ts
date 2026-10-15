@@ -236,7 +236,7 @@ describe("Aujourd'hui, revue des pages (docs/43)", () => {
     await chart.find("[data-test=week-applications]").trigger("click");
     expect(chart.text()).toContain("3 candidatures sur 7 jours");
     await chart.findAll("li")[6]!.trigger("focus");
-    expect(chart.find(".week-tip").text()).toContain("1 candidature");
+    expect(chart.find(".bar-tip").text()).toContain("1 candidature");
 
     const gauge = wrapper.find("[data-test=orp-gauge]");
     expect(gauge.find("[data-test=gauge-count]").text()).toBe("3");

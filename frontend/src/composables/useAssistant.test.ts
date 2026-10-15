@@ -16,6 +16,8 @@ describe("useAssistant", () => {
     // « Comment ça marche ici ? » remplace les « ? » des pages (docs/53).
     expect(suggestionsFor("inconnue", null)).toHaveLength(4);
     expect(suggestionsFor("settings", null).at(-1)).toBe("Comment ça marche ici ?");
+    // Le Bilan a ses propres suggestions (docs/56), plus les génériques.
+    expect(suggestionsFor("insights", null)[2]).toBe("Prépare mon résumé pour l'ORP");
   });
 
   it("un raccourci ouvre le panneau sur l'élément", () => {
