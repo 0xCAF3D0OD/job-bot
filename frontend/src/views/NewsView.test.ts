@@ -77,27 +77,55 @@ async function mountView(path = "/actualites") {
 }
 
 describe("NewsView", () => {
-  it("page journal : une à la une, puis des titres groupés par période ; filtres derrière « Filtrer »", async () => {
+  it("modules à la RTS : en tête, deux en second rang, puis des lignes par période ; filtres derrière « Filtrer »", async () => {
     const now = Date.now();
     const at = (days: number) => new Date(now - days * 24 * 3600_000).toISOString();
     mockApi(
       pageOf([
         item(1, "articles", { published_at: at(0), source: "SECO — marché du travail" }),
-        item(2, "articles", { published_at: at(0), source: "SECO — marché du travail" }),
+        item(2, "articles", { published_at: at(0), has_image: true }),
         item(3, "articles", { published_at: at(3) }),
-        item(4, "articles", { published_at: at(20) }),
+        item(4, "articles", { published_at: at(3) }),
+        item(5, "articles", { published_at: at(20) }),
       ]),
       prefs({ countries: ["CH"] }),
     );
     const { wrapper } = await mountView();
-    expect(wrapper.find(".news-lead .news-title").text()).toBe("Contenu 1");
-    expect(wrapper.findAll(".news-group-title").map((h) => h.text())).toEqual(["Aujourd'hui", "Cette semaine", "Plus ancien"]);
-    expect(wrapper.find(".news-row-meta").text()).toMatch(/^SECO · /);
+    // En tête : la plus récente qui a une image ; les autres gardent l'ordre.
+    expect(wrapper.find(".news-story.lead .news-title").text()).toBe("Contenu 2");
+    expect(wrapper.find(".news-top").classes()).toContain("count-3");
+    expect(wrapper.findAll(".news-story.second .news-title").map((t) => t.text())).toEqual(["Contenu 1", "Contenu 3"]);
+    // Sans image : une vignette texte avec le nom court de la source.
+    expect(wrapper.find(".news-story.second .news-thumb.text").text()).toBe("SECO");
+    expect(wrapper.findAll(".news-group-title").map((h) => h.text())).toEqual(["Cette semaine", "Plus ancien"]);
+    expect(wrapper.find(".news-story.row .news-time").text()).toMatch(/^il y a|hier/);
     const toggle = wrapper.find("[data-test=news-filter-toggle]");
     expect(toggle.text()).toBe("Filtrer · 1");
     expect((wrapper.find("[data-test=news-filter-popover]").element as HTMLElement).style.display).toBe("none");
     await toggle.trigger("click");
     expect((wrapper.find("[data-test=news-filter-popover]").element as HTMLElement).style.display).toBe("");
+  });
+
+  it("une seule actualité : en tête sur toute la largeur ; téléphone : seule l'actualité en tête est en grand", async () => {
+    mockApi(pageOf([item(1, "articles", { has_image: true })]));
+    const { wrapper } = await mountView();
+    expect(wrapper.find(".news-top").classes()).toContain("count-1");
+    expect(wrapper.find(".news-second").exists()).toBe(false);
+
+    const original = globalThis.matchMedia;
+    globalThis.matchMedia = ((query: string) =>
+      ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
+    try {
+      mockApi(pageOf([item(1, "articles", { has_image: true }), item(2, "articles"), item(3, "articles")]));
+      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: NewsView }] });
+      await router.push("/actualites");
+      const phone = mount(NewsView, { global: { plugins: [router], stubs: { teleport: true } } });
+      await flushPromises();
+      expect(phone.find(".news-top").classes()).toContain("count-1");
+      expect(phone.findAll(".news-story.row")).toHaveLength(2);
+    } finally {
+      globalThis.matchMedia = original;
+    }
   });
 
   it("articles, compteurs de nouveautés, visite enregistrée", async () => {

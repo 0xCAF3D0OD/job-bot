@@ -4,13 +4,14 @@ import { useRoute } from "vue-router";
 
 import { api, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
 import HelpTip from "../components/HelpTip.vue";
+import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
 import { usePhone } from "../composables/usePhone";
 import { since } from "../format";
-import { countryLabel, highlight, languageLabel } from "../newsLabels";
+import { countryLabel, languageLabel } from "../newsLabels";
 
 // Actualités (docs/15 §2, docs/16) : marché de l'emploi et vidéos, filtrés selon ton domaine.
 const POLL_MS = 4_000;
@@ -28,12 +29,16 @@ const { loggedIn } = useAuth();
 let poll: ReturnType<typeof setTimeout> | undefined;
 let polls = 0;
 
-const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+const { phone } = usePhone();
 
-// Page « journal » (docs/32 §5) : un article à la une, puis des titres seuls groupés par
-// période ; les vidéos gardent leurs cartes (la vignette y est l'information).
-const lead = computed(() => (tab.value === "articles" ? (items.value[0] ?? null) : null));
+// À la manière de RTS (docs/35) : une actualité en tête (la plus récente qui a une image),
+// deux en second rang sur ordinateur, puis des lignes groupées par période. Même chose pour
+// les vidéos. Sur téléphone, seule l'actualité en tête est en grand.
+const ordered = computed(() => {
+  const lead = items.value.find((item) => item.has_image) ?? items.value[0];
+  return lead ? [lead, ...items.value.filter((item) => item !== lead)] : [];
+});
+const top = computed(() => ordered.value.slice(0, phone.value ? 1 : 3));
 const PERIODS = [
   { key: "today", label: "Aujourd'hui" },
   { key: "week", label: "Cette semaine" },
@@ -47,16 +52,12 @@ function period(published: string, now = new Date()): (typeof PERIODS)[number]["
 }
 
 const groups = computed(() => {
-  const rest = items.value.slice(1);
+  const rest = ordered.value.slice(top.value.length);
   return PERIODS.map((p) => ({ ...p, items: rest.filter((item) => period(item.published_at) === p.key) })).filter(
     (g) => g.items.length,
   );
 });
 
-// « SECO — marché du travail » : le nom court suffit sur une ligne de titre.
-function shortSource(source: string): string {
-  return source.split(" — ")[0] ?? source;
-}
 
 // Pays et langue derrière « Filtrer » (docs/32 §5.2), avec le nombre de filtres actifs.
 const filtersOpen = ref(false);
@@ -64,7 +65,6 @@ const filtersRoot = ref<HTMLElement | null>(null);
 // Téléphone (retour du 2026-10-15) : comme les alertes, une carte sur toute la largeur sous
 // la ligne des filtres, qui pousse la liste en douceur. Ordinateur : le menu déroulant.
 const filtersPopover = ref<HTMLElement | null>(null);
-const { phone } = usePhone();
 const activeFilters = computed(() => (preferences.value?.countries.length ?? 0) + (preferences.value?.languages.length ?? 0));
 const canFilter = computed(() => (page.value?.countries.length ?? 0) > 1 || (page.value?.languages.length ?? 0) > 1);
 
@@ -329,79 +329,28 @@ onUnmounted(() => {
           </RouterLink>
         </template>
       </p>
-      <ul
-        v-else-if="tab === 'videos'"
-        :class="['news-grid', tab]"
-      >
-        <li
-          v-for="item in items"
-          :key="item.id"
-        >
-          <a
-            class="news-card"
-            :href="item.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-test="news-item"
-          >
-            <img
-              v-if="item.has_image"
-              class="news-image"
-              :src="`/api/news/items/${item.id}/image`"
-              alt=""
-              loading="lazy"
-            >
-            <span class="news-body">
-              <span class="news-meta">{{ item.source }} · {{ dateFormat.format(new Date(item.published_at)) }}</span>
-              <strong class="news-title"><template
-                v-for="(part, index) in highlight(item.title, item.matched)"
-                :key="index"
-              ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></strong>
-              <span
-                v-if="item.summary"
-                class="news-summary"
-              ><template
-                v-for="(part, index) in highlight(item.summary, item.matched)"
-                :key="index"
-              ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
-            </span>
-          </a>
-        </li>
-      </ul>
       <div
         v-else
-        class="news-journal"
+        :class="['news-modules', tab]"
       >
-        <a
-          v-if="lead"
-          class="news-lead"
-          :href="lead.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-test="news-item"
-        >
-          <img
-            v-if="lead.has_image"
-            class="news-image"
-            :src="`/api/news/items/${lead.id}/image`"
-            alt=""
-            loading="lazy"
+        <div :class="['news-top', `count-${top.length}`]">
+          <NewsStory
+            v-if="top[0]"
+            :item="top[0]"
+            variant="lead"
+          />
+          <div
+            v-if="top.length > 1"
+            class="news-second"
           >
-          <span class="news-body">
-            <span class="news-meta">À la une · {{ lead.source }} · {{ dateFormat.format(new Date(lead.published_at)) }}</span>
-            <strong class="news-title news-lead-title"><template
-              v-for="(part, index) in highlight(lead.title, lead.matched)"
-              :key="index"
-            ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></strong>
-            <span
-              v-if="lead.summary"
-              class="news-summary"
-            ><template
-              v-for="(part, index) in highlight(lead.summary, lead.matched)"
-              :key="index"
-            ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
-          </span>
-        </a>
+            <NewsStory
+              v-for="item in top.slice(1)"
+              :key="item.id"
+              :item="item"
+              variant="second"
+            />
+          </div>
+        </div>
         <section
           v-for="group in groups"
           :key="group.key"
@@ -410,30 +359,15 @@ onUnmounted(() => {
           <h2 class="news-group-title">
             {{ group.label }}
           </h2>
-          <ul class="news-rows">
+          <ul class="news-row-list">
             <li
               v-for="item in group.items"
               :key="item.id"
             >
-              <a
-                class="news-row"
-                :href="item.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-test="news-item"
-              >
-                <span class="news-row-main">
-                  <span class="news-title"><template
-                    v-for="(part, index) in highlight(item.title, item.matched)"
-                    :key="index"
-                  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
-                  <span
-                    v-if="item.summary"
-                    class="news-row-summary"
-                  >{{ item.summary }}</span>
-                </span>
-                <span class="news-row-meta">{{ shortSource(item.source) }} · {{ shortDate.format(new Date(item.published_at)) }}</span>
-              </a>
+              <NewsStory
+                :item="item"
+                variant="row"
+              />
             </li>
           </ul>
         </section>
