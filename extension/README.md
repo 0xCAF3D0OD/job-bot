@@ -1,6 +1,6 @@
-# Extension job-bot (docs/25)
+# Extension jobA1 (docs/25)
 
-Remplit le formulaire de candidature de l'employeur avec tes données job-bot : coordonnées,
+Remplit le formulaire de candidature de l'employeur avec tes données jobA1 : coordonnées,
 CV et lettre en PDF, texte de la lettre, et, sur demande, une proposition de réponse aux
 questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune case.
 
@@ -8,7 +8,7 @@ questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune c
 
 1. Ouvre `chrome://extensions` et active le **mode développeur** (en haut à droite).
 2. **Charger l'extension non empaquetée** → choisis ce dossier `extension/`.
-3. Épingle l'icône job-bot dans la barre du navigateur.
+3. Épingle l'icône jobA1 dans la barre du navigateur.
 
 ## Installer (Firefox 128 et plus)
 
@@ -26,7 +26,7 @@ questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune c
 
 1. Sur la plateforme : **Réglages › Extension du navigateur › Créer un jeton** ; copie-le
    (il n'est montré qu'une fois).
-2. Clique sur l'icône job-bot : colle l'adresse de ta plateforme (en `https://`, ou
+2. Clique sur l'icône jobA1 : colle l'adresse de ta plateforme (en `https://`, ou
    `http://localhost:…` sur ta machine) et le jeton, puis **Relier**. Le navigateur demande
    l'autorisation de joindre cette adresse, et seulement celle-ci. Si le panneau se ferme
    pendant cette demande (fréquent dans Firefox), rouvre-le : **Autoriser l'accès à ma
@@ -34,7 +34,7 @@ questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune c
 
 ## Utiliser
 
-Sur le formulaire de l'employeur (ouvert depuis « Postuler ») : icône job-bot →
+Sur le formulaire de l'employeur (ouvert depuis « Postuler ») : icône jobA1 →
 **Remplir le formulaire**. Les champs remplis sont encadrés en violet, les champs obligatoires
 restants en orange. Vérifie, envoie depuis le site, puis **J'ai envoyé ma candidature** :
 elle arrive dans ton Suivi avec l'adresse du formulaire.

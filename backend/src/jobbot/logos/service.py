@@ -33,7 +33,7 @@ MAX_PAGE_BYTES = 400_000
 MAX_PER_RUN = 25
 DELAY_SECONDS = 2.0
 RETRY_AFTER = timedelta(days=30)
-USER_AGENT = "job-bot/0.7 (usage personnel)"
+USER_AGENT = "jobA1/0.7 (usage personnel)"
 WATCHED = (
     OfferStatus.NEW,
     OfferStatus.TO_REVIEW,

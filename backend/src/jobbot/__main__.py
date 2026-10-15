@@ -264,7 +264,7 @@ def cmd_set_password(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="jobbot", description="job-bot")
+    parser = argparse.ArgumentParser(prog="jobbot", description="jobA1")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("api", help="API HTTP").set_defaults(func=cmd_api)
     sub.add_parser("worker", help="file de tâches").set_defaults(func=cmd_worker)

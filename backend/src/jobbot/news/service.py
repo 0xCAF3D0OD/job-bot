@@ -32,7 +32,7 @@ MAX_IMAGE_BYTES = 300_000
 MAX_ITEMS_PER_SOURCE = 30
 KEEP_FOR = timedelta(days=60)
 DEDUPE_FOR = timedelta(days=14)
-USER_AGENT = "job-bot/0.8 (usage personnel)"
+USER_AGENT = "jobA1/0.8 (usage personnel)"
 _YOUTUBE_ID = re.compile(r"(UC[\w-]{22})")
 _YOUTUBE_CHANNEL_URL = re.compile(
     r"https://(?:www\.|m\.)?youtube\.com/channel/(UC[\w-]{22})(?:[/?#]|$)"

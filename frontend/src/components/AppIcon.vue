@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Icônes au trait, dessinées pour job-bot (style de la maquette, aucun fichier repris).
+// Icônes au trait, dessinées pour jobA1 (style de la maquette, aucun fichier repris).
 defineProps<{ name: "pin" | "rate" | "globe" | "check" | "chevron" | "calendar" | "eye" | "bell" | "user" | "search" }>();
 </script>
 

@@ -152,7 +152,7 @@ async def test_api_test_notification(rt: Runtime, sent: list[Message], settings:
         status = (await api.get("/api/notifications")).json()
         assert status == {"configured": True, "server": "https://ntfy.sh"}
         assert (await api.post("/api/notifications/test")).status_code == 204
-    assert sent[0].title == "job-bot : notification de test"
+    assert sent[0].title == "jobA1 : notification de test"
     assert "sujet-secret" not in str(status)
 
 
