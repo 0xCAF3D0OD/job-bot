@@ -2,11 +2,13 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { useJobsMemory } from "../composables/useJobsMemory";
+import { usePhone } from "../composables/usePhone";
 import { formatMonth, scoreLevel } from "../format";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
@@ -71,6 +73,8 @@ function toggleFolds(): void {
 const { last: lastJobsPage } = useJobsMemory();
 
 const steps = computed(() => today.value?.checklist ?? []);
+const journeyDone = computed(() => today.value?.journey.filter((s) => s.done).length ?? 0);
+const { phone } = usePhone();
 const doneCount = computed(() => steps.value.filter((s) => s.done).length);
 const showChecklist = computed(
   () => !!today.value && !today.value.checklist_dismissed && doneCount.value < steps.value.length,
@@ -137,9 +141,14 @@ onMounted(() => void load());
       v-if="today"
       class="container today"
     >
-      <article
+      <!-- Téléphone (docs/34 §4) : repliés, sous l'essentiel du jour. -->
+      <component
+        :is="phone ? DisclosureRow : 'article'"
         v-if="!today.journey_dismissed && today.journey.length"
-        class="side-card journey"
+        :class="phone ? 'journey today-help-row' : 'side-card journey'"
+        :title="phone ? 'Comment ça marche' : undefined"
+        :value="phone ? `${journeyDone} / ${today.journey.length}` : undefined"
+        :group="phone ? 'today-help' : undefined"
         data-test="journey"
       >
         <div class="checklist-head">
@@ -174,10 +183,14 @@ onMounted(() => void load());
             <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
           </li>
         </ol>
-      </article>
-      <article
+      </component>
+      <component
+        :is="phone ? DisclosureRow : 'article'"
         v-if="showChecklist"
-        class="side-card checklist"
+        :class="phone ? 'checklist today-help-row' : 'side-card checklist'"
+        :title="phone ? 'Pour bien démarrer' : undefined"
+        :value="phone ? `${doneCount} / ${steps.length}` : undefined"
+        :group="phone ? 'today-help' : undefined"
         data-test="checklist"
       >
         <div class="checklist-head">
@@ -215,7 +228,7 @@ onMounted(() => void load());
             >{{ STEPS[step.key].hint }}</span>
           </li>
         </ul>
-      </article>
+      </component>
 
       <div class="today-section-head">
         <h2>Candidatures</h2>

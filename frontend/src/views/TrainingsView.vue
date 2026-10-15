@@ -3,10 +3,14 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
+import SidePanel from "../components/SidePanel.vue";
+import TrainingCardBody from "../components/TrainingCardBody.vue";
+import { usePhone } from "../composables/usePhone";
 import { highlight, languageLabel } from "../newsLabels";
-import { FORMATS, KINDS, LEVELS, ORP_LINKS, PRICES, STATUSES } from "../trainingLabels";
+import { KINDS, ORP_LINKS, PRICES, STATUSES } from "../trainingLabels";
 
 // Formations (docs/16 §5) : catalogue vérifié, suggestions de l'IA sur demande, suivi.
 type Status = "interested" | "in_progress" | "done";
@@ -120,7 +124,13 @@ async function suggest(): Promise<void> {
   }
 }
 
-const inputValue = (event: Event): string => (event.target as HTMLInputElement).value;
+// Téléphone (docs/34 §2) : une liste fine, la fiche en plein écran, les filtres derrière
+// « Filtrer », l'encadré ORP replié. Sur ordinateur, rien ne change.
+const { phone } = usePhone();
+const openId = ref<number | null>(null);
+const opened = computed(() => items.value.find((t) => t.id === openId.value) ?? null);
+const filtersOpen = ref(false);
+const activeFilters = computed(() => [kind.value, price.value, language.value].filter(Boolean).length);
 
 onMounted(() => void load());
 </script>
@@ -157,8 +167,11 @@ onMounted(() => void load());
         </RouterLink>
       </nav>
 
-      <aside
-        class="orp-note"
+      <component
+        :is="phone ? DisclosureRow : 'aside'"
+        :class="phone ? 'orp-note-row' : 'orp-note'"
+        :title="phone ? 'Formation et chômage' : undefined"
+        :value="phone ? 'accord de l\'ORP' : undefined"
         data-test="orp-note"
       >
         <strong>Formation et chômage :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
@@ -176,7 +189,7 @@ onMounted(() => void load());
             rel="noopener noreferrer"
           >{{ link.label }}</a>
         </span>
-      </aside>
+      </component>
 
       <div
         v-if="loaded"
@@ -212,54 +225,69 @@ onMounted(() => void load());
           :text="`Mon domaine : ${keywords.join(', ')}. À modifier dans Réglages › Actualités.`"
           label="Mots de Mon domaine"
         />
-        <select
-          v-model="kind"
-          aria-label="Type"
-          data-test="filter-kind"
+        <button
+          v-if="phone"
+          type="button"
+          class="secondary small training-filter-toggle"
+          :aria-expanded="filtersOpen"
+          data-test="training-filter-toggle"
+          @click="filtersOpen = !filtersOpen"
         >
-          <option value="">
-            Tous les types
-          </option>
-          <option
-            v-for="(label, key) in KINDS"
-            :key="key"
-            :value="key"
-          >
-            {{ label }}
-          </option>
-        </select>
-        <select
-          v-model="price"
-          aria-label="Prix"
-          data-test="filter-price"
+          Filtrer{{ activeFilters ? ` · ${activeFilters}` : "" }}
+        </button>
+        <div
+          v-show="!phone || filtersOpen"
+          :class="phone ? 'training-filter-sheet' : 'training-filter-group'"
         >
-          <option value="">
-            Gratuit ou payant
-          </option>
-          <option
-            v-for="(label, key) in PRICES"
-            :key="key"
-            :value="key"
+          <select
+            v-model="kind"
+            aria-label="Type"
+            data-test="filter-kind"
           >
-            {{ label }}
-          </option>
-        </select>
-        <select
-          v-if="languages.length > 1"
-          v-model="language"
-          aria-label="Langue"
-        >
-          <option value="">
-            Toutes les langues
-          </option>
-          <option
-            v-for="code in languages"
-            :key="code"
-            :value="code"
+            <option value="">
+              Tous les types
+            </option>
+            <option
+              v-for="(label, key) in KINDS"
+              :key="key"
+              :value="key"
+            >
+              {{ label }}
+            </option>
+          </select>
+          <select
+            v-model="price"
+            aria-label="Prix"
+            data-test="filter-price"
           >
-            {{ languageLabel(code) }}
-          </option>
-        </select>
+            <option value="">
+              Gratuit ou payant
+            </option>
+            <option
+              v-for="(label, key) in PRICES"
+              :key="key"
+              :value="key"
+            >
+              {{ label }}
+            </option>
+          </select>
+          <select
+            v-if="languages.length > 1"
+            v-model="language"
+            aria-label="Langue"
+          >
+            <option value="">
+              Toutes les langues
+            </option>
+            <option
+              v-for="code in languages"
+              :key="code"
+              :value="code"
+            >
+              {{ languageLabel(code) }}
+            </option>
+          </select>
+        </div>
         <span
           v-if="canSuggest && tab === 'catalog'"
           class="news-status"
@@ -307,6 +335,40 @@ onMounted(() => void load());
         {{ tab === "mine" ? "Aucune formation suivie : marque une formation « Intéressé » dans le catalogue." : "Aucune formation avec ces filtres." }}
       </p>
       <ul
+        v-else-if="phone"
+        class="news-rows training-rows"
+      >
+        <li
+          v-for="training in shown"
+          :key="training.id"
+          data-test="training"
+        >
+          <button
+            type="button"
+            class="news-row training-row"
+            :aria-expanded="openId === training.id"
+            data-test="training-row"
+            @click="openId = training.id"
+          >
+            <span class="news-row-main">
+              <span class="news-title"><template
+                v-for="(part, index) in highlight(training.title, training.matched)"
+                :key="index"
+              ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
+              <span class="training-row-facts">{{ KINDS[training.kind] }} · {{ training.provider }} · {{ PRICES[training.price] }}</span>
+            </span>
+            <span
+              v-if="training.mark"
+              class="badge"
+            >{{ STATUSES[training.mark.status] }}</span>
+            <span
+              v-else-if="!training.verified"
+              class="badge warn"
+            >à vérifier</span>
+          </button>
+        </li>
+      </ul>
+      <ul
         v-else
         class="training-grid"
       >
@@ -316,125 +378,27 @@ onMounted(() => void load());
           class="training-card"
           data-test="training"
         >
-          <div class="training-head">
-            <span class="news-meta">{{ KINDS[training.kind] }} · {{ training.provider }}</span>
-            <span
-              v-if="!training.verified"
-              class="badge warn"
-              data-test="unverified"
-            >à vérifier</span>
-          </div>
-          <a
-            class="training-title"
-            :href="training.url"
-            target="_blank"
-            rel="noopener noreferrer"
-          ><template
-            v-for="(part, index) in highlight(training.title, training.matched)"
-            :key="index"
-          ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></a>
-          <p class="training-facts">
-            {{ FORMATS[training.format] }} · {{ languageLabel(training.language) }} · {{ PRICES[training.price] }}
-            <template v-if="training.level">
-              · {{ LEVELS[training.level] }}
-            </template>
-            <template v-if="training.duration">
-              · {{ training.duration }}
-            </template>
-          </p>
-          <p
-            v-if="training.description"
-            class="training-text"
-          >
-            {{ training.description }}
-          </p>
-          <p
-            v-if="training.prep"
-            class="training-text"
-          >
-            <strong>Préparation conseillée :</strong> {{ training.prep }}
-          </p>
-          <p
-            v-if="training.price === 'paid'"
-            class="hint"
-          >
-            Financement possible seulement avec l'accord préalable de ton conseiller ORP.
-          </p>
-          <div
-            v-if="!training.verified"
-            class="training-actions"
-          >
-            <button
-              type="button"
-              class="secondary small"
-              data-test="keep"
-              @click="review(training, true)"
-            >
-              Garder
-            </button>
-            <button
-              type="button"
-              class="link danger"
-              data-test="dismiss"
-              @click="review(training, false)"
-            >
-              Écarter
-            </button>
-          </div>
-          <div class="training-actions">
-            <div
-              class="segmented"
-              role="radiogroup"
-              aria-label="Suivi"
-            >
-              <button
-                v-for="(label, key) in STATUSES"
-                :key="key"
-                type="button"
-                role="radio"
-                :aria-checked="training.mark?.status === key"
-                :data-test="`mark-${key}`"
-                @click="training.mark?.status === key ? mark(training, null) : mark(training, key as Status)"
-              >
-                {{ label }}
-              </button>
-            </div>
-          </div>
-          <label
-            v-if="training.mark?.status === 'in_progress'"
-            class="training-field"
-          >Progression
-            <input
-              type="text"
-              maxlength="80"
-              placeholder="module 4/12"
-              :value="training.mark.progress ?? ''"
-              data-test="progress"
-              @change="mark(training, 'in_progress', { progress: inputValue($event) })"
-            >
-          </label>
-          <div
-            v-if="training.mark?.status === 'done'"
-            class="training-field"
-          >
-            <label>Terminée le
-              <input
-                type="date"
-                :value="training.mark.done_at ?? ''"
-                @change="mark(training, 'done', { done_at: inputValue($event) || null })"
-              >
-            </label>
-            <label class="check">
-              <input
-                type="checkbox"
-                :checked="training.mark.certified ?? false"
-                data-test="certified"
-                @change="mark(training, 'done', { certified: !(training.mark.certified ?? false) })"
-              > certificat obtenu
-            </label>
-          </div>
+          <TrainingCardBody
+            :training="training"
+            @mark="(status, extra) => mark(training, status, extra)"
+            @review="(keep) => review(training, keep)"
+          />
         </li>
       </ul>
     </div>
   </section>
+  <SidePanel
+    v-if="phone && opened"
+    open
+    :title="opened.title"
+    @close="openId = null"
+  >
+    <div class="training-card training-sheet">
+      <TrainingCardBody
+        :training="opened"
+        @mark="(status, extra) => mark(opened!, status, extra)"
+        @review="(keep) => { review(opened!, keep); if (!keep) openId = null; }"
+      />
+    </div>
+  </SidePanel>
 </template>

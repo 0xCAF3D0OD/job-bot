@@ -123,4 +123,31 @@ describe("TrainingsView", () => {
     expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);
     expect((wrapper.find("[data-test=certified]").element as HTMLInputElement).checked).toBe(true);
   });
+
+  it("téléphone : liste fine, fiche en plein écran, filtres derrière « Filtrer », encadré ORP replié", async () => {
+    const original = globalThis.matchMedia;
+    globalThis.matchMedia = ((query: string) =>
+      ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
+    GET.mockResolvedValue({ data: page([training(1), training(2, { title: "Microsoft Learn", price: "free", kind: "parcours" })]) });
+    PUT.mockResolvedValue({ data: { status: "interested", progress: null, done_at: null, certified: null } });
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: TrainingsView }] });
+    await router.push("/formations");
+    const wrapper = mount(TrainingsView, { global: { plugins: [router], stubs: { teleport: true } } });
+    await flushPromises();
+
+    expect(wrapper.findAll("[data-test=training-row]")).toHaveLength(2);
+    expect(wrapper.find(".training-grid").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-note]").classes()).toContain("disclosure");
+    const toggle = wrapper.find("[data-test=training-filter-toggle]");
+    expect(toggle.text()).toBe("Filtrer");
+    await wrapper.find("[data-test=filter-kind]").setValue("certification");
+    expect(toggle.text()).toBe("Filtrer · 1");
+
+    await wrapper.find("[data-test=training-row]").trigger("click");
+    expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("Certified Kubernetes Administrator (CKA)");
+    await wrapper.find("[data-test=side-panel] [data-test=mark-interested]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=training-row] .badge").text()).toBe("Intéressé");
+    globalThis.matchMedia = original;
+  });
 });
