@@ -833,12 +833,8 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .bell-button { position: relative; border-radius: 999px; width: 2.4rem; height: 2.4rem; padding: 0; justify-content: center; }
 .bell-button .icon { width: 1.15rem; height: 1.15rem; }
 .bell-badge { position: absolute; top: -0.25rem; right: -0.25rem; min-width: 1.2rem; height: 1.2rem; padding: 0 0.3rem; border-radius: 999px; background: var(--down); color: #fff; font-size: 0.7rem; font-weight: 700; display: grid; place-items: center; }
-.bell-drop { max-width: 84rem; margin: 0 auto; padding: 0 1.5rem; }
+.bell-panel { position: absolute; right: 0; top: 2.9rem; z-index: 40; width: min(24rem, calc(100vw - 2rem)); max-height: 70vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 16px 40px rgba(17, 17, 31, 0.16); padding: 0.5rem; }
 .bell-drop:empty { display: none; }
-.bell-panel { margin: 0 0 0.9rem; max-height: min(60vh, 34rem); overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 10px 28px rgb(17 17 31 / 8%); padding: 0.5rem; }
-.bell-drop-enter-active, .bell-drop-leave-active { transition: opacity 0.18s ease, transform 0.18s ease; }
-.bell-drop-enter-from, .bell-drop-leave-to { opacity: 0; transform: translateY(-0.4rem); }
-@media (prefers-reduced-motion: reduce) { .bell-drop-enter-active, .bell-drop-leave-active { transition: none; } }
 .bell-head { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.6rem 0.6rem; }
 .bell-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.2rem; }
 .bell-item { width: 100%; display: grid; gap: 0.15rem; text-align: left; border: 0; background: transparent; padding: 0.6rem 0.7rem; border-radius: 10px; font-weight: 400; }
@@ -1507,7 +1503,10 @@ button, .button-link { max-width: 100%; }
   .hero .eyebrow, .hero-subtitle { display: none; }
   .hero h1 { font-size: 1.6rem; }
   input, select, textarea { font-size: 16px; }
-  .bell-drop { padding: 0 1rem; }
+  /* Cloche : carte sur toute la largeur de l'écran, sous la barre, qui pousse la page. */
+  .bell-drop .bell-drop-enter-active, .bell-drop .bell-drop-leave-active { transition: opacity 0.18s ease, transform 0.18s ease; }
+  .bell-drop .bell-drop-enter-from, .bell-drop .bell-drop-leave-to { opacity: 0; transform: translateY(-0.4rem); }
+  .bell-drop .bell-panel { position: static; width: auto; max-height: min(60vh, 34rem); margin: 0; border-width: 1px 0 0; border-radius: 0; box-shadow: 0 10px 20px rgb(17 17 31 / 6%); padding: 0.5rem 0.5rem 0.75rem; }
 }
 html.side-open { overflow: hidden; }
 
@@ -1550,3 +1549,4 @@ html.side-open { overflow: hidden; }
 }
 /* Écran d’accueil, plein écran (docs/33 §3.5) : la barre du haut évite l’encoche. */
 .topbar { padding-top: env(safe-area-inset-top); }
+@media (prefers-reduced-motion: reduce) { .bell-drop .bell-drop-enter-active, .bell-drop .bell-drop-leave-active { transition: none; } }

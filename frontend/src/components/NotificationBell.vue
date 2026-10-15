@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { api, type Inbox, type InboxItem } from "../api/client";
 import { since } from "../format";
 import AppIcon from "./AppIcon.vue";
+import { usePhone } from "../composables/usePhone";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
 const REFRESH_MS = 60_000;
@@ -13,9 +14,11 @@ const router = useRouter();
 const inbox = ref<Inbox>({ unread: 0, items: [] });
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
-// La carte s'ouvre sous la barre du haut, à sa largeur, et pousse la page vers le bas
-// (retour du 2026-10-15) : elle est rendue dans #bell-drop, au pied de la barre.
+// Sur téléphone, la carte s'ouvre sous la barre du haut, sur toute la largeur de l'écran, et
+// pousse la page vers le bas (retour du 2026-10-15) : elle est rendue dans #bell-drop. Sur
+// ordinateur, elle reste le menu déroulant sous la cloche.
 const panel = ref<HTMLElement | null>(null);
+const { phone } = usePhone();
 let timer: ReturnType<typeof setInterval> | undefined;
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
@@ -96,6 +99,7 @@ onUnmounted(() => {
     <Teleport
       to="#bell-drop"
       defer
+      :disabled="!phone"
     >
       <Transition name="bell-drop">
         <div
