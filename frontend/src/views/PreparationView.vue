@@ -342,7 +342,7 @@ onMounted(() => void load());
       >
         <div class="apply-steps">
           <template v-if="offer.status !== 'applied'">
-            <section class="offer-section">
+            <section class="panel-section">
               <h3>1. Postuler</h3>
               <p class="hint">
                 Joins ta lettre et ton CV en PDF ; la fiche ci-dessous t'aide à remplir le formulaire.
@@ -359,7 +359,7 @@ onMounted(() => void load());
               </div>
             </section>
             <section
-              class="offer-section"
+              class="panel-section"
               data-test="apply-sheet"
             >
               <h3>2. Fiche pour le formulaire</h3>
@@ -369,7 +369,7 @@ onMounted(() => void load());
                 :cv-id="currentCvId"
               />
             </section>
-            <section class="offer-section">
+            <section class="panel-section">
               <h3>3. J'ai postulé</h3>
               <p class="hint">
                 La candidature passe dans ton suivi, avec ta lettre et ton CV, pour le formulaire ORP.

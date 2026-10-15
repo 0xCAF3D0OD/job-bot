@@ -264,7 +264,7 @@ const stateText = computed(() => {
   </div>
   <template v-else>
     <section
-      class="training-panel-section"
+      class="panel-section"
       data-test="section-follow"
     >
       <h3>Mon suivi</h3>
@@ -323,7 +323,7 @@ const stateText = computed(() => {
     </section>
     <section
       v-if="training.price === 'paid' && training.mark"
-      class="training-panel-section"
+      class="panel-section"
       data-test="section-funding"
     >
       <h3>Financement ORP</h3>
@@ -419,7 +419,7 @@ const stateText = computed(() => {
     </section>
     <section
       v-if="training.mark?.status === 'done'"
-      class="training-panel-section"
+      class="panel-section"
       data-test="section-profile"
     >
       <h3>Mon profil</h3>

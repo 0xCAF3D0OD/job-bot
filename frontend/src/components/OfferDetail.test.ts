@@ -101,7 +101,7 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
         description: "Missions. ".repeat(60),
       }),
     );
-    const titles = wrapper.findAll(".offer-section h3").map((h) => h.text());
+    const titles = wrapper.findAll(".panel-section h3").map((h) => h.text());
     expect(titles).toEqual(["Pour toi", "À savoir", "Entreprise", "Annonce"]);
     expect(wrapper.find("[data-test=score-note]").text()).toBe("Ton profil a changé depuis : note à refaire.");
     const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark").text());
