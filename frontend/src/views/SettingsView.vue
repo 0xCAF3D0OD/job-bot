@@ -110,7 +110,6 @@ const SECTIONS = [
 
 <template>
   <PageHero
-    eyebrow="Réglages"
     title="Tes réglages"
   />
   <section class="band">
@@ -133,7 +132,7 @@ const SECTIONS = [
         >
           <form
             v-if="loaded"
-            class="form-card"
+            class="form-card settings-numbers"
             data-test="settings-form"
             @submit.prevent="save"
           >

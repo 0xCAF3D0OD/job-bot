@@ -1,6 +1,6 @@
 # 43 — Revue page par page (version 0.35.0)
 
-> Statut : **validé** le 2026-10-15. Livré : PR a, PR b.
+> Statut : **validé** le 2026-10-15. Livré : PR a, PR b, PR c.
 > Revue de chaque page sur ordinateur (1280 px) et téléphone (375 px), le 2026-10-15, avec des données fictives (30 offres, 12 candidatures, 89 actualités, le catalogue de formations). Jugée selon tes règles : compact, symétrique, linéaire, rien de trop long par rapport au reste, aucun libellé coupé, ouvertures fluides, barres d'accent droites.
 
 **En bref** : aucun débordement horizontal sur téléphone, les dépliages tiennent. Les défauts sont surtout de **cohérence entre pages** (en-têtes, largeurs, pluriels « (s) ») et de **longueur** (Actualités : 11 écrans sur téléphone ; Formations ; les guides de démarrage sur Aujourd'hui).
@@ -135,3 +135,14 @@ D'abord ce qui change ce que tu fais, puis la cohérence, puis les détails. Cha
 - **Pluriels** : plus aucun « (s) » dans l'interface, ni dans les notifications (cloche, ntfy) ni dans les messages des commandes.
 - **Chevrons** : retirés des boutons d'action (Enregistrer, Ajouter, Créer, Renoter, Collecter maintenant, Afficher plus, Marquer comme remis, Rédiger la lettre, Préparer le CV, Se connecter) ; gardés pour ce qui ouvre une autre page ou l'étape suivante (Continuer, Compléter, Ouvrir, liens vers les sites).
 - **Titres** : un seul titre de page partout (la feuille ORP n'en ajoute plus) ; le panneau du Suivi et les jours de la liste des offres ont un vrai titre de section. **Les cartes d'offres restent des boutons** : un titre ne peut pas se trouver dans un bouton ; on passe d'une offre à l'autre avec Tab, chaque carte annonçant son poste.
+
+## Écarts avec la PR c
+
+- **Pastilles en haut des pages retirées** (« Aujourd'hui », « Actualités », « Candidatures »…, retour du 2026-10-15) : le menu dit déjà où l'on est ; le titre de page monte d'autant.
+- **Offres** : « Candidature spontanée » sur la ligne « 21 offres » (petit bouton à droite) ; la liste occupe toute la largeur jusqu'au bord des onglets (elle était centrée sur 52 rem) ; groupes **Aujourd'hui · Cette semaine · Plus ancien** avec leur nombre d'offres, le tri « Par jour » reste dans chaque groupe ; « Effacer tout » n'apparaît qu'avec un filtre actif.
+- **Suivi** : ligne 1, le mois, le compteur, Calendrier / Liste et un bouton rond « ＋ » ; ligne 2, dans un cadre, l'état ORP et son action, seulement s'il y a à faire (ou une remise à annuler). Sur téléphone, l'action reste fixée en bas de l'écran.
+- **Alertes** : l'assistant prend toute la largeur.
+- **Formations** : groupes **Certifications** puis **Cours et parcours** ; format court sur la carte (« examen », « examen en ligne », « à ton rythme »), le format complet en infobulle ; la mention du financement n'est plus sur chaque carte.
+- **Profil** : carte « Tes prérequis » pleine largeur, en lignes libellé / valeur (comme le Bilan), cantons en toutes lettres (« Vaud ») ; l'explication des prérequis dans le « ? » ; un sous-titre commun aux trois onglets. Le formulaire de modification garde sa largeur de lecture.
+- **Réglages** : les quatre nombres de Recherche d'emploi en grille 2 × 2 (une colonne sur téléphone) ; sites suivis et sources des Actualités en colonnes fixes, cases et « Retirer » alignés, y compris pour jobup et Indeed.
+- **Vérifié** dans le navigateur avec les données fictives, sur ordinateur (captures) ; un espace manquant (« 10candidatures ») repéré et corrigé.

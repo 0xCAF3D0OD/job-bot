@@ -42,7 +42,6 @@ onMounted(() => void load());
 
 <template>
   <PageHero
-    eyebrow="Connexion"
     title="Se connecter"
     subtitle="Less searching. More living. Les Actualités sont ouvertes ; le reste demande ta connexion."
   />

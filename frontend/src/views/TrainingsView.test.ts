@@ -64,9 +64,12 @@ describe("TrainingsView", () => {
     const cards = wrapper.findAll("[data-test=training]");
     expect(cards).toHaveLength(2);
     expect(cards[0]!.findAll("mark").map((m) => m.text())).toEqual(["Kubernetes", "CKA"]);
-    expect(cards[0]!.text()).toContain("examen en ligne surveillé");
-    expect(cards[0]!.text()).toContain("Financement possible");
-    expect(cards[1]!.text()).not.toContain("Financement possible");
+    // Format court sur la carte, complet dans l'infobulle ; la mention du financement est
+    // dans l'encadré du haut, plus sur chaque carte (docs/43 n° 20, 22).
+    expect(cards[0]!.text()).toContain("examen en ligne ·");
+    expect(cards[0]!.find(".training-facts span").attributes("title")).toBe("examen en ligne surveillé");
+    expect(cards[0]!.text()).not.toContain("Financement possible");
+    expect(wrapper.find("[data-test=training-section-certifications] h2").text()).toBe("Certifications");
 
     await wrapper.find("[data-test=filter-price]").setValue("free");
     expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);

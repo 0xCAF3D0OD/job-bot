@@ -52,7 +52,7 @@ describe("CriteriaView", () => {
         excluded_types: ["stage"],
       }),
     });
-    expect(wrapper.find("[role=status]").text()).toContain("refiltrées");
+    expect(wrapper.find(".form-actions [role=status]").text()).toContain("refiltrées");
   });
 });
 
@@ -75,10 +75,14 @@ describe("CriteriaForm, déjà saisis", () => {
     const wrapper = mount(CriteriaView);
     await flushPromises();
     const summary = wrapper.find("[data-test=criteria-summary]");
-    expect(summary.text()).toContain("Lieux : VD, Genève");
-    expect(summary.text()).toContain("Télétravail complet : accepté s'il est ouvert depuis la Suisse");
-    expect(summary.text()).toContain("80 % au moins");
-    expect(summary.text()).toContain("Exclus : stages");
+    // Lignes alignées, cantons en toutes lettres (docs/43 n° 23, 24).
+    const rows = summary.findAll(".summary-rows > div").map((row) => [row.find("dt").text(), row.find("dd").text()]);
+    expect(rows).toEqual([
+      ["Lieux", "Vaud, Genève"],
+      ["Télétravail complet", "accepté s'il est ouvert depuis la Suisse"],
+      ["Taux d'activité", "80 % au moins"],
+      ["Types d'offres exclus", "stages"],
+    ]);
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);
     await wrapper.find("[data-test=edit-criteria]").trigger("click");
     expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(true);

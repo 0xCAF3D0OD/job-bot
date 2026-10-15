@@ -21,19 +21,14 @@ const tab = computed<Tab>(() => {
   const wanted = route.query.onglet;
   return TABS.find((t) => t.key === wanted)?.key ?? "recherche";
 });
-const SUBTITLES: Record<Tab, string> = {
-  recherche:
-    "Tes prérequis : une offre qui ne les respecte pas passe dans « Écartées ».",
-  parcours: "Ton CV et tes blocs de profil, la base de l'IA pour noter et rédiger.",
-  coordonnees: "Pour l'en-tête de tes lettres, de ton CV et des preuves ORP (jamais envoyées à l'IA).",
-};
+// Un sous-titre pour les trois onglets (docs/43 n° 25) : ce que chaque onglet contient est
+// dit dans l'onglet lui-même.
 </script>
 
 <template>
   <PageHero
-    eyebrow="Profil"
     title="Toi et ta recherche"
-    :subtitle="SUBTITLES[tab]"
+    subtitle="Ce que tu cherches, ton parcours et tes coordonnées."
   >
     <nav
       class="prep-tabs"

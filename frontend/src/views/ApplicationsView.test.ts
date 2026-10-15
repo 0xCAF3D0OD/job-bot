@@ -374,3 +374,18 @@ describe("Panneau défilant (retour d'usage du 2026-10-07)", () => {
     expect(scroll.classes()).not.toContain("fade-bottom");
   });
 });
+
+describe("Suivi, revue des pages (docs/43 n° 14)", () => {
+  it("ligne 1 : mois, compteur, Calendrier / Liste, ＋ ; ligne 2 seulement s'il y a à faire", async () => {
+    mockApi(() => month());
+    const { wrapper } = await mountView();
+    const head = wrapper.find(".applications-head");
+    expect(head.find("[data-test=layout-calendar]").exists()).toBe(true);
+    expect(head.find("[data-test=add-application]").attributes("aria-label")).toBe("Ajouter une candidature");
+    expect(wrapper.find(".applications-todo [data-test=state]").text()).toContain("Preuves à remettre");
+
+    mockApi(() => month({ state: "en_cours", incomplete: 0, rows: [row(1)] }));
+    const { wrapper: calm } = await mountView();
+    expect(calm.find(".applications-todo").exists()).toBe(false);
+  });
+});

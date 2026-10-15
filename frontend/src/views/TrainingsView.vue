@@ -43,6 +43,13 @@ const shown = computed(() =>
       (!language.value || t.language === language.value),
   ),
 );
+// Deux groupes titrés, comme les sections des Actualités (docs/43 n° 21).
+const sections = computed(() =>
+  [
+    { key: "certifications", label: "Certifications", items: shown.value.filter((t) => t.kind === "certification") },
+    { key: "courses", label: "Cours et parcours", items: shown.value.filter((t) => t.kind !== "certification") },
+  ].filter((section) => section.items.length),
+);
 const mineCount = computed(() => items.value.filter((t) => t.mark).length);
 
 async function load(): Promise<void> {
@@ -154,7 +161,6 @@ onMounted(() => void load());
 
 <template>
   <PageHero
-    eyebrow="Formations"
     title="Se former dans son domaine"
     subtitle="Certifications et cours en ligne pour ton domaine."
   >
@@ -355,58 +361,70 @@ onMounted(() => void load());
       >
         {{ tab === "mine" ? "Aucune formation suivie : marque une formation « Intéressé » dans le catalogue." : "Aucune formation avec ces filtres." }}
       </p>
-      <ul
-        v-else-if="phone"
-        class="news-rows training-rows"
-      >
-        <li
-          v-for="training in shown"
-          :key="training.id"
-          data-test="training"
+      <template v-else>
+        <section
+          v-for="section in sections"
+          :key="section.key"
+          class="training-section"
+          :data-test="`training-section-${section.key}`"
         >
-          <button
-            type="button"
-            class="news-row training-row"
-            :aria-expanded="openId === training.id"
-            data-test="training-row"
-            @click="openId = training.id"
+          <h2 class="news-group-title">
+            {{ section.label }}
+          </h2>
+          <ul
+            v-if="phone"
+            class="news-rows training-rows"
           >
-            <span class="news-row-main">
-              <span class="news-title"><template
-                v-for="(part, index) in highlight(training.title, training.matched)"
-                :key="index"
-              ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
-              <span class="training-row-facts">{{ KINDS[training.kind] }} · {{ training.provider }} · {{ PRICES[training.price] }}</span>
-            </span>
-            <span
-              v-if="training.mark"
-              class="badge"
-            >{{ STATUSES[training.mark.status] }}</span>
-            <span
-              v-else-if="!training.verified"
-              class="badge warn"
-            >à vérifier</span>
-          </button>
-        </li>
-      </ul>
-      <ul
-        v-else
-        class="training-grid"
-      >
-        <li
-          v-for="training in shown"
-          :key="training.id"
-          class="training-card"
-          data-test="training"
-        >
-          <TrainingCardBody
-            :training="training"
-            @mark="(status, extra) => mark(training, status, extra)"
-            @review="(keep) => review(training, keep)"
-            @linked="(linked) => replace({ ...training, mark: linked })"
-          />
-        </li>
-      </ul>
+            <li
+              v-for="training in section.items"
+              :key="training.id"
+              data-test="training"
+            >
+              <button
+                type="button"
+                class="news-row training-row"
+                :aria-expanded="openId === training.id"
+                data-test="training-row"
+                @click="openId = training.id"
+              >
+                <span class="news-row-main">
+                  <span class="news-title"><template
+                    v-for="(part, index) in highlight(training.title, training.matched)"
+                    :key="index"
+                  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
+                  <span class="training-row-facts">{{ KINDS[training.kind] }} · {{ training.provider }} · {{ PRICES[training.price] }}</span>
+                </span>
+                <span
+                  v-if="training.mark"
+                  class="badge"
+                >{{ STATUSES[training.mark.status] }}</span>
+                <span
+                  v-else-if="!training.verified"
+                  class="badge warn"
+                >à vérifier</span>
+              </button>
+            </li>
+          </ul>
+          <ul
+            v-else
+            class="training-grid"
+          >
+            <li
+              v-for="training in section.items"
+              :key="training.id"
+              class="training-card"
+              data-test="training"
+            >
+              <TrainingCardBody
+                :training="training"
+                @mark="(status, extra) => mark(training, status, extra)"
+                @review="(keep) => review(training, keep)"
+                @linked="(linked) => replace({ ...training, mark: linked })"
+              />
+            </li>
+          </ul>
+        </section>
+      </template>
     </div>
   </section>
   <SidePanel

@@ -14,6 +14,15 @@ export const FORMATS: Record<string, string> = {
   exam_online: "examen en ligne surveillé",
 };
 
+// Sur la carte, sur une ligne (docs/43 n° 22) ; le format complet reste dans l'infobulle.
+export const SHORT_FORMATS: Record<string, string> = {
+  self_paced: "à ton rythme",
+  live: "en direct",
+  in_person: "en présentiel",
+  exam: "examen",
+  exam_online: "examen en ligne",
+};
+
 export const LEVELS: Record<string, string> = {
   beginner: "débutant",
   intermediate: "intermédiaire",

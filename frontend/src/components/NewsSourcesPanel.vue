@@ -204,7 +204,7 @@ onMounted(() => void load());
           label="Aide : sources des Actualités"
         />
       </legend>
-      <ul class="sites-list">
+      <ul class="sites-list news-sources-list">
         <li
           v-for="source in sources"
           :key="source.id"
