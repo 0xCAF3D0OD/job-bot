@@ -198,10 +198,11 @@ describe("barre de candidature", () => {
     // Retour aux offres toujours possible.
     expect(wrapper.find("[data-test=back-to-offers]").attributes("href")).toBe("/candidatures/offres");
     const steps = wrapper.find("[data-test=apply-steps]");
-    expect(steps.findAll(".apply-steps h3").map((h) => h.text())).toEqual([
-      "1. Postuler",
-      "2. Fiche pour le formulaire",
-      "3. J'ai postulé",
+    // Numérotées par compteur CSS (docs/51 n° 4).
+    expect(steps.findAll(".apply-steps .apply-step h3").map((h) => h.text())).toEqual([
+      "Postuler",
+      "Fiche pour le formulaire",
+      "J'ai postulé",
     ]);
     expect(steps.find("[data-test=apply-contacts] h2").text()).toBe("Contacts chez Acme SA");
     expect(steps.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");

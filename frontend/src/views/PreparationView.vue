@@ -193,6 +193,8 @@ function edited(): void {
 }
 
 function resize(el: HTMLTextAreaElement): void {
+  // Champ masqué (l'objet « téléphone » sur ordinateur) : rien à mesurer.
+  if (!el.offsetParent) return;
   el.style.height = "auto";
   el.style.height = `${el.scrollHeight}px`;
 }
@@ -342,8 +344,10 @@ onMounted(() => void load());
       >
         <div class="apply-steps">
           <template v-if="offer.status !== 'applied'">
-            <section class="panel-section">
-              <h3>1. Postuler</h3>
+            <!-- Numéros par compteur CSS : sur téléphone, « Postuler » est fixé en bas et sa
+                 section disparaît, les étapes se renumérotent (docs/51 n° 4). -->
+            <section class="panel-section apply-step apply-step-post">
+              <h3>Postuler</h3>
               <p class="hint">
                 Joins ta lettre et ton CV en PDF ; la fiche ci-dessous t'aide à remplir le formulaire.
               </p>
@@ -359,18 +363,18 @@ onMounted(() => void load());
               </div>
             </section>
             <section
-              class="panel-section"
+              class="panel-section apply-step"
               data-test="apply-sheet"
             >
-              <h3>2. Fiche pour le formulaire</h3>
+              <h3>Fiche pour le formulaire</h3>
               <FormSheet
                 :letter-text="currentLetterText"
                 :letter-id="currentLetterId"
                 :cv-id="currentCvId"
               />
             </section>
-            <section class="panel-section">
-              <h3>3. J'ai postulé</h3>
+            <section class="panel-section apply-step">
+              <h3>J'ai postulé</h3>
               <p class="hint">
                 La candidature passe dans ton suivi, avec ta lettre et ton CV, pour le formulaire ORP.
               </p>
@@ -476,11 +480,21 @@ onMounted(() => void load());
               <span v-if="subjectPrefix.trim()">{{ subjectPrefix.trim() }}</span>
               <input
                 v-model="draft.subject"
-                class="screen-only"
+                class="screen-only subject-wide"
                 aria-label="Objet de la lettre"
                 data-test="subject"
                 @input="edited"
               >
+              <!-- Sur téléphone, l'objet passe à la ligne (docs/51 n° 2). -->
+              <textarea
+                v-model="draft.subject"
+                class="screen-only subject-phone"
+                rows="1"
+                aria-label="Objet de la lettre"
+                data-test="subject-phone"
+                @input="onInput"
+                @keydown.enter.prevent
+              />
               <span class="print-only">{{ draft.subject }}</span>
             </p>
             <p>{{ doc.salutation }}</p>
