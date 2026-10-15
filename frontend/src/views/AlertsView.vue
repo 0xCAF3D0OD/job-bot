@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
 import AlertsPanel from "../components/AlertsPanel.vue";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import JournalPanel from "../components/JournalPanel.vue";
@@ -60,13 +61,14 @@ onMounted(() => void load());
       />
     </template>
 
-    <details
+    <DisclosureRow
       class="journal-toggle"
+      title="Alertes reçues"
+      value="le journal des e-mails lus"
       data-test="journal-toggle"
-      @toggle="journalOpen = ($event.target as HTMLDetailsElement).open"
+      @toggle="journalOpen = $event"
     >
-      <summary>Voir les alertes reçues</summary>
       <JournalPanel v-if="journalOpen" />
-    </details>
+    </DisclosureRow>
   </section>
 </template>

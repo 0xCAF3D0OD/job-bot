@@ -82,7 +82,7 @@ async function mountView() {
     ],
   });
   await router.push("/offres/7/preparer");
-  const wrapper = mount(PreparationView, { global: { plugins: [router] } });
+  const wrapper = mount(PreparationView, { global: { plugins: [router], stubs: { ContactsPanel: true } } });
   await flushPromises();
   return wrapper;
 }

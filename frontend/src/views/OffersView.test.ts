@@ -69,7 +69,7 @@ async function mountAt(path: string) {
     routes: [{ path: "/offres", component: OffersView }],
   });
   await router.push(path);
-  const wrapper = mount(OffersView, { global: { plugins: [router] } });
+  const wrapper = mount(OffersView, { global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } } });
   await flushPromises();
   return wrapper;
 }

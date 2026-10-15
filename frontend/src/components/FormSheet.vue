@@ -68,9 +68,6 @@ async function copy(label: string, value: string): Promise<void> {
     class="form-sheet"
     data-test="form-sheet"
   >
-    <p class="hint">
-      À recopier dans le formulaire de l'employeur. Joins le CV et la lettre en PDF.
-    </p>
     <p
       v-if="letterId || cvId"
       class="form-sheet-files"

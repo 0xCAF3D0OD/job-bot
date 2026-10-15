@@ -33,7 +33,7 @@ function offer(extra: Record<string, unknown> = {}) {
 
 async function mountDetail(value: Record<string, unknown>) {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
-  const wrapper = mount(OfferDetail, { props: { offer: value as never }, global: { plugins: [router] } });
+  const wrapper = mount(OfferDetail, { props: { offer: value as never }, global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } } });
   await flushPromises();
   return wrapper;
 }
@@ -74,9 +74,13 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     expect(wrapper.find("[data-test=prepare]").exists()).toBe(true);
     expect(wrapper.find("[data-test=apply]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
     expect(wrapper.find("[data-test=apply]").text()).toContain("Postuler sur Indeed");
-    const company = wrapper.find("[data-test=company-section]");
-    expect(company.attributes("open")).toBeUndefined();
-    expect(company.find("[data-test=address]").exists()).toBe(true);
+    // L'entreprise est dans le panneau latéral, fermé tant qu'on ne l'ouvre pas (docs/32 §2.2).
+    const panel = () => wrapper.find("[data-test=company-section]").element.closest("[data-test=side-panel]") as HTMLElement;
+    expect(panel().style.display).toBe("none");
+    await wrapper.find("[data-test=open-company]").trigger("click");
+    await flushPromises();
+    expect(panel().style.display).toBe("");
+    expect(wrapper.find("[data-test=address]").exists()).toBe(true);
     await wrapper.find("[data-test=more]").trigger("click");
     expect(wrapper.find("[data-test=menu-find-employer]").exists()).toBe(true);
   });

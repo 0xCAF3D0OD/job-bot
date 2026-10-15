@@ -8,6 +8,7 @@ import AppIcon from "./components/AppIcon.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
+import AppToast from "./components/AppToast.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useNewsCount } from "./composables/useNewsCount";
@@ -15,7 +16,8 @@ import { useCollect } from "./composables/useCollect";
 import { useProfiles } from "./composables/useProfiles";
 import { navigation, PUBLIC_ROUTES } from "./router";
 
-const { message, running, collectNow } = useCollect();
+const { message, running, failed, collectNow } = useCollect();
+
 const { count: newsCount, start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
 const route = useRoute();
@@ -124,13 +126,12 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
       Revenir à {{ mainProfile.name }}
     </button>
   </div>
-  <p
+  <AppToast
     v-if="message"
-    class="toast"
-    role="status"
-  >
-    {{ message }}
-  </p>
+    :message="message"
+    :error="failed"
+    @close="message = ''"
+  />
   <main>
     <RouterView />
   </main>

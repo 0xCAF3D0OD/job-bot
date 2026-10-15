@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { api } from "../api/client";
 import { email, postcode, webAddress, type Check } from "../validators";
 import AppIcon from "./AppIcon.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 
 // Coordonnées pour l'en-tête des lettres, du CV et du formulaire ORP : base locale seulement,
 // jamais envoyées à l'IA.
@@ -174,14 +175,12 @@ onMounted(async () => {
           >{{ errors.email }}</span>
         </label>
       </div>
-      <details
+      <DisclosureRow
         class="identity-more"
+        title="Pour les formulaires en ligne"
+        :value="formFilled ? `facultatif · ${formFilled} / 5` : 'facultatif'"
         data-test="identity-more"
       >
-        <summary>
-          Pour les formulaires en ligne
-          <span class="muted">· facultatif{{ formFilled ? ` · ${formFilled} / 5` : "" }}</span>
-        </summary>
         <div class="form-grid">
           <label>LinkedIn
             <input
@@ -251,7 +250,7 @@ onMounted(async () => {
             <option value="Permis G (frontalier)" />
           </datalist>
         </div>
-      </details>
+      </DisclosureRow>
     </fieldset>
     <div class="form-actions">
       <button

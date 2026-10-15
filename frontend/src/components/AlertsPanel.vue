@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 import MoreInfo from "./MoreInfo.vue";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
@@ -118,8 +119,10 @@ onMounted(() => void load());
         La lecture de ta boîte mail n'est pas encore branchée (réglage d'installation, voir le README).
       </template>
     </p>
-    <details class="forwarding">
-      <summary>Tu as donné une autre adresse sur le site ?</summary>
+    <DisclosureRow
+      class="forwarding"
+      title="Tu as donné une autre adresse sur le site ?"
+    >
       <p class="hint">
         Fais-les suivre vers la boîte lue avec un filtre sur l'expéditeur :
       </p>
@@ -131,7 +134,7 @@ onMounted(() => void load());
           <strong>{{ site.name }}</strong> : {{ site.senders.length ? site.senders.join(", ") : "à compléter dans Réglages → Sites suivis" }}
         </li>
       </ul>
-    </details>
+    </DisclosureRow>
 
     <p
       v-if="!active.length"
@@ -285,11 +288,12 @@ onMounted(() => void load());
       </button>
     </div>
 
-    <details
+    <DisclosureRow
       v-if="paused.length"
       class="forwarding"
+      title="Recherches mises de côté"
+      :value="String(paused.length)"
     >
-      <summary>Recherches mises de côté ({{ paused.length }})</summary>
       <ul>
         <li
           v-for="search in paused"
@@ -305,6 +309,6 @@ onMounted(() => void load());
           </button>
         </li>
       </ul>
-    </details>
+    </DisclosureRow>
   </div>
 </template>
