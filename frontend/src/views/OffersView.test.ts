@@ -199,7 +199,7 @@ describe("OffersView", () => {
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
 
     await cards[1]?.trigger("click");
-    expect(wrapper.find("[data-test=reasons]").text()).toContain("Type : stage");
+    expect(wrapper.find("[data-test=facts] .no").text()).toContain("✗Type : stage");
   });
 });
 
@@ -273,6 +273,7 @@ describe("tri et candidature", () => {
     POST.mockResolvedValue({ data: { id: 9, company: "Acme SA" } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=more]").trigger("click");
     await wrapper.find("[data-test=mark-applied]").trigger("click");
     await flushPromises();
     await wrapper.find("form.application-form").trigger("submit");
