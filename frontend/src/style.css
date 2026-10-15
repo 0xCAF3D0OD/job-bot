@@ -1182,7 +1182,7 @@ button.filter-row:not(.filter-option)::after { content: "›"; color: var(--fain
 .filter-switch input::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 2px rgb(0 0 0 / 20%); }
 .filter-switch input:checked { background: var(--accent); }
 .filter-switch input:checked::after { transform: translateX(0.9rem); }
-.filter-customize { padding: 0 0.2rem; }
+.filter-customize { padding: 0 0.2rem; margin-top: 0.4rem; }
 .filters-footer { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
 .filters-clear, .filters-done { border-radius: 999px; padding: 0.6rem 0.9rem; font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
 .filters-clear { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
@@ -1648,7 +1648,7 @@ html.side-open { overflow: hidden; }
 .insights-step strong { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .insights-step span { color: var(--muted); font-size: 0.82rem; white-space: nowrap; }
 .insights-step:hover strong { color: var(--accent); }
-.insights-delay { margin: 0.6rem 0 0; }
+.insights-delay { margin: 1rem 0 0; }
 .insights-headline { margin: 1rem 0 0; padding: 0.75rem 1rem; border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--surface); font-weight: 500; }
 .insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
 .insights-card { padding: 1rem 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
@@ -1660,7 +1660,7 @@ html.side-open { overflow: hidden; }
 .insights-count { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .insights-card li.few .insights-label, .insights-card li.few .insights-count { color: var(--muted); font-weight: 400; }
 .insights-few { grid-column: 1 / -1; color: var(--muted); font-size: 0.78rem; }
-.insights-note { margin: 0.8rem 0 0; }
+.insights-note { margin: 1rem 0 0; }
 .insights-summary { margin-top: 1rem; }
 .insights-summary-body { display: grid; gap: 0.4rem; justify-items: start; margin-top: 0.6rem; padding: 0.9rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .insights-summary-body p { margin: 0; }
@@ -1728,7 +1728,7 @@ html.side-open { overflow: hidden; }
 .applications-state.done { color: var(--muted); font-weight: 400; }
 
 /* Formations : Certifications, puis Cours et parcours (docs/43 n° 21). */
-.training-section { display: grid; gap: 0.75rem; }
+.training-section { display: grid; gap: 1rem; }
 .training-section + .training-section { margin-top: 2rem; }
 
 /* Profil (docs/43 n° 23) : le résumé de ce que tu cherches sur toute la largeur, en lignes
@@ -1763,7 +1763,10 @@ html.side-open { overflow: hidden; }
 
 /* Sections titrées des panneaux (docs/44 §2, docs/45 à 49) : une seule classe (docs/50 §2). */
 .panel-section { display: grid; gap: 0.6rem; padding-top: 1rem; margin-top: 0.4rem; border-top: 1px solid var(--border); }
-.panel-section h3 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+.panel-section h3 { margin: 0 0 0.4rem; font-size: 0.95rem; font-weight: 600; }
+/* De l'air entre un texte et la carte qui suit (retour du 2026-10-15) : 1rem au moins. */
+.panel-section .form-sheet { margin: 0; }
+.panel-section > :is(.notice, .form-sheet, .disclosure, .calm-list) + * { margin-top: 0.4rem; }
 
 /* Fiche d'une offre en sections (docs/45) : deux boutons, puis Pour toi, À savoir, Entreprise, Annonce. */
 .more-button { border: none; background: none; font-size: 1.5rem; line-height: 1; padding: 0.1rem 0.4rem; color: var(--muted); }
