@@ -161,9 +161,12 @@ onMounted(() => void load());
         class="orp-note"
         data-test="orp-note"
       >
-        <strong>Formation et chômage :</strong> l'assurance chômage peut financer certaines formations
-        (« mesures relatives au marché du travail »), <strong>sur demande à ton conseiller ORP et avec son accord
-          préalable</strong>. La plateforme ne dit pas si une formation sera acceptée : c'est la décision de l'ORP.
+        <strong>Formation et chômage :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
+          son accord préalable</strong>.
+        <HelpTip
+          label="Aide : financement"
+          text="L'assurance chômage peut financer certaines formations (« mesures relatives au marché du travail »). La plateforme ne dit pas si une formation sera acceptée : c'est la décision de l'ORP."
+        />
         <span class="orp-links">
           <a
             v-for="link in ORP_LINKS"
@@ -269,8 +272,15 @@ onMounted(() => void load());
             @click="suggest"
           >
             {{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}
+            <span
+              v-if="!suggesting"
+              class="cost"
+            >· 0,02 à 0,05 $</span>
           </button>
-          <span class="hint">L'IA cherche sur Internet, environ 0,02 à 0,05 $.</span>
+          <HelpTip
+            label="Aide : suggestions de l'IA"
+            text="L'IA cherche d'autres formations sur Internet. Elles arrivent marquées « à vérifier » : garde-les ou écarte-les."
+          />
         </span>
       </div>
       <p

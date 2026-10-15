@@ -12,6 +12,7 @@ import {
 } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import ChunkProposals from "./ChunkProposals.vue";
+import HelpTip from "./HelpTip.vue";
 import TagInput from "./TagInput.vue";
 import { formatDate } from "../format";
 
@@ -241,6 +242,10 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
     <h2 class="section-title first">
       Documents
+      <HelpTip
+        label="Aide : documents"
+        text="Tes documents restent stockés en local, jamais dans git. « Proposer des blocs » les fait lire par l'IA pour préparer tes blocs de profil."
+      />
     </h2>
     <div class="profile-docs">
       <div class="doc-column">
@@ -255,7 +260,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
             @change="onFile"
           >
           <span class="drop-title">{{ uploading ? "Envoi…" : "Déposer un document" }}</span>
-          <span class="detail">PDF, DOCX, TXT ou MD · 10 Mo au plus · stocké en local, jamais dans git</span>
+          <span class="detail">PDF, DOCX, TXT ou MD · 10 Mo au plus</span>
         </label>
 
         <ul class="doc-list">
@@ -459,7 +464,13 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
     >
       <h3>{{ editing.id === null ? "Nouveau bloc" : "Modifier le bloc" }}</h3>
       <fieldset>
-        <legend><label for="chunk-kind">Type</label></legend>
+        <legend>
+          <label for="chunk-kind">Type</label>
+          <HelpTip
+            label="Aide : type de bloc"
+            :text="KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? ''"
+          />
+        </legend>
         <select
           id="chunk-kind"
           v-model="editing.form.kind"
@@ -472,7 +483,6 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
             {{ kind.label }}
           </option>
         </select>
-        <span class="hint">{{ KINDS.find((k) => k.value === editing?.form.kind)?.hint }}</span>
       </fieldset>
       <fieldset>
         <legend><label for="chunk-title">Titre</label></legend>

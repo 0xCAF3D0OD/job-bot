@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
 import AppIcon from "./AppIcon.vue";
-import MoreInfo from "./MoreInfo.vue";
+import HelpTip from "./HelpTip.vue";
 import { secureAddress, senders, useChecks } from "../validators";
 
 // Sites dont les alertes sont suivies (docs/11 §2).
@@ -112,16 +112,13 @@ onMounted(() => void load());
     data-test="sites"
   >
     <fieldset>
-      <legend>Sites suivis</legend>
-      <p class="hint">
-        Les sites dont la plateforme lit les e-mails d'alerte.
-      </p>
-      <MoreInfo>
-        <p>
-          jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA (environ 0,01 $ par e-mail, tes
-          coordonnées retirées).
-        </p>
-      </MoreInfo>
+      <legend>
+        Sites suivis
+        <HelpTip
+          text="La plateforme lit leurs e-mails d'alerte. jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA (environ 0,01 $ par e-mail, tes coordonnées retirées)."
+          label="Aide : sites suivis"
+        />
+      </legend>
       <ul class="sites-list">
         <li
           v-for="site in sites"
@@ -164,7 +161,7 @@ onMounted(() => void load());
         data-test="site-suggestions"
       >
         <p class="hint">
-          Offres en télétravail, avec les pays acceptés indiqués :
+          Sites de télétravail à ajouter :
         </p>
         <ul>
           <li

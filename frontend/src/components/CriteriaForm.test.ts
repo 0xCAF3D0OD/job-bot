@@ -2,6 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import CriteriaView from "./CriteriaForm.vue";
+import HelpTip from "./HelpTip.vue";
 
 const GET = vi.fn();
 const PUT = vi.fn();
@@ -33,7 +34,8 @@ describe("CriteriaView", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("VD");
-    expect(wrapper.text()).toContain("Cherche : stage, internship");
+    const typesHelp = wrapper.findAllComponents(HelpTip).find((h) => h.props("label") === "Aide : types d'offres");
+    expect(typesHelp?.props("text")).toContain("Stages : stage, internship…");
 
     const locationInput = wrapper.find("#locations");
     await locationInput.setValue("Genève");

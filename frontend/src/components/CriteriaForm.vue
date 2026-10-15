@@ -6,6 +6,7 @@ import type { components } from "../api/schema";
 
 type RemotePolicy = components["schemas"]["RemotePolicy"];
 import AppIcon from "./AppIcon.vue";
+import HelpTip from "./HelpTip.vue";
 import TagInput from "./TagInput.vue";
 
 const CONTRACTS: { value: ContractType; label: string }[] = [
@@ -53,6 +54,19 @@ const failed = ref(false);
 // « Modifier » (docs/10 §2).
 const savedAt = ref<string | null>(null);
 const editing = ref(false);
+
+// Aides « ? » (docs/32 §1) : les mots-clés réels du filtre, en abrégé.
+const contractsHelp = computed(() => {
+  const intro = "Écartée si le titre ou l'extrait contient un mot du type.";
+  if (!keywords.value) return intro;
+  const k = keywords.value;
+  const lines = CONTRACTS.map((c) => `${c.label} : ${(k.contract_types[c.value] ?? []).slice(0, 3).join(", ")}…`);
+  return `${intro} ${lines.join(" ; ")}.`;
+});
+const languagesHelp = computed(() => {
+  const words = keywords.value?.requirement_words.slice(0, 8).join(", ") ?? "";
+  return `Écartée si le titre ou l'extrait exige la langue : son nom à moins de trois mots de ${words}…`;
+});
 
 const summary = computed(() => {
   const f = form.value;
@@ -158,10 +172,13 @@ onMounted(() => void load());
       @submit.prevent="save"
     >
       <fieldset>
-        <legend>Lieux acceptés</legend>
-        <p class="hint">
-          Communes (Lausanne, Genève) ou cantons en deux lettres (VD, GE). Vide : pas de règle de lieu.
-        </p>
+        <legend>
+          Lieux acceptés
+          <HelpTip
+            label="Aide : lieux"
+            text="Communes (Lausanne, Genève) ou cantons en deux lettres (VD, GE). Vide : pas de règle de lieu."
+          />
+        </legend>
         <TagInput
           id="locations"
           v-model="form.locations"
@@ -170,7 +187,13 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>Télétravail complet</legend>
+        <legend>
+          Télétravail complet
+          <HelpTip
+            label="Aide : télétravail"
+            text="« Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »)."
+          />
+        </legend>
         <div
           class="segmented"
           role="radiogroup"
@@ -188,16 +211,16 @@ onMounted(() => void load());
             {{ policy.label }}
           </button>
         </div>
-        <p class="hint">
-          « Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »).
-        </p>
       </fieldset>
 
       <fieldset>
-        <legend>Taux d'activité minimum</legend>
-        <p class="hint">
-          Une offre « 60-80 % » passe avec un minimum de 80. Sans taux indiqué, elle passe toujours.
-        </p>
+        <legend>
+          Taux d'activité minimum
+          <HelpTip
+            label="Aide : taux"
+            text="Une offre « 60-80 % » passe avec un minimum de 80. Sans taux indiqué, elle passe toujours."
+          />
+        </legend>
         <div class="inline-field">
           <input
             id="min_rate"
@@ -212,7 +235,13 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>Types d'offres exclus</legend>
+        <legend>
+          Types d'offres exclus
+          <HelpTip
+            label="Aide : types d'offres"
+            :text="contractsHelp"
+          />
+        </legend>
         <label
           v-for="contract in CONTRACTS"
           :key="contract.value"
@@ -223,21 +252,18 @@ onMounted(() => void load());
             type="checkbox"
             :value="contract.value"
           >
-          <span>
-            {{ contract.label }}
-            <small
-              v-if="keywords"
-              class="hint"
-            >Cherche : {{ keywords.contract_types[contract.value]?.join(", ") }}</small>
-          </span>
+          {{ contract.label }}
         </label>
       </fieldset>
 
       <fieldset>
-        <legend>Mots interdits dans le titre</legend>
-        <p class="hint">
-          Sans tenir compte des majuscules ni des accents.
-        </p>
+        <legend>
+          Mots interdits dans le titre
+          <HelpTip
+            label="Aide : mots interdits"
+            text="Sans tenir compte des majuscules ni des accents."
+          />
+        </legend>
         <TagInput
           id="banned_words"
           v-model="form.banned_words"
@@ -246,14 +272,14 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>Langues que tu ne parles pas</legend>
-        <p
-          v-if="keywords"
-          class="hint"
-        >
-          Écartée si le titre ou l'extrait exige la langue : son nom à moins de trois mots de
-          {{ keywords.requirement_words.slice(0, 8).join(", ") }}…
-        </p>
+        <legend>
+          Langues que tu ne parles pas
+          <HelpTip
+            v-if="keywords"
+            label="Aide : langues"
+            :text="languagesHelp"
+          />
+        </legend>
         <label
           v-for="language in LANGUAGES"
           :key="language.value"

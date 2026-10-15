@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import { api, type Chunk, type ChunkKind, type ChunkProposal } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import HelpTip from "./HelpTip.vue";
 
 const props = defineProps<{
   documentId: number;
@@ -77,11 +78,13 @@ async function save(): Promise<void> {
       data-test="proposals"
       @submit.prevent="save"
     >
-      <h3>Blocs proposés pour « {{ documentName }} »</h3>
-      <p class="hint">
-        Relis et corrige chaque bloc, puis coche ceux à ajouter. Les blocs qui ressemblent à un bloc existant sont
-        décochés.
-      </p>
+      <h3>
+        Blocs proposés pour « {{ documentName }} »
+        <HelpTip
+          label="Aide : blocs proposés"
+          text="Relis et corrige chaque bloc, puis coche ceux à ajouter. Ceux qui ressemblent à un bloc existant sont décochés."
+        />
+      </h3>
       <ul class="proposal-list">
         <li
           v-for="(item, index) in items"

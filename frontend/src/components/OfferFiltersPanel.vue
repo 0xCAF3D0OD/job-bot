@@ -6,6 +6,7 @@ import type { OfferFilters, Remote, Sort, View } from "../composables/useOfferFi
 import { activeCount, DEFAULT_FILTERS } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import HelpTip from "./HelpTip.vue";
 import ScoreCurve from "./ScoreCurve.vue";
 
 const props = defineProps<{
@@ -281,7 +282,10 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
             data-test="min-rate"
             @change="onRate"
           >
-          <span class="hint">Les offres sans taux indiqué restent visibles.</span>
+          <HelpTip
+            label="Aide : taux"
+            text="Les offres sans taux indiqué restent visibles."
+          />
         </div>
       </template>
       <label
@@ -394,7 +398,11 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
         data-test="customize-list"
       >
         <legend class="hint">
-          Filtres affichés (statut, recherche et tri le sont toujours)
+          Filtres affichés
+          <HelpTip
+            label="Aide : filtres affichés"
+            text="Statut, recherche et tri restent toujours affichés."
+          />
         </legend>
         <label
           v-for="entry in FILTERS"

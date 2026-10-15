@@ -6,6 +6,7 @@ import { expiredText, formatDate, rateText, remoteText, scoreLevel, sourceLabel 
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
+import HelpTip from "./HelpTip.vue";
 import SidePanel from "./SidePanel.vue";
 import { CONTACTS_HELP } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
@@ -406,11 +407,18 @@ watch(
           v-if="offer.score !== null && offer.score !== undefined"
           :class="['score', 'big', scoreLevel(offer.score)]"
         >{{ offer.score }}<small>/100</small></span>
-        <span class="detail">
-          Résumé et note par l'IA{{ offer.summary_partial ? ", sur l'extrait de l'alerte seulement" : "" }}.
+        <span
+          v-if="offer.summary_partial || offer.score_stale || offer.score === null"
+          class="detail"
+        >
+          <template v-if="offer.summary_partial">Sur l'extrait de l'alerte seulement.</template>
           <template v-if="offer.score_stale">Ton profil a changé depuis : note à refaire.</template>
           <template v-if="offer.score === null">Pas de note : aucun bloc de profil actif.</template>
         </span>
+        <HelpTip
+          label="Aide : résumé et note"
+          text="Résumé et note par l'IA : elle compare l'annonce à tes blocs de profil actifs. Les points forts citent le bloc d'où ils viennent."
+        />
       </div>
       <dl class="summary">
         <div><dt>Poste</dt><dd>{{ offer.summary_role }}</dd></div>

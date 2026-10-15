@@ -112,7 +112,7 @@ onUnmounted(() => {
         v-if="!inbox.items.length"
         class="hint bell-empty"
       >
-        Aucune alerte pour l'instant. Les bonnes offres, les relances et les rappels ORP apparaîtront ici.
+        Aucune alerte pour l'instant.
       </p>
       <ul v-else>
         <li

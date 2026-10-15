@@ -13,6 +13,7 @@ import {
   SUGGESTED_QUESTIONS,
   THANKS,
 } from "../interviewLabels";
+import HelpTip from "./HelpTip.vue";
 
 // Retour d'entretien (docs/23 §2) : quelques clics, puis des champs courts ; seul le
 // ressenti global est obligatoire.
@@ -103,10 +104,13 @@ function submit(): void {
       data-test="interview-form"
       @submit.prevent="submit"
     >
-      <h3>Retour d'entretien · {{ company }}</h3>
-      <p class="hint">
-        Deux minutes pour garder un constat ; seul le ressenti est obligatoire. Rien n'est envoyé à l'IA.
-      </p>
+      <h3>
+        Retour d'entretien · {{ company }}
+        <HelpTip
+          text="Seul le ressenti global est obligatoire. Rien n'est envoyé à l'IA, sauf si tu demandes des pistes dans « Mes enseignements »."
+          label="Aide : retour d'entretien"
+        />
+      </h3>
 
       <fieldset>
         <legend>Le déroulé</legend>
@@ -240,7 +244,10 @@ function submit(): void {
 
       <fieldset>
         <legend>Les questions posées</legend>
-        <p class="hint">
+        <p
+          v-if="form.questions.length"
+          class="hint"
+        >
           Coche celles qui t'ont mis en difficulté.
         </p>
         <ul class="question-list">

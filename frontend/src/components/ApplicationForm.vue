@@ -4,6 +4,7 @@ import { ref } from "vue";
 import type { ApplicationStatus, ApplicationUpdate } from "../api/client";
 import { applicationStatusLabel, methodLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import HelpTip from "./HelpTip.vue";
 import { email, useChecks } from "../validators";
 
 export type ApplicationFormValue = ApplicationUpdate & { offer_id?: number | null };
@@ -46,10 +47,13 @@ const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, s
       data-test="application-form"
       @submit.prevent="validate() && emit('submit', form)"
     >
-      <h3>{{ title }}</h3>
-      <p class="hint">
-        Ces informations alimentent le formulaire ORP « preuves des recherches d'emploi ».
-      </p>
+      <h3>
+        {{ title }}
+        <HelpTip
+          text="Ces informations alimentent le formulaire ORP « preuves des recherches d'emploi »."
+          label="Aide : candidature"
+        />
+      </h3>
       <div class="form-grid">
         <label>Date d'envoi
           <input

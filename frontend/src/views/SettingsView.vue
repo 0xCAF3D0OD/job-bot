@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import ExtensionPanel from "../components/ExtensionPanel.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
@@ -93,7 +94,6 @@ const SECTIONS = [
   <PageHero
     eyebrow="Réglages"
     title="Tes réglages"
-    subtitle="Ce que tu peux régler."
   />
   <section class="band">
     <div class="settings-layout">
@@ -121,10 +121,13 @@ const SECTIONS = [
           @submit.prevent="save"
         >
           <fieldset>
-            <legend><label for="orp">Objectif mensuel de l'ORP</label></legend>
-            <p class="hint">
-              Nombre de candidatures demandé par ton conseiller. Vide si tu ne le connais pas encore.
-            </p>
+            <legend>
+              <label for="orp">Objectif mensuel de l'ORP</label>
+              <HelpTip
+                text="Le nombre de candidatures demandé par ton conseiller. Laisse vide si tu ne le connais pas encore."
+                label="Aide : objectif de l'ORP"
+              />
+            </legend>
             <div class="inline-field">
               <input
                 id="orp"
@@ -137,10 +140,13 @@ const SECTIONS = [
             </div>
           </fieldset>
           <fieldset>
-            <legend><label for="due-day">Date limite de remise des preuves</label></legend>
-            <p class="hint">
-              Jour du mois suivant où ton conseiller attend les preuves (souvent le 5).
-            </p>
+            <legend>
+              <label for="due-day">Date limite de remise des preuves</label>
+              <HelpTip
+                text="Le jour du mois suivant où ton conseiller attend les preuves, souvent le 5."
+                label="Aide : date limite"
+              />
+            </legend>
             <div class="inline-field">
               <span>le</span>
               <input
@@ -156,10 +162,13 @@ const SECTIONS = [
             </div>
           </fieldset>
           <fieldset>
-            <legend><label for="threshold">Seuil de notification des offres</label></legend>
-            <p class="hint">
-              Tu es prévenu des nouvelles offres notées au moins à ce score.
-            </p>
+            <legend>
+              <label for="threshold">Seuil de notification des offres</label>
+              <HelpTip
+                text="Tu es prévenu des nouvelles offres notées au moins à ce score."
+                label="Aide : seuil de notification"
+              />
+            </legend>
             <div class="inline-field">
               <input
                 id="threshold"
@@ -173,10 +182,13 @@ const SECTIONS = [
             </div>
           </fieldset>
           <fieldset>
-            <legend><label for="employer-threshold">Recherche de l'annonce chez l'employeur</label></legend>
-            <p class="hint">
-              Dès cette note, l'annonce est cherchée automatiquement chez l'employeur (≈ 0,02 $ si l'IA est nécessaire).
-            </p>
+            <legend>
+              <label for="employer-threshold">Recherche de l'annonce chez l'employeur</label>
+              <HelpTip
+                text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur (environ 0,02 $ si l'IA est nécessaire)."
+                label="Aide : recherche chez l'employeur"
+              />
+            </legend>
             <div class="inline-field">
               <input
                 id="employer-threshold"
@@ -226,11 +238,15 @@ const SECTIONS = [
           class="form-card"
         >
           <fieldset data-test="notifications">
-            <legend>Notifications</legend>
+            <legend>
+              Notifications
+              <HelpTip
+                v-if="notifications?.configured"
+                :text="`Envoyées sur ton téléphone (${notifications.server}) : offres bien notées, et IA à 80 % du plafond.`"
+                label="Aide : notifications"
+              />
+            </legend>
             <template v-if="notifications?.configured">
-              <p class="hint">
-                Sur ton téléphone ({{ notifications.server }}) : offres bien notées, et IA à 80 % du plafond.
-              </p>
               <div class="inline-field">
                 <button
                   type="button"
@@ -276,10 +292,13 @@ const SECTIONS = [
           @submit.prevent="save"
         >
           <fieldset>
-            <legend><label for="budget">Plafond mensuel du coût de l'IA</label></legend>
-            <p class="hint">
-              Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
-            </p>
+            <legend>
+              <label for="budget">Plafond mensuel du coût de l'IA</label>
+              <HelpTip
+                text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant."
+                label="Aide : plafond de l'IA"
+              />
+            </legend>
             <div class="inline-field">
               <input
                 id="budget"

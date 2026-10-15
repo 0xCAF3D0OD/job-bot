@@ -1,13 +1,16 @@
 <script setup lang="ts">
-// « En savoir plus » (docs/21 §2) : une phrase d'aide visible, le détail replié.
-withDefaults(defineProps<{ label?: string }>(), { label: "En savoir plus" });
+import DisclosureRow from "./DisclosureRow.vue";
+
+// Étapes à suivre trop longues pour une bulle « ? » (docs/32 §1) : une ligne dépliable.
+withDefaults(defineProps<{ label?: string; value?: string }>(), { label: "En savoir plus", value: "" });
 </script>
 
 <template>
-  <details class="more-info">
-    <summary>{{ label }}</summary>
-    <div class="more-info-body">
-      <slot />
-    </div>
-  </details>
+  <DisclosureRow
+    class="more-info"
+    :title="label"
+    :value="value"
+  >
+    <slot />
+  </DisclosureRow>
 </template>

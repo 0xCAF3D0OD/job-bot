@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import AppIcon from "../components/AppIcon.vue";
+import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAuth } from "../composables/useAuth";
 
@@ -55,12 +56,12 @@ onMounted(() => void load());
       >
         <p>
           Aucun compte n'existe encore. Crée-le une fois, dans un terminal, depuis le dossier du projet :
+          <HelpTip
+            text="L'identifiant et le mot de passe (12 caractères au moins) sont demandés au clavier, sans s'afficher. Le mot de passe est enregistré haché, jamais en clair ; ne le transmets à personne."
+            label="Aide : création du compte"
+          />
         </p>
         <pre class="command"><code>cd backend && uv run jobbot set-password</code></pre>
-        <p class="hint">
-          L'identifiant et le mot de passe (12 caractères au moins) sont demandés au clavier, sans s'afficher.
-          Le mot de passe est enregistré haché, jamais en clair ; ne le transmets à personne.
-        </p>
       </div>
       <form
         v-else

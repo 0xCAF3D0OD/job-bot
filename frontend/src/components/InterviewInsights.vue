@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { api, type InterviewInsights } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
 import DisclosureRow from "./DisclosureRow.vue";
+import HelpTip from "./HelpTip.vue";
 
 // « Mes enseignements » (docs/23 §3) : tous les retours d'entretien, regroupés, sans IA ;
 // les pistes de l'IA seulement à la demande.
@@ -156,9 +157,16 @@ onMounted(() => void load());
         data-test="coach"
         @click="coach"
       >
-        {{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA (≈ 0,03 $)" : "Demander des pistes à l'IA (≈ 0,03 $)" }}
+        {{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}
+        <span
+          v-if="!busy"
+          class="cost"
+        >· 0,03 $</span>
       </button>
-      <span class="hint">L'IA ne reçoit que tes retours et tes blocs de profil.</span>
+      <HelpTip
+        text="L'IA ne reçoit que tes retours d'entretien et tes blocs de profil, jamais tes coordonnées ; elle propose des pistes, des réponses et des questions à poser."
+        label="Aide : pistes de l'IA"
+      />
       <p
         v-if="message"
         class="notice error"

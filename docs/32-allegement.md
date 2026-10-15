@@ -1,6 +1,6 @@
 # 32 — Alléger la plateforme : aides, sections dépliables, pages compactes, Actualités (version 0.25.0)
 
-> Statut : **validé** le 2026-10-15. livré : PR a (bulle, lignes dépliables, panneau latéral, préparation compacte).
+> Statut : **validé** le 2026-10-15. livré : PR a (bulle, lignes dépliables, panneau latéral, préparation compacte), PR b (textes d'aide).
 > Retours d'usage du 2026-10-15 :
 > - trop de textes d'explication, qui surchargent les pages (préparation, et partout ailleurs) ;
 > - le style actuel des sections dépliables (« ▸ Contacts chez … ») ne plaît pas ;
@@ -110,3 +110,11 @@ Sans migration ni changement d'API.
 - **Contacts rangés en trois rubriques** : « Trouver quelqu'un » (liens en liste, ↗), « Premier message » (rôle et canal côte à côte, « Rédiger un message · 0,002 $ »), « Mes prises de contact ». Les trois phrases d'explication sont derrière le « ? » du panneau.
 - **Préparation** : carte « Postule avec le bouton en haut… » retirée (« ← Retour aux offres » est déjà en haut) ; « Aucune lettre pour cette offre » prend la hauteur de la colonne de droite.
 - **Bulle** : 5 s, 8 s pour une erreur (collecte non configurée, API injoignable), le compte s'arrête au survol ou au clavier, × pour fermer.
+
+## Écarts avec la PR b
+
+- **96 textes passés en revue** dans 33 fichiers (la page Actualités attend la PR c). Gardés : les états, les erreurs, les listes vides, les consignes d'une étape (assistant des alertes), les avertissements à suivre (formation et chômage : accord préalable de l'ORP). Le reste est derrière un « ? » (un par section le plus souvent, à côté du titre ou de la légende) ou retiré.
+- **Coûts dans les boutons** : « Rédiger la lettre · 0,10 $ », « Préparer le CV · 0,05 $ », « Pistes de l'IA · 0,03 $ », « Chercher des formations · 0,02 à 0,05 $ », « Proposer des mots-clés · 0,001 $ », « Rédiger un message · 0,002 $ ». Le coût disparaît pendant le traitement. La recherche automatique de l'annonce chez l'employeur (Réglages, seuil) n'a pas de bouton : son coût reste dans le « ? ».
+- **Libellés raccourcis** pour tenir sur une ligne : « Nouvelle version » (lettre et CV), « Pistes de l'IA » / « Nouvelles pistes de l'IA » (entretiens).
+- **« ? »** : rond, avec un petit écart après le texte ; sa bulle se décale pour rester dans l'écran. Pas de « ? » dans la cloche (la bulle y serait coupée) : sa phrase d'explication est simplement retirée.
+- **« En savoir plus »** : il n'en reste qu'un, « Comment l'installer » (extension du navigateur), une liste d'étapes trop longue pour une bulle ; il prend le style des lignes dépliables.

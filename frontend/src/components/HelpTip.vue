@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from "vue";
+import { nextTick, onBeforeUnmount, ref } from "vue";
 
 // Aide « ? » (docs/29 §2) : remplace une infobulle au survol, invisible au toucher et au
 // clavier. S'ouvre au clic, au toucher ou à Entrée ; Échap, un clic ailleurs ou la sortie du
@@ -8,6 +8,20 @@ defineProps<{ text: string; label?: string }>();
 
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
+const bubble = ref<HTMLElement | null>(null);
+// Décalage horizontal pour que la bulle reste dans l'écran (docs/32 §1 : le « ? » est partout).
+const shift = ref(0);
+const MARGIN = 8;
+
+async function place(): Promise<void> {
+  shift.value = 0;
+  await nextTick();
+  const rect = bubble.value?.getBoundingClientRect();
+  if (!rect) return;
+  const width = globalThis.innerWidth ?? 0;
+  if (rect.left < MARGIN) shift.value = MARGIN - rect.left;
+  else if (width && rect.right > width - MARGIN) shift.value = width - MARGIN - rect.right;
+}
 const id = `help-${Math.random().toString(36).slice(2, 8)}`;
 
 function onDocument(event: Event): void {
@@ -16,7 +30,10 @@ function onDocument(event: Event): void {
 
 function toggle(): void {
   open.value = !open.value;
-  if (open.value) document.addEventListener("pointerdown", onDocument);
+  if (open.value) {
+    document.addEventListener("pointerdown", onDocument);
+    void place();
+  }
   else document.removeEventListener("pointerdown", onDocument);
 }
 
@@ -51,6 +68,8 @@ onBeforeUnmount(close);
     >
       <span
         v-if="open"
+        ref="bubble"
+        :style="shift ? { marginLeft: `${shift}px` } : undefined"
         data-test="help-tip-text"
       >{{ text }}</span>
     </span>

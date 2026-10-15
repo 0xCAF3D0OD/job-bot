@@ -2,7 +2,7 @@
 import { useRouter } from "vue-router";
 
 import { useAuth } from "../composables/useAuth";
-import MoreInfo from "./MoreInfo.vue";
+import HelpTip from "./HelpTip.vue";
 
 // Connexion (docs/18 §1) : compte connecté, « Se déconnecter partout ».
 const router = useRouter();
@@ -22,16 +22,16 @@ async function everywhere(): Promise<void> {
     data-test="session-panel"
   >
     <fieldset>
-      <legend>Ton compte</legend>
+      <legend>
+        Ton compte
+        <HelpTip
+          text="La session dure 30 jours. Le mot de passe se change sur l'ordinateur qui fait tourner la plateforme (voir le README) ; toutes les sessions sont alors fermées."
+          label="Aide : ton compte"
+        />
+      </legend>
       <p class="hint">
-        Connecté en tant que <strong>{{ me.username }}</strong> ; la session dure 30 jours.
+        Connecté en tant que <strong>{{ me.username }}</strong>.
       </p>
-      <MoreInfo>
-        <p>
-          Le mot de passe se change sur l'ordinateur qui fait tourner la plateforme (voir le README) ; toutes les
-          sessions sont alors fermées.
-        </p>
-      </MoreInfo>
       <div class="form-actions">
         <button
           type="button"

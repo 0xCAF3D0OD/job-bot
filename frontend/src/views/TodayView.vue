@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
+import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
@@ -398,7 +399,13 @@ onMounted(() => void load());
       </div>
 
       <div class="today-section-head">
-        <h2>Comprendre le marché</h2>
+        <h2>
+          Comprendre le marché
+          <HelpTip
+            label="Aide : actualités"
+            text="Les actualités sont relevées toutes les 6 heures ; celles de ton domaine passent en premier."
+          />
+        </h2>
         <RouterLink
           to="/actualites"
           class="link"
@@ -414,7 +421,7 @@ onMounted(() => void load());
           v-if="!news.length"
           class="hint"
         >
-          Pas encore d'actualités : elles sont relevées toutes les 6 heures.
+          Pas encore d'actualités.
         </p>
         <ul
           v-else

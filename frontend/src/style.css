@@ -990,10 +990,8 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .employer-line { margin: 0.4rem 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; }
 
 /* « En savoir plus » (docs/21 §2) */
-.more-info { font-size: 0.85rem; color: var(--muted); }
-.more-info summary { cursor: pointer; color: var(--accent); width: fit-content; }
-.more-info-body { margin-top: 0.35rem; display: grid; gap: 0.35rem; }
-.more-info-body p { margin: 0; }
+.more-info .disclosure-body { font-size: 0.88rem; }
+.more-info .disclosure-body p { margin: 0; }
 
 /* « Comment ça marche » (docs/21 §3), même allure que « Pour bien démarrer » */
 .journey ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
@@ -1360,7 +1358,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 /* --- Aides visibles (docs/29 §2-§5) --- */
 .field-error { display: block; margin-top: 0.25rem; font-size: 0.82rem; font-weight: 500; color: var(--down-text); }
 input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--down); }
-.help-tip { position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
+.help-tip { position: relative; display: inline-flex; align-items: center; vertical-align: middle; margin-left: 0.3rem; }
 .help-tip-button { width: 1.25rem; height: 1.25rem; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 0.75rem; font-weight: 600; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .help-tip-button:hover, .help-tip-button[aria-expanded="true"] { color: var(--accent-text); border-color: var(--accent); }
 .help-tip-text > span { position: absolute; top: calc(100% + 0.4rem); left: 50%; transform: translateX(-50%); z-index: 20; width: max-content; max-width: 16rem; padding: 0.5rem 0.65rem; border-radius: 10px; background: var(--text); color: var(--bg); font-size: 0.82rem; line-height: 1.4; font-weight: 400; white-space: normal; box-shadow: 0 8px 24px rgb(17 17 31 / 18%); }
@@ -1442,3 +1440,4 @@ button, .button-link, .link, .apply-bar a, .apply-bar button { white-space: nowr
 .cost { font-weight: 400; }
 .secondary .cost, button.link .cost { color: var(--muted); }
 .side-panel-body .form-sheet { margin: 0; padding: 0; border: 0; }
+.columns-list legend { font-size: 0.85rem; color: var(--muted); }

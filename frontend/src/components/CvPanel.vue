@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import HelpTip from "./HelpTip.vue";
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
 const props = defineProps<{ offer: Offer; primary?: boolean }>();
@@ -197,9 +198,6 @@ onMounted(() => void load());
         data-test="no-cv"
       >
         <p>Aucun CV adapté pour cette offre.</p>
-        <p class="hint">
-          L'IA choisit tes blocs de profil et écrit un titre et un court résumé (≈ 0,05 $).
-        </p>
       </div>
       <div
         v-else-if="writing && !selected"
@@ -274,7 +272,13 @@ onMounted(() => void load());
 
     <aside class="prep-side">
       <div class="side-card">
-        <h2>{{ selected ? "Nouvelle version" : "Préparer le CV" }}</h2>
+        <h2>
+          {{ selected ? "Nouvelle version" : "Préparer le CV" }}
+          <HelpTip
+            text="L'IA choisit tes blocs de profil et écrit un titre et un court résumé ; la consigne ajuste la version affichée."
+            label="Aide : préparer le CV"
+          />
+        </h2>
         <label>Langue du titre et du résumé
           <select
             v-model="language"
@@ -304,7 +308,11 @@ onMounted(() => void load());
           data-test="write-cv"
           @click="write"
         >
-          {{ writing ? "Préparation…" : selected ? "Préparer une nouvelle version" : "Préparer le CV" }}
+          {{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}
+          <span
+            v-if="!writing"
+            class="cost"
+          >· 0,05 $</span>
           <AppIcon name="chevron" />
         </button>
       </div>
@@ -313,10 +321,13 @@ onMounted(() => void load());
         v-if="selected"
         class="side-card"
       >
-        <h2>Blocs du CV</h2>
-        <p class="hint">
-          Coche, décoche et ordonne ; le CV se met à jour aussitôt. Garde-le sur une page.
-        </p>
+        <h2>
+          Blocs du CV
+          <HelpTip
+            text="Coche, décoche et ordonne tes blocs : le CV se met à jour aussitôt. Garde-le sur une page."
+            label="Aide : blocs du CV"
+          />
+        </h2>
         <ul class="cv-blocks">
           <template
             v-for="group in blocksBySection"
