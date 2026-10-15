@@ -892,7 +892,7 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .training-facts { margin: 0; font-size: 0.8rem; color: var(--muted); }
 .training-text { margin: 0; font-size: 0.86rem; color: var(--muted); }
 .training-card .hint { margin: 0; font-size: 0.78rem; }
-.training-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: auto; }
+.training-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .training-actions .segmented { width: 100%; }
 .training-field { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; font-size: 0.82rem; }
 .training-field input[type="text"], .training-field input[type="date"] { padding: 0.25rem 0.4rem; font-size: 0.82rem; }
@@ -1815,3 +1815,14 @@ html.side-open { overflow: hidden; }
   .news-sources-list .source-fields .check { grid-column: 1 / -1; }
 }
 .criteria-summary { padding-top: 1.5rem; }
+
+/* Formations, carte calme (docs/44 §1) : description sur 3 lignes, une ligne en bas. */
+.training-text.clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.training-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; min-height: 3.2rem; margin-top: auto; padding-top: 0.7rem; border-top: 1px solid var(--border); }
+.training-state { display: inline-flex; align-items: center; gap: 0.45rem; min-width: 0; font-size: 0.86rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.training-state::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--accent); }
+.training-foot .link { white-space: nowrap; }
+
+/* Le panneau latéral (docs/44 §2) : trois sections titrées l'une sous l'autre. */
+.training-panel-section { display: grid; gap: 0.6rem; padding-top: 1rem; margin-top: 0.4rem; border-top: 1px solid var(--border); }
+.training-panel-section h3 { margin: 0; font-size: 0.95rem; font-weight: 600; }
