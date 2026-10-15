@@ -11,15 +11,17 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot.api.routes.contacts import ContactOut
 from jobbot.api.routes.interviews import InterviewOut
 from jobbot.api.routes.orp import mark_changed
 from jobbot.db.models import (
     Application,
     ApplicationMethod,
     ApplicationStatus,
+    Contact,
     DraftKind,
     Evaluation,
     Interview,
@@ -220,6 +222,8 @@ class ApplicationOut(ApplicationUpdate):
     # Poste entièrement à distance (docs/26 §6), d'après la note de l'offre ; rempli par la liste.
     remote_full: bool = False
     remote_region: str | None = None
+    # Prises de contact dans l'entreprise (docs/31 §4) ; rempli par la liste.
+    contacts: list[ContactOut] = []
 
 
 class ApplicationPrefill(ApplicationBase):
@@ -301,6 +305,21 @@ async def list_applications(
             .order_by(Interview.held_at.nulls_last(), Interview.id)
         ):
             interviews.setdefault(row.application_id, []).append(InterviewOut.model_validate(row))
+        contacts: dict[int, list[ContactOut]] = {}
+        by_offer = {a.offer_id: a.id for a in applications if a.offer_id}
+        for contact in await session.scalars(
+            select(Contact)
+            .where(
+                or_(
+                    Contact.application_id.in_([a.id for a in applications]),
+                    Contact.offer_id.in_(list(by_offer)),
+                )
+            )
+            .order_by(Contact.contacted_on)
+        ):
+            owner = contact.application_id or by_offer.get(contact.offer_id or -1)
+            if owner is not None:
+                contacts.setdefault(owner, []).append(ContactOut.model_validate(contact))
         remote = {
             offer_id: region
             for offer_id, region in (
@@ -318,6 +337,7 @@ async def list_applications(
                 "interviews": interviews.get(a.id, []),
                 "remote_full": a.offer_id in remote,
                 "remote_region": remote.get(a.offer_id) if a.offer_id else None,
+                "contacts": contacts.get(a.id, []),
             }
         )
         for a in applications

@@ -798,3 +798,27 @@ class ExtensionToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Contact(Base):
+    """Prise de contact dans l'entreprise (docs/31 §4) : rattachée à l'offre et/ou à la candidature.
+    Le nom de la personne reste ici ; il n'est jamais envoyé à l'IA."""
+
+    __tablename__ = "contacts"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    offer_id: Mapped[int | None] = mapped_column(
+        ForeignKey("offers.id", ondelete="CASCADE"), index=True
+    )
+    application_id: Mapped[int | None] = mapped_column(
+        ForeignKey("applications.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str | None] = mapped_column(Text)
+    role: Mapped[str] = mapped_column(Text)  # recruiter | manager | team | alumni | other
+    # linkedin_invite | linkedin_message | email | phone | other
+    channel: Mapped[str] = mapped_column(Text)
+    contacted_on: Mapped[date] = mapped_column(Date)
+    answered_on: Mapped[date | None] = mapped_column(Date)
+    note: Mapped[str | None] = mapped_column(Text)
+    reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

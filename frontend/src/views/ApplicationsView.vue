@@ -471,6 +471,7 @@ onUnmounted(() => assistant.setFocus(null));
               @remove="remove"
               @interview="openInterview"
               @prepare="preparing = $event"
+              @changed="load"
             />
           </div>
         </aside>

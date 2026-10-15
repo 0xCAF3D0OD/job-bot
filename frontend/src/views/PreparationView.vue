@@ -6,6 +6,7 @@ import { api, type Letter, type LetterLanguage, type Offer } from "../api/client
 import AppIcon from "../components/AppIcon.vue";
 import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
+import ContactsPanel from "../components/ContactsPanel.vue";
 import CvPanel from "../components/CvPanel.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
@@ -327,6 +328,11 @@ onMounted(() => void load());
         :letter-text="currentLetterText"
         :letter-id="currentLetterId"
         :cv-id="currentCvId"
+      />
+      <ContactsPanel
+        v-if="offer?.company"
+        :offer-id="offer.id"
+        :company="offer.company"
       />
       <p
         v-if="applyNotice"

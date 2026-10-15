@@ -5,6 +5,7 @@ import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { expiredText, formatDate, rateText, remoteText, scoreLevel, sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
+import ContactsPanel from "./ContactsPanel.vue";
 import { useAssistant } from "../composables/useAssistant";
 
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
@@ -560,6 +561,12 @@ watch(
         >{{ employerMessage }}</span>
       </p>
     </details>
+    <ContactsPanel
+      v-if="offer.company"
+      :key="offer.id"
+      :offer-id="offer.id"
+      :company="offer.company"
+    />
     <ul
       v-if="offer.filter_reasons?.length"
       class="reasons"
