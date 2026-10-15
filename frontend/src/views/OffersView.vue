@@ -7,6 +7,8 @@ import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
+import PushTransition from "../components/PushTransition.vue";
+import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
@@ -35,6 +37,7 @@ const failed = ref(false);
 const selectedId = ref<number | null>(null);
 const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
+const { phone } = usePhone();
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
 
@@ -265,39 +268,45 @@ onUnmounted(() => {
         data-test="filters-toggle"
         @click="filtersOpen = !filtersOpen"
       >
-        Filtres{{ activeCount(filters) ? ` (${activeCount(filters)})` : "" }}
+        Filtrer{{ activeCount(filters) ? ` · ${activeCount(filters)}` : "" }}
       </button>
     </div>
 
     <div :class="['offers-grid', { 'has-selection': selected }]">
-      <aside :class="['filters-column', { open: filtersOpen }]">
-        <div class="filters-sheet-head">
-          <span
-            class="sheet-grabber"
-            aria-hidden="true"
+      <!-- Téléphone (docs/36 §3) : une carte pleine largeur qui pousse la liste. -->
+      <PushTransition :enabled="phone">
+        <aside
+          v-show="!phone || filtersOpen"
+          :class="['filters-column', { open: filtersOpen }]"
+        >
+          <div class="filters-sheet-head">
+            <span
+              class="sheet-grabber"
+              aria-hidden="true"
+            />
+            <strong>Filtres</strong>
+            <button
+              type="button"
+              class="close"
+              aria-label="Fermer les filtres"
+              @click="filtersOpen = false"
+            >
+              ×
+            </button>
+          </div>
+          <OfferFiltersPanel
+            :filters="filters"
+            :counts="counts"
+            :facets="facets"
+            :visible="visibleFilters"
+            :total="total"
+            @update="update"
+            @reset="reset"
+            @visibility="setVisibility"
+            @done="filtersOpen = false"
           />
-          <strong>Filtres</strong>
-          <button
-            type="button"
-            class="close"
-            aria-label="Fermer les filtres"
-            @click="filtersOpen = false"
-          >
-            ×
-          </button>
-        </div>
-        <OfferFiltersPanel
-          :filters="filters"
-          :counts="counts"
-          :facets="facets"
-          :visible="visibleFilters"
-          :total="total"
-          @update="update"
-          @reset="reset"
-          @visibility="setVisibility"
-          @done="filtersOpen = false"
-        />
-      </aside>
+        </aside>
+      </PushTransition>
 
       <div class="offers-list">
         <p

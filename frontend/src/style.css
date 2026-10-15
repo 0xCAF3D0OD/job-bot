@@ -1607,3 +1607,45 @@ html.side-open { overflow: hidden; }
   .news-story.lead .news-story-title { font-size: 1.45rem; }
 }
 .news-row mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 0.1em; }
+
+/* Téléphone : Candidatures et Profil (docs/36) */
+.label-short, .job-company-place { display: none; }
+@media (max-width: 820px) {
+  .label-long { display: none; }
+  .label-short { display: inline; }
+
+  .jobs-head .eyebrow { display: none; }
+  .jobs-head h1 { font-size: 1.4rem; margin: 0 0 0.6rem; }
+
+  /* Offres : une ligne compacte (titre, entreprise · lieu, note et date à droite). */
+  .job-card { gap: 0.4rem; padding: 0.8rem 0.9rem; }
+  .job-card .logo:not(.large) { width: 1.9rem; height: 1.9rem; font-size: 0.8rem; }
+  .job-card .kw-rows, .job-card .summary, .job-card .job-snippet, .job-card .badge.reason { display: none; }
+  .job-company-place { display: inline; }
+  .job-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .job-card .job-meta { padding-top: 0; border-top: 0; }
+  .job-card .job-meta > :not(.meta-doubt) { display: none; }
+  .job-card .job-meta:not(:has(.meta-doubt)) { display: none; }
+
+  /* Filtrer : carte pleine largeur, dans la page. */
+  .filters-column, .filters-column.open {
+    display: block; position: static; inset: auto; z-index: auto; max-height: none; overflow: visible;
+    margin-inline: calc(50% - 50vw); padding: 0.9rem max(1rem, calc(50vw - 50%));
+    background: var(--surface); border-block: 1px solid var(--border);
+  }
+  .filters-column.open { top: auto; border-radius: 0; box-shadow: none; flex-direction: column; }
+  .filters-column .filters-sheet-head, .filters-column.open .filters-sheet-head { display: none; }
+  .filters-column .filters-panel { background: none; border: 0; padding: 0; }
+  .filters-column.open .filters-footer { position: static; background: none; }
+
+  /* Suivi : le mois, le nombre et ＋ sur une ligne ; l'échéance dessous. */
+  .applications-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.4rem 0.75rem; align-items: center; margin-bottom: 0.9rem; }
+  .applications-head .month-nav { grid-column: 1; }
+  .applications-head .month-nav strong { min-width: 0; }
+  .applications-head .month-goal { grid-column: 2; justify-self: end; min-width: 0; font-size: 0.85rem; white-space: nowrap; }
+  .applications-head .goal-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .applications-head .month-goal .budget-bar, .applications-head .month-goal .hint { display: none; }
+  .applications-head .add-application { grid-column: 3; grid-row: 1; width: 2.4rem; height: 2.4rem; padding: 0; border-radius: 50%; justify-content: center; font-size: 0; }
+  .applications-head .add-application::before { content: "+"; font-size: 1.3rem; line-height: 1; }
+  .applications-head > .badge, .applications-head > .link { grid-column: 1 / -1; justify-self: start; }
+}

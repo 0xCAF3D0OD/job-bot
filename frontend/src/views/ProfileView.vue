@@ -9,9 +9,10 @@ import ProfileParcours from "../components/ProfileParcours.vue";
 
 // Tout ce qui te concerne au même endroit (docs/10 §2 a) ; l'onglet est dans l'URL.
 const TABS = [
-  { key: "recherche", label: "Ce que je cherche" },
-  { key: "parcours", label: "Mon parcours" },
-  { key: "coordonnees", label: "Mes coordonnées" },
+  // Sur téléphone, un nom court qui tient sur une ligne (docs/36 §5).
+  { key: "recherche", label: "Ce que je cherche", short: "Recherche" },
+  { key: "parcours", label: "Mon parcours", short: "Parcours" },
+  { key: "coordonnees", label: "Mes coordonnées", short: "Coordonnées" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -47,7 +48,8 @@ const SUBTITLES: Record<Tab, string> = {
           :class="{ active: tab === entry.key }"
           :data-test="`tab-${entry.key}`"
         >
-          {{ entry.label }}
+          <span class="label-long">{{ entry.label }}</span>
+          <span class="label-short">{{ entry.short }}</span>
         </RouterLink>
       </nav>
       <div

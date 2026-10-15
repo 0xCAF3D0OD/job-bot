@@ -10,13 +10,15 @@ const route = useRoute();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
 const counts = ref({ offres: 0, suivi: 0, alertes: 0 });
 
-const TABS: { key: JobsTab; label: string; path: string; title: string; hint: string }[] = [
-  { key: "offres", label: "Offres", path: "/candidatures/offres", title: "Les offres pour toi", hint: "à examiner" },
+// `short` : le titre sur téléphone, sur une ligne (docs/36 §2).
+const TABS: { key: JobsTab; label: string; path: string; title: string; short: string; hint: string }[] = [
+  { key: "offres", label: "Offres", path: "/candidatures/offres", title: "Les offres pour toi", short: "Les offres pour toi", hint: "à examiner" },
   {
     key: "suivi",
     label: "Suivi",
     path: "/candidatures/suivi",
     title: "Tes candidatures et tes preuves ORP",
+    short: "Ton suivi",
     hint: "à relancer ou à compléter",
   },
   {
@@ -24,6 +26,7 @@ const TABS: { key: JobsTab; label: string; path: string; title: string; hint: st
     label: "Alertes",
     path: "/candidatures/alertes",
     title: "Tes alertes emploi",
+    short: "Tes alertes",
     hint: "alerte(s) créée(s) sans rien envoyé",
   },
 ];
@@ -59,7 +62,10 @@ onMounted(() => void refresh());
 <template>
   <div class="jobs-head">
     <span class="eyebrow">Candidatures</span>
-    <h1>{{ current.title }}</h1>
+    <h1>
+      <span class="label-long">{{ current.title }}</span>
+      <span class="label-short">{{ current.short }}</span>
+    </h1>
     <nav
       class="prep-tabs jobs-tabs"
       aria-label="Candidatures"

@@ -330,7 +330,7 @@ onUnmounted(() => assistant.setFocus(null));
           class="month-goal"
           data-test="goal"
         >
-          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }} candidature(s)</span>
+          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }}<span :class="{ 'goal-unit': orp.target }"> candidature(s)</span></span>
           <div
             v-if="progress !== null"
             class="budget-bar"
@@ -390,7 +390,7 @@ onUnmounted(() => assistant.setFocus(null));
         </template>
         <button
           type="button"
-          class="secondary small"
+          class="secondary small add-application"
           data-test="add-application"
           @click="addManual"
         >
