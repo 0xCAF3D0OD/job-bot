@@ -1841,3 +1841,20 @@ html.side-open { overflow: hidden; }
 .chunk-form input[type="text"], .chunk-form textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.7rem; }
 .chunk-form > label > span { display: inline-flex; align-items: center; gap: 0.3rem; }
 .chunk-tags { display: grid; gap: 0.35rem; font-size: 0.9rem; }
+
+/* Téléphone, revue de 0.36 à 0.41 (docs/51), sous 820 px seulement. */
+.subject-phone { display: none; }
+.apply-steps { counter-reset: apply-step; }
+.apply-step { counter-increment: apply-step; }
+.apply-step h3::before { content: counter(apply-step) ". "; }
+@media (max-width: 820px) {
+  .page-head .page-head-sub.prep-sub { display: flex; margin: -0.4rem 0 0.75rem; font-size: 0.9rem; }
+  .letter-subject { flex-wrap: wrap; }
+  .letter-subject .subject-wide { display: none; }
+  .letter-subject .subject-phone { display: block; flex: 1 1 100%; width: 100%; font: inherit; font-weight: 700; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.1rem 0.25rem; resize: none; overflow: hidden; }
+  .letter-paragraph textarea { text-align: left; }
+  .apply-step-post { display: none; }
+  .apply-step-post + .apply-step { border-top: 0; padding-top: 0; }
+  .kind-tabs { display: flex; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .kind-tabs button { flex: none; white-space: nowrap; }
+}
