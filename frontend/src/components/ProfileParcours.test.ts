@@ -61,9 +61,12 @@ describe("ProfileView", () => {
     expect(wrapper.find("[data-test=document]").text()).toContain("117 Ko");
     expect(wrapper.findAll("[data-test=chunk]")).toHaveLength(1);
 
-    const formationTab = wrapper.findAll("[role=tab]").find((t) => t.text().startsWith("Formation"));
-    await formationTab?.trigger("click");
-    expect(wrapper.findAll("[data-test=chunk]")).toHaveLength(0);
+    // Filtres sans les types vides (docs/49 §3).
+    expect(wrapper.findAll("[role=tab]").map((t) => t.text())).toEqual(["Tous 1", "Compétence 1"]);
+    // Carte calme : le type et les mots-clés en bas, plus de Modifier / Supprimer sur la carte.
+    const card = wrapper.find("[data-test=chunk]");
+    expect(card.find(".chunk-foot").text()).toContain("Compétence · 1 mot-clé");
+    expect(card.text()).not.toContain("Supprimer");
   });
 
   it("envoie un fichier en multipart", async () => {
@@ -87,10 +90,10 @@ describe("ProfileView", () => {
   it("crée un bloc à partir d'un passage sélectionné", async () => {
     mockApi();
     POST.mockResolvedValue({ data: { ...chunk, id: 10 }, response: { status: 201 } });
-    const wrapper = mount(ProfileView, { attachTo: document.body });
+    const wrapper = mount(ProfileView, { attachTo: document.body, global: { stubs: { teleport: true } } });
     await flushPromises();
 
-    await wrapper.find("[data-test=document] button").trigger("click");
+    await wrapper.find("[data-test=open-document-4]").trigger("click");
     await flushPromises();
     const textNode = wrapper.find(".doc-text").element.firstChild as Text;
     const range = document.createRange();
@@ -171,5 +174,26 @@ describe("propositions de blocs", () => {
     await wrapper.find("[data-test=propose-4]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[role=status]").text()).toContain("plafond mensuel");
+  });
+});
+
+describe("Mon parcours, panneaux (docs/49)", () => {
+  it("sans document : un seul encart ; un bloc s'ouvre dans le panneau, Supprimer en bas", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/documents" ? [] : path === "/api/profile-chunks" ? [chunk] : null }),
+    );
+    PUT.mockResolvedValue({ data: chunk });
+    const wrapper = mount(ProfileView, { global: { stubs: { teleport: true } } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=profile-missing]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=drop-zone]").text()).toContain("Dépose ton CV");
+    expect(wrapper.text()).not.toContain("Aucun document");
+
+    await wrapper.find("[data-test=open-chunk-9]").trigger("click");
+    expect((wrapper.find("#chunk-title").element as HTMLInputElement).value).toBe("Kubernetes");
+    expect(wrapper.find("[data-test=remove-chunk]").exists()).toBe(true);
+    await wrapper.find("[data-test=chunk-form]").trigger("submit");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/profile-chunks/{chunk_id}", expect.objectContaining({ params: { path: { chunk_id: 9 } } }));
   });
 });

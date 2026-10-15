@@ -12,6 +12,7 @@ import {
 } from "../api/client";
 import ChunkProposals from "./ChunkProposals.vue";
 import HelpTip from "./HelpTip.vue";
+import SidePanel from "./SidePanel.vue";
 import TagInput from "./TagInput.vue";
 import { formatDate, plural } from "../format";
 
@@ -59,6 +60,8 @@ const visibleChunks = computed(() =>
 function kindCount(kind: ChunkKind): number {
   return chunks.value.filter((c) => c.kind === kind).length;
 }
+// Filtres (docs/49 §3) : seulement les types qui ont des blocs (et celui choisi).
+const usedKinds = computed(() => KINDS.filter((k) => kindCount(k.value) || filter.value === k.value));
 
 function sizeText(size: number): string {
   return size < 1024 * 1024 ? `${Math.max(1, Math.round(size / 1024))} Ko` : `${(size / 1024 / 1024).toFixed(1)} Mo`;
@@ -192,21 +195,27 @@ async function saveChunk(): Promise<void> {
 
 async function removeChunk(chunk: Chunk): Promise<void> {
   if (!window.confirm(`Supprimer le bloc « ${chunk.title} » ?`)) return;
+  editing.value = null;
   await api.DELETE("/api/profile-chunks/{chunk_id}", { params: { path: { chunk_id: chunk.id } } });
   await Promise.all([loadChunks(), loadDocuments()]);
 }
 
+// Échap ferme les propositions ; les panneaux latéraux se ferment d'eux-mêmes.
 function onKeydown(event: KeyboardEvent): void {
-  if (event.key !== "Escape") return;
-  editing.value = null;
-  proposal.value = null;
+  if (event.key === "Escape") proposal.value = null;
+}
+const editedChunk = computed(() => chunks.value.find((c) => c.id === editing.value?.id) ?? null);
+function chunkFoot(chunk: Chunk): string {
+  const tags = chunk.tags?.length ? plural(chunk.tags.length, "mot-clé", "mots-clés") : "";
+  return [kindLabel[chunk.kind], tags].filter(Boolean).join(" · ");
 }
 
 // Ce qui manque à l'IA pour noter et rédiger (docs/21 §6), affiché en premier.
 const ready = ref(false);
 const missingProfile = computed(() => {
   if (!ready.value) return "";
-  if (!documents.value.length) return "Il manque ton CV : dépose-le ci-dessous.";
+  // Sans document, l'encart de dépôt le dit déjà (docs/49 §2).
+  if (!documents.value.length) return "";
   if (!chunks.value.some((c) => c.active)) {
     return "Il manque tes blocs de profil : « Proposer des blocs » les prépare à partir de ton CV.";
   }
@@ -246,116 +255,106 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         text="Tes documents restent stockés en local, jamais dans git. « Proposer des blocs » les fait lire par l'IA pour préparer tes blocs de profil."
       />
     </h2>
-    <div class="profile-docs">
-      <div class="doc-column">
-        <label
-          class="drop-zone"
-          :class="{ busy: uploading }"
+    <!-- Lignes calmes (docs/49 §2) : une action, le texte et « Supprimer » dans le panneau. -->
+    <ul
+      v-if="documents.length"
+      class="calm-list doc-list"
+    >
+      <li
+        v-for="doc in documents"
+        :key="doc.id"
+        data-test="document"
+      >
+        <button
+          type="button"
+          class="calm-row"
+          :data-test="`open-document-${doc.id}`"
+          @click="showText(doc.id)"
         >
-          <input
-            type="file"
-            accept=".pdf,.docx,.txt,.md"
-            data-test="file-input"
-            @change="onFile"
-          >
-          <span class="drop-title">{{ uploading ? "Envoi…" : "Déposer un document" }}</span>
-          <span class="detail">PDF, DOCX, TXT ou MD · 10 Mo au plus</span>
-        </label>
-
-        <ul class="doc-list">
-          <li
-            v-for="doc in documents"
-            :key="doc.id"
-            :class="['doc-card', { selected: openText?.id === doc.id }]"
-            data-test="document"
-          >
-            <span :class="['logo', 'c' + (doc.doc_type === 'pdf' ? 0 : doc.doc_type === 'docx' ? 3 : 2)]">
-              {{ doc.doc_type.toUpperCase().slice(0, 3) }}
-            </span>
-            <div class="doc-info">
-              <span class="job-title">{{ doc.filename }}</span>
-              <span class="job-company">
-                {{ sizeText(doc.size) }} · {{ formatDate(doc.uploaded_at) }} · {{ plural(doc.chunk_count, "bloc", "blocs") }}
-              </span>
-              <span
-                v-if="doc.text_status !== 'ok'"
-                class="badge reason"
-              >{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
-            </div>
-            <div class="doc-actions">
-              <button
-                type="button"
-                class="secondary small"
-                @click="showText(doc.id)"
-              >
-                Texte
-              </button>
-              <button
-                v-if="doc.text_status === 'ok'"
-                type="button"
-                :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
-                :disabled="proposing !== null"
-                :data-test="`propose-${doc.id}`"
-                @click="propose(doc)"
-              >
-                {{ proposing === doc.id ? "L'IA lit le document… (≈ 30 s)" : "Proposer des blocs" }}
-              </button>
-              <a
-                class="link"
-                :href="`/api/documents/${doc.id}/file`"
-                target="_blank"
-                rel="noopener noreferrer"
-              >Ouvrir</a>
-              <button
-                type="button"
-                class="link danger"
-                :aria-label="`Supprimer ${doc.filename}`"
-                @click="removeDocument(doc)"
-              >
-                Supprimer
-              </button>
-            </div>
-          </li>
-        </ul>
-        <p
-          v-if="!documents.length"
-          class="muted"
+          <strong>{{ doc.filename }}</strong>
+          <span class="hint">
+            {{ sizeText(doc.size) }} · {{ formatDate(doc.uploaded_at) }} · {{ plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
+              · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
+            </template>
+          </span>
+        </button>
+        <button
+          v-if="doc.text_status === 'ok'"
+          type="button"
+          :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
+          :disabled="proposing !== null"
+          :data-test="`propose-${doc.id}`"
+          @click="propose(doc)"
         >
-          Aucun document pour l'instant : commence par ton CV.
-        </p>
-      </div>
+          {{ proposing === doc.id ? "L'IA lit le document… (≈ 30 s)" : "Proposer des blocs" }}
+        </button>
+      </li>
+    </ul>
+    <label
+      :class="['drop-zone', { busy: uploading, 'drop-zone-first': !documents.length }]"
+      data-test="drop-zone"
+    >
+      <input
+        type="file"
+        accept=".pdf,.docx,.txt,.md"
+        data-test="file-input"
+        @change="onFile"
+      >
+      <span class="drop-title">{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
+      <span class="detail">
+        PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l'IA en tire tes premiers blocs." }}
+      </span>
+    </label>
 
-      <article
-        v-if="openText"
-        class="detail-panel text-panel"
+    <SidePanel
+      v-if="openText"
+      open
+      :title="openDocument?.filename ?? 'Document'"
+      @close="openText = null"
+    >
+      <div
+        class="calm-panel"
         data-test="document-text"
       >
-        <div class="text-head">
-          <h3>{{ openDocument?.filename }}</h3>
+        <p class="offer-section-links">
+          <a
+            v-if="openDocument"
+            class="link"
+            :href="`/api/documents/${openDocument.id}/file`"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Ouvrir le fichier ›</a>
           <button
             type="button"
-            class="secondary small"
+            class="link"
             :disabled="openText.text_status !== 'ok'"
             data-test="chunk-from-selection"
             @click="chunkFromSelection"
           >
             Créer un bloc avec la sélection
           </button>
-        </div>
+        </p>
         <div
           ref="textBox"
           class="doc-text"
         >
           {{ openText.text || "Aucun texte n'a pu être extrait de ce document." }}
         </div>
-      </article>
-      <div
-        v-else
-        class="detail-panel empty-detail"
-      >
-        Choisis « Texte » sur un document pour le lire ici et en tirer des blocs.
+        <p
+          v-if="openDocument"
+          class="calm-panel-foot"
+        >
+          <button
+            type="button"
+            class="link danger"
+            data-test="remove-document"
+            @click="removeDocument(openDocument)"
+          >
+            Supprimer ce document
+          </button>
+        </p>
       </div>
-    </div>
+    </SidePanel>
 
     <div class="chunks-head">
       <h2 class="section-title">
@@ -371,6 +370,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       </button>
     </div>
     <div
+      v-if="chunks.length"
       class="tabs kind-tabs"
       role="tablist"
       aria-label="Types de blocs"
@@ -384,7 +384,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         Tous <span class="tab-count">{{ chunks.length }}</span>
       </button>
       <button
-        v-for="kind in KINDS"
+        v-for="kind in usedKinds"
         :key="kind.value"
         type="button"
         role="tab"
@@ -395,42 +395,27 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       </button>
     </div>
 
+    <!-- Cartes calmes (docs/49 §3) : 3 lignes, le type en bas, toute la carte ouvre le bloc. -->
     <ul class="chunk-grid">
       <li
         v-for="chunk in visibleChunks"
         :key="chunk.id"
-        :class="['job-card', 'chunk-card', { inactive: !chunk.active }]"
+        :class="{ inactive: !chunk.active }"
         data-test="chunk"
       >
-        <div class="chunk-top">
-          <span class="badge">{{ kindLabel[chunk.kind] }}</span>
-          <span
-            v-if="!chunk.active"
-            class="badge reason"
-          >inactif</span>
-        </div>
-        <span class="job-title">{{ chunk.title }}</span>
-        <p class="job-snippet chunk-content">
-          {{ chunk.content }}
-        </p>
-        <div class="job-meta">
-          <span
-            v-for="tag in chunk.tags"
-            :key="tag"
-          >#{{ tag }}</span>
-          <span class="chunk-actions">
-            <button
-              type="button"
-              class="link"
-              @click="editChunk(chunk)"
-            >Modifier</button>
-            <button
-              type="button"
-              class="link danger"
-              @click="removeChunk(chunk)"
-            >Supprimer</button>
+        <button
+          type="button"
+          class="chunk-card"
+          :data-test="`open-chunk-${chunk.id}`"
+          @click="editChunk(chunk)"
+        >
+          <span class="job-title">{{ chunk.title }}</span>
+          <span class="chunk-content">{{ chunk.content }}</span>
+          <span class="chunk-foot">
+            <span>{{ chunkFoot(chunk) }}<template v-if="!chunk.active"> · inactif</template></span>
+            <span aria-hidden="true">›</span>
           </span>
-        </div>
+        </button>
       </li>
     </ul>
     <p
@@ -451,25 +436,25 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
     @saved="onProposalsSaved"
   />
 
-  <div
+  <!-- Le bloc dans le panneau latéral (docs/49 §3), comme le reste de l'application. -->
+  <SidePanel
     v-if="editing"
-    class="overlay"
-    @click.self="editing = null"
+    open
+    :title="editing.id === null ? 'Nouveau bloc' : (editedChunk?.title ?? 'Bloc')"
+    @close="editing = null"
   >
     <form
-      class="form-card editor"
+      class="calm-panel chunk-form"
       data-test="chunk-form"
       @submit.prevent="saveChunk"
     >
-      <h3>{{ editing.id === null ? "Nouveau bloc" : "Modifier le bloc" }}</h3>
-      <fieldset>
-        <legend>
-          <label for="chunk-kind">Type</label>
+      <label>
+        <span>Type
           <HelpTip
             label="Aide : type de bloc"
             :text="KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? ''"
           />
-        </legend>
+        </span>
         <select
           id="chunk-kind"
           v-model="editing.form.kind"
@@ -482,9 +467,8 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
             {{ kind.label }}
           </option>
         </select>
-      </fieldset>
-      <fieldset>
-        <legend><label for="chunk-title">Titre</label></legend>
+      </label>
+      <label>Titre
         <input
           id="chunk-title"
           v-model="editing.form.title"
@@ -492,30 +476,30 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           maxlength="200"
           required
         >
-      </fieldset>
-      <fieldset>
-        <legend><label for="chunk-content">Contenu</label></legend>
+      </label>
+      <label>Contenu
         <textarea
           id="chunk-content"
           v-model="editing.form.content"
-          rows="7"
+          rows="8"
           required
         />
-      </fieldset>
-      <fieldset>
-        <legend>Étiquettes</legend>
+      </label>
+      <div class="chunk-tags">
+        <span class="muted">Mots-clés</span>
         <TagInput
           id="chunk-tags"
           v-model="editing.form.tags"
           placeholder="infra, linux…"
         />
-      </fieldset>
-      <label class="check">
+      </div>
+      <label class="filter-switch calm-panel-switch">
+        <span>Utilisé par l'IA</span>
         <input
           v-model="editing.form.active"
           type="checkbox"
+          role="switch"
         >
-        Actif : l'IA peut s'en servir
       </label>
       <div class="form-actions">
         <button
@@ -525,14 +509,20 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         >
           Enregistrer
         </button>
+      </div>
+      <p
+        v-if="editedChunk"
+        class="calm-panel-foot"
+      >
         <button
           type="button"
-          class="secondary"
-          @click="editing = null"
+          class="link danger"
+          data-test="remove-chunk"
+          @click="removeChunk(editedChunk)"
         >
-          Annuler
+          Supprimer ce bloc
         </button>
-      </div>
+      </p>
     </form>
-  </div>
+  </SidePanel>
 </template>
