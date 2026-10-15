@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { api, type InterviewInsights } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
 import DisclosureRow from "./DisclosureRow.vue";
+import AiWriting from "./AiWriting.vue";
 import { plural } from "../format";
 
 // « Mes enseignements » (docs/23 §3) : tous les retours d'entretien, regroupés, sans IA ;
@@ -148,6 +149,10 @@ onMounted(() => void load());
       <InterviewCoaching
         v-if="data.coaching"
         :coaching="data.coaching"
+      />
+      <AiWriting
+        v-if="busy"
+        kind="coaching"
       />
       <button
         v-if="data.can_coach"

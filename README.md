@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/57-clic-direct.md](docs/57-clic-direct.md) (0.45.2)
+- Version en cours : [docs/58-illustrations.md](docs/58-illustrations.md) (0.46.0)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
 ## Versions
@@ -69,6 +69,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.45.0 | Le Bilan dans le style du tableau de bord : quatre tuiles, le parcours en barres, candidatures et réponses par mois, comparaisons en barres, résumé ORP visible | livrée |
 | 0.45.1 | Revue : guide de l'assistant à jour (Aujourd'hui, Bilan), suggestions du Bilan, ménage de la feuille de style | livrée |
 | 0.45.2 | Clic direct : l'élément entier ouvre son contenu avec un survol, plus de « › » ni de « Continuer › » | livrée |
+| 0.46.0 | Illustrations animées : prise en main, chargements, rédaction par l'IA, fichiers en préparation | livrée |
+| 0.46.1 | Illustrations : pages vides, réussites, erreurs | prévue |
 
 ## Lancer en local
 
@@ -141,3 +143,5 @@ Le dépôt est public. CV, profil, offres, lettres et exports ORP restent dans `
 ## Licence
 
 GPL-3.0, voir [LICENSE](LICENSE).
+
+Les illustrations de `frontend/src/assets/illustrations/` viennent d'[unDraw](https://undraw.co) (Katerina Limpitsouni), sous la licence unDraw ; elles sont animées et préparées par `frontend/scripts/illustrations.mjs` (docs/58), sans changer leurs formes.
