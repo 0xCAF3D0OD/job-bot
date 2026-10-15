@@ -4,7 +4,6 @@ import { computed, reactive, ref } from "vue";
 import { api, type Training } from "../api/client";
 import { highlight, languageLabel } from "../newsLabels";
 import AppIcon from "./AppIcon.vue";
-import HelpTip from "./HelpTip.vue";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 
 // Contenu d'une formation (docs/16 §5). Deux présentations (docs/44) : la carte du catalogue,
@@ -366,10 +365,6 @@ const stateText = computed(() => {
               >
                 Marquer comme demandée
               </button>
-              <HelpTip
-                label="Aide : demande de financement"
-                text="Rien n'est envoyé : copie le texte dans un e-mail ou dans Job-Room. Complète ce qui est entre crochets. Un rappel arrive après 14 jours sans réponse."
-              />
             </div>
           </template>
         </template>
@@ -496,10 +491,6 @@ const stateText = computed(() => {
             >
               Annuler
             </button>
-            <HelpTip
-              label="Aide : bloc de profil"
-              text="Le bloc rejoint Mon parcours et sert aux lettres, aux CV et à la note des offres. Les notes existantes ne sont refaites qu'avec « Renoter » (Réglages › IA)."
-            />
           </div>
         </form>
       </div>

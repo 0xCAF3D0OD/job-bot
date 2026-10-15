@@ -429,7 +429,6 @@ onUnmounted(() => {
     v-if="spontaneousOpen"
     open
     title="Candidature spontanée"
-    help="Pour une entreprise qui n'a pas publié d'annonce. La lettre et le CV se préparent ensuite comme pour une offre ; elle compte dans le formulaire ORP du mois. Pas de note de l'IA."
     @close="spontaneousOpen = false"
   >
     <SpontaneousForm @created="load()" />

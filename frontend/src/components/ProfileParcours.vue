@@ -11,11 +11,11 @@ import {
   type DocumentText,
 } from "../api/client";
 import ChunkProposals from "./ChunkProposals.vue";
-import HelpTip from "./HelpTip.vue";
 import SidePanel from "./SidePanel.vue";
 import TagInput from "./TagInput.vue";
 import { formatDate, plural } from "../format";
 
+import HoverNote from "./HoverNote.vue";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
   { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau." },
@@ -250,10 +250,6 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
     <h2 class="section-title first">
       Documents
-      <HelpTip
-        label="Aide : documents"
-        text="Tes documents restent stockés en local, jamais dans git. « Proposer des blocs » les fait lire par l'IA pour préparer tes blocs de profil."
-      />
     </h2>
     <!-- Lignes calmes (docs/49 §2) : une action, le texte et « Supprimer » dans le panneau. -->
     <ul
@@ -449,12 +445,9 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
       @submit.prevent="saveChunk"
     >
       <label>
-        <span>Type
-          <HelpTip
-            label="Aide : type de bloc"
-            :text="KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? ''"
-          />
-        </span>
+        <HoverNote :text="KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? ''">
+          Type
+        </HoverNote>
         <select
           id="chunk-kind"
           v-model="editing.form.kind"

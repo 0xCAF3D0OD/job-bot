@@ -47,7 +47,7 @@ describe("IdentityForm", () => {
         permit: null,
       },
     });
-    expect(wrapper.find("[data-test=identity-form] [role=status]:not(.help-tip-text)").text()).toContain("enregistrées");
+    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("enregistrées");
   });
 
   it("plateforme pas à jour : demande de la redémarrer", async () => {
@@ -58,7 +58,7 @@ describe("IdentityForm", () => {
     await flushPromises();
     await wrapper.find("[data-test=identity-form]").trigger("submit");
     await flushPromises();
-    expect(wrapper.find("[data-test=identity-form] [role=status]:not(.help-tip-text)").text()).toContain("redémarre-la");
+    expect(wrapper.find("[data-test=identity-form] [role=status]").text()).toContain("redémarre-la");
   });
 });
 

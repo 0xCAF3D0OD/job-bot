@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import HelpTip from "../components/HelpTip.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
@@ -394,10 +393,6 @@ useDataChanged(load);
       >
         <h2>
           Comprendre le marché
-          <HelpTip
-            label="Aide : actualités"
-            text="Les actualités de ton domaine, sinon celles qui parlent d'emploi ; relevées toutes les 6 heures."
-          />
         </h2>
         <RouterLink
           to="/actualites"

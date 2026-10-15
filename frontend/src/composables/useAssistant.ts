@@ -53,6 +53,8 @@ export function focusBody(value: AssistantFocus | null): Record<string, unknown>
 }
 
 // Trois suggestions selon la page et l'élément choisi (docs/24 §1).
+export const HOW_IT_WORKS = "Comment ça marche ici ?";
+
 export function suggestionsFor(page: string, value: AssistantFocus | null): string[] {
   if (value?.offerId) {
     if (page === "preparation") {
@@ -77,5 +79,7 @@ export function suggestionsFor(page: string, value: AssistantFocus | null): stri
     settings: ["À quoi servent les seuils de note ?", "Comment ajouter un site suivi ?", "Comment fonctionne le plafond de l'IA ?"],
     diagnostic: ["Que veut dire cet état ?", "La collecte fonctionne-t-elle ?", "Pourquoi l'IA ne note-t-elle pas ?"],
   };
-  return byPage[page] ?? ["Que faire aujourd'hui ?", "Où en suis-je pour l'ORP ce mois-ci ?", "Comment créer mes alertes ?"];
+  const list = byPage[page] ?? ["Que faire aujourd'hui ?", "Où en suis-je pour l'ORP ce mois-ci ?", "Comment créer mes alertes ?"];
+  // Les « ? » ont laissé la place à l'assistant (docs/53) : il explique la page ouverte.
+  return [...list, HOW_IT_WORKS];
 }

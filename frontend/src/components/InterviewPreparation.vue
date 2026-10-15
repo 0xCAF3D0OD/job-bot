@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Application, type InterviewInsights, type Offer } from "../api/client";
-import HelpTip from "./HelpTip.vue";
 import InterviewCoaching from "./InterviewCoaching.vue";
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
@@ -162,11 +161,6 @@ onMounted(async () => {
             class="cost"
           >· 0,03 $</span>
         </button>
-        <HelpTip
-          v-if="insights?.can_coach && insights.count"
-          text="Pistes pour cet entretien : l'IA ne reçoit que tes retours d'entretien, tes blocs de profil et le poste visé, jamais tes coordonnées."
-          label="Aide : pistes de l'IA"
-        />
         <button
           type="button"
           class="primary small"

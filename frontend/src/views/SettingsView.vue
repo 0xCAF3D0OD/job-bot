@@ -4,7 +4,6 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
-import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
 import ExtensionPanel from "../components/ExtensionPanel.vue";
@@ -14,6 +13,7 @@ import SessionPanel from "../components/SessionPanel.vue";
 import SettingsSection from "../components/SettingsSection.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
+import HoverNote from "../components/HoverNote.vue";
 const form = ref<SettingsModel>({
   orp_monthly_target: null,
   notify_score_threshold: 70,
@@ -167,10 +167,6 @@ const active = computed<SectionId>(() => {
             <fieldset>
               <legend>
                 <label for="orp">Objectif mensuel de l'ORP</label>
-                <HelpTip
-                  text="Le nombre de candidatures demandé par ton conseiller. Laisse vide si tu ne le connais pas encore."
-                  label="Aide : objectif mensuel de l'ORP"
-                />
               </legend>
               <div class="inline-field">
                 <input
@@ -186,10 +182,6 @@ const active = computed<SectionId>(() => {
             <fieldset>
               <legend>
                 <label for="due-day">Date limite de remise des preuves</label>
-                <HelpTip
-                  text="Le jour du mois suivant où ton conseiller attend les preuves, souvent le 5."
-                  label="Aide : date limite de remise des preuves"
-                />
               </legend>
               <div class="inline-field">
                 <span>le</span>
@@ -207,11 +199,11 @@ const active = computed<SectionId>(() => {
             </fieldset>
             <fieldset class="wide">
               <legend>
-                <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
-                <HelpTip
-                  text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur, pour postuler sans passer par un site d'emploi (environ 0,02 $ si l'IA est nécessaire)."
-                  label="Aide : recherche chez l'employeur"
-                />
+                <label for="employer-threshold">
+                  <HoverNote text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur, pour postuler sans passer par un site d'emploi (environ 0,02 $ si l'IA est nécessaire).">
+                    Chercher l'annonce chez l'employeur à partir de
+                  </HoverNote>
+                </label>
               </legend>
               <div class="inline-field">
                 <input
@@ -268,10 +260,6 @@ const active = computed<SectionId>(() => {
             <fieldset>
               <legend>
                 <label for="threshold">M'avertir d'une offre à partir de</label>
-                <HelpTip
-                  text="Tu es prévenu des nouvelles offres notées au moins à ce score."
-                  label="Aide : seuil de notification"
-                />
               </legend>
               <div class="inline-field">
                 <input
@@ -308,11 +296,6 @@ const active = computed<SectionId>(() => {
             <fieldset data-test="notifications">
               <legend>
                 Notifications
-                <HelpTip
-                  v-if="notifications?.configured"
-                  :text="`Envoyées sur ton téléphone (${notifications.server}) : offres bien notées, et IA à 80 % du plafond.`"
-                  label="Aide : notifications"
-                />
               </legend>
               <template v-if="notifications?.configured">
                 <div class="inline-field">
@@ -362,11 +345,11 @@ const active = computed<SectionId>(() => {
           >
             <fieldset>
               <legend>
-                <label for="budget">Plafond mensuel du coût de l'IA</label>
-                <HelpTip
-                  text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant."
-                  label="Aide : plafond de l'IA"
-                />
+                <label for="budget">
+                  <HoverNote text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant.">
+                    Plafond mensuel du coût de l'IA
+                  </HoverNote>
+                </label>
               </legend>
               <div class="inline-field">
                 <input

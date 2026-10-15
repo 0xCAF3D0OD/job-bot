@@ -4,7 +4,6 @@ import { onMounted, ref } from "vue";
 import { api, type InterviewInsights } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
 import DisclosureRow from "./DisclosureRow.vue";
-import HelpTip from "./HelpTip.vue";
 import { plural } from "../format";
 
 // « Mes enseignements » (docs/23 §3) : tous les retours d'entretien, regroupés, sans IA ;
@@ -164,10 +163,6 @@ onMounted(() => void load());
           class="cost"
         >· 0,03 $</span>
       </button>
-      <HelpTip
-        text="L'IA ne reçoit que tes retours d'entretien et tes blocs de profil, jamais tes coordonnées ; elle propose des pistes, des réponses et des questions à poser."
-        label="Aide : pistes de l'IA"
-      />
       <p
         v-if="message"
         class="notice error"

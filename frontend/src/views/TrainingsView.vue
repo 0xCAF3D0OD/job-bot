@@ -5,7 +5,6 @@ import { useRoute } from "vue-router";
 import { api, type Training } from "../api/client";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import DomainField from "../components/DomainField.vue";
-import HelpTip from "../components/HelpTip.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
 import PushTransition from "../components/PushTransition.vue";
@@ -16,6 +15,7 @@ import { highlight, languageLabel } from "../newsLabels";
 import { KINDS, ORP_LINKS, PRICES, STATUSES } from "../trainingLabels";
 import { plural } from "../format";
 
+import HoverNote from "../components/HoverNote.vue";
 // Formations (docs/16 §5) : catalogue vérifié, suggestions de l'IA sur demande, suivi.
 type Status = "interested" | "in_progress" | "done";
 
@@ -201,12 +201,8 @@ onMounted(() => void load());
         :value="phone ? 'accord de l\'ORP' : undefined"
         data-test="orp-note"
       >
-        <strong>Formation et chômage :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
+        <strong><HoverNote text="L'assurance chômage peut financer certaines formations (« mesures relatives au marché du travail »). La plateforme ne dit pas si une formation sera acceptée : c'est la décision de l'ORP.">Formation et chômage</HoverNote> :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
           son accord préalable</strong>.
-        <HelpTip
-          label="Aide : financement"
-          text="L'assurance chômage peut financer certaines formations (« mesures relatives au marché du travail »). La plateforme ne dit pas si une formation sera acceptée : c'est la décision de l'ORP."
-        />
         <span class="orp-links">
           <a
             v-for="link in ORP_LINKS"
@@ -247,11 +243,6 @@ onMounted(() => void load());
             Tout
           </button>
         </div>
-        <HelpTip
-          v-if="hasDomain"
-          :text="`Mon domaine : ${keywords.join(', ')}. À modifier dans Réglages › Actualités.`"
-          label="Mots de Mon domaine"
-        />
         <button
           v-if="phone"
           type="button"
@@ -334,10 +325,6 @@ onMounted(() => void load());
               class="cost"
             >· 0,02 à 0,05 $</span>
           </button>
-          <HelpTip
-            label="Aide : suggestions de l'IA"
-            text="L'IA cherche d'autres formations sur Internet. Elles arrivent marquées « à vérifier » : garde-les ou écarte-les."
-          />
         </span>
       </div>
       <p

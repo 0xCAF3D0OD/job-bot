@@ -5,10 +5,10 @@ import { api, type ContractType, type CriteriaIn, type Keywords, type Language }
 import type { components } from "../api/schema";
 
 type RemotePolicy = components["schemas"]["RemotePolicy"];
-import HelpTip from "./HelpTip.vue";
 import TagInput from "./TagInput.vue";
 import { placeLabel } from "../cantons";
 
+import HoverNote from "./HoverNote.vue";
 const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "stage", label: "Stages" },
   { value: "apprentissage", label: "Apprentissages" },
@@ -144,10 +144,6 @@ onMounted(() => void load());
     >
       <h2 class="criteria-summary-title">
         Tes prérequis
-        <HelpTip
-          label="Aide : prérequis"
-          text="Une offre qui ne les respecte pas passe dans « Écartées » ; tu peux toujours la remettre à examiner."
-        />
       </h2>
       <dl class="summary-rows">
         <div
@@ -182,11 +178,9 @@ onMounted(() => void load());
     >
       <fieldset>
         <legend>
-          Lieux acceptés
-          <HelpTip
-            label="Aide : lieux"
-            text="Communes (Lausanne, Genève) ou cantons en deux lettres (VD, GE). Vide : pas de règle de lieu."
-          />
+          <HoverNote text="Communes (Lausanne, Genève) ou cantons en deux lettres (VD, GE). Vide : pas de règle de lieu.">
+            Lieux acceptés
+          </HoverNote>
         </legend>
         <TagInput
           id="locations"
@@ -197,11 +191,9 @@ onMounted(() => void load());
 
       <fieldset>
         <legend>
-          Télétravail complet
-          <HelpTip
-            label="Aide : télétravail"
-            text="« Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »)."
-          />
+          <HoverNote text="« Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »).">
+            Télétravail complet
+          </HoverNote>
         </legend>
         <div
           class="segmented"
@@ -224,11 +216,9 @@ onMounted(() => void load());
 
       <fieldset>
         <legend>
-          Taux d'activité minimum
-          <HelpTip
-            label="Aide : taux"
-            text="Une offre « 60-80 % » passe avec un minimum de 80. Sans taux indiqué, elle passe toujours."
-          />
+          <HoverNote text="Une offre « 60-80 % » passe avec un minimum de 80. Sans taux indiqué, elle passe toujours.">
+            Taux d'activité minimum
+          </HoverNote>
         </legend>
         <div class="inline-field">
           <input
@@ -245,11 +235,9 @@ onMounted(() => void load());
 
       <fieldset>
         <legend>
-          Types d'offres exclus
-          <HelpTip
-            label="Aide : types d'offres"
-            :text="contractsHelp"
-          />
+          <HoverNote :text="contractsHelp">
+            Types d'offres exclus
+          </HoverNote>
         </legend>
         <label
           v-for="contract in CONTRACTS"
@@ -268,10 +256,6 @@ onMounted(() => void load());
       <fieldset>
         <legend>
           Mots interdits dans le titre
-          <HelpTip
-            label="Aide : mots interdits"
-            text="Sans tenir compte des majuscules ni des accents."
-          />
         </legend>
         <TagInput
           id="banned_words"
@@ -282,12 +266,9 @@ onMounted(() => void load());
 
       <fieldset>
         <legend>
-          Langues que tu ne parles pas
-          <HelpTip
-            v-if="keywords"
-            label="Aide : langues"
-            :text="languagesHelp"
-          />
+          <HoverNote :text="keywords ? languagesHelp : ''">
+            Langues que tu ne parles pas
+          </HoverNote>
         </legend>
         <label
           v-for="language in LANGUAGES"

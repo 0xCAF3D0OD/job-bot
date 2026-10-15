@@ -4,7 +4,6 @@ import { computed, onMounted, ref } from "vue";
 import { api } from "../api/client";
 import { email, postcode, webAddress, type Check } from "../validators";
 import DisclosureRow from "./DisclosureRow.vue";
-import HelpTip from "./HelpTip.vue";
 
 // Coordonnées pour l'en-tête des lettres, du CV et du formulaire ORP : base locale seulement,
 // jamais envoyées à l'IA.
@@ -94,10 +93,6 @@ onMounted(async () => {
     <fieldset>
       <legend>
         Mes coordonnées
-        <HelpTip
-          text="Gardées sur ta plateforme, jamais envoyées à l'IA."
-          label="Aide : mes coordonnées"
-        />
       </legend>
       <p
         v-if="missing.length"

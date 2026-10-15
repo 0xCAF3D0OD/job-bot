@@ -2,11 +2,11 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
-import HelpTip from "./HelpTip.vue";
 import SidePanel from "./SidePanel.vue";
 import { secureAddress, senders, useChecks } from "../validators";
 import { plural } from "../format";
 
+import HoverNote from "./HoverNote.vue";
 // Sites dont les alertes sont suivies (docs/11 §2).
 const sites = ref<SiteOut[]>([]);
 // Sites d'offres en télétravail proposés en un clic (docs/26 §5).
@@ -125,11 +125,9 @@ onMounted(() => void load());
   >
     <fieldset>
       <legend>
-        Sites suivis
-        <HelpTip
-          text="La plateforme lit leurs e-mails d'alerte. jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA (environ 0,01 $ par e-mail, tes coordonnées retirées)."
-          label="Aide : sites suivis"
-        />
+        <HoverNote text="La plateforme lit leurs e-mails d'alerte. jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA (environ 0,01 $ par e-mail, tes coordonnées retirées).">
+          Sites suivis
+        </HoverNote>
       </legend>
       <ul class="calm-list">
         <li

@@ -2,10 +2,10 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAuth } from "../composables/useAuth";
 
+import HoverNote from "../components/HoverNote.vue";
 // Page de connexion (docs/18 §1) : un seul compte, créé en ligne de commande.
 const route = useRoute();
 const router = useRouter();
@@ -53,11 +53,10 @@ onMounted(() => void load());
         data-test="setup-needed"
       >
         <p>
-          Aucun compte n'existe encore. Crée-le une fois, dans un terminal, depuis le dossier du projet :
-          <HelpTip
-            text="L'identifiant et le mot de passe (12 caractères au moins) sont demandés au clavier, sans s'afficher. Le mot de passe est enregistré haché, jamais en clair ; ne le transmets à personne."
-            label="Aide : création du compte"
-          />
+          Aucun compte n'existe encore.
+          <HoverNote text="L'identifiant et le mot de passe (12 caractères au moins) sont demandés au clavier, sans s'afficher. Le mot de passe est enregistré haché, jamais en clair ; ne le transmets à personne.">
+            Crée-le une fois
+          </HoverNote>, dans un terminal, depuis le dossier du projet :
         </p>
         <pre class="command"><code>cd backend && uv run jobbot set-password</code></pre>
       </div>

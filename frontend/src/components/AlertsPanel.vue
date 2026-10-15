@@ -4,7 +4,6 @@ import { computed, onMounted, ref } from "vue";
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
-import HelpTip from "./HelpTip.vue";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
 // ouvre la recherche déjà remplie ; l'alerte se crée sur le site, avec l'adresse de son choix.
@@ -96,10 +95,6 @@ onMounted(() => void load());
   >
     <h2 class="section-title first">
       Mes alertes
-      <HelpTip
-        label="Aide : alertes"
-        text="« Ouvrir » affiche la recherche sur le site : crée l'alerte là-bas (« Créer une alerte ») avec l'adresse de ton choix, puis coche « J'ai créé l'alerte ». La plateforme ne peut pas le faire à ta place."
-      />
     </h2>
     <p
       class="notice"

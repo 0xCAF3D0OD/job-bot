@@ -6,7 +6,7 @@ import { CHANNELS, contactName, isoDay, ROLES, toFollowUp } from "../contactLabe
 
 // Contacts dans l'entreprise (docs/31) : recherches LinkedIn déjà remplies, ouvertes dans
 // un nouvel onglet, et suivi des prises de contact. Rien n'est lu sur LinkedIn. Affiché dans
-// le panneau latéral (docs/32 §2.2) ; l'explication est derrière son « ? » (CONTACTS_HELP).
+// le panneau latéral (docs/32 §2.2) .
 const props = withDefaults(defineProps<{ offerId?: number | null; applicationId?: number | null }>(), {
   offerId: null,
   applicationId: null,

@@ -13,7 +13,6 @@ import {
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import HelpTip from "../components/HelpTip.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationPanel from "../components/ApplicationPanel.vue";
 import SidePanel from "../components/SidePanel.vue";
@@ -487,11 +486,6 @@ onUnmounted(() => assistant.setFocus(null));
         >
           <h2 class="suivi-panel-title">
             {{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : "À relancer" }}
-            <HelpTip
-              v-if="!selectedDay"
-              text="Les candidatures à relancer s'affichent ici. Clique sur un jour du calendrier pour voir ses candidatures."
-              label="Aide : à relancer"
-            />
           </h2>
           <p
             v-if="!panelCards.length"
@@ -547,10 +541,6 @@ onUnmounted(() => assistant.setFocus(null));
           class="muted empty"
         >
           Aucune candidature en {{ formatMonth(orp.month) }}.
-          <HelpTip
-            text="Depuis une offre, « Marquer comme envoyée » l'ajoute ici."
-            label="Aide : ajouter une candidature"
-          />
         </p>
         <ApplicationsTable
           v-else

@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 
-import HelpTip from "./HelpTip.vue";
 
 // Panneau latéral (docs/32 §2.2) : le contenu long et secondaire glisse depuis la droite,
 // la page dessous ne bouge pas. Fermeture par ×, Échap ou clic à côté. Le contenu reste
 // monté une fois la page ouverte (comptes, formulaires en cours).
-const props = defineProps<{ open: boolean; title: string; help?: string }>();
+const props = defineProps<{ open: boolean; title: string }>();
 const emit = defineEmits<{ close: [] }>();
 
 const closeButton = ref<HTMLButtonElement | null>(null);
@@ -119,10 +118,6 @@ const openStack: symbol[] = [];
       >
         <header class="side-panel-head">
           <h2>{{ title }}</h2>
-          <HelpTip
-            v-if="help"
-            :text="help"
-          />
           <button
             ref="closeButton"
             type="button"
