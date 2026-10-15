@@ -1864,3 +1864,25 @@ html.side-open { overflow: hidden; }
 .offer-section .full-text.folded { max-height: calc(6 * 1.65em); mask-image: linear-gradient(to bottom, #000 60%, transparent); }
 .read-more { justify-self: start; }
 @media (prefers-reduced-motion: reduce) { .offer-section .full-text { transition: none; } }
+
+/* Préparer une candidature (docs/47) : trois onglets numérotés, l'offre à côté, Postuler à part. */
+.prep-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 1rem; }
+.prep-sub .back-link { margin: 0; }
+.step-number { display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; margin-right: 0.35rem; border-radius: 50%; border: 1px solid currentColor; font-size: 0.75rem; font-weight: 600; }
+.prep-tabs a.active .step-number { background: var(--accent); border-color: var(--accent); color: #fff; }
+.step-done { color: var(--ok-text); font-weight: 600; }
+.offer-brief-head { display: flex; align-items: center; gap: 0.6rem; margin: 0; font-size: 0.88rem; }
+.offer-brief-points ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.3rem; font-size: 0.88rem; }
+.offer-brief-points li.ok::marker { color: var(--ok-text); }
+.offer-brief-points li.gap::marker { color: var(--warn-text); }
+.offer-brief-points.folded li:nth-child(n + 4) { display: none; }
+.offer-brief-more { justify-self: start; }
+.download-actions { flex-wrap: nowrap; }
+.download-actions a { white-space: nowrap; }
+.apply-steps { display: grid; gap: 1.1rem; align-content: start; }
+.apply-steps .offer-section { margin-top: 0; }
+.apply-steps .offer-section:first-child { border-top: 0; padding-top: 0; }
+.apply-steps .hint { margin: 0; }
+.apply-steps .button-link, .apply-done { justify-self: start; }
+.prep-side [data-test=apply-contacts] { gap: 0.5rem; }
+.prep-side [data-test=apply-contacts] .link { justify-self: start; justify-content: flex-start; }

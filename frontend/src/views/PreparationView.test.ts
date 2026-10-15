@@ -73,7 +73,7 @@ function mockGet(letters: unknown[]): void {
   );
 }
 
-async function mountView() {
+async function mountView(path = "/offres/7/preparer") {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -81,8 +81,8 @@ async function mountView() {
       { path: "/:any(.*)*", component: { template: "<div />" } },
     ],
   });
-  await router.push("/offres/7/preparer");
-  const wrapper = mount(PreparationView, { global: { plugins: [router], stubs: { ContactsPanel: true } } });
+  await router.push(path);
+  const wrapper = mount(PreparationView, { global: { plugins: [router], stubs: { ContactsPanel: true, FormSheet: true } } });
   await flushPromises();
   return wrapper;
 }
@@ -185,18 +185,31 @@ describe("barre de candidature", () => {
       }),
     );
     POST.mockResolvedValue({ data: { id: 5, company: "Acme SA" } });
-    const wrapper = await mountView();
+    const letterTab = await mountView();
+    // Trois onglets numérotés (docs/47) : lettre et CV faits, cochés ; plus de barre du haut.
+    expect(letterTab.find("[data-test=tab-letter]").text()).toContain("✓");
+    expect(letterTab.find("[data-test=tab-cv]").text()).toContain("✓");
+    expect(letterTab.find("[data-test=apply-bar]").exists()).toBe(false);
+    expect(letterTab.find("[data-test=pdf]").text()).toBe("PDF");
+    expect(letterTab.find("[data-test=save-letter]").exists()).toBe(false);
+    letterTab.unmount();
+
+    const wrapper = await mountView("/offres/7/preparer?doc=postuler");
     // Retour aux offres toujours possible.
     expect(wrapper.find("[data-test=back-to-offers]").attributes("href")).toBe("/candidatures/offres");
-    const bar = wrapper.find("[data-test=apply-bar]");
-    expect(bar.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");
-    expect(bar.find("[data-test=bar-letter]").attributes("href")).toBe("/api/letters/11/pdf");
-    expect(bar.find("[data-test=bar-cv]").attributes("href")).toBe("/api/cvs/31/pdf");
+    const steps = wrapper.find("[data-test=apply-steps]");
+    expect(steps.findAll(".apply-steps h3").map((h) => h.text())).toEqual([
+      "1. Postuler",
+      "2. Fiche pour le formulaire",
+      "3. J'ai postulé",
+    ]);
+    expect(steps.find("[data-test=apply-contacts] h2").text()).toBe("Contacts chez Acme SA");
+    expect(steps.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");
     // Lettre et CV prêts : « Postuler » est le seul bouton plein (docs/29 §1.3).
-    expect(bar.find("[data-test=apply]").classes()).toContain("primary-link");
+    expect(steps.find("[data-test=apply]").classes()).toContain("primary-link");
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
 
-    await bar.find("[data-test=mark-applied]").trigger("click");
+    await steps.find("[data-test=mark-applied]").trigger("click");
     await flushPromises();
     expect(wrapper.find<HTMLInputElement>("[data-test=application-url]").element.value).toBe(
       "https://acme.example/jobs/1",

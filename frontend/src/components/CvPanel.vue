@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import HelpTip from "./HelpTip.vue";
+import OfferBrief from "./OfferBrief.vue";
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
 const props = defineProps<{ offer: Offer; primary?: boolean }>();
@@ -270,6 +271,7 @@ onMounted(() => void load());
     </div>
 
     <aside class="prep-side">
+      <OfferBrief :offer="offer" />
       <div class="side-card">
         <h2>
           {{ selected ? "Nouvelle version" : "Préparer le CV" }}
@@ -300,19 +302,21 @@ onMounted(() => void load());
             data-test="cv-instruction"
           />
         </label>
-        <button
-          type="button"
-          :class="primary ? 'primary' : 'secondary'"
-          :disabled="writing"
-          data-test="write-cv"
-          @click="write"
-        >
-          {{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}
-          <span
-            v-if="!writing"
-            class="cost"
-          >· 0,05 $</span>
-        </button>
+        <div class="mobile-dock">
+          <button
+            type="button"
+            :class="primary ? 'primary' : 'secondary'"
+            :disabled="writing"
+            data-test="write-cv"
+            @click="write"
+          >
+            {{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}
+            <span
+              v-if="!writing"
+              class="cost"
+            >· 0,05 $</span>
+          </button>
+        </div>
       </div>
 
       <div
@@ -379,39 +383,38 @@ onMounted(() => void load());
         v-if="selected"
         class="side-card"
       >
-        <h2>Cette version</h2>
-        <button
-          type="button"
-          class="secondary"
-          :disabled="!dirty || saving"
-          data-test="save-cv"
-          @click="save()"
-        >
-          {{ dirty ? "Enregistrer le titre et le résumé" : "Aucune modification" }}
-        </button>
+        <h2>Télécharger</h2>
+        <template v-if="dirty">
+          <button
+            type="button"
+            class="secondary"
+            :disabled="saving"
+            data-test="save-cv"
+            @click="save()"
+          >
+            Enregistrer le titre et le résumé
+          </button>
+          <p class="hint">
+            Enregistre d'abord tes modifications pour les télécharger.
+          </p>
+        </template>
         <div
-          v-if="!dirty"
-          class="actions"
+          v-else
+          class="actions download-actions"
         >
           <a
             class="secondary"
             :href="`/api/cvs/${selected.id}/pdf`"
             download
             data-test="cv-pdf"
-          >Télécharger en PDF</a>
+          >PDF</a>
           <a
             class="secondary"
             :href="`/api/cvs/${selected.id}/docx`"
             download
             data-test="cv-docx"
-          >Télécharger en Word</a>
+          >Word</a>
         </div>
-        <p
-          v-if="dirty"
-          class="hint"
-        >
-          Enregistre d'abord tes modifications pour les télécharger.
-        </p>
       </div>
 
       <div
