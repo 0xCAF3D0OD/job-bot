@@ -8,8 +8,7 @@ import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ContactsPanel from "../components/ContactsPanel.vue";
 import CvPanel from "../components/CvPanel.vue";
-import SidePanel from "../components/SidePanel.vue";
-import { CONTACTS_HELP } from "../contactLabels";
+import OfferBrief from "../components/OfferBrief.vue";
 import FormSheet from "../components/FormSheet.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
@@ -19,9 +18,10 @@ import { expiredText } from "../format";
 
 const route = useRoute();
 const offerId = Number(route.params.id);
-const tab = computed(() => (route.query.doc === "cv" ? "cv" : "letter"));
+// Trois onglets numérotés (docs/47 §2) : ① Lettre, ② CV, ③ Postuler.
+const tab = computed(() => (route.query.doc === "cv" ? "cv" : route.query.doc === "postuler" ? "apply" : "letter"));
 
-// Barre « Postuler · Marquer comme envoyée · Télécharger » (docs/13 §1).
+// « Postuler sur … » (docs/13 §1), dans l'onglet Postuler.
 const SITE_NAMES: Record<string, string> = { jobup: "jobup", indeed: "Indeed", jobroom: "Job-Room" };
 const applyLink = computed(() => {
   const o = offer.value;
@@ -32,13 +32,12 @@ const applyLink = computed(() => {
     return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" };
   }
   const link = o.links[0];
-  return link ? { url: link.url, label: `Ouvrir l'annonce sur ${SITE_NAMES[link.source] ?? link.source}` } : null;
+  return link ? { url: link.url, label: `Postuler sur ${SITE_NAMES[link.source] ?? link.source}` } : null;
 });
 const currentCvId = ref<number | null>(null);
 const currentLetterId = computed(() => current(letters.value)?.id ?? null);
 // Corps de la lettre, pour les formulaires qui le demandent en texte (docs/25 §5).
 const currentLetterText = computed(() => current(letters.value)?.paragraphs.map((p) => p.text).join("\n\n") ?? null);
-const sheetOpen = ref(false);
 // Un seul bouton plein (docs/29 §1.3) : la prochaine étape — la lettre, puis le CV, puis postuler.
 const nextStep = computed<"letter" | "cv" | "apply">(() =>
   !currentLetterId.value ? "letter" : !currentCvId.value ? "cv" : "apply",
@@ -72,9 +71,6 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
 }
 
 const offer = ref<Offer | null>(null);
-// Contacts dans le panneau latéral (docs/32 §2.2) : la page reste compacte.
-const contactsOpen = ref(false);
-const contactsCount = ref(0);
 const assistant = useAssistant();
 watch(offer, (o) => {
   if (o) assistant.setFocus({ offerId: o.id, label: `préparation : ${o.title}${o.company ? ` chez ${o.company}` : ""}` });
@@ -232,21 +228,61 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <PageHero
-    :title="offer?.title ?? (notFound ? 'Offre introuvable' : 'Chargement…')"
-    :subtitle="offer ? [offer.company, offer.location].filter(Boolean).join(' · ') : undefined"
-  />
-
-  <section class="band">
-    <div class="container">
+  <PageHero :title="offer?.title ?? (notFound ? 'Offre introuvable' : 'Chargement…')">
+    <p class="page-head-sub prep-sub">
+      <span v-if="offer">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
       <!-- Toujours visible : revenir aux offres à tout moment (retour d'usage du 2026-10-07). -->
       <RouterLink
         to="/candidatures/offres"
         class="back-link"
         data-test="back-to-offers"
       >
-        ← Retour aux offres
+        ← Offres
       </RouterLink>
+    </p>
+    <nav
+      v-if="offer"
+      class="prep-tabs"
+      aria-label="Étapes de la candidature"
+    >
+      <RouterLink
+        :to="{ query: {} }"
+        :class="{ active: tab === 'letter' }"
+        data-test="tab-letter"
+      >
+        <span class="step-number">1</span> Lettre<span
+          v-if="currentLetterId"
+          class="step-done"
+          aria-label="faite"
+        > ✓</span>
+      </RouterLink>
+      <RouterLink
+        :to="{ query: { doc: 'cv' } }"
+        :class="{ active: tab === 'cv' }"
+        data-test="tab-cv"
+      >
+        <span class="step-number">2</span> CV<span
+          v-if="currentCvId"
+          class="step-done"
+          aria-label="fait"
+        > ✓</span>
+      </RouterLink>
+      <RouterLink
+        :to="{ query: { doc: 'postuler' } }"
+        :class="{ active: tab === 'apply' }"
+        data-test="tab-apply"
+      >
+        <span class="step-number">3</span> Postuler<span
+          v-if="offer.status === 'applied'"
+          class="step-done"
+          aria-label="fait"
+        > ✓</span>
+      </RouterLink>
+    </nav>
+  </PageHero>
+
+  <section class="band">
+    <div class="container">
       <p
         v-if="notFound"
         class="notice error"
@@ -264,109 +300,25 @@ onMounted(() => void load());
         {{ expiredText(offer) }} Vérifie avant d'envoyer ta candidature.
       </p>
       <div
-        v-if="offer"
+        v-if="offer?.status === 'applied'"
         class="apply-bar"
         data-test="apply-bar"
       >
-        <template v-if="offer.status === 'applied'">
-          <span class="status-pill applied">Candidature envoyée</span>
-          <RouterLink
-            to="/candidatures/offres"
-            class="button-link primary-link"
-            data-test="next-offers"
-          >
-            Revenir aux offres <AppIcon name="chevron" />
-          </RouterLink>
-          <RouterLink
-            to="/candidatures/suivi"
-            class="link"
-          >
-            Voir le suivi
-          </RouterLink>
-        </template>
-        <!-- Sur téléphone, Postuler et « Marquer comme envoyée » sont fixés en bas (docs/33 §3.2). -->
-        <div
-          v-else
-          class="mobile-dock"
+        <span class="status-pill applied">Candidature envoyée</span>
+        <RouterLink
+          to="/candidatures/offres"
+          class="button-link primary-link"
+          data-test="next-offers"
         >
-          <a
-            v-if="applyLink"
-            :href="applyLink.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            :class="['button-link', { 'primary-link': nextStep === 'apply' }]"
-            data-test="apply"
-          >{{ applyLink.label }} <AppIcon name="chevron" /></a>
-          <button
-            type="button"
-            class="secondary small"
-            data-test="mark-applied"
-            @click="openApplication"
-          >
-            Marquer comme envoyée
-          </button>
-        </div>
-        <span class="spacer" />
-        <a
-          v-if="currentLetterId"
+          Revenir aux offres <AppIcon name="chevron" />
+        </RouterLink>
+        <RouterLink
+          to="/candidatures/suivi"
           class="link"
-          :href="`/api/letters/${currentLetterId}/pdf`"
-          download
-          data-test="bar-letter"
-        >Lettre (PDF)</a>
-        <a
-          v-if="currentCvId"
-          class="link"
-          :href="`/api/cvs/${currentCvId}/pdf`"
-          download
-          data-test="bar-cv"
-        >CV (PDF)</a>
-        <button
-          v-if="offer.company"
-          type="button"
-          class="link"
-          :aria-expanded="contactsOpen"
-          data-test="bar-contacts"
-          @click="contactsOpen = true"
         >
-          Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }}
-        </button>
-        <button
-          v-if="offer.status !== 'applied'"
-          type="button"
-          class="link"
-          :aria-expanded="sheetOpen"
-          data-test="bar-sheet"
-          @click="sheetOpen = true"
-        >
-          Fiche pour le formulaire
-        </button>
+          Voir le suivi
+        </RouterLink>
       </div>
-      <SidePanel
-        v-if="offer && offer.status !== 'applied'"
-        :open="sheetOpen"
-        title="Fiche pour le formulaire"
-        help="À recopier dans le formulaire en ligne de l'employeur ; joins le CV et la lettre en PDF."
-        @close="sheetOpen = false"
-      >
-        <FormSheet
-          :letter-text="currentLetterText"
-          :letter-id="currentLetterId"
-          :cv-id="currentCvId"
-        />
-      </SidePanel>
-      <SidePanel
-        v-if="offer?.company"
-        :open="contactsOpen"
-        :title="`Contacts chez ${offer.company}`"
-        :help="CONTACTS_HELP"
-        @close="contactsOpen = false"
-      >
-        <ContactsPanel
-          :offer-id="offer.id"
-          @count="contactsCount = $event"
-        />
-      </SidePanel>
       <p
         v-if="applyNotice"
         class="notice"
@@ -381,29 +333,80 @@ onMounted(() => void load());
           Revenir aux offres
         </RouterLink>
       </p>
-      <nav
-        v-if="offer"
-        class="prep-tabs"
-        aria-label="Documents"
+
+      <!-- ③ Postuler (docs/47 §2) : dans l'ordre où on le fait ; les contacts à côté. -->
+      <div
+        v-if="offer && tab === 'apply'"
+        class="prep-layout"
+        data-test="apply-steps"
       >
-        <RouterLink
-          :to="{ query: {} }"
-          :class="{ active: tab === 'letter' }"
-          data-test="tab-letter"
+        <div class="apply-steps">
+          <template v-if="offer.status !== 'applied'">
+            <section class="offer-section">
+              <h3>1. Postuler</h3>
+              <p class="hint">
+                Joins ta lettre et ton CV en PDF ; la fiche ci-dessous t'aide à remplir le formulaire.
+              </p>
+              <div class="mobile-dock">
+                <a
+                  v-if="applyLink"
+                  :href="applyLink.url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="button-link primary-link"
+                  data-test="apply"
+                >{{ applyLink.label }} <AppIcon name="chevron" /></a>
+              </div>
+            </section>
+            <section
+              class="offer-section"
+              data-test="apply-sheet"
+            >
+              <h3>2. Fiche pour le formulaire</h3>
+              <FormSheet
+                :letter-text="currentLetterText"
+                :letter-id="currentLetterId"
+                :cv-id="currentCvId"
+              />
+            </section>
+            <section class="offer-section">
+              <h3>3. J'ai postulé</h3>
+              <p class="hint">
+                La candidature passe dans ton suivi, avec ta lettre et ton CV, pour le formulaire ORP.
+              </p>
+              <button
+                type="button"
+                class="secondary small apply-done"
+                data-test="mark-applied"
+                @click="openApplication"
+              >
+                Marquer comme envoyée
+              </button>
+            </section>
+          </template>
+          <p
+            v-else
+            class="hint"
+          >
+            Candidature envoyée : elle est dans ton suivi.
+          </p>
+        </div>
+        <aside
+          v-if="offer.company"
+          class="prep-side"
         >
-          Lettre de motivation
-        </RouterLink>
-        <RouterLink
-          :to="{ query: { doc: 'cv' } }"
-          :class="{ active: tab === 'cv' }"
-          data-test="tab-cv"
-        >
-          CV adapté
-        </RouterLink>
-      </nav>
+          <div
+            class="side-card"
+            data-test="apply-contacts"
+          >
+            <h2>Contacts chez {{ offer.company }}</h2>
+            <ContactsPanel :offer-id="offer.id" />
+          </div>
+        </aside>
+      </div>
 
       <CvPanel
-        v-if="offer && tab === 'cv'"
+        v-else-if="offer && tab === 'cv'"
         :offer="offer"
         :primary="nextStep === 'cv'"
         @current="currentCvId = $event"
@@ -513,6 +516,7 @@ onMounted(() => void load());
         </div>
 
         <aside class="prep-side">
+          <OfferBrief :offer="offer" />
           <div class="side-card">
             <h2>
               {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
@@ -543,58 +547,60 @@ onMounted(() => void load());
                 data-test="instruction"
               />
             </label>
-            <button
-              type="button"
-              :class="nextStep === 'letter' ? 'primary' : 'secondary'"
-              :disabled="writing"
-              data-test="write"
-              @click="write"
-            >
-              {{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}
-              <span
-                v-if="!writing"
-                class="cost"
-              >· 0,10 $</span>
-            </button>
+            <div class="mobile-dock">
+              <button
+                type="button"
+                :class="nextStep === 'letter' ? 'primary' : 'secondary'"
+                :disabled="writing"
+                data-test="write"
+                @click="write"
+              >
+                {{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}
+                <span
+                  v-if="!writing"
+                  class="cost"
+                >· 0,10 $</span>
+              </button>
+            </div>
           </div>
 
           <div
             v-if="selected"
             class="side-card"
+            data-test="download-card"
           >
-            <h2>Cette version</h2>
-            <button
-              type="button"
-              class="secondary"
-              :disabled="!dirty || saving"
-              data-test="save-letter"
-              @click="save"
-            >
-              {{ dirty ? "Enregistrer mes modifications" : "Aucune modification" }}
-            </button>
+            <h2>Télécharger</h2>
+            <template v-if="dirty">
+              <button
+                type="button"
+                class="secondary"
+                :disabled="saving"
+                data-test="save-letter"
+                @click="save"
+              >
+                Enregistrer mes modifications
+              </button>
+              <p class="hint">
+                Enregistre d'abord tes modifications pour les télécharger.
+              </p>
+            </template>
             <div
-              v-if="!dirty"
-              class="actions"
+              v-else
+              class="actions download-actions"
             >
               <a
                 class="secondary"
                 :href="`/api/letters/${selected.id}/pdf`"
                 download
                 data-test="pdf"
-              >Télécharger en PDF</a>
+              >PDF</a>
               <a
                 class="secondary"
                 :href="`/api/letters/${selected.id}/docx`"
                 download
                 data-test="docx"
-              >Télécharger en Word</a>
+              >Word</a>
             </div>
-            <p
-              v-if="dirty"
-              class="hint"
-            >
-              Enregistre d'abord tes modifications pour les télécharger.
-            </p>
           </div>
 
           <div
