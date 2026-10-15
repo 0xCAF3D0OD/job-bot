@@ -92,10 +92,12 @@ async def draft(
         raw = await scoring_service.make_client(settings).score(params)
     except Refused:
         raise MessageUnavailable("message refusé par l'IA") from None
+    except (anthropic.RateLimitError, anthropic.APIConnectionError):
+        raise MessageUnavailable("IA momentanément indisponible, réessaie") from None
     except anthropic.APIStatusError as exc:
-        if problem := account_problem(exc):
-            raise MessageUnavailable(problem) from None
-        raise
+        raise MessageUnavailable(
+            account_problem(exc) or "IA momentanément indisponible, réessaie"
+        ) from None
     async with runtime.sessionmaker.begin() as session:
         await record_call(session, raw, offer_id=offer_id, rate=rate, purpose="contact")
     text = raw.text.strip().strip('"«» ').strip()

@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.orp import LOCAL_TZ
-from jobbot.db.models import Evaluation, Offer, Training, TrainingMark
+from jobbot.db.models import Evaluation, Offer, Profile, Training, TrainingMark
 from jobbot.news import domain
 from jobbot.notify.service import Message, deliver
 from jobbot.runtime import Runtime
@@ -22,6 +22,8 @@ WINDOW = timedelta(days=90)
 FOLLOW_UP_AFTER = timedelta(days=14)
 EXAMPLES = 3
 MATCHED = 3
+# Au plus tant d'offres lues pour l'argument (les plus récentes).
+SCAN_LIMIT = 1_000
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,7 @@ async def argument(
             .join(Evaluation, Evaluation.offer_id == Offer.id)
             .where(Offer.first_seen_at >= since, Offer.duplicate_of.is_(None))
             .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
+            .limit(SCAN_LIMIT)
         )
     ).all()
     count = 0
@@ -84,7 +87,10 @@ async def due(session: AsyncSession, today: date | None = None) -> list[tuple[Tr
     rows = await session.execute(
         select(TrainingMark, Training.title)
         .join(Training, Training.id == TrainingMark.training_id)
+        # Le lien du rappel ouvre le profil principal : ses demandes seulement.
+        .join(Profile, Profile.id == TrainingMark.profile_id)
         .where(
+            Profile.is_main.is_(True),
             TrainingMark.funding_status == "requested",
             TrainingMark.funding_requested_at <= limit,
             TrainingMark.funding_reminded_at.is_(None),

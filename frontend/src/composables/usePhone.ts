@@ -4,7 +4,9 @@ import { onMounted, onUnmounted, ref } from "vue";
 export const PHONE_QUERY = "(max-width: 820px)";
 
 export function usePhone() {
-  const phone = ref(false);
+  // Lu tout de suite, avant le premier rendu : sinon les éléments repliés sur téléphone
+  // (carte « Filtrer ») s'ouvrent puis se referment à chaque arrivée sur la page.
+  const phone = ref(globalThis.matchMedia?.(PHONE_QUERY).matches ?? false);
   let query: MediaQueryList | undefined;
   const update = (): void => {
     phone.value = query?.matches ?? false;

@@ -42,6 +42,14 @@ function close(): void {
   document.removeEventListener("pointerdown", onDocument);
 }
 
+// Échap ferme la bulle seulement : le panneau ou l'offre ouverts derrière restent en place.
+function onEscape(event: KeyboardEvent): void {
+  if (!open.value) return;
+  event.preventDefault();
+  event.stopPropagation();
+  close();
+}
+
 onBeforeUnmount(close);
 </script>
 
@@ -49,7 +57,7 @@ onBeforeUnmount(close);
   <span
     ref="root"
     class="help-tip"
-    @keydown.esc="close"
+    @keydown.esc="onEscape"
   >
     <button
       type="button"

@@ -8,6 +8,9 @@ import HelpTip from "./HelpTip.vue";
 // Candidature spontanée (docs/39 §1) : entreprise, poste visé, « Pourquoi elle » ; puis, au
 // choix, l'adresse au registre du commerce ; enfin la préparation habituelle (lettre, CV).
 const router = useRouter();
+// L'offre existe dès « Continuer » : la liste des offres se recharge pour la montrer, même si
+// le panneau est fermé sans passer par « Préparer ».
+const emit = defineEmits<{ created: [id: number] }>();
 const form = reactive({ company: "", title: "", website: "", reason: "" });
 const saving = ref(false);
 const error = ref("");
@@ -32,6 +35,7 @@ async function create(): Promise<void> {
       return;
     }
     offerId.value = data.id;
+    emit("created", data.id);
   } finally {
     saving.value = false;
   }

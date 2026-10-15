@@ -73,7 +73,7 @@ async function markDone(): Promise<void> {
 
 <template>
   <div
-    class="follow-up"
+    class="follow-up-panel"
     data-test="follow-up"
   >
     <p class="muted">

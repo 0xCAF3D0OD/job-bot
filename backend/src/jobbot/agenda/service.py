@@ -20,6 +20,9 @@ from jobbot.orp.service import load_due_day
 
 PREFIX = "jba_"
 INTERVIEW_ALARMS = ("P1D", "PT2H")
+# Relance proposée jusqu'à 30 jours après l'envoi ; dossiers clos retirés (revue 0.33.1).
+FOLLOW_UP_UNTIL = timedelta(days=30)
+CLOSED = (ApplicationStatus.REFUS, ApplicationStatus.ENGAGEMENT, ApplicationStatus.SANS_REPONSE)
 DUE_ALARMS = ("P3D",)
 
 
@@ -51,11 +54,16 @@ async def events(session: AsyncSession, base_url: str) -> list[Event]:
     since = datetime.now(UTC) - timedelta(days=30)
     applications = list(await session.scalars(select(Application)))
     for application in applications:
+        if application.status in CLOSED:
+            continue
         meeting = interview_event(application, base_url)
         if meeting is not None and application.interview_at and application.interview_at >= since:
             found.append(meeting)
         # Relance à faire : le jour où la candidature atteint 10 jours sans réponse (docs/38).
-        if application.status == ApplicationStatus.EN_ATTENTE:
+        if (
+            application.status == ApplicationStatus.EN_ATTENTE
+            and application.sent_at + FOLLOW_UP_UNTIL >= today
+        ):
             found.append(
                 Event(
                     uid=f"follow-up-{application.id}@joba1",
@@ -66,7 +74,7 @@ async def events(session: AsyncSession, base_url: str) -> list[Event]:
                 )
             )
     # Suites attendues après un entretien (docs/23).
-    companies = {a.id: (a.company, a.job_title) for a in applications}
+    companies = {a.id: (a.company, a.job_title) for a in applications if a.status not in CLOSED}
     for interview in await session.scalars(
         select(Interview).where(
             Interview.next_step_at.is_not(None), Interview.next_step_at >= today - timedelta(days=7)

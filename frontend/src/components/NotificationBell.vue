@@ -105,6 +105,7 @@ onUnmounted(() => {
       <PushTransition :enabled="phone">
         <div
           v-if="open"
+          ref="panel"
           class="bell-panel"
           role="dialog"
           aria-label="Alertes"

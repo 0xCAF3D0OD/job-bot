@@ -151,10 +151,11 @@ async def draft(runtime: Runtime, application_id: int) -> FollowUpDraft | None:
         raw = await scoring_service.make_client(settings).score(params)
     except Refused:
         return template("réponse refusée par l'IA")
+    except (anthropic.RateLimitError, anthropic.APIConnectionError):
+        return template("IA momentanément indisponible")
     except anthropic.APIStatusError as exc:
-        if problem := account_problem(exc):
-            return template(problem)
-        raise
+        # Clé refusée, crédit épuisé, ou IA surchargée : le modèle gratuit (docs/38 §2).
+        return template(account_problem(exc) or "IA momentanément indisponible")
     async with runtime.sessionmaker.begin() as session:
         await record_call(session, raw, offer_id=application.offer_id, rate=rate, purpose="relance")
     text = raw.text.strip().strip('"«» ').strip()

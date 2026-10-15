@@ -426,8 +426,11 @@ async def update_application(
         values = body.model_dump()
         if values["status"] != application.status and values["status_at"] is None:
             values["status_at"] = _today()
-        # Passée à la main en « Relancée » : la date de la relance (docs/38).
-        if values["status"] == ApplicationStatus.RELANCEE and application.followed_up_at is None:
+        # Passée à la main en « Relancée » : la date de cette relance (docs/38) ; effacée
+        # quand elle quitte ce statut, pour ne pas proposer « Sans réponse » trop tôt.
+        if values["status"] != ApplicationStatus.RELANCEE:
+            application.followed_up_at = None
+        elif application.status != ApplicationStatus.RELANCEE or not application.followed_up_at:
             application.followed_up_at = values["status_at"] or _today()
         for key, value in values.items():
             setattr(application, key, value)
@@ -563,6 +566,10 @@ async def mark_followed_up(request: Request, application_id: int) -> Application
         application = await session.get(Application, application_id)
         if application is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+        if application.status != ApplicationStatus.EN_ATTENTE:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "seule une candidature en attente se relance"
+            )
         await followups.mark_followed_up(session, application)
         await session.flush()
         await session.refresh(application)

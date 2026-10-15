@@ -25,7 +25,25 @@ describe("Abonnement d'agenda (docs/40 §2)", () => {
     await wrapper.find("[data-test=agenda-create]").trigger("click");
     await flushPromises();
     expect(POST.mock.calls[0]![1].body.origin).toBe(globalThis.location.origin);
+    expect(POST.mock.calls[0]![1].body.name).toMatch(/^Agenda du /);
     expect(wrapper.find("[data-test=agenda-url] code").text()).toBe("https://moi.tunnel.ms/api/agenda/feed/jba_x.ics");
     expect(wrapper.findAll("[data-test=agenda-revoke]")).toHaveLength(1);
+  });
+
+  it("désactive le bouton pendant la création et dit l'échec", async () => {
+    GET.mockResolvedValueOnce({ data: [] });
+    let answer: (value: unknown) => void = () => {};
+    POST.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    const wrapper = mount(AgendaPanel);
+    await flushPromises();
+    const button = wrapper.find("[data-test=agenda-create]");
+    await button.trigger("click");
+    expect(button.attributes("disabled")).toBeDefined();
+    await button.trigger("click");
+    expect(POST).toHaveBeenCalledTimes(1);
+    answer({ error: { detail: "refusé" } });
+    await flushPromises();
+    expect(button.attributes("disabled")).toBeUndefined();
+    expect(wrapper.find("[data-test=agenda-error]").text()).toBe("Création impossible : réessaie dans un instant.");
   });
 });

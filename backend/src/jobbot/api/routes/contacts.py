@@ -127,6 +127,18 @@ async def add_contact(request: Request, body: ContactIn) -> ContactOut:
     async with _runtime(request).sessionmaker.begin() as session:
         application_id = body.application_id
         offer_id = body.offer_id
+        # Rattachement vérifié : un identifiant inconnu ou un couple incohérent est refusé.
+        if offer_id is not None and await session.get(Offer, offer_id) is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre introuvable")
+        if application_id is not None:
+            given = await session.get(Application, application_id)
+            if given is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+            if offer_id is not None and given.offer_id not in (None, offer_id):
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    "offre et candidature ne vont pas ensemble",
+                )
         if offer_id is not None and application_id is None:
             application_id = await session.scalar(
                 select(Application.id).where(Application.offer_id == offer_id)

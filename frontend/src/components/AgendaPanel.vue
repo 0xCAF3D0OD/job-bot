@@ -12,20 +12,36 @@ type Token = components["schemas"]["CalendarTokenOut"];
 const tokens = ref<Token[]>([]);
 const created = ref<string | null>(null);
 const copied = ref(false);
+const creating = ref(false);
+const createError = ref("");
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/agenda/tokens");
   tokens.value = data ?? [];
 }
 
+// Chaque adresse porte sa date de création (« Agenda du 15 oct. ») : on sait laquelle révoquer.
 async function create(): Promise<void> {
-  const { data } = await api.POST("/api/agenda/tokens", {
-    body: { name: "Mon agenda", origin: globalThis.location?.origin ?? null },
-  });
-  if (!data) return;
-  created.value = data.url;
-  copied.value = false;
-  await load();
+  if (creating.value) return;
+  creating.value = true;
+  createError.value = "";
+  try {
+    const name = `Agenda du ${new Date().toLocaleDateString("fr-CH", { day: "numeric", month: "short" })}`;
+    const { data } = await api.POST("/api/agenda/tokens", {
+      body: { name, origin: globalThis.location?.origin ?? null },
+    });
+    if (!data) {
+      createError.value = "Création impossible : réessaie dans un instant.";
+      return;
+    }
+    created.value = data.url;
+    copied.value = false;
+    await load();
+  } catch {
+    createError.value = "Création impossible : réessaie dans un instant.";
+  } finally {
+    creating.value = false;
+  }
 }
 
 async function revoke(token: Token): Promise<void> {
@@ -108,10 +124,19 @@ onMounted(load);
           </button>
         </li>
       </ul>
+      <p
+        v-if="createError"
+        class="notice error"
+        role="alert"
+        data-test="agenda-error"
+      >
+        {{ createError }}
+      </p>
       <div class="form-actions">
         <button
           type="button"
           class="secondary small"
+          :disabled="creating"
           data-test="agenda-create"
           @click="create"
         >
