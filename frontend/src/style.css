@@ -1824,5 +1824,30 @@ html.side-open { overflow: hidden; }
 .training-foot .link { white-space: nowrap; }
 
 /* Le panneau latéral (docs/44 §2) : trois sections titrées l'une sous l'autre. */
-.training-panel-section { display: grid; gap: 0.6rem; padding-top: 1rem; margin-top: 0.4rem; border-top: 1px solid var(--border); }
-.training-panel-section h3 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+.training-panel-section, .offer-section { display: grid; gap: 0.6rem; padding-top: 1rem; margin-top: 0.4rem; border-top: 1px solid var(--border); }
+.training-panel-section h3, .offer-section h3 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+
+/* Fiche d'une offre en sections (docs/45) : deux boutons, puis Pour toi, À savoir, Entreprise, Annonce. */
+.more-button { border: none; background: none; font-size: 1.5rem; line-height: 1; padding: 0.1rem 0.4rem; color: var(--muted); }
+.more-button:hover { color: var(--text); }
+.detail-panel .triage { padding-bottom: 0; border-bottom: 0; }
+@media (min-width: 821px) { .detail-panel .triage.mobile-dock { display: flex; } }
+.detail-panel .offer-section { margin-top: 0; }
+.offer-section-head { display: flex; align-items: center; gap: 0.4rem; }
+.offer-section .ai-head { align-items: flex-start; }
+.offer-section .summary { flex: 1 1 auto; min-width: 0; }
+.offer-section .summary dd { white-space: normal; }
+.offer-section .points h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 0.4rem; font-weight: 600; }
+.score-note { margin: 0; font-size: 0.85rem; }
+.offer-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; font-size: 0.92rem; }
+.offer-facts li { display: grid; grid-template-columns: 1.1rem minmax(0, 1fr); gap: 0.4rem; align-items: baseline; }
+.fact-mark { font-weight: 700; text-align: center; }
+.offer-facts .ok .fact-mark { color: var(--ok-text); }
+.offer-facts .check .fact-mark, .offer-facts .scam { color: var(--warn-text); }
+.offer-facts .no .fact-mark { color: var(--down-text); }
+.offer-facts q { display: block; color: var(--muted); font-style: italic; font-size: 0.86rem; }
+.offer-section-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0; font-size: 0.9rem; }
+.offer-section .full-text { max-height: none; overflow: hidden; padding-right: 0; transition: max-height 0.3s ease; }
+.offer-section .full-text.folded { max-height: calc(6 * 1.65em); mask-image: linear-gradient(to bottom, #000 60%, transparent); }
+.read-more { justify-self: start; }
+@media (prefers-reduced-motion: reduce) { .offer-section .full-text { transition: none; } }

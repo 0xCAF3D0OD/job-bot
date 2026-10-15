@@ -69,20 +69,51 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
 });
 
 describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
-  it("Préparer et Postuler, l'entreprise repliée, chercher chez l'employeur dans ⋯", async () => {
+  it("deux boutons, le reste dans ⋯, sans doublon de l'annonce d'origine (docs/45)", async () => {
     const wrapper = await mountDetail(offer());
-    expect(wrapper.find("[data-test=prepare]").exists()).toBe(true);
+    const triage = wrapper.find("[data-test=triage]");
+    expect(triage.findAll("a")).toHaveLength(2);
     expect(wrapper.find("[data-test=apply]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
     expect(wrapper.find("[data-test=apply]").text()).toContain("Postuler sur Indeed");
-    // L'entreprise est dans le panneau latéral, fermé tant qu'on ne l'ouvre pas (docs/32 §2.2).
-    const panel = () => wrapper.find("[data-test=company-section]").element.closest("[data-test=side-panel]") as HTMLElement;
-    expect(panel().style.display).toBe("none");
-    await wrapper.find("[data-test=open-company]").trigger("click");
-    await flushPromises();
-    expect(panel().style.display).toBe("");
-    expect(wrapper.find("[data-test=address]").exists()).toBe(true);
+    // « Voir sur Indeed » serait le même lien que « Postuler sur Indeed » : il n'apparaît pas.
+    expect(wrapper.text()).not.toContain("Voir sur Indeed");
+    expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
     await wrapper.find("[data-test=more]").trigger("click");
-    expect(wrapper.find("[data-test=menu-find-employer]").exists()).toBe(true);
+    for (const key of ["mark-applied", "later", "ignore", "flag-expired", "menu-find-employer"]) {
+      expect(wrapper.find(`[data-test=${key}]`).exists()).toBe(true);
+    }
+  });
+
+  it("sections Pour toi, À savoir, Entreprise, Annonce, dans cet ordre", async () => {
+    const wrapper = await mountDetail(
+      offer({
+        employer_url: "https://exemple.ch/jobs/2",
+        employer_status: "found",
+        score: 88,
+        score_stale: true,
+        summary_role: "Architecte cloud",
+        summary_asks: "AWS",
+        summary_offers: "80-100 %",
+        rate_min: 80,
+        rate_max: 100,
+        doubts: [{ kind: "permanent", text: "Annonce permanente : vue depuis 38 jours", excerpt: null }],
+        filter_reasons: ["Type : stage"],
+        description: "Missions. ".repeat(60),
+      }),
+    );
+    const titles = wrapper.findAll(".offer-section h3").map((h) => h.text());
+    expect(titles).toEqual(["Pour toi", "À savoir", "Entreprise", "Annonce"]);
+    expect(wrapper.find("[data-test=score-note]").text()).toBe("Ton profil a changé depuis : note à refaire.");
+    const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark").text());
+    expect(marks).toEqual(["✓", "✓", "!", "✗"]);
+    expect(wrapper.find("[data-test=facts]").text()).toContain("80–100 %");
+    // L'annonce chez l'employeur est le bouton : celle d'Indeed reste en lien, en bas.
+    expect(wrapper.find("[data-test=section-ad]").text()).toContain("Voir sur Indeed");
+    expect(wrapper.find("[data-test=company-section] [data-test=address]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=description]").classes()).toContain("folded");
+    await wrapper.find("[data-test=read-more]").trigger("click");
+    expect(wrapper.find("[data-test=description]").classes()).not.toContain("folded");
+    expect(wrapper.find("[data-test=read-more]").exists()).toBe(false);
   });
 
   it("annonce trouvée chez l'employeur : « Postuler chez l'employeur »", async () => {

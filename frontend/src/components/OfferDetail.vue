@@ -19,16 +19,25 @@ function sources(ids: number[]): string {
     .filter(Boolean)
     .join(", ");
 }
-// Entreprise et contacts dans le panneau latéral (docs/32 §2.2) : la fiche ne s'allonge plus.
-const companyOpen = ref(false);
+// Les contacts dans le panneau latéral (docs/32 §2.2) ; l'entreprise a sa section (docs/45).
 const contactsOpen = ref(false);
 const contactsCount = ref(0);
+// L'annonce repliée à 6 lignes (docs/45) : « Lire toute l'annonce » la déplie.
+const LONG_TEXT = 420;
+const textOpen = ref(false);
+const textEl = ref<HTMLElement | null>(null);
+const textHeight = ref<string | undefined>(undefined);
+function openText(): void {
+  textHeight.value = textEl.value ? `${textEl.value.scrollHeight}px` : undefined;
+  textOpen.value = true;
+}
 watch(
   () => props.offer.id,
   () => {
-    companyOpen.value = false;
     contactsOpen.value = false;
     contactsCount.value = 0;
+    textOpen.value = false;
+    textHeight.value = undefined;
   },
 );
 const emit = defineEmits<{
@@ -147,6 +156,30 @@ const statusLabel = computed(() =>
 const pillClass = computed(() =>
   props.offer.expired_at && props.offer.status !== "applied" ? "expired" : props.offer.status,
 );
+// « À savoir » (docs/45) : une ligne par fait, ✓ sûr, ! à vérifier, ✗ raison d'un écart.
+type Fact = { mark: "ok" | "check" | "no"; text: string; excerpt?: string; scam?: boolean };
+const MARKS: Record<Fact["mark"], string> = { ok: "✓", check: "!", no: "✗" };
+const facts = computed<Fact[]>(() => {
+  const o = props.offer;
+  const terms = [rateText(o.rate_min, o.rate_max) || "taux non indiqué", remoteText(o), o.employment_type]
+    .filter(Boolean)
+    .join(" · ");
+  const list: Fact[] = [
+    { mark: "ok", text: terms.charAt(0).toUpperCase() + terms.slice(1) },
+    { mark: "ok", text: `Vue ${o.seen_count} fois, depuis le ${formatDate(o.first_seen_at)}` },
+  ];
+  if (o.remote_from_switzerland === false) list.push({ mark: "check", text: "Télétravail pas ouvert depuis la Suisse" });
+  for (const doubt of o.doubts ?? []) {
+    list.push({ mark: "check", text: doubt.text, excerpt: doubt.excerpt ?? undefined, scam: doubt.kind === "scam" });
+  }
+  for (const reason of o.filter_reasons ?? []) list.push({ mark: "no", text: reason });
+  if (o.enrich_status === "expired") list.push({ mark: "no", text: "L'annonce n'est plus en ligne sur jobup." });
+  return list;
+});
+// Les annonces d'origine qui ne sont pas déjà le bouton « Postuler » (docs/45 : pas de doublon).
+const otherLinks = computed(() =>
+  props.offer.links.filter((link) => props.offer.status === "applied" || link.url !== postLink.value?.url),
+);
 const ADDRESS_SOURCE: Record<string, string> = {
   page: "annonce",
   registry: "registre IDE",
@@ -164,6 +197,17 @@ function askAssistant(): void {
   assistant.askAbout({ offerId: o.id, label: `offre ${o.title}${o.company ? ` chez ${o.company}` : ""}` });
 }
 
+const scoreNote = computed(() => {
+  const o = props.offer;
+  return [
+    o.summary_partial && "Sur l'extrait de l'alerte seulement.",
+    o.score_stale && "Ton profil a changé depuis : note à refaire.",
+    o.score === null && "Pas de note : aucun bloc de profil actif.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+});
+const showMenu = computed(() => props.offer.status !== "applied" || assistant.available.value);
 function act(action: () => void): void {
   menuOpen.value = false;
   action();
@@ -195,6 +239,7 @@ watch(
 );
 </script>
 
+
 <template>
   <article
     class="detail-panel"
@@ -206,23 +251,15 @@ watch(
         large
       />
       <div class="detail-top-actions">
-        <button
-          v-if="assistant.available.value"
-          type="button"
-          class="link detail-ask"
-          data-test="ask-assistant"
-          @click="askAssistant"
-        >
-          Demander à l'assistant
-        </button>
+        <!-- Tout sauf les deux actions principales, dans « ⋯ » (docs/45). -->
         <div
-          v-if="offer.status !== 'applied'"
+          v-if="showMenu"
           ref="menuRoot"
           class="more-menu"
         >
           <button
             type="button"
-            class="close"
+            class="more-button"
             aria-label="Plus d'actions"
             :aria-expanded="menuOpen"
             data-test="more"
@@ -235,66 +272,88 @@ watch(
             class="menu"
             role="menu"
           >
-            <li v-if="offer.status === 'later' || offer.status === 'ignored' || offer.status === 'preparing'">
+            <li v-if="offer.status !== 'applied'">
               <button
                 type="button"
                 role="menuitem"
-                data-test="back-to-review"
-                @click="act(() => emit('status', 'to_review'))"
+                data-test="mark-applied"
+                @click="act(() => emit('applied'))"
               >
-                Remettre à examiner
+                J'ai postulé
               </button>
             </li>
-            <template v-else>
-              <li>
+            <template v-if="offer.status !== 'applied'">
+              <li v-if="offer.status === 'later' || offer.status === 'ignored' || offer.status === 'preparing'">
                 <button
                   type="button"
                   role="menuitem"
-                  data-test="later"
-                  @click="act(() => emit('status', 'later'))"
+                  data-test="back-to-review"
+                  @click="act(() => emit('status', 'to_review'))"
                 >
-                  Plus tard
+                  Remettre à examiner
                 </button>
               </li>
+              <template v-else>
+                <li>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    data-test="later"
+                    @click="act(() => emit('status', 'later'))"
+                  >
+                    Plus tard
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    data-test="ignore"
+                    @click="act(() => emit('status', 'ignored'))"
+                  >
+                    Ignorer
+                  </button>
+                </li>
+              </template>
               <li>
+                <button
+                  v-if="offer.expired_at"
+                  type="button"
+                  role="menuitem"
+                  data-test="not-expired"
+                  @click="act(() => emit('expiry', false))"
+                >
+                  Pas expirée
+                </button>
+                <button
+                  v-else
+                  type="button"
+                  role="menuitem"
+                  data-test="flag-expired"
+                  @click="act(() => emit('expiry', true))"
+                >
+                  Signaler comme expirée
+                </button>
+              </li>
+              <li v-if="!employerKnown && !offer.employer_url && offer.employer_status !== 'agency'">
                 <button
                   type="button"
                   role="menuitem"
-                  data-test="ignore"
-                  @click="act(() => emit('status', 'ignored'))"
+                  data-test="menu-find-employer"
+                  @click="act(findEmployer)"
                 >
-                  Ignorer
+                  Chercher chez l'employeur
                 </button>
               </li>
             </template>
-            <li>
-              <button
-                v-if="offer.expired_at"
-                type="button"
-                role="menuitem"
-                data-test="not-expired"
-                @click="act(() => emit('expiry', false))"
-              >
-                Pas expirée
-              </button>
-              <button
-                v-else
-                type="button"
-                role="menuitem"
-                data-test="flag-expired"
-                @click="act(() => emit('expiry', true))"
-              >
-                Signaler comme expirée
-              </button>
-            </li>
-            <li v-if="!employerKnown && !offer.employer_url && offer.employer_status !== 'agency'">
+            <li v-if="assistant.available.value">
               <button
                 type="button"
                 role="menuitem"
-                data-test="menu-find-employer"
-                @click="act(findEmployer)"
+                data-test="ask-assistant"
+                @click="act(askAssistant)"
               >
-                Chercher l'offre chez l'employeur
+                Demander à l'assistant
               </button>
             </li>
           </ul>
@@ -319,7 +378,7 @@ watch(
     </div>
     <div>
       <h2>{{ offer.title }}</h2>
-      <span class="detail">{{ offer.company ?? "Entreprise non indiquée" }}</span>
+      <span class="detail">{{ [offer.company ?? "Entreprise non indiquée", offer.location].filter(Boolean).join(" · ") }}</span>
       <div class="status-line">
         <span
           v-if="statusLabel"
@@ -343,8 +402,7 @@ watch(
       {{ expiredText(offer) }}
     </p>
 
-
-    <!-- L'essentiel d'abord (docs/21 §5) : préparer, postuler ; l'annonce d'origine en lien discret. -->
+    <!-- Deux boutons seulement (docs/45) : préparer, postuler. -->
     <div
       v-if="offer.status !== 'applied'"
       class="triage mobile-dock"
@@ -366,255 +424,264 @@ watch(
         :data-test="offer.employer_url ? 'employer' : 'apply'"
       >{{ postLink.label }} <AppIcon name="chevron" /></a>
     </div>
-    <p class="offer-links">
-      <button
-        v-if="offer.status !== 'applied'"
-        type="button"
-        class="link"
-        data-test="mark-applied"
-        @click="emit('applied')"
-      >
-        J'ai postulé : marquer comme envoyée
-      </button>
-      <a
-        v-for="link in offer.links"
-        :key="link.source"
-        :href="link.url"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="link"
-      >Voir sur {{ sourceLabel[link.source] }}</a>
-      <button
-        type="button"
-        class="link"
-        :aria-expanded="companyOpen"
-        data-test="open-company"
-        @click="companyOpen = true"
-      >
-        Entreprise
-      </button>
-      <button
-        v-if="offer.company"
-        type="button"
-        class="link"
-        :aria-expanded="contactsOpen"
-        data-test="open-contacts"
-        @click="contactsOpen = true"
-      >
-        Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }}
-      </button>
-    </p>
+
     <section
-      v-if="offer.summary_role"
-      class="ai-block"
-      data-test="ai"
+      v-if="offer.summary_role || offer.score_error"
+      class="offer-section"
+      data-test="section-for-you"
     >
-      <div class="ai-head">
-        <span
-          v-if="offer.score !== null && offer.score !== undefined"
-          :class="['score', 'big', scoreLevel(offer.score)]"
-        >{{ offer.score }}<small>/100</small></span>
-        <span
-          v-if="offer.summary_partial || offer.score_stale || offer.score === null"
-          class="detail"
-        >
-          <template v-if="offer.summary_partial">Sur l'extrait de l'alerte seulement.</template>
-          <template v-if="offer.score_stale">Ton profil a changé depuis : note à refaire.</template>
-          <template v-if="offer.score === null">Pas de note : aucun bloc de profil actif.</template>
-        </span>
-        <HelpTip
-          label="Aide : résumé et note"
-          text="Résumé et note par l'IA : elle compare l'annonce à tes blocs de profil actifs. Les points forts citent le bloc d'où ils viennent."
-        />
-      </div>
-      <dl class="summary">
-        <div><dt>Poste</dt><dd>{{ offer.summary_role }}</dd></div>
-        <div><dt>Demande</dt><dd>{{ offer.summary_asks }}</dd></div>
-        <div><dt>Offre</dt><dd>{{ offer.summary_offers }}</dd></div>
-      </dl>
-      <div
-        v-if="offer.strengths?.length || offer.gaps?.length"
-        class="points"
-      >
-        <div v-if="offer.strengths?.length">
-          <h3>Points forts</h3>
-          <ul data-test="strengths">
-            <li
-              v-for="point in offer.strengths"
-              :key="point.text"
-            >
-              {{ point.text }}
-              <span
-                v-if="sources(point.chunk_ids)"
-                class="detail"
-              >Bloc : {{ sources(point.chunk_ids) }}</span>
-            </li>
-          </ul>
-        </div>
-        <div v-if="offer.gaps?.length">
-          <h3>Manques</h3>
-          <ul
-            class="gaps"
-            data-test="gaps"
-          >
-            <li
-              v-for="point in offer.gaps"
-              :key="point.text"
-            >
-              {{ point.text }}
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-    <p
-      v-else-if="offer.score_error"
-      class="badge reason"
-    >
-      Note impossible : {{ offer.score_error }}
-    </p>
-    <SidePanel
-      :open="companyOpen"
-      :title="offer.company ?? 'Entreprise'"
-      help="L'adresse sert au formulaire ORP ; l'annonce chez l'employeur évite de passer par un site d'emploi."
-      @close="companyOpen = false"
-    >
-      <div
-        class="company-section"
-        data-test="company-section"
-      >
+      <h3>Pour toi</h3>
+      <template v-if="offer.summary_role">
         <div
-          class="address-line"
-          data-test="address"
+          class="ai-head"
+          data-test="ai"
         >
-          <template v-if="!editingAddress">
-            <span class="muted">Adresse :</span>
-            <span v-if="offer.company_address">
-              {{ offer.company_address.split("\n").join(", ") }}
-              <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
-              <a
-                v-if="offer.company_address_source === 'web' && offer.company_address_url"
-                :href="offer.company_address_url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="hint"
-                data-test="address-source"
-              > (vérifier la source)</a>
-            </span>
-            <span
-              v-else
-              class="hint"
-            >inconnue</span>
-            <button
-              type="button"
-              class="link"
-              data-test="edit-address"
-              @click="startAddress"
-            >
-              {{ offer.company_address ? "Modifier" : "Ajouter" }}
-            </button>
-            <button
-              v-if="offer.company && offer.company_address_source !== 'manual' && offer.company_address_source !== 'page'"
-              type="button"
-              class="link"
-              :disabled="searching"
-              data-test="search-registry"
-              @click="searchRegistry"
-            >
-              {{ searching ? "Recherche…" : "Chercher l'adresse" }}
-            </button>
-          </template>
-          <div
-            v-if="registryMessage || proposals.length"
-            class="registry-proposals"
-            data-test="registry"
-          >
-            <p
-              v-if="registryMessage"
-              class="hint"
-            >
-              {{ registryMessage }}
-            </p>
-            <ul v-if="proposals.length">
+          <span
+            v-if="offer.score !== null && offer.score !== undefined"
+            :class="['score', 'big', scoreLevel(offer.score)]"
+          >{{ offer.score }}<small>/100</small></span>
+          <dl class="summary">
+            <div><dt>Poste</dt><dd>{{ offer.summary_role }}</dd></div>
+            <div><dt>Demande</dt><dd>{{ offer.summary_asks }}</dd></div>
+            <div><dt>Offre</dt><dd>{{ offer.summary_offers }}</dd></div>
+          </dl>
+          <HelpTip
+            label="Aide : résumé et note"
+            text="Résumé et note par l'IA : elle compare l'annonce à tes blocs de profil actifs. Les points forts citent le bloc d'où ils viennent."
+          />
+        </div>
+        <p
+          v-if="scoreNote"
+          class="hint score-note"
+          data-test="score-note"
+        >
+          {{ scoreNote }}
+        </p>
+        <div
+          v-if="offer.strengths?.length || offer.gaps?.length"
+          class="points"
+        >
+          <div v-if="offer.strengths?.length">
+            <h4>Points forts</h4>
+            <ul data-test="strengths">
               <li
-                v-for="proposal in proposals"
-                :key="proposal.uid"
+                v-for="point in offer.strengths"
+                :key="point.text"
               >
-                <span>
-                  <strong>{{ proposal.name }}</strong><br>
-                  <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
-                </span>
-                <button
-                  type="button"
-                  class="secondary small"
-                  data-test="choose-registry"
-                  @click="chooseRegistry(proposal.uid)"
-                >
-                  Choisir
-                </button>
+                {{ point.text }}
+                <span
+                  v-if="sources(point.chunk_ids)"
+                  class="detail"
+                >Bloc : {{ sources(point.chunk_ids) }}</span>
               </li>
             </ul>
           </div>
-          <form
-            v-if="editingAddress"
-            class="address-form"
-            @submit.prevent="saveAddress"
-          >
-            <textarea
-              v-model="addressDraft"
-              rows="2"
-              placeholder="Rue et numéro&#10;NPA localité"
-              aria-label="Adresse de l'entreprise"
-              data-test="address-input"
-            />
-            <div>
-              <button
-                type="submit"
-                class="secondary small"
-                data-test="save-address"
+          <div v-if="offer.gaps?.length">
+            <h4>Manques</h4>
+            <ul
+              class="gaps"
+              data-test="gaps"
+            >
+              <li
+                v-for="point in offer.gaps"
+                :key="point.text"
               >
-                Enregistrer
-              </button>
-              <button
-                type="button"
-                class="link"
-                @click="editingAddress = false"
-              >
-                Annuler
-              </button>
-            </div>
-          </form>
+                {{ point.text }}
+              </li>
+            </ul>
+          </div>
         </div>
-        <p
-          v-if="!employerKnown"
-          class="hint employer-line"
-          data-test="employer-line"
+      </template>
+      <p
+        v-else
+        class="hint"
+      >
+        Note impossible : {{ offer.score_error }}
+      </p>
+    </section>
+
+    <section
+      class="offer-section"
+      data-test="section-facts"
+    >
+      <h3>À savoir</h3>
+      <ul
+        class="offer-facts"
+        data-test="facts"
+      >
+        <li
+          v-for="fact in facts"
+          :key="fact.mark + fact.text"
+          :class="[fact.mark, { scam: fact.scam }]"
         >
           <span
-            v-if="offer.employer_url && offer.employer_checked_at"
-          >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
-            {{ shortDate.format(new Date(offer.employer_checked_at)) }}.</span>
-          <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
-          <template v-else>
-            <span v-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
-            <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
+            class="fact-mark"
+            aria-hidden="true"
+          >{{ MARKS[fact.mark] }}</span>
+          <span>
+            {{ fact.text }}
+            <q v-if="fact.excerpt">{{ fact.excerpt }}</q>
+          </span>
+        </li>
+      </ul>
+    </section>
+
+    <section
+      class="offer-section"
+      data-test="company-section"
+    >
+      <div class="offer-section-head">
+        <h3>Entreprise</h3>
+        <HelpTip
+          label="Aide : entreprise"
+          text="L'adresse sert au formulaire ORP ; l'annonce chez l'employeur évite de passer par un site d'emploi."
+        />
+      </div>
+      <div
+        class="address-line"
+        data-test="address"
+      >
+        <template v-if="!editingAddress">
+          <span class="muted">Adresse :</span>
+          <span v-if="offer.company_address">
+            {{ offer.company_address.split("\n").join(", ") }}
+            <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
+            <a
+              v-if="offer.company_address_source === 'web' && offer.company_address_url"
+              :href="offer.company_address_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="hint"
+              data-test="address-source"
+            > (vérifier la source)</a>
+          </span>
+          <span
+            v-else
+            class="hint"
+          >inconnue</span>
+          <button
+            type="button"
+            class="link"
+            data-test="edit-address"
+            @click="startAddress"
+          >
+            {{ offer.company_address ? "Modifier" : "Ajouter" }}
+          </button>
+          <button
+            v-if="offer.company && offer.company_address_source !== 'manual' && offer.company_address_source !== 'page'"
+            type="button"
+            class="link"
+            :disabled="searching"
+            data-test="search-registry"
+            @click="searchRegistry"
+          >
+            {{ searching ? "Recherche…" : "Chercher l'adresse" }}
+          </button>
+        </template>
+        <div
+          v-if="registryMessage || proposals.length"
+          class="registry-proposals"
+          data-test="registry"
+        >
+          <p
+            v-if="registryMessage"
+            class="hint"
+          >
+            {{ registryMessage }}
+          </p>
+          <ul v-if="proposals.length">
+            <li
+              v-for="proposal in proposals"
+              :key="proposal.uid"
+            >
+              <span>
+                <strong>{{ proposal.name }}</strong><br>
+                <span class="muted">{{ proposal.address.split("\n").join(", ") }}</span>
+              </span>
+              <button
+                type="button"
+                class="secondary small"
+                data-test="choose-registry"
+                @click="chooseRegistry(proposal.uid)"
+              >
+                Choisir
+              </button>
+            </li>
+          </ul>
+        </div>
+        <form
+          v-if="editingAddress"
+          class="address-form"
+          @submit.prevent="saveAddress"
+        >
+          <textarea
+            v-model="addressDraft"
+            rows="2"
+            placeholder="Rue et numéro&#10;NPA localité"
+            aria-label="Adresse de l'entreprise"
+            data-test="address-input"
+          />
+          <div>
+            <button
+              type="submit"
+              class="secondary small"
+              data-test="save-address"
+            >
+              Enregistrer
+            </button>
             <button
               type="button"
               class="link"
-              :disabled="employerBusy"
-              data-test="find-employer"
-              @click="findEmployer"
+              @click="editingAddress = false"
             >
-              {{ employerBusy ? "Recherche en cours (jusqu'à 30 s)…" : offer.employer_checked_at ? "Chercher à nouveau" : "Chercher l'offre chez l'employeur" }}
+              Annuler
             </button>
-          </template>
-          <span
-            v-if="employerMessage"
-            role="status"
-          >{{ employerMessage }}</span>
-        </p>
+          </div>
+        </form>
       </div>
-    </SidePanel>
+      <p
+        v-if="!employerKnown"
+        class="hint employer-line"
+        data-test="employer-line"
+      >
+        <span
+          v-if="offer.employer_url && offer.employer_checked_at"
+        >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
+          {{ shortDate.format(new Date(offer.employer_checked_at)) }}.</span>
+        <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
+        <template v-else>
+          <span v-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
+          <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
+          <button
+            type="button"
+            class="link"
+            :disabled="employerBusy"
+            data-test="find-employer"
+            @click="findEmployer"
+          >
+            {{ employerBusy ? "Recherche en cours (jusqu'à 30 s)…" : offer.employer_checked_at ? "Chercher à nouveau" : "Chercher l'offre chez l'employeur" }}
+          </button>
+        </template>
+        <span
+          v-if="employerMessage"
+          role="status"
+        >{{ employerMessage }}</span>
+      </p>
+      <p
+        v-if="offer.company"
+        class="offer-section-links"
+      >
+        <button
+          type="button"
+          class="link"
+          :aria-expanded="contactsOpen"
+          data-test="open-contacts"
+          @click="contactsOpen = true"
+        >
+          Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }} ›
+        </button>
+      </p>
+    </section>
     <SidePanel
       v-if="offer.company"
       :open="contactsOpen"
@@ -628,83 +695,56 @@ watch(
         @count="contactsCount = $event"
       />
     </SidePanel>
-    <ul
-      v-if="offer.filter_reasons?.length"
-      class="reasons"
-      data-test="reasons"
+
+    <section
+      class="offer-section"
+      data-test="section-ad"
     >
-      <li
-        v-for="reason in offer.filter_reasons"
-        :key="reason"
-      >
-        {{ reason }}
-      </li>
-    </ul>
-    <p
-      v-if="offer.enrich_status === 'expired'"
-      class="badge reason"
-    >
-      L'annonce n'est plus en ligne sur jobup.
-    </p>
-    <div
-      v-if="offer.doubts?.length"
-      class="doubts"
-      data-test="doubts"
-    >
-      <strong>À vérifier</strong>
-      <ul>
-        <li
-          v-for="doubt in offer.doubts"
-          :key="doubt.text"
-          :class="doubt.kind"
+      <h3>Annonce</h3>
+      <template v-if="offer.description">
+        <div
+          ref="textEl"
+          :class="['full-text', { folded: !textOpen && offer.description.length > LONG_TEXT }]"
+          :style="textOpen && textHeight ? { maxHeight: textHeight } : undefined"
+          data-test="description"
         >
-          {{ doubt.text }}
-          <q v-if="doubt.excerpt">{{ doubt.excerpt }}</q>
-        </li>
-      </ul>
-    </div>
-    <ul class="checks">
-      <li>
-        <AppIcon name="check" /><strong>Lieu.</strong>
-        <span>{{ offer.location ?? "non indiqué" }}</span>
-      </li>
-      <li>
-        <AppIcon name="check" /><strong>Taux.</strong>
-        <span>{{ rateText(offer.rate_min, offer.rate_max) || "non indiqué" }}</span>
-      </li>
-      <li v-if="remoteText(offer)">
-        <AppIcon name="check" /><strong>Télétravail.</strong>
-        <span>
-          {{ remoteText(offer) }}{{ offer.remote_from_switzerland === false ? " : pas ouvert depuis la Suisse" : "" }}
-        </span>
-      </li>
-      <li v-if="offer.employment_type">
-        <AppIcon name="check" /><strong>Type.</strong>
-        <span>{{ offer.employment_type }}</span>
-      </li>
-      <li>
-        <AppIcon name="check" /><strong>Vue.</strong>
-        <span>{{ offer.seen_count }} fois, depuis le {{ formatDate(offer.first_seen_at) }}</span>
-      </li>
-    </ul>
-    <div
-      v-if="offer.description"
-      class="full-text"
-      data-test="description"
-    >
-      {{ offer.description }}
-    </div>
-    <p
-      v-else-if="offer.snippet"
-      class="detail-snippet"
-    >
-      {{ offer.snippet }}
-    </p>
-    <p
-      v-else
-      class="detail-snippet"
-    >
-      Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site.
-    </p>
+          {{ offer.description }}
+        </div>
+        <button
+          v-if="!textOpen && offer.description.length > LONG_TEXT"
+          type="button"
+          class="link read-more"
+          data-test="read-more"
+          @click="openText"
+        >
+          Lire toute l'annonce ⌄
+        </button>
+      </template>
+      <p
+        v-else-if="offer.snippet"
+        class="detail-snippet"
+      >
+        {{ offer.snippet }}
+      </p>
+      <p
+        v-else
+        class="detail-snippet"
+      >
+        Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site.
+      </p>
+      <p
+        v-if="otherLinks.length"
+        class="offer-section-links"
+      >
+        <a
+          v-for="link in otherLinks"
+          :key="link.source"
+          :href="link.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link"
+        >Voir sur {{ sourceLabel[link.source] }} ›</a>
+      </p>
+    </section>
   </article>
 </template>
