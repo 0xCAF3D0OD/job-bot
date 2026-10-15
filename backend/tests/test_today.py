@@ -107,3 +107,42 @@ async def test_checklist_and_day(rt: Runtime) -> None:
 
         assert (await api.put("/api/onboarding", json={"dismissed": True})).status_code == 204
         assert (await api.get("/api/today")).json()["checklist_dismissed"] is True
+
+
+async def test_week_and_orp_history(rt: Runtime) -> None:
+    """Tableau de bord (docs/54 §5) : 7 jours d'activité, les 3 mois précédents."""
+    today = datetime.now(UTC).astimezone(LOCAL_TZ).date()
+    now = datetime.now(UTC)
+    async with rt.sessionmaker.begin() as session:
+        session.add_all(
+            [
+                Offer(fingerprint="w1", title="A", first_seen_at=now, last_seen_at=now),
+                Offer(fingerprint="w2", title="B", first_seen_at=now, last_seen_at=now),
+                # Trop ancienne pour la semaine.
+                Offer(
+                    fingerprint="w3",
+                    title="C",
+                    first_seen_at=now - timedelta(days=8),
+                    last_seen_at=now,
+                ),
+            ]
+        )
+    two_ago = shift_month(f"{today:%Y-%m}", -2)
+    year, month = (int(x) for x in two_ago.split("-"))
+    async with await client(rt) as api:
+        for sent_at in (today, today - timedelta(days=3), date(year, month, 10)):
+            await api.post(
+                "/api/applications",
+                json={"sent_at": sent_at.isoformat(), "company": "Acme SA", "job_title": "SRE"},
+            )
+        day = (await api.get("/api/today")).json()
+    week = day["week"]
+    assert [w["day"] for w in week] == [
+        (today - timedelta(days=6 - i)).isoformat() for i in range(7)
+    ]
+    assert week[-1] == {"day": today.isoformat(), "offers": 2, "applications": 1}
+    assert week[3]["applications"] == 1
+    assert sum(w["offers"] for w in week) == 2
+    history = {h["month"]: h["count"] for h in day["orp_history"]}
+    assert list(history) == [shift_month(f"{today:%Y-%m}", d) for d in (-3, -2, -1)]
+    assert history[two_ago] == 1

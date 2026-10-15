@@ -42,6 +42,20 @@ function today(extra: Record<string, unknown> = {}) {
     orp_due_month: "2026-09",
     orp_due_date: "2026-10-05",
     last_collect_at: null,
+    week: [
+      { day: "2026-10-09", offers: 3, applications: 0 },
+      { day: "2026-10-10", offers: 0, applications: 1 },
+      { day: "2026-10-11", offers: 0, applications: 0 },
+      { day: "2026-10-12", offers: 2, applications: 0 },
+      { day: "2026-10-13", offers: 4, applications: 1 },
+      { day: "2026-10-14", offers: 1, applications: 0 },
+      { day: "2026-10-15", offers: 5, applications: 1 },
+    ],
+    orp_history: [
+      { month: "2026-07", count: 22 },
+      { month: "2026-08", count: 12 },
+      { month: "2026-09", count: 20 },
+    ],
     ...extra,
   };
 }
@@ -52,7 +66,7 @@ function mockGet(day: unknown): void {
       data:
         path === "/api/today"
           ? day
-          : { items: [{ id: 1, title: "Ingénieur DevOps", company: "Acme SA", location: "Lausanne", score: 82 }] },
+          : { items: [{ id: 1, title: "Ingénieur DevOps", company: "Acme SA", location: "Lausanne", score: 82, first_seen_at: "2026-10-14T08:00:00Z", links: [] }] },
     }),
   );
 }
@@ -183,7 +197,7 @@ describe("Aujourd'hui, revue des pages (docs/43)", () => {
     expect(wrapper.find("[data-test=orp-urgent]").text()).toContain("à remettre dans 2 jours");
     expect(wrapper.find("[data-test=stat-orp]").classes()).toContain("warn");
     expect(wrapper.find("[data-test=stat-follow-up]").classes()).not.toContain("warn");
-    expect(wrapper.find("[data-test=stat-follow-up]").text()).toContain("à relancer · 1 contact");
+    expect(wrapper.find("[data-test=stat-follow-up]").text()).toContain("dont 1 contact");
     expect(wrapper.find("[data-test=contacts-to-follow-up]").exists()).toBe(false);
   });
 
@@ -205,5 +219,36 @@ describe("Aujourd'hui, revue des pages (docs/43)", () => {
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=today-news]").exists()).toBe(false);
     expect(wrapper.text()).not.toContain("Comprendre le marché");
+  });
+
+  it("tableau de bord : tuiles avec la semaine, barres, jauge ORP et mois précédents (docs/54)", async () => {
+    mockGet(today());
+    const wrapper = await mountView();
+    const review = wrapper.find("[data-test=stat-review]");
+    expect(review.classes()).toContain("accent");
+    expect(review.text()).toContain("+15 cette semaine");
+    expect(review.find(".sparkline").exists()).toBe(true);
+    expect(wrapper.find("[data-test=stat-month]").text()).toContain("+3 cette semaine");
+
+    const chart = wrapper.find("[data-test=week-chart]");
+    expect(chart.findAll("[data-test=week-bar]")).toHaveLength(7);
+    expect(chart.text()).toContain("15 offres sur 7 jours");
+    await chart.find("[data-test=week-applications]").trigger("click");
+    expect(chart.text()).toContain("3 candidatures sur 7 jours");
+    await chart.findAll("li")[6]!.trigger("focus");
+    expect(chart.find(".week-tip").text()).toContain("1 candidature");
+
+    const gauge = wrapper.find("[data-test=orp-gauge]");
+    expect(gauge.find("[data-test=gauge-count]").text()).toBe("3");
+    expect(gauge.text()).toContain("sur 20");
+    expect(gauge.findAll(".gauge-history li").map((li) => li.classes())).toEqual([["ok"], ["short"], ["ok"]]);
+
+    // Le tableau : les mieux notées d'abord, les commencées dans le second onglet.
+    const table = wrapper.find("[data-test=best]");
+    expect(table.text()).toContain("Ingénieur DevOps");
+    const shown = () => (table.find("[data-test=preparing]").element as HTMLElement).style.display !== "none";
+    expect(shown()).toBe(false);
+    await table.find("[data-test=tab-preparing]").trigger("click");
+    expect(shown()).toBe(true);
   });
 });

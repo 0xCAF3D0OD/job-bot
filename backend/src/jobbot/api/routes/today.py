@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request, status
 from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.alerts import service as alert_service
 from jobbot.contacts import service as contact_service
@@ -68,6 +69,21 @@ class UpcomingInterview(BaseModel):
     at: datetime
 
 
+class DayActivity(BaseModel):
+    """Un jour de la semaine en tableau de bord (docs/54 §5)."""
+
+    day: date
+    offers: int
+    applications: int
+
+
+class MonthResult(BaseModel):
+    """Un mois passé, pour la jauge de l'objectif ORP (docs/54 §5)."""
+
+    month: str
+    count: int
+
+
 class TodayOut(BaseModel):
     # Démarrage : affiché tant qu'une étape manque, sauf si Kevin l'a masqué.
     checklist: list[ChecklistItem]
@@ -91,6 +107,9 @@ class TodayOut(BaseModel):
     contacts_to_follow_up: int = 0
     interviews_to_review: list[InterviewToReview] = []
     upcoming_interviews: list[UpcomingInterview] = []
+    # Les 7 derniers jours (le plus ancien d'abord) et les 3 mois précédents (docs/54).
+    week: list[DayActivity] = []
+    orp_history: list[MonthResult] = []
 
 
 class OnboardingIn(BaseModel):
@@ -100,6 +119,37 @@ class OnboardingIn(BaseModel):
 def _runtime(request: Request) -> Runtime:
     runtime: Runtime = request.app.state.runtime
     return runtime
+
+
+async def _week(session: AsyncSession, today: date) -> list[DayActivity]:
+    """Offres reçues (première fois vues, doublons exclus) et candidatures envoyées, par jour,
+    sur les 7 derniers jours (heure suisse)."""
+    first = today - timedelta(days=6)
+    start = datetime.combine(first, datetime.min.time(), LOCAL_TZ)
+    seen_day = func.date(func.timezone("Europe/Zurich", Offer.first_seen_at))
+    offers: dict[date, int] = dict(
+        (
+            await session.execute(
+                select(seen_day, func.count())
+                .where(Offer.first_seen_at >= start, Offer.duplicate_of.is_(None))
+                .group_by(seen_day)
+            )
+        ).all()
+    )
+    sent: dict[date, int] = dict(
+        (
+            await session.execute(
+                select(Application.sent_at, func.count())
+                .where(Application.sent_at >= first, Application.sent_at <= today)
+                .group_by(Application.sent_at)
+            )
+        ).all()
+    )
+    days = [first + timedelta(days=i) for i in range(7)]
+    return [
+        DayActivity(day=d, offers=int(offers.get(d, 0)), applications=int(sent.get(d, 0)))
+        for d in days
+    ]
 
 
 @router.get("/today", operation_id="getToday")
@@ -259,6 +309,17 @@ async def get_today(request: Request) -> TodayOut:
             )
         )
 
+        week = await _week(session, today)
+        orp_history = [
+            MonthResult(
+                month=m,
+                count=await count(
+                    select(func.count()).select_from(Application).where(Application.orp_month == m)
+                ),
+            )
+            for m in (shift_month(month, -3), shift_month(month, -2), previous)
+        ]
+
     target = values.get("orp_monthly_target")
     checklist = [
         ChecklistItem(key="criteria", done=criteria > 0),
@@ -290,6 +351,8 @@ async def get_today(request: Request) -> TodayOut:
         contacts_to_follow_up=contacts_to_follow_up,
         interviews_to_review=interviews_to_review,
         upcoming_interviews=upcoming_interviews,
+        week=week,
+        orp_history=orp_history,
     )
 
 
