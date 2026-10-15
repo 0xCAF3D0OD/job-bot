@@ -8707,6 +8707,31 @@
         ],
         "title": "DatabaseStatus"
       },
+      "DayActivity": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "offers": {
+            "type": "integer",
+            "title": "Offers"
+          },
+          "applications": {
+            "type": "integer",
+            "title": "Applications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "offers",
+          "applications"
+        ],
+        "title": "DayActivity",
+        "description": "Un jour de la semaine en tableau de bord (docs/54 §5)."
+      },
       "DelayOut": {
         "properties": {
           "typical": {
@@ -10998,6 +11023,25 @@
           "limit"
         ],
         "title": "MessageOut"
+      },
+      "MonthResult": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "count"
+        ],
+        "title": "MonthResult",
+        "description": "Un mois passé, pour la jauge de l'objectif ORP (docs/54 §5)."
       },
       "MonthSummary": {
         "properties": {
@@ -14605,6 +14649,22 @@
             },
             "type": "array",
             "title": "Upcoming Interviews",
+            "default": []
+          },
+          "week": {
+            "items": {
+              "$ref": "#/components/schemas/DayActivity"
+            },
+            "type": "array",
+            "title": "Week",
+            "default": []
+          },
+          "orp_history": {
+            "items": {
+              "$ref": "#/components/schemas/MonthResult"
+            },
+            "type": "array",
+            "title": "Orp History",
             "default": []
           }
         },

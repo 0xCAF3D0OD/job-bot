@@ -3022,6 +3022,21 @@ export interface components {
             /** Error */
             error: string | null;
         };
+        /**
+         * DayActivity
+         * @description Un jour de la semaine en tableau de bord (docs/54 §5).
+         */
+        DayActivity: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Offers */
+            offers: number;
+            /** Applications */
+            applications: number;
+        };
         /** DelayOut */
         DelayOut: {
             /** Typical */
@@ -3652,6 +3667,16 @@ export interface components {
             text: string;
             /** Limit */
             limit: number | null;
+        };
+        /**
+         * MonthResult
+         * @description Un mois passé, pour la jauge de l'objectif ORP (docs/54 §5).
+         */
+        MonthResult: {
+            /** Month */
+            month: string;
+            /** Count */
+            count: number;
         };
         /** MonthSummary */
         MonthSummary: {
@@ -4826,6 +4851,16 @@ export interface components {
              * @default []
              */
             upcoming_interviews: components["schemas"]["UpcomingInterview"][];
+            /**
+             * Week
+             * @default []
+             */
+            week: components["schemas"]["DayActivity"][];
+            /**
+             * Orp History
+             * @default []
+             */
+            orp_history: components["schemas"]["MonthResult"][];
         };
         /** TokenCreated */
         TokenCreated: {
