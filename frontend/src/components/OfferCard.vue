@@ -33,6 +33,11 @@ const sites = computed(() => props.offer.links.map((link) => sourceLabel[link.so
       <CompanyLogo :offer="offer" />
       <div>
         <span class="job-title">{{ offer.title }}</span>
+        <span
+          v-if="offer.spontaneous"
+          class="badge spontaneous-badge"
+          data-test="spontaneous-badge"
+        >Spontanée</span>
         <span class="job-company">{{ offer.company ?? "Entreprise non indiquée" }}<span
           v-if="offer.location"
           class="job-company-place"

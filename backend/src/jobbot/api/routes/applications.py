@@ -227,6 +227,8 @@ class ApplicationOut(ApplicationUpdate):
     remote_region: str | None = None
     # Prises de contact dans l'entreprise (docs/31 §4) ; rempli par la liste.
     contacts: list[ContactOut] = []
+    # Candidature spontanée (docs/39 §3).
+    spontaneous: bool = False
 
 
 class ApplicationPrefill(ApplicationBase):
@@ -323,6 +325,14 @@ async def list_applications(
             owner = contact.application_id or by_offer.get(contact.offer_id or -1)
             if owner is not None:
                 contacts.setdefault(owner, []).append(ContactOut.model_validate(contact))
+        spontaneous = set(
+            await session.scalars(
+                select(Offer.id).where(
+                    Offer.id.in_([a.offer_id for a in applications if a.offer_id]),
+                    Offer.spontaneous.is_(True),
+                )
+            )
+        )
         remote = {
             offer_id: region
             for offer_id, region in (
@@ -341,6 +351,7 @@ async def list_applications(
                 "remote_full": a.offer_id in remote,
                 "remote_region": remote.get(a.offer_id) if a.offer_id else None,
                 "contacts": contacts.get(a.id, []),
+                "spontaneous": a.offer_id in spontaneous,
             }
         )
         for a in applications

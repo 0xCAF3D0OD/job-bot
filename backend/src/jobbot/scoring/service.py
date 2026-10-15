@@ -164,6 +164,8 @@ async def candidates(
             Offer.expired_at.is_(None),
             # Un doublon n'est pas noté : son offre gardée l'est (docs/30 §3).
             Offer.duplicate_of.is_(None),
+            # Candidature spontanée : pas d'annonce à comparer au profil (docs/39 §4).
+            Offer.spontaneous.is_(False),
             or_(and_(Offer.status.in_(TO_SCORE), or_(*needs)), kept_aside),
         )
         .order_by(Offer.first_seen_at.desc(), Offer.id.desc())

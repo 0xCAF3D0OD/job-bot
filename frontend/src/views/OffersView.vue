@@ -8,6 +8,8 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import PushTransition from "../components/PushTransition.vue";
+import SidePanel from "../components/SidePanel.vue";
+import SpontaneousForm from "../components/SpontaneousForm.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import { applicationBody } from "../applicationBody";
@@ -38,6 +40,8 @@ const selectedId = ref<number | null>(null);
 const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 const { phone } = usePhone();
+// Candidature spontanée (docs/39) : sans annonce, préparée comme une offre.
+const spontaneousOpen = ref(false);
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
 
@@ -270,6 +274,14 @@ onUnmounted(() => {
       >
         Filtrer{{ activeCount(filters) ? ` · ${activeCount(filters)}` : "" }}
       </button>
+      <button
+        type="button"
+        class="secondary spontaneous-open"
+        data-test="spontaneous-open"
+        @click="spontaneousOpen = true"
+      >
+        Candidature spontanée
+      </button>
     </div>
 
     <div :class="['offers-grid', { 'has-selection': selected }]">
@@ -400,4 +412,13 @@ onUnmounted(() => {
     @submit="saveApplication"
     @close="applying = null"
   />
+  <SidePanel
+    v-if="spontaneousOpen"
+    open
+    title="Candidature spontanée"
+    help="Pour une entreprise qui n'a pas publié d'annonce. La lettre et le CV se préparent ensuite comme pour une offre ; elle compte dans le formulaire ORP du mois. Pas de note de l'IA."
+    @close="spontaneousOpen = false"
+  >
+    <SpontaneousForm />
+  </SidePanel>
 </template>

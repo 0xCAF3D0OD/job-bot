@@ -19,6 +19,15 @@ Tu rédiges une lettre de motivation pour une personne qui cherche un emploi en 
   - Allemand : orthographe suisse (« ss », jamais « ß »), Sie-Form.
   - Anglais : anglais britannique, ton professionnel sobre.
 
+## Candidature spontanée
+
+Si l'offre commence par « Candidature spontanée » (docs/39), il n'y a pas d'annonce :
+- n'écris jamais « suite à votre annonce » ni rien qui suppose un poste publié ;
+- ouvre sur ce qui attire la personne vers cette entreprise, à partir de « Pourquoi cette entreprise » (ses mots, reformulés sans rien ajouter) ;
+- présente ce que le parcours apporte au « Poste visé », à partir des blocs ;
+- conclus en proposant un entretien ou un échange, même si aucun poste n'est ouvert pour l'instant ;
+- objet : par exemple « Candidature spontanée – ingénieur DevOps ».
+
 ## Coordonnées de l'employeur
 
 Dans `employer`, recopie depuis le texte de l'offre, s'ils y figurent : l'adresse postale de l'entreprise (`address`, rue et NPA localité sur deux lignes), le nom de la personne de contact (`contact_name`) et son téléphone (`contact_phone`). Sinon, null. N'invente rien.

@@ -44,7 +44,8 @@ async def group_duplicates(session: AsyncSession) -> int:
     """Rattache les doublons à l'offre gardée ; rend le nombre d'offres rattachées."""
     groups: dict[tuple[str, str], list[Offer]] = defaultdict(list)
     alone: list[Offer] = []
-    for offer in await session.scalars(select(Offer)):
+    # Une candidature spontanée n'est le doublon de rien (docs/39 §4).
+    for offer in await session.scalars(select(Offer).where(Offer.spontaneous.is_(False))):
         key = _key(offer)
         if key is None:
             alone.append(offer)

@@ -131,6 +131,8 @@ class OfferOut(BaseModel):
     remote_from_switzerland: bool | None = None
     # Signaux « à vérifier » (docs/30 §2) : annonce permanente, employeur caché, arnaque possible.
     doubts: list["DoubtOut"] = []
+    # Candidature spontanée, créée par toi sans annonce (docs/39).
+    spontaneous: bool = False
 
 
 class DoubtOut(BaseModel):
@@ -213,6 +215,8 @@ PERMANENT_AFTER = timedelta(days=30)
 def _doubts(offer: Offer, evaluation: Evaluation | None) -> list["DoubtOut"]:
     """Signaux « à vérifier » (docs/30 §2) ; rien n'est écarté pour autant."""
     found: list[DoubtOut] = []
+    if offer.spontaneous:
+        return found
     since = offer.seen_since or offer.first_seen_at
     age = datetime.now(UTC) - since
     if offer.expired_at is None and age > PERMANENT_AFTER:
@@ -416,7 +420,7 @@ def _doubtful() -> ColumnElement[bool]:
         # Valeur vide : ni vrai ni faux en SQL ; ramenée à « pas une agence ».
         func.coalesce(Offer.employer_status, "") == "agency",
     )
-    return or_(scam, permanent, hidden)
+    return and_(Offer.spontaneous.is_(False), or_(scam, permanent, hidden))
 
 
 REMOTE_WORDS = ("remote", "home office", "homeoffice", "teletravail", "télétravail")

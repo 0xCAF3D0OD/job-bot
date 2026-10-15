@@ -394,6 +394,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/spontaneous": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Spontaneous */
+        post: operations["createSpontaneousApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -2278,6 +2295,11 @@ export interface components {
              * @default []
              */
             contacts: components["schemas"]["ContactOut"][];
+            /**
+             * Spontaneous
+             * @default false
+             */
+            spontaneous: boolean;
         };
         /** ApplicationPrefill */
         ApplicationPrefill: {
@@ -3818,6 +3840,11 @@ export interface components {
              * @default []
              */
             doubts: components["schemas"]["DoubtOut"][];
+            /**
+             * Spontaneous
+             * @default false
+             */
+            spontaneous: boolean;
         };
         /** OfferPage */
         OfferPage: {
@@ -4300,6 +4327,11 @@ export interface components {
              * @default []
              */
             doubts: components["schemas"]["DoubtOut"][];
+            /**
+             * Spontaneous
+             * @default false
+             */
+            spontaneous: boolean;
             /** Is First */
             is_first: boolean;
         };
@@ -4439,6 +4471,22 @@ export interface components {
             url: string;
             /** Note */
             note: string;
+        };
+        /** SpontaneousIn */
+        SpontaneousIn: {
+            /** Company */
+            company: string;
+            /** Title */
+            title: string;
+            /** Reason */
+            reason: string;
+            /** Website */
+            website?: string | null;
+        };
+        /** SpontaneousOut */
+        SpontaneousOut: {
+            /** Id */
+            id: number;
         };
         /** StatusResponse */
         StatusResponse: {
@@ -5434,6 +5482,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createSpontaneousApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpontaneousIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpontaneousOut"];
                 };
             };
             /** @description Validation Error */

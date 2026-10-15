@@ -122,6 +122,11 @@ const onStatus = (event: Event): void =>
           v-if="application.assigned_by_orp"
           class="badge"
         >ORP</span>
+        <span
+          v-if="application.spontaneous"
+          class="badge spontaneous-badge"
+          data-test="card-spontaneous"
+        >Spontanée</span>
         <p class="muted">
           {{ application.job_title }} · {{ shortDate.format(new Date(application.sent_at)) }}
         </p>
