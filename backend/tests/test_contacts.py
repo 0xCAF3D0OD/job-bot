@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
+from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
@@ -9,25 +10,28 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
-from jobbot.contacts import service
-from jobbot.db.models import Application, Notification, Offer, ProfileChunk
+from jobbot.contacts import message, service
+from jobbot.db.models import Application, Contact, LlmCall, Notification, Offer, ProfileChunk
+from jobbot.llm.client import RawResult
+from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
+from jobbot.scoring import service as scoring
 from jobbot.settings import Settings
+
+TRUNCATE = (
+    "TRUNCATE offers, applications, contacts, notifications, profile_chunks, llm_calls CASCADE"
+)
 
 
 @pytest.fixture
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
     async with runtime.engine.begin() as conn:
-        await conn.execute(
-            text("TRUNCATE offers, applications, contacts, notifications, profile_chunks CASCADE")
-        )
+        await conn.execute(text(TRUNCATE))
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     async with runtime.engine.begin() as conn:
-        await conn.execute(
-            text("TRUNCATE offers, applications, contacts, notifications, profile_chunks CASCADE")
-        )
+        await conn.execute(text(TRUNCATE))
 
 
 def keywords(url: str) -> str:
@@ -118,3 +122,56 @@ async def test_searches_contacts_and_follow_up(api: AsyncClient, runtime: Runtim
         "/api/contacts", json={"role": "team", "channel": "email", "contacted_on": old}
     )
     assert missing.status_code == 422
+
+
+async def test_message_never_sends_names(
+    api: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        offer = Offer(
+            fingerprint="m1",
+            title="SRE",
+            company="Exemple SA",
+            status="to_review",
+            first_seen_at=now,
+            last_seen_at=now,
+            description="Équipe plateforme à Lausanne.",
+        )
+        session.add(offer)
+        session.add(ProfileChunk(kind="competence", title="Kubernetes", content="Clusters k3s."))
+        await session.flush()
+        session.add(
+            Contact(
+                offer_id=offer.id,
+                name="Marie Dupont",
+                role="recruiter",
+                channel="linkedin_invite",
+                contacted_on=date.today(),
+            )
+        )
+        offer_id = offer.id
+    await api.put("/api/identity", json={"name": "Camille Exemple"})
+    body = {"offer_id": offer_id, "role": "team", "channel": "linkedin_invite"}
+    assert (await api.post("/api/contacts/message", json=body)).status_code == 409
+
+    calls: list[dict[str, Any]] = []
+
+    class Fake:
+        async def score(self, params: dict[str, Any]) -> RawResult:
+            calls.append(params)
+            text = "« Bonjour [Prénom], … [ton prénom] »"
+            return RawResult(text, message.MODEL, Usage(700, 0, 0, 60), "end_turn")
+
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Fake())
+    monkeypatch.setattr(type(runtime.settings), "llm_configured", property(lambda _self: True))
+    drafted = (await api.post("/api/contacts/message", json=body)).json()
+    assert drafted == {"text": "Bonjour [Prénom], … [ton prénom]", "limit": 300}
+    content = calls[0]["messages"][0]["content"]
+    assert "membre de l'équipe" in content and "Clusters k3s." in content
+    assert "Marie" not in content and "Camille" not in content  # jamais de nom
+    assert calls[0]["model"] == "claude-haiku-4-5"
+    async with runtime.sessionmaker() as session:
+        assert list(await session.scalars(select(LlmCall.purpose))) == ["contact"]
+    longer = {**body, "channel": "email"}
+    assert (await api.post("/api/contacts/message", json=longer)).json()["limit"] is None

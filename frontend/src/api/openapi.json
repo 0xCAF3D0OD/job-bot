@@ -858,6 +858,47 @@
         }
       }
     },
+    "/api/contacts/message": {
+      "post": {
+        "tags": [
+          "contacts"
+        ],
+        "summary": "Draft Message",
+        "operationId": "draftContactMessage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/status": {
       "get": {
         "tags": [
@@ -9797,6 +9838,81 @@
           "auth_enabled"
         ],
         "title": "Me"
+      },
+      "MessageIn": {
+        "properties": {
+          "offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Id"
+          },
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "recruiter",
+              "manager",
+              "team",
+              "alumni",
+              "other"
+            ],
+            "title": "Role",
+            "default": "recruiter"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "linkedin_invite",
+              "linkedin_message",
+              "email"
+            ],
+            "title": "Channel",
+            "default": "linkedin_invite"
+          }
+        },
+        "type": "object",
+        "title": "MessageIn"
+      },
+      "MessageOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "limit"
+        ],
+        "title": "MessageOut"
       },
       "MonthSummary": {
         "properties": {

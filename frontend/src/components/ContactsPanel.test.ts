@@ -86,4 +86,29 @@ describe("ContactsPanel", () => {
     await flushPromises();
     expect(PUT.mock.calls[0]![1].body).toMatchObject({ answered_on: isoDay(), note: "Appel jeudi" });
   });
+
+  it("rédige un message, compte les caractères d'une invitation et reprend le rôle", async () => {
+    GET.mockResolvedValue(page([]));
+    POST.mockResolvedValueOnce({ data: { text: "Bonjour [Prénom], ".repeat(20), limit: 300 } });
+    const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
+    await flushPromises();
+    await wrapper.find("[data-test=contact-writer] select").setValue("team");
+    await wrapper.find("[data-test=contact-writer] form").trigger("submit");
+    await flushPromises();
+    expect(POST.mock.calls[0]![0]).toBe("/api/contacts/message");
+    expect(POST.mock.calls[0]![1].body).toMatchObject({ offer_id: 7, role: "team", channel: "linkedin_invite" });
+    expect(wrapper.find("[data-test=contact-count]").text()).toContain("trop long");
+    await wrapper.find("[data-test=contact-add]").trigger("click");
+    expect((wrapper.find("[data-test=contact-form] select").element as HTMLSelectElement).value).toBe("team");
+  });
+
+  it("explique pourquoi le message n'a pas pu être rédigé", async () => {
+    GET.mockResolvedValue(page([]));
+    POST.mockResolvedValueOnce({ error: { detail: "plafond mensuel de l'IA atteint" } });
+    const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
+    await flushPromises();
+    await wrapper.find("[data-test=contact-writer] form").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[role=alert]").text()).toBe("Rédaction impossible : plafond mensuel de l'IA atteint.");
+  });
 });

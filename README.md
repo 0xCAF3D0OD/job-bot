@@ -40,7 +40,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.21.0 | Accessibilité : contraste, couleur seule, zones de clic | livrée |
 | 0.22.0 | Une action principale par page (a), aides visibles (b) | livrée |
 | 0.23.0 | Repérer les offres douteuses : doublons, annonces permanentes, employeur caché, arnaques | livrée |
-| 0.24.0 | Contacts dans l'entreprise : recherches LinkedIn déjà remplies, suivi des prises de contact et relance | en cours (PR a livrée) |
+| 0.24.0 | Contacts dans l'entreprise : recherches LinkedIn déjà remplies, premier message rédigé par l'IA, suivi des prises de contact et relance | livrée |
 
 ## Lancer en local
 

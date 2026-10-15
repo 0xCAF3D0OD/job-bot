@@ -148,7 +148,8 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 .toast {
   position: fixed;
   right: 1.5rem;
-  bottom: 1.5rem;
+  /* Au-dessus du bouton Assistant, en bas à droite (retour d'usage du 2026-10-15). */
+  bottom: 5.25rem;
   z-index: 20;
   max-width: 24rem;
   margin: 0;
@@ -328,7 +329,7 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
   .container { padding: 0 1rem; }
   .hero { padding: 2.25rem 1rem 1.75rem; }
   .runs { display: block; overflow-x: auto; }
-  .toast { left: 1rem; right: 1rem; bottom: 1rem; }
+  .toast { left: 1rem; right: 1rem; bottom: 4.75rem; }
 }
 
 /* --- Statuts des offres (0.3) --- */
@@ -1040,6 +1041,11 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .contact-form label { display: grid; gap: 0.2rem; font-size: 0.85rem; }
 .contact-form > div { display: inline-flex; align-items: center; gap: 0.8rem; }
 .application-card .contacts-section { border-top: 1px solid var(--border); padding-top: 0.4rem; }
+.contact-writer { margin: 0.4rem 0 0.8rem; padding-left: 0.9rem; border-left: 2px solid var(--border); }
+.contact-writer textarea { width: 100%; margin-top: 0.6rem; font: inherit; font-size: 0.92rem; }
+.contact-message-foot { display: flex; align-items: center; gap: 1rem; margin: 0.3rem 0 0; }
+.contact-message-foot .hint { display: inline; }
+.contact-message-foot .over-limit { color: var(--down-text); }
 
 /* Preuves ORP : une action à la fois (docs/21 §6) */
 .orp-next { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0.8rem 0; }
