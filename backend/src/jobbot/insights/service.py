@@ -6,7 +6,7 @@ de moins de `ENOUGH` candidatures est signalé « trop peu pour conclure ».
 
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from statistics import median
 
 from sqlalchemy import func, select
@@ -80,11 +80,23 @@ class Delay:
 
 
 @dataclass
+class Bucket:
+    """Un mois (ou une semaine) de la période : candidatures envoyées et leurs réponses."""
+
+    start: date
+    applications: int = 0
+    responses: int = 0
+
+
+@dataclass
 class Insights:
     funnel: Funnel
     delay: Delay | None
     comparisons: list[Comparison]
     headline: str | None
+    unit: str = "month"
+    buckets: list[Bucket] = field(default_factory=list)
+    interviews_upcoming: int = 0
 
 
 @dataclass
@@ -285,7 +297,50 @@ def headline(comparisons: list[Comparison]) -> str | None:
     return best[1] if best else None
 
 
-async def insights(session: AsyncSession, start: date | None, end: date) -> Insights:
+# « Tout » : les 12 derniers mois au plus dans « Par mois » (docs/55).
+MAX_MONTHS = 12
+
+
+def _month_start(day: date) -> date:
+    return day.replace(day=1)
+
+
+def _next_month(day: date) -> date:
+    return date(day.year + day.month // 12, day.month % 12 + 1, 1)
+
+
+def buckets(facts: list[Facts], start: date | None, end: date, unit: str) -> list[Bucket]:
+    """Candidatures par mois (ou par semaine du lundi, coupée au mois choisi) ; les réponses
+    sont celles des candidatures envoyées ce mois-là, comme dans le parcours."""
+    if unit == "week":
+        first = start or end
+        starts = [first]
+        monday = first - timedelta(days=first.weekday()) + timedelta(days=7)
+        while monday <= end:
+            starts.append(monday)
+            monday += timedelta(days=7)
+    else:
+        sent = [f.application.sent_at for f in facts]
+        first = _month_start(start or (min(sent) if sent else end))
+        starts = []
+        month = first
+        while month <= end:
+            starts.append(month)
+            month = _next_month(month)
+        starts = starts[-MAX_MONTHS:]
+    found = [Bucket(s) for s in starts]
+    for fact in facts:
+        for bucket in reversed(found):
+            if fact.application.sent_at >= bucket.start:
+                bucket.applications += 1
+                bucket.responses += int(fact.answered)
+                break
+    return found
+
+
+async def insights(
+    session: AsyncSession, start: date | None, end: date, unit: str = "month"
+) -> Insights:
     offers = (
         select(func.count())
         .select_from(Offer)
@@ -326,6 +381,13 @@ async def insights(session: AsyncSession, start: date | None, end: date) -> Insi
         delay=Delay(round(median(delays)), min(delays), max(delays)) if delays else None,
         comparisons=comparisons,
         headline=headline(comparisons),
+        unit=unit,
+        buckets=buckets(facts, start, end, unit),
+        interviews_upcoming=sum(
+            f.application.interview_at is not None
+            and f.application.interview_at > datetime.now(UTC)
+            for f in facts
+        ),
     )
 
 
