@@ -2,6 +2,7 @@ import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
 import ApplicationCard from "./ApplicationCard.vue";
+import ApplicationPanel from "./ApplicationPanel.vue";
 import InterviewForm from "./InterviewForm.vue";
 
 describe("InterviewForm (docs/23 §2)", () => {
@@ -64,16 +65,19 @@ const application = {
   cv_draft_id: null,
 };
 
-describe("ApplicationCard, retour d'entretien (docs/23 §3)", () => {
-  it("entretien passé sans retour : « Faire le point »", async () => {
+describe("Carte et panneau d'une candidature, retour d'entretien (docs/23 §3, docs/46)", () => {
+  it("entretien passé sans retour : « Faire le point » sur la carte", async () => {
     const wrapper = mount(ApplicationCard, { props: { application: { ...application, interviews: [] } as never } });
-    await wrapper.find("[data-test=interview-feedback]").trigger("click");
+    await wrapper.find("[data-test=card-step-feedback]").trigger("click");
     expect(wrapper.emitted("interview")![0]).toEqual([expect.objectContaining({ id: 3 }), null]);
   });
 
-  it("retour fait : résumé d'une ligne et « Voir le retour »", () => {
+  it("retour fait : résumé d'une ligne et « Voir le retour » dans le panneau", () => {
     const interview = { id: 9, application_id: 3, kind: "technique", held_at: "2026-10-06", rating: 4, next_step: "reponse", next_step_at: "2026-10-20" };
-    const wrapper = mount(ApplicationCard, { props: { application: { ...application, interviews: [interview] } as never } });
+    const wrapper = mount(ApplicationPanel, {
+      props: { application: { ...application, interviews: [interview] } as never },
+      global: { stubs: { teleport: true, ContactsPanel: true } },
+    });
     expect(wrapper.find("[data-test=interview-summary]").text()).toBe("Technique · ressenti 4/5 · suite : une réponse attendue avant le 20.10.2026");
     expect(wrapper.find("[data-test=interview-feedback]").exists()).toBe(false);
     expect(wrapper.find("[data-test=interview-open]").exists()).toBe(true);

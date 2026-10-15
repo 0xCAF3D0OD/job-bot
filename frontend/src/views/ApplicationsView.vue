@@ -15,6 +15,8 @@ import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import HelpTip from "../components/HelpTip.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
+import ApplicationPanel from "../components/ApplicationPanel.vue";
+import SidePanel from "../components/SidePanel.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
 import InterviewForm from "../components/InterviewForm.vue";
@@ -232,6 +234,23 @@ async function remove(application: Application): Promise<void> {
   });
   await load();
 }
+
+// Panneau d'une candidature (docs/46 §3), depuis une carte ou la liste. Les formulaires
+// (Modifier, entretien) s'ouvrent à sa place : ils passeraient sinon dessous.
+const openId = ref<number | null>(null);
+const opened = computed(() => (openId.value === null ? null : (all.value.find((a) => a.id === openId.value) ?? null)));
+function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {
+  return (...args: T) => {
+    openId.value = null;
+    void action(...args);
+  };
+}
+const editFromPanel = fromPanel(edit);
+const removeFromPanel = fromPanel(remove);
+const interviewFromPanel = fromPanel(openInterview);
+const prepareFromPanel = fromPanel((application: Application) => {
+  preparing.value = application;
+});
 
 // Retour d'entretien (docs/23) : formulaire ouvert depuis une carte.
 const interviewing = ref<{ application: Application; interview: Interview | null } | null>(null);
@@ -502,9 +521,9 @@ onUnmounted(() => assistant.setFocus(null));
               :key="application.id"
               :application="application"
               :orp-row="rowsById.get(application.id) ?? null"
+              @open="openId = $event.id"
               @status="setStatus"
               @edit="edit"
-              @remove="remove"
               @interview="openInterview"
               @prepare="preparing = $event"
               @changed="load"
@@ -535,6 +554,7 @@ onUnmounted(() => assistant.setFocus(null));
           v-else
           :items="items"
           :show-month="allMonths"
+          @open="openId = $event.id"
           @edit="edit"
           @status="setStatus"
           @remove="remove"
@@ -568,6 +588,23 @@ onUnmounted(() => assistant.setFocus(null));
     />
   </section>
 
+  <SidePanel
+    v-if="opened"
+    open
+    :title="opened.company"
+    @close="openId = null"
+  >
+    <ApplicationPanel
+      :application="opened"
+      :orp-row="rowsById.get(opened.id) ?? null"
+      @status="setStatus"
+      @edit="editFromPanel"
+      @remove="removeFromPanel"
+      @interview="interviewFromPanel"
+      @prepare="prepareFromPanel"
+      @changed="load"
+    />
+  </SidePanel>
   <InterviewPreparation
     v-if="preparing"
     :application="preparing"
