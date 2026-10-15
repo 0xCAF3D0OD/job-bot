@@ -1550,3 +1550,29 @@ html.side-open { overflow: hidden; }
 /* Écran d’accueil, plein écran (docs/33 §3.5) : la barre du haut évite l’encoche. */
 .topbar { padding-top: env(safe-area-inset-top); }
 @media (prefers-reduced-motion: reduce) { .bell-drop .bell-drop-enter-active, .bell-drop .bell-drop-leave-active { transition: none; } }
+
+/* Téléphone : Formations en liste, fiche en plein écran (docs/34 §2) */
+.orp-note-row { margin: 0 0 1rem; }
+.orp-note-row .orp-links { display: grid; gap: 0.4rem; }
+.training-filter-group { display: contents; }
+.training-filter-toggle { margin-left: auto; }
+.training-filter-sheet { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; width: 100%; }
+.training-filter-sheet select { width: 100%; }
+.training-row { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; border: 0; border-radius: 0; background: none; font: inherit; text-align: left; cursor: pointer; align-items: center; }
+.training-row-facts { font-size: 0.8rem; color: var(--muted); }
+.training-sheet { border: 0; padding: 0; background: none; box-shadow: none; }
+
+/* Téléphone : Réglages en lignes dépliables (docs/34 §3) */
+@media (max-width: 820px) {
+  .settings-toc { display: none; }
+  .settings-row { margin: 0; }
+  .settings-row + .settings-row { margin-top: 0.6rem; }
+  .settings-row .form-card { border: 0; padding: 0; }
+}
+
+/* Téléphone : Aujourd'hui, l'essentiel d'abord (docs/34 §4) */
+@media (max-width: 820px) {
+  .today > .today-help-row { order: 99; margin: 0; }
+  .today-help-row .checklist-head { justify-content: flex-end; }
+  .today-help-row .checklist-head h2 { display: none; }
+}

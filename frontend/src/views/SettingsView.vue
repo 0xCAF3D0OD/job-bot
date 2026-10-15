@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
+import { useAuth } from "../composables/useAuth";
 import AppIcon from "../components/AppIcon.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
@@ -10,6 +11,7 @@ import ExtensionPanel from "../components/ExtensionPanel.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
+import SettingsSection from "../components/SettingsSection.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 const form = ref<SettingsModel>({
@@ -77,6 +79,20 @@ async function save(): Promise<void> {
   }
 }
 const router = useRouter();
+const { me } = useAuth();
+// Résumés des sections, affichés sur téléphone (docs/34 §3).
+const summary = computed(() => ({
+  recherche: [
+    form.value.orp_monthly_target ? `objectif ${form.value.orp_monthly_target} / mois` : "objectif à saisir",
+    `alerte dès ${form.value.notify_score_threshold}`,
+  ].join(" · "),
+  actualites: "mots-clés et sources",
+  notifications: notifications.value ? (notifications.value.configured ? "actives" : "non configurées") : "",
+  ia: `plafond ${form.value.llm_monthly_budget_chf} CHF / mois`,
+  profils: "profils fictifs",
+  connexion: me.value?.auth_enabled ? (me.value.username ?? "") : "désactivée",
+  extension: "jetons",
+}));
 
 // Sommaire (docs/19 §4) : les sections dans l'ordre de la page.
 const SECTIONS = [
@@ -108,250 +124,250 @@ const SECTIONS = [
         >{{ section.label }}</a>
       </nav>
       <div class="settings-sections">
-        <h2
+        <SettingsSection
           id="recherche"
-          class="section-title"
+          title="Recherche d'emploi"
+          :value="summary.recherche"
         >
-          Recherche d'emploi
-        </h2>
-        <form
-          v-if="loaded"
-          class="form-card"
-          data-test="settings-form"
-          @submit.prevent="save"
-        >
-          <fieldset>
-            <legend>
-              <label for="orp">Objectif mensuel de l'ORP</label>
-              <HelpTip
-                text="Le nombre de candidatures demandé par ton conseiller. Laisse vide si tu ne le connais pas encore."
-                label="Aide : objectif de l'ORP"
-              />
-            </legend>
-            <div class="inline-field">
-              <input
-                id="orp"
-                v-model.number="form.orp_monthly_target"
-                type="number"
-                min="1"
-                max="100"
-              >
-              <span>candidatures par mois</span>
-            </div>
-          </fieldset>
-          <fieldset>
-            <legend>
-              <label for="due-day">Date limite de remise des preuves</label>
-              <HelpTip
-                text="Le jour du mois suivant où ton conseiller attend les preuves, souvent le 5."
-                label="Aide : date limite"
-              />
-            </legend>
-            <div class="inline-field">
-              <span>le</span>
-              <input
-                id="due-day"
-                v-model.number="form.orp_due_day"
-                type="number"
-                min="2"
-                max="28"
-                required
-                data-test="due-day"
-              >
-              <span>du mois suivant</span>
-            </div>
-          </fieldset>
-          <fieldset>
-            <legend>
-              <label for="threshold">Seuil de notification des offres</label>
-              <HelpTip
-                text="Tu es prévenu des nouvelles offres notées au moins à ce score."
-                label="Aide : seuil de notification"
-              />
-            </legend>
-            <div class="inline-field">
-              <input
-                id="threshold"
-                v-model.number="form.notify_score_threshold"
-                type="number"
-                min="0"
-                max="100"
-                required
-              >
-              <span>/ 100</span>
-            </div>
-          </fieldset>
-          <fieldset>
-            <legend>
-              <label for="employer-threshold">Recherche de l'annonce chez l'employeur</label>
-              <HelpTip
-                text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur (environ 0,02 $ si l'IA est nécessaire)."
-                label="Aide : recherche chez l'employeur"
-              />
-            </legend>
-            <div class="inline-field">
-              <input
-                id="employer-threshold"
-                v-model.number="form.employer_search_threshold"
-                type="number"
-                min="0"
-                max="100"
-                required
-              >
-              <span>/ 100</span>
-            </div>
-          </fieldset>
-          <div class="form-actions">
-            <button
-              type="submit"
-              class="secondary"
-              :disabled="saving"
-              data-test="save-settings"
-            >
-              Enregistrer <AppIcon name="chevron" />
-            </button>
-            <span
-              v-if="message"
-              role="status"
-              class="muted"
-            >{{ message }}</span>
-          </div>
-        </form>
-        <SitesPanel class="settings-status" />
-
-        <h2
-          id="actualites"
-          class="section-title"
-        >
-          Actualités
-        </h2>
-        <NewsSourcesPanel />
-
-        <h2
-          id="notifications"
-          class="section-title"
-        >
-          Notifications
-        </h2>
-        <div
-          v-if="loaded"
-          class="form-card"
-        >
-          <fieldset data-test="notifications">
-            <legend>
-              Notifications
-              <HelpTip
-                v-if="notifications?.configured"
-                :text="`Envoyées sur ton téléphone (${notifications.server}) : offres bien notées, et IA à 80 % du plafond.`"
-                label="Aide : notifications"
-              />
-            </legend>
-            <template v-if="notifications?.configured">
+          <form
+            v-if="loaded"
+            class="form-card"
+            data-test="settings-form"
+            @submit.prevent="save"
+          >
+            <fieldset>
+              <legend>
+                <label for="orp">Objectif mensuel de l'ORP</label>
+                <HelpTip
+                  text="Le nombre de candidatures demandé par ton conseiller. Laisse vide si tu ne le connais pas encore."
+                  label="Aide : objectif de l'ORP"
+                />
+              </legend>
               <div class="inline-field">
-                <button
-                  type="button"
-                  class="secondary small"
-                  :disabled="testing"
-                  data-test="test-notification"
-                  @click="sendTest"
+                <input
+                  id="orp"
+                  v-model.number="form.orp_monthly_target"
+                  type="number"
+                  min="1"
+                  max="100"
                 >
-                  Envoyer une notification de test
-                </button>
-                <span
-                  v-if="testMessage"
-                  role="status"
-                >{{ testMessage }}</span>
+                <span>candidatures par mois</span>
               </div>
-            </template>
-            <p
-              v-else-if="notificationsUnknown"
-              class="notice error"
-              data-test="notifications-unknown"
-            >
-              Impossible de vérifier pour l'instant : la plateforme ne répond pas. Réessaie dans un moment.
-            </p>
-            <p
-              v-else
-              class="hint"
-            >
-              Non configurées (application ntfy sur ton téléphone ; réglage d'installation, voir le README).
-            </p>
-          </fieldset>
-        </div>
-
-        <h2
-          id="ia"
-          class="section-title"
-        >
-          IA
-        </h2>
-        <form
-          v-if="loaded"
-          class="form-card"
-          data-test="budget-form"
-          @submit.prevent="save"
-        >
-          <fieldset>
-            <legend>
-              <label for="budget">Plafond mensuel du coût de l'IA</label>
-              <HelpTip
-                text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant."
-                label="Aide : plafond de l'IA"
-              />
-            </legend>
-            <div class="inline-field">
-              <input
-                id="budget"
-                v-model.number="form.llm_monthly_budget_chf"
-                type="number"
-                min="0"
-                max="1000"
-                step="0.5"
-                required
+            </fieldset>
+            <fieldset>
+              <legend>
+                <label for="due-day">Date limite de remise des preuves</label>
+                <HelpTip
+                  text="Le jour du mois suivant où ton conseiller attend les preuves, souvent le 5."
+                  label="Aide : date limite"
+                />
+              </legend>
+              <div class="inline-field">
+                <span>le</span>
+                <input
+                  id="due-day"
+                  v-model.number="form.orp_due_day"
+                  type="number"
+                  min="2"
+                  max="28"
+                  required
+                  data-test="due-day"
+                >
+                <span>du mois suivant</span>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>
+                <label for="threshold">Seuil de notification des offres</label>
+                <HelpTip
+                  text="Tu es prévenu des nouvelles offres notées au moins à ce score."
+                  label="Aide : seuil de notification"
+                />
+              </legend>
+              <div class="inline-field">
+                <input
+                  id="threshold"
+                  v-model.number="form.notify_score_threshold"
+                  type="number"
+                  min="0"
+                  max="100"
+                  required
+                >
+                <span>/ 100</span>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>
+                <label for="employer-threshold">Recherche de l'annonce chez l'employeur</label>
+                <HelpTip
+                  text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur (environ 0,02 $ si l'IA est nécessaire)."
+                  label="Aide : recherche chez l'employeur"
+                />
+              </legend>
+              <div class="inline-field">
+                <input
+                  id="employer-threshold"
+                  v-model.number="form.employer_search_threshold"
+                  type="number"
+                  min="0"
+                  max="100"
+                  required
+                >
+                <span>/ 100</span>
+              </div>
+            </fieldset>
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="secondary"
+                :disabled="saving"
+                data-test="save-settings"
               >
-              <span>CHF</span>
+                Enregistrer <AppIcon name="chevron" />
+              </button>
+              <span
+                v-if="message"
+                role="status"
+                class="muted"
+              >{{ message }}</span>
             </div>
-          </fieldset>
-          <div class="form-actions">
-            <button
-              type="submit"
-              class="secondary"
-              :disabled="saving"
-              data-test="save-budget"
-            >
-              Enregistrer <AppIcon name="chevron" />
-            </button>
-            <span
-              v-if="message"
-              role="status"
-              class="muted"
-            >{{ message }}</span>
+          </form>
+          <SitesPanel class="settings-status" />
+        </SettingsSection>
+
+        <SettingsSection
+          id="actualites"
+          title="Actualités"
+          :value="summary.actualites"
+        >
+          <NewsSourcesPanel />
+        </SettingsSection>
+
+        <SettingsSection
+          id="notifications"
+          title="Notifications"
+          :value="summary.notifications"
+        >
+          <div
+            v-if="loaded"
+            class="form-card"
+          >
+            <fieldset data-test="notifications">
+              <legend>
+                Notifications
+                <HelpTip
+                  v-if="notifications?.configured"
+                  :text="`Envoyées sur ton téléphone (${notifications.server}) : offres bien notées, et IA à 80 % du plafond.`"
+                  label="Aide : notifications"
+                />
+              </legend>
+              <template v-if="notifications?.configured">
+                <div class="inline-field">
+                  <button
+                    type="button"
+                    class="secondary small"
+                    :disabled="testing"
+                    data-test="test-notification"
+                    @click="sendTest"
+                  >
+                    Envoyer une notification de test
+                  </button>
+                  <span
+                    v-if="testMessage"
+                    role="status"
+                  >{{ testMessage }}</span>
+                </div>
+              </template>
+              <p
+                v-else-if="notificationsUnknown"
+                class="notice error"
+                data-test="notifications-unknown"
+              >
+                Impossible de vérifier pour l'instant : la plateforme ne répond pas. Réessaie dans un moment.
+              </p>
+              <p
+                v-else
+                class="hint"
+              >
+                Non configurées (application ntfy sur ton téléphone ; réglage d'installation, voir le README).
+              </p>
+            </fieldset>
           </div>
-        </form>
+        </SettingsSection>
 
-        <h2
+        <SettingsSection
+          id="ia"
+          title="IA"
+          :value="summary.ia"
+        >
+          <form
+            v-if="loaded"
+            class="form-card"
+            data-test="budget-form"
+            @submit.prevent="save"
+          >
+            <fieldset>
+              <legend>
+                <label for="budget">Plafond mensuel du coût de l'IA</label>
+                <HelpTip
+                  text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant."
+                  label="Aide : plafond de l'IA"
+                />
+              </legend>
+              <div class="inline-field">
+                <input
+                  id="budget"
+                  v-model.number="form.llm_monthly_budget_chf"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="0.5"
+                  required
+                >
+                <span>CHF</span>
+              </div>
+            </fieldset>
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="secondary"
+                :disabled="saving"
+                data-test="save-budget"
+              >
+                Enregistrer <AppIcon name="chevron" />
+              </button>
+              <span
+                v-if="message"
+                role="status"
+                class="muted"
+              >{{ message }}</span>
+            </div>
+          </form>
+        </SettingsSection>
+
+        <SettingsSection
           id="profils"
-          class="section-title"
+          title="Profils d'essai"
+          :value="summary.profils"
         >
-          Profils d'essai
-        </h2>
-        <ProfilesPanel />
+          <ProfilesPanel />
+        </SettingsSection>
 
-        <h2
+        <SettingsSection
           id="connexion"
-          class="section-title"
+          title="Connexion"
+          :value="summary.connexion"
         >
-          Connexion
-        </h2>
-        <SessionPanel />
+          <SessionPanel />
+        </SettingsSection>
 
-        <h2
+        <SettingsSection
           id="extension"
-          class="section-title"
+          title="Extension du navigateur"
+          :value="summary.extension"
         >
-          Extension du navigateur
-        </h2>
-        <ExtensionPanel />
+          <ExtensionPanel />
+        </SettingsSection>
 
         <p class="diagnostic-link">
           <RouterLink
