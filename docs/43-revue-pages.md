@@ -146,3 +146,7 @@ D'abord ce qui change ce que tu fais, puis la cohérence, puis les détails. Cha
 - **Profil** : carte « Tes prérequis » pleine largeur, en lignes libellé / valeur (comme le Bilan), cantons en toutes lettres (« Vaud ») ; l'explication des prérequis dans le « ? » ; un sous-titre commun aux trois onglets. Le formulaire de modification garde sa largeur de lecture.
 - **Réglages** : les quatre nombres de Recherche d'emploi en grille 2 × 2 (une colonne sur téléphone) ; sites suivis et sources des Actualités en colonnes fixes, cases et « Retirer » alignés, y compris pour jobup et Indeed.
 - **Vérifié** dans le navigateur avec les données fictives, sur ordinateur (captures) ; un espace manquant (« 10candidatures ») repéré et corrigé.
+
+## Complément (0.36.1)
+
+- **Offre ouverte par un lien** (`?offre=`, depuis l'assistant ou Aujourd'hui) alors qu'elle n'est pas dans la vue (par exemple « En préparation » quand on regarde « À examiner ») : elle est posée en tête de liste. Depuis les groupes de la PR c, elle faisait apparaître « Plus ancien » deux fois et faussait les nombres. Elle reste en tête, sans intertitre, et n'est comptée dans aucun groupe.
