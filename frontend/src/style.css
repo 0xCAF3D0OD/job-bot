@@ -379,8 +379,6 @@ input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
 /* --- Profil : documents et blocs (0.3) --- */
 
 .section-title.first { margin-top: 0; }
-.profile-docs { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
-.doc-column { display: grid; gap: 1rem; }
 .drop-zone {
   display: grid;
   gap: 0.3rem;
@@ -398,9 +396,6 @@ input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
 .drop-zone:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .drop-title { color: var(--accent); font-weight: 500; }
 .doc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
-.doc-card { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 0.75rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-.doc-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.doc-card .logo { font-size: 0.65rem; }
 .doc-info { display: grid; gap: 0.2rem; min-width: 0; }
 .doc-info .job-title { overflow-wrap: anywhere; }
 .doc-actions { grid-column: 2; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
@@ -409,7 +404,6 @@ button.link { border-radius: 4px; transition: color 0.15s, background-color 0.15
 .link:hover { color: var(--accent-strong); background-color: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); }
 .link.danger { color: var(--down-text); }
 .link.danger:hover { color: var(--down-text); background-color: rgb(229 72 77 / 10%); box-shadow: 0 0 0 3px rgb(229 72 77 / 10%); }
-.text-panel { gap: 1rem; }
 .text-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .text-head h3 { font-size: 1.1rem; overflow-wrap: anywhere; }
 .doc-text {
@@ -427,12 +421,14 @@ button.link { border-radius: 4px; transition: color 0.15s, background-color 0.15
 .chunks-head .section-title { margin: 0; }
 .kind-tabs { margin: 1rem 0 1.25rem; flex-wrap: wrap; }
 .chunk-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: 1rem; }
-.chunk-card { cursor: default; }
-.chunk-card.inactive { opacity: 0.6; }
-.chunk-top { display: flex; gap: 0.4rem; }
-.chunk-content { -webkit-line-clamp: 4; white-space: pre-line; }
-.chunk-actions { margin-left: auto; display: inline-flex; gap: 0.75rem; }
-.job-meta .chunk-actions::before { content: none; }
+/* Carte calme d'un bloc (docs/49 §3) : 3 lignes, le type en bas, même hauteur dans la rangée. */
+.chunk-grid > li { display: flex; }
+.chunk-grid > li.inactive .chunk-card { opacity: 0.6; }
+.chunk-card { flex: 1; display: flex; flex-direction: column; gap: 0.45rem; align-items: stretch; padding: 1rem 1.1rem 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font: inherit; text-align: left; cursor: pointer; white-space: normal; }
+.chunk-card:hover { border-color: var(--accent); }
+.chunk-card .job-title { font-weight: 600; }
+.chunk-content { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+.chunk-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; min-height: 2.6rem; border-top: 1px solid var(--divider); font-size: 0.84rem; color: var(--muted); }
 .overlay { position: fixed; inset: 0; z-index: 30; background: rgb(17 17 31 / 35%); display: grid; place-items: center; padding: 1rem; overflow: auto; }
 .editor { width: min(40rem, 100%); padding-top: 1.5rem; }
 .editor h3 { font-size: 1.3rem; }
@@ -441,8 +437,6 @@ textarea { width: 100%; resize: vertical; line-height: 1.55; }
 .editor input[type="text"] { width: 100%; }
 
 @media (max-width: 900px) {
-  .profile-docs { grid-template-columns: minmax(0, 1fr); }
-  .profile-docs .empty-detail { display: none; }
 }
 
 /* --- Candidature et texte complet (0.3.1) --- */
@@ -1908,3 +1902,11 @@ html.side-open { overflow: hidden; }
 .calm-panel-foot { margin: 0.5rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border); }
 .settings-numbers fieldset.wide { grid-column: 1 / -1; }
 .settings-next-card { margin-top: 1rem; }
+
+/* Mon parcours (docs/49) : documents en lignes calmes, le bloc dans le panneau. */
+.doc-list.calm-list { margin: 0 0 0.75rem; display: block; gap: 0; }
+.drop-zone-first { padding-block: 2rem; }
+.calm-panel .doc-text { max-height: none; }
+.chunk-form input[type="text"], .chunk-form textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.7rem; }
+.chunk-form > label > span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.chunk-tags { display: grid; gap: 0.35rem; font-size: 0.9rem; }
