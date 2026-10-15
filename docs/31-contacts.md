@@ -1,6 +1,6 @@
 # 31 — Contacts dans l'entreprise (version 0.24.0)
 
-> Statut : **validé** le 2026-10-14. livré : PR a (recherches et suivi des contacts).
+> Statut : **validé** le 2026-10-14. livré : PR a (recherches et suivi des contacts), PR b (message rédigé par l'IA).
 > Dernière idée tirée de Jobright (2026-10-07) : trouver quelqu'un dans l'entreprise (recruteur, futur responsable, ancien de ton école), lui écrire un message court, et suivre ces prises de contact. Une recommandation interne multiplie les chances d'entretien.
 
 ## 1. Le principe
@@ -71,3 +71,16 @@ contacts  id, offer_id?, application_id?, name?, role (recruiter|manager|team|al
 - **Rattachement** : un contact ajouté depuis l'offre est aussi rattaché à sa candidature (et inversement), il se voit donc aux deux endroits.
 - **Relance** : rappel dans la cloche une seule fois (« Relancer Marie chez Exemple SA ? », ou « ton contact » sans nom), lien vers l'offre ; sur **Aujourd'hui**, une ligne « N prise(s) de contact sans réponse depuis 7 jours », avec un lien vers le Suivi.
 - **« A répondu »** ouvre une note facultative ; la date de réponse est celle du jour.
+
+## Écarts avec la PR b
+
+- **Où** : dans la section « Contacts chez … », au-dessus de la liste : « Écrire à » (le rôle), « Canal » (**invitation LinkedIn** 300 caractères, **message LinkedIn** ou **e-mail**, 120 mots), puis « Rédiger un message ». Le texte reste modifiable, avec « Copier ».
+- **Invitation** : compteur « N / 300 caractères », en rouge avec « trop long pour une invitation » au-delà ; le texte n'est pas coupé d'office.
+- **« J'ai contacté quelqu'un »** reprend ensuite le rôle et le canal du message rédigé.
+- **Candidature sans offre** (spontanée) : l'IA reçoit alors seulement le poste et l'entreprise de la candidature.
+- Envoyé à l'IA : poste, entreprise, description de l'offre (3 000 caractères au plus), rôle du destinataire, canal et blocs de profil actifs ; **aucun nom** (ni celui du contact, ni le tien), aucune coordonnée. Claude Haiku, `purpose = contact`, estimation 0,002 $ pour le plafond.
+- Non essayé avec une vraie clé : vérifié par des tests avec une IA simulée et, dans le navigateur, le message d'erreur « IA non configurée ».
+
+## Complément du 2026-10-15 : bulle au-dessus de l'Assistant
+
+- Retour d'usage : la bulle « Collecte lancée… » passait derrière le bouton Assistant, en bas à droite. Elle s'affiche désormais **au-dessus** de lui, sur ordinateur comme sur téléphone.

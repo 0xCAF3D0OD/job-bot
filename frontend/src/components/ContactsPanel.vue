@@ -19,6 +19,52 @@ const busy = ref(false);
 const answering = ref<number | null>(null);
 const note = ref("");
 const draft = reactive({ name: "", role: "recruiter" as Contact["role"], channel: "linkedin_invite" as Contact["channel"], contacted_on: isoDay() });
+// Premier message rédigé par l'IA (docs/31 §3) : jamais de nom envoyé.
+type MessageChannel = "linkedin_invite" | "linkedin_message" | "email";
+const MESSAGE_CHANNELS: Record<MessageChannel, string> = {
+  linkedin_invite: "Invitation LinkedIn (300 caractères)",
+  linkedin_message: "Message LinkedIn",
+  email: "E-mail",
+};
+const writing = ref(false);
+const writer = reactive({ role: "recruiter" as Contact["role"], channel: "linkedin_invite" as MessageChannel });
+const written = ref("");
+const limit = ref<number | null>(null);
+const writeError = ref("");
+const copied = ref(false);
+
+async function write(): Promise<void> {
+  writing.value = true;
+  writeError.value = "";
+  try {
+    const { data, error } = await api.POST("/api/contacts/message", {
+      body: { offer_id: props.offerId, application_id: props.applicationId, ...writer },
+    });
+    if (!data) {
+      const detail = (error as { detail?: unknown } | undefined)?.detail;
+      writeError.value = typeof detail === "string" ? `Rédaction impossible : ${detail}.` : "Rédaction impossible.";
+      return;
+    }
+    written.value = data.text;
+    limit.value = data.limit ?? null;
+    // « J'ai contacté quelqu'un » reprend le rôle et le canal du message.
+    draft.role = writer.role;
+    draft.channel = writer.channel;
+  } finally {
+    writing.value = false;
+  }
+}
+
+async function copyMessage(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(written.value);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 1500);
+  } catch {
+    copied.value = false;
+  }
+}
+
 const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
 function day(value: string): string {
@@ -139,6 +185,81 @@ onMounted(() => {
           data-test="contact-website"
         >Site de l'employeur</a>
       </p>
+
+      <div
+        class="contact-writer"
+        data-test="contact-writer"
+      >
+        <form
+          class="contact-form"
+          @submit.prevent="write"
+        >
+          <label>
+            Écrire à
+            <select v-model="writer.role">
+              <option
+                v-for="(text, value) in ROLES"
+                :key="value"
+                :value="value"
+              >{{ text }}</option>
+            </select>
+          </label>
+          <label>
+            Canal
+            <select v-model="writer.channel">
+              <option
+                v-for="(text, value) in MESSAGE_CHANNELS"
+                :key="value"
+                :value="value"
+              >{{ text }}</option>
+            </select>
+          </label>
+          <div>
+            <button
+              type="submit"
+              class="secondary small"
+              :disabled="writing"
+              data-test="contact-write"
+            >
+              {{ writing ? "Rédaction…" : written ? "Rédiger à nouveau" : "Rédiger un message" }}
+            </button>
+          </div>
+        </form>
+        <p class="hint">
+          L'IA reçoit le poste, le rôle choisi et ton profil, jamais de nom : remplace « [Prénom] » et
+          « [ton prénom] ». Environ 0,002 $.
+        </p>
+        <p
+          v-if="writeError"
+          class="notice error"
+          role="alert"
+        >
+          {{ writeError }}
+        </p>
+        <template v-if="written">
+          <textarea
+            v-model="written"
+            rows="5"
+            aria-label="Message à envoyer"
+            data-test="contact-message"
+          />
+          <p class="contact-message-foot">
+            <span
+              v-if="limit"
+              :class="['hint', { 'over-limit': written.length > limit }]"
+              data-test="contact-count"
+            >{{ written.length }} / {{ limit }} caractères{{ written.length > limit ? " : trop long pour une invitation" : "" }}</span>
+            <button
+              type="button"
+              class="link"
+              data-test="contact-copy"
+              @click="copyMessage"
+            >
+              {{ copied ? "Copié" : "Copier" }}
+            </button>
+          </p>
+        </template>
+      </div>
 
       <ul
         v-if="page.contacts.length"

@@ -377,6 +377,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/contacts/message": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Draft Message */
+        post: operations["draftContactMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -3217,6 +3234,32 @@ export interface components {
             /** Auth Enabled */
             auth_enabled: boolean;
         };
+        /** MessageIn */
+        MessageIn: {
+            /** Offer Id */
+            offer_id?: number | null;
+            /** Application Id */
+            application_id?: number | null;
+            /**
+             * Role
+             * @default recruiter
+             * @enum {string}
+             */
+            role: "recruiter" | "manager" | "team" | "alumni" | "other";
+            /**
+             * Channel
+             * @default linkedin_invite
+             * @enum {string}
+             */
+            channel: "linkedin_invite" | "linkedin_message" | "email";
+        };
+        /** MessageOut */
+        MessageOut: {
+            /** Text */
+            text: string;
+            /** Limit */
+            limit: number | null;
+        };
         /** MonthSummary */
         MonthSummary: {
             /** Month */
@@ -5208,6 +5251,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draftContactMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
             };
             /** @description Validation Error */
             422: {

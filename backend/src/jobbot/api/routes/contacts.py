@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import ColumnElement, or_, select
 
-from jobbot.contacts import service
+from jobbot.contacts import message, service
 from jobbot.db.models import Application, Contact, Offer
 from jobbot.runtime import Runtime
 
@@ -162,3 +162,36 @@ async def delete_contact(request: Request, contact_id: int) -> None:
         contact = await session.get(Contact, contact_id)
         if contact is not None:
             await session.delete(contact)
+
+
+# --- Message rédigé par l'IA (docs/31 §3) ---------------------------------------------------
+
+
+class MessageIn(BaseModel):
+    offer_id: int | None = None
+    application_id: int | None = None
+    role: Role = "recruiter"
+    channel: Literal["linkedin_invite", "linkedin_message", "email"] = "linkedin_invite"
+
+
+class MessageOut(BaseModel):
+    text: str
+    # Caractères au plus (invitation LinkedIn), sinon rien.
+    limit: int | None
+
+
+@router.post("/contacts/message", operation_id="draftContactMessage")
+async def draft_message(request: Request, body: MessageIn) -> MessageOut:
+    if body.offer_id is None and body.application_id is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "offre ou candidature requise")
+    try:
+        result = await message.draft(
+            _runtime(request),
+            offer_id=body.offer_id,
+            application_id=body.application_id,
+            role=body.role,
+            channel=body.channel,
+        )
+    except message.MessageUnavailable as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    return MessageOut(text=result.text, limit=result.limit)
