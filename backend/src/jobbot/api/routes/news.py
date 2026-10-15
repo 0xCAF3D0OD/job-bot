@@ -239,7 +239,12 @@ async def list_news(
             for item, source in rows
         ]
         if domain_only:
-            found = [row for row in found if row[2] or row[1].labour_market][:limit]
+            found = [
+                row
+                for row in found
+                if row[2]
+                or (row[1].labour_market and domain.about_jobs(row[0].title, row[0].summary))
+            ][:limit]
         seen = profile.news_seen_at
         counts = dict(
             (
