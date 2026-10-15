@@ -106,7 +106,7 @@ describe("TrainingsView", () => {
     const wrapper = await mountView();
     await wrapper.find("[data-test=suggest]").trigger("click");
     await flushPromises();
-    expect(wrapper.text()).toContain("2 formation(s) proposée(s)");
+    expect(wrapper.text()).toContain("2 formations proposées");
     expect(wrapper.findAll("[data-test=unverified]")).toHaveLength(2);
     await wrapper.findAll("[data-test=keep]")[0]!.trigger("click");
     await flushPromises();
@@ -185,7 +185,7 @@ describe("TrainingsView", () => {
     await flushPromises();
     const text = (wrapper.find("[data-test=funding-letter]").element as HTMLTextAreaElement).value;
     expect(text).toContain("« Certified Kubernetes Administrator (CKA) » (The Linux Foundation / CNCF");
-    expect(text).toContain("12 offre(s) que j'ai reçue(s) demandaient Kubernetes ou CKA, par exemple « Ingénieur DevOps » chez Consort Group.");
+    expect(text).toContain("12 offres que j'ai reçues demandaient Kubernetes ou CKA, par exemple « Ingénieur DevOps » chez Consort Group.");
     expect(text).toContain("Coût : [montant]. Durée : 2 h d'examen.");
     expect(text.trim().endsWith("Camille Exemple")).toBe(true);
 

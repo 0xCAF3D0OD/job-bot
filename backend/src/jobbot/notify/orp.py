@@ -13,6 +13,7 @@ from typing import Any
 from sqlalchemy.dialects.postgresql import insert
 
 from jobbot.core.orp import LOCAL_TZ, due_date, shift_month
+from jobbot.core.plural import plural
 from jobbot.db.models import OrpMonth
 from jobbot.log import get_logger
 from jobbot.notify import service as notify
@@ -82,7 +83,7 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
             runtime,
             notify.Message(
                 title=f"{now_counts.count} / {target} candidatures en {month_name(current)}",
-                message=f"Il reste {days_left} jour(s) pour atteindre l'objectif.",
+                message=f"Il reste {plural(days_left, 'jour', 'jours')} pour atteindre l'objectif.",
                 tags=["dart"],
                 click=f"{base}/candidatures/offres",
             ),
@@ -99,9 +100,9 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
     if not submitted and today < deadline:
         key = "eve" if today == deadline - timedelta(days=1) else "due"
         if key not in previous_sent and (key == "eve" or "eve" not in previous_sent):
-            details = f"{prev_counts.count} candidature(s)"
+            details = plural(prev_counts.count, "candidature", "candidatures")
             if prev_counts.incomplete:
-                details += f", {prev_counts.incomplete} ligne(s) à compléter"
+                details += f", {plural(prev_counts.incomplete, 'ligne', 'lignes')} à compléter"
             title = (
                 f"Demain : preuves de {month_name(previous)} à remettre"
                 if key == "eve"

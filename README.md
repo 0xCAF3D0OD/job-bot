@@ -54,7 +54,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.33.0 | Tes dates dans ton agenda : fichier par entretien, abonnement (entretiens, suites, remise ORP, relances) | livrée |
 | 0.33.1 | Revue 0.24 à 0.33 : corrections (spontanée expirée, Échap, cloche, relances, agenda, IA indisponible…) | livrée |
 | 0.34.0 | Bilan : ce qui donne des réponses (source, note, contact, relance), parcours, résumé pour le rendez-vous ORP | livrée |
-| 0.35.0 | Revue page par page : Aujourd'hui par urgence, Actualités emploi / économie, « Mon domaine » sur place, chargement, onglets sur téléphone | en cours (a) |
+| 0.35.0 | Revue page par page : Aujourd'hui par urgence, Actualités emploi / économie, « Mon domaine » sur place, chargement, onglets sur téléphone | en cours (a, b) |
 
 ## Lancer en local
 

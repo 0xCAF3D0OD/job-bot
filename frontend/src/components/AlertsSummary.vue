@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import type { AlertsPage } from "../api/client";
+import { plural } from "../format";
 
 // Résumé des alertes (docs/21 §4) : un point par recherche, l'aide seulement si besoin.
 const props = defineProps<{ page: AlertsPage }>();
@@ -49,7 +50,7 @@ const siteNames = (cells: Cell[]): string =>
   >
     <div class="summary-head">
       <p>
-        <strong>{{ activeCount }} recherche(s) suivie(s)</strong>
+        <strong>{{ plural(activeCount, "recherche suivie", "recherches suivies") }}</strong>
         <template v-if="lastReceived">
           · dernière alerte reçue le {{ dateFormat.format(new Date(lastReceived)) }}
         </template>

@@ -281,7 +281,7 @@ async def test_reminders_once_after_ten_days(rt: Runtime, sent: list[Message]) -
     finally:
         await configured.dispose()
     [message] = sent
-    assert message.title == "1 candidature(s) sans réponse depuis 10 jours"
+    assert message.title == "1 candidature sans réponse depuis 10 jours"
     assert "Acme SA — Poste du 2026-10-09 (envoyée le 09.10)" in message.message
     async with rt.sessionmaker() as session:
         reminded = await session.scalar(

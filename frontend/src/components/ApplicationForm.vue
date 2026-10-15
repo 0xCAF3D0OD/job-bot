@@ -3,7 +3,6 @@ import { ref } from "vue";
 
 import type { ApplicationStatus, ApplicationUpdate } from "../api/client";
 import { applicationStatusLabel, methodLabel } from "../format";
-import AppIcon from "./AppIcon.vue";
 import HelpTip from "./HelpTip.vue";
 import { email, useChecks } from "../validators";
 
@@ -192,7 +191,7 @@ const STATUSES = Object.entries(applicationStatusLabel) as [ApplicationStatus, s
           class="primary"
           data-test="save-application"
         >
-          Enregistrer <AppIcon name="chevron" />
+          Enregistrer
         </button>
         <button
           type="button"

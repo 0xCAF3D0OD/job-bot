@@ -10,11 +10,10 @@ import {
   type DocumentOut,
   type DocumentText,
 } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import ChunkProposals from "./ChunkProposals.vue";
 import HelpTip from "./HelpTip.vue";
 import TagInput from "./TagInput.vue";
-import { formatDate } from "../format";
+import { formatDate, plural } from "../format";
 
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
@@ -136,7 +135,7 @@ async function propose(doc: DocumentOut): Promise<void> {
 
 async function onProposalsSaved(count: number): Promise<void> {
   proposal.value = null;
-  message.value = `${count} bloc(s) ajouté(s) à ton profil.`;
+  message.value = `${plural(count, "bloc ajouté", "blocs ajoutés")} à ton profil.`;
   await Promise.all([loadChunks(), loadDocuments()]);
 }
 
@@ -276,7 +275,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
             <div class="doc-info">
               <span class="job-title">{{ doc.filename }}</span>
               <span class="job-company">
-                {{ sizeText(doc.size) }} · {{ formatDate(doc.uploaded_at) }} · {{ doc.chunk_count }} bloc(s)
+                {{ sizeText(doc.size) }} · {{ formatDate(doc.uploaded_at) }} · {{ plural(doc.chunk_count, "bloc", "blocs") }}
               </span>
               <span
                 v-if="doc.text_status !== 'ok'"
@@ -340,7 +339,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
             data-test="chunk-from-selection"
             @click="chunkFromSelection"
           >
-            Créer un bloc avec la sélection <AppIcon name="chevron" />
+            Créer un bloc avec la sélection
           </button>
         </div>
         <div
@@ -368,7 +367,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         data-test="new-chunk"
         @click="newChunk()"
       >
-        Nouveau bloc <AppIcon name="chevron" />
+        Nouveau bloc
       </button>
     </div>
     <div
@@ -524,7 +523,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           class="primary"
           data-test="save-chunk"
         >
-          Enregistrer <AppIcon name="chevron" />
+          Enregistrer
         </button>
         <button
           type="button"

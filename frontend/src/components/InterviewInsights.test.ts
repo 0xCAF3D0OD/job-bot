@@ -45,7 +45,7 @@ describe("Mes enseignements (docs/23 §3)", () => {
     POST.mockResolvedValue({ data: insights({ coaching }) });
     const wrapper = mount(InterviewInsights);
     await flushPromises();
-    expect(wrapper.find(".disclosure-row").text()).toContain("2 entretien(s) · ressenti 3/5");
+    expect(wrapper.find(".disclosure-row").text()).toContain("2 entretiens · ressenti 3/5");
     expect(wrapper.find("[data-test=insight-questions]").text()).toContain("difficile 1×");
     await wrapper.find("[data-test=prepare-item]").setValue(true);
     await flushPromises();

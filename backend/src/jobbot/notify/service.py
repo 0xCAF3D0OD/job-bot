@@ -19,6 +19,7 @@ import httpx
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot.core.plural import plural
 from jobbot.db.models import (
     Application,
     ApplicationStatus,
@@ -95,10 +96,13 @@ def offers_message(
         for score, title, company, location in rows[:MAX_LISTED]
     ]
     if len(rows) > MAX_LISTED:
-        lines.append(f"… et {len(rows) - MAX_LISTED} autre(s)")
+        lines.append(f"… et {plural(len(rows) - MAX_LISTED, 'autre', 'autres')}")
     best = rows[0][0]
     return Message(
-        title=f"{len(rows)} nouvelle(s) offre(s) pour toi (jusqu'à {best}/100)",
+        title=(
+            f"{plural(len(rows), 'nouvelle offre', 'nouvelles offres')} pour toi"
+            f" (jusqu'à {best}/100)"
+        ),
         message="\n".join(lines),
         priority=4 if best >= 85 else 3,
         tags=["briefcase"],
@@ -240,11 +244,14 @@ async def notify_reminders(runtime: Runtime, today: date | None = None) -> int:
         f"{a.company} — {a.job_title} (envoyée le {a.sent_at:%d.%m})" for a in due[:MAX_LISTED]
     ]
     if len(due) > MAX_LISTED:
-        lines.append(f"… et {len(due) - MAX_LISTED} autre(s)")
+        lines.append(f"… et {plural(len(due) - MAX_LISTED, 'autre', 'autres')}")
     await deliver(
         runtime,
         Message(
-            title=f"{len(due)} candidature(s) sans réponse depuis {REMIND_AFTER_DAYS} jours",
+            title=(
+                f"{plural(len(due), 'candidature', 'candidatures')} sans réponse"
+                f" depuis {REMIND_AFTER_DAYS} jours"
+            ),
             message="Relancer ?\n" + "\n".join(lines),
             tags=["hourglass"],
             click=f"{settings.public_url.rstrip('/')}/candidatures/suivi",

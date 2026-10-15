@@ -15,7 +15,7 @@ const item = (id: number, extra: Record<string, unknown> = {}) => ({
   id,
   kind: "orp_due",
   title: "Preuves de septembre à remettre avant le 5 octobre",
-  message: "18 candidature(s), 2 ligne(s) à compléter.",
+  message: "18 candidatures, 2 lignes à compléter.",
   link: "/orp?mois=2026-09",
   created_at: new Date(Date.now() - 2 * 3600_000).toISOString(),
   read_at: null,

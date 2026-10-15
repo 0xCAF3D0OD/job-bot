@@ -1,6 +1,6 @@
 # 43 — Revue page par page (version 0.35.0)
 
-> Statut : **validé** le 2026-10-15. Livré : PR a.
+> Statut : **validé** le 2026-10-15. Livré : PR a, PR b.
 > Revue de chaque page sur ordinateur (1280 px) et téléphone (375 px), le 2026-10-15, avec des données fictives (30 offres, 12 candidatures, 89 actualités, le catalogue de formations). Jugée selon tes règles : compact, symétrique, linéaire, rien de trop long par rapport au reste, aucun libellé coupé, ouvertures fluides, barres d'accent droites.
 
 **En bref** : aucun débordement horizontal sur téléphone, les dépliages tiennent. Les défauts sont surtout de **cohérence entre pages** (en-têtes, largeurs, pluriels « (s) ») et de **longueur** (Actualités : 11 écrans sur téléphone ; Formations ; les guides de démarrage sur Aujourd'hui).
@@ -128,3 +128,10 @@ D'abord ce qui change ce que tu fais, puis la cohérence, puis les détails. Cha
 - **Chargement** : blocs gris sur Aujourd'hui, Actualités, Formations, Suivi et Bilan.
 - **Onglets sur téléphone** : marges resserrées pour tous les onglets ; Offres 21 · Suivi 8 · Alertes · Bilan tiennent sur 343 px.
 - **Vérifié** dans le navigateur avec les données fictives : chiffres du jour au premier écran (ordinateur 900 px), Actualités 2,5 à 2,7 écrans sur téléphone, onglets entiers, champ « Mon domaine ».
+
+## Écarts avec la PR b
+
+- **Un en-tête, une largeur** : toutes les pages prennent l'en-tête de Candidatures (étiquette, titre à gauche, onglets dessous) et la même largeur de contenu (80 rem, 1280 px). Les onglets d'Actualités, Formations et Profil montent dans l'en-tête ; Candidatures passe dans la même bande grise que les autres pages. Le sous-titre reste, en petit sous le titre, masqué sur téléphone. Mesuré sur les 9 pages : titre et bords au même pixel (ordinateur 1600 px et téléphone 375 px).
+- **Pluriels** : plus aucun « (s) » dans l'interface, ni dans les notifications (cloche, ntfy) ni dans les messages des commandes.
+- **Chevrons** : retirés des boutons d'action (Enregistrer, Ajouter, Créer, Renoter, Collecter maintenant, Afficher plus, Marquer comme remis, Rédiger la lettre, Préparer le CV, Se connecter) ; gardés pour ce qui ouvre une autre page ou l'étape suivante (Continuer, Compléter, Ouvrir, liens vers les sites).
+- **Titres** : un seul titre de page partout (la feuille ORP n'en ajoute plus) ; le panneau du Suivi et les jours de la liste des offres ont un vrai titre de section. **Les cartes d'offres restent des boutons** : un titre ne peut pas se trouver dans un bouton ; on passe d'une offre à l'autre avec Tab, chaque carte annonçant son poste.

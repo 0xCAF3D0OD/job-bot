@@ -2,8 +2,8 @@
 import { computed, ref } from "vue";
 
 import { api, type Chunk, type ChunkKind, type ChunkProposal } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import HelpTip from "./HelpTip.vue";
+import { plural } from "../format";
 
 const props = defineProps<{
   documentId: number;
@@ -61,7 +61,7 @@ async function save(): Promise<void> {
     }
     emit("saved", created);
   } catch {
-    error.value = `${created} bloc(s) ajouté(s), puis un refus : vérifie titres et contenus.`;
+    error.value = `${plural(created, "bloc ajouté", "blocs ajoutés")}, puis un refus : vérifie titres et contenus.`;
   } finally {
     saving.value = false;
   }
@@ -136,7 +136,7 @@ async function save(): Promise<void> {
           :disabled="saving"
           data-test="add-proposals"
         >
-          Ajouter {{ selectedCount }} bloc(s) <AppIcon name="chevron" />
+          Ajouter {{ plural(selectedCount, "bloc", "blocs") }}
         </button>
         <button
           type="button"

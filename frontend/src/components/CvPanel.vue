@@ -2,7 +2,6 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import HelpTip from "./HelpTip.vue";
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
@@ -313,7 +312,6 @@ onMounted(() => void load());
             v-if="!writing"
             class="cost"
           >· 0,05 $</span>
-          <AppIcon name="chevron" />
         </button>
       </div>
 

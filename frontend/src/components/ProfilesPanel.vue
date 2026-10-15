@@ -4,8 +4,8 @@ import { onMounted, ref } from "vue";
 import { api, type Profile, type ProfileList } from "../api/client";
 import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
-import AppIcon from "./AppIcon.vue";
 import HelpTip from "./HelpTip.vue";
+import { plural } from "../format";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
 // Actualités et les Formations leur conviennent.
@@ -131,7 +131,7 @@ onMounted(async () => {
             <span class="hint">
               <template v-if="profile.occupation">{{ profile.occupation }} · </template>
               {{ profile.domain_keywords.length ? profile.domain_keywords.join(", ") : "domaine non renseigné" }}
-              · {{ profile.sources }} source(s)
+              · {{ plural(profile.sources, "source", "sources") }}
             </span>
           </span>
           <span
@@ -255,7 +255,7 @@ onMounted(async () => {
             :disabled="busy"
             data-test="save-profile"
           >
-            Créer le profil <AppIcon name="chevron" />
+            Créer le profil
           </button>
           <button
             type="button"

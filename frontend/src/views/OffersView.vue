@@ -3,7 +3,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client";
-import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
@@ -16,6 +15,7 @@ import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
+import { plural } from "../format";
 
 const PAGE_SIZE = 50;
 
@@ -331,7 +331,7 @@ onUnmounted(() => {
           {{ notice }}
         </p>
         <p class="count list-count">
-          {{ total }} offre(s){{ loading ? "…" : "" }}
+          {{ plural(total, "offre", "offres") }}{{ loading ? "…" : "" }}
         </p>
         <p
           v-if="failed"
@@ -363,7 +363,9 @@ onUnmounted(() => {
               class="offer-day"
               data-test="offer-day"
             >
-              {{ dayHeader(index) }}
+              <h2 class="offer-day-title">
+                {{ dayHeader(index) }}
+              </h2>
             </li>
             <li>
               <OfferCard
@@ -381,7 +383,7 @@ onUnmounted(() => {
           :disabled="loading"
           @click="load(true)"
         >
-          Afficher plus <AppIcon name="chevron" />
+          Afficher plus
         </button>
       </div>
 

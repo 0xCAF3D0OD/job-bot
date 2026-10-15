@@ -191,49 +191,49 @@ onUnmounted(() => {
     title="Le marché de l'emploi, et de quoi progresser"
     short="Actualités"
     subtitle="L'emploi et ton domaine : articles et vidéos récents."
-  />
+  >
+    <nav
+      class="prep-tabs"
+      aria-label="Actualités"
+    >
+      <RouterLink
+        :to="{ query: {} }"
+        :class="{ active: tab === 'jobs' }"
+        data-test="tab-articles"
+      >
+        <span class="label-long">Marché de l'emploi</span>
+        <span class="label-short">Emploi</span>
+        <span
+          v-if="counts.jobs"
+          class="tab-count"
+        >{{ counts.jobs }}</span>
+      </RouterLink>
+      <RouterLink
+        :to="{ query: { rubrique: 'economie' } }"
+        :class="{ active: tab === 'economy' }"
+        data-test="tab-economy"
+      >
+        Économie
+        <span
+          v-if="counts.economy"
+          class="tab-count"
+        >{{ counts.economy }}</span>
+      </RouterLink>
+      <RouterLink
+        :to="{ query: { rubrique: 'videos' } }"
+        :class="{ active: tab === 'videos' }"
+        data-test="tab-videos"
+      >
+        Vidéos
+        <span
+          v-if="counts.videos"
+          class="tab-count"
+        >{{ counts.videos }}</span>
+      </RouterLink>
+    </nav>
+  </PageHero>
   <section class="band">
     <div class="container">
-      <nav
-        class="prep-tabs"
-        aria-label="Actualités"
-      >
-        <RouterLink
-          :to="{ query: {} }"
-          :class="{ active: tab === 'jobs' }"
-          data-test="tab-articles"
-        >
-          <span class="label-long">Marché de l'emploi</span>
-          <span class="label-short">Emploi</span>
-          <span
-            v-if="counts.jobs"
-            class="tab-count"
-          >{{ counts.jobs }}</span>
-        </RouterLink>
-        <RouterLink
-          :to="{ query: { rubrique: 'economie' } }"
-          :class="{ active: tab === 'economy' }"
-          data-test="tab-economy"
-        >
-          Économie
-          <span
-            v-if="counts.economy"
-            class="tab-count"
-          >{{ counts.economy }}</span>
-        </RouterLink>
-        <RouterLink
-          :to="{ query: { rubrique: 'videos' } }"
-          :class="{ active: tab === 'videos' }"
-          data-test="tab-videos"
-        >
-          Vidéos
-          <span
-            v-if="counts.videos"
-            class="tab-count"
-          >{{ counts.videos }}</span>
-        </RouterLink>
-      </nav>
-
       <div
         v-if="preferences && page"
         class="news-filters"

@@ -3,7 +3,7 @@ import { computed } from "vue";
 import DisclosureRow from "./DisclosureRow.vue";
 
 import type { Application } from "../api/client";
-import { applicationStatusLabel } from "../format";
+import { applicationStatusLabel, plural } from "../format";
 
 // Calendrier du mois (docs/22 §3) : une pastille par candidature envoyée, repères entretien
 // et relance, point rouge si la ligne ORP est à compléter.
@@ -73,7 +73,7 @@ function label(day: string): string {
   const parts = [`${Number(day.slice(8))}`];
   if (sent.length) {
     const statuses = sent.map((a) => applicationStatusLabel[a.status ?? "en_attente"].toLowerCase());
-    parts.push(`${sent.length} candidature(s) : ${statuses.join(", ")}`);
+    parts.push(`${plural(sent.length, "candidature", "candidatures")} : ${statuses.join(", ")}`);
   }
   if (interviews.value.has(day)) parts.push("entretien");
   if (reminders.value.has(day)) parts.push("à relancer");
