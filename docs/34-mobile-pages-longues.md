@@ -63,3 +63,9 @@ Une seule PR (**0.27.0**), sans migration ni changement d'API. Vérifiée à 375
 - **Aujourd'hui** : « Comment ça marche » et « Pour bien démarrer » sont en bas de page, repliés, une seule ouverte à la fois ; « Masquer » reste dedans.
 - **Ordinateur** : vérifié inchangé à 1280 px (cartes et encadré des Formations, sommaire et titres des Réglages, blocs d'Aujourd'hui).
 - **Largeurs vérifiées** : 393 px (téléphone) et 1280 px (ordinateur) seulement ; 375 et 768 px, prévus au §5, n'ont pas été passés en revue.
+
+## Complément du 2026-10-15 : clavier, filtres en carte, ouvertures fluides (téléphone)
+
+- **Assistant** : plus de bouton « Envoyer » sur téléphone ; la touche Entrée du clavier envoie (elle affiche « Envoyer » sur les claviers qui le permettent). Pour les claviers Android qui ne signalent pas la touche, le retour à la ligne est intercepté et envoie la question. Sur ordinateur, rien ne change (Entrée envoie, Maj+Entrée va à la ligne, bouton visible).
+- **« Filtrer »** (Actualités, Formations) : comme les alertes, une **carte sur toute la largeur de l'écran** sous la ligne des filtres, qui **pousse la liste** vers le bas. Sur ordinateur, le menu déroulant d'Actualités ne change pas.
+- **Ouvertures fluides** : la carte des alertes et celle des filtres s'ouvrent et se ferment en glissant (0,2 s) ; la page suit en douceur au lieu de sauter. Rien pour qui demande moins d'animations.

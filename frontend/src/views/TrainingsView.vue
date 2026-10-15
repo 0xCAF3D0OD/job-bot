@@ -6,6 +6,7 @@ import { api, type Training } from "../api/client";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import HelpTip from "../components/HelpTip.vue";
 import PageHero from "../components/PageHero.vue";
+import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
 import TrainingCardBody from "../components/TrainingCardBody.vue";
 import { usePhone } from "../composables/usePhone";
@@ -235,59 +236,61 @@ onMounted(() => void load());
         >
           Filtrer{{ activeFilters ? ` · ${activeFilters}` : "" }}
         </button>
-        <div
-          v-show="!phone || filtersOpen"
-          :class="phone ? 'training-filter-sheet' : 'training-filter-group'"
-        >
-          <select
-            v-model="kind"
-            aria-label="Type"
-            data-test="filter-kind"
+        <PushTransition :enabled="phone">
+          <div
+            v-show="!phone || filtersOpen"
+            :class="phone ? 'training-filter-sheet' : 'training-filter-group'"
           >
-            <option value="">
-              Tous les types
-            </option>
-            <option
-              v-for="(label, key) in KINDS"
-              :key="key"
-              :value="key"
+            <select
+              v-model="kind"
+              aria-label="Type"
+              data-test="filter-kind"
             >
-              {{ label }}
-            </option>
-          </select>
-          <select
-            v-model="price"
-            aria-label="Prix"
-            data-test="filter-price"
-          >
-            <option value="">
-              Gratuit ou payant
-            </option>
-            <option
-              v-for="(label, key) in PRICES"
-              :key="key"
-              :value="key"
+              <option value="">
+                Tous les types
+              </option>
+              <option
+                v-for="(label, key) in KINDS"
+                :key="key"
+                :value="key"
+              >
+                {{ label }}
+              </option>
+            </select>
+            <select
+              v-model="price"
+              aria-label="Prix"
+              data-test="filter-price"
             >
-              {{ label }}
-            </option>
-          </select>
-          <select
-            v-if="languages.length > 1"
-            v-model="language"
-            aria-label="Langue"
-          >
-            <option value="">
-              Toutes les langues
-            </option>
-            <option
-              v-for="code in languages"
-              :key="code"
-              :value="code"
+              <option value="">
+                Gratuit ou payant
+              </option>
+              <option
+                v-for="(label, key) in PRICES"
+                :key="key"
+                :value="key"
+              >
+                {{ label }}
+              </option>
+            </select>
+            <select
+              v-if="languages.length > 1"
+              v-model="language"
+              aria-label="Langue"
             >
-              {{ languageLabel(code) }}
-            </option>
-          </select>
-        </div>
+              <option value="">
+                Toutes les langues
+              </option>
+              <option
+                v-for="code in languages"
+                :key="code"
+                :value="code"
+              >
+                {{ languageLabel(code) }}
+              </option>
+            </select>
+          </div>
+        </PushTransition>
         <span
           v-if="canSuggest && tab === 'catalog'"
           class="news-status"

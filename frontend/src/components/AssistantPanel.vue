@@ -6,6 +6,7 @@ import { api, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT } from "../api/c
 import type { components } from "../api/schema";
 import { blocks, readEvents } from "../assistantText";
 import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssistant";
+import { usePhone } from "../composables/usePhone";
 
 type Conversation = components["schemas"]["ConversationOut"];
 type Line = { role: "user" | "assistant"; content: string; error?: boolean };
@@ -166,6 +167,18 @@ async function send(text: string = draft.value): Promise<void> {
 
 function onEnter(event: KeyboardEvent): void {
   if (event.shiftKey || event.isComposing) return;
+  event.preventDefault();
+  void send();
+}
+
+// Téléphone (retour du 2026-10-15) : pas de bouton « Envoyer », la touche Entrée du clavier
+// envoie (étiquetée « Envoyer » grâce à enterkeyhint). Certains claviers Android ne
+// signalent pas la touche : le retour à la ligne demandé est alors intercepté ici.
+const { phone } = usePhone();
+
+function onBeforeInput(event: InputEvent): void {
+  if (!phone.value) return; // ordinateur : Maj+Entrée va à la ligne
+  if (event.inputType !== "insertLineBreak" && event.inputType !== "insertParagraph") return;
   event.preventDefault();
   void send();
 }
@@ -427,12 +440,14 @@ function day(value: string): string {
           maxlength="4000"
           placeholder="Écris ta question…"
           aria-label="Ta question"
+          enterkeyhint="send"
           data-test="assistant-input"
           @keydown.enter="onEnter"
+          @beforeinput="onBeforeInput"
         />
         <button
           type="submit"
-          class="primary small"
+          class="primary small assistant-send"
           :disabled="busy"
           data-test="assistant-send"
         >

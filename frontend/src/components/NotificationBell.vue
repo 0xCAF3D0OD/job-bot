@@ -6,6 +6,7 @@ import { api, type Inbox, type InboxItem } from "../api/client";
 import { since } from "../format";
 import AppIcon from "./AppIcon.vue";
 import { usePhone } from "../composables/usePhone";
+import PushTransition from "./PushTransition.vue";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
 const REFRESH_MS = 60_000;
@@ -101,7 +102,7 @@ onUnmounted(() => {
       defer
       :disabled="!phone"
     >
-      <Transition name="bell-drop">
+      <PushTransition :enabled="phone">
         <div
           v-if="open"
           class="bell-panel"
@@ -148,7 +149,7 @@ onUnmounted(() => {
             </li>
           </ul>
         </div>
-      </Transition>
+      </PushTransition>
     </Teleport>
   </div>
 </template>

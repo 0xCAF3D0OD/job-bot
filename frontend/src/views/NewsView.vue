@@ -4,9 +4,11 @@ import { useRoute } from "vue-router";
 
 import { api, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
 import HelpTip from "../components/HelpTip.vue";
+import PushTransition from "../components/PushTransition.vue";
 import PageHero from "../components/PageHero.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
+import { usePhone } from "../composables/usePhone";
 import { since } from "../format";
 import { countryLabel, highlight, languageLabel } from "../newsLabels";
 
@@ -59,11 +61,16 @@ function shortSource(source: string): string {
 // Pays et langue derrière « Filtrer » (docs/32 §5.2), avec le nombre de filtres actifs.
 const filtersOpen = ref(false);
 const filtersRoot = ref<HTMLElement | null>(null);
+// Téléphone (retour du 2026-10-15) : comme les alertes, une carte sur toute la largeur sous
+// la ligne des filtres, qui pousse la liste en douceur. Ordinateur : le menu déroulant.
+const filtersPopover = ref<HTMLElement | null>(null);
+const { phone } = usePhone();
 const activeFilters = computed(() => (preferences.value?.countries.length ?? 0) + (preferences.value?.languages.length ?? 0));
 const canFilter = computed(() => (page.value?.countries.length ?? 0) > 1 || (page.value?.languages.length ?? 0) > 1);
 
 function onDocument(event: Event): void {
-  if (filtersRoot.value && !filtersRoot.value.contains(event.target as Node)) closeFilters();
+  const target = event.target as Node;
+  if (!filtersRoot.value?.contains(target) && !filtersPopover.value?.contains(target)) closeFilters();
 }
 
 function toggleFilters(): void {
@@ -236,52 +243,64 @@ onUnmounted(() => {
           >
             Filtrer{{ activeFilters ? ` · ${activeFilters}` : "" }}
           </button>
-          <div
-            v-show="filtersOpen"
-            id="news-filter-popover"
-            class="news-filter-popover"
-            data-test="news-filter-popover"
+          <Teleport
+            to="#news-filter-drop"
+            defer
+            :disabled="!phone"
           >
-            <div
-              v-if="page.countries.length > 1"
-              class="chip-group"
-              role="group"
-              aria-label="Pays"
-            >
-              <span class="chip-label">Pays</span>
-              <button
-                v-for="code in page.countries"
-                :key="code"
-                type="button"
-                :class="['chip', { on: selected('countries', code) }]"
-                :aria-pressed="selected('countries', code)"
-                data-test="filter-country"
-                @click="toggle('countries', code)"
+            <PushTransition :enabled="phone">
+              <div
+                v-show="filtersOpen"
+                id="news-filter-popover"
+                class="news-filter-popover"
+                data-test="news-filter-popover"
               >
-                {{ countryLabel(code) }}
-              </button>
-            </div>
-            <div
-              v-if="page.languages.length > 1"
-              class="chip-group"
-              role="group"
-              aria-label="Langue"
-            >
-              <span class="chip-label">Langue</span>
-              <button
-                v-for="code in page.languages"
-                :key="code"
-                type="button"
-                :class="['chip', { on: selected('languages', code) }]"
-                :aria-pressed="selected('languages', code)"
-                data-test="filter-language"
-                @click="toggle('languages', code)"
-              >
-                {{ languageLabel(code) }}
-              </button>
-            </div>
-          </div>
+                <div
+                  v-if="page.countries.length > 1"
+                  class="chip-group"
+                  role="group"
+                  aria-label="Pays"
+                >
+                  <span class="chip-label">Pays</span>
+                  <button
+                    v-for="code in page.countries"
+                    :key="code"
+                    type="button"
+                    :class="['chip', { on: selected('countries', code) }]"
+                    :aria-pressed="selected('countries', code)"
+                    data-test="filter-country"
+                    @click="toggle('countries', code)"
+                  >
+                    {{ countryLabel(code) }}
+                  </button>
+                </div>
+                <div
+                  v-if="page.languages.length > 1"
+                  class="chip-group"
+                  role="group"
+                  aria-label="Langue"
+                >
+                  <span class="chip-label">Langue</span>
+                  <button
+                    v-for="code in page.languages"
+                    :key="code"
+                    type="button"
+                    :class="['chip', { on: selected('languages', code) }]"
+                    :aria-pressed="selected('languages', code)"
+                    data-test="filter-language"
+                    @click="toggle('languages', code)"
+                  >
+                    {{ languageLabel(code) }}
+                  </button>
+                </div>
+              </div>
+            </PushTransition>
+          </Teleport>
         </div>
+        <div
+          id="news-filter-drop"
+          class="filter-drop-zone"
+        />
       </div>
       <p
         v-if="preferences && !hasDomain"
