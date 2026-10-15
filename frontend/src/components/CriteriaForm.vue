@@ -7,6 +7,7 @@ import type { components } from "../api/schema";
 type RemotePolicy = components["schemas"]["RemotePolicy"];
 import HelpTip from "./HelpTip.vue";
 import TagInput from "./TagInput.vue";
+import { placeLabel } from "../cantons";
 
 const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "stage", label: "Stages" },
@@ -67,22 +68,23 @@ const languagesHelp = computed(() => {
   return `Écartée si le titre ou l'extrait exige la langue : son nom à moins de trois mots de ${words}…`;
 });
 
+// Résumé en lignes alignées, libellé à gauche, valeur à droite (docs/43 n° 23) ; les cantons
+// en toutes lettres (n° 24).
 const summary = computed(() => {
   const f = form.value;
-  const lines: string[] = [];
-  lines.push(
-    f.locations.length
-      ? `Lieux : ${f.locations.join(", ")}`
-      : "Lieux : partout",
-  );
-  lines.push(REMOTE_POLICIES.find((p) => p.value === f.remote_policy)?.summary ?? "");
-  lines.push(f.min_rate ? `Taux d'activité : ${f.min_rate} % au moins` : "Taux d'activité : tous");
+  const rows: { label: string; value: string }[] = [
+    { label: "Lieux", value: f.locations.length ? f.locations.map(placeLabel).join(", ") : "partout" },
+  ];
+  const remote = REMOTE_POLICIES.find((p) => p.value === f.remote_policy)?.summary ?? "";
+  const [remoteLabel, remoteValue] = remote.split(" : ");
+  if (remoteLabel && remoteValue) rows.push({ label: remoteLabel, value: remoteValue });
+  rows.push({ label: "Taux d'activité", value: f.min_rate ? `${f.min_rate} % au moins` : "tous" });
   const types = CONTRACTS.filter((c) => f.excluded_types.includes(c.value)).map((c) => c.label.toLowerCase());
-  lines.push(types.length ? `Exclus : ${types.join(", ")}` : "Aucun type d'offre exclu");
-  if (f.banned_words.length) lines.push(`Mots interdits dans le titre : ${f.banned_words.join(", ")}`);
+  rows.push({ label: "Types d'offres exclus", value: types.length ? types.join(", ") : "aucun" });
+  if (f.banned_words.length) rows.push({ label: "Mots interdits dans le titre", value: f.banned_words.join(", ") });
   const langs = LANGUAGES.filter((l) => f.unspoken_languages.includes(l.value)).map((l) => l.label.toLowerCase());
-  if (langs.length) lines.push(`Langues que tu ne parles pas : ${langs.join(", ")}`);
-  return lines;
+  if (langs.length) rows.push({ label: "Langues que tu ne parles pas", value: langs.join(", ") });
+  return rows;
 });
 
 async function load(): Promise<void> {
@@ -140,14 +142,22 @@ onMounted(() => void load());
       class="form-card criteria-summary"
       data-test="criteria-summary"
     >
-      <ul>
-        <li
-          v-for="line in summary"
-          :key="line"
+      <h2 class="criteria-summary-title">
+        Tes prérequis
+        <HelpTip
+          label="Aide : prérequis"
+          text="Une offre qui ne les respecte pas passe dans « Écartées » ; tu peux toujours la remettre à examiner."
+        />
+      </h2>
+      <dl class="summary-rows">
+        <div
+          v-for="row in summary"
+          :key="row.label"
         >
-          {{ line }}
-        </li>
-      </ul>
+          <dt>{{ row.label }}</dt>
+          <dd>{{ row.value }}</dd>
+        </div>
+      </dl>
       <div class="form-actions">
         <button
           type="button"

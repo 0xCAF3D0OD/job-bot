@@ -70,7 +70,6 @@ onMounted(() => void refresh());
 
 <template>
   <div class="jobs-head">
-    <span class="eyebrow">Candidatures</span>
     <h1>
       <span class="label-long">{{ current.title }}</span>
       <span class="label-short">{{ current.short }}</span>

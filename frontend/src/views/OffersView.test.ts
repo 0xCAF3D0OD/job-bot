@@ -466,3 +466,26 @@ describe("tri « Dernière action »", () => {
     expect(router.currentRoute.value.query.tri).toBeUndefined();
   });
 });
+
+describe("Offres, revue des pages (docs/43)", () => {
+  it("groupées Aujourd'hui · Cette semaine · Plus ancien ; « Candidature spontanée » sur la ligne du nombre", async () => {
+    const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+    mockOffers(
+      page([
+        offer(1, "Aujourd'hui", { first_seen_at: ago(0) }),
+        offer(2, "Mardi", { first_seen_at: ago(2) }),
+        offer(3, "Lundi", { first_seen_at: ago(3) }),
+        offer(4, "Ancienne", { first_seen_at: ago(20) }),
+      ]),
+    );
+    const wrapper = await mountAt("/offres");
+    expect(wrapper.findAll("[data-test=offer-day]").map((h) => h.text())).toEqual([
+      "Aujourd'hui · 1 offre",
+      "Cette semaine · 2 offres",
+      "Plus ancien · 1 offre",
+    ]);
+    expect(wrapper.find(".list-count-row [data-test=spontaneous-open]").exists()).toBe(true);
+    // Aucun filtre actif : pas de « Effacer tout ».
+    expect(wrapper.find("[data-test=reset]").exists()).toBe(false);
+  });
+});

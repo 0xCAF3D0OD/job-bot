@@ -421,10 +421,11 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
     </div>
 
     <div class="filters-footer">
+      <!-- Masqué tant qu'aucun filtre n'est actif (docs/43 n° 13). -->
       <button
+        v-if="activeCount(filters)"
         type="button"
         class="filters-clear"
-        :disabled="!activeCount(filters)"
         data-test="reset"
         @click="emit('reset')"
       >

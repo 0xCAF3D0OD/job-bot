@@ -152,6 +152,11 @@ onMounted(() => void load());
           >
             Retirer
           </button>
+          <!-- Sites intégrés : la colonne reste, vide, pour aligner les cases (docs/43 n° 26). -->
+          <span
+            v-else
+            aria-hidden="true"
+          />
         </li>
       </ul>
 

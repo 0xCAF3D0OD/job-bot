@@ -7,7 +7,6 @@ defineProps<{ entry: NavEntry }>();
 
 <template>
   <PageHero
-    :eyebrow="entry.label"
     :title="entry.label"
     :subtitle="entry.description"
   />

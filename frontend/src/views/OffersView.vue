@@ -45,19 +45,18 @@ const spontaneousOpen = ref(false);
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
 
-// Tri « Par jour » : un intertitre avant la première offre de chaque jour (heure suisse).
+// Tri « Par jour » : les offres groupées comme les Actualités, Aujourd'hui · Cette semaine ·
+// Plus ancien (docs/43 n° 12), la date restant sur chaque carte ; heure suisse.
 const dayKey = (iso: string): string => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" });
-function dayLabel(key: string): string {
-  const today = dayKey(new Date().toISOString());
-  const yesterday = dayKey(new Date(Date.now() - 86_400_000).toISOString());
-  if (key === today) return "Aujourd'hui";
-  if (key === yesterday) return "Hier";
-  return new Date(`${key}T12:00:00`).toLocaleDateString("fr-CH", { weekday: "long", day: "numeric", month: "long" });
+const PERIOD_LABELS = { today: "Aujourd'hui", week: "Cette semaine", older: "Plus ancien" } as const;
+function periodOf(iso: string): keyof typeof PERIOD_LABELS {
+  if (dayKey(iso) === dayKey(new Date().toISOString())) return "today";
+  return Date.now() - new Date(iso).getTime() < 7 * 86_400_000 ? "week" : "older";
 }
-const dayCounts = computed(() => {
+const periodCounts = computed(() => {
   const counts = new Map<string, number>();
   for (const offer of items.value) {
-    const key = dayKey(offer.first_seen_at);
+    const key = periodOf(offer.first_seen_at);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return counts;
@@ -66,11 +65,10 @@ function dayHeader(index: number): string | null {
   if (filters.value.sort !== "day") return null;
   const offer = items.value[index];
   if (!offer) return null;
-  const key = dayKey(offer.first_seen_at);
+  const key = periodOf(offer.first_seen_at);
   const previous = items.value[index - 1];
-  if (previous && dayKey(previous.first_seen_at) === key) return null;
-  const count = dayCounts.value.get(key) ?? 0;
-  return `${dayLabel(key)} · ${count} offre${count > 1 ? "s" : ""}`;
+  if (previous && periodOf(previous.first_seen_at) === key) return null;
+  return `${PERIOD_LABELS[key]} · ${plural(periodCounts.value.get(key) ?? 0, "offre", "offres")}`;
 }
 const route = useRoute();
 const router = useRouter();
@@ -276,14 +274,6 @@ onUnmounted(() => {
       >
         Filtrer{{ activeCount(filters) ? ` · ${activeCount(filters)}` : "" }}
       </button>
-      <button
-        type="button"
-        class="secondary spontaneous-open"
-        data-test="spontaneous-open"
-        @click="spontaneousOpen = true"
-      >
-        Candidature spontanée
-      </button>
     </div>
 
     <div :class="['offers-grid', { 'has-selection': selected }]">
@@ -330,9 +320,20 @@ onUnmounted(() => {
         >
           {{ notice }}
         </p>
-        <p class="count list-count">
-          {{ plural(total, "offre", "offres") }}{{ loading ? "…" : "" }}
-        </p>
+        <!-- « Candidature spontanée » sur la ligne du nombre d'offres (docs/43 n° 11). -->
+        <div class="list-count-row">
+          <p class="count list-count">
+            {{ plural(total, "offre", "offres") }}{{ loading ? "…" : "" }}
+          </p>
+          <button
+            type="button"
+            class="secondary small spontaneous-open"
+            data-test="spontaneous-open"
+            @click="spontaneousOpen = true"
+          >
+            Candidature spontanée
+          </button>
+        </div>
         <p
           v-if="failed"
           class="notice error"

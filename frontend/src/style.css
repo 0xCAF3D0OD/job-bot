@@ -788,10 +788,15 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .apply-bar .spacer { flex: 1; }
 @media print { .apply-bar { display: none; } }
 .sites-list { list-style: none; margin: 0.5rem 0 1rem; padding: 0; display: grid; gap: 0.5rem; }
-.sites-list li { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 10px; }
+/* Colonnes fixes (docs/43 n° 26) : compteurs, cases et « Retirer » alignés d'un site à l'autre. */
+.sites-list li { display: grid; grid-template-columns: minmax(0, 1fr) 13rem 4.5rem 4rem; gap: 0.4rem 1rem; align-items: center; padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 10px; }
 .sites-list li.paused { opacity: 0.6; }
-.site-main { display: grid; flex: 1; min-width: 12rem; }
-.site-stats { white-space: nowrap; }
+.site-main { display: grid; min-width: 0; }
+.site-stats { white-space: nowrap; text-align: right; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 820px) {
+  .sites-list li { grid-template-columns: minmax(0, 1fr) 4.5rem 4rem; }
+  .sites-list .site-stats { grid-column: 1; grid-row: 2; text-align: left; }
+}
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Page Offres (docs/14 §1) : sans offre ouverte, la liste est centrée ; à l'ouverture, elle
@@ -802,7 +807,8 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
   .offers-grid .detail-column { min-width: 0; overflow-x: hidden; }
   .offers-grid:not(.has-selection) { column-gap: 0; }
   .offers-grid:not(.has-selection) .filters-column { margin-right: 1.5rem; }
-  .offers-list { width: 100%; max-width: 52rem; justify-self: center; transition: max-width 0.28s ease; }
+  /* Liste alignée sur les onglets (docs/43 n° 11). */
+  .offers-list { width: 100%; }
   .offers-grid.has-selection .offers-list { max-width: 100%; }
   .detail-enter-active, .detail-leave-active { transition: opacity 0.25s ease, transform 0.28s ease; }
   .detail-enter-from, .detail-leave-to { opacity: 0; transform: translateX(2.5rem); }
@@ -922,7 +928,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 
 /* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
 .jobs-head { max-width: var(--page-width); margin: 0 auto; padding: 1.75rem 1.5rem 0; }
-.jobs-head h1 { font-size: 2rem; margin: 0.6rem 0 1rem; }
+.jobs-head h1 { font-size: 2rem; margin: 0 0 1rem; }
 .jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
 .jobs-tabs a { white-space: nowrap; }
 .jobs-band > .offers-page { padding-top: 1.5rem; }
@@ -998,7 +1004,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .journey li.done .tick { background: var(--ok); border-color: var(--ok); }
 
 /* Alertes : assistant et résumé (docs/21 §4) */
-.wizard { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; padding: 1.4rem; max-width: 46rem; }
+.wizard { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; padding: 1.4rem; }
 .wizard h2 { margin: 0; font-size: 1.3rem; }
 .wizard-step { margin: 0; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .wizard-links { display: grid; gap: 0.5rem; justify-items: start; }
@@ -1054,7 +1060,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .diagnostic-link { margin-top: 1.5rem; font-size: 0.9rem; }
 
 /* Suivi en calendrier (docs/22) */
-.layout-switch { width: 14rem; margin: 0 0 1rem; }
+.layout-switch { width: 14rem; margin: 0; }
 .suivi-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr); gap: 1.25rem; align-items: start; }
 .suivi-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; }
 .suivi-calendar .weekday { font-size: 0.75rem; color: var(--muted); text-align: center; padding-bottom: 0.2rem; }
@@ -1653,9 +1659,9 @@ html.side-open { overflow: hidden; }
   .applications-head .month-goal { grid-column: 2; justify-self: end; min-width: 0; font-size: 0.85rem; white-space: nowrap; }
   .applications-head .goal-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .applications-head .month-goal .budget-bar, .applications-head .month-goal .hint { display: none; }
-  .applications-head .add-application { grid-column: 3; grid-row: 1; width: 2.4rem; height: 2.4rem; padding: 0; border-radius: 50%; justify-content: center; font-size: 0; }
-  .applications-head .add-application::before { content: "+"; font-size: 1.3rem; line-height: 1; }
-  .applications-head > .badge, .applications-head > .link { grid-column: 1 / -1; justify-self: start; }
+  .applications-head .add-application { grid-column: 3; grid-row: 1; }
+  .applications-head .layout-switch { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  .applications-todo { padding: 0.6rem 0.8rem; }
 }
 
 /* Formation terminée vers Mon parcours (docs/37 §1) */
@@ -1676,6 +1682,8 @@ html.side-open { overflow: hidden; }
 
 /* Candidatures spontanées (docs/39) */
 .spontaneous-open { margin-left: auto; }
+.list-count-row { display: flex; align-items: center; gap: 1rem; margin: 0 0 0.75rem; }
+.list-count-row .list-count { margin: 0; }
 .spontaneous-badge { margin: 0 0 0.2rem; }
 .spontaneous-form { display: grid; gap: 0.75rem; justify-items: start; }
 .spontaneous-form label { display: grid; gap: 0.25rem; width: 100%; font-size: 0.88rem; }
@@ -1764,3 +1772,46 @@ html.side-open { overflow: hidden; }
   .page-head .page-head-sub { display: none; }
 }
 .offer-day-title { margin: 0; font: inherit; color: inherit; }
+
+/* Sans bouton visible (ordinateur), la ligne au-dessus des offres disparaît. */
+@media (min-width: 861px) { .offers-heading { display: none; } }
+
+/* Suivi (docs/43 n° 14) : ligne 1, le mois, le compteur, Calendrier / Liste et ＋ ; ligne 2,
+   seulement s'il y a à faire, l'état ORP et son action. */
+.applications-head .add-application { width: 2.4rem; height: 2.4rem; padding: 0; border-radius: 50%; justify-content: center; font-size: 1.15rem; line-height: 1; }
+.applications-todo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; margin: 0 0 1.25rem; padding: 0.7rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.applications-state { font-weight: 500; }
+.applications-state.done { color: var(--muted); font-weight: 400; }
+
+/* Formations : Certifications, puis Cours et parcours (docs/43 n° 21). */
+.training-section { display: grid; gap: 0.75rem; }
+.training-section + .training-section { margin-top: 2rem; }
+
+/* Profil (docs/43 n° 23) : le résumé de ce que tu cherches sur toute la largeur, en lignes
+   alignées comme les cartes du Bilan. */
+.narrow-block:has(.criteria-summary) { max-width: none; }
+.criteria-summary-title { display: flex; align-items: center; gap: 0.4rem; margin: 0 0 0.4rem; font-size: 1rem; font-weight: 600; }
+.summary-rows { margin: 0 0 1rem; }
+.summary-rows > div { display: grid; grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); gap: 1rem; padding: 0.55rem 0; }
+.summary-rows > div + div { border-top: 1px solid var(--border); }
+.summary-rows dt { color: var(--muted); }
+.summary-rows dd { margin: 0; font-weight: 500; }
+@media (max-width: 820px) {
+  .summary-rows > div { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+}
+
+/* Réglages, Recherche d'emploi (docs/43 n° 27) : les quatre nombres en grille 2 × 2. */
+@media (min-width: 821px) {
+  .settings-numbers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2rem; }
+  .settings-numbers .form-actions { grid-column: 1 / -1; }
+}
+
+/* Sources des Actualités (docs/43 n° 28) : mêmes colonnes pour toutes les sources. */
+.news-sources-list li { grid-template-columns: minmax(0, 1fr) 4.5rem 4rem; }
+.news-sources-list .source-fields { display: grid; grid-template-columns: 9rem 9rem auto; justify-content: start; }
+.news-sources-list .source-fields select { width: 100%; }
+@media (max-width: 820px) {
+  .news-sources-list .source-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .news-sources-list .source-fields .check { grid-column: 1 / -1; }
+}
+.criteria-summary { padding-top: 1.5rem; }

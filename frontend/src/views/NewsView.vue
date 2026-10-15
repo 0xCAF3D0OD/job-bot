@@ -187,7 +187,6 @@ onUnmounted(() => {
 
 <template>
   <PageHero
-    eyebrow="Actualités"
     title="Le marché de l'emploi, et de quoi progresser"
     short="Actualités"
     subtitle="L'emploi et ton domaine : articles et vidéos récents."

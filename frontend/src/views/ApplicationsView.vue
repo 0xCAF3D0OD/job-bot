@@ -345,7 +345,7 @@ onUnmounted(() => assistant.setFocus(null));
           class="month-goal"
           data-test="goal"
         >
-          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }}<span :class="{ 'goal-unit': orp.target }"> {{ orp.count === 1 ? "candidature" : "candidatures" }}</span></span>
+          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }}<span :class="{ 'goal-unit': orp.target }">{{ orp.count === 1 ? " candidature" : " candidatures" }}</span></span>
           <div
             v-if="progress !== null"
             class="budget-bar"
@@ -361,81 +361,87 @@ onUnmounted(() => assistant.setFocus(null));
             class="hint"
           >Objectif ORP à saisir dans les Réglages.</span>
         </div>
-        <span
-          :class="['badge', orp.state === 'remis' ? 'new' : '']"
-          data-test="state"
-        >{{ stateLabel }}</span>
-        <!-- Une action ORP à la fois (docs/22 §2). -->
-        <template v-if="orp.count">
+        <div
+          class="segmented layout-switch"
+          role="radiogroup"
+          aria-label="Affichage"
+        >
           <button
-            v-if="orp.state === 'remis'"
             type="button"
-            class="link"
-            :disabled="busy"
-            data-test="cancel-submit"
-            @click="submit(false)"
+            role="radio"
+            :aria-checked="layout === 'calendar'"
+            data-test="layout-calendar"
+            @click="setLayout('calendar')"
           >
-            Annuler la remise
+            Calendrier
           </button>
-          <!-- Sur téléphone, l'action du moment est fixée en bas de l'écran (docs/33 §3.2). -->
-          <div
-            v-else
-            class="mobile-dock"
+          <button
+            type="button"
+            role="radio"
+            :aria-checked="layout === 'list'"
+            data-test="layout-list"
+            @click="setLayout('list')"
           >
-            <button
-              v-if="firstIncomplete"
-              type="button"
-              class="primary small"
-              data-test="complete-next"
-              @click="edit(firstIncomplete)"
-            >
-              Compléter {{ plural(orp.incomplete, "ligne", "lignes") }} <AppIcon name="chevron" />
-            </button>
-            <button
-              v-else
-              type="button"
-              class="primary small"
-              :disabled="busy"
-              data-test="submit"
-              @click="submit(true)"
-            >
-              Marquer comme remis
-            </button>
-          </div>
-        </template>
+            Liste
+          </button>
+        </div>
         <button
           type="button"
           class="secondary small add-application"
+          aria-label="Ajouter une candidature"
+          title="Ajouter une candidature"
           data-test="add-application"
           @click="addManual"
         >
-          Ajouter une candidature
+          ＋
         </button>
       </div>
 
+      <!-- Ligne 2, seulement s'il y a à faire : l'état ORP et son action (docs/43 n° 14). -->
       <div
-        class="segmented layout-switch"
-        role="radiogroup"
-        aria-label="Affichage"
+        v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
+        class="applications-todo"
       >
+        <span
+          :class="['applications-state', { done: orp.state === 'remis' }]"
+          data-test="state"
+        >{{ stateLabel }}</span>
+        <!-- Une action ORP à la fois (docs/22 §2). -->
         <button
+          v-if="orp.state === 'remis'"
           type="button"
-          role="radio"
-          :aria-checked="layout === 'calendar'"
-          data-test="layout-calendar"
-          @click="setLayout('calendar')"
+          class="link"
+          :disabled="busy"
+          data-test="cancel-submit"
+          @click="submit(false)"
         >
-          Calendrier
+          Annuler la remise
         </button>
-        <button
-          type="button"
-          role="radio"
-          :aria-checked="layout === 'list'"
-          data-test="layout-list"
-          @click="setLayout('list')"
+        <!-- Sur téléphone, l'action du moment est fixée en bas de l'écran (docs/33 §3.2). -->
+        <div
+          v-else
+          class="mobile-dock"
         >
-          Liste
-        </button>
+          <button
+            v-if="firstIncomplete"
+            type="button"
+            class="primary small"
+            data-test="complete-next"
+            @click="edit(firstIncomplete)"
+          >
+            Compléter {{ plural(orp.incomplete, "ligne", "lignes") }} <AppIcon name="chevron" />
+          </button>
+          <button
+            v-else
+            type="button"
+            class="primary small"
+            :disabled="busy"
+            data-test="submit"
+            @click="submit(true)"
+          >
+            Marquer comme remis
+          </button>
+        </div>
       </div>
 
       <div

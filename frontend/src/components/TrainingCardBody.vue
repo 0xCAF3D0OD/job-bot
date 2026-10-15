@@ -4,7 +4,7 @@ import { reactive, ref } from "vue";
 import { api, type Training } from "../api/client";
 import { highlight, languageLabel } from "../newsLabels";
 import HelpTip from "./HelpTip.vue";
-import { FORMATS, KINDS, LEVELS, PRICES, STATUSES } from "../trainingLabels";
+import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 
 // Contenu d'une formation (docs/16 §5) : la carte du catalogue sur ordinateur, la fiche en
 // plein écran sur téléphone (docs/34 §2).
@@ -168,7 +168,7 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
     :key="index"
   ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></a>
   <p class="training-facts">
-    {{ FORMATS[training.format] }} · {{ languageLabel(training.language) }} · {{ PRICES[training.price] }}
+    <span :title="FORMATS[training.format]">{{ SHORT_FORMATS[training.format] ?? FORMATS[training.format] }}</span> · {{ languageLabel(training.language) }} · {{ PRICES[training.price] }}
     <template v-if="training.level">
       · {{ LEVELS[training.level] }}
     </template>
@@ -187,12 +187,6 @@ const inputValue = (event: Event): string => (event.target as HTMLInputElement).
     class="training-text"
   >
     <strong>Préparation conseillée :</strong> {{ training.prep }}
-  </p>
-  <p
-    v-if="training.price === 'paid'"
-    class="hint"
-  >
-    Financement possible seulement avec l'accord préalable de ton conseiller ORP.
   </p>
   <div
     v-if="!training.verified"

@@ -171,7 +171,6 @@ onMounted(() => void load());
 
 <template>
   <PageHero
-    eyebrow="Aujourd'hui"
     :title="dateTitle.charAt(0).toUpperCase() + dateTitle.slice(1)"
     subtitle="Le point sur ta recherche, et ce qu'il reste à faire."
   />

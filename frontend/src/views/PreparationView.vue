@@ -233,7 +233,6 @@ onMounted(() => void load());
 
 <template>
   <PageHero
-    eyebrow="Préparation"
     :title="offer?.title ?? (notFound ? 'Offre introuvable' : 'Chargement…')"
     :subtitle="offer ? [offer.company, offer.location].filter(Boolean).join(' · ') : undefined"
   />
