@@ -3632,6 +3632,16 @@ export interface components {
             new_articles: number;
             /** New Videos */
             new_videos: number;
+            /**
+             * New Jobs
+             * @default 0
+             */
+            new_jobs: number;
+            /**
+             * New Economy
+             * @default 0
+             */
+            new_economy: number;
             /** Fetched At */
             fetched_at: string | null;
             /** Refreshing */
@@ -4731,6 +4741,11 @@ export interface components {
              * @default []
              */
             interviews_to_review: components["schemas"]["InterviewToReview"][];
+            /**
+             * Upcoming Interviews
+             * @default []
+             */
+            upcoming_interviews: components["schemas"]["UpcomingInterview"][];
         };
         /** TokenCreated */
         TokenCreated: {
@@ -4870,6 +4885,21 @@ export interface components {
         TrainingReview: {
             /** Keep */
             keep: boolean;
+        };
+        /**
+         * UpcomingInterview
+         * @description Entretien aujourd'hui ou demain : en tête d'Aujourd'hui (docs/43 n° 30).
+         */
+        UpcomingInterview: {
+            /** Application Id */
+            application_id: number;
+            /** Company */
+            company: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -8175,6 +8205,7 @@ export interface operations {
                 domain_only?: boolean;
                 country?: string[] | null;
                 language?: string[] | null;
+                topic?: ("jobs" | "economy") | null;
             };
             header?: never;
             path?: never;

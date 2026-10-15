@@ -60,6 +60,14 @@ class InterviewToReview(BaseModel):
     link: str
 
 
+class UpcomingInterview(BaseModel):
+    """Entretien aujourd'hui ou demain : en tête d'Aujourd'hui (docs/43 n° 30)."""
+
+    application_id: int
+    company: str
+    at: datetime
+
+
 class TodayOut(BaseModel):
     # Démarrage : affiché tant qu'une étape manque, sauf si Kevin l'a masqué.
     checklist: list[ChecklistItem]
@@ -82,6 +90,7 @@ class TodayOut(BaseModel):
     # Prises de contact sans réponse depuis 7 jours (docs/31 §4).
     contacts_to_follow_up: int = 0
     interviews_to_review: list[InterviewToReview] = []
+    upcoming_interviews: list[UpcomingInterview] = []
 
 
 class OnboardingIn(BaseModel):
@@ -213,6 +222,28 @@ async def get_today(request: Request) -> TodayOut:
             )
             for p in await interview_reminders.to_review(session, today)
         ]
+        # Entretiens d'ici la fin de demain (heure suisse), dossiers clos exceptés.
+        now = datetime.now(UTC)
+        until = datetime.combine(today + timedelta(days=2), datetime.min.time(), LOCAL_TZ)
+        upcoming_interviews = [
+            UpcomingInterview(application_id=a.id, company=a.company, at=a.interview_at)
+            for a in await session.scalars(
+                select(Application)
+                .where(
+                    Application.interview_at >= now,
+                    Application.interview_at < until,
+                    Application.status.not_in(
+                        (
+                            ApplicationStatus.REFUS,
+                            ApplicationStatus.ENGAGEMENT,
+                            ApplicationStatus.SANS_REPONSE,
+                        )
+                    ),
+                )
+                .order_by(Application.interview_at)
+            )
+            if a.interview_at is not None
+        ]
         alerts_waiting = await alert_service.waiting(session)
         contacts_to_follow_up = await count(
             select(func.count())
@@ -258,6 +289,7 @@ async def get_today(request: Request) -> TodayOut:
         alerts_waiting=alerts_waiting,
         contacts_to_follow_up=contacts_to_follow_up,
         interviews_to_review=interviews_to_review,
+        upcoming_interviews=upcoming_interviews,
     )
 
 

@@ -21,6 +21,9 @@ from jobbot.worker.tasks.news import NEWS_JOB
 router = APIRouter(prefix="/api/news", tags=["news"])
 log = get_logger(__name__)
 Kind = Literal["articles", "videos"]
+# Articles (docs/43 n° 16) : « Marché de l'emploi » ne garde que ce qui parle d'emploi (ou de
+# ton domaine) ; le reste de l'économie passe dans « Économie ». Des règles simples, sans IA.
+Topic = Literal["jobs", "economy"]
 # Pays : code ISO à deux lettres, ou INT pour international.
 Country = Annotated[str, Field(pattern=r"^([A-Z]{2}|INT)$")]
 Language = Annotated[str, Field(pattern=r"^[a-z]{2}$")]
@@ -54,6 +57,9 @@ class NewsPage(BaseModel):
     # Nouveautés depuis la dernière visite de la page, par rubrique.
     new_articles: int
     new_videos: int
+    # Les nouveautés des articles, réparties entre les deux onglets (docs/43 n° 16).
+    new_jobs: int = 0
+    new_economy: int = 0
     # Dernier relevé réussi d'une source active ; relevé en attente ou en cours.
     fetched_at: datetime | None
     refreshing: bool
@@ -212,6 +218,7 @@ async def list_news(
     domain_only: bool = False,
     country: Annotated[list[str] | None, Query()] = None,
     language: Annotated[list[str] | None, Query()] = None,
+    topic: Topic | None = None,
 ) -> NewsPage:
     runtime = _runtime(request)
     profile = await _profile(request)
@@ -224,7 +231,7 @@ async def list_news(
             .join(NewsSource, NewsSource.id == NewsItem.source_id)
             .where(NewsSource.id.in_(followed))
             .order_by(NewsItem.published_at.desc(), NewsItem.id.desc())
-            .limit(DOMAIN_WINDOW if domain_only else limit)
+            .limit(DOMAIN_WINDOW if domain_only or topic else limit)
         )
         if kind:
             query = query.where(NewsSource.kind == kind)
@@ -244,7 +251,10 @@ async def list_news(
                 for row in found
                 if row[2]
                 or (row[1].labour_market and domain.about_jobs(row[0].title, row[0].summary))
-            ][:limit]
+            ]
+        if topic is not None:
+            found = [row for row in found if _is_jobs(row[0], row[2]) == (topic == "jobs")]
+        found = found[:limit]
         seen = profile.news_seen_at
         counts = dict(
             (
@@ -258,6 +268,21 @@ async def list_news(
                     .group_by(NewsSource.kind)
                 )
             ).all()
+        )
+        fresh = (
+            await session.execute(
+                select(NewsItem)
+                .join(NewsSource, NewsSource.id == NewsItem.source_id)
+                .where(
+                    NewsSource.id.in_(followed),
+                    NewsSource.kind == "articles",
+                    NewsItem.created_at > (seen or datetime(1970, 1, 1, tzinfo=UTC)),
+                )
+                .limit(DOMAIN_WINDOW)
+            )
+        ).scalars()
+        new_jobs = sum(
+            _is_jobs(item, domain.matched(keywords, item.title, item.summary)) for item in fresh
         )
         active = list(await session.scalars(select(NewsSource).where(NewsSource.id.in_(followed))))
         languages = set(
@@ -292,11 +317,18 @@ async def list_news(
         ],
         new_articles=counts.get("articles", 0),
         new_videos=counts.get("videos", 0),
+        new_jobs=new_jobs,
+        new_economy=max(counts.get("articles", 0) - new_jobs, 0),
         fetched_at=max(fetched) if fetched else None,
         refreshing=refreshing,
         countries=sorted({s.country for s in active if s.country}),
         languages=sorted(language for language in languages if language),
     )
+
+
+def _is_jobs(item: NewsItem, matched: list[str]) -> bool:
+    """Un article parle d'emploi, ou de ton domaine : il va dans « Marché de l'emploi »."""
+    return bool(matched) or domain.about_jobs(item.title, item.summary)
 
 
 @router.post("/refresh", operation_id="refreshNews")

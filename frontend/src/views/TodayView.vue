@@ -4,12 +4,12 @@ import { computed, onMounted, ref } from "vue";
 import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import HelpTip from "../components/HelpTip.vue";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { usePhone } from "../composables/usePhone";
-import { formatMonth, scoreLevel } from "../format";
+import { formatMonth, plural, scoreLevel } from "../format";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
 const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: string; hint?: string }> = {
@@ -72,9 +72,47 @@ function toggleFolds(): void {
 // Comme le menu : retour à la candidature commencée ou à l'onglet quitté.
 const { last: lastJobsPage } = useJobsMemory();
 
+// Le plus urgent en tête (docs/43 n° 30) : entretien aujourd'hui ou demain, remise ORP dans
+// moins de 5 jours.
+const URGENT_DAYS = 5;
+const DAY_MS = 86_400_000;
+const time = new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit" });
+
+function startOfDay(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+function interviewText(iso: string, company: string): string {
+  const at = new Date(iso);
+  const day = startOfDay(at) === startOfDay(new Date()) ? "aujourd'hui" : "demain";
+  return `Entretien ${day} à ${time.format(at)} chez ${company}`;
+}
+
+const orpDays = computed(() => {
+  const due = today.value?.orp_due_date;
+  if (!due) return null;
+  const [y, m, d] = due.split("-").map(Number);
+  return Math.round((new Date(y!, m! - 1, d!).getTime() - startOfDay(new Date())) / DAY_MS);
+});
+const orpUrgent = computed(() => orpDays.value !== null && orpDays.value <= URGENT_DAYS);
+const orpText = computed(() => {
+  const days = orpDays.value ?? 0;
+  const month = formatMonth(today.value?.orp_due_month ?? "");
+  if (days < 0) return `Preuves de ${month} à remettre : échéance passée le ${longDate.format(new Date(today.value!.orp_due_date!))}.`;
+  const when = days === 0 ? "aujourd'hui" : days === 1 ? "demain" : `dans ${days} jours`;
+  return `Preuves de ${month} à remettre ${when}.`;
+});
+
+// Une seule chose en orange (docs/43 n° 31) : la plus urgente.
+const warn = computed<"orp" | "follow-up" | null>(() => {
+  if (!today.value) return null;
+  if (orpUrgent.value) return "orp";
+  if (today.value.to_follow_up || today.value.contacts_to_follow_up) return "follow-up";
+  return today.value.orp_due_month ? "orp" : null;
+});
+
 const steps = computed(() => today.value?.checklist ?? []);
 const journeyDone = computed(() => today.value?.journey.filter((s) => s.done).length ?? 0);
-const { phone } = usePhone();
 const doneCount = computed(() => steps.value.filter((s) => s.done).length);
 const showChecklist = computed(
   () => !!today.value && !today.value.checklist_dismissed && doneCount.value < steps.value.length,
@@ -85,15 +123,16 @@ const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "nume
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
 async function loadNews(): Promise<void> {
-  // Les dernières de « Mon domaine » ; à défaut (domaine vide ou rien de neuf), les dernières tout court.
-  const mine = await api.GET("/api/news", { params: { query: { limit: 3, domain_only: true } } });
+  // Les dernières de « Mon domaine » ; à défaut, celles qui parlent d'emploi. Rien d'autre :
+  // sans actualité utile, la section disparaît (docs/43 n° 9).
+  const mine = await api.GET("/api/news", { params: { query: { kind: "articles", limit: 3, domain_only: true } } });
   const items = (mine.data?.items ?? []).filter((i) => i.matched.length);
   if (items.length) {
     news.value = items;
     return;
   }
-  const all = await api.GET("/api/news", { params: { query: { limit: 3 } } });
-  news.value = all.data?.items ?? [];
+  const jobs = await api.GET("/api/news", { params: { query: { kind: "articles", limit: 3, topic: "jobs" } } });
+  news.value = jobs.data?.items ?? [];
 }
 
 async function loadTrainings(): Promise<void> {
@@ -141,94 +180,28 @@ onMounted(() => void load());
       v-if="today"
       class="container today"
     >
-      <!-- Téléphone (docs/34 §4) : repliés, sous l'essentiel du jour. -->
-      <component
-        :is="phone ? DisclosureRow : 'article'"
-        v-if="!today.journey_dismissed && today.journey.length"
-        :class="phone ? 'journey today-help-row' : 'side-card journey'"
-        :title="phone ? 'Comment ça marche' : undefined"
-        :value="phone ? `${journeyDone} / ${today.journey.length}` : undefined"
-        :group="phone ? 'today-help' : undefined"
-        data-test="journey"
+      <!-- Le plus urgent en tête (docs/43 n° 30). -->
+      <p
+        v-for="item in today.upcoming_interviews"
+        :key="item.application_id"
+        class="notice today-urgent"
+        data-test="upcoming-interview"
       >
-        <div class="checklist-head">
-          <h2>Comment ça marche</h2>
-          <button
-            type="button"
-            class="link"
-            data-test="dismiss-journey"
-            @click="dismissJourney"
-          >
-            Masquer
-          </button>
-        </div>
-        <ol>
-          <li
-            v-for="step in today.journey"
-            :key="step.key"
-            :class="{ done: step.done }"
-            :data-test="`journey-${step.key}`"
-          >
-            <span
-              class="tick"
-              aria-hidden="true"
-            />
-            <span
-              v-if="step.done"
-              class="visually-hidden"
-            >Fait : </span>
-            <RouterLink :to="JOURNEY[step.key].to">
-              {{ JOURNEY[step.key].label }}
-            </RouterLink>
-            <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
-          </li>
-        </ol>
-      </component>
-      <component
-        :is="phone ? DisclosureRow : 'article'"
-        v-if="showChecklist"
-        :class="phone ? 'checklist today-help-row' : 'side-card checklist'"
-        :title="phone ? 'Pour bien démarrer' : undefined"
-        :value="phone ? `${doneCount} / ${steps.length}` : undefined"
-        :group="phone ? 'today-help' : undefined"
-        data-test="checklist"
+        {{ interviewText(item.at, item.company) }}.
+        <RouterLink to="/candidatures/suivi">
+          Préparer
+        </RouterLink>
+      </p>
+      <p
+        v-if="orpUrgent && today.orp_due_month"
+        class="notice today-urgent"
+        data-test="orp-urgent"
       >
-        <div class="checklist-head">
-          <h2>Pour bien démarrer · {{ doneCount }} / {{ steps.length }}</h2>
-          <button
-            type="button"
-            class="link"
-            data-test="dismiss"
-            @click="dismiss"
-          >
-            Masquer
-          </button>
-        </div>
-        <ul>
-          <li
-            v-for="step in steps"
-            :key="step.key"
-            :class="{ done: step.done }"
-            :data-test="`step-${step.key}`"
-          >
-            <span
-              class="tick"
-              aria-hidden="true"
-            >{{ step.done ? "✓" : "" }}</span>
-            <RouterLink
-              v-if="!step.done && STEPS[step.key].to"
-              :to="STEPS[step.key].to!"
-            >
-              {{ STEPS[step.key].label }}
-            </RouterLink>
-            <span v-else>{{ STEPS[step.key].label }}</span>
-            <span
-              v-if="!step.done && STEPS[step.key].hint"
-              class="hint"
-            >{{ STEPS[step.key].hint }}</span>
-          </li>
-        </ul>
-      </component>
+        {{ orpText }}
+        <RouterLink :to="{ path: '/candidatures/suivi', query: { mois: today.orp_due_month } }">
+          Préparer la remise
+        </RouterLink>
+      </p>
 
       <div class="today-section-head">
         <h2>Candidatures</h2>
@@ -255,21 +228,11 @@ onMounted(() => void load());
         </RouterLink>
       </p>
       <p
-        v-if="today.contacts_to_follow_up"
-        class="notice"
-        data-test="contacts-to-follow-up"
-      >
-        {{ today.contacts_to_follow_up }} prise(s) de contact sans réponse depuis 7 jours.
-        <RouterLink to="/candidatures/suivi">
-          Relancer
-        </RouterLink>
-      </p>
-      <p
         v-if="today.alerts_waiting"
         class="notice"
         data-test="alerts-waiting"
       >
-        {{ today.alerts_waiting }} alerte(s) créée(s) depuis 3 jours n'ont encore rien envoyé.
+        {{ today.alerts_waiting === 1 ? "1 alerte créée depuis 3 jours n'a encore rien envoyé." : `${today.alerts_waiting} alertes créées depuis 3 jours n'ont encore rien envoyé.` }}
         <RouterLink to="/candidatures/alertes">
           Vérifier mes alertes
         </RouterLink>
@@ -281,7 +244,7 @@ onMounted(() => void load());
           data-test="stat-review"
         >
           <strong>{{ today.to_review }}</strong>
-          <span>offre(s) à examiner</span>
+          <span>{{ today.to_review === 1 ? "offre à examiner" : "offres à examiner" }}</span>
         </RouterLink>
         <RouterLink
           to="/candidatures/suivi"
@@ -289,19 +252,20 @@ onMounted(() => void load());
           data-test="stat-month"
         >
           <strong>{{ today.month_count }}{{ today.month_target ? ` / ${today.month_target}` : "" }}</strong>
-          <span>candidature(s) en {{ formatMonth(today.month) }}</span>
+          <span>{{ today.month_count === 1 ? "candidature" : "candidatures" }} en {{ formatMonth(today.month) }}</span>
         </RouterLink>
         <RouterLink
           to="/candidatures/suivi"
-          :class="['stat', { warn: today.to_follow_up }]"
+          :class="['stat', { warn: warn === 'follow-up' }]"
           data-test="stat-follow-up"
         >
           <strong>{{ today.to_follow_up }}</strong>
-          <span>à relancer (sans réponse depuis 10 jours)</span>
+          <!-- Les contacts sans réponse rejoignent cette case (docs/43 n° 8). -->
+          <span>à relancer<template v-if="today.contacts_to_follow_up"> · {{ plural(today.contacts_to_follow_up, "contact", "contacts") }}</template></span>
         </RouterLink>
         <RouterLink
           to="/candidatures/suivi"
-          :class="['stat', { warn: today.orp_due_month }]"
+          :class="['stat', { warn: warn === 'orp' }]"
           data-test="stat-orp"
         >
           <template v-if="today.orp_due_month && today.orp_due_date">
@@ -343,7 +307,7 @@ onMounted(() => void load());
               class="today-list"
             >
               <li
-                v-for="offer in preparing.slice(0, 5)"
+                v-for="offer in preparing.slice(0, 3)"
                 :key="offer.id"
               >
                 <span>
@@ -356,6 +320,12 @@ onMounted(() => void load());
                 >
                   Continuer
                 </RouterLink>
+              </li>
+              <li
+                v-if="preparing.length < Math.min(best.length, 3)"
+                class="today-list-rest"
+              >
+                Rien d'autre en cours.
               </li>
             </ul>
             <RouterLink
@@ -391,7 +361,7 @@ onMounted(() => void load());
               class="best-offers"
             >
               <li
-                v-for="offer in best.slice(0, 5)"
+                v-for="offer in best.slice(0, 3)"
                 :key="offer.id"
               >
                 <span :class="['score', scoreLevel(offer.score!)]">{{ offer.score }}</span>
@@ -399,6 +369,12 @@ onMounted(() => void load());
                   <strong>{{ offer.title }}</strong><br>
                   <span class="muted">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
                 </span>
+              </li>
+              <li
+                v-if="best.length < Math.min(preparing.length, 3)"
+                class="today-list-rest"
+              >
+                Rien d'autre à examiner.
               </li>
             </ul>
             <RouterLink
@@ -411,12 +387,15 @@ onMounted(() => void load());
         </section>
       </div>
 
-      <div class="today-section-head">
+      <div
+        v-if="news.length"
+        class="today-section-head"
+      >
         <h2>
           Comprendre le marché
           <HelpTip
             label="Aide : actualités"
-            text="Les actualités sont relevées toutes les 6 heures ; celles de ton domaine passent en premier."
+            text="Les actualités de ton domaine, sinon celles qui parlent d'emploi ; relevées toutes les 6 heures."
           />
         </h2>
         <RouterLink
@@ -427,19 +406,11 @@ onMounted(() => void load());
         </RouterLink>
       </div>
       <article
+        v-if="news.length"
         class="side-card"
         data-test="today-news"
       >
-        <p
-          v-if="!news.length"
-          class="hint"
-        >
-          Pas encore d'actualités.
-        </p>
-        <ul
-          v-else
-          class="today-list"
-        >
+        <ul class="today-list">
           <li
             v-for="item in news"
             :key="item.id"
@@ -507,6 +478,102 @@ onMounted(() => void load());
           </RouterLink>.
         </p>
       </article>
+
+      <!-- Les deux guides, repliés sous l'essentiel du jour, sur ordinateur comme sur téléphone
+           (docs/34 §4, docs/43 n° 6). -->
+      <component
+        :is="DisclosureRow"
+        v-if="!today.journey_dismissed && today.journey.length"
+        class="journey today-help-row"
+        title="Comment ça marche"
+        :value="`${journeyDone} / ${today.journey.length}`"
+        group="today-help"
+        data-test="journey"
+      >
+        <div class="checklist-head">
+          <h2>Comment ça marche</h2>
+          <button
+            type="button"
+            class="link"
+            data-test="dismiss-journey"
+            @click="dismissJourney"
+          >
+            Masquer
+          </button>
+        </div>
+        <ol>
+          <li
+            v-for="step in today.journey"
+            :key="step.key"
+            :class="{ done: step.done }"
+            :data-test="`journey-${step.key}`"
+          >
+            <span
+              class="tick"
+              aria-hidden="true"
+            />
+            <span
+              v-if="step.done"
+              class="visually-hidden"
+            >Fait : </span>
+            <RouterLink :to="JOURNEY[step.key].to">
+              {{ JOURNEY[step.key].label }}
+            </RouterLink>
+            <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
+          </li>
+        </ol>
+      </component>
+      <component
+        :is="DisclosureRow"
+        v-if="showChecklist"
+        class="checklist today-help-row"
+        title="Pour bien démarrer"
+        :value="`${doneCount} / ${steps.length}`"
+        group="today-help"
+        data-test="checklist"
+      >
+        <div class="checklist-head">
+          <h2>Pour bien démarrer · {{ doneCount }} / {{ steps.length }}</h2>
+          <button
+            type="button"
+            class="link"
+            data-test="dismiss"
+            @click="dismiss"
+          >
+            Masquer
+          </button>
+        </div>
+        <ul>
+          <li
+            v-for="step in steps"
+            :key="step.key"
+            :class="{ done: step.done }"
+            :data-test="`step-${step.key}`"
+          >
+            <span
+              class="tick"
+              aria-hidden="true"
+            >{{ step.done ? "✓" : "" }}</span>
+            <RouterLink
+              v-if="!step.done && STEPS[step.key].to"
+              :to="STEPS[step.key].to!"
+            >
+              {{ STEPS[step.key].label }}
+            </RouterLink>
+            <span v-else>{{ STEPS[step.key].label }}</span>
+            <span
+              v-if="!step.done && STEPS[step.key].hint"
+              class="hint"
+            >{{ STEPS[step.key].hint }}</span>
+          </li>
+        </ul>
+      </component>
+    </div>
+    <div
+      v-else
+      class="container today"
+    >
+      <LoadingBlocks :heights="['7rem', '7rem', '12rem']" />
     </div>
   </section>
 </template>

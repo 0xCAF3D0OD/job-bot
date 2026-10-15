@@ -117,10 +117,10 @@ describe("TodayView par catégories (docs/19 §3)", () => {
         });
       if (path === "/api/offers") return Promise.resolve({ data: { items: [] } });
       if (path === "/api/news")
-        // « Mon domaine » ne trouve rien : les dernières actualités tout court.
+        // « Mon domaine » ne trouve rien : celles qui parlent d'emploi.
         return Promise.resolve({
           data: {
-            items: query.domain_only
+            items: query.domain_only || query.topic !== "jobs"
               ? []
               : [{ id: 1, title: "Chômage stable", url: "https://x.example/1", source: "SECO", published_at: "2026-10-06T08:00:00Z", matched: [] }],
           },
@@ -159,5 +159,51 @@ describe("Comment ça marche (docs/21 §3)", () => {
     expect(wrapper.find("[data-test=journey-alerts]").text()).toContain("Candidatures › Alertes");
     await wrapper.find("[data-test=dismiss-journey]").trigger("click");
     expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: true } });
+  });
+});
+
+describe("Aujourd'hui, revue des pages (docs/43)", () => {
+  const isoIn = (days: number): string => {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  it("le plus urgent en tête, une seule case en orange, contacts dans « à relancer »", async () => {
+    const soon = new Date(Date.now() + 3 * 3600_000).toISOString();
+    mockGet(
+      today({
+        orp_due_date: isoIn(2),
+        contacts_to_follow_up: 1,
+        upcoming_interviews: [{ application_id: 4, company: "Bientôt SA", at: soon }],
+      }),
+    );
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=upcoming-interview]").text()).toMatch(/^Entretien (aujourd'hui|demain) à .* chez Bientôt SA/);
+    expect(wrapper.find("[data-test=orp-urgent]").text()).toContain("à remettre dans 2 jours");
+    expect(wrapper.find("[data-test=stat-orp]").classes()).toContain("warn");
+    expect(wrapper.find("[data-test=stat-follow-up]").classes()).not.toContain("warn");
+    expect(wrapper.find("[data-test=stat-follow-up]").text()).toContain("à relancer · 1 contact");
+    expect(wrapper.find("[data-test=contacts-to-follow-up]").exists()).toBe(false);
+  });
+
+  it("remise ORP lointaine : la relance passe en orange, pas d'urgence ORP ; guides en bas", async () => {
+    mockGet(today({ orp_due_date: isoIn(20) }));
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=orp-urgent]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=stat-follow-up]").classes()).toContain("warn");
+    expect(wrapper.find("[data-test=stat-orp]").classes()).not.toContain("warn");
+    const html = wrapper.html();
+    expect(html.indexOf('data-test="journey"')).toBeGreaterThan(html.indexOf('data-test="stat-review"'));
+  });
+
+  it("aucune actualité utile : la section disparaît", async () => {
+    mockGet(today());
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/today" ? today() : { items: [] } }),
+    );
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-news]").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Comprendre le marché");
   });
 });

@@ -125,3 +125,9 @@ export function remoteText(offer: {
   if (offer.remote === "full") return offer.remote_region ? `100 % télétravail · ${offer.remote_region}` : "100 % télétravail";
   return null;
 }
+
+// « 1 offre », « 3 offres », « aucune offre » : de vrais accords plutôt que « offre(s) » (docs/43 n° 2).
+export function plural(count: number, one: string, many: string, none?: string): string {
+  if (count === 0 && none) return none;
+  return `${count} ${count === 1 ? one : many}`;
+}

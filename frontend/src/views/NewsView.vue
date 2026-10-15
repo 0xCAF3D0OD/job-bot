@@ -3,7 +3,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
+import DomainField from "../components/DomainField.vue";
 import HelpTip from "../components/HelpTip.vue";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
 import PageHero from "../components/PageHero.vue";
@@ -13,16 +15,21 @@ import { usePhone } from "../composables/usePhone";
 import { since } from "../format";
 import { countryLabel, languageLabel } from "../newsLabels";
 
-// Actualités (docs/15 §2, docs/16) : marché de l'emploi et vidéos, filtrés selon ton domaine.
+// Actualités (docs/15 §2, docs/16) : marché de l'emploi, économie et vidéos, filtrés selon ton
+// domaine. « Marché de l'emploi » ne garde que l'emploi et ton domaine (docs/43 n° 16).
 const POLL_MS = 4_000;
 const POLL_LIMIT = 30; // deux minutes au plus
 
 const route = useRoute();
-const tab = computed<"articles" | "videos">(() => (route.query.rubrique === "videos" ? "videos" : "articles"));
+type Tab = "jobs" | "economy" | "videos";
+const tab = computed<Tab>(() => {
+  if (route.query.rubrique === "videos") return "videos";
+  return route.query.rubrique === "economie" ? "economy" : "jobs";
+});
 const items = ref<NewsItem[]>([]);
 const page = ref<NewsPage | null>(null);
 const preferences = ref<NewsPreferences | null>(null);
-const counts = ref({ articles: 0, videos: 0 });
+const counts = ref({ jobs: 0, economy: 0, videos: 0 });
 const loaded = ref(false);
 const { reset } = useNewsCount();
 const { loggedIn } = useAuth();
@@ -30,13 +37,18 @@ let poll: ReturnType<typeof setTimeout> | undefined;
 let polls = 0;
 
 const { phone } = usePhone();
+// Téléphone (docs/43 n° 17) : 10 contenus d'abord, puis « Voir plus », au lieu de 60 d'un coup.
+const PHONE_STEP = 10;
+const shown = ref(PHONE_STEP);
+const visible = computed(() => (phone.value ? items.value.slice(0, shown.value) : items.value));
+const hidden = computed(() => items.value.length - visible.value.length);
 
 // À la manière de RTS (docs/35) : une actualité en tête (la plus récente qui a une image),
 // deux en second rang sur ordinateur, puis des lignes groupées par période. Même chose pour
 // les vidéos. Sur téléphone, seule l'actualité en tête est en grand.
 const ordered = computed(() => {
-  const lead = items.value.find((item) => item.has_image) ?? items.value[0];
-  return lead ? [lead, ...items.value.filter((item) => item !== lead)] : [];
+  const lead = visible.value.find((item) => item.has_image) ?? visible.value[0];
+  return lead ? [lead, ...visible.value.filter((item) => item !== lead)] : [];
 });
 const top = computed(() => ordered.value.slice(0, phone.value ? 1 : 3));
 const PERIODS = [
@@ -84,13 +96,27 @@ function closeFilters(): void {
   document.removeEventListener("pointerdown", onDocument);
 }
 const hasDomain = computed(() => (preferences.value?.domain_keywords.length ?? 0) > 0);
+// Sans domaine, « Mon domaine » ouvre le champ sur place (docs/43 n° 4).
+const domainFieldOpen = ref(false);
+
+function chooseDomain(): void {
+  if (hasDomain.value) void savePreferences({ domain_only: true });
+  else domainFieldOpen.value = !domainFieldOpen.value;
+}
+
+async function onDomainSaved(keywords: string[]): Promise<void> {
+  domainFieldOpen.value = false;
+  if (preferences.value) preferences.value = { ...preferences.value, domain_keywords: keywords, domain_only: true };
+  await load();
+}
 
 async function load(): Promise<void> {
   const prefs = preferences.value;
   const { data } = await api.GET("/api/news", {
     params: {
       query: {
-        kind: tab.value,
+        kind: tab.value === "videos" ? "videos" : "articles",
+        topic: tab.value === "videos" ? undefined : tab.value,
         limit: 60,
         domain_only: Boolean(prefs?.domain_only && hasDomain.value),
         country: prefs?.countries.length ? prefs.countries : undefined,
@@ -102,7 +128,7 @@ async function load(): Promise<void> {
   page.value = data;
   items.value = data.items;
   if (!loaded.value) {
-    counts.value = { articles: data.new_articles, videos: data.new_videos };
+    counts.value = { jobs: data.new_jobs, economy: data.new_economy, videos: data.new_videos };
     // La visite remet les compteurs à zéro (pour la prochaine fois).
     // Sans connexion, rien n'est enregistré (docs/18 §1).
     if (loggedIn.value) await api.POST("/api/news/seen");
@@ -144,7 +170,10 @@ function toggle(list: "countries" | "languages", value: string): void {
 const selected = (list: "countries" | "languages", value: string): boolean =>
   preferences.value?.[list].includes(value) ?? false;
 
-watch(tab, () => void load());
+watch(tab, () => {
+  shown.value = PHONE_STEP;
+  void load();
+});
 onMounted(async () => {
   const { data } = await api.GET("/api/news/preferences");
   preferences.value = data ?? null;
@@ -160,6 +189,7 @@ onUnmounted(() => {
   <PageHero
     eyebrow="Actualités"
     title="Le marché de l'emploi, et de quoi progresser"
+    short="Actualités"
     subtitle="L'emploi et ton domaine : articles et vidéos récents."
   />
   <section class="band">
@@ -170,14 +200,26 @@ onUnmounted(() => {
       >
         <RouterLink
           :to="{ query: {} }"
-          :class="{ active: tab === 'articles' }"
+          :class="{ active: tab === 'jobs' }"
           data-test="tab-articles"
         >
-          Marché de l'emploi
+          <span class="label-long">Marché de l'emploi</span>
+          <span class="label-short">Emploi</span>
           <span
-            v-if="counts.articles"
+            v-if="counts.jobs"
             class="tab-count"
-          >{{ counts.articles }}</span>
+          >{{ counts.jobs }}</span>
+        </RouterLink>
+        <RouterLink
+          :to="{ query: { rubrique: 'economie' } }"
+          :class="{ active: tab === 'economy' }"
+          data-test="tab-economy"
+        >
+          Économie
+          <span
+            v-if="counts.economy"
+            class="tab-count"
+          >{{ counts.economy }}</span>
         </RouterLink>
         <RouterLink
           :to="{ query: { rubrique: 'videos' } }"
@@ -206,9 +248,9 @@ onUnmounted(() => {
             type="button"
             role="radio"
             :aria-checked="preferences.domain_only && hasDomain"
-            :disabled="!hasDomain"
+            :aria-expanded="hasDomain ? undefined : domainFieldOpen"
             data-test="filter-domain"
-            @click="savePreferences({ domain_only: true })"
+            @click="chooseDomain"
           >
             Mon domaine
           </button>
@@ -302,18 +344,20 @@ onUnmounted(() => {
           class="filter-drop-zone"
         />
       </div>
-      <p
-        v-if="preferences && !hasDomain"
-        class="hint"
-      >
-        Pour filtrer selon ton domaine (DevOps, Kubernetes…), indique tes mots-clés dans
-        <RouterLink to="/reglages#actualites">
-          Réglages → Actualités
-        </RouterLink>.
-      </p>
+      <PushTransition>
+        <DomainField
+          v-if="domainFieldOpen && !hasDomain"
+          @saved="onDomainSaved"
+        />
+      </PushTransition>
+
+      <LoadingBlocks
+        v-if="!loaded"
+        :heights="phone ? ['14rem', '5rem', '5rem'] : ['22rem', '6rem', '6rem']"
+      />
 
       <p
-        v-if="loaded && !items.length"
+        v-else-if="!items.length"
         class="muted empty"
       >
         <template v-if="page?.refreshing">
@@ -331,7 +375,7 @@ onUnmounted(() => {
       </p>
       <div
         v-else
-        :class="['news-modules', tab]"
+        :class="['news-modules', tab === 'videos' ? 'videos' : 'articles']"
       >
         <div :class="['news-top', `count-${top.length}`]">
           <NewsStory
@@ -371,6 +415,15 @@ onUnmounted(() => {
             </li>
           </ul>
         </section>
+        <button
+          v-if="hidden > 0"
+          type="button"
+          class="secondary news-more"
+          data-test="news-more"
+          @click="shown += PHONE_STEP"
+        >
+          Voir plus
+        </button>
       </div>
       <p
         v-if="page"

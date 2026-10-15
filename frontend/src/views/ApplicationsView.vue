@@ -10,6 +10,7 @@ import {
   type InterviewIn,
   type OrpMonth,
 } from "../api/client";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import HelpTip from "../components/HelpTip.vue";
@@ -555,6 +556,10 @@ onUnmounted(() => assistant.setFocus(null));
         </DisclosureRow>
       </div>
     </template>
+    <LoadingBlocks
+      v-else
+      :heights="['3rem', '22rem']"
+    />
   </section>
 
   <InterviewPreparation
