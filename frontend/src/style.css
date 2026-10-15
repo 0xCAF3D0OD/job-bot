@@ -1649,3 +1649,9 @@ html.side-open { overflow: hidden; }
   .applications-head .add-application::before { content: "+"; font-size: 1.3rem; line-height: 1; }
   .applications-head > .badge, .applications-head > .link { grid-column: 1 / -1; justify-self: start; }
 }
+
+/* Formation terminée vers Mon parcours (docs/37 §1) */
+.training-profile { display: grid; gap: 0.6rem; justify-items: start; }
+.training-block-form { display: grid; gap: 0.6rem; width: 100%; }
+.training-block-form label { display: grid; gap: 0.25rem; font-size: 0.85rem; }
+.training-block-form input, .training-block-form textarea { width: 100%; font: inherit; }

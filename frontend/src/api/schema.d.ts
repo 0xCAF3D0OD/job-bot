@@ -1747,6 +1747,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trainings/{training_id}/profile-block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add To Profile
+         * @description Une formation terminée entre dans Mon parcours (docs/37 §1). Rien n'est renoté :
+         *     les notes existantes sont « faites avec un ancien profil » jusqu'à « Renoter ».
+         */
+        post: operations["addTrainingToProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profiles": {
         parameters: {
             query?: never;
@@ -3834,6 +3855,18 @@ export interface components {
             /** Done */
             done: boolean;
         };
+        /**
+         * ProfileBlockIn
+         * @description Bloc « formation » proposé depuis une formation terminée, relu avant l'envoi.
+         */
+        ProfileBlockIn: {
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+            /** Tags */
+            tags?: string[];
+        };
         /** ProfileIn */
         ProfileIn: {
             /** Name */
@@ -4428,6 +4461,8 @@ export interface components {
             done_at: string | null;
             /** Certified */
             certified: boolean | null;
+            /** Chunk Id */
+            chunk_id?: number | null;
         };
         /** TrainingOut */
         TrainingOut: {
@@ -8088,6 +8123,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    addTrainingToProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileBlockIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingMarkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

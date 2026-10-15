@@ -150,4 +150,23 @@ describe("TrainingsView", () => {
     expect(wrapper.find("[data-test=training-row] .badge").text()).toBe("Intéressé");
     globalThis.matchMedia = original;
   });
+
+  it("formation terminée : « Ajouter à mon profil », bloc prérempli, puis « Dans ton profil »", async () => {
+    const done = { status: "done", progress: null, done_at: "2026-09-30", certified: true, chunk_id: null };
+    GET.mockResolvedValue({ data: page([training(1, { mark: done })]) });
+    POST.mockResolvedValue({ data: { ...done, chunk_id: 42 } });
+    const wrapper = await mountView();
+    await wrapper.find("[data-test=add-to-profile]").trigger("click");
+    expect((wrapper.find("[data-test=block-title]").element as HTMLInputElement).value).toBe(
+      "Certified Kubernetes Administrator (CKA) (The Linux Foundation / CNCF)",
+    );
+    const content = (wrapper.find("[data-test=block-content]").element as HTMLTextAreaElement).value;
+    expect(content).toBe("Formation terminée en septembre 2026, certificat obtenu. Certification de référence.");
+    expect((wrapper.find("[data-test=block-tags]").element as HTMLInputElement).value).toBe("Kubernetes, CKA");
+    await wrapper.find("[data-test=block-form]").trigger("submit");
+    await flushPromises();
+    expect(POST.mock.calls[0]![0]).toBe("/api/trainings/{training_id}/profile-block");
+    expect(POST.mock.calls[0]![1].body.tags).toEqual(["Kubernetes", "CKA"]);
+    expect(wrapper.find("[data-test=in-profile]").exists()).toBe(true);
+  });
 });

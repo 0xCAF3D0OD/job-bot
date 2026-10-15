@@ -385,6 +385,7 @@ onMounted(() => void load());
             :training="training"
             @mark="(status, extra) => mark(training, status, extra)"
             @review="(keep) => review(training, keep)"
+            @linked="(linked) => replace({ ...training, mark: linked })"
           />
         </li>
       </ul>
@@ -401,6 +402,7 @@ onMounted(() => void load());
         :training="opened"
         @mark="(status, extra) => mark(opened!, status, extra)"
         @review="(keep) => { review(opened!, keep); if (!keep) openId = null; }"
+        @linked="(linked) => replace({ ...opened!, mark: linked })"
       />
     </div>
   </SidePanel>

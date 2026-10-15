@@ -4667,6 +4667,59 @@
         }
       }
     },
+    "/api/trainings/{training_id}/profile-block": {
+      "post": {
+        "tags": [
+          "trainings"
+        ],
+        "summary": "Add To Profile",
+        "description": "Une formation terminée entre dans Mon parcours (docs/37 §1). Rien n'est renoté :\nles notes existantes sont « faites avec un ancien profil » jusqu'à « Renoter ».",
+        "operationId": "addTrainingToProfile",
+        "parameters": [
+          {
+            "name": "training_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Training Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileBlockIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingMarkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/profiles": {
       "get": {
         "tags": [
@@ -11755,6 +11808,39 @@
         ],
         "title": "PreparedIn"
       },
+      "ProfileBlockIn": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Content"
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Tags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "content"
+        ],
+        "title": "ProfileBlockIn",
+        "description": "Bloc « formation » proposé depuis une formation terminée, relu avant l'envoi."
+      },
       "ProfileIn": {
         "properties": {
           "name": {
@@ -13538,6 +13624,17 @@
               }
             ],
             "title": "Certified"
+          },
+          "chunk_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Id"
           }
         },
         "type": "object",

@@ -626,6 +626,10 @@ class TrainingMark(Base):
     progress: Mapped[str | None] = mapped_column(Text)
     done_at: Mapped[date | None] = mapped_column(Date)
     certified: Mapped[bool | None]
+    # Bloc « formation » créé depuis la formation terminée (docs/37 §1).
+    chunk_id: Mapped[int | None] = mapped_column(
+        ForeignKey("profile_chunks.id", ondelete="SET NULL")
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
