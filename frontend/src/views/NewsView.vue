@@ -27,6 +27,55 @@ let poll: ReturnType<typeof setTimeout> | undefined;
 let polls = 0;
 
 const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+
+// Page « journal » (docs/32 §5) : un article à la une, puis des titres seuls groupés par
+// période ; les vidéos gardent leurs cartes (la vignette y est l'information).
+const lead = computed(() => (tab.value === "articles" ? (items.value[0] ?? null) : null));
+const PERIODS = [
+  { key: "today", label: "Aujourd'hui" },
+  { key: "week", label: "Cette semaine" },
+  { key: "older", label: "Plus ancien" },
+] as const;
+
+function period(published: string, now = new Date()): (typeof PERIODS)[number]["key"] {
+  const day = new Date(published);
+  if (day.toDateString() === now.toDateString()) return "today";
+  return now.getTime() - day.getTime() < 7 * 24 * 3600 * 1000 ? "week" : "older";
+}
+
+const groups = computed(() => {
+  const rest = items.value.slice(1);
+  return PERIODS.map((p) => ({ ...p, items: rest.filter((item) => period(item.published_at) === p.key) })).filter(
+    (g) => g.items.length,
+  );
+});
+
+// « SECO — marché du travail » : le nom court suffit sur une ligne de titre.
+function shortSource(source: string): string {
+  return source.split(" — ")[0] ?? source;
+}
+
+// Pays et langue derrière « Filtrer » (docs/32 §5.2), avec le nombre de filtres actifs.
+const filtersOpen = ref(false);
+const filtersRoot = ref<HTMLElement | null>(null);
+const activeFilters = computed(() => (preferences.value?.countries.length ?? 0) + (preferences.value?.languages.length ?? 0));
+const canFilter = computed(() => (page.value?.countries.length ?? 0) > 1 || (page.value?.languages.length ?? 0) > 1);
+
+function onDocument(event: Event): void {
+  if (filtersRoot.value && !filtersRoot.value.contains(event.target as Node)) closeFilters();
+}
+
+function toggleFilters(): void {
+  filtersOpen.value = !filtersOpen.value;
+  if (filtersOpen.value) document.addEventListener("pointerdown", onDocument);
+  else document.removeEventListener("pointerdown", onDocument);
+}
+
+function closeFilters(): void {
+  filtersOpen.value = false;
+  document.removeEventListener("pointerdown", onDocument);
+}
 const hasDomain = computed(() => (preferences.value?.domain_keywords.length ?? 0) > 0);
 
 async function load(): Promise<void> {
@@ -94,7 +143,10 @@ onMounted(async () => {
   preferences.value = data ?? null;
   await load();
 });
-onUnmounted(() => clearTimeout(poll));
+onUnmounted(() => {
+  clearTimeout(poll);
+  closeFilters();
+});
 </script>
 
 <template>
@@ -169,60 +221,67 @@ onUnmounted(() => clearTimeout(poll));
           label="Mots de Mon domaine"
         />
         <div
-          v-if="page.countries.length > 1"
-          class="chip-group"
-          role="group"
-          aria-label="Pays"
+          v-if="canFilter"
+          ref="filtersRoot"
+          class="news-filter-menu"
+          @keydown.esc="closeFilters"
         >
-          <span class="chip-label">Pays</span>
           <button
-            v-for="code in page.countries"
-            :key="code"
             type="button"
-            :class="['chip', { on: selected('countries', code) }]"
-            :aria-pressed="selected('countries', code)"
-            data-test="filter-country"
-            @click="toggle('countries', code)"
+            class="secondary small"
+            :aria-expanded="filtersOpen"
+            aria-controls="news-filter-popover"
+            data-test="news-filter-toggle"
+            @click="toggleFilters"
           >
-            {{ countryLabel(code) }}
+            Filtrer{{ activeFilters ? ` · ${activeFilters}` : "" }}
           </button>
-        </div>
-        <div
-          v-if="page.languages.length > 1"
-          class="chip-group"
-          role="group"
-          aria-label="Langue"
-        >
-          <span class="chip-label">Langue</span>
-          <button
-            v-for="code in page.languages"
-            :key="code"
-            type="button"
-            :class="['chip', { on: selected('languages', code) }]"
-            :aria-pressed="selected('languages', code)"
-            data-test="filter-language"
-            @click="toggle('languages', code)"
+          <div
+            v-show="filtersOpen"
+            id="news-filter-popover"
+            class="news-filter-popover"
+            data-test="news-filter-popover"
           >
-            {{ languageLabel(code) }}
-          </button>
-        </div>
-        <span class="news-status">
-          <span
-            v-if="page.refreshing"
-            data-test="news-refreshing"
-          >Relevé en cours…</span>
-          <template v-else>
-            <span v-if="page.fetched_at">Relevé {{ since(page.fetched_at) }}</span>
-            <button
-              type="button"
-              class="link"
-              data-test="news-refresh"
-              @click="refresh"
+            <div
+              v-if="page.countries.length > 1"
+              class="chip-group"
+              role="group"
+              aria-label="Pays"
             >
-              Relever maintenant
-            </button>
-          </template>
-        </span>
+              <span class="chip-label">Pays</span>
+              <button
+                v-for="code in page.countries"
+                :key="code"
+                type="button"
+                :class="['chip', { on: selected('countries', code) }]"
+                :aria-pressed="selected('countries', code)"
+                data-test="filter-country"
+                @click="toggle('countries', code)"
+              >
+                {{ countryLabel(code) }}
+              </button>
+            </div>
+            <div
+              v-if="page.languages.length > 1"
+              class="chip-group"
+              role="group"
+              aria-label="Langue"
+            >
+              <span class="chip-label">Langue</span>
+              <button
+                v-for="code in page.languages"
+                :key="code"
+                type="button"
+                :class="['chip', { on: selected('languages', code) }]"
+                :aria-pressed="selected('languages', code)"
+                data-test="filter-language"
+                @click="toggle('languages', code)"
+              >
+                {{ languageLabel(code) }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       <p
         v-if="preferences && !hasDomain"
@@ -252,7 +311,7 @@ onUnmounted(() => clearTimeout(poll));
         </template>
       </p>
       <ul
-        v-else
+        v-else-if="tab === 'videos'"
         :class="['news-grid', tab]"
       >
         <li
@@ -290,6 +349,96 @@ onUnmounted(() => clearTimeout(poll));
           </a>
         </li>
       </ul>
+      <div
+        v-else
+        class="news-journal"
+      >
+        <a
+          v-if="lead"
+          class="news-lead"
+          :href="lead.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-test="news-item"
+        >
+          <img
+            v-if="lead.has_image"
+            class="news-image"
+            :src="`/api/news/items/${lead.id}/image`"
+            alt=""
+            loading="lazy"
+          >
+          <span class="news-body">
+            <span class="news-meta">À la une · {{ lead.source }} · {{ dateFormat.format(new Date(lead.published_at)) }}</span>
+            <strong class="news-title news-lead-title"><template
+              v-for="(part, index) in highlight(lead.title, lead.matched)"
+              :key="index"
+            ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></strong>
+            <span
+              v-if="lead.summary"
+              class="news-summary"
+            ><template
+              v-for="(part, index) in highlight(lead.summary, lead.matched)"
+              :key="index"
+            ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
+          </span>
+        </a>
+        <section
+          v-for="group in groups"
+          :key="group.key"
+          class="news-group"
+        >
+          <h2 class="news-group-title">
+            {{ group.label }}
+          </h2>
+          <ul class="news-rows">
+            <li
+              v-for="item in group.items"
+              :key="item.id"
+            >
+              <a
+                class="news-row"
+                :href="item.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-test="news-item"
+              >
+                <span class="news-row-main">
+                  <span class="news-title"><template
+                    v-for="(part, index) in highlight(item.title, item.matched)"
+                    :key="index"
+                  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
+                  <span
+                    v-if="item.summary"
+                    class="news-row-summary"
+                  >{{ item.summary }}</span>
+                </span>
+                <span class="news-row-meta">{{ shortSource(item.source) }} · {{ shortDate.format(new Date(item.published_at)) }}</span>
+              </a>
+            </li>
+          </ul>
+        </section>
+      </div>
+      <p
+        v-if="page"
+        class="news-status"
+      >
+        <span
+          v-if="page.refreshing"
+          data-test="news-refreshing"
+        >Relevé en cours…</span>
+        <template v-else>
+          <span v-if="page.fetched_at">Relevé {{ since(page.fetched_at) }}</span>
+          <button
+            type="button"
+            class="link"
+            data-test="news-refresh"
+            @click="refresh"
+          >
+            Relever
+          </button>
+        </template>
+      </p>
     </div>
   </section>
 </template>

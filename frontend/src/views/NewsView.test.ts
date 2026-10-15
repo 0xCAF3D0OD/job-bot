@@ -77,6 +77,29 @@ async function mountView(path = "/actualites") {
 }
 
 describe("NewsView", () => {
+  it("page journal : une à la une, puis des titres groupés par période ; filtres derrière « Filtrer »", async () => {
+    const now = Date.now();
+    const at = (days: number) => new Date(now - days * 24 * 3600_000).toISOString();
+    mockApi(
+      pageOf([
+        item(1, "articles", { published_at: at(0), source: "SECO — marché du travail" }),
+        item(2, "articles", { published_at: at(0), source: "SECO — marché du travail" }),
+        item(3, "articles", { published_at: at(3) }),
+        item(4, "articles", { published_at: at(20) }),
+      ]),
+      prefs({ countries: ["CH"] }),
+    );
+    const { wrapper } = await mountView();
+    expect(wrapper.find(".news-lead .news-title").text()).toBe("Contenu 1");
+    expect(wrapper.findAll(".news-group-title").map((h) => h.text())).toEqual(["Aujourd'hui", "Cette semaine", "Plus ancien"]);
+    expect(wrapper.find(".news-row-meta").text()).toMatch(/^SECO · /);
+    const toggle = wrapper.find("[data-test=news-filter-toggle]");
+    expect(toggle.text()).toBe("Filtrer · 1");
+    expect((wrapper.find("[data-test=news-filter-popover]").element as HTMLElement).style.display).toBe("none");
+    await toggle.trigger("click");
+    expect((wrapper.find("[data-test=news-filter-popover]").element as HTMLElement).style.display).toBe("");
+  });
+
   it("articles, compteurs de nouveautés, visite enregistrée", async () => {
     mockApi(pageOf([item(1, "articles")], { new_articles: 3, new_videos: 2 }));
     const { wrapper } = await mountView();
