@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/47-preparer.md](docs/47-preparer.md) (0.39.0)
+- Version en cours : [docs/48-reglages.md](docs/48-reglages.md) (0.40.0)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
 ## Versions
@@ -59,6 +59,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.37.0 | Fiche d'une offre : deux boutons et « ⋯ », sections Pour toi, À savoir (✓ ! ✗), Entreprise, Annonce repliée | livrée |
 | 0.38.0 | Suivi : cartes calmes (statut, une seule prochaine étape), panneau d'une candidature en cinq sections, ouvert aussi depuis la liste | livrée |
 | 0.39.0 | Préparer une candidature : onglets ① Lettre ② CV ③ Postuler, l'offre à côté de la lettre, PDF / Word sur une ligne | livrée |
+| 0.40.0 | Réglages : une rubrique à la fois (six), sites et sources en lignes calmes avec panneau, seuils dits en clair | livrée |
 
 ## Lancer en local
 

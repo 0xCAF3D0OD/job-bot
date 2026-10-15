@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
@@ -56,6 +56,11 @@ onMounted(async () => {
     await router.replace("/reglages/diagnostic");
     return;
   }
+  // Anciens liens « /reglages#agenda » (docs/48 §5) : la rubrique qui contient la section.
+  const old = route.hash.slice(1);
+  if (old && OLD_ANCHORS[old] && !route.query.rubrique) {
+    await router.replace({ query: { rubrique: OLD_ANCHORS[old] }, hash: route.hash });
+  }
   try {
     const status = await api.GET("/api/notifications");
     notifications.value = status.data ?? null;
@@ -80,32 +85,49 @@ async function save(): Promise<void> {
 }
 const router = useRouter();
 const { me } = useAuth();
-// Résumés des sections, affichés sur téléphone (docs/34 §3).
+// Résumés des rubriques, affichés sur téléphone (docs/34 §3).
 const summary = computed(() => ({
   recherche: [
     form.value.orp_monthly_target ? `objectif ${form.value.orp_monthly_target} / mois` : "objectif à saisir",
-    `alerte dès ${form.value.notify_score_threshold}`,
+    "sites suivis",
   ].join(" · "),
   actualites: "mots-clés et sources",
-  notifications: notifications.value ? (notifications.value.configured ? "actives" : "non configurées") : "",
+  notifications: [
+    notifications.value ? (notifications.value.configured ? "actives" : "non configurées") : "",
+    `dès ${form.value.notify_score_threshold} / 100`,
+  ]
+    .filter(Boolean)
+    .join(" · "),
   ia: `plafond ${form.value.llm_monthly_budget_chf} CHF / mois`,
-  profils: "profils fictifs",
-  connexion: me.value?.auth_enabled ? (me.value.username ?? "") : "désactivée",
-  extension: "jetons",
-  agenda: "abonnement",
+  compte: me.value?.auth_enabled ? `profils d'essai · ${me.value.username ?? ""}` : "profils d'essai",
+  outils: "agenda, extension",
 }));
 
-// Sommaire (docs/19 §4) : les sections dans l'ordre de la page.
+// Une rubrique à la fois (docs/48 §2) : le sommaire choisit, l'adresse la retient.
 const SECTIONS = [
   { id: "recherche", label: "Recherche d'emploi" },
   { id: "actualites", label: "Actualités" },
   { id: "notifications", label: "Notifications" },
   { id: "ia", label: "IA" },
-  { id: "profils", label: "Profils d'essai" },
-  { id: "connexion", label: "Connexion" },
-  { id: "agenda", label: "Agenda" },
-  { id: "extension", label: "Extension" },
-];
+  { id: "compte", label: "Compte" },
+  { id: "outils", label: "Outils" },
+] as const;
+type SectionId = (typeof SECTIONS)[number]["id"];
+const OLD_ANCHORS: Record<string, SectionId> = {
+  recherche: "recherche",
+  actualites: "actualites",
+  notifications: "notifications",
+  ia: "ia",
+  profils: "compte",
+  connexion: "compte",
+  agenda: "outils",
+  extension: "outils",
+};
+const route = useRoute();
+const active = computed<SectionId>(() => {
+  const wanted = route.query.rubrique;
+  return SECTIONS.find((s) => s.id === wanted)?.id ?? OLD_ANCHORS[route.hash.slice(1)] ?? "recherche";
+});
 </script>
 
 <template>
@@ -118,17 +140,23 @@ const SECTIONS = [
         class="settings-toc"
         aria-label="Sections des réglages"
       >
-        <a
+        <RouterLink
           v-for="section in SECTIONS"
           :key="section.id"
-          :href="`#${section.id}`"
-        >{{ section.label }}</a>
+          :to="{ query: { rubrique: section.id } }"
+          :class="{ active: active === section.id }"
+          :aria-current="active === section.id ? 'page' : undefined"
+          :data-test="`toc-${section.id}`"
+        >
+          {{ section.label }}
+        </RouterLink>
       </nav>
       <div class="settings-sections">
         <SettingsSection
           id="recherche"
           title="Recherche d'emploi"
           :value="summary.recherche"
+          :active="active === 'recherche'"
         >
           <form
             v-if="loaded"
@@ -141,7 +169,7 @@ const SECTIONS = [
                 <label for="orp">Objectif mensuel de l'ORP</label>
                 <HelpTip
                   text="Le nombre de candidatures demandé par ton conseiller. Laisse vide si tu ne le connais pas encore."
-                  label="Aide : objectif de l'ORP"
+                  label="Aide : objectif mensuel de l'ORP"
                 />
               </legend>
               <div class="inline-field">
@@ -160,7 +188,7 @@ const SECTIONS = [
                 <label for="due-day">Date limite de remise des preuves</label>
                 <HelpTip
                   text="Le jour du mois suivant où ton conseiller attend les preuves, souvent le 5."
-                  label="Aide : date limite"
+                  label="Aide : date limite de remise des preuves"
                 />
               </legend>
               <div class="inline-field">
@@ -177,31 +205,11 @@ const SECTIONS = [
                 <span>du mois suivant</span>
               </div>
             </fieldset>
-            <fieldset>
+            <fieldset class="wide">
               <legend>
-                <label for="threshold">Seuil de notification des offres</label>
+                <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
                 <HelpTip
-                  text="Tu es prévenu des nouvelles offres notées au moins à ce score."
-                  label="Aide : seuil de notification"
-                />
-              </legend>
-              <div class="inline-field">
-                <input
-                  id="threshold"
-                  v-model.number="form.notify_score_threshold"
-                  type="number"
-                  min="0"
-                  max="100"
-                  required
-                >
-                <span>/ 100</span>
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>
-                <label for="employer-threshold">Recherche de l'annonce chez l'employeur</label>
-                <HelpTip
-                  text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur (environ 0,02 $ si l'IA est nécessaire)."
+                  text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur, pour postuler sans passer par un site d'emploi (environ 0,02 $ si l'IA est nécessaire)."
                   label="Aide : recherche chez l'employeur"
                 />
               </legend>
@@ -240,6 +248,7 @@ const SECTIONS = [
           id="actualites"
           title="Actualités"
           :value="summary.actualites"
+          :active="active === 'actualites'"
         >
           <NewsSourcesPanel />
         </SettingsSection>
@@ -248,7 +257,50 @@ const SECTIONS = [
           id="notifications"
           title="Notifications"
           :value="summary.notifications"
+          :active="active === 'notifications'"
         >
+          <form
+            v-if="loaded"
+            class="form-card"
+            data-test="notify-form"
+            @submit.prevent="save"
+          >
+            <fieldset>
+              <legend>
+                <label for="threshold">M'avertir d'une offre à partir de</label>
+                <HelpTip
+                  text="Tu es prévenu des nouvelles offres notées au moins à ce score."
+                  label="Aide : seuil de notification"
+                />
+              </legend>
+              <div class="inline-field">
+                <input
+                  id="threshold"
+                  v-model.number="form.notify_score_threshold"
+                  type="number"
+                  min="0"
+                  max="100"
+                  required
+                >
+                <span>/ 100</span>
+              </div>
+            </fieldset>
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="secondary"
+                :disabled="saving"
+                data-test="save-notify"
+              >
+                Enregistrer
+              </button>
+              <span
+                v-if="message"
+                role="status"
+                class="muted"
+              >{{ message }}</span>
+            </div>
+          </form>
           <div
             v-if="loaded"
             class="form-card"
@@ -300,6 +352,7 @@ const SECTIONS = [
           id="ia"
           title="IA"
           :value="summary.ia"
+          :active="active === 'ia'"
         >
           <form
             v-if="loaded"
@@ -347,35 +400,30 @@ const SECTIONS = [
         </SettingsSection>
 
         <SettingsSection
-          id="profils"
-          title="Profils d'essai"
-          :value="summary.profils"
+          id="compte"
+          title="Compte"
+          :value="summary.compte"
+          :active="active === 'compte'"
         >
+          <h3 class="settings-subtitle">
+            Profils d'essai
+          </h3>
           <ProfilesPanel />
-        </SettingsSection>
-
-        <SettingsSection
-          id="connexion"
-          title="Connexion"
-          :value="summary.connexion"
-        >
+          <h3 class="settings-subtitle">
+            Connexion
+          </h3>
           <SessionPanel />
         </SettingsSection>
 
         <SettingsSection
-          id="agenda"
-          title="Agenda"
-          :value="summary.agenda"
+          id="outils"
+          title="Outils"
+          :value="summary.outils"
+          :active="active === 'outils'"
         >
+          <!-- Chaque outil a déjà son titre dans sa carte. -->
           <AgendaPanel />
-        </SettingsSection>
-
-        <SettingsSection
-          id="extension"
-          title="Extension du navigateur"
-          :value="summary.extension"
-        >
-          <ExtensionPanel />
+          <ExtensionPanel class="settings-next-card" />
         </SettingsSection>
 
         <p class="diagnostic-link">

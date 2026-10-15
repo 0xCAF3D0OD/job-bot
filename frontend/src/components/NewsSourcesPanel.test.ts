@@ -41,7 +41,7 @@ describe("NewsSourcesPanel", () => {
     );
     PUT.mockImplementation((_path: string, { body }: { body: unknown }) => Promise.resolve({ data: body }));
     PATCH.mockResolvedValue({ data: [{ ...source, country: "INT" }] });
-    const wrapper = mount(NewsSourcesPanel);
+    const wrapper = mount(NewsSourcesPanel, { global: { stubs: { teleport: true } } });
     await flushPromises();
 
     await wrapper.find("[data-test=domain-input]").setValue("Kubernetes, CKA");
@@ -52,6 +52,11 @@ describe("NewsSourcesPanel", () => {
     });
     expect(wrapper.find("[data-test=domain-keywords]").text()).toContain("CKA");
 
+    // Ligne calme (docs/48 §3) : le résumé et l'interrupteur ; les réglages dans le panneau.
+    expect(wrapper.find("[data-test=news-source]").text()).toContain("articles · Suisse · langues mêlées · marché de l'emploi");
+    expect(wrapper.find("[data-test=source-country]").exists()).toBe(false);
+    await wrapper.find("[data-test=open-source-1]").trigger("click");
+    expect(wrapper.find("[data-test=remove-source]").exists()).toBe(true);
     await wrapper.find("[data-test=source-country]").setValue("INT");
     await flushPromises();
     expect(PATCH).toHaveBeenCalledWith("/api/news/sources/{source_id}", {
@@ -112,6 +117,6 @@ describe("NewsSourcesPanel — suggestions et veilles", () => {
     expect(POST).toHaveBeenCalledWith("/api/news/searches", {
       body: { query: "Kubernetes emploi", country: "CH", language: "fr" },
     });
-    expect(wrapper.text()).toContain("veille Google Actualités : « Kubernetes emploi »");
+    expect(wrapper.text()).toContain("veille « Kubernetes emploi » · Suisse");
   });
 });

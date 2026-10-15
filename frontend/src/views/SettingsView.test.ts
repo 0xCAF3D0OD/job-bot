@@ -1,6 +1,8 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { createMemoryHistory, createRouter } from "vue-router";
+
 import SettingsView from "./SettingsView.vue";
 
 const GET = vi.fn();
@@ -9,6 +11,15 @@ vi.mock("../api/client", () => ({
   api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), PUT: vi.fn() },
 }));
 afterEach(() => vi.resetAllMocks());
+
+// Une rubrique à la fois (docs/48 §2) : ?rubrique=… choisit ce qui s'affiche.
+async function mountSettings(rubrique?: string) {
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+  await router.push({ path: "/reglages", query: rubrique ? { rubrique } : {} });
+  const wrapper = mount(SettingsView, { global: { plugins: [router], stubs: { StatusPanel: true, SitesPanel: true } } });
+  await flushPromises();
+  return { wrapper, router };
+}
 
 function mockGet(configured: boolean): void {
   GET.mockImplementation((path: string) =>
@@ -30,16 +41,14 @@ describe("SettingsView, notifications", () => {
           : { data: { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 } },
       ),
     );
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
-    await flushPromises();
+    const { wrapper } = await mountSettings("notifications");
     expect(wrapper.find("[data-test=notifications-unknown]").text()).toContain("ne répond pas");
     expect(wrapper.text()).not.toContain("Non configurées");
   });
 
   it("non configurées : explique quoi faire", async () => {
     mockGet(false);
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
-    await flushPromises();
+    const { wrapper } = await mountSettings("notifications");
     expect(wrapper.find("[data-test=notifications]").text()).toContain("réglage d'installation");
     expect(wrapper.find("[data-test=test-notification]").exists()).toBe(false);
   });
@@ -47,8 +56,7 @@ describe("SettingsView, notifications", () => {
   it("configurées : envoie une notification de test", async () => {
     mockGet(true);
     POST.mockResolvedValue({ response: { status: 204 } });
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
-    await flushPromises();
+    const { wrapper } = await mountSettings("notifications");
     await wrapper.find("[data-test=test-notification]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/notifications/test");
@@ -68,13 +76,33 @@ describe("SettingsView, date limite ORP", () => {
     );
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: {} } as never);
-    const wrapper = mount(SettingsView, { global: { stubs: { StatusPanel: true, SitesPanel: true } } });
-    await flushPromises();
+    const { wrapper } = await mountSettings();
     await wrapper.find("[data-test=due-day]").setValue(10);
     await wrapper.find("[data-test=settings-form]").trigger("submit");
     await flushPromises();
     expect(put).toHaveBeenCalledWith("/api/settings", {
       body: { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 10 },
     });
+  });
+});
+
+describe("SettingsView, une rubrique à la fois (docs/48)", () => {
+  it("six rubriques, une seule affichée ; un ancien lien #agenda mène à Outils", async () => {
+    mockGet(false);
+    const { wrapper, router } = await mountSettings();
+    const toc = wrapper.findAll(".settings-toc a").map((a) => a.text());
+    expect(toc).toEqual(["Recherche d'emploi", "Actualités", "Notifications", "IA", "Compte", "Outils"]);
+    expect(wrapper.find("[data-test=settings-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
+    // Le seuil de notification est dans sa rubrique, dit en clair.
+    expect(wrapper.text()).not.toContain("M'avertir d'une offre");
+    await router.push({ query: { rubrique: "notifications" } });
+    await flushPromises();
+    expect(wrapper.text()).toContain("M'avertir d'une offre à partir de");
+    expect(wrapper.find("[data-test=settings-form]").exists()).toBe(false);
+
+    await router.push({ path: "/reglages", query: {}, hash: "#agenda" });
+    await flushPromises();
+    expect(wrapper.find(".settings-toc a.active").text()).toBe("Outils");
   });
 });

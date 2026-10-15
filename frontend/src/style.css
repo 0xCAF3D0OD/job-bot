@@ -1886,3 +1886,25 @@ html.side-open { overflow: hidden; }
 .apply-steps .button-link, .apply-done { justify-self: start; }
 .prep-side [data-test=apply-contacts] { gap: 0.5rem; }
 .prep-side [data-test=apply-contacts] .link { justify-self: start; justify-content: flex-start; }
+
+/* Réglages (docs/48) : une rubrique à la fois ; sites et sources en lignes calmes. */
+.settings-toc a.active { color: var(--accent); font-weight: 600; }
+.settings-subtitle { margin: 1.25rem 0 0.6rem; font-size: 1rem; font-weight: 600; }
+.settings-sections > .section-title + .settings-subtitle { margin-top: 0.25rem; }
+.calm-list { list-style: none; margin: 0.5rem 0 1rem; padding: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.calm-list li { display: flex; align-items: center; gap: 0.8rem; padding-right: 0.9rem; }
+.calm-list li + li { border-top: 1px solid var(--divider); }
+.calm-list li.paused .calm-row { opacity: 0.6; }
+.calm-row { flex: 1 1 auto; min-width: 0; display: grid; gap: 0.1rem; justify-items: start; padding: 0.65rem 0.9rem; border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; white-space: normal; }
+.calm-row .hint { font-size: 0.84rem; }
+.calm-row:hover strong { color: var(--accent-text); }
+.calm-switch { display: inline-flex; flex: none; }
+.calm-panel { display: grid; gap: 1rem; }
+.calm-panel > label:not(.check, .filter-switch) { display: grid; gap: 0.35rem; font-size: 0.9rem; color: var(--muted); }
+.calm-panel select { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.7rem; }
+.calm-panel-switch { display: flex; justify-content: space-between; align-items: center; font-weight: 500; }
+.calm-panel .summary-rows { margin: 0; }
+.calm-panel .summary-rows > div { grid-template-columns: 8rem minmax(0, 1fr); }
+.calm-panel-foot { margin: 0.5rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border); }
+.settings-numbers fieldset.wide { grid-column: 1 / -1; }
+.settings-next-card { margin-top: 1rem; }

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { api, type NewsPreferences, type NewsSource } from "../api/client";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import NewsCatalog from "./NewsCatalog.vue";
 import HelpTip from "./HelpTip.vue";
+import SidePanel from "./SidePanel.vue";
 
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
@@ -70,7 +71,28 @@ async function remove(source: NewsSource): Promise<void> {
   const { data } = await api.DELETE("/api/news/sources/{source_id}", {
     params: { path: { source_id: source.id } },
   });
-  if (data) sources.value = data;
+  if (data) {
+    sources.value = data;
+    openId.value = null;
+  }
+}
+
+// Lignes calmes (docs/48 §3) : le nom, une ligne courte, l'interrupteur ; le reste dans le panneau.
+const openId = ref<number | null>(null);
+const opened = computed(() => sources.value.find((s) => s.id === openId.value) ?? null);
+function origin(source: NewsSource): string {
+  if (source.query) return `veille Google Actualités : « ${source.query} »`;
+  return `${source.kind === "videos" ? "vidéos" : "articles"}${source.match ? ` · filtre : ${source.match}` : ""}`;
+}
+function line(source: NewsSource): string {
+  return [
+    source.query ? `veille « ${source.query} »` : source.kind === "videos" ? "vidéos" : "articles",
+    source.country ? COUNTRIES[source.country as keyof typeof COUNTRIES] : "",
+    source.language ? LANGUAGES[source.language as keyof typeof LANGUAGES] : "langues mêlées",
+    source.labour_market ? "marché de l'emploi" : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 async function add(): Promise<void> {
@@ -204,72 +226,111 @@ onMounted(() => void load());
           label="Aide : sources des Actualités"
         />
       </legend>
-      <ul class="sites-list news-sources-list">
+      <ul class="calm-list">
         <li
           v-for="source in sources"
           :key="source.id"
           :class="{ paused: !source.active }"
           data-test="news-source"
         >
-          <span class="site-main">
+          <button
+            type="button"
+            class="calm-row"
+            :data-test="`open-source-${source.id}`"
+            @click="openId = source.id"
+          >
             <strong>{{ source.name }}</strong>
             <span class="hint">
-              <template v-if="source.query">veille Google Actualités : « {{ source.query }} »</template>
-              <template v-else>{{ source.kind === "videos" ? "vidéos" : "articles" }}{{ source.match ? ` · filtre : ${source.match}` : "" }}</template>
-              <template v-if="source.error"> · <span class="danger">dernier relevé en échec</span></template>
+              {{ line(source) }}<template v-if="source.error"> · <span class="danger">dernier relevé en échec</span></template>
             </span>
-            <span class="source-fields">
-              <select
-                :value="source.country ?? ''"
-                aria-label="Pays"
-                data-test="source-country"
-                @change="update(source, { country: value($event) })"
-              >
-                <option value="">pays ?</option>
-                <option
-                  v-for="(label, code) in COUNTRIES"
-                  :key="code"
-                  :value="code"
-                >{{ label }}</option>
-              </select>
-              <select
-                :value="source.language ?? ''"
-                aria-label="Langue"
-                @change="update(source, { language: value($event) })"
-              >
-                <option value="">langues mêlées</option>
-                <option
-                  v-for="(label, code) in LANGUAGES"
-                  :key="code"
-                  :value="code"
-                >{{ label }}</option>
-              </select>
-              <label class="check">
-                <input
-                  type="checkbox"
-                  :checked="source.labour_market"
-                  data-test="source-labour"
-                  @change="update(source, { labour_market: !source.labour_market })"
-                > marché de l'emploi
-              </label>
-            </span>
-          </span>
+          </button>
+          <label class="filter-switch calm-switch">
+            <span class="visually-hidden">{{ source.name }} suivie</span>
+            <input
+              type="checkbox"
+              role="switch"
+              :checked="source.active"
+              data-test="source-active"
+              @change="update(source, { active: !source.active })"
+            >
+          </label>
+        </li>
+      </ul>
+      <SidePanel
+        v-if="opened"
+        open
+        :title="opened.name"
+        @close="openId = null"
+      >
+        <div
+          class="calm-panel"
+          data-test="source-panel"
+        >
+          <p class="hint">
+            {{ origin(opened) }}<template v-if="opened.error">
+              · <span class="danger">dernier relevé en échec</span>
+            </template>
+          </p>
+          <label class="filter-switch calm-panel-switch">
+            <span>Suivie</span>
+            <input
+              type="checkbox"
+              role="switch"
+              :checked="opened.active"
+              @change="update(opened, { active: !opened.active })"
+            >
+          </label>
+          <label>Pays
+            <select
+              :value="opened.country ?? ''"
+              data-test="source-country"
+              @change="update(opened, { country: value($event) })"
+            >
+              <option value="">pays ?</option>
+              <option
+                v-for="(label, code) in COUNTRIES"
+                :key="code"
+                :value="code"
+              >{{ label }}</option>
+            </select>
+          </label>
+          <label>Langue
+            <select
+              :value="opened.language ?? ''"
+              @change="update(opened, { language: value($event) })"
+            >
+              <option value="">langues mêlées</option>
+              <option
+                v-for="(label, code) in LANGUAGES"
+                :key="code"
+                :value="code"
+              >{{ label }}</option>
+            </select>
+          </label>
           <label class="check">
             <input
               type="checkbox"
-              :checked="source.active"
-              @change="update(source, { active: !source.active })"
-            > suivie
+              :checked="opened.labour_market"
+              data-test="source-labour"
+              @change="update(opened, { labour_market: !opened.labour_market })"
+            > Marché de l'emploi
+            <HelpTip
+              text="Avec « Mon domaine », une source « marché de l'emploi » garde ses articles sur l'emploi (chômage, salaires, embauches)."
+              label="Aide : marché de l'emploi"
+            />
           </label>
-          <button
-            type="button"
-            class="link danger"
-            @click="remove(source)"
-          >
-            Retirer
-          </button>
-        </li>
-      </ul>
+          <p class="calm-panel-foot">
+            <button
+              type="button"
+              class="link danger"
+              data-test="remove-source"
+              @click="remove(opened)"
+            >
+              Retirer cette source
+            </button>
+          </p>
+        </div>
+      </SidePanel>
       <NewsCatalog
         v-if="adding === 'catalog'"
         @added="catalogAdded"
