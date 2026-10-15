@@ -111,3 +111,8 @@ Sans migration ni changement d'API. Chaque PR est vérifiée à 375 px (iPhone),
 ## Complément du 2026-10-15 : la cloche en carte sous la barre
 
 - Retour d'usage : la liste des alertes s'ouvre maintenant comme une **carte sous la barre du haut**, à sa largeur, qui **pousse la page vers le bas** (sur ordinateur comme sur téléphone) au lieu de flotter par-dessus. Elle reste visible en défilant (elle fait partie de la barre), défile si elle est longue, et se ferme avec Échap, un clic ailleurs ou la cloche.
+
+## Complément du 2026-10-15 : la cloche, téléphone seulement
+
+- Retour d'usage : la carte des alertes prend **toute la largeur de l'écran** sur téléphone (bord à bord, sous la barre), mais l'**ordinateur garde le menu déroulant d'origine** sous la cloche.
+- **Règle pour la suite** : tout ce qui est discuté dans ce travail sur le téléphone ne s'applique qu'au téléphone (sous 820 px) ; l'affichage ordinateur ne change pas.
