@@ -1129,7 +1129,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .assistant-focus span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .assistant-focus .assistant-close { font-size: 1.1rem; }
 
-/* --- Fiche pour le formulaire (docs/25 §5) --- */
+/* --- Champs à recopier sur le site de l'employeur (docs/25 §5, docs/47) --- */
 .form-sheet { margin: -0.4rem 0 1rem; padding: 0.9rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
 .form-sheet .hint { margin-bottom: 0.5rem; }
 .form-sheet-files { display: flex; gap: 1rem; margin: 0 0 0.6rem; }

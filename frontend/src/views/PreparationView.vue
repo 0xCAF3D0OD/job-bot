@@ -349,7 +349,7 @@ onMounted(() => void load());
             <section class="panel-section apply-step apply-step-post">
               <h3>Postuler</h3>
               <p class="hint">
-                Joins ta lettre et ton CV en PDF ; la fiche ci-dessous t'aide à remplir le formulaire.
+                Sur son site, joins ta lettre et ton CV en PDF ; recopie les champs ci-dessous dans son formulaire de candidature.
               </p>
               <div class="mobile-dock">
                 <a
@@ -366,7 +366,7 @@ onMounted(() => void load());
               class="panel-section apply-step"
               data-test="apply-sheet"
             >
-              <h3>Fiche pour le formulaire</h3>
+              <h3>À recopier sur le site de l'employeur</h3>
               <FormSheet
                 :letter-text="currentLetterText"
                 :letter-id="currentLetterId"
@@ -376,7 +376,7 @@ onMounted(() => void load());
             <section class="panel-section apply-step">
               <h3>J'ai postulé</h3>
               <p class="hint">
-                La candidature passe dans ton suivi, avec ta lettre et ton CV, pour le formulaire ORP.
+                La candidature passe dans ton suivi, avec ta lettre et ton CV, et compte dans tes preuves ORP du mois.
               </p>
               <button
                 type="button"

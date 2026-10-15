@@ -180,7 +180,7 @@ onMounted(async () => {
       </div>
       <DisclosureRow
         class="identity-more"
-        title="Pour les formulaires en ligne"
+        title="Pour les formulaires de candidature"
         :value="formFilled ? `facultatif · ${formFilled} / 5` : 'facultatif'"
         data-test="identity-more"
       >

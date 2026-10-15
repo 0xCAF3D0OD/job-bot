@@ -201,7 +201,7 @@ describe("barre de candidature", () => {
     // Numérotées par compteur CSS (docs/51 n° 4).
     expect(steps.findAll(".apply-steps .apply-step h3").map((h) => h.text())).toEqual([
       "Postuler",
-      "Fiche pour le formulaire",
+      "À recopier sur le site de l'employeur",
       "J'ai postulé",
     ]);
     expect(steps.find("[data-test=apply-contacts] h2").text()).toBe("Contacts chez Acme SA");
