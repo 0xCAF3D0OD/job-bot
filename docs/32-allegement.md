@@ -1,6 +1,6 @@
 # 32 — Alléger la plateforme : aides, sections dépliables, pages compactes, Actualités (version 0.25.0)
 
-> Statut : **validé** le 2026-10-15. livré : PR a (bulle, lignes dépliables, panneau latéral, préparation compacte), PR b (textes d'aide).
+> Statut : **validé** le 2026-10-15. livré : PR a (bulle, lignes dépliables, panneau latéral, préparation compacte), PR b (textes d'aide), PR c (Actualités).
 > Retours d'usage du 2026-10-15 :
 > - trop de textes d'explication, qui surchargent les pages (préparation, et partout ailleurs) ;
 > - le style actuel des sections dépliables (« ▸ Contacts chez … ») ne plaît pas ;
@@ -118,3 +118,12 @@ Sans migration ni changement d'API.
 - **Libellés raccourcis** pour tenir sur une ligne : « Nouvelle version » (lettre et CV), « Pistes de l'IA » / « Nouvelles pistes de l'IA » (entretiens).
 - **« ? »** : rond, avec un petit écart après le texte ; sa bulle se décale pour rester dans l'écran. Pas de « ? » dans la cloche (la bulle y serait coupée) : sa phrase d'explication est simplement retirée.
 - **« En savoir plus »** : il n'en reste qu'un, « Comment l'installer » (extension du navigateur), une liste d'étapes trop longue pour une bulle ; il prend le style des lignes dépliables.
+
+## Écarts avec la PR c
+
+- **À la une** : le premier article de la liste affichée (le plus récent, dans « Mon domaine » si ce filtre est choisi), avec son image quand il en a une, la source complète, la date et deux lignes de résumé.
+- **Liste fine** : le titre seul et, à droite, le nom court de la source (« SECO » pour « SECO — marché du travail ») et la date courte ; le résumé apparaît sous le titre au survol ou au clavier, pas au toucher (un appui ouvre l'article). Sur téléphone, la source et la date passent sous le titre.
+- **Groupes** : « Aujourd'hui », « Cette semaine » (7 derniers jours), « Plus ancien » ; un groupe vide n'est pas affiché.
+- **« Filtrer · N »** : n'apparaît que si plusieurs pays ou langues existent ; s'ouvre sous le bouton, se ferme avec Échap ou un clic ailleurs.
+- **Relevé** : « Relevé il y a 20 h · Relever », en petit, en bas de page (« Relever maintenant » raccourci).
+- **Vidéos** inchangées (cartes avec vignette).
