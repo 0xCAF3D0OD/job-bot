@@ -34,3 +34,18 @@ Une PR (**0.41.2**), CSS surtout. Captures 390 px avant / après ; l'ordinateur 
 - **Objet de la lettre** : sur téléphone, « Objet : » sur sa ligne, puis l'objet sur toute la largeur, qui passe à la ligne (Entrée n'y ajoute pas de saut). Sur ordinateur, le champ d'une ligne reste.
 - **Étapes de Postuler** : les numéros viennent d'un compteur CSS ; la section masquée ne compte pas. Sur téléphone, la première étape visible n'a plus de trait au-dessus.
 - **Ordinateur** : 12 pages comparées au pixel avec 0.41.1 ; 10 identiques, la fiche d'offre varie d'une capture à l'autre (animation), et sur « Postuler » le numéro « 2. » bouge d'un sous-pixel (numéro généré par le CSS), identique à l'œil.
+
+## Complément (0.41.4) : de l'air entre le texte et les cartes
+
+Retour du 2026-10-15 : « fais attention à l'écart entre le texte et les éléments (carte, etc.) : il ne faut pas qu'ils soient trop près ». Mesure automatique, sur ordinateur et à 390 px, de l'écart entre chaque carte et la ligne de texte la plus proche au-dessus et en dessous, sur 20 pages. Règle retenue : **1 rem (16 px) au moins** entre un texte et une carte.
+
+| Endroit | Avant | Après |
+|---|---|---|
+| Titre d'une section de panneau → son contenu (fiche d'offre, Suivi, Préparer, Formations, Parcours) | 10 px | 16 px |
+| Préparer › Postuler : « À recopier sur le site de l'employeur » → la fiche | 6 px | 16 px |
+| Panneau d'une candidature : cadre « Il manque… » → tableau Job-Room (et tout cadre suivi d'un texte dans un panneau) | 10 px | 16 px |
+| Bilan : parcours → « Réponse en N jours », cartes → note du bas | 12–15 px | 16 px |
+| Formations : « Certifications », « Cours et parcours » → cartes | 12 px | 16 px |
+| Offres : dernière carte de filtre → « Personnaliser les filtres » | 14 px | 18 px |
+
+Les autres écarts relevés sous 16 px étaient des textes repliés (lignes dépliables fermées, fondu de « À relancer ») : rien à corriger.
