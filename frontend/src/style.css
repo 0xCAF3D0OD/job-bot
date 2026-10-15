@@ -895,9 +895,6 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .profile-banner span { color: var(--muted); }
 
 /* Candidatures et preuves ORP réunies (docs/18 §2) */
-.follow-up { margin: 0 0 1rem; padding: 0.6rem 0.9rem; border: 1px solid var(--border); border-left: 3px solid #e08a2e; border-radius: 10px; background: var(--surface); font-size: 0.88rem; color: var(--muted); }
-.follow-up strong { color: var(--text); }
-.follow-up-list { display: inline-flex; flex-wrap: wrap; gap: 0.2rem 0.8rem; margin-left: 0.4rem; }
 .all-months { display: inline-flex; margin: 0 0 0.8rem; font-size: 0.88rem; }
 
 /* Connexion (docs/18 §1) */
@@ -1397,6 +1394,8 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 button, .button-link, .link, .apply-bar a, .apply-bar button { white-space: nowrap; }
 /* Cartes et lignes cliquables : leur texte passe à la ligne normalement (docs/33 §3.1). */
 .job-card, .disclosure-row, .filter-row, .news-row, .news-lead, .bell-item, .day-card { white-space: normal; }
+/* Les liens de recherche LinkedIn sont longs : ils passent à la ligne au lieu de déborder. */
+.contacts-searches .link { white-space: normal; overflow-wrap: anywhere; }
 button, .button-link { max-width: 100%; }
 .help-tip-button { flex: none; aspect-ratio: 1; min-width: 1.25rem; min-height: 1.25rem; padding: 0; }
 
@@ -1417,8 +1416,17 @@ button, .button-link { max-width: 100%; }
 .disclosure-panel { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 0fr; transition: grid-template-rows 0.2s ease; }
 .disclosure.open .disclosure-panel { grid-template-rows: 1fr; }
 .disclosure-clip { position: relative; overflow: hidden; min-height: 0; }
+/* Ouverte, la ligne ne rogne plus son contenu une fois le glissement fini : les bulles « ? »
+   débordent du cadre au lieu d'être coupées. Repliée ou en mouvement, elle reste rognée. */
+.disclosure.open, .disclosure.open .disclosure-clip, .disclosure-list:has(> .disclosure.open) { animation: disclosure-reveal 0s 0.2s forwards; }
+@keyframes disclosure-reveal { to { overflow: visible; } }
+.disclosure-list > .disclosure:first-child { border-top-left-radius: 13px; border-top-right-radius: 13px; }
+.disclosure-list > .disclosure:last-child { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
 .disclosure-body { margin: 0 0.9rem 0.9rem 1.1rem; padding: 0.2rem 0 0.2rem 0.9rem; border-left: 2px solid var(--border); display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
-@media (prefers-reduced-motion: reduce) { .disclosure-panel, .disclosure-chevron { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .disclosure-panel, .disclosure-chevron { transition: none; }
+  .disclosure.open, .disclosure.open .disclosure-clip, .disclosure-list:has(> .disclosure.open) { animation-delay: 0s; }
+}
 
 /* Panneau latéral (docs/32 §2.2) */
 .side-backdrop { position: fixed; inset: 0; z-index: 40; background: rgb(17 17 31 / 12%); }
@@ -1660,8 +1668,8 @@ html.side-open { overflow: hidden; }
 
 /* Relancer une candidature (docs/38) */
 .follow-up-line { color: var(--warn-text); }
-.follow-up { display: grid; gap: 0.8rem; justify-items: start; }
-.follow-up .muted { margin: 0; }
+.follow-up-panel { display: grid; gap: 0.8rem; justify-items: start; }
+.follow-up-panel .muted { margin: 0; }
 .follow-up-field { display: grid; gap: 0.25rem; width: 100%; font-size: 0.85rem; }
 .follow-up-field input, .follow-up-field textarea { width: 100%; font: inherit; }
 .follow-up-actions { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }

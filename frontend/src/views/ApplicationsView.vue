@@ -22,6 +22,7 @@ import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
+import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
 import { formatMonth, shiftMonth } from "../format";
 
@@ -81,10 +82,11 @@ const stateLabel = computed(() => {
 const toFollowUp = computed(() => {
   const limit = new Date();
   limit.setDate(limit.getDate() - REMIND_AFTER_DAYS);
-  const day = limit.toISOString().slice(0, 10);
+  // Dates locales, comme sur la carte : en UTC, le soir, la relance tomberait un jour trop tôt.
+  const day = isoDay(limit);
   const noAnswer = new Date();
   noAnswer.setDate(noAnswer.getDate() - NO_ANSWER_DAYS);
-  const after = noAnswer.toISOString().slice(0, 10);
+  const after = isoDay(noAnswer);
   return all.value
     .filter(
       (a) =>

@@ -15,6 +15,8 @@ const emit = defineEmits<{ changed: []; count: [count: number] }>();
 
 const page = ref<ContactsPage | null>(null);
 const failed = ref(false);
+// Ajout ou retrait refusé, ou API injoignable : dit dans le panneau plutôt que rien ne bouge.
+const actionError = ref("");
 const adding = ref(false);
 const busy = ref(false);
 const answering = ref<number | null>(null);
@@ -74,14 +76,20 @@ function day(value: string): string {
 
 async function load(): Promise<void> {
   failed.value = false;
-  const result = props.applicationId
-    ? await api.GET("/api/applications/{application_id}/contacts", {
-      params: { path: { application_id: props.applicationId } },
-    })
-    : await api.GET("/api/offers/{offer_id}/contacts", { params: { path: { offer_id: props.offerId ?? 0 } } });
-  page.value = result.data ?? null;
-  failed.value = !result.data;
-  if (result.data) emit("count", result.data.contacts.length);
+  try {
+    const result = props.applicationId
+      ? await api.GET("/api/applications/{application_id}/contacts", {
+        params: { path: { application_id: props.applicationId } },
+      })
+      : await api.GET("/api/offers/{offer_id}/contacts", { params: { path: { offer_id: props.offerId ?? 0 } } });
+    page.value = result.data ?? null;
+    failed.value = !result.data;
+    if (result.data) emit("count", result.data.contacts.length);
+  } catch {
+    // API injoignable (réseau) : même message qu'une réponse en erreur.
+    page.value = null;
+    failed.value = true;
+  }
 }
 
 function body(contact: Contact, changes: Partial<ContactIn>): ContactIn {
@@ -91,6 +99,7 @@ function body(contact: Contact, changes: Partial<ContactIn>): ContactIn {
 
 async function add(): Promise<void> {
   busy.value = true;
+  actionError.value = "";
   try {
     const { data } = await api.POST("/api/contacts", {
       body: {
@@ -102,12 +111,17 @@ async function add(): Promise<void> {
         contacted_on: draft.contacted_on || isoDay(),
       },
     });
-    if (!data) return;
+    if (!data) {
+      actionError.value = "Enregistrement impossible : réessaie dans un instant.";
+      return;
+    }
     adding.value = false;
     draft.name = "";
     draft.contacted_on = isoDay();
     await load();
     emit("changed");
+  } catch {
+    actionError.value = "Enregistrement impossible : réessaie dans un instant.";
   } finally {
     busy.value = false;
   }
@@ -134,7 +148,18 @@ async function saveAnswer(contact: Contact): Promise<void> {
 }
 
 async function remove(contact: Contact): Promise<void> {
-  await api.DELETE("/api/contacts/{contact_id}", { params: { path: { contact_id: contact.id } } });
+  if (!window.confirm("Retirer ce contact ?")) return;
+  actionError.value = "";
+  try {
+    const { error } = await api.DELETE("/api/contacts/{contact_id}", { params: { path: { contact_id: contact.id } } });
+    if (error !== undefined) {
+      actionError.value = "Retrait impossible : réessaie dans un instant.";
+      return;
+    }
+  } catch {
+    actionError.value = "Retrait impossible : réessaie dans un instant.";
+    return;
+  }
   await load();
   emit("changed");
 }
@@ -150,6 +175,8 @@ onMounted(() => void load());
     <p
       v-if="failed"
       class="notice error"
+      role="alert"
+      data-test="contacts-error"
     >
       Impossible de charger les contacts.
     </p>
@@ -259,6 +286,14 @@ onMounted(() => void load());
 
       <section class="contacts-block">
         <h3>Mes prises de contact</h3>
+        <p
+          v-if="actionError"
+          class="notice error"
+          role="alert"
+          data-test="contact-error"
+        >
+          {{ actionError }}
+        </p>
         <ul
           v-if="page.contacts.length"
           class="contacts-list"

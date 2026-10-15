@@ -33,6 +33,8 @@ describe("Candidature spontanée (docs/39)", () => {
       reason: "Leur plateforme cloud.",
       website: null,
     });
+    // La liste des offres se recharge dès la création, même sans passer par « Préparer ».
+    expect(wrapper.emitted("created")).toEqual([[77]]);
 
     await wrapper.find("[data-test=spontaneous-search]").trigger("click");
     await flushPromises();

@@ -7,14 +7,19 @@ import ContactsPanel from "./ContactsPanel.vue";
 const GET = vi.fn();
 const POST = vi.fn();
 const PUT = vi.fn();
+const DELETE = vi.fn();
 vi.mock("../api/client", () => ({
   api: {
     GET: (...a: unknown[]) => GET(...a),
     POST: (...a: unknown[]) => POST(...a),
     PUT: (...a: unknown[]) => PUT(...a),
+    DELETE: (...a: unknown[]) => DELETE(...a),
   },
 }));
-afterEach(() => vi.resetAllMocks());
+afterEach(() => {
+  vi.resetAllMocks();
+  vi.restoreAllMocks();
+});
 
 function daysAgo(days: number): string {
   const d = new Date();
@@ -110,5 +115,45 @@ describe("ContactsPanel", () => {
     await wrapper.find("[data-test=contact-writer] form").trigger("submit");
     await flushPromises();
     expect(wrapper.find("[role=alert]").text()).toBe("Rédaction impossible : plafond mensuel de l'IA atteint.");
+  });
+
+  it("dit que le chargement a échoué, réseau coupé compris", async () => {
+    GET.mockRejectedValue(new TypeError("Failed to fetch"));
+    const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
+    await flushPromises();
+    const error = wrapper.find("[data-test=contacts-error]");
+    expect(error.attributes("role")).toBe("alert");
+    expect(error.text()).toBe("Impossible de charger les contacts.");
+  });
+
+  it("demande confirmation avant de retirer un contact et dit l'échec", async () => {
+    GET.mockResolvedValue(page([contact(1, {})]));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
+    await flushPromises();
+    const remove = wrapper.findAll(".contact-actions button").find((b) => b.text() === "Retirer")!;
+    await remove.trigger("click");
+    await flushPromises();
+    expect(confirm).toHaveBeenCalledWith("Retirer ce contact ?");
+    expect(DELETE).not.toHaveBeenCalled();
+
+    confirm.mockReturnValue(true);
+    DELETE.mockResolvedValue({ error: { detail: "introuvable" } });
+    await remove.trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledTimes(1);
+    expect(wrapper.find("[data-test=contact-error]").text()).toBe("Retrait impossible : réessaie dans un instant.");
+    expect(wrapper.emitted("changed")).toBeUndefined();
+  });
+
+  it("dit que l'ajout a échoué", async () => {
+    GET.mockResolvedValue(page([]));
+    POST.mockResolvedValue({ error: { detail: "invalide" } });
+    const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
+    await flushPromises();
+    await wrapper.find("[data-test=contact-add]").trigger("click");
+    await wrapper.find("[data-test=contact-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[data-test=contact-error]").attributes("role")).toBe("alert");
   });
 });

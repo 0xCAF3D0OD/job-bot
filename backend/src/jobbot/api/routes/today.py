@@ -5,7 +5,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Request, status
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 
 from jobbot.alerts import service as alert_service
@@ -34,6 +34,7 @@ from jobbot.worker.tasks.collect import COLLECT_JOB
 
 router = APIRouter(prefix="/api", tags=["today"])
 REMIND_AFTER = timedelta(days=10)
+NO_ANSWER_AFTER = timedelta(days=14)
 
 Step = Literal["criteria", "profile", "identity", "orp_target", "notifications", "imap"]
 
@@ -136,8 +137,18 @@ async def get_today(request: Request) -> TodayOut:
             select(func.count())
             .select_from(Application)
             .where(
-                Application.status == ApplicationStatus.EN_ATTENTE,
-                Application.sent_at <= today - REMIND_AFTER,
+                or_(
+                    and_(
+                        Application.status == ApplicationStatus.EN_ATTENTE,
+                        Application.sent_at <= today - REMIND_AFTER,
+                    ),
+                    # Relancées sans réponse depuis 14 jours : la même liste que le Suivi
+                    # (docs/38 §4).
+                    and_(
+                        Application.status == ApplicationStatus.RELANCEE,
+                        Application.followed_up_at <= today - NO_ANSWER_AFTER,
+                    ),
+                )
             )
         )
         previous_count = await count(

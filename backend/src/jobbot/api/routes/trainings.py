@@ -291,9 +291,14 @@ async def add_to_profile(
             raise HTTPException(
                 status.HTTP_409_CONFLICT, "les blocs de profil appartiennent au profil principal"
             )
-        mark = await session.get(TrainingMark, (profile.id, training_id))
+        mark = await session.get(TrainingMark, (profile.id, training_id), with_for_update=True)
         if mark is None or mark.status != "done":
             raise HTTPException(status.HTTP_409_CONFLICT, "formation pas encore terminée")
+        # Un seul bloc par formation (un double clic n'en crée pas un second).
+        if mark.chunk_id is not None:
+            existing = await session.get(ProfileChunk, mark.chunk_id)
+            if existing is not None:
+                raise HTTPException(status.HTTP_409_CONFLICT, "formation déjà dans ton profil")
         tags: dict[str, str] = {}
         for tag in body.tags:
             if cleaned := tag.strip():

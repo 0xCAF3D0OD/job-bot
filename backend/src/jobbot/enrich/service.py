@@ -148,6 +148,8 @@ async def expire_stale(runtime: Runtime, now: datetime) -> int:
                 Offer.status != OfferStatus.APPLIED,
                 Offer.last_seen_at < now - STALE_AFTER,
                 Offer.id.not_in(jobup_offers),
+                # Candidature spontanée : pas d'annonce qui pourrait disparaître (docs/39 §4).
+                Offer.spontaneous.is_(False),
             )
             .values(expired_at=now, expiry_source="age")
         )

@@ -206,6 +206,8 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
 
 function onKeydown(event: KeyboardEvent): void {
   if (event.key !== "Escape") return;
+  // Échap ferme la couche du dessus seulement : bulle d'aide ou panneau latéral d'abord.
+  if (event.defaultPrevented || document.documentElement.classList.contains("side-open")) return;
   if (applying.value) applying.value = null;
   else if (filtersOpen.value) filtersOpen.value = false;
   else selectedId.value = null;
@@ -419,6 +421,6 @@ onUnmounted(() => {
     help="Pour une entreprise qui n'a pas publié d'annonce. La lettre et le CV se préparent ensuite comme pour une offre ; elle compte dans le formulaire ORP du mois. Pas de note de l'IA."
     @close="spontaneousOpen = false"
   >
-    <SpontaneousForm />
+    <SpontaneousForm @created="load()" />
   </SidePanel>
 </template>
