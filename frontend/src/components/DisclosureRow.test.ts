@@ -42,6 +42,12 @@ describe("Panneau latéral (docs/32 §2.2)", () => {
     await wrapper.find("[data-test=side-close]").trigger("click");
     await wrapper.find("[data-test=side-backdrop]").trigger("click");
     expect(wrapper.emitted("close")).toHaveLength(3);
+    // La page derrière ne défile plus tant que le panneau est ouvert.
+    expect(document.documentElement.classList.contains("side-open")).toBe(true);
+    await wrapper.setProps({ open: false });
+    expect(document.documentElement.classList.contains("side-open")).toBe(false);
+    await wrapper.setProps({ open: true });
     wrapper.unmount();
+    expect(document.documentElement.classList.contains("side-open")).toBe(false);
   });
 });

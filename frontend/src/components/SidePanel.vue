@@ -11,6 +11,16 @@ const emit = defineEmits<{ close: [] }>();
 
 const closeButton = ref<HTMLButtonElement | null>(null);
 let returnTo: HTMLElement | null = null;
+let locked = false;
+
+// La page derrière ne défile plus tant qu'un panneau est ouvert (retour du 2026-10-15) :
+// sa barre de défilement n'a pas de sens à côté du panneau.
+function lockPage(lock: boolean): void {
+  if (lock === locked) return;
+  locked = lock;
+  openPanels += lock ? 1 : -1;
+  document.documentElement.classList.toggle("side-open", openPanels > 0);
+}
 
 function onKey(event: KeyboardEvent): void {
   if (event.key === "Escape") emit("close");
@@ -19,6 +29,7 @@ function onKey(event: KeyboardEvent): void {
 watch(
   () => props.open,
   async (open) => {
+    lockPage(open);
     if (open) {
       returnTo = document.activeElement as HTMLElement | null;
       document.addEventListener("keydown", onKey);
@@ -32,7 +43,14 @@ watch(
   },
   { immediate: true },
 );
-onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
+onBeforeUnmount(() => {
+  document.removeEventListener("keydown", onKey);
+  lockPage(false);
+});
+</script>
+
+<script lang="ts">
+let openPanels = 0;
 </script>
 
 <template>
