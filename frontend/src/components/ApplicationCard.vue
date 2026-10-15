@@ -25,6 +25,8 @@ const emit = defineEmits<{
   changed: [];
 }>();
 
+// Lien vers la plateforme dans l'événement d'agenda (docs/40 §1).
+const origin = globalThis.location?.origin ?? "";
 const upcoming = computed(() => {
   const at = props.application.interview_at;
   return !!at && new Date(at).getTime() > Date.now();
@@ -275,6 +277,13 @@ const onStatus = (event: Event): void =>
       >
         Préparer l'entretien
       </button>
+      <a
+        v-if="upcoming"
+        class="link"
+        :href="`/api/applications/${application.id}/interview.ics?origin=${encodeURIComponent(origin)}`"
+        download
+        data-test="interview-calendar"
+      >Ajouter à mon agenda</a>
       <button
         v-if="!upcoming && (needsFeedback || (application.status === 'entretien' && !latest))"
         type="button"

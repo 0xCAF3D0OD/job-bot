@@ -24,6 +24,8 @@ PUBLIC_READ = [
     re.compile(r"^/api/news$"),
     re.compile(r"^/api/news/preferences$"),
     re.compile(r"^/api/news/items/\d+/image$"),
+    # Abonnement d'agenda (docs/40) : la route vérifie elle-même son jeton secret.
+    re.compile(r"^/api/agenda/feed/[A-Za-z0-9_-]+\.ics$"),
     # Documentation interactive (absente en production).
     re.compile(r"^/api/docs"),
     re.compile(r"^/api/openapi\.json$"),

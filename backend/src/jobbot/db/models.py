@@ -801,6 +801,21 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class CalendarToken(Base):
+    """Abonnement d'agenda (docs/40) : jeton secret révocable ; seule son empreinte est gardée."""
+
+    __tablename__ = "calendar_tokens"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(Text)
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    # Adresse de la plateforme vue par le navigateur (tunnel, https), pour les liens.
+    origin: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class ExtensionToken(Base):
     """Jeton de l'extension du navigateur (docs/25 §4) : seule son empreinte est gardée."""
 

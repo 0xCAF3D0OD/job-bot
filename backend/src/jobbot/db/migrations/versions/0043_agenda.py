@@ -1,0 +1,36 @@
+"""Tes dates dans ton agenda (docs/40) : jetons d'abonnement
+
+Revision ID: 0043
+Revises: 0042
+Create Date: 2026-10-15
+"""
+
+from collections.abc import Sequence
+
+import sqlalchemy as sa
+from alembic import op
+
+revision: str = "0043"
+down_revision: str | None = "0042"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
+
+
+def upgrade() -> None:
+    op.create_table(
+        "calendar_tokens",
+        sa.Column("id", sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column("name", sa.Text(), nullable=False),
+        sa.Column("token_hash", sa.Text(), nullable=False, unique=True),
+        # Adresse de la plateforme vue par le navigateur, pour les liens des événements.
+        sa.Column("origin", sa.Text(), nullable=True),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+        ),
+        sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
+    )
+
+
+def downgrade() -> None:
+    op.drop_table("calendar_tokens")
