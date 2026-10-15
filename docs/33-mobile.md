@@ -88,3 +88,9 @@ Sans migration ni changement d'API. Chaque PR est vérifiée à 375 px (iPhone),
 - **En-tête compact** sous 820 px : titre plus petit, sans pastille ni sous-titre.
 - **Champs à 16 px** sous 820 px.
 - **Aujourd'hui** : « Comment ça marche » et « Pour bien démarrer » remis d'aplomb (pastille et texte sur une ligne, « où » ou l'indication juste dessous, en petit), sur toutes les largeurs.
+
+## Complément du 2026-10-15 : trait droit et page figée sous le menu
+
+- Retour d'usage : le trait violet de la page en cours se courbait en haut et en bas (les liens ont des coins arrondis, qui courbaient sa bordure). C'est désormais un **trait droit** posé à côté du lien. Même correction pour la bulle d'information et la note du formulaire ORP (côté gauche droit, coins arrondis à droite seulement).
+- La **barre de défilement** de la page restait visible à côté du menu : tant qu'un panneau latéral est ouvert (menu, Contacts, Entreprise, Fiche), la page derrière **ne défile plus**.
+- Le compte, dans le menu, n'a plus les traits du petit menu d'ordinateur.
