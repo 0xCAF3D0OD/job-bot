@@ -76,3 +76,11 @@ Une PR (**0.39.0**). Ordinateur et téléphone, captures avant / après.
 - **Télécharger** : « PDF » et « Word », deux boutons courts côte à côte ; le titre « Cette version » devient « Télécharger ». Le bouton « Enregistrer » ne paraît qu'après une modification, avec la phrase qui l'explique.
 - **Téléphone** : l'action fixée en bas suit l'onglet : « Nouvelle version » (ou « Rédiger la lettre »), « Préparer le CV », « Postuler sur … ». Vérifié à 390 px, sans débordement.
 - Une candidature déjà envoyée garde son bandeau « Candidature envoyée · Revenir aux offres · Voir le suivi ».
+
+## Complément (0.41.3)
+
+Retour du 2026-10-15 : « de quel formulaire il est question ? ». Deux formulaires différents portaient le même mot sur la même page : celui de **candidature, sur le site de l'employeur** (étape 2) et le **formulaire ORP** des preuves du mois (étape « J'ai postulé »). Libellés précisés :
+
+- « Fiche pour le formulaire » → **« À recopier sur le site de l'employeur »** ; la phrase de l'étape Postuler dit « recopie les champs ci-dessous dans son formulaire de candidature ».
+- « J'ai postulé » : « … et compte dans tes preuves ORP du mois » (au lieu de « pour le formulaire ORP »).
+- Profil › Coordonnées : « Pour les formulaires en ligne » → « Pour les formulaires de candidature ».
