@@ -38,7 +38,7 @@ from jobbot.scoring.service import account_problem, budget_state, record_call
 
 log = get_logger(__name__)
 
-USER_AGENT = "job-bot/0.13 (usage personnel)"
+USER_AGENT = "jobA1/0.13 (usage personnel)"
 MAX_PAGE_BYTES = 2_000_000
 MAX_LIST_BYTES = 5_000_000
 TITLE_MATCH = 0.75

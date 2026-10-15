@@ -54,7 +54,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     # hors ligne par `jobbot openapi` pour le frontend.
     docs = not settings.is_prod
     app = FastAPI(
-        title="job-bot",
+        title="jobA1",
         version=settings.version,
         lifespan=lifespan,
         docs_url="/api/docs" if docs else None,

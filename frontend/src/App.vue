@@ -51,13 +51,13 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
       <RouterLink
         to="/"
         class="brand"
-        aria-label="job-bot, accueil"
+        aria-label="jobA1, accueil"
       >
         <span
           class="brand-mark"
           aria-hidden="true"
         />
-        job-bot
+        jobA1
       </RouterLink>
       <nav aria-label="Navigation principale">
         <ul class="nav">

@@ -14,7 +14,7 @@ import httpx
 
 ENDPOINT = "https://www.uid-wse.admin.ch/V5.0/PublicServices.svc"
 ACTION = "http://www.uid.admin.ch/xmlns/uid-wse/IPublicServices/Search"
-USER_AGENT = "job-bot/0.7 (usage personnel)"
+USER_AGENT = "jobA1/0.7 (usage personnel)"
 # Radiée du registre du commerce, ou entreprise inactive / supprimée dans le registre IDE.
 _REMOVED_CR = {"2"}
 _REMOVED_UID = {"6", "7"}

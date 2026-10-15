@@ -1,4 +1,6 @@
-# job-bot
+# jobA1
+
+> **Less searching. More living.** (anciennement job-bot : le dépôt, le paquet `jobbot`, la commande `jobbot` et les variables `JOBBOT_*` gardent leur nom technique.)
 
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup, Indeed, Job-Room), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 

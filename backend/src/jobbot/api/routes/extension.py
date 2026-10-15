@@ -121,7 +121,7 @@ async def _offer(request: Request, offer_id: int) -> Offer:
 @router.get("/me", operation_id="extensionMe")
 async def me(request: Request) -> ExtensionMe:
     """Vérifie le jeton au moment de relier l'extension."""
-    return ExtensionMe(platform="job-bot", version=_runtime(request).settings.version)
+    return ExtensionMe(platform="jobA1", version=_runtime(request).settings.version)
 
 
 @router.get("/match", operation_id="extensionMatch")

@@ -93,7 +93,7 @@ async def test_tokens_and_extension_routes(
     auth = {"Authorization": f"Bearer {token}"}
 
     # Le jeton suffit, même quand la connexion est obligatoire (pas de cookie)…
-    assert (await secured.get("/api/extension/me", headers=auth)).json()["platform"] == "job-bot"
+    assert (await secured.get("/api/extension/me", headers=auth)).json()["platform"] == "jobA1"
     # … et ne donne accès qu'aux routes de l'extension.
     assert (await secured.get("/api/offers", headers=auth)).status_code == 401
     # Une requête venue d'une extension (autre origine) passe : le jeton remplace le cookie.

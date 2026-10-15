@@ -203,7 +203,7 @@ async def send_test(settings: Settings) -> None:
     await send(
         settings,
         Message(
-            title="job-bot : notification de test",
+            title="jobA1 : notification de test",
             message="Les notifications fonctionnent. Tu seras prévenu des offres bien notées.",
             tags=["white_check_mark"],
             click=f"{settings.public_url.rstrip('/')}/candidatures/offres",

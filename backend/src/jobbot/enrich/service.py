@@ -28,7 +28,7 @@ from jobbot.sources.jobup_page import PageNotParsable, parse_jobup_page
 
 log = get_logger(__name__)
 
-USER_AGENT = "job-bot/0.3 (usage personnel)"
+USER_AGENT = "jobA1/0.3 (usage personnel)"
 DELAY_SECONDS = 10.0
 MAX_PER_RUN = 30
 MAX_ATTEMPTS = 3
