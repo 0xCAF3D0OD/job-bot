@@ -8,6 +8,7 @@ import PageHero from "../components/PageHero.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
 import ExtensionPanel from "../components/ExtensionPanel.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
+import PlatformPanel from "../components/PlatformPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import SettingsSection from "../components/SettingsSection.vue";
@@ -25,7 +26,9 @@ const form = ref<SettingsModel>({
 const loaded = ref(false);
 const saving = ref(false);
 const message = ref("");
-const notifications = ref<{ configured: boolean; server: string } | null>(null);
+const notifications = ref<{ configured: boolean; server: string; personal?: boolean; topic?: string | null } | null>(
+  null,
+);
 // Vrai si l'API n'a pas répondu (arrêtée, ou plus ancienne que l'interface).
 const notificationsUnknown = ref(false);
 const testMessage = ref("");
@@ -71,6 +74,13 @@ onMounted(async () => {
   }
 });
 
+// Compte invité (docs/65 §4) : ses alertes sur son téléphone, avec un sujet ntfy à lui.
+async function setPhone(enabled: boolean): Promise<void> {
+  const { data } = await api.PUT("/api/notifications/phone", { body: { enabled } });
+  if (data) notifications.value = data;
+  testMessage.value = "";
+}
+
 async function save(): Promise<void> {
   saving.value = true;
   try {
@@ -86,6 +96,8 @@ async function save(): Promise<void> {
 }
 const router = useRouter();
 const { me } = useAuth();
+// L'exploitant (docs/65) : la rubrique Plateforme, son plafond de l'IA, les profils d'essai.
+const owner = computed(() => Boolean(me.value?.is_owner));
 // Résumés des rubriques, affichés sur téléphone (docs/34 §3).
 const summary = computed(() => ({
   recherche: [
@@ -100,8 +112,11 @@ const summary = computed(() => ({
     .filter(Boolean)
     .join(" · "),
   ia: `plafond ${form.value.llm_monthly_budget_chf} CHF / mois`,
-  compte: me.value?.auth_enabled ? `profils d'essai · ${me.value.username ?? ""}` : "profils d'essai",
+  compte: [owner.value ? "profils d'essai" : "connexion", me.value?.auth_enabled ? (me.value.username ?? "") : ""]
+    .filter(Boolean)
+    .join(" · "),
   outils: "agenda, extension",
+  plateforme: "comptes et IA de la plateforme",
 }));
 
 // Une rubrique à la fois (docs/48 §2) : le sommaire choisit, l'adresse la retient.
@@ -112,6 +127,7 @@ const SECTIONS = [
   { id: "ia", label: "IA" },
   { id: "compte", label: "Compte" },
   { id: "outils", label: "Outils" },
+  { id: "plateforme", label: "Plateforme" },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
 const OLD_ANCHORS: Record<string, SectionId> = {
@@ -125,9 +141,10 @@ const OLD_ANCHORS: Record<string, SectionId> = {
   extension: "outils",
 };
 const route = useRoute();
+const sections = computed(() => SECTIONS.filter((s) => s.id !== "plateforme" || owner.value));
 const active = computed<SectionId>(() => {
   const wanted = route.query.rubrique;
-  return SECTIONS.find((s) => s.id === wanted)?.id ?? OLD_ANCHORS[route.hash.slice(1)] ?? "recherche";
+  return sections.value.find((s) => s.id === wanted)?.id ?? OLD_ANCHORS[route.hash.slice(1)] ?? "recherche";
 });
 </script>
 
@@ -142,7 +159,7 @@ const active = computed<SectionId>(() => {
         aria-label="Sections des réglages"
       >
         <RouterLink
-          v-for="section in SECTIONS"
+          v-for="section in sections"
           :key="section.id"
           :to="{ query: { rubrique: section.id } }"
           :class="{ active: active === section.id }"
@@ -298,7 +315,52 @@ const active = computed<SectionId>(() => {
               <legend>
                 Notifications
               </legend>
-              <template v-if="notifications?.configured">
+              <template v-if="notifications?.personal">
+                <template v-if="notifications.configured">
+                  <p data-test="phone-on">
+                    Tes alertes arrivent sur ton téléphone. Dans l'application ntfy, abonne-toi au sujet
+                    <code>{{ notifications.topic }}</code> sur le serveur {{ notifications.server }}.
+                  </p>
+                  <div class="inline-field">
+                    <button
+                      type="button"
+                      class="secondary small"
+                      :disabled="testing"
+                      data-test="test-notification"
+                      @click="sendTest"
+                    >
+                      Envoyer une notification de test
+                    </button>
+                    <button
+                      type="button"
+                      class="link"
+                      data-test="phone-off"
+                      @click="setPhone(false)"
+                    >
+                      Arrêter
+                    </button>
+                    <span
+                      v-if="testMessage"
+                      role="status"
+                    >{{ testMessage }}</span>
+                  </div>
+                </template>
+                <template v-else>
+                  <p class="hint">
+                    Reçois les offres bien notées, les relances et le rappel des preuves ORP sur ton téléphone, avec
+                    l'application gratuite ntfy.
+                  </p>
+                  <button
+                    type="button"
+                    class="secondary small"
+                    data-test="phone-on-button"
+                    @click="setPhone(true)"
+                  >
+                    Recevoir sur mon téléphone
+                  </button>
+                </template>
+              </template>
+              <template v-else-if="notifications?.configured">
                 <div class="inline-field">
                   <button
                     type="button"
@@ -339,8 +401,23 @@ const active = computed<SectionId>(() => {
           :active="active === 'ia'"
         >
           <div class="ai-layout">
+            <div
+              v-if="loaded && !owner"
+              class="form-card"
+              data-test="budget-fixed"
+            >
+              <fieldset>
+                <legend>Plafond mensuel du coût de l'IA</legend>
+                <p>
+                  <strong>{{ form.llm_monthly_budget_chf }} CHF</strong> par mois, fixé par l'exploitant de la plateforme.
+                </p>
+                <p class="hint">
+                  Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
+                </p>
+              </fieldset>
+            </div>
             <form
-              v-if="loaded"
+              v-else-if="loaded"
               class="form-card"
               data-test="budget-form"
               @submit.prevent="save"
@@ -392,10 +469,12 @@ const active = computed<SectionId>(() => {
           :value="summary.compte"
           :active="active === 'compte'"
         >
-          <h3 class="settings-subtitle">
-            Profils d'essai
-          </h3>
-          <ProfilesPanel />
+          <template v-if="owner">
+            <h3 class="settings-subtitle">
+              Profils d'essai
+            </h3>
+            <ProfilesPanel />
+          </template>
           <h3 class="settings-subtitle">
             Connexion
           </h3>
@@ -411,6 +490,16 @@ const active = computed<SectionId>(() => {
           <!-- Chaque outil a déjà son titre dans sa carte. -->
           <AgendaPanel />
           <ExtensionPanel class="settings-next-card" />
+        </SettingsSection>
+
+        <SettingsSection
+          v-if="owner"
+          id="plateforme"
+          title="Plateforme"
+          :value="summary.plateforme"
+          :active="active === 'plateforme'"
+        >
+          <PlatformPanel />
         </SettingsSection>
 
         <p class="diagnostic-link">

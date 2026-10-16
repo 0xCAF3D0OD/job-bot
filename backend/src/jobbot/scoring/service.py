@@ -16,6 +16,7 @@ from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import accounts, platform
 from jobbot.db.models import (
     Evaluation,
     LlmBatch,
@@ -24,6 +25,7 @@ from jobbot.db.models import (
     OfferStatus,
     ProfileChunk,
     Setting,
+    User,
 )
 from jobbot.llm.client import BatchItem, RawResult, Refused, ScoreClient, client_factory
 from jobbot.llm.pricing import cost_usd
@@ -101,12 +103,42 @@ async def month_spend_chf(session: AsyncSession, now: datetime) -> Decimal:
     return Decimal(str(total))
 
 
+@dataclass(frozen=True)
+class Budget:
+    spend: Decimal  # dépense du mois du compte, en CHF
+    cap: Decimal  # plafond du compte
+    effective: Decimal  # ce que le compte peut atteindre, plafond total de la plateforme compris
+    rate: Decimal  # taux USD → CHF
+    platform_reached: bool  # le plafond total est atteint
+
+
+async def budget_details(session: AsyncSession, now: datetime) -> Budget:
+    """Plafond du compte (docs/65 §4) : celui des Réglages pour l'exploitant, celui que
+    l'exploitant a fixé pour un compte invité ; et, pour tous, le plafond total."""
+    spend = await month_spend_chf(session, now)
+    if await accounts.is_owner(session):
+        cap = await _setting(session, "llm_monthly_budget_chf", Decimal("10"))
+    else:
+        user = await session.get(User, accounts.current())
+        fixed = user.ai_budget_chf if user else None
+        cap = fixed if fixed is not None else platform.ACCOUNT_AI_BUDGET_CHF
+    start = now.astimezone(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    total_spend = Decimal(str(await session.scalar(select(func.platform_month_spend(start))) or 0))
+    left = await platform.total_ai_budget(session) - total_spend
+    rate = await _setting(session, "usd_chf_rate", Decimal("0.8"))
+    return Budget(
+        spend=spend,
+        cap=cap,
+        effective=min(cap, spend + max(left, Decimal(0))),
+        rate=rate,
+        platform_reached=left <= 0,
+    )
+
+
 async def budget_state(session: AsyncSession, now: datetime) -> tuple[Decimal, Decimal, Decimal]:
     """(dépense du mois en CHF, plafond en CHF, taux USD→CHF)."""
-    spend = await month_spend_chf(session, now)
-    budget = await _setting(session, "llm_monthly_budget_chf", Decimal("10"))
-    rate = await _setting(session, "usd_chf_rate", Decimal("0.8"))
-    return spend, budget, rate
+    budget = await budget_details(session, now)
+    return budget.spend, budget.effective, budget.rate
 
 
 def _rate_text(offer: Offer) -> str | None:

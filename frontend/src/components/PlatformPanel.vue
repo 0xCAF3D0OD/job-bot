@@ -1,0 +1,306 @@
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+
+import { api, type AccountOut, type PlatformOut } from "../api/client";
+import { formatDate, plural } from "../format";
+import CopyLabel from "./CopyLabel.vue";
+
+// Plateforme (docs/65 §2, §4, §5) : les comptes, réservé à l'exploitant. De chaque compte,
+// l'usage seulement (connexion, dépense de l'IA, offres reçues), jamais ses données.
+type Platform = PlatformOut;
+type Account = AccountOut;
+
+const platform = ref<Platform | null>(null);
+const failed = ref(false);
+// Le dernier lien créé, montré une seule fois, à transmettre soi-même.
+const link = ref<{ kind: "invite" | "reset"; username: string | null; url: string; expires: string } | null>(null);
+const copied = ref(false);
+const total = ref("");
+const message = ref("");
+const caps = ref<Record<number, string>>({});
+
+function money(value: string): string {
+  return Number(value).toLocaleString("fr-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function show(data: Platform | undefined): void {
+  if (!data) return;
+  platform.value = data;
+  total.value = String(Number(data.ai_total_budget_chf));
+  caps.value = Object.fromEntries(data.accounts.map((a) => [a.id, String(Number(a.ai_budget_chf))]));
+}
+
+async function load(): Promise<void> {
+  const { data } = await api.GET("/api/platform");
+  failed.value = !data;
+  show(data);
+}
+
+function address(token: string): string {
+  return `${window.location.origin}/acces/${token}`;
+}
+
+async function invite(): Promise<void> {
+  const { data } = await api.POST("/api/platform/invitations");
+  if (!data) return;
+  link.value = { kind: "invite", username: null, url: address(data.token), expires: data.expires_at };
+  copied.value = false;
+  await load();
+}
+
+async function reset(account: Account): Promise<void> {
+  const { data } = await api.POST("/api/platform/accounts/{account_id}/reset", {
+    params: { path: { account_id: account.id } },
+  });
+  if (!data) return;
+  link.value = { kind: "reset", username: account.username, url: address(data.token), expires: data.expires_at };
+  copied.value = false;
+}
+
+async function copy(): Promise<void> {
+  if (!link.value) return;
+  await navigator.clipboard.writeText(link.value.url);
+  copied.value = true;
+  setTimeout(() => (copied.value = false), 2000);
+}
+
+async function withdraw(id: number): Promise<void> {
+  await api.DELETE("/api/platform/invitations/{link_id}", { params: { path: { link_id: id } } });
+  await load();
+}
+
+async function suspend(account: Account): Promise<void> {
+  const verb = account.suspended ? "Réactiver" : "Suspendre";
+  if (!account.suspended && !window.confirm(`${verb} ${account.username} ? Il ne pourra plus se connecter ; ses données restent.`)) return;
+  const { data } = await api.PATCH("/api/platform/accounts/{account_id}", {
+    params: { path: { account_id: account.id } },
+    body: { suspended: !account.suspended },
+  });
+  show(data);
+}
+
+async function remove(account: Account): Promise<void> {
+  const typed = window.prompt(
+    `Supprimer ${account.username} et toutes ses données (offres, candidatures, documents) ? ` +
+      "Rien ne sera gardé. Écris son identifiant pour confirmer.",
+  );
+  if (typed?.trim() !== account.username) return;
+  const { data } = await api.DELETE("/api/platform/accounts/{account_id}", {
+    params: { path: { account_id: account.id } },
+  });
+  show(data);
+}
+
+async function saveCap(account: Account): Promise<void> {
+  const value = Number(caps.value[account.id]);
+  if (!Number.isFinite(value) || value < 0) return;
+  const { data } = await api.PATCH("/api/platform/accounts/{account_id}", {
+    params: { path: { account_id: account.id } },
+    body: { ai_budget_chf: value },
+  });
+  show(data);
+}
+
+async function saveTotal(): Promise<void> {
+  const { data } = await api.PUT("/api/platform/settings", {
+    body: { ai_total_budget_chf: Number(total.value) },
+  });
+  show(data);
+  message.value = data ? "Plafond enregistré." : "Valeur refusée.";
+}
+
+onMounted(load);
+</script>
+
+<template>
+  <p
+    v-if="failed"
+    class="notice error"
+  >
+    Impossible de lire les comptes pour l'instant.
+  </p>
+  <template v-else-if="platform">
+    <p
+      v-if="!platform.auth_enabled"
+      class="notice"
+      data-test="platform-auth-disabled"
+    >
+      La connexion est désactivée sur cette installation : les comptes invités ne pourront pas se connecter.
+    </p>
+    <div
+      class="form-card"
+      data-test="platform-accounts"
+    >
+      <fieldset>
+        <legend>Comptes</legend>
+        <ul class="platform-accounts">
+          <li
+            v-for="account in platform.accounts"
+            :key="account.id"
+            :data-test="`account-${account.username}`"
+          >
+            <div class="platform-account-head">
+              <strong>{{ account.username }}</strong>
+              <span
+                v-if="account.is_owner"
+                class="badge"
+              >toi</span>
+              <span
+                v-if="account.suspended"
+                class="badge warn"
+              >suspendu</span>
+              <span
+                v-if="!account.has_password"
+                class="badge"
+              >sans mot de passe</span>
+            </div>
+            <p class="hint">
+              Créé le {{ formatDate(account.created_at) }} ·
+              {{ account.last_login_at ? `connecté le ${formatDate(account.last_login_at)}` : "jamais connecté" }}
+            </p>
+            <p class="platform-usage">
+              Ce mois : IA {{ money(account.month_spend_chf) }} CHF sur {{ money(account.ai_budget_chf) }} ·
+              {{ plural(account.month_offers, "offre reçue", "offres reçues", "aucune offre reçue") }}
+            </p>
+            <div
+              v-if="!account.is_owner"
+              class="platform-actions"
+            >
+              <label class="inline-field">
+                <span>Plafond IA</span>
+                <input
+                  v-model="caps[account.id]"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="0.5"
+                  :data-test="`cap-${account.username}`"
+                  @change="saveCap(account)"
+                >
+                <span>CHF / mois</span>
+              </label>
+              <button
+                type="button"
+                class="secondary small"
+                :data-test="`reset-${account.username}`"
+                @click="reset(account)"
+              >
+                Lien de nouveau mot de passe
+              </button>
+              <button
+                type="button"
+                class="secondary small"
+                :data-test="`suspend-${account.username}`"
+                @click="suspend(account)"
+              >
+                {{ account.suspended ? "Réactiver" : "Suspendre" }}
+              </button>
+              <button
+                type="button"
+                class="link danger"
+                :data-test="`delete-${account.username}`"
+                @click="remove(account)"
+              >
+                Supprimer
+              </button>
+            </div>
+          </li>
+        </ul>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="secondary"
+            data-test="invite"
+            @click="invite"
+          >
+            Inviter quelqu'un
+          </button>
+        </div>
+        <div
+          v-if="link"
+          class="extension-token platform-link"
+          data-test="platform-link"
+        >
+          <p>
+            {{ link.kind === "invite" ? "Lien d'invitation" : `Lien de nouveau mot de passe pour ${link.username}` }},
+            valable jusqu'au {{ formatDate(link.expires) }} :
+          </p>
+          <code>{{ link.url }}</code>
+          <button
+            type="button"
+            class="link"
+            @click="copy"
+          >
+            <CopyLabel
+              :done="copied"
+              label="Copier le lien"
+            />
+          </button>
+          <p class="hint">
+            Montré une seule fois : transmets-le toi-même (message, e-mail). Il ne sert qu'une fois.
+          </p>
+        </div>
+        <ul
+          v-if="platform.invitations.length"
+          class="extension-tokens"
+          data-test="platform-invitations"
+        >
+          <li
+            v-for="invitation in platform.invitations"
+            :key="invitation.id"
+          >
+            <span>Invitation du {{ formatDate(invitation.created_at) }}
+              <span class="muted">· valable jusqu'au {{ formatDate(invitation.expires_at) }}</span></span>
+            <button
+              type="button"
+              class="link danger"
+              @click="withdraw(invitation.id)"
+            >
+              Retirer
+            </button>
+          </li>
+        </ul>
+      </fieldset>
+    </div>
+    <form
+      class="form-card settings-next-card"
+      data-test="platform-ai"
+      @submit.prevent="saveTotal"
+    >
+      <fieldset>
+        <legend>
+          <label for="platform-total">Plafond total de l'IA, tous comptes</label>
+        </legend>
+        <div class="inline-field">
+          <input
+            id="platform-total"
+            v-model="total"
+            type="number"
+            min="0"
+            max="10000"
+            step="1"
+            required
+          >
+          <span>CHF / mois</span>
+        </div>
+        <p class="hint">
+          Dépensé ce mois, tous comptes : {{ money(platform.ai_month_spend_chf) }} CHF. Au-delà, l'IA s'arrête pour tous
+          jusqu'au mois suivant.
+        </p>
+      </fieldset>
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="secondary"
+        >
+          Enregistrer
+        </button>
+        <span
+          v-if="message"
+          role="status"
+          class="muted"
+        >{{ message }}</span>
+      </div>
+    </form>
+  </template>
+</template>

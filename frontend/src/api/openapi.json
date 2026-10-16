@@ -101,6 +101,380 @@
         }
       }
     },
+    "/api/auth/links/{token}": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get Link",
+        "operationId": "getAccountLink",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lien inconnu"
+          },
+          "410": {
+            "description": "Utilisé ou expiré"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Use Link",
+        "description": "Crée le compte ou change le mot de passe, puis ouvre la session.",
+        "operationId": "useAccountLink",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkUse"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Lien inconnu"
+          },
+          "410": {
+            "description": "Utilisé ou expiré"
+          },
+          "422": {
+            "description": "Identifiant ou mot de passe refusé"
+          }
+        }
+      }
+    },
+    "/api/platform": {
+      "get": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Get Platform",
+        "operationId": "getPlatform",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          }
+        }
+      }
+    },
+    "/api/platform/invitations": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Create Invitation",
+        "operationId": "createInvitation",
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkCreated"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          }
+        }
+      }
+    },
+    "/api/platform/invitations/{link_id}": {
+      "delete": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Delete Invitation",
+        "operationId": "deleteInvitation",
+        "parameters": [
+          {
+            "name": "link_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Link Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/accounts/{account_id}/reset": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Create Reset",
+        "operationId": "createResetLink",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkCreated"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "404": {
+            "description": "Compte"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/accounts/{account_id}": {
+      "patch": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Update Account",
+        "operationId": "updateAccount",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountChange"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "404": {
+            "description": "Compte"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Delete Account",
+        "description": "Le compte et toutes ses données, fichiers compris : rien n'est gardé.",
+        "operationId": "deleteAccount",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "404": {
+            "description": "Compte"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/settings": {
+      "put": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Save Platform Settings",
+        "operationId": "savePlatformSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformSettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/assistant/status": {
       "get": {
         "tags": [
@@ -2098,6 +2472,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotificationsStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/phone": {
+      "put": {
+        "tags": [
+          "preferences"
+        ],
+        "summary": "Set Phone",
+        "description": "Compte invité : recevoir ses alertes sur son téléphone, avec un sujet ntfy à lui.",
+        "operationId": "setPhoneNotifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsStatus"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Réglage d'installation pour l'exploitant"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -6134,6 +6553,109 @@
   },
   "components": {
     "schemas": {
+      "AccountChange": {
+        "properties": {
+          "suspended": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspended"
+          },
+          "ai_budget_chf": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Budget Chf"
+          }
+        },
+        "type": "object",
+        "title": "AccountChange"
+      },
+      "AccountOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "is_owner": {
+            "type": "boolean",
+            "title": "Is Owner"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "suspended": {
+            "type": "boolean",
+            "title": "Suspended"
+          },
+          "has_password": {
+            "type": "boolean",
+            "title": "Has Password"
+          },
+          "ai_budget_chf": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ai Budget Chf"
+          },
+          "month_spend_chf": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Month Spend Chf"
+          },
+          "month_offers": {
+            "type": "integer",
+            "title": "Month Offers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "is_owner",
+          "created_at",
+          "last_login_at",
+          "suspended",
+          "has_password",
+          "ai_budget_chf",
+          "month_spend_chf",
+          "month_offers"
+        ],
+        "title": "AccountOut"
+      },
       "AddressCandidates": {
         "properties": {
           "chosen_uid": {
@@ -10480,6 +11002,31 @@
         "title": "InterviewToReview",
         "description": "Entretien passé sans retour (docs/23 §1)."
       },
+      "InvitationOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "InvitationOut"
+      },
       "JobRoomFieldOut": {
         "properties": {
           "step": {
@@ -10966,6 +11513,93 @@
         "type": "object",
         "title": "LetterRequest"
       },
+      "LinkCreated": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "token",
+          "expires_at"
+        ],
+        "title": "LinkCreated",
+        "description": "Le jeton n'est montré qu'une fois : l'adresse est à transmettre par toi-même."
+      },
+      "LinkOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "invite",
+              "reset"
+            ],
+            "title": "Kind"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "username",
+          "expires_at"
+        ],
+        "title": "LinkOut"
+      },
+      "LinkUse": {
+        "properties": {
+          "username": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "LinkUse"
+      },
       "LoginIn": {
         "properties": {
           "username": {
@@ -11039,6 +11673,11 @@
           "auth_enabled": {
             "type": "boolean",
             "title": "Auth Enabled"
+          },
+          "is_owner": {
+            "type": "boolean",
+            "title": "Is Owner",
+            "default": false
           }
         },
         "type": "object",
@@ -11799,6 +12438,22 @@
           "server": {
             "type": "string",
             "title": "Server"
+          },
+          "personal": {
+            "type": "boolean",
+            "title": "Personal",
+            "default": false
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
           }
         },
         "type": "object",
@@ -12962,6 +13617,83 @@
         ],
         "title": "ParseStatus"
       },
+      "PhoneIn": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "title": "PhoneIn"
+      },
+      "PlatformOut": {
+        "properties": {
+          "accounts": {
+            "items": {
+              "$ref": "#/components/schemas/AccountOut"
+            },
+            "type": "array",
+            "title": "Accounts"
+          },
+          "invitations": {
+            "items": {
+              "$ref": "#/components/schemas/InvitationOut"
+            },
+            "type": "array",
+            "title": "Invitations"
+          },
+          "ai_total_budget_chf": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ai Total Budget Chf"
+          },
+          "ai_month_spend_chf": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ai Month Spend Chf"
+          },
+          "auth_enabled": {
+            "type": "boolean",
+            "title": "Auth Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accounts",
+          "invitations",
+          "ai_total_budget_chf",
+          "ai_month_spend_chf",
+          "auth_enabled"
+        ],
+        "title": "PlatformOut"
+      },
+      "PlatformSettingsIn": {
+        "properties": {
+          "ai_total_budget_chf": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Ai Total Budget Chf"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ai_total_budget_chf"
+        ],
+        "title": "PlatformSettingsIn"
+      },
       "PrepareItem": {
         "properties": {
           "text": {
@@ -13389,6 +14121,11 @@
           "budget_reached": {
             "type": "boolean",
             "title": "Budget Reached"
+          },
+          "platform_budget_reached": {
+            "type": "boolean",
+            "title": "Platform Budget Reached",
+            "default": false
           },
           "active_chunks": {
             "type": "integer",

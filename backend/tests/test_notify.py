@@ -150,7 +150,12 @@ async def test_api_test_notification(rt: Runtime, sent: list[Message], settings:
     app = create_app(rt.settings, rt)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
         status = (await api.get("/api/notifications")).json()
-        assert status == {"configured": True, "server": "https://ntfy.sh"}
+        assert status == {
+            "configured": True,
+            "server": "https://ntfy.sh",
+            "personal": False,
+            "topic": None,
+        }
         assert (await api.post("/api/notifications/test")).status_code == 204
     assert sent[0].title == "jobA1 : notification de test"
     assert "sujet-secret" not in str(status)

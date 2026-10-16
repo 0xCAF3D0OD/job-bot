@@ -728,7 +728,8 @@ class ProfileSource(Base):
 
 
 class User(Base):
-    """Compte de connexion (docs/18 §1) ; un seul pour l'instant, créé par `jobbot set-password`."""
+    """Compte de connexion (docs/18 §1, docs/65) : le premier est l'exploitant, les autres
+    sont invités par lui."""
 
     __tablename__ = "users"
 
@@ -740,6 +741,34 @@ class User(Base):
     password_changed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # Fixé par l'exploitant (docs/65 §4) ; vide : le plafond par défaut d'un compte invité.
+    ai_budget_chf: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
+    # Suspendu : plus de connexion ni de tâches, données gardées.
+    suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class AccountLink(Base):
+    """Lien à usage unique (docs/65 §2) : invitation (7 jours) ou réinitialisation (24 h)."""
+
+    __tablename__ = "account_links"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    kind: Mapped[str] = mapped_column(Text)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PlatformSetting(Base):
+    """Réglage de l'installation, commun à tous les comptes (plafond total de l'IA)."""
+
+    __tablename__ = "platform_settings"
+
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    value: Mapped[Any] = mapped_column(JSONB)
 
 
 class UserSession(Base):

@@ -9,6 +9,7 @@ secret JOBBOT_NTFY_TOPIC. Sans sujet, rien ne part vers le téléphone ; chaque 
 enregistrée pour la cloche de la plateforme (docs/15 §1).
 """
 
+import secrets
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
@@ -16,8 +17,10 @@ from decimal import Decimal
 from typing import Any
 
 import httpx
+from pydantic import SecretStr
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
 from jobbot.core.plural import plural
@@ -67,6 +70,25 @@ async def http_send(settings: Settings, message: Message) -> None:
         response.raise_for_status()
 
 
+PHONE_TOPIC = "phone_topic"
+
+
+async def phone_settings(session: AsyncSession, settings: Settings) -> Settings | None:
+    """Où envoyer sur le téléphone (docs/65 §4) : le sujet ntfy de l'installation pour
+    l'exploitant ; pour un compte invité, le sien, s'il l'a activé. None : pas d'envoi."""
+    if await accounts.is_owner(session):
+        return settings if settings.ntfy_configured else None
+    topic = await session.scalar(select(Setting.value).where(Setting.key == PHONE_TOPIC))
+    if not topic:
+        return None
+    return settings.model_copy(update={"ntfy_topic": SecretStr(str(topic))})
+
+
+def new_topic() -> str:
+    """Un sujet tiré au hasard : qui le connaît lit les messages, il ne se devine pas."""
+    return "jobbot-" + secrets.token_urlsafe(18)
+
+
 # Remplaçable en test : aucun envoi réel.
 send: Callable[[Settings, Message], Awaitable[None]] = http_send
 
@@ -78,13 +100,11 @@ async def deliver(runtime: Runtime, message: Message, *, kind: str, link: str) -
         session.add(
             Notification(kind=kind, title=message.title, message=message.message, link=link)
         )
-        # Le sujet ntfy est celui de l'installation : seul l'exploitant le reçoit, jusqu'aux
-        # sujets par compte (docs/65 §4).
-        owner = await accounts.is_owner(session)
-    if not runtime.settings.ntfy_configured or not owner:
+        target = await phone_settings(session, runtime.settings)
+    if target is None:
         return
     try:
-        await send(runtime.settings, message)
+        await send(target, message)
     except httpx.HTTPError as exc:
         log.warning("ntfy_send_failed", kind=kind, error=type(exc).__name__)
 

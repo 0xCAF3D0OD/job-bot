@@ -42,6 +42,13 @@ const chf = (n: number): string => n.toFixed(2).replace(".", ",");
         :style="{ width: `${Math.round(share * 100)}%` }"
       />
     </span>
+    <p
+      v-if="status.platform_budget_reached"
+      class="notice"
+      data-test="platform-reached"
+    >
+      Le plafond de la plateforme est atteint : l'IA reprend le mois prochain.
+    </p>
     <p class="muted">
       {{ status.configured ? `IA configurée · ${status.model}` : "IA non configurée (réglage d'installation)" }}
     </p>

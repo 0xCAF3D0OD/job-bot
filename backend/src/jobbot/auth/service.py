@@ -58,7 +58,8 @@ async def authenticate(session: AsyncSession, token: str | None) -> Authenticate
         await session.execute(
             select(UserSession, User.username)
             .join(User, User.id == UserSession.user_id)
-            .where(UserSession.token_hash == token_hash(token))
+            # Un compte suspendu (docs/65 §2) n'a plus de session valable.
+            .where(UserSession.token_hash == token_hash(token), User.suspended_at.is_(None))
         )
     ).first()
     if row is None:

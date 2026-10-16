@@ -18,6 +18,8 @@ class Storage(Protocol):
 
     def exists(self, key: str) -> bool: ...
 
+    def delete_folder(self, prefix: str) -> None: ...
+
 
 def create_storage(settings: Settings) -> Storage:
     from jobbot.storage.local import LocalStorage

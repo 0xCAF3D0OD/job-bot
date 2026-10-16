@@ -16,7 +16,7 @@ afterEach(() => vi.resetAllMocks());
 async function mountSettings(rubrique?: string) {
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
   await router.push({ path: "/reglages", query: rubrique ? { rubrique } : {} });
-  const wrapper = mount(SettingsView, { global: { plugins: [router], stubs: { StatusPanel: true, SitesPanel: true } } });
+  const wrapper = mount(SettingsView, { global: { plugins: [router], stubs: { StatusPanel: true, SitesPanel: true, PlatformPanel: true } } });
   await flushPromises();
   return { wrapper, router };
 }
@@ -104,5 +104,55 @@ describe("SettingsView, une rubrique à la fois (docs/48)", () => {
     await router.push({ path: "/reglages", query: {}, hash: "#agenda" });
     await flushPromises();
     expect(wrapper.find(".settings-toc a.active").text()).toBe("Outils");
+  });
+});
+
+describe("SettingsView, comptes (docs/65)", () => {
+  afterEach(async () => {
+    const { useAuth } = await import("../composables/useAuth");
+    useAuth().me.value = null;
+  });
+
+  async function as(isOwner: boolean): Promise<void> {
+    const { useAuth } = await import("../composables/useAuth");
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: isOwner };
+  }
+
+  it("compte invité : plafond de l'IA fixé, ni Plateforme ni profils d'essai", async () => {
+    await as(false);
+    mockGet(false);
+    const { wrapper } = await mountSettings("ia");
+    expect(wrapper.find("[data-test=budget-fixed]").text()).toContain("10 CHF");
+    expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=toc-plateforme]").exists()).toBe(false);
+  });
+
+  it("compte invité : active les notifications sur son téléphone", async () => {
+    await as(false);
+    const PUT = (await import("../api/client")).api.PUT as unknown as ReturnType<typeof vi.fn>;
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/notifications"
+            ? { configured: false, server: "https://ntfy.sh", personal: true, topic: null }
+            : { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 5 },
+      }),
+    );
+    PUT.mockResolvedValue({
+      data: { configured: true, server: "https://ntfy.sh", personal: true, topic: "jobbot-abc" },
+    });
+    const { wrapper } = await mountSettings("notifications");
+    await wrapper.find("[data-test=phone-on-button]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/notifications/phone", { body: { enabled: true } });
+    expect(wrapper.find("[data-test=phone-on]").text()).toContain("jobbot-abc");
+  });
+
+  it("exploitant : la rubrique Plateforme", async () => {
+    await as(true);
+    mockGet(false);
+    const { wrapper } = await mountSettings("plateforme");
+    expect(wrapper.find("[data-test=toc-plateforme]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
   });
 });
