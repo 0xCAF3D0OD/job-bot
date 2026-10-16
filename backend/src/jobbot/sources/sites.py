@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import anthropic
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import ParseStatus, Site
+from jobbot.db.models import AccountSite, ParseStatus, Site
 from jobbot.letters.service import load_identity
 from jobbot.llm import alert as alert_llm
 from jobbot.llm.client import Refused
@@ -34,9 +34,21 @@ class SiteData:
     active: bool
 
 
+def followed() -> ColumnElement[bool]:
+    """Les sites que le compte en cours suit : tous, sauf ceux qu'il a mis en pause (docs/65)."""
+    paused = select(AccountSite.site_id).where(AccountSite.active.is_(False))
+    return Site.id.not_in(paused)
+
+
+async def paused_site_ids(session: AsyncSession) -> set[int]:
+    rows = await session.scalars(select(AccountSite.site_id).where(AccountSite.active.is_(False)))
+    return set(rows)
+
+
 async def load_sites(session: AsyncSession) -> list[SiteData]:
+    paused = await paused_site_ids(session)
     return [
-        SiteData(s.slug, s.name, tuple(x.lower() for x in s.senders), s.reader, s.active)
+        SiteData(s.slug, s.name, tuple(x.lower() for x in s.senders), s.reader, s.id not in paused)
         for s in await session.scalars(select(Site).order_by(Site.id))
     ]
 

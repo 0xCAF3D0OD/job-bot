@@ -39,6 +39,7 @@ from jobbot.notify import interviews as interview_reminders
 from jobbot.notify.service import REMIND_AFTER_DAYS
 from jobbot.orp.service import load_due_day, load_target, month_counts
 from jobbot.scoring.service import active_profile
+from jobbot.sources.sites import followed
 
 _MONTH = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 DESCRIPTION_LIMIT = 4_000
@@ -422,7 +423,7 @@ async def _orp(session: AsyncSession, _profile: int, params: dict[str, Any]) -> 
 
 
 async def _alerts(session: AsyncSession, _profile: int, _params: dict[str, Any]) -> Any:
-    sites = list(await session.scalars(select(Site).where(Site.active.is_(True))))
+    sites = list(await session.scalars(select(Site).where(followed())))
     result = []
     for search in await session.scalars(select(AlertSearch).order_by(AlertSearch.id)):
         cells = await alert_service.cells(session, search, sites)

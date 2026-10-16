@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     imap_password: SecretStr | None = None
     imap_folder: str = "INBOX"
     imap_backfill_days: int = Field(default=30, ge=1, le=365)
+    # Adresse où arrivent les alertes (docs/65 §3) ; vide : celle de la boîte (JOBBOT_IMAP_USER).
+    # Un compte invité reçoit à « boite+code@domaine », livré dans la même boîte.
+    mail_address: str = ""
 
     # Lecture des pages d'offres jobup après la collecte (docs/05). false : désactivée.
     enrich_enabled: bool = True

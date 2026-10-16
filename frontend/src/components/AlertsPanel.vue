@@ -99,7 +99,11 @@ onMounted(() => void load());
       class="notice"
       data-test="mailbox"
     >
-      <template v-if="page.mailbox">
+      <template v-if="page.mailbox && page.personal_address">
+        Ton adresse pour les alertes : <strong>{{ page.mailbox }}</strong>. Donne-la aux sites d'emploi : la plateforme
+        reçoit pour toi.
+      </template>
+      <template v-else-if="page.mailbox">
         Boîte lue par la plateforme : <strong>{{ page.mailbox }}</strong>, dossier <strong>{{ page.folder }}</strong>.
         Les alertes doivent y arriver.
       </template>

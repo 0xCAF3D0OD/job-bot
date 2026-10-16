@@ -8,11 +8,11 @@ import asyncio
 import hashlib
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from typing import Protocol
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +30,8 @@ from jobbot.db.models import (
 )
 from jobbot.llm import alert as alert_llm
 from jobbot.log import get_logger
+from jobbot.mail import addresses
+from jobbot.mail.confirm import confirmation_link
 from jobbot.mail.imap import FetchedEmail, ImapMailbox, MailboxError
 from jobbot.mail.message import ParsedEmail, parse_email
 from jobbot.metrics import COLLECT_EMAILS, COLLECT_OFFERS, IMAP_ERRORS
@@ -64,6 +66,10 @@ class CollectResult:
     fetched: int = 0
     new_searches: int = 0
     new_offers: int = 0
+    # Les comptes qui ont reçu de nouvelles offres : leurs tâches suivent (filtre, notation).
+    accounts: set[int] = field(default_factory=set)
+    # E-mails adressés à un code inconnu (compte supprimé) : pas rangés.
+    unrouted: int = 0
 
 
 def raw_key(email: ParsedEmail) -> str:
@@ -81,11 +87,12 @@ def _since(settings: Settings) -> date:
 
 
 async def _known_message_ids(runtime: Runtime, ids: set[str]) -> set[str]:
+    """Déjà rangés, dans n'importe quel compte (docs/65 §3) : la base ne rend que les ids."""
     if not ids:
         return set()
     async with runtime.sessionmaker() as session:
-        rows = await session.scalars(select(Search.message_id).where(Search.message_id.in_(ids)))
-        return set(rows)
+        rows = await session.scalars(select(func.collected_message_ids(list(ids))))
+        return {str(r) for r in rows}
 
 
 async def _analyse(
@@ -203,13 +210,18 @@ async def ingest_offers(
 
 
 async def ingest_email(
-    runtime: Runtime, fetched: FetchedEmail, run_id: uuid.UUID | None
+    runtime: Runtime,
+    fetched: FetchedEmail,
+    run_id: uuid.UUID | None,
+    email: ParsedEmail | None = None,
 ) -> Search | None:
-    """Enregistre un e-mail et ses offres. None s'il était déjà connu."""
-    email = parse_email(fetched.raw, fallback_received=datetime.now(UTC))
+    """Enregistre un e-mail et ses offres, dans le compte en cours. None s'il était connu."""
+    email = email or parse_email(fetched.raw, fallback_received=datetime.now(UTC))
     async with runtime.sessionmaker() as session:
         sites = await load_sites(session)
     source, status, version, alert, error = await _analyse(runtime, email, sites)
+    # « Confirmez votre alerte » : le lien, pour la page Alertes (docs/65 §3).
+    confirm = confirmation_link(email) if status == ParseStatus.UNRECOGNIZED else None
     key = raw_key(email)
     runtime.storage.put(key, fetched.raw)
 
@@ -229,6 +241,7 @@ async def ingest_email(
                 error=error,
                 results_count=len(alert.offers),
                 job_run_id=run_id,
+                confirm_url=confirm,
             )
             .on_conflict_do_nothing(index_elements=["user_id", "message_id"])
             .returning(Search.id)
@@ -273,12 +286,28 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
         IMAP_ERRORS.labels(kind=exc.kind).inc()
         raise
 
+    # Chaque e-mail va au compte de son adresse de destination (docs/65 §3).
+    base = addresses.base_address(settings)
+    async with runtime.sessionmaker.begin() as session:
+        owner = await accounts.owner_id(session)
+        codes = await addresses.recipients_map(session)
+        active = set(await accounts.account_ids(session))
     result = CollectResult(fetched=len(emails))
     for fetched in emails:
-        search = await ingest_email(runtime, fetched, run_id)
+        email = parse_email(fetched.raw, fallback_received=datetime.now(UTC))
+        account = addresses.route(email.recipients, base, codes, owner)
+        if account is None or account not in active:
+            # Code inconnu (compte supprimé) ou compte suspendu : l'e-mail n'est pas rangé.
+            result.unrouted += 1
+            log.info("email_not_routed", suspended=account is not None)
+            continue
+        with accounts.use(account):
+            search = await ingest_email(runtime, fetched, run_id, email)
         if search is not None:
             result.new_searches += 1
             result.new_offers += search.new_offers_count
+            if search.new_offers_count:
+                result.accounts.add(account)
     log.info(
         "collect_finished",
         since=since.isoformat(),

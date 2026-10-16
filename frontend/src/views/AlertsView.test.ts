@@ -118,3 +118,27 @@ describe("Alertes, résumé (docs/21 §4)", () => {
     expect(wrapper.find("[data-test=late-help]").exists()).toBe(false);
   });
 });
+
+describe("Alertes, adresse par compte (docs/65 §3)", () => {
+  it("un site demande de confirmer : le lien, puis la ligne s'en va", async () => {
+    const pending = {
+      search_id: 9,
+      site: "jobsch",
+      subject: "Confirmez votre alerte",
+      received_at: "2026-10-16T08:00:00Z",
+      url: "https://jobs.example/confirm?t=1",
+    };
+    const data = { ...page([search(1, [cell("jobup", { status: "receiving" })])]), to_confirm: [pending] };
+    POST.mockResolvedValue({ data: { ...data, to_confirm: [] } });
+    const wrapper = await mountView(data);
+    const link = wrapper.find("[data-test=confirm-link]");
+    expect(link.attributes("href")).toBe("https://jobs.example/confirm?t=1");
+    expect(link.attributes("rel")).toContain("noopener");
+    await link.trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/alert-searches/confirmations/{search_id}", {
+      params: { path: { search_id: 9 } },
+    });
+    expect(wrapper.find("[data-test=to-confirm]").exists()).toBe(false);
+  });
+});

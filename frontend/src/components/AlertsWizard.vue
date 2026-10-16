@@ -178,7 +178,13 @@ function nextSite(): void {
       <template v-else-if="step === 2 && site">
         <h2>Crée l'alerte sur {{ site.name }}</h2>
         <p class="hint">
-          Ouvre la recherche, clique sur « Créer une alerte » (ou « Activer l'alerte ») et donne ton adresse e-mail.
+          Ouvre la recherche, clique sur « Créer une alerte » (ou « Activer l'alerte ») et donne
+          <template v-if="page.mailbox">
+            l'adresse <strong data-test="wizard-address">{{ page.mailbox }}</strong>
+          </template>
+          <template v-else>
+            ton adresse e-mail
+          </template>.
           Site {{ siteIndex + 1 }} sur {{ sites.length }}.
         </p>
         <div class="wizard-links">
@@ -229,10 +235,12 @@ function nextSite(): void {
       <template v-else>
         <h2>C'est prêt</h2>
         <p>
-          Tes alertes arriveront dans ta boîte<template v-if="page.mailbox">
-            (<strong>{{ page.mailbox }}</strong>)
-          </template>, souvent dès le lendemain. Elles apparaîtront ici au premier
-          envoi.
+          Tes alertes arriveront<template v-if="page.mailbox">
+            à <strong>{{ page.mailbox }}</strong>
+          </template><template v-else>
+            dans ta boîte
+          </template>, souvent dès le lendemain. Elles apparaîtront ici au premier envoi ; si un site
+          demande de confirmer l'alerte, son lien apparaîtra aussi ici.
         </p>
         <div class="form-actions">
           <button

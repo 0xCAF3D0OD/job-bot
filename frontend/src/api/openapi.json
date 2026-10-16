@@ -4642,6 +4642,7 @@
           "sites"
         ],
         "summary": "Set Site Active",
+        "description": "Suivre un site ou le mettre en pause : pour son compte seulement (docs/65).",
         "operationId": "setSiteActive",
         "parameters": [
           {
@@ -6008,6 +6009,52 @@
         }
       }
     },
+    "/api/alert-searches/confirmations/{search_id}": {
+      "post": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Mark Confirmed",
+        "description": "La personne a ouvert le lien de confirmation : il quitte la liste.",
+        "operationId": "markAlertConfirmed",
+        "parameters": [
+          {
+            "name": "search_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Search Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertsPage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "E-mail introuvable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/alert-searches": {
       "get": {
         "tags": [
@@ -6956,6 +7003,11 @@
             ],
             "title": "Folder"
           },
+          "personal_address": {
+            "type": "boolean",
+            "title": "Personal Address",
+            "default": false
+          },
           "sites": {
             "items": {
               "$ref": "#/components/schemas/AlertSite"
@@ -6969,6 +7021,14 @@
             },
             "type": "array",
             "title": "Searches"
+          },
+          "to_confirm": {
+            "items": {
+              "$ref": "#/components/schemas/ToConfirm"
+            },
+            "type": "array",
+            "title": "To Confirm",
+            "default": []
           }
         },
         "type": "object",
@@ -15396,6 +15456,48 @@
           "unreadable"
         ],
         "title": "TextStatus"
+      },
+      "ToConfirm": {
+        "properties": {
+          "search_id": {
+            "type": "integer",
+            "title": "Search Id"
+          },
+          "site": {
+            "type": "string",
+            "title": "Site"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "search_id",
+          "site",
+          "subject",
+          "received_at",
+          "url"
+        ],
+        "title": "ToConfirm",
+        "description": "Un site demande de confirmer l'alerte (docs/65 §3) : le lien est à ouvrir soi-même."
       },
       "TodayOut": {
         "properties": {

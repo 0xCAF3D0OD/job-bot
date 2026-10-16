@@ -65,6 +65,8 @@ La cloche, en haut, rassemble les alertes de la plateforme.
 - Premier passage : un assistant en trois étapes (ses recherches, puis un site à la fois avec « Ouvrir … » et « C'est fait, site suivant », puis « C'est prêt »).
 - Ensuite, un résumé : un point par recherche — vert (alerte reçue), orange (créée depuis 3 jours sans rien reçu : vérifier le transfert des e-mails), violet pâle (créée, en attente du premier envoi), gris (à créer). « Gérer mes alertes » ouvre le tableau complet ; « Ajouter des alertes avec l'assistant » relance l'assistant.
 - Les alertes arrivent dans la boîte lue par la plateforme (un libellé dédié) ; si elles vont à une autre adresse, il faut les faire suivre vers cette boîte.
+- Adresse à donner aux sites : celle affichée dans l'assistant et dans « Gérer mes alertes ». Pour un compte invité, c'est une adresse à lui (« boite+code@… ») : la plateforme reçoit pour lui. Si un site demande de confirmer l'alerte, l'encadré « À confirmer » de la page Alertes donne le lien, à ouvrir soi-même.
+- Mettre un site en pause (Réglages › Recherche d'emploi) vaut pour son compte ; ajouter ou retirer un site est réservé à l'exploitant.
 - « Voir les alertes reçues » (replié) : le journal des recherches, joint en annexe du PDF ORP.
 - Sites suivis : jobup, jobs.ch, LinkedIn, Indeed, et ceux ajoutés dans Réglages.
 

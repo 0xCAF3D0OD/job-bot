@@ -125,6 +125,9 @@ class Search(Base):
     error: Mapped[str | None] = mapped_column(Text)
     results_count: Mapped[int] = mapped_column(default=0)
     new_offers_count: Mapped[int] = mapped_column(default=0)
+    # Un site demande de confirmer l'alerte (docs/65 §3) : son lien, et quand c'est fait.
+    confirm_url: Mapped[str | None] = mapped_column(Text)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     collected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -549,9 +552,25 @@ class Site(Base):
     senders: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
     url: Mapped[str | None] = mapped_column(Text)
     reader: Mapped[str] = mapped_column(Text)
-    active: Mapped[bool] = mapped_column(default=True)
     builtin: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AccountSite(Base):
+    """Un site en pause pour un compte (docs/65) ; sans ligne, le site est suivi."""
+
+    __tablename__ = "account_sites"
+
+    user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+        server_default=CURRENT_ACCOUNT,
+    )
+    site_id: Mapped[int] = mapped_column(
+        ForeignKey("sites.id", ondelete="CASCADE"), primary_key=True
+    )
+    active: Mapped[bool] = mapped_column()
 
 
 class CompanyLogo(Base):
@@ -746,6 +765,8 @@ class User(Base):
     # Suspendu : plus de connexion ni de tâches, données gardées.
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Adresse de réception d'un compte invité : boite+code@domaine (docs/65 §3).
+    mail_code: Mapped[str | None] = mapped_column(Text, unique=True)
 
 
 class AccountLink(Base):

@@ -2276,3 +2276,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .platform-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-top: 0.3rem; }
 .platform-actions .inline-field input { width: 5.5rem; }
 .platform-link > p { flex-basis: 100%; margin: 0; }
+
+/* Alertes à confirmer (docs/65 §3) : le lien de chaque site, ouvert par la personne. */
+.to-confirm { display: grid; gap: 0.5rem; margin-bottom: 1rem; }
+.to-confirm p { margin: 0; }
+.to-confirm ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.to-confirm li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem 1rem; }

@@ -7,12 +7,14 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert
 
 from jobbot.api.owner import require_owner
 from jobbot.collect.service import reparse
 from jobbot.core.normalize import normalize_text
-from jobbot.db.models import ParseStatus, Search, Site, SiteReader
+from jobbot.db.models import AccountSite, ParseStatus, Search, Site, SiteReader
 from jobbot.runtime import Runtime
+from jobbot.sources.sites import paused_site_ids
 
 router = APIRouter(prefix="/api", tags=["sites"])
 _SENDER = re.compile(r"^([a-z0-9._%+-]+@)?[a-z0-9-]+(\.[a-z0-9-]+)+$")
@@ -133,6 +135,8 @@ async def _list(runtime: Runtime) -> list[SiteOut]:
                 )
             ).all()
         )
+    async with runtime.sessionmaker() as session:
+        paused = await paused_site_ids(session)
     return [
         SiteOut(
             id=s.id,
@@ -141,7 +145,7 @@ async def _list(runtime: Runtime) -> list[SiteOut]:
             senders=list(s.senders),
             url=s.url,
             reader=s.reader,
-            active=s.active,
+            active=s.id not in paused,
             builtin=s.builtin,
             alerts=stats.get(s.slug, (0, None))[0],
             last_alert_at=stats.get(s.slug, (0, None))[1],
@@ -182,7 +186,6 @@ async def add_site(request: Request, body: SiteIn) -> list[SiteOut]:
                 senders=body.senders,
                 url=body.url,
                 reader=SiteReader.AI,
-                active=True,
             )
         )
     return await _list(runtime)
@@ -190,13 +193,18 @@ async def add_site(request: Request, body: SiteIn) -> list[SiteOut]:
 
 @router.patch("/sites/{site_id}", operation_id="setSiteActive")
 async def set_site_active(request: Request, site_id: int, body: SiteActive) -> list[SiteOut]:
-    await require_owner(_runtime(request))
+    """Suivre un site ou le mettre en pause : pour son compte seulement (docs/65)."""
     runtime = _runtime(request)
     async with runtime.sessionmaker.begin() as session:
-        site = await session.get(Site, site_id)
-        if site is None:
+        if await session.get(Site, site_id) is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "site introuvable")
-        site.active = body.active
+        await session.execute(
+            insert(AccountSite)
+            .values(site_id=site_id, active=body.active)
+            .on_conflict_do_update(
+                index_elements=["user_id", "site_id"], set_={"active": body.active}
+            )
+        )
     return await _list(runtime)
 
 
