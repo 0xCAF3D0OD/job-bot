@@ -12,6 +12,7 @@ import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
 import { firstTime } from "../composables/useIntro";
+import { usePageReady } from "../composables/usePageTransition";
 
 // Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP ;
 // présenté comme le tableau d'Aujourd'hui (docs/55) : tuiles, barres, cartes à bulles.
@@ -22,6 +23,7 @@ const route = useRoute();
 const router = useRouter();
 const insights = ref<Insights | null>(null);
 const error = ref("");
+usePageReady("insights", () => !!insights.value || !!error.value);
 const copied = ref(false);
 
 function currentMonth(): string {

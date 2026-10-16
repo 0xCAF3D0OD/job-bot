@@ -12,6 +12,7 @@ import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
+import SuccessCard from "../components/SuccessCard.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { expiredText, ofMonth } from "../format";
@@ -337,20 +338,7 @@ onMounted(() => void load());
         data-test="apply-steps"
       >
         <div class="apply-steps">
-          <IllustratedSide
-            v-if="sent"
-            name="message-sent"
-            phone="small"
-            class="moment"
-            data-test="sent-moment"
-          >
-            <h3>Candidature envoyée chez {{ sent.company }}.</h3>
-            <p v-if="sent.count !== null">
-              Comptée dans tes preuves ORP {{ ofMonth(sent.month) }} :
-              <strong>{{ sent.count }}{{ sent.target ? ` sur ${sent.target}` : "" }}</strong>.
-            </p>
-          </IllustratedSide>
-          <template v-else-if="offer.status !== 'applied'">
+          <template v-if="offer.status !== 'applied'">
             <!-- Numéros par compteur CSS : sur téléphone, « Postuler » est fixé en bas et sa
                  section disparaît, les étapes se renumérotent (docs/51 n° 4). -->
             <section class="panel-section apply-step apply-step-post">
@@ -374,11 +362,16 @@ onMounted(() => void load());
               data-test="apply-sheet"
             >
               <h3>À recopier sur le site de l'employeur</h3>
-              <FormSheet
-                :letter-text="currentLetterText"
-                :letter-id="currentLetterId"
-                :cv-id="currentCvId"
-              />
+              <IllustratedSide
+                name="guidelines"
+                side="right"
+              >
+                <FormSheet
+                  :letter-text="currentLetterText"
+                  :letter-id="currentLetterId"
+                  :cv-id="currentCvId"
+                />
+              </IllustratedSide>
             </section>
             <section class="panel-section apply-step">
               <h3>J'ai postulé</h3>
@@ -644,6 +637,18 @@ onMounted(() => void load());
     </div>
   </section>
 
+  <SuccessCard
+    v-if="sent"
+    name="message-sent"
+    :title="`Candidature envoyée chez ${sent.company}`"
+    test-id="sent-moment"
+    @close="sent = null"
+  >
+    <p v-if="sent.count !== null">
+      Comptée pour l'ORP {{ ofMonth(sent.month) }} :
+      <strong>{{ sent.count }}{{ sent.target ? ` sur ${sent.target}` : "" }}</strong>
+    </p>
+  </SuccessCard>
   <ApplicationForm
     v-if="applying"
     title="Candidature envoyée"

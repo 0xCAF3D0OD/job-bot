@@ -3,6 +3,7 @@ import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw
 
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
+import { startPage } from "./composables/usePageTransition";
 import AlertsView from "./views/AlertsView.vue";
 import InsightsView from "./views/InsightsView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
@@ -141,7 +142,10 @@ router.beforeEach(async (to) => {
   return { name: "login", query: { suite: to.fullPath } };
 });
 
-// Retour à la dernière page de la rubrique Candidatures depuis le menu (docs/19).
-router.afterEach((to) => {
+// Retour à la dernière page de la rubrique Candidatures depuis le menu (docs/19). À l'arrivée
+// sur une autre page, sa transition si elle charge des données (docs/61 §2) ; pas en changeant
+// seulement un filtre, un mois ou un onglet dans la page.
+router.afterEach((to, from) => {
   useJobsMemory().remember(to.fullPath);
+  if (to.name !== from.name) startPage(typeof to.name === "string" ? to.name : null);
 });

@@ -7,10 +7,12 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import JournalPanel from "../components/JournalPanel.vue";
+import { usePageReady } from "../composables/usePageTransition";
 
 // Onglet Alertes (docs/20 §1, docs/21 §4) : l'assistant tant que rien n'est en place,
 // ensuite un résumé ; le tableau complet dans « Gérer mes alertes » ; le journal replié.
 const page = ref<AlertsPage | null>(null);
+usePageReady("alerts", () => !!page.value);
 const mode = ref<"auto" | "wizard" | "manage">("auto");
 const journalOpen = ref(false);
 

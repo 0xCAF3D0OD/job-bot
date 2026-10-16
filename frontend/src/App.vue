@@ -9,6 +9,7 @@ import AccountMenu from "./components/AccountMenu.vue";
 import MobileMenu from "./components/MobileMenu.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
+import PageTransition from "./components/PageTransition.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useNewsCount } from "./composables/useNewsCount";
@@ -147,5 +148,6 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
   <main>
     <RouterView />
   </main>
+  <PageTransition />
   <AssistantPanel v-if="loggedIn" />
 </template>

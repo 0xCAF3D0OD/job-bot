@@ -16,6 +16,7 @@ import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { formatMonth, localDate, plural, scoreLevel } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
+import { usePageReady } from "../composables/usePageTransition";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
 const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: string; hint?: string }> = {
@@ -48,6 +49,7 @@ const JOURNEY: Record<Today["journey"][number]["key"], { label: string; to: stri
 };
 
 const today = ref<Today | null>(null);
+usePageReady("today", () => !!today.value);
 const best = ref<Offer[]>([]);
 // Blocs par catégorie (docs/19 §3).
 const preparing = ref<Offer[]>([]);
