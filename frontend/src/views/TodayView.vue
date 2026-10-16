@@ -513,7 +513,6 @@ useDataChanged(load);
             class="journey today-help-row"
             title="Comment ça marche"
             :value="`${journeyDone} / ${today.journey.length}`"
-            group="today-help"
             data-test="journey"
           >
             <div class="checklist-head">
@@ -559,7 +558,6 @@ useDataChanged(load);
             class="checklist today-help-row"
             title="Pour bien démarrer"
             :value="`${doneCount} / ${steps.length}`"
-            group="today-help"
             data-test="checklist"
           >
             <div class="checklist-head">
