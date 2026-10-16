@@ -2367,7 +2367,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .welcome-recap button span { flex: 1; }
 .welcome-recap small { color: var(--accent); font-size: 0.85rem; }
 @media (hover: hover) { .welcome-recap button:hover { border-color: var(--border); background: var(--surface); } }
-.welcome-recap .icon { color: var(--ok); }
+.welcome-recap .icon { width: 20px; height: 20px; color: var(--ok); }
 .welcome-actions { display: grid; justify-items: center; gap: 0.6rem; padding-top: 0.5rem; }
 .welcome-nav { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.6rem; width: 100%; }
 .welcome-nav button { justify-content: center; padding: 0.7rem 0.8rem; border-radius: 14px; }

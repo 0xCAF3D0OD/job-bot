@@ -606,24 +606,15 @@ function edit(key: StepKey): void {
     </Transition>
 
     <footer class="welcome-actions">
-      <template v-if="step === 'ready'">
-        <button
-          type="button"
-          class="primary welcome-continue"
-          data-test="welcome-alerts"
-          @click="finish('/candidatures/alertes')"
-        >
-          Créer mes alertes
-        </button>
-        <button
-          type="button"
-          class="link"
-          data-test="welcome-today"
-          @click="finish('/aujourdhui')"
-        >
-          Aller à Aujourd'hui
-        </button>
-      </template>
+      <button
+        v-if="step === 'ready'"
+        type="button"
+        class="primary welcome-continue"
+        data-test="welcome-alerts"
+        @click="finish('/candidatures/alertes')"
+      >
+        Créer mes alertes
+      </button>
       <button
         v-else-if="step !== 'goal' && step !== 'rate' && step !== 'due'"
         type="button"

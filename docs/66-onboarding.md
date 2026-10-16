@@ -22,7 +22,7 @@
 | 6 | **Ton CV, pour que la plateforme te connaisse** | Déposer mon CV (PDF ou Word) · Plus tard | le document ; la plateforme propose ensuite les blocs de profil, comme dans Profil |
 | 7 | **Dernière chose : comment veux-tu être prévenu·e ?** | Sur mon téléphone (ntfy) · Seulement dans la plateforme | les notifications du compte |
 
-Puis un écran **« C'est prêt »** : un petit récapitulatif (« DevOps · Vaud, Genève · 80 % et plus · 10 recherches par mois ») et un seul bouton, **« Créer mes alertes »**, qui ouvre l'assistant des alertes avec la recherche déjà remplie (métier et lieu des écrans 2 et 3). Un lien discret « Aller à Aujourd'hui ».
+Puis un écran **« C'est prêt »** : un petit récapitulatif (« DevOps · Vaud, Genève · 80 % et plus · 10 recherches par mois ») et un seul bouton, **« Créer mes alertes »**, qui ouvre l'assistant des alertes avec la recherche déjà remplie (métier et lieu des écrans 2 et 3).
 
 ## 3. Le style
 
@@ -67,3 +67,4 @@ Une PR (**0.54.0**). Captures de chaque écran sur ordinateur et téléphone, cl
 - **Complément (même jour, « des points qui marquent les étapes, et y accéder ainsi »)** : la barre de progression devient une rangée de points, un par écran (7, ou 8 avec l'ORP). Le point de l'écran en cours s'allonge, ceux des questions déjà répondues sont pleins ; on touche un point pour aller directement à cet écran (zone de 1,75 rem au doigt, nom de l'étape au survol et pour les lecteurs d'écran).
 - **Complément (même jour, « pour la date, un calendrier, et sa propre étape »)** : la date de remise ORP quitte l'écran 5 pour un écran à elle, juste après (ORP seulement). Un calendrier du mois prochain, semaines du lundi au dimanche ; on touche le jour et on avance. Le 1er et les jours après le 28 sont grisés (l'ORP accepte du 2 au 28). Le récapitulatif ajoute « Preuves à remettre avant le … du mois », modifiable comme les autres lignes.
 - **Complément (même jour, illustrations)** : trois dessins unDraw de plus, choisis sur planche et préparés par `scripts/illustrations.mjs` : taux d'activité → *tight-deadline*, CV → *my-resume*, notifications → *lock-screen-notifications*. « Où travailler » garde la boîte aux lettres (aucune carte dans les dessins disponibles). Environ 25 Ko en tout, chargés seulement à l'écran concerné. *lock-screen-notifications* dessine un téléphone, objet plutôt que maquette d'écran : exception à la règle 3 de `docs/interface.md`, limitée à l'accueil. La date de remise reste sans illustration : le calendrier occupe déjà l'écran.
+- **Complément (même jour)** : sur « C'est prêt », les coches vertes du récapitulatif passent de 16 à 20 px, et le lien « Aller à Aujourd'hui » est retiré : un seul bouton, « Créer mes alertes » (« ← Retour » reste).
