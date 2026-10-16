@@ -14,7 +14,7 @@ D'après la règle posée en docs/62 (`docs/interface.md`) : une image ne rempli
 
 | Capture | Ce qui prend de la place pour rien | Après |
 |---|---|---|
-| **Aujourd'hui › Comment ça marche** (ouvert) | cinq lignes à gauche, toute la largeur vide à droite | les cinq étapes **en une frise horizontale** sur ordinateur (remplacé à la livraison : les deux guides côte à côte, voir les écarts) |
+| **Aujourd'hui › Comment ça marche** (ouvert) | cinq lignes à gauche, toute la largeur vide à droite | les cinq étapes **en une frise horizontale** sur ordinateur : un rond coché ou vide par étape, relié par un trait, le titre et « où » dessous ; l'étape à faire en violet, toute la case cliquable. Sur téléphone, la liste actuelle |
 | **Aujourd'hui › Progresser / Comprendre le marché** | les deux cartes prennent la hauteur de la plus haute : Progresser garde un grand vide en bas | chaque carte à sa hauteur ; Progresser montre jusqu'à **trois** formations (en cours, puis suggestions) pour équilibrer quand il y en a |
 | **Suivi › calendrier** | les semaines sans candidature ont la même hauteur que les autres | une semaine **vide** est plus basse (les cases gardent le numéro du jour et les repères « relancer ») |
 | **Suivi › Mes enseignements** (vide) | une phrase sur toute la largeur | la phrase limitée à la largeur de lecture |
@@ -48,7 +48,8 @@ Une PR (**0.48.2**). La seule partie qui touche l'API : les raisons d'écart des
 
 ## Écarts avec la livraison
 
-- **Les deux guides côte à côte** (retour du 2026-10-16, à la place de la frise) : sur ordinateur, « Comment ça marche » et « Pour bien démarrer » chacun sur une demi-largeur, en liste, et ils s'ouvrent indépendamment l'un de l'autre (avant, ouvrir l'un fermait l'autre). Sur téléphone, l'un sous l'autre comme avant.
+- **Frise** : sur ordinateur, chaque étape est une case entière cliquable (fond gris au survol, violet pâle pour l'étape à faire) ; le trait vers une étape est vert quand la précédente est faite. « Pour bien démarrer » reste une liste.
+- **Comment ça marche** : les deux guides ont été essayés côte à côte (0.48.2, #154), puis la frise a été remise, à la demande (retour du 2026-10-16).
 - **Progresser** : les formations en cours d'abord, puis des suggestions vérifiées, trois en tout ; les cartes du bas ne sont plus étirées à la même hauteur.
 - **Calendrier** : une semaine sans candidature passe à 3,4 rem de haut (au lieu de 5,2).
 - **Profil** : « Ce que donnent tes critères » s'affiche à droite du résumé (pas pendant la modification) ; route `GET /api/insights/filter` (mois en cours et deux précédents, comme le Bilan). Une offre écartée pour deux raisons compte dans les deux ; les trois raisons les plus fréquentes, en barres. Les raisons viennent du dernier passage du filtre : après un changement de critères, elles suivent quand les offres sont refiltrées.
