@@ -355,7 +355,7 @@ onUnmounted(() => {
       <IllustratedSide
         v-else-if="!items.length"
         class="empty-state empty"
-        name="newsfeed"
+        name="absorbed"
         phone="small"
       >
         <p>

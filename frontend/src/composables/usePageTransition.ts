@@ -7,11 +7,11 @@ import type { IllustrationName } from "../components/Illustration.vue";
 // qu'elles arrivent, le voile s'efface, après 0,5 s au moins pour ne pas clignoter.
 export const PAGE_TRANSITIONS: Record<string, { illustration: IllustrationName; label: string }> = {
   today: { illustration: "morning-plans", label: "Aujourd'hui" },
-  offers: { illustration: "mobile-inbox", label: "Offres" },
-  applications: { illustration: "date-picker", label: "Suivi" },
+  offers: { illustration: "mailbox", label: "Offres" },
+  applications: { illustration: "done", label: "Suivi" },
   insights: { illustration: "stepping-up", label: "Bilan" },
-  alerts: { illustration: "mailbox", label: "Alertes" },
-  news: { illustration: "newsfeed", label: "Actualités" },
+  alerts: { illustration: "message-sent", label: "Alertes" },
+  news: { illustration: "absorbed", label: "Actualités" },
   trainings: { illustration: "certification", label: "Formations" },
 };
 export const SHOW_AFTER_MS = 150;

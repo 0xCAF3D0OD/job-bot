@@ -5,7 +5,8 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/61-cartes-et-transitions.md](docs/61-cartes-et-transitions.md) (0.48.0)
+- Version en cours : [docs/62-illustrations-a-leur-place.md](docs/62-illustrations-a-leur-place.md) (0.48.1)
+- Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
 ## Versions
@@ -74,6 +75,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.47.1 | Illustrations en grand sur ordinateur (réussites, prise en main, formulaires, pages vides), retours d'actions, entrée des chiffres et des barres | livrée |
 | 0.47.2 | Illustrations à côté des cartes et plus grandes ; Engagement en grand par-dessus la page | livrée |
 | 0.48.0 | Carte de réussite qui vient devant, transition des pages qui chargent, images à côté des blocs trop larges | livrée |
+| 0.48.1 | Illustrations à leur place : retirées des Réglages, de Profil, de Préparer et d'Aujourd'hui ; une seule famille aux couleurs de l'interface | livrée |
 
 ## Lancer en local
 
@@ -133,7 +135,7 @@ La liste complète est dans [docs/exploitation.md](docs/exploitation.md) (sectio
 ```
 backend/    Python 3.13 (uv) : FastAPI, SQLAlchemy, Alembic, procrastinate
 frontend/   Vue 3 + Vite + TypeScript, types générés depuis l'OpenAPI du backend
-docs/       cadrage, documents de version, contrat d'exploitation
+docs/       cadrage, documents de version, règles de l'interface, contrat d'exploitation
 data/       fichiers personnels, ignoré par git
 ```
 

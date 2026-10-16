@@ -16,25 +16,15 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const ILLUSTRATIONS = [
-  "artificial-intelligence",
+  "absorbed",
   "certification",
-  "date-picker",
   "done",
-  "guidelines",
   "handshake-deal",
-  "lock-screen-notifications",
   "login",
   "mailbox",
   "message-sent",
-  "mobile-inbox",
   "morning-plans",
-  "my-resume",
-  "newsfeed",
-  "online-connection",
   "page-eaten",
-  "profile",
-  "security-on",
-  "settings",
   "stepping-up",
 ];
 

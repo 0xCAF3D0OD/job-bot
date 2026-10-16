@@ -4,8 +4,7 @@ import { useRoute } from "vue-router";
 
 import { usePhone } from "../composables/usePhone";
 import DisclosureRow from "./DisclosureRow.vue";
-import IllustratedSide from "./IllustratedSide.vue";
-import type { IllustrationName } from "./Illustration.vue";
+import AppIcon from "./AppIcon.vue";
 
 // Section des Réglages (docs/34 §3) : sur ordinateur, le titre et son contenu comme avant ;
 // sur téléphone, une ligne dépliable avec un résumé, une seule ouverte à la fois. Un lien
@@ -19,14 +18,16 @@ const { phone } = usePhone();
 const route = useRoute();
 // « /reglages?rubrique=actualites » (docs/48) ou l'ancien « #actualites » : la ligne s'ouvre.
 const targeted = computed(() => route.query.rubrique === props.id || route.hash === `#${props.id}`);
-// Sur ordinateur, le formulaire garde une largeur de lecture, son image à droite (docs/61 §3).
-const ILLUSTRATIONS: Record<string, IllustrationName> = {
-  recherche: "stepping-up",
-  actualites: "newsfeed",
-  notifications: "lock-screen-notifications",
-  ia: "artificial-intelligence",
-  compte: "security-on",
-  outils: "online-connection",
+// Une petite icône au trait devant le titre, de la famille de la navigation (docs/62 §1) ;
+// plus d'illustration dans un formulaire.
+type Icon = InstanceType<typeof AppIcon>["$props"]["name"];
+const ICONS: Record<string, Icon> = {
+  recherche: "search",
+  actualites: "news",
+  notifications: "bell",
+  ia: "spark",
+  compte: "shield",
+  outils: "plug",
 };
 </script>
 
@@ -48,17 +49,12 @@ const ILLUSTRATIONS: Record<string, IllustrationName> = {
       :id="id"
       class="section-title"
     >
+      <AppIcon
+        v-if="ICONS[id]"
+        :name="ICONS[id]!"
+      />
       {{ title }}
     </h2>
-    <IllustratedSide
-      v-if="ILLUSTRATIONS[id]"
-      :name="ILLUSTRATIONS[id]!"
-      side="right"
-    >
-      <div class="settings-side-body">
-        <slot />
-      </div>
-    </IllustratedSide>
-    <slot v-else />
+    <slot />
   </template>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Icônes au trait, dessinées pour jobA1 (style de la maquette, aucun fichier repris).
 // Pictogrammes des bulles d'Aujourd'hui (docs/54) : inbox, send, refresh, file, trend, book, news ;
-// du Bilan (docs/55) : reply, clock, star.
+// du Bilan (docs/55) : reply, clock, star ; des Réglages (docs/62) : spark, shield, plug.
 defineProps<{
   name:
     | "pin"
@@ -23,7 +23,10 @@ defineProps<{
     | "news"
     | "reply"
     | "clock"
-    | "star";
+    | "star"
+    | "spark"
+    | "shield"
+    | "plug";
 }>();
 </script>
 
@@ -147,6 +150,18 @@ defineProps<{
     </template>
     <template v-else-if="name === 'star'">
       <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
+    </template>
+    <template v-else-if="name === 'spark'">
+      <path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z" />
+      <path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />
+    </template>
+    <template v-else-if="name === 'shield'">
+      <path d="M12 3.5l7 2.5v5.5c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6z" />
+      <path d="M9 12l2.2 2.2L15.5 10" />
+    </template>
+    <template v-else-if="name === 'plug'">
+      <path d="M9 3.5v4M15 3.5v4M6.5 7.5h11v3a5.5 5.5 0 0 1-11 0z" />
+      <path d="M12 16v4.5" />
     </template>
     <template v-else-if="name === 'news'">
       <rect

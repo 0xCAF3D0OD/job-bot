@@ -578,7 +578,7 @@ onUnmounted(() => assistant.setFocus(null));
         <IllustratedSide
           v-if="loaded && !items.length"
           class="empty-state empty"
-          name="date-picker"
+          name="done"
           phone="small"
         >
           <p>Aucune candidature en {{ formatMonth(orp.month) }}.</p>

@@ -12,7 +12,7 @@ const emit = defineEmits<{ updated: [page: AlertsPage]; done: [] }>();
 const step = ref<1 | 2 | 3>(1);
 // À gauche sur ordinateur, à côté du formulaire et pas dedans (docs/60 §2.2 et complément) :
 // tes recherches, le site, c'est prêt.
-const WIZARD_ILLUSTRATIONS: IllustrationName[] = ["mailbox", "online-connection", "done"];
+const WIZARD_ILLUSTRATIONS: IllustrationName[] = ["mailbox", "message-sent", "done"];
 const siteIndex = ref(0);
 const form = ref({ terms: "", location: "" });
 const busy = ref(false);
