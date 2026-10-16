@@ -47,7 +47,7 @@ function share(part: number, total: number): string {
           <span class="bilan-track">
             <span
               class="bilan-bar"
-              :style="{ width: share(reason.count, data.received - data.retained) }"
+              :style="{ width: `${Math.round((reason.count / (data.received - data.retained)) * 100)}%` }"
             />
           </span>
           <strong>{{ reason.count }}</strong>

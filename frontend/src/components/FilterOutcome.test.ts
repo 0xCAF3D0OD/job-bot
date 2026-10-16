@@ -28,6 +28,8 @@ describe("de l'information plutôt que du vide (docs/63 §2)", () => {
     expect(wrapper.text()).toContain("96 offres passent sur 412 reçues");
     expect(wrapper.text()).toContain("23 %");
     expect(wrapper.findAll("li")).toHaveLength(3);
+    // Une largeur CSS valide (« 57% », sans espace), sinon toutes les barres sont pleines.
+    expect(wrapper.find(".bilan-bar").attributes("style")).toContain("width: 57%");
   });
 
   it("la dépense du mois à côté du plafond", async () => {

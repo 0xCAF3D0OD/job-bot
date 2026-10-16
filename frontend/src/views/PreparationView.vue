@@ -44,7 +44,8 @@ const nextStep = computed<"letter" | "cv" | "apply">(() =>
 );
 const applying = ref<ApplicationFormValue | null>(null);
 const applyError = ref("");
-// Le moment « candidature envoyée » (docs/60 §2.1) : où elle compte pour l'ORP.
+// Le moment « candidature envoyée », sur la carte qui vient devant (docs/61 §1) : où elle compte
+// pour l'ORP.
 const sent = ref<{ company: string; month: string; count: number | null; target: number | null } | null>(null);
 
 async function openApplication(): Promise<void> {

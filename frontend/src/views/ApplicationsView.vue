@@ -306,7 +306,7 @@ async function removeInterview(): Promise<void> {
   await load();
 }
 
-// Le moment « preuves remises » (docs/60 §2.1), le temps de la visite.
+// Le moment « preuves remises » : la carte qui vient devant (docs/61 §1).
 const submitted = ref<{ month: string; nextDue: string | null } | null>(null);
 async function submit(done: boolean): Promise<void> {
   if (!orp.value || (!done && !window.confirm("Annuler la remise de ce mois ?"))) return;

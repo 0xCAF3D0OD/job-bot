@@ -313,9 +313,49 @@ async def test_focus_describes_chosen_element(
     await reset(runtime)
 
 
+async def test_criteria_tool(runtime: Runtime) -> None:
+    # « Pourquoi si peu d'offres ? » (docs/64 §1) : les critères et ce qu'ils donnent,
+    # comme « Ce que donnent tes critères » sur Profil.
+    await reset(runtime)
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        for n, reasons in enumerate([[], ["locations"], ["locations", "language"]]):
+            offer = Offer(
+                fingerprint=f"criteres-{n}",
+                title="SRE",
+                company=f"Critères {n} SA",
+                status="to_review",
+                first_seen_at=now - timedelta(days=1),
+                last_seen_at=now,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=not reasons,
+                    filter_reasons=[{"rule": r, "message": r} for r in reasons],
+                    criteria_hash="h",
+                )
+            )
+    async with runtime.sessionmaker() as session:
+        found, error = await tools.run(session, 1, "criteres", {})
+    data = json.loads(found)
+    assert not error and (data["offres_recues"], data["offres_retenues"]) == (3, 1)
+    assert data["raisons_d_ecart"] == [
+        {"raison": "lieu", "offres": 2},
+        {"raison": "langue", "offres": 1},
+    ]
+    assert set(data["criteres"]) >= {"lieux", "taux_minimum", "langues_ecartees"}
+    await reset(runtime)
+
+
 def test_guide_follows_the_pages() -> None:
     # Les « ? » ont laissé la place à l'assistant (docs/53) : son guide décrit les pages
     # actuelles, Aujourd'hui en tableau de bord et le Bilan (docs/56).
     assert "Objectif ORP" in service.INSTRUCTIONS and "Ta semaine" in service.INSTRUCTIONS
     assert "Ce qui donne des réponses dans sa recherche" in service.INSTRUCTIONS
     assert "`/candidatures/bilan?mois=AAAA-MM`" in service.INSTRUCTIONS
+    # Ce qui est venu de 0.48.2 (docs/64) : ce que donnent les critères, la dépense du mois.
+    assert "Ce que donnent tes critères" in service.INSTRUCTIONS
+    assert "dépense du mois" in service.INSTRUCTIONS and "« criteres »" in service.INSTRUCTIONS
