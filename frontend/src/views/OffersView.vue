@@ -394,7 +394,7 @@ onUnmounted(() => {
           v-else-if="!loading && items.length === 0"
           class="empty-state empty"
           data-test="offers-empty"
-          name="mobile-inbox"
+          name="mailbox"
           phone="small"
         >
           <p>

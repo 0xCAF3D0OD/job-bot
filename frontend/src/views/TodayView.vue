@@ -11,7 +11,6 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import AppIcon from "../components/AppIcon.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
-import Illustration, { type IllustrationName } from "../components/Illustration.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { formatMonth, localDate, plural, scoreLevel } from "../format";
@@ -110,33 +109,6 @@ const warn = computed<"orp" | "follow-up" | null>(() => {
 });
 
 const steps = computed(() => today.value?.checklist ?? []);
-// L'illustration de l'étape à faire, à gauche de la liste sur ordinateur (docs/60 §2.2).
-const STEP_ILLUSTRATIONS: Record<Today["checklist"][number]["key"], IllustrationName> = {
-  criteria: "settings",
-  profile: "my-resume",
-  identity: "profile",
-  orp_target: "stepping-up",
-  notifications: "lock-screen-notifications",
-  imap: "online-connection",
-};
-const JOURNEY_ILLUSTRATIONS: Record<Today["journey"][number]["key"], IllustrationName> = {
-  alerts: "mailbox",
-  triage: "mobile-inbox",
-  apply: "message-sent",
-  follow: "date-picker",
-  orp: "certification",
-};
-// Le guide ouvert donne l'illustration, posée à côté des deux lignes (docs/60, complément).
-const openGuide = ref<"journey" | "checklist" | null>(null);
-function onGuide(guide: "journey" | "checklist", open: boolean): void {
-  if (open) openGuide.value = guide;
-  else if (openGuide.value === guide) openGuide.value = null;
-}
-const guideIllustration = computed<IllustrationName | null>(() => {
-  if (openGuide.value === "journey" && nextJourney.value) return JOURNEY_ILLUSTRATIONS[nextJourney.value.key];
-  if (openGuide.value === "checklist" && nextStep.value) return STEP_ILLUSTRATIONS[nextStep.value.key];
-  return null;
-});
 // L'étape à faire, mise en avant dans la liste (docs/59 §5).
 const nextStep = computed(() => steps.value.find((s) => !s.done) ?? null);
 const nextJourney = computed(() => today.value?.journey.find((s) => !s.done) ?? null);
@@ -531,14 +503,8 @@ useDataChanged(load);
 
       <!-- Les deux guides, repliés sous l'essentiel du jour, sur ordinateur comme sur téléphone
            (docs/34 §4, docs/43 n° 6). -->
-      <!-- L'illustration de l'étape à faire, à côté des guides et pas dedans (docs/60, complément). -->
-      <div :class="['today-guides', 'phone-hide', { illustrated: !!guideIllustration }]">
-        <Illustration
-          v-if="guideIllustration"
-          :key="guideIllustration"
-          :name="guideIllustration"
-        />
-        <div class="today-guides-rows illustrated-body">
+      <div class="today-guides">
+        <div class="today-guides-rows">
           <component
             :is="DisclosureRow"
             v-if="!today.journey_dismissed && today.journey.length"
@@ -547,7 +513,6 @@ useDataChanged(load);
             :value="`${journeyDone} / ${today.journey.length}`"
             group="today-help"
             data-test="journey"
-            @toggle="onGuide('journey', $event)"
           >
             <div class="checklist-head">
               <h2>Comment ça marche</h2>
@@ -594,7 +559,6 @@ useDataChanged(load);
             :value="`${doneCount} / ${steps.length}`"
             group="today-help"
             data-test="checklist"
-            @toggle="onGuide('checklist', $event)"
           >
             <div class="checklist-head">
               <h2>Pour bien démarrer · {{ doneCount }} / {{ steps.length }}</h2>

@@ -38,25 +38,15 @@ watch(
 
 <script lang="ts">
 export type IllustrationName =
-  | "artificial-intelligence"
+  | "absorbed"
   | "certification"
-  | "date-picker"
   | "done"
-  | "guidelines"
   | "handshake-deal"
-  | "lock-screen-notifications"
   | "login"
   | "mailbox"
   | "message-sent"
-  | "mobile-inbox"
   | "morning-plans"
-  | "my-resume"
-  | "newsfeed"
-  | "online-connection"
   | "page-eaten"
-  | "profile"
-  | "security-on"
-  | "settings"
   | "stepping-up";
 </script>
 

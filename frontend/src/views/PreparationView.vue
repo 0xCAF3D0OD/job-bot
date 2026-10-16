@@ -11,7 +11,6 @@ import OfferBrief from "../components/OfferBrief.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
-import IllustratedSide from "../components/IllustratedSide.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
@@ -362,16 +361,12 @@ onMounted(() => void load());
               data-test="apply-sheet"
             >
               <h3>À recopier sur le site de l'employeur</h3>
-              <IllustratedSide
-                name="guidelines"
-                side="right"
-              >
-                <FormSheet
-                  :letter-text="currentLetterText"
-                  :letter-id="currentLetterId"
-                  :cv-id="currentCvId"
-                />
-              </IllustratedSide>
+              <FormSheet
+                class="reading-width"
+                :letter-text="currentLetterText"
+                :letter-id="currentLetterId"
+                :cv-id="currentCvId"
+              />
             </section>
             <section class="panel-section apply-step">
               <h3>J'ai postulé</h3>
