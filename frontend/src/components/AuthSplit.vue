@@ -14,8 +14,9 @@ defineProps<{ title: string; subtitle?: string }>();
       aria-hidden="true"
     >
       <Illustration
-        name="emails-tries"
+        name="connexion"
         class="auth-illu"
+        sizes="(max-width: 820px) 100vw, 57vw"
       />
       <p class="auth-tagline">
         Less searching. More living.

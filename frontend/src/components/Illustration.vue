@@ -5,15 +5,16 @@ import { computed, ref, watch } from "vue";
 // scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
 // fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
-const props = withDefaults(defineProps<{ name: IllustrationName; label?: string; size?: "small" | "medium" | "large" }>(), {
-  label: "",
-  size: "medium",
-});
+// `sizes` : la largeur affichée, pour que le navigateur choisisse la bonne version.
+const props = withDefaults(
+  defineProps<{ name: IllustrationName; label?: string; size?: "small" | "medium" | "large"; sizes?: string }>(),
+  { label: "", size: "medium", sizes: "(max-width: 820px) 240px, 440px" },
+);
 
 const files = import.meta.glob<string>("../assets/illustrations/*.webp", { query: "?url", import: "default", eager: true });
 
 function srcset(name: string): string {
-  return [480, 800]
+  return [480, 800, 1200]
     .map((width) => [files[`../assets/illustrations/${name}-${width}.webp`], width] as const)
     .filter(([url]) => url)
     .map(([url, width]) => `${url} ${width}w`)
@@ -36,6 +37,7 @@ export type IllustrationName =
   | "alertes-carte"
   | "aucune-offre"
   | "bilan"
+  | "connexion"
   | "emails-tries"
   | "formations"
   | "lecture-calme"
@@ -61,12 +63,12 @@ export type IllustrationName =
         v-if="dark"
         media="(prefers-color-scheme: dark)"
         :srcset="dark"
-        sizes="(max-width: 820px) 240px, 440px"
+        :sizes="sizes"
       >
       <img
         :src="files[`../assets/illustrations/${name}-480.webp`]"
         :srcset="light"
-        sizes="(max-width: 820px) 240px, 440px"
+        :sizes="sizes"
         alt=""
         loading="lazy"
         decoding="async"

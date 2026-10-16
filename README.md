@@ -86,6 +86,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.54.0 | L'accueil après la première connexion, façon Duolingo : sept questions en cartes, chaque réponse règle la plateforme, puis la création des alertes | livrée |
 | 0.55.0 | Les illustrations de jobA1 : des images générées, plus grandes, remplacent les dessins unDraw (gardés en réserve) ; sans connexion, la présentation de la plateforme à la place des Actualités | livrée |
 | 0.55.1 | Les pages qui chargent gardent leurs dessins animés d'avant (Aujourd'hui, Offres, Suivi, Bilan, Alertes, Actualités, Formations) | livrée |
+| 0.55.2 | La connexion illustrée par la ville et le bureau, en grand, aux bords estompés | livrée |
 
 ## Lancer en local
 
