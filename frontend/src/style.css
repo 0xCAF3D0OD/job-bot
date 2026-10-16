@@ -2282,3 +2282,13 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .to-confirm p { margin: 0; }
 .to-confirm ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
 .to-confirm li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem 1rem; }
+
+/* Tes données (docs/65 §6) : une page de lecture. */
+.privacy-page { max-width: 44rem; }
+.privacy-page h2 { margin: 1.6rem 0 0.5rem; font-size: 1.05rem; }
+.privacy-page h2:first-child { margin-top: 0; }
+.privacy-page p, .privacy-page li { line-height: 1.6; }
+.privacy-page ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+.privacy-contact { white-space: pre-line; }
+.account-delete { display: grid; gap: 0.6rem; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--divider); }
+.account-delete p { margin: 0; }

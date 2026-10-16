@@ -202,6 +202,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/account/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Data */
+        get: operations["getAccountData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/account/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Account */
+        get: operations["exportAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/account/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Delete Own Account
+         * @description Le compte et toutes ses données, fichiers compris, après le mot de passe.
+         */
+        post: operations["deleteOwnAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Privacy
+         * @description Public : la page « Tes données » se lit avant même d'accepter une invitation.
+         */
+        get: operations["getPrivacy"];
+        /** Save Privacy */
+        put: operations["savePrivacy"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assistant/status": {
         parameters: {
             query?: never;
@@ -3254,6 +3329,25 @@ export interface components {
             /** Items */
             items: components["schemas"]["CvItemOut"][];
         };
+        /** DataSummary */
+        DataSummary: {
+            /** Offers */
+            offers: number;
+            /** Applications */
+            applications: number;
+            /** Documents */
+            documents: number;
+            /** Profile Blocks */
+            profile_blocks: number;
+            /** Alert Emails */
+            alert_emails: number;
+            /** Conversations */
+            conversations: number;
+            /** Notifications */
+            notifications: number;
+            /** Can Delete */
+            can_delete: boolean;
+        };
         /** DatabaseStatus */
         DatabaseStatus: {
             /** Ok */
@@ -3290,6 +3384,11 @@ export interface components {
             shortest: number;
             /** Longest */
             longest: number;
+        };
+        /** DeleteIn */
+        DeleteIn: {
+            /** Password */
+            password: string;
         };
         /** DocumentOut */
         DocumentOut: {
@@ -4623,6 +4722,19 @@ export interface components {
             done: boolean;
         };
         /**
+         * Privacy
+         * @description Les mentions de l'exploitant (responsable, contact, hébergeur), écrites par lui.
+         */
+        Privacy: {
+            /** Contact */
+            contact: string | null;
+        };
+        /** PrivacyIn */
+        PrivacyIn: {
+            /** Contact */
+            contact: string;
+        };
+        /**
          * ProfileBlockIn
          * @description Bloc « formation » proposé depuis une formation terminée, relu avant l'envoi.
          */
@@ -5913,6 +6025,152 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformOut"];
+                };
+            };
+            /** @description Exploitant seul */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getAccountData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataSummary"];
+                };
+            };
+        };
+    };
+    exportAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Archive ZIP */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "application/zip": unknown;
+                };
+            };
+        };
+    };
+    deleteOwnAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Mot de passe incorrect */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Compte de l'exploitant */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getPrivacy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Privacy"];
+                };
+            };
+        };
+    };
+    savePrivacy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivacyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Privacy"];
                 };
             };
             /** @description Exploitant seul */

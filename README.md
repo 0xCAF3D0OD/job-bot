@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/65-vrais-comptes.md](docs/65-vrais-comptes.md) (0.52.0)
+- Version en cours : [docs/65-vrais-comptes.md](docs/65-vrais-comptes.md) (0.53.0)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -81,6 +81,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.50.0 | Chaque donnée appartient à un compte, séparé par la base ; tâches compte par compte ; test des deux comptes sur toutes les routes | livrée |
 | 0.51.0 | Comptes invités : invitation et nouveau mot de passe par lien, suspension, suppression ; rubrique Plateforme ; plafond de l'IA par compte et total ; notifications à soi | livrée |
 | 0.52.0 | Une adresse de réception par compte, collecte rangée par destinataire, e-mails « confirmez votre alerte » dans Alertes, pause des sites par compte | livrée |
+| 0.53.0 | Tes données : page publique (ce qui est gardé, ce qui part à l'IA, tes mentions), export complet du compte, suppression de son compte | livrée |
 
 ## Lancer en local
 

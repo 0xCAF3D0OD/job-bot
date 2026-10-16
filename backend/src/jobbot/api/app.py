@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from jobbot.api.middleware import RequestContextMiddleware
 from jobbot.api.routes import (
+    account,
     agenda,
     alerts,
     applications,
@@ -86,6 +87,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
 
     app.include_router(auth.router)
     app.include_router(platform.router)
+    app.include_router(account.router)
     app.include_router(assistant.router)
     app.include_router(extension.router)
     app.include_router(extension.tokens_router)

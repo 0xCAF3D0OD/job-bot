@@ -8,6 +8,7 @@ import AlertsView from "./views/AlertsView.vue";
 import InsightsView from "./views/InsightsView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
 import AccessView from "./views/AccessView.vue";
+import PrivacyView from "./views/PrivacyView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
 import JobsView from "./views/JobsView.vue";
 import LoginView from "./views/LoginView.vue";
@@ -118,6 +119,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/connexion", name: "login", component: LoginView },
   // Lien d'invitation ou de réinitialisation, transmis par l'exploitant (docs/65 §2).
   { path: "/acces/:token", name: "access", component: AccessView },
+  // Ce que la plateforme garde, lisible sans connexion (docs/65 §6).
+  { path: "/tes-donnees", name: "privacy", component: PrivacyView },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/candidatures/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   // Adresse inconnue (docs/59 §5) : une page qui le dit.
@@ -131,7 +134,7 @@ export const router = createRouter({
 });
 
 // Ouvert sans connexion : les Actualités, la connexion (docs/18 §1) et les liens d'accès.
-export const PUBLIC_ROUTES = new Set(["news", "login", "access"]);
+export const PUBLIC_ROUTES = new Set(["news", "login", "access", "privacy"]);
 
 router.beforeEach(async (to) => {
   const { loggedIn, load } = useAuth();

@@ -109,7 +109,24 @@ async function saveTotal(): Promise<void> {
   message.value = data ? "Plafond enregistré." : "Valeur refusée.";
 }
 
-onMounted(load);
+// Les mentions de la page « Tes données » (docs/65 §6) : responsable, contact, hébergeur.
+const mentions = ref("");
+const mentionsMessage = ref("");
+
+async function loadMentions(): Promise<void> {
+  const { data } = await api.GET("/api/privacy");
+  mentions.value = data?.contact ?? "";
+}
+
+async function saveMentions(): Promise<void> {
+  const { data } = await api.PUT("/api/privacy", { body: { contact: mentions.value } });
+  mentionsMessage.value = data ? "Mentions enregistrées." : "Enregistrement impossible.";
+}
+
+onMounted(async () => {
+  await load();
+  await loadMentions();
+});
 </script>
 
 <template>
@@ -262,6 +279,42 @@ onMounted(load);
         </ul>
       </fieldset>
     </div>
+    <form
+      class="form-card settings-next-card"
+      data-test="platform-mentions"
+      @submit.prevent="saveMentions"
+    >
+      <fieldset>
+        <legend>
+          <label for="platform-mentions">Mentions de la page « Tes données »</label>
+        </legend>
+        <p class="hint">
+          Qui est responsable des données, comment te joindre, où la plateforme est hébergée. Lisible par tous, même sans
+          connexion, sur <RouterLink to="/tes-donnees">
+            la page Tes données
+          </RouterLink>.
+        </p>
+        <textarea
+          id="platform-mentions"
+          v-model="mentions"
+          rows="4"
+          maxlength="4000"
+        />
+      </fieldset>
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="secondary"
+        >
+          Enregistrer
+        </button>
+        <span
+          v-if="mentionsMessage"
+          role="status"
+          class="muted"
+        >{{ mentionsMessage }}</span>
+      </div>
+    </form>
     <form
       class="form-card settings-next-card"
       data-test="platform-ai"
