@@ -8,7 +8,8 @@ import Illustration, { type IllustrationName } from "../components/Illustration.
 import { useAuth } from "../composables/useAuth";
 
 // L'accueil après la première connexion (docs/66) : un écran, une question, des cartes qu'on
-// touche ; chaque réponse remplit un vrai réglage. « Passer » partout, « Plus tard » en haut.
+// touche ; chaque réponse remplit un vrai réglage. « Retour » et « Passer » en bas de chaque
+// écran, « Plus tard » en haut ; le récapitulatif ramène à la question qu'on veut corriger.
 type Goal = "job" | "orp" | "news";
 type StepKey = "goal" | "trade" | "places" | "rate" | "orp" | "cv" | "phone" | "ready";
 type Icon = InstanceType<typeof AppIcon>["$props"]["name"];
@@ -32,6 +33,8 @@ const criteria = ref<CriteriaIn | null>(null);
 const settings = ref<SettingsModel | null>(null);
 const index = ref(0);
 const direction = ref<"forward" | "back">("forward");
+// Venu du récapitulatif pour corriger une réponse : « Continuer » y ramène aussitôt.
+const fromRecap = ref(false);
 const loaded = ref(false);
 
 const STEPS = computed<StepKey[]>(() => [
@@ -117,6 +120,10 @@ onMounted(async () => {
 // L'écran avance aussitôt ; l'enregistrement suit en arrière-plan (le rythme de Duolingo).
 // L'avancement et la réponse de l'écran partent ensemble, pour ne pas se marcher dessus.
 function go(next: number, changes: Record<string, unknown> = {}): void {
+  if (fromRecap.value && next > index.value) {
+    next = STEPS.value.length - 1;
+    fromRecap.value = false;
+  }
   direction.value = next > index.value ? "forward" : "back";
   index.value = Math.max(0, Math.min(next, STEPS.value.length - 1));
   void remember({ step: index.value + 1, ...changes });
@@ -136,6 +143,8 @@ function saveSettings(changes: Partial<SettingsModel>): void {
 }
 
 function chooseGoal(id: Goal): void {
+  // Passer à l'ORP ajoute une question : on la pose avant de revenir au récapitulatif.
+  if (id === "orp" && goal.value !== "orp") fromRecap.value = false;
   goal.value = id;
   go(index.value + 1, { goal: id });
 }
@@ -217,15 +226,28 @@ async function finish(to: string): Promise<void> {
 }
 
 const recap = computed(() =>
-  [
-    trade.value.trim(),
-    places.value.length
-      ? places.value.map((p) => CANTONS.find((c) => c.code === p)?.name ?? p).join(", ")
-      : "toute la Suisse",
-    rate.value ? `${rate.value} % et plus` : "",
-    goal.value === "orp" && target.value ? `${target.value} recherches par mois` : "",
-  ].filter(Boolean),
+  (
+    [
+      { step: "goal", text: GOALS.find((g) => g.id === goal.value)?.title ?? "" },
+      { step: "trade", text: trade.value.trim() },
+      {
+        step: "places",
+        text: places.value.length
+          ? places.value.map((p) => CANTONS.find((c) => c.code === p)?.name ?? p).join(", ")
+          : "Toute la Suisse",
+      },
+      { step: "rate", text: rate.value ? `${rate.value} % et plus` : rate.value === null ? "Tout taux d'activité" : "" },
+      { step: "orp", text: goal.value === "orp" && target.value ? `${target.value} recherches par mois` : "" },
+    ] satisfies { step: StepKey; text: string }[]
+  ).filter((line) => line.text),
 );
+
+function edit(key: StepKey): void {
+  fromRecap.value = true;
+  direction.value = "back";
+  index.value = STEPS.value.indexOf(key);
+  void remember({ step: index.value + 1 });
+}
 </script>
 
 <template>
@@ -235,20 +257,6 @@ const recap = computed(() =>
     data-test="welcome"
   >
     <header class="welcome-top">
-      <button
-        v-if="index > 0 && step !== 'ready'"
-        type="button"
-        class="welcome-back"
-        aria-label="Revenir à la question précédente"
-        data-test="welcome-back"
-        @click="go(index - 1)"
-      >
-        ←
-      </button>
-      <span
-        v-else
-        class="welcome-back"
-      />
       <div
         class="welcome-progress"
         role="progressbar"
@@ -486,9 +494,18 @@ const recap = computed(() =>
           >
             <li
               v-for="line in recap"
-              :key="line"
+              :key="line.step"
             >
-              <AppIcon name="check" /> {{ line }}
+              <button
+                type="button"
+                :data-test="`recap-${line.step}`"
+                :aria-label="`${line.text} — modifier`"
+                @click="edit(line.step)"
+              >
+                <AppIcon name="check" />
+                <span>{{ line.text }}</span>
+                <small>Modifier</small>
+              </button>
             </li>
           </ul>
           <p class="welcome-hint">
@@ -517,34 +534,36 @@ const recap = computed(() =>
           Aller à Aujourd'hui
         </button>
       </template>
-      <template v-else-if="step !== 'goal' && step !== 'rate'">
+      <button
+        v-else-if="step !== 'goal' && step !== 'rate'"
+        type="button"
+        class="primary welcome-continue"
+        :disabled="(step === 'trade' && !trade.trim()) || (step === 'cv' && !cvName) || (step === 'phone' && phone === null)"
+        data-test="welcome-continue"
+        @click="step === 'trade' ? confirmTrade() : step === 'places' ? confirmPlaces() : step === 'orp' ? confirmOrp() : go(index + 1)"
+      >
+        {{ fromRecap ? "Enregistrer" : "Continuer" }}
+      </button>
+      <div class="welcome-nav">
         <button
+          v-if="index > 0"
           type="button"
-          class="primary welcome-continue"
-          :disabled="(step === 'trade' && !trade.trim()) || (step === 'cv' && !cvName) || (step === 'phone' && phone === null)"
-          data-test="welcome-continue"
-          @click="step === 'trade' ? confirmTrade() : step === 'places' ? confirmPlaces() : step === 'orp' ? confirmOrp() : go(index + 1)"
+          class="secondary"
+          data-test="welcome-back"
+          @click="fromRecap ? go(STEPS.length - 1) : go(index - 1)"
         >
-          Continuer
+          ← {{ fromRecap ? "Revenir au récapitulatif" : "Retour" }}
         </button>
         <button
+          v-if="step !== 'ready'"
           type="button"
-          class="link"
+          class="secondary"
           data-test="welcome-skip"
           @click="go(index + 1)"
         >
-          Passer
+          Passer →
         </button>
-      </template>
-      <button
-        v-else
-        type="button"
-        class="link"
-        data-test="welcome-skip"
-        @click="go(index + 1)"
-      >
-        Passer
-      </button>
+      </div>
     </footer>
   </section>
 </template>

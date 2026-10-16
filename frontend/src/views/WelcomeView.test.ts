@@ -131,4 +131,28 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(calls("/api/welcome")).toContainEqual({ postponed: true });
     expect(router.currentRoute.value.path).toBe("/aujourdhui");
   });
+
+  it("« Retour » revient d'un écran ; le récapitulatif ramène à la réponse à corriger", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 7, goal: "job", trade: "DevOps" });
+    expect(wrapper.find("[data-test=welcome-ready]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=welcome-skip]").exists()).toBe(false);
+
+    await wrapper.find("[data-test=welcome-back]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=welcome-phone]").exists()).toBe(true);
+    await wrapper.find("[data-test=welcome-skip]").trigger("click");
+    await flushPromises();
+
+    // Corriger le métier depuis le récapitulatif, puis y revenir directement.
+    await wrapper.find("[data-test=recap-trade]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=welcome-trade]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Enregistrer");
+    await wrapper.find("[data-test=welcome-trade] input").setValue("Comptable");
+    await wrapper.find("[data-test=welcome-continue]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=welcome-ready]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=welcome-recap]").text()).toContain("Comptable");
+    expect(calls("/api/welcome")).toContainEqual({ step: 7, trade: "Comptable" });
+  });
 });
