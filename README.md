@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/63-largeur-utile.md](docs/63-largeur-utile.md) (0.48.2)
+- Version en cours : [docs/64-revue-0.46-0.48.md](docs/64-revue-0.46-0.48.md) (0.48.3)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -77,6 +77,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.48.0 | Carte de réussite qui vient devant, transition des pages qui chargent, images à côté des blocs trop larges | livrée |
 | 0.48.1 | Illustrations à leur place : retirées des Réglages, de Profil, de Préparer et d'Aujourd'hui ; une seule famille aux couleurs de l'interface | livrée |
 | 0.48.2 | Des blocs à leur taille : frise des étapes, ce que donnent tes critères, dépense de l'IA, Réglages à la largeur de lecture ; transition plus lente | livrée |
+| 0.48.3 | Revue : l'assistant connaît tes critères et la dépense de l'IA, ménage de la feuille de style, téléphone vérifié (sélecteurs, barres des critères, guides, page introuvable) | livrée |
 
 ## Lancer en local
 

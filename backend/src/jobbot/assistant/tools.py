@@ -32,6 +32,8 @@ from jobbot.db.models import (
     Training,
     TrainingMark,
 )
+from jobbot.filtering.service import load_criteria
+from jobbot.insights import service as insight_service
 from jobbot.interviews import service as interview_service
 from jobbot.notify import interviews as interview_reminders
 from jobbot.notify.service import REMIND_AFTER_DAYS
@@ -124,6 +126,13 @@ TOOLS: list[dict[str, Any]] = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        "name": "criteres",
+        "description": "Les critères du filtre (Profil, onglet « Ce que je cherche ») et ce qu'ils "
+        "donnent sur les 3 derniers mois : offres reçues, offres retenues, raisons d'écart "
+        "les plus fréquentes. À appeler pour « pourquoi si peu d'offres ? ».",
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "actualites",
         "description": "Les dernières actualités des sources suivies par le profil affiché.",
         "input_schema": {
@@ -151,6 +160,7 @@ LABELS = {
     "alertes": "tes alertes",
     "retours_entretien": "tes retours d'entretien",
     "profil": "tes blocs de profil",
+    "criteres": "tes critères",
     "actualites": "les actualités",
     "formations": "tes formations",
 }
@@ -474,6 +484,28 @@ async def _profile(session: AsyncSession, _profile_id: int, _params: dict[str, A
     ]
 
 
+async def _criteria(session: AsyncSession, _profile_id: int, _params: dict[str, Any]) -> Any:
+    # Même période et même calcul que « Ce que donnent tes critères » (docs/63 §2).
+    today = _today()
+    start = date.fromisoformat(f"{shift_month(f'{today:%Y-%m}', -2)}-01")
+    found = await insight_service.filter_summary(session, start, today)
+    criteria = await load_criteria(session)
+    return {
+        "criteres": {
+            "lieux": list(criteria.locations),
+            "teletravail": criteria.remote_policy.value,
+            "taux_minimum": criteria.min_rate,
+            "contrats_ecartes": [t.value for t in criteria.excluded_types],
+            "mots_exclus": list(criteria.banned_words),
+            "langues_ecartees": [lang.value for lang in criteria.unspoken_languages],
+        },
+        "depuis": start.isoformat(),
+        "offres_recues": found.received,
+        "offres_retenues": found.retained,
+        "raisons_d_ecart": [{"raison": label, "offres": n} for _rule, label, n in found.reasons],
+    }
+
+
 async def _news(session: AsyncSession, profile_id: int, params: dict[str, Any]) -> Any:
     rows = (
         await session.execute(
@@ -530,6 +562,7 @@ _TOOLS: dict[str, Tool] = {
     "alertes": _alerts,
     "retours_entretien": _interviews,
     "profil": _profile,
+    "criteres": _criteria,
     "actualites": _news,
     "formations": _trainings,
 }

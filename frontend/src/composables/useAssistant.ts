@@ -76,7 +76,7 @@ export function suggestionsFor(page: string, value: AssistantFocus | null): stri
     alerts: ["Mes alertes arrivent-elles bien ?", "Comment créer une alerte sur un site ?", "Quelles recherches ajouter ?"],
     news: ["Que retenir des dernières actualités ?", "Comment ajouter une source ?", "Comment filtrer sur mon domaine ?"],
     trainings: ["Quelle formation me serait la plus utile ?", "Où en sont mes formations ?", "Comment fonctionnent les suggestions ?"],
-    profile: ["Que manque-t-il à mon profil ?", "Comment écrire un bon bloc de profil ?", "Quelles compétences mettre en avant ?"],
+    profile: ["Que manque-t-il à mon profil ?", "Comment écrire un bon bloc de profil ?", "Quel critère m'écarte le plus d'offres ?"],
     settings: ["À quoi servent les seuils de note ?", "Comment ajouter un site suivi ?", "Comment fonctionne le plafond de l'IA ?"],
     diagnostic: ["Que veut dire cet état ?", "La collecte fonctionne-t-elle ?", "Pourquoi l'IA ne note-t-elle pas ?"],
   };

@@ -55,7 +55,7 @@ Page d'accueil en tableau de bord :
 - « Ta semaine » : barres du lundi au dimanche des 7 derniers jours, offres reçues ou candidatures envoyées ; la valeur s'affiche au survol d'une barre.
 - « À examiner en priorité » : les 5 offres les mieux notées (note, lieu, date de réception) ; l'onglet « Commencées » liste les préparations en cours.
 - « Objectif ORP » : une jauge du rouge au vert avec les candidatures du mois sur l'objectif, et « dans les temps », « à rattraper » ou « atteint » selon le jour du mois ; dessous, les trois mois précédents (atteint ou manqué). Sans objectif saisi : « objectif à saisir » (Réglages › Recherche d'emploi).
-- En bas : « Progresser » (formation en cours), les actualités de son domaine, puis les encarts « Comment ça marche » (masquable) et « Pour bien démarrer » (CV, coordonnées, critères).
+- En bas : « Progresser » (jusqu'à trois formations : celles en cours d'abord, puis des suggestions), les actualités de son domaine, puis les encarts « Comment ça marche » (masquable ; sur ordinateur, les cinq étapes en frise) et « Pour bien démarrer » (CV, coordonnées, critères).
 
 La cloche, en haut, rassemble les alertes de la plateforme.
 
@@ -115,12 +115,12 @@ Catalogue de formations vérifiées et suggestions de l'IA selon « Mon domaine 
 ### Profil
 
 - Coordonnées (pour la lettre et l'ORP), CV et documents déposés, blocs de profil (expériences, compétences, formations, préférences, rédhibitoires, ton) : la seule source de l'IA pour noter et rédiger.
-- « Ce que je cherche » : critères du filtre (lieux, taux d'activité, contrats et langues à écarter…).
+- « Ce que je cherche » : critères du filtre (lieux, taux d'activité, contrats et langues à écarter…). À côté, « Ce que donnent tes critères » : sur les 3 derniers mois, combien d'offres reçues passent les critères (« 96 sur 412, 23 % »), et les trois raisons d'écart les plus fréquentes, en barres (lieu, taux d'activité, langue…). Pour « pourquoi si peu d'offres ? » ou « quel critère m'écarte le plus ? », lis la fonction « criteres » ; tu peux conseiller d'assouplir un critère, mais c'est la personne qui le change, dans Profil › Ce que je cherche.
 - Chaque onglet indique d'abord ce qui manque.
 
 ### Réglages
 
-Une rubrique à la fois : Recherche d'emploi (objectif ORP, date limite, seuil de recherche chez l'employeur, sites suivis), Actualités (« Mon domaine », sources), Notifications (seuil d'avertissement), IA (plafond mensuel), Compte (profils d'essai, connexion), Outils (agenda, extension du navigateur). « Diagnostic » (en bas des Réglages) : état technique (collecte, IA, notifications).
+Une rubrique à la fois : Recherche d'emploi (objectif ORP, date limite, seuil de recherche chez l'employeur, sites suivis), Actualités (« Mon domaine », sources), Notifications (seuil d'avertissement), IA (plafond mensuel, et à côté la dépense du mois : « 3,20 CHF sur 20 », une barre qui passe en orange au plafond, le modèle utilisé), Compte (profils d'essai, connexion), Outils (agenda, extension du navigateur). « Diagnostic » (en bas des Réglages) : état technique (collecte, IA, notifications).
 
 ### Connexion et profils d'essai
 
@@ -128,4 +128,4 @@ La plateforme se protège par un mot de passe (page Connexion) ; seules les Actu
 
 ### Coût de l'IA
 
-Notation, lettres, CV, recherche chez l'employeur, pistes d'entretien et cet assistant consomment le plafond mensuel de l'IA (Réglages). Une question à l'assistant coûte environ 0,01 à 0,03 $.
+Notation, lettres, CV, recherche chez l'employeur, pistes d'entretien et cet assistant consomment le plafond mensuel de l'IA ; la dépense du mois s'affiche à côté du plafond (Réglages › IA). Une question à l'assistant coûte environ 0,01 à 0,03 $.

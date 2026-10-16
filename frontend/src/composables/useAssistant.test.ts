@@ -18,6 +18,8 @@ describe("useAssistant", () => {
     expect(suggestionsFor("settings", null).at(-1)).toBe("Comment ça marche ici ?");
     // Le Bilan a ses propres suggestions (docs/56), plus les génériques.
     expect(suggestionsFor("insights", null)[2]).toBe("Prépare mon résumé pour l'ORP");
+    // Profil parle aussi des critères (docs/64 §1).
+    expect(suggestionsFor("profile", null)).toContain("Quel critère m'écarte le plus d'offres ?");
   });
 
   it("un raccourci ouvre le panneau sur l'élément", () => {

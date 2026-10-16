@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 
-// Illustration unDraw des pages vides (docs/58, docs/59 §5) : insérée dans la page pour prendre
+// Illustration unDraw (règles dans docs/interface.md, docs/62) : insérée dans la page pour prendre
 // les couleurs du thème (feuille de style, `.illu [fill=…]`) ; son animation joue une fois.
 // Chargée seulement quand elle s'affiche.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
