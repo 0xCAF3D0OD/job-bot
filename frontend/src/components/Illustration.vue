@@ -27,7 +27,24 @@ watch(() => props.name, draw);
 </script>
 
 <script lang="ts">
-export type IllustrationName = "chat-bot" | "date-picker" | "mobile-inbox" | "newsfeed" | "page-eaten" | "stepping-up";
+export type IllustrationName =
+  | "certification"
+  | "chat-bot"
+  | "date-picker"
+  | "done"
+  | "handshake-deal"
+  | "lock-screen-notifications"
+  | "login"
+  | "mailbox"
+  | "message-sent"
+  | "mobile-inbox"
+  | "my-resume"
+  | "newsfeed"
+  | "online-connection"
+  | "page-eaten"
+  | "profile"
+  | "settings"
+  | "stepping-up";
 </script>
 
 <template>

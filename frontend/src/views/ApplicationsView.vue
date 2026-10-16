@@ -22,11 +22,11 @@ import InterviewInsights from "../components/InterviewInsights.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
-import Illustration from "../components/Illustration.vue";
+import IllustratedSide from "../components/IllustratedSide.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
-import { formatMonth, plural, shiftMonth } from "../format";
+import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
@@ -293,14 +293,23 @@ async function removeInterview(): Promise<void> {
   await load();
 }
 
+// Le moment « preuves remises » (docs/60 §2.1), le temps de la visite.
+const submitted = ref<{ month: string; nextDue: string | null } | null>(null);
 async function submit(done: boolean): Promise<void> {
   if (!orp.value || (!done && !window.confirm("Annuler la remise de ce mois ?"))) return;
   busy.value = true;
   try {
-    const params = { params: { path: { month: orp.value.month } } };
+    const month = orp.value.month;
+    const params = { params: { path: { month } } };
     if (done) await api.PUT("/api/orp/{month}/submission", params);
     else await api.DELETE("/api/orp/{month}/submission", params);
+    submitted.value = null;
     await load();
+    if (done) {
+      submitted.value = { month, nextDue: null };
+      const next = await api.GET("/api/orp", { params: { query: { month: shiftMonth(month, 1) } } }).catch(() => null);
+      if (submitted.value?.month === month) submitted.value = { month, nextDue: next?.data?.due_date ?? null };
+    }
   } finally {
     busy.value = false;
   }
@@ -464,6 +473,19 @@ onUnmounted(() => assistant.setFocus(null));
         </div>
       </div>
 
+      <IllustratedSide
+        v-if="submitted && submitted.month === orp.month && orp.state === 'remis'"
+        name="done"
+        phone="small"
+        class="moment"
+        data-test="submitted-moment"
+      >
+        <h3>Preuves {{ ofMonth(submitted.month) }} remises.</h3>
+        <p v-if="submitted.nextDue">
+          Prochaine remise avant le {{ longDate.format(new Date(submitted.nextDue)) }}.
+        </p>
+      </IllustratedSide>
+
       <div
         v-if="layout === 'calendar'"
         class="suivi-grid"
@@ -536,13 +558,14 @@ onUnmounted(() => assistant.setFocus(null));
             data-test="all-months"
           > Tous les mois
         </label>
-        <div
+        <IllustratedSide
           v-if="loaded && !items.length"
           class="empty-state empty"
+          name="date-picker"
+          phone="small"
         >
-          <Illustration name="date-picker" />
           <p>Aucune candidature en {{ formatMonth(orp.month) }}.</p>
-        </div>
+        </IllustratedSide>
         <ApplicationsTable
           v-else
           :items="items"

@@ -6,6 +6,7 @@ import CriteriaForm from "../components/CriteriaForm.vue";
 import IdentityForm from "../components/IdentityForm.vue";
 import PageHero from "../components/PageHero.vue";
 import ProfileParcours from "../components/ProfileParcours.vue";
+import IllustratedSide from "../components/IllustratedSide.vue";
 
 // Tout ce qui te concerne au même endroit (docs/10 §2 a) ; l'onglet est dans l'URL.
 const TABS = [
@@ -52,14 +53,24 @@ const tab = computed<Tab>(() => {
         v-if="tab === 'recherche'"
         class="narrow-block"
       >
-        <CriteriaForm />
+        <IllustratedSide
+          name="settings"
+          class="form-side"
+        >
+          <CriteriaForm />
+        </IllustratedSide>
       </div>
       <ProfileParcours v-else-if="tab === 'parcours'" />
       <div
         v-else
         class="narrow-block"
       >
-        <IdentityForm />
+        <IllustratedSide
+          name="profile"
+          class="form-side"
+        >
+          <IdentityForm />
+        </IllustratedSide>
       </div>
     </div>
   </section>

@@ -3,6 +3,7 @@ import { computed } from "vue";
 
 import type { Today } from "../../api/client";
 import { formatMonth } from "../../format";
+import { firstTime, useCountUp } from "../../composables/useIntro";
 
 // « Objectif ORP » (docs/54 §2) : jauge en demi-cercle, du rouge au vert comme la maquette
 // (adoucie), le compte du mois au centre ; trois cases pour les mois précédents.
@@ -40,6 +41,9 @@ function result(count: number): { text: string; tone: string } {
   return count >= props.target ? { text: "atteint", tone: "ok" } : { text: "manqué", tone: "short" };
 }
 const short = (month: string): string => formatMonth(month).split(" ")[0] ?? month;
+// Les arcs apparaissent, le repère glisse et le compte monte, une fois par visite (docs/60 §3).
+const intro = firstTime("orp-gauge");
+const counted = useCountUp("orp-gauge", () => props.count);
 </script>
 
 <template>
@@ -52,7 +56,7 @@ const short = (month: string): string => formatMonth(month).split(" ")[0] ?? mon
       <h2>Objectif ORP</h2>
       <span class="muted">{{ formatMonth(month) }}</span>
     </header>
-    <div class="gauge">
+    <div :class="['gauge', { intro }]">
       <svg
         viewBox="0 0 200 112"
         aria-hidden="true"
@@ -72,7 +76,7 @@ const short = (month: string): string => formatMonth(month).split(" ")[0] ?? mon
         />
       </svg>
       <p class="gauge-value">
-        <strong data-test="gauge-count">{{ count }}</strong>
+        <strong data-test="gauge-count">{{ counted }}</strong>
         <span>{{ target ? `sur ${target} · ${pace}` : pace }}</span>
       </p>
     </div>

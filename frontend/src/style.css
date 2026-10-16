@@ -2118,3 +2118,80 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 }
 .assistant-illu { margin: 0.5rem auto 0.75rem; }
 .not-found .empty-state { padding: 4rem 1rem; } .not-found h1 { font-size: 1.5rem; color: var(--text); }
+
+/* Illustration en grand sur ordinateur (docs/60) : l'image à gauche, le contenu à droite. */
+.illustrated { display: grid; grid-template-columns: 260px minmax(0, 1fr); align-items: center; gap: 2.5rem; }
+.illustrated > .illu { width: 260px; margin: 0; }
+.illustrated-body { min-width: 0; }
+@media (max-width: 820px) {
+  .illustrated { display: block; }
+  .illustrated.phone-hide > .illu { display: none; }
+  .illustrated.phone-small > .illu { width: 96px; margin: 0 auto 0.8rem; }
+}
+.illustrated.empty-state { justify-items: stretch; text-align: left; width: min(100%, 46rem); margin: 0 auto; padding: 2.5rem 1rem; }
+.illustrated.empty-state .illustrated-body { display: grid; gap: 0.8rem; justify-items: start; }
+.illustrated.empty-state .illustrated-body p { margin: 0; }
+@media (max-width: 820px) {
+  .illustrated.empty-state { text-align: center; padding: 2rem 1rem; }
+  .illustrated.empty-state .illustrated-body { justify-items: center; }
+}
+.wizard-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; }
+/* Formulaires de départ (docs/60 §2.3) : l'image reste en haut à gauche pendant qu'on remplit. */
+.illustrated.form-side { align-items: start; }
+.illustrated.form-side > .illu { position: sticky; top: 6rem; margin-top: 1rem; }
+@media (min-width: 821px) {
+  .narrow-block:has(> .illustrated) { max-width: 68rem; }
+  .container.narrow.login-container { max-width: 54rem; }
+  .login-container .illustrated { align-items: center; }
+}
+/* Les réussites (docs/60 §2.1) : un moment illustré, une fois, à l'endroit de l'action. */
+.illustrated.moment { padding: 1.5rem; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); animation: line-in var(--t-enter) var(--ease-out); }
+.illustrated.moment .illustrated-body { display: grid; gap: 0.6rem; }
+.illustrated.moment h3 { margin: 0; font-size: 1.2rem; }
+.illustrated.moment p { margin: 0; }
+.moment-links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; }
+@media (prefers-reduced-motion: reduce) { .illustrated.moment { animation: none; } }
+@media (max-width: 820px) { .illustrated.moment { padding: 1.1rem; text-align: center; } .moment-links { justify-content: center; } }
+.applications-view .moment, [data-test=submitted-moment] { margin-bottom: 1rem; }
+/* Engagement (docs/60 §2.1) : la poignée de main et quelques confettis, une fois. */
+.engagement-moment { display: grid; justify-items: center; gap: 0.5rem; margin-bottom: 1rem; padding: 1.4rem 1rem; text-align: center; border: 1px solid color-mix(in srgb, var(--mint) 45%, var(--border)); border-radius: 20px; background: color-mix(in srgb, var(--mint) 14%, var(--surface)); animation: line-in var(--t-enter) var(--ease-out); }
+.engagement-moment h3 { margin: 0; font-size: 1.2rem; }
+.engagement-moment p { margin: 0; }
+.engagement-art { position: relative; }
+.engagement-art .illu { width: 220px; }
+.confetti { position: absolute; left: 50%; top: 45%; width: 0; height: 0; pointer-events: none; }
+.confetti span { position: absolute; width: 7px; height: 11px; border-radius: 2px; background: var(--c); opacity: 0; animation: confetti-burst 1s var(--ease-out) both; }
+@keyframes confetti-burst {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--r)); }
+}
+@media (prefers-reduced-motion: reduce) { .engagement-moment { animation: none; } .confetti { display: none; } }
+@media (max-width: 820px) { .engagement-art .illu { width: 96px; } }
+.assistant-action .engagement-moment { padding: 1rem 0.8rem; } .assistant-action .engagement-art .illu { width: 150px; }
+/* Trier une offre (docs/60 §3) : sa carte s'efface vers la droite, les suivantes remontent. */
+.offer-cards { position: relative; }
+.card-move { transition: transform var(--t-state) var(--ease-out); }
+.card-leave-active { position: absolute; left: 0; right: 0; transition: opacity var(--t-state), transform var(--t-state) var(--ease-out); }
+.card-leave-to { opacity: 0; transform: translateX(40px); }
+.card-enter-active { transition: opacity var(--t-enter), transform var(--t-enter) var(--ease-out); }
+.card-enter-from { opacity: 0; transform: translateY(8px); }
+@media (prefers-reduced-motion: reduce) { .card-move, .card-leave-active, .card-enter-active { transition: none; } }
+/* Entrée des chiffres et des barres (docs/60 §3) : une fois par visite. */
+.bar-chart.intro .bar-fill { transform-origin: bottom; animation: bar-rise var(--t-enter) var(--ease-out) both; }
+.bar-chart.intro li:nth-child(2) .bar-fill { animation-delay: 40ms; }
+.bar-chart.intro li:nth-child(3) .bar-fill { animation-delay: 80ms; }
+.bar-chart.intro li:nth-child(4) .bar-fill { animation-delay: 120ms; }
+.bar-chart.intro li:nth-child(5) .bar-fill { animation-delay: 160ms; }
+.bar-chart.intro li:nth-child(6) .bar-fill { animation-delay: 200ms; }
+.bar-chart.intro li:nth-child(n + 7) .bar-fill { animation-delay: 240ms; }
+@keyframes bar-rise { from { transform: scaleY(0); } }
+.bilan-funnel.intro .bilan-bar { transform-origin: left; animation: bar-grow var(--t-enter) var(--ease-out) both; }
+@keyframes bar-grow { from { transform: scaleX(0); } }
+.gauge.intro .gauge-arc { animation: line-in var(--t-enter) var(--ease-out) both; }
+.gauge.intro .gauge-arc:nth-child(2) { animation-delay: 60ms; }
+.gauge.intro .gauge-arc:nth-child(3) { animation-delay: 120ms; }
+.gauge.intro .gauge-arc:nth-child(4) { animation-delay: 180ms; }
+.gauge.intro .gauge-arc:nth-child(5) { animation-delay: 240ms; }
+.gauge.intro .gauge-marker { animation: line-in var(--t-enter) var(--ease-out) 300ms both; }
+@media (prefers-reduced-motion: reduce) { .bar-chart.intro .bar-fill, .bilan-funnel.intro .bilan-bar, .gauge.intro .gauge-arc, .gauge.intro .gauge-marker { animation: none; } }

@@ -247,6 +247,14 @@ describe("tri et candidature", () => {
       body: { status: "later" },
     });
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
+    // Le message propose d'annuler (docs/60 §3) : l'offre revient à son statut d'avant.
+    expect(wrapper.text()).toContain("Passée en Plus tard.");
+    await wrapper.find("[data-test=undo-status]").trigger("click");
+    await flushPromises();
+    expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", {
+      params: { path: { offer_id: 1 } },
+      body: { status: "to_review" },
+    });
   });
 
   it("« Marquer comme envoyée » pré-remplit puis enregistre la candidature", async () => {

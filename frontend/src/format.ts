@@ -94,6 +94,12 @@ export function formatMonth(month: string): string {
   return monthFormat.format(new Date(Date.UTC(year ?? 2000, (m ?? 1) - 1, 1)));
 }
 
+// « de septembre », « d'octobre », « d'août » : le nom du mois après « de », élidé.
+export function ofMonth(month: string): string {
+  const name = formatMonth(month).split(" ")[0]!.toLowerCase();
+  return /^[aeiouyàâéèêî]/.test(name) ? `d'${name}` : `de ${name}`;
+}
+
 export function shiftMonth(month: string, delta: number): string {
   const [year, m] = month.split("-").map(Number);
   const date = new Date(Date.UTC(year ?? 2000, (m ?? 1) - 1 + delta, 1));

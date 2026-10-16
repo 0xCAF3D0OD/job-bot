@@ -10,7 +10,8 @@ import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
-import Illustration from "../components/Illustration.vue";
+import IllustratedSide from "../components/IllustratedSide.vue";
+import { firstTime } from "../composables/useIntro";
 
 // Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP ;
 // présenté comme le tableau d'Aujourd'hui (docs/55) : tuiles, barres, cartes à bulles.
@@ -118,6 +119,8 @@ async function copy(): Promise<void> {
 
 watch(() => route.query, () => void load());
 onMounted(() => void load());
+// Les barres montent à la première ouverture (docs/60 §3).
+const intro = firstTime("bilan-funnel");
 </script>
 
 <template>
@@ -245,7 +248,7 @@ onMounted(() => void load());
             <h2>Ton parcours</h2>
           </header>
           <ol
-            class="bilan-funnel"
+            :class="['bilan-funnel', { intro }]"
             aria-label="Ton parcours"
           >
             <li
@@ -276,14 +279,15 @@ onMounted(() => void load());
         />
       </div>
 
-      <div
+      <IllustratedSide
         v-if="insights.funnel.applications === 0"
         class="empty-state"
         data-test="insights-empty"
+        name="stepping-up"
+        phone="small"
       >
-        <Illustration name="stepping-up" />
         <p>Pas encore de candidature sur cette période : le bilan se remplit au fil de tes envois.</p>
-      </div>
+      </IllustratedSide>
       <template v-else>
         <p
           v-if="insights.headline"

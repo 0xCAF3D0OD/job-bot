@@ -10,6 +10,7 @@ import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
 import CopyLabel from "./CopyLabel.vue";
 import Illustration from "./Illustration.vue";
+import EngagementMoment from "./EngagementMoment.vue";
 
 type Conversation = components["schemas"]["ConversationOut"];
 // Propositions de l'assistant (docs/52) : affichées sous sa réponse, faites sur un clic.
@@ -215,6 +216,7 @@ async function copy(text: string, index: number): Promise<void> {
 
 // « Confirmer », « Non merci », « Annuler » : seul un clic change quelque chose (docs/52).
 const deciding = ref<number | null>(null);
+const celebrated = ref<number | null>(null);
 const DECISIONS = {
   confirm: "/api/assistant/actions/{action_id}/confirm",
   decline: "/api/assistant/actions/{action_id}/decline",
@@ -231,6 +233,10 @@ async function decide(action: ChatAction, decision: keyof typeof DECISIONS): Pro
     }
     Object.assign(action, data);
     if (!data.note && decision !== "decline") announceDataChanged();
+    // Une candidature confirmée en Engagement : le moment de fête (docs/60 §2.1).
+    if (decision === "confirm" && data.state === "done" && data.kind === "application_status" && data.label.endsWith("en Engagement")) {
+      celebrated.value = action.id;
+    }
   } finally {
     deciding.value = null;
   }
@@ -455,6 +461,7 @@ function day(value: string): string {
             :class="['assistant-action', action.state]"
             data-test="assistant-action"
           >
+            <EngagementMoment v-if="celebrated === action.id && action.state === 'done'" />
             <p class="assistant-action-label">
               {{ action.label }}
             </p>

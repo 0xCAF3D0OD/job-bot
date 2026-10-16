@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import type { Today } from "../../api/client";
 import { localDate, plural } from "../../format";
+import { firstTime } from "../../composables/useIntro";
 
 // « Ta semaine » (docs/54 §2) : barres des 7 derniers jours, offres reçues ou candidatures
 // envoyées ; la valeur dans une bulle sombre au survol (ou au focus) d'une barre.
@@ -17,6 +18,8 @@ const total = computed(() => props.week.reduce((n, d) => n + d[kind.value], 0));
 function amount(n: number): string {
   return kind.value === "offers" ? plural(n, "offre", "offres", "aucune offre") : plural(n, "candidature", "candidatures", "aucune candidature");
 }
+// Les barres montent à la première ouverture (docs/60 §3).
+const intro = firstTime("week-chart");
 </script>
 
 <template>
@@ -54,7 +57,7 @@ function amount(n: number): string {
     <p class="hint week-total">
       {{ amount(total) }} sur 7 jours
     </p>
-    <ol class="bar-chart">
+    <ol :class="['bar-chart', { intro }]">
       <li
         v-for="(day, index) in week"
         :key="day.day"
