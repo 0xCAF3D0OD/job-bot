@@ -17,7 +17,6 @@ import { join } from "node:path";
 
 export const ILLUSTRATIONS = [
   "absorbed",
-  "booking",
   "certification",
   "done",
   "handshake-deal",

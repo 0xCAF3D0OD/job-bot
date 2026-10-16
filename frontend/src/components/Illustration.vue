@@ -39,7 +39,6 @@ watch(
 <script lang="ts">
 export type IllustrationName =
   | "absorbed"
-  | "booking"
   | "certification"
   | "done"
   | "handshake-deal"
