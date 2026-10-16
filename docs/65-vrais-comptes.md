@@ -1,6 +1,6 @@
 # 65 — De vrais comptes : plusieurs chercheurs d'emploi sur la même plateforme (versions 0.50 à 0.53)
 
-> Statut : **validé** le 2026-10-16. 0.50.0 à 0.52.0 livrées ; 0.53 à suivre.
+> Statut : **validé** le 2026-10-16, livré (0.50.0 à 0.53.0).
 > Suite de docs/17 (option B, « plus tard ») : aujourd'hui, la plateforme a **un seul compte** (le tien, créé par `jobbot set-password`), et tout est commun : offres, candidatures, preuves ORP, profil, réglages, IA. Les profils d'essai ne changent que les Actualités et les Formations. Le but : que d'autres chercheurs d'emploi utilisent la plateforme, chacun avec **ses** données, sans jamais voir celles des autres.
 
 ## 1. Ce que chacun a à soi, ce qui reste commun
@@ -128,3 +128,11 @@ Chaque PR est vérifiée avec deux comptes sur l'instance de test (jamais sur ta
 - **Sites suivis** : la pause d'un site vaut pour le compte (ta pause actuelle est reprise dans ton compte). Ajouter, retirer ou proposer un site reste à toi : la liste des sites et de leurs expéditeurs est commune, elle sert à reconnaître les e-mails de tous.
 - **Pas fait** : envoyer les e-mails de confirmation au compte par e-mail (la plateforme n'envoie pas d'e-mail) ; une boîte dédiée à la plateforme reste conseillée dès qu'il y a d'autres comptes (§3), c'est ta configuration.
 - **Vérifié** sur l'instance de test, connecté en « camille » : l'encadré « À confirmer » et son bouton, et l'étape 2 de l'assistant qui donne son adresse `…+code@…`.
+
+## Écarts avec la livraison de 0.53.0
+
+- **La page « Tes données »** (`/tes-donnees`) se lit sans connexion, avant même d'accepter une invitation (l'invitation y renvoie) : ce qui est gardé, où et combien de temps (discussions 30 jours, notifications 90 jours, le reste jusqu'à la suppression du compte), qui y a accès (la personne ; l'exploitant voit l'usage, jamais les données), ce qui part à l'IA (offres, blocs de profil, questions, texte du CV pour les propositions de blocs, alertes lues par l'IA ; jamais les coordonnées ni les noms des contacts), ntfy seulement si activé.
+- **Tes mentions** : Réglages, rubrique Plateforme, « Mentions de la page Tes données » (responsable, contact, hébergeur), affichées en bas de la page ; sans elles, la page le dit.
+- **Exporter** (Réglages › Compte, tous les comptes, toi compris) : une archive ZIP avec `data/<table>.json` pour chacune des 28 tables rangées par compte, les documents déposés et les e-mails d'alerte reçus, plus un LISEZ-MOI. Les empreintes des jetons ne sont pas reprises. Les PDF (lettres, CV, preuves ORP) ne sont pas régénérés : leur contenu est dans les données, et ils se téléchargent toujours depuis leurs pages.
+- **Supprimer mon compte** : pour un compte invité, avec son mot de passe ; tout est effacé (lignes et dossier de fichiers), la session se ferme. Ton compte ne se supprime pas depuis la plateforme.
+- **Vérifié** : un test ouvre l'archive d'un compte et n'y trouve rien d'un autre ; sur l'instance de test, la page publique sans connexion, puis « camille » qui exporte son archive (`jobA1-camille-2026-10-16.zip`).

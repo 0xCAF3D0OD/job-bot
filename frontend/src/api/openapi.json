@@ -475,6 +475,152 @@
         }
       }
     },
+    "/api/account/data": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Get Data",
+        "operationId": "getAccountData",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account/export": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Export Account",
+        "operationId": "exportAccount",
+        "responses": {
+          "200": {
+            "description": "Archive ZIP",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/zip": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/account/delete": {
+      "post": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Delete Own Account",
+        "description": "Le compte et toutes ses données, fichiers compris, après le mot de passe.",
+        "operationId": "deleteOwnAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Mot de passe incorrect"
+          },
+          "409": {
+            "description": "Compte de l'exploitant"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/privacy": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Get Privacy",
+        "description": "Public : la page « Tes données » se lit avant même d'accepter une invitation.",
+        "operationId": "getPrivacy",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Privacy"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Save Privacy",
+        "operationId": "savePrivacy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivacyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Privacy"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/assistant/status": {
       "get": {
         "tags": [
@@ -9281,6 +9427,54 @@
         ],
         "title": "CvSectionOut"
       },
+      "DataSummary": {
+        "properties": {
+          "offers": {
+            "type": "integer",
+            "title": "Offers"
+          },
+          "applications": {
+            "type": "integer",
+            "title": "Applications"
+          },
+          "documents": {
+            "type": "integer",
+            "title": "Documents"
+          },
+          "profile_blocks": {
+            "type": "integer",
+            "title": "Profile Blocks"
+          },
+          "alert_emails": {
+            "type": "integer",
+            "title": "Alert Emails"
+          },
+          "conversations": {
+            "type": "integer",
+            "title": "Conversations"
+          },
+          "notifications": {
+            "type": "integer",
+            "title": "Notifications"
+          },
+          "can_delete": {
+            "type": "boolean",
+            "title": "Can Delete"
+          }
+        },
+        "type": "object",
+        "required": [
+          "offers",
+          "applications",
+          "documents",
+          "profile_blocks",
+          "alert_emails",
+          "conversations",
+          "notifications",
+          "can_delete"
+        ],
+        "title": "DataSummary"
+      },
       "DatabaseStatus": {
         "properties": {
           "ok": {
@@ -9382,6 +9576,21 @@
           "longest"
         ],
         "title": "DelayOut"
+      },
+      "DeleteIn": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "title": "DeleteIn"
       },
       "DocumentOut": {
         "properties": {
@@ -13791,6 +14000,41 @@
           "done"
         ],
         "title": "PreparedIn"
+      },
+      "Privacy": {
+        "properties": {
+          "contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contact"
+        ],
+        "title": "Privacy",
+        "description": "Les mentions de l'exploitant (responsable, contact, hébergeur), écrites par lui."
+      },
+      "PrivacyIn": {
+        "properties": {
+          "contact": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Contact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contact"
+        ],
+        "title": "PrivacyIn"
       },
       "ProfileBlockIn": {
         "properties": {

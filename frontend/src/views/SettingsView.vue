@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import PageHero from "../components/PageHero.vue";
+import AccountDataPanel from "../components/AccountDataPanel.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
 import ExtensionPanel from "../components/ExtensionPanel.vue";
 import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
@@ -479,6 +480,7 @@ const active = computed<SectionId>(() => {
             Connexion
           </h3>
           <SessionPanel />
+          <AccountDataPanel class="settings-next-card" />
         </SettingsSection>
 
         <SettingsSection
