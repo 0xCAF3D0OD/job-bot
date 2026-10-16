@@ -47,6 +47,10 @@ const weeks = computed(() => {
   return Array.from({ length: cells.length / 7 }, (_, i) => cells.slice(i * 7, i * 7 + 7));
 });
 
+// Une semaine sans candidature est plus basse (docs/63 §2) : elle garde ses jours et ses repères.
+const quietWeeks = computed(
+  () => new Set(weeks.value.flatMap((week, w) => (week.some((day) => day && sentOn.value.get(day)?.length) ? [] : [w]))),
+);
 const sentOn = computed(() => {
   const map = new Map<string, Application[]>();
   for (const a of props.applications) map.set(a.sent_at, [...(map.get(a.sent_at) ?? []), a]);
@@ -109,13 +113,13 @@ function label(day: string): string {
         >
           <span
             v-if="!day"
-            class="day empty"
+            :class="['day', 'empty', { quiet: quietWeeks.has(w) }]"
           />
           <button
             v-else
             type="button"
             role="gridcell"
-            :class="['day', { today: day === today, selected: day === selected, busy: sentOn.get(day)?.length }]"
+            :class="['day', { today: day === today, selected: day === selected, busy: sentOn.get(day)?.length, quiet: quietWeeks.has(w) }]"
             :aria-label="label(day)"
             :aria-pressed="day === selected"
             :data-test="`day-${day}`"

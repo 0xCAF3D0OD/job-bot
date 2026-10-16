@@ -14,6 +14,7 @@ import SettingsSection from "../components/SettingsSection.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 import HoverNote from "../components/HoverNote.vue";
+import AiSpend from "../components/AiSpend.vue";
 const form = ref<SettingsModel>({
   orp_monthly_target: null,
   notify_score_threshold: 70,
@@ -337,49 +338,52 @@ const active = computed<SectionId>(() => {
           :value="summary.ia"
           :active="active === 'ia'"
         >
-          <form
-            v-if="loaded"
-            class="form-card"
-            data-test="budget-form"
-            @submit.prevent="save"
-          >
-            <fieldset>
-              <legend>
-                <label for="budget">
-                  <HoverNote text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant.">
-                    Plafond mensuel du coût de l'IA
-                  </HoverNote>
-                </label>
-              </legend>
-              <div class="inline-field">
-                <input
-                  id="budget"
-                  v-model.number="form.llm_monthly_budget_chf"
-                  type="number"
-                  min="0"
-                  max="1000"
-                  step="0.5"
-                  required
+          <div class="ai-layout">
+            <form
+              v-if="loaded"
+              class="form-card"
+              data-test="budget-form"
+              @submit.prevent="save"
+            >
+              <fieldset>
+                <legend>
+                  <label for="budget">
+                    <HoverNote text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant.">
+                      Plafond mensuel du coût de l'IA
+                    </HoverNote>
+                  </label>
+                </legend>
+                <div class="inline-field">
+                  <input
+                    id="budget"
+                    v-model.number="form.llm_monthly_budget_chf"
+                    type="number"
+                    min="0"
+                    max="1000"
+                    step="0.5"
+                    required
+                  >
+                  <span>CHF</span>
+                </div>
+              </fieldset>
+              <div class="form-actions">
+                <button
+                  type="submit"
+                  class="secondary"
+                  :disabled="saving"
+                  data-test="save-budget"
                 >
-                <span>CHF</span>
+                  Enregistrer
+                </button>
+                <span
+                  v-if="message"
+                  role="status"
+                  class="muted"
+                >{{ message }}</span>
               </div>
-            </fieldset>
-            <div class="form-actions">
-              <button
-                type="submit"
-                class="secondary"
-                :disabled="saving"
-                data-test="save-budget"
-              >
-                Enregistrer
-              </button>
-              <span
-                v-if="message"
-                role="status"
-                class="muted"
-              >{{ message }}</span>
-            </div>
-          </form>
+            </form>
+            <AiSpend />
+          </div>
         </SettingsSection>
 
         <SettingsSection

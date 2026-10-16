@@ -192,3 +192,37 @@ def test_buckets_by_month_and_by_week() -> None:
     # Un mois : semaines du lundi, la première coupée au 1er (jeudi 1er octobre 2026).
     weeks = buckets(facts[1:], date(2026, 10, 1), date(2026, 10, 15), "week")
     assert [(b.start.day, b.applications) for b in weeks] == [(1, 1), (5, 0), (12, 1)]
+
+
+async def test_filter_summary(api: AsyncClient, runtime: Runtime) -> None:
+    # Ce que donnent les critères (docs/63 §2) : reçues, retenues, raisons d'écart.
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        for n, reasons in enumerate(
+            [[], [], ["locations"], ["locations", "min_rate"], ["language"]]
+        ):
+            offer = Offer(
+                fingerprint=f"filtre-{n}",
+                title="SRE",
+                company=f"Filtre {n} SA",
+                status="to_review",
+                first_seen_at=now - timedelta(days=2),
+                last_seen_at=now,
+            )
+            session.add(offer)
+            await session.flush()
+            session.add(
+                Evaluation(
+                    offer_id=offer.id,
+                    filter_passed=not reasons,
+                    filter_reasons=[{"rule": r, "message": r} for r in reasons],
+                    criteria_hash="h",
+                )
+            )
+    found = (await api.get("/api/insights/filter")).json()
+    assert (found["received"], found["retained"]) == (5, 2)
+    assert [(r["label"], r["count"]) for r in found["reasons"]] == [
+        ("lieu", 2),
+        ("langue", 1),
+        ("taux d'activité", 1),
+    ]

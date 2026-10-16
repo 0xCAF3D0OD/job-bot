@@ -4001,6 +4001,28 @@
         }
       }
     },
+    "/api/insights/filter": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Get Filter Summary",
+        "description": "Ce que donnent tes critères (docs/63 §2) : reçues, retenues, raisons d'écart.",
+        "operationId": "getFilterSummary",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterSummaryOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/address-candidates": {
       "get": {
         "tags": [
@@ -9151,6 +9173,29 @@
         "title": "FillOut",
         "description": "Tout ce que l'extension met dans le formulaire (docs/25 §3.2)."
       },
+      "FilterReasonOut": {
+        "properties": {
+          "rule": {
+            "type": "string",
+            "title": "Rule"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule",
+          "label",
+          "count"
+        ],
+        "title": "FilterReasonOut"
+      },
       "FilterResponse": {
         "properties": {
           "result": {
@@ -9167,6 +9212,38 @@
           "result"
         ],
         "title": "FilterResponse"
+      },
+      "FilterSummaryOut": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "received": {
+            "type": "integer",
+            "title": "Received"
+          },
+          "retained": {
+            "type": "integer",
+            "title": "Retained"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/FilterReasonOut"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "received",
+          "retained",
+          "reasons"
+        ],
+        "title": "FilterSummaryOut"
       },
       "FocusIn": {
         "properties": {

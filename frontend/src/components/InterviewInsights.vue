@@ -53,7 +53,7 @@ onMounted(() => void load());
     <!-- Toujours visible (retour d'usage du 2026-10-07) : dit comment la remplir. -->
     <p
       v-if="!data.count"
-      class="hint"
+      class="hint reading-width"
       data-test="insights-empty"
     >
       Rien pour l'instant. Après un entretien, passe la candidature au statut « Entretien » (avec sa date), puis

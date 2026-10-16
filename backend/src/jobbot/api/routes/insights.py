@@ -70,6 +70,20 @@ class SearchReportOut(BaseModel):
     interviews_upcoming: int = 0
 
 
+class FilterReasonOut(BaseModel):
+    rule: str
+    label: str
+    count: int
+
+
+class FilterSummaryOut(BaseModel):
+    # Les 3 derniers mois (le mois en cours et les deux précédents), comme le Bilan.
+    start: date
+    received: int
+    retained: int
+    reasons: list[FilterReasonOut]
+
+
 def _runtime(request: Request) -> Runtime:
     runtime: Runtime = request.app.state.runtime
     return runtime
@@ -127,4 +141,19 @@ async def get_insights(
         unit="week" if found.unit == "week" else "month",
         buckets=[BucketOut(**vars(b)) for b in found.buckets],
         interviews_upcoming=found.interviews_upcoming,
+    )
+
+
+@router.get("/insights/filter", operation_id="getFilterSummary")
+async def get_filter_summary(request: Request) -> FilterSummaryOut:
+    """Ce que donnent tes critères (docs/63 §2) : reçues, retenues, raisons d'écart."""
+    today = datetime.now(UTC).astimezone(LOCAL_TZ).date()
+    start = date.fromisoformat(f"{shift_month(f'{today:%Y-%m}', -2)}-01")
+    async with _runtime(request).sessionmaker() as session:
+        found = await service.filter_summary(session, start, today)
+    return FilterSummaryOut(
+        start=start,
+        received=found.received,
+        retained=found.retained,
+        reasons=[FilterReasonOut(rule=r, label=label, count=n) for r, label, n in found.reasons],
     )

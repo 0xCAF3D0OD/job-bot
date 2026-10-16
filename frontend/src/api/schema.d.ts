@@ -1484,6 +1484,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/insights/filter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Filter Summary
+         * @description Ce que donnent tes critères (docs/63 §2) : reçues, retenues, raisons d'écart.
+         */
+        get: operations["getFilterSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/address-candidates": {
         parameters: {
             query?: never;
@@ -3170,6 +3190,15 @@ export interface components {
             /** Cv Filename */
             cv_filename: string;
         };
+        /** FilterReasonOut */
+        FilterReasonOut: {
+            /** Rule */
+            rule: string;
+            /** Label */
+            label: string;
+            /** Count */
+            count: number;
+        };
         /** FilterResponse */
         FilterResponse: {
             /**
@@ -3177,6 +3206,20 @@ export interface components {
              * @enum {string}
              */
             result: "queued" | "already_queued";
+        };
+        /** FilterSummaryOut */
+        FilterSummaryOut: {
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Received */
+            received: number;
+            /** Retained */
+            retained: number;
+            /** Reasons */
+            reasons: components["schemas"]["FilterReasonOut"][];
         };
         /**
          * FocusIn
@@ -8126,6 +8169,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getFilterSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FilterSummaryOut"];
                 };
             };
         };
