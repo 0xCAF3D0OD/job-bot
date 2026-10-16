@@ -7,6 +7,11 @@ import { secureAddress, senders, useChecks } from "../validators";
 import { plural } from "../format";
 
 import HoverNote from "./HoverNote.vue";
+import { useAuth } from "../composables/useAuth";
+// Mettre un site en pause vaut pour son compte ; ajouter ou retirer un site change la liste
+// commune à tous les comptes : réservé à l'exploitant (docs/65).
+const { me } = useAuth();
+const owner = computed(() => Boolean(me.value?.is_owner));
 // Sites dont les alertes sont suivies (docs/11 §2).
 const sites = ref<SiteOut[]>([]);
 // Sites d'offres en télétravail proposés en un clic (docs/26 §5).
@@ -197,7 +202,7 @@ onMounted(() => void load());
             >
           </label>
           <p
-            v-if="!opened.builtin"
+            v-if="!opened.builtin && owner"
             class="calm-panel-foot"
           >
             <button
@@ -213,7 +218,7 @@ onMounted(() => void load());
       </SidePanel>
 
       <div
-        v-if="suggestions.length"
+        v-if="owner && suggestions.length"
         class="site-suggestions"
         data-test="site-suggestions"
       >
@@ -246,7 +251,7 @@ onMounted(() => void load());
       </div>
 
       <form
-        v-if="adding"
+        v-if="owner && adding"
         class="form-grid"
         data-test="add-site-form"
         @submit.prevent="add"
@@ -318,6 +323,7 @@ onMounted(() => void load());
         class="form-actions"
       >
         <button
+          v-if="owner"
           type="button"
           class="secondary small"
           data-test="add-site"

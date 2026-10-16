@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from email import message_from_bytes, policy
 from email.message import EmailMessage
-from email.utils import parseaddr
+from email.utils import getaddresses, parseaddr
 
 
 @dataclass(frozen=True)
@@ -17,6 +17,8 @@ class ParsedEmail:
     received_at: datetime
     html: str | None
     text: str | None
+    # Adresses de destination (To, Cc, Delivered-To…), pour ranger l'e-mail par compte.
+    recipients: tuple[str, ...] = ()
 
 
 def _body(msg: EmailMessage, subtype: str) -> str | None:
@@ -37,6 +39,20 @@ def _header(msg: EmailMessage, name: str) -> str | None:
     except (ValueError, IndexError):
         return None
     return str(value).strip() if value is not None else None
+
+
+RECIPIENT_HEADERS = ("Delivered-To", "X-Original-To", "To", "Cc")
+
+
+def _recipients(msg: EmailMessage) -> tuple[str, ...]:
+    values: list[str] = []
+    for name in RECIPIENT_HEADERS:
+        try:
+            values += [str(v) for v in msg.get_all(name, [])]
+        except (ValueError, IndexError):
+            continue
+    found = [address.lower() for _, address in getaddresses(values) if "@" in address]
+    return tuple(dict.fromkeys(found))
 
 
 def parse_email(raw: bytes, *, fallback_received: datetime) -> ParsedEmail:
@@ -60,4 +76,5 @@ def parse_email(raw: bytes, *, fallback_received: datetime) -> ParsedEmail:
         received_at=received_at,
         html=_body(msg, "html"),
         text=_body(msg, "plain"),
+        recipients=_recipients(msg),
     )

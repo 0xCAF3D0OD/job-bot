@@ -1,6 +1,6 @@
 # 65 — De vrais comptes : plusieurs chercheurs d'emploi sur la même plateforme (versions 0.50 à 0.53)
 
-> Statut : **validé** le 2026-10-16. 0.50.0 et 0.51.0 livrées ; 0.52 et 0.53 à suivre.
+> Statut : **validé** le 2026-10-16. 0.50.0 à 0.52.0 livrées ; 0.53 à suivre.
 > Suite de docs/17 (option B, « plus tard ») : aujourd'hui, la plateforme a **un seul compte** (le tien, créé par `jobbot set-password`), et tout est commun : offres, candidatures, preuves ORP, profil, réglages, IA. Les profils d'essai ne changent que les Actualités et les Formations. Le but : que d'autres chercheurs d'emploi utilisent la plateforme, chacun avec **ses** données, sans jamais voir celles des autres.
 
 ## 1. Ce que chacun a à soi, ce qui reste commun
@@ -119,3 +119,12 @@ Chaque PR est vérifiée avec deux comptes sur l'instance de test (jamais sur ta
 - **Profils d'essai** : créer, dupliquer ou supprimer un profil d'essai est réservé à l'exploitant (**403** sinon), et la section n'apparaît pas pour les autres.
 - **Pas encore** : les sites d'emploi suivis restent communs et réservés à l'exploitant ; ils passeront par compte avec les adresses de réception (0.52).
 - **Vérifié** : sur l'instance de test, une invitation créée dans la rubrique Plateforme, le compte « camille » créé par son lien, qui arrive sur un Aujourd'hui vide (aucune des offres de l'exploitant) et voit son plafond fixé et l'activation des notifications ; la rubrique Plateforme ne lui apparaît pas.
+
+## Écarts avec la livraison de 0.52.0
+
+- **L'adresse** : la plateforme lit toujours une seule boîte, la tienne (`JOBBOT_IMAP_USER`, ou `JOBBOT_MAIL_ADDRESS` si les alertes arrivent à une autre adresse de la même boîte). Toi, tu gardes cette adresse : rien ne change pour tes alertes. Un compte invité reçoit à `boite+code@domaine` (code de 8 caractères, créé à la première visite de ses Alertes), que l'assistant des alertes et « Gérer mes alertes » lui montrent.
+- **La collecte** lit la boîte une fois, puis range chaque e-mail selon son adresse de destination (`Delivered-To`, `To`, `Cc`…) : un code connu, ce compte ; aucune adresse « plus » de la boîte, toi, comme avant ; un code inconnu (compte supprimé) ou un compte suspendu, nulle part. Les e-mails déjà rangés, dans n'importe quel compte, ne sont pas relus. Le filtre tourne pour chaque compte qui a reçu des offres ; la lecture jobup et la notation, pour tous, comme après chaque collecte.
+- **E-mails de confirmation** : un e-mail non reconnu qui demande de confirmer (français, allemand, anglais, italien) garde son lien `https://` (jamais celui de désabonnement). La page Alertes du compte montre « À confirmer » avec un bouton « Confirmer ↗ » qui ouvre le lien dans un nouvel onglet ; la ligne s'en va ensuite. La plateforme n'ouvre jamais ce lien elle-même.
+- **Sites suivis** : la pause d'un site vaut pour le compte (ta pause actuelle est reprise dans ton compte). Ajouter, retirer ou proposer un site reste à toi : la liste des sites et de leurs expéditeurs est commune, elle sert à reconnaître les e-mails de tous.
+- **Pas fait** : envoyer les e-mails de confirmation au compte par e-mail (la plateforme n'envoie pas d'e-mail) ; une boîte dédiée à la plateforme reste conseillée dès qu'il y a d'autres comptes (§3), c'est ta configuration.
+- **Vérifié** sur l'instance de test, connecté en « camille » : l'encadré « À confirmer » et son bouton, et l'étape 2 de l'assistant qui donne son adresse `…+code@…`.

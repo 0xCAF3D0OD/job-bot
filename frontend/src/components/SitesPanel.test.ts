@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useAuth } from "../composables/useAuth";
 import SitesPanel from "./SitesPanel.vue";
 
 const GET = vi.fn();
@@ -15,6 +16,10 @@ vi.mock("../api/client", () => ({
   },
 }));
 afterEach(() => vi.resetAllMocks());
+// L'exploitant : ajouter ou retirer un site change la liste commune (docs/65).
+beforeEach(() => {
+  useAuth().me.value = { authenticated: true, username: "kevin", setup_needed: false, auth_enabled: true, is_owner: true };
+});
 
 const site = (id: number, slug: string, extra: Record<string, unknown> = {}) => ({
   id,
@@ -65,5 +70,16 @@ describe("SitesPanel", () => {
     expect(POST).toHaveBeenCalledWith("/api/sites", {
       body: { name: "JobScout24", senders: ["alerts@jobscout24.ch", "jobscout24.ch"], url: null },
     });
+  });
+});
+
+describe("SitesPanel, compte invité (docs/65)", () => {
+  it("met en pause pour soi, sans ajouter ni retirer de site", async () => {
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false };
+    GET.mockResolvedValue({ data: [] });
+    const wrapper = mount(SitesPanel);
+    await flushPromises();
+    expect(wrapper.find("[data-test=add-site]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=site-suggestions]").exists()).toBe(false);
   });
 });

@@ -91,7 +91,9 @@ const siteNames = (cells: Cell[]): string =>
       Rien reçu de {{ lateSites.map((s) => s.name).join(", ") }} ? Vérifie que l'alerte est bien créée sur le site et
       que ses e-mails arrivent dans
       <template v-if="page.mailbox">
-        <strong>{{ page.mailbox }}</strong>, dossier <strong>{{ page.folder }}</strong>
+        <strong>{{ page.mailbox }}</strong><template v-if="page.folder">
+          , dossier <strong>{{ page.folder }}</strong>
+        </template>
       </template>
       <template v-else>
         la boîte lue par la plateforme

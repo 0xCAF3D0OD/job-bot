@@ -1,0 +1,72 @@
+"""Une adresse de réception par compte (docs/65 §3).
+
+La plateforme lit une seule boîte. L'exploitant y reçoit à l'adresse de la boîte ; un compte
+invité à « boite+code@domaine », que la boîte reçoit aussi (adressage « plus » de Gmail et
+de la plupart des fournisseurs). À la collecte, l'adresse de destination dit à quel compte
+l'e-mail appartient. Aucun mot de passe de boîte d'une autre personne n'est gardé.
+"""
+
+import secrets
+import string
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from jobbot import accounts
+from jobbot.db.models import User
+from jobbot.settings import Settings
+
+CODE_ALPHABET = string.ascii_lowercase + string.digits
+CODE_LENGTH = 8
+
+
+def base_address(settings: Settings) -> str | None:
+    address = (settings.mail_address or settings.imap_user).strip().lower()
+    return address if "@" in address else None
+
+
+def plus_address(base: str, code: str) -> str:
+    local, _, domain = base.partition("@")
+    return f"{local.split('+')[0]}+{code}@{domain}"
+
+
+async def account_address(session: AsyncSession, settings: Settings) -> str | None:
+    """L'adresse à donner aux sites pour le compte en cours ; créée à la première demande."""
+    base = base_address(settings)
+    if base is None or not settings.imap_configured:
+        return None
+    if await accounts.is_owner(session):
+        return base
+    user = await session.get_one(User, accounts.current())
+    if user.mail_code is None:
+        user.mail_code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
+        await session.flush()
+    return plus_address(base, user.mail_code)
+
+
+async def recipients_map(session: AsyncSession) -> dict[str, int]:
+    """Code d'adresse → compte, pour les comptes qui en ont un."""
+    rows = await session.execute(select(User.mail_code, User.id).where(User.mail_code.is_not(None)))
+    return {str(code): int(user_id) for code, user_id in rows}
+
+
+def route(
+    recipients: tuple[str, ...], base: str | None, codes: dict[str, int], owner: int
+) -> int | None:
+    """Le compte d'un e-mail selon ses destinataires : un code connu désigne son compte ; un
+    code inconnu, personne (l'e-mail n'est pas rangé) ; sinon l'exploitant, comme avant."""
+    if base is not None:
+        local, _, domain = base.partition("@")
+        local = local.split("+")[0]
+        unknown = False
+        for address in recipients:
+            name, _, host = address.lower().partition("@")
+            if host != domain or "+" not in name or name.split("+")[0] != local:
+                continue
+            code = name.partition("+")[2]
+            if code in codes:
+                return codes[code]
+            unknown = True
+        if unknown:
+            return None
+    return owner

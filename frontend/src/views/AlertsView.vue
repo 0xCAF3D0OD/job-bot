@@ -32,11 +32,48 @@ async function closeManage(): Promise<void> {
   await load();
 }
 
+// Un site demande de confirmer l'alerte (docs/65 §3) : la personne ouvre le lien elle-même,
+// puis la ligne s'en va.
+async function confirmed(searchId: number): Promise<void> {
+  const { data } = await api.POST("/api/alert-searches/confirmations/{search_id}", {
+    params: { path: { search_id: searchId } },
+  });
+  if (data) page.value = data;
+}
+
+const received = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+
 onMounted(() => void load());
 </script>
 
 <template>
   <section class="jobs-body">
+    <div
+      v-if="page?.to_confirm?.length"
+      class="notice to-confirm"
+      data-test="to-confirm"
+    >
+      <p>
+        <strong>À confirmer</strong> : {{ page.to_confirm?.length === 1 ? "un site demande" : "des sites demandent" }}
+        de confirmer ton alerte avant de l'envoyer.
+      </p>
+      <ul>
+        <li
+          v-for="item in page.to_confirm"
+          :key="item.search_id"
+        >
+          <span>{{ item.subject || item.site }} <span class="muted">· {{ received.format(new Date(item.received_at)) }}</span></span>
+          <a
+            :href="item.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="button-link small"
+            data-test="confirm-link"
+            @click="confirmed(item.search_id)"
+          >Confirmer ↗</a>
+        </li>
+      </ul>
+    </div>
     <template v-if="page">
       <AlertsWizard
         v-if="view === 'wizard'"

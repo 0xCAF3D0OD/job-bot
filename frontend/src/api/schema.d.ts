@@ -1749,7 +1749,10 @@ export interface paths {
         delete: operations["deleteSite"];
         options?: never;
         head?: never;
-        /** Set Site Active */
+        /**
+         * Set Site Active
+         * @description Suivre un site ou le mettre en pause : pour son compte seulement (docs/65).
+         */
         patch: operations["setSiteActive"];
         trace?: never;
     };
@@ -2224,6 +2227,26 @@ export interface paths {
         patch: operations["updateProfile"];
         trace?: never;
     };
+    "/api/alert-searches/confirmations/{search_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Confirmed
+         * @description La personne a ouvert le lien de confirmation : il quitte la liste.
+         */
+        post: operations["markAlertConfirmed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/alert-searches": {
         parameters: {
             query?: never;
@@ -2488,10 +2511,20 @@ export interface components {
             mailbox: string | null;
             /** Folder */
             folder: string | null;
+            /**
+             * Personal Address
+             * @default false
+             */
+            personal_address: boolean;
             /** Sites */
             sites: components["schemas"]["AlertSite"][];
             /** Searches */
             searches: components["schemas"]["AlertSearchOut"][];
+            /**
+             * To Confirm
+             * @default []
+             */
+            to_confirm: components["schemas"]["ToConfirm"][];
         };
         /** AnswerOut */
         AnswerOut: {
@@ -5142,6 +5175,25 @@ export interface components {
          * @enum {string}
          */
         TextStatus: "ok" | "empty" | "unreadable";
+        /**
+         * ToConfirm
+         * @description Un site demande de confirmer l'alerte (docs/65 §3) : le lien est à ouvrir soi-même.
+         */
+        ToConfirm: {
+            /** Search Id */
+            search_id: number;
+            /** Site */
+            site: string;
+            /** Subject */
+            subject: string | null;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /** Url */
+            url: string;
+        };
         /** TodayOut */
         TodayOut: {
             /** Checklist */
@@ -10015,6 +10067,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProfileList"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markAlertConfirmed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertsPage"];
+                };
+            };
+            /** @description E-mail introuvable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -1,17 +1,20 @@
 """Mes alertes (docs/20 §1) : recherches à suivre, liens par site, état d'après le journal."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
+from jobbot import accounts
 from jobbot.alerts import service
 from jobbot.core.filter import RemotePolicy
-from jobbot.db.models import AlertSearch, AlertSetup, Site
+from jobbot.db.models import AlertSearch, AlertSetup, Search, Site
 from jobbot.filtering.service import load_criteria
+from jobbot.mail import addresses
 from jobbot.runtime import Runtime
+from jobbot.sources.sites import followed
 
 # /api/alerts/refresh (bouton « Collecter ») existe déjà : préfixe distinct.
 router = APIRouter(prefix="/api/alert-searches", tags=["alerts"])
@@ -53,12 +56,26 @@ class AlertSite(BaseModel):
     prefilled: bool
 
 
+class ToConfirm(BaseModel):
+    """Un site demande de confirmer l'alerte (docs/65 §3) : le lien est à ouvrir soi-même."""
+
+    search_id: int
+    site: str
+    subject: str | None
+    received_at: datetime
+    url: str
+
+
 class AlertsPage(BaseModel):
-    # Boîte lue par la plateforme (adresse et dossier), si la collecte est configurée.
+    # L'adresse à donner aux sites pour ce compte (docs/65 §3), si la collecte est configurée ;
+    # le dossier lu, pour l'exploitant seulement (c'est sa boîte).
     mailbox: str | None
     folder: str | None
+    # Adresse propre au compte (boite+code@…), et non la boîte de l'exploitant.
+    personal_address: bool = False
     sites: list[AlertSite]
     searches: list[AlertSearchOut]
+    to_confirm: list[ToConfirm] = []
 
 
 class AlertSearchIn(BaseModel):
@@ -75,11 +92,19 @@ class AlertSearchUpdate(BaseModel):
 async def _page(runtime: Runtime) -> AlertsPage:
     settings = runtime.settings
     async with runtime.sessionmaker.begin() as session:
+        address = await addresses.account_address(session, settings)
+        owner = await accounts.is_owner(session)
+        pending = list(
+            await session.scalars(
+                select(Search)
+                .where(Search.confirm_url.is_not(None), Search.confirmed_at.is_(None))
+                .order_by(Search.received_at.desc())
+                .limit(10)
+            )
+        )
         await service.propose(session)
         await session.flush()
-        sites = list(
-            await session.scalars(select(Site).where(Site.active.is_(True)).order_by(Site.id))
-        )
+        sites = list(await session.scalars(select(Site).where(followed()).order_by(Site.id)))
         searches = list(
             await session.scalars(
                 select(AlertSearch).order_by(AlertSearch.active.desc(), AlertSearch.id)
@@ -98,8 +123,19 @@ async def _page(runtime: Runtime) -> AlertsPage:
         return AlertCell(**found.__dict__, remote_url=remote)
 
     return AlertsPage(
-        mailbox=settings.imap_user or None if settings.imap_configured else None,
-        folder=settings.imap_folder if settings.imap_configured else None,
+        mailbox=address,
+        folder=settings.imap_folder if address and owner else None,
+        personal_address=bool(address) and not owner,
+        to_confirm=[
+            ToConfirm(
+                search_id=p.id,
+                site=p.source,
+                subject=p.subject,
+                received_at=p.received_at,
+                url=p.confirm_url or "",
+            )
+            for p in pending
+        ],
         sites=[
             AlertSite(
                 slug=s.slug,
@@ -120,6 +156,22 @@ async def _page(runtime: Runtime) -> AlertsPage:
             for s, found in rows
         ],
     )
+
+
+@router.post(
+    "/confirmations/{search_id}",
+    operation_id="markAlertConfirmed",
+    responses={404: {"description": "E-mail introuvable"}},
+)
+async def mark_confirmed(request: Request, search_id: int) -> AlertsPage:
+    """La personne a ouvert le lien de confirmation : il quitte la liste."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker.begin() as session:
+        search = await session.get(Search, search_id)
+        if search is None or search.confirm_url is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "e-mail introuvable")
+        search.confirmed_at = datetime.now(UTC)
+    return await _page(runtime)
 
 
 @router.get("", operation_id="listAlertSearches")

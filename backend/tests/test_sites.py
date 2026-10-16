@@ -9,11 +9,11 @@ from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select, text, update
+from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
 from jobbot.collect import service
-from jobbot.db.models import LlmCall, OfferLink, Search, Site
+from jobbot.db.models import LlmCall, OfferLink, Search
 from jobbot.llm import alert
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
@@ -129,10 +129,24 @@ async def rt(tmp_path: Any) -> AsyncIterator[Runtime]:
                 " AND slug NOT IN ('jobsch', 'linkedin', 'jobroom')"
             )
         )
-        await conn.execute(text("UPDATE sites SET active = slug <> 'jobroom'"))
+        # Jobroom en pause pour ce compte (docs/65 : la pause est propre au compte).
+        await conn.execute(text("DELETE FROM account_sites"))
+        await conn.execute(
+            text(
+                "INSERT INTO account_sites (site_id, active)"
+                " SELECT id, false FROM sites WHERE slug = 'jobroom'"
+            )
+        )
     yield runtime
     async with runtime.engine.begin() as conn:
-        await conn.execute(text("UPDATE sites SET active = slug <> 'jobroom'"))
+        # Jobroom en pause pour ce compte (docs/65 : la pause est propre au compte).
+        await conn.execute(text("DELETE FROM account_sites"))
+        await conn.execute(
+            text(
+                "INSERT INTO account_sites (site_id, active)"
+                " SELECT id, false FROM sites WHERE slug = 'jobroom'"
+            )
+        )
     await runtime.dispose()
 
 
@@ -164,7 +178,12 @@ async def test_paused_site_and_no_key(
     fake = FakeClient()
     monkeypatch.setattr(scoring, "make_client", lambda _settings: fake)
     async with rt.sessionmaker.begin() as session:
-        await session.execute(update(Site).where(Site.slug == "linkedin").values(active=False))
+        await session.execute(
+            text(
+                "INSERT INTO account_sites (site_id, active)"
+                " SELECT id, false FROM sites WHERE slug = 'linkedin'"
+            )
+        )
     mailbox.add(linkedin_email(), "<l1@linkedin.com>")
     await service.collect(rt)
     async with rt.sessionmaker() as session:
@@ -177,10 +196,12 @@ async def test_paused_site_and_no_key(
     assert fake.calls == []
 
     # Le site réactivé, « Relire » traite l'alerte gardée.
-    async with rt.sessionmaker.begin() as session:
-        await session.execute(update(Site).where(Site.slug == "linkedin").values(active=True))
     app = create_app(rt.settings, rt)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        sites = (await api.get("/api/sites")).json()
+        linkedin = next(x for x in sites if x["slug"] == "linkedin")
+        assert not linkedin["active"]
+        await api.patch(f"/api/sites/{linkedin['id']}", json={"active": True})
         reread = (await api.post("/api/sites/reread")).json()
     assert reread["updated"] == 1 and reread["new_offers"] == 1
 

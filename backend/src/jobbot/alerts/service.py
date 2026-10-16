@@ -15,6 +15,7 @@ from jobbot.core.normalize import normalize_text
 from jobbot.db.models import AlertSearch, AlertSetup, Search, Setting, Site
 from jobbot.filtering.service import load_criteria
 from jobbot.news import domain
+from jobbot.sources.sites import followed
 
 PROPOSED_KEY = "alert_searches_proposed"
 MAX_PROPOSED = 8
@@ -137,7 +138,7 @@ async def cells(session: AsyncSession, search: AlertSearch, sites: list[Site]) -
 
 async def waiting(session: AsyncSession) -> int:
     """Alertes créées depuis 3 jours ou plus qui n'ont encore rien envoyé (rappel)."""
-    sites = list(await session.scalars(select(Site).where(Site.active.is_(True))))
+    sites = list(await session.scalars(select(Site).where(followed())))
     limit = datetime.now(UTC) - WAIT_BEFORE_REMINDER
     count = 0
     for search in await session.scalars(select(AlertSearch).where(AlertSearch.active.is_(True))):

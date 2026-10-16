@@ -17,17 +17,19 @@ def make_email(
     received_at: datetime,
     offers: list[tuple[str, ...]] = (),  # type: ignore[assignment]
     subject: str = "Nouvelles offres",
+    to: str = "alertes@example.com",
+    html: str = "<html><body><p>alerte</p></body></html>",
 ) -> bytes:
     """E-mail dont le corps texte liste les offres, une par ligne :
     titre|entreprise|lieu|url|identifiant (identifiant facultatif)."""
     msg = EmailMessage()
     msg["From"] = f"Alertes <{sender}>"
-    msg["To"] = "alertes@example.com"
+    msg["To"] = to
     msg["Subject"] = subject
     msg["Message-ID"] = message_id
     msg["Date"] = format_datetime(received_at)
     msg.set_content("\n".join("|".join(offer) for offer in offers) or "aucune offre")
-    msg.add_alternative("<html><body><p>alerte</p></body></html>", subtype="html")
+    msg.add_alternative(html, subtype="html")
     return msg.as_bytes()
 
 
