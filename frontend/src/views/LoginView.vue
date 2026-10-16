@@ -48,7 +48,7 @@ onMounted(() => void load());
 <template>
   <AuthSplit
     title="Se connecter"
-    subtitle="Les Actualités sont ouvertes à tous ; le reste demande ta connexion."
+    subtitle="Tes offres, tes candidatures et tes preuves ORP, au même endroit."
   >
     <div
       v-if="me?.setup_needed"

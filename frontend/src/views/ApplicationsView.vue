@@ -493,7 +493,7 @@ onUnmounted(() => assistant.setFocus(null));
       />
       <SuccessCard
         v-if="submitted"
-        name="done"
+        name="preuves-orp"
         :title="`Preuves ${ofMonth(submitted.month)} remises`"
         test-id="submitted-moment"
         @close="submitted = null"
@@ -578,7 +578,7 @@ onUnmounted(() => assistant.setFocus(null));
         <IllustratedSide
           v-if="loaded && !items.length"
           class="empty-state empty"
-          name="done"
+          name="suivi-envoi"
           phone="small"
         >
           <p>Aucune candidature en {{ formatMonth(orp.month) }}.</p>

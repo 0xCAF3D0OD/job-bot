@@ -10,11 +10,14 @@ afterEach(() => {
 });
 
 describe("routes réservées (docs/18 §1)", () => {
-  it("sans connexion : Actualités ouvertes, le reste mène à la connexion", async () => {
+  it("sans connexion : la présentation de la plateforme, le reste mène à la connexion", async () => {
     GET.mockResolvedValue({ data: { authenticated: false, username: null, setup_needed: false, auth_enabled: true } });
     const { router } = await import("./router");
+    await router.push("/la-plateforme");
+    expect(router.currentRoute.value.name).toBe("discover");
+    // Les Actualités demandent la connexion depuis la 0.55.0 (docs/67).
     await router.push("/actualites");
-    expect(router.currentRoute.value.name).toBe("news");
+    expect(router.currentRoute.value.name).toBe("login");
     // Ancienne adresse : redirigée vers l'onglet, puis vers la connexion.
     await router.push("/candidatures?vue=orp&mois=2026-09");
     expect(router.currentRoute.value.name).toBe("login");

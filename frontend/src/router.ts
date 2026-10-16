@@ -8,6 +8,7 @@ import AlertsView from "./views/AlertsView.vue";
 import InsightsView from "./views/InsightsView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
 import AccessView from "./views/AccessView.vue";
+import DiscoverView from "./views/DiscoverView.vue";
 import PrivacyView from "./views/PrivacyView.vue";
 import WelcomeView from "./views/WelcomeView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
@@ -120,6 +121,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/connexion", name: "login", component: LoginView },
   // Lien d'invitation ou de réinitialisation, transmis par l'exploitant (docs/65 §2).
   { path: "/acces/:token", name: "access", component: AccessView },
+  // La plateforme présentée à qui n'est pas connecté (docs/67, complément).
+  { path: "/la-plateforme", name: "discover", component: DiscoverView },
   // Ce que la plateforme garde, lisible sans connexion (docs/65 §6).
   { path: "/tes-donnees", name: "privacy", component: PrivacyView },
   // L'accueil après la première connexion (docs/66), plein écran, sans menu.
@@ -136,8 +139,9 @@ export const router = createRouter({
   scrollBehavior: (to) => (to.hash ? { el: to.hash, top: 80 } : { top: 0 }),
 });
 
-// Ouvert sans connexion : les Actualités, la connexion (docs/18 §1) et les liens d'accès.
-export const PUBLIC_ROUTES = new Set(["news", "login", "access", "privacy"]);
+// Ouvert sans connexion : la présentation de la plateforme, la connexion (docs/18 §1), les liens
+// d'accès et ce qui est gardé. Les Actualités demandent la connexion depuis la 0.55.0 (docs/67).
+export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "privacy"]);
 
 router.beforeEach(async (to) => {
   const { loggedIn, load } = useAuth();

@@ -635,7 +635,7 @@ onMounted(() => void load());
 
   <SuccessCard
     v-if="sent"
-    name="message-sent"
+    name="suivi-envoi"
     :title="`Candidature envoyée chez ${sent.company}`"
     test-id="sent-moment"
     @close="sent = null"

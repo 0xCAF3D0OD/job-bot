@@ -6,13 +6,13 @@ import type { IllustrationName } from "../components/Illustration.vue";
 // sont pas là après 0,15 s, l'écran se grise avec l'illustration de la page au centre ; dès
 // qu'elles arrivent, le voile s'efface, après 1,2 s au moins (docs/63 §3).
 export const PAGE_TRANSITIONS: Record<string, { illustration: IllustrationName; label: string }> = {
-  today: { illustration: "morning-plans", label: "Aujourd'hui" },
-  offers: { illustration: "mailbox", label: "Offres" },
-  applications: { illustration: "done", label: "Suivi" },
-  insights: { illustration: "stepping-up", label: "Bilan" },
-  alerts: { illustration: "message-sent", label: "Alertes" },
-  news: { illustration: "absorbed", label: "Actualités" },
-  trainings: { illustration: "certification", label: "Formations" },
+  today: { illustration: "tableau-de-bord", label: "Aujourd'hui" },
+  offers: { illustration: "offres-profils", label: "Offres" },
+  applications: { illustration: "suivi-envoi", label: "Suivi" },
+  insights: { illustration: "bilan", label: "Bilan" },
+  alerts: { illustration: "alertes-carte", label: "Alertes" },
+  news: { illustration: "porte-ouverte", label: "Actualités" },
+  trainings: { illustration: "formations", label: "Formations" },
 };
 export const SHOW_AFTER_MS = 150;
 // Plus lente (docs/63 §3) : le temps que l'illustration joue.
