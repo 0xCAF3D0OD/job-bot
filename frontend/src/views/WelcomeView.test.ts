@@ -99,7 +99,14 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     await wrapper.find("[data-test=target-10]").trigger("click");
     await wrapper.find("[data-test=welcome-continue]").trigger("click");
     await flushPromises();
-    expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 10, orp_due_day: 5 });
+    expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 10 });
+
+    // La date de remise, son propre écran : un calendrier, le 1er et après le 28 grisés.
+    expect(wrapper.find("[data-test=due-calendar]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=due-1]").attributes("disabled")).toBeDefined();
+    await wrapper.find("[data-test=due-10]").trigger("click");
+    await flushPromises();
+    expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 10, orp_due_day: 10 });
 
     expect(wrapper.find("[data-test=welcome-cv]").exists()).toBe(true);
     await wrapper.find("[data-test=welcome-skip]").trigger("click");
@@ -113,6 +120,7 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(recap).toContain("Infirmière");
     expect(recap).toContain("Vaud, Genève");
     expect(recap).toContain("10 recherches par mois");
+    expect(recap).toContain("avant le 10 du mois");
     await wrapper.find("[data-test=welcome-alerts]").trigger("click");
     await flushPromises();
     expect(calls("/api/welcome").at(-1)).toEqual({ done: true, postponed: false });

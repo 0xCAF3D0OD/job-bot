@@ -2355,6 +2355,13 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .welcome-input:focus { outline: none; border-color: var(--accent); }
 .welcome-input.short { width: 4.5rem; text-align: center; }
 .welcome-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.6rem; }
+.welcome-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.3rem; width: 100%; max-width: 22rem; margin: 0 auto; padding: 0.9rem; background: var(--surface); border: 2px solid var(--border); border-radius: 16px; }
+.welcome-calendar-title { grid-column: 1 / -1; margin: 0 0 0.3rem; text-align: center; font-weight: 600; text-transform: capitalize; }
+.welcome-calendar-head { text-align: center; font-size: 0.8rem; color: var(--muted); }
+.welcome-day { display: grid; place-items: center; width: 100%; min-width: 0; min-height: 0; aspect-ratio: 1; padding: 0; font: inherit; color: var(--text); background: none; border: 2px solid transparent; border-radius: 999px; cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast); }
+.welcome-day:disabled { color: var(--muted); opacity: 0.45; cursor: default; }
+.welcome-day.chosen { color: #fff; background: var(--accent); border-color: var(--accent); animation: welcome-pick var(--t-fast) var(--ease-out); }
+@media (hover: hover) { .welcome-day:hover:not(:disabled, .chosen) { border-color: var(--accent); } }
 .welcome-recap { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 0.5rem; }
 .welcome-recap button { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.8rem; font: inherit; font-size: 1.05rem; text-align: left; color: var(--text); background: none; border: 2px solid transparent; border-radius: 12px; cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast); }
 .welcome-recap button span { flex: 1; }
@@ -2378,7 +2385,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   .welcome-screen .welcome-art { width: 120px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .welcome-dot::after, .welcome-card, .welcome-chip { transition: none; }
-  .welcome-card.chosen, .welcome-chip.chosen { animation: none; }
+  .welcome-dot::after, .welcome-card, .welcome-chip, .welcome-day { transition: none; }
+  .welcome-card.chosen, .welcome-chip.chosen, .welcome-day.chosen { animation: none; }
   .welcome-forward-enter-active, .welcome-back-enter-active { transition: none; }
 }

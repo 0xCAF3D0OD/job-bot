@@ -11,7 +11,7 @@ import { useAuth } from "../composables/useAuth";
 // touche ; chaque réponse remplit un vrai réglage. « Retour » et « Passer » en bas de chaque
 // écran, « Plus tard » en haut ; le récapitulatif ramène à la question qu'on veut corriger.
 type Goal = "job" | "orp" | "news";
-type StepKey = "goal" | "trade" | "places" | "rate" | "orp" | "cv" | "phone" | "ready";
+type StepKey = "goal" | "trade" | "places" | "rate" | "orp" | "due" | "cv" | "phone" | "ready";
 type Icon = InstanceType<typeof AppIcon>["$props"]["name"];
 
 const router = useRouter();
@@ -24,6 +24,7 @@ const city = ref("");
 const rate = ref<number | null | undefined>(undefined);
 const target = ref<number | null | undefined>(undefined);
 const dueDay = ref(5);
+const dueChosen = ref(false);
 const cvName = ref("");
 const cvError = ref("");
 const uploading = ref(false);
@@ -42,7 +43,7 @@ const STEPS = computed<StepKey[]>(() => [
   "trade",
   "places",
   "rate",
-  ...(goal.value === "orp" ? (["orp"] as const) : []),
+  ...(goal.value === "orp" ? (["orp", "due"] as const) : []),
   "cv",
   "phone",
   "ready",
@@ -55,6 +56,7 @@ const LABELS: Record<StepKey, string> = {
   places: "Où travailler",
   rate: "Taux d'activité",
   orp: "Objectif ORP",
+  due: "Date de remise",
   cv: "Ton CV",
   phone: "Notifications",
   ready: "C'est prêt",
@@ -66,6 +68,7 @@ function answered(key: StepKey): boolean {
     places: places.value.length > 0,
     rate: rate.value !== undefined,
     orp: target.value != null,
+    due: dueChosen.value,
     cv: cvName.value !== "",
     phone: phone.value !== null,
     ready: false,
@@ -80,7 +83,8 @@ function jump(to: number): void {
   void remember({ step: to + 1 });
 }
 
-const ART: Record<StepKey, IllustrationName> = {
+// L'écran de la date a son calendrier, pas d'illustration.
+const ART: Partial<Record<StepKey, IllustrationName>> = {
   goal: "morning-plans",
   trade: "stepping-up",
   places: "mailbox",
@@ -205,7 +209,29 @@ function chooseRate(value: number | null): void {
 }
 
 function confirmOrp(): void {
-  saveSettings({ orp_monthly_target: target.value ?? null, orp_due_day: dueDay.value });
+  saveSettings({ orp_monthly_target: target.value ?? null });
+  go(index.value + 1);
+}
+
+// La date de remise : le calendrier du mois prochain, semaines du lundi au dimanche. L'ORP
+// accepte un jour entre le 2 et le 28 ; les autres jours sont grisés.
+const DUE_MIN = 2;
+const DUE_MAX = 28;
+const dueMonth = computed(() => {
+  const today = new Date();
+  const first = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return {
+    title: first.toLocaleDateString("fr-CH", { month: "long", year: "numeric" }),
+    offset: (first.getDay() + 6) % 7,
+    days: Array.from({ length: days }, (_, i) => i + 1),
+  };
+});
+
+function chooseDue(day: number): void {
+  dueDay.value = day;
+  dueChosen.value = true;
+  saveSettings({ orp_due_day: day });
   go(index.value + 1);
 }
 
@@ -267,6 +293,7 @@ const recap = computed(() =>
       },
       { step: "rate", text: rate.value ? `${rate.value} % et plus` : rate.value === null ? "Tout taux d'activité" : "" },
       { step: "orp", text: goal.value === "orp" && target.value ? `${target.value} recherches par mois` : "" },
+      { step: "due", text: goal.value === "orp" ? `Preuves à remettre avant le ${dueDay.value} du mois` : "" },
     ] satisfies { step: StepKey; text: string }[]
   ).filter((line) => line.text),
 );
@@ -323,7 +350,8 @@ function edit(key: StepKey): void {
         :data-test="`welcome-${step}`"
       >
         <Illustration
-          :name="ART[step]"
+          v-if="ART[step]"
+          :name="ART[step]!"
           class="welcome-art"
         />
 
@@ -447,17 +475,43 @@ function edit(key: StepKey): void {
               Je ne sais pas encore
             </button>
           </div>
-          <label class="welcome-row">
-            <span>Preuves à remettre avant le</span>
-            <input
-              v-model.number="dueDay"
-              class="welcome-input short"
-              type="number"
-              min="2"
-              max="28"
+        </template>
+
+        <template v-else-if="step === 'due'">
+          <h1>Avant quel jour remets-tu tes preuves à l'ORP ?</h1>
+          <p class="welcome-hint">
+            Chaque mois, pour les recherches du mois d'avant. La plateforme te le rappellera.
+          </p>
+          <div
+            class="welcome-calendar"
+            data-test="due-calendar"
+          >
+            <p class="welcome-calendar-title">
+              {{ dueMonth.title }}
+            </p>
+            <span
+              v-for="(day, i) in ['L', 'M', 'M', 'J', 'V', 'S', 'D']"
+              :key="`h${i}`"
+              class="welcome-calendar-head"
+              aria-hidden="true"
+            >{{ day }}</span>
+            <span
+              v-for="n in dueMonth.offset"
+              :key="`e${n}`"
+            />
+            <button
+              v-for="day in dueMonth.days"
+              :key="day"
+              type="button"
+              :class="['welcome-day', { chosen: dueDay === day }]"
+              :disabled="day < DUE_MIN || day > DUE_MAX"
+              :aria-pressed="dueDay === day"
+              :data-test="`due-${day}`"
+              @click="chooseDue(day)"
             >
-            <span>du mois suivant</span>
-          </label>
+              {{ day }}
+            </button>
+          </div>
         </template>
 
         <template v-else-if="step === 'cv'">
@@ -571,7 +625,7 @@ function edit(key: StepKey): void {
         </button>
       </template>
       <button
-        v-else-if="step !== 'goal' && step !== 'rate'"
+        v-else-if="step !== 'goal' && step !== 'rate' && step !== 'due'"
         type="button"
         class="primary welcome-continue"
         :disabled="(step === 'trade' && !trade.trim()) || (step === 'cv' && !cvName) || (step === 'phone' && phone === null)"
