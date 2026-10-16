@@ -39,6 +39,7 @@ from jobbot.api.routes import (
     status,
     today,
     trainings,
+    welcome,
 )
 from jobbot.auth.middleware import AuthMiddleware
 from jobbot.db.schema import head_revision
@@ -88,6 +89,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(auth.router)
     app.include_router(platform.router)
     app.include_router(account.router)
+    app.include_router(welcome.router)
     app.include_router(assistant.router)
     app.include_router(extension.router)
     app.include_router(extension.tokens_router)

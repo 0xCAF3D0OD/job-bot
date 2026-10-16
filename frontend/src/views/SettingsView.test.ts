@@ -115,7 +115,7 @@ describe("SettingsView, comptes (docs/65)", () => {
 
   async function as(isOwner: boolean): Promise<void> {
     const { useAuth } = await import("../composables/useAuth");
-    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: isOwner };
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: isOwner, welcome: "done" };
   }
 
   it("compte invité : plafond de l'IA fixé, ni Plateforme ni profils d'essai", async () => {

@@ -40,14 +40,18 @@ watch(
 export type IllustrationName =
   | "absorbed"
   | "certification"
+  | "detailed-answer"
   | "done"
   | "handshake-deal"
+  | "lock-screen-notifications"
   | "login"
   | "mailbox"
   | "message-sent"
   | "morning-plans"
+  | "my-resume"
   | "page-eaten"
-  | "stepping-up";
+  | "stepping-up"
+  | "tight-deadline";
 </script>
 
 <template>

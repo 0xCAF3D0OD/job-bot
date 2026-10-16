@@ -84,6 +84,7 @@ async def test_pages_reserved_until_login(rt: Runtime) -> None:
             "setup_needed": True,
             "auth_enabled": True,
             "is_owner": False,
+            "welcome": "done",
         }
         assert (
             await api.post("/api/auth/login", json={"username": "x", "password": "y"})

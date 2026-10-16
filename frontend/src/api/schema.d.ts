@@ -277,6 +277,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/welcome": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Welcome */
+        get: operations["getWelcome"];
+        /** Save Welcome */
+        put: operations["saveWelcome"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/assistant/status": {
         parameters: {
             query?: never;
@@ -4065,6 +4083,12 @@ export interface components {
              * @default false
              */
             is_owner: boolean;
+            /**
+             * Welcome
+             * @default done
+             * @enum {string}
+             */
+            welcome: "pending" | "postponed" | "done";
         };
         /** MessageIn */
         MessageIn: {
@@ -5536,6 +5560,33 @@ export interface components {
             /** Context */
             ctx?: Record<string, never>;
         };
+        /** WelcomeIn */
+        WelcomeIn: {
+            /** Step */
+            step?: number | null;
+            /** Goal */
+            goal?: ("job" | "orp" | "news") | null;
+            /** Trade */
+            trade?: string | null;
+            /** Postponed */
+            postponed?: boolean | null;
+            /** Done */
+            done?: boolean | null;
+        };
+        /** WelcomeOut */
+        WelcomeOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "postponed" | "done";
+            /** Step */
+            step: number;
+            /** Goal */
+            goal: ("job" | "orp" | "news") | null;
+            /** Trade */
+            trade: string | null;
+        };
         /** WorkerStatus */
         WorkerStatus: {
             /** Healthy */
@@ -6179,6 +6230,59 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getWelcome: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WelcomeOut"];
+                };
+            };
+        };
+    };
+    saveWelcome: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WelcomeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WelcomeOut"];
+                };
             };
             /** @description Validation Error */
             422: {

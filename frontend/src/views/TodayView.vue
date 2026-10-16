@@ -9,6 +9,7 @@ import OrpGauge from "../components/dash/OrpGauge.vue";
 import WeekChart from "../components/dash/WeekChart.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import AppIcon from "../components/AppIcon.vue";
+import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
@@ -169,6 +170,7 @@ async function dismiss(): Promise<void> {
 
 onMounted(() => void load());
 useDataChanged(load);
+const { me } = useAuth();
 </script>
 
 <template>
@@ -181,6 +183,15 @@ useDataChanged(load);
       v-if="today"
       class="container today"
     >
+      <!-- Accueil remis à plus tard (docs/66 §4) : le reprendre d'un clic. -->
+      <RouterLink
+        v-if="me?.welcome === 'postponed'"
+        to="/bienvenue"
+        class="notice today-welcome"
+        data-test="finish-welcome"
+      >
+        <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
+      </RouterLink>
       <!-- Le plus urgent en tête (docs/43 n° 30). -->
       <p
         v-for="item in today.upcoming_interviews"

@@ -34,7 +34,9 @@ async function submit(): Promise<void> {
       error.value = problem.charAt(0).toUpperCase() + problem.slice(1) + ".";
       return;
     }
-    await router.replace(next());
+    // Un compte dont l'accueil n'est pas fini le reprend là où il s'était arrêté (docs/66 §4).
+    const welcome = me.value?.welcome;
+    await router.replace(welcome === "pending" || welcome === "postponed" ? "/bienvenue" : next());
   } finally {
     busy.value = false;
   }

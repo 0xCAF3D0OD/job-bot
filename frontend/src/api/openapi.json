@@ -621,6 +621,66 @@
         }
       }
     },
+    "/api/welcome": {
+      "get": {
+        "tags": [
+          "welcome"
+        ],
+        "summary": "Get Welcome",
+        "operationId": "getWelcome",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WelcomeOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "welcome"
+        ],
+        "summary": "Save Welcome",
+        "operationId": "saveWelcome",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WelcomeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WelcomeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/assistant/status": {
       "get": {
         "tags": [
@@ -11947,6 +12007,16 @@
             "type": "boolean",
             "title": "Is Owner",
             "default": false
+          },
+          "welcome": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "postponed",
+              "done"
+            ],
+            "title": "Welcome",
+            "default": "done"
           }
         },
         "type": "object",
@@ -16402,6 +16472,127 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WelcomeIn": {
+        "properties": {
+          "step": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 20.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "goal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "job",
+                  "orp",
+                  "news"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal"
+          },
+          "trade": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade"
+          },
+          "postponed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postponed"
+          },
+          "done": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "title": "WelcomeIn"
+      },
+      "WelcomeOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "postponed",
+              "done"
+            ],
+            "title": "Status"
+          },
+          "step": {
+            "type": "integer",
+            "title": "Step"
+          },
+          "goal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "job",
+                  "orp",
+                  "news"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal"
+          },
+          "trade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "step",
+          "goal",
+          "trade"
+        ],
+        "title": "WelcomeOut"
       },
       "WorkerStatus": {
         "properties": {

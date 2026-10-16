@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
-from jobbot import accounts
+from jobbot import accounts, welcome
 from jobbot.auth import links, passwords, service
 from jobbot.auth.middleware import cookie_token, session_cookie
 from jobbot.db.models import User
@@ -52,6 +52,8 @@ class Me(BaseModel):
     auth_enabled: bool
     # L'exploitant (le premier compte) : la rubrique Plateforme des Réglages (docs/65 §5).
     is_owner: bool = False
+    # L'accueil après la première connexion (docs/66) : à faire, remis à plus tard, fait.
+    welcome: Literal["pending", "postponed", "done"] = "done"
 
 
 class LoginIn(BaseModel):
@@ -73,6 +75,10 @@ async def me(request: Request) -> Me:
             or 0
         )
         owner = await accounts.owner_id(session)
+        found = _current(request)
+        welcome_status = (
+            welcome.status(await welcome.state(session)) if found is not None else "done"
+        )
     if not runtime.settings.auth_enabled:
         return Me(
             authenticated=True, username=None, setup_needed=False, auth_enabled=False, is_owner=True
@@ -84,6 +90,7 @@ async def me(request: Request) -> Me:
         setup_needed=users == 0,
         auth_enabled=True,
         is_owner=found is not None and found.user_id == owner,
+        welcome=welcome_status,
     )
 
 

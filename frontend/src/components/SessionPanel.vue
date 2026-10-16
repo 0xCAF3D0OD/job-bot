@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 
+import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 
 // Connexion (docs/18 §1) : compte connecté, « Se déconnecter partout ».
 const router = useRouter();
 const { me, logout } = useAuth();
+
+// Refaire l'accueil (docs/66 §4) : les réponses actuelles sont reprises.
+async function welcomeAgain(): Promise<void> {
+  await api.PUT("/api/welcome", { body: { done: false, postponed: false, step: 1 } });
+  if (me.value) me.value = { ...me.value, welcome: "pending" };
+  await router.push("/bienvenue");
+}
 
 async function everywhere(): Promise<void> {
   if (!window.confirm("Fermer toutes les sessions ouvertes, celle-ci comprise ?")) return;
@@ -35,6 +43,15 @@ async function everywhere(): Promise<void> {
           @click="everywhere"
         >
           Se déconnecter partout
+        </button>
+        <button
+          v-if="!me.is_owner"
+          type="button"
+          class="link"
+          data-test="welcome-again"
+          @click="welcomeAgain"
+        >
+          Refaire l'accueil
         </button>
       </div>
     </fieldset>
