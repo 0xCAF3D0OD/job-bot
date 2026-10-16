@@ -529,7 +529,7 @@ async def put_identity(request: Request, body: Identity) -> Identity:
             await session.execute(
                 insert(Setting)
                 .values(key=key, value=value)
-                .on_conflict_do_update(index_elements=["key"], set_={"value": value})
+                .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
             )
     return body
 

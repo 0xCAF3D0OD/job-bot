@@ -19,6 +19,7 @@ import httpx
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot import accounts
 from jobbot.core.plural import plural
 from jobbot.db.models import (
     Application,
@@ -77,7 +78,10 @@ async def deliver(runtime: Runtime, message: Message, *, kind: str, link: str) -
         session.add(
             Notification(kind=kind, title=message.title, message=message.message, link=link)
         )
-    if not runtime.settings.ntfy_configured:
+        # Le sujet ntfy est celui de l'installation : seul l'exploitant le reçoit, jusqu'aux
+        # sujets par compte (docs/65 §4).
+        owner = await accounts.is_owner(session)
+    if not runtime.settings.ntfy_configured or not owner:
         return
     try:
         await send(runtime.settings, message)
@@ -198,7 +202,7 @@ async def _budget_alert(runtime: Runtime) -> bool:
         await session.execute(
             insert(Setting)
             .values(key=BUDGET_ALERT_KEY, value=month)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": month})
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": month})
         )
     return True
 

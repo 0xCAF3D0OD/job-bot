@@ -10,8 +10,10 @@ import re
 from http.cookies import SimpleCookie
 from typing import Any
 
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from jobbot import accounts
 from jobbot.auth import service
 from jobbot.extension import service as extension_service
 from jobbot.log import get_logger
@@ -31,6 +33,7 @@ PUBLIC_READ = [
     re.compile(r"^/api/openapi\.json$"),
 ]
 PUBLIC_ANY = [re.compile(r"^/api/auth/")]
+CALENDAR_FEED = re.compile(r"^/api/agenda/feed/([A-Za-z0-9_-]+)\.ics$")
 PROFILE_HEADER = b"x-jobbot-profile"
 # Routes de l'extension du navigateur (docs/25) : jeton obligatoire, connexion ou non.
 EXTENSION_PREFIX = "/api/extension/"
@@ -131,12 +134,31 @@ class AuthMiddleware:
         runtime: Any = scope["app"].state.runtime
         state = scope.setdefault("state", {})
         state["user"] = None
+        account: int | None
+        if feed := CALENDAR_FEED.match(path):
+            # Agenda (docs/40) : le compte est celui du jeton ; un jeton inconnu ne voit rien.
+            async with runtime.sessionmaker.begin() as session:
+                account = await accounts.account_of_token(
+                    session, "calendar", service.token_hash(feed.group(1))
+                )
+            with accounts.use(account):
+                await self.app(scope, receive, send)
+            return
         if not runtime.settings.auth_enabled:
-            await self.app(scope, receive, send)
+            try:
+                async with runtime.sessionmaker.begin() as session:
+                    account = await accounts.owner_id(session)
+            except SQLAlchemyError:
+                # Base injoignable : la route le dira (état, diagnostic), sans compte.
+                account = None
+            with accounts.use(account):
+                await self.app(scope, receive, send)
             return
         token = cookie_token(headers)
         async with runtime.sessionmaker.begin() as session:
             found = await service.authenticate(session, token)
+            # Sans connexion, les pages publiques (Actualités) sont celles de l'exploitant.
+            account = found.user_id if found else await accounts.owner_id(session)
         state["user"] = found
         if found is None:
             # Sans connexion, le profil d'essai demandé est ignoré : profil principal.
@@ -145,7 +167,8 @@ class AuthMiddleware:
                 await _json(send, 401, "connexion requise")
                 return
         if not (found and found.renewed and token):
-            await self.app(scope, receive, send)
+            with accounts.use(account):
+                await self.app(scope, receive, send)
             return
         cookie = session_cookie(token, headers).encode()
 
@@ -154,7 +177,8 @@ class AuthMiddleware:
                 message.setdefault("headers", []).append((b"set-cookie", cookie))
             await send(message)
 
-        await self.app(scope, receive, send_with_cookie)
+        with accounts.use(account):
+            await self.app(scope, receive, send_with_cookie)
 
     async def _extension(
         self, scope: Scope, receive: Receive, send: Send, headers: dict[str, str]
@@ -162,13 +186,21 @@ class AuthMiddleware:
         """Extension : le jeton remplace le cookie. Un jeton n'est jamais joint d'office par
         le navigateur : pas de risque de requête forgée par un autre site."""
         runtime: Any = scope["app"].state.runtime
+        token = bearer_token(headers)
         async with runtime.sessionmaker.begin() as session:
-            found = await extension_service.authenticate(session, bearer_token(headers))
-        if found is None:
-            await _json(send, 401, "jeton de l'extension absent ou révoqué")
-            return
-        state = scope.setdefault("state", {})
-        state["user"] = None
-        state["extension_token"] = found.id
-        scope["headers"] = [(k, v) for k, v in scope["headers"] if k != PROFILE_HEADER]
-        await self.app(scope, receive, send)
+            account = (
+                await accounts.account_of_token(session, "extension", service.token_hash(token))
+                if token
+                else None
+            )
+        with accounts.use(account):
+            async with runtime.sessionmaker.begin() as session:
+                found = await extension_service.authenticate(session, token)
+            if found is None:
+                await _json(send, 401, "jeton de l'extension absent ou révoqué")
+                return
+            state = scope.setdefault("state", {})
+            state["user"] = None
+            state["extension_token"] = found.id
+            scope["headers"] = [(k, v) for k, v in scope["headers"] if k != PROFILE_HEADER]
+            await self.app(scope, receive, send)

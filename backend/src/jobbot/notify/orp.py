@@ -48,7 +48,9 @@ async def _mark(runtime: Runtime, month: str, sent: dict[str, Any], key: str, da
         await session.execute(
             insert(OrpMonth)
             .values(month=month, reminders_sent=value)
-            .on_conflict_do_update(index_elements=["month"], set_={"reminders_sent": value})
+            .on_conflict_do_update(
+                index_elements=["user_id", "month"], set_={"reminders_sent": value}
+            )
         )
 
 

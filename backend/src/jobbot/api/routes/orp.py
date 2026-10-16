@@ -221,7 +221,7 @@ async def _touch(session: AsyncSession, month: str, **values: object) -> None:
     await session.execute(
         insert(OrpMonth)
         .values(month=month, **values)
-        .on_conflict_do_update(index_elements=["month"], set_=values)
+        .on_conflict_do_update(index_elements=["user_id", "month"], set_=values)
     )
 
 

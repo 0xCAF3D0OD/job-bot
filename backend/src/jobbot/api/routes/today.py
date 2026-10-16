@@ -363,7 +363,9 @@ async def set_onboarding(request: Request, body: OnboardingIn) -> None:
         await session.execute(
             insert(Setting)
             .values(key="onboarding_dismissed", value=body.dismissed)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": body.dismissed})
+            .on_conflict_do_update(
+                index_elements=["user_id", "key"], set_={"value": body.dismissed}
+            )
         )
 
 
@@ -374,5 +376,7 @@ async def set_journey(request: Request, body: OnboardingIn) -> None:
         await session.execute(
             insert(Setting)
             .values(key="journey_dismissed", value=body.dismissed)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": body.dismissed})
+            .on_conflict_do_update(
+                index_elements=["user_id", "key"], set_={"value": body.dismissed}
+            )
         )

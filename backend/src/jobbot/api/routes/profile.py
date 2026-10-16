@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from jobbot import accounts
 from jobbot.core.extract import (
     CONTENT_TYPES,
     MAX_SIZE,
@@ -130,7 +131,8 @@ async def upload_document(request: Request, file: Annotated[UploadFile, File()])
         raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, str(exc)) from None
 
     digest = hashlib.sha256(data).hexdigest()
-    key = f"documents/{uuid.uuid4().hex}.{extracted.type.value}"
+    # Un dossier par compte (docs/65 §1) ; les documents d'avant gardent leur emplacement.
+    key = f"accounts/{accounts.current()}/documents/{uuid.uuid4().hex}.{extracted.type.value}"
     runtime.storage.put(key, data)
     try:
         async with runtime.sessionmaker.begin() as session:

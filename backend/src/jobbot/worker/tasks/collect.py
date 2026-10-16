@@ -14,7 +14,8 @@ COLLECT_CRON = "0 */2 * * *"
 COLLECT_ACTIVE_HOURS = (7, 21)
 
 
-@register(COLLECT_JOB, cron=COLLECT_CRON, active_hours=COLLECT_ACTIVE_HOURS)
+# La boîte e-mail est celle de l'installation : rangée chez l'exploitant (docs/65 §3).
+@register(COLLECT_JOB, cron=COLLECT_CRON, active_hours=COLLECT_ACTIVE_HOURS, scope="owner")
 async def collect_job(runtime: Runtime, ctx: RunContext) -> None:
     try:
         result = await collect(runtime, ctx.run_id)

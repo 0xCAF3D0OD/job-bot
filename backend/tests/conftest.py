@@ -11,6 +11,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, text
 
+from jobbot import accounts
 from jobbot.api.app import create_app
 from jobbot.api.routes import trainings as trainings_routes
 from jobbot.db.schema import upgrade
@@ -67,6 +68,16 @@ async def runtime(settings: Settings) -> AsyncIterator[Runtime]:
     rt = Runtime.create(settings)
     yield rt
     await rt.dispose()
+
+
+@pytest.fixture(autouse=True)
+async def account(runtime: Runtime) -> AsyncIterator[int]:
+    """Chaque test agit au nom de l'exploitant (docs/65), comme l'API sans connexion."""
+    async with runtime.sessionmaker.begin() as session:
+        owner = await accounts.owner_id(session)
+    accounts.set_current(owner)
+    yield owner
+    accounts.set_current(None)
 
 
 @pytest.fixture

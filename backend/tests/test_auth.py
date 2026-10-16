@@ -24,12 +24,19 @@ PASSWORD = "un-mot-de-passe-de-test"
 async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(auth_enabled=True))
     auth_routes.throttle.failures.clear()
-    async with runtime.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE users CASCADE"))
+    await reset_accounts(runtime)
     yield runtime
-    async with runtime.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE users CASCADE"))
+    await reset_accounts(runtime)
     await runtime.dispose()
+
+
+async def reset_accounts(runtime: Runtime) -> None:
+    """Aucun compte utilisable : seul reste celui de l'exploitant, sans mot de passe (docs/65),
+    qui garde les données des autres tests."""
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM users WHERE id <> (SELECT min(id) FROM users)"))
+        await conn.execute(text("TRUNCATE sessions"))
+        await conn.execute(text("UPDATE users SET username = 'proprietaire', password_hash = '!'"))
 
 
 async def add_user(rt: Runtime, username: str = "camille") -> None:

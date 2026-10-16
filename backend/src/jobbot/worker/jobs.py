@@ -10,11 +10,13 @@ import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 import structlog
 from sqlalchemy import update
 
+from jobbot import accounts
 from jobbot.db.models import JobRun, JobRunStatus
 from jobbot.log import get_logger
 from jobbot.metrics import JOB_DURATION, JOB_LAST_SUCCESS, JOB_RUNS
@@ -33,6 +35,10 @@ class RunContext:
 
 JobFunc = Callable[[Runtime, RunContext], Awaitable[None]]
 
+# Pour qui tourne une tâche (docs/65 §7) : chaque compte à son tour ; l'exploitant seul (ce
+# qui vient encore de l'installation : sa boîte e-mail) ; ou la plateforme (sans compte).
+Scope = Literal["accounts", "owner", "platform"]
+
 # Les plages horaires des tâches planifiées s'entendent en heure suisse ; le planificateur,
 # lui, compte en UTC. La tâche est donc planifiée large et filtrée ici.
 LOCAL_TZ = ZoneInfo("Europe/Zurich")
@@ -47,6 +53,7 @@ class JobSpec:
     # Heures (début, fin incluses, heure suisse) où une exécution planifiée est utile.
     # Les exécutions manuelles (bouton, `jobbot run-job`) ne sont pas limitées.
     active_hours: tuple[int, int] | None = None
+    scope: Scope = "accounts"
 
     def is_active_at(self, moment: datetime) -> bool:
         if self.active_hours is None:
@@ -59,12 +66,18 @@ JOBS: dict[str, JobSpec] = {}
 
 
 def register(
-    name: str, *, cron: str | None = None, active_hours: tuple[int, int] | None = None
+    name: str,
+    *,
+    cron: str | None = None,
+    active_hours: tuple[int, int] | None = None,
+    scope: Scope = "accounts",
 ) -> Callable[[JobFunc], JobFunc]:
     def decorator(func: JobFunc) -> JobFunc:
         if name in JOBS:
             raise ValueError(f"Tâche déjà enregistrée : {name}")
-        JOBS[name] = JobSpec(name=name, func=func, cron=cron, active_hours=active_hours)
+        JOBS[name] = JobSpec(
+            name=name, func=func, cron=cron, active_hours=active_hours, scope=scope
+        )
         return func
 
     return decorator
@@ -86,7 +99,7 @@ async def execute(runtime: Runtime, name: str) -> bool:
         status = JobRunStatus.SUCCESS
         error: str | None = None
         try:
-            await spec.func(runtime, ctx)
+            await _run_for_accounts(runtime, spec, ctx)
         except Exception as exc:
             status = JobRunStatus.FAILURE
             error = f"{type(exc).__name__}: {exc}"[:2000]
@@ -117,3 +130,30 @@ async def execute(runtime: Runtime, name: str) -> bool:
                     items_out=ctx.items_out,
                 )
     return status is JobRunStatus.SUCCESS
+
+
+async def _run_for_accounts(runtime: Runtime, spec: JobSpec, ctx: RunContext) -> None:
+    """Une tâche lancée pour un compte (bouton, tâche appelée par une autre) ne tourne que
+    pour lui ; planifiée, elle passe par chaque compte, et l'échec de l'un n'arrête pas les
+    suivants (la première erreur est relancée à la fin)."""
+    if spec.scope == "platform":
+        await spec.func(runtime, ctx)
+        return
+    async with runtime.sessionmaker.begin() as session:
+        owner = await accounts.owner_id(session)
+        everyone = await accounts.account_ids(session)
+    current = accounts.current()
+    if current is not None:
+        if spec.scope == "accounts" or current == owner:
+            await spec.func(runtime, ctx)
+        return
+    failure: Exception | None = None
+    for account in [owner] if spec.scope == "owner" else everyone:
+        with accounts.use(account), structlog.contextvars.bound_contextvars(account=account):
+            try:
+                await spec.func(runtime, ctx)
+            except Exception as exc:
+                log.exception("job_failed_for_account")
+                failure = failure or exc
+    if failure is not None:
+        raise failure
