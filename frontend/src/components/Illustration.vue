@@ -29,7 +29,6 @@ watch(() => props.name, draw);
 <script lang="ts">
 export type IllustrationName =
   | "certification"
-  | "chat-bot"
   | "date-picker"
   | "done"
   | "handshake-deal"

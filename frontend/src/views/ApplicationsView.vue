@@ -23,6 +23,7 @@ import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
+import EngagementMoment from "../components/EngagementMoment.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
@@ -195,6 +196,13 @@ function addManual(): void {
   };
 }
 
+// Une candidature qui passe en Engagement : le moment de fête, par-dessus la page (docs/60).
+const celebrating = ref<string | null>(null);
+function celebrateIf(id: number | null, status: string | undefined, company: string): void {
+  const before = id === null ? undefined : all.value.find((a) => a.id === id)?.status;
+  if (status === "engagement" && before !== "engagement") celebrating.value = company;
+}
+
 async function save(value: ApplicationFormValue): Promise<void> {
   if (!editing.value) return;
   const result =
@@ -208,6 +216,7 @@ async function save(value: ApplicationFormValue): Promise<void> {
     error.value = "Vérifie les champs obligatoires (date, entreprise, poste).";
     return;
   }
+  celebrateIf(editing.value.id, value.status, value.company);
   editing.value = null;
   await load();
 }
@@ -222,6 +231,7 @@ async function setStatus(application: Application, status: ApplicationStatus): P
       interview_at: application.interview_at ?? null,
     },
   });
+  celebrateIf(application.id, status, application.company);
   await load();
 }
 
@@ -473,6 +483,11 @@ onUnmounted(() => assistant.setFocus(null));
         </div>
       </div>
 
+      <EngagementMoment
+        v-if="celebrating"
+        :company="celebrating"
+        @close="celebrating = null"
+      />
       <IllustratedSide
         v-if="submitted && submitted.month === orp.month && orp.state === 'remis'"
         name="done"

@@ -349,17 +349,6 @@ onMounted(() => void load());
               Comptée dans tes preuves ORP {{ ofMonth(sent.month) }} :
               <strong>{{ sent.count }}{{ sent.target ? ` sur ${sent.target}` : "" }}</strong>.
             </p>
-            <p class="moment-links">
-              <RouterLink :to="{ path: '/candidatures/suivi', query: { mois: sent.month } }">
-                Voir dans le Suivi
-              </RouterLink>
-              <RouterLink
-                to="/candidatures/offres"
-                data-test="notice-offers"
-              >
-                Retour aux offres
-              </RouterLink>
-            </p>
           </IllustratedSide>
           <template v-else-if="offer.status !== 'applied'">
             <!-- Numéros par compteur CSS : sur téléphone, « Postuler » est fixé en bas et sa

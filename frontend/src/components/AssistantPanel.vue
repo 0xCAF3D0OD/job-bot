@@ -9,7 +9,6 @@ import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssis
 import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
 import CopyLabel from "./CopyLabel.vue";
-import Illustration from "./Illustration.vue";
 import EngagementMoment from "./EngagementMoment.vue";
 
 type Conversation = components["schemas"]["ConversationOut"];
@@ -317,10 +316,6 @@ function day(value: string): string {
         aria-live="polite"
       >
         <template v-if="!lines.length">
-          <Illustration
-            name="chat-bot"
-            class="assistant-illu"
-          />
           <p class="muted assistant-intro">
             Pose une question sur la plateforme ou sur tes données : offres, candidatures, preuves ORP, entretiens.
             L'assistant lit et conseille ; il peut te proposer un changement, que tu confirmes d'un clic.
@@ -461,7 +456,10 @@ function day(value: string): string {
             :class="['assistant-action', action.state]"
             data-test="assistant-action"
           >
-            <EngagementMoment v-if="celebrated === action.id && action.state === 'done'" />
+            <EngagementMoment
+              v-if="celebrated === action.id && action.state === 'done'"
+              @close="celebrated = null"
+            />
             <p class="assistant-action-label">
               {{ action.label }}
             </p>

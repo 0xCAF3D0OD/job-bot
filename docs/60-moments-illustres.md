@@ -89,3 +89,16 @@ Une PR (**0.47.1**), captures sur ordinateur (clair et sombre) de chaque endroit
 - **Entrée des chiffres** : les comptes des tuiles (« 21 », « 4 / 10 ») et le compte de la jauge montent jusqu'à leur valeur ; une date (« 5 octobre ») ne bouge pas. Les barres de « Ta semaine » et « Par mois » montent l'une après l'autre, celles du parcours s'étirent, les arcs de la jauge apparaissent. Une fois par visite (rechargement de la page).
 - **Nouvelles offres** : toute carte qui arrive dans la liste (après « Collecter », « Afficher plus » ou un changement de filtre) apparaît en fondu en glissant de 8 px.
 - **Vérifié** sur ordinateur : connexion, Coordonnées, Ce que je cherche, assistant des alertes, page introuvable, Bilan vide, prise en main. La candidature envoyée, les preuves remises et l'Engagement sont couverts par des tests.
+
+## Complément (0.47.2) : les illustrations à côté des cartes, pas dedans
+
+Retour du 2026-10-16 : « je n'aurais pas mis les animations dans les cartes, il faudrait qu'elles soient à côté, ou trouver un moyen de ne pas les mettre dans les cartes, et qu'elles soient assez grosses pour que ça ait un sens ».
+
+- **Plus grandes** : 320 px de large sur ordinateur (au lieu de 260), toujours à gauche.
+- **Prise en main** : l'illustration n'est plus dans la ligne « Pour bien démarrer » ou « Comment ça marche » ; elle se pose à gauche des deux lignes quand l'une est ouverte (celle de son étape à faire), et disparaît quand elles sont fermées. Les lignes restent ouvertes en changeant d'étape.
+- **Assistant des alertes** : l'illustration sort de la carte du formulaire, à sa gauche.
+- **Candidature envoyée, preuves remises** : l'image est libre à gauche, seul le texte est dans une carte à droite. Le moment « envoyée » ne répète plus « Voir le Suivi » et « Revenir aux offres », déjà dans la barre du haut.
+- **Engagement** : plus dans le panneau (trop étroit) ni dans la carte de l'assistant, mais **en grand par-dessus la page**, sans carte : la poignée de main (380 px), les confettis, « Félicitations ! », et « Fermer » (ou Échap, ou un clic à côté). Déclenché quand on enregistre une candidature en Engagement depuis le Suivi, ou qu'on confirme la proposition de l'assistant.
+- **Assistant** : l'illustration de la discussion vide est retirée (dans le panneau, elle était dans une carte et trop petite).
+- Connexion, Coordonnées, Ce que je cherche et les pages vides avaient déjà l'image hors de la carte : seule leur taille change.
+- **Vérifié** dans le navigateur à 1280 px : prise en main ouverte, assistant des alertes, candidature envoyée et Engagement déclenchés pour de vrai sur l'instance de test.

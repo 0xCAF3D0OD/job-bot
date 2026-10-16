@@ -10,7 +10,8 @@ const props = defineProps<{ page: AlertsPage }>();
 const emit = defineEmits<{ updated: [page: AlertsPage]; done: [] }>();
 
 const step = ref<1 | 2 | 3>(1);
-// À gauche sur ordinateur (docs/60 §2.2) : tes recherches, le site, c'est prêt.
+// À gauche sur ordinateur, à côté du formulaire et pas dedans (docs/60 §2.2 et complément) :
+// tes recherches, le site, c'est prêt.
 const WIZARD_ILLUSTRATIONS: IllustrationName[] = ["mailbox", "online-connection", "done"];
 const siteIndex = ref(0);
 const form = ref({ terms: "", location: "" });
@@ -89,160 +90,161 @@ function nextSite(): void {
 </script>
 
 <template>
-  <section
-    class="form-card wizard"
-    data-test="alerts-wizard"
+  <IllustratedSide
+    :name="WIZARD_ILLUSTRATIONS[step - 1]!"
+    class="wizard-side"
   >
-    <IllustratedSide :name="WIZARD_ILLUSTRATIONS[step - 1]!">
-      <div class="wizard-body">
-        <ol
-          class="wizard-progress"
-          aria-hidden="true"
-        >
-          <li
-            v-for="n in 3"
-            :key="n"
-            :class="{ done: n < step, current: n === step }"
-          />
-        </ol>
-        <p class="wizard-step">
-          Étape {{ step }} sur 3
-        </p>
+    <section
+      class="form-card wizard"
+      data-test="alerts-wizard"
+    >
+      <ol
+        class="wizard-progress"
+        aria-hidden="true"
+      >
+        <li
+          v-for="n in 3"
+          :key="n"
+          :class="{ done: n < step, current: n === step }"
+        />
+      </ol>
+      <p class="wizard-step">
+        Étape {{ step }} sur 3
+      </p>
 
-        <template v-if="step === 1">
-          <h2>Que veux-tu recevoir ?</h2>
-          <ul class="keyword-chips">
-            <li
-              v-for="search in searches"
-              :key="search.id"
-              class="chip"
-              data-test="wizard-search"
-            >
-              {{ search.terms }} · {{ search.location || "toute la Suisse" }}
-              <button
-                type="button"
-                :aria-label="`Retirer ${search.terms}`"
-                @click="remove(search.id)"
-              >
-                ×
-              </button>
-            </li>
-          </ul>
-          <form
-            class="inline-form"
-            data-test="wizard-add"
-            @submit.prevent="add"
+      <template v-if="step === 1">
+        <h2>Que veux-tu recevoir ?</h2>
+        <ul class="keyword-chips">
+          <li
+            v-for="search in searches"
+            :key="search.id"
+            class="chip"
+            data-test="wizard-search"
           >
-            <input
-              v-model="form.terms"
-              type="text"
-              maxlength="120"
-              placeholder="Mots (DevOps)"
-              aria-label="Mots"
-              data-test="wizard-terms"
-            >
-            <input
-              v-model="form.location"
-              type="text"
-              maxlength="80"
-              placeholder="Lieu (Lausanne)"
-              aria-label="Lieu"
-            >
-            <button
-              type="submit"
-              class="secondary small"
-            >
-              Ajouter
-            </button>
-          </form>
-          <div class="form-actions">
+            {{ search.terms }} · {{ search.location || "toute la Suisse" }}
             <button
               type="button"
-              class="primary"
-              data-test="wizard-next"
-              @click="continueToSites"
+              :aria-label="`Retirer ${search.terms}`"
+              @click="remove(search.id)"
             >
-              Continuer
+              ×
             </button>
-            <span
-              v-if="searchHint"
-              class="field-error"
-              role="status"
-            >{{ searchHint }}</span>
-          </div>
-        </template>
+          </li>
+        </ul>
+        <form
+          class="inline-form"
+          data-test="wizard-add"
+          @submit.prevent="add"
+        >
+          <input
+            v-model="form.terms"
+            type="text"
+            maxlength="120"
+            placeholder="Mots (DevOps)"
+            aria-label="Mots"
+            data-test="wizard-terms"
+          >
+          <input
+            v-model="form.location"
+            type="text"
+            maxlength="80"
+            placeholder="Lieu (Lausanne)"
+            aria-label="Lieu"
+          >
+          <button
+            type="submit"
+            class="secondary small"
+          >
+            Ajouter
+          </button>
+        </form>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="primary"
+            data-test="wizard-next"
+            @click="continueToSites"
+          >
+            Continuer
+          </button>
+          <span
+            v-if="searchHint"
+            class="field-error"
+            role="status"
+          >{{ searchHint }}</span>
+        </div>
+      </template>
 
-        <template v-else-if="step === 2 && site">
-          <h2>Crée l'alerte sur {{ site.name }}</h2>
-          <p class="hint">
-            Ouvre la recherche, clique sur « Créer une alerte » (ou « Activer l'alerte ») et donne ton adresse e-mail.
-            Site {{ siteIndex + 1 }} sur {{ sites.length }}.
-          </p>
-          <div class="wizard-links">
-            <template
-              v-for="search in searches"
-              :key="search.id"
-            >
-              <a
-                v-if="cellUrl(search.id)"
-                :href="cellUrl(search.id)!"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="button-link"
-                data-test="wizard-open"
-              >Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}</a>
-            </template>
+      <template v-else-if="step === 2 && site">
+        <h2>Crée l'alerte sur {{ site.name }}</h2>
+        <p class="hint">
+          Ouvre la recherche, clique sur « Créer une alerte » (ou « Activer l'alerte ») et donne ton adresse e-mail.
+          Site {{ siteIndex + 1 }} sur {{ sites.length }}.
+        </p>
+        <div class="wizard-links">
+          <template
+            v-for="search in searches"
+            :key="search.id"
+          >
             <a
-              v-for="link in remoteLinks"
-              :key="link.terms"
-              :href="link.url"
+              v-if="cellUrl(search.id)"
+              :href="cellUrl(search.id)!"
               target="_blank"
               rel="noopener noreferrer"
               class="button-link"
-              data-test="wizard-open-remote"
-            >Ouvrir {{ site.name }} en télétravail : {{ link.terms }}</a>
-          </div>
-          <div class="form-actions">
-            <button
-              type="button"
-              class="primary"
-              :disabled="busy"
-              data-test="wizard-site-done"
-              @click="siteDone"
-            >
-              C'est fait, site suivant
-            </button>
-            <button
-              type="button"
-              class="link"
-              data-test="wizard-skip"
-              @click="nextSite"
-            >
-              Passer ce site
-            </button>
-          </div>
-        </template>
+              data-test="wizard-open"
+            >Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}</a>
+          </template>
+          <a
+            v-for="link in remoteLinks"
+            :key="link.terms"
+            :href="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="button-link"
+            data-test="wizard-open-remote"
+          >Ouvrir {{ site.name }} en télétravail : {{ link.terms }}</a>
+        </div>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="primary"
+            :disabled="busy"
+            data-test="wizard-site-done"
+            @click="siteDone"
+          >
+            C'est fait, site suivant
+          </button>
+          <button
+            type="button"
+            class="link"
+            data-test="wizard-skip"
+            @click="nextSite"
+          >
+            Passer ce site
+          </button>
+        </div>
+      </template>
 
-        <template v-else>
-          <h2>C'est prêt</h2>
-          <p>
-            Tes alertes arriveront dans ta boîte<template v-if="page.mailbox">
-              (<strong>{{ page.mailbox }}</strong>)
-            </template>, souvent dès le lendemain. Elles apparaîtront ici au premier
-            envoi.
-          </p>
-          <div class="form-actions">
-            <button
-              type="button"
-              class="primary"
-              data-test="wizard-finish"
-              @click="emit('done')"
-            >
-              Voir mes alertes
-            </button>
-          </div>
-        </template>
-      </div>
-    </IllustratedSide>
-  </section>
+      <template v-else>
+        <h2>C'est prêt</h2>
+        <p>
+          Tes alertes arriveront dans ta boîte<template v-if="page.mailbox">
+            (<strong>{{ page.mailbox }}</strong>)
+          </template>, souvent dès le lendemain. Elles apparaîtront ici au premier
+          envoi.
+        </p>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="primary"
+            data-test="wizard-finish"
+            @click="emit('done')"
+          >
+            Voir mes alertes
+          </button>
+        </div>
+      </template>
+    </section>
+  </IllustratedSide>
 </template>

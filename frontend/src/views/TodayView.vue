@@ -11,8 +11,7 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import AppIcon from "../components/AppIcon.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
-import IllustratedSide from "../components/IllustratedSide.vue";
-import type { IllustrationName } from "../components/Illustration.vue";
+import Illustration, { type IllustrationName } from "../components/Illustration.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { formatMonth, localDate, plural, scoreLevel } from "../format";
@@ -125,6 +124,17 @@ const JOURNEY_ILLUSTRATIONS: Record<Today["journey"][number]["key"], Illustratio
   follow: "date-picker",
   orp: "certification",
 };
+// Le guide ouvert donne l'illustration, posée à côté des deux lignes (docs/60, complément).
+const openGuide = ref<"journey" | "checklist" | null>(null);
+function onGuide(guide: "journey" | "checklist", open: boolean): void {
+  if (open) openGuide.value = guide;
+  else if (openGuide.value === guide) openGuide.value = null;
+}
+const guideIllustration = computed<IllustrationName | null>(() => {
+  if (openGuide.value === "journey" && nextJourney.value) return JOURNEY_ILLUSTRATIONS[nextJourney.value.key];
+  if (openGuide.value === "checklist" && nextStep.value) return STEP_ILLUSTRATIONS[nextStep.value.key];
+  return null;
+});
 // L'étape à faire, mise en avant dans la liste (docs/59 §5).
 const nextStep = computed(() => steps.value.find((s) => !s.done) ?? null);
 const nextJourney = computed(() => today.value?.journey.find((s) => !s.done) ?? null);
@@ -519,111 +529,113 @@ useDataChanged(load);
 
       <!-- Les deux guides, repliés sous l'essentiel du jour, sur ordinateur comme sur téléphone
            (docs/34 §4, docs/43 n° 6). -->
-      <component
-        :is="DisclosureRow"
-        v-if="!today.journey_dismissed && today.journey.length"
-        class="journey today-help-row"
-        title="Comment ça marche"
-        :value="`${journeyDone} / ${today.journey.length}`"
-        group="today-help"
-        data-test="journey"
-      >
-        <div class="checklist-head">
-          <h2>Comment ça marche</h2>
-          <button
-            type="button"
-            class="link"
-            data-test="dismiss-journey"
-            @click="dismissJourney"
+      <!-- L'illustration de l'étape à faire, à côté des guides et pas dedans (docs/60, complément). -->
+      <div :class="['today-guides', 'phone-hide', { illustrated: !!guideIllustration }]">
+        <Illustration
+          v-if="guideIllustration"
+          :key="guideIllustration"
+          :name="guideIllustration"
+        />
+        <div class="today-guides-rows illustrated-body">
+          <component
+            :is="DisclosureRow"
+            v-if="!today.journey_dismissed && today.journey.length"
+            class="journey today-help-row"
+            title="Comment ça marche"
+            :value="`${journeyDone} / ${today.journey.length}`"
+            group="today-help"
+            data-test="journey"
+            @toggle="onGuide('journey', $event)"
           >
-            Masquer
-          </button>
-        </div>
-        <component
-          :is="nextJourney ? IllustratedSide : 'div'"
-          v-bind="nextJourney ? { name: JOURNEY_ILLUSTRATIONS[nextJourney.key] } : {}"
-        >
-          <ol>
-            <li
-              v-for="step in today.journey"
-              :key="step.key"
-              :class="{ done: step.done, next: step === nextJourney }"
-              :data-test="`journey-${step.key}`"
-            >
-              <span
-                class="tick"
-                aria-hidden="true"
-              ><svg
-                v-if="step.done"
-                class="tick-svg"
-                viewBox="0 0 12 12"
-              ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
-              <span
-                v-if="step.done"
-                class="visually-hidden"
-              >Fait : </span>
-              <RouterLink :to="JOURNEY[step.key].to">
-                {{ JOURNEY[step.key].label }}
-              </RouterLink>
-              <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
-            </li>
-          </ol>
-        </component>
-      </component>
-      <component
-        :is="DisclosureRow"
-        v-if="showChecklist"
-        class="checklist today-help-row"
-        title="Pour bien démarrer"
-        :value="`${doneCount} / ${steps.length}`"
-        group="today-help"
-        data-test="checklist"
-      >
-        <div class="checklist-head">
-          <h2>Pour bien démarrer · {{ doneCount }} / {{ steps.length }}</h2>
-          <button
-            type="button"
-            class="link"
-            data-test="dismiss"
-            @click="dismiss"
-          >
-            Masquer
-          </button>
-        </div>
-        <component
-          :is="nextStep ? IllustratedSide : 'div'"
-          v-bind="nextStep ? { name: STEP_ILLUSTRATIONS[nextStep.key] } : {}"
-        >
-          <ul>
-            <li
-              v-for="step in steps"
-              :key="step.key"
-              :class="{ done: step.done, next: step === nextStep }"
-              :data-test="`step-${step.key}`"
-            >
-              <span
-                class="tick"
-                aria-hidden="true"
-              ><svg
-                v-if="step.done"
-                class="tick-svg"
-                viewBox="0 0 12 12"
-              ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
-              <RouterLink
-                v-if="!step.done && STEPS[step.key].to"
-                :to="STEPS[step.key].to!"
+            <div class="checklist-head">
+              <h2>Comment ça marche</h2>
+              <button
+                type="button"
+                class="link"
+                data-test="dismiss-journey"
+                @click="dismissJourney"
               >
-                {{ STEPS[step.key].label }}
-              </RouterLink>
-              <span v-else>{{ STEPS[step.key].label }}</span>
-              <span
-                v-if="!step.done && STEPS[step.key].hint"
-                class="hint"
-              >{{ STEPS[step.key].hint }}</span>
-            </li>
-          </ul>
-        </component>
-      </component>
+                Masquer
+              </button>
+            </div>
+            <ol>
+              <li
+                v-for="step in today.journey"
+                :key="step.key"
+                :class="{ done: step.done, next: step === nextJourney }"
+                :data-test="`journey-${step.key}`"
+              >
+                <span
+                  class="tick"
+                  aria-hidden="true"
+                ><svg
+                  v-if="step.done"
+                  class="tick-svg"
+                  viewBox="0 0 12 12"
+                ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
+                <span
+                  v-if="step.done"
+                  class="visually-hidden"
+                >Fait : </span>
+                <RouterLink :to="JOURNEY[step.key].to">
+                  {{ JOURNEY[step.key].label }}
+                </RouterLink>
+                <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
+              </li>
+            </ol>
+          </component>
+          <component
+            :is="DisclosureRow"
+            v-if="showChecklist"
+            class="checklist today-help-row"
+            title="Pour bien démarrer"
+            :value="`${doneCount} / ${steps.length}`"
+            group="today-help"
+            data-test="checklist"
+            @toggle="onGuide('checklist', $event)"
+          >
+            <div class="checklist-head">
+              <h2>Pour bien démarrer · {{ doneCount }} / {{ steps.length }}</h2>
+              <button
+                type="button"
+                class="link"
+                data-test="dismiss"
+                @click="dismiss"
+              >
+                Masquer
+              </button>
+            </div>
+            <ul>
+              <li
+                v-for="step in steps"
+                :key="step.key"
+                :class="{ done: step.done, next: step === nextStep }"
+                :data-test="`step-${step.key}`"
+              >
+                <span
+                  class="tick"
+                  aria-hidden="true"
+                ><svg
+                  v-if="step.done"
+                  class="tick-svg"
+                  viewBox="0 0 12 12"
+                ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
+                <RouterLink
+                  v-if="!step.done && STEPS[step.key].to"
+                  :to="STEPS[step.key].to!"
+                >
+                  {{ STEPS[step.key].label }}
+                </RouterLink>
+                <span v-else>{{ STEPS[step.key].label }}</span>
+                <span
+                  v-if="!step.done && STEPS[step.key].hint"
+                  class="hint"
+                >{{ STEPS[step.key].hint }}</span>
+              </li>
+            </ul>
+          </component>
+        </div>
+      </div>
     </div>
     <div
       v-else
