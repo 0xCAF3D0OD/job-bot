@@ -2105,6 +2105,17 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Sans série sombre, l'image claire est assombrie pour que ses blancs ne fassent pas des taches. */
 @media (prefers-color-scheme: dark) { .illu.no-dark img { filter: brightness(0.85); } }
 @media (prefers-reduced-motion: reduce) { .illu.loaded img { animation: none; opacity: 1; } }
+/* Les dessins animés des pages qui chargent (LoadingDrawing, docs/67 complément 0.55.1) : unDraw,
+   aux couleurs des tokens dans les deux thèmes ; encre en gris neutre, plans au gris des bordures,
+   papier au fond des cartes. */
+.drawing svg { display: block; width: 100%; height: auto; overflow: visible; }
+.drawing [fill="#6c63ff"] { fill: var(--accent); }
+.drawing [stroke="#6c63ff"] { stroke: var(--accent); }
+.drawing [fill="#090814"], .drawing [fill="#2f2e41"], .drawing [fill="#2f2e43"], .drawing [fill="#3f3d56"] { fill: var(--faint); }
+.drawing [stroke="#090814"], .drawing [stroke="#2f2e41"], .drawing [stroke="#3f3d56"] { stroke: var(--faint); }
+.drawing [fill="#e6e6e6"], .drawing [fill="#e4e4e4"], .drawing [fill="#f2f2f2"], .drawing [fill="#d6d6e3"], .drawing [fill="#ccc"], .drawing [fill="#cacaca"], .drawing [fill="#cbcbcb"], .drawing [fill="#e0e0e0"], .drawing [fill="#dedfe0"], .drawing [fill="#f1f1f1"] { fill: var(--border); }
+.drawing [stroke="#e6e6e6"], .drawing [stroke="#f2f2f2"], .drawing [stroke="#ccc"] { stroke: var(--border); }
+.drawing [fill="#fff"], .drawing [fill="#ffffff"], .drawing [fill="#fafafa"], .drawing [fill="#f8f8f8"] { fill: var(--surface); }
 .empty-state { display: grid; justify-items: center; gap: 0.8rem; padding: 2rem 1rem; text-align: center; color: var(--muted); }
 .empty-state p { margin: 0; max-width: 28rem; }
 @media (max-width: 820px) { .illu { width: 200px; } }
