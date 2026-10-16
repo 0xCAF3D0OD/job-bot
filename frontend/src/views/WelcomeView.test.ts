@@ -154,5 +154,15 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(wrapper.find("[data-test=welcome-ready]").exists()).toBe(true);
     expect(wrapper.find("[data-test=welcome-recap]").text()).toContain("Comptable");
     expect(calls("/api/welcome")).toContainEqual({ step: 7, trade: "Comptable" });
+
+    // Les points : un par écran, on touche celui qu'on veut.
+    expect(wrapper.findAll(".welcome-dot")).toHaveLength(7);
+    expect(wrapper.find("[data-test=dot-trade]").classes()).toContain("answered");
+    expect(wrapper.find("[data-test=dot-cv]").classes()).not.toContain("answered");
+    await wrapper.find("[data-test=dot-places]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=welcome-places]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=dot-places]").attributes("aria-current")).toBe("step");
+    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer");
   });
 });

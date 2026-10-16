@@ -48,8 +48,37 @@ const STEPS = computed<StepKey[]>(() => [
   "ready",
 ]);
 const step = computed(() => STEPS.value[Math.min(index.value, STEPS.value.length - 1)]!);
-// La progression compte les questions, pas l'écran « C'est prêt ».
-const progress = computed(() => Math.round((index.value / (STEPS.value.length - 1)) * 100));
+// Un point par écran : plein quand la question a une réponse, on le touche pour y aller.
+const LABELS: Record<StepKey, string> = {
+  goal: "Ce qui t'amène",
+  trade: "Ton métier",
+  places: "Où travailler",
+  rate: "Taux d'activité",
+  orp: "Objectif ORP",
+  cv: "Ton CV",
+  phone: "Notifications",
+  ready: "C'est prêt",
+};
+function answered(key: StepKey): boolean {
+  return {
+    goal: goal.value !== null,
+    trade: trade.value.trim() !== "",
+    places: places.value.length > 0,
+    rate: rate.value !== undefined,
+    orp: target.value != null,
+    cv: cvName.value !== "",
+    phone: phone.value !== null,
+    ready: false,
+  }[key];
+}
+
+function jump(to: number): void {
+  if (to === index.value) return;
+  fromRecap.value = false;
+  direction.value = to > index.value ? "forward" : "back";
+  index.value = to;
+  void remember({ step: to + 1 });
+}
 
 const ART: Record<StepKey, IllustrationName> = {
   goal: "morning-plans",
@@ -257,15 +286,22 @@ function edit(key: StepKey): void {
     data-test="welcome"
   >
     <header class="welcome-top">
-      <div
-        class="welcome-progress"
-        role="progressbar"
-        :aria-valuenow="progress"
-        aria-valuemin="0"
-        aria-valuemax="100"
+      <nav
+        class="welcome-dots"
+        aria-label="Étapes de l'accueil"
       >
-        <span :style="{ width: `${progress}%` }" />
-      </div>
+        <button
+          v-for="(key, i) in STEPS"
+          :key="key"
+          type="button"
+          :class="['welcome-dot', { current: i === index, answered: answered(key) }]"
+          :aria-label="`${i + 1}. ${LABELS[key]}`"
+          :aria-current="i === index ? 'step' : undefined"
+          :title="LABELS[key]"
+          :data-test="`dot-${key}`"
+          @click="jump(i)"
+        />
+      </nav>
       <button
         v-if="step !== 'ready'"
         type="button"
