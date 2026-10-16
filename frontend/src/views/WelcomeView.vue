@@ -83,15 +83,15 @@ function jump(to: number): void {
   void remember({ step: to + 1 });
 }
 
-// L'écran de la date a son calendrier, pas d'illustration.
-const ART: Partial<Record<StepKey, IllustrationName>> = {
+const ART: Record<StepKey, IllustrationName> = {
   goal: "morning-plans",
   trade: "stepping-up",
   places: "mailbox",
-  rate: "done",
+  rate: "tight-deadline",
   orp: "certification",
-  cv: "absorbed",
-  phone: "message-sent",
+  due: "booking",
+  cv: "my-resume",
+  phone: "lock-screen-notifications",
   ready: "handshake-deal",
 };
 
@@ -350,8 +350,7 @@ function edit(key: StepKey): void {
         :data-test="`welcome-${step}`"
       >
         <Illustration
-          v-if="ART[step]"
-          :name="ART[step]!"
+          :name="ART[step]"
           class="welcome-art"
         />
 

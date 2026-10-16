@@ -17,15 +17,19 @@ import { join } from "node:path";
 
 export const ILLUSTRATIONS = [
   "absorbed",
+  "booking",
   "certification",
   "done",
   "handshake-deal",
+  "lock-screen-notifications",
   "login",
   "mailbox",
   "message-sent",
   "morning-plans",
+  "my-resume",
   "page-eaten",
   "stepping-up",
+  "tight-deadline",
 ];
 
 const OUT = new URL("../src/assets/illustrations/", import.meta.url);
