@@ -18,17 +18,32 @@ from sqlalchemy import (
     UniqueConstraint,
     false,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from jobbot.db.base import Base
 
+# Compte de la ligne (docs/65) : tiré du compte en cours ; la base ne montre que les siennes.
+CURRENT_ACCOUNT = text("nullif(current_setting('app.user_id', true), '')::bigint")
+
+
+def account_column() -> Mapped[int]:
+    return mapped_column(
+        BigInteger,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        server_default=CURRENT_ACCOUNT,
+        index=True,
+    )
+
 
 class Setting(Base):
     """Réglages métier modifiables dans l'interface (seuils, objectif ORP…)."""
 
     __tablename__ = "settings"
+
+    user_id: Mapped[int] = account_column()
 
     key: Mapped[str] = mapped_column(Text, primary_key=True)
     value: Mapped[Any] = mapped_column(JSONB, nullable=False)
@@ -95,6 +110,8 @@ class Search(Base):
 
     __tablename__ = "searches"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     source: Mapped[str] = mapped_column(Text)
     message_id: Mapped[str] = mapped_column(Text, unique=True)
@@ -118,6 +135,8 @@ class Search(Base):
 
 class Offer(Base):
     __tablename__ = "offers"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     fingerprint: Mapped[str] = mapped_column(Text, unique=True)
@@ -179,6 +198,8 @@ class OfferLink(Base):
     """Où trouver l'offre : un lien par site."""
 
     __tablename__ = "offer_links"
+
+    user_id: Mapped[int] = account_column()
     __table_args__ = (UniqueConstraint("offer_id", "source"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -192,6 +213,8 @@ class OfferSighting(Base):
     """Dans quelles alertes l'offre est apparue."""
 
     __tablename__ = "offer_sightings"
+
+    user_id: Mapped[int] = account_column()
 
     offer_id: Mapped[int] = mapped_column(
         ForeignKey("offers.id", ondelete="CASCADE"), primary_key=True
@@ -212,6 +235,8 @@ class Criterion(Base):
 
     __tablename__ = "criteria"
 
+    user_id: Mapped[int] = account_column()
+
     kind: Mapped[str] = mapped_column(Text, primary_key=True)
     value: Mapped[Any] = mapped_column(JSONB, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
@@ -223,6 +248,8 @@ class Evaluation(Base):
     """Résultat du filtre pour une offre ; la note IA s'y ajoutera en 0.4."""
 
     __tablename__ = "evaluations"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"), unique=True)
@@ -281,6 +308,8 @@ class Document(Base):
 
     __tablename__ = "documents"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     filename: Mapped[str] = mapped_column(Text)
     doc_type: Mapped[str] = mapped_column(Text)
@@ -298,6 +327,8 @@ class ProfileChunk(Base):
     """Bloc de profil : la seule source de vérité de l'IA sur Kevin (cadrage §3)."""
 
     __tablename__ = "profile_chunks"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     document_id: Mapped[int | None] = mapped_column(ForeignKey("documents.id", ondelete="SET NULL"))
@@ -328,6 +359,8 @@ class LlmCall(Base):
 
     __tablename__ = "llm_calls"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     purpose: Mapped[str] = mapped_column(Text)
     offer_id: Mapped[int | None] = mapped_column(ForeignKey("offers.id", ondelete="SET NULL"))
@@ -348,6 +381,8 @@ class LlmBatch(Base):
     """Lot de notes envoyé à l'API (rattrapage, renotation) : moitié prix, résultat différé."""
 
     __tablename__ = "llm_batches"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     provider_batch_id: Mapped[str] = mapped_column(Text, unique=True)
@@ -384,6 +419,8 @@ class Application(Base):
     """Une candidature envoyée par Kevin : suivi et données du formulaire ORP (docs/08)."""
 
     __tablename__ = "applications"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     offer_id: Mapped[int | None] = mapped_column(
@@ -435,6 +472,8 @@ class Draft(Base):
     """
 
     __tablename__ = "drafts"
+
+    user_id: Mapped[int] = account_column()
     __table_args__ = (UniqueConstraint("offer_id", "kind", "version"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -454,6 +493,8 @@ class OrpMonth(Base):
     """État de la remise des preuves ORP d'un mois (docs/09 §4)."""
 
     __tablename__ = "orp_months"
+
+    user_id: Mapped[int] = account_column()
 
     month: Mapped[str] = mapped_column(Text, primary_key=True)
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -530,6 +571,8 @@ class Notification(Base):
     """Alerte de la cloche (docs/15 §1) : la même que sur le téléphone, gardée 90 jours."""
 
     __tablename__ = "notifications"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     # offers, follow_up, orp_target, orp_due, budget, collect_failed
@@ -622,6 +665,8 @@ class TrainingMark(Base):
 
     __tablename__ = "training_marks"
 
+    user_id: Mapped[int] = account_column()
+
     profile_id: Mapped[int] = mapped_column(
         ForeignKey("profiles.id", ondelete="CASCADE"), primary_key=True
     )
@@ -654,6 +699,8 @@ class Profile(Base):
 
     __tablename__ = "profiles"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(Text)
     occupation: Mapped[str | None] = mapped_column(Text)
@@ -668,6 +715,8 @@ class ProfileSource(Base):
     """Source d'actualités suivie par un profil ; une source sans abonné actif n'est pas relevée."""
 
     __tablename__ = "profile_sources"
+
+    user_id: Mapped[int] = account_column()
 
     profile_id: Mapped[int] = mapped_column(
         ForeignKey("profiles.id", ondelete="CASCADE"), primary_key=True
@@ -713,6 +762,8 @@ class AlertSearch(Base):
 
     __tablename__ = "alert_searches"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     terms: Mapped[str] = mapped_column(Text)
     location: Mapped[str | None] = mapped_column(Text)
@@ -725,6 +776,8 @@ class AlertSetup(Base):
 
     __tablename__ = "alert_setups"
 
+    user_id: Mapped[int] = account_column()
+
     search_id: Mapped[int] = mapped_column(
         ForeignKey("alert_searches.id", ondelete="CASCADE"), primary_key=True
     )
@@ -736,6 +789,8 @@ class Interview(Base):
     """Retour d'entretien (docs/23) : déroulé, ressenti, questions, enseignements, suite."""
 
     __tablename__ = "interviews"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     application_id: Mapped[int] = mapped_column(
@@ -777,6 +832,8 @@ class ChatConversation(Base):
 
     __tablename__ = "chat_conversations"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -789,6 +846,8 @@ class ChatMessage(Base):
     """Réplique d'une discussion : texte seulement (les lectures de données ne sont pas gardées)."""
 
     __tablename__ = "chat_messages"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     conversation_id: Mapped[int] = mapped_column(
@@ -808,6 +867,8 @@ class ChatAction(Base):
     """
 
     __tablename__ = "chat_actions"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     conversation_id: Mapped[int] = mapped_column(
@@ -830,6 +891,8 @@ class CalendarToken(Base):
 
     __tablename__ = "calendar_tokens"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(Text)
     token_hash: Mapped[str] = mapped_column(Text, unique=True)
@@ -845,6 +908,8 @@ class ExtensionToken(Base):
 
     __tablename__ = "extension_tokens"
 
+    user_id: Mapped[int] = account_column()
+
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(Text)
     token_hash: Mapped[str] = mapped_column(Text, unique=True)
@@ -858,6 +923,8 @@ class Contact(Base):
     Le nom de la personne reste ici ; il n'est jamais envoyé à l'IA."""
 
     __tablename__ = "contacts"
+
+    user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     offer_id: Mapped[int | None] = mapped_column(

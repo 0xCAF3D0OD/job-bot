@@ -152,6 +152,7 @@ def cmd_imap_sample(args: argparse.Namespace) -> int:
 
 
 def cmd_reparse(args: argparse.Namespace) -> int:
+    from jobbot import accounts
     from jobbot.collect.service import reparse
     from jobbot.db.models import ParseStatus
     from jobbot.runtime import Runtime
@@ -161,6 +162,7 @@ def cmd_reparse(args: argparse.Namespace) -> int:
     async def run() -> int:
         runtime = Runtime.create(settings)
         try:
+            await accounts.act_as_owner(runtime.sessionmaker)
             status = ParseStatus.UNRECOGNIZED if args.unrecognized else None
             result = await reparse(runtime, source=args.source or None, parse_status=status)
         finally:
@@ -181,6 +183,7 @@ def cmd_anonymize_sample(args: argparse.Namespace) -> int:
 
     from sqlalchemy import select
 
+    from jobbot import accounts
     from jobbot.db.models import Search
     from jobbot.mail.anonymize import anonymize
     from jobbot.runtime import Runtime
@@ -192,6 +195,7 @@ def cmd_anonymize_sample(args: argparse.Namespace) -> int:
     async def run() -> int:
         runtime = Runtime.create(settings)
         try:
+            await accounts.act_as_owner(runtime.sessionmaker)
             async with runtime.sessionmaker() as session:
                 rows = list(await session.scalars(select(Search).where(Search.id.in_(args.ids))))
         finally:
@@ -213,6 +217,7 @@ def cmd_set_password(args: argparse.Namespace) -> int:
 
     from sqlalchemy import func, select
 
+    from jobbot import accounts
     from jobbot.auth import passwords, service
     from jobbot.db.models import User
     from jobbot.runtime import Runtime
@@ -249,7 +254,17 @@ def cmd_set_password(args: argparse.Namespace) -> int:
                 user = await session.scalar(
                     select(User).where(func.lower(User.username) == username.lower())
                 )
-                created = user is None
+                if user is None:
+                    # Le compte créé d'office (docs/65) prend l'identifiant choisi.
+                    user = await session.scalar(
+                        select(User).where(User.password_hash == accounts.UNUSABLE_PASSWORD)
+                    )
+                    adopted = user is not None
+                    if user is not None:
+                        user.username = username
+                else:
+                    adopted = False
+                created = user is None or adopted
                 if user is None:
                     user = User(username=username, password_hash=password_hash)
                     session.add(user)

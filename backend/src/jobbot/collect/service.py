@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import accounts
 from jobbot.core.filter import canton_of
 from jobbot.core.normalize import normalize_offer
 from jobbot.db.models import (
@@ -66,8 +67,9 @@ class CollectResult:
 
 
 def raw_key(email: ParsedEmail) -> str:
+    # Un dossier par compte (docs/65 §1) ; les e-mails d'avant gardent leur emplacement.
     digest = hashlib.sha256(email.message_id.encode()).hexdigest()[:32]
-    return f"emails/{email.received_at:%Y/%m}/{digest}.eml"
+    return f"accounts/{accounts.current()}/emails/{email.received_at:%Y/%m}/{digest}.eml"
 
 
 def _since(settings: Settings) -> date:
@@ -155,7 +157,7 @@ async def ingest_offers(
                     seen_since=seen_at,
                     last_seen_at=seen_at,
                 )
-                .on_conflict_do_nothing(index_elements=["fingerprint"])
+                .on_conflict_do_nothing(index_elements=["user_id", "fingerprint"])
                 .returning(Offer.id)
             )
             if offer_id is None:  # créée entre-temps par une autre collecte
@@ -228,7 +230,7 @@ async def ingest_email(
                 results_count=len(alert.offers),
                 job_run_id=run_id,
             )
-            .on_conflict_do_nothing(index_elements=["message_id"])
+            .on_conflict_do_nothing(index_elements=["user_id", "message_id"])
             .returning(Search.id)
         )
         if search_id is None:

@@ -119,10 +119,12 @@ async def upload(api: AsyncClient, name: str, data: bytes) -> dict[str, object]:
     return body
 
 
-async def test_document_lifecycle(api: AsyncClient, tmp_path: Path) -> None:
+async def test_document_lifecycle(api: AsyncClient, tmp_path: Path, account: int) -> None:
+    # Un dossier par compte (docs/65 §1).
+    folder = tmp_path / "accounts" / str(account) / "documents"
     doc = await upload(api, "CV.pdf", pdf_with_text("Ingenieur systeme"))
     assert (doc["doc_type"], doc["text_status"], doc["chunk_count"]) == ("pdf", "ok", 0)
-    stored = list((tmp_path / "documents").iterdir())
+    stored = list(folder.iterdir())
     assert len(stored) == 1 and stored[0].suffix == ".pdf"
 
     text_body = (await api.get(f"/api/documents/{doc['id']}/text")).json()
@@ -133,7 +135,7 @@ async def test_document_lifecycle(api: AsyncClient, tmp_path: Path) -> None:
 
     again = await api.post("/api/documents", files={"file": ("copie.pdf", file.content)})
     assert again.status_code == 409
-    assert len(list((tmp_path / "documents").iterdir())) == 1
+    assert len(list(folder.iterdir())) == 1
 
     chunk = await api.post(
         "/api/profile-chunks",
@@ -143,7 +145,7 @@ async def test_document_lifecycle(api: AsyncClient, tmp_path: Path) -> None:
     assert (await api.get("/api/documents")).json()[0]["chunk_count"] == 1
 
     assert (await api.delete(f"/api/documents/{doc['id']}")).status_code == 204
-    assert list((tmp_path / "documents").iterdir()) == []
+    assert list(folder.iterdir()) == []
     # Le bloc reste, sans lien vers le document supprimé.
     [kept] = (await api.get("/api/profile-chunks")).json()
     assert kept["document_id"] is None

@@ -54,7 +54,7 @@ async def save_criteria(session: AsyncSession, criteria: Criteria) -> None:
         await session.execute(
             insert(Criterion)
             .values(kind=kind, value=value)
-            .on_conflict_do_update(index_elements=["kind"], set_={"value": value})
+            .on_conflict_do_update(index_elements=["user_id", "kind"], set_={"value": value})
         )
 
 

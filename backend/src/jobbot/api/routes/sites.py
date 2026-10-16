@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 
+from jobbot.api.owner import require_owner
 from jobbot.collect.service import reparse
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import ParseStatus, Search, Site, SiteReader
@@ -166,6 +167,7 @@ async def list_suggestions(request: Request) -> list[SiteSuggestion]:
 @router.post("/sites", operation_id="addSite", status_code=status.HTTP_201_CREATED)
 async def add_site(request: Request, body: SiteIn) -> list[SiteOut]:
     """Nouveau site : ses alertes seront lues par l'IA."""
+    await require_owner(_runtime(request))
     runtime = _runtime(request)
     slug = _slug(body.name)
     if len(slug) < 2:
@@ -188,6 +190,7 @@ async def add_site(request: Request, body: SiteIn) -> list[SiteOut]:
 
 @router.patch("/sites/{site_id}", operation_id="setSiteActive")
 async def set_site_active(request: Request, site_id: int, body: SiteActive) -> list[SiteOut]:
+    await require_owner(_runtime(request))
     runtime = _runtime(request)
     async with runtime.sessionmaker.begin() as session:
         site = await session.get(Site, site_id)
@@ -200,6 +203,7 @@ async def set_site_active(request: Request, site_id: int, body: SiteActive) -> l
 @router.delete("/sites/{site_id}", operation_id="deleteSite")
 async def delete_site(request: Request, site_id: int) -> list[SiteOut]:
     """Retire un site ajouté ; ses offres déjà collectées restent."""
+    await require_owner(_runtime(request))
     runtime = _runtime(request)
     async with runtime.sessionmaker.begin() as session:
         site = await session.get(Site, site_id)

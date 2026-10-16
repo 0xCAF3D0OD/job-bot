@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
+from jobbot import accounts
 from jobbot.auth import passwords, service
 from jobbot.auth.middleware import cookie_token, session_cookie
 from jobbot.db.models import User
@@ -51,7 +52,15 @@ class LoginIn(BaseModel):
 async def me(request: Request) -> Me:
     runtime = _runtime(request)
     async with runtime.sessionmaker() as session:
-        users = await session.scalar(select(func.count()).select_from(User)) or 0
+        # Le compte créé d'office (docs/65) n'a pas de mot de passe : il reste à configurer.
+        users = (
+            await session.scalar(
+                select(func.count())
+                .select_from(User)
+                .where(User.password_hash != accounts.UNUSABLE_PASSWORD)
+            )
+            or 0
+        )
     if not runtime.settings.auth_enabled:
         return Me(authenticated=True, username=None, setup_needed=False, auth_enabled=False)
     found = _current(request)
@@ -86,7 +95,11 @@ async def login(request: Request, body: LoginIn, response: Response) -> None:
             headers={"Retry-After": str(wait)},
         )
     async with runtime.sessionmaker.begin() as session:
-        if not await session.scalar(select(func.count()).select_from(User)):
+        if not await session.scalar(
+            select(func.count())
+            .select_from(User)
+            .where(User.password_hash != accounts.UNUSABLE_PASSWORD)
+        ):
             raise HTTPException(
                 status.HTTP_409_CONFLICT, "aucun compte : lance « jobbot set-password »"
             )

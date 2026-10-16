@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot.api.owner import require_owner
 from jobbot.db.models import NewsItem, NewsSource, Profile, ProfileSource
 from jobbot.log import get_logger
 from jobbot.news import catalog, domain
@@ -427,6 +428,7 @@ async def list_sources(request: Request) -> list[NewsSourceOut]:
 )
 async def add_source(request: Request, body: NewsSourceIn) -> list[NewsSourceOut]:
     """Site, flux RSS ou chaîne YouTube : le flux est trouvé et vérifié avant l'ajout."""
+    await require_owner(_runtime(request))
     try:
         found = await resolve(body.url)
     except SourceError as exc:
@@ -507,6 +509,7 @@ async def get_catalog(request: Request) -> NewsCatalog:
     responses={404: {"description": "Suggestion inconnue"}, 409: {"description": "Déjà suivie"}},
 )
 async def add_catalog_source(request: Request, catalog_id: str) -> list[NewsSourceOut]:
+    await require_owner(_runtime(request))
     entry = catalog.load().get(catalog_id)
     if entry is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "suggestion inconnue")
@@ -533,6 +536,7 @@ async def add_catalog_source(request: Request, catalog_id: str) -> list[NewsSour
 )
 async def add_search(request: Request, body: NewsSearchIn) -> list[NewsSourceOut]:
     """Veille par recherche : mots-clés, pays et langue, relevés dans Google Actualités."""
+    await require_owner(_runtime(request))
     query = " ".join(body.query.split())
     return await _add(
         request,
@@ -554,6 +558,9 @@ async def update_source(
 ) -> list[NewsSourceOut]:
     runtime = _runtime(request)
     profile = await _profile(request)
+    if (body.country, body.language, body.labour_market) != (None, None, None):
+        # Ce qui décrit la source vaut pour tous les comptes ; la pause, pour soi.
+        await require_owner(runtime)
     async with runtime.sessionmaker.begin() as session:
         source = await session.get(NewsSource, source_id)
         subscription = await session.get(ProfileSource, (profile.id, source_id))
@@ -584,11 +591,8 @@ async def delete_source(request: Request, source_id: int) -> list[NewsSourceOut]
             raise HTTPException(status.HTTP_404_NOT_FOUND, "source introuvable")
         await session.delete(subscription)
         await session.flush()
-        others = await session.scalar(
-            select(func.count())
-            .select_from(ProfileSource)
-            .where(ProfileSource.source_id == source_id)
-        )
+        # Suivie dans un autre compte ? La base compte pour tous (migration 0046).
+        others = await session.scalar(select(func.news_source_followers(source_id)))
         if not others:
             source = await session.get(NewsSource, source_id)
             if source is not None:

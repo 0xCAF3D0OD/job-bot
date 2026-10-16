@@ -114,7 +114,7 @@ async def set_prepared(session: AsyncSession, text: str, done: bool) -> None:
     await session.execute(
         insert(Setting)
         .values(key=PREPARED_KEY, value=value)
-        .on_conflict_do_update(index_elements=["key"], set_={"value": value})
+        .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
     )
 
 
@@ -247,7 +247,7 @@ async def coach(runtime: Runtime, application_id: int | None) -> Coaching:
         await session.execute(
             insert(Setting)
             .values(key=COACH_KEY, value=value)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": value})
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
         )
     return coaching
 

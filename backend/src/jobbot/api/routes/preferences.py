@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot import accounts
 from jobbot.core.filter import (
     CONTRACT_KEYWORDS,
     LANGUAGE_NAMES,
@@ -157,7 +158,7 @@ async def put_settings(request: Request, body: SettingsModel) -> SettingsModel:
             await session.execute(
                 insert(Setting)
                 .values(key=key, value=value)
-                .on_conflict_do_update(index_elements=["key"], set_={"value": value})
+                .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
             )
     return body
 
@@ -214,12 +215,12 @@ async def put_offer_filters(request: Request, body: OfferFiltersVisible) -> Offe
         await session.execute(
             insert(Setting)
             .values(key="offer_filters_visible", value=body.visible)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": body.visible})
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": body.visible})
         )
         await session.execute(
             insert(Setting)
             .values(key="offer_filters_known", value=ALL_FILTERS)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": ALL_FILTERS})
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": ALL_FILTERS})
         )
     return body
 
@@ -265,12 +266,12 @@ async def put_orp_columns(request: Request, body: OrpColumnsVisible) -> OrpColum
         await session.execute(
             insert(Setting)
             .values(key="orp_columns_visible", value=body.visible)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": body.visible})
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": body.visible})
         )
         await session.execute(
             insert(Setting)
             .values(key="offer_filters_known", value=ALL_FILTERS)
-            .on_conflict_do_update(index_elements=["key"], set_={"value": ALL_FILTERS})
+            .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": ALL_FILTERS})
         )
     return body
 
@@ -297,8 +298,12 @@ async def get_notifications(request: Request) -> NotificationsStatus:
     responses={409: {"description": "Non configuré"}, 502: {"description": "Envoi refusé"}},
 )
 async def test_notification(request: Request) -> None:
-    settings = _runtime(request).settings
-    if not settings.ntfy_configured:
+    runtime = _runtime(request)
+    settings = runtime.settings
+    async with runtime.sessionmaker() as session:
+        # Le sujet ntfy est celui de l'installation : réservé à l'exploitant (docs/65 §4).
+        owner = await accounts.is_owner(session)
+    if not settings.ntfy_configured or not owner:
         raise HTTPException(
             status.HTTP_409_CONFLICT, "notifications non configurées : renseigner JOBBOT_NTFY_TOPIC"
         )

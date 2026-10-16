@@ -13,7 +13,7 @@ HEARTBEAT_CRON = "*/5 * * * *"
 HEARTBEAT_STALE_AFTER_SECONDS = 600
 
 
-@register(HEARTBEAT_JOB, cron=HEARTBEAT_CRON)
+@register(HEARTBEAT_JOB, cron=HEARTBEAT_CRON, scope="platform")
 async def heartbeat(runtime: Runtime, ctx: RunContext) -> None:
     async with runtime.engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
