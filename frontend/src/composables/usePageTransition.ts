@@ -4,7 +4,7 @@ import type { IllustrationName } from "../components/Illustration.vue";
 
 // Les pages qui chargent des données (docs/61 §2) : à l'arrivée sur la page, si les données ne
 // sont pas là après 0,15 s, l'écran se grise avec l'illustration de la page au centre ; dès
-// qu'elles arrivent, le voile s'efface, après 0,5 s au moins pour ne pas clignoter.
+// qu'elles arrivent, le voile s'efface, après 1,2 s au moins (docs/63 §3).
 export const PAGE_TRANSITIONS: Record<string, { illustration: IllustrationName; label: string }> = {
   today: { illustration: "morning-plans", label: "Aujourd'hui" },
   offers: { illustration: "mailbox", label: "Offres" },
@@ -15,7 +15,8 @@ export const PAGE_TRANSITIONS: Record<string, { illustration: IllustrationName; 
   trainings: { illustration: "certification", label: "Formations" },
 };
 export const SHOW_AFTER_MS = 150;
-export const SHOW_AT_LEAST_MS = 500;
+// Plus lente (docs/63 §3) : le temps que l'illustration joue.
+export const SHOW_AT_LEAST_MS = 1200;
 const GIVE_UP_MS = 8000;
 
 export const pageTransition = reactive({ page: null as string | null, shown: false });

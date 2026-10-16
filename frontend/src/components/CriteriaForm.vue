@@ -9,6 +9,7 @@ import TagInput from "./TagInput.vue";
 import { placeLabel } from "../cantons";
 
 import HoverNote from "./HoverNote.vue";
+import FilterOutcome from "./FilterOutcome.vue";
 const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "stage", label: "Stages" },
   { value: "apprentissage", label: "Apprentissages" },
@@ -139,36 +140,41 @@ onMounted(() => void load());
     </p>
     <div
       v-else-if="loaded && !editing"
-      class="form-card criteria-summary"
-      data-test="criteria-summary"
+      class="criteria-layout"
     >
-      <h2 class="criteria-summary-title">
-        Tes prérequis
-      </h2>
-      <dl class="summary-rows">
-        <div
-          v-for="row in summary"
-          :key="row.label"
-        >
-          <dt>{{ row.label }}</dt>
-          <dd>{{ row.value }}</dd>
+      <div
+        class="form-card criteria-summary"
+        data-test="criteria-summary"
+      >
+        <h2 class="criteria-summary-title">
+          Tes prérequis
+        </h2>
+        <dl class="summary-rows">
+          <div
+            v-for="row in summary"
+            :key="row.label"
+          >
+            <dt>{{ row.label }}</dt>
+            <dd>{{ row.value }}</dd>
+          </div>
+        </dl>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="secondary"
+            data-test="edit-criteria"
+            @click="editing = true"
+          >
+            Modifier ce que je cherche
+          </button>
+          <span
+            v-if="message"
+            role="status"
+            class="muted"
+          >{{ message }}</span>
         </div>
-      </dl>
-      <div class="form-actions">
-        <button
-          type="button"
-          class="secondary"
-          data-test="edit-criteria"
-          @click="editing = true"
-        >
-          Modifier ce que je cherche
-        </button>
-        <span
-          v-if="message"
-          role="status"
-          class="muted"
-        >{{ message }}</span>
       </div>
+      <FilterOutcome />
     </div>
     <form
       v-else-if="loaded"

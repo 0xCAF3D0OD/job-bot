@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, time, timedelta
 from statistics import median
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.orp import LOCAL_TZ
@@ -465,3 +465,61 @@ async def _trainings(session: AsyncSession, month: str) -> list[str]:
         )
     ).all()
     return [f"{title} ({'terminée' if status == 'done' else 'en cours'})" for title, status in rows]
+
+
+# Ce que donnent les critères (docs/63 §2) : sur la période, les offres reçues, celles qui passent
+# le filtre, et les raisons d'écart les plus fréquentes. Une offre écartée pour deux raisons
+# compte dans les deux.
+REASON_LABELS = {
+    "locations": "lieu",
+    "min_rate": "taux d'activité",
+    "contract": "type d'offre",
+    "language": "langue",
+    "remote": "télétravail",
+    "remote_region": "télétravail hors de Suisse",
+    "banned_word": "mot exclu",
+}
+
+
+@dataclass
+class FilterSummary:
+    received: int
+    retained: int
+    reasons: list[tuple[str, str, int]]
+
+
+async def filter_summary(session: AsyncSession, start: date, end: date) -> FilterSummary:
+    offers = (
+        select(func.count())
+        .select_from(Offer)
+        .where(
+            Offer.spontaneous.is_(False),
+            Offer.duplicate_of.is_(None),
+            Offer.first_seen_at >= _start_of(start),
+            Offer.first_seen_at < _start_of(end + timedelta(days=1)),
+        )
+    )
+    received = int(await session.scalar(offers) or 0)
+    retained = int(
+        await session.scalar(
+            offers.join(Evaluation, Evaluation.offer_id == Offer.id).where(
+                Evaluation.filter_passed.is_(True)
+            )
+        )
+        or 0
+    )
+    rows = (
+        await session.execute(
+            text(
+                "select r->>'rule' as rule, count(distinct o.id) as n "
+                "from offers o join evaluations e on e.offer_id = o.id, "
+                "jsonb_array_elements(e.filter_reasons) r "
+                "where e.filter_passed is false and o.spontaneous is false "
+                "and o.duplicate_of is null and o.first_seen_at >= :start "
+                "and o.first_seen_at < :end group by 1 order by 2 desc, 1"
+            ),
+            {"start": _start_of(start), "end": _start_of(end + timedelta(days=1))},
+        )
+    ).all()
+    reasons = [(rule, REASON_LABELS.get(rule, rule), int(n)) for rule, n in rows]
+    return FilterSummary(received, retained, reasons)

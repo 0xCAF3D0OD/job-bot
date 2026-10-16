@@ -54,7 +54,7 @@ const best = ref<Offer[]>([]);
 const preparing = ref<Offer[]>([]);
 const news = ref<NewsItem[]>([]);
 const trainingsInProgress = ref<Training[]>([]);
-const trainingIdea = ref<Training | null>(null);
+const trainingIdeas = ref<Training[]>([]);
 const { message } = useCollect();
 
 // Tableau « À examiner en priorité » (docs/54 §2) : deux onglets, le choix n'est pas retenu.
@@ -139,7 +139,8 @@ async function loadTrainings(): Promise<void> {
   const { data } = await api.GET("/api/trainings", { params: { query: { domain_only: true } } });
   const items = data?.items ?? [];
   trainingsInProgress.value = items.filter((t) => t.mark?.status === "in_progress").slice(0, 3);
-  trainingIdea.value = items.find((t) => !t.mark && t.verified) ?? null;
+  // Jusqu'à trois en tout (docs/63 §2) : en cours d'abord, puis des suggestions vérifiées.
+  trainingIdeas.value = items.filter((t) => !t.mark && t.verified).slice(0, Math.max(0, 3 - trainingsInProgress.value.length));
 }
 
 async function load(): Promise<void> {
@@ -432,7 +433,7 @@ useDataChanged(load);
             </h2>
           </header>
           <ul
-            v-if="trainingsInProgress.length || trainingIdea"
+            v-if="trainingsInProgress.length || trainingIdeas.length"
             class="today-list"
           >
             <li
@@ -445,7 +446,8 @@ useDataChanged(load);
               </span>
             </li>
             <li
-              v-if="trainingIdea"
+              v-for="trainingIdea in trainingIdeas"
+              :key="trainingIdea.id"
               data-test="training-idea"
             >
               <span>

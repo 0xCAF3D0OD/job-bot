@@ -14,13 +14,13 @@ describe("transition des pages qui chargent (docs/61 §2)", () => {
     expect(pageTransition.shown).toBe(false);
   });
 
-  it("lent : le voile après 0,15 s, gardé 0,5 s au moins", () => {
+  it("lent : le voile après 0,15 s, gardé 1,2 s au moins (docs/63 §3)", () => {
     startPage("news");
     vi.advanceTimersByTime(150);
     expect(pageTransition.shown).toBe(true);
     vi.advanceTimersByTime(100);
     pageReady("news");
-    vi.advanceTimersByTime(300);
+    vi.advanceTimersByTime(1000);
     expect(pageTransition.shown).toBe(true);
     vi.advanceTimersByTime(100);
     expect(pageTransition.shown).toBe(false);
