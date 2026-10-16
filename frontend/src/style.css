@@ -2234,16 +2234,8 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   /* Réglages : les rubriques à la largeur de lecture. */
   .settings-sections { max-width: 46rem; }
   .settings-sections:has(.ai-spend) { max-width: 64rem; }
-  /* « Comment ça marche » en frise : un rond par étape, relié au précédent. */
-  .journey ol { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; }
-  .journey li { position: relative; grid-template-columns: 1fr; justify-items: center; align-content: start; row-gap: 0.45rem; margin: 0; padding: 0.7rem 0.6rem; border-radius: 14px; text-align: center; }
-  .journey li > a, .journey .journey-where { grid-column: 1; }
-  .journey li::before { content: ""; position: absolute; top: calc(0.7rem + 0.6rem - 1px); right: calc(50% + 0.85rem); width: calc(100% - 1.2rem); height: 2px; background: var(--border); }
-  .journey li:first-child::before { display: none; }
-  .journey li.done + li::before { background: var(--ok); }
-  .journey li > a::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }
-  .journey li:hover:not(.next) { background: var(--band); }
-  .journey li.next { margin: 0; padding: 0.7rem 0.6rem; }
+  /* Les deux guides côte à côte, chacun sur une demi-largeur (docs/63, complément). */
+  .today-guides-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 }
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
    les critères à côté. */
