@@ -17,7 +17,6 @@ import { join } from "node:path";
 
 export const ILLUSTRATIONS = [
   "certification",
-  "chat-bot",
   "date-picker",
   "done",
   "handshake-deal",

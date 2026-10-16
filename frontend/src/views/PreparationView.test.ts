@@ -221,7 +221,7 @@ describe("barre de candidature", () => {
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 7, application_url: "https://acme.example/jobs/1" });
     expect(wrapper.find("[data-test=sent-moment]").text()).toContain("Candidature envoyée chez Acme SA.");
-    // Une fois envoyée : revenir aux offres en un clic.
-    expect(wrapper.find("[data-test=notice-offers]").attributes("href")).toBe("/candidatures/offres");
+    // Comptée pour l'ORP ; le retour aux offres est dans la barre du haut (offre envoyée).
+    expect(wrapper.find("[data-test=sent-moment]").text()).not.toContain("Retour aux offres");
   });
 });
