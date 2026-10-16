@@ -18,6 +18,7 @@ import { join } from "node:path";
 export const ILLUSTRATIONS = [
   "absorbed",
   "certification",
+  "detailed-answer",
   "done",
   "handshake-deal",
   "lock-screen-notifications",

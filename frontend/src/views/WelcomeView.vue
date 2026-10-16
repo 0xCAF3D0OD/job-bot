@@ -11,7 +11,7 @@ import { useAuth } from "../composables/useAuth";
 // touche ; chaque réponse remplit un vrai réglage. « Retour » et « Passer » en bas de chaque
 // écran, « Plus tard » en haut ; le récapitulatif ramène à la question qu'on veut corriger.
 type Goal = "job" | "orp" | "news";
-type StepKey = "goal" | "trade" | "places" | "rate" | "orp" | "due" | "cv" | "phone" | "ready";
+type StepKey = "goal" | "trade" | "places" | "rate" | "orp" | "due" | "cv" | "phone" | "ready" | "next";
 type Icon = InstanceType<typeof AppIcon>["$props"]["name"];
 
 const router = useRouter();
@@ -47,6 +47,7 @@ const STEPS = computed<StepKey[]>(() => [
   "cv",
   "phone",
   "ready",
+  "next",
 ]);
 const step = computed(() => STEPS.value[Math.min(index.value, STEPS.value.length - 1)]!);
 // Un point par écran : plein quand la question a une réponse, on le touche pour y aller.
@@ -60,6 +61,7 @@ const LABELS: Record<StepKey, string> = {
   cv: "Ton CV",
   phone: "Notifications",
   ready: "C'est prêt",
+  next: "La suite",
 };
 function answered(key: StepKey): boolean {
   return {
@@ -72,6 +74,7 @@ function answered(key: StepKey): boolean {
     cv: cvName.value !== "",
     phone: phone.value !== null,
     ready: false,
+    next: false,
   }[key];
 }
 
@@ -154,7 +157,7 @@ onMounted(async () => {
 // L'avancement et la réponse de l'écran partent ensemble, pour ne pas se marcher dessus.
 function go(next: number, changes: Record<string, unknown> = {}): void {
   if (fromRecap.value && next > index.value) {
-    next = STEPS.value.length - 1;
+    next = STEPS.value.indexOf("ready");
     fromRecap.value = false;
   }
   direction.value = next > index.value ? "forward" : "back";
@@ -330,7 +333,7 @@ function edit(key: StepKey): void {
         />
       </nav>
       <button
-        v-if="step !== 'ready'"
+        v-if="step !== 'ready' && step !== 'next'"
         type="button"
         class="link"
         data-test="welcome-later"
@@ -575,7 +578,7 @@ function edit(key: StepKey): void {
           </p>
         </template>
 
-        <template v-else>
+        <template v-else-if="step === 'ready'">
           <h1>C'est prêt !</h1>
           <ul
             v-if="recap.length"
@@ -598,16 +601,28 @@ function edit(key: StepKey): void {
               </button>
             </li>
           </ul>
-          <p class="welcome-hint">
-            Prochaine étape : créer tes alertes sur les sites d'emploi. La recherche est déjà remplie.
-          </p>
+        </template>
+
+        <template v-else-if="step === 'next'">
+          <div class="welcome-speaker">
+            <p
+              class="welcome-bubble"
+              data-test="welcome-bubble"
+            >
+              Prochaine étape : créer tes alertes sur les sites d'emploi. La recherche est déjà remplie.
+            </p>
+            <Illustration
+              name="detailed-answer"
+              class="welcome-character"
+            />
+          </div>
         </template>
       </div>
     </Transition>
 
     <footer class="welcome-actions">
       <button
-        v-if="step === 'ready'"
+        v-if="step === 'next'"
         type="button"
         class="primary welcome-continue"
         data-test="welcome-alerts"
@@ -631,12 +646,12 @@ function edit(key: StepKey): void {
           type="button"
           class="secondary"
           data-test="welcome-back"
-          @click="fromRecap ? go(STEPS.length - 1) : go(index - 1)"
+          @click="fromRecap ? go(STEPS.indexOf('ready')) : go(index - 1)"
         >
           ← {{ fromRecap ? "Revenir au récapitulatif" : "Retour" }}
         </button>
         <button
-          v-if="step !== 'ready'"
+          v-if="step !== 'ready' && step !== 'next'"
           type="button"
           class="secondary"
           data-test="welcome-skip"

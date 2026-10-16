@@ -2368,6 +2368,12 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .welcome-recap small { color: var(--accent); font-size: 0.85rem; }
 @media (hover: hover) { .welcome-recap button:hover { border-color: var(--border); background: var(--surface); } }
 .welcome-recap .icon { width: 20px; height: 20px; color: var(--ok); }
+/* La suite : le personnage et sa bulle au-dessus, façon Duolingo ; la pointe de la bulle vise
+   le personnage, à droite du dessin. */
+.welcome-speaker { display: grid; justify-items: center; gap: 1rem; }
+.welcome-bubble { position: relative; margin: 0; padding: 1.1rem 1.25rem; font-size: 1.15rem; line-height: 1.45; background: var(--surface); border: 2px solid var(--border); border-radius: 18px; }
+.welcome-bubble::after { content: ""; position: absolute; bottom: -0.6rem; left: 64%; width: 1rem; height: 1rem; background: var(--surface); border-bottom: 2px solid var(--border); border-right: 2px solid var(--border); transform: translateX(-50%) rotate(45deg); }
+.welcome-speaker .welcome-character { width: 220px; }
 .welcome-actions { display: grid; justify-items: center; gap: 0.6rem; padding-top: 0.5rem; }
 .welcome-nav { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0.6rem; width: 100%; }
 .welcome-nav button { justify-content: center; padding: 0.7rem 0.8rem; border-radius: 14px; }
@@ -2383,6 +2389,8 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   .welcome-actions { position: sticky; bottom: 0; background: var(--bg); padding-bottom: 0.5rem; }
   .welcome-screen h1 { font-size: 1.3rem; }
   .welcome-screen .welcome-art { width: 120px; }
+  .welcome-bubble { font-size: 1.05rem; }
+  .welcome-speaker .welcome-character { width: 170px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .welcome-dot::after, .welcome-card, .welcome-chip, .welcome-day { transition: none; }

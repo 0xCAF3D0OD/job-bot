@@ -40,6 +40,7 @@ watch(
 export type IllustrationName =
   | "absorbed"
   | "certification"
+  | "detailed-answer"
   | "done"
   | "handshake-deal"
   | "lock-screen-notifications"

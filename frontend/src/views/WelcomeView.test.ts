@@ -121,6 +121,13 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(recap).toContain("Vaud, Genève");
     expect(recap).toContain("10 recherches par mois");
     expect(recap).toContain("avant le 10 du mois");
+    expect(wrapper.find("[data-test=welcome-alerts]").exists()).toBe(false);
+
+    // La suite : le personnage l'annonce, puis on crée les alertes.
+    await wrapper.find("[data-test=welcome-continue]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=welcome-bubble]").text()).toContain("Prochaine étape : créer tes alertes");
+    expect(wrapper.find("[data-test=welcome-later]").exists()).toBe(false);
     await wrapper.find("[data-test=welcome-alerts]").trigger("click");
     await flushPromises();
     expect(calls("/api/welcome").at(-1)).toEqual({ done: true, postponed: false });
@@ -164,7 +171,7 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(calls("/api/welcome")).toContainEqual({ step: 7, trade: "Comptable" });
 
     // Les points : un par écran, on touche celui qu'on veut.
-    expect(wrapper.findAll(".welcome-dot")).toHaveLength(7);
+    expect(wrapper.findAll(".welcome-dot")).toHaveLength(8);
     expect(wrapper.find("[data-test=dot-trade]").classes()).toContain("answered");
     expect(wrapper.find("[data-test=dot-cv]").classes()).not.toContain("answered");
     await wrapper.find("[data-test=dot-places]").trigger("click");
