@@ -71,3 +71,18 @@ describe("LoginView", () => {
     expect(router.currentRoute.value.fullPath).toBe("/aujourdhui");
   });
 });
+
+describe("LoginView, deux moitiés (docs/65, complément 0.53.1)", () => {
+  it("Google, Apple, Microsoft présentés : un clic dit que ça arrive", async () => {
+    GET.mockResolvedValue({ data: anonymous });
+    const { wrapper } = await mountLogin();
+    expect(wrapper.find(".auth-art").exists()).toBe(true);
+    for (const id of ["google", "apple", "microsoft"]) {
+      expect(wrapper.find(`[data-test=social-${id}]`).exists()).toBe(true);
+    }
+    await wrapper.find("[data-test=social-google]").trigger("click");
+    expect(wrapper.find("[data-test=social-notice]").text()).toContain("Google arrive bientôt");
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=login-form]").exists()).toBe(true);
+  });
+});
