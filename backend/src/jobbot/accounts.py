@@ -54,7 +54,11 @@ async def owner_id(session: AsyncSession) -> int:
 
 
 async def account_ids(session: AsyncSession) -> list[int]:
-    return [int(i) for i in await session.scalars(select(User.id).order_by(User.id))]
+    """Les comptes pour qui tournent les tâches : un compte suspendu n'en a plus."""
+    rows = await session.scalars(
+        select(User.id).where(User.suspended_at.is_(None)).order_by(User.id)
+    )
+    return [int(i) for i in rows]
 
 
 async def is_owner(session: AsyncSession) -> bool:

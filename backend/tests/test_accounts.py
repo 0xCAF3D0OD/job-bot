@@ -209,6 +209,9 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
             "source_id": 1,
             "item_id": 1,
             "catalog_id": "inconnu",
+            "token": "inconnu",
+            "account_id": accounts.current(),
+            "link_id": 1,
         }
 
 

@@ -25,10 +25,12 @@ DEFAULT_PREFERENCES: dict[str, Any] = {
 async def main_profile(session: AsyncSession) -> Profile:
     profile = await session.scalar(select(Profile).where(Profile.is_main.is_(True)))
     if profile is None:
-        # Base sans profil (ne devrait pas arriver après la migration 0027) : on le recrée.
+        # Compte invité, à sa première visite (docs/65) : son profil, qui suit d'office les
+        # articles « marché de l'emploi » du catalogue.
         profile = Profile(name="Profil principal", is_main=True, preferences={})
         session.add(profile)
         await session.flush()
+        await subscribe_starters(session, profile.id)
     return profile
 
 

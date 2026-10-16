@@ -124,7 +124,9 @@ Une rubrique à la fois : Recherche d'emploi (objectif ORP, date limite, seuil d
 
 ### Connexion et profils d'essai
 
-La plateforme se protège par un mot de passe (page Connexion) ; seules les Actualités sont publiques. Les profils d'essai changent seulement les Actualités et les Formations ; les candidatures, offres et preuves ORP sont communes.
+La plateforme se protège par un mot de passe (page Connexion) ; seules les Actualités sont publiques. Les profils d'essai (outil de l'exploitant) changent seulement les Actualités et les Formations ; les candidatures, offres et preuves ORP restent celles du compte.
+
+Comptes (docs/65) : chaque personne a son compte et ne voit que ses données. Pas d'inscription : l'exploitant de la plateforme invite par un lien, et crée aussi les liens de nouveau mot de passe (Réglages, rubrique Plateforme, visible par lui seul). Un compte invité a un plafond de l'IA fixé par l'exploitant, et peut recevoir ses alertes sur son téléphone (Réglages › Notifications, application ntfy).
 
 ### Coût de l'IA
 

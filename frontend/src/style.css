@@ -2264,3 +2264,15 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .ai-spend-figures strong { font-size: 1.3rem; }
 .ai-spend .bilan-bar.reached { background: var(--warn); }
 @media (min-width: 821px) { .ai-layout { grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem); align-items: start; } }
+
+/* Plateforme (docs/65 §5) : les comptes en lignes calmes, l'usage puis les actions. */
+.platform-accounts { list-style: none; margin: 0; padding: 0; display: grid; }
+.platform-accounts > li { display: grid; gap: 0.35rem; padding: 0.9rem 0; border-bottom: 1px solid var(--divider); }
+.platform-accounts > li:first-child { padding-top: 0; }
+.platform-accounts > li:last-child { border-bottom: 0; }
+.platform-account-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.platform-accounts p { margin: 0; }
+.platform-usage { font-size: 0.92rem; }
+.platform-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-top: 0.3rem; }
+.platform-actions .inline-field input { width: 5.5rem; }
+.platform-link > p { flex-basis: 100%; margin: 0; }

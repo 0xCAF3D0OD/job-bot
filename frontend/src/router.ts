@@ -7,6 +7,7 @@ import { startPage } from "./composables/usePageTransition";
 import AlertsView from "./views/AlertsView.vue";
 import InsightsView from "./views/InsightsView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
+import AccessView from "./views/AccessView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
 import JobsView from "./views/JobsView.vue";
 import LoginView from "./views/LoginView.vue";
@@ -115,6 +116,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/reglages/diagnostic", name: "diagnostic", component: DiagnosticView },
   // Connexion (docs/18 §1).
   { path: "/connexion", name: "login", component: LoginView },
+  // Lien d'invitation ou de réinitialisation, transmis par l'exploitant (docs/65 §2).
+  { path: "/acces/:token", name: "access", component: AccessView },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/candidatures/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   // Adresse inconnue (docs/59 §5) : une page qui le dit.
@@ -127,8 +130,8 @@ export const router = createRouter({
   scrollBehavior: (to) => (to.hash ? { el: to.hash, top: 80 } : { top: 0 }),
 });
 
-// Ouvert sans connexion : les Actualités et la page de connexion (docs/18 §1).
-export const PUBLIC_ROUTES = new Set(["news", "login"]);
+// Ouvert sans connexion : les Actualités, la connexion (docs/18 §1) et les liens d'accès.
+export const PUBLIC_ROUTES = new Set(["news", "login", "access"]);
 
 router.beforeEach(async (to) => {
   const { loggedIn, load } = useAuth();

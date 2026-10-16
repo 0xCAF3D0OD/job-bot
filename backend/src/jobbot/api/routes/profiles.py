@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
+from jobbot.api.owner import require_owner
 from jobbot.api.routes.news import Country, Language, NewsPreferences
 from jobbot.db.models import Profile, ProfileSource
 from jobbot.profiles import keywords, service
@@ -102,6 +103,8 @@ async def list_profiles(request: Request) -> ProfileList:
 async def create_profile(request: Request, body: ProfileIn) -> ProfileList:
     """Profil fictif : nom, métier, « Mon domaine », pays et langues ; il suit au départ les
     articles « marché de l'emploi »."""
+    # Les profils d'essai sont un outil de l'exploitant (docs/65 §4).
+    await require_owner(_runtime(request))
     preferences = NewsPreferences(
         domain_keywords=body.domain_keywords,
         domain_only=bool(body.domain_keywords),
@@ -143,6 +146,8 @@ async def propose_keywords(request: Request, body: ProfileKeywordsIn) -> Profile
 )
 async def duplicate_profile(request: Request, profile_id: int) -> ProfileList:
     """Copie d'un profil (préférences et sources), pour comparer deux variantes."""
+    # Les profils d'essai sont un outil de l'exploitant (docs/65 §4).
+    await require_owner(_runtime(request))
     async with _runtime(request).sessionmaker.begin() as session:
         original = await session.get(Profile, profile_id)
         if original is None:
@@ -176,6 +181,8 @@ async def update_profile(request: Request, profile_id: int, body: ProfileUpdate)
     responses={409: {"description": "Le profil principal ne se supprime pas"}},
 )
 async def delete_profile(request: Request, profile_id: int) -> ProfileList:
+    # Les profils d'essai sont un outil de l'exploitant (docs/65 §4).
+    await require_owner(_runtime(request))
     async with _runtime(request).sessionmaker.begin() as session:
         profile = await session.get(Profile, profile_id)
         if profile is None:

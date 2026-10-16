@@ -24,7 +24,7 @@ describe("routes réservées (docs/18 §1)", () => {
   });
 
   it("connecté : la page de connexion renvoie vers l'application", async () => {
-    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true };
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false };
     const { router } = await import("./router");
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("trainings");

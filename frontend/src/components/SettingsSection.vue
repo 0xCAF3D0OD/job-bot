@@ -28,6 +28,7 @@ const ICONS: Record<string, Icon> = {
   ia: "spark",
   compte: "shield",
   outils: "plug",
+  plateforme: "user",
 };
 </script>
 

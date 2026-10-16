@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path, PurePosixPath
 
 
@@ -28,3 +29,7 @@ class LocalStorage:
 
     def exists(self, key: str) -> bool:
         return self._path(key).is_file()
+
+    def delete_folder(self, prefix: str) -> None:
+        """Tout un dossier (« accounts/7 ») : les fichiers d'un compte supprimé (docs/65)."""
+        shutil.rmtree(self._path(prefix.rstrip("/")), ignore_errors=True)

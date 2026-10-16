@@ -1,12 +1,12 @@
 """Prérequis (filtre) et réglages, saisis dans l'interface (docs/04 §3 et §6)."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 
 from jobbot import accounts
@@ -23,6 +23,7 @@ from jobbot.db.models import Criterion, Setting
 from jobbot.filtering.service import load_criteria, save_criteria
 from jobbot.notify import service as notify_service
 from jobbot.runtime import Runtime
+from jobbot.scoring.service import budget_details
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.filter import FILTER_JOB
 
@@ -146,6 +147,11 @@ async def start_filter(request: Request) -> FilterResponse:
 async def get_settings(request: Request) -> SettingsModel:
     async with _runtime(request).sessionmaker() as session:
         rows = {s.key: s.value for s in await session.scalars(select(Setting))}
+        if not await accounts.is_owner(session):
+            # Compte invité : le plafond de l'IA est celui que l'exploitant a fixé (docs/65 §4).
+            rows["llm_monthly_budget_chf"] = float(
+                (await budget_details(session, datetime.now(UTC))).cap
+            )
     return SettingsModel.model_validate(
         {k: v for k, v in rows.items() if k in SettingsModel.model_fields}
     )
@@ -154,13 +160,17 @@ async def get_settings(request: Request) -> SettingsModel:
 @router.put("/settings", operation_id="saveSettings")
 async def put_settings(request: Request, body: SettingsModel) -> SettingsModel:
     async with _runtime(request).sessionmaker.begin() as session:
-        for key, value in body.model_dump().items():
+        values = body.model_dump()
+        if not await accounts.is_owner(session):
+            # Fixé par l'exploitant : un compte invité ne le change pas.
+            values.pop("llm_monthly_budget_chf")
+        for key, value in values.items():
             await session.execute(
                 insert(Setting)
                 .values(key=key, value=value)
                 .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
             )
-    return body
+    return await get_settings(request)
 
 
 # --- Filtres affichés sur la page Offres (docs/10 §3) -----------------------------------
@@ -281,14 +291,58 @@ async def put_orp_columns(request: Request, body: OrpColumnsVisible) -> OrpColum
 
 class NotificationsStatus(BaseModel):
     configured: bool
-    # Serveur ntfy (sans le sujet, qui est secret).
+    # Serveur ntfy (sans le sujet de l'installation, qui est secret).
     server: str
+    # Compte invité (docs/65 §4) : son propre sujet, qu'il active lui-même et qu'il suit dans
+    # l'application ntfy ; vide pour l'exploitant, dont le sujet est celui de l'installation.
+    personal: bool = False
+    topic: str | None = None
+
+
+class PhoneIn(BaseModel):
+    enabled: bool
 
 
 @router.get("/notifications", operation_id="getNotifications")
 async def get_notifications(request: Request) -> NotificationsStatus:
-    settings = _runtime(request).settings
-    return NotificationsStatus(configured=settings.ntfy_configured, server=settings.ntfy_url)
+    runtime = _runtime(request)
+    settings = runtime.settings
+    async with runtime.sessionmaker() as session:
+        if await accounts.is_owner(session):
+            return NotificationsStatus(
+                configured=settings.ntfy_configured, server=settings.ntfy_url
+            )
+        topic = await session.scalar(
+            select(Setting.value).where(Setting.key == notify_service.PHONE_TOPIC)
+        )
+    return NotificationsStatus(
+        configured=bool(topic), server=settings.ntfy_url, personal=True, topic=topic or None
+    )
+
+
+@router.put(
+    "/notifications/phone",
+    operation_id="setPhoneNotifications",
+    responses={409: {"description": "Réglage d'installation pour l'exploitant"}},
+)
+async def set_phone(request: Request, body: PhoneIn) -> NotificationsStatus:
+    """Compte invité : recevoir ses alertes sur son téléphone, avec un sujet ntfy à lui."""
+    runtime = _runtime(request)
+    async with runtime.sessionmaker.begin() as session:
+        if await accounts.is_owner(session):
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "ton sujet ntfy est un réglage d'installation (README)"
+            )
+        if body.enabled:
+            topic = notify_service.new_topic()
+            await session.execute(
+                insert(Setting)
+                .values(key=notify_service.PHONE_TOPIC, value=topic)
+                .on_conflict_do_nothing(index_elements=["user_id", "key"])
+            )
+        else:
+            await session.execute(delete(Setting).where(Setting.key == notify_service.PHONE_TOPIC))
+    return await get_notifications(request)
 
 
 @router.post(
@@ -299,16 +353,12 @@ async def get_notifications(request: Request) -> NotificationsStatus:
 )
 async def test_notification(request: Request) -> None:
     runtime = _runtime(request)
-    settings = runtime.settings
     async with runtime.sessionmaker() as session:
-        # Le sujet ntfy est celui de l'installation : réservé à l'exploitant (docs/65 §4).
-        owner = await accounts.is_owner(session)
-    if not settings.ntfy_configured or not owner:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "notifications non configurées : renseigner JOBBOT_NTFY_TOPIC"
-        )
+        target = await notify_service.phone_settings(session, runtime.settings)
+    if target is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "notifications non configurées")
     try:
-        await notify_service.send_test(settings)
+        await notify_service.send_test(target)
     except httpx.HTTPError as exc:
         raise HTTPException(
             status.HTTP_502_BAD_GATEWAY, f"envoi refusé par le serveur ntfy ({type(exc).__name__})"

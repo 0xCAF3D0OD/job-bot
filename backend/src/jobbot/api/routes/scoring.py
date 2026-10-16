@@ -12,7 +12,7 @@ from jobbot.db.models import Evaluation, JobRun, JobRunStatus, LlmBatch, Offer
 from jobbot.llm.scoring import COMPATIBLE_VERSIONS, profile_hash
 from jobbot.runtime import Runtime
 from jobbot.scoring import remote
-from jobbot.scoring.service import TO_SCORE, active_profile, budget_state
+from jobbot.scoring.service import TO_SCORE, active_profile, budget_details
 from jobbot.worker.queue import enqueue
 from jobbot.worker.tasks.score import REMOTE_JOB, RESCORE_JOB, SCORE_JOB
 
@@ -23,8 +23,10 @@ class ScoringStatus(BaseModel):
     configured: bool
     model: str
     month_spend_chf: Decimal
+    # Le plafond du compte (docs/65 §4) ; atteint aussi quand la plateforme a atteint le sien.
     budget_chf: Decimal
     budget_reached: bool
+    platform_budget_reached: bool = False
     active_chunks: int
     scored: int
     unscored: int
@@ -51,7 +53,7 @@ async def get_scoring_status(request: Request) -> ScoringStatus:
     async with runtime.sessionmaker() as session:
         profile = await active_profile(session)
         current = profile_hash(profile)
-        spend, budget, _ = await budget_state(session, datetime.now(UTC))
+        budget = await budget_details(session, datetime.now(UTC))
         base = (
             select(func.count())
             .select_from(Offer)
@@ -98,9 +100,10 @@ async def get_scoring_status(request: Request) -> ScoringStatus:
     return ScoringStatus(
         configured=runtime.settings.llm_configured,
         model=runtime.settings.llm_model,
-        month_spend_chf=spend.quantize(Decimal("0.01")),
-        budget_chf=budget,
-        budget_reached=spend >= budget,
+        month_spend_chf=budget.spend.quantize(Decimal("0.01")),
+        budget_chf=budget.cap,
+        budget_reached=budget.spend >= budget.effective,
+        platform_budget_reached=budget.platform_reached,
         active_chunks=len(profile),
         scored=scored,
         unscored=unscored,

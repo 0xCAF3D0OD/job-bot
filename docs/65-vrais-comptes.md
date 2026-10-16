@@ -1,6 +1,6 @@
 # 65 — De vrais comptes : plusieurs chercheurs d'emploi sur la même plateforme (versions 0.50 à 0.53)
 
-> Statut : **validé** le 2026-10-16. 0.50.0 livrée ; 0.51 à 0.53 à suivre.
+> Statut : **validé** le 2026-10-16. 0.50.0 et 0.51.0 livrées ; 0.52 et 0.53 à suivre.
 > Suite de docs/17 (option B, « plus tard ») : aujourd'hui, la plateforme a **un seul compte** (le tien, créé par `jobbot set-password`), et tout est commun : offres, candidatures, preuves ORP, profil, réglages, IA. Les profils d'essai ne changent que les Actualités et les Formations. Le but : que d'autres chercheurs d'emploi utilisent la plateforme, chacun avec **ses** données, sans jamais voir celles des autres.
 
 ## 1. Ce que chacun a à soi, ce qui reste commun
@@ -106,3 +106,16 @@ Chaque PR est vérifiée avec deux comptes sur l'instance de test (jamais sur ta
 - **Fichiers** : les nouveaux documents et e-mails vont sous `accounts/<compte>/` ; les anciens restent où ils sont.
 - **Le test des deux comptes** appelle les 153 routes de l'API (lues dans le schéma : une route ajoutée plus tard est testée d'office) avec un corps valide et les numéros des lignes de A, plus l'extension avec son propre jeton et le lien d'agenda : B ne voit, ne modifie ni ne supprime rien de A, ni des données communes. Un second test vérifie la base elle-même (lecture et écriture au nom d'un autre compte refusées, rien sans compte), un troisième les tâches compte par compte.
 - **À faire de ton côté** : `make migrate` avant de relancer `make dev` (les migrations ne se lancent jamais au démarrage).
+
+## Écarts avec la livraison de 0.51.0
+
+- **Invitations** : Réglages, rubrique **Plateforme** (visible par toi seul) : « Inviter quelqu'un » montre une fois le lien `/acces/…`, valable 7 jours, à transmettre toi-même ; les invitations en attente se retirent. La page du lien demande l'identifiant (40 caractères au plus, pas déjà pris) et le mot de passe deux fois (12 caractères au moins), puis ouvre la session.
+- **Nouveau mot de passe** : « Lien de nouveau mot de passe » sur la ligne du compte, valable 24 h ; un nouveau lien remplace le précédent ; ses autres sessions sont fermées.
+- **Suspendre** : plus de connexion (« compte suspendu »), sessions fermées, plus de tâches ; ses données restent. **Supprimer** : il faut écrire son identifiant pour confirmer ; le compte, toutes ses lignes et son dossier de fichiers sont effacés. Ton compte ne se suspend ni ne se supprime.
+- **Ce que tu vois** : identifiant, création, dernière connexion, dépense de l'IA du mois sur son plafond, offres reçues ce mois. Les totaux viennent de deux fonctions de la base, qui ne rendent que ces chiffres.
+- **IA** : chaque compte invité a 5 CHF par mois par défaut, que tu changes sur sa ligne ; il voit son plafond sans pouvoir le changer. Ton plafond reste celui de tes Réglages (rubrique IA). Plafond total de la plateforme : 50 CHF par mois par défaut, réglable ; atteint, l'IA s'arrête pour tous, et la carte de la dépense le dit.
+- **Notifications** : un compte invité choisit « Recevoir sur mon téléphone » ; la plateforme lui tire un sujet ntfy au hasard, qu'il suit dans l'application ; « Arrêter » l'efface. Rien ne part vers ntfy sans ce choix. Toi, tu gardes le sujet de l'installation.
+- **Compte neuf** : son profil principal est créé à sa première connexion (ou à l'invitation) et suit d'office les articles « marché de l'emploi », comme un profil d'essai. Le compte `infirmiere` de ta base en aura un à sa prochaine connexion.
+- **Profils d'essai** : créer, dupliquer ou supprimer un profil d'essai est réservé à l'exploitant (**403** sinon), et la section n'apparaît pas pour les autres.
+- **Pas encore** : les sites d'emploi suivis restent communs et réservés à l'exploitant ; ils passeront par compte avec les adresses de réception (0.52).
+- **Vérifié** : sur l'instance de test, une invitation créée dans la rubrique Plateforme, le compte « camille » créé par son lien, qui arrive sur un Aujourd'hui vide (aucune des offres de l'exploitant) et voit son plafond fixé et l'activation des notifications ; la rubrique Plateforme ne lui apparaît pas.
