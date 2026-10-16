@@ -14,7 +14,7 @@ defineProps<{ title: string; subtitle?: string }>();
       aria-hidden="true"
     >
       <Illustration
-        name="login"
+        name="emails-tries"
         class="auth-illu"
       />
       <p class="auth-tagline">

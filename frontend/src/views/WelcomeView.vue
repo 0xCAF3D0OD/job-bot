@@ -88,14 +88,14 @@ function jump(to: number): void {
 
 // L'écran de la date a déjà son calendrier : pas d'illustration.
 const ART: Partial<Record<StepKey, IllustrationName>> = {
-  goal: "morning-plans",
-  trade: "stepping-up",
-  places: "mailbox",
-  rate: "tight-deadline",
-  orp: "certification",
-  cv: "my-resume",
-  phone: "lock-screen-notifications",
-  ready: "handshake-deal",
+  goal: "accueil-reseau",
+  trade: "formations",
+  places: "lieux-carte",
+  rate: "tableau-de-bord",
+  orp: "preuves-orp",
+  cv: "offres-profils",
+  phone: "lecture-calme",
+  ready: "suivi-envoi",
 };
 
 const GOALS: { id: Goal; icon: Icon; title: string; hint: string }[] = [
@@ -612,7 +612,7 @@ function edit(key: StepKey): void {
               Prochaine étape : créer tes alertes sur les sites d'emploi. La recherche est déjà remplie.
             </p>
             <Illustration
-              name="detailed-answer"
+              name="messager"
               class="welcome-character"
             />
           </div>

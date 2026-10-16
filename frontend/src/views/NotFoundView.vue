@@ -9,7 +9,7 @@ import IllustratedSide from "../components/IllustratedSide.vue";
   <section class="band not-found">
     <div class="container">
       <IllustratedSide
-        name="page-eaten"
+        name="lecture-calme"
         phone="small"
         class="empty-state"
       >

@@ -1,66 +1,77 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
-// Illustration unDraw (règles dans docs/interface.md, docs/62) : insérée dans la page pour prendre
-// les couleurs du thème (feuille de style, `.illu [fill=…]`) ; son animation joue une fois.
-// Chargée seulement quand elle s'affiche.
+// Illustration de jobA1 (docs/67) : une image générée pour la plateforme, préparée par
+// scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
+// fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
 const props = withDefaults(defineProps<{ name: IllustrationName; label?: string; size?: "small" | "medium" | "large" }>(), {
   label: "",
   size: "medium",
 });
 
-const files = import.meta.glob<string>("../assets/illustrations/*.svg", { query: "?raw", import: "default" });
-// Le dessin est posé tel quel dans la page (fichiers du dépôt, préparés par
-// scripts/illustrations.mjs) : c'est ce qui lui permet de suivre les couleurs du thème.
-const host = ref<HTMLElement | null>(null);
+const files = import.meta.glob<string>("../assets/illustrations/*.webp", { query: "?url", import: "default", eager: true });
 
-// Le texte du dessin et son emplacement arrivent dans n'importe quel ordre : on le pose dès que
-// les deux sont là (sinon une illustration peut rester vide).
-const svg = ref("");
+function srcset(name: string): string {
+  return [480, 800]
+    .map((width) => [files[`../assets/illustrations/${name}-${width}.webp`], width] as const)
+    .filter(([url]) => url)
+    .map(([url, width]) => `${url} ${width}w`)
+    .join(", ");
+}
+
+const light = computed(() => srcset(props.name));
+const dark = computed(() => srcset(`${props.name}-sombre`));
+const loaded = ref(false);
 watch(
   () => props.name,
-  async (name) => {
-    const load = files[`../assets/illustrations/${name}.svg`];
-    const text = load ? await load() : "";
-    if (name === props.name) svg.value = text;
-  },
-  { immediate: true },
-);
-watch(
-  [host, svg],
-  ([el, text]) => {
-    if (el) el.innerHTML = text;
-  },
-  { flush: "post", immediate: true },
+  () => (loaded.value = false),
 );
 </script>
 
 <script lang="ts">
 export type IllustrationName =
-  | "absorbed"
-  | "certification"
-  | "detailed-answer"
-  | "done"
-  | "handshake-deal"
-  | "lock-screen-notifications"
-  | "login"
-  | "mailbox"
-  | "message-sent"
-  | "morning-plans"
-  | "my-resume"
-  | "page-eaten"
-  | "stepping-up"
-  | "tight-deadline";
+  | "accueil-reseau"
+  | "actualites-video"
+  | "alertes-carte"
+  | "aucune-offre"
+  | "bilan"
+  | "emails-tries"
+  | "formations"
+  | "lecture-calme"
+  | "lieux-carte"
+  | "messager"
+  | "offres-profils"
+  | "porte-ouverte"
+  | "preuves-orp"
+  | "suivi-envoi"
+  | "tableau-de-bord";
 </script>
 
 <template>
   <span
-    ref="host"
-    :class="['illu', size]"
+    :class="['illu', size, { loaded, 'no-dark': !dark }]"
     :role="label ? 'img' : undefined"
     :aria-label="label || undefined"
     :aria-hidden="label ? undefined : 'true'"
     :data-illustration="name"
-  />
+  >
+    <picture :key="name">
+      <source
+        v-if="dark"
+        media="(prefers-color-scheme: dark)"
+        :srcset="dark"
+        sizes="(max-width: 820px) 200px, 380px"
+      >
+      <img
+        :src="files[`../assets/illustrations/${name}-480.webp`]"
+        :srcset="light"
+        sizes="(max-width: 820px) 200px, 380px"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        @load="loaded = true"
+      >
+    </picture>
+  </span>
 </template>

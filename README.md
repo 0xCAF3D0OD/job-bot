@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/66-onboarding.md](docs/66-onboarding.md) (0.54.0)
+- Version en cours : [docs/67-illustrations-generees.md](docs/67-illustrations-generees.md) (0.55.0)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -84,6 +84,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.53.0 | Tes données : page publique (ce qui est gardé, ce qui part à l'IA, tes mentions), export complet du compte, suppression de son compte | livrée |
 | 0.53.1 | Page de connexion en deux moitiés : illustration à gauche, connexion à droite ; Google, Apple, Microsoft présentés (pas encore branchés) | livrée |
 | 0.54.0 | L'accueil après la première connexion, façon Duolingo : sept questions en cartes, chaque réponse règle la plateforme, puis la création des alertes | livrée |
+| 0.55.0 | Les illustrations de jobA1 : des images générées pour la plateforme remplacent les dessins unDraw (gardés en réserve) ; série sombre à venir | livrée |
 
 ## Lancer en local
 

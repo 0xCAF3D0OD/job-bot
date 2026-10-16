@@ -285,7 +285,7 @@ const intro = firstTime("bilan-funnel");
         v-if="insights.funnel.applications === 0"
         class="empty-state"
         data-test="insights-empty"
-        name="stepping-up"
+        name="bilan"
         phone="small"
       >
         <p>Pas encore de candidature sur cette période : le bilan se remplit au fil de tes envois.</p>

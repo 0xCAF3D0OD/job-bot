@@ -50,7 +50,7 @@ onUnmounted(() => document.removeEventListener("keydown", onKey, true));
         aria-labelledby="engagement-title"
       >
         <div class="engagement-art">
-          <Illustration name="handshake-deal" />
+          <Illustration name="porte-ouverte" />
           <span
             class="confetti"
             aria-hidden="true"

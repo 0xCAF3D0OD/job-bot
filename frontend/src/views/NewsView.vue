@@ -355,7 +355,7 @@ onUnmounted(() => {
       <IllustratedSide
         v-else-if="!items.length"
         class="empty-state empty"
-        name="absorbed"
+        name="actualites-video"
         phone="small"
       >
         <p>
