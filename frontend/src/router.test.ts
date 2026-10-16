@@ -24,7 +24,7 @@ describe("routes réservées (docs/18 §1)", () => {
   });
 
   it("connecté : la page de connexion renvoie vers l'application", async () => {
-    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false };
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done" };
     const { router } = await import("./router");
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("trainings");
@@ -47,5 +47,26 @@ describe("routes réservées (docs/18 §1)", () => {
     // État technique devenu la page Diagnostic (docs/21 §6).
     await router.push("/etat");
     expect(router.currentRoute.value.name).toBe("diagnostic");
+  });
+});
+
+describe("accueil d'un nouveau compte (docs/66 §4)", () => {
+  it("à faire : chaque page mène à l'accueil ; remis à plus tard : on circule", async () => {
+    useAuth().me.value = {
+      authenticated: true,
+      username: "camille",
+      setup_needed: false,
+      auth_enabled: true,
+      is_owner: false,
+      welcome: "pending",
+    };
+    const { router } = await import("./router");
+    await router.push("/formations");
+    expect(router.currentRoute.value.name).toBe("welcome");
+    await router.push("/tes-donnees");
+    expect(router.currentRoute.value.name).toBe("privacy");
+    useAuth().me.value = { ...useAuth().me.value!, welcome: "postponed" };
+    await router.push("/formations");
+    expect(router.currentRoute.value.name).toBe("trainings");
   });
 });

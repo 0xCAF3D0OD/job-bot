@@ -9,6 +9,7 @@ import InsightsView from "./views/InsightsView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
 import AccessView from "./views/AccessView.vue";
 import PrivacyView from "./views/PrivacyView.vue";
+import WelcomeView from "./views/WelcomeView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
 import JobsView from "./views/JobsView.vue";
 import LoginView from "./views/LoginView.vue";
@@ -121,6 +122,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/acces/:token", name: "access", component: AccessView },
   // Ce que la plateforme garde, lisible sans connexion (docs/65 §6).
   { path: "/tes-donnees", name: "privacy", component: PrivacyView },
+  // L'accueil après la première connexion (docs/66), plein écran, sans menu.
+  { path: "/bienvenue", name: "welcome", component: WelcomeView, meta: { bare: true } },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/candidatures/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   // Adresse inconnue (docs/59 §5) : une page qui le dit.
@@ -143,6 +146,11 @@ router.beforeEach(async (to) => {
     if (!loggedIn.value) return true;
     const wanted = typeof to.query.suite === "string" ? to.query.suite : "";
     return wanted.startsWith("/") && !wanted.startsWith("//") ? wanted : "/aujourdhui";
+  }
+  // Un nouveau compte passe d'abord par l'accueil (docs/66 §4) ; « Plus tard » le laisse aller.
+  const { me } = useAuth();
+  if (loggedIn.value && me.value?.welcome === "pending" && to.name !== "welcome" && !PUBLIC_ROUTES.has(String(to.name))) {
+    return { name: "welcome" };
   }
   if (loggedIn.value || PUBLIC_ROUTES.has(String(to.name))) return true;
   return { name: "login", query: { suite: to.fullPath } };

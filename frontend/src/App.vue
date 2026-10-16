@@ -49,7 +49,10 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
 </script>
 
 <template>
-  <header :class="['topbar', { 'has-burger': loggedIn }]">
+  <header
+    v-if="!route.meta.bare"
+    :class="['topbar', { 'has-burger': loggedIn }]"
+  >
     <div class="topbar-inner">
       <RouterLink
         to="/"
@@ -149,5 +152,5 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
     <RouterView />
   </main>
   <PageTransition />
-  <AssistantPanel v-if="loggedIn" />
+  <AssistantPanel v-if="loggedIn && !route.meta.bare" />
 </template>
