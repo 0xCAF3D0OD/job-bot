@@ -2,12 +2,14 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import PageHero from "../components/PageHero.vue";
+import AuthSplit from "../components/AuthSplit.vue";
+import HoverNote from "../components/HoverNote.vue";
+import SocialSignIn from "../components/SocialSignIn.vue";
 import { useAuth } from "../composables/useAuth";
 
-import HoverNote from "../components/HoverNote.vue";
-import IllustratedSide from "../components/IllustratedSide.vue";
-// Page de connexion (docs/18 §1) : un seul compte, créé en ligne de commande.
+// Page de connexion (docs/18 §1) : l'écran coupé en deux, l'illustration à gauche et la
+// connexion à droite ; Google, Apple et Microsoft présentés, pas encore branchés (docs/65,
+// complément 0.53.1).
 const route = useRoute();
 const router = useRouter();
 const { me, load, login } = useAuth();
@@ -42,72 +44,73 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <PageHero
+  <AuthSplit
     title="Se connecter"
-    subtitle="Less searching. More living. Les Actualités sont ouvertes ; le reste demande ta connexion."
-  />
-  <section class="band">
-    <div class="container narrow login-container">
-      <IllustratedSide name="login">
-        <div
-          v-if="me?.setup_needed"
-          class="form-card"
-          data-test="setup-needed"
-        >
-          <p>
-            Aucun compte n'existe encore.
-            <HoverNote text="L'identifiant et le mot de passe (12 caractères au moins) sont demandés au clavier, sans s'afficher. Le mot de passe est enregistré haché, jamais en clair ; ne le transmets à personne.">
-              Crée-le une fois
-            </HoverNote>, dans un terminal, depuis le dossier du projet :
-          </p>
-          <pre class="command"><code>cd backend && uv run jobbot set-password</code></pre>
-        </div>
-        <form
-          v-else
-          class="form-card login-form"
-          data-test="login-form"
-          @submit.prevent="submit"
-        >
-          <label>Identifiant
-            <input
-              v-model="username"
-              type="text"
-              autocomplete="username"
-              autocapitalize="none"
-              spellcheck="false"
-              required
-              data-test="username"
-            >
-          </label>
-          <label>Mot de passe
-            <input
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              data-test="password"
-            >
-          </label>
-          <p
-            v-if="error"
-            class="notice"
-            role="alert"
-            data-test="login-error"
-          >
-            {{ error }}
-          </p>
-          <div class="form-actions">
-            <button
-              type="submit"
-              class="primary"
-              :disabled="busy"
-              data-test="login-submit"
-            >
-              {{ busy ? "Connexion…" : "Se connecter" }}
-            </button>
-          </div>
-        </form>
-      </IllustratedSide>
+    subtitle="Les Actualités sont ouvertes à tous ; le reste demande ta connexion."
+  >
+    <div
+      v-if="me?.setup_needed"
+      class="auth-setup"
+      data-test="setup-needed"
+    >
+      <p>
+        Aucun compte n'existe encore.
+        <HoverNote text="L'identifiant et le mot de passe (12 caractères au moins) sont demandés au clavier, sans s'afficher. Le mot de passe est enregistré haché, jamais en clair ; ne le transmets à personne.">
+          Crée-le une fois
+        </HoverNote>, dans un terminal, depuis le dossier du projet :
+      </p>
+      <pre class="command"><code>cd backend && uv run jobbot set-password</code></pre>
     </div>
-  </section>
+    <template v-else>
+      <SocialSignIn />
+      <form
+        class="login-form"
+        data-test="login-form"
+        @submit.prevent="submit"
+      >
+        <label>Identifiant
+          <input
+            v-model="username"
+            type="text"
+            autocomplete="username"
+            autocapitalize="none"
+            spellcheck="false"
+            required
+            data-test="username"
+          >
+        </label>
+        <label>Mot de passe
+          <input
+            v-model="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            data-test="password"
+          >
+        </label>
+        <p
+          v-if="error"
+          class="notice"
+          role="alert"
+          data-test="login-error"
+        >
+          {{ error }}
+        </p>
+        <button
+          type="submit"
+          class="primary auth-submit"
+          :disabled="busy"
+          data-test="login-submit"
+        >
+          {{ busy ? "Connexion…" : "Se connecter" }}
+        </button>
+      </form>
+      <p class="hint auth-foot">
+        Pas encore de compte ? L'accès se fait sur invitation.
+        <RouterLink to="/tes-donnees">
+          Tes données
+        </RouterLink>
+      </p>
+    </template>
+  </AuthSplit>
 </template>

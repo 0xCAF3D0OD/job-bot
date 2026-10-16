@@ -6,7 +6,7 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 
 1. Une illustration seulement si l'écran n'a rien d'autre à montrer (vide, erreur, première fois) ou pour marquer un moment (réussite, transition d'une page qui charge).
 2. Jamais dans un formulaire, une liste ou un tableau ; jamais dans une carte (posée à côté, ou au-dessus pour la carte d'une réussite).
-3. Une seule famille : des objets et des personnages unDraw, sans maquette d'écran ni cadre. 220 px au plus, 140 sur téléphone. Deux exceptions, les moments : la carte d'une réussite (170 px, 130 sur téléphone) et l'Engagement (380 px, 200 sur téléphone).
+3. Une seule famille : des objets et des personnages unDraw, sans maquette d'écran ni cadre. 220 px au plus, 140 sur téléphone. Exceptions : les moments, la carte d'une réussite (170 px, 130 sur téléphone) et l'Engagement (380 px, 200 sur téléphone) ; la page de connexion, coupée en deux, où l'illustration occupe la moitié gauche (340 px au plus, 140 sur téléphone).
 4. Couleurs des tokens : violet `--accent`, encre `--faint`, plans `--border`, papier `--surface`. Décorative pour les lecteurs d'écran : le texte à côté dit tout.
 5. Animée une fois à l'apparition, rien si « réduire les animations » est demandé. Préparées par `frontend/scripts/illustrations.mjs`, sans changer leurs formes.
 

@@ -136,3 +136,13 @@ Chaque PR est vérifiée avec deux comptes sur l'instance de test (jamais sur ta
 - **Exporter** (Réglages › Compte, tous les comptes, toi compris) : une archive ZIP avec `data/<table>.json` pour chacune des 28 tables rangées par compte, les documents déposés et les e-mails d'alerte reçus, plus un LISEZ-MOI. Les empreintes des jetons ne sont pas reprises. Les PDF (lettres, CV, preuves ORP) ne sont pas régénérés : leur contenu est dans les données, et ils se téléchargent toujours depuis leurs pages.
 - **Supprimer mon compte** : pour un compte invité, avec son mot de passe ; tout est effacé (lignes et dossier de fichiers), la session se ferme. Ton compte ne se supprime pas depuis la plateforme.
 - **Vérifié** : un test ouvre l'archive d'un compte et n'y trouve rien d'un autre ; sur l'instance de test, la page publique sans connexion, puis « camille » qui exporte son archive (`jobA1-camille-2026-10-16.zip`).
+
+## Complément 0.53.1 : la page de connexion en deux moitiés
+
+Retour du 2026-10-16 : « une page séparée en deux, une illustration à gauche et la connexion à droite ; pouvoir se connecter avec Google, Apple ou autre, à faire fonctionner plus tard, mais présenté ainsi ».
+
+- **Ordinateur** : à gauche, sur fond violet très clair, l'illustration de la connexion en grand, « Less searching. More living. » et une phrase sur la plateforme ; à droite, « Se connecter », les boutons **Continuer avec Google, Apple, Microsoft**, un séparateur « ou », puis l'identifiant et le mot de passe. En bas : « Pas encore de compte ? L'accès se fait sur invitation » et le lien vers « Tes données ».
+- **Les boutons Google, Apple, Microsoft sont présentés, pas branchés** : un clic dit « La connexion avec Google arrive bientôt. Pour l'instant, utilise ton identifiant et ton mot de passe. » Rien n'est envoyé nulle part. Les brancher demandera de déclarer la plateforme chez chacun (identifiants d'application, adresse de retour), une décision et une configuration à toi, et de relier un compte existant ou d'en créer un sur invitation.
+- **Téléphone** : l'illustration en petit au-dessus, le formulaire en dessous.
+- La page des liens d'invitation et de nouveau mot de passe prend la même mise en page.
+- `docs/interface.md` : la page de connexion est la seule où l'illustration va jusqu'à 340 px.

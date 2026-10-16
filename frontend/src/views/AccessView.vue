@@ -3,8 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
-import IllustratedSide from "../components/IllustratedSide.vue";
-import PageHero from "../components/PageHero.vue";
+import AuthSplit from "../components/AuthSplit.vue";
 import { useAuth } from "../composables/useAuth";
 import { formatDate } from "../format";
 
@@ -64,98 +63,90 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <PageHero
-    :title="link?.kind === 'reset' ? 'Nouveau mot de passe' : 'Bienvenue sur jobA1'"
-    subtitle="Less searching. More living."
-  />
-  <section class="band">
-    <div class="container narrow login-container">
-      <IllustratedSide name="login">
-        <div
-          v-if="problem"
-          class="form-card"
-          data-test="access-problem"
-        >
-          <p>{{ problem }}</p>
-          <p class="hint">
-            Demande un nouveau lien à la personne qui t'a invité.
-          </p>
-        </div>
-        <form
-          v-else-if="link"
-          class="form-card login-form"
-          data-test="access-form"
-          @submit.prevent="submit"
-        >
-          <p
-            v-if="link.kind === 'reset'"
-            class="hint"
-          >
-            Pour le compte <strong>{{ link.username }}</strong>. Tes autres sessions seront fermées.
-          </p>
-          <p
-            v-else
-            class="hint"
-          >
-            Choisis ton identifiant et ton mot de passe. Lien valable jusqu'au {{ formatDate(link.expires_at) }}.
-            Avant : <RouterLink
-              to="/tes-donnees"
-              target="_blank"
-            >
-              ce que la plateforme garde sur toi
-            </RouterLink>.
-          </p>
-          <label v-if="link.kind === 'invite'">Identifiant
-            <input
-              v-model="username"
-              type="text"
-              autocomplete="username"
-              autocapitalize="none"
-              spellcheck="false"
-              maxlength="40"
-              required
-              data-test="access-username"
-            >
-          </label>
-          <label>Mot de passe (12 caractères au moins)
-            <input
-              v-model="password"
-              type="password"
-              autocomplete="new-password"
-              minlength="12"
-              required
-              data-test="access-password"
-            >
-          </label>
-          <label>Encore une fois
-            <input
-              v-model="again"
-              type="password"
-              autocomplete="new-password"
-              required
-              data-test="access-again"
-            >
-          </label>
-          <p
-            v-if="error"
-            class="notice"
-            role="alert"
-            data-test="access-error"
-          >
-            {{ error }}
-          </p>
-          <div class="form-actions">
-            <button
-              type="submit"
-              class="primary"
-              :disabled="busy"
-              data-test="access-submit"
-            >
-              {{ link.kind === "reset" ? "Changer mon mot de passe" : "Créer mon compte" }}
-            </button>
-          </div>
-        </form>
-      </IllustratedSide>
+  <AuthSplit :title="link?.kind === 'reset' ? 'Nouveau mot de passe' : 'Bienvenue sur jobA1'">
+    <div
+      v-if="problem"
+      class="auth-setup"
+      data-test="access-problem"
+    >
+      <p>{{ problem }}</p>
+      <p class="hint">
+        Demande un nouveau lien à la personne qui t'a invité.
+      </p>
     </div>
-  </section>
+    <form
+      v-else-if="link"
+      class="login-form"
+      data-test="access-form"
+      @submit.prevent="submit"
+    >
+      <p
+        v-if="link.kind === 'reset'"
+        class="hint"
+      >
+        Pour le compte <strong>{{ link.username }}</strong>. Tes autres sessions seront fermées.
+      </p>
+      <p
+        v-else
+        class="hint"
+      >
+        Choisis ton identifiant et ton mot de passe. Lien valable jusqu'au {{ formatDate(link.expires_at) }}.
+        Avant : <RouterLink
+          to="/tes-donnees"
+          target="_blank"
+        >
+          ce que la plateforme garde sur toi
+        </RouterLink>.
+      </p>
+      <label v-if="link.kind === 'invite'">Identifiant
+        <input
+          v-model="username"
+          type="text"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          maxlength="40"
+          required
+          data-test="access-username"
+        >
+      </label>
+      <label>Mot de passe (12 caractères au moins)
+        <input
+          v-model="password"
+          type="password"
+          autocomplete="new-password"
+          minlength="12"
+          required
+          data-test="access-password"
+        >
+      </label>
+      <label>Encore une fois
+        <input
+          v-model="again"
+          type="password"
+          autocomplete="new-password"
+          required
+          data-test="access-again"
+        >
+      </label>
+      <p
+        v-if="error"
+        class="notice"
+        role="alert"
+        data-test="access-error"
+      >
+        {{ error }}
+      </p>
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="primary"
+          :disabled="busy"
+          data-test="access-submit"
+        >
+          {{ link.kind === "reset" ? "Changer mon mot de passe" : "Créer mon compte" }}
+        </button>
+      </div>
+    </form>
+  </AuthSplit>
 </template>
