@@ -14,8 +14,15 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 // nom dans la plateforme → fichier d'origine (sans .webp) ;
-// `efface` : un rectangle [gauche, haut, largeur, hauteur] de l'original rendu transparent.
+// `efface` : un rectangle [gauche, haut, largeur, hauteur] de l'original rendu transparent ;
+// `ovale` : le cadre [gauche, haut, largeur, hauteur] gardé, arrondi et aux bords estompés (pour
+// une scène sur fond plein, posée sur une autre couleur) ; `entiere` : l'image telle quelle, sans
+// rien rogner ; `ciel` : des pixels ajoutés en haut, de la couleur de son ciel uni ;
+// `largeurs` : les tailles écrites.
 export const ILLUSTRATIONS = {
+  // La connexion (docs/67, complément 0.55.2) : la ville et le bureau, l'image entière, son ciel
+  // prolongé vers le haut pour qu'elle remplisse aussi une moitié d'écran plus haute que large.
+  connexion: { source: "Connexion_Ville", entiere: true, ciel: 120, largeurs: [480, 800, 1200] },
   "accueil-reseau": { source: "15_Reseau" },
   "actualites-video": { source: "Actualites_C_Videos" },
   "alertes-carte": { source: "02_Alertes" },
@@ -36,9 +43,32 @@ export const ILLUSTRATIONS = {
 
 const OUT = fileURLToPath(new URL("../src/assets/illustrations/", import.meta.url));
 
+// Le cadre : un rectangle aux coins très arrondis, flouté pour que ses bords s'estompent ; le
+// milieu, où sont les personnages, reste net.
+function oval(width, height) {
+  const soft = Math.round(height * 0.06);
+  return Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+      `<defs><filter id="f" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${soft}"/></filter></defs>` +
+      `<rect x="${soft * 1.5}" y="${soft * 1.5}" width="${width - soft * 3}" height="${height - soft * 3}" ` +
+      `rx="${height * 0.45}" ry="${height * 0.45}" fill="#000" filter="url(#f)"/></svg>`,
+  );
+}
+
 // Les marges transparentes sont rognées : l'image remplit la place qu'on lui donne.
-async function prepare(file, { efface }) {
+async function prepare(file, { efface, ovale, entiere, ciel }) {
   let image = sharp(file).ensureAlpha();
+  if (entiere && ciel) {
+    const { data } = await sharp(file).extract({ left: 0, top: 0, width: 1, height: 1 }).raw().toBuffer({ resolveWithObject: true });
+    const background = { r: data[0], g: data[1], b: data[2], alpha: 1 };
+    return sharp(await image.extend({ top: ciel, background }).png().toBuffer());
+  }
+  if (entiere) return image;
+  if (ovale) {
+    const [left, top, width, height] = ovale;
+    const framed = await image.extract({ left, top, width, height }).png().toBuffer();
+    return sharp(await sharp(framed).composite([{ input: oval(width, height), blend: "dest-in" }]).png().toBuffer());
+  }
   if (efface) {
     const [left, top, width, height] = efface;
     const opaque = { create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } } };
@@ -48,7 +78,7 @@ async function prepare(file, { efface }) {
 }
 
 async function write(file, name, spec, suffix) {
-  for (const width of [480, 800]) {
+  for (const width of spec.largeurs ?? [480, 800]) {
     const image = await prepare(file, spec);
     const target = join(OUT, `${name}${suffix}-${width}.webp`);
     await image.resize({ width }).webp({ quality: 82, effort: 6, alphaQuality: 90 }).toFile(target);
