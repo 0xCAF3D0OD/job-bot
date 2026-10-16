@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import Illustration from "./Illustration.vue";
 
-// Connexion et liens d'accès (docs/65, complément 0.53.1) : l'écran coupé en deux, une
-// illustration et la phrase de la plateforme à gauche, le formulaire à droite. Sur téléphone,
-// le formulaire seul, l'illustration en petit au-dessus.
+// Connexion et liens d'accès (docs/65, complément 0.53.1) : l'écran coupé en deux, la scène qui
+// remplit la moitié gauche avec la phrase de la plateforme dessus (docs/67, complément 0.55.2), le
+// formulaire à droite. Sur téléphone, la scène en bandeau au-dessus du formulaire.
 defineProps<{ title: string; subtitle?: string }>();
 </script>
 
@@ -16,14 +16,17 @@ defineProps<{ title: string; subtitle?: string }>();
       <Illustration
         name="connexion"
         class="auth-illu"
-        sizes="(max-width: 820px) 100vw, 57vw"
+        sizes="(max-width: 820px) 100vw, 90vw"
+        eager
       />
-      <p class="auth-tagline">
-        Less searching. More living.
-      </p>
-      <p class="auth-pitch">
-        Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
-      </p>
+      <div class="auth-caption">
+        <p class="auth-tagline">
+          Less searching. More living.
+        </p>
+        <p class="auth-pitch">
+          Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
+        </p>
+      </div>
     </div>
     <div class="auth-panel">
       <div class="auth-box">

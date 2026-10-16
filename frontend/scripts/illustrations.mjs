@@ -16,10 +16,13 @@ import sharp from "sharp";
 // nom dans la plateforme → fichier d'origine (sans .webp) ;
 // `efface` : un rectangle [gauche, haut, largeur, hauteur] de l'original rendu transparent ;
 // `ovale` : le cadre [gauche, haut, largeur, hauteur] gardé, arrondi et aux bords estompés (pour
-// une scène sur fond plein, posée sur une autre couleur) ; `largeurs` : les tailles écrites.
+// une scène sur fond plein, posée sur une autre couleur) ; `entiere` : l'image telle quelle, sans
+// rien rogner ; `ciel` : des pixels ajoutés en haut, de la couleur de son ciel uni ;
+// `largeurs` : les tailles écrites.
 export const ILLUSTRATIONS = {
-  // La connexion (docs/67, complément 0.55.2) : la ville et le bureau, le garçon et la fille au centre.
-  connexion: { source: "Connexion_Ville", ovale: [130, 300, 1180, 500], largeurs: [480, 800, 1200] },
+  // La connexion (docs/67, complément 0.55.2) : la ville et le bureau, l'image entière, son ciel
+  // prolongé vers le haut pour qu'elle remplisse aussi une moitié d'écran plus haute que large.
+  connexion: { source: "Connexion_Ville", entiere: true, ciel: 120, largeurs: [480, 800, 1200] },
   "accueil-reseau": { source: "15_Reseau" },
   "actualites-video": { source: "Actualites_C_Videos" },
   "alertes-carte": { source: "02_Alertes" },
@@ -53,8 +56,14 @@ function oval(width, height) {
 }
 
 // Les marges transparentes sont rognées : l'image remplit la place qu'on lui donne.
-async function prepare(file, { efface, ovale }) {
+async function prepare(file, { efface, ovale, entiere, ciel }) {
   let image = sharp(file).ensureAlpha();
+  if (entiere && ciel) {
+    const { data } = await sharp(file).extract({ left: 0, top: 0, width: 1, height: 1 }).raw().toBuffer({ resolveWithObject: true });
+    const background = { r: data[0], g: data[1], b: data[2], alpha: 1 };
+    return sharp(await image.extend({ top: ciel, background }).png().toBuffer());
+  }
+  if (entiere) return image;
   if (ovale) {
     const [left, top, width, height] = ovale;
     const framed = await image.extract({ left, top, width, height }).png().toBuffer();
