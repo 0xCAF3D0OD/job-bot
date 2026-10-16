@@ -61,12 +61,12 @@ export type IllustrationName =
         v-if="dark"
         media="(prefers-color-scheme: dark)"
         :srcset="dark"
-        sizes="(max-width: 820px) 200px, 380px"
+        sizes="(max-width: 820px) 240px, 440px"
       >
       <img
         :src="files[`../assets/illustrations/${name}-480.webp`]"
         :srcset="light"
-        sizes="(max-width: 820px) 200px, 380px"
+        sizes="(max-width: 820px) 240px, 440px"
         alt=""
         loading="lazy"
         decoding="async"

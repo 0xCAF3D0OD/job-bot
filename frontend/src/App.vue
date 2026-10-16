@@ -16,7 +16,7 @@ import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { useFileDownloads } from "./composables/useFileDownloads";
 import { useProfiles } from "./composables/useProfiles";
-import { navigation, PUBLIC_ROUTES } from "./router";
+import { navigation, type NavEntry, PUBLIC_ROUTES } from "./router";
 
 const { message, running, failed, collectNow } = useCollect();
 
@@ -28,9 +28,9 @@ useFileDownloads();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 const { last: lastJobsPage } = useJobsMemory();
-// Sans connexion : seulement les Actualités dans le menu (docs/18 §1).
-// Six entrées (docs/19 §1) ; sans connexion, seulement les Actualités (docs/18 §1).
-const menu = computed(() => (loggedIn.value ? navigation : navigation.filter((e) => PUBLIC_ROUTES.has(e.name))));
+// Six entrées (docs/19 §1) ; sans connexion, seulement la présentation de la plateforme (docs/67).
+const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme" }];
+const menu = computed(() => (loggedIn.value ? navigation : DISCOVER));
 
 function onUnauthorized(): void {
   expired();

@@ -84,7 +84,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.53.0 | Tes données : page publique (ce qui est gardé, ce qui part à l'IA, tes mentions), export complet du compte, suppression de son compte | livrée |
 | 0.53.1 | Page de connexion en deux moitiés : illustration à gauche, connexion à droite ; Google, Apple, Microsoft présentés (pas encore branchés) | livrée |
 | 0.54.0 | L'accueil après la première connexion, façon Duolingo : sept questions en cartes, chaque réponse règle la plateforme, puis la création des alertes | livrée |
-| 0.55.0 | Les illustrations de jobA1 : des images générées pour la plateforme remplacent les dessins unDraw (gardés en réserve) ; série sombre à venir | livrée |
+| 0.55.0 | Les illustrations de jobA1 : des images générées, plus grandes, remplacent les dessins unDraw (gardés en réserve) ; sans connexion, la présentation de la plateforme à la place des Actualités | livrée |
 
 ## Lancer en local
 

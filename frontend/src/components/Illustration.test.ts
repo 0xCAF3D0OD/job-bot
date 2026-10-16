@@ -7,7 +7,7 @@ describe("Illustration (docs/67)", () => {
   it("pose l'image réduite, chargée à l'affichage, décorative par défaut", async () => {
     const plain = mount(Illustration, { props: { name: "bilan" } });
     const img = plain.find("img");
-    expect(img.attributes("srcset")).toMatch(/bilan-480\.webp 480w$/);
+    expect(img.attributes("srcset")).toMatch(/bilan-480\.webp 480w, .*bilan-800\.webp 800w$/);
     expect(img.attributes("loading")).toBe("lazy");
     expect(img.attributes("alt")).toBe("");
     expect(plain.attributes("aria-hidden")).toBe("true");
@@ -24,8 +24,4 @@ describe("Illustration (docs/67)", () => {
     expect(told.attributes("aria-label")).toBe("Bilan");
   });
 
-  it("propose la version de 800 px pour les grandes", () => {
-    const big = mount(Illustration, { props: { name: "porte-ouverte" } });
-    expect(big.find("img").attributes("srcset")).toMatch(/porte-ouverte-480\.webp 480w, .*porte-ouverte-800\.webp 800w$/);
-  });
 });

@@ -3,8 +3,8 @@
 //   node scripts/illustrations.mjs <dossier des images transparentes> [<dossier de la série sombre>]
 //
 // Pour chaque nom de ILLUSTRATIONS, prend l'original (1000 px de large, WebP transparent) et écrit
-// src/assets/illustrations/<nom>-480.webp : deux fois la taille affichée (220 px au plus), pour les
-// écrans nets. Les grandes (connexion, Engagement) ont aussi <nom>-800.webp. Si la série sombre
+// src/assets/illustrations/<nom>-480.webp et <nom>-800.webp : le navigateur prend la plus petite
+// qui reste nette (240 px affichés sur téléphone, jusqu'à 440 px sur ordinateur). Si la série sombre
 // contient la même image, elle est écrite à côté (<nom>-sombre-480.webp…) ; sinon, en sombre, la
 // version claire est simplement assombrie (feuille de style).
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
-// nom dans la plateforme → fichier d'origine (sans .webp) ; `large` : aussi en 800 px ;
+// nom dans la plateforme → fichier d'origine (sans .webp) ;
 // `efface` : un rectangle [gauche, haut, largeur, hauteur] de l'original rendu transparent.
 export const ILLUSTRATIONS = {
   "accueil-reseau": { source: "15_Reseau" },
@@ -21,14 +21,14 @@ export const ILLUSTRATIONS = {
   "alertes-carte": { source: "02_Alertes" },
   "aucune-offre": { source: "03_Offres_Aucune_Offre" },
   bilan: { source: "06_Bilan" },
-  "emails-tries": { source: "00_Accueil_Banniere", large: true },
+  "emails-tries": { source: "00_Accueil_Banniere" },
   formations: { source: "06_Formations" },
   "lecture-calme": { source: "13_Parametres" },
   "lieux-carte": { source: "07_Profil" },
   // Le personnage qui parle (docs/66) : sa bulle vide est effacée, la nôtre se pose au-dessus.
   messager: { source: "12_Messagerie", efface: [475, 132, 340, 200] },
   "offres-profils": { source: "02_Candidatures_Offres" },
-  "porte-ouverte": { source: "Actualites_A_Marche_Emploi", large: true },
+  "porte-ouverte": { source: "Actualites_A_Marche_Emploi" },
   "preuves-orp": { source: "04_Preuves_ORP" },
   "suivi-envoi": { source: "03_Candidatures_Suivi" },
   "tableau-de-bord": { source: "01_Dashboard" },
@@ -48,7 +48,7 @@ async function prepare(file, { efface }) {
 }
 
 async function write(file, name, spec, suffix) {
-  for (const width of spec.large ? [480, 800] : [480]) {
+  for (const width of [480, 800]) {
     const image = await prepare(file, spec);
     const target = join(OUT, `${name}${suffix}-${width}.webp`);
     await image.resize({ width }).webp({ quality: 82, effort: 6, alphaQuality: 90 }).toFile(target);
