@@ -220,8 +220,8 @@ describe("barre de candidature", () => {
     const [path, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(path).toBe("/api/applications");
     expect(opts.body).toMatchObject({ offer_id: 7, application_url: "https://acme.example/jobs/1" });
-    expect(wrapper.find("[data-test=sent-moment]").text()).toContain("Candidature envoyée chez Acme SA.");
+    expect(document.querySelector("[data-test=sent-moment]")!.textContent).toContain("Candidature envoyée chez Acme SA");
     // Comptée pour l'ORP ; le retour aux offres est dans la barre du haut (offre envoyée).
-    expect(wrapper.find("[data-test=sent-moment]").text()).not.toContain("Retour aux offres");
+    expect(document.querySelector("[data-test=sent-moment]")!.textContent).not.toContain("Retour aux offres");
   });
 });

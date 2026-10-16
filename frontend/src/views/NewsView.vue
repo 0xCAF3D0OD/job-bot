@@ -12,6 +12,7 @@ import IllustratedSide from "../components/IllustratedSide.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
 import { usePhone } from "../composables/usePhone";
+import { usePageReady } from "../composables/usePageTransition";
 import { since } from "../format";
 import { countryLabel, languageLabel } from "../newsLabels";
 
@@ -31,6 +32,7 @@ const page = ref<NewsPage | null>(null);
 const preferences = ref<NewsPreferences | null>(null);
 const counts = ref({ jobs: 0, economy: 0, videos: 0 });
 const loaded = ref(false);
+usePageReady("news", () => loaded.value);
 const { reset } = useNewsCount();
 const { loggedIn } = useAuth();
 let poll: ReturnType<typeof setTimeout> | undefined;

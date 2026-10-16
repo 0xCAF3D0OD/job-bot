@@ -18,6 +18,7 @@ import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
+import { usePageReady } from "../composables/usePageTransition";
 
 const PAGE_SIZE = 50;
 
@@ -38,6 +39,8 @@ const notice = ref("");
 const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0 });
 const loading = ref(false);
 const failed = ref(false);
+const firstLoaded = ref(false);
+usePageReady("offers", () => firstLoaded.value);
 const selectedId = ref<number | null>(null);
 const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
@@ -144,7 +147,10 @@ async function load(append = false): Promise<void> {
   } catch {
     if (current === requestId) failed.value = true;
   } finally {
-    if (current === requestId) loading.value = false;
+    if (current === requestId) {
+      loading.value = false;
+      firstLoaded.value = true;
+    }
   }
 }
 

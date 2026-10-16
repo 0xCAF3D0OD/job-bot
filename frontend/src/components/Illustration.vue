@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 
 // Illustration unDraw des pages vides (docs/58, docs/59 §5) : insérée dans la page pour prendre
 // les couleurs du thème (feuille de style, `.illu [fill=…]`) ; son animation joue une fois.
@@ -15,33 +15,47 @@ const files = import.meta.glob<string>("../assets/illustrations/*.svg", { query:
 // scripts/illustrations.mjs) : c'est ce qui lui permet de suivre les couleurs du thème.
 const host = ref<HTMLElement | null>(null);
 
-// Posé une fois l'emplacement monté (un fichier déjà chargé arrive avant sinon).
-async function draw(): Promise<void> {
-  const wanted = props.name;
-  const load = files[`../assets/illustrations/${wanted}.svg`];
-  const text = load ? await load() : "";
-  if (wanted === props.name && host.value) host.value.innerHTML = text;
-}
-onMounted(draw);
-watch(() => props.name, draw);
+// Le texte du dessin et son emplacement arrivent dans n'importe quel ordre : on le pose dès que
+// les deux sont là (sinon une illustration peut rester vide).
+const svg = ref("");
+watch(
+  () => props.name,
+  async (name) => {
+    const load = files[`../assets/illustrations/${name}.svg`];
+    const text = load ? await load() : "";
+    if (name === props.name) svg.value = text;
+  },
+  { immediate: true },
+);
+watch(
+  [host, svg],
+  ([el, text]) => {
+    if (el) el.innerHTML = text;
+  },
+  { flush: "post", immediate: true },
+);
 </script>
 
 <script lang="ts">
 export type IllustrationName =
+  | "artificial-intelligence"
   | "certification"
   | "date-picker"
   | "done"
+  | "guidelines"
   | "handshake-deal"
   | "lock-screen-notifications"
   | "login"
   | "mailbox"
   | "message-sent"
   | "mobile-inbox"
+  | "morning-plans"
   | "my-resume"
   | "newsfeed"
   | "online-connection"
   | "page-eaten"
   | "profile"
+  | "security-on"
   | "settings"
   | "stepping-up";
 </script>

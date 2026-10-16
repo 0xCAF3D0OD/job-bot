@@ -245,7 +245,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves remises le 3 novembre 2026");
     // Le moment illustré, le temps de la visite (docs/60 §2.1).
-    expect(wrapper.find("[data-test=submitted-moment]").text()).toContain("Preuves d'octobre remises.");
+    expect(wrapper.find("[data-test=submitted-moment]").text()).toContain("Preuves d'octobre remises");
     await wrapper.find("[data-test=cancel-submit]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalled();

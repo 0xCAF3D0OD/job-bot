@@ -24,11 +24,13 @@ import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
 import EngagementMoment from "../components/EngagementMoment.vue";
+import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
 import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
+import { usePageReady } from "../composables/usePageTransition";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
 const REMIND_AFTER_DAYS = 10;
@@ -38,6 +40,7 @@ const VIEW_KEY = "jobbot-suivi-vue";
 const route = useRoute();
 const router = useRouter();
 const orp = ref<OrpMonth | null>(null);
+usePageReady("applications", () => !!orp.value);
 const all = ref<Application[]>([]);
 const allMonths = ref(false);
 const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(null);
@@ -488,18 +491,17 @@ onUnmounted(() => assistant.setFocus(null));
         :company="celebrating"
         @close="celebrating = null"
       />
-      <IllustratedSide
-        v-if="submitted && submitted.month === orp.month && orp.state === 'remis'"
+      <SuccessCard
+        v-if="submitted"
         name="done"
-        phone="small"
-        class="moment"
-        data-test="submitted-moment"
+        :title="`Preuves ${ofMonth(submitted.month)} remises`"
+        test-id="submitted-moment"
+        @close="submitted = null"
       >
-        <h3>Preuves {{ ofMonth(submitted.month) }} remises.</h3>
         <p v-if="submitted.nextDue">
           Prochaine remise avant le {{ longDate.format(new Date(submitted.nextDue)) }}.
         </p>
-      </IllustratedSide>
+      </SuccessCard>
 
       <div
         v-if="layout === 'calendar'"
