@@ -1,5 +1,6 @@
-// En réserve depuis la 0.55.0 (docs/67) : les illustrations unDraw d'avant, gardées pour revenir
-// en arrière si les images générées ne conviennent pas. Rien dans l'application ne les charge.
+// Les illustrations unDraw d'avant (docs/67). Celles des pages qui chargent sont dans
+// l'application (src/assets/dessins/, composant LoadingDrawing, complément 0.55.1) ; les autres en
+// réserve (reserve/illustrations-undraw/), gardées pour revenir en arrière si besoin.
 // Prépare les illustrations unDraw pour la plateforme (docs/58).
 //
 //   node scripts/illustrations-undraw.mjs <dossier des versions animées> [<dossier des originaux>…]
@@ -35,6 +36,8 @@ export const ILLUSTRATIONS = [
 ];
 
 const OUT = new URL("../reserve/illustrations-undraw/", import.meta.url);
+const LOADING = new URL("../src/assets/dessins/", import.meta.url);
+const LOADING_NAMES = ["absorbed", "certification", "done", "mailbox", "message-sent", "morning-plans", "stepping-up"];
 
 function find(dirs, name) {
   for (const dir of dirs) {
@@ -78,6 +81,6 @@ if (!dirs.length) {
 }
 for (const name of ILLUSTRATIONS) {
   const source = find(dirs, name);
-  writeFileSync(new URL(`${name}.svg`, OUT), prepare(readFileSync(source, "utf8"), name));
+  writeFileSync(new URL(`${name}.svg`, LOADING_NAMES.includes(name) ? LOADING : OUT), prepare(readFileSync(source, "utf8"), name));
   console.log(`${name} ← ${source}`);
 }
