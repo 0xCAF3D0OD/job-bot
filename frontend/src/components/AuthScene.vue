@@ -11,7 +11,7 @@ import video from "../assets/videos/connexion-soir.mp4";
 // sur le ciel du jour, clair sur celui du soir.
 const files = import.meta.glob<string>("../assets/illustrations/connexion*.webp", { query: "?url", import: "default", eager: true });
 const srcset = (name: string) =>
-  [480, 800, 1200].map((width) => `${files[`../assets/illustrations/${name}-${width}.webp`]} ${width}w`).join(", ");
+  [480, 800, 1264].map((width) => `${files[`../assets/illustrations/${name}-${width}.webp`]} ${width}w`).join(", ");
 const DAY = srcset("connexion");
 const NIGHT = srcset("connexion-soir");
 const SIZES = "(max-width: 820px) 160vw, 90vw";
