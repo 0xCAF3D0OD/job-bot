@@ -7,7 +7,8 @@ import video from "../assets/videos/connexion-soir.mp4";
 // clair, le jour. En sombre, la vidéo du jour qui tombe joue une fois, puis l'image du soir reste ;
 // de même si le thème passe en sombre pendant qu'on est sur la page. « Réduire les animations » :
 // l'image du soir directement. Les trois ont le même cadrage ; le ciel, uni, est prolongé par la
-// couleur du fond, qui suit la vidéo.
+// couleur du fond, qui suit la vidéo. Ce qu'on pose dessus (la phrase de jobA1) suit aussi : foncé
+// sur le ciel du jour, clair sur celui du soir.
 const files = import.meta.glob<string>("../assets/illustrations/connexion*.webp", { query: "?url", import: "default", eager: true });
 const srcset = (name: string) =>
   [480, 800, 1200].map((width) => `${files[`../assets/illustrations/${name}-${width}.webp`]} ${width}w`).join(", ");
@@ -96,5 +97,6 @@ onBeforeUnmount(() => {
       disablepictureinpicture
       @ended="night"
     />
+    <slot />
   </div>
 </template>
