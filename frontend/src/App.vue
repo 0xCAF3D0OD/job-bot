@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { UNAUTHORIZED_EVENT } from "./api/client";
 
 import NotificationBell from "./components/NotificationBell.vue";
+import BrandFigure from "./components/BrandFigure.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import MobileMenu from "./components/MobileMenu.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
@@ -63,7 +64,14 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
           class="brand-mark"
           aria-hidden="true"
         />
-        jobA1
+        <!-- Connecté : le « 1 » devient le personnage de l'heure (docs/68). -->
+        <span
+          v-if="loggedIn"
+          class="brand-name"
+        >jobA<BrandFigure /></span>
+        <template v-else>
+          jobA1
+        </template>
       </RouterLink>
       <nav aria-label="Navigation principale">
         <ul class="nav">
