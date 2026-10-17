@@ -4,8 +4,8 @@ import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 // Le personnage du titre (docs/68) : une fois connecté, il remplace le « 1 » de jobA1 et change à
 // chaque heure, le même pour tout le monde à la même heure. Préparés par scripts/personnages.mjs ;
 // insérés dans la page pour prendre les couleurs du thème (`.drawing [fill=…]`). Immobile au repos ;
-// au survol du titre, son animation joue avec un petit bond (feuille de style, rien si « réduire
-// les animations »). Décoratif : le lien du titre s'annonce « jobA1, accueil ».
+// au survol du titre, ses propres animations jouent et il grandit un peu pour qu'on les voie
+// (feuille de style). Décoratif : le lien du titre s'annonce « jobA1, accueil ».
 const host = ref<HTMLElement | null>(null);
 const name = ref(figureAt(new Date()));
 const svg = ref("");
