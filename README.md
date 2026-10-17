@@ -87,6 +87,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.55.0 | Les illustrations de jobA1 : des images générées, plus grandes, remplacent les dessins unDraw (gardés en réserve) ; sans connexion, la présentation de la plateforme à la place des Actualités | livrée |
 | 0.55.1 | Les pages qui chargent gardent leurs dessins animés d'avant (Aujourd'hui, Offres, Suivi, Bilan, Alertes, Actualités, Formations) | livrée |
 | 0.55.2 | La connexion illustrée par la ville et le bureau, l'image entière remplissant la moitié gauche | livrée |
+| 0.55.3 | En sombre, la connexion joue la vidéo du soir qui tombe, puis l'image du soir | livrée |
 
 ## Lancer en local
 

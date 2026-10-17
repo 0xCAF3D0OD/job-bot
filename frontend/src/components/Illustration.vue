@@ -5,11 +5,10 @@ import { computed, onMounted, ref, watch } from "vue";
 // scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
 // fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
-// `sizes` : la largeur affichée, pour que le navigateur choisisse la bonne version ; `eager` :
-// chargée tout de suite, pour une image visible dès l'arrivée sur la page (la connexion).
+// `sizes` : la largeur affichée, pour que le navigateur choisisse la bonne version.
 const props = withDefaults(
-  defineProps<{ name: IllustrationName; label?: string; size?: "small" | "medium" | "large"; sizes?: string; eager?: boolean }>(),
-  { label: "", size: "medium", sizes: "(max-width: 820px) 240px, 440px", eager: false },
+  defineProps<{ name: IllustrationName; label?: string; size?: "small" | "medium" | "large"; sizes?: string }>(),
+  { label: "", size: "medium", sizes: "(max-width: 820px) 240px, 440px" },
 );
 
 const files = import.meta.glob<string>("../assets/illustrations/*.webp", { query: "?url", import: "default", eager: true });
@@ -43,7 +42,6 @@ export type IllustrationName =
   | "alertes-carte"
   | "aucune-offre"
   | "bilan"
-  | "connexion"
   | "emails-tries"
   | "formations"
   | "lecture-calme"
@@ -77,7 +75,7 @@ export type IllustrationName =
         :srcset="light"
         :sizes="sizes"
         alt=""
-        :loading="eager ? 'eager' : 'lazy'"
+        loading="lazy"
         decoding="async"
         @load="loaded = true"
       >

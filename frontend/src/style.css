@@ -2301,13 +2301,19 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Connexion et liens d'accès (docs/65, complément 0.53.1) : l'écran coupé en deux, une
    illustration à gauche, le formulaire à droite. */
 .auth-split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); min-height: calc(100dvh - 4.4rem); }
-/* La scène remplit toute la moitié gauche (docs/67, complément 0.55.2), cadrée pour garder le
-   garçon sur son banc et la fille qui arrive au bureau ; la phrase de jobA1 en haut, dans le ciel,
-   sur un fondu. */
+/* La scène remplit toute la moitié gauche (AuthScene, docs/67 compléments 0.55.2 et 0.55.3) ; la
+   phrase de jobA1 en haut, dans le ciel, sur un fondu. */
 .auth-art { position: relative; overflow: hidden; background: var(--accent-soft); }
-.auth-art .auth-illu { position: absolute; inset: 0; width: 100%; height: 100%; }
-.auth-art .auth-illu picture { height: 100%; }
-.auth-art .auth-illu img { width: 100%; height: 100%; max-height: none; object-fit: cover; object-position: 41% 75%; }
+/* Images et vidéo ont le même cadrage : posées en bas, assez hautes pour remplir la moitié, jamais
+   plus larges que ce qui garde le garçon et la fille (au plus une hauteur égale à la largeur), et
+   centrées sur eux (47 % de l'image). Au-dessus, la couleur du ciel prolonge l'image ; elle tombe
+   avec la vidéo. */
+.auth-scene { position: absolute; inset: 0; overflow: hidden; container-type: size; background: #f4f3f8; transition: background-color 600ms var(--ease-out); }
+.auth-scene.dusk { background: #5a609e; transition: background-color 9s ease-in; }
+.auth-scene.night { background: #5a609e; }
+.auth-scene-media { --h: clamp(66.7cqw, 100cqh, 100cqw); position: absolute; bottom: 0; left: clamp(calc(100cqw - var(--h) * 1.4994), calc(50cqw - var(--h) * 0.705), 0px); width: calc(var(--h) * 1.4994); height: var(--h); max-width: none; object-fit: cover; }
+.auth-scene .film { opacity: 0; transition: opacity 600ms var(--ease-out); }
+.auth-scene.dusk .film { opacity: 1; transition: none; }
 .auth-caption { position: absolute; left: 0; right: 0; top: 0; display: grid; justify-items: center; gap: 0.4rem; padding: 2.5rem 1.5rem 4rem; text-align: center; background: linear-gradient(to top, transparent, color-mix(in srgb, var(--bg) 85%, transparent) 55%); }
 .auth-tagline { margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--text); }
 .auth-pitch { margin: 0; max-width: 24rem; color: var(--muted); }
