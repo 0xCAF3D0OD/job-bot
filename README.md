@@ -88,6 +88,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.55.1 | Les pages qui chargent gardent leurs dessins animés d'avant (Aujourd'hui, Offres, Suivi, Bilan, Alertes, Actualités, Formations) | livrée |
 | 0.55.2 | La connexion illustrée par la ville et le bureau, l'image entière remplissant la moitié gauche | livrée |
 | 0.55.3 | En sombre, la connexion joue la vidéo du soir qui tombe, puis l'image du soir | livrée |
+| 0.55.4 | La connexion sans voile : la phrase en haut à gauche, la lune visible, les couleurs qui suivent le ciel | livrée |
 
 ## Lancer en local
 

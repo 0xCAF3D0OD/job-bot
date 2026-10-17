@@ -14,15 +14,16 @@ defineProps<{ title: string; subtitle?: string }>();
       class="auth-art"
       aria-hidden="true"
     >
-      <AuthScene />
-      <div class="auth-caption">
-        <p class="auth-tagline">
-          Less searching. More living.
-        </p>
-        <p class="auth-pitch">
-          Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
-        </p>
-      </div>
+      <AuthScene>
+        <div class="auth-caption">
+          <p class="auth-tagline">
+            Less searching. More living.
+          </p>
+          <p class="auth-pitch">
+            Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
+          </p>
+        </div>
+      </AuthScene>
     </div>
     <div class="auth-panel">
       <div class="auth-box">
