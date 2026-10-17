@@ -17,12 +17,14 @@ import sharp from "sharp";
 // `efface` : un rectangle [gauche, haut, largeur, hauteur] de l'original rendu transparent ;
 // `ovale` : le cadre [gauche, haut, largeur, hauteur] gardé, arrondi et aux bords estompés (pour
 // une scène sur fond plein, posée sur une autre couleur) ; `entiere` : l'image telle quelle, sans
-// rien rogner ; `largeurs` : les tailles écrites.
+// rien rogner ; `largeurs` : les tailles écrites ; `nette` : qualité 92 et netteté renforcée
+// (une image affichée en grand).
 export const ILLUSTRATIONS = {
   // La connexion (docs/67, compléments 0.55.2 et 0.55.3) : la ville et le bureau, le jour et le
   // soir, images entières ; leur ciel est prolongé par la page (AuthScene), pas dans l'image.
-  connexion: { source: "Connexion_Ville", entiere: true, largeurs: [480, 800, 1200] },
-  "connexion-soir": { source: "Connexion_Soir", entiere: true, largeurs: [480, 800, 1200] },
+  // Affichées en grand : leur pleine largeur (1264 px), en meilleure qualité, un peu plus nettes.
+  connexion: { source: "Connexion_Ville", entiere: true, largeurs: [480, 800, 1264], nette: true },
+  "connexion-soir": { source: "Connexion_Soir", entiere: true, largeurs: [480, 800, 1264], nette: true },
   "accueil-reseau": { source: "15_Reseau" },
   "actualites-video": { source: "Actualites_C_Videos" },
   "alertes-carte": { source: "02_Alertes" },
@@ -76,7 +78,9 @@ async function write(file, name, spec, suffix) {
   for (const width of spec.largeurs ?? [480, 800]) {
     const image = await prepare(file, spec);
     const target = join(OUT, `${name}${suffix}-${width}.webp`);
-    await image.resize({ width }).webp({ quality: 82, effort: 6, alphaQuality: 90 }).toFile(target);
+    const sized = image.resize({ width, kernel: "lanczos3" });
+    const sharp_ = spec.nette ? sized.sharpen({ sigma: 0.7, m1: 0.6, m2: 1.2 }) : sized;
+    await sharp_.webp({ quality: spec.nette ? 92 : 82, effort: 6, alphaQuality: 90 }).toFile(target);
     console.log(`${target.slice(OUT.length)} ← ${file}`);
   }
 }
