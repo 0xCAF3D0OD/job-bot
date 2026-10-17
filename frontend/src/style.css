@@ -2116,6 +2116,20 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .drawing [fill="#e6e6e6"], .drawing [fill="#e4e4e4"], .drawing [fill="#f2f2f2"], .drawing [fill="#d6d6e3"], .drawing [fill="#ccc"], .drawing [fill="#cacaca"], .drawing [fill="#cbcbcb"], .drawing [fill="#e0e0e0"], .drawing [fill="#dedfe0"], .drawing [fill="#f1f1f1"] { fill: var(--border); }
 .drawing [stroke="#e6e6e6"], .drawing [stroke="#f2f2f2"], .drawing [stroke="#ccc"] { stroke: var(--border); }
 .drawing [fill="#fff"], .drawing [fill="#ffffff"], .drawing [fill="#fafafa"], .drawing [fill="#f8f8f8"] { fill: var(--surface); }
+.drawing [fill="#010001"], .drawing [fill="#0f0f10"] { fill: var(--faint); }
+/* Le personnage du titre (docs/68), à la place du « 1 » : assis sur la ligne du texte. */
+.brand-name { display: inline-flex; align-items: flex-end; }
+.brand-figure { display: inline-block; height: 44px; margin: -12px 0 -6px 0.1rem; line-height: 0; }
+.brand-figure svg { display: block; height: 100%; width: auto; overflow: visible; }
+@media (max-width: 820px) { .brand-figure { height: 36px; margin-top: -8px; } }
+/* Immobile au repos ; au survol du titre (ou au clavier), ses propres animations se lancent, et il
+   grandit en douceur pour qu'on les voie (à 44 px, une tête qui penche de 4° ne se verrait pas). */
+.brand-figure * { animation-play-state: paused !important; }
+.brand:hover .brand-figure *, .brand:focus-visible .brand-figure * { animation-play-state: running !important; }
+.brand-figure svg { transform-origin: 30% 85%; transition: transform var(--t-state) var(--ease-out); }
+.brand:hover .brand-figure svg, .brand:focus-visible .brand-figure svg { transform: scale(1.3); }
+@media (max-width: 820px) { .brand:hover .brand-figure svg, .brand:focus-visible .brand-figure svg { transform: scale(1.4); } }
+@media (prefers-reduced-motion: reduce) { .brand-figure svg { transition: none; } }
 .empty-state { display: grid; justify-items: center; gap: 0.8rem; padding: 2rem 1rem; text-align: center; color: var(--muted); }
 .empty-state p { margin: 0; max-width: 28rem; }
 @media (max-width: 820px) { .illu { width: 200px; } }
