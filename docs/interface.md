@@ -13,7 +13,7 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 ## Mouvement (docs/59)
 
 1. Le mouvement répond à une action (appui, survol, choix, envoi) ; rien ne bouge tout seul en boucle, sauf une vraie attente (rédaction par l'IA).
-2. Trois durées : 150 ms (survol, appui), 250 ms (un état qui change), 500 ms (une entrée). Exceptions écrites : la carte d'une réussite monte en 420 ms avec un léger rebond (docs/61 §1) ; la transition d'une page qui charge entre et sort en 400 ms et reste au moins 1,2 s, rien si la page arrive en moins de 0,15 s (docs/63 §3) ; en sombre, la connexion joue une fois la vidéo du soir qui tombe (9 s), puis reste sur l'image du soir (docs/67, complément 0.55.3) ; le personnage du titre, une fois connecté, bouge doucement en boucle (docs/68).
+2. Trois durées : 150 ms (survol, appui), 250 ms (un état qui change), 500 ms (une entrée). Exceptions écrites : la carte d'une réussite monte en 420 ms avec un léger rebond (docs/61 §1) ; la transition d'une page qui charge entre et sort en 400 ms et reste au moins 1,2 s, rien si la page arrive en moins de 0,15 s (docs/63 §3) ; en sombre, la connexion joue une fois la vidéo du soir qui tombe (9 s), puis reste sur l'image du soir (docs/67, complément 0.55.3) ; le personnage du titre, une fois connecté, ne bouge qu'au survol du titre (docs/68).
 3. « Réduire les animations » : les retours restent (couleurs, coches, textes), sans mouvement.
 
 ## Accès à un contenu (docs/57)
