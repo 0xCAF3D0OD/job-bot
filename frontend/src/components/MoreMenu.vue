@@ -3,15 +3,30 @@ import { nextTick, onMounted, onUnmounted, ref } from "vue";
 
 // Menu « ⋯ » commun (docs/50 §1) : Échap ferme le seul menu et rend le focus à « ⋯ »,
 // un clic ailleurs le ferme, les flèches passent d'une action à l'autre.
-export type MoreMenuItem = { label: string; test: string; run: () => void; danger?: boolean };
+// docs/74 §5 : une action peut être un lien (page externe « ↗ » ou fichier à télécharger),
+// porter un nombre ; les suppressions viennent en dernier, après un filet.
+export type MoreMenuItem = {
+  label: string;
+  test: string;
+  run?: () => void;
+  href?: string;
+  /** Lien vers un fichier : téléchargé, sans nouvel onglet. */
+  download?: boolean;
+  count?: number;
+  disabled?: boolean;
+  danger?: boolean;
+};
 
-withDefaults(defineProps<{ items: MoreMenuItem[]; label?: string; testId?: string }>(), {
+const props = withDefaults(defineProps<{ items: MoreMenuItem[]; label?: string; testId?: string }>(), {
   label: "Plus d'actions",
   testId: "more",
 });
 
 const open = ref(false);
+const up = ref(false);
+const alignLeft = ref(false);
 const root = ref<HTMLElement | null>(null);
+const menu = ref<HTMLElement | null>(null);
 const toggleButton = ref<HTMLButtonElement | null>(null);
 
 function entries(): HTMLButtonElement[] {
@@ -21,9 +36,25 @@ function entries(): HTMLButtonElement[] {
 async function toggle(): Promise<void> {
   open.value = !open.value;
   if (open.value) {
+    up.value = false;
+    alignLeft.value = false;
     await nextTick();
+    place();
     entries()[0]?.focus();
   }
+}
+
+// Le menu ne sort jamais de l'écran : vers le haut s'il manque de place dessous, aligné à
+// gauche de « ⋯ » s'il déborderait à gauche.
+// La marge du bas tient compte d'une barre fixe en bas de l'écran (téléphone).
+function place(): void {
+  const box = root.value?.getBoundingClientRect();
+  const list = menu.value?.getBoundingClientRect();
+  if (!box || !list || !list.height || !menu.value) return;
+  const bottomGap = parseFloat(getComputedStyle(menu.value).scrollMarginBottom) || 8;
+  up.value = box.bottom + list.height + bottomGap > window.innerHeight && box.top - list.height - 8 > 0;
+  alignLeft.value = box.right - list.width < 8;
+  menu.value.scrollIntoView?.({ block: "nearest" });
 }
 
 function close(focus = false): void {
@@ -33,7 +64,11 @@ function close(focus = false): void {
 
 function choose(item: MoreMenuItem): void {
   close();
-  item.run();
+  item.run?.();
+}
+
+function separated(index: number, items: MoreMenuItem[]): boolean {
+  return Boolean(items[index]?.danger) && index > 0 && !items[index - 1]?.danger;
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -75,27 +110,73 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
       :data-test="testId"
       @click="toggle"
     >
-      ⋯
+      <!-- Trois points dessinés : centrés quelle que soit la police (docs/74). -->
+      <svg
+        viewBox="0 0 20 4"
+        width="20"
+        height="4"
+        aria-hidden="true"
+      ><circle
+        cx="2"
+        cy="2"
+        r="2"
+      /><circle
+        cx="10"
+        cy="2"
+        r="2"
+      /><circle
+        cx="18"
+        cy="2"
+        r="2"
+      /></svg>
     </button>
     <ul
       v-if="open"
-      class="menu"
+      ref="menu"
+      :class="['menu', { up, 'align-left': alignLeft }]"
       role="menu"
     >
-      <li
-        v-for="item in items"
+      <template
+        v-for="(item, index) in props.items"
         :key="item.test"
       >
-        <button
-          type="button"
-          role="menuitem"
-          :class="{ danger: item.danger }"
-          :data-test="item.test"
-          @click="choose(item)"
-        >
-          {{ item.label }}
-        </button>
-      </li>
+        <li
+          v-if="separated(index, props.items)"
+          role="separator"
+          class="menu-separator"
+        />
+        <li role="none">
+          <a
+            v-if="item.href"
+            role="menuitem"
+            :href="item.href"
+            :class="{ danger: item.danger }"
+            :data-test="item.test"
+            v-bind="item.download ? { download: '' } : { target: '_blank', rel: 'noopener noreferrer' }"
+            @click="choose(item)"
+          >{{ item.label }}<span
+            v-if="!item.download"
+            aria-hidden="true"
+          > ↗</span><span
+            v-if="!item.download"
+            class="visually-hidden"
+          > (nouvel onglet)</span></a>
+          <button
+            v-else
+            type="button"
+            role="menuitem"
+            :class="{ danger: item.danger }"
+            :disabled="item.disabled"
+            :data-test="item.test"
+            @click="choose(item)"
+          >
+            {{ item.label }}<span
+              v-if="item.count"
+              class="menu-count"
+            > ({{ item.count }})</span>
+          </button>
+        </li>
+      </template>
     </ul>
   </div>
 </template>

@@ -37,6 +37,9 @@ describe("ProfilesPanel", () => {
       body: { name: "Infirmière", occupation: null, domain_keywords: ["soins", "infirmière"], languages: ["fr"], countries: ["CH"] },
     });
     expect(wrapper.findAll("[data-test=profile]")).toHaveLength(2);
+    // « Supprimer » dans le « ⋯ » de chaque profil, sauf le principal (docs/74).
+    const menus = wrapper.findAll("[data-test=profile-more]");
+    for (const menu of menus) await menu.trigger("click");
     expect(wrapper.findAll("[data-test=profile-delete]")).toHaveLength(1);
     expect(wrapper.find("[data-test=propose-keywords]").exists()).toBe(false);
   });

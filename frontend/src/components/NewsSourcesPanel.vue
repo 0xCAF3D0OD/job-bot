@@ -7,6 +7,7 @@ import NewsCatalog from "./NewsCatalog.vue";
 import SidePanel from "./SidePanel.vue";
 
 import HoverNote from "./HoverNote.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
 const preferences = ref<NewsPreferences | null>(null);
@@ -151,6 +152,12 @@ function catalogAdded(list: NewsSource[]): void {
 const value = (event: Event): string => (event.target as HTMLSelectElement).value;
 
 onMounted(() => void load());
+
+// « Parcourir les suggestions » visible, les autres façons d'ajouter dans « ⋯ » (docs/74).
+const addItems: MoreMenuItem[] = [
+  { label: "Nouvelle veille", test: "add-search", run: () => (adding.value = "search") },
+  { label: "Ajouter par adresse", test: "add-news", run: () => (adding.value = "url") },
+];
 </script>
 
 <template>
@@ -469,22 +476,11 @@ onMounted(() => void load());
         >
           Parcourir les suggestions
         </button>
-        <button
-          type="button"
-          class="secondary small"
-          data-test="add-search"
-          @click="adding = 'search'"
-        >
-          Nouvelle veille
-        </button>
-        <button
-          type="button"
-          class="link"
-          data-test="add-news"
-          @click="adding = 'url'"
-        >
-          Ajouter par adresse
-        </button>
+        <MoreMenu
+          :items="addItems"
+          label="Autres façons d'ajouter une source"
+          test-id="add-more"
+        />
       </div>
       <p
         v-if="message"

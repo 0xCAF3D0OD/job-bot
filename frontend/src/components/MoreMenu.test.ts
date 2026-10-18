@@ -36,4 +36,28 @@ describe("MoreMenu (docs/50 §1)", () => {
     document.removeEventListener("keydown", outside);
     wrapper.unmount();
   });
+
+  it("liens, nombre, et un filet avant les suppressions (docs/74 §5)", async () => {
+    const wrapper = mount(MoreMenu, {
+      props: {
+        items: [
+          { label: "Lettre (Word)", test: "letter", href: "/api/letters/1/docx", download: true },
+          { label: "Ouvrir l'annonce", test: "page", href: "https://exemple.ch/annonce" },
+          { label: "Contacts", test: "contacts", count: 2, run: vi.fn() },
+          { label: "Supprimer", test: "remove", danger: true, run: vi.fn() },
+        ],
+      },
+    });
+    await wrapper.find("[data-test=more]").trigger("click");
+    const letter = wrapper.find("[data-test=letter]");
+    expect(letter.attributes("download")).toBe("");
+    expect(letter.attributes("target")).toBeUndefined();
+    const page = wrapper.find("[data-test=page]");
+    expect(page.attributes("target")).toBe("_blank");
+    expect(page.attributes("rel")).toBe("noopener noreferrer");
+    expect(page.text()).toContain("↗");
+    expect(wrapper.find("[data-test=contacts]").text()).toBe("Contacts (2)");
+    const roles = wrapper.findAll("[role=menu] > li").map((li) => li.attributes("role"));
+    expect(roles).toEqual(["none", "none", "none", "separator", "none"]);
+  });
 });

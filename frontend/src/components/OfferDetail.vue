@@ -222,13 +222,45 @@ const menuItems = computed<MoreMenuItem[]>(() => {
         ? { label: "Pas expirée", test: "not-expired", run: () => emit("expiry", false) }
         : { label: "Signaler comme expirée", test: "flag-expired", run: () => emit("expiry", true) },
     );
-    if (!employerKnown.value && !o.employer_url && o.employer_status !== "agency") {
-      items.push({ label: "Chercher chez l'employeur", test: "menu-find-employer", run: () => void findEmployer() });
-    }
   }
   if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", run: askAssistant });
   return items;
 });
+
+// Partie « Entreprise » (docs/74) : l'adresse visible, les actions dans son « ⋯ ».
+const canSearchEmployer = computed(
+  () =>
+    !employerKnown.value &&
+    props.offer.employer_status !== "agency" &&
+    !(props.offer.employer_url && props.offer.employer_checked_at),
+);
+const companyItems = computed<MoreMenuItem[]>(() => {
+  const o = props.offer;
+  const items: MoreMenuItem[] = [];
+  if (o.company_address) items.push({ label: "Modifier l'adresse", test: "edit-address", run: startAddress });
+  if (o.company && o.company_address_source !== "manual" && o.company_address_source !== "page") {
+    items.push({ label: "Chercher l'adresse", test: "search-registry", disabled: searching.value, run: () => void searchRegistry() });
+  }
+  if (canSearchEmployer.value) {
+    items.push({
+      label: o.employer_checked_at ? "Chercher à nouveau chez l'employeur" : "Chercher l'offre chez l'employeur",
+      test: "find-employer",
+      disabled: employerBusy.value,
+      run: () => void findEmployer(),
+    });
+  }
+  if (o.company) {
+    items.push({ label: "Contacts", test: "open-contacts", count: contactsCount.value, run: () => (contactsOpen.value = true) });
+  }
+  if (o.company_address_source === "web" && o.company_address_url) {
+    items.push({ label: "Vérifier la source de l'adresse", test: "address-source", href: o.company_address_url });
+  }
+  return items;
+});
+// Les annonces d'origine, dans le « ⋯ » de la partie « Annonce ».
+const announceItems = computed<MoreMenuItem[]>(() =>
+  otherLinks.value.map((link) => ({ label: `Voir sur ${sourceLabel[link.source]}`, test: `source-${link.source}`, href: link.url })),
+);
 
 const editingAddress = ref(false);
 const addressDraft = ref("");
@@ -442,6 +474,13 @@ watch(
     >
       <div class="panel-section-head">
         <h3>Entreprise</h3>
+        <MoreMenu
+          v-if="companyItems.length"
+          class="section-more"
+          :items="companyItems"
+          label="Actions sur l'entreprise"
+          test-id="company-more"
+        />
       </div>
       <div
         class="address-line"
@@ -452,38 +491,26 @@ watch(
           <span v-if="offer.company_address">
             {{ offer.company_address.split("\n").join(", ") }}
             <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
-            <a
-              v-if="offer.company_address_source === 'web' && offer.company_address_url"
-              :href="offer.company_address_url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="hint"
-              data-test="address-source"
-            > (vérifier la source)</a>
           </span>
-          <span
-            v-else
-            class="hint"
-          >inconnue</span>
-          <button
-            type="button"
-            class="link"
-            data-test="edit-address"
-            @click="startAddress"
-          >
-            {{ offer.company_address ? "Modifier" : "Ajouter" }}
-          </button>
-          <button
-            v-if="offer.company && offer.company_address_source !== 'manual' && offer.company_address_source !== 'page'"
-            type="button"
-            class="link"
-            :disabled="searching"
-            data-test="search-registry"
-            @click="searchRegistry"
-          >
-            {{ searching ? "Recherche…" : "Chercher l'adresse" }}
-          </button>
+          <template v-else>
+            <span class="hint">inconnue</span>
+            <button
+              type="button"
+              class="link"
+              data-test="add-address"
+              @click="startAddress"
+            >
+              Ajouter l'adresse
+            </button>
+          </template>
         </template>
+        <p
+          v-if="searching"
+          class="hint"
+          role="status"
+        >
+          Recherche dans le registre IDE…
+        </p>
         <div
           v-if="registryMessage || proposals.length"
           class="registry-proposals"
@@ -546,46 +573,25 @@ watch(
         </form>
       </div>
       <p
-        v-if="!employerKnown"
+        v-if="!employerKnown && (offer.employer_checked_at || offer.employer_status === 'agency' || employerBusy || employerMessage)"
         class="hint employer-line"
         data-test="employer-line"
       >
         <span
-          v-if="offer.employer_url && offer.employer_checked_at"
+          v-if="employerBusy"
+          role="status"
+        >Recherche chez l'employeur en cours (jusqu'à 30 s)…</span>
+        <span
+          v-else-if="offer.employer_url && offer.employer_checked_at"
         >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
           {{ shortDate.format(new Date(offer.employer_checked_at)) }}.</span>
         <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
-        <template v-else>
-          <span v-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
-          <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
-          <button
-            type="button"
-            class="link"
-            :disabled="employerBusy"
-            data-test="find-employer"
-            @click="findEmployer"
-          >
-            {{ employerBusy ? "Recherche en cours (jusqu'à 30 s)…" : offer.employer_checked_at ? "Chercher à nouveau" : "Chercher l'offre chez l'employeur" }}
-          </button>
-        </template>
+        <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
+        <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>
         <span
           v-if="employerMessage"
           role="status"
         >{{ employerMessage }}</span>
-      </p>
-      <p
-        v-if="offer.company"
-        class="panel-section-links"
-      >
-        <button
-          type="button"
-          class="link"
-          :aria-expanded="contactsOpen"
-          data-test="open-contacts"
-          @click="contactsOpen = true"
-        >
-          Contacts{{ contactsCount ? ` · ${contactsCount}` : "" }}
-        </button>
       </p>
     </section>
     <SidePanel
@@ -605,7 +611,16 @@ watch(
       class="panel-section"
       data-test="section-ad"
     >
-      <h3>Annonce</h3>
+      <div class="panel-section-head">
+        <h3>Annonce</h3>
+        <MoreMenu
+          v-if="announceItems.length"
+          class="section-more"
+          :items="announceItems"
+          label="Voir l'annonce sur les sites"
+          test-id="ad-more"
+        />
+      </div>
       <template v-if="offer.description">
         <div
           ref="textEl"
@@ -636,19 +651,6 @@ watch(
         class="detail-snippet"
       >
         Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site.
-      </p>
-      <p
-        v-if="otherLinks.length"
-        class="panel-section-links"
-      >
-        <a
-          v-for="link in otherLinks"
-          :key="link.source"
-          :href="link.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="link"
-        >Voir sur {{ sourceLabel[link.source] }}</a>
       </p>
     </section>
   </article>

@@ -393,6 +393,7 @@ describe("détail allégé et adresse", () => {
     await wrapper.find("[data-test=more]").trigger("click");
     expect(wrapper.find("[data-test=back-to-review]").exists()).toBe(true);
 
+    await wrapper.find("[data-test=company-more]").trigger("click");
     await wrapper.find("[data-test=edit-address]").trigger("click");
     await wrapper.find("[data-test=address-input]").setValue("Rue du Port 2\n1201 Genève");
     await wrapper.find("[data-test=save-address]").trigger("submit");
@@ -426,6 +427,7 @@ describe("adresse par le registre IDE", () => {
     POST.mockResolvedValue({ data: { company_address: "Rue 2\n1206 Genève", company_address_source: "registry" } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
+    await wrapper.find("[data-test=company-more]").trigger("click");
     await wrapper.find("[data-test=search-registry]").trigger("click");
     await flushPromises();
     const choices = wrapper.findAll("[data-test=choose-registry]");

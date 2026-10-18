@@ -110,6 +110,7 @@ describe("NewsSourcesPanel — suggestions et veilles", () => {
     });
     const wrapper = mount(NewsSourcesPanel);
     await flushPromises();
+    await wrapper.find("[data-test=add-more]").trigger("click");
     await wrapper.find("[data-test=add-search]").trigger("click");
     await wrapper.find("[data-test=search-query]").setValue(" Kubernetes emploi ");
     await wrapper.find("[data-test=add-news-search]").trigger("submit");

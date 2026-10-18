@@ -131,15 +131,16 @@ describe("ContactsPanel", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
     await flushPromises();
-    const remove = wrapper.findAll(".contact-actions button").find((b) => b.text() === "Retirer")!;
-    await remove.trigger("click");
+    await wrapper.find("[data-test=contact-more]").trigger("click");
+    await wrapper.find("[data-test=contact-remove]").trigger("click");
     await flushPromises();
     expect(confirm).toHaveBeenCalledWith("Retirer ce contact ?");
     expect(DELETE).not.toHaveBeenCalled();
 
     confirm.mockReturnValue(true);
     DELETE.mockResolvedValue({ error: { detail: "introuvable" } });
-    await remove.trigger("click");
+    await wrapper.find("[data-test=contact-more]").trigger("click");
+    await wrapper.find("[data-test=contact-remove]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalledTimes(1);
     expect(wrapper.find("[data-test=contact-error]").text()).toBe("Retrait impossible : réessaie dans un instant.");

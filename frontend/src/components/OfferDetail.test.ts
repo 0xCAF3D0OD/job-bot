@@ -50,6 +50,8 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
   it("recherche à la demande, puis « pas trouvée »", async () => {
     POST.mockResolvedValue({ data: offer({ employer_status: "not_found", employer_checked_at: "2026-10-07T08:00:00Z" }) });
     const wrapper = await mountDetail(offer());
+    // Dans le « ⋯ » de la partie Entreprise (docs/74).
+    await wrapper.find("[data-test=company-more]").trigger("click");
     await wrapper.find("[data-test=find-employer]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/employer", { params: { path: { offer_id: 4 } } });
@@ -58,7 +60,8 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
     await wrapper.setProps({ offer: offer({ employer_status: "not_found", employer_checked_at: "2026-10-07T08:00:00Z" }) as never });
     const line = wrapper.find("[data-test=employer-line]");
     expect(line.text().match(/Pas trouvée/g)).toHaveLength(1);
-    expect(line.find("[data-test=find-employer]").text()).toBe("Chercher à nouveau");
+    await wrapper.find("[data-test=company-more]").trigger("click");
+    expect(wrapper.find("[data-test=find-employer]").text()).toBe("Chercher à nouveau chez l'employeur");
   });
 
   it("agence, ou lien employeur déjà donné par jobup", async () => {
@@ -79,9 +82,11 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     expect(wrapper.text()).not.toContain("Voir sur Indeed");
     expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
     await wrapper.find("[data-test=more]").trigger("click");
-    for (const key of ["mark-applied", "later", "ignore", "flag-expired", "menu-find-employer"]) {
+    for (const key of ["mark-applied", "later", "ignore", "flag-expired"]) {
       expect(wrapper.find(`[data-test=${key}]`).exists()).toBe(true);
     }
+    // Chercher chez l'employeur est rangé dans la partie Entreprise (docs/74).
+    expect(wrapper.find("[data-test=find-employer]").exists()).toBe(false);
   });
 
   it("sections Pour toi, À savoir, Entreprise, Annonce, dans cet ordre", async () => {
@@ -107,7 +112,8 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark").text());
     expect(marks).toEqual(["✓", "✓", "!", "✗"]);
     expect(wrapper.find("[data-test=facts]").text()).toContain("80–100 %");
-    // L'annonce chez l'employeur est le bouton : celle d'Indeed reste en lien, en bas.
+    // L'annonce chez l'employeur est le bouton : celle d'Indeed est dans le « ⋯ » de l'annonce.
+    await wrapper.find("[data-test=ad-more]").trigger("click");
     expect(wrapper.find("[data-test=section-ad]").text()).toContain("Voir sur Indeed");
     expect(wrapper.find("[data-test=company-section] [data-test=address]").exists()).toBe(true);
     expect(wrapper.find("[data-test=description]").classes()).toContain("folded");
@@ -121,5 +127,20 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     const button = wrapper.find("[data-test=employer]");
     expect(button.attributes("href")).toBe("https://exemple.ch/jobs/2");
     expect(button.text()).toContain("Postuler chez l'employeur");
+  });
+});
+
+describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
+  it("l'adresse visible, les actions dans « ⋯ », « Ajouter l'adresse » visible si elle manque", async () => {
+    const known = await mountDetail(offer({ company_address: "Rue 1\n1201 Genève", company_address_source: "registry" }));
+    const section = known.find("[data-test=company-section]");
+    expect(section.find("[data-test=address]").text()).toContain("Rue 1, 1201 Genève");
+    expect(section.findAll("button.link")).toHaveLength(0);
+    await section.find("[data-test=company-more]").trigger("click");
+    const labels = section.findAll("[role=menuitem]").map((item) => item.text());
+    expect(labels).toEqual(["Modifier l'adresse", "Chercher l'adresse", "Chercher l'offre chez l'employeur", "Contacts"]);
+
+    const missing = await mountDetail(offer());
+    expect(missing.find("[data-test=add-address]").text()).toBe("Ajouter l'adresse");
   });
 });

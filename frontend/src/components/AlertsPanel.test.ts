@@ -81,6 +81,7 @@ describe("AlertsPanel (docs/20 §1)", () => {
     await wrapper.find("[data-test=add-alert-search]").trigger("submit");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "SRE", location: null } });
+    await wrapper.find("[data-test=alert-more]").trigger("click");
     await wrapper.find("[data-test=pause]").trigger("click");
     await flushPromises();
     expect(wrapper.findAll("[data-test=alert-search]")).toHaveLength(0);

@@ -4,6 +4,7 @@ import { onMounted, reactive, ref } from "vue";
 import { api, type Contact, type ContactIn, type ContactsPage } from "../api/client";
 import { CHANNELS, contactName, isoDay, ROLES, toFollowUp } from "../contactLabels";
 import CopyLabel from "./CopyLabel.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Contacts dans l'entreprise (docs/31) : recherches LinkedIn déjà remplies, ouvertes dans
 // un nouvel onglet, et suivi des prises de contact. Rien n'est lu sur LinkedIn. Affiché dans
@@ -126,6 +127,16 @@ async function add(): Promise<void> {
   } finally {
     busy.value = false;
   }
+}
+
+// « A répondu » visible tant qu'il n'a pas répondu ; le reste dans « ⋯ » (docs/74).
+function contactItems(contact: Contact): MoreMenuItem[] {
+  return [
+    ...(contact.answered_on
+      ? [{ label: "Modifier la note", test: "contact-answered", run: () => startAnswer(contact) }]
+      : []),
+    { label: "Retirer", test: "contact-remove", danger: true, run: () => void remove(contact) },
+  ];
 }
 
 function startAnswer(contact: Contact): void {
@@ -325,20 +336,19 @@ onMounted(() => void load());
             >En attente de réponse</span>
             <span class="contact-actions">
               <button
+                v-if="!contact.answered_on"
                 type="button"
                 class="link"
                 data-test="contact-answered"
                 @click="startAnswer(contact)"
               >
-                {{ contact.answered_on ? "Modifier la note" : "A répondu" }}
+                A répondu
               </button>
-              <button
-                type="button"
-                class="link danger"
-                @click="remove(contact)"
-              >
-                Retirer
-              </button>
+              <MoreMenu
+                :items="contactItems(contact)"
+                :label="`Actions sur le contact ${contactName(contact)}`"
+                test-id="contact-more"
+              />
             </span>
             <form
               v-if="answering === contact.id"

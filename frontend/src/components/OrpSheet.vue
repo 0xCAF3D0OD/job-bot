@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type OrpMonth, type OrpRow, type Source } from "../api/client";
-import DisclosureRow from "./DisclosureRow.vue";
 import { printSheet } from "../composables/usePrint";
 import { formatMonth, plural, sourceLabel } from "../format";
 import CopyLabel from "./CopyLabel.vue";
 import JobRoomDeclared from "./JobRoomDeclared.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Preuves ORP du mois (docs/09), onglet de la page Candidatures (docs/18 §2).
 // embedded : dans l'onglet Suivi (docs/22 §2), les actions de remise sont dans la barre du mois.
@@ -30,9 +30,12 @@ function steps(row: OrpRow): { step: string; fields: OrpRow["job_room"] }[] {
   return groups;
 }
 
-async function printPdf(): Promise<void> {
+async function printPdf(journal = false): Promise<void> {
+  withSearches.value = journal;
+  await nextTick();
   const sheet = document.querySelector<HTMLElement>(".orp-sheet");
   if (sheet) printSheet(sheet, { title: `Preuves ORP - ${props.data.month}`, landscape: true });
+  withSearches.value = false;
   await api.POST("/api/orp/{month}/exported", { params: { path: { month: props.data.month } } });
   emit("reload");
 }
@@ -92,6 +95,19 @@ const COLUMNS: { key: OrpColumn; label: string }[] = [
 ];
 const visibleColumns = ref<OrpColumn[]>(COLUMNS.map((c) => c.key));
 const pickingColumns = ref(false);
+// La barre du mois : l'étape suivante et Job-Room visibles, le reste dans « ⋯ » (docs/74).
+const monthItems = computed<MoreMenuItem[]>(() => [
+  { label: "Télécharger le PDF", test: "pdf", run: () => void printPdf() },
+  ...(props.data.searches.length
+    ? [{ label: "PDF avec le journal des recherches", test: "pdf-with-searches", count: props.data.searches.length, run: () => void printPdf(true) }]
+    : []),
+  { label: "Télécharger en CSV (Excel)", test: "csv", href: `/api/orp/${props.data.month}/csv`, download: true },
+  {
+    label: `Colonnes affichées (${visibleColumns.value.length + 3} / ${COLUMNS.length + 3})`,
+    test: "columns",
+    run: () => (pickingColumns.value = !pickingColumns.value),
+  },
+]);
 
 function show(column: OrpColumn): boolean {
   return visibleColumns.value.includes(column);
@@ -139,7 +155,7 @@ onMounted(async () => {
       </RouterLink> pour l'en-tête du PDF.
     </p>
 
-    <!-- Une seule action à la fois selon le moment (docs/21 §6) ; le reste dans « Plus d'options ». -->
+    <!-- Une seule action à la fois selon le moment (docs/21 §6) ; le reste dans « ⋯ » (docs/74). -->
     <div
       v-if="data.count"
       class="orp-next"
@@ -194,72 +210,43 @@ onMounted(async () => {
           class="job-room-count"
           data-test="job-room-count"
         >{{ declareCount }}</span>
+        <MoreMenu
+          :items="monthItems"
+          label="Plus d'actions sur ce mois"
+          test-id="orp-more"
+        />
+      </span>
+    </div>
+    <fieldset
+      v-if="data.count && pickingColumns"
+      class="customize-list columns-list orp-columns"
+      data-test="columns-list"
+    >
+      <legend>
+        Colonnes affichées
         <button
           type="button"
           class="link"
-          data-test="pdf"
-          @click="printPdf"
+          data-test="columns-done"
+          @click="pickingColumns = false"
         >
-          Télécharger le PDF
+          Terminé
         </button>
-      </span>
-    </div>
-    <DisclosureRow
-      v-if="data.count"
-      class="more-options"
-      title="Plus d'options"
-      value="CSV, journal des recherches, colonnes"
-      data-test="more-options"
-    >
-      <div class="more-options-body">
-        <a
-          class="link"
-          :href="`/api/orp/${data.month}/csv`"
-          download
-          data-test="csv"
-        >Télécharger en CSV (Excel)</a>
-        <label class="check">
-          <input
-            v-model="withSearches"
-            type="checkbox"
-            data-test="with-searches"
-          > Joindre au PDF le journal des recherches ({{ data.searches.length }})
-        </label>
-        <div class="columns-picker">
-          <button
-            type="button"
-            class="link"
-            :aria-expanded="pickingColumns"
-            data-test="columns"
-            @click="pickingColumns = !pickingColumns"
-          >
-            Colonnes affichées ({{ visibleColumns.length + 3 }} / {{ COLUMNS.length + 3 }})
-          </button>
-          <fieldset
-            v-if="pickingColumns"
-            class="customize-list columns-list"
-            data-test="columns-list"
-          >
-            <legend>
-              Colonnes
-            </legend>
-            <label
-              v-for="column in COLUMNS"
-              :key="column.key"
-              class="check"
-            >
-              <input
-                type="checkbox"
-                :checked="show(column.key)"
-                :data-test="`column-${column.key}`"
-                @change="toggleColumn(column.key)"
-              >
-              {{ column.label }}
-            </label>
-          </fieldset>
-        </div>
-      </div>
-    </DisclosureRow>
+      </legend>
+      <label
+        v-for="column in COLUMNS"
+        :key="column.key"
+        class="check"
+      >
+        <input
+          type="checkbox"
+          :checked="show(column.key)"
+          :data-test="`column-${column.key}`"
+          @change="toggleColumn(column.key)"
+        >
+        {{ column.label }}
+      </label>
+    </fieldset>
 
     <p
       v-if="!data.count"

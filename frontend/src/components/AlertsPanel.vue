@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
 import DisclosureRow from "./DisclosureRow.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
 // ouvre la recherche déjà remplie ; l'alerte se crée sur le site, avec l'adresse de son choix.
@@ -33,6 +34,15 @@ async function add(): Promise<void> {
   apply(data);
   form.value = { terms: "", location: "" };
   adding.value = false;
+}
+
+// Les actions d'une recherche dans son « ⋯ » (docs/74).
+function searchItems(search: AlertSearch): MoreMenuItem[] {
+  return [
+    { label: "Modifier", test: "edit-alert", run: () => void edit(search) },
+    { label: "Mettre de côté", test: "pause", run: () => void setActive(search, false) },
+    { label: "Supprimer", test: "remove-alert", danger: true, run: () => void remove(search) },
+  ];
 }
 
 async function edit(search: AlertSearch): Promise<void> {
@@ -197,29 +207,12 @@ onMounted(() => void load());
                 > J'ai créé l'alerte
               </label>
             </td>
-            <td class="row-actions">
-              <button
-                type="button"
-                class="link"
-                @click="edit(search)"
-              >
-                Modifier
-              </button>
-              <button
-                type="button"
-                class="link"
-                data-test="pause"
-                @click="setActive(search, false)"
-              >
-                Mettre de côté
-              </button>
-              <button
-                type="button"
-                class="link danger"
-                @click="remove(search)"
-              >
-                Supprimer
-              </button>
+            <td class="row-more">
+              <MoreMenu
+                :items="searchItems(search)"
+                :label="`Actions sur la recherche ${search.terms}`"
+                test-id="alert-more"
+              />
             </td>
           </tr>
         </tbody>
