@@ -2564,3 +2564,25 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .demo-banner { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; align-items: baseline; justify-content: center; padding: 0.55rem 1rem; background: var(--accent-soft); color: var(--text); font-size: 0.88rem; text-align: center; }
 .demo-banner strong { color: var(--accent); }
 .demo-banner a { color: var(--accent); font-weight: 500; }
+
+/* --- Un seul cadre par bloc (docs/74, complément) ---
+   Dans une carte ou un volet, un tableau, une liste ou un repliable perd son propre cadre :
+   des lignes séparées par un filet, alignées sur le texte de la carte. */
+:is(.form-card, .disclosure, .disclosure-list) .runs { border: 0; border-radius: 0; background: none; overflow: visible; }
+:is(.form-card, .disclosure, .disclosure-list) .runs :is(th, td):first-child { padding-left: 0; }
+:is(.form-card, .disclosure, .disclosure-list) .runs :is(th, td):last-child { padding-right: 0; }
+:is(.form-card, .disclosure, .disclosure-list) .runs tbody tr:last-child > td { border-bottom: 0; }
+/* Le trait de gauche d'un volet sert au texte ; un tableau s'aligne sur le titre du volet. */
+.disclosure-body:has(.runs) { margin-left: 0.9rem; padding-left: 0; border-left: 0; }
+.form-card .calm-list { margin: 0.25rem 0 1rem; border: 0; border-radius: 0; }
+.form-card .calm-list li { padding-right: 0; }
+.form-card .calm-list .calm-row { padding-left: 0; }
+.form-card .disclosure { background: none; border: 0; border-radius: 0; }
+.form-card .disclosure > .disclosure-row { padding-left: 0; padding-right: 0; }
+.form-card .disclosure > .disclosure-panel .disclosure-body { margin-left: 0.1rem; margin-right: 0; }
+@media (max-width: 820px) {
+  /* Sur téléphone, les lignes des preuves ne sont plus des cartes dans le volet. */
+  :is(.disclosure, .disclosure-list) .orp-table tr { margin: 0; padding: 0.8rem 0; border: 0; border-bottom: 1px solid var(--divider); border-radius: 0; background: none; }
+  :is(.disclosure, .disclosure-list) .orp-table tr:last-child { border-bottom: 0; }
+  :is(.disclosure, .disclosure-list) .orp-table tr.incomplete { padding-left: 0.7rem; box-shadow: inset 3px 0 0 var(--warn); }
+}
