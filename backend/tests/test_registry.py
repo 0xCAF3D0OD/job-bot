@@ -17,6 +17,8 @@ from jobbot.registry.uid import RegistryCompany, parse_response
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 
 
@@ -59,7 +61,7 @@ def test_name_key_and_choose() -> None:
 
 @pytest.fixture
 async def fresh(runtime: Runtime) -> AsyncIterator[Runtime]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, companies CASCADE"))
     yield runtime
 
@@ -177,3 +179,33 @@ async def test_other_account_choice_stays_its_own(
     async with fresh.sessionmaker() as session:
         record = await session.scalar(select(Company))
     assert record is not None and record.chosen_by != "manual" and record.uid is None
+
+
+async def test_guest_lookup_stays_in_its_offers(
+    api: AsyncClient, fresh: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Un invité n'écrit pas le cache commun des entreprises (docs/78 §3.2) : ses propositions
+    viennent de la recherche, son choix ne vaut que pour ses offres."""
+    twins = [company("Jumelle SA"), company("Jumelle Sàrl")]
+
+    async def fake(_name: str) -> list[RegistryCompany]:
+        return twins
+
+    async def no(_session: object) -> bool:
+        return False
+
+    monkeypatch.setattr(uid, "search", fake)
+    monkeypatch.setattr(accounts, "is_owner", no)
+    monkeypatch.setattr(accounts, "writes_shared", no)
+    first = await add(fresh, 1, "Jumelle")
+    found = (await api.get(f"/api/offers/{first}/address-candidates")).json()
+    assert [c["uid"] for c in found["candidates"]] == [t.uid for t in twins]
+    async with fresh.sessionmaker() as session:
+        assert await session.scalar(select(Company)) is None
+    chosen = twins[0]
+    response = await api.post(
+        f"/api/offers/{first}/address-candidates/choose", json={"uid": chosen.uid}
+    )
+    assert response.json()["company_address"] == chosen.address
+    async with fresh.sessionmaker() as session:
+        assert await session.scalar(select(Company)) is None

@@ -17,9 +17,11 @@ from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 
+from .conftest import admin_engine
+
 
 async def reset(runtime: Runtime) -> None:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(
             text("TRUNCATE applications, interviews, interview_practices, contacts CASCADE")
         )

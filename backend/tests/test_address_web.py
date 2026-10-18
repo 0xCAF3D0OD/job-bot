@@ -19,7 +19,7 @@ from jobbot.registry.service import lookup_addresses
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 FOUND = (
@@ -77,7 +77,7 @@ class FakeClient:
 @pytest.fixture
 async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(anthropic_api_key="sk-test"))
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, companies, llm_calls CASCADE"))
     yield runtime
     async with runtime.sessionmaker.begin() as session:

@@ -13,7 +13,7 @@ from jobbot.notify.service import Message
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def sent(monkeypatch: pytest.MonkeyPatch) -> list[Message]:
 @pytest.fixture
 async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(ntfy_topic="sujet-test"))
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE applications, orp_months, notifications CASCADE"))
         await conn.execute(
             text("DELETE FROM settings WHERE key IN ('orp_monthly_target', 'orp_due_day')")

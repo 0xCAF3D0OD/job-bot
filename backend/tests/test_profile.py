@@ -13,7 +13,7 @@ from jobbot.api.app import create_app
 from jobbot.core.extract import DocumentType, TextStatus, UnsupportedDocument, extract
 from jobbot.runtime import Runtime
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 
 def pdf_with_text(text_line: str) -> bytes:
@@ -104,7 +104,7 @@ def test_rejected_documents(filename: str, data: bytes, message: str) -> None:
 async def api(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     settings = make_settings(storage_path=tmp_path)
     runtime = Runtime.create(settings)
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE documents, profile_chunks CASCADE"))
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:

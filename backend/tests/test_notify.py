@@ -19,7 +19,7 @@ from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 from jobbot.worker.jobs import execute
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 
@@ -37,7 +37,7 @@ def sent(monkeypatch: pytest.MonkeyPatch) -> list[Message]:
 
 @pytest.fixture
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, searches, job_runs, llm_calls CASCADE"))
         await conn.execute(text("DELETE FROM settings WHERE key = 'budget_alert_month'"))
     r = Runtime.create(make_settings(ntfy_topic="sujet-secret", public_url="http://jobbot.local"))

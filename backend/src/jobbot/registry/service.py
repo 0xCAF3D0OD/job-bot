@@ -21,6 +21,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import accounts
 from jobbot.core.address import weaker_sources
 from jobbot.core.normalize import normalize_location, normalize_text
 from jobbot.db.models import Company, Offer, OfferStatus
@@ -68,7 +69,7 @@ def choose(company: str, candidates: list[RegistryCompany], place: Place) -> Reg
     return same[0] if len(same) == 1 else None
 
 
-def _proposals(company: str, candidates: list[RegistryCompany]) -> list[RegistryCompany]:
+def proposals(company: str, candidates: list[RegistryCompany]) -> list[RegistryCompany]:
     """Les 3 propositions actives les plus proches du nom cherché (ordre du registre)."""
     key = name_key(company)
     active = [c for c in candidates if c.active and c.street]
@@ -85,7 +86,7 @@ async def remember(
     values = {
         "uid": chosen.uid if chosen else None,
         "address": chosen.address if chosen else None,
-        "candidates": [c.as_dict() for c in _proposals(company, candidates)],
+        "candidates": [c.as_dict() for c in proposals(company, candidates)],
         "chosen_by": "auto" if chosen else None,
         "looked_up_at": datetime.now(UTC),
     }
@@ -168,11 +169,13 @@ async def web_lookup(
         values: dict[str, object] = {"web_looked_up_at": datetime.now(UTC)}
         if found:
             values |= {"address": found.address, "source_url": found.source_url, "chosen_by": "web"}
-        await session.execute(
-            insert(Company)
-            .values(name_key=key, looked_up_at=datetime.now(UTC), candidates=[], **values)
-            .on_conflict_do_update(index_elements=["name_key"], set_=values)
-        )
+        # Trouvée pour un invité : elle ne vaut que pour ses offres (docs/78 §3.2).
+        if await accounts.writes_shared(session):
+            await session.execute(
+                insert(Company)
+                .values(name_key=key, looked_up_at=datetime.now(UTC), candidates=[], **values)
+                .on_conflict_do_update(index_elements=["name_key"], set_=values)
+            )
         if found:
             await apply_address(session, key, found.address, "web", found.source_url)
     return found

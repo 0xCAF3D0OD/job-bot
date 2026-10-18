@@ -1,6 +1,6 @@
 # 78 — Constat de sécurité, étanchéité des comptes et règles écrites (versions 0.64.0 à 0.64.2)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-18.
 > Origine : ta question du 2026-10-18 : « est-ce que ma plateforme est sécurisée ? » Tu veux une étanchéité **parfaite** entre les comptes, et des règles (policies) définies. Deux relectures complètes en lisant le code : la séparation dans la base (tables, règles, fonctions, tâches de fond), puis la connexion, les droits route par route, les fichiers, les adresses que le serveur va chercher et les bibliothèques. J'ai fait les contrôles sur la base de test (`jobbot_test`, migration 0053) et j'ai revérifié moi-même chaque constat moyen ou grave dans le code. Je n'ai rien lu de ta base, je ne me suis connecté à rien.
 
 ## 1. En clair : le verdict
@@ -147,3 +147,35 @@ Vérifications, à chaque fois sur une base à part :
 6. **Session de 90 jours au plus** (§2).
 7. **Les règles écrites** : `docs/securite.md`, et `SECURITY.md` avec le signalement privé de GitHub, sans adresse e-mail (§4).
 8. **Trois PR, 0.64.0 à 0.64.2**, avec trois migrations (§5).
+
+## Écarts avec le cadrage (0.64.0)
+
+- **Une limite à dire franchement.** La séparation repose sur le compte que le serveur donne à la base au début de chaque transaction. Une injection SQL pourrait encore changer ce compte dans sa propre transaction. Je n'en ai trouvé aucune : aucune requête n'est construite avec une saisie. Ce que 0.64.0 enlève, c'est tout le reste. Une injection ne pourrait plus :
+  - lire les fichiers du serveur ;
+  - lancer une commande ;
+  - modifier ou vider une table ;
+  - reprendre les droits d'administrateur.
+
+  Le §1 disait « sortir de ce mode et tout voir » : il ne reste plus que changer de compte, ce qui suppose une injection.
+- **Pas de rôle `jobbot_owner` créé** : le propriétaire des tables reste l'utilisateur des migrations (`dkey` chez toi, `jobbot` dans la démo), donné par `JOBBOT_MIGRATE_DATABASE_URL`.
+- **Pas de `FORCE ROW LEVEL SECURITY`.** Le propriétaire est superutilisateur partout, et un superutilisateur passe outre de toute façon : `FORCE` n'aurait rien changé. Il aurait en revanche bloqué les fonctions spéciales si le propriétaire ne l'était pas. La protection vient de ce que le serveur ne se connecte plus en propriétaire, et de `tests/test_policies.py`.
+- **Ancienne configuration acceptée, signalée** : sans les nouvelles adresses, l'API et le worker se restreignent eux-mêmes comme avant. L'API l'écrit dans son journal et l'affiche en rouge sur « La plateforme ». La démo, elle, refuse de démarrer.
+- **Le journal des tâches est lisible par tous les comptes dans la base** (les dates de la dernière collecte servent à l'état de chaque compte) ; sa page reste réservée à l'exploitant. L'erreur détaillée passe par compte en 0.64.1.
+- **La file des tâches** : l'API garde le droit d'écrire dans les tables de procrastinate, parce que ses fonctions de mise en file s'exécutent avec les droits de l'appelant. Elle n'y lit aucun contenu des comptes.
+- **Le worker lit tous les comptes** (pas les mots de passe à l'écran, mais la ligne) : il en a besoin pour ranger chaque alerte e-mail par l'adresse du compte.
+- **Une session expirée est encore reconnue par sa fonction**, pour être effacée ensuite au nom de son compte ; elle n'ouvre rien.
+- **Les découvertes d'un invité, déjà en 0.64.0** pour l'adresse (registre, Internet) et la page carrière : la base refusant désormais ces écritures, elles ne valent que pour ses offres. Choisir une proposition du registre la redemande au registre si le cache commun ne l'a pas. Le logo tiré du site saisi dans une candidature spontanée reste pour 0.64.2.
+- **Une source d'actualités** que plus personne ne suit est effacée par une fonction de la base (`drop_unfollowed_news_source`), qui remplace `news_source_followers` : un compte n'apprend plus si d'autres la suivent.
+- **Le catalogue des formations** s'écrit au nom de l'exploitant, à la première lecture.
+- **La page « Confidentialité »** dit aussi que l'exploitant s'engage à ne pas lire les données (§4).
+- **Les tests qui vident les tables** le font avec le propriétaire (`admin_engine()`), le serveur n'ayant plus `TRUNCATE`.
+- **Vérifié** :
+  - 479 tests serveur, dont 13 nouveaux (`test_policies.py`, connexion directe en `jobbot_app`, trois accès, recherche d'adresse d'un invité), et 290 tests de l'interface ;
+  - dans Docker, la démo 0.63.2 mise à jour en 0.64.0 sur sa base existante, puis une installation neuve :
+    - l'API connectée en `jobbot_app`, avec le mot de passe donné par `jobbot migrate` ;
+    - le parcours de toutes les pages : 174 appels, aucune erreur ;
+    - la remise à neuf de nuit fonctionne ;
+    - `reset role` puis `truncate` sont refusés au rôle ;
+  - sur une base de brouillon, avec ton ancienne configuration : l'avertissement s'affiche ;
+  - avec les trois adresses : une tâche mise en file par l'API est faite par le worker en `jobbot_worker`.
+- **À activer sur GitHub** (toi) : Settings › Security › « Private vulnerability reporting », pour que le signalement de `SECURITY.md` soit possible.

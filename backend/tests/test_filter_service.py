@@ -12,12 +12,14 @@ from jobbot.filtering.service import load_criteria, run_filter, save_criteria
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 
 
 @pytest.fixture
 async def fresh(runtime: Runtime) -> AsyncIterator[Runtime]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, criteria, searches, job_runs CASCADE"))
     yield runtime
 

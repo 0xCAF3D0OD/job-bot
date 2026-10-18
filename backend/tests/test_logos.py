@@ -16,6 +16,7 @@ from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 from jobbot.sources.jobup_page import parse_jobup_page
 
+from .conftest import admin_engine
 from .test_enrich import URL, page
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 50
@@ -73,7 +74,7 @@ def test_alert_logo_is_an_image_of_the_email() -> None:
 
 @pytest.fixture
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, company_logos, companies CASCADE"))
     yield runtime
 

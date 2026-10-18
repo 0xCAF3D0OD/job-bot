@@ -35,6 +35,7 @@ const PLATFORM = {
   ai_total_budget_chf: "50",
   ai_month_spend_chf: "0.80",
   auth_enabled: true,
+  database_admin: false,
 };
 
 describe("Plateforme (docs/65 §5)", () => {
@@ -49,6 +50,17 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(wrapper.find("[data-test=account-kevin]").text()).toContain("toi");
     expect(wrapper.find("[data-test=reset-kevin]").exists()).toBe(false);
     expect(wrapper.find("[data-test=platform-ai]").text()).toContain("0,80 CHF");
+  });
+
+  it("une connexion à la base en administrateur est signalée (docs/78 §3.1)", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    const calm = mount(PlatformPanel);
+    await flushPromises();
+    expect(calm.find("[data-test=platform-database-admin]").exists()).toBe(false);
+    GET.mockResolvedValue({ data: { ...PLATFORM, database_admin: true } });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    expect(wrapper.find("[data-test=platform-database-admin]").text()).toContain("jobbot_app");
   });
 
   it("une invitation : le lien, montré une fois", async () => {

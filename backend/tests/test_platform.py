@@ -15,7 +15,7 @@ from jobbot.db.models import LlmCall, User
 from jobbot.notify import service as notify_service
 from jobbot.runtime import Runtime
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 PASSWORD = "un-mot-de-passe-solide"
 
@@ -25,7 +25,7 @@ async def secured() -> AsyncIterator[Runtime]:
     """Connexion activée : les comptes invités se connectent par leur cookie."""
     runtime = Runtime.create(make_settings(auth_enabled=True))
     yield runtime
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("DELETE FROM users WHERE id <> (SELECT min(id) FROM users)"))
         await conn.execute(text("TRUNCATE account_links, platform_settings"))
     await runtime.dispose()

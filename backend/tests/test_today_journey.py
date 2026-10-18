@@ -9,9 +9,11 @@ from sqlalchemy import text
 from jobbot.db.models import Application, Offer, OfferStatus, Search
 from jobbot.runtime import Runtime
 
+from .conftest import admin_engine
+
 
 async def test_journey_steps(client: AsyncClient, runtime: Runtime) -> None:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, applications, searches, orp_months CASCADE"))
         await conn.execute(text("DELETE FROM settings WHERE key = 'journey_dismissed'"))
 
@@ -56,6 +58,6 @@ async def test_journey_steps(client: AsyncClient, runtime: Runtime) -> None:
 
     assert (await client.put("/api/journey", json={"dismissed": True})).status_code == 204
     assert (await client.get("/api/today")).json()["journey_dismissed"] is True
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, applications, searches CASCADE"))
         await conn.execute(text("DELETE FROM settings WHERE key = 'journey_dismissed'"))

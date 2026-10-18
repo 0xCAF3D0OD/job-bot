@@ -15,6 +15,8 @@ from jobbot.filtering.service import save_criteria
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 RESET = [
     "TRUNCATE alert_searches, searches CASCADE",
     "DELETE FROM settings WHERE key = 'alert_searches_proposed'",
@@ -24,7 +26,7 @@ RESET = [
 
 @pytest.fixture
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         for statement in RESET:
             await conn.execute(text(statement))
         await conn.execute(text("TRUNCATE criteria"))
@@ -38,7 +40,7 @@ async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         for statement in RESET:
             await conn.execute(text(statement))
         await conn.execute(text("TRUNCATE criteria"))

@@ -18,7 +18,7 @@ from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ async def secured() -> AsyncIterator[AsyncClient]:
 
 
 async def reset(runtime: Runtime) -> None:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(
             text("TRUNCATE extension_tokens, offers, applications, llm_calls CASCADE")
         )

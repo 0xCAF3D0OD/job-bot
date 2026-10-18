@@ -12,6 +12,8 @@ from jobbot.db.schema import head_revision
 from jobbot.runtime import Runtime
 from jobbot.worker.jobs import execute
 
+from .conftest import admin_engine
+
 
 async def test_healthz_does_not_need_database(offline_client: AsyncClient) -> None:
     response = await offline_client.get("/healthz")
@@ -33,10 +35,10 @@ async def test_readyz_200_when_migrated(client: AsyncClient) -> None:
 
 @pytest.fixture
 async def outdated_schema(runtime: Runtime) -> AsyncIterator[None]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("UPDATE alembic_version SET version_num = '0001'"))
     yield
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(
             text("UPDATE alembic_version SET version_num = :head"), {"head": head_revision()}
         )

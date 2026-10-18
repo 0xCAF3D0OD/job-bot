@@ -21,7 +21,9 @@ from sqlalchemy.exc import ProgrammingError
 
 from jobbot import accounts
 from jobbot.api.app import create_app
+from jobbot.api.routes import trainings as trainings_routes
 from jobbot.auth import passwords
+from jobbot.db import policies
 from jobbot.db.models import (
     AlertSearch,
     Application,
@@ -49,7 +51,7 @@ from jobbot.db.models import (
 )
 from jobbot.runtime import Runtime
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 SECRET = "SECRET-A"
 PASSWORD = "un-mot-de-passe-de-test"
@@ -241,22 +243,15 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
         }
 
 
-async def account_tables(runtime: Runtime) -> list[str]:
-    """Les tables rangées par compte : celles qui ont la colonne `user_id` et la séparation."""
-    async with runtime.sessionmaker() as session:
-        rows = await session.scalars(
-            text(
-                "select c.relname from pg_class c join pg_attribute a on a.attrelid = c.oid "
-                "where c.relrowsecurity and a.attname = 'user_id' and c.relkind = 'r' "
-                "order by 1"
-            )
-        )
-        return list(rows)
+async def account_tables(_runtime: Runtime) -> list[str]:
+    """Les tables rangées par compte (docs/78 §3.2) ; `test_policies.py` vérifie que la base
+    les sépare toutes."""
+    return sorted(policies.PERSONAL)
 
 
-# Communs, et modifiables seulement par l'exploitant (le catalogue des formations se met à
-# jour tout seul à la lecture, le journal des tâches aussi).
-SHARED = ("companies", "sites", "company_logos", "news_sources", "news_items")
+# Communs, et modifiables seulement par l'exploitant et le worker (docs/78 §3.2) ; le journal
+# des tâches change à chaque tâche.
+SHARED = tuple(t for t in policies.SHARED if t != "job_runs")
 
 
 async def snapshot(runtime: Runtime, tables: list[str] | None = None) -> dict[str, str]:
@@ -319,7 +314,7 @@ def example(
 
 @pytest.fixture
 async def two_accounts(runtime: Runtime) -> AsyncIterator[tuple[int, int]]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, alert_searches, chat_conversations CASCADE"))
         await conn.execute(text("DELETE FROM users WHERE username = 'compte-b'"))
     async with runtime.sessionmaker.begin() as session:
@@ -329,7 +324,7 @@ async def two_accounts(runtime: Runtime) -> AsyncIterator[tuple[int, int]]:
         await session.flush()
         other = b.id
     yield owner, other
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("DELETE FROM users WHERE username = 'compte-b'"))
         await conn.execute(text("TRUNCATE offers, alert_searches, chat_conversations CASCADE"))
         await conn.execute(text("DELETE FROM calendar_tokens WHERE name = :n"), {"n": SECRET})
@@ -352,6 +347,9 @@ async def test_account_b_sees_and_changes_nothing_of_a(
     owner, other = two_accounts
     assert owner != other
     ids = await seed_account_a(runtime)
+    # Le catalogue des formations, tiré du dépôt, est écrit d'abord : ce n'est pas B qui
+    # l'écrit, c'est la plateforme, au nom de l'exploitant.
+    await trainings_routes._ensure_catalog(runtime)
     before = await snapshot(runtime)
     shared_before = await snapshot(runtime, list(SHARED))
 
@@ -523,10 +521,12 @@ async def test_jobs_run_account_by_account(
     monkeypatch.setitem(
         jobs.JOBS, "test-plateforme", jobs.JobSpec("test-plateforme", record, scope="platform")
     )
+    # Le worker, avec son accès (docs/78 §3.1) : il écrit le journal des tâches.
+    worker = Runtime.create(runtime.settings, "worker")
     with accounts.use(None):
         # Planifiées : chaque compte à son tour, l'exploitant seul, ou sans compte.
         for name in ("test-comptes", "test-exploitant", "test-plateforme"):
-            assert await jobs.execute(runtime, name)
+            assert await jobs.execute(worker, name)
     assert seen == [
         ("test-comptes", owner),
         ("test-comptes", other),
@@ -536,6 +536,7 @@ async def test_jobs_run_account_by_account(
     seen.clear()
     # Lancée pour un compte (bouton) : pour lui seul ; celle de l'exploitant, pas pour B.
     with accounts.use(other):
-        assert await jobs.execute(runtime, "test-comptes")
-        assert await jobs.execute(runtime, "test-exploitant")
+        assert await jobs.execute(worker, "test-comptes")
+        assert await jobs.execute(worker, "test-exploitant")
     assert seen == [("test-comptes", other)]
+    await worker.dispose()

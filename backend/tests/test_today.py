@@ -12,12 +12,12 @@ from jobbot.core.orp import LOCAL_TZ, shift_month
 from jobbot.db.models import Offer, OfferStatus, ProfileChunk, Setting
 from jobbot.runtime import Runtime
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 
 @pytest.fixture
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(
             text(
                 "TRUNCATE offers, applications, orp_months, criteria, documents, profile_chunks"

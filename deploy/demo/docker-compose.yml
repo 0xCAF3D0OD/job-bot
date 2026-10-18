@@ -1,6 +1,6 @@
 # Démo en ligne de jobA1 (docs/77) : `docker compose up -d` dans ce dossier.
 # Réglages dans `.env` (voir `.env.example`) ; rien de secret : la démo n'a ni IA, ni e-mail,
-# ni mot de passe, et sa base n'est pas joignable depuis Internet.
+# ni compte avec mot de passe, et sa base n'est pas joignable depuis Internet.
 name: joba1-demo
 
 x-jobbot: &jobbot
@@ -13,7 +13,10 @@ x-jobbot: &jobbot
       VERSION: ${DEMO_VERSION:-dev}
   restart: unless-stopped
   environment:
-    JOBBOT_DATABASE_URL: postgresql+psycopg://jobbot:${DEMO_DB_PASSWORD:-demo}@db:5432/jobbot
+    # L'API se connecte avec le rôle restreint jobbot_app ; `migrate` et `demo-seed` avec le
+    # propriétaire des tables (docs/78 §3.1). `jobbot migrate` donne au rôle son mot de passe.
+    JOBBOT_DATABASE_URL: postgresql+psycopg://jobbot_app:${DEMO_APP_DB_PASSWORD:-demo-app}@db:5432/jobbot
+    JOBBOT_MIGRATE_DATABASE_URL: postgresql+psycopg://jobbot:${DEMO_DB_PASSWORD:-demo}@db:5432/jobbot
     JOBBOT_DEMO: "true"
     JOBBOT_ENV: prod
     JOBBOT_API_HOST: 0.0.0.0

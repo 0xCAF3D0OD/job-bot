@@ -20,7 +20,7 @@ from fastapi import FastAPI
 from jobbot.health import health_router
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
-from jobbot.settings import Settings
+from jobbot.settings import Settings, libpq
 from jobbot.worker import tasks as _tasks  # noqa: F401  (enregistre les tâches)
 from jobbot.worker.jobs import JOBS, execute
 from jobbot.worker.queue import QUEUE
@@ -33,7 +33,7 @@ DB_RETRY_MAX_SECONDS = 30
 
 def build_procrastinate_app(runtime: Runtime) -> procrastinate.App:
     app = procrastinate.App(
-        connector=procrastinate.PsycopgConnector(conninfo=runtime.settings.libpq_url)
+        connector=procrastinate.PsycopgConnector(conninfo=libpq(runtime.settings.url_for("worker")))
     )
     for spec in JOBS.values():
         name = spec.name
@@ -66,7 +66,9 @@ async def _wait_for_database(settings: Settings, stop: asyncio.Event) -> bool:
     delay = 1.0
     while not stop.is_set():
         try:
-            conn = await psycopg.AsyncConnection.connect(settings.libpq_url, connect_timeout=3)
+            conn = await psycopg.AsyncConnection.connect(
+                libpq(settings.url_for("worker")), connect_timeout=3
+            )
             await conn.close()
             return True
         except psycopg.OperationalError:
@@ -78,7 +80,7 @@ async def _wait_for_database(settings: Settings, stop: asyncio.Event) -> bool:
 
 
 async def run_worker(settings: Settings) -> None:
-    runtime = Runtime.create(settings)
+    runtime = Runtime.create(settings, "worker")
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):

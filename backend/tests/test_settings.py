@@ -62,3 +62,26 @@ def test_defaults_and_prod_log_format(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_secret_is_not_printed(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("JOBBOT_DATABASE_URL", "postgresql+psycopg://u:motdepasse@h/db")
     assert "motdepasse" not in repr(load_settings())
+
+
+def test_three_database_accesses(monkeypatch: pytest.MonkeyPatch) -> None:
+    """L'API, le worker et les commandes du propriétaire ont chacun leur adresse ; sans
+    réglage, celle de l'API (docs/78 §3.1)."""
+    from jobbot.db.schema import role_passwords
+
+    api = "postgresql+psycopg://jobbot_app:secret-api@db/jobbot"
+    monkeypatch.setenv("JOBBOT_DATABASE_URL", api)
+    monkeypatch.setenv("JOBBOT_WORKER_DATABASE_URL", "")
+    settings = load_settings()
+    assert settings.url_for("worker") == api and settings.url_for("admin") == api
+    assert role_passwords(settings) == {"jobbot_app": "secret-api"}
+    monkeypatch.setenv("JOBBOT_WORKER_DATABASE_URL", "postgresql+psycopg://jobbot_worker@db/jobbot")
+    monkeypatch.setenv("JOBBOT_MIGRATE_DATABASE_URL", "postgresql+psycopg://jobbot:m@db/jobbot")
+    settings = load_settings()
+    assert settings.url_for("worker").startswith("postgresql+psycopg://jobbot_worker@")
+    assert settings.url_for("admin").endswith("jobbot:m@db/jobbot")
+    # Un rôle sans mot de passe (connexion locale de confiance) n'en reçoit pas.
+    assert role_passwords(settings) == {"jobbot_app": "secret-api"}
+    monkeypatch.setenv("JOBBOT_MIGRATE_DATABASE_URL", "postgresql://db/jobbot")
+    with pytest.raises(ConfigError, match="JOBBOT_MIGRATE_DATABASE_URL : doit commencer"):
+        load_settings()

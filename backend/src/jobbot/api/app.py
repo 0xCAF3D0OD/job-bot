@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 
 from jobbot import demo
 from jobbot.api.middleware import RequestContextMiddleware
@@ -43,10 +44,31 @@ from jobbot.api.routes import (
     welcome,
 )
 from jobbot.auth.middleware import AuthMiddleware
+from jobbot.db.base import connected_as_admin
 from jobbot.db.schema import head_revision
 from jobbot.health import health_router
+from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
+
+log = get_logger(__name__)
+
+
+async def _check_access(runtime: Runtime) -> None:
+    """L'API ne devrait jamais se connecter en administrateur (docs/78 §3.1) : la démo refuse
+    de démarrer, une plateforme le dit dans son journal et à l'exploitant."""
+    try:
+        async with runtime.sessionmaker() as session:
+            admin = await connected_as_admin(session)
+    except SQLAlchemyError:
+        return  # base injoignable : l'état le dira
+    if not admin:
+        return
+    if runtime.settings.demo:
+        raise demo.NotADemoDatabase(
+            "la démo se connecte à la base en administrateur : utiliser le rôle jobbot_app"
+        )
+    log.warning("database_admin_connection", hint="JOBBOT_DATABASE_URL avec le rôle jobbot_app")
 
 
 def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
@@ -57,6 +79,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
         if settings.demo:
             # Garde-fou (docs/72 §2) : jamais le mode démo sur une base qui a un vrai compte.
             await demo.check(runtime.sessionmaker)
+        await _check_access(runtime)
         yield
         await runtime.dispose()
 

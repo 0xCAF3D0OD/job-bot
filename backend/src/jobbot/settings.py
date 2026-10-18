@@ -15,7 +15,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 ENV_PREFIX = "JOBBOT_"
 
 # Variables dont la valeur peut être lue depuis un fichier (JOBBOT_<NOM>_FILE).
-SECRET_FIELDS = ("database_url", "imap_password", "anthropic_api_key", "ntfy_topic")
+SECRET_FIELDS = (
+    "database_url",
+    "worker_database_url",
+    "migrate_database_url",
+    "imap_password",
+    "anthropic_api_key",
+    "ntfy_topic",
+)
 
 
 class Env(StrEnum):
@@ -43,6 +50,12 @@ class Settings(BaseSettings):
     )
 
     database_url: SecretStr
+    # Trois accès à la base (docs/78 §3.1) : l'API par `database_url` (rôle jobbot_app), le
+    # worker par le sien (jobbot_worker, qui écrit aussi les tables communes), et
+    # `jobbot migrate`, `demo-seed`, `set-password` par celui du propriétaire des tables. Vides :
+    # `database_url`, comme avant 0.64.
+    worker_database_url: SecretStr | None = None
+    migrate_database_url: SecretStr | None = None
     env: Env = Env.DEV
     api_host: str = "127.0.0.1"
     api_port: int = Field(default=8000, ge=1, le=65535)
@@ -92,10 +105,16 @@ class Settings(BaseSettings):
     # Adresse d'une démo en ligne : « La plateforme » propose « Voir la démo » (toute installation).
     demo_url: str | None = None
 
-    @field_validator("database_url")
+    @field_validator("worker_database_url", "migrate_database_url", mode="before")
     @classmethod
-    def _check_database_url(cls, value: SecretStr) -> SecretStr:
-        if not value.get_secret_value().startswith("postgresql+psycopg://"):
+    def _empty_is_unset(cls, value: object) -> object:
+        # Variable laissée vide : l'adresse de l'API.
+        return None if value == "" else value
+
+    @field_validator("database_url", "worker_database_url", "migrate_database_url")
+    @classmethod
+    def _check_database_url(cls, value: SecretStr | None) -> SecretStr | None:
+        if value is not None and not value.get_secret_value().startswith("postgresql+psycopg://"):
             raise ValueError("doit commencer par postgresql+psycopg://")
         return value
 
@@ -135,10 +154,22 @@ class Settings(BaseSettings):
     def sqlalchemy_url(self) -> str:
         return self.database_url.get_secret_value()
 
+    def url_for(self, access: str) -> str:
+        """L'adresse de la base pour l'API (`app`), le worker ou les commandes du propriétaire
+        (`admin`)."""
+        chosen = {"worker": self.worker_database_url, "admin": self.migrate_database_url}.get(
+            access
+        )
+        return chosen.get_secret_value() if chosen else self.sqlalchemy_url
+
     @property
     def libpq_url(self) -> str:
         """URL sans le suffixe de pilote SQLAlchemy, pour psycopg et procrastinate."""
-        return self.sqlalchemy_url.replace("postgresql+psycopg://", "postgresql://", 1)
+        return libpq(self.sqlalchemy_url)
+
+
+def libpq(url: str) -> str:
+    return url.replace("postgresql+psycopg://", "postgresql://", 1)
 
 
 class ConfigError(Exception):

@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import func
 
 from jobbot import accounts, welcome
 from jobbot.auth import links, passwords, service
@@ -70,14 +70,7 @@ async def me(request: Request) -> Me:
     runtime = _runtime(request)
     async with runtime.sessionmaker() as session:
         # Le compte créé d'office (docs/65) n'a pas de mot de passe : il reste à configurer.
-        users = (
-            await session.scalar(
-                select(func.count())
-                .select_from(User)
-                .where(User.password_hash != accounts.UNUSABLE_PASSWORD)
-            )
-            or 0
-        )
+        configured = await accounts.has_password(session)
         owner = await accounts.owner_id(session)
         found = _current(request)
         welcome_status = (
@@ -106,7 +99,7 @@ async def me(request: Request) -> Me:
     return Me(
         authenticated=found is not None,
         username=found.username if found else None,
-        setup_needed=users == 0,
+        setup_needed=not configured,
         auth_enabled=True,
         is_owner=found is not None and found.user_id == owner,
         welcome=welcome_status,
@@ -137,38 +130,38 @@ async def login(request: Request, body: LoginIn, response: Response) -> None:
             headers={"Retry-After": str(wait)},
         )
     async with runtime.sessionmaker.begin() as session:
-        if not await session.scalar(
-            select(func.count())
-            .select_from(User)
-            .where(User.password_hash != accounts.UNUSABLE_PASSWORD)
-        ):
+        if not await accounts.has_password(session):
             raise HTTPException(
                 status.HTTP_409_CONFLICT, "aucun compte : lance « jobbot set-password »"
             )
-        user = await session.scalar(
-            select(User).where(func.lower(User.username) == username.lower())
-        )
-        valid = passwords.verify_password(
-            body.password, user.password_hash if user else _DUMMY_HASH
-        )
-        if user is not None and valid and user.suspended_at is not None:
-            raise HTTPException(
-                status.HTTP_403_FORBIDDEN,
-                "compte suspendu : vois avec l'exploitant de la plateforme",
+        # La base ne rend que le numéro du compte ; sa ligne est lue ensuite en son nom.
+        account = await accounts.account_of_login(session, username)
+    with accounts.use(account):
+        async with runtime.sessionmaker.begin() as session:
+            user = await session.get(User, account) if account is not None else None
+            valid = passwords.verify_password(
+                body.password, user.password_hash if user else _DUMMY_HASH
             )
-        if user is None or not valid:
-            throttle.fail(*keys)
-            # Jamais le mot de passe dans les journaux.
-            log.warning("login_failed", username=username[:80], ip=ip)
-            raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED, "identifiant ou mot de passe incorrect"
+            if user is not None and valid and user.suspended_at is not None:
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN,
+                    "compte suspendu : vois avec l'exploitant de la plateforme",
+                )
+            if user is None or not valid:
+                throttle.fail(*keys)
+                # Jamais le mot de passe dans les journaux.
+                log.warning("login_failed", username=username[:80], ip=ip)
+                raise HTTPException(
+                    status.HTTP_401_UNAUTHORIZED, "identifiant ou mot de passe incorrect"
+                )
+            token = await service.create_session(
+                session, user.id, request.headers.get("user-agent")
             )
-        token = await service.create_session(session, user.id, request.headers.get("user-agent"))
-        user.last_login_at = func.now()
-        user_id = user.id
+            user.last_login_at = func.now()
+            user_id, name = user.id, user.username
     await _ensure_profile(runtime, user_id)
     throttle.reset(*keys)
-    log.info("login_succeeded", username=user.username, ip=ip)
+    log.info("login_succeeded", username=name, ip=ip)
     response.headers["set-cookie"] = session_cookie(token, _headers(request))
 
 
@@ -221,17 +214,25 @@ def _link_error(exc: links.LinkError) -> HTTPException:
     return HTTPException(_LINK_STATUS[exc.reason], str(exc))
 
 
+async def _owner(runtime: Runtime) -> int:
+    async with runtime.sessionmaker.begin() as session:
+        return await accounts.owner_id(session)
+
+
 @router.get(
     "/links/{token}",
     operation_id="getAccountLink",
     responses={404: {"description": "Lien inconnu"}, 410: {"description": "Utilisé ou expiré"}},
 )
 async def get_link(request: Request, token: str) -> LinkOut:
-    async with _runtime(request).sessionmaker() as session:
-        try:
-            link, user = await links.find(session, token)
-        except links.LinkError as exc:
-            raise _link_error(exc) from None
+    runtime = _runtime(request)
+    # Le lien a été créé par l'exploitant : il se lit et sert en son nom (migration 0054).
+    with accounts.use(await _owner(runtime)):
+        async with runtime.sessionmaker() as session:
+            try:
+                link, user = await links.find(session, token)
+            except links.LinkError as exc:
+                raise _link_error(exc) from None
     return LinkOut(
         kind="reset" if link.kind == "reset" else "invite",
         username=user.username if user else None,
@@ -252,14 +253,17 @@ async def get_link(request: Request, token: str) -> LinkOut:
 async def use_link(request: Request, token: str, body: LinkUse, response: Response) -> None:
     """Crée le compte ou change le mot de passe, puis ouvre la session."""
     runtime = _runtime(request)
-    async with runtime.sessionmaker.begin() as session:
-        try:
-            user = await links.use(session, token, body.username, body.password)
-        except links.LinkError as exc:
-            raise _link_error(exc) from None
-        cookie = await service.create_session(session, user.id, request.headers.get("user-agent"))
-        user.last_login_at = func.now()
-        username, user_id = user.username, user.id
+    with accounts.use(await _owner(runtime)):
+        async with runtime.sessionmaker.begin() as session:
+            try:
+                user = await links.use(session, token, body.username, body.password)
+            except links.LinkError as exc:
+                raise _link_error(exc) from None
+            cookie = await service.create_session(
+                session, user.id, request.headers.get("user-agent")
+            )
+            user.last_login_at = func.now()
+            username, user_id = user.username, user.id
     await _ensure_profile(runtime, user_id)
     log.info("account_link_used", username=username)
     response.headers["set-cookie"] = session_cookie(cookie, _headers(request))

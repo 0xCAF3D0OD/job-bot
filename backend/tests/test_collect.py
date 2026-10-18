@@ -15,7 +15,7 @@ from jobbot.settings import Settings
 from jobbot.sources import registry as sources
 from jobbot.worker.jobs import JOBS, execute
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 from .emails import LineParser, make_email
 
 T0 = datetime(2026, 10, 1, 8, 0, tzinfo=UTC)
@@ -76,8 +76,9 @@ def imap_settings(tmp_path: Path) -> Settings:
 
 @pytest.fixture
 async def collect_runtime(imap_settings: Settings) -> AsyncIterator[Runtime]:
-    runtime = Runtime.create(imap_settings)
-    async with runtime.engine.begin() as conn:
+    # La collecte tourne dans le worker, avec son accès (docs/78 §3.1).
+    runtime = Runtime.create(imap_settings, "worker")
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE searches, offers, job_runs CASCADE"))
     yield runtime
     await runtime.dispose()

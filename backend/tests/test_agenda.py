@@ -14,19 +14,19 @@ from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 TRUNCATE = "TRUNCATE calendar_tokens, applications, interviews, orp_months CASCADE"
 
 
 @pytest.fixture
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
 
 

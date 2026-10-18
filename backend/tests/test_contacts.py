@@ -18,6 +18,8 @@ from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 TRUNCATE = (
     "TRUNCATE offers, applications, contacts, notifications, profile_chunks, llm_calls CASCADE"
 )
@@ -25,12 +27,12 @@ TRUNCATE = (
 
 @pytest.fixture
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
         # Ton identité saisie par le test ne reste pas pour les suivants.
         await conn.execute(text("DELETE FROM settings WHERE key LIKE 'identity_%'"))

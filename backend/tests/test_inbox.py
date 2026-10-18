@@ -15,10 +15,12 @@ from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 
 @pytest.fixture
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE notifications"))
     yield runtime
 

@@ -5,7 +5,8 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/77-demo-en-ligne.md](docs/77-demo-en-ligne.md) (0.63.2)
+- Version en cours : [docs/78-securite.md](docs/78-securite.md) (0.64.0)
+- Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -106,7 +107,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.62.2 | Revue : assistant v8, cohérence des « ⋯ » et de la note, accessibilité, ménage, extension 0.58.2 | livrée |
 | 0.63.0 | La démo en ligne : `deploy/demo/` (Docker, Caddy, remise à neuf chaque nuit) et son mode d'emploi | livrée |
 | 0.63.1 | La démo en ligne sur https://demo.joba1.ch ; mode d'emploi corrigé d'après la mise en ligne | livrée |
-| 0.63.2 | Actualités : plus de message « rien n'est enregistré » à l'ouverture de la démo, vignettes sans image centrées | en cours |
+| 0.63.2 | Actualités : plus de message « rien n'est enregistré » à l'ouverture de la démo, vignettes sans image centrées | livrée |
+| 0.64.0 | Étanchéité des comptes : le serveur jamais administrateur de la base (rôles `jobbot_app`, `jobbot_worker`), une règle pour chaque table, règles de sécurité écrites | en cours |
 
 ## Lancer en local
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from jobbot.db.base import create_engine, create_sessionmaker
+from jobbot.db.base import Access, create_engine, create_sessionmaker
 from jobbot.settings import Settings
 from jobbot.storage.base import Storage, create_storage
 
@@ -17,8 +17,10 @@ class Runtime:
     storage: Storage
 
     @classmethod
-    def create(cls, settings: Settings) -> "Runtime":
-        engine = create_engine(settings)
+    def create(cls, settings: Settings, access: Access = "app") -> "Runtime":
+        """`access` : l'API (`app`), le worker, ou une commande du propriétaire (`admin`),
+        chacun avec son accès à la base (docs/78 §3.1)."""
+        engine = create_engine(settings, access)
         return cls(
             settings=settings,
             engine=engine,
