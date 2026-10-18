@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 PG_BIN ?= $(shell brew --prefix postgresql@17 2>/dev/null)/bin
 
-.PHONY: setup migrate dev demo test lint openapi check-openapi check extension
+.PHONY: setup migrate dev demo demo-image demo-image-stop test lint openapi check-openapi check extension
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -49,6 +49,17 @@ demo: ## démo en local, données fictives (http://localhost:5200), Ctrl-C arrê
 	(cd frontend && JOBBOT_DEV_API_URL=http://127.0.0.1:8200 npm run dev -- --port 5200) & \
 	(until curl -sf -o /dev/null http://localhost:5200; do sleep 1; done; $(DEMO_OPEN) http://localhost:5200) & \
 	wait
+
+# La démo en ligne (docs/77) essayée sur ton ordinateur, dans Docker, comme sur le serveur.
+DEMO_LOCAL := cd deploy/demo && DEMO_DOMAIN=http://localhost DEMO_HTTP_PORT=8280 DEMO_HTTPS_PORT=8643 \
+	DEMO_PUBLIC_URL=http://localhost:8280 docker compose -p joba1-demo-local
+
+demo-image: ## la démo en ligne dans Docker, sur http://localhost:8280 (make demo-image-stop pour l'arrêter)
+	$(DEMO_LOCAL) up -d --build --wait
+	@echo "Démo : http://localhost:8280"
+
+demo-image-stop: ## arrête la démo Docker locale et efface ses données
+	$(DEMO_LOCAL) down -v
 
 test: ## tests backend (base jobbot_test) et frontend
 	cd backend && uv run pytest

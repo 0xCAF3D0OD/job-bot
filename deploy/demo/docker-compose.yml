@@ -1,0 +1,88 @@
+# Démo en ligne de jobA1 (docs/77) : `docker compose up -d` dans ce dossier.
+# Réglages dans `.env` (voir `.env.example`) ; rien de secret : la démo n'a ni IA, ni e-mail,
+# ni mot de passe, et sa base n'est pas joignable depuis Internet.
+name: joba1-demo
+
+x-jobbot: &jobbot
+  image: joba1-demo-api
+  build:
+    context: ../..
+    dockerfile: deploy/demo/Dockerfile
+    target: api
+    args:
+      VERSION: ${DEMO_VERSION:-dev}
+  restart: unless-stopped
+  environment:
+    JOBBOT_DATABASE_URL: postgresql+psycopg://jobbot:${DEMO_DB_PASSWORD:-demo}@db:5432/jobbot
+    JOBBOT_DEMO: "true"
+    JOBBOT_ENV: prod
+    JOBBOT_API_HOST: 0.0.0.0
+    JOBBOT_API_PORT: "8000"
+    JOBBOT_STORAGE_PATH: /data
+    JOBBOT_SCHEDULER_ENABLED: "false"
+    JOBBOT_PUBLIC_URL: ${DEMO_PUBLIC_URL:-https://demo.joba1.ch}
+    TZ: Europe/Zurich
+  volumes:
+    - files:/data
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jobbot
+      POSTGRES_PASSWORD: ${DEMO_DB_PASSWORD:-demo}
+      POSTGRES_DB: jobbot
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobbot -d jobbot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # Aucun port publié : seule l'API la voit.
+
+  api:
+    <<: *jobbot
+    # À chaque démarrage : schéma à jour, démo remplie, puis l'API.
+    command: ["sh", "-c", "jobbot migrate && jobbot demo-seed && exec jobbot api"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  nightly:
+    <<: *jobbot
+    command: ["python", "/app/nightly.py"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  web:
+    image: joba1-demo-web
+    build:
+      context: ../..
+      dockerfile: deploy/demo/Dockerfile
+      target: web
+    restart: unless-stopped
+    environment:
+      DEMO_DOMAIN: ${DEMO_DOMAIN:-demo.joba1.ch}
+    ports:
+      - "${DEMO_HTTP_PORT:-80}:80"
+      - "${DEMO_HTTPS_PORT:-443}:443"
+      # HTTP/3, si le pare-feu laisse passer l'UDP ; sans lui, tout marche en HTTP/2.
+      - "${DEMO_HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - caddy:/data
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  database:
+  files:
+  caddy:

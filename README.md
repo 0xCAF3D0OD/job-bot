@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/76-revue-0.57-0.62.md](docs/76-revue-0.57-0.62.md) (0.62.2)
+- Version en cours : [docs/77-demo-en-ligne.md](docs/77-demo-en-ligne.md) (0.63.0)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -103,7 +103,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.61.0 | Les actions rangées dans « ⋯ » : dans chaque partie, le contenu visible, au plus une action importante, le reste dans un menu | livrée |
 | 0.62.0 | S'entraîner à l'entretien : l'IA joue le recruteur, cinq questions, une relance au plus, puis un retour question par question | livrée |
 | 0.62.1 | Revue : garde-fou de la démo, un seul cadre par bloc, jeton de liaison qui expire, démo en lecture seule, entraînement verrouillé | livrée |
-| 0.62.2 | Revue : assistant v8, cohérence des « ⋯ » et de la note, accessibilité, ménage, extension 0.58.2 | en cours |
+| 0.62.2 | Revue : assistant v8, cohérence des « ⋯ » et de la note, accessibilité, ménage, extension 0.58.2 | livrée |
+| 0.63.0 | La démo en ligne : `deploy/demo/` (Docker, Caddy, remise à neuf chaque nuit) et son mode d'emploi | en cours |
 
 ## Lancer en local
 
