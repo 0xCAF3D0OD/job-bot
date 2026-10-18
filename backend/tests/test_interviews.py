@@ -11,6 +11,8 @@ from jobbot.db.models import Application, Notification
 from jobbot.notify.interviews import notify_interviews
 from jobbot.runtime import Runtime
 
+from .conftest import admin_engine
+
 
 async def add_application(runtime: Runtime, **extra: object) -> int:
     async with runtime.sessionmaker.begin() as session:
@@ -30,7 +32,7 @@ async def add_application(runtime: Runtime, **extra: object) -> int:
 
 
 async def reset(runtime: Runtime) -> None:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE applications, interviews, notifications CASCADE"))
 
 

@@ -45,3 +45,34 @@ def test_missing_role_refused_once_accounts_exist() -> None:
 
 def test_unmigrated_database_still_reachable() -> None:
     _on_connect(FakeConnection(role=False, policies=False), None)
+
+
+class DirectConnection(FakeConnection):
+    """Connecté directement avec un rôle restreint (docs/78 §3.1)."""
+
+    def __init__(self, user: str) -> None:
+        super().__init__(role=True, policies=True)
+        self.user = user
+
+    def fetchone(self) -> tuple[Any] | None:
+        if self.executed[-1] == "select current_user":
+            return (self.user,)
+        return super().fetchone()
+
+
+def test_direct_login_needs_nothing() -> None:
+    connection = DirectConnection("jobbot_app")
+    _on_connect(connection, None)
+    assert connection.executed == ["select current_user"]
+
+
+def test_worker_takes_its_own_role() -> None:
+    connection = DirectConnection("dkey")
+    _on_connect(connection, None, access="worker")
+    assert "set role jobbot_worker" in connection.executed
+
+
+def test_owner_commands_stay_unrestricted() -> None:
+    connection = FakeConnection(role=True, policies=True)
+    _on_connect(connection, None, access="admin")
+    assert connection.executed == []

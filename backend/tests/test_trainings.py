@@ -26,7 +26,7 @@ from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 from jobbot.trainings import funding, service
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 KEYWORDS = ["Kubernetes", "CKA"]
 
@@ -66,7 +66,7 @@ class FakeClient:
 async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(anthropic_api_key="sk-test"))
     routes._synced = False
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE trainings, llm_calls CASCADE"))
         await conn.execute(
             text(
@@ -83,7 +83,7 @@ async def rt() -> AsyncIterator[Runtime]:
             )
         )
     yield runtime
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE trainings CASCADE"))
         await conn.execute(text("UPDATE profiles SET preferences = '{}'::jsonb WHERE is_main"))
     await runtime.dispose()
@@ -305,7 +305,7 @@ async def test_finished_training_becomes_a_profile_block(rt: Runtime) -> None:
 
 async def test_funding_request_argument_status_and_reminder(rt: Runtime) -> None:
     now = datetime.now(UTC)
-    async with rt.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, notifications CASCADE"))
     async with rt.sessionmaker.begin() as session:
         for key, title, company, asks, days in [
@@ -369,5 +369,5 @@ async def test_funding_request_argument_status_and_reminder(rt: Runtime) -> None
         assert listed["mark"]["funding_status"] == "accepted"
         cleared = (await api.put(url, json={"status": None})).json()
         assert cleared["funding_status"] is None and cleared["funding_requested_at"] is None
-    async with rt.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, notifications CASCADE"))

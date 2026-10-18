@@ -44,7 +44,8 @@ onMounted(async () => {
       <p>
         Toi seul, par ta connexion. Aucun autre compte ne voit tes données. L'exploitant de la plateforme voit seulement
         ton usage (dernière connexion, dépense de l'IA du mois, nombre d'offres reçues) ; il administre le serveur, mais
-        la plateforme ne lui montre jamais tes offres, candidatures, documents ou discussions.
+        la plateforme ne lui montre jamais tes offres, candidatures, documents ou discussions. Il s'engage à ne pas les
+        lire, sauf à ta demande ou par obligation légale.
       </p>
 
       <h2>Ce qui part à l'IA</h2>

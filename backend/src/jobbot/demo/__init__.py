@@ -24,11 +24,17 @@ async def check(sessionmaker: async_sessionmaker[AsyncSession]) -> None:
     données hors du compte fictif.
 
     Une installation neuve, ou sans connexion, a un exploitant sans mot de passe : seuls ses
-    données le distinguent d'une base de démo (docs/76 §1). Chaque compte se lit à son nom,
-    les règles de la base ne montrant que les lignes du compte en cours.
+    données le distinguent d'une base de démo (docs/76 §1). Les comptes se lisent au nom de
+    l'exploitant, les données de chacun au sien.
     """
-    async with sessionmaker() as session:
-        users = (await session.execute(select(User.id, User.username, User.password_hash))).all()
+    async with sessionmaker.begin() as session:
+        owner = await accounts.owner_id(session)
+    # L'exploitant voit tous les comptes (migration 0054).
+    with accounts.use(owner):
+        async with sessionmaker() as session:
+            users = (
+                await session.execute(select(User.id, User.username, User.password_hash))
+            ).all()
     for user_id, username, password_hash in users:
         if password_hash != accounts.UNUSABLE_PASSWORD or username not in (
             DEMO_USERNAME,
@@ -43,7 +49,9 @@ async def check(sessionmaker: async_sessionmaker[AsyncSession]) -> None:
         with accounts.use(user_id):
             async with sessionmaker() as session:
                 for model in (Offer, Application, Document, ProfileChunk):
-                    if await session.scalar(select(model.id).limit(1)) is not None:
+                    # Filtré aussi à la main : la commande du propriétaire passe outre les règles.
+                    query = select(model.id).where(model.user_id == user_id).limit(1)
+                    if await session.scalar(query) is not None:
                         raise NotADemoDatabase(
                             "cette base contient des données hors de la démo : le mode démo ne "
                             "s'utilise que sur une base à part"
@@ -51,5 +59,4 @@ async def check(sessionmaker: async_sessionmaker[AsyncSession]) -> None:
 
 
 async def account(session: AsyncSession) -> int | None:
-    found = await session.scalar(select(User.id).where(User.username == DEMO_USERNAME))
-    return None if found is None else int(found)
+    return await accounts.account_of_login(session, DEMO_USERNAME)

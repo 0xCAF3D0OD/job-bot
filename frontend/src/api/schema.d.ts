@@ -5010,6 +5010,11 @@ export interface components {
             ai_month_spend_chf: string;
             /** Auth Enabled */
             auth_enabled: boolean;
+            /**
+             * Database Admin
+             * @default false
+             */
+            database_admin: boolean;
         };
         /** PlatformSettingsIn */
         PlatformSettingsIn: {
@@ -9927,6 +9932,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Registre IDE injoignable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

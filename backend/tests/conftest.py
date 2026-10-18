@@ -10,6 +10,8 @@ from collections.abc import AsyncIterator, Iterator
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine, text
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from jobbot import accounts
 from jobbot.api.app import create_app
@@ -22,6 +24,13 @@ TEST_DATABASE_URL = os.environ.get(
     "JOBBOT_TEST_DATABASE_URL", "postgresql+psycopg://localhost:5432/jobbot_test"
 )
 UNREACHABLE_DATABASE_URL = "postgresql+psycopg://jobbot@127.0.0.1:1/jobbot"
+
+
+def admin_engine() -> AsyncEngine:
+    """Le propriétaire des tables, pour vider les tables entre deux tests (TRUNCATE) : l'API
+    n'en a plus le droit (docs/78 §3.1). Sans réserve de connexions, valable dans chaque
+    boucle d'événements."""
+    return create_async_engine(TEST_DATABASE_URL, poolclass=NullPool)
 
 
 def make_settings(**overrides: object) -> Settings:
@@ -89,7 +98,7 @@ async def client(settings: Settings, runtime: Runtime) -> AsyncIterator[AsyncCli
 
 @pytest.fixture
 async def clean_job_runs(runtime: Runtime) -> None:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE job_runs CASCADE"))
 
 

@@ -17,22 +17,26 @@ from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 TRUNCATE = "TRUNCATE offers, applications, contacts, llm_calls, orp_months CASCADE"
 BUDGET = "llm_monthly_budget_chf"
 
 
 @pytest.fixture
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
+    async with runtime.engine.begin() as conn:
         budget = await conn.scalar(
             text("SELECT value FROM settings WHERE key = :key"), {"key": BUDGET}
         )
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
+    async with runtime.engine.begin() as conn:
         # Le plafond reprend sa valeur : d'autres tests le lisent.
         await conn.execute(text("DELETE FROM settings WHERE key = :key"), {"key": BUDGET})
         if budget is not None:

@@ -16,6 +16,7 @@ from jobbot import accounts, platform
 from jobbot.api.owner import require_owner
 from jobbot.auth import links
 from jobbot.auth.service import end_all_sessions
+from jobbot.db.base import connected_as_admin
 from jobbot.db.models import AccountLink, User
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -55,6 +56,8 @@ class PlatformOut(BaseModel):
     ai_total_budget_chf: Decimal
     ai_month_spend_chf: Decimal
     auth_enabled: bool
+    # L'API se connecte à la base en administrateur (docs/78 §3.1) : à corriger dans les réglages.
+    database_admin: bool = False
 
 
 class LinkCreated(BaseModel):
@@ -110,6 +113,7 @@ async def get_platform(request: Request) -> PlatformOut:
         )
         total = await platform.total_ai_budget(session)
         spend = await session.scalar(select(func.platform_month_spend(start))) or 0
+        database_admin = await connected_as_admin(session)
     return PlatformOut(
         accounts=[
             AccountOut(
@@ -141,6 +145,7 @@ async def get_platform(request: Request) -> PlatformOut:
         ai_total_budget_chf=total,
         ai_month_spend_chf=Decimal(str(spend)).quantize(Decimal("0.01")),
         auth_enabled=runtime.settings.auth_enabled,
+        database_admin=database_admin,
     )
 
 

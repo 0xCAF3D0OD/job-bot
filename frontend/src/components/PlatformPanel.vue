@@ -149,6 +149,16 @@ onMounted(async () => {
   </p>
   <template v-else-if="platform">
     <p
+      v-if="platform.database_admin"
+      class="notice error"
+      role="alert"
+      data-test="platform-database-admin"
+    >
+      Le serveur se connecte à la base en administrateur : la séparation des comptes ne tient qu'à lui.
+      Dans le fichier <code>.env</code>, utilise le rôle <code>jobbot_app</code> pour l'API et
+      <code>jobbot_worker</code> pour le worker (voir <code>docs/exploitation.md</code>, « Accès à la base »).
+    </p>
+    <p
       v-if="!platform.auth_enabled"
       class="notice"
       data-test="platform-auth-disabled"

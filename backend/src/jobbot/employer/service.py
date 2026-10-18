@@ -26,6 +26,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import accounts
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import Company, Offer
 from jobbot.llm.client import Refused
@@ -326,7 +327,7 @@ async def _from_site(
 async def _remember(
     session: AsyncSession, offer: Offer, careers: str | None, ats: str | None
 ) -> None:
-    if not offer.company:
+    if not offer.company or not await accounts.writes_shared(session):
         return
     values = {"careers_url": careers, "ats": ats, "careers_checked_at": datetime.now(UTC)}
     await session.execute(

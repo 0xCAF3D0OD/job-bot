@@ -54,6 +54,14 @@ async def demo_runtime(demo_database: str) -> AsyncIterator[Runtime]:
     await rt.dispose()
 
 
+@pytest.fixture
+async def demo_admin(demo_database: str) -> AsyncIterator[Runtime]:
+    """`jobbot demo-seed` : la commande du propriétaire des tables (docs/78 §3.1)."""
+    rt = Runtime.create(make_settings(database_url=demo_database, demo=True), "admin")
+    yield rt
+    await rt.dispose()
+
+
 def test_demo_refuses_ai_mail_and_ntfy(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(ValueError, match="JOBBOT_DEMO"):
         make_settings(demo=True, anthropic_api_key="sk-test")
@@ -74,11 +82,11 @@ def test_dates_follow_the_day() -> None:
     assert sent_day(date(2026, 1, 1), 0, 0.5) == date(2026, 1, 1)
 
 
-async def test_seed_fills_a_believable_search(demo_runtime: Runtime) -> None:
-    count = await seed(demo_runtime, TODAY)
+async def test_seed_fills_a_believable_search(demo_runtime: Runtime, demo_admin: Runtime) -> None:
+    count = await seed(demo_admin, TODAY)
     # Un deuxième passage repart de zéro : la démo est rejouée chaque nuit.
-    assert await seed(demo_runtime, TODAY) == count
-    async with demo_runtime.sessionmaker() as session:
+    assert await seed(demo_admin, TODAY) == count
+    async with demo_admin.sessionmaker() as session:
         users = list(await session.scalars(select(User.username).order_by(User.id)))
         assert users == [accounts.PLACEHOLDER_USERNAME, demo.DEMO_USERNAME]
         visitor = await demo.account(session)
@@ -134,8 +142,8 @@ async def test_seed_fills_a_believable_search(demo_runtime: Runtime) -> None:
     assert all(any(w in spec.company for w in words) for spec in data.OFFERS)
 
 
-async def test_read_only_without_login(demo_runtime: Runtime) -> None:
-    await seed(demo_runtime, TODAY)
+async def test_read_only_without_login(demo_runtime: Runtime, demo_admin: Runtime) -> None:
+    await seed(demo_admin, TODAY)
     app = create_app(demo_runtime.settings, demo_runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         me = (await client.get("/api/auth/me")).json()
@@ -168,14 +176,14 @@ async def test_guard_refuses_a_real_database() -> None:
         await real.dispose()
 
 
-async def test_guard_refuses_data_outside_the_demo(demo_database: str) -> None:
+async def test_guard_refuses_data_outside_the_demo(demo_database: str, demo_admin: Runtime) -> None:
     """Une installation neuve, ou sans connexion, a un exploitant sans mot de passe : ce sont
     ses données qui la distinguent d'une démo (docs/76 §1). Rien n'est effacé."""
     rt = Runtime.create(make_settings(database_url=demo_database, demo=True))
     owner = None
     try:
-        await seed(rt, TODAY)
-        async with rt.sessionmaker() as session:
+        await seed(demo_admin, TODAY)
+        async with demo_admin.sessionmaker() as session:
             owner = await session.scalar(
                 select(User.id).where(User.username == accounts.PLACEHOLDER_USERNAME)
             )
@@ -191,7 +199,7 @@ async def test_guard_refuses_data_outside_the_demo(demo_database: str) -> None:
                     )
                 )
         with pytest.raises(demo.NotADemoDatabase, match="données"):
-            await seed(rt, TODAY)
+            await seed(demo_admin, TODAY)
         with accounts.use(owner):
             async with rt.sessionmaker() as session:
                 kept = await session.scalar(select(func.count()).select_from(Application))
@@ -211,10 +219,10 @@ async def test_guard_refuses_data_outside_the_demo(demo_database: str) -> None:
         await rt.dispose()
 
 
-async def test_demo_reads_write_nothing(demo_runtime: Runtime) -> None:
+async def test_demo_reads_write_nothing(demo_runtime: Runtime, demo_admin: Runtime) -> None:
     """Une lecture qui enregistrerait quelque chose (date d'export du CSV) n'écrit rien en démo,
     et la base refuse toute écriture pendant une requête de visiteur."""
-    await seed(demo_runtime, TODAY)
+    await seed(demo_admin, TODAY)
     app = create_app(demo_runtime.settings, demo_runtime)
 
     async def months() -> int:

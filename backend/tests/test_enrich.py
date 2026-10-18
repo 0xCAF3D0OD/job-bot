@@ -14,6 +14,8 @@ from jobbot.enrich.service import FetchResult
 from jobbot.runtime import Runtime
 from jobbot.sources.jobup_page import ApplyKind, PageNotParsable, parse_jobup_page
 
+from .conftest import admin_engine
+
 PAGES = Path(__file__).parent / "fixtures" / "pages"
 UUID = "f322e247-a189-40ed-86f6-0a9ed911b321"
 URL = f"https://www.jobup.ch/fr/emplois/detail/{UUID}/"
@@ -93,7 +95,7 @@ def web(monkeypatch: pytest.MonkeyPatch) -> FakeWeb:
 
 @pytest.fixture
 async def fresh(runtime: Runtime) -> AsyncIterator[Runtime]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, searches, job_runs CASCADE"))
     yield runtime
 

@@ -14,8 +14,9 @@ from jobbot.db.models import NewsItem, NewsSource, ProfileSource
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 RESET = [
-    "TRUNCATE news_items",
     "DELETE FROM news_sources WHERE name LIKE 'Test %'",
     "DELETE FROM profiles WHERE NOT is_main",
     "UPDATE profiles SET preferences = '{}'::jsonb, news_seen_at = NULL WHERE is_main",
@@ -30,12 +31,16 @@ async def api(
         return True
 
     monkeypatch.setattr("jobbot.api.routes.news.enqueue", fake_enqueue)
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE news_items"))
     async with runtime.engine.begin() as conn:
         for statement in RESET:
             await conn.execute(text(statement))
     app = create_app(settings, runtime)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE news_items"))
     async with runtime.engine.begin() as conn:
         for statement in RESET:
             await conn.execute(text(statement))

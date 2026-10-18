@@ -159,8 +159,18 @@ class AuthMiddleware:
                 await self.app(scope, receive, send)
             return
         token = cookie_token(headers)
-        async with runtime.sessionmaker.begin() as session:
-            found = await service.authenticate(session, token)
+        found = None
+        if token:
+            # La base ne rend que le numéro du compte ; la session est lue ensuite en son nom
+            # (migration 0054).
+            async with runtime.sessionmaker.begin() as session:
+                session_account = await accounts.account_of_session(
+                    session, service.token_hash(token)
+                )
+            if session_account is not None:
+                with accounts.use(session_account):
+                    async with runtime.sessionmaker.begin() as session:
+                        found = await service.authenticate(session, token)
         # Sans connexion, aucun compte : les routes publiques n'en ont pas besoin, et une route
         # oubliée ne verrait rien (docs/69 §1).
         account = found.user_id if found else None

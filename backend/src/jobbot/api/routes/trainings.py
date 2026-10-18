@@ -9,6 +9,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import accounts
 from jobbot.db.models import ChunkKind, Profile, ProfileChunk, Training, TrainingMark
 from jobbot.letters.service import load_identity
 from jobbot.news import domain
@@ -100,8 +101,12 @@ async def _ensure_catalog(runtime: Runtime) -> None:
     # Démo : le remplissage a déjà posé le catalogue, et rien ne s'écrit (docs/76 §1).
     if _synced or runtime.settings.demo:
         return
+    # Le catalogue est commun : il s'écrit au nom de l'exploitant (docs/78 §3.2).
     async with runtime.sessionmaker.begin() as session:
-        await service.sync_catalog(session)
+        owner = await accounts.owner_id(session)
+    with accounts.use(owner):
+        async with runtime.sessionmaker.begin() as session:
+            await service.sync_catalog(session)
     _synced = True
 
 

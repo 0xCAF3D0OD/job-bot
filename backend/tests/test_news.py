@@ -17,6 +17,8 @@ from jobbot.news.feeds import FeedError, parse_feed
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 NOW = datetime(2026, 10, 6, 12, 0, tzinfo=UTC)
 RSS = """<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel><title>RTS Info - Économie</title>
@@ -62,7 +64,6 @@ def test_parse_refuses_entities_and_garbage() -> None:
 
 
 RESET = [
-    "TRUNCATE news_items",
     "DELETE FROM news_sources WHERE name LIKE 'Test %'",
     "DELETE FROM profiles WHERE NOT is_main",
     "UPDATE profiles SET preferences = '{}'::jsonb, news_seen_at = NULL WHERE is_main",
@@ -71,12 +72,16 @@ RESET = [
 
 @pytest.fixture
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE news_items"))
     async with runtime.engine.begin() as conn:
         for statement in RESET:
             await conn.execute(text(statement))
         # Les sources de départ restent suivies, en pause : seules celles du test sont relevées.
         await conn.execute(text("UPDATE profile_sources SET active = false"))
     yield runtime
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE news_items"))
     async with runtime.engine.begin() as conn:
         for statement in RESET:
             await conn.execute(text(statement))
@@ -368,7 +373,7 @@ async def test_first_visit_triggers_fetch(
 
 
 async def test_domain_suggested_from_offers(runtime: Runtime) -> None:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers CASCADE"))
     now = datetime.now(UTC)
     async with runtime.sessionmaker.begin() as session:
@@ -392,7 +397,7 @@ async def test_domain_suggested_from_offers(runtime: Runtime) -> None:
         )
     async with runtime.sessionmaker() as session:
         assert await domain.suggest(session) == ["DevOps", "Kubernetes", "AWS"]
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers CASCADE"))
 
 

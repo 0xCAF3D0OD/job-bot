@@ -29,7 +29,7 @@ from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
 from jobbot.scoring import service
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 IDENTITY = {
@@ -85,7 +85,7 @@ def fake(monkeypatch: pytest.MonkeyPatch) -> FakeClient:
 @pytest.fixture
 async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(anthropic_api_key="sk-test"))
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, profile_chunks, llm_calls, applications CASCADE"))
         await conn.execute(
             text("DELETE FROM settings WHERE key LIKE 'identity_%' OR key LIKE 'apply_%'")

@@ -591,10 +591,7 @@ async def delete_source(request: Request, source_id: int) -> list[NewsSourceOut]
             raise HTTPException(status.HTTP_404_NOT_FOUND, "source introuvable")
         await session.delete(subscription)
         await session.flush()
-        # Suivie dans un autre compte ? La base compte pour tous (migration 0046).
-        others = await session.scalar(select(func.news_source_followers(source_id)))
-        if not others:
-            source = await session.get(NewsSource, source_id)
-            if source is not None:
-                await session.delete(source)
+        # Suivie par personne, dans aucun compte : la base l'efface (migration 0054), sans dire
+        # à ce compte si d'autres la suivent.
+        await session.execute(select(func.drop_unfollowed_news_source(source_id)))
     return await _sources(runtime, profile.id)

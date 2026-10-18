@@ -14,6 +14,8 @@ from jobbot.db.models import Search, Setting
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 TODAY = date(2026, 11, 3)
 
 
@@ -80,7 +82,7 @@ async def api(
     runtime: Runtime, settings: Settings, monkeypatch: pytest.MonkeyPatch
 ) -> AsyncIterator[AsyncClient]:
     monkeypatch.setattr(orp_route, "_today", lambda: TODAY)
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, applications, orp_months, searches CASCADE"))
         await conn.execute(text("DELETE FROM settings WHERE key LIKE 'identity_%'"))
     async with runtime.sessionmaker.begin() as session:

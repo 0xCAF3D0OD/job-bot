@@ -13,6 +13,8 @@ from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
+from .conftest import admin_engine
+
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 
 
@@ -34,7 +36,7 @@ async def add(runtime: Runtime, n: int, title: str, sources: list[str], **extra:
 
 @pytest.fixture
 async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient]:
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, searches, job_runs CASCADE"))
     await add(
         runtime,
@@ -191,7 +193,7 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
 
 async def test_sort_by_day_then_score(api: AsyncClient, runtime: Runtime) -> None:
     """Par jour (heure suisse), le plus récent d'abord ; dans un jour, la mieux notée d'abord."""
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers CASCADE"))
     # 5 oct. 23 h 30 en Suisse = 21 h 30 UTC : encore le 5 ; 6 oct. 00 h 30 = 22 h 30 UTC le 5.
     rows = [
@@ -233,7 +235,7 @@ async def test_sort_by_day_then_score(api: AsyncClient, runtime: Runtime) -> Non
 async def test_remote_filter_and_label(api: AsyncClient, runtime: Runtime) -> None:
     """« Au moins partiel » et « complet » (docs/26 §4) ; un lieu « Remote » compte comme
     complet avant même la notation."""
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers CASCADE"))
     rows = [
         ("Partiel", "Lausanne", "hybrid", 2),
@@ -275,7 +277,7 @@ async def test_remote_filter_and_label(api: AsyncClient, runtime: Runtime) -> No
 
 async def test_score_range_and_curve(api: AsyncClient, runtime: Runtime) -> None:
     """Note entre deux bornes, et courbe des notes sans le filtre de note (docs/27 §3)."""
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers CASCADE"))
     async with runtime.sessionmaker.begin() as session:
         for n, score in enumerate([42, 63, 64, 88, 100, None]):

@@ -71,7 +71,8 @@ def cmd_demo_seed(_: argparse.Namespace) -> int:
     settings = _settings()
 
     async def run() -> int:
-        runtime = Runtime.create(settings)
+        # Commande du propriétaire : elle remplace tous les comptes (docs/78 §3.1).
+        runtime = Runtime.create(settings, "admin")
         try:
             return await seed(runtime)
         finally:
@@ -87,12 +88,14 @@ def cmd_demo_seed(_: argparse.Namespace) -> int:
 
 
 def cmd_migrate(_: argparse.Namespace) -> int:
-    from jobbot.db.schema import head_revision, upgrade
+    from jobbot.db.schema import head_revision, sync_role_passwords, upgrade
 
     settings = _settings()
     log = get_logger("jobbot.migrate")
     log.info("migrate_started", target=head_revision())
     upgrade(settings)
+    for role in sync_role_passwords(settings):
+        log.info("migrate_role_password_set", role=role)
     log.info("migrate_finished", revision=head_revision())
     return 0
 
@@ -108,7 +111,8 @@ def cmd_run_job(args: argparse.Namespace) -> int:
         return 1
 
     async def run() -> bool:
-        runtime = Runtime.create(settings)
+        # Une tâche du worker, lancée à la main : avec l'accès du worker (docs/78 §3.1).
+        runtime = Runtime.create(settings, "worker")
         try:
             return await execute(runtime, args.name)
         except Exception:
@@ -253,7 +257,7 @@ def cmd_set_password(args: argparse.Namespace) -> int:
     settings = _settings()
 
     async def existing_username() -> str:
-        runtime = Runtime.create(settings)
+        runtime = Runtime.create(settings, "admin")
         try:
             async with runtime.sessionmaker() as session:
                 return await session.scalar(select(User.username).order_by(User.id)) or ""
@@ -276,7 +280,7 @@ def cmd_set_password(args: argparse.Namespace) -> int:
     password_hash = passwords.hash_password(password)
 
     async def save() -> tuple[bool, int]:
-        runtime = Runtime.create(settings)
+        runtime = Runtime.create(settings, "admin")
         try:
             async with runtime.sessionmaker.begin() as session:
                 user = await session.scalar(

@@ -18,7 +18,7 @@ from jobbot.llm.scoring import InvalidScore, ProfileChunkData
 from jobbot.runtime import Runtime
 from jobbot.scoring import service
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 CV = (
     "Jean Exemple\nRenens • +41 76 123 45 67 • jean@example.com • github.com/jean\n"
@@ -102,7 +102,7 @@ def fake(monkeypatch: pytest.MonkeyPatch) -> FakeClient:
 async def api(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     settings = make_settings(anthropic_api_key="sk-test", storage_path=tmp_path)
     runtime = Runtime.create(settings)
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE documents, profile_chunks, llm_calls CASCADE"))
     async with runtime.sessionmaker.begin() as session:
         session.add(ProfileChunk(kind="competence", title="Kubernetes", content="K3s, Helm"))

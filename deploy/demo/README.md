@@ -62,6 +62,8 @@ cd ~/job-bot && git pull && cd deploy/demo && docker compose up -d --build --wai
 
 La démo est remplie à nouveau au redémarrage.
 
+**Depuis 0.64** (docs/78), l'API se connecte à la base avec un rôle restreint, `jobbot_app`, qui ne peut pas passer outre la séparation des comptes ; seules la mise à jour du schéma et la remise à neuf utilisent le propriétaire des tables. Rien à faire : le mot de passe de ce rôle a une valeur par défaut. Pour le choisir toi-même, ajoute `DEMO_APP_DB_PASSWORD=…` dans `.env` avant la commande ci-dessus.
+
 ## Si quelque chose ne va pas
 
 - **Voir ce qui se passe** : `docker compose ps` (l'état des services), `docker compose logs --tail 50 api web`.

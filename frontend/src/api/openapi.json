@@ -4910,6 +4910,9 @@
               }
             }
           },
+          "503": {
+            "description": "Registre IDE injoignable"
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -14809,6 +14812,11 @@
           "auth_enabled": {
             "type": "boolean",
             "title": "Auth Enabled"
+          },
+          "database_admin": {
+            "type": "boolean",
+            "title": "Database Admin",
+            "default": false
           }
         },
         "type": "object",

@@ -20,7 +20,7 @@ from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 from jobbot.worker.jobs import execute
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 
 NOW = datetime(2026, 10, 7, 8, 0, tzinfo=UTC)
 HOME = b'<html><a href="/fr/carrieres">Carri\xc3\xa8res</a></html>'
@@ -59,10 +59,10 @@ class FakeClient:
 @pytest.fixture
 async def rt() -> AsyncIterator[Runtime]:
     runtime = Runtime.create(make_settings(anthropic_api_key="sk-test"))
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, companies, llm_calls CASCADE"))
     yield runtime
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, companies, llm_calls CASCADE"))
     await runtime.dispose()
 

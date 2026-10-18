@@ -21,7 +21,7 @@ from jobbot.mail.message import parse_email
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 
-from .conftest import make_settings
+from .conftest import admin_engine, make_settings
 from .test_collect import FakeMailbox, mailbox
 
 __all__ = ["mailbox"]
@@ -121,7 +121,7 @@ async def rt(tmp_path: Any) -> AsyncIterator[Runtime]:
             anthropic_api_key="sk-test",
         )
     )
-    async with runtime.engine.begin() as conn:
+    async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE searches, offers, job_runs, llm_calls CASCADE"))
         await conn.execute(
             text(
@@ -129,6 +129,7 @@ async def rt(tmp_path: Any) -> AsyncIterator[Runtime]:
                 " AND slug NOT IN ('jobsch', 'linkedin', 'jobroom')"
             )
         )
+    async with runtime.engine.begin() as conn:
         # Jobroom en pause pour ce compte (docs/65 : la pause est propre au compte).
         await conn.execute(text("DELETE FROM account_sites"))
         await conn.execute(
