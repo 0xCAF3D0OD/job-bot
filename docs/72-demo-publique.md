@@ -97,3 +97,15 @@ Pas de migration.
 - **« Voir la démo »** sur « La plateforme » de toute installation, quand `JOBBOT_DEMO_URL` est réglé.
 - **Tests** : sur une base à part (`jobbot_demo_test`, créée par les tests), pour que le remplissage ne touche pas la base des autres tests. Mutations vérifiées : sans le verrou d'écriture, ou sans le garde-fou au démarrage, un test échoue.
 - **Essayé** : la démo complète en local (API en mode démo sur une base de démo, interface), toutes les pages parcourues, une action refusée avec son message.
+
+## Complément 0.59.1 : `make demo`
+
+- **Le besoin** (2026-10-18) : montrer la démo depuis son ordinateur, par exemple à un rendez-vous à l'ORP, avant de la mettre en ligne.
+- **`make demo`** fait tout en une commande :
+  - crée la base `jobbot_demo` si elle n'existe pas ;
+  - applique les migrations, puis `jobbot demo-seed` (données fictives recalées sur le jour) ;
+  - lance l'API en mode démo (port 8200) et l'interface (port 5200), puis ouvre http://localhost:5200 dans le navigateur.
+
+  Ctrl-C arrête tout.
+- **À côté de `make dev`** : base et ports à part, la vraie plateforme n'est pas touchée. Les clés d'IA, la boîte e-mail et ntfy du `.env` sont neutralisés pour la démo (variables vides), et aucun worker n'est lancé.
+- **Essayé** : `make demo` sur une base neuve (créée, migrée, remplie : 36 candidatures), API en mode démo et interface qui répondent. La base d'essai est ensuite supprimée : elle se recrée au premier `make demo`.
