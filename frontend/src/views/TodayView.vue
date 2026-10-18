@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
@@ -12,9 +13,10 @@ import AppIcon from "../components/AppIcon.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
+import ScoreRing from "../components/ScoreRing.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
-import { formatMonth, localDate, plural, scoreLevel } from "../format";
+import { formatMonth, localDate, plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -369,7 +371,7 @@ const { me } = useAuth();
                       </span>
                     </span>
                   </td>
-                  <td><span :class="['score', scoreLevel(offer.score!)]">{{ offer.score }}</span></td>
+                  <td><ScoreRing :score="offer.score!" /></td>
                   <td class="dash-col-place muted">
                     {{ offer.location || "—" }}
                   </td>

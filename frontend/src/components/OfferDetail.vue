@@ -1,11 +1,13 @@
+
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
-import { expiredText, formatDate, rateText, remoteText, scoreLevel, sourceLabel } from "../format";
+import { expiredText, formatDate, rateText, remoteText, sourceLabel } from "../format";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import ScoreRing from "./ScoreRing.vue";
 import SidePanel from "./SidePanel.vue";
 import { useAssistant } from "../composables/useAssistant";
 
@@ -347,10 +349,11 @@ watch(
           class="ai-head"
           data-test="ai"
         >
-          <span
+          <ScoreRing
             v-if="offer.score !== null && offer.score !== undefined"
-            :class="['score', 'big', scoreLevel(offer.score)]"
-          >{{ offer.score }}<small>/100</small></span>
+            :score="offer.score"
+            large
+          />
           <dl class="summary">
             <div><dt>Poste</dt><dd>{{ offer.summary_role }}</dd></div>
             <div><dt>Demande</dt><dd>{{ offer.summary_asks }}</dd></div>

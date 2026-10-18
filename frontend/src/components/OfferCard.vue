@@ -2,8 +2,9 @@
 import { computed } from "vue";
 
 import type { Offer } from "../api/client";
-import { dayShort, scoreLevel } from "../format";
+import { dayShort } from "../format";
 import CompanyLogo from "./CompanyLogo.vue";
+import ScoreRing from "./ScoreRing.vue";
 
 // Une offre sur une ligne (docs/73 §4) : de quoi choisir ; le détail est dans le panneau de
 // droite. La date n'y est que hors du tri « Par jour », où la ligne du jour la donne.
@@ -60,12 +61,11 @@ const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" "
         class="visually-hidden"
       > : {{ doubtText }}</span></span>
     </span>
-    <span
+    <ScoreRing
       v-if="offer.score !== null && offer.score !== undefined"
-      :class="['score', scoreLevel(offer.score), { stale: offer.score_stale }]"
-      :title="offer.score_stale ? 'Note faite avec un ancien profil' : 'Note de l\'IA'"
-      data-test="score"
-    >{{ offer.score }}</span>
+      :score="offer.score"
+      :stale="offer.score_stale"
+    />
     <span
       v-else
       class="score pending"
