@@ -35,6 +35,7 @@ from jobbot.db.models import (
     Evaluation,
     ExtensionToken,
     Interview,
+    InterviewPractice,
     LlmCall,
     Notification,
     Offer,
@@ -65,6 +66,7 @@ PERSONAL = {
     "draft_id",
     "interview_id",
     "notification_id",
+    "practice_id",
     "offer_id",
     "profile_id",
     "search_id",
@@ -118,6 +120,13 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
         session.add(application)
         await session.flush()
         interview = Interview(application_id=application.id, rating=4)
+        practice = InterviewPractice(
+            application_id=application.id,
+            kind="rh",
+            tone="bienveillant",
+            language="fr",
+            turns=[{"role": "recruteur", "text": SECRET, "question": 1}],
+        )
         contact = Contact(
             application_id=application.id,
             name=SECRET,
@@ -155,6 +164,7 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
         session.add_all(
             [
                 interview,
+                practice,
                 contact,
                 draft,
                 document,
@@ -212,6 +222,7 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
             "document_id": document.id,
             "draft_id": draft.id,
             "interview_id": interview.id,
+            "practice_id": practice.id,
             "notification_id": notification.id,
             "offer_id": offer.id,
             "profile_id": profile.id,
@@ -466,7 +477,7 @@ async def test_database_refuses_other_account(
     owner, other = two_accounts
     await seed_account_a(runtime)
     tables = await account_tables(runtime)
-    assert len(tables) == 28
+    assert len(tables) == 29
     with accounts.use(other):
         async with runtime.sessionmaker() as session:
             for table in tables:

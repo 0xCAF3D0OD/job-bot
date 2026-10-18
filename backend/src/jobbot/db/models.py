@@ -879,6 +879,32 @@ class Interview(Base):
     )
 
 
+class InterviewPractice(Base):
+    """Entretien blanc avec l'IA (docs/75) : jamais compté comme un vrai entretien."""
+
+    __tablename__ = "interview_practices"
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    # Sans candidature : un entretien type, d'après le profil.
+    application_id: Mapped[int | None] = mapped_column(
+        ForeignKey("applications.id", ondelete="SET NULL"), index=True
+    )
+    kind: Mapped[str] = mapped_column(Text)
+    tone: Mapped[str] = mapped_column(Text)
+    language: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default="en_cours")
+    # [{role: recruteur|candidat, text, question, relance, skipped}]
+    turns: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    feedback: Mapped[Any | None] = mapped_column(JSONB)
+    cost_chf: Mapped[Decimal] = mapped_column(Numeric(10, 5), default=Decimal(0))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class ChatConversation(Base):
     """Discussion avec l'assistant (docs/24 §4), gardée 30 jours après la dernière réplique."""
 

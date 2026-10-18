@@ -19,6 +19,7 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import ApplicationsTable from "../components/ApplicationsTable.vue";
 import InterviewForm from "../components/InterviewForm.vue";
 import InterviewInsights from "../components/InterviewInsights.vue";
+import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
@@ -263,6 +264,11 @@ const removeFromPanel = fromPanel(remove);
 const interviewFromPanel = fromPanel(openInterview);
 const prepareFromPanel = fromPanel((application: Application) => {
   preparing.value = application;
+});
+// S'entraîner (docs/75), depuis le « ⋯ » des entretiens.
+const practicing = ref<Application | null>(null);
+const practiceFromPanel = fromPanel((application: Application) => {
+  practicing.value = application;
 });
 
 // Retour d'entretien (docs/23) : formulaire ouvert depuis une carte.
@@ -635,9 +641,15 @@ onUnmounted(() => assistant.setFocus(null));
       @remove="removeFromPanel"
       @interview="interviewFromPanel"
       @prepare="prepareFromPanel"
+      @practice="practiceFromPanel"
       @changed="load"
     />
   </SidePanel>
+  <InterviewPractice
+    v-if="practicing"
+    :application="practicing"
+    @close="practicing = null"
+  />
   <InterviewPreparation
     v-if="preparing"
     :application="preparing"

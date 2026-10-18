@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 
 import { api, type InterviewInsights } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
+import InterviewPractice from "./InterviewPractice.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import AiWriting from "./AiWriting.vue";
 import { plural } from "../format";
@@ -12,6 +13,8 @@ import { plural } from "../format";
 const data = ref<InterviewInsights | null>(null);
 const busy = ref(false);
 const message = ref("");
+// Un entretien type, sans candidature (docs/75 §3).
+const practicing = ref(false);
 const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
 async function load(): Promise<void> {
@@ -176,5 +179,26 @@ onMounted(() => void load());
         {{ message }}
       </p>
     </div>
+    <p
+      v-if="data.can_coach"
+      class="practice-cta"
+    >
+      <button
+        type="button"
+        class="link"
+        data-test="insights-practice"
+        @click="practicing = true"
+      >
+        M'entraîner sur un entretien type
+      </button>
+      <span class="hint">Cinq questions de l'IA sur ton métier, puis un retour.</span>
+    </p>
+    <Teleport to="body">
+      <InterviewPractice
+        v-if="practicing"
+        @changed="load"
+        @close="practicing = false"
+      />
+    </Teleport>
   </DisclosureRow>
 </template>

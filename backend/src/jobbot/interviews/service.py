@@ -26,6 +26,8 @@ from jobbot.scoring.service import account_problem, active_profile, budget_state
 
 PREPARED_KEY = "interview_prepared"
 COACH_KEY = "interview_coaching"
+# Points « à préparer » ajoutés depuis le retour d'un entraînement (docs/75 §7).
+EXTRA_KEY = "interview_to_prepare_extra"
 MODEL = "claude-sonnet-5"
 MAX_TOKENS = 3_000
 ESTIMATE_USD = Decimal("0.06")
@@ -74,6 +76,8 @@ async def insights(session: AsyncSession) -> Insights:
     ).all()
     result = Insights(count=len(rows))
     if not rows:
+        done = await _prepared(session)
+        result.to_prepare = [(t, normalize_text(t) in done) for t in await _extra(session)]
         return result
     result.average_rating = round(sum(i.rating for i, _ in rows) / len(rows), 1)
     stats: dict[str, QuestionStat] = {}
@@ -100,10 +104,30 @@ async def insights(session: AsyncSession) -> Insights:
         for item in interview.to_prepare or []:
             prepare.setdefault(normalize_text(item), item)
     done = await _prepared(session)
+    for item in await _extra(session):
+        prepare.setdefault(normalize_text(item), item)
     # Les questions difficiles d'abord, puis les plus fréquentes.
     result.questions = sorted(stats.values(), key=lambda s: (-s.difficult, -s.count, s.text))
     result.to_prepare = [(text, key in done) for key, text in prepare.items()]
     return result
+
+
+async def _extra(session: AsyncSession) -> list[str]:
+    value = await session.scalar(select(Setting.value).where(Setting.key == EXTRA_KEY))
+    return [v for v in value if isinstance(v, str)] if isinstance(value, list) else []
+
+
+async def add_to_prepare(session: AsyncSession, text: str) -> None:
+    """Range un point à travailler, tiré d'un entraînement, dans « À préparer »."""
+    current = await _extra(session)
+    if normalize_text(text) in {normalize_text(t) for t in current}:
+        return
+    value = [*current, text][-30:]
+    await session.execute(
+        insert(Setting)
+        .values(key=EXTRA_KEY, value=value)
+        .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
+    )
 
 
 async def set_prepared(session: AsyncSession, text: str, done: bool) -> None:

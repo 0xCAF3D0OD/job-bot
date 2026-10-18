@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/74-actions-rangees.md](docs/74-actions-rangees.md) (0.61.0)
+- Version en cours : [docs/75-entrainement-entretien.md](docs/75-entrainement-entretien.md) (0.62.0)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -100,7 +100,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.59.0 | La démo publique : une installation à part, sans connexion, en lecture seule, remplie de données fictives par `jobbot demo-seed` | livrée |
 | 0.59.1 | `make demo` : la démo en local en une commande, pour la montrer depuis son ordinateur | livrée |
 | 0.60.0 | Des offres plus légères : une ligne par jour, une offre sur une ligne, une seule alerte si nécessaire, les filtres secondaires repliés | livrée |
-| 0.61.0 | Les actions rangées dans « ⋯ » : dans chaque partie, le contenu visible, au plus une action importante, le reste dans un menu | en cours |
+| 0.61.0 | Les actions rangées dans « ⋯ » : dans chaque partie, le contenu visible, au plus une action importante, le reste dans un menu | livrée |
+| 0.62.0 | S'entraîner à l'entretien : l'IA joue le recruteur, cinq questions, une relance au plus, puis un retour question par question | en cours |
 
 ## Lancer en local
 
