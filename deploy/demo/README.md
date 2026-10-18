@@ -12,9 +12,11 @@ La démo n'a **aucun secret** : ni clé d'IA, ni boîte e-mail, ni mot de passe,
 ## Mise en ligne (une fois)
 
 1. **Loue le serveur** et note son adresse IP (le fournisseur l'affiche).
-2. **Fais pointer l'adresse vers le serveur** : chez ton fournisseur de nom de domaine, ajoute un enregistrement **A** pour `demo` (ou le nom choisi) avec l'adresse IP du serveur. Il faut parfois quelques minutes pour que ce soit pris en compte.
+2. **Fais pointer l'adresse vers le serveur** : chez ton fournisseur de nom de domaine, dans la **zone DNS** de ton domaine (par exemple `joba1.ch`), ajoute un enregistrement **A** : source `demo`, cible l'adresse IP du serveur. `demo.joba1.ch` est un **sous-domaine** : il n'y a rien à acheter de plus que `joba1.ch`. Il faut parfois quelques minutes pour que ce soit pris en compte ; depuis ton ordinateur, `dig +short demo.joba1.ch` doit afficher l'IP du serveur.
+
+   Sans nom de domaine, pour un premier essai : l'adresse `IP-AVEC-DES-TIRETS.sslip.io` (par exemple `83-166-1-2.sslip.io`) pointe d'elle-même vers ton serveur, HTTPS compris.
 3. **Ouvre les ports 80 et 443** du serveur, s'il a un pare-feu (souvent dans le panneau du fournisseur). Rien d'autre n'a besoin d'être ouvert.
-4. **Connecte-toi au serveur**, comme le fournisseur l'explique, par exemple :
+4. **Connecte-toi au serveur**, comme le fournisseur l'explique (si ton utilisateur n'est pas `root`, mets `sudo` devant les commandes `apt-get` et `docker` qui suivent), par exemple :
 
    ```bash
    ssh root@ADRESSE_IP
@@ -46,9 +48,9 @@ La démo n'a **aucun secret** : ni clé d'IA, ni boîte e-mail, ni mot de passe,
    docker compose up -d --build --wait
    ```
 
-   À la fin, les quatre services (`db`, `api`, `nightly`, `web`) sont marqués « Healthy ».
+   À la fin, `docker compose ps` montre les quatre services : `db` et `api` « Up … (healthy) », `nightly` et `web` simplement « Up » (ils n'ont pas de contrôle de santé, c'est normal). Seul `web` publie des ports (80 et 443).
 
-9. **Ouvre l'adresse** dans ton navigateur : la démo apparaît, avec le bandeau « Démo » en haut. Le certificat HTTPS est obtenu tout seul à la première visite.
+9. **Ouvre l'adresse** dans ton navigateur, en `https://` : la démo apparaît, avec le bandeau « Démo » en haut. Le certificat HTTPS est obtenu tout seul à la première visite (quelques secondes). Si tu vois une page « en construction » de ton fournisseur, l'adresse ouverte n'est pas celle qui pointe vers le serveur (étape 2).
 
 10. **Sur ta vraie plateforme**, ajoute le réglage `JOBBOT_DEMO_URL=https://demo.joba1.ch` (ton adresse) et redémarre-la : « La plateforme » propose alors « Voir la démo ».
 

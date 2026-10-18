@@ -113,3 +113,8 @@ Le certificat HTTPS ne s'essaie qu'avec la vraie adresse : c'est la seule partie
 
   Seul le certificat HTTPS ne s'essaie qu'avec la vraie adresse.
 
+## Complément 0.63.1 : la mise en ligne réelle
+
+- **En ligne le 2026-10-18** sur un VPS Infomaniak : **https://demo.joba1.ch** (sous-domaine de `joba1.ch`, enregistrement A vers le VPS ; certificat Let's Encrypt obtenu par Caddy à la première visite). Vérifié depuis l'extérieur : pages et API en 200, écriture en 403, `/metrics`, `/version` et documentation de l'API en 404, en-têtes de sécurité et `noindex` présents.
+- **Le mode d'emploi corrigé d'après ce passage** : seuls `db` et `api` sont « healthy » (`nightly` et `web` sont « Up », sans contrôle de santé) ; un sous-domaine ne s'achète pas, il se crée dans la zone DNS ; `sudo` si l'utilisateur n'est pas `root` ; la page « en construction » du fournisseur signale une adresse qui ne pointe pas vers le serveur ; sslip.io pour un essai sans nom de domaine.
+
