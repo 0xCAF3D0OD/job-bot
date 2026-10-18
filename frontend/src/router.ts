@@ -9,6 +9,7 @@ import InsightsView from "./views/InsightsView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
 import AccessView from "./views/AccessView.vue";
 import DiscoverView from "./views/DiscoverView.vue";
+import ExtensionLinkView from "./views/ExtensionLinkView.vue";
 import PrivacyView from "./views/PrivacyView.vue";
 import WelcomeView from "./views/WelcomeView.vue";
 import ApplicationsView from "./views/ApplicationsView.vue";
@@ -127,6 +128,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/tes-donnees", name: "privacy", component: PrivacyView },
   // L'accueil après la première connexion (docs/66), plein écran, sans menu.
   { path: "/bienvenue", name: "welcome", component: WelcomeView, meta: { bare: true } },
+  // Relier l'extension du navigateur en un clic, ouverte par l'extension (docs/71 §4).
+  { path: "/extension/relier", name: "extension-link", component: ExtensionLinkView },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/candidatures/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   // Adresse inconnue (docs/59 §5) : une page qui le dit.

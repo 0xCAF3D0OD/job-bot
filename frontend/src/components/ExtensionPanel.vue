@@ -3,10 +3,14 @@ import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import { browserName } from "../browserName";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
 
-// Extension du navigateur (docs/25 §4) : un jeton révocable la relie à la plateforme.
+// Extension du navigateur (docs/25 §4, docs/71) : installée depuis la boutique de Mozilla, reliée
+// en un clic (« Relier ce navigateur ») ; le jeton à copier reste, replié.
+// La fiche de la boutique, une fois en ligne (docs/71 §8) ; vide : le mode d'emploi.
+const STORE_URL = "";
 type Token = components["schemas"]["TokenOut"];
 
 const tokens = ref<Token[]>([]);
@@ -20,7 +24,7 @@ async function load(): Promise<void> {
 }
 
 async function create(): Promise<void> {
-  const { data } = await api.POST("/api/extension-tokens", { body: { name: navigatorName() } });
+  const { data } = await api.POST("/api/extension-tokens", { body: { name: browserName() } });
   if (!data) return;
   created.value = data.token;
   copied.value = false;
@@ -43,14 +47,6 @@ async function copy(): Promise<void> {
   }
 }
 
-function navigatorName(): string {
-  const agent = globalThis.navigator?.userAgent ?? "";
-  if (agent.includes("Edg/")) return "Edge";
-  if (agent.includes("Brave")) return "Brave";
-  if (agent.includes("Chrome/")) return "Chrome";
-  return "Mon navigateur";
-}
-
 function day(value: string | null | undefined): string {
   return value ? new Date(value).toLocaleDateString("fr-CH", { day: "numeric", month: "short" }) : "jamais";
 }
@@ -67,61 +63,90 @@ onMounted(load);
       <legend>
         Extension du navigateur
       </legend>
-      <MoreInfo label="Comment l'installer">
-        <ol class="extension-steps">
-          <li>
-            Chrome, Edge ou Brave : <code>chrome://extensions</code>, mode développeur, « Charger l'extension non
-            empaquetée » → le dossier <code>extension/</code> du dépôt. Firefox : voir <code>extension/README.md</code>.
-          </li>
-          <li>Crée un jeton ci-dessous, puis clique sur l'icône jobA1 : colle <code>{{ origin }}</code> et le jeton.</li>
-        </ol>
-      </MoreInfo>
-      <div
-        v-if="created"
-        class="extension-token"
-        data-test="extension-token"
+      <p class="hint">
+        Elle remplit les formulaires de candidature et la saisie Job-Room avec tes données. Rien n'est envoyé à ta place.
+      </p>
+      <ol class="extension-steps">
+        <li>
+          <a
+            v-if="STORE_URL"
+            :href="STORE_URL"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="button-link"
+            data-test="extension-install"
+          >Installer l'extension (Firefox)</a>
+          <template v-else>
+            Installe l'extension : bientôt dans la boutique de Mozilla ; en attendant, voir « Comment l'installer ».
+          </template>
+        </li>
+        <li>
+          Un onglet « Relier jobA1 » s'ouvre : indique <code>{{ origin }}</code>, puis « Relier », et
+          « Relier ce navigateur » sur la page qui s'ouvre.
+        </li>
+      </ol>
+      <MoreInfo
+        v-if="!STORE_URL"
+        label="Comment l'installer"
       >
-        <code>{{ created }}</code>
-        <button
-          type="button"
-          class="link"
-          @click="copy"
-        >
-          <CopyLabel :done="copied" />
-        </button>
-        <p class="hint">
-          Montré une seule fois : colle-le maintenant dans l'extension.
+        <p>
+          Firefox : <code>about:debugging#/runtime/this-firefox</code> › « Charger un module complémentaire
+          temporaire » › le fichier <code>extension/manifest.json</code> du dépôt (à refaire après un redémarrage).
+          Chrome, Edge ou Brave : <code>chrome://extensions</code>, mode développeur, « Charger l'extension non
+          empaquetée » › le dossier <code>extension/</code>.
         </p>
-      </div>
-      <ul
-        v-if="tokens.length"
-        class="extension-tokens"
-      >
-        <li
-          v-for="token in tokens"
-          :key="token.id"
+      </MoreInfo>
+      <template v-if="tokens.length">
+        <p class="extension-tokens-title">
+          Navigateurs reliés
+        </p>
+        <ul class="extension-tokens">
+          <li
+            v-for="token in tokens"
+            :key="token.id"
+          >
+            <span>{{ token.name }} <span class="muted">· utilisé {{ day(token.last_used_at) }}</span></span>
+            <button
+              type="button"
+              class="link danger"
+              data-test="extension-revoke"
+              @click="revoke(token)"
+            >
+              Révoquer
+            </button>
+          </li>
+        </ul>
+      </template>
+      <MoreInfo label="Relier avec un jeton">
+        <p>Si « Relier » ne fonctionne pas : crée un jeton, puis colle-le dans l'extension (« Relier avec un jeton »).</p>
+        <div
+          v-if="created"
+          class="extension-token"
+          data-test="extension-token"
         >
-          <span>{{ token.name }} <span class="muted">· utilisé {{ day(token.last_used_at) }}</span></span>
+          <code>{{ created }}</code>
           <button
             type="button"
-            class="link danger"
-            data-test="extension-revoke"
-            @click="revoke(token)"
+            class="link"
+            @click="copy"
           >
-            Révoquer
+            <CopyLabel :done="copied" />
           </button>
-        </li>
-      </ul>
-      <div class="form-actions">
-        <button
-          type="button"
-          class="secondary small"
-          data-test="extension-create"
-          @click="create"
-        >
-          Créer un jeton
-        </button>
-      </div>
+          <p class="hint">
+            Montré une seule fois : colle-le maintenant dans l'extension.
+          </p>
+        </div>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="secondary small"
+            data-test="extension-create"
+            @click="create"
+          >
+            Créer un jeton
+          </button>
+        </div>
+      </MoreInfo>
     </fieldset>
   </div>
 </template>

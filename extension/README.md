@@ -1,4 +1,4 @@
-# Extension jobA1 (docs/25, docs/70)
+# Extension jobA1 (docs/25, docs/70, docs/71)
 
 Remplit le formulaire de candidature de l'employeur avec tes données jobA1 : coordonnées,
 CV et lettre en PDF, texte de la lettre, et, sur demande, une proposition de réponse aux
@@ -8,33 +8,30 @@ Sur Job-Room, elle remplit la saisie d'une recherche d'emploi avec une candidatu
 Là, elle choisit aussi les réponses de la déclaration (mode, assignation, taux, résultat), mais
 n'enregistre rien : « Sauvegarder » reste le tien.
 
-## Installer (Chrome, Edge, Brave)
+## Installer
 
-1. Ouvre `chrome://extensions` et active le **mode développeur** (en haut à droite).
-2. **Charger l'extension non empaquetée** → choisis ce dossier `extension/`.
-3. Épingle l'icône jobA1 dans la barre du navigateur.
+- **Firefox** : bientôt dans la boutique de Mozilla (« Ajouter à Firefox », mises à jour
+  automatiques). En attendant, pour essayer : `about:debugging#/runtime/this-firefox` →
+  **Charger un module complémentaire temporaire…** → `extension/manifest.json` (Firefox
+  l'enlève à chaque redémarrage). Firefox 140 ou plus.
+- **Chrome, Edge, Brave** : `chrome://extensions`, **mode développeur**, **Charger l'extension
+  non empaquetée** → ce dossier `extension/`.
 
-## Installer (Firefox 128 et plus)
-
-- **Pour essayer** : ouvre `about:debugging#/runtime/this-firefox` → **Charger un module
-  complémentaire temporaire…** → choisis `extension/manifest.json`. Firefox l'enlève à chaque
-  redémarrage : recharge-la, puis relie-la à nouveau.
-- **Pour la garder** : Firefox n'installe durablement qu'une extension signée par Mozilla. La
-  signature est gratuite et l'extension reste privée (non publiée) :
-  1. crée un compte sur addons.mozilla.org, puis tes clés dans « Outils › Gérer les clés
-     d'API » (garde-les pour toi) ;
-  2. dans ce dossier : `npx web-ext sign --channel=unlisted --api-key=… --api-secret=…` ;
-  3. ouvre le fichier `.xpi` produit (dossier `web-ext-artifacts/`) dans Firefox.
+À l'installation, un onglet **« Relier jobA1 »** s'ouvre.
 
 ## Relier à ta plateforme
 
-1. Sur la plateforme : **Réglages › Extension du navigateur › Créer un jeton** ; copie-le
-   (il n'est montré qu'une fois).
-2. Clique sur l'icône jobA1 : colle l'adresse de ta plateforme (en `https://`, ou
-   `http://localhost:…` sur ta machine) et le jeton, puis **Relier**. Le navigateur demande
-   l'autorisation de joindre cette adresse, et seulement celle-ci. Si le panneau se ferme
-   pendant cette demande (fréquent dans Firefox), rouvre-le : **Autoriser l'accès à ma
-   plateforme** reprend là où tu en étais.
+1. Dans l'onglet « Relier jobA1 » (ou en cliquant sur l'icône) : l'adresse de ta plateforme
+   (`https://…`, ou `http://localhost:5173` sur ta machine), puis **Relier**. Le navigateur
+   demande l'accès à cette adresse, et seulement celle-ci.
+2. Une page de ta plateforme s'ouvre : **Relier ce navigateur**. L'extension y lit son jeton,
+   l'efface de la page, et c'est relié. Le jeton ne passe jamais dans une adresse ; s'il n'est
+   pas lu dans les 2 minutes, il est révoqué.
+3. Épingle l'icône jobA1 dans la barre du navigateur.
+
+Si le panneau se ferme pendant la demande d'accès (fréquent dans Firefox), rouvre-le et clique
+à nouveau sur **Relier**. **Relier avec un jeton** (replié) garde l'ancienne méthode : un jeton
+créé dans Réglages › Extension du navigateur, à coller.
 
 ## Utiliser
 
@@ -58,11 +55,20 @@ Les champs sont reconnus d'après le relevé du formulaire (`fixtures/job-room-f
 Si Job-Room change son formulaire, refais le relevé : colle `releve-formulaire.js` dans la console
 du navigateur sur la saisie **vide** (structure seulement, aucune valeur), puis remplace le fichier.
 
+## Paquet pour la boutique
+
+`make extension` produit `web-ext-artifacts/joba1-<version>.zip`, avec seulement ce que
+l'extension utilise. Les textes de la fiche et la politique de confidentialité sont dans
+`fiche-boutique.md`. Chaque version envoyée à Mozilla doit avoir un nouveau numéro
+(`manifest.json`).
+
 ## Permissions
 
 - `activeTab` et `scripting` : agir seulement sur l'onglet où tu cliques sur l'icône, à ce
   moment-là ; aucune lecture des autres sites ni de l'historique.
 - `storage` : garder l'adresse de ta plateforme et le jeton dans ce navigateur.
+- Page de fond (`background.js`) : ouvrir l'onglet d'accueil à l'installation, et lire le jeton
+  dans l'onglet de liaison qu'elle a ouvert, sur l'adresse autorisée.
 - Accès à ta plateforme : demandé au moment de relier, pour cette seule adresse.
 
 Un formulaire intégré depuis un autre site (cadre) se remplit en l'ouvrant dans son propre

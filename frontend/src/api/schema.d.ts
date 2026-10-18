@@ -3531,6 +3531,8 @@ export interface components {
             platform: string;
             /** Version */
             version: string;
+            /** Features */
+            features: string[];
         };
         /** Facet */
         Facet: {

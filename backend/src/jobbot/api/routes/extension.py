@@ -38,6 +38,13 @@ def _runtime(request: Request) -> Runtime:
 class ExtensionMe(BaseModel):
     platform: str
     version: str
+    # Ce que cette plateforme sait faire avec l'extension (docs/71 §5) : l'extension, mise à
+    # jour par la boutique, peut être plus récente que la plateforme.
+    features: list[str]
+
+
+# Formulaires des employeurs (docs/25), Job-Room (docs/70).
+FEATURES = ["forms", "job-room"]
 
 
 class OfferBrief(BaseModel):
@@ -124,7 +131,9 @@ async def _offer(request: Request, offer_id: int) -> Offer:
 @router.get("/me", operation_id="extensionMe")
 async def me(request: Request) -> ExtensionMe:
     """Vérifie le jeton au moment de relier l'extension."""
-    return ExtensionMe(platform="jobA1", version=_runtime(request).settings.version)
+    return ExtensionMe(
+        platform="jobA1", version=_runtime(request).settings.version, features=FEATURES
+    )
 
 
 @router.get("/match", operation_id="extensionMatch")
