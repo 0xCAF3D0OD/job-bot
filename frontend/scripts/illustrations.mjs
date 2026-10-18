@@ -15,8 +15,7 @@ import sharp from "sharp";
 
 // nom dans la plateforme → fichier d'origine (sans .webp) ;
 // `efface` : un rectangle [gauche, haut, largeur, hauteur] de l'original rendu transparent ;
-// `ovale` : le cadre [gauche, haut, largeur, hauteur] gardé, arrondi et aux bords estompés (pour
-// une scène sur fond plein, posée sur une autre couleur) ; `entiere` : l'image telle quelle, sans
+// `entiere` : l'image telle quelle, sans
 // rien rogner ; `largeurs` : les tailles écrites ; `nette` : qualité 92 et netteté renforcée
 // (une image affichée en grand).
 export const ILLUSTRATIONS = {
@@ -45,27 +44,10 @@ export const ILLUSTRATIONS = {
 
 const OUT = fileURLToPath(new URL("../src/assets/illustrations/", import.meta.url));
 
-// Le cadre : un rectangle aux coins très arrondis, flouté pour que ses bords s'estompent ; le
-// milieu, où sont les personnages, reste net.
-function oval(width, height) {
-  const soft = Math.round(height * 0.06);
-  return Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
-      `<defs><filter id="f" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${soft}"/></filter></defs>` +
-      `<rect x="${soft * 1.5}" y="${soft * 1.5}" width="${width - soft * 3}" height="${height - soft * 3}" ` +
-      `rx="${height * 0.45}" ry="${height * 0.45}" fill="#000" filter="url(#f)"/></svg>`,
-  );
-}
-
 // Les marges transparentes sont rognées : l'image remplit la place qu'on lui donne.
-async function prepare(file, { efface, ovale, entiere }) {
+async function prepare(file, { efface, entiere }) {
   let image = sharp(file).ensureAlpha();
   if (entiere) return image;
-  if (ovale) {
-    const [left, top, width, height] = ovale;
-    const framed = await image.extract({ left, top, width, height }).png().toBuffer();
-    return sharp(await sharp(framed).composite([{ input: oval(width, height), blend: "dest-in" }]).png().toBuffer());
-  }
   if (efface) {
     const [left, top, width, height] = efface;
     const opaque = { create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 1 } } };

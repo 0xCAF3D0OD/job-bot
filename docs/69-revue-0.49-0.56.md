@@ -1,6 +1,6 @@
 # 69 — Revue après 0.49 à 0.56 : les comptes, puis le ménage (versions 0.56.1 et 0.56.2)
 
-> Statut : **validé** le 2026-10-18 ; 0.56.1 (§1) livrée, 0.56.2 à suivre.
+> Statut : **validé** le 2026-10-18 ; 0.56.1 (§1) et 0.56.2 (§2 à §5) livrées.
 > Huit versions de suite (docs/65 à 68) : les vrais comptes (chacun ne voit que ses données), les invitations, l'export et la suppression du compte, l'accueil, la page « La plateforme », les nouvelles illustrations, la connexion jour et soir, le titre animé. La partie illustrations a été refaite plusieurs fois en un jour ; il en reste des traces. Relecture du serveur (sécurité des comptes) et de l'interface (restes, documentation, accessibilité), en lisant le code ; chaque constat ci-dessous a un fichier et une ligne.
 
 ## 1. La sécurité des comptes (0.56.1, à livrer d'abord)
@@ -86,3 +86,11 @@ Deux PR : **0.56.1** (§1, la sécurité, à fusionner vite) puis **0.56.2** (§
 - **La suppression du compte** : après cinq mots de passe faux, il faut attendre (429), comme à la connexion.
 - **L'accueil** : changer de métier retire l'ancien de « Mon domaine », sans toucher aux mots ajoutés ailleurs ; le profil est verrouillé pendant la modification.
 - **Tests** : 440 côté serveur (9 nouveaux), 253 côté interface.
+
+## Écarts avec la livraison (0.56.2)
+
+- **L'assistant** : consigne `assistant-v6` (pages publiques, « La plateforme », accueil avec la date de remise, « Refaire l'accueil », tes données dans Réglages › Compte, liens `/tes-donnees`, `/bienvenue`, `/la-plateforme`). En plus du cadrage : l'interface n'acceptait pas les liens vers le **Bilan** (`/candidatures/bilan`), pourtant cités dans le guide depuis 0.48 ; ils passent, avec les trois nouveaux.
+- **Le ménage** : `Illustration` sans la version de 1200 px ni la prop `size` ; le script des images sans l'option `ovale` (régénérées : identiques) ; l'en-tête du script unDraw à jour ; `.illu` a une base de 300 px et plus de règle téléphone (chaque usage fixe sa largeur : rien ne change à l'écran, mesuré dans l'accueil et La plateforme) ; commentaires à jour ; `docs/interface.md` (tailles de La plateforme, personnage du titre hors famille, 1264 px de la connexion, durées de la connexion et du chemin) et docs/67 (réserve, renvois dans les tables) corrigés.
+- **L'accessibilité** : dans l'accueil, le focus va au titre de chaque nouvel écran (test qui échoue sans) ; la bulle de « La suite » est le titre de son écran, à l'identique à l'écran ; les pastilles de La plateforme sont décoratives, son chemin est entier d'emblée avec « réduire les animations » ; la montée du voile des pages qui chargent est coupée aussi. La phrase de la connexion reste décorative.
+- **Le test instable** : `BrandFigure` et `LoadingDrawing` chargent leur dessin avant de démarrer, avec une attente de 5 s ; l'horloge simulée ne touche plus que les minuteries et la date. Toute la suite lancée **20 fois** pendant que la construction tournait en boucle : **aucun échec**.
+- **Tests** : 254 côté interface, 440 côté serveur.

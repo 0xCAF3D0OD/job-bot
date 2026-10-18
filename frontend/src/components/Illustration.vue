@@ -6,15 +6,15 @@ import { computed, onMounted, ref, watch } from "vue";
 // fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
 // Décorative par défaut ; `label` la décrit aux lecteurs d'écran quand elle dit quelque chose.
 // `sizes` : la largeur affichée, pour que le navigateur choisisse la bonne version.
-const props = withDefaults(
-  defineProps<{ name: IllustrationName; label?: string; size?: "small" | "medium" | "large"; sizes?: string }>(),
-  { label: "", size: "medium", sizes: "(max-width: 820px) 240px, 440px" },
-);
+const props = withDefaults(defineProps<{ name: IllustrationName; label?: string; sizes?: string }>(), {
+  label: "",
+  sizes: "(max-width: 820px) 240px, 440px",
+});
 
 const files = import.meta.glob<string>("../assets/illustrations/*.webp", { query: "?url", import: "default", eager: true });
 
 function srcset(name: string): string {
-  return [480, 800, 1200]
+  return [480, 800]
     .map((width) => [files[`../assets/illustrations/${name}-${width}.webp`], width] as const)
     .filter(([url]) => url)
     .map(([url, width]) => `${url} ${width}w`)
@@ -56,7 +56,7 @@ export type IllustrationName =
 
 <template>
   <span
-    :class="['illu', size, { loaded, 'no-dark': !dark }]"
+    :class="['illu', { loaded, 'no-dark': !dark }]"
     :role="label ? 'img' : undefined"
     :aria-label="label || undefined"
     :aria-hidden="label ? undefined : 'true'"

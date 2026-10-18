@@ -30,7 +30,10 @@ const SETTINGS = {
 
 type State = { status: string; step: number; goal: string | null; trade: string | null };
 
-async function mountWelcome(state: State = { status: "pending", step: 1, goal: null, trade: null }) {
+async function mountWelcome(
+  state: State = { status: "pending", step: 1, goal: null, trade: null },
+  options: { realTransition?: boolean } = {},
+) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({
       data:
@@ -61,7 +64,11 @@ async function mountWelcome(state: State = { status: "pending", step: 1, goal: n
   });
   await router.push("/bienvenue");
   const wrapper = mount(WelcomeView, {
-    global: { plugins: [router], stubs: { Illustration: true } },
+    attachTo: options.realTransition ? document.body : undefined,
+    global: {
+      plugins: [router],
+      stubs: { Illustration: true, ...(options.realTransition ? { transition: false } : {}) },
+    },
   });
   await flushPromises();
   return { wrapper, router };
@@ -179,5 +186,17 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(wrapper.find("[data-test=welcome-places]").exists()).toBe(true);
     expect(wrapper.find("[data-test=dot-places]").attributes("aria-current")).toBe("step");
     expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer");
+  });
+
+  it("en changeant d'écran, le focus va au titre du nouvel écran (docs/69 §4)", async () => {
+    const { wrapper } = await mountWelcome(undefined, { realTransition: true });
+    await wrapper.find("[data-test=goal-job]").trigger("click");
+    await vi.waitFor(async () => {
+      await flushPromises();
+      const focused = document.activeElement as HTMLElement | null;
+      expect(focused?.tagName).toBe("H1");
+      expect(focused?.textContent).toContain("Quel métier");
+    });
+    wrapper.unmount();
   });
 });

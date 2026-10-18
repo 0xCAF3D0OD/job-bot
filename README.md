@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/69-revue-0.49-0.56.md](docs/69-revue-0.49-0.56.md) (0.56.1)
+- Version en cours : [docs/69-revue-0.49-0.56.md](docs/69-revue-0.49-0.56.md) (0.56.2)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -92,6 +92,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.55.5 | La connexion plus nette, la phrase qui blanchit plus tard | livrée |
 | 0.56.0 | Le titre animé : une fois connecté, un personnage à la place du « 1 », qui change chaque heure | livrée |
 | 0.56.1 | Revue des comptes : les Actualités fermées sans connexion, liens d'invitation verrouillés, identifiant unique, journal des tâches réservé, export complet | livrée |
+| 0.56.2 | Revue, suite : l'assistant à jour (`assistant-v6`), le ménage des illustrations, le focus de l'accueil, le test instable stabilisé | livrée |
 
 ## Lancer en local
 

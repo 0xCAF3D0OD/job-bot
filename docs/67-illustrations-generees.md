@@ -17,7 +17,7 @@ Les endroits restent ceux de `docs/62` et de l'accueil (`docs/66`) : on ne remet
 
 | Page | Avant (unDraw) | Après |
 |---|---|---|
-| Aujourd'hui | morning-plans | **01 Dashboard** (le calendrier, la jauge) |
+| Aujourd'hui | morning-plans | **01 Dashboard** (le calendrier, la jauge) — *depuis 0.55.1, toutes les transitions de cette table gardent leur dessin animé d'avant (complément 0.55.1)* |
 | Offres | mailbox | **02 Candidatures Offres** (les profils qui défilent) |
 | Suivi | done | **03 Candidatures Suivi** (l'avion en papier, les jours cochés) |
 | Bilan | stepping-up | **06 Bilan** (l'entonnoir) |
@@ -39,7 +39,7 @@ Les endroits restent ceux de `docs/62` et de l'accueil (`docs/66`) : on ne remet
 
 | Endroit | Avant | Après |
 |---|---|---|
-| Connexion et liens d'accès (moitié gauche) | login | **00 Accueil Bannière** (les e-mails triés, la porte qui s'ouvre) |
+| Connexion et liens d'accès (moitié gauche) | login | **00 Accueil Bannière** (les e-mails triés, la porte qui s'ouvre) — *remplacée en 0.55.2 par la scène de la ville et du bureau (compléments 0.55.2 à 0.55.5)* |
 | Assistant des alertes, étapes 1 · 2 · 3 | mailbox · message-sent · done | **02 Alertes** · **00 Accueil Bannière** · **03 Candidatures Suivi** |
 | Carte « candidature envoyée » | message-sent | **03 Candidatures Suivi** |
 | Carte « preuves remises » | done | **04 Preuves ORP** (le classeur, la coche) |
@@ -97,7 +97,7 @@ Une PR (**0.55.0**), après la fusion de la 0.54.0. Captures avant/après de cha
 ## Écarts avec la livraison
 
 - **Le sombre** : Kevin fera générer une série sombre des mêmes images. `scripts/illustrations.mjs` la prend en second dossier (mêmes noms de fichiers) et l'écrit à côté (`<nom>-sombre-480.webp`) ; la plateforme la choisit d'elle-même en sombre (`<picture>`). En attendant, ou si elle ne convient pas, l'image claire est assombrie à 85 %.
-- **La réserve** : les 14 dessins unDraw et leur script sont gardés dans `frontend/reserve/illustrations-undraw/` et `scripts/illustrations-undraw.mjs`, hors de l'application (rien ne les charge), pour revenir en arrière si besoin.
+- **La réserve** : les dessins unDraw et leur script (7 depuis 0.55.1, les 7 autres revenus pour les pages qui chargent) sont gardés dans `frontend/reserve/illustrations-undraw/` et `scripts/illustrations-undraw.mjs`, hors de l'application (rien ne les charge), pour revenir en arrière si besoin.
 - **Le poids** : 17 fichiers, environ 510 Ko au total (15 à 40 Ko en 480 px, 45 et 50 Ko pour les deux en 800 px). Les marges transparentes des originaux sont rognées, pour que chaque image remplisse sa place ; l'accueil les montre un peu plus grandes (220 px, 170 sur téléphone ; le personnage 280 px), et la bannière de connexion fait 280 px sur téléphone.
 - **Le personnage qui parle** : le script efface la bulle vide de *12 Messagerie* (le haut devenu vide part avec les marges) ; la pointe de notre bulle vise sa tête.
 - **Les noms** disent ce que montre l'image : tableau-de-bord, offres-profils, suivi-envoi, bilan, alertes-carte, porte-ouverte, formations, aucune-offre, actualites-video, lecture-calme, emails-tries, preuves-orp, accueil-reseau, lieux-carte, messager. `sharp` est ajouté pour le développement seulement.
