@@ -99,7 +99,10 @@ async def draft(
             account_problem(exc) or "IA momentanément indisponible, réessaie"
         ) from None
     async with runtime.sessionmaker.begin() as session:
-        await record_call(session, raw, offer_id=offer_id, rate=rate, purpose="contact")
+        # Seulement une offre de ce compte, lue plus haut (docs/78 §2).
+        await record_call(
+            session, raw, offer_id=offer.id if offer else None, rate=rate, purpose="contact"
+        )
     text = raw.text.strip().strip('"«» ').strip()
     if not text:
         raise MessageUnavailable("réponse vide, réessaie")

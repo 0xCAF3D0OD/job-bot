@@ -179,3 +179,18 @@ Vérifications, à chaque fois sur une base à part :
   - sur une base de brouillon, avec ton ancienne configuration : l'avertissement s'affiche ;
   - avec les trois adresses : une tâche mise en file par l'API est faite par le worker en `jobbot_worker`.
 - **À activer sur GitHub** (toi) : Settings › Security › « Private vulnerability reporting », pour que le signalement de `SECURITY.md` soit possible.
+
+## Écarts avec le cadrage (0.64.1)
+
+- **Quatre unicités valaient pour toute la plateforme** : une candidature, une évaluation, un lien par site et une version de lettre par offre. Un refus pouvait dire à un compte qu'une ligne existait chez un autre. Le test des liens l'a montré : la base répondait « déjà pris » avant de vérifier le compte. Elles valent maintenant par compte. Un test vérifie qu'aucune unicité d'une table personnelle ne vaut pour toute la plateforme. Seules exceptions : les empreintes de jetons et le numéro de lot de l'IA, tirés au hasard.
+- **Les 21 liens** sont vérifiés dans la définition de la base (chacun comprend le compte), et quatre sont essayés pour de vrai : l'appel d'IA, la candidature, le contact, le message de l'assistant. PostgreSQL applique la même règle à tous.
+- **Un lien qui traversait déjà deux comptes** : la migration le défait s'il est facultatif, et s'arrête sans rien effacer s'il est obligatoire. Vérifié en lecture seule sur ta base : aucun.
+- **Une tâche à la fois, tous comptes confondus.** Chaque compte a sa place dans la file, mais deux exécutions de la même tâche ne tournent toujours pas en même temps. Un clic ne chevauche donc jamais le passage planifié du même compte.
+- **« Collecter maintenant »** lit la boîte de l'installation, qui est commune ; chaque e-mail va dans son compte. Le clic d'un invité ne fait qu'avancer cette lecture : c'est accepté.
+- **L'erreur de notation** :
+  - l'exploitant voit le détail ;
+  - le compte pour qui la notation a échoué voit « voir avec l'exploitant » ;
+  - un autre compte ne voit rien.
+- **Vérifié** :
+  - 485 tests serveur, dont 6 nouveaux (`test_links.py`, unicités par compte). La file est la vraie, sans bouchon : la tâche de B tourne pour B, celle de l'exploitant pour l'exploitant.
+  - Dans Docker, la démo 0.64.0 mise à jour en 0.64.1 sur sa base : migration 0055, parcours de toutes les pages en 174 appels, aucune erreur.
