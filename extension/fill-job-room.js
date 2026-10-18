@@ -1,5 +1,6 @@
 // Remplissage du formulaire Job-Room (docs/70 §4, §5). Injecté par l'extension dans l'onglet de
-// Job-Room où tu as cliqué sur son icône, seulement à ce moment-là. Il remplit la saisie d'une
+// Job-Room où tu as cliqué sur son icône, seulement à ce moment-là, et dans la page elle-même :
+// depuis l'espace isolé de l'extension, Firefox cache la saisie à Job-Room. Il remplit la saisie d'une
 // recherche d'emploi, choisit les réponses de la déclaration (mode, assignation, taux,
 // résultat), et n'enregistre rien : « Sauvegarder » reste le tien. Il ne lit rien d'autre de la
 // page que les champs qu'il remplit.

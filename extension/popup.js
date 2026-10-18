@@ -396,10 +396,14 @@ async function fillJobRoom() {
   $("jr-fill").textContent = "Remplissage…";
   try {
     const data = await (await call(`/api/extension/applications/${declaring}/job-room`)).json();
+    // Dans la page elle-même (« MAIN ») : depuis l'espace isolé de l'extension, Firefox ne
+    // laisse pas Job-Room (Angular) voir la saisie ; les champs restaient vides (docs/70,
+    // complément 0.57.1). Le script ne reçoit que la candidature à saisir.
     const target = { tabId: tab.id };
-    await chrome.scripting.executeScript({ target, files: ["fill-job-room.js"] });
+    await chrome.scripting.executeScript({ target, world: "MAIN", files: ["fill-job-room.js"] });
     const [{ result }] = await chrome.scripting.executeScript({
       target,
+      world: "MAIN",
       func: (input) => globalThis.jobbotJobRoom.fill(input),
       args: [data],
     });
