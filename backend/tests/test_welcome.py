@@ -65,6 +65,21 @@ async def test_new_account_goes_through_welcome(secured: Runtime, runtime: Runti
     with accounts.use(camille):
         async with secured.sessionmaker() as session:
             assert (await domain.keywords(session))[0] == "Infirmière"
+    # Changer de métier à l'accueil remplace l'ancien, sans toucher aux mots ajoutés ailleurs
+    # (docs/69 §1).
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as api:
+        await api.post(
+            "/api/auth/login", json={"username": "camille-accueil", "password": PASSWORD}
+        )
+        current = (await api.get("/api/news/preferences")).json()
+        words = current["domain_keywords"] + ["soins palliatifs"]
+        await api.put("/api/news/preferences", json={**current, "domain_keywords": words})
+        await api.put("/api/welcome", json={"trade": "Aide-soignante"})
+    with accounts.use(camille):
+        async with secured.sessionmaker() as session:
+            kept = await domain.keywords(session)
+    assert kept[0] == "Aide-soignante" and "Infirmière" not in kept
+    assert "soins palliatifs" in kept
     # L'exploitant ne le voit jamais.
     async with AsyncClient(
         transport=ASGITransport(app=create_app(runtime.settings, runtime)), base_url="http://test"

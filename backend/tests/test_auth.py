@@ -62,9 +62,11 @@ def test_passwords() -> None:
 
 
 def test_rules() -> None:
-    assert is_public("GET", "/api/news") and is_public("GET", "/api/news/items/3/image")
-    assert not is_public("POST", "/api/news/seen") and not is_public("GET", "/api/offers")
-    assert not is_public("PUT", "/api/news/preferences") and is_public("POST", "/api/auth/login")
+    # Les Actualités ne sont plus publiques (docs/69 §1) ; « Tes données » et la connexion, si.
+    assert not is_public("GET", "/api/news") and not is_public("GET", "/api/news/items/3/image")
+    assert not is_public("GET", "/api/news/preferences") and not is_public("GET", "/api/offers")
+    assert is_public("GET", "/api/privacy") and not is_public("PUT", "/api/privacy")
+    assert is_public("POST", "/api/auth/login")
     assert cross_site("POST", {"sec-fetch-site": "cross-site"})
     assert not cross_site("POST", {"sec-fetch-site": "same-origin"})
     assert not cross_site("GET", {"sec-fetch-site": "cross-site"})
@@ -103,9 +105,13 @@ async def test_pages_reserved_until_login(rt: Runtime) -> None:
         ):
             assert (await api.get(path)).status_code == 401, path
         assert (await api.post("/api/news/seen")).status_code == 401
-        # Ouvert : les Actualités en lecture (profil principal, même si un autre est demandé).
-        assert (await api.get("/api/news", headers={"X-Jobbot-Profile": "999"})).status_code == 200
-        assert (await api.get("/api/news/preferences")).status_code == 200
+        # Les Actualités demandent la connexion depuis 0.56.1 (docs/69 §1) : elles répondaient
+        # au nom de l'exploitant et laissaient deviner sa recherche d'emploi.
+        assert (await api.get("/api/news")).status_code == 401
+        assert (await api.get("/api/news/preferences")).status_code == 401
+        assert (await api.get("/api/news/items/1/image")).status_code == 401
+        # Ouvert : les mentions de « Tes données ».
+        assert (await api.get("/api/privacy")).status_code == 200
 
         bad = await api.post("/api/auth/login", json={"username": "camille", "password": "faux"})
         assert bad.status_code == 401

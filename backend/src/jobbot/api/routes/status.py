@@ -9,6 +9,8 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import accounts
+from jobbot.api.owner import require_owner
 from jobbot.db.models import JobRun, JobRunStatus
 from jobbot.health import check_database
 from jobbot.runtime import Runtime
@@ -102,8 +104,11 @@ async def get_status(request: Request) -> StatusResponse:
                 .order_by(JobRun.finished_at.desc())
                 .limit(1)
             )
+            # Le message d'erreur peut citer la boîte de l'exploitant ou un autre compte : à lui
+            # seul (docs/69 §1) ; les autres voient l'échec, sans le détail.
             if latest is not None and latest.status == JobRunStatus.FAILURE:
-                collect.last_error = latest.error
+                owner = await accounts.is_owner(session)
+                collect.last_error = latest.error if owner else "voir avec l'exploitant"
     stale_after = timedelta(seconds=HEARTBEAT_STALE_AFTER_SECONDS)
     healthy = last_heartbeat is not None and datetime.now(UTC) - last_heartbeat < stale_after
     return StatusResponse(
@@ -131,7 +136,9 @@ async def list_job_runs(
     limit: Annotated[int, Query(ge=1, le=200)] = 20,
     job: str | None = None,
 ) -> list[JobRunOut]:
+    """Le journal des tâches, commun à tous les comptes : réservé à l'exploitant (docs/69 §1)."""
     runtime = _runtime(request)
+    await require_owner(runtime)
     query = select(JobRun).order_by(JobRun.started_at.desc(), JobRun.id.desc()).limit(limit)
     if job is not None:
         query = query.where(JobRun.job == job)

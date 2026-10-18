@@ -33,6 +33,9 @@ def status(value: dict[str, Any]) -> Status:
 
 
 async def save(session: AsyncSession, changes: dict[str, Any]) -> dict[str, Any]:
+    # Le métier mis par l'accueil avant ce changement : il cède la place au nouveau (docs/69 §1).
+    before = await session.scalar(select(Setting.value).where(Setting.key == KEY))
+    previous = before.get("trade") if isinstance(before, dict) else None
     # Fusion faite par la base (jsonb ||) : deux enregistrements rapprochés de l'accueil ne
     # s'écrasent pas l'un l'autre.
     statement = insert(Setting).values(key=KEY, value=changes)
@@ -45,11 +48,17 @@ async def save(session: AsyncSession, changes: dict[str, Any]) -> dict[str, Any]
     trade = changes.get("trade")
     if isinstance(trade, str) and trade.strip():
         # Le métier devient le premier mot de « Mon domaine » : les Actualités le suivent, et
-        # la page Alertes propose la recherche qui va avec.
+        # la page Alertes propose la recherche qui va avec. Le métier choisi avant à l'accueil
+        # s'en va ; les mots ajoutés ailleurs restent. Le profil est verrouillé pendant la
+        # modification, pour ne pas écraser un changement de « Mon domaine » simultané.
         profile = await main_profile(session)
+        await session.refresh(profile, with_for_update=True)
         preferences = dict(profile.preferences or {})
         words = [w for w in preferences.get("domain_keywords") or [] if isinstance(w, str)]
         name = trade.strip()
-        preferences["domain_keywords"] = [name] + [w for w in words if w.lower() != name.lower()]
+        gone = {name.lower()}
+        if isinstance(previous, str) and previous.strip():
+            gone.add(previous.strip().lower())
+        preferences["domain_keywords"] = [name] + [w for w in words if w.lower() not in gone]
         profile.preferences = preferences
     return value if isinstance(value, dict) else {}

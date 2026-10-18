@@ -522,7 +522,7 @@
           "account"
         ],
         "summary": "Delete Own Account",
-        "description": "Le compte et toutes ses données, fichiers compris, après le mot de passe.",
+        "description": "Le compte et toutes ses données, fichiers compris, après le mot de passe. Les essais\nratés sont limités comme à la connexion (docs/69 §1).",
         "operationId": "deleteOwnAccount",
         "requestBody": {
           "content": {
@@ -543,6 +543,9 @@
           },
           "409": {
             "description": "Compte de l'exploitant"
+          },
+          "429": {
+            "description": "Trop d'essais"
           },
           "422": {
             "description": "Validation Error",
@@ -1826,6 +1829,7 @@
           "status"
         ],
         "summary": "List Job Runs",
+        "description": "Le journal des tâches, commun à tous les comptes : réservé à l'exploitant (docs/69 §1).",
         "operationId": "listJobRuns",
         "parameters": [
           {
@@ -4700,7 +4704,7 @@
           "registry"
         ],
         "summary": "Choose Address",
-        "description": "Kevin choisit une proposition : elle vaut pour toutes les offres de cette entreprise.",
+        "description": "On choisit une proposition : elle vaut pour toutes les offres de cette entreprise du\ncompte. Le cache des entreprises est commun : seul l'exploitant y écrit son choix, celui d'un\nautre compte ne s'impose pas aux autres (docs/69 §1).",
         "operationId": "chooseAddressCandidate",
         "parameters": [
           {

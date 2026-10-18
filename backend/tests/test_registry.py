@@ -6,10 +6,11 @@ from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
+from sqlalchemy import select, text
 
+from jobbot import accounts
 from jobbot.api.app import create_app
-from jobbot.db.models import Offer, OfferStatus
+from jobbot.db.models import Company, Offer, OfferStatus
 from jobbot.registry import uid
 from jobbot.registry.service import Place, choose, lookup_addresses, name_key
 from jobbot.registry.uid import RegistryCompany, parse_response
@@ -149,3 +150,30 @@ async def test_api_candidates_and_choice(
     assert (await api.get(f"/api/offers/{other}")).json()["company_address"] == chosen.address
     bad = await api.post(f"/api/offers/{first}/address-candidates/choose", json={"uid": "CHE0"})
     assert bad.status_code == 404
+
+
+async def test_other_account_choice_stays_its_own(
+    api: AsyncClient, fresh: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Le cache des entreprises est commun : le choix d'un autre compte que l'exploitant vaut
+    pour ses offres, sans s'imposer aux autres (docs/69 §1)."""
+    twins = [company("Homonyme SA"), company("Homonyme Sàrl")]
+
+    async def fake(_name: str) -> list[RegistryCompany]:
+        return twins
+
+    async def not_owner(_session: object) -> bool:
+        return False
+
+    monkeypatch.setattr(uid, "search", fake)
+    first = await add(fresh, 1, "Homonyme")
+    await api.get(f"/api/offers/{first}/address-candidates")
+    monkeypatch.setattr(accounts, "is_owner", not_owner)
+    chosen = twins[1]
+    response = await api.post(
+        f"/api/offers/{first}/address-candidates/choose", json={"uid": chosen.uid}
+    )
+    assert response.json()["company_address"] == chosen.address
+    async with fresh.sessionmaker() as session:
+        record = await session.scalar(select(Company))
+    assert record is not None and record.chosen_by != "manual" and record.uid is None
