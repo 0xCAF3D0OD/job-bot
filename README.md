@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/79-maintenance.md](docs/79-maintenance.md) (0.65.0)
+- Version en cours : [docs/80-maintenance-lecture.md](docs/80-maintenance-lecture.md) (0.65.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -111,7 +111,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.64.0 | Étanchéité des comptes : le serveur jamais administrateur de la base (rôles `jobbot_app`, `jobbot_worker`), une règle pour chaque table, règles de sécurité écrites | livrée |
 | 0.64.1 | Aucun lien entre deux comptes dans la base, tâches qui gardent leur compte, erreur de notation par compte | livrée |
 | 0.64.2 | Connexion : jetons coupés à la suspension, essais comptés par adresse, session de 90 jours au plus, mode sans connexion verrouillé ; en-têtes de sécurité, taille des envois, audit hebdomadaire des bibliothèques | livrée |
-| 0.65.0 | La page de maintenance : par-dessus l'écran pendant une mise à jour, `jobbot maintenance on/off`, `make update` | en cours |
+| 0.65.0 | La page de maintenance : par-dessus l'écran pendant une mise à jour, `jobbot maintenance on/off`, `make update` | livrée |
+| 0.65.1 | Maintenance en lecture seule (`--lecture`), tâches de fond en pause, le dessin unDraw animé sur la page d'attente | en cours |
 
 ## Lancer en local
 

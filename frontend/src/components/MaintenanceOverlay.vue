@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from "vue";
 
-import IllustratedSide from "./IllustratedSide.vue";
+import LoadingDrawing from "./LoadingDrawing.vue";
 
 // La page d'attente (docs/79) : par-dessus tout, sans recharger ; le reste de l'écran est
 // inerte tant qu'elle est là, et retrouvé tel quel ensuite.
@@ -41,23 +41,24 @@ watch(
       data-test="maintenance"
     >
       <div class="container">
-        <IllustratedSide
-          name="lecture-calme"
-          phone="small"
-        >
-          <h1 id="maintenance-title">
-            jobA1 revient dans un instant
-          </h1>
-          <p
-            class="maintenance-message"
-            aria-live="polite"
-          >
-            {{ message || "La plateforme se met à jour, ou la connexion est coupée." }}
-          </p>
-          <p class="muted">
-            On réessaie toutes les 10 secondes. Ta page t'attend telle quelle : ce que tu étais en train d'écrire n'est pas perdu.
-          </p>
-        </IllustratedSide>
+        <!-- Le dessin unDraw de la maintenance : il bouge tant que l'attente dure (docs/80 §2). -->
+        <div class="illustrated phone-small">
+          <LoadingDrawing name="maintenance" />
+          <div class="illustrated-body">
+            <h1 id="maintenance-title">
+              jobA1 revient dans un instant
+            </h1>
+            <p
+              class="maintenance-message"
+              aria-live="polite"
+            >
+              {{ message || "La plateforme se met à jour, ou la connexion est coupée." }}
+            </p>
+            <p class="muted">
+              On réessaie toutes les 10 secondes. Ta page t'attend telle quelle : ce que tu étais en train d'écrire n'est pas perdu.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </Teleport>

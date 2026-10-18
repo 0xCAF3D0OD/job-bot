@@ -257,7 +257,9 @@ def cmd_maintenance(args: argparse.Namespace) -> int:
         try:
             async with runtime.sessionmaker.begin() as session:
                 if args.action == "on":
-                    await maintenance.announce(session, " ".join(args.message))
+                    await maintenance.announce(
+                        session, " ".join(args.message), "lecture" if args.lecture else "complete"
+                    )
                 elif args.action == "off":
                     await maintenance.lift(session)
                 return await maintenance.announced(session)
@@ -269,8 +271,14 @@ def cmd_maintenance(args: argparse.Namespace) -> int:
         print("Pas de maintenance annoncée : la plateforme est ouverte.")
     else:
         message = found.get("message")
+        reading = found.get("mode") == "lecture"
         print(
-            "Maintenance annoncée : seuls toi et les commandes passent"
+            (
+                "Maintenance annoncée en lecture seule : les invités consultent, toi seul "
+                "enregistres"
+                if reading
+                else "Maintenance annoncée : seuls toi et les commandes passent"
+            )
             + (f" ; message : « {message} »" if message else "")
             + f" (dans les {maintenance.CACHE_S:.0f} s). Pour rouvrir : jobbot maintenance off."
         )
@@ -379,6 +387,11 @@ def main(argv: list[str] | None = None) -> int:
     upkeep = sub.add_parser("maintenance", help="annonce ou lève une maintenance (docs/79)")
     upkeep.add_argument("action", choices=["on", "off", "status"])
     upkeep.add_argument("message", nargs="*", help="message montré pendant la maintenance")
+    upkeep.add_argument(
+        "--lecture",
+        action="store_true",
+        help="les invités consultent encore, sans enregistrer (docs/80)",
+    )
     upkeep.set_defaults(func=cmd_maintenance)
     password = sub.add_parser("set-password", help="compte de connexion (saisie masquée)")
     password.add_argument("--username", help="identifiant (par défaut : le compte existant)")

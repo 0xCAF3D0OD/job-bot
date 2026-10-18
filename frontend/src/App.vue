@@ -23,7 +23,13 @@ import { navigation, type NavEntry, PUBLIC_ROUTES } from "./router";
 
 const { message, running, failed, collectNow } = useCollect();
 // Maintenance (docs/79) : la page d'attente, et le rappel à l'exploitant qui passe quand même.
-const { waiting: maintenanceWaiting, message: maintenanceMessage, bypass: maintenanceBypass } = useMaintenance();
+const {
+  waiting: maintenanceWaiting,
+  message: maintenanceMessage,
+  bypass: maintenanceBypass,
+  reading: maintenanceReading,
+  refused: maintenanceRefused,
+} = useMaintenance();
 
 const { count: newsCount, start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
@@ -206,6 +212,20 @@ onUnmounted(() => {
     Maintenance annoncée : la plateforme est fermée aux autres comptes. Pour la rouvrir :
     <code>jobbot maintenance off</code>.
   </p>
+  <p
+    v-else-if="maintenanceReading"
+    class="maintenance-bypass reading"
+    role="status"
+    data-test="maintenance-reading"
+  >
+    Maintenance : tu peux consulter, pas encore enregistrer.{{ maintenanceMessage ? ` ${maintenanceMessage}` : "" }}
+  </p>
+  <AppToast
+    v-if="maintenanceRefused"
+    :message="maintenanceRefused"
+    data-test="maintenance-refused"
+    @close="maintenanceRefused = ''"
+  />
   <main>
     <RouterView />
   </main>

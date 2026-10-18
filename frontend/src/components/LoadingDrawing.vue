@@ -3,7 +3,8 @@ import { ref, watch } from "vue";
 
 // Le dessin animé d'une page qui charge (docs/61 §2, docs/67 complément 0.55.1) : les dessins
 // unDraw d'avant, gardés pour ce seul moment parce que leur animation fait patienter. Inséré dans
-// la page pour prendre les couleurs du thème (`.drawing [fill=…]`) ; l'animation joue une fois.
+// la page pour prendre les couleurs du thème (`.drawing [fill=…]`) ; l'animation joue une fois,
+// sauf celle de la maintenance, qui dure autant que l'attente (docs/80 §2).
 // Préparés par scripts/illustrations-undraw.mjs. Décoratif : le nom de la page est écrit dessous.
 const props = defineProps<{ name: DrawingName }>();
 
@@ -32,7 +33,15 @@ watch(
 </script>
 
 <script lang="ts">
-export type DrawingName = "absorbed" | "certification" | "done" | "mailbox" | "message-sent" | "morning-plans" | "stepping-up";
+export type DrawingName =
+  | "absorbed"
+  | "certification"
+  | "done"
+  | "mailbox"
+  | "maintenance"
+  | "message-sent"
+  | "morning-plans"
+  | "stepping-up";
 </script>
 
 <template>

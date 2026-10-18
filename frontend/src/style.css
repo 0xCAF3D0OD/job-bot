@@ -2634,3 +2634,5 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .maintenance-message { margin: 0 0 0.75rem; font-size: 1.05rem; }
 .maintenance p { max-width: 34rem; }
 .maintenance-bypass { margin: 0; padding: 0.6rem 1rem; text-align: center; background: var(--surface); border-bottom: 1px solid var(--down); color: var(--down-text); font-size: 0.92rem; }
+/* Lecture seule (docs/80) : une information, pas une alerte. */
+.maintenance-bypass.reading { border-bottom-color: var(--border); color: var(--text); }

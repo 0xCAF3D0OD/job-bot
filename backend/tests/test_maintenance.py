@@ -62,6 +62,7 @@ async def test_announced_maintenance_lets_only_the_owner_through(
     assert state == {
         "active": True,
         "reason": "announced",
+        "mode": "complete",
         "message": "Nouvelle version, dix minutes",
         "bypass": True,
     }
@@ -107,3 +108,65 @@ async def test_unreachable_database_is_not_a_maintenance(offline_client: AsyncCl
     """Une base injoignable n'est pas une mise à jour : l'état de la plateforme l'explique."""
     assert (await offline_client.get("/api/maintenance")).json()["active"] is False
     assert (await offline_client.get("/api/status")).status_code == 200
+
+
+async def test_read_only_maintenance_lets_guests_read(
+    client: AsyncClient, runtime: Runtime, guest: None
+) -> None:
+    """En lecture seule (docs/80), un invité consulte encore ; ses écritures attendent."""
+    async with runtime.sessionmaker.begin() as session:
+        await maintenance.announce(session, "Sauvegarde", "lecture")
+    state = (await client.get("/api/maintenance")).json()
+    assert state["mode"] == "lecture" and state["bypass"] is True
+    # L'exploitant écrit.
+    assert (await client.put("/api/criteria", json={})).status_code != 503
+    async for api in secured_client():
+        login = await api.post("/api/auth/login", json={"username": GUEST, "password": PASSWORD})
+        assert login.status_code == 204
+        assert (await api.get("/api/applications")).status_code == 200
+        refused = await api.post("/api/news/seen")
+        assert refused.status_code == 503
+        assert refused.json()["mode"] == "lecture"
+        assert refused.json()["message"] == "Sauvegarde"
+
+
+async def test_background_tasks_wait_except_the_owners(
+    runtime: Runtime, account: int, guest: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Pendant une maintenance annoncée, la vraie file : la tâche de l'invité et la tâche
+    planifiée attendent, celle de l'exploitant passe (docs/80 §3)."""
+    from jobbot import accounts
+    from jobbot.worker import jobs
+    from jobbot.worker.app import build_procrastinate_app
+    from jobbot.worker.queue import enqueue
+
+    seen: list[int | None] = []
+
+    async def record(_runtime: Runtime, _ctx: jobs.RunContext) -> None:
+        seen.append(accounts.current())
+
+    monkeypatch.setitem(jobs.JOBS, "test-pause", jobs.JobSpec("test-pause", record))
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM procrastinate_jobs"))
+        guest_id = await conn.scalar(text("SELECT id FROM users WHERE username = :u"), {"u": GUEST})
+    async with runtime.sessionmaker.begin() as session:
+        await maintenance.announce(session, None, "lecture")
+    assert await maintenance.worker_paused(runtime, None)
+    with accounts.use(guest_id):
+        assert await enqueue(runtime.settings, "test-pause")
+    assert await enqueue(runtime.settings, "test-pause")
+    worker = Runtime.create(runtime.settings, "worker")
+    try:
+        app = build_procrastinate_app(worker)
+        async with app.open_async():
+            await app.run_worker_async(
+                queues=["default"], wait=False, install_signal_handlers=False
+            )
+    finally:
+        await worker.dispose()
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM job_runs WHERE job = 'test-pause'"))
+    assert seen == [account]
+    async with runtime.sessionmaker.begin() as session:
+        await maintenance.lift(session)
+    assert not await maintenance.worker_paused(runtime, None)

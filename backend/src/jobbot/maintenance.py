@@ -6,7 +6,9 @@ Deux cas :
 - **la base n'est pas encore à jour** (le code est nouveau, `jobbot migrate` pas encore
   lancé) : toutes les routes de l'API répondent 503, pour tout le monde ;
 - **une maintenance annoncée** (`jobbot maintenance on`) : 503 pour tous, sauf l'exploitant,
-  qui peut vérifier la plateforme avant de la rouvrir (`jobbot maintenance off`).
+  qui peut vérifier la plateforme avant de la rouvrir (`jobbot maintenance off`). En lecture
+  seule (`--lecture`, docs/80), les invités lisent encore : seules leurs écritures reçoivent
+  503. Les tâches de fond attendent, sauf celles de l'exploitant.
 
 Une base injoignable n'est pas une maintenance : les routes le disent elles-mêmes, et l'état
 de la plateforme l'explique. L'état est relu au plus toutes les quelques secondes.
@@ -34,23 +36,30 @@ MESSAGE = "jobA1 se met à jour, ça revient dans un instant."
 OPEN_PATHS = ("/api/maintenance", "/api/auth/")
 
 Reason = Literal["announced", "update"]
+Mode = Literal["complete", "lecture"]
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
 @dataclass(frozen=True)
 class State:
     reason: Reason | None = None
     message: str | None = None
+    mode: Mode = "complete"
 
     @property
     def active(self) -> bool:
         return self.reason is not None
 
 
-async def announce(session: AsyncSession, message: str | None) -> None:
+async def announce(session: AsyncSession, message: str | None, mode: Mode = "complete") -> None:
     await platform.put(
         session,
         KEY,
-        {"message": (message or "").strip()[:300] or None, "since": datetime.now(UTC).isoformat()},
+        {
+            "message": (message or "").strip()[:300] or None,
+            "mode": mode,
+            "since": datetime.now(UTC).isoformat(),
+        },
     )
 
 
@@ -83,7 +92,8 @@ class Watch:
                 async with runtime.sessionmaker() as session:
                     found = await announced(session)
                     if found is not None:
-                        state = State("announced", found.get("message"))
+                        mode: Mode = "lecture" if found.get("mode") == "lecture" else "complete"
+                        state = State("announced", found.get("message"), mode)
                         owner = await accounts.owner_id(session)
             except Exception:  # une lecture ratée ne ferme pas la plateforme
                 state = State()
@@ -92,10 +102,16 @@ class Watch:
 
 
 async def _refuse(send: Send, state: State) -> None:
+    detail = (
+        "Maintenance en cours : tu peux consulter, pas encore enregistrer."
+        if state.mode == "lecture"
+        else MESSAGE
+    )
     body = {
-        "detail": MESSAGE,
+        "detail": detail,
         "maintenance": True,
         "reason": state.reason,
+        "mode": state.mode,
         "message": state.message,
     }
     await send(
@@ -126,7 +142,17 @@ class MaintenanceMiddleware:
         app_state = scope["app"].state
         state, owner = await app_state.maintenance.state(app_state.runtime)
         bypass = state.reason == "announced" and owner is not None and accounts.current() == owner
-        if state.active and not bypass:
+        reading = state.mode == "lecture" and scope.get("method", "GET") in SAFE_METHODS
+        if state.active and not bypass and not reading:
             await _refuse(send, state)
             return
         await self.app(scope, receive, send)
+
+
+async def worker_paused(runtime: Runtime, account: int | None) -> bool:
+    """Pendant une maintenance annoncée, les tâches de fond attendent (docs/80 §3) : sinon la
+    collecte ou la notation écriraient quand même. Une tâche lancée par l'exploitant passe."""
+    async with runtime.sessionmaker() as session:
+        if await announced(session) is None:
+            return False
+        return account is None or account != await accounts.owner_id(session)
