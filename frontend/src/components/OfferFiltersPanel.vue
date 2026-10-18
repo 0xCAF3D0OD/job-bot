@@ -134,6 +134,19 @@ const showPost = computed(() =>
   ["remote", "rate", "external", "doubtful"].some((k) => props.visible.includes(k as FilterKey)),
 );
 const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visible.includes(k as FilterKey)));
+
+// « Plus de filtres » (docs/73 §6) : la recherche, le statut, le tri et la note restent
+// visibles ; le reste est replié, avec le nombre de filtres actifs. Déplié d'office s'il y en a.
+const secondaryActive = computed(
+  () =>
+    Number(props.filters.remote !== null) +
+    Number(props.filters.minRate !== null) +
+    Number(props.filters.externalOnly) +
+    Number(props.filters.hideDoubtful) +
+    props.filters.sources.length +
+    props.filters.cantons.length,
+);
+const more = ref(secondaryActive.value > 0);
 </script>
 
 <template>
@@ -224,8 +237,20 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
       />
     </div>
 
+    <button
+      type="button"
+      class="filter-more link"
+      :aria-expanded="more"
+      data-test="more-filters"
+      @click="more = !more"
+    >
+      {{ more ? "Moins de filtres" : "Plus de filtres" }}<template v-if="secondaryActive">
+        ({{ secondaryActive }})
+      </template>
+    </button>
+
     <div
-      v-if="showPost"
+      v-if="more && showPost"
       class="filter-card"
     >
       <template v-if="visible.includes('remote')">
@@ -312,7 +337,7 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
     </div>
 
     <div
-      v-if="showOrigin"
+      v-if="more && showOrigin"
       class="filter-card"
     >
       <template v-if="visible.includes('sources')">
@@ -377,7 +402,10 @@ const showOrigin = computed(() => ["sources", "cantons"].some((k) => props.visib
       </template>
     </div>
 
-    <div class="filter-customize">
+    <div
+      v-if="more"
+      class="filter-customize"
+    >
       <button
         type="button"
         class="link"
