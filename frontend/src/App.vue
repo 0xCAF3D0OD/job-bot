@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from "vue";
+import { computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { UNAUTHORIZED_EVENT } from "./api/client";
@@ -44,7 +44,9 @@ function onUnauthorized(): void {
 onMounted(async () => {
   window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   await load();
-  startNewsCount();
+  // Le compteur des Actualités, une fois connecté seulement : sans connexion, elles ne
+  // répondent plus (docs/69 §1).
+  watch(loggedIn, (yes) => yes && startNewsCount(), { immediate: true });
 });
 onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized));
 </script>

@@ -1,10 +1,13 @@
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import text
 from structlog.testing import capture_logs
 
+from jobbot import accounts
+from jobbot.db.models import JobRun, JobRunStatus
 from jobbot.db.schema import head_revision
 from jobbot.runtime import Runtime
 from jobbot.worker.jobs import execute
@@ -69,6 +72,36 @@ async def test_status_worker_healthy_after_heartbeat(client: AsyncClient, runtim
     body = (await client.get("/api/status")).json()
     assert body["worker"]["healthy"] is True
     assert body["worker"]["last_heartbeat_at"] is not None
+
+
+@pytest.mark.usefixtures("clean_job_runs")
+async def test_job_journal_reserved_to_owner(
+    client: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Le journal des tâches est commun : son détail, et le message de la dernière erreur de
+    collecte, sont réservés à l'exploitant (docs/69 §1)."""
+    now = datetime.now(UTC)
+    async with runtime.sessionmaker.begin() as session:
+        session.add(
+            JobRun(
+                job="collect",
+                started_at=now,
+                finished_at=now,
+                status=JobRunStatus.FAILURE,
+                error="MailboxError: boite-exploitant@example.ch refusée",
+            )
+        )
+    owner = (await client.get("/api/status")).json()["collect"]["last_error"]
+    assert "boite-exploitant" in owner
+    assert (await client.get("/api/job-runs")).status_code == 200
+
+    async def not_owner(_session: object) -> bool:
+        return False
+
+    monkeypatch.setattr(accounts, "is_owner", not_owner)
+    guest = (await client.get("/api/status")).json()["collect"]["last_error"]
+    assert guest is not None and "boite-exploitant" not in guest
+    assert (await client.get("/api/job-runs")).status_code == 403
 
 
 async def test_status_reports_unreachable_database(offline_client: AsyncClient) -> None:

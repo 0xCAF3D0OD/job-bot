@@ -6,7 +6,9 @@ une route ajoutée plus tard est testée d'office), avec les numéros des lignes
 il ne doit rien en voir, rien en modifier, rien en supprimer.
 """
 
+import io
 import re
+import zipfile
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -70,6 +72,19 @@ PERSONAL = {
 }
 # Routes qui fermeraient la session de B pendant le test.
 SKIPPED = {("post", "/api/auth/logout"), ("post", "/api/auth/logout-all")}
+# Sans connexion, seules répondent : la connexion et les liens d'accès, les mentions de « Tes
+# données », l'agenda (son propre jeton) et l'extension (le sien) — docs/69 §1.
+ANONYMOUS_OPEN = re.compile(r"^/api/(auth/|privacy$|agenda/feed/|extension/)")
+
+
+def visible(response: Any) -> str:
+    """Ce que la réponse laisse lire : le texte, ou le contenu d'une archive ZIP (un export)."""
+    if response.headers.get("content-type", "").startswith("application/zip"):
+        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            return "\n".join(
+                archive.read(name).decode("utf-8", "replace") for name in archive.namelist()
+            )
+    return str(response.text)
 
 
 async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
@@ -375,7 +390,9 @@ async def test_account_b_sees_and_changes_nothing_of_a(
             else:
                 response = await api.request(method.upper(), url, headers=headers)
             called += 1
-            assert SECRET not in response.text, f"{method.upper()} {path} montre une donnée de A"
+            assert SECRET not in visible(response), (
+                f"{method.upper()} {path} montre une donnée de A"
+            )
             if method == "get" and PERSONAL & set(names) and response.status_code == 200:
                 # Une liste rattachée à une ligne de A (ses entretiens…) : vide pour B.
                 assert response.json() in ([], None), f"GET {path} lit une ligne de A"
@@ -402,6 +419,44 @@ async def test_account_b_sees_and_changes_nothing_of_a(
         transport=ASGITransport(app=owner_app), base_url="http://localhost"
     ) as api:
         assert SECRET in await feed(api)
+    await secured.dispose()
+
+
+async def test_without_login_nothing_answers(
+    runtime: Runtime, two_accounts: tuple[int, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sans connexion, toutes les routes (lues dans le schéma) répondent 401, sauf celles qui
+    sont ouvertes exprès ; aucune ne montre ni ne modifie une donnée de A (docs/69 §1)."""
+    ids = await seed_account_a(runtime)
+    before = await snapshot(runtime)
+
+    async def no_queue(*_args: object) -> bool:
+        return True
+
+    for module in ("collect", "scoring", "preferences", "news"):
+        monkeypatch.setattr(f"jobbot.api.routes.{module}.enqueue", no_queue)
+    secured = Runtime.create(make_settings(auth_enabled=True))
+    app = create_app(secured.settings, secured)
+    spec = app.openapi()
+    called = 0
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as api:
+        for path, ops in spec["paths"].items():
+            for method, op in ops.items():
+                url = path
+                for name in re.findall(r"{([^}]+)}", path):
+                    url = url.replace("{" + name + "}", str(ids.get(name, 1)))
+                body = None
+                content = op.get("requestBody", {}).get("content", {})
+                if "application/json" in content:
+                    body = example(content["application/json"]["schema"], spec, ids)
+                response = await api.request(method.upper(), url, json=body)
+                called += 1
+                where = f"{method.upper()} {path}"
+                assert SECRET not in visible(response), f"{where} montre une donnée de A"
+                if not ANONYMOUS_OPEN.match(path):
+                    assert response.status_code == 401, f"{where} répond sans connexion"
+    assert called > 140
+    assert await snapshot(runtime) == before, "une route sans connexion a modifié des données"
     await secured.dispose()
 
 

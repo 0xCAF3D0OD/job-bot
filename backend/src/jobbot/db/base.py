@@ -32,6 +32,15 @@ def _on_connect(dbapi_connection: Any, _record: Any) -> None:
         cursor.execute("select 1 from pg_roles where rolname = %s", (APP_ROLE,))
         if cursor.fetchone() is not None:
             cursor.execute(f"set role {APP_ROLE}")
+        else:
+            # Sans ce rôle, la séparation des comptes serait contournée sans bruit (docs/69 §1).
+            # Une base pas encore migrée n'a ni le rôle ni les règles : elle reste joignable
+            # (l'état dit qu'elle est à mettre à jour) ; une base qui a les règles, non.
+            cursor.execute("select 1 from pg_policies where policyname = 'account_isolation'")
+            if cursor.fetchone() is not None:
+                raise RuntimeError(
+                    f"rôle {APP_ROLE} absent : la séparation des comptes ne s'appliquerait pas"
+                )
     finally:
         cursor.close()
     dbapi_connection.commit()

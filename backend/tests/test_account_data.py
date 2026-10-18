@@ -113,6 +113,14 @@ async def test_export_holds_only_the_account(secured: Runtime, account: int) -> 
     document = next(n for n in names if n.startswith("documents/"))
     assert archive.read(document) == b"CV CAMILLE"
     assert [n for n in names if n.startswith("emails/")]
+    # Complet (docs/69 §1) : le compte, ses sessions, les formations de ses profils ; jamais
+    # l'empreinte du mot de passe ni celle d'un jeton.
+    assert {"compte.json", "sessions.json", "data/trainings.json"} <= set(names)
+    compte = json.loads(archive.read("compte.json"))
+    assert compte["username"] == "camille-donnees" and "password_hash" not in compte
+    sessions = json.loads(archive.read("sessions.json"))
+    assert len(sessions) == 1 and "token_hash" not in sessions[0]
+    assert b"scrypt$" not in everything and b"token_hash" not in everything
 
 
 async def test_guest_deletes_own_account(secured: Runtime, account: int) -> None:
@@ -129,6 +137,18 @@ async def test_guest_deletes_own_account(secured: Runtime, account: int) -> None
     async with secured.engine.begin() as conn:
         left = await conn.execute(text("select count(*) from users where id = :c"), {"c": camille})
         assert left.scalar() == 0
+
+
+async def test_delete_limits_wrong_passwords(secured: Runtime) -> None:
+    """Comme à la connexion : après cinq mots de passe faux, il faut attendre (docs/69 §1)."""
+    await guest(secured)
+    async with client(secured) as api:
+        await login(api)
+        for _ in range(5):
+            wrong = await api.post("/api/account/delete", json={"password": "pas-le-bon"})
+            assert wrong.status_code == 403
+        blocked = await api.post("/api/account/delete", json={"password": PASSWORD})
+        assert blocked.status_code == 429 and "Retry-After" in blocked.headers
 
 
 async def test_owner_cannot_delete_from_the_platform(runtime: Runtime) -> None:

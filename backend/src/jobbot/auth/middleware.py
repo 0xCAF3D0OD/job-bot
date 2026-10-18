@@ -1,5 +1,5 @@
-"""Protection de l'API (docs/18 §1) : session obligatoire hors Actualités, requêtes venues
-d'un autre site refusées.
+"""Protection de l'API (docs/18 §1, docs/69 §1) : session obligatoire hors connexion, liens
+d'accès et « Tes données », requêtes venues d'un autre site refusées.
 
 Middleware ASGI : il lit le cookie, rattache le compte à la requête (`request.state.user`),
 renvoie 401 sur une route réservée et prolonge le cookie quand la session l'est.
@@ -21,11 +21,9 @@ from jobbot.log import get_logger
 log = get_logger(__name__)
 
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
-# Ouvert sans connexion : les Actualités du profil principal, en lecture, et la connexion.
+# Ouvert sans connexion, en lecture. Les Actualités ne le sont plus depuis 0.56.1 (docs/69 §1) :
+# elles répondaient au nom de l'exploitant et laissaient deviner sa recherche d'emploi.
 PUBLIC_READ = [
-    re.compile(r"^/api/news$"),
-    re.compile(r"^/api/news/preferences$"),
-    re.compile(r"^/api/news/items/\d+/image$"),
     # Les mentions de la page « Tes données » (docs/65 §6), lisibles avant toute invitation.
     re.compile(r"^/api/privacy$"),
     # Abonnement d'agenda (docs/40) : la route vérifie elle-même son jeton secret.
@@ -159,8 +157,9 @@ class AuthMiddleware:
         token = cookie_token(headers)
         async with runtime.sessionmaker.begin() as session:
             found = await service.authenticate(session, token)
-            # Sans connexion, les pages publiques (Actualités) sont celles de l'exploitant.
-            account = found.user_id if found else await accounts.owner_id(session)
+        # Sans connexion, aucun compte : les routes publiques n'en ont pas besoin, et une route
+        # oubliée ne verrait rien (docs/69 §1).
+        account = found.user_id if found else None
         state["user"] = found
         if found is None:
             # Sans connexion, le profil d'essai demandé est ignoré : profil principal.

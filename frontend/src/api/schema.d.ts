@@ -247,7 +247,8 @@ export interface paths {
         put?: never;
         /**
          * Delete Own Account
-         * @description Le compte et toutes ses données, fichiers compris, après le mot de passe.
+         * @description Le compte et toutes ses données, fichiers compris, après le mot de passe. Les essais
+         *     ratés sont limités comme à la connexion (docs/69 §1).
          */
         post: operations["deleteOwnAccount"];
         delete?: never;
@@ -758,7 +759,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Job Runs */
+        /**
+         * List Job Runs
+         * @description Le journal des tâches, commun à tous les comptes : réservé à l'exploitant (docs/69 §1).
+         */
         get: operations["listJobRuns"];
         put?: never;
         post?: never;
@@ -1775,7 +1779,9 @@ export interface paths {
         put?: never;
         /**
          * Choose Address
-         * @description Kevin choisit une proposition : elle vaut pour toutes les offres de cette entreprise.
+         * @description On choisit une proposition : elle vaut pour toutes les offres de cette entreprise du
+         *     compte. Le cache des entreprises est commun : seul l'exploitant y écrit son choix, celui d'un
+         *     autre compte ne s'impose pas aux autres (docs/69 §1).
          */
         post: operations["chooseAddressCandidate"];
         delete?: never;
@@ -6179,6 +6185,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Trop d'essais */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

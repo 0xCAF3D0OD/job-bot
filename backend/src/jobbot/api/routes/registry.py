@@ -7,6 +7,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
+from jobbot import accounts
 from jobbot.core.normalize import normalize_location
 from jobbot.db.models import Company, Offer
 from jobbot.registry import uid
@@ -125,7 +126,9 @@ async def get_address_candidates(request: Request, offer_id: int) -> AddressCand
 
 @router.post("/offers/{offer_id}/address-candidates/choose", operation_id="chooseAddressCandidate")
 async def choose_address(request: Request, offer_id: int, body: ChooseIn) -> ChosenAddress:
-    """Kevin choisit une proposition : elle vaut pour toutes les offres de cette entreprise."""
+    """On choisit une proposition : elle vaut pour toutes les offres de cette entreprise du
+    compte. Le cache des entreprises est commun : seul l'exploitant y écrit son choix, celui d'un
+    autre compte ne s'impose pas aux autres (docs/69 §1)."""
     runtime = _runtime(request)
     offer = await _offer_company(runtime, offer_id)
     assert offer.company is not None
@@ -137,11 +140,12 @@ async def choose_address(request: Request, offer_id: int, body: ChooseIn) -> Cho
         )
         if record is None or candidate is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "proposition introuvable")
-        record.uid, record.address, record.chosen_by = (
-            candidate["uid"],
-            candidate["address"],
-            "manual",
-        )
+        if await accounts.is_owner(session):
+            record.uid, record.address, record.chosen_by = (
+                candidate["uid"],
+                candidate["address"],
+                "manual",
+            )
         await apply_address(session, key, candidate["address"])
         current = await session.get(Offer, offer_id)
         assert current is not None

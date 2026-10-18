@@ -61,11 +61,14 @@ async def create(session: AsyncSession, kind: Kind, user_id: int | None = None) 
     return Created(link, token)
 
 
-async def find(session: AsyncSession, token: str) -> tuple[AccountLink, User | None]:
-    """Le lien encore valable ; sinon LinkError (gone : utilisé ou expiré)."""
-    link = await session.scalar(
-        select(AccountLink).where(AccountLink.token_hash == token_hash(token))
-    )
+async def find(
+    session: AsyncSession, token: str, *, lock: bool = False
+) -> tuple[AccountLink, User | None]:
+    """Le lien encore valable ; sinon LinkError (gone : utilisé ou expiré). `lock` : verrouillé
+    jusqu'à la fin de la transaction, pour qu'un lien ne serve qu'une fois même envoyé deux fois
+    en même temps (docs/69 §1)."""
+    query = select(AccountLink).where(AccountLink.token_hash == token_hash(token))
+    link = await session.scalar(query.with_for_update() if lock else query)
     if link is None or not token.startswith(PREFIX):
         raise LinkError("lien inconnu : demande-en un nouveau", "unknown")
     if link.used_at is not None:
@@ -79,7 +82,7 @@ async def find(session: AsyncSession, token: str) -> tuple[AccountLink, User | N
 async def use(session: AsyncSession, token: str, username: str | None, password: str) -> User:
     """Crée le compte (invitation) ou change le mot de passe (réinitialisation) ; le lien ne
     sert plus. Les sessions ouvertes du compte sont fermées après une réinitialisation."""
-    link, user = await find(session, token)
+    link, user = await find(session, token, lock=True)
     if problem := passwords.check_strength(password):
         raise LinkError(f"mot de passe refusé : {problem}", "invalid")
     now = datetime.now(UTC)

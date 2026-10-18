@@ -18,6 +18,7 @@ from sqlalchemy import delete, func, select, text
 
 from jobbot import accounts, platform
 from jobbot.api.owner import require_owner
+from jobbot.api.routes.auth import throttle
 from jobbot.auth import passwords
 from jobbot.auth.middleware import session_cookie
 from jobbot.db.models import (
@@ -29,6 +30,7 @@ from jobbot.db.models import (
     ProfileChunk,
     Search,
     User,
+    UserSession,
 )
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -112,12 +114,32 @@ def _safe(name: str) -> str:
 README = """Export de ton compte jobA1 (docs/65 §6)
 
 data/<table>.json   tes données, table par table (offres, candidatures, profil, réglages…)
+data/trainings.json les formations suggérées pour tes profils
+compte.json         ton compte : identifiant, dates, plafond de l'IA, code de ton adresse de
+                    réception
+sessions.json       les navigateurs où tu es connecté (date, appareil)
 documents/          les documents que tu as déposés (CV, certificats)
 emails/             les e-mails d'alerte reçus pour toi, tels quels
 
-Rien d'autre n'est gardé sur toi. Les empreintes des jetons (agenda, extension) ne sont pas
-reprises : elles ne servent qu'à les reconnaître.
+Rien d'autre n'est gardé sur toi. Ne sont pas repris : ton mot de passe (seule son empreinte est
+gardée) et les empreintes des jetons (sessions, agenda, extension), qui ne servent qu'à les
+reconnaître.
 """
+
+# Ton compte, sans l'empreinte du mot de passe (docs/69 §1).
+ACCOUNT_FIELDS = (
+    "username",
+    "created_at",
+    "password_changed_at",
+    "last_login_at",
+    "suspended_at",
+    "ai_budget_chf",
+    "mail_code",
+)
+
+
+def _json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, indent=1, default=str)
 
 
 @router.get(
@@ -140,9 +162,39 @@ async def export_account(request: Request) -> Response:
                 cleaned = [
                     {k: v for k, v in row.items() if k not in LEFT_OUT} for row in rows or []
                 ]
-                archive.writestr(
-                    f"data/{table}.json", json.dumps(cleaned, ensure_ascii=False, indent=1)
+                archive.writestr(f"data/{table}.json", _json(cleaned))
+            # Les formations suggérées pour tes profils (sans user_id : rangées par profil).
+            trainings = await session.scalar(
+                text(
+                    "select coalesce(json_agg(t), '[]'::json) from trainings t "
+                    "where t.profile_id is not null"
                 )
+            )
+            archive.writestr("data/trainings.json", _json(trainings or []))
+            user = await session.get(User, accounts.current())
+            if user is not None:
+                archive.writestr(
+                    "compte.json", _json({field: getattr(user, field) for field in ACCOUNT_FIELDS})
+                )
+            sessions = await session.scalars(
+                select(UserSession)
+                .where(UserSession.user_id == accounts.current())
+                .order_by(UserSession.created_at)
+            )
+            archive.writestr(
+                "sessions.json",
+                _json(
+                    [
+                        {
+                            "created_at": s.created_at,
+                            "last_seen_at": s.last_seen_at,
+                            "expires_at": s.expires_at,
+                            "user_agent": s.user_agent,
+                        }
+                        for s in sessions
+                    ]
+                ),
+            )
             for document in await session.scalars(select(Document).order_by(Document.id)):
                 if runtime.storage.exists(document.storage_key):
                     archive.writestr(
@@ -169,12 +221,21 @@ async def export_account(request: Request) -> Response:
     responses={
         403: {"description": "Mot de passe incorrect"},
         409: {"description": "Compte de l'exploitant"},
+        429: {"description": "Trop d'essais"},
     },
 )
 async def delete_own_account(request: Request, body: DeleteIn, response: Response) -> None:
-    """Le compte et toutes ses données, fichiers compris, après le mot de passe."""
+    """Le compte et toutes ses données, fichiers compris, après le mot de passe. Les essais
+    ratés sont limités comme à la connexion (docs/69 §1)."""
     runtime = _runtime(request)
     account = accounts.current()
+    key = f"delete:{account}"
+    if wait := throttle.wait(key):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            f"trop d'essais : réessaie dans {wait} s",
+            headers={"Retry-After": str(wait)},
+        )
     async with runtime.sessionmaker() as session:
         if not runtime.settings.auth_enabled or await accounts.is_owner(session):
             raise HTTPException(
@@ -183,7 +244,9 @@ async def delete_own_account(request: Request, body: DeleteIn, response: Respons
             )
         user = await session.get(User, account)
         if user is None or not passwords.verify_password(body.password, user.password_hash):
+            throttle.fail(key)
             raise HTTPException(status.HTTP_403_FORBIDDEN, "mot de passe incorrect")
+    throttle.reset(key)
     async with runtime.sessionmaker.begin() as session:
         await session.execute(delete(User).where(User.id == account))
     runtime.storage.delete_folder(f"accounts/{account}")
