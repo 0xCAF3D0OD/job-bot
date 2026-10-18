@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { api, DEMO_REFUSED_EVENT, PROFILE_HEADER, PROFILE_KEY, UNAUTHORIZED_EVENT } from "./client";
+import { api, DEMO_REFUSED_EVENT, MAINTENANCE_EVENT, PROFILE_HEADER, PROFILE_KEY, UNAUTHORIZED_EVENT } from "./client";
 
 afterEach(() => {
   localStorage.clear();
@@ -56,5 +56,24 @@ describe("démo publique (docs/72)", () => {
     });
     window.removeEventListener(DEMO_REFUSED_EVENT, listener);
     expect(heard).toEqual(["Dans la démo, rien n'est enregistré."]);
+  });
+});
+
+describe("maintenance (docs/79)", () => {
+  it("la page d'attente pour une maintenance, un serveur qui ne répond pas, pas pour une autre erreur", async () => {
+    const heard: (string | null)[] = [];
+    const listener = (event: Event) => heard.push((event as CustomEvent<string | null>).detail);
+    window.addEventListener(MAINTENANCE_EVENT, listener);
+    await api.GET("/api/orp", respond(503, { detail: "…", maintenance: true, message: "Dix minutes" }));
+    // L'intermédiaire (Vite, Caddy) quand l'API redémarre : 502, sans corps JSON.
+    await api.GET("/api/orp", { fetch: async () => new Response("", { status: 502 }) });
+    await expect(api.GET("/api/orp", { fetch: () => Promise.reject(new TypeError("Failed to fetch")) })).rejects.toThrow();
+    // Une IA indisponible (503 de la route), une requête annulée : pas de maintenance.
+    await api.GET("/api/orp", respond(503, { detail: "IA momentanément indisponible, réessayer" }));
+    await expect(
+      api.GET("/api/orp", { fetch: () => Promise.reject(new DOMException("annulée", "AbortError")) }),
+    ).rejects.toThrow();
+    window.removeEventListener(MAINTENANCE_EVENT, listener);
+    expect(heard).toEqual(["Dix minutes", null, null]);
   });
 });

@@ -96,6 +96,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/maintenance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Maintenance */
+        get: operations["getMaintenance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/platform": {
         parameters: {
             query?: never;
@@ -4336,6 +4353,17 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** MaintenanceOut */
+        MaintenanceOut: {
+            /** Active */
+            active: boolean;
+            /** Reason */
+            reason: ("announced" | "update") | null;
+            /** Message */
+            message: string | null;
+            /** Bypass */
+            bypass: boolean;
+        };
         /** MatchOut */
         MatchOut: {
             offer: components["schemas"]["OfferBrief"] | null;
@@ -6261,6 +6289,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getMaintenance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaintenanceOut"];
+                };
             };
         };
     };

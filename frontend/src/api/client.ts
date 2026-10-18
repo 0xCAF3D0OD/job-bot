@@ -21,6 +21,13 @@ export function storedProfile(): string | null {
 export const UNAUTHORIZED_EVENT = "jobbot:unauthorized";
 // Démo publique (docs/72) : une écriture refusée ; le message est montré tel quel.
 export const DEMO_REFUSED_EVENT = "jobbot:demo-refused";
+// Maintenance (docs/79) : l'API répond « en maintenance », ou ne répond plus (elle redémarre,
+// l'intermédiaire renvoie 502 à 504) ; la page d'attente se pose par-dessus, le message en détail.
+export const MAINTENANCE_EVENT = "jobbot:maintenance";
+
+function maintenance(message: string | null = null): void {
+  globalThis.dispatchEvent?.(new CustomEvent(MAINTENANCE_EVENT, { detail: message }));
+}
 
 api.use({
   onRequest({ request }) {
@@ -32,11 +39,21 @@ api.use({
     if (response.status === 401 && !new URL(request.url).pathname.startsWith("/api/auth/")) {
       globalThis.dispatchEvent?.(new Event(UNAUTHORIZED_EVENT));
     }
+    if ([502, 503, 504].includes(response.status)) {
+      const body = (await response.clone().json().catch(() => null)) as { maintenance?: boolean; message?: string | null } | null;
+      // Un 503 de l'API sans « maintenance » (IA indisponible…) reste une erreur de la page.
+      if (response.status !== 503 || !body || body.maintenance) maintenance(body?.message ?? null);
+    }
     if (response.status === 403) {
       const body = (await response.clone().json().catch(() => null)) as { demo?: boolean; detail?: string } | null;
       if (body?.demo) globalThis.dispatchEvent?.(new CustomEvent(DEMO_REFUSED_EVENT, { detail: body.detail }));
     }
     return response;
+  },
+  onError({ error }) {
+    // Le serveur ne répond pas du tout (redémarrage) : l'erreur suit son cours, la page
+    // d'attente s'affiche. Une requête annulée par la page elle-même n'en est pas une.
+    if (!(error instanceof DOMException && error.name === "AbortError")) maintenance();
   },
 });
 

@@ -60,7 +60,7 @@ La démo n'a **aucun secret** : ni clé d'IA, ni boîte e-mail, ni mot de passe,
 cd ~/job-bot && git pull && cd deploy/demo && docker compose up -d --build --wait
 ```
 
-La démo est remplie à nouveau au redémarrage.
+La démo est remplie à nouveau au redémarrage. Pendant les quelques secondes où l'API redémarre, les visiteurs voient la page « jobA1 revient dans un instant », qui disparaît toute seule (depuis 0.65, docs/79).
 
 **Depuis 0.64** (docs/78), l'API se connecte à la base avec un rôle restreint, `jobbot_app`, qui ne peut pas passer outre la séparation des comptes ; seules la mise à jour du schéma et la remise à neuf utilisent le propriétaire des tables. Rien à faire : le mot de passe de ce rôle a une valeur par défaut. Pour le choisir toi-même, ajoute `DEMO_APP_DB_PASSWORD=…` dans `.env` avant la commande ci-dessus.
 

@@ -11,15 +11,19 @@ import MobileMenu from "./components/MobileMenu.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
 import PageTransition from "./components/PageTransition.vue";
+import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { useFileDownloads } from "./composables/useFileDownloads";
+import { useMaintenance } from "./composables/useMaintenance";
 import { useProfiles } from "./composables/useProfiles";
 import { navigation, type NavEntry, PUBLIC_ROUTES } from "./router";
 
 const { message, running, failed, collectNow } = useCollect();
+// Maintenance (docs/79) : la page d'attente, et le rappel à l'exploitant qui passe quand même.
+const { waiting: maintenanceWaiting, message: maintenanceMessage, bypass: maintenanceBypass } = useMaintenance();
 
 const { count: newsCount, start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
@@ -193,9 +197,22 @@ onUnmounted(() => {
     :error="failed"
     @close="message = ''"
   />
+  <p
+    v-if="maintenanceBypass"
+    class="maintenance-bypass"
+    role="status"
+    data-test="maintenance-bypass"
+  >
+    Maintenance annoncée : la plateforme est fermée aux autres comptes. Pour la rouvrir :
+    <code>jobbot maintenance off</code>.
+  </p>
   <main>
     <RouterView />
   </main>
+  <MaintenanceOverlay
+    :waiting="maintenanceWaiting"
+    :message="maintenanceMessage"
+  />
   <PageTransition />
   <AssistantPanel v-if="loggedIn && !route.meta.bare" />
 </template>

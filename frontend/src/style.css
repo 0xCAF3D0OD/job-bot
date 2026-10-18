@@ -2626,3 +2626,11 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Une seule action ordinaire, sans menu (docs/76 §3) : alignée comme le « ⋯ ». */
 .more-direct { white-space: nowrap; font-size: 0.9rem; }
 .panel-section-head .more-direct, .doc-actions .more-direct { margin-left: auto; }
+
+/* Maintenance (docs/79) : la page d'attente par-dessus tout, et le rappel à l'exploitant. */
+.maintenance { position: fixed; inset: 0; z-index: 1000; overflow-y: auto; display: grid; align-items: center; padding: 2rem 0; background: var(--bg); color: var(--text); }
+.maintenance:focus { outline: none; }
+.maintenance h1 { margin: 0 0 0.75rem; }
+.maintenance-message { margin: 0 0 0.75rem; font-size: 1.05rem; }
+.maintenance p { max-width: 34rem; }
+.maintenance-bypass { margin: 0; padding: 0.6rem 1rem; text-align: center; background: var(--surface); border-bottom: 1px solid var(--down); color: var(--down-text); font-size: 0.92rem; }
