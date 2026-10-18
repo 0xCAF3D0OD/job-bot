@@ -47,7 +47,7 @@ demo: ## démo en local, données fictives (http://localhost:5200), Ctrl-C arrê
 	@trap 'kill 0' INT TERM EXIT; \
 	(cd backend && $(DEMO_ENV) uv run jobbot api) & \
 	(cd frontend && JOBBOT_DEV_API_URL=http://127.0.0.1:8200 npm run dev -- --port 5200) & \
-	(sleep 5 && $(DEMO_OPEN) http://localhost:5200) & \
+	(until curl -sf -o /dev/null http://localhost:5200; do sleep 1; done; $(DEMO_OPEN) http://localhost:5200) & \
 	wait
 
 test: ## tests backend (base jobbot_test) et frontend

@@ -185,7 +185,7 @@ onMounted(() => void load());
     >
       <button
         type="button"
-        class="link"
+        class="secondary small"
         data-test="insights-practice"
         @click="practicing = true"
       >

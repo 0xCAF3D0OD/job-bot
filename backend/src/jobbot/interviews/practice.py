@@ -6,26 +6,22 @@ blocs de profil, les questions difficiles et les points à préparer : jamais le
 personne, ses coordonnées, ses contacts ni les noms des recruteurs notés dans ses retours.
 """
 
-import json
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from decimal import Decimal
 from importlib import resources
-from typing import Any
+from typing import Any, Literal, get_args
 
-import anthropic
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import Application, Evaluation, InterviewPractice, Offer, Profile
+from jobbot.db.models import Application, Evaluation, InterviewPractice, Profile
 from jobbot.interviews import service as interviews
-from jobbot.llm.client import Refused
+from jobbot.llm.common import SONNET, call, check_budget, clean, parse_reponse
 from jobbot.runtime import Runtime
-from jobbot.scoring import service as scoring_service
-from jobbot.scoring.service import account_problem, active_profile, budget_state, record_call
+from jobbot.scoring.service import active_profile
 
-MODEL = "claude-sonnet-5"
+MODEL = SONNET
 QUESTIONS = 5
 RECRUITER_MAX_TOKENS = 400
 FEEDBACK_MAX_TOKENS = 4_000
@@ -35,16 +31,22 @@ SESSION_ESTIMATE_USD = Decimal("0.30")
 TURN_ESTIMATE_USD = Decimal("0.02")
 FEEDBACK_ESTIMATE_USD = Decimal("0.06")
 ANSWER_MAX = 4_000
-KINDS = {"rh": "RH", "manager": "manager", "technique": "technique"}
-TONES = {"bienveillant": "bienveillant", "exigeant": "exigeant"}
-LANGUAGES = {"fr": "français", "en": "anglais", "de": "allemand"}
-LEVELS = ("solide", "a_preciser", "a_retravailler")
+# Les valeurs permises, une seule fois : les routes les reprennent (docs/76 §5).
+Kind = Literal["rh", "manager", "technique"]
+Tone = Literal["bienveillant", "exigeant"]
+Language = Literal["fr", "en", "de"]
+Level = Literal["solide", "a_preciser", "a_retravailler"]
+KINDS: dict[str, str] = {"rh": "RH", "manager": "manager", "technique": "technique"}
+TONES: dict[str, str] = {"bienveillant": "bienveillant", "exigeant": "exigeant"}
+LANGUAGES: dict[str, str] = {"fr": "français", "en": "anglais", "de": "allemand"}
+LEVELS: tuple[Level, ...] = get_args(Level)
+# Un point « à travailler » rejoint la liste « À préparer », limitée à cette longueur.
+POINT_MAX = 200
 RECRUITER = resources.files("jobbot.llm").joinpath("prompts/recruiter-v1.md").read_text("utf-8")
 FEEDBACK = (
     resources.files("jobbot.llm").joinpath("prompts/practice-feedback-v1.md").read_text("utf-8")
 )
-_ANSWER = re.compile(r"<reponse>\s*(\{.*\})\s*</reponse>", re.S)
-_WORDS = {
+_WORDS: dict[Language, set[str]] = {
     "fr": {"le", "la", "les", "des", "vous", "et", "pour", "nous", "avec", "une", "du"},
     "en": {"the", "and", "you", "we", "with", "for", "our", "your", "will", "of", "to"},
     "de": {"und", "die", "der", "sie", "wir", "mit", "für", "ihre", "das", "zu", "bei"},
@@ -52,19 +54,24 @@ _WORDS = {
 
 
 class PracticeUnavailable(Exception):
-    """IA non configurée, plafond atteint, compte indisponible, ou entraînement terminé."""
+    """IA non configurée, plafond atteint, compte indisponible, réponse de l'IA refusée ou
+    illisible, entraînement terminé, réponse vide, ou question du recruteur pas encore là."""
 
 
-def guess_language(text: str | None) -> str:
+def as_kind(value: str | None) -> Kind | None:
+    """Le type d'un entretien noté, s'il existe aussi pour l'entraînement."""
+    for kind in get_args(Kind):
+        if kind == value:
+            return kind  # type: ignore[no-any-return]
+    return None
+
+
+def guess_language(text: str | None) -> Language:
     """La langue de l'annonce, d'après ses mots les plus courants ; le français par défaut."""
     words = re.findall(r"[a-zäöüéèàç]+", (text or "").lower())[:600]
     counts = {lang: sum(w in common for w in words) for lang, common in _WORDS.items()}
     best = max(counts, key=lambda lang: counts[lang])
     return best if counts[best] >= 5 and counts[best] > counts["fr"] else "fr"
-
-
-def _clean(value: str) -> str:
-    return value.replace("<", " ").replace(">", " ")
 
 
 @dataclass
@@ -76,32 +83,20 @@ class Context:
 
 
 async def _context(session: AsyncSession, application_id: int | None) -> Context:
-    profile = "\n".join(
-        f"- [{c.kind}] {c.title} : {c.content}" for c in await active_profile(session)
-    )
-    poste = ""
+    poste = await interviews.offer_context(session, application_id, excerpt=3000)
     gaps: list[str] = []
-    if application_id is not None:
-        application = await session.get(Application, application_id)
-        if application is not None:
-            poste = f"Poste : {application.job_title}\nEntreprise : {application.company}"
-            if application.offer_id:
-                evaluation = await session.scalar(
-                    select(Evaluation).where(Evaluation.offer_id == application.offer_id)
-                )
-                offer = await session.get(Offer, application.offer_id)
-                if evaluation and evaluation.summary_role:
-                    poste += f"\nLe poste : {evaluation.summary_role}"
-                    poste += f"\nCe qu'il demande : {evaluation.summary_asks or '?'}"
-                elif offer and (offer.description or offer.snippet):
-                    poste += f"\nAnnonce : {(offer.description or offer.snippet or '')[:3000]}"
-                if evaluation:
-                    gaps += [
-                        str(k.get("text"))
-                        for k in evaluation.keywords_asks or []
-                        if isinstance(k, dict) and k.get("text") and not k.get("covered")
-                    ]
-                    gaps += [str(g) for g in evaluation.gaps or [] if isinstance(g, str)]
+    application = await session.get(Application, application_id) if application_id else None
+    if application is not None and application.offer_id:
+        evaluation = await session.scalar(
+            select(Evaluation).where(Evaluation.offer_id == application.offer_id)
+        )
+        if evaluation:
+            gaps += [
+                str(k.get("text"))
+                for k in evaluation.keywords_asks or []
+                if isinstance(k, dict) and k.get("text") and not k.get("covered")
+            ]
+            gaps += [str(g) for g in evaluation.gaps or [] if isinstance(g, str)]
     if not poste:
         occupation = await session.scalar(select(Profile.occupation).where(Profile.is_main))
         poste = "Entretien type, sans offre précise."
@@ -111,10 +106,11 @@ async def _context(session: AsyncSession, application_id: int | None) -> Context
     difficult = [f"- {q.text}" for q in found.questions if q.difficult][:8]
     difficult += [f"- à préparer : {text}" for text, done in found.to_prepare if not done][:6]
     return Context(
-        poste=_clean(poste)[:4000],
-        manques=_clean("\n".join(f"- {g}" for g in dict.fromkeys(gaps)))[:1500] or "(aucun)",
-        difficiles=_clean("\n".join(difficult))[:2500] or "(aucune)",
-        profil=_clean(profile)[:12000] or "(profil vide)",
+        poste=clean(poste)[:4000],
+        manques=clean("\n".join(f"- {g}" for g in dict.fromkeys(gaps)))[:1500] or "(aucun)",
+        difficiles=clean("\n".join(difficult))[:2500] or "(aucune)",
+        profil=clean(interviews.profile_text(await active_profile(session)))[:12000]
+        or "(profil vide)",
     )
 
 
@@ -151,7 +147,7 @@ def transcript(turns: list[dict[str, Any]]) -> str:
         else:
             label = f"Candidat (question {number})"
         text = "(question passée)" if turn.get("skipped") else turn.get("text", "")
-        lines.append(f"{label} : {_clean(str(text))}")
+        lines.append(f"{label} : {clean(str(text))}")
     return "\n".join(lines)
 
 
@@ -167,14 +163,8 @@ def _relance_used(turns: list[dict[str, Any]], number: int) -> bool:
 
 
 def parse_turn(text: str) -> tuple[str, str] | None:
-    matches = _ANSWER.findall(text)
-    if not matches:
-        return None
-    try:
-        data = json.loads(matches[-1])
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(data, dict):
+    data = parse_reponse(text)
+    if data is None:
         return None
     action = str(data["action"]) if data.get("action") in ("relance", "fin") else "question"
     said = " ".join(str(data.get("text") or "").split())
@@ -182,14 +172,8 @@ def parse_turn(text: str) -> tuple[str, str] | None:
 
 
 def parse_feedback(text: str, numbers: set[int]) -> dict[str, Any] | None:
-    matches = _ANSWER.findall(text)
-    if not matches:
-        return None
-    try:
-        data = json.loads(matches[-1])
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(data, dict):
+    data = parse_reponse(text)
+    if data is None:
         return None
 
     def string(value: Any) -> str:
@@ -212,7 +196,10 @@ def parse_feedback(text: str, numbers: set[int]) -> dict[str, Any] | None:
     def strings(value: Any) -> list[str]:
         if not isinstance(value, list):
             return []
-        return [" ".join(v.split()) for v in value if isinstance(v, str) and v.strip()][:3]
+        # Un point « à travailler » peut rejoindre « À préparer » : même longueur au plus.
+        return [" ".join(v.split())[:POINT_MAX] for v in value if isinstance(v, str) and v.strip()][
+            :3
+        ]
 
     return {
         "questions": [questions[n] for n in sorted(questions)],
@@ -222,27 +209,12 @@ def parse_feedback(text: str, numbers: set[int]) -> dict[str, Any] | None:
 
 
 async def _call(runtime: Runtime, params: dict[str, Any], rate: Decimal) -> tuple[str, Decimal]:
-    try:
-        raw = await scoring_service.make_client(runtime.settings).score(params)
-    except Refused:
-        raise PracticeUnavailable("réponse refusée par l'IA") from None
-    except anthropic.APIStatusError as exc:
-        if problem := account_problem(exc):
-            raise PracticeUnavailable(problem) from None
-        raise
-    async with runtime.sessionmaker.begin() as session:
-        chf = await record_call(session, raw, offer_id=None, rate=rate, purpose="practice")
+    raw, chf = await call(runtime, params, rate, purpose="practice", error=PracticeUnavailable)
     return raw.text, chf
 
 
 async def _check(runtime: Runtime, estimate: Decimal) -> Decimal:
-    if not runtime.settings.llm_configured:
-        raise PracticeUnavailable("IA non configurée (réglage d'installation, voir le README)")
-    async with runtime.sessionmaker() as session:
-        spend, budget, rate = await budget_state(session, datetime.now(UTC))
-    if spend + estimate * rate > budget:
-        raise PracticeUnavailable("plafond mensuel de l'IA atteint")
-    return rate
+    return await check_budget(runtime, estimate, PracticeUnavailable)
 
 
 async def _recruiter_turn(
@@ -310,7 +282,13 @@ async def start(
         session.add(practice)
         await session.flush()
         practice_id = practice.id
-    await _advance(runtime, practice_id, rate, relance_allowed=False)
+    try:
+        await _advance(runtime, practice_id, rate, relance_allowed=False)
+    except PracticeUnavailable:
+        # Pas de question : rien à reprendre, l'entraînement n'a pas commencé (docs/76 §3).
+        async with runtime.sessionmaker.begin() as session:
+            await session.delete(await _load(session, practice_id))
+        raise
     return practice_id
 
 
@@ -379,6 +357,10 @@ async def retry(runtime: Runtime, practice_id: int) -> None:
         return
     last = turns[-1] if turns else None
     number = current_question(turns)
+    if number >= QUESTIONS:
+        # Dernière question répondue : c'est le retour qui manquait (docs/76 §3).
+        await _feedback(runtime, practice_id, rate)
+        return
     relance_allowed = (
         last is not None and not last.get("skipped") and not _relance_used(turns, number)
     )

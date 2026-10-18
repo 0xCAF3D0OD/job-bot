@@ -5752,6 +5752,11 @@ export interface components {
             /** Url */
             url: string;
         };
+        /** ToPrepareIn */
+        ToPrepareIn: {
+            /** Text */
+            text: string;
+        };
         /** TodayOut */
         TodayOut: {
             /** Checklist */
@@ -11468,7 +11473,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PreparedIn"];
+                "application/json": components["schemas"]["ToPrepareIn"];
             };
         };
         responses: {

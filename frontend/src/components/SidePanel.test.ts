@@ -19,7 +19,15 @@ describe("SidePanel (docs/32 §2.2)", () => {
   it("Échap ferme le menu « ⋯ » ouvert dans le panneau, pas le panneau", async () => {
     const wrapper = mount(SidePanel, {
       props: { open: true, title: "Candidature" },
-      slots: { default: () => h(MoreMenu, { items: [{ label: "Modifier", test: "edit", run: () => undefined }] }) },
+      slots: {
+        default: () =>
+          h(MoreMenu, {
+            items: [
+              { label: "Modifier", test: "edit", run: () => undefined },
+              { label: "Supprimer", test: "remove", danger: true, run: () => undefined },
+            ],
+          }),
+      },
       attachTo: document.body,
     });
     await flushPromises();

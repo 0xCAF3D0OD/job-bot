@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jobbot.core.orp import (
     LOCAL_TZ,
     ApplicationData,
+    Day,
     OrpRow,
     due_date,
     shift_month,
@@ -48,10 +49,6 @@ class JobRoomFieldOut(BaseModel):
     value: str
     # Case à cocher ou bouton à choisir dans Job-Room, plutôt qu'un texte à coller.
     choice: bool
-
-
-# Le champ « date » des lignes masque le type dans leur classe.
-Day = date
 
 
 class OrpRowOut(BaseModel):

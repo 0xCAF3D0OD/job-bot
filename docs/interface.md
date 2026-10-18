@@ -19,3 +19,28 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 ## Accès à un contenu (docs/57)
 
 L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Continuer › ». Les vraies actions gardent leur verbe.
+
+## La note (docs/73, docs/76)
+
+Un cercle dont le contour se remplit comme la note (plein à 100), à la couleur de la note ; la part manquante reste visible en gris clair. Une offre pas encore notée : un cercle vide en pointillés, avec « – », qui dit pourquoi au survol. Jamais une pastille.
+
+## Les actions (docs/74, docs/76)
+
+1. Dans chaque partie (ou ligne d'un tableau), le contenu reste visible, avec au plus une action importante ; le reste va dans « ⋯ », en haut à droite de la partie ou au bout de la ligne.
+2. Les suppressions toujours dans « ⋯ », en dernier, en rouge, après un filet, avec leur confirmation.
+3. Pas de « ⋯ » pour une seule action ordinaire : elle s'affiche directement.
+4. Chaque « ⋯ » a un nom pour les lecteurs d'écran : « Actions sur … ». 2,75 rem au doigt ; le menu ne sort jamais de l'écran, ni sous une barre fixe.
+5. Restent visibles sans menu : les « Copier » à côté des champs, les téléchargements qui sont le but d'une carte (PDF, Word), les listes de liens qui sont le contenu, les étapes d'un parcours, les boutons d'un formulaire.
+
+## Les listes (docs/73)
+
+Une ligne par élément, séparées par un filet ; une ligne par jour quand la liste suit les jours. Au moins 0,75 rem au-dessus et au-dessous d'une ligne, et entre un texte et la carte qui suit.
+
+## Un seul cadre par bloc (docs/74, docs/76)
+
+Dans une carte ou un volet, un tableau, une liste ou un repliable perd son propre cadre : des lignes séparées par un filet, alignées sur le texte de la carte. Jamais deux cadres l'un dans l'autre.
+
+## Écrans de travail sur téléphone (docs/75)
+
+Sous 820 px, un écran où l'on travaille un moment (l'entraînement à l'entretien) prend tout l'écran ; sa barre du haut garde le titre sur une ligne et ses actions.
+

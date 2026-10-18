@@ -62,14 +62,9 @@ const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" "
       > : {{ doubtText }}</span></span>
     </span>
     <ScoreRing
-      v-if="offer.score !== null && offer.score !== undefined"
-      :score="offer.score"
+      :score="offer.score ?? null"
+      :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : 'Pas encore notée, à noter'"
       :stale="offer.score_stale"
     />
-    <span
-      v-else
-      class="score pending"
-      :title="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : 'Pas encore notée'"
-    >{{ offer.summary_role ? "–" : "à noter" }}</span>
   </button>
 </template>

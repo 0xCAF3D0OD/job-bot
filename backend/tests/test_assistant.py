@@ -370,3 +370,13 @@ def test_guide_follows_the_pages() -> None:
     assert "Copier pour Job-Room" not in service.INSTRUCTIONS
     assert "Recopier dans Job-Room" in service.INSTRUCTIONS
     assert "Marquer comme déclarée" in service.INSTRUCTIONS
+    # 0.62.2 (docs/76 §2) : les « ⋯ », l'entraînement, l'extension en un clic, la démo.
+    assert "assistant-v8" not in service.INSTRUCTIONS  # la consigne ne se cite pas elle-même
+    assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS
+    assert "S'entraîner à l'entretien" in service.INSTRUCTIONS
+    assert "M'entraîner pour cet entretien" in service.INSTRUCTIONS
+    assert (
+        "`/extension/relier`" in service.INSTRUCTIONS
+        and "Relier ce navigateur" in service.INSTRUCTIONS
+    )
+    assert "Voir chez l'employeur" not in service.INSTRUCTIONS

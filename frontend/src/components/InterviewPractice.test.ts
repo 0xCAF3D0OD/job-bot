@@ -137,4 +137,21 @@ describe("InterviewPractice", () => {
     await flushPromises();
     expect(wrapper.find("[role=alert]").text()).toBe("Impossible : plafond mensuel de l'IA atteint.");
   });
+
+  it("fenêtre : Échap ferme d'où qu'on soit, le focus revient au bouton d'ouverture (docs/76 §4)", async () => {
+    GET.mockResolvedValue({ data: { kind: "rh", language: "fr", can_practice: true } });
+    const opener = document.createElement("button");
+    document.body.append(opener);
+    opener.focus();
+    const wrapper = mount(InterviewPractice, { props: {}, attachTo: document.body });
+    await flushPromises();
+    expect(document.activeElement?.getAttribute("data-test")).toBe("practice-start");
+    document.body.focus();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    expect(wrapper.emitted("close")).toHaveLength(1);
+    wrapper.unmount();
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
+  });
 });
+

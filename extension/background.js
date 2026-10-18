@@ -29,7 +29,8 @@ async function startLink(base) {
 chrome.tabs.onUpdated.addListener(async (tabId, change) => {
   if (!change.url && change.status !== "complete") return;
   const { linking } = await chrome.storage.session.get("linking");
-  if (linking?.tabId === tabId) await collect(linking);
+  // Une page pas encore autorisée ou fermée entre-temps : on attend la suivante, sans erreur.
+  if (linking?.tabId === tabId) await collect(linking).catch(() => undefined);
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {

@@ -298,7 +298,7 @@ const headItems: MoreMenuItem[] = [
           <MoreMenu
             v-if="lines.length"
             :items="headItems"
-            label="Plus d'actions sur la discussion"
+            label="Actions sur la discussion"
             test-id="assistant-more"
           />
           <button

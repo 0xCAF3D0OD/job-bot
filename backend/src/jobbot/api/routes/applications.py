@@ -7,7 +7,6 @@ locale et ne sont jamais envoyées à l'IA.
 from dataclasses import asdict
 from datetime import UTC, date, datetime
 from typing import Annotated, Literal
-from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -38,7 +37,6 @@ from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["applications"])
 log = get_logger(__name__)
-LOCAL_TZ = ZoneInfo("Europe/Zurich")
 
 ShortText = Annotated[str, Field(max_length=300)]
 
@@ -261,10 +259,6 @@ def _one_line(address: str | None) -> str | None:
     return ", ".join(part.strip() for part in address.splitlines() if part.strip())
 
 
-def _today() -> date:
-    return datetime.now(UTC).astimezone(LOCAL_TZ).date()
-
-
 @router.get("/offers/{offer_id}/application-prefill", operation_id="getApplicationPrefill")
 async def get_application_prefill(request: Request, offer_id: int) -> ApplicationPrefill:
     """Valeurs proposées pour « Marquer comme envoyée »."""
@@ -280,7 +274,7 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
     employer = (letter.content.get("employer") if letter else None) or {}
     return ApplicationPrefill(
         offer_id=offer.id,
-        sent_at=_today(),
+        sent_at=followups.local_today(),
         # Adresse connue de l'offre (annonce, registre, saisie), sinon celle relevée par l'IA.
         # Champ sur une ligne : « Rue 1, 1003 Lausanne » (l'adresse est gardée sur deux lignes).
         company_address=_one_line(offer.company_address or employer.get("address")),
@@ -364,7 +358,7 @@ async def get_applications_summary(
     request: Request,
     month: Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}$")] = None,
 ) -> MonthSummary:
-    month = month or _today().strftime("%Y-%m")
+    month = month or followups.local_today().strftime("%Y-%m")
     async with _runtime(request).sessionmaker() as session:
         count = await session.scalar(
             select(func.count()).select_from(Application).where(Application.orp_month == month)
@@ -426,13 +420,13 @@ async def update_application(
         before = application.orp_month
         values = body.model_dump()
         if values["status"] != application.status and values["status_at"] is None:
-            values["status_at"] = _today()
+            values["status_at"] = followups.local_today()
         # Passée à la main en « Relancée » : la date de cette relance (docs/38). Effacée au
         # retour en « En attente » ; gardée après une réponse, le bilan s'en sert (docs/42).
         if values["status"] == ApplicationStatus.EN_ATTENTE:
             application.followed_up_at = None
         elif application.status != ApplicationStatus.RELANCEE or not application.followed_up_at:
-            application.followed_up_at = values["status_at"] or _today()
+            application.followed_up_at = values["status_at"] or followups.local_today()
         for key, value in values.items():
             setattr(application, key, value)
         application.orp_month = body.sent_at.strftime("%Y-%m")
@@ -471,7 +465,7 @@ async def declare_in_job_room(
     if not declared:
         application.job_room_at = None
     elif application.job_room_at is None:
-        application.job_room_at = _today()
+        application.job_room_at = followups.local_today()
     return application
 
 
