@@ -105,7 +105,7 @@ Ce qui donne des réponses dans sa recherche, sans IA : de simples comptes sur s
 
 ### Preuves ORP
 
-Chaque mois, la personne doit prouver ses recherches à l'ORP (objectif mensuel réglable, date limite le 5 du mois suivant par défaut). La remise se fait sur Job-Room : « Copier pour Job-Room » donne les champs dans l'ordre du formulaire de Job-Room ; le PDF sert de copie. Une ligne est complète quand l'adresse de l'entreprise est connue. Des rappels arrivent si le mois est en retard sur l'objectif, puis avant la date limite.
+Chaque mois, la personne doit prouver ses recherches à l'ORP (objectif mensuel réglable, date limite le 5 du mois suivant par défaut). La remise se fait sur Job-Room. L'extension jobA1 du navigateur y remplit la saisie d'une candidature : la personne ouvre la saisie dans Job-Room, clique sur l'icône jobA1, choisit la candidature, vérifie, puis sauvegarde elle-même ; jobA1 n'enregistre jamais rien à sa place. Sans extension, « Recopier dans Job-Room » donne les champs dans l'ordre du formulaire. « Marquer comme déclarée » (dans le panneau d'une candidature ou la saisie Job-Room du mois), ou « C'est déclaré » dans l'extension, suit ce qui reste à déclarer. Le PDF sert de copie. Une ligne est complète quand l'adresse de l'entreprise est connue. Des rappels arrivent si le mois est en retard sur l'objectif, puis avant la date limite.
 
 ### Actualités
 

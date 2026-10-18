@@ -6,6 +6,7 @@ import DisclosureRow from "./DisclosureRow.vue";
 import { printSheet } from "../composables/usePrint";
 import { formatMonth, plural, sourceLabel } from "../format";
 import CopyLabel from "./CopyLabel.vue";
+import JobRoomDeclared from "./JobRoomDeclared.vue";
 
 // Preuves ORP du mois (docs/09), onglet de la page Candidatures (docs/18 §2).
 // embedded : dans l'onglet Suivi (docs/22 §2), les actions de remise sont dans la barre du mois.
@@ -48,6 +49,14 @@ async function submit(done: boolean): Promise<void> {
     busy.value = false;
   }
 }
+
+// « 3 à déclarer » une fois que tu déclares depuis jobA1 (au moins une marquée) : sinon, pour
+// qui remet le PDF, le compte serait toujours plein (docs/70 §6).
+const declareCount = computed(() => {
+  const { count, to_declare: left } = props.data;
+  if (!count || left === count) return "";
+  return left ? `${left} à déclarer` : "tout déclaré";
+});
 
 // Première ligne à compléter : l'action proposée tant qu'il en reste.
 const firstIncomplete = computed(() => props.data.rows.find((r) => r.missing.length) ?? null);
@@ -180,6 +189,11 @@ onMounted(async () => {
         >
           {{ jobRoom ? "Revenir au tableau" : "Recopier dans Job-Room" }}
         </button>
+        <span
+          v-if="declareCount && !jobRoom"
+          class="job-room-count"
+          data-test="job-room-count"
+        >{{ declareCount }}</span>
         <button
           type="button"
           class="link"
@@ -256,48 +270,59 @@ onMounted(async () => {
 
     <div
       v-else-if="jobRoom"
-      class="job-room"
+      class="job-room-view"
     >
-      <article
-        v-for="(row, index) in data.rows"
-        :key="row.application_id"
-        class="job-room-card"
-        data-test="job-room-row"
-      >
-        <h3>{{ index + 1 }}. {{ row.company }} — {{ row.job_title }}</h3>
-        <section
-          v-for="group in steps(row)"
-          :key="group.step"
-          class="job-room-step"
+      <p class="muted job-room-hint">
+        Avec l'extension jobA1, Job-Room se remplit en un clic : ouvre la saisie d'une recherche
+        dans Job-Room, puis clique sur l'icône jobA1.
+      </p>
+      <div class="job-room">
+        <article
+          v-for="(row, index) in data.rows"
+          :key="row.application_id"
+          class="job-room-card"
+          data-test="job-room-row"
         >
-          <h4>{{ group.step }}</h4>
-          <dl>
-            <template
-              v-for="item in group.fields"
-              :key="item.label"
-            >
-              <dt>{{ item.label }}</dt>
-              <dd>
-                <span
-                  v-if="item.choice"
-                  class="job-room-choice"
-                  data-test="job-room-choice"
-                >{{ item.value ? `à cocher : ${item.value}` : "—" }}</span>
-                <span v-else>{{ item.value || "—" }}</span>
-                <button
-                  v-if="item.value && !item.choice"
-                  type="button"
-                  class="link"
-                  data-test="copy"
-                  @click="copy(item.value, `${row.application_id}-${item.label}`)"
-                >
-                  <CopyLabel :done="copied === `${row.application_id}-${item.label}`" />
-                </button>
-              </dd>
-            </template>
-          </dl>
-        </section>
-      </article>
+          <h3>{{ index + 1 }}. {{ row.company }} — {{ row.job_title }}</h3>
+          <JobRoomDeclared
+            :application-id="row.application_id"
+            :declared-at="row.declared_at"
+            @changed="emit('reload')"
+          />
+          <section
+            v-for="group in steps(row)"
+            :key="group.step"
+            class="job-room-step"
+          >
+            <h4>{{ group.step }}</h4>
+            <dl>
+              <template
+                v-for="item in group.fields"
+                :key="item.label"
+              >
+                <dt>{{ item.label }}</dt>
+                <dd>
+                  <span
+                    v-if="item.choice"
+                    class="job-room-choice"
+                    data-test="job-room-choice"
+                  >{{ item.value ? `à cocher : ${item.value}` : "—" }}</span>
+                  <span v-else>{{ item.value || "—" }}</span>
+                  <button
+                    v-if="item.value && !item.choice"
+                    type="button"
+                    class="link"
+                    data-test="copy"
+                    @click="copy(item.value, `${row.application_id}-${item.label}`)"
+                  >
+                    <CopyLabel :done="copied === `${row.application_id}-${item.label}`" />
+                  </button>
+                </dd>
+              </template>
+            </dl>
+          </section>
+        </article>
+      </div>
     </div>
 
     <div

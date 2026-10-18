@@ -1258,6 +1258,110 @@
         }
       }
     },
+    "/api/extension/job-room": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Job Room List",
+        "operationId": "extensionJobRoomList",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRoomList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/applications/{application_id}/job-room": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Job Room Values",
+        "operationId": "extensionJobRoomFill",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRoomFillOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Job Room Declared",
+        "description": "« C'est déclaré » : renvoie celles qui restent, pour proposer la suivante.",
+        "operationId": "extensionJobRoomDeclared",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRoomList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/extension-tokens": {
       "get": {
         "tags": [
@@ -3631,6 +3735,74 @@
         "summary": "Delete Application",
         "description": "Annule une candidature enregistrée par erreur ; l'offre revient « en préparation ».",
         "operationId": "deleteApplication",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/{application_id}/job-room": {
+      "put": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Mark Declared",
+        "operationId": "markDeclaredInJobRoom",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Unmark Declared",
+        "operationId": "unmarkDeclaredInJobRoom",
         "parameters": [
           {
             "name": "application_id",
@@ -11388,6 +11560,145 @@
         ],
         "title": "JobRoomFieldOut"
       },
+      "JobRoomFillOut": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "street": {
+            "type": "string",
+            "title": "Street"
+          },
+          "number": {
+            "type": "string",
+            "title": "Number"
+          },
+          "po_box": {
+            "type": "string",
+            "title": "Po Box"
+          },
+          "postcode_city": {
+            "type": "string",
+            "title": "Postcode City"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "assigned": {
+            "type": "boolean",
+            "title": "Assigned"
+          },
+          "rate": {
+            "type": "string",
+            "title": "Rate"
+          },
+          "interview": {
+            "type": "boolean",
+            "title": "Interview"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "channel",
+          "company",
+          "street",
+          "number",
+          "po_box",
+          "postcode_city",
+          "contact",
+          "email",
+          "phone",
+          "job_title",
+          "url",
+          "assigned",
+          "rate",
+          "interview",
+          "result"
+        ],
+        "title": "JobRoomFillOut"
+      },
+      "JobRoomItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          },
+          "orp_month": {
+            "type": "string",
+            "title": "Orp Month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company",
+          "job_title",
+          "sent_at",
+          "orp_month"
+        ],
+        "title": "JobRoomItem"
+      },
+      "JobRoomList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JobRoomItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "JobRoomList",
+        "description": "Les candidatures à déclarer : du mois précédent et du mois en cours, les plus anciennes\nd'abord."
+      },
       "JobRunOut": {
         "properties": {
           "id": {
@@ -13767,6 +14078,10 @@
             "type": "integer",
             "title": "Incomplete"
           },
+          "to_declare": {
+            "type": "integer",
+            "title": "To Declare"
+          },
           "rows": {
             "items": {
               "$ref": "#/components/schemas/OrpRowOut"
@@ -13821,6 +14136,7 @@
           "count",
           "target",
           "incomplete",
+          "to_declare",
           "rows",
           "submitted_at",
           "exported_at",
@@ -13893,6 +14209,18 @@
             },
             "type": "array",
             "title": "Job Room"
+          },
+          "declared_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared At"
           }
         },
         "type": "object",
@@ -13910,7 +14238,8 @@
           "result",
           "url",
           "missing",
-          "job_room"
+          "job_room",
+          "declared_at"
         ],
         "title": "OrpRowOut"
       },

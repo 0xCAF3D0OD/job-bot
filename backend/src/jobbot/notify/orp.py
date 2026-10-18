@@ -105,6 +105,10 @@ async def notify_orp(runtime: Runtime, today: date | None = None) -> int:
             details = plural(prev_counts.count, "candidature", "candidatures")
             if prev_counts.incomplete:
                 details += f", {plural(prev_counts.incomplete, 'ligne', 'lignes')} à compléter"
+            # Seulement si tu déclares dans Job-Room depuis jobA1 (au moins une déjà marquée) :
+            # sinon (PDF remis à l'ORP), le compte serait toujours plein (docs/70 §6).
+            if 0 < prev_counts.to_declare < prev_counts.count:
+                details += f", {prev_counts.to_declare} à déclarer dans Job-Room"
             title = (
                 f"Demain : preuves de {month_name(previous)} à remettre"
                 if key == "eve"

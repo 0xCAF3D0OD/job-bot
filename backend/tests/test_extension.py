@@ -1,7 +1,8 @@
-"""Extension du navigateur (docs/25) : jetons, offre reconnue, données, « J'ai envoyé »."""
+"""Extension du navigateur (docs/25, docs/70) : jetons, offre reconnue, données, « J'ai envoyé »,
+Job-Room."""
 
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 import pytest
@@ -9,6 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
+from jobbot.api.routes import extension as extension_routes
 from jobbot.db.models import Application, Draft, LlmCall, Offer, OfferLink
 from jobbot.extension import service
 from jobbot.llm.client import RawResult
@@ -202,3 +204,60 @@ async def test_answer(
     async with runtime.sessionmaker() as session:
         assert list(await session.scalars(select(LlmCall.purpose))) == ["form"]
     await reset(runtime)
+
+
+async def test_job_room_list_fill_and_declared(
+    client: AsyncClient, secured: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    await reset(runtime)
+    monkeypatch.setattr(extension_routes, "local_today", lambda: date(2026, 11, 3))
+    for sent_at, company in (
+        ("2026-11-02", "Delta SA"),
+        ("2026-10-20", "Beta SA"),
+        ("2026-10-02", "Alpha SA"),
+        ("2026-09-28", "Ancienne SA"),  # avant le mois précédent : pas proposée
+    ):
+        response = await client.post(
+            "/api/applications",
+            json={
+                "sent_at": sent_at,
+                "company": company,
+                "job_title": "DevOps",
+                "company_address": "Rue du Test 1, 1000 Lausanne",
+                "method": "electronique",
+                "rate_text": "temps partiel (80 %)",
+            },
+        )
+        assert response.status_code == 201
+    token = (await client.post("/api/extension-tokens", json={})).json()["token"]
+    auth = {"Authorization": f"Bearer {token}"}
+
+    # Connexion obligatoire : sans jeton, rien.
+    assert (await secured.get("/api/extension/job-room")).status_code == 401
+
+    listed = (await client.get("/api/extension/job-room", headers=auth)).json()["items"]
+    assert [i["company"] for i in listed] == ["Alpha SA", "Beta SA", "Delta SA"]
+    first = listed[0]["id"]
+
+    values = (
+        await client.get(f"/api/extension/applications/{first}/job-room", headers=auth)
+    ).json()
+    assert values["date"] == "02.10.2026" and values["channel"] == "electronic"
+    assert (values["street"], values["number"], values["postcode_city"]) == (
+        "Rue du Test",
+        "1",
+        "1000 Lausanne",
+    )
+    assert (values["rate"], values["interview"], values["result"]) == (
+        "PARTTIME",
+        False,
+        "PENDING",
+    )
+    missing = await client.get("/api/extension/applications/999999/job-room", headers=auth)
+    assert missing.status_code == 404
+
+    left = await client.put(f"/api/extension/applications/{first}/job-room", headers=auth)
+    assert [i["company"] for i in left.json()["items"]] == ["Beta SA", "Delta SA"]
+    async with runtime.sessionmaker() as session:
+        declared = await session.get(Application, first)
+        assert declared is not None and declared.job_room_at is not None

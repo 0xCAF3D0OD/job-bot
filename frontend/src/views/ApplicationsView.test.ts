@@ -38,6 +38,7 @@ const row = (id: number, extra: Record<string, unknown> = {}) => ({
   result: "en suspens",
   url: "https://emploi.exemple.ch/postuler/1",
   missing: [],
+  declared_at: null,
   job_room: [
     { step: "Quand avez-vous postulé ?", label: "Date", value: "02.10.2026", choice: false },
     { step: "Comment avez-vous postulé ?", label: "Mode", value: "Par voie électronique", choice: true },
@@ -56,6 +57,7 @@ function month(extra: Record<string, unknown> = {}) {
     count: 2,
     target: 20,
     incomplete: 1,
+    to_declare: 2,
     rows: [row(1), row(2, { address: "", missing: ["adresse de l'entreprise"] })],
     submitted_at: null,
     exported_at: null,
@@ -272,6 +274,34 @@ describe("Candidatures, onglet Preuves ORP", () => {
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("Acme SA");
     expect(wrapper.findAll("[data-test=copy]")[1]!.text()).toBe("✓ Copié");
+  });
+
+  it("Job-Room : marquer comme déclarée, puis annuler (docs/70 §6)", async () => {
+    // Rien de déclaré : pas de compte (pour qui remet le PDF, il serait toujours plein).
+    const months = [
+      month(),
+      month({ to_declare: 1, rows: [row(1, { declared_at: "2026-10-12" }), row(2)] }),
+    ];
+    mockApi(() => months.shift() ?? month({ to_declare: 1, rows: [row(1, { declared_at: "2026-10-12" }), row(2)] }));
+    PUT.mockResolvedValue({ response: { status: 204 } });
+    DELETE.mockResolvedValue({ response: { status: 204 } });
+    const { wrapper } = await mountView("/candidatures/preuves");
+    expect(wrapper.find("[data-test=job-room-count]").exists()).toBe(false);
+    await wrapper.find("[data-test=job-room]").trigger("click");
+    await wrapper.find("[data-test=job-room-row] [data-test=job-room-mark]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}/job-room", {
+      params: { path: { application_id: 1 } },
+    });
+    const first = wrapper.findAll("[data-test=job-room-row]")[0]!;
+    expect(first.find("[data-test=job-room-declared]").text()).toContain("Déclarée dans Job-Room le 12.10");
+    await first.find("[data-test=job-room-undo]").trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/applications/{application_id}/job-room", {
+      params: { path: { application_id: 1 } },
+    });
+    await wrapper.find("[data-test=job-room]").trigger("click");
+    expect(wrapper.find("[data-test=job-room-count]").text()).toBe("1 à déclarer");
   });
 
   it("navigation de mois : passe par l'URL", async () => {

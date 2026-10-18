@@ -1,11 +1,11 @@
-"""Extension du navigateur (docs/25) : routes appelées par l'extension, et ses jetons.
+"""Extension du navigateur (docs/25, docs/70) : routes appelées par l'extension, et ses jetons.
 
 `/api/extension/…` : réservé à l'extension, avec son jeton (`Authorization: Bearer …`,
 vérifié par le middleware). `/api/extension-tokens` : gestion des jetons depuis les
 Réglages, avec la session habituelle.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
@@ -15,8 +15,11 @@ from sqlalchemy import select
 from jobbot.api.routes import applications as application_routes
 from jobbot.api.routes import cvs as cv_routes
 from jobbot.api.routes import letters as letter_routes
+from jobbot.api.routes.orp import application_data
+from jobbot.core.orp import job_room_fill, shift_month
 from jobbot.db.models import Application, DraftKind, ExtensionToken, Offer
 from jobbot.extension import service
+from jobbot.followups.service import local_today
 from jobbot.letters.service import current_draft, load_identity
 from jobbot.runtime import Runtime
 
@@ -209,6 +212,88 @@ async def answer(request: Request, body: QuestionIn) -> AnswerOut:
     except service.AnswerUnavailable as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
     return AnswerOut(text=result.text)
+
+
+# --- Job-Room (docs/70) --------------------------------------------------------------------
+
+
+class JobRoomItem(BaseModel):
+    id: int
+    company: str
+    job_title: str
+    sent_at: date
+    orp_month: str
+
+
+class JobRoomList(BaseModel):
+    """Les candidatures à déclarer : du mois précédent et du mois en cours, les plus anciennes
+    d'abord."""
+
+    items: list[JobRoomItem]
+
+
+class JobRoomFillOut(BaseModel):
+    date: str
+    channel: str
+    company: str
+    street: str
+    number: str
+    po_box: str
+    postcode_city: str
+    contact: str
+    email: str
+    phone: str
+    job_title: str
+    url: str
+    assigned: bool
+    rate: str
+    interview: bool
+    result: str
+
+
+async def _to_declare(request: Request) -> JobRoomList:
+    since = shift_month(f"{local_today():%Y-%m}", -1)
+    async with _runtime(request).sessionmaker() as session:
+        rows = await session.scalars(
+            select(Application)
+            .where(Application.job_room_at.is_(None), Application.orp_month >= since)
+            .order_by(Application.sent_at, Application.id)
+        )
+        return JobRoomList(
+            items=[
+                JobRoomItem(
+                    id=a.id,
+                    company=a.company,
+                    job_title=a.job_title,
+                    sent_at=a.sent_at,
+                    orp_month=a.orp_month,
+                )
+                for a in rows
+            ]
+        )
+
+
+@router.get("/job-room", operation_id="extensionJobRoomList")
+async def job_room_list(request: Request) -> JobRoomList:
+    return await _to_declare(request)
+
+
+@router.get("/applications/{application_id}/job-room", operation_id="extensionJobRoomFill")
+async def job_room_values(request: Request, application_id: int) -> JobRoomFillOut:
+    async with _runtime(request).sessionmaker() as session:
+        application = await session.get(Application, application_id)
+        if application is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+        values = job_room_fill(application_data(application))
+    return JobRoomFillOut(**values.__dict__)
+
+
+@router.put("/applications/{application_id}/job-room", operation_id="extensionJobRoomDeclared")
+async def job_room_declared(request: Request, application_id: int) -> JobRoomList:
+    """« C'est déclaré » : renvoie celles qui restent, pour proposer la suivante."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        await application_routes.declare_in_job_room(session, application_id, True)
+    return await _to_declare(request)
 
 
 # --- Jetons (Réglages) --------------------------------------------------------------------

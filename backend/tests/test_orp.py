@@ -183,3 +183,22 @@ async def test_csv_submission_and_changes(api: AsyncClient) -> None:
 async def test_default_month_without_previous(api: AsyncClient) -> None:
     # Rien en octobre : la page s'ouvre sur le mois en cours.
     assert (await api.get("/api/orp")).json()["month"] == "2026-11"
+
+
+async def test_declared_in_job_room(api: AsyncClient) -> None:
+    """« Marquer comme déclarée » et son annulation ; le compte « à déclarer » (docs/70 §6)."""
+    first = await add(api, "2026-10-02")
+    await add(api, "2026-10-20")
+    month = (await api.get("/api/orp", params={"month": "2026-10"})).json()
+    assert month["to_declare"] == 2
+    assert [r["declared_at"] for r in month["rows"]] == [None, None]
+
+    assert (await api.put(f"/api/applications/{first}/job-room")).status_code == 204
+    month = (await api.get("/api/orp", params={"month": "2026-10"})).json()
+    assert month["to_declare"] == 1 and month["rows"][0]["declared_at"]
+    # Déclarer un mois remis ne le signale pas comme modifié : rien de la ligne ne change.
+    assert not month["changed_after_submit"]
+
+    assert (await api.delete(f"/api/applications/{first}/job-room")).status_code == 204
+    assert (await api.get("/api/orp", params={"month": "2026-10"})).json()["to_declare"] == 2
+    assert (await api.put("/api/applications/999999/job-room")).status_code == 404

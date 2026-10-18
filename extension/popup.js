@@ -1,5 +1,7 @@
 // Panneau de l'extension (docs/25 §3.1) : candidature reconnue, « Remplir le formulaire »,
-// questions libres, « J'ai envoyé ». Le jeton reste dans le stockage local du navigateur.
+// questions libres, « J'ai envoyé ». Sur Job-Room (docs/70) : les candidatures à déclarer,
+// « Remplir dans Job-Room », « C'est déclaré ». Le jeton reste dans le stockage local du
+// navigateur.
 // Chrome, Edge, Brave et Firefox (128 et plus) : même code, API `chrome.*` à promesses.
 
 const $ = (id) => document.getElementById(id);
@@ -111,6 +113,7 @@ async function unlink() {
   await chrome.storage.local.remove(["base", "token"]);
   config = { base: "", token: "" };
   show("main", false);
+  show("job-room", false);
   show("authorize", false);
   show("fields");
   show("link");
@@ -144,8 +147,13 @@ async function start() {
     return;
   }
   show("setup", false);
-  show("main");
   tab = await targetTab();
+  if (isJobRoom(tab?.url)) {
+    show("job-room");
+    await startJobRoom();
+    return;
+  }
+  show("main");
   if (!tab?.url?.startsWith("http")) {
     say("error", "Ouvre le formulaire de l'employeur dans cet onglet, puis clique à nouveau sur l'icône.");
     return;
@@ -318,6 +326,129 @@ async function sent() {
     say("error", error.message);
   }
 }
+
+// --- Job-Room (docs/70) ----------------------------------------------------------------
+
+let declaring = null;
+
+function isJobRoom(url) {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === "https:" && (hostname === "job-room.ch" || hostname.endsWith(".job-room.ch"));
+  } catch {
+    return false;
+  }
+}
+
+function frenchDate(iso) {
+  const [year, month, day] = iso.split("-");
+  return `${day}.${month}.${year}`;
+}
+
+function renderToDeclare(items) {
+  const select = $("jr-choices");
+  select.replaceChildren();
+  for (const item of items) {
+    const option = document.createElement("option");
+    option.value = String(item.id);
+    option.textContent = `${frenchDate(item.sent_at)} · ${item.company} — ${item.job_title}`;
+    select.append(option);
+  }
+  declaring = items[0]?.id ?? null;
+  show("jr-choices", items.length > 0);
+  $("jr-fill").disabled = !declaring;
+  if (!items.length) say("jr-message", "Tout est déclaré pour ce mois et le précédent.");
+}
+
+async function startJobRoom() {
+  try {
+    const { items } = await (await call("/api/extension/job-room")).json();
+    renderToDeclare(items);
+  } catch (error) {
+    say("jr-error", error.name === "TypeError" ? "Plateforme injoignable." : error.message);
+  }
+}
+
+function copyRow(label, value) {
+  const row = document.createElement("div");
+  row.className = "copy-row todo";
+  const text = document.createElement("span");
+  text.textContent = value ? `${label} : ${value}` : label;
+  row.append(text);
+  if (value) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "link";
+    button.textContent = "Copier";
+    button.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(value);
+      button.textContent = "Copié";
+    });
+    row.append(button);
+  }
+  return row;
+}
+
+async function fillJobRoom() {
+  say("jr-error", "");
+  say("jr-message", "");
+  $("jr-fill").disabled = true;
+  $("jr-fill").textContent = "Remplissage…";
+  try {
+    const data = await (await call(`/api/extension/applications/${declaring}/job-room`)).json();
+    const target = { tabId: tab.id };
+    await chrome.scripting.executeScript({ target, files: ["fill-job-room.js"] });
+    const [{ result }] = await chrome.scripting.executeScript({
+      target,
+      func: (input) => globalThis.jobbotJobRoom.fill(input),
+      args: [data],
+    });
+    const report = $("jr-report");
+    report.replaceChildren();
+    if (!result?.form) {
+      say("jr-message", "Ouvre dans Job-Room le formulaire pour saisir une recherche d'emploi, puis clique à nouveau.");
+      show("jr-report", false);
+      return;
+    }
+    report.append(line(`${result.filled.length} réponse(s) remplie(s), encadrées en violet.`, "ok"));
+    if (result.todo.length) {
+      report.append(line("À faire toi-même (en orange) :"));
+      for (const item of result.todo) report.append(copyRow(item.label, item.value));
+    }
+    report.append(line("Vérifie tout, puis « Sauvegarder » dans Job-Room."));
+    show("jr-report");
+    show("jr-declared");
+  } catch (error) {
+    say("jr-error", error.message);
+  } finally {
+    $("jr-fill").disabled = !declaring;
+    $("jr-fill").textContent = "Remplir à nouveau";
+  }
+}
+
+async function declared() {
+  say("jr-error", "");
+  try {
+    const { items } = await (await call(`/api/extension/applications/${declaring}/job-room`, { method: "PUT" })).json();
+    show("jr-declared", false);
+    show("jr-report", false);
+    $("jr-fill").textContent = "Remplir dans Job-Room";
+    renderToDeclare(items);
+    if (items.length) say("jr-message", "Déclarée. Ouvre une nouvelle saisie dans Job-Room pour la suivante.");
+  } catch (error) {
+    say("jr-error", error.message);
+  }
+}
+
+$("jr-fill").addEventListener("click", fillJobRoom);
+$("jr-declared").addEventListener("click", declared);
+$("jr-unlink").addEventListener("click", unlink);
+$("jr-choices").addEventListener("change", (event) => {
+  declaring = Number(event.target.value) || null;
+  $("jr-fill").disabled = !declaring;
+  show("jr-declared", false);
+  show("jr-report", false);
+});
 
 $("link").addEventListener("click", link);
 $("authorize").addEventListener("click", authorize);

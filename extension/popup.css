@@ -43,7 +43,9 @@ button.link:hover { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--
 .offer-title { font-weight: 600; }
 .offer-company { color: var(--muted); }
 .applied { color: var(--muted); font-size: 12px; }
-#report p { margin: 0 0 0.25rem; }
+#report p, #jr-report p { margin: 0 0 0.25rem; }
+.copy-row { display: flex; justify-content: space-between; gap: 0.5rem; align-items: baseline; }
+.copy-row span { overflow-wrap: anywhere; }
 .ok { color: var(--accent); font-weight: 500; }
 .todo { color: var(--warn); }
 .question { display: grid; gap: 0.3rem; padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: 8px; }
