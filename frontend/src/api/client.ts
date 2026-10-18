@@ -105,3 +105,5 @@ export type AlertSearch = Schemas["AlertSearchOut"];
 export type Interview = Schemas["InterviewOut"];
 export type InterviewIn = Schemas["InterviewIn"];
 export type InterviewInsights = Schemas["InsightsOut"];
+export type Practice = Schemas["PracticeOut"];
+export type PracticeDefaults = Schemas["PracticeDefaults"];

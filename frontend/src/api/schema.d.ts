@@ -2552,6 +2552,156 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interviews/insights/to-prepare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add To Prepare
+         * @description Ajoute un point à travailler, tiré du retour d'un entraînement (docs/75 §7).
+         */
+        post: operations["addInterviewToPrepare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-practices/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Practice Defaults
+         * @description Le type du dernier entretien noté pour cette candidature, la langue de l'annonce.
+         */
+        get: operations["getPracticeDefaults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-practices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Practices */
+        get: operations["listPractices"];
+        put?: never;
+        /**
+         * Start Practice
+         * @description Démarre un entretien blanc : la première question du recruteur (docs/75).
+         */
+        post: operations["startPractice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-practices/{practice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Practice */
+        get: operations["getPractice"];
+        put?: never;
+        post?: never;
+        /** Delete Practice */
+        delete: operations["deletePractice"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-practices/{practice_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer Practice */
+        post: operations["answerPractice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-practices/{practice_id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip Practice */
+        post: operations["skipPracticeQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-practices/{practice_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Practice */
+        post: operations["retryPractice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview-practices/{practice_id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Finish Practice
+         * @description « Terminer et voir le retour », à tout moment après une réponse.
+         */
+        post: operations["finishPractice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4865,6 +5015,143 @@ export interface components {
         PlatformSettingsIn: {
             /** Ai Total Budget Chf */
             ai_total_budget_chf: number | string;
+        };
+        /** PracticeAnswerIn */
+        PracticeAnswerIn: {
+            /** Text */
+            text: string;
+        };
+        /** PracticeDefaults */
+        PracticeDefaults: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "rh" | "manager" | "technique";
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "fr" | "en" | "de";
+            /** Can Practice */
+            can_practice: boolean;
+        };
+        /** PracticeFeedback */
+        PracticeFeedback: {
+            /** Questions */
+            questions: components["schemas"]["PracticeQuestionFeedback"][];
+            /** Strengths */
+            strengths: string[];
+            /** Work On */
+            work_on: string[];
+        };
+        /** PracticeIn */
+        PracticeIn: {
+            /** Application Id */
+            application_id?: number | null;
+            /**
+             * Kind
+             * @default rh
+             * @enum {string}
+             */
+            kind: "rh" | "manager" | "technique";
+            /**
+             * Tone
+             * @default bienveillant
+             * @enum {string}
+             */
+            tone: "bienveillant" | "exigeant";
+            /**
+             * Language
+             * @default fr
+             * @enum {string}
+             */
+            language: "fr" | "en" | "de";
+        };
+        /** PracticeOut */
+        PracticeOut: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number | null;
+            /** Company */
+            company: string | null;
+            /** Job Title */
+            job_title: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "rh" | "manager" | "technique";
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "bienveillant" | "exigeant";
+            /**
+             * Language
+             * @enum {string}
+             */
+            language: "fr" | "en" | "de";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "en_cours" | "termine";
+            /** Question */
+            question: number;
+            /** Questions */
+            questions: number;
+            /** Waiting */
+            waiting: boolean;
+            /** Turns */
+            turns: components["schemas"]["PracticeTurn"][];
+            feedback: components["schemas"]["PracticeFeedback"] | null;
+            /** Cost Chf */
+            cost_chf: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PracticeQuestionFeedback */
+        PracticeQuestionFeedback: {
+            /** Question */
+            question: number;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "solide" | "a_preciser" | "a_retravailler";
+            /** Good */
+            good: string;
+            /** Missing */
+            missing: string;
+            /** Better */
+            better: string;
+        };
+        /** PracticeTurn */
+        PracticeTurn: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "recruteur" | "candidat";
+            /** Text */
+            text: string;
+            /** Question */
+            question: number;
+            /**
+             * Relance
+             * @default false
+             */
+            relance: boolean;
+            /**
+             * Skipped
+             * @default false
+             */
+            skipped: boolean;
         };
         /** PrepareItem */
         PrepareItem: {
@@ -11150,6 +11437,357 @@ export interface operations {
                 };
             };
             /** @description IA indisponible, plafond atteint ou aucun retour */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    addInterviewToPrepare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreparedIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getPracticeDefaults: {
+        parameters: {
+            query?: {
+                application_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeDefaults"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listPractices: {
+        parameters: {
+            query?: {
+                application_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    startPractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PracticeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeOut"];
+                };
+            };
+            /** @description IA indisponible ou plafond atteint */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getPractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                practice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deletePractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                practice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answerPractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                practice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PracticeAnswerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeOut"];
+                };
+            };
+            /** @description IA indisponible, plafond atteint ou entraînement terminé */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skipPracticeQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                practice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeOut"];
+                };
+            };
+            /** @description IA indisponible ou entraînement terminé */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retryPractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                practice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeOut"];
+                };
+            };
+            /** @description IA indisponible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    finishPractice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                practice_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PracticeOut"];
+                };
+            };
+            /** @description IA indisponible ou aucune réponse */
             409: {
                 headers: {
                     [name: string]: unknown;

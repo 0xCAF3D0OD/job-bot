@@ -23,6 +23,7 @@ const emit = defineEmits<{
   remove: [application: Application];
   interview: [application: Application, interview: Interview | null];
   prepare: [application: Application];
+  practice: [application: Application];
   changed: [];
 }>();
 
@@ -57,6 +58,10 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
       href: `/api/applications/${a.id}/interview.ics?origin=${encodeURIComponent(origin)}`,
       download: true,
     });
+  }
+  // S'entraîner avec l'IA (docs/75), seulement si l'IA est configurée.
+  if (assistant.available.value) {
+    items.push({ label: "M'entraîner", test: "interview-practice", run: () => emit("practice", a) });
   }
   const last = latest.value;
   if (last) {

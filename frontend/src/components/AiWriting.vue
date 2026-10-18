@@ -4,7 +4,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 // L'IA rédige (docs/59 §4) : la seule vraie attente de la plateforme (10 à 30 s). Une barre
 // d'étapes, l'étape en cours en violet, les faites cochées ; elle avance avec le temps
 // habituel de chaque étape et s'arrête sur la dernière jusqu'à l'arrivée du texte.
-const props = defineProps<{ kind: "letter" | "cv" | "coaching" }>();
+const props = defineProps<{ kind: "letter" | "cv" | "coaching" | "feedback" }>();
 
 const STEPS: Record<typeof props.kind, { labels: string[]; everyMs: number; hint: string }> = {
   letter: {
@@ -21,6 +21,11 @@ const STEPS: Record<typeof props.kind, { labels: string[]; everyMs: number; hint
     labels: ["Relire tes retours", "Chercher ce qui revient", "Préparer des pistes"],
     everyMs: 3000,
     hint: "Quelques secondes.",
+  },
+  feedback: {
+    labels: ["Relire tes réponses", "Les comparer à ton profil", "Écrire le retour"],
+    everyMs: 5000,
+    hint: "Une quinzaine de secondes.",
   },
 };
 const current = ref(0);

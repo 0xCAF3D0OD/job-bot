@@ -6978,6 +6978,460 @@
           }
         }
       }
+    },
+    "/api/interviews/insights/to-prepare": {
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Add To Prepare",
+        "description": "Ajoute un point à travailler, tiré du retour d'un entraînement (docs/75 §7).",
+        "operationId": "addInterviewToPrepare",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreparedIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview-practices/defaults": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Practice Defaults",
+        "description": "Le type du dernier entretien noté pour cette candidature, la langue de l'annonce.",
+        "operationId": "getPracticeDefaults",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeDefaults"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview-practices": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "List Practices",
+        "operationId": "listPractices",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PracticeOut"
+                  },
+                  "title": "Response Listpractices"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Start Practice",
+        "description": "Démarre un entretien blanc : la première question du recruteur (docs/75).",
+        "operationId": "startPractice",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PracticeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible ou plafond atteint"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview-practices/{practice_id}": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Get Practice",
+        "operationId": "getPractice",
+        "parameters": [
+          {
+            "name": "practice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Practice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Delete Practice",
+        "operationId": "deletePractice",
+        "parameters": [
+          {
+            "name": "practice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Practice Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview-practices/{practice_id}/answer": {
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Answer Practice",
+        "operationId": "answerPractice",
+        "parameters": [
+          {
+            "name": "practice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Practice Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PracticeAnswerIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible, plafond atteint ou entraînement terminé"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview-practices/{practice_id}/skip": {
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Skip Practice",
+        "operationId": "skipPracticeQuestion",
+        "parameters": [
+          {
+            "name": "practice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Practice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible ou entraînement terminé"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview-practices/{practice_id}/retry": {
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Retry Practice",
+        "operationId": "retryPractice",
+        "parameters": [
+          {
+            "name": "practice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Practice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/interview-practices/{practice_id}/finish": {
+      "post": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Finish Practice",
+        "description": "« Terminer et voir le retour », à tout moment après une réponse.",
+        "operationId": "finishPractice",
+        "parameters": [
+          {
+            "name": "practice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Practice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible ou aucune réponse"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -14389,6 +14843,339 @@
           "ai_total_budget_chf"
         ],
         "title": "PlatformSettingsIn"
+      },
+      "PracticeAnswerIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "PracticeAnswerIn"
+      },
+      "PracticeDefaults": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "rh",
+              "manager",
+              "technique"
+            ],
+            "title": "Kind"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en",
+              "de"
+            ],
+            "title": "Language"
+          },
+          "can_practice": {
+            "type": "boolean",
+            "title": "Can Practice"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "language",
+          "can_practice"
+        ],
+        "title": "PracticeDefaults"
+      },
+      "PracticeFeedback": {
+        "properties": {
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/PracticeQuestionFeedback"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "strengths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Strengths"
+          },
+          "work_on": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Work On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "questions",
+          "strengths",
+          "work_on"
+        ],
+        "title": "PracticeFeedback"
+      },
+      "PracticeIn": {
+        "properties": {
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "rh",
+              "manager",
+              "technique"
+            ],
+            "title": "Kind",
+            "default": "rh"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "bienveillant",
+              "exigeant"
+            ],
+            "title": "Tone",
+            "default": "bienveillant"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en",
+              "de"
+            ],
+            "title": "Language",
+            "default": "fr"
+          }
+        },
+        "type": "object",
+        "title": "PracticeIn"
+      },
+      "PracticeOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "job_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Title"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "rh",
+              "manager",
+              "technique"
+            ],
+            "title": "Kind"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "bienveillant",
+              "exigeant"
+            ],
+            "title": "Tone"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "fr",
+              "en",
+              "de"
+            ],
+            "title": "Language"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "en_cours",
+              "termine"
+            ],
+            "title": "Status"
+          },
+          "question": {
+            "type": "integer",
+            "title": "Question"
+          },
+          "questions": {
+            "type": "integer",
+            "title": "Questions"
+          },
+          "waiting": {
+            "type": "boolean",
+            "title": "Waiting"
+          },
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/PracticeTurn"
+            },
+            "type": "array",
+            "title": "Turns"
+          },
+          "feedback": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PracticeFeedback"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cost_chf": {
+            "type": "number",
+            "title": "Cost Chf"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "application_id",
+          "company",
+          "job_title",
+          "kind",
+          "tone",
+          "language",
+          "status",
+          "question",
+          "questions",
+          "waiting",
+          "turns",
+          "feedback",
+          "cost_chf",
+          "created_at"
+        ],
+        "title": "PracticeOut"
+      },
+      "PracticeQuestionFeedback": {
+        "properties": {
+          "question": {
+            "type": "integer",
+            "title": "Question"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "solide",
+              "a_preciser",
+              "a_retravailler"
+            ],
+            "title": "Level"
+          },
+          "good": {
+            "type": "string",
+            "title": "Good"
+          },
+          "missing": {
+            "type": "string",
+            "title": "Missing"
+          },
+          "better": {
+            "type": "string",
+            "title": "Better"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "level",
+          "good",
+          "missing",
+          "better"
+        ],
+        "title": "PracticeQuestionFeedback"
+      },
+      "PracticeTurn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "recruteur",
+              "candidat"
+            ],
+            "title": "Role"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "question": {
+            "type": "integer",
+            "title": "Question"
+          },
+          "relance": {
+            "type": "boolean",
+            "title": "Relance",
+            "default": false
+          },
+          "skipped": {
+            "type": "boolean",
+            "title": "Skipped",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "text",
+          "question"
+        ],
+        "title": "PracticeTurn"
       },
       "PrepareItem": {
         "properties": {

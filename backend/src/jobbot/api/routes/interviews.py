@@ -6,9 +6,10 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot.db.models import Application, Interview
-from jobbot.interviews import service
+from jobbot.db.models import Application, Interview, InterviewPractice, Offer
+from jobbot.interviews import practice, service
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["interviews"])
@@ -245,3 +246,251 @@ async def coach_interviews(request: Request, body: CoachIn) -> InsightsOut:
     except service.CoachUnavailable as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
     return await _insights(_runtime(request))
+
+
+@router.post("/interviews/insights/to-prepare", operation_id="addInterviewToPrepare")
+async def add_to_prepare(request: Request, body: PreparedIn) -> InsightsOut:
+    """Ajoute un point à travailler, tiré du retour d'un entraînement (docs/75 §7)."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        await service.add_to_prepare(session, body.text.strip())
+    return await _insights(_runtime(request))
+
+
+# --- S'entraîner à l'entretien (docs/75) ---------------------------------------------------
+
+PracticeKind = Literal["rh", "manager", "technique"]
+Tone = Literal["bienveillant", "exigeant"]
+Language = Literal["fr", "en", "de"]
+Level = Literal["solide", "a_preciser", "a_retravailler"]
+
+
+class PracticeIn(BaseModel):
+    application_id: int | None = None
+    kind: PracticeKind = "rh"
+    tone: Tone = "bienveillant"
+    language: Language = "fr"
+
+
+class PracticeAnswerIn(BaseModel):
+    text: Annotated[str, Field(min_length=1, max_length=practice.ANSWER_MAX)]
+
+
+class PracticeTurn(BaseModel):
+    role: Literal["recruteur", "candidat"]
+    text: str
+    question: int
+    relance: bool = False
+    skipped: bool = False
+
+
+class PracticeQuestionFeedback(BaseModel):
+    question: int
+    level: Level
+    good: str
+    missing: str
+    better: str
+
+
+class PracticeFeedback(BaseModel):
+    questions: list[PracticeQuestionFeedback]
+    strengths: list[str]
+    work_on: list[str]
+
+
+class PracticeOut(BaseModel):
+    id: int
+    application_id: int | None
+    company: str | None
+    job_title: str | None
+    kind: PracticeKind
+    tone: Tone
+    language: Language
+    status: Literal["en_cours", "termine"]
+    question: int
+    questions: int
+    # Le recruteur n'a pas encore parlé (erreur de l'IA) : « Réessayer ».
+    waiting: bool
+    turns: list[PracticeTurn]
+    feedback: PracticeFeedback | None
+    cost_chf: float
+    created_at: datetime
+
+
+class PracticeDefaults(BaseModel):
+    kind: PracticeKind
+    language: Language
+    can_practice: bool
+
+
+async def _practice_out(session: AsyncSession, item: InterviewPractice) -> PracticeOut:
+    application = (
+        await session.get(Application, item.application_id) if item.application_id else None
+    )
+    turns = list(item.turns or [])
+    return PracticeOut(
+        id=item.id,
+        application_id=item.application_id,
+        company=application.company if application else None,
+        job_title=application.job_title if application else None,
+        kind=item.kind,
+        tone=item.tone,
+        language=item.language,
+        status=item.status,
+        question=practice.current_question(turns),
+        questions=practice.QUESTIONS,
+        waiting=item.status == "en_cours" and (not turns or turns[-1].get("role") != "recruteur"),
+        turns=[PracticeTurn(**t) for t in turns],
+        feedback=PracticeFeedback(**item.feedback) if item.feedback else None,
+        cost_chf=float(item.cost_chf or 0),
+        created_at=item.created_at,
+    )
+
+
+async def _one(runtime: Runtime, practice_id: int) -> PracticeOut:
+    async with runtime.sessionmaker() as session:
+        item = await session.get(InterviewPractice, practice_id)
+        if item is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Entraînement introuvable")
+        return await _practice_out(session, item)
+
+
+def _unavailable(exc: Exception) -> HTTPException:
+    if isinstance(exc, LookupError):
+        return HTTPException(status.HTTP_404_NOT_FOUND, str(exc))
+    return HTTPException(status.HTTP_409_CONFLICT, str(exc))
+
+
+@router.get("/interview-practices/defaults", operation_id="getPracticeDefaults")
+async def practice_defaults(
+    request: Request, application_id: int | None = None
+) -> PracticeDefaults:
+    """Le type du dernier entretien noté pour cette candidature, la langue de l'annonce."""
+    runtime = _runtime(request)
+    kind: PracticeKind = "rh"
+    language: Language = "fr"
+    async with runtime.sessionmaker() as session:
+        if application_id is not None:
+            last = await session.scalar(
+                select(Interview.kind)
+                .where(Interview.application_id == application_id)
+                .order_by(Interview.id.desc())
+                .limit(1)
+            )
+            if last == "manager":
+                kind = "manager"
+            elif last == "technique":
+                kind = "technique"
+            application = await session.get(Application, application_id)
+            if application is not None and application.offer_id:
+                offer = await session.get(Offer, application.offer_id)
+                if offer is not None:
+                    language = practice.guess_language(  # type: ignore[assignment]
+                        f"{offer.title} {offer.description or offer.snippet or ''}"
+                    )
+    return PracticeDefaults(
+        kind=kind, language=language, can_practice=runtime.settings.llm_configured
+    )
+
+
+@router.get("/interview-practices", operation_id="listPractices")
+async def list_practices(request: Request, application_id: int | None = None) -> list[PracticeOut]:
+    async with _runtime(request).sessionmaker() as session:
+        query = select(InterviewPractice).order_by(InterviewPractice.created_at.desc())
+        if application_id is not None:
+            query = query.where(InterviewPractice.application_id == application_id)
+        return [await _practice_out(session, item) for item in await session.scalars(query)]
+
+
+@router.post(
+    "/interview-practices",
+    operation_id="startPractice",
+    status_code=status.HTTP_201_CREATED,
+    responses={409: {"description": "IA indisponible ou plafond atteint"}},
+)
+async def start_practice(request: Request, body: PracticeIn) -> PracticeOut:
+    """Démarre un entretien blanc : la première question du recruteur (docs/75)."""
+    runtime = _runtime(request)
+    try:
+        practice_id = await practice.start(
+            runtime, body.application_id, body.kind, body.tone, body.language
+        )
+    except (practice.PracticeUnavailable, LookupError) as exc:
+        raise _unavailable(exc) from None
+    return await _one(runtime, practice_id)
+
+
+@router.get("/interview-practices/{practice_id}", operation_id="getPractice")
+async def get_practice(request: Request, practice_id: int) -> PracticeOut:
+    return await _one(_runtime(request), practice_id)
+
+
+@router.post(
+    "/interview-practices/{practice_id}/answer",
+    operation_id="answerPractice",
+    responses={409: {"description": "IA indisponible, plafond atteint ou entraînement terminé"}},
+)
+async def answer_practice(
+    request: Request, practice_id: int, body: PracticeAnswerIn
+) -> PracticeOut:
+    runtime = _runtime(request)
+    try:
+        await practice.answer(runtime, practice_id, body.text)
+    except (practice.PracticeUnavailable, LookupError) as exc:
+        raise _unavailable(exc) from None
+    return await _one(runtime, practice_id)
+
+
+@router.post(
+    "/interview-practices/{practice_id}/skip",
+    operation_id="skipPracticeQuestion",
+    responses={409: {"description": "IA indisponible ou entraînement terminé"}},
+)
+async def skip_practice(request: Request, practice_id: int) -> PracticeOut:
+    runtime = _runtime(request)
+    try:
+        await practice.skip(runtime, practice_id)
+    except (practice.PracticeUnavailable, LookupError) as exc:
+        raise _unavailable(exc) from None
+    return await _one(runtime, practice_id)
+
+
+@router.post(
+    "/interview-practices/{practice_id}/retry",
+    operation_id="retryPractice",
+    responses={409: {"description": "IA indisponible"}},
+)
+async def retry_practice(request: Request, practice_id: int) -> PracticeOut:
+    runtime = _runtime(request)
+    try:
+        await practice.retry(runtime, practice_id)
+    except (practice.PracticeUnavailable, LookupError) as exc:
+        raise _unavailable(exc) from None
+    return await _one(runtime, practice_id)
+
+
+@router.post(
+    "/interview-practices/{practice_id}/finish",
+    operation_id="finishPractice",
+    responses={409: {"description": "IA indisponible ou aucune réponse"}},
+)
+async def finish_practice(request: Request, practice_id: int) -> PracticeOut:
+    """« Terminer et voir le retour », à tout moment après une réponse."""
+    runtime = _runtime(request)
+    try:
+        await practice.finish(runtime, practice_id)
+    except (practice.PracticeUnavailable, LookupError) as exc:
+        raise _unavailable(exc) from None
+    return await _one(runtime, practice_id)
+
+
+@router.delete(
+    "/interview-practices/{practice_id}",
+    operation_id="deletePractice",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_practice(request: Request, practice_id: int) -> None:
+    async with _runtime(request).sessionmaker.begin() as session:
+        item = await session.get(InterviewPractice, practice_id)
+        if item is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Entraînement introuvable")
+        await session.delete(item)

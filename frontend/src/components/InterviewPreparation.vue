@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 
-import { api, type Application, type InterviewInsights, type Offer } from "../api/client";
+import { api, type Application, type InterviewInsights, type Offer, type Practice } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
+import InterviewPractice from "./InterviewPractice.vue";
 import AiWriting from "./AiWriting.vue";
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
@@ -14,6 +15,31 @@ const insights = ref<InterviewInsights | null>(null);
 const offer = ref<Offer | null>(null);
 const busy = ref(false);
 const message = ref("");
+// S'entraîner (docs/75) : un nouvel entraînement, ou en rouvrir un.
+const practices = ref<Practice[]>([]);
+const practicing = ref(false);
+const openPractice = ref<number | null>(null);
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+const KIND_LABELS: Record<string, string> = { rh: "RH", manager: "manager", technique: "technique" };
+function levels(item: Practice): string {
+  if (item.status !== "termine" || !item.feedback) return "en cours";
+  const count = (level: string) => item.feedback!.questions.filter((q) => q.level === level).length;
+  return [
+    count("solide") && `${count("solide")} solide${count("solide") > 1 ? "s" : ""}`,
+    count("a_preciser") && `${count("a_preciser")} à préciser`,
+    count("a_retravailler") && `${count("a_retravailler")} à retravailler`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+async function loadPractices(): Promise<void> {
+  practices.value =
+    (await api.GET("/api/interview-practices", { params: { query: { application_id: props.application.id } } })).data ?? [];
+}
+function closePractice(): void {
+  practicing.value = false;
+  openPractice.value = null;
+}
 const longDate = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
 const difficult = computed(() => (insights.value?.questions ?? []).filter((q) => q.difficult));
@@ -39,6 +65,7 @@ async function coach(): Promise<void> {
 }
 
 onMounted(async () => {
+  void loadPractices();
   insights.value = (await api.GET("/api/interviews/insights")).data ?? null;
   if (props.application.offer_id) {
     offer.value =
@@ -63,6 +90,20 @@ onMounted(async () => {
           · {{ longDate.format(new Date(application.interview_at)) }}
         </template>
       </p>
+      <div
+        v-if="insights?.can_coach"
+        class="practice-cta"
+      >
+        <button
+          type="button"
+          class="primary small"
+          data-test="prep-practice"
+          @click="practicing = true"
+        >
+          M'entraîner pour cet entretien
+        </button>
+        <span class="hint">Un entretien blanc avec l'IA, cinq questions et un retour.</span>
+      </div>
       <section v-if="offer?.summary_role">
         <h4>Le poste</h4>
         <p>{{ offer.summary_role }}</p>
@@ -136,6 +177,28 @@ onMounted(async () => {
       >
         Aucun retour d'entretien pour l'instant.
       </p>
+      <section
+        v-if="practices.length"
+        data-test="prep-practices"
+      >
+        <h4>Mes entraînements</h4>
+        <ul class="practice-history">
+          <li
+            v-for="item in practices"
+            :key="item.id"
+          >
+            <button
+              type="button"
+              class="link"
+              data-test="prep-practice-open"
+              @click="openPractice = item.id"
+            >
+              {{ shortDate.format(new Date(item.created_at)) }} · {{ KIND_LABELS[item.kind] }}
+            </button>
+            <span class="hint">{{ levels(item) }}</span>
+          </li>
+        </ul>
+      </section>
       <InterviewCoaching
         v-if="coaching"
         :coaching="coaching"
@@ -175,5 +238,12 @@ onMounted(async () => {
         </button>
       </div>
     </article>
+    <InterviewPractice
+      v-if="practicing || openPractice"
+      :application="application"
+      :practice-id="openPractice"
+      @changed="loadPractices"
+      @close="closePractice"
+    />
   </div>
 </template>
