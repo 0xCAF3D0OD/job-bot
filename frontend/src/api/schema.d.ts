@@ -5838,6 +5838,11 @@ export interface components {
              * @default Mon navigateur
              */
             name: string;
+            /**
+             * Link
+             * @default false
+             */
+            link: boolean;
         };
         /** TokenOut */
         TokenOut: {

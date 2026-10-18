@@ -322,6 +322,8 @@ class TokenCreated(TokenOut):
 
 class TokenIn(BaseModel):
     name: Annotated[str, Field(min_length=1, max_length=80)] = "Mon navigateur"
+    # « Relier ce navigateur » : à lire par l'extension dans les 2 minutes (docs/76 §1).
+    link: bool = False
 
 
 def _token_out(row: ExtensionToken) -> TokenOut:
@@ -334,9 +336,7 @@ def _token_out(row: ExtensionToken) -> TokenOut:
 async def list_tokens(request: Request) -> list[TokenOut]:
     async with _runtime(request).sessionmaker() as session:
         rows = await session.scalars(
-            select(ExtensionToken)
-            .where(ExtensionToken.revoked_at.is_(None))
-            .order_by(ExtensionToken.id.desc())
+            select(ExtensionToken).where(service.usable()).order_by(ExtensionToken.id.desc())
         )
         return [_token_out(r) for r in rows]
 
@@ -344,7 +344,9 @@ async def list_tokens(request: Request) -> list[TokenOut]:
 @tokens_router.post("", operation_id="createExtensionToken", status_code=status.HTTP_201_CREATED)
 async def create_token(request: Request, body: TokenIn) -> TokenCreated:
     async with _runtime(request).sessionmaker.begin() as session:
-        row, token = await service.create_token(session, body.name.strip() or "Mon navigateur")
+        row, token = await service.create_token(
+            session, body.name.strip() or "Mon navigateur", link=body.link
+        )
         await session.refresh(row)
         return TokenCreated(**_token_out(row).model_dump(), token=token)
 

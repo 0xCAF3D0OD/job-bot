@@ -32,6 +32,8 @@ FEEDBACK_MAX_TOKENS = 4_000
 # Un entraînement complet : une douzaine d'échanges et le retour (docs/75 §9). Le départ est
 # refusé s'il ne reste pas de quoi aller jusqu'au retour.
 SESSION_ESTIMATE_USD = Decimal("0.30")
+TURN_ESTIMATE_USD = Decimal("0.02")
+FEEDBACK_ESTIMATE_USD = Decimal("0.06")
 ANSWER_MAX = 4_000
 KINDS = {"rh": "RH", "manager": "manager", "technique": "technique"}
 TONES = {"bienveillant": "bienveillant", "exigeant": "exigeant"}
@@ -312,8 +314,11 @@ async def start(
     return practice_id
 
 
-async def _load(session: AsyncSession, practice_id: int) -> InterviewPractice:
-    practice = await session.get(InterviewPractice, practice_id)
+async def _load(
+    session: AsyncSession, practice_id: int, *, lock: bool = False
+) -> InterviewPractice:
+    # Verrouillé le temps d'une écriture : deux envois simultanés ne se mélangent pas.
+    practice = await session.get(InterviewPractice, practice_id, with_for_update=lock)
     if practice is None:
         raise LookupError("entraînement introuvable")
     return practice
@@ -327,18 +332,29 @@ async def _advance(
         session.expunge(practice)
     turn, chf = await _recruiter_turn(runtime, practice, rate, relance_allowed=relance_allowed)
     async with runtime.sessionmaker.begin() as session:
-        stored = await _load(session, practice_id)
+        stored = await _load(session, practice_id, lock=True)
         stored.cost_chf = (stored.cost_chf or Decimal(0)) + chf
+        current = list(stored.turns or [])
+        # Un autre échange (envoi en double, « Terminer ») est passé entre-temps : on ne
+        # rajoute rien.
+        if stored.status != "en_cours" or (current and current[-1].get("role") == "recruteur"):
+            return
         if turn is not None:
-            stored.turns = [*(stored.turns or []), turn]
+            stored.turns = [*current, turn]
     if turn is None:
         await _feedback(runtime, practice_id, rate)
 
 
-async def _candidate(runtime: Runtime, practice_id: int, text: str, skipped: bool) -> Decimal:
-    rate = await _check(runtime, Decimal("0.02"))
+def _estimate(turns: list[dict[str, Any]]) -> Decimal:
+    """La réponse à la dernière question déclenche le retour, plus coûteux."""
+    return FEEDBACK_ESTIMATE_USD if current_question(turns) >= QUESTIONS else TURN_ESTIMATE_USD
+
+
+async def _candidate(runtime: Runtime, practice_id: int, text: str, skipped: bool) -> None:
+    async with runtime.sessionmaker() as session:
+        rate = await _check(runtime, _estimate(list((await _load(session, practice_id)).turns)))
     async with runtime.sessionmaker.begin() as session:
-        practice = await _load(session, practice_id)
+        practice = await _load(session, practice_id, lock=True)
         if practice.status != "en_cours":
             raise PracticeUnavailable("cet entraînement est terminé")
         turns = list(practice.turns or [])
@@ -351,15 +367,14 @@ async def _candidate(runtime: Runtime, practice_id: int, text: str, skipped: boo
         practice.turns = [*turns, turn]
         relance_allowed = not skipped and not _relance_used(turns, number)
     await _advance(runtime, practice_id, rate, relance_allowed=relance_allowed)
-    return rate
 
 
 async def retry(runtime: Runtime, practice_id: int) -> None:
     """Reprend après une erreur de l'IA : le recruteur n'avait pas encore répondu."""
-    rate = await _check(runtime, Decimal("0.02"))
     async with runtime.sessionmaker() as session:
         practice = await _load(session, practice_id)
         turns = list(practice.turns or [])
+    rate = await _check(runtime, _estimate(turns))
     if practice.status != "en_cours" or (turns and turns[-1].get("role") == "recruteur"):
         return
     last = turns[-1] if turns else None
@@ -383,7 +398,7 @@ async def skip(runtime: Runtime, practice_id: int) -> None:
 
 async def finish(runtime: Runtime, practice_id: int) -> None:
     """« Terminer et voir le retour », à tout moment après une réponse."""
-    rate = await _check(runtime, Decimal("0.06"))
+    rate = await _check(runtime, FEEDBACK_ESTIMATE_USD)
     async with runtime.sessionmaker() as session:
         practice = await _load(session, practice_id)
         if practice.status != "en_cours":

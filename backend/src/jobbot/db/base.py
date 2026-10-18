@@ -1,5 +1,7 @@
 """Moteur et sessions SQLAlchemy (asynchrones, pilote psycopg 3)."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Any
 
@@ -20,6 +22,18 @@ from jobbot.settings import Settings
 APP_ROLE = "jobbot_app"
 # Le compte en cours (voir jobbot.accounts), transmis à la base au début de chaque transaction.
 ACCOUNT: ContextVar[int | None] = ContextVar("jobbot_account", default=None)
+# Démo publique (docs/76 §1) : les requêtes d'un visiteur ne peuvent rien écrire en base, même
+# une lecture qui enregistrerait quelque chose en passant.
+READ_ONLY: ContextVar[bool] = ContextVar("jobbot_read_only", default=False)
+
+
+@contextmanager
+def read_only() -> Iterator[None]:
+    token = READ_ONLY.set(True)
+    try:
+        yield
+    finally:
+        READ_ONLY.reset(token)
 
 
 class Base(DeclarativeBase):
@@ -47,6 +61,9 @@ def _on_connect(dbapi_connection: Any, _record: Any) -> None:
 
 
 def _on_begin(connection: Any) -> None:
+    if READ_ONLY.get():
+        # Avant toute autre instruction de la transaction.
+        connection.exec_driver_sql("set transaction read only")
     account = ACCOUNT.get()
     connection.exec_driver_sql(
         "select set_config('app.user_id', %s, true)",

@@ -81,7 +81,6 @@ def _address(spec: data.OfferSpec, number: int) -> str:
 
 
 async def _wipe_and_create_accounts(session: AsyncSession) -> int:
-    await demo.check(session)
     # Les données d'un compte partent avec lui (clés étrangères en cascade).
     await session.execute(delete(User))
     await session.execute(delete(JobRun))
@@ -572,6 +571,9 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
 async def seed(runtime: Runtime, today: date | None = None) -> int:
     """Vide la base de démo et la remplit ; renvoie le nombre de candidatures fictives."""
     today = today or local_today()
+    if not runtime.settings.demo:
+        raise demo.NotADemoDatabase("le remplissage de la démo demande JOBBOT_DEMO=true")
+    await demo.check(runtime.sessionmaker)
     async with runtime.sessionmaker.begin() as session:
         visitor = await _wipe_and_create_accounts(session)
     with accounts.use(visitor):

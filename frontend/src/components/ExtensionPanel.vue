@@ -24,7 +24,7 @@ async function load(): Promise<void> {
 }
 
 async function create(): Promise<void> {
-  const { data } = await api.POST("/api/extension-tokens", { body: { name: browserName() } });
+  const { data } = await api.POST("/api/extension-tokens", { body: { name: browserName(), link: false } });
   if (!data) return;
   created.value = data.token;
   copied.value = false;

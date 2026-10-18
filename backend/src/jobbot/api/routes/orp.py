@@ -242,9 +242,12 @@ async def _touch(session: AsyncSession, month: str, **values: object) -> None:
     responses={200: {"content": {"text/csv": {}}}},
 )
 async def download_orp_csv(request: Request, month: Month) -> Response:
-    async with _runtime(request).sessionmaker.begin() as session:
+    runtime = _runtime(request)
+    async with runtime.sessionmaker.begin() as session:
         rows = await _rows(session, month)
-        await _touch(session, month, exported_at=datetime.now(UTC))
+        # Démo : rien ne s'enregistre, pas même la date d'export (docs/76 §1).
+        if not runtime.settings.demo:
+            await _touch(session, month, exported_at=datetime.now(UTC))
     return Response(
         to_csv(rows),
         media_type="text/csv; charset=utf-8",

@@ -17153,6 +17153,11 @@
             "minLength": 1,
             "title": "Name",
             "default": "Mon navigateur"
+          },
+          "link": {
+            "type": "boolean",
+            "title": "Link",
+            "default": false
           }
         },
         "type": "object",

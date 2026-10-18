@@ -15,6 +15,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from jobbot import accounts, demo
 from jobbot.auth import service
+from jobbot.db.base import read_only
 from jobbot.extension import service as extension_service
 from jobbot.log import get_logger
 
@@ -195,7 +196,7 @@ class AuthMiddleware:
             account = await demo.account(session)
         scope.setdefault("state", {})["user"] = None
         scope["headers"] = [(k, v) for k, v in scope["headers"] if k != PROFILE_HEADER]
-        with accounts.use(account):
+        with accounts.use(account), read_only():
             await self.app(scope, receive, send)
 
     async def _extension(

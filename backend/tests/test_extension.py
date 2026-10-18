@@ -110,6 +110,41 @@ async def test_tokens_and_extension_routes(
     await reset(runtime)
 
 
+async def test_link_token_expires_unread(client: AsyncClient, runtime: Runtime) -> None:
+    """« Relier ce navigateur » : un jeton pas lu dans les 2 minutes ne sert plus, même si la
+    page qui devait le révoquer a été fermée (docs/76 §1)."""
+    await reset(runtime)
+    late = (await client.post("/api/extension-tokens", json={"link": True})).json()
+    on_time = (await client.post("/api/extension-tokens", json={"link": True})).json()
+    async with runtime.engine.begin() as conn:
+        await conn.execute(
+            text(
+                "UPDATE extension_tokens SET expires_at = now() - interval '1 second' WHERE id = :i"
+            ),
+            {"i": late["id"]},
+        )
+    expired = {"Authorization": f"Bearer {late['token']}"}
+    assert (await client.get("/api/extension/me", headers=expired)).status_code == 401
+    assert [t["id"] for t in (await client.get("/api/extension-tokens")).json()] == [on_time["id"]]
+    # Lu à temps : il devient un jeton ordinaire, sans délai.
+    fresh = {"Authorization": f"Bearer {on_time['token']}"}
+    assert (await client.get("/api/extension/me", headers=fresh)).status_code == 200
+    async with runtime.engine.begin() as conn:
+        left = await conn.scalar(
+            text("SELECT expires_at FROM extension_tokens WHERE id = :i"), {"i": on_time["id"]}
+        )
+    assert left is None
+    # Un jeton créé à la main n'a jamais de délai.
+    manual = (await client.post("/api/extension-tokens", json={})).json()
+    async with runtime.engine.begin() as conn:
+        assert (
+            await conn.scalar(
+                text("SELECT expires_at FROM extension_tokens WHERE id = :i"), {"i": manual["id"]}
+            )
+        ) is None
+    await reset(runtime)
+
+
 async def test_match_fill_and_sent(client: AsyncClient, runtime: Runtime) -> None:
     await reset(runtime)
     form = "https://jobs.lever.co/exemple/abc-123"
