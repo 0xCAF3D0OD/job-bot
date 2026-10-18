@@ -1187,18 +1187,19 @@ button.filter-row[aria-expanded]:not(.filter-option)::after { content: "›"; co
 .filters-clear:disabled { color: var(--faint); cursor: default; }
 .filters-done { display: none; background: var(--text); color: var(--bg); border: 1px solid var(--text); }
 /* Courbe des notes : la partie choisie est la même courbe, découpée entre les poignées. */
-.score-curve { display: grid; gap: 0.5rem; }
-.score-curve svg { width: 100%; height: 4.5rem; display: block; }
+/* Les ronds du curseur sont centrés sur la ligne : la ligne s'arrête au centre des ronds, 0,5 rem au-dessus du bas du dessin. */
+.score-curve { --thumb: 1.1rem; display: grid; gap: 0.5rem; }
+.score-curve svg { width: calc(100% - var(--thumb)); margin-inline: calc(var(--thumb) / 2); height: 4.5rem; display: block; }
 .curve-all { fill: var(--border); }
 .curve-chosen { fill: var(--mint); }
 .curve-axis { stroke: var(--border); stroke-width: 2; }
 .curve-axis.chosen { stroke: var(--ok); }
-.dual-range { position: relative; height: 1.4rem; margin-top: -1.4rem; }
-.dual-range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; appearance: none; height: 1.4rem; }
-.dual-range input::-webkit-slider-runnable-track { background: none; height: 1.4rem; }
+.dual-range { position: relative; height: var(--thumb); margin-top: calc(-1rem - var(--thumb) / 2); }
+.dual-range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; appearance: none; height: var(--thumb); }
+.dual-range input::-webkit-slider-runnable-track { background: none; height: var(--thumb); }
 .dual-range input::-moz-range-track { background: none; }
-.dual-range input::-webkit-slider-thumb { appearance: none; pointer-events: auto; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; margin-top: 0.15rem; }
-.dual-range input::-moz-range-thumb { pointer-events: auto; width: 1rem; height: 1rem; border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; }
+.dual-range input::-webkit-slider-thumb { appearance: none; pointer-events: auto; box-sizing: border-box; width: var(--thumb); height: var(--thumb); border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; margin-top: 0; }
+.dual-range input::-moz-range-thumb { pointer-events: auto; box-sizing: border-box; width: var(--thumb); height: var(--thumb); border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; }
 .score-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.5rem; align-items: center; }
 .score-fields input { font: inherit; width: 100%; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .sheet-grabber { display: none; }
@@ -1289,8 +1290,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
   .chip, .suggestions .chip, .assistant-suggestions .chip { min-height: 2.75rem; }
   .assistant-head-actions { gap: 1.25rem; }
   input[type="checkbox"]:not([role="switch"]), input[type="radio"] { width: 1.25rem; height: 1.25rem; }
-  .dual-range input::-webkit-slider-thumb { width: 1.75rem; height: 1.75rem; margin-top: -0.2rem; }
-  .dual-range input::-moz-range-thumb { width: 1.6rem; height: 1.6rem; }
+  .score-curve { --thumb: 1.75rem; }
   .filter-switch input { width: 2.75rem; height: 1.6rem; }
   .filter-switch input::after { width: 1.3rem; height: 1.3rem; }
   .filter-switch input:checked::after { transform: translateX(1.15rem); }
