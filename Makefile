@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 PG_BIN ?= $(shell brew --prefix postgresql@17 2>/dev/null)/bin
 
-.PHONY: setup migrate dev test lint openapi check-openapi check extension
+.PHONY: setup migrate dev demo test lint openapi check-openapi check extension
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -29,6 +29,25 @@ dev: ## lance api + worker + frontend (http://localhost:5173), Ctrl-C arrête to
 	(cd backend && uv run jobbot api) & \
 	(cd backend && uv run jobbot worker) & \
 	(cd frontend && npm run dev) & \
+	wait
+
+# Démo en local (docs/72, complément 0.59.1) : sa propre base, des données fictives recalées
+# sur le jour, et ses propres ports (API 8200, interface 5200), à côté de make dev. Ni IA, ni
+# boîte e-mail, ni notifications, ni worker.
+DEMO_DB := jobbot_demo
+DEMO_ENV := JOBBOT_DEMO=true JOBBOT_DATABASE_URL=postgresql+psycopg://localhost:5432/$(DEMO_DB) \
+	JOBBOT_API_PORT=8200 JOBBOT_ANTHROPIC_API_KEY= JOBBOT_IMAP_USER= JOBBOT_IMAP_PASSWORD= \
+	JOBBOT_NTFY_TOPIC= JOBBOT_STORAGE_PATH=../data/demo
+DEMO_OPEN ?= open
+
+demo: ## démo en local, données fictives (http://localhost:5200), Ctrl-C arrête tout
+	@"$(PG_BIN)/psql" -d postgres -Atc "SELECT 1 FROM pg_database WHERE datname = '$(DEMO_DB)'" \
+		| grep -q 1 || { "$(PG_BIN)/createdb" $(DEMO_DB) && echo "base $(DEMO_DB) créée"; }
+	cd backend && $(DEMO_ENV) uv run jobbot migrate && $(DEMO_ENV) uv run jobbot demo-seed
+	@trap 'kill 0' INT TERM EXIT; \
+	(cd backend && $(DEMO_ENV) uv run jobbot api) & \
+	(cd frontend && JOBBOT_DEV_API_URL=http://127.0.0.1:8200 npm run dev -- --port 5200) & \
+	(sleep 5 && $(DEMO_OPEN) http://localhost:5200) & \
 	wait
 
 test: ## tests backend (base jobbot_test) et frontend
