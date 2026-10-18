@@ -132,8 +132,9 @@ async function load(): Promise<void> {
   if (!loaded.value) {
     counts.value = { jobs: data.new_jobs, economy: data.new_economy, videos: data.new_videos };
     // La visite remet les compteurs à zéro (pour la prochaine fois).
-    // Sans connexion, rien n'est enregistré (docs/18 §1).
-    if (loggedIn.value) await api.POST("/api/news/seen");
+    // Sans connexion, rien n'est enregistré (docs/18 §1) ; dans la démo non plus : la visite
+    // n'y déclenche pas le message « rien n'est enregistré » (docs/72).
+    if (loggedIn.value && !me.value?.demo) await api.POST("/api/news/seen");
     reset();
   }
   loaded.value = true;

@@ -1525,7 +1525,7 @@ html.side-open { overflow: hidden; }
 .news-story-body { display: grid; gap: 0.3rem; min-width: 0; }
 .news-thumb { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 12px; background: var(--band); }
 .news-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.news-thumb.text { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; letter-spacing: 0.02em; }
+.news-thumb.text { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; letter-spacing: 0.02em; text-align: center; padding: 0.5rem 0.75rem; overflow-wrap: anywhere; }
 .news-play { position: absolute; left: 0.5rem; bottom: 0.5rem; display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: rgb(17 17 31 / 60%); color: #fff; font-size: 0.7rem; }
 .news-kicker { font-size: 0.8rem; color: var(--muted); }
 .news-story-title { font-weight: 600; line-height: 1.25; }
