@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
 from jobbot import demo
-from jobbot.api.middleware import RequestContextMiddleware
+from jobbot.api.middleware import RequestContextMiddleware, SecurityMiddleware
 from jobbot.api.routes import (
     account,
     agenda,
@@ -99,6 +99,8 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     # Ajouté avant le contexte de requête : celui-ci l'enveloppe et journalise aussi les refus.
     app.add_middleware(AuthMiddleware)
     app.add_middleware(RequestContextMiddleware)
+    # Le plus à l'extérieur : ses en-têtes vont aussi sur les refus des autres.
+    app.add_middleware(SecurityMiddleware)
     if settings.cors_origins:
         app.add_middleware(
             CORSMiddleware,

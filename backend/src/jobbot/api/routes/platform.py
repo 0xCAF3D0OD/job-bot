@@ -10,14 +10,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import delete, func, select, text, update
 
 from jobbot import accounts, platform
 from jobbot.api.owner import require_owner
 from jobbot.auth import links
 from jobbot.auth.service import end_all_sessions
 from jobbot.db.base import connected_as_admin
-from jobbot.db.models import AccountLink, User
+from jobbot.db.models import AccountLink, CalendarToken, ExtensionToken, User
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 
@@ -223,6 +223,17 @@ async def update_account(request: Request, account_id: int, body: AccountChange)
                 await end_all_sessions(session, account_id)
         if "ai_budget_chf" in body.model_fields_set:
             user.ai_budget_chf = body.ai_budget_chf
+    if body.suspended:
+        # Ses jetons d'extension et d'agenda aussi (docs/78 §2), révoqués en son nom : ses
+        # lignes ne sont visibles que de lui.
+        with accounts.use(account_id):
+            async with runtime.sessionmaker.begin() as session:
+                for model in (ExtensionToken, CalendarToken):
+                    await session.execute(
+                        update(model)
+                        .where(model.revoked_at.is_(None))
+                        .values(revoked_at=func.now())
+                    )
     log.info("account_updated", account=account_id, suspended=body.suspended)
     return await get_platform(request)
 

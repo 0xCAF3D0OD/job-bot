@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
+from jobbot import accounts
 from jobbot.db.models import Company, CompanyLogo, Offer, OfferStatus
 from jobbot.log import get_logger
 from jobbot.registry.service import name_key
@@ -179,6 +180,9 @@ async def fetch_logos(runtime: Runtime) -> LogoResult:
                 )
             ).all()
         }
+        # Le logo est commun à tous les comptes : le site saisi par un invité (candidature
+        # spontanée, adresse trouvée pour lui) ne l'impose pas aux autres (docs/78 §3.2).
+        own_sites = await accounts.is_owner(session)
     # Par entreprise : un logo relevé (page, e-mail), sinon le site connu.
     todo: dict[str, dict[str, str | None]] = {}
     for company, logo_url, website, address_url in rows:
@@ -187,7 +191,8 @@ async def fetch_logos(runtime: Runtime) -> LogoResult:
             continue
         entry = todo.setdefault(key, {"logo": None, "website": None})
         entry["logo"] = entry["logo"] or logo_url
-        entry["website"] = entry["website"] or website or address_url or websites.get(key)
+        typed = (website or address_url) if own_sites else None
+        entry["website"] = entry["website"] or typed or websites.get(key)
 
     async with httpx.AsyncClient(
         timeout=10, follow_redirects=False, headers={"User-Agent": USER_AGENT}

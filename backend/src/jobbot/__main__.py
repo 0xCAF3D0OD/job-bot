@@ -47,6 +47,8 @@ def cmd_api(_: argparse.Namespace) -> int:
         log_config=None,
         access_log=False,
         timeout_graceful_shutdown=20,
+        proxy_headers=True,
+        forwarded_allow_ips=settings.trusted_proxies,
     )
     return 0
 

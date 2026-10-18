@@ -1811,13 +1811,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
          * Get Address Candidates
          * @description Propositions du registre IDE ; une recherche est faite si rien n'est en cache.
          */
-        get: operations["getAddressCandidates"];
-        put?: never;
-        post?: never;
+        post: operations["getAddressCandidates"];
         delete?: never;
         options?: never;
         head?: never;

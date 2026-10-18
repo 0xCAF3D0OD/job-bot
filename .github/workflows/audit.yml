@@ -1,0 +1,33 @@
+# Les bibliothèques ont-elles une faille connue ? Chaque lundi, et à la demande (docs/securite.md §6).
+name: Audit des bibliothèques
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  serveur:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Bibliothèques du serveur (sans celles du développement)
+        working-directory: backend
+        run: |
+          uv export --no-dev --no-hashes --no-emit-project --format requirements-txt -q > requirements.txt
+          uvx pip-audit -r requirements.txt
+
+  interface:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Bibliothèques de l'interface (sans celles du développement)
+        working-directory: frontend
+        run: npm audit --omit=dev

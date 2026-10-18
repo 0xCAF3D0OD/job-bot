@@ -137,7 +137,7 @@ async def test_api_candidates_and_choice(
     monkeypatch.setattr(uid, "search", fake)
     first = await add(fresh, 1, "Homonyme")
     other = await add(fresh, 2, "Homonyme")
-    proposals = (await api.get(f"/api/offers/{first}/address-candidates")).json()
+    proposals = (await api.post(f"/api/offers/{first}/address-candidates")).json()
     assert proposals["chosen_uid"] is None and len(proposals["candidates"]) == 2
 
     chosen = twins[1]
@@ -169,7 +169,7 @@ async def test_other_account_choice_stays_its_own(
 
     monkeypatch.setattr(uid, "search", fake)
     first = await add(fresh, 1, "Homonyme")
-    await api.get(f"/api/offers/{first}/address-candidates")
+    await api.post(f"/api/offers/{first}/address-candidates")
     monkeypatch.setattr(accounts, "is_owner", not_owner)
     chosen = twins[1]
     response = await api.post(
@@ -198,7 +198,7 @@ async def test_guest_lookup_stays_in_its_offers(
     monkeypatch.setattr(accounts, "is_owner", no)
     monkeypatch.setattr(accounts, "writes_shared", no)
     first = await add(fresh, 1, "Jumelle")
-    found = (await api.get(f"/api/offers/{first}/address-candidates")).json()
+    found = (await api.post(f"/api/offers/{first}/address-candidates")).json()
     assert [c["uid"] for c in found["candidates"]] == [t.uid for t in twins]
     async with fresh.sessionmaker() as session:
         assert await session.scalar(select(Company)) is None

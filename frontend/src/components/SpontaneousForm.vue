@@ -45,7 +45,7 @@ async function searchAddress(): Promise<void> {
   searching.value = true;
   searchMessage.value = "";
   try {
-    const { data } = await api.GET("/api/offers/{offer_id}/address-candidates", {
+    const { data } = await api.POST("/api/offers/{offer_id}/address-candidates", {
       params: { path: { offer_id: offerId.value } },
     });
     if (!data) {

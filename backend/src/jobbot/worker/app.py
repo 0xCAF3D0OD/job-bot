@@ -18,6 +18,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from jobbot import accounts
+from jobbot.api.middleware import SecurityMiddleware
 from jobbot.health import health_router
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -64,6 +65,7 @@ def build_procrastinate_app(runtime: Runtime) -> procrastinate.App:
 def build_http_app(runtime: Runtime) -> FastAPI:
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.runtime = runtime
+    app.add_middleware(SecurityMiddleware)
     app.include_router(health_router())
     return app
 

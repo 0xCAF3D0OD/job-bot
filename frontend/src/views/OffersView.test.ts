@@ -409,6 +409,10 @@ describe("détail allégé et adresse", () => {
 describe("adresse par le registre IDE", () => {
   it("propose les entreprises possibles puis enregistre le choix", async () => {
     GET.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/profile-chunks" ? { data: [] } : page([offer(1, "Ingénieur système")])),
+    );
+    // La recherche est une écriture (docs/78 §2), le choix aussi.
+    POST.mockImplementation((path: string) =>
       Promise.resolve(
         path === "/api/offers/{offer_id}/address-candidates"
           ? {
@@ -420,12 +424,9 @@ describe("adresse par le registre IDE", () => {
                 ],
               },
             }
-          : path === "/api/profile-chunks"
-            ? { data: [] }
-            : page([offer(1, "Ingénieur système")]),
+          : { data: { company_address: "Rue 2\n1206 Genève", company_address_source: "registry" } },
       ),
     );
-    POST.mockResolvedValue({ data: { company_address: "Rue 2\n1206 Genève", company_address_source: "registry" } });
     const wrapper = await mountAt("/offres");
     await wrapper.find("[data-test=offer]").trigger("click");
     await wrapper.find("[data-test=company-more]").trigger("click");

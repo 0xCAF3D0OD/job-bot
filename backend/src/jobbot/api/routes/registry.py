@@ -71,7 +71,9 @@ async def _offer_company(runtime: Runtime, offer_id: int) -> Offer:
     return offer
 
 
-@router.get(
+# Une écriture (POST) : la recherche appelle le registre et l'IA, et range l'adresse trouvée ;
+# protégée comme les autres modifications contre une requête venue d'un autre site (docs/78 §2).
+@router.post(
     "/offers/{offer_id}/address-candidates",
     operation_id="getAddressCandidates",
     responses={503: {"description": "Registre IDE injoignable"}},

@@ -194,3 +194,22 @@ Vérifications, à chaque fois sur une base à part :
 - **Vérifié** :
   - 485 tests serveur, dont 6 nouveaux (`test_links.py`, unicités par compte). La file est la vraie, sans bouchon : la tâche de B tourne pour B, celle de l'exploitant pour l'exploitant.
   - Dans Docker, la démo 0.64.0 mise à jour en 0.64.1 sur sa base : migration 0055, parcours de toutes les pages en 174 appels, aucune erreur.
+
+## Écarts avec le cadrage (0.64.2)
+
+- **Plus de compteur par identifiant seul** : les essais ratés comptent par adresse, et par adresse plus identifiant. Un essai depuis une autre adresse ne bloque donc plus ta connexion. Contre des essais venus de nombreuses adresses, deux choses suffisent :
+  - un mot de passe de 12 caractères au moins ;
+  - scrypt, qui rend chaque essai coûteux.
+- **Un jeton révoqué à la suspension le reste** si le compte est réactivé : la personne en crée un nouveau dans ses Réglages. La base ignore aussi les jetons d'un compte suspendu, même révoqués à la main.
+- **Les adresses d'exploitation** (`/readyz`, `/version`, `/metrics`, documentation de l'API) restent permises depuis le réseau privé, pour les sondes et Prometheus. Jamais au travers d'un intermédiaire : une requête qui porte `X-Forwarded-For` reçoit 404. Sur ta plateforme, la documentation de l'API n'est donc plus visible par le tunnel, même en `JOBBOT_ENV=dev`.
+- **Les en-têtes de l'API** : `nosniff`, `SAMEORIGIN`, `same-origin`. Pas de CSP générale sur les réponses JSON ; les logos et images ont déjà la leur. Dans la démo, Caddy pose des valeurs plus strictes (`DENY`, `no-referrer`).
+- **Taille des envois** : refusée dès l'en-tête au-delà de 11 Mo. Un envoi sans taille annoncée est coupé dès qu'il dépasse.
+- **Le logo, pour un compte invité** : seul le logo relevé dans une page ou une alerte compte, ou le site connu du cache commun. Jamais un site saisi par l'invité, ni l'adresse trouvée pour lui.
+- **L'audit des bibliothèques** tourne chaque lundi sur GitHub, et à la main par « Run workflow » (`.github/workflows/audit.yml`). Les deux passent aujourd'hui : aucune faille connue.
+- **Vérifié** :
+  - 494 tests serveur, dont 9 nouveaux (`test_connexion.py`), et 290 tests de l'interface.
+  - Dans Docker, la démo 0.64.1 mise à jour en 0.64.2 sur sa base, avec la migration 0056 :
+    - le parcours de toutes les pages fait 174 appels, aucune erreur ;
+    - les adresses d'exploitation répondent 404 depuis l'extérieur ;
+    - `/readyz` répond toujours depuis l'intérieur du conteneur ;
+    - la recherche d'adresse est refusée par la démo, comme toute écriture.
