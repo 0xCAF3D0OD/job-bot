@@ -175,22 +175,44 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 
 /* --- Cartes d'offres --- */
 
-.offer-cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 1rem; }
-.job-card {
+/* Offres (docs/73) : une ligne par jour, puis les offres du jour en un seul bloc ; une offre
+   sur une ligne. Du texte aéré : 0,85 rem au-dessus et au-dessous de chaque offre, plus d'air
+   au-dessus de la ligne du jour qu'en dessous. */
+.offer-cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; }
+.offer-day { margin: 1.5rem 0 0.6rem; }
+.offer-day:first-child { margin-top: 0; }
+.offer-day-title { display: flex; align-items: baseline; gap: 0.6rem; margin: 0; font: inherit; }
+.offer-day-name { font-weight: 600; font-size: 0.95rem; color: var(--text); }
+.offer-day-count { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+.offer-day-title::after { content: ""; flex: 1; align-self: center; height: 1px; background: var(--border); }
+.offer-row {
   width: 100%;
-  text-align: left;
   display: grid;
-  gap: 0.8rem;
-  padding: 1.15rem 1.25rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.85rem 1.15rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-top-width: 0;
+  border-radius: 0;
+  text-align: left;
   font-weight: 400;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: background-color 0.15s, box-shadow 0.15s;
 }
-.job-card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
-.job-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.job-head { display: grid; grid-template-columns: auto 1fr auto; gap: 0.75rem; align-items: start; }
+.offer-cards > li:first-child .offer-row,
+.offer-day + li .offer-row { border-top-width: 1px; border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+.offer-cards > li:last-child .offer-row,
+.offer-cards > li:has(+ .offer-day) .offer-row { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+.offer-row:hover { background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+.offer-row.selected { background: color-mix(in srgb, var(--accent) 7%, var(--surface)); box-shadow: inset 3px 0 0 var(--accent); }
+.offer-row.expired { opacity: 0.6; }
+.offer-row-main { display: grid; gap: 0.3rem; min-width: 0; }
+.offer-row-title { font-weight: 500; font-size: 0.98rem; line-height: 1.35; overflow-wrap: anywhere; }
+.offer-row-sub { color: var(--muted); font-size: 0.85rem; line-height: 1.45; }
+.offer-row-alert { margin-top: 0.3rem; font-size: 0.82rem; line-height: 1.4; color: var(--warn-text); }
+.offer-row-alert.danger { color: var(--down-text); }
+.filter-more { justify-self: start; margin: 0.15rem 0.25rem; font-size: 0.9rem; }
 .logo {
   display: grid;
   place-items: center;
@@ -207,29 +229,6 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 .logo.c3 { background: var(--sky); }
 .logo.large { width: 3rem; height: 3rem; font-size: 1.2rem; }
 .job-title { font-weight: 500; font-size: 0.98rem; line-height: 1.3; display: block; }
-.job-company { color: var(--muted); font-size: 0.85rem; }
-.job-date { color: var(--accent); font-size: 0.78rem; white-space: nowrap; }
-.job-snippet {
-  color: var(--muted);
-  font-size: 0.86rem;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.job-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem 0.75rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid var(--divider);
-  color: var(--muted);
-  font-size: 0.82rem;
-}
-.job-meta span { display: inline-flex; align-items: center; gap: 0.3rem; }
-.job-meta span + span::before { content: "•"; color: var(--faint); margin-right: 0.45rem; }
 
 .detail-panel { position: sticky; top: 5.5rem; background: var(--panel); border-radius: 16px; padding: 2rem; display: grid; gap: 1.25rem; }
 .detail-panel h2 { font-size: 1.5rem; line-height: 1.2; }
@@ -444,10 +443,8 @@ p.badge.reason { margin: 0; }
 .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 .chip.on .facet-count { color: #fff; opacity: 0.8; }
 .list-count { margin: 0 0 0.75rem; }
-.job-side { display: grid; justify-items: end; gap: 0.3rem; }
 .score { font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--accent); color: #fff; white-space: nowrap; }
 .score.pending { background: var(--band); color: var(--muted); border: 1px solid var(--border); }
-.meta-accent { color: var(--accent); font-weight: 500; }
 .detail-column { position: sticky; top: 5.25rem; max-height: calc(100vh - 6.5rem); overflow: auto; border-radius: 16px; }
 .detail-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .close { border: none; background: none; font-size: 1.5rem; line-height: 1; padding: 0.1rem 0.4rem; color: var(--muted); }
@@ -497,8 +494,15 @@ p.badge.reason { margin: 0; }
 .score.mid { background: #fff1e4; color: var(--warn-text); }
 .score.low { background: var(--band); color: var(--muted); border: 1px solid var(--border); }
 .score.stale { opacity: 0.6; }
-.score.big { font-size: 1.6rem; padding: 0.35rem 0.8rem; border-radius: 12px; line-height: 1; }
-.score.big small { font-size: 0.75rem; font-weight: 500; opacity: 0.8; margin-left: 0.1rem; }
+/* La note dans un cercle : le contour, plein à 100, se remplit comme la note (docs/73). */
+.score-ring { --p: 0; --ring: var(--accent); position: relative; flex-shrink: 0; display: inline-grid; place-content: center; justify-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; font-size: 0.85rem; font-weight: 650; line-height: 1; color: var(--ring-text, var(--accent-text)); font-variant-numeric: tabular-nums; }
+.score-ring::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(var(--ring) calc(var(--p) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); }
+.score-ring.mid { --ring: #f08a24; --ring-text: var(--warn-text); }
+.score-ring.low { --ring: var(--muted); --ring-text: var(--muted); }
+.score-ring.stale { opacity: 0.6; }
+.score-ring.large { width: 4.2rem; height: 4.2rem; font-size: 1.35rem; gap: 0.2rem; }
+.score-ring.large::before { -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5.5px), #000 calc(100% - 5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 5.5px), #000 calc(100% - 5px)); }
+.score-ring.large small { font-size: 0.68rem; font-weight: 500; color: var(--muted); }
 .summary { margin: 0; display: grid; gap: 0.2rem; font-size: 0.86rem; }
 .summary div { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); gap: 0.5rem; }
 .summary dt { color: var(--muted); font-weight: 500; }
@@ -682,7 +686,6 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .orp-sign { display: flex; justify-content: space-between; margin-top: 8mm; }
 .orp-annex { break-before: page; }
 .expired-notice { border-color: var(--warn); color: var(--warn-text); margin: 0.5rem 0; }
-.job-card.expired { opacity: 0.6; }
 .criteria-summary ul { margin: 1rem 0 0.5rem; padding-left: 1.1rem; display: grid; gap: 0.4rem; }
 .narrow-block { max-width: 46rem; }
 .settings-status { margin-top: 2rem; }
@@ -726,9 +729,6 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .registry-proposals li { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 10px; font-size: 0.86rem; }
 
 /* Étiquettes des cartes (docs/11 §3) */
-.kw-rows { display: grid; gap: 0.35rem; }
-.kw-row { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
-.kw-label { width: 4.6rem; flex: none; font-size: 0.78rem; color: var(--muted); font-weight: 500; }
 .kw { font-size: 0.76rem; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--panel); border: 1px solid var(--border); color: var(--text); white-space: nowrap; }
 .kw.gap { background: color-mix(in srgb, var(--warn) 12%, transparent); border-color: color-mix(in srgb, var(--warn) 45%, transparent); color: var(--warn-text); }
 .kw.offer { background: var(--accent-soft); border-color: transparent; color: var(--accent-text); }
@@ -1150,12 +1150,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .extension-tokens { list-style: none; margin: 0.6rem 0 0; padding: 0; display: grid; gap: 0.3rem; font-size: 0.9rem; }
 .extension-tokens li { display: flex; justify-content: space-between; gap: 0.75rem; }
 /* Tri « Par jour » : intertitre de jour dans la liste des offres. */
-.offer-day { grid-column: 1 / -1; margin-top: 0.4rem; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
-.offer-day::first-letter { text-transform: uppercase; }
-.offer-day:first-child { margin-top: 0; }
 /* Télétravail sur la carte (docs/26 §2) ; barré s'il n'est pas ouvert depuis la Suisse. */
-.meta-remote { color: var(--accent); font-weight: 500; }
-.meta-remote.excluded { color: var(--muted); text-decoration: line-through; }
 .remote-read { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.75rem; margin: 0.6rem 0 0; font-size: 0.88rem; color: var(--muted); }
 /* Sites d'offres en télétravail proposés (docs/26 §5). */
 .site-suggestions { margin-top: 0.8rem; }
@@ -1192,18 +1187,19 @@ button.filter-row[aria-expanded]:not(.filter-option)::after { content: "›"; co
 .filters-clear:disabled { color: var(--faint); cursor: default; }
 .filters-done { display: none; background: var(--text); color: var(--bg); border: 1px solid var(--text); }
 /* Courbe des notes : la partie choisie est la même courbe, découpée entre les poignées. */
-.score-curve { display: grid; gap: 0.5rem; }
-.score-curve svg { width: 100%; height: 4.5rem; display: block; }
+/* Les ronds du curseur sont centrés sur la ligne : la ligne s'arrête au centre des ronds, 0,5 rem au-dessus du bas du dessin. */
+.score-curve { --thumb: 1.1rem; display: grid; gap: 0.5rem; }
+.score-curve svg { width: calc(100% - var(--thumb)); margin-inline: calc(var(--thumb) / 2); height: 4.5rem; display: block; }
 .curve-all { fill: var(--border); }
 .curve-chosen { fill: var(--mint); }
 .curve-axis { stroke: var(--border); stroke-width: 2; }
 .curve-axis.chosen { stroke: var(--ok); }
-.dual-range { position: relative; height: 1.4rem; margin-top: -1.4rem; }
-.dual-range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; appearance: none; height: 1.4rem; }
-.dual-range input::-webkit-slider-runnable-track { background: none; height: 1.4rem; }
+.dual-range { position: relative; height: var(--thumb); margin-top: calc(-1rem - var(--thumb) / 2); }
+.dual-range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; appearance: none; height: var(--thumb); }
+.dual-range input::-webkit-slider-runnable-track { background: none; height: var(--thumb); }
 .dual-range input::-moz-range-track { background: none; }
-.dual-range input::-webkit-slider-thumb { appearance: none; pointer-events: auto; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; margin-top: 0.15rem; }
-.dual-range input::-moz-range-thumb { pointer-events: auto; width: 1rem; height: 1rem; border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; }
+.dual-range input::-webkit-slider-thumb { appearance: none; pointer-events: auto; box-sizing: border-box; width: var(--thumb); height: var(--thumb); border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; margin-top: 0; }
+.dual-range input::-moz-range-thumb { pointer-events: auto; box-sizing: border-box; width: var(--thumb); height: var(--thumb); border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; }
 .score-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.5rem; align-items: center; }
 .score-fields input { font: inherit; width: 100%; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .sheet-grabber { display: none; }
@@ -1294,8 +1290,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
   .chip, .suggestions .chip, .assistant-suggestions .chip { min-height: 2.75rem; }
   .assistant-head-actions { gap: 1.25rem; }
   input[type="checkbox"]:not([role="switch"]), input[type="radio"] { width: 1.25rem; height: 1.25rem; }
-  .dual-range input::-webkit-slider-thumb { width: 1.75rem; height: 1.75rem; margin-top: -0.2rem; }
-  .dual-range input::-moz-range-thumb { width: 1.6rem; height: 1.6rem; }
+  .score-curve { --thumb: 1.75rem; }
   .filter-switch input { width: 2.75rem; height: 1.6rem; }
   .filter-switch input::after { width: 1.3rem; height: 1.3rem; }
   .filter-switch input:checked::after { transform: translateX(1.15rem); }
@@ -1328,13 +1323,10 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .today-collect { margin-left: auto; margin-right: 1rem; color: var(--muted); font-size: 0.85rem; }
 
 /* Offres à vérifier (docs/30 §3) : étiquette sur la carte, détail des signaux. */
-.meta-doubt { padding: 0.05rem 0.5rem; border-radius: 999px; background: var(--band); border: 1px solid var(--border); color: var(--muted); font-size: 0.78rem; font-weight: 500; }
-.meta-doubt.scam { background: color-mix(in srgb, var(--warn) 12%, transparent); border-color: color-mix(in srgb, var(--warn) 45%, transparent); color: var(--warn-text); }
 .doubts { margin: 0.25rem 0 0.75rem; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 12px; background: var(--band); font-size: 0.9rem; }
 .doubts ul { margin: 0.35rem 0 0; padding-left: 1.1rem; display: grid; gap: 0.3rem; }
 .doubts li.scam { color: var(--warn-text); }
 .doubts q { display: block; color: var(--muted); font-style: italic; }
-.job-meta .meta-doubt::before { content: none; }
 
 /* Suivi : enseignements et formulaire ORP, une ligne ouverte à la fois */
 .suivi-more { margin-top: 1.5rem; }
@@ -1342,7 +1334,7 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 /* Alléger (docs/32) : boutons et liens sur une ligne, « ? » toujours rond */
 button, .button-link, .link, .apply-bar a, .apply-bar button { white-space: nowrap; }
 /* Cartes et lignes cliquables : leur texte passe à la ligne normalement (docs/33 §3.1). */
-.job-card, .disclosure-row, .filter-row, .news-row, .bell-item { white-space: normal; }
+.offer-row, .disclosure-row, .filter-row, .news-row, .bell-item { white-space: normal; }
 /* Les liens de recherche LinkedIn sont longs : ils passent à la ligne au lieu de déborder. */
 .contacts-searches .link { white-space: normal; overflow-wrap: anywhere; }
 button, .button-link { max-width: 100%; }
@@ -1556,7 +1548,7 @@ html.side-open { overflow: hidden; }
 .news-row mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 0.1em; }
 
 /* Téléphone : Candidatures et Profil (docs/36) */
-.label-short, .job-company-place { display: none; }
+.label-short { display: none; }
 @media (max-width: 820px) {
   .label-long { display: none; }
   .label-short { display: inline; }
@@ -1564,15 +1556,11 @@ html.side-open { overflow: hidden; }
   .jobs-head .eyebrow { display: none; }
   .jobs-head h1 { font-size: 1.4rem; margin: 0 0 0.6rem; }
 
-  /* Offres : une ligne compacte (titre, entreprise · lieu, note et date à droite). */
-  .job-card { gap: 0.4rem; padding: 0.8rem 0.9rem; }
-  .job-card .logo:not(.large) { width: 1.9rem; height: 1.9rem; font-size: 0.8rem; }
-  .job-card .kw-rows, .job-card .summary, .job-card .job-snippet, .job-card .badge.reason { display: none; }
-  .job-company-place { display: inline; }
+  /* Offres (docs/73) : la même ligne, un peu plus serrée sur les côtés. */
+  .offer-row { gap: 0.75rem; padding: 0.8rem 0.9rem; }
+  .offer-row .logo:not(.large) { width: 2rem; height: 2rem; font-size: 0.8rem; }
+  .offer-row-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .job-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .job-card .job-meta { padding-top: 0; border-top: 0; }
-  .job-card .job-meta > :not(.meta-doubt) { display: none; }
-  .job-card .job-meta:not(:has(.meta-doubt)) { display: none; }
 
   /* Filtrer : carte pleine largeur, dans la page. */
   .filters-column, .filters-column.open {
@@ -1672,7 +1660,6 @@ html.side-open { overflow: hidden; }
 @media (max-width: 820px) {
   .page-head .page-head-sub { display: none; }
 }
-.offer-day-title { margin: 0; font: inherit; color: inherit; }
 
 /* Sans bouton visible (ordinateur), la ligne au-dessus des offres disparaît. */
 @media (min-width: 861px) { .offers-heading { display: none; } }
@@ -2019,11 +2006,11 @@ button:not(:disabled, .link, [role="radio"], [role="tab"], .filter-row):active, 
 .button-link:hover { border-color: var(--accent); color: var(--accent-text); }
 
 /* Survol d'une carte cliquable : elle se soulève de 2 px, ombre venue du haut. */
-.job-card, .chunk-card, .dash-tile:not(.static), .dash-link, .application-card, a.calm-row, button.calm-row {
+.chunk-card, .dash-tile:not(.static), .dash-link, .application-card, a.calm-row, button.calm-row {
   transition: border-color var(--t-fast), transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
 }
 @media (hover: hover) {
-  .job-card:hover, .chunk-card:hover, .dash-tile:not(.static):hover, .dash-link:hover, .application-card:hover { transform: translateY(-2px); box-shadow: var(--lift); }
+  .chunk-card:hover, .dash-tile:not(.static):hover, .dash-link:hover, .application-card:hover { transform: translateY(-2px); box-shadow: var(--lift); }
 }
 
 /* Sélecteur : la pastille violette glisse vers le choix (deux ou trois choix, sur une ligne). */
@@ -2140,9 +2127,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .empty-state p { margin: 0; max-width: 28rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  button, .button-link, .job-card, .chunk-card, .dash-tile, .dash-link, .application-card, .segmented::before, .filter-switch input::after { transition: none !important; }
+  button, .button-link, .offer-row, .chunk-card, .dash-tile, .dash-link, .application-card, .segmented::before, .filter-switch input::after { transition: none !important; }
   button:active, .button-link:active { transform: none !important; }
-  .job-card:hover, .chunk-card:hover, .dash-tile:hover, .dash-link:hover, .application-card:hover { transform: none !important; }
+  .chunk-card:hover, .dash-tile:hover, .dash-link:hover, .application-card:hover { transform: none !important; }
   .tick-svg, input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before { animation: none !important; }
 }
 /* Le fond de la page jusqu'en bas de l'écran, sous l'en-tête (docs/64 §3). */

@@ -1,8 +1,10 @@
+
 <script setup lang="ts">
 import { ref } from "vue";
 
 import type { Offer } from "../api/client";
-import { plural, scoreLevel } from "../format";
+import { plural } from "../format";
+import ScoreRing from "./ScoreRing.vue";
 
 // « Pour cette offre » (docs/47 §2) : la note, les points forts et les manques, à côté de la
 // lettre et du CV, pour écrire en ayant l'offre sous les yeux.
@@ -20,10 +22,10 @@ const gaps = () => props.offer.gaps ?? [];
   >
     <h2>Pour cette offre</h2>
     <p class="offer-brief-head">
-      <span
+      <ScoreRing
         v-if="offer.score !== null && offer.score !== undefined"
-        :class="['score', scoreLevel(offer.score)]"
-      >{{ offer.score }}<small>/100</small></span>
+        :score="offer.score"
+      />
       <span class="muted">
         {{ [strengths().length ? plural(strengths().length, "point fort", "points forts") : "", gaps().length ? plural(gaps().length, "manque", "manques") : ""].filter(Boolean).join(" · ") }}
       </span>

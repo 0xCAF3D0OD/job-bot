@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
 
 import { fromQuery, toQuery } from "../composables/useOfferFilters";
+import { dayName } from "../format";
 import OffersView from "./OffersView.vue";
 
 const GET = vi.fn();
@@ -135,12 +136,16 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     // Cartes (docs/27) : la ligne déplie le choix dessous ; un autre filtre le replie.
     expect(wrapper.find("[data-test=row-view]").text()).toContain("À examiner");
+    // Les filtres secondaires sont repliés dans « Plus de filtres » (docs/73 §6).
+    expect(wrapper.find("[data-test=row-cantons]").exists()).toBe(false);
+    await wrapper.find("[data-test=more-filters]").trigger("click");
     await wrapper.find("[data-test=row-cantons]").trigger("click");
     await wrapper.find("[data-test=canton-VD]").trigger("change");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ canton: ["VD"] });
     expect(lastQuery()).toMatchObject({ cantons: ["VD"] });
     expect(wrapper.find("[data-test=row-cantons]").text()).toContain("VD");
+    expect(wrapper.find("[data-test=more-filters]").text()).toBe("Moins de filtres (1)");
 
     await wrapper.find("[data-test=row-sources]").trigger("click");
     expect(wrapper.find("[data-test=canton-VD]").exists()).toBe(false); // un seul ouvert
@@ -184,9 +189,11 @@ describe("OffersView", () => {
     );
     const wrapper = await mountAt("/offres");
     const cards = wrapper.findAll("[data-test=offer]");
-    expect(cards[0]?.text()).toContain("chez l'employeur");
+    // Une ligne (docs/73 §4) : le site et « chez l'employeur » sont dans le panneau.
+    expect(cards[0]?.text()).not.toContain("chez l'employeur");
     expect(cards[0]?.text()).toContain("à noter");
-    expect(cards[1]?.find(".badge.reason").text()).toBe("Type : stage (« stage »)");
+    expect(cards[0]?.find("[data-test=offer-alert]").exists()).toBe(false);
+    expect(cards[1]?.find("[data-test=offer-alert]").text()).toBe("Type : stage (« stage »)");
 
     await cards[0]?.trigger("click");
     const apply = wrapper.find("[data-test=apply]");
@@ -224,7 +231,10 @@ describe("note et résumé", () => {
     const [scored, unscored] = wrapper.findAll("[data-test=offer]");
     expect(scored?.find("[data-test=score]").text()).toBe("82");
     expect(scored?.find("[data-test=score]").classes()).toContain("high");
-    expect(scored?.find("[data-test=summary]").text()).toContain("Demande5 ans Linux, Ansible");
+    // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
+    expect(scored?.find("[data-test=summary]").exists()).toBe(false);
+    expect(scored?.find("[data-test=offer-date]").exists()).toBe(true);
+    expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
     expect(unscored?.text()).toContain("à noter");
 
     await scored?.trigger("click");
@@ -432,7 +442,7 @@ describe("adresse par le registre IDE", () => {
 });
 
 describe("étiquettes en mots-clés", () => {
-  it("affiche les pastilles, demandes non couvertes en orange ; sinon les phrases", async () => {
+  it("une seule alerte : ce que ton profil ne couvre pas (docs/73 §4)", async () => {
     mockOffers(
       page([
         offer(1, "Ingénieur DevOps", {
@@ -450,12 +460,10 @@ describe("étiquettes en mots-clés", () => {
     );
     const wrapper = await mountAt("/offres");
     const cards = wrapper.findAll("[data-test=offer]");
-    const keywords = cards[0]!.find("[data-test=keywords]");
-    expect(keywords.text()).toContain("DevOps");
-    // Un ✗ en plus de l'orange, et le sens pour les lecteurs d'écran (docs/28 §3.2).
-    expect(keywords.find(".kw.gap").text()).toBe("✗ Pas couvert par ton profil : allemand B2");
-    expect(keywords.findAll(".kw.offer").map((k) => k.text())).toEqual(["80-100 %", "CDI"]);
-    expect(cards[1]!.find("[data-test=summary]").text()).toContain("Phrase complète du poste");
+    expect(cards[0]!.find("[data-test=keywords]").exists()).toBe(false);
+    expect(cards[0]!.find("[data-test=offer-alert]").text()).toBe("Il te manque : allemand B2");
+    expect(cards[0]!.text()).not.toContain("80-100 %");
+    expect(cards[1]!.find("[data-test=offer-alert]").exists()).toBe(false);
   });
 });
 
@@ -477,22 +485,21 @@ describe("tri « Dernière action »", () => {
 });
 
 describe("Offres, revue des pages (docs/43)", () => {
-  it("groupées Aujourd'hui · Cette semaine · Plus ancien ; « Candidature spontanée » sur la ligne du nombre", async () => {
+  it("une ligne par jour, les offres sans leur date ; « Candidature spontanée » sur la ligne du nombre", async () => {
     const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
     mockOffers(
       page([
         offer(1, "Aujourd'hui", { first_seen_at: ago(0) }),
-        offer(2, "Mardi", { first_seen_at: ago(2) }),
-        offer(3, "Lundi", { first_seen_at: ago(3) }),
+        offer(2, "Hier", { first_seen_at: ago(1) }),
+        offer(3, "Hier aussi", { first_seen_at: ago(1) }),
         offer(4, "Ancienne", { first_seen_at: ago(20) }),
       ]),
     );
     const wrapper = await mountAt("/offres");
-    expect(wrapper.findAll("[data-test=offer-day]").map((h) => h.text())).toEqual([
-      "Aujourd'hui · 1 offre",
-      "Cette semaine · 2 offres",
-      "Plus ancien · 1 offre",
-    ]);
+    const days = wrapper.findAll("[data-test=offer-day]");
+    expect(days.map((h) => h.find(".offer-day-name").text())).toEqual(["Aujourd'hui", "Hier", dayName(ago(20))]);
+    expect(days.map((h) => h.find(".offer-day-count").text())).toEqual(["1 offre", "2 offres", "1 offre"]);
+    expect(wrapper.find("[data-test=offer-date]").exists()).toBe(false);
     expect(wrapper.find(".list-count-row [data-test=spontaneous-open]").exists()).toBe(true);
     // Aucun filtre actif : pas de « Effacer tout ».
     expect(wrapper.find("[data-test=reset]").exists()).toBe(false);
@@ -512,10 +519,13 @@ describe("Offres, offre ouverte par un lien (docs/43, complément)", () => {
       ),
     );
     const wrapper = await mountAt("/offres?offre=9");
-    expect(wrapper.findAll("[data-test=offer]")[0]!.text()).toContain("En préparation");
-    expect(wrapper.findAll("[data-test=offer-day]").map((h) => h.text())).toEqual([
-      "Cette semaine · 1 offre",
-      "Plus ancien · 1 offre",
+    const first = wrapper.findAll("[data-test=offer]")[0]!;
+    expect(first.text()).toContain("En préparation");
+    // Sans ligne de jour au-dessus, elle garde sa date.
+    expect(first.find("[data-test=offer-date]").exists()).toBe(true);
+    expect(wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text())).toEqual([
+      dayName(ago(2)),
+      dayName(ago(20)),
     ]);
   });
 });

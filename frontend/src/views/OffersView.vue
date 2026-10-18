@@ -16,7 +16,7 @@ import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
-import { plural } from "../format";
+import { dayKey, dayName, plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -50,40 +50,36 @@ const spontaneousOpen = ref(false);
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
 
-// Tri « Par jour » : les offres groupées comme les Actualités, Aujourd'hui · Cette semaine ·
-// Plus ancien (docs/43 n° 12), la date restant sur chaque carte ; heure suisse.
-const dayKey = (iso: string): string => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" });
-const PERIOD_LABELS = { today: "Aujourd'hui", week: "Cette semaine", older: "Plus ancien" } as const;
-function periodOf(iso: string): keyof typeof PERIOD_LABELS {
-  if (dayKey(iso) === dayKey(new Date().toISOString())) return "today";
-  return Date.now() - new Date(iso).getTime() < 7 * 86_400_000 ? "week" : "older";
-}
-// Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans intertitre, et
-// comptée dans aucun groupe (sinon « Plus ancien » apparaissait deux fois).
+// Tri « Par jour » (docs/73 §3) : une ligne par jour (« Aujourd'hui », « Hier », « Jeudi
+// 15 octobre ») et les offres du jour dessous, sans leur date ; heure suisse.
+// Offre ouverte par un lien (?offre=) hors de la vue : posée en tête, sans ligne de jour, et
+// comptée dans aucun jour.
 const pinnedId = ref<number | null>(null);
-const periodCounts = computed(() => {
+const byDay = computed(() => filters.value.sort === "day");
+const dayCounts = computed(() => {
   const counts = new Map<string, number>();
   for (const offer of items.value) {
     if (offer.id === pinnedId.value) continue;
-    const key = periodOf(offer.first_seen_at);
+    const key = dayKey(offer.first_seen_at);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return counts;
 });
-function dayHeader(index: number): string | null {
-  if (filters.value.sort !== "day") return null;
+type Day = { name: string; count: string };
+function dayHeader(index: number): Day | null {
+  if (!byDay.value) return null;
   const offer = items.value[index];
   if (!offer || offer.id === pinnedId.value) return null;
-  const key = periodOf(offer.first_seen_at);
+  const key = dayKey(offer.first_seen_at);
   const previous = items.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
-  if (previous && periodOf(previous.first_seen_at) === key) return null;
-  return `${PERIOD_LABELS[key]} · ${plural(periodCounts.value.get(key) ?? 0, "offre", "offres")}`;
+  if (previous && dayKey(previous.first_seen_at) === key) return null;
+  return { name: dayName(offer.first_seen_at), count: plural(dayCounts.value.get(key) ?? 0, "offre", "offres") };
 }
-// Une liste à plat (titres de jour et cartes) pour que chaque carte s'anime seule (docs/60 §3).
+// Une liste à plat (lignes de jour et offres) pour que chaque offre s'anime seule (docs/60 §3).
 const rows = computed(() =>
   items.value.flatMap((offer, index) => {
     const day = dayHeader(index);
-    const card = { key: `offer-${offer.id}`, day: null as string | null, offer };
+    const card = { key: `offer-${offer.id}`, day: null as Day | null, offer };
     return day ? [{ key: `day-${offer.id}`, day, offer: null }, card] : [card];
   }),
 );
@@ -424,12 +420,14 @@ onUnmounted(() => {
               v-if="row.day"
               class="offer-day-title"
             >
-              {{ row.day }}
+              <span class="offer-day-name">{{ row.day.name }}</span>
+              <span class="offer-day-count">{{ row.day.count }}</span>
             </h2>
             <OfferCard
               v-else-if="row.offer"
               :offer="row.offer"
               :selected="row.offer.id === selectedId"
+              :show-date="!byDay || row.offer.id === pinnedId"
               @select="selectedId = row.offer.id"
             />
           </li>

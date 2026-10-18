@@ -47,6 +47,45 @@ export function formatDate(iso: string): string {
   return shortDate.format(new Date(iso));
 }
 
+// Jours de la liste des offres (docs/73 §3), à l'heure suisse.
+const ZURICH = "Europe/Zurich";
+export function dayKey(iso: string): string {
+  return new Date(iso).toLocaleDateString("sv-SE", { timeZone: ZURICH });
+}
+function daysBefore(iso: string, now: Date): number {
+  return Math.round((Date.parse(dayKey(now.toISOString())) - Date.parse(dayKey(iso))) / 86_400_000);
+}
+/** Ligne d'un jour : « Aujourd'hui », « Hier », « Jeudi 15 octobre » (avec l'année si autre). */
+export function dayName(iso: string, now: Date = new Date()): string {
+  const before = daysBefore(iso, now);
+  if (before === 0) return "Aujourd'hui";
+  if (before === 1) return "Hier";
+  const sameYear = dayKey(iso).slice(0, 4) === dayKey(now.toISOString()).slice(0, 4);
+  const text = new Date(iso).toLocaleDateString("fr-CH", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    ...(sameYear ? {} : { year: "numeric" }),
+    timeZone: ZURICH,
+  });
+  // « mercredi, 31 décembre 2025 » : sans la virgule qu'ajoute l'année.
+  const clean = text.replace(/,/g, "");
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
+}
+/** Le jour en bref, dans une offre : « aujourd'hui », « hier », « 15 oct. ». */
+export function dayShort(iso: string, now: Date = new Date()): string {
+  const before = daysBefore(iso, now);
+  if (before === 0) return "aujourd'hui";
+  if (before === 1) return "hier";
+  const sameYear = dayKey(iso).slice(0, 4) === dayKey(now.toISOString()).slice(0, 4);
+  return new Date(iso).toLocaleDateString("fr-CH", {
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" }),
+    timeZone: ZURICH,
+  });
+}
+
 /** Couleur stable (0 à 3) pour la pastille d'une entreprise. */
 export function colorIndex(name: string): number {
   let hash = 0;
