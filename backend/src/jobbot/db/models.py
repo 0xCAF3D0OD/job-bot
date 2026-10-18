@@ -454,6 +454,8 @@ class Application(Base):
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     orp_month: Mapped[str] = mapped_column(Text, index=True)
+    # Saisie dans Job-Room le … (docs/70 §6) : par l'extension ou « Marquer comme déclarée ».
+    job_room_at: Mapped[date | None] = mapped_column(Date)
     # Documents envoyés (docs/08 §5), retéléchargeables depuis la page Candidatures.
     letter_draft_id: Mapped[int | None] = mapped_column(
         ForeignKey("drafts.id", ondelete="SET NULL")

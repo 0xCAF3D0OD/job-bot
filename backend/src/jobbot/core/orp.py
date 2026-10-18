@@ -51,6 +51,12 @@ class ApplicationData:
     interview_at: datetime | None
     application_url: str | None = None
     contact_email: str | None = None
+    # Saisie dans Job-Room le … (docs/70 §6).
+    job_room_at: date | None = None
+
+
+# Le champ « date » des lignes masque le type dans leur classe.
+Day = date
 
 
 @dataclass(frozen=True)
@@ -71,6 +77,8 @@ class OrpRow:
     missing: list[str] = field(default_factory=list)
     # Les champs dans l'ordre du formulaire de saisie de Job-Room (copier un à un).
     job_room: list["JobRoomField"] = field(default_factory=list)
+    # Saisie dans Job-Room le … (docs/70 §6) ; None : à déclarer.
+    declared_at: Day | None = None
 
     def values(self) -> list[str]:
         return [
@@ -197,6 +205,67 @@ def job_room_fields(app: "ApplicationData") -> list[JobRoomField]:
     ]
 
 
+@dataclass(frozen=True)
+class JobRoomFill:
+    """Ce que l'extension met dans le formulaire de Job-Room (docs/70 §4).
+
+    Les choix portent les codes du formulaire (relevé du 2026-10-18) : ils ne dépendent pas de
+    la langue choisie dans Job-Room.
+    """
+
+    date: str
+    # electronic, mail, personal ou phone : la case « Comment avez-vous postulé ? ».
+    channel: str
+    company: str
+    street: str
+    number: str
+    po_box: str
+    postcode_city: str
+    contact: str
+    email: str
+    phone: str
+    job_title: str
+    url: str
+    assigned: bool
+    # FULLTIME, PARTTIME ou "" (non précisé : à choisir soi-même).
+    rate: str
+    # La case « Entretien d'embauche », en plus du résultat.
+    interview: bool
+    # PENDING, EMPLOYED ou REJECTED.
+    result: str
+
+
+JOB_ROOM_CHANNEL = {
+    "electronique": "electronic",
+    "ecrit": "mail",
+    "personnel": "personal",
+    "telephone": "phone",
+}
+
+
+def job_room_fill(app: ApplicationData) -> JobRoomFill:
+    address = split_address(app.company_address)
+    rate = job_room_rate(app.rate_text)
+    return JobRoomFill(
+        date=f"{app.sent_at:%d.%m.%Y}",
+        channel=JOB_ROOM_CHANNEL.get(app.method, ""),
+        company=app.company,
+        street=address.street,
+        number=address.number,
+        po_box=address.po_box,
+        postcode_city=address.postcode_city,
+        contact=app.contact_name or "",
+        email=app.contact_email or "",
+        phone=app.contact_phone or "",
+        job_title=app.job_title,
+        url=app.application_url or "",
+        assigned=app.assigned_by_orp,
+        rate={"A plein temps": "FULLTIME", "A temps partiel": "PARTTIME"}.get(rate, ""),
+        interview=app.status == "entretien" or app.interview_at is not None,
+        result={"engagement": "EMPLOYED", "refus": "REJECTED"}.get(app.status, "PENDING"),
+    )
+
+
 def result_text(status: str, reason: str | None, interview_at: datetime | None) -> str:
     """Statut de suivi → colonne « Résultat » (en suspens, engagement, refus + motif)."""
     if status == "engagement":
@@ -231,6 +300,7 @@ def to_row(app: ApplicationData) -> OrpRow:
         url=app.application_url or "",
         missing=[] if address else ["adresse de l'entreprise"],
         job_room=job_room_fields(app),
+        declared_at=app.job_room_at,
     )
 
 

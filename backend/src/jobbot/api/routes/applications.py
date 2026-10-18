@@ -13,6 +13,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.api.routes.contacts import ContactOut
 from jobbot.api.routes.interviews import InterviewOut
@@ -458,6 +459,40 @@ async def delete_application(request: Request, application_id: int) -> None:
                 offer.status = OfferStatus.PREPARING
         await mark_changed(session, {application.orp_month})
         await session.delete(application)
+
+
+async def declare_in_job_room(
+    session: AsyncSession, application_id: int, declared: bool
+) -> Application:
+    """Marque la candidature saisie dans Job-Room aujourd'hui, ou l'annule (docs/70 §6)."""
+    application = await session.get(Application, application_id)
+    if application is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+    if not declared:
+        application.job_room_at = None
+    elif application.job_room_at is None:
+        application.job_room_at = _today()
+    return application
+
+
+@router.put(
+    "/applications/{application_id}/job-room",
+    operation_id="markDeclaredInJobRoom",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def mark_declared(request: Request, application_id: int) -> None:
+    async with _runtime(request).sessionmaker.begin() as session:
+        await declare_in_job_room(session, application_id, True)
+
+
+@router.delete(
+    "/applications/{application_id}/job-room",
+    operation_id="unmarkDeclaredInJobRoom",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def unmark_declared(request: Request, application_id: int) -> None:
+    async with _runtime(request).sessionmaker.begin() as session:
+        await declare_in_job_room(session, application_id, False)
 
 
 # --- Coordonnées ----------------------------------------------------------------------

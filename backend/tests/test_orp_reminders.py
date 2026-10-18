@@ -45,7 +45,12 @@ async def rt() -> AsyncIterator[Runtime]:
     await runtime.dispose()
 
 
-async def add(rt: Runtime, sent_at: date, address: str | None = "Rue 1, 1000 Lausanne") -> None:
+async def add(
+    rt: Runtime,
+    sent_at: date,
+    address: str | None = "Rue 1, 1000 Lausanne",
+    job_room_at: date | None = None,
+) -> None:
     async with rt.sessionmaker.begin() as session:
         session.add(
             Application(
@@ -55,6 +60,7 @@ async def add(rt: Runtime, sent_at: date, address: str | None = "Rue 1, 1000 Lau
                 company_address=address,
                 job_title="DevOps",
                 orp_month=f"{sent_at:%Y-%m}",
+                job_room_at=job_room_at,
             )
         )
 
@@ -89,6 +95,18 @@ async def test_due_then_eve_then_nothing_once_submitted(rt: Runtime, sent: list[
         assert record is not None
         record.submitted_at = datetime(2026, 12, 2, 9, 0, tzinfo=UTC)
     assert await notify_orp(rt, date(2026, 12, 4)) == 0
+
+
+async def test_due_mentions_job_room_only_when_used(rt: Runtime, sent: list[Message]) -> None:
+    """Le compte « à déclarer » n'apparaît que si au moins une est déjà déclarée (docs/70 §6)."""
+    await add(rt, date(2026, 9, 3))
+    await add(rt, date(2026, 9, 10))
+    assert await notify_orp(rt, date(2026, 10, 1)) == 1
+    assert "Job-Room depuis" in sent[0].message and "à déclarer" not in sent[0].message
+
+    await add(rt, date(2026, 9, 17), job_room_at=date(2026, 9, 18))
+    assert await notify_orp(rt, date(2026, 10, 4)) == 1
+    assert sent[1].message.startswith("3 candidatures, 2 à déclarer dans Job-Room.")
 
 
 async def test_due_day_setting_and_no_ntfy(rt: Runtime, sent: list[Message]) -> None:

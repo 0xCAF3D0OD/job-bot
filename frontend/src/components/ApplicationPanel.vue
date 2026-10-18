@@ -12,6 +12,7 @@ import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 import CopyLabel from "./CopyLabel.vue";
+import JobRoomDeclared from "./JobRoomDeclared.vue";
 
 // Panneau d'une candidature (docs/46 §3) : Statut, Entretiens, Pour l'ORP, Documents, Contacts.
 const props = defineProps<{ application: Application; orpRow?: OrpRow | null }>();
@@ -273,6 +274,12 @@ const onStatus = (event: Event): void =>
         100 % télétravail{{ application.remote_region ? ` · ${application.remote_region}` : "" }} : si l'employeur est à
         l'étranger, vérifie contrat et assurances sociales avec ton conseiller ORP.
       </p>
+      <JobRoomDeclared
+        v-if="orpRow"
+        :application-id="application.id"
+        :declared-at="orpRow.declared_at"
+        @changed="emit('changed')"
+      />
       <dl
         v-if="orpRow"
         class="card-job-room"

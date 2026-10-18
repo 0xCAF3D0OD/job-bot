@@ -25,6 +25,8 @@ class MonthCounts:
     count: int
     # Lignes sans adresse d'entreprise : « à compléter » avant la remise.
     incomplete: int
+    # Pas encore déclarées dans Job-Room (docs/70 §6).
+    to_declare: int = 0
 
 
 async def month_counts(session: AsyncSession, month: str) -> MonthCounts:
@@ -41,4 +43,9 @@ async def month_counts(session: AsyncSession, month: str) -> MonthCounts:
             ),
         )
     )
-    return MonthCounts(count or 0, incomplete or 0)
+    to_declare = await session.scalar(
+        select(func.count())
+        .select_from(Application)
+        .where(in_month, Application.job_room_at.is_(None))
+    )
+    return MonthCounts(count or 0, incomplete or 0, to_declare or 0)

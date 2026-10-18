@@ -1,6 +1,7 @@
 """Preuves ORP du mois : tableau, contrôle avant remise, CSV, remise (docs/09-export-orp.md).
 
-Rien n'est transmis à l'ORP ni à Job-Room : Kevin remet lui-même le PDF ou recopie les lignes.
+Rien n'est transmis à l'ORP ni à Job-Room : Kevin remet lui-même le PDF, ou saisit les lignes
+dans Job-Room, à la main ou avec l'extension (docs/70), et les enregistre lui-même.
 """
 
 from datetime import UTC, date, datetime, time
@@ -49,6 +50,10 @@ class JobRoomFieldOut(BaseModel):
     choice: bool
 
 
+# Le champ « date » des lignes masque le type dans leur classe.
+Day = date
+
+
 class OrpRowOut(BaseModel):
     application_id: int
     date: str
@@ -65,6 +70,8 @@ class OrpRowOut(BaseModel):
     missing: list[str]
     # Champs dans l'ordre du formulaire de saisie de Job-Room.
     job_room: list[JobRoomFieldOut]
+    # Saisie dans Job-Room le … (docs/70 §6) ; null : à déclarer.
+    declared_at: Day | None
 
 
 class OrpSearchOut(BaseModel):
@@ -88,6 +95,8 @@ class OrpMonthOut(BaseModel):
     count: int
     target: int | None
     incomplete: int
+    # Candidatures pas encore déclarées dans Job-Room (docs/70 §6).
+    to_declare: int
     rows: list[OrpRowOut]
     submitted_at: datetime | None
     exported_at: datetime | None
@@ -105,34 +114,34 @@ async def mark_changed(session: AsyncSession, months: set[str]) -> None:
             record.changed_after_submit = True
 
 
+def application_data(a: Application) -> ApplicationData:
+    return ApplicationData(
+        id=a.id,
+        sent_at=a.sent_at,
+        company=a.company,
+        company_address=a.company_address,
+        contact_name=a.contact_name,
+        contact_phone=a.contact_phone,
+        contact_email=a.contact_email,
+        job_title=a.job_title,
+        rate_text=a.rate_text,
+        method=a.method,
+        assigned_by_orp=a.assigned_by_orp,
+        status=a.status,
+        status_reason=a.status_reason,
+        interview_at=a.interview_at,
+        application_url=a.application_url,
+        job_room_at=a.job_room_at,
+    )
+
+
 async def _rows(session: AsyncSession, month: str) -> list[OrpRow]:
     applications = await session.scalars(
         select(Application)
         .where(Application.orp_month == month)
         .order_by(Application.sent_at, Application.id)
     )
-    return [
-        to_row(
-            ApplicationData(
-                id=a.id,
-                sent_at=a.sent_at,
-                company=a.company,
-                company_address=a.company_address,
-                contact_name=a.contact_name,
-                contact_phone=a.contact_phone,
-                contact_email=a.contact_email,
-                job_title=a.job_title,
-                rate_text=a.rate_text,
-                method=a.method,
-                assigned_by_orp=a.assigned_by_orp,
-                status=a.status,
-                status_reason=a.status_reason,
-                interview_at=a.interview_at,
-                application_url=a.application_url,
-            )
-        )
-        for a in applications
-    ]
+    return [to_row(application_data(a)) for a in applications]
 
 
 async def _default_month(session: AsyncSession) -> str:
@@ -200,6 +209,7 @@ async def get_orp_month(
         count=len(rows),
         target=int(target) if target else None,
         incomplete=sum(1 for r in rows if r.missing),
+        to_declare=sum(1 for r in rows if r.declared_at is None),
         rows=[
             OrpRowOut(
                 **{

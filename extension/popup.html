@@ -44,6 +44,21 @@
       </footer>
     </section>
 
+    <!-- Sur le formulaire de Job-Room (docs/70). -->
+    <section id="job-room" hidden>
+      <p class="hint">Job-Room · candidatures à déclarer</p>
+      <select id="jr-choices" aria-label="Candidature à déclarer" hidden></select>
+      <button id="jr-fill" class="primary" type="button" disabled>Remplir dans Job-Room</button>
+      <div id="jr-report" hidden></div>
+      <button id="jr-declared" class="secondary" type="button" hidden>C'est déclaré</button>
+      <p id="jr-message" class="hint" hidden></p>
+      <p id="jr-error" class="error" hidden></p>
+      <footer>
+        <span class="hint">Rien n'est enregistré à ta place.</span>
+        <button id="jr-unlink" class="link" type="button">Délier</button>
+      </footer>
+    </section>
+
     <script type="module" src="popup.js"></script>
   </body>
 </html>

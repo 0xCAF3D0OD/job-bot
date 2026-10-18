@@ -366,3 +366,7 @@ def test_guide_follows_the_pages() -> None:
     assert "La plateforme" in service.INSTRUCTIONS and "`/la-plateforme`" in service.INSTRUCTIONS
     assert "`/tes-donnees`" in service.INSTRUCTIONS and "`/bienvenue`" in service.INSTRUCTIONS
     assert "Refaire l'accueil" in service.INSTRUCTIONS and "date de remise" in service.INSTRUCTIONS
+    # 0.57.0 (docs/70) : l'extension remplit Job-Room, « Marquer comme déclarée ».
+    assert "Copier pour Job-Room" not in service.INSTRUCTIONS
+    assert "Recopier dans Job-Room" in service.INSTRUCTIONS
+    assert "Marquer comme déclarée" in service.INSTRUCTIONS

@@ -665,6 +665,11 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .job-room-card dd > span { min-width: 0; overflow-wrap: anywhere; }
 .job-room-card dd > button { flex: none; }
 .job-room-card h3 { overflow-wrap: anywhere; }
+/* Déclarée dans Job-Room (docs/70 §6). */
+.job-room-declared { display: flex; flex-wrap: wrap; gap: 0.3rem 0.7rem; align-items: baseline; margin: 0 0 0.75rem; font-size: 0.86rem; }
+.job-room-declared .done { color: var(--accent); font-weight: 500; }
+.job-room-count { color: var(--muted); }
+.job-room-hint { margin: 0 0 0.9rem; font-size: 0.88rem; }
 .orp-sheet { display: none; }
 #print-root .orp-sheet { display: block; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
 .orp-sheet .orp-sheet-title { font-size: 12pt; margin: 0 0 4mm; }

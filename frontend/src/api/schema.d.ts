@@ -545,6 +545,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/extension/job-room": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job Room List */
+        get: operations["extensionJobRoomList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/applications/{application_id}/job-room": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job Room Values */
+        get: operations["extensionJobRoomFill"];
+        /**
+         * Job Room Declared
+         * @description « C'est déclaré » : renvoie celles qui restent, pour proposer la suivante.
+         */
+        put: operations["extensionJobRoomDeclared"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/extension-tokens": {
         parameters: {
             query?: never;
@@ -1360,6 +1398,24 @@ export interface paths {
          * @description Annule une candidature enregistrée par erreur ; l'offre revient « en préparation ».
          */
         delete: operations["deleteApplication"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{application_id}/job-room": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Mark Declared */
+        put: operations["markDeclaredInJobRoom"];
+        post?: never;
+        /** Unmark Declared */
+        delete: operations["unmarkDeclaredInJobRoom"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3872,6 +3928,66 @@ export interface components {
             /** Choice */
             choice: boolean;
         };
+        /** JobRoomFillOut */
+        JobRoomFillOut: {
+            /** Date */
+            date: string;
+            /** Channel */
+            channel: string;
+            /** Company */
+            company: string;
+            /** Street */
+            street: string;
+            /** Number */
+            number: string;
+            /** Po Box */
+            po_box: string;
+            /** Postcode City */
+            postcode_city: string;
+            /** Contact */
+            contact: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Job Title */
+            job_title: string;
+            /** Url */
+            url: string;
+            /** Assigned */
+            assigned: boolean;
+            /** Rate */
+            rate: string;
+            /** Interview */
+            interview: boolean;
+            /** Result */
+            result: string;
+        };
+        /** JobRoomItem */
+        JobRoomItem: {
+            /** Id */
+            id: number;
+            /** Company */
+            company: string;
+            /** Job Title */
+            job_title: string;
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+            /** Orp Month */
+            orp_month: string;
+        };
+        /**
+         * JobRoomList
+         * @description Les candidatures à déclarer : du mois précédent et du mois en cours, les plus anciennes
+         *     d'abord.
+         */
+        JobRoomList: {
+            /** Items */
+            items: components["schemas"]["JobRoomItem"][];
+        };
         /** JobRunOut */
         JobRunOut: {
             /** Id */
@@ -4652,6 +4768,8 @@ export interface components {
             target: number | null;
             /** Incomplete */
             incomplete: number;
+            /** To Declare */
+            to_declare: number;
             /** Rows */
             rows: components["schemas"]["OrpRowOut"][];
             /** Submitted At */
@@ -4694,6 +4812,8 @@ export interface components {
             missing: string[];
             /** Job Room */
             job_room: components["schemas"]["JobRoomFieldOut"][];
+            /** Declared At */
+            declared_at: string | null;
         };
         /** OrpSearchOut */
         OrpSearchOut: {
@@ -6764,6 +6884,88 @@ export interface operations {
             };
         };
     };
+    extensionJobRoomList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRoomList"];
+                };
+            };
+        };
+    };
+    extensionJobRoomFill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRoomFillOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionJobRoomDeclared: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRoomList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listExtensionTokens: {
         parameters: {
             query?: never;
@@ -8497,6 +8699,64 @@ export interface operations {
         };
     };
     deleteApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markDeclaredInJobRoom: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmarkDeclaredInJobRoom: {
         parameters: {
             query?: never;
             header?: never;

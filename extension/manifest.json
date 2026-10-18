@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "jobA1 — remplir mes candidatures",
   "short_name": "jobA1",
-  "version": "0.18.1",
-  "description": "Remplit le formulaire de candidature de l'employeur avec tes données jobA1. N'envoie jamais rien à ta place.",
+  "version": "0.57.0",
+  "description": "Remplit les formulaires de candidature et la saisie Job-Room avec tes données jobA1. N'envoie jamais rien à ta place.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Remplir avec jobA1",
