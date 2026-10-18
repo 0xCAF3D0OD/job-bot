@@ -244,6 +244,39 @@ def cmd_anonymize_sample(args: argparse.Namespace) -> int:
     return asyncio.run(run())
 
 
+def cmd_maintenance(args: argparse.Namespace) -> int:
+    """Annonce ou lève une maintenance (docs/79) : entre les deux, l'API répond « en
+    maintenance » à tous, sauf à l'exploitant."""
+    from jobbot import maintenance
+    from jobbot.runtime import Runtime
+
+    settings = _settings()
+
+    async def run() -> dict[str, object] | None:
+        runtime = Runtime.create(settings, "admin")
+        try:
+            async with runtime.sessionmaker.begin() as session:
+                if args.action == "on":
+                    await maintenance.announce(session, " ".join(args.message))
+                elif args.action == "off":
+                    await maintenance.lift(session)
+                return await maintenance.announced(session)
+        finally:
+            await runtime.dispose()
+
+    found = asyncio.run(run())
+    if found is None:
+        print("Pas de maintenance annoncée : la plateforme est ouverte.")
+    else:
+        message = found.get("message")
+        print(
+            "Maintenance annoncée : seuls toi et les commandes passent"
+            + (f" ; message : « {message} »" if message else "")
+            + f" (dans les {maintenance.CACHE_S:.0f} s). Pour rouvrir : jobbot maintenance off."
+        )
+    return 0
+
+
 def cmd_set_password(args: argparse.Namespace) -> int:
     """Le mot de passe est saisi au clavier, sans écho ; il n'apparaît ni à l'écran, ni dans
     l'historique du terminal, ni dans les journaux. Les sessions ouvertes sont fermées."""
@@ -343,6 +376,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser(
         "demo-seed", help="remplit une base de démo avec des données fictives (docs/72)"
     ).set_defaults(func=cmd_demo_seed)
+    upkeep = sub.add_parser("maintenance", help="annonce ou lève une maintenance (docs/79)")
+    upkeep.add_argument("action", choices=["on", "off", "status"])
+    upkeep.add_argument("message", nargs="*", help="message montré pendant la maintenance")
+    upkeep.set_defaults(func=cmd_maintenance)
     password = sub.add_parser("set-password", help="compte de connexion (saisie masquée)")
     password.add_argument("--username", help="identifiant (par défaut : le compte existant)")
     password.set_defaults(func=cmd_set_password)

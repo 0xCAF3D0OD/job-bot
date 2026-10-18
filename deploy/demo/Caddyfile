@@ -49,6 +49,14 @@ Disallow: /
 		file_server
 	}
 
+	# L'API redémarre (mise à jour, docs/79) : une réponse « en maintenance », que l'interface
+	# reconnaît pour montrer sa page d'attente, au lieu d'une erreur 502.
+	handle_errors 502 503 504 {
+		header Content-Type application/json
+		header Retry-After 10
+		respond `{"detail": "jobA1 se met à jour, ça revient dans un instant.", "maintenance": true, "reason": "update", "message": null}` 503
+	}
+
 	# Journal d'accès : 7 jours au plus, rien d'autre n'est gardé sur les visites.
 	log {
 		output file /data/access.log {

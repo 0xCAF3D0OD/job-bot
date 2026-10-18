@@ -192,6 +192,27 @@
         }
       }
     },
+    "/api/maintenance": {
+      "get": {
+        "tags": [
+          "maintenance"
+        ],
+        "summary": "Get Maintenance",
+        "operationId": "getMaintenance",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/platform": {
       "get": {
         "tags": [
@@ -12730,6 +12751,52 @@
           "password"
         ],
         "title": "LoginIn"
+      },
+      "MaintenanceOut": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "announced",
+                  "update"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "bypass": {
+            "type": "boolean",
+            "title": "Bypass"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active",
+          "reason",
+          "message",
+          "bypass"
+        ],
+        "title": "MaintenanceOut"
       },
       "MatchOut": {
         "properties": {

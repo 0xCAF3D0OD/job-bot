@@ -1,6 +1,6 @@
 # 79 — La page de maintenance (version 0.65.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-18.
 > Origine : ta demande du 2026-10-18 : quand tu mets la plateforme à jour (`git pull`, puis redémarrage), les personnes qui l'utilisent à ce moment-là voient des erreurs. Elles devraient voir à la place une page claire qui dit que la plateforme revient tout de suite.
 
 ## 1. En clair
@@ -58,3 +58,21 @@ Ce qui sera vérifié :
 4. **`make update`** pour la mise à jour en une commande (§2).
 5. **La page statique de Caddy** pour la démo en ligne (§2).
 6. **0.65.0 après la sécurité**, ou avant si tu préfères (§4).
+
+## Écarts avec le cadrage
+
+- **Pour la démo, pas de page statique de Caddy** : une réponse « en maintenance » (503, JSON), que l'interface reconnaît pour montrer sa propre page d'attente. L'interface elle-même est servie par Caddy, qui ne s'arrête pas quand l'API redémarre. Une page à part ne se serait vue que si Caddy redémarrait aussi ; dans ce cas, c'est le navigateur qui affiche son erreur, quelques secondes, et on ne peut pas la remplacer.
+- **Le texte de la page** reste vrai dans les deux cas, une mise à jour ou une connexion coupée : « jobA1 revient dans un instant », puis « La plateforme se met à jour, ou la connexion est coupée », ou ton message s'il y en a un. Une coupure de ton propre réseau ressemble en effet, vue du navigateur, à un serveur qui redémarre.
+- **Un 503 d'une route** (IA ou registre momentanément indisponibles) reste une erreur de la page : seul un 503 marqué « maintenance », ou un 502 à 504 de l'intermédiaire, montre la page d'attente. Une requête annulée par la page non plus.
+- **Le rappel pour l'exploitant** se lit au chargement de la page : après `jobbot maintenance off`, il disparaît au prochain rechargement.
+- **`make update`** lève la maintenance avant que tu redémarres `make dev`. Si la base a changé, l'ancienne API voit une base plus récente que son code et répond « en maintenance » d'elle-même jusqu'au redémarrage. Sinon, rien ne change pour les autres comptes. La première fois (depuis une version d'avant 0.65), la commande `jobbot maintenance` n'existe pas encore : l'étape le dit et continue.
+- **Une base injoignable n'est pas une maintenance** : l'état de la plateforme l'explique, comme avant.
+- **Vérifié** :
+  - 497 tests serveur, dont 3 nouveaux (`test_maintenance.py`), et 293 tests de l'interface, dont 3 nouveaux :
+    - détection par le client ;
+    - page posée par-dessus et rendue avec la saisie intacte ;
+    - rappel pour l'exploitant.
+  - Dans la démo Docker, l'API arrêtée pendant une visite :
+    - la page d'attente s'affiche, sur ordinateur et sur téléphone ;
+    - elle disparaît 6 à 7 secondes après le retour de l'API.
+  - Sur une instance de brouillon avec `jobbot maintenance on` : l'exploitant passe et voit le rappel.

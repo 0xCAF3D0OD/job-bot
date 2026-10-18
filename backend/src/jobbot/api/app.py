@@ -28,6 +28,7 @@ from jobbot.api.routes import (
     insights,
     interviews,
     letters,
+    maintenance,
     news,
     orp,
     platform,
@@ -48,6 +49,7 @@ from jobbot.db.base import connected_as_admin
 from jobbot.db.schema import head_revision
 from jobbot.health import health_router
 from jobbot.log import get_logger
+from jobbot.maintenance import MaintenanceMiddleware, Watch
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
@@ -95,8 +97,11 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
         openapi_url="/api/openapi.json" if docs else None,
     )
     app.state.runtime = runtime
+    app.state.maintenance = Watch()
 
     # Ajouté avant le contexte de requête : celui-ci l'enveloppe et journalise aussi les refus.
+    # À l'intérieur de la connexion : il sait si la requête vient de l'exploitant (docs/79).
+    app.add_middleware(MaintenanceMiddleware)
     app.add_middleware(AuthMiddleware)
     app.add_middleware(RequestContextMiddleware)
     # Le plus à l'extérieur : ses en-têtes vont aussi sur les refus des autres.
@@ -116,6 +121,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
         return {"version": settings.version, "migration_head": head_revision()}
 
     app.include_router(auth.router)
+    app.include_router(maintenance.router)
     app.include_router(platform.router)
     app.include_router(account.router)
     app.include_router(welcome.router)

@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 PG_BIN ?= $(shell brew --prefix postgresql@17 2>/dev/null)/bin
 
-.PHONY: setup migrate dev demo demo-image demo-image-stop test lint openapi check-openapi check extension
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -23,6 +23,17 @@ migrate: ## applique les migrations
 
 check: ## vérifie configuration et base
 	cd backend && uv run jobbot check
+
+update: ## met la plateforme à jour : maintenance annoncée, git pull, dépendances, migrations (docs/79)
+	@cd backend && uv run jobbot maintenance on "Mise à jour de jobA1" \
+		|| echo "(maintenance pas annoncée : version d'avant 0.65)"
+	git pull --ff-only
+	cd backend && uv sync
+	cd frontend && npm install --no-audit --no-fund
+	cd backend && uv run jobbot migrate
+	cd backend && uv run jobbot maintenance off
+	@echo "Mise à jour faite. Redémarre make dev (Ctrl-C, puis make dev) pour charger la nouvelle version ; si la base a changé, la page de maintenance reste affichée jusque-là."
+	@echo "En cas d'échec d'une étape : la maintenance reste annoncée ; « cd backend && uv run jobbot maintenance off » la lève."
 
 dev: ## lance api + worker + frontend (http://localhost:5173), Ctrl-C arrête tout
 	@trap 'kill 0' INT TERM EXIT; \

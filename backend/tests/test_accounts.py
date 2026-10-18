@@ -77,8 +77,9 @@ PERSONAL = {
 # Routes qui fermeraient la session de B pendant le test.
 SKIPPED = {("post", "/api/auth/logout"), ("post", "/api/auth/logout-all")}
 # Sans connexion, seules répondent : la connexion et les liens d'accès, les mentions de « Tes
-# données », l'agenda (son propre jeton) et l'extension (le sien) — docs/69 §1.
-ANONYMOUS_OPEN = re.compile(r"^/api/(auth/|privacy$|agenda/feed/|extension/)")
+# données », l'état de la maintenance (docs/79), l'agenda (son propre jeton) et l'extension
+# (le sien) — docs/69 §1.
+ANONYMOUS_OPEN = re.compile(r"^/api/(auth/|privacy$|maintenance$|agenda/feed/|extension/)")
 
 
 def visible(response: Any) -> str:
