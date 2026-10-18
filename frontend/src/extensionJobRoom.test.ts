@@ -25,7 +25,8 @@ function control(el: Element): string {
   const attrs = ["id", "type", "role", "placeholder", "autocomplete"]
     .filter((a) => typeof el[a] === "string")
     .map((a) => `${a}="${escape(String(el[a]))}"`);
-  if (el.required === "true") attrs.push("required");
+  // Comme Job-Room : required="true" ou required="false" (attribut présent dans les deux cas).
+  if (typeof el.required === "string") attrs.push(`required="${el.required}"`);
   if (el["aria-required"]) attrs.push(`aria-required="${String(el["aria-required"])}"`);
   const label = escape(String(el.etiquette ?? ""));
   if (el.balise === "select") {
@@ -159,6 +160,16 @@ describe("remplissage de Job-Room", () => {
     await jobRoom().fill(values);
     expect(input("global.date").value).toBe("02.10.2026");
     expect(input("company.name").value).toBe("Acme SA");
+  });
+
+  it("ne signale pas les champs facultatifs vides (required=\"false\")", async () => {
+    const report = await jobRoom().fill({ ...values, po_box: "", contact: "", email: "", phone: "", url: "" });
+    expect(report.todo).toEqual([]);
+  });
+
+  it("signale un champ obligatoire resté vide", async () => {
+    const report = await jobRoom().fill({ ...values, job_title: "" });
+    expect(report.todo).toEqual([{ label: "Désignation du poste", value: "" }]);
   });
 
   it("ne fait rien hors du formulaire de saisie", async () => {

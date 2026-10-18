@@ -376,6 +376,8 @@ function renderToDeclare(items) {
     select.append(option);
   }
   declaring = items[0]?.id ?? null;
+  // Coupé dans la liste s'il est long : en entier au survol.
+  select.title = select.selectedOptions[0]?.textContent ?? "";
   show("jr-choices", items.length > 0);
   $("jr-fill").disabled = !declaring;
   if (!items.length) say("jr-message", "Tout est déclaré pour ce mois et le précédent.");
@@ -472,6 +474,7 @@ $("jr-declared").addEventListener("click", declared);
 $("jr-unlink").addEventListener("click", unlink);
 $("jr-choices").addEventListener("change", (event) => {
   declaring = Number(event.target.value) || null;
+  event.target.title = event.target.selectedOptions[0]?.textContent ?? "";
   $("jr-fill").disabled = !declaring;
   show("jr-declared", false);
   show("jr-report", false);
