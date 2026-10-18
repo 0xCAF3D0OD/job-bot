@@ -21,7 +21,9 @@
       .replace(/\s+/g, " ")
       .trim();
 
-  const byId = (part) => document.querySelector(`[id*="${part}"]`);
+  // Le champ lui-même : son cadre, son étiquette ou son message d'erreur peuvent porter un
+  // identifiant voisin (« …company.name-0-label »), placé avant lui dans la page.
+  const byId = (part) => document.querySelector(["input", "select", "textarea"].map((tag) => `${tag}[id*="${part}"]`).join(", "));
   const radio = (code) => document.querySelector(`input[type="radio"][id$="-${code}"]`);
 
   // Textes, dans l'ordre du formulaire. `always` : la valeur de la candidature remplace celle
@@ -133,7 +135,9 @@
       }
       setValue(el, value);
       leave(el);
-      done(el, label);
+      // Vérifié après coup : si la page n'a pas pris la valeur, le champ reste à faire.
+      if (el.value === value) done(el, label);
+      else todo(el, label, value);
     }
 
     // Pays, avant « NPA / Lieu » : les suggestions en dépendent.

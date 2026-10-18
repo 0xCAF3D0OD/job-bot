@@ -89,7 +89,8 @@ const values = {
 };
 
 const jobRoom = (): JobRoom => (globalThis as unknown as { jobbotJobRoom: JobRoom }).jobbotJobRoom;
-const input = (part: string): HTMLInputElement => document.querySelector(`[id*="${part}"]`)!;
+const input = (part: string): HTMLInputElement =>
+  document.querySelector(`input[id*="${part}"], select[id*="${part}"]`)!;
 const checked = (id: string): boolean => (document.getElementById(id) as HTMLInputElement).checked;
 
 describe("remplissage de Job-Room", () => {
@@ -142,6 +143,22 @@ describe("remplissage de Job-Room", () => {
       { label: "NPA / Lieu", value: "9999 Nulle-part" },
       { label: "Taux d'occupation", value: "" },
     ]);
+  });
+
+  it("vise le champ, pas son cadre ni son étiquette au même identifiant", async () => {
+    // Job-Room entoure ses champs de composants dont l'identifiant reprend celui du champ.
+    for (const part of ["global.date", "company.name"]) {
+      const field = input(part);
+      const wrapper = document.createElement("div");
+      wrapper.id = `${field.id}-wrapper`;
+      field.before(wrapper);
+      const hint = document.createElement("span");
+      hint.id = `${field.id}-label`;
+      wrapper.before(hint);
+    }
+    await jobRoom().fill(values);
+    expect(input("global.date").value).toBe("02.10.2026");
+    expect(input("company.name").value).toBe("Acme SA");
   });
 
   it("ne fait rien hors du formulaire de saisie", async () => {

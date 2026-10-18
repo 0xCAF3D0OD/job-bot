@@ -108,3 +108,9 @@ Rien ne change dans les droits de l'extension : la recharger suffit (Firefox : n
   - les routes avec un vrai jeton ;
   - la migration 0051 sur une copie de ta base (13 candidatures), aller et retour.
 - **Non essayé** : le vrai Job-Room (il faut ta connexion) et le panneau dans le navigateur (le navigateur de test ne charge pas d'extension). C'est l'essai réel de ton côté.
+
+## Complément : premier essai réel (2026-10-18)
+
+- **Constat** : la case « Par voie électronique » est cochée, mais la date et l'entreprise restent vides, avec « Champ obligatoire ».
+- **Cause probable** : la recherche par identifiant prenait le premier élément de la page dont l'identifiant contient la clé. Un cadre ou une étiquette de Job-Room porte un identifiant voisin du champ et passe avant lui ; la valeur partait dans cet élément, puis la sortie du champ déclenchait l'erreur. Les cases, déjà cherchées parmi les `input`, n'avaient pas le problème.
+- **Correction** : la recherche se limite aux champs (`input`, `select`, `textarea`). Chaque valeur est relue après la saisie : si la page ne l'a pas prise, le champ passe en orange avec sa valeur à copier, au lieu d'être compté comme rempli. Un test reproduit le cas, et il échoue sans la correction.
