@@ -9,7 +9,7 @@ import { useAuth } from "../composables/useAuth";
 // Un chemin relie les étapes ; chaque scène montre un bout de la plateforme en arrière-plan, un
 // personnage devant, et sa bulle qui explique. Le chemin se colore à mesure qu'on descend.
 // L'accès se fait sur invitation (docs/65).
-const { loggedIn } = useAuth();
+const { loggedIn, me } = useAuth();
 
 const SCENES: { art: IllustrationName; mock: MockKind; title: string; text: string }[] = [
   {
@@ -147,11 +147,21 @@ onBeforeUnmount(() => {
       >
         Se connecter
       </RouterLink>
+      <a
+        v-if="me?.demo_url && !me.demo"
+        :href="me.demo_url"
+        class="button-link"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-test="discover-demo"
+      >
+        Voir la démo
+      </a>
       <p
         v-if="!loggedIn"
         class="hint"
       >
-        L'accès se fait sur invitation.
+        L'accès se fait sur invitation{{ me?.demo_url ? " ; la démo est ouverte à tous, avec des données fictives" : "" }}.
       </p>
     </header>
 

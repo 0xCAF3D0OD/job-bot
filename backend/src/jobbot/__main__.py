@@ -54,7 +54,35 @@ def cmd_api(_: argparse.Namespace) -> int:
 def cmd_worker(_: argparse.Namespace) -> int:
     from jobbot.worker.app import run_worker
 
-    asyncio.run(run_worker(_settings()))
+    settings = _settings()
+    if settings.demo:
+        # Démo publique (docs/72) : rien ne tourne en arrière-plan.
+        print("Démo : pas de worker (JOBBOT_DEMO=true).", file=sys.stderr)
+        return 1
+    asyncio.run(run_worker(settings))
+    return 0
+
+
+def cmd_demo_seed(_: argparse.Namespace) -> int:
+    from jobbot.demo import NotADemoDatabase
+    from jobbot.demo.seed import seed
+    from jobbot.runtime import Runtime
+
+    settings = _settings()
+
+    async def run() -> int:
+        runtime = Runtime.create(settings)
+        try:
+            return await seed(runtime)
+        finally:
+            await runtime.dispose()
+
+    try:
+        count = asyncio.run(run())
+    except NotADemoDatabase as exc:
+        print(f"Refusé : {exc}.", file=sys.stderr)
+        return 1
+    print(f"Démo remplie : {plural(count, 'candidature', 'candidatures')} fictives.")
     return 0
 
 
@@ -306,6 +334,9 @@ def main(argv: list[str] | None = None) -> int:
     anon.add_argument("ids", nargs="+", type=int, help="identifiants d'alertes (journal)")
     anon.add_argument("--out", required=True, help="dossier de sortie")
     anon.set_defaults(func=cmd_anonymize_sample)
+    sub.add_parser(
+        "demo-seed", help="remplit une base de démo avec des données fictives (docs/72)"
+    ).set_defaults(func=cmd_demo_seed)
     password = sub.add_parser("set-password", help="compte de connexion (saisie masquée)")
     password.add_argument("--username", help="identifiant (par défaut : le compte existant)")
     password.set_defaults(func=cmd_set_password)

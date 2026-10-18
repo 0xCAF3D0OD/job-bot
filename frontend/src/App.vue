@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { UNAUTHORIZED_EVENT } from "./api/client";
+import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 
 import NotificationBell from "./components/NotificationBell.vue";
 import BrandFigure from "./components/BrandFigure.vue";
@@ -41,14 +41,24 @@ function onUnauthorized(): void {
 }
 
 
+// Démo publique (docs/72) : une action refusée le dit, au lieu d'une erreur.
+const demoRefused = ref("");
+function onDemoRefused(event: Event): void {
+  demoRefused.value = String((event as CustomEvent<string>).detail || "Dans la démo, rien n'est enregistré.");
+}
+
 onMounted(async () => {
   window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  window.addEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
   await load();
   // Le compteur des Actualités, une fois connecté seulement : sans connexion, elles ne
   // répondent plus (docs/69 §1).
   watch(loggedIn, (yes) => yes && startNewsCount(), { immediate: true });
 });
-onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized));
+onUnmounted(() => {
+  window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  window.removeEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
+});
 </script>
 
 <template>
@@ -100,7 +110,9 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
         class="topbar-actions"
       >
         <NotificationBell />
+        <!-- La démo ne collecte rien (docs/72). -->
         <button
+          v-if="!me?.demo"
           type="button"
           class="secondary small collect-top"
           :disabled="running"
@@ -152,6 +164,29 @@ onUnmounted(() => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized)
       Revenir à {{ mainProfile.name }}
     </button>
   </div>
+  <div
+    v-if="me?.demo && !route.meta.bare"
+    class="demo-banner"
+    role="note"
+    data-test="demo-banner"
+  >
+    <strong>Démo</strong>
+    <span>Données fictives : rien de ce que tu fais n'est enregistré.</span>
+    <RouterLink to="/la-plateforme">
+      Découvrir jobA1
+    </RouterLink>
+    <a
+      href="https://github.com/0xCAF3D0OD/job-bot"
+      target="_blank"
+      rel="noopener noreferrer"
+    >Le code</a>
+  </div>
+  <AppToast
+    v-if="demoRefused"
+    :message="demoRefused"
+    data-test="demo-refused"
+    @close="demoRefused = ''"
+  />
   <AppToast
     v-if="message"
     :message="message"

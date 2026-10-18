@@ -12340,6 +12340,22 @@
             ],
             "title": "Welcome",
             "default": "done"
+          },
+          "demo": {
+            "type": "boolean",
+            "title": "Demo",
+            "default": false
+          },
+          "demo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demo Url"
           }
         },
         "type": "object",

@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from jobbot import demo
 from jobbot.api.middleware import RequestContextMiddleware
 from jobbot.api.routes import (
     account,
@@ -53,6 +54,10 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        if settings.demo:
+            # Garde-fou (docs/72 §2) : jamais le mode démo sur une base qui a un vrai compte.
+            async with runtime.sessionmaker() as session:
+                await demo.check(session)
         yield
         await runtime.dispose()
 

@@ -92,7 +92,10 @@ async function signOut(): Promise<void> {
         </li>
       </ul>
     </nav>
-    <div class="mobile-menu-section">
+    <div
+      v-if="!me?.demo"
+      class="mobile-menu-section"
+    >
       <button
         type="button"
         class="link"

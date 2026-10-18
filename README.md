@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/71-extension-publiee.md](docs/71-extension-publiee.md) (0.58.1)
+- Version en cours : [docs/72-demo-publique.md](docs/72-demo-publique.md) (0.59.0)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -97,6 +97,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.57.1 | Job-Room dans Firefox : le remplissage tourne dans la page, les valeurs tapées sont prises ; chaque valeur relue après la saisie | livrée |
 | 0.58.0 | L'extension prête pour la boutique de Mozilla : relier en un clic (« Relier ce navigateur »), onglet d'accueil à l'installation, paquet, fiche et politique de confidentialité | livrée |
 | 0.58.1 | Premier essai réel : le panneau tient dans sa largeur, les champs facultatifs de Job-Room ne sont plus signalés, essai par le paquet (zip) | livrée |
+| 0.59.0 | La démo publique : une installation à part, sans connexion, en lecture seule, remplie de données fictives par `jobbot demo-seed` | livrée |
 
 ## Lancer en local
 

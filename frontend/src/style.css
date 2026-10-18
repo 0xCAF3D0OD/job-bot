@@ -2546,3 +2546,8 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .extension-link .form-actions { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
 .extension-link-done { color: var(--accent); font-weight: 500; }
 .extension-tokens-title { font-weight: 600; margin: 0.75rem 0 0.25rem; }
+
+/* Démo publique (docs/72) : bande sous la barre du haut. */
+.demo-banner { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; align-items: baseline; justify-content: center; padding: 0.55rem 1rem; background: var(--accent-soft); color: var(--text); font-size: 0.88rem; text-align: center; }
+.demo-banner strong { color: var(--accent); }
+.demo-banner a { color: var(--accent); font-weight: 500; }

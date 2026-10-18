@@ -54,6 +54,10 @@ class Me(BaseModel):
     is_owner: bool = False
     # L'accueil après la première connexion (docs/66) : à faire, remis à plus tard, fait.
     welcome: Literal["pending", "postponed", "done"] = "done"
+    # Démo publique (docs/72) : bande « Démo », écritures refusées.
+    demo: bool = False
+    # Adresse d'une démo en ligne, proposée par « La plateforme ».
+    demo_url: str | None = None
 
 
 class LoginIn(BaseModel):
@@ -79,9 +83,24 @@ async def me(request: Request) -> Me:
         welcome_status = (
             welcome.status(await welcome.state(session)) if found is not None else "done"
         )
+    demo_url = runtime.settings.demo_url
+    if runtime.settings.demo:
+        return Me(
+            authenticated=True,
+            username=None,
+            setup_needed=False,
+            auth_enabled=False,
+            demo=True,
+            demo_url=demo_url,
+        )
     if not runtime.settings.auth_enabled:
         return Me(
-            authenticated=True, username=None, setup_needed=False, auth_enabled=False, is_owner=True
+            authenticated=True,
+            username=None,
+            setup_needed=False,
+            auth_enabled=False,
+            is_owner=True,
+            demo_url=demo_url,
         )
     found = _current(request)
     return Me(
@@ -91,6 +110,7 @@ async def me(request: Request) -> Me:
         auth_enabled=True,
         is_owner=found is not None and found.user_id == owner,
         welcome=welcome_status,
+        demo_url=demo_url,
     )
 
 
