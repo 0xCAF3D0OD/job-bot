@@ -112,5 +112,6 @@ Rien ne change dans les droits de l'extension : la recharger suffit (Firefox : n
 ## Complément : premier essai réel (2026-10-18)
 
 - **Constat** : la case « Par voie électronique » est cochée, mais la date et l'entreprise restent vides, avec « Champ obligatoire ».
-- **Cause probable** : la recherche par identifiant prenait le premier élément de la page dont l'identifiant contient la clé. Un cadre ou une étiquette de Job-Room porte un identifiant voisin du champ et passe avant lui ; la valeur partait dans cet élément, puis la sortie du champ déclenchait l'erreur. Les cases, déjà cherchées parmi les `input`, n'avaient pas le problème.
-- **Correction** : la recherche se limite aux champs (`input`, `select`, `textarea`). Chaque valeur est relue après la saisie : si la page ne l'a pas prise, le champ passe en orange avec sa valeur à copier, au lieu d'être compté comme rempli. Un test reproduit le cas, et il échoue sans la correction.
+- **Première hypothèse, écartée** : un cadre ou une étiquette au même identifiant, placé avant le champ. Le relevé des identifiants montre que le champ vient bien en premier ; seuls les messages d'erreur (`…-validation`) et l'aide (`…-help`) portent un identifiant voisin, après lui.
+- **Gardé quand même** : la recherche se limite aux champs (`input`, `select`, `textarea`), et chaque valeur est relue après la saisie. Si la page ne l'a pas prise, le champ passe en orange avec sa valeur à copier, au lieu d'être compté comme rempli.
+- **À vérifier** : l'essai suppose la plateforme de cette version (routes de l'extension, migration 0051) et l'extension de cette branche.
