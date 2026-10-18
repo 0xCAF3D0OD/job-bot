@@ -18,4 +18,17 @@ describe("La plateforme, en parcours (docs/67)", () => {
     expect(wrapper.find("[data-test=discover-login]").attributes("href")).toBe("/connexion");
     expect(wrapper.text()).toContain("ne partent jamais à l'IA");
   });
+
+  it("propose la démo quand son adresse est réglée, mais pas dans la démo elle-même (docs/72)", async () => {
+    const me = { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done" as const, demo: false, demo_url: "https://demo.exemple.ch" };
+    useAuth().me.value = me;
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    await router.push("/la-plateforme");
+    const wrapper = mount(DiscoverView, { global: { plugins: [router] } });
+    expect(wrapper.find("[data-test=discover-demo]").attributes("href")).toBe("https://demo.exemple.ch");
+    useAuth().me.value = { ...me, authenticated: true, demo: true };
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find("[data-test=discover-demo]").exists()).toBe(false);
+    useAuth().me.value = null;
+  });
 });

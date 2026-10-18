@@ -34,7 +34,7 @@ const counts = ref({ jobs: 0, economy: 0, videos: 0 });
 const loaded = ref(false);
 usePageReady("news", () => loaded.value);
 const { reset } = useNewsCount();
-const { loggedIn } = useAuth();
+const { loggedIn, me } = useAuth();
 let poll: ReturnType<typeof setTimeout> | undefined;
 let polls = 0;
 
@@ -436,6 +436,7 @@ onUnmounted(() => {
         <template v-else>
           <span v-if="page.fetched_at">Relevé {{ since(page.fetched_at) }}</span>
           <button
+            v-if="!me?.demo"
             type="button"
             class="link"
             data-test="news-refresh"

@@ -15,7 +15,7 @@ export function useAuth() {
     loading ??= (async () => {
       try {
         const { data } = await api.GET("/api/auth/me");
-        me.value = data ?? { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done" };
+        me.value = data ?? { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
       } finally {
         loading = null;
       }
@@ -36,7 +36,7 @@ export function useAuth() {
   async function logout(everywhere = false): Promise<void> {
     if (everywhere) await api.POST("/api/auth/logout-all");
     else await api.POST("/api/auth/logout");
-    me.value = { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done" };
+    me.value = { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
   }
 
   function expired(): void {

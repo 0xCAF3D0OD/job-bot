@@ -4213,6 +4213,13 @@ export interface components {
              * @enum {string}
              */
             welcome: "pending" | "postponed" | "done";
+            /**
+             * Demo
+             * @default false
+             */
+            demo: boolean;
+            /** Demo Url */
+            demo_url?: string | null;
         };
         /** MessageIn */
         MessageIn: {

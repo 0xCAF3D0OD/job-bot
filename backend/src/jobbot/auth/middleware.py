@@ -13,7 +13,7 @@ from typing import Any
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from jobbot import accounts
+from jobbot import accounts, demo
 from jobbot.auth import service
 from jobbot.extension import service as extension_service
 from jobbot.log import get_logger
@@ -101,8 +101,8 @@ def session_cookie(token: str, headers: dict[str, str], *, clear: bool = False) 
     return "; ".join(parts)
 
 
-async def _json(send: Send, status: int, detail: str) -> None:
-    body = json.dumps({"detail": detail}).encode()
+async def _json(send: Send, status: int, detail: str, **extra: Any) -> None:
+    body = json.dumps({"detail": detail, **extra}).encode()
     await send(
         {
             "type": "http.response.start",
@@ -124,6 +124,9 @@ class AuthMiddleware:
             return
         method: str = scope.get("method", "GET")
         headers = _headers(scope)
+        if scope["app"].state.runtime.settings.demo:
+            await self._demo(scope, receive, send, method)
+            return
         if path.startswith(EXTENSION_PREFIX):
             await self._extension(scope, receive, send, headers)
             return
@@ -180,6 +183,20 @@ class AuthMiddleware:
 
         with accounts.use(account):
             await self.app(scope, receive, send_with_cookie)
+
+    async def _demo(self, scope: Scope, receive: Receive, send: Send, method: str) -> None:
+        """Démo publique (docs/72) : sans connexion, sur le compte fictif, en lecture seule.
+        Toute écriture est refusée, avec un message que l'interface montre tel quel."""
+        if method not in SAFE_METHODS:
+            await _json(send, 403, demo.MESSAGE, demo=True)
+            return
+        runtime: Any = scope["app"].state.runtime
+        async with runtime.sessionmaker.begin() as session:
+            account = await demo.account(session)
+        scope.setdefault("state", {})["user"] = None
+        scope["headers"] = [(k, v) for k, v in scope["headers"] if k != PROFILE_HEADER]
+        with accounts.use(account):
+            await self.app(scope, receive, send)
 
     async def _extension(
         self, scope: Scope, receive: Receive, send: Send, headers: dict[str, str]

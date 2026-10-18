@@ -19,6 +19,8 @@ export function storedProfile(): string | null {
 
 // Session expirée ou fermée ailleurs : la page de connexion prend le relais (docs/18 §1).
 export const UNAUTHORIZED_EVENT = "jobbot:unauthorized";
+// Démo publique (docs/72) : une écriture refusée ; le message est montré tel quel.
+export const DEMO_REFUSED_EVENT = "jobbot:demo-refused";
 
 api.use({
   onRequest({ request }) {
@@ -26,9 +28,13 @@ api.use({
     if (profile) request.headers.set(PROFILE_HEADER, profile);
     return request;
   },
-  onResponse({ request, response }) {
+  async onResponse({ request, response }) {
     if (response.status === 401 && !new URL(request.url).pathname.startsWith("/api/auth/")) {
       globalThis.dispatchEvent?.(new Event(UNAUTHORIZED_EVENT));
+    }
+    if (response.status === 403) {
+      const body = (await response.clone().json().catch(() => null)) as { demo?: boolean; detail?: string } | null;
+      if (body?.demo) globalThis.dispatchEvent?.(new CustomEvent(DEMO_REFUSED_EVENT, { detail: body.detail }));
     }
     return response;
   },

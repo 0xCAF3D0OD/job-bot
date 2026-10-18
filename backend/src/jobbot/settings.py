@@ -86,6 +86,12 @@ class Settings(BaseSettings):
     # false seulement pour un essai local : toutes les pages redeviennent ouvertes.
     auth_enabled: bool = True
 
+    # Démo publique (docs/72) : installation à part, sans connexion, en lecture seule, sur le
+    # compte fictif rempli par `jobbot demo-seed`. Jamais sur une vraie plateforme.
+    demo: bool = False
+    # Adresse d'une démo en ligne : « La plateforme » propose « Voir la démo » (toute installation).
+    demo_url: str | None = None
+
     @field_validator("database_url")
     @classmethod
     def _check_database_url(cls, value: SecretStr) -> SecretStr:
@@ -95,6 +101,12 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _derive(self) -> "Settings":
+        if self.demo and (self.llm_configured or self.imap_configured or self.ntfy_configured):
+            # Une démo publique ne doit ni dépenser d'IA, ni lire une boîte, ni notifier.
+            raise ValueError(
+                "JOBBOT_DEMO : retirer de cette installation la clé de l'IA, la boîte e-mail "
+                "et ntfy"
+            )
         self.log_level = self.log_level.upper()
         if self.log_format is None:
             self.log_format = LogFormat.JSON if self.env is Env.PROD else LogFormat.CONSOLE

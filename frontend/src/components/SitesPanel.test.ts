@@ -18,7 +18,7 @@ vi.mock("../api/client", () => ({
 afterEach(() => vi.resetAllMocks());
 // L'exploitant : ajouter ou retirer un site change la liste commune (docs/65).
 beforeEach(() => {
-  useAuth().me.value = { authenticated: true, username: "kevin", setup_needed: false, auth_enabled: true, is_owner: true, welcome: "done" };
+  useAuth().me.value = { authenticated: true, username: "kevin", setup_needed: false, auth_enabled: true, is_owner: true, welcome: "done", demo: false };
 });
 
 const site = (id: number, slug: string, extra: Record<string, unknown> = {}) => ({
@@ -75,7 +75,7 @@ describe("SitesPanel", () => {
 
 describe("SitesPanel, compte invité (docs/65)", () => {
   it("met en pause pour soi, sans ajouter ni retirer de site", async () => {
-    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done" };
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
     GET.mockResolvedValue({ data: [] });
     const wrapper = mount(SitesPanel);
     await flushPromises();

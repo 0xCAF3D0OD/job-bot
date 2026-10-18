@@ -1,0 +1,180 @@
+"""Démo publique (docs/72) : réglage, garde-fou, lecture seule, jeu de données fictif.
+
+Sur une base à part (`jobbot_demo_test`) : le remplissage vide les comptes, il ne doit pas
+toucher la base des autres tests.
+"""
+
+from collections.abc import AsyncIterator, Iterator
+from datetime import date
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.engine import make_url
+
+from jobbot import accounts, demo
+from jobbot.api.app import create_app
+from jobbot.db.models import Application, Evaluation, Offer, User
+from jobbot.db.schema import upgrade
+from jobbot.demo import data
+from jobbot.demo.seed import next_thursday, seed, sent_day
+from jobbot.runtime import Runtime
+from jobbot.settings import ConfigError, load_settings
+
+from .conftest import TEST_DATABASE_URL, make_settings
+
+TODAY = date(2026, 10, 18)
+DEMO_DATABASE_URL = str(make_url(TEST_DATABASE_URL).set(database="jobbot_demo_test"))
+
+
+@pytest.fixture(scope="module")
+def demo_database() -> Iterator[str]:
+    url = make_url(DEMO_DATABASE_URL)
+    admin = create_engine(url.set(database="postgres"), isolation_level="AUTOCOMMIT")
+    with admin.connect() as conn:
+        exists = conn.scalar(
+            text("select 1 from pg_database where datname = :name"), {"name": url.database}
+        )
+        if not exists:
+            conn.execute(text(f'create database "{url.database}"'))
+    admin.dispose()
+    engine = create_engine(DEMO_DATABASE_URL)
+    with engine.begin() as conn:
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
+    engine.dispose()
+    upgrade(make_settings(database_url=DEMO_DATABASE_URL))
+    yield DEMO_DATABASE_URL
+
+
+@pytest.fixture
+async def demo_runtime(demo_database: str) -> AsyncIterator[Runtime]:
+    rt = Runtime.create(make_settings(database_url=demo_database, demo=True))
+    yield rt
+    await rt.dispose()
+
+
+def test_demo_refuses_ai_mail_and_ntfy(monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(ValueError, match="JOBBOT_DEMO"):
+        make_settings(demo=True, anthropic_api_key="sk-test")
+    monkeypatch.setenv("JOBBOT_DATABASE_URL", DEMO_DATABASE_URL)
+    monkeypatch.setenv("JOBBOT_DEMO", "true")
+    monkeypatch.setenv("JOBBOT_NTFY_TOPIC", "sujet")
+    with pytest.raises(ConfigError, match="JOBBOT_DEMO"):
+        load_settings()
+
+
+def test_dates_follow_the_day() -> None:
+    assert next_thursday(TODAY) == date(2026, 10, 22)  # dimanche -> jeudi
+    assert next_thursday(date(2026, 10, 22)) == date(2026, 10, 29)
+    # Le mois en cours s'arrête la veille ; les précédents vont jusqu'à leur dernier jour.
+    assert sent_day(TODAY, 0, 1.0) == date(2026, 10, 17)
+    assert sent_day(TODAY, 1, 0.0) == date(2026, 9, 1)
+    assert sent_day(TODAY, 1, 1.0) == date(2026, 9, 30)
+    assert sent_day(date(2026, 1, 1), 0, 0.5) == date(2026, 1, 1)
+
+
+async def test_seed_fills_a_believable_search(demo_runtime: Runtime) -> None:
+    count = await seed(demo_runtime, TODAY)
+    # Un deuxième passage repart de zéro : la démo est rejouée chaque nuit.
+    assert await seed(demo_runtime, TODAY) == count
+    async with demo_runtime.sessionmaker() as session:
+        users = list(await session.scalars(select(User.username).order_by(User.id)))
+        assert users == [accounts.PLACEHOLDER_USERNAME, demo.DEMO_USERNAME]
+        visitor = await demo.account(session)
+    with accounts.use(visitor):
+        async with demo_runtime.sessionmaker() as session:
+            months = dict(
+                (
+                    await session.execute(
+                        select(Application.orp_month, func.count()).group_by(Application.orp_month)
+                    )
+                ).all()
+            )
+            # Aucune offre fictive n'est prise pour le doublon d'une autre.
+            duplicates = await session.scalar(
+                select(func.count()).select_from(Offer).where(Offer.duplicate_of.is_not(None))
+            )
+            filtered = list(
+                await session.scalars(
+                    select(Offer.title).where(Offer.status == "filtered_out").order_by(Offer.title)
+                )
+            )
+            reasons = {
+                r["rule"]
+                for e in await session.scalars(
+                    select(Evaluation).where(Evaluation.filter_passed.is_(False))
+                )
+                for r in e.filter_reasons
+            }
+            upcoming = await session.scalar(select(func.max(Application.interview_at)))
+    assert count == sum(months.values())
+    assert months["2026-10"] == 6 and months["2026-09"] == 10 and months["2026-08"] == 10
+    assert months["2026-07"] == 10
+    assert duplicates == 0
+    assert filtered == ["Ingénieur·e cloud à 40 %", "Platform Engineer", "Stage DevOps"]
+    assert reasons == {"contract", "locations", "min_rate"}
+    # L'entretien à venir : jeudi prochain.
+    assert upcoming is not None and upcoming.date() == next_thursday(TODAY)
+    # Rien que des noms d'entreprise inventés, reconnaissables.
+    words = (
+        "Exemple",
+        "Démo",
+        "Essai",
+        "Modèle",
+        "Prototype",
+        "Échantillon",
+        "Test",
+        "Bac à sable",
+        "Maquette",
+        "Brouillon",
+        "Fictif",
+        "Témoin",
+    )
+    assert all(any(w in spec.company for w in words) for spec in data.OFFERS)
+
+
+async def test_read_only_without_login(demo_runtime: Runtime) -> None:
+    await seed(demo_runtime, TODAY)
+    app = create_app(demo_runtime.settings, demo_runtime)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        me = (await client.get("/api/auth/me")).json()
+        assert (me["demo"], me["authenticated"], me["is_owner"]) == (True, True, False)
+        month = (await client.get("/api/orp", params={"month": "2026-09"})).json()
+        assert month["count"] == 10
+        refused = await client.put("/api/applications/1/job-room")
+        assert refused.status_code == 403
+        assert refused.json() == {"detail": demo.MESSAGE, "demo": True}
+        assert (await client.post("/api/collect")).status_code == 403
+        login = await client.post("/api/auth/login", json={"username": "x", "password": "y"})
+        assert login.status_code == 403
+
+
+async def test_guard_refuses_a_real_database() -> None:
+    """Le mode démo ne démarre pas, et le remplissage refuse, sur une base qui a un vrai compte."""
+    real = Runtime.create(make_settings(demo=True))
+    try:
+        async with real.sessionmaker.begin() as session:
+            session.add(User(username="kevin-test", password_hash="scrypt$x"))
+        with pytest.raises(demo.NotADemoDatabase):
+            await seed(real, TODAY)
+        app = create_app(real.settings, real)
+        with pytest.raises(demo.NotADemoDatabase):
+            async with app.router.lifespan_context(app):
+                pass
+    finally:
+        async with real.sessionmaker.begin() as session:
+            await session.execute(text("delete from users where username = 'kevin-test'"))
+        await real.dispose()
+
+
+async def test_demo_url_offered_by_any_platform() -> None:
+    """« La plateforme » d'une vraie installation propose la démo quand son adresse est réglée."""
+    rt = Runtime.create(make_settings(demo_url="https://demo.exemple.ch"))
+    try:
+        app = create_app(rt.settings, rt)
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            me = (await client.get("/api/auth/me")).json()
+    finally:
+        await rt.dispose()
+    assert (me["demo"], me["demo_url"]) == (False, "https://demo.exemple.ch")
