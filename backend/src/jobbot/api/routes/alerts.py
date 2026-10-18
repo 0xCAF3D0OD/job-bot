@@ -102,8 +102,10 @@ async def _page(runtime: Runtime) -> AlertsPage:
                 .limit(10)
             )
         )
-        await service.propose(session)
-        await session.flush()
+        # Démo : les recherches fictives sont déjà là, rien ne s'écrit (docs/76 §1).
+        if not settings.demo:
+            await service.propose(session)
+            await session.flush()
         sites = list(await session.scalars(select(Site).where(followed()).order_by(Site.id)))
         searches = list(
             await session.scalars(

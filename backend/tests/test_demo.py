@@ -168,6 +168,75 @@ async def test_guard_refuses_a_real_database() -> None:
         await real.dispose()
 
 
+async def test_guard_refuses_data_outside_the_demo(demo_database: str) -> None:
+    """Une installation neuve, ou sans connexion, a un exploitant sans mot de passe : ce sont
+    ses données qui la distinguent d'une démo (docs/76 §1). Rien n'est effacé."""
+    rt = Runtime.create(make_settings(database_url=demo_database, demo=True))
+    owner = None
+    try:
+        await seed(rt, TODAY)
+        async with rt.sessionmaker() as session:
+            owner = await session.scalar(
+                select(User.id).where(User.username == accounts.PLACEHOLDER_USERNAME)
+            )
+        with accounts.use(owner):
+            async with rt.sessionmaker.begin() as session:
+                session.add(
+                    Application(
+                        sent_at=TODAY,
+                        method="electronique",
+                        company="Vraie SA",
+                        job_title="Vrai poste",
+                        orp_month="2026-10",
+                    )
+                )
+        with pytest.raises(demo.NotADemoDatabase, match="données"):
+            await seed(rt, TODAY)
+        with accounts.use(owner):
+            async with rt.sessionmaker() as session:
+                kept = await session.scalar(select(func.count()).select_from(Application))
+        assert kept == 1
+        # Sans le mode démo, la commande ne touche à rien, même sur une base de démo.
+        plain = Runtime.create(make_settings(database_url=demo_database))
+        try:
+            with pytest.raises(demo.NotADemoDatabase, match="JOBBOT_DEMO"):
+                await seed(plain, TODAY)
+        finally:
+            await plain.dispose()
+    finally:
+        # Au nom de l'exploitant : les règles de la base ne montrent que ses lignes.
+        with accounts.use(owner):
+            async with rt.sessionmaker.begin() as session:
+                await session.execute(text("DELETE FROM applications WHERE company = 'Vraie SA'"))
+        await rt.dispose()
+
+
+async def test_demo_reads_write_nothing(demo_runtime: Runtime) -> None:
+    """Une lecture qui enregistrerait quelque chose (date d'export du CSV) n'écrit rien en démo,
+    et la base refuse toute écriture pendant une requête de visiteur."""
+    await seed(demo_runtime, TODAY)
+    app = create_app(demo_runtime.settings, demo_runtime)
+
+    async def months() -> int:
+        async with demo_runtime.engine.begin() as conn:
+            return int(await conn.scalar(text("select count(*) from orp_months")) or 0)
+
+    before = await months()
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        assert (await client.get("/api/orp/2026-09/csv")).status_code == 200
+        # Les pages qui écrivaient en lisant (catalogue des formations, propositions
+        # d'alertes) répondent sans rien écrire.
+        assert (await client.get("/api/trainings")).status_code == 200
+        assert (await client.get("/api/alert-searches")).status_code == 200
+    assert await months() == before
+    from jobbot.db.base import read_only
+
+    with read_only():
+        async with demo_runtime.sessionmaker() as session:
+            with pytest.raises(Exception, match="read-only"):
+                await session.execute(text("insert into orp_months (month) values ('2026-01')"))
+
+
 async def test_demo_url_offered_by_any_platform() -> None:
     """« La plateforme » d'une vraie installation propose la démo quand son adresse est réglée."""
     rt = Runtime.create(make_settings(demo_url="https://demo.exemple.ch"))

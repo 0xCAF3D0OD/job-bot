@@ -97,7 +97,8 @@ class SuggestResult(BaseModel):
 
 async def _ensure_catalog(runtime: Runtime) -> None:
     global _synced
-    if _synced:
+    # Démo : le remplissage a déjà posé le catalogue, et rien ne s'écrit (docs/76 §1).
+    if _synced or runtime.settings.demo:
         return
     async with runtime.sessionmaker.begin() as session:
         await service.sync_catalog(session)

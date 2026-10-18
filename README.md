@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/75-entrainement-entretien.md](docs/75-entrainement-entretien.md) (0.62.0)
+- Version en cours : [docs/76-revue-0.57-0.62.md](docs/76-revue-0.57-0.62.md) (0.62.1)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
 
@@ -101,7 +101,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.59.1 | `make demo` : la démo en local en une commande, pour la montrer depuis son ordinateur | livrée |
 | 0.60.0 | Des offres plus légères : une ligne par jour, une offre sur une ligne, une seule alerte si nécessaire, les filtres secondaires repliés | livrée |
 | 0.61.0 | Les actions rangées dans « ⋯ » : dans chaque partie, le contenu visible, au plus une action importante, le reste dans un menu | livrée |
-| 0.62.0 | S'entraîner à l'entretien : l'IA joue le recruteur, cinq questions, une relance au plus, puis un retour question par question | en cours |
+| 0.62.0 | S'entraîner à l'entretien : l'IA joue le recruteur, cinq questions, une relance au plus, puis un retour question par question | livrée |
+| 0.62.1 | Revue : garde-fou de la démo, un seul cadre par bloc, jeton de liaison qui expire, démo en lecture seule, entraînement verrouillé | en cours |
 
 ## Lancer en local
 

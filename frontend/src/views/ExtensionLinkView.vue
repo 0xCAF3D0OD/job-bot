@@ -26,7 +26,7 @@ function stop(): void {
 }
 
 async function link(): Promise<void> {
-  const { data } = await api.POST("/api/extension-tokens", { body: { name } });
+  const { data } = await api.POST("/api/extension-tokens", { body: { name, link: true } });
   if (!data) {
     state.value = "error";
     return;

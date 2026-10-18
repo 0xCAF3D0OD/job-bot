@@ -265,3 +265,21 @@ def test_guess_language() -> None:
     )
     assert practice.guess_language("Nous cherchons pour notre équipe un ingénieur et vous") == "fr"
     assert practice.guess_language(None) == "fr"
+
+
+async def test_two_answers_at_once_keep_one(client: AsyncClient, runtime: Runtime, ai: Any) -> None:
+    """Deux envois simultanés : un seul passe, une seule question suit (docs/76 §1)."""
+    import asyncio
+
+    await reset(runtime)
+    fake = ai([question(1), question(2), question(3)])
+    practice_id = (await client.post("/api/interview-practices", json={})).json()["id"]
+    url = f"/api/interview-practices/{practice_id}/answer"
+    first, second = await asyncio.gather(
+        client.post(url, json={"text": "Une"}), client.post(url, json={"text": "Deux"})
+    )
+    assert sorted([first.status_code, second.status_code]) == [200, 409]
+    body = (await client.get(f"/api/interview-practices/{practice_id}")).json()
+    assert [t["role"] for t in body["turns"]] == ["recruteur", "candidat", "recruteur"]
+    assert len(fake.calls) == 2
+    await reset(runtime)

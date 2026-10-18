@@ -6,13 +6,14 @@ plateforme par un jeton révocable ; seule son empreinte est gardée en base.
 
 import secrets
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from importlib import resources
+from typing import Any
 from urllib.parse import urlsplit
 
 import anthropic
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.auth.service import token_hash
@@ -31,6 +32,8 @@ DESCRIPTION_LIMIT = 4_000
 INSTRUCTIONS = (
     resources.files("jobbot.llm").joinpath("prompts/form-answer-v1.md").read_text("utf-8")
 )
+# Un jeton de liaison doit être lu par l'extension dans ce délai (docs/76 §1).
+LINK_TTL = timedelta(minutes=2)
 # Offres proposées quand la page n'est pas reconnue : celles en cours de préparation.
 CHOICES = 10
 
@@ -38,9 +41,22 @@ CHOICES = 10
 # --- Jetons -------------------------------------------------------------------------------
 
 
-async def create_token(session: AsyncSession, name: str) -> tuple[ExtensionToken, str]:
+def usable() -> Any:
+    """Ni révoqué, ni jeton de liaison resté sans lecture au-delà de son délai."""
+    return ExtensionToken.revoked_at.is_(None) & or_(
+        ExtensionToken.expires_at.is_(None), ExtensionToken.expires_at > func.now()
+    )
+
+
+async def create_token(
+    session: AsyncSession, name: str, *, link: bool = False
+) -> tuple[ExtensionToken, str]:
     token = PREFIX + secrets.token_urlsafe(32)
-    row = ExtensionToken(name=name, token_hash=token_hash(token))
+    row = ExtensionToken(
+        name=name,
+        token_hash=token_hash(token),
+        expires_at=datetime.now(UTC) + LINK_TTL if link else None,
+    )
     session.add(row)
     await session.flush()
     return row, token
@@ -50,12 +66,12 @@ async def authenticate(session: AsyncSession, token: str | None) -> ExtensionTok
     if not token or not token.startswith(PREFIX):
         return None
     row = await session.scalar(
-        select(ExtensionToken).where(
-            ExtensionToken.token_hash == token_hash(token), ExtensionToken.revoked_at.is_(None)
-        )
+        select(ExtensionToken).where(ExtensionToken.token_hash == token_hash(token), usable())
     )
     if row is not None:
         row.last_used_at = datetime.now(UTC)
+        # Lu à temps : le jeton de liaison devient un jeton ordinaire.
+        row.expires_at = None
     return row
 
 

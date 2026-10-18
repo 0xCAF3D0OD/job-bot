@@ -44,7 +44,8 @@ describe("relier ce navigateur", () => {
     expect(token().dataset.token).toBeUndefined();
     await wrapper.find("[data-test=link-browser]").trigger("click");
     await flushPromises();
-    expect(POST).toHaveBeenCalledWith("/api/extension-tokens", { body: { name: browserName() } });
+    // Jeton de liaison : le serveur le refuse s'il n'est pas lu dans les 2 minutes (docs/76 §1).
+    expect(POST).toHaveBeenCalledWith("/api/extension-tokens", { body: { name: browserName(), link: true } });
     expect(token().dataset.token).toBe("jbx_secret");
     expect(token().hidden).toBe(true);
     // Jamais dans l'adresse : seulement le signal.

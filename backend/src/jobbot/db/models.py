@@ -994,6 +994,9 @@ class ExtensionToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Jeton de liaison (« Relier ce navigateur ») : à lire dans les 2 minutes, puis effacé à la
+    # première utilisation (docs/76 §1).
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Contact(Base):

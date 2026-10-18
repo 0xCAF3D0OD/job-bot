@@ -56,8 +56,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         if settings.demo:
             # Garde-fou (docs/72 §2) : jamais le mode démo sur une base qui a un vrai compte.
-            async with runtime.sessionmaker() as session:
-                await demo.check(session)
+            await demo.check(runtime.sessionmaker)
         yield
         await runtime.dispose()
 
