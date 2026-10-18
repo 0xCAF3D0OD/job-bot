@@ -17,10 +17,12 @@ vi.mock("../api/client", () => ({
   },
 }));
 const loggedIn = ref(true);
-vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ loggedIn }) }));
+const me = ref<{ demo: boolean } | null>({ demo: false });
+vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ loggedIn, me }) }));
 afterEach(() => {
   vi.resetAllMocks();
   loggedIn.value = true;
+  me.value = { demo: false };
 });
 
 const item = (id: number, kind: string, extra: Record<string, unknown> = {}) => ({
@@ -221,6 +223,13 @@ describe("NewsView", () => {
     await vi.advanceTimersByTimeAsync(4_000);
     expect(newsCalls().length).toBe(before + 1);
     vi.useRealTimers();
+  });
+
+  it("dans la démo : la visite n'enregistre rien, donc pas de message de refus", async () => {
+    me.value = { demo: true };
+    mockApi(pageOf([item(1, "articles")], { new_articles: 3 }));
+    await mountView();
+    expect(POST).not.toHaveBeenCalledWith("/api/news/seen");
   });
 
   it("sans connexion : lecture seule, rien n'est enregistré", async () => {
