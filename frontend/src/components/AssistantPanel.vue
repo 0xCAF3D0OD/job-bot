@@ -10,6 +10,7 @@ import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
 import CopyLabel from "./CopyLabel.vue";
 import EngagementMoment from "./EngagementMoment.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 type Conversation = components["schemas"]["ConversationOut"];
 // Propositions de l'assistant (docs/52) : affichées sous sa réponse, faites sur un clic.
@@ -251,6 +252,11 @@ const DONE_TEXT: Record<string, string> = {
 function day(value: string): string {
   return new Date(value).toLocaleDateString("fr-CH", { day: "numeric", month: "short" });
 }
+
+// « Nouvelle discussion » visible, l'effacement dans « ⋯ » (docs/74).
+const headItems: MoreMenuItem[] = [
+  { label: "Effacer la discussion", test: "assistant-erase", danger: true, run: () => void erase() },
+];
 </script>
 
 <template>
@@ -289,15 +295,12 @@ function day(value: string): string {
           >
             Nouvelle discussion
           </button>
-          <button
+          <MoreMenu
             v-if="lines.length"
-            type="button"
-            class="link danger"
-            data-test="assistant-erase"
-            @click="erase"
-          >
-            Effacer
-          </button>
+            :items="headItems"
+            label="Plus d'actions sur la discussion"
+            test-id="assistant-more"
+          />
           <button
             type="button"
             class="assistant-close"

@@ -44,6 +44,29 @@ const summary = computed(() => {
   return parts.join(" · ");
 });
 
+const canFeedback = computed(
+  () => !upcoming.value && (feedback.value || (props.application.status === "entretien" && !latest.value)),
+);
+const interviewItems = computed<MoreMenuItem[]>(() => {
+  const a = props.application;
+  const items: MoreMenuItem[] = [];
+  if (upcoming.value) {
+    items.push({
+      label: "Ajouter à mon agenda",
+      test: "interview-calendar",
+      href: `/api/applications/${a.id}/interview.ics?origin=${encodeURIComponent(origin)}`,
+      download: true,
+    });
+  }
+  const last = latest.value;
+  if (last) {
+    items.push({ label: "Voir le retour", test: "interview-open", run: () => emit("interview", a, last) });
+    if (!feedback.value) {
+      items.push({ label: "Ajouter un autre entretien", test: "interview-add", run: () => emit("interview", a, null) });
+    }
+  }
+  return items;
+});
 const followUpOpen = ref(false);
 function onFollowedUp(): void {
   followUpOpen.value = false;
@@ -184,7 +207,16 @@ const onStatus = (event: Event): void =>
       class="panel-section"
       data-test="section-interviews"
     >
-      <h3>Entretiens</h3>
+      <div class="panel-section-head">
+        <h3>Entretiens</h3>
+        <MoreMenu
+          v-if="interviewItems.length"
+          class="section-more"
+          :items="interviewItems"
+          label="Actions sur les entretiens"
+          test-id="interviews-more"
+        />
+      </div>
       <p
         v-if="upcoming"
         class="panel-line"
@@ -198,7 +230,11 @@ const onStatus = (event: Event): void =>
       >
         {{ summary }}
       </p>
-      <p class="panel-section-links">
+      <!-- Une seule action visible, la plus utile maintenant ; le reste dans « ⋯ » (docs/74). -->
+      <p
+        v-if="upcoming || canFeedback"
+        class="panel-section-links"
+      >
         <button
           v-if="upcoming"
           type="button"
@@ -208,15 +244,8 @@ const onStatus = (event: Event): void =>
         >
           Préparer l'entretien
         </button>
-        <a
-          v-if="upcoming"
-          class="link"
-          :href="`/api/applications/${application.id}/interview.ics?origin=${encodeURIComponent(origin)}`"
-          download
-          data-test="interview-calendar"
-        >Ajouter à mon agenda</a>
         <button
-          v-if="!upcoming && (feedback || (application.status === 'entretien' && !latest))"
+          v-else
           type="button"
           class="link"
           data-test="interview-feedback"
@@ -224,24 +253,6 @@ const onStatus = (event: Event): void =>
         >
           Faire le point sur l'entretien
         </button>
-        <template v-if="latest">
-          <button
-            type="button"
-            class="link"
-            data-test="interview-open"
-            @click="emit('interview', application, latest)"
-          >
-            Voir le retour
-          </button>
-          <button
-            v-if="!feedback"
-            type="button"
-            class="link"
-            @click="emit('interview', application, null)"
-          >
-            Ajouter un autre entretien
-          </button>
-        </template>
       </p>
     </section>
 

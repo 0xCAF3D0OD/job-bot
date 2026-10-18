@@ -16,6 +16,7 @@ import TagInput from "./TagInput.vue";
 import { formatDate, plural } from "../format";
 
 import HoverNote from "./HoverNote.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
   { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau." },
@@ -229,6 +230,16 @@ onMounted(() => {
   });
 });
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
+
+// Le document ouvert : « Créer un bloc » visible, le reste dans « ⋯ » (docs/74).
+const documentItems = computed<MoreMenuItem[]>(() => {
+  const doc = openDocument.value;
+  if (!doc) return [];
+  return [
+    { label: "Ouvrir le fichier", test: "open-document-file", href: `/api/documents/${doc.id}/file` },
+    { label: "Supprimer ce document", test: "remove-document", danger: true, run: () => void removeDocument(doc) },
+  ];
+});
 </script>
 
 <template>
@@ -312,14 +323,7 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         class="calm-panel"
         data-test="document-text"
       >
-        <p class="panel-section-links">
-          <a
-            v-if="openDocument"
-            class="link"
-            :href="`/api/documents/${openDocument.id}/file`"
-            target="_blank"
-            rel="noopener noreferrer"
-          >Ouvrir le fichier</a>
+        <p class="panel-section-links doc-actions">
           <button
             type="button"
             class="link"
@@ -329,6 +333,13 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
           >
             Créer un bloc avec la sélection
           </button>
+          <MoreMenu
+            v-if="documentItems.length"
+            class="section-more"
+            :items="documentItems"
+            label="Actions sur le document"
+            test-id="document-more"
+          />
         </p>
         <div
           ref="textBox"
@@ -336,19 +347,6 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
         >
           {{ openText.text || "Aucun texte n'a pu être extrait de ce document." }}
         </div>
-        <p
-          v-if="openDocument"
-          class="calm-panel-foot"
-        >
-          <button
-            type="button"
-            class="link danger"
-            data-test="remove-document"
-            @click="removeDocument(openDocument)"
-          >
-            Supprimer ce document
-          </button>
-        </p>
       </div>
     </SidePanel>
 

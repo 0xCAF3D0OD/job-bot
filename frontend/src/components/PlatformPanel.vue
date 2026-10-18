@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { api, type AccountOut, type PlatformOut } from "../api/client";
 import { formatDate, plural } from "../format";
 import CopyLabel from "./CopyLabel.vue";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Plateforme (docs/65 §2, §4, §5) : les comptes, réservé à l'exploitant. De chaque compte,
 // l'usage seulement (connexion, dépense de l'IA, offres reçues), jamais ses données.
@@ -46,6 +47,16 @@ async function invite(): Promise<void> {
   link.value = { kind: "invite", username: null, url: address(data.token), expires: data.expires_at };
   copied.value = false;
   await load();
+}
+
+// Le plafond reste visible ; les actions sur le compte dans son « ⋯ » (docs/74).
+function accountItems(account: Account): MoreMenuItem[] {
+  const u = account.username;
+  return [
+    { label: "Lien de nouveau mot de passe", test: `reset-${u}`, run: () => void reset(account) },
+    { label: account.suspended ? "Réactiver" : "Suspendre", test: `suspend-${u}`, run: () => void suspend(account) },
+    { label: "Supprimer", test: `delete-${u}`, danger: true, run: () => void remove(account) },
+  ];
 }
 
 async function reset(account: Account): Promise<void> {
@@ -196,30 +207,12 @@ onMounted(async () => {
                 >
                 <span>CHF / mois</span>
               </label>
-              <button
-                type="button"
-                class="secondary small"
-                :data-test="`reset-${account.username}`"
-                @click="reset(account)"
-              >
-                Lien de nouveau mot de passe
-              </button>
-              <button
-                type="button"
-                class="secondary small"
-                :data-test="`suspend-${account.username}`"
-                @click="suspend(account)"
-              >
-                {{ account.suspended ? "Réactiver" : "Suspendre" }}
-              </button>
-              <button
-                type="button"
-                class="link danger"
-                :data-test="`delete-${account.username}`"
-                @click="remove(account)"
-              >
-                Supprimer
-              </button>
+              <MoreMenu
+                class="section-more"
+                :items="accountItems(account)"
+                :label="`Actions sur le compte ${account.username}`"
+                :test-id="`account-more-${account.username}`"
+              />
             </div>
           </li>
         </ul>

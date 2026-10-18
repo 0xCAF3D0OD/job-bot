@@ -714,7 +714,20 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .detail-top-actions { display: flex; gap: 0.4rem; align-items: flex-start; }
 .more-menu { position: relative; }
 .more-menu .menu { position: absolute; right: 0; top: 2.4rem; z-index: 20; list-style: none; margin: 0; padding: 0.35rem; min-width: 14rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(17, 17, 31, 0.12); }
-.more-menu .menu button { width: 100%; text-align: left; border: 0; background: transparent; padding: 0.55rem 0.7rem; border-radius: 8px; font-weight: 500; }
+.more-menu .menu button,
+.more-menu .menu a { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 0.55rem 0.7rem; border-radius: 8px; font-weight: 500; font-size: 0.95rem; color: var(--text); text-decoration: none; }
+/* docs/74 §5 : jamais hors de l'écran, un filet avant les suppressions, en rouge. */
+.more-menu .menu { max-width: calc(100vw - 2rem); scroll-margin: 0.5rem; }
+.more-menu .menu.up { top: auto; bottom: 2.4rem; }
+.more-menu .menu.align-left { right: auto; left: 0; }
+.more-menu .menu .danger { color: var(--down-text); }
+.more-menu .menu-separator { height: 1px; margin: 0.3rem 0.5rem; background: var(--divider); }
+.more-menu .menu-count { color: var(--muted); font-weight: 400; }
+.more-menu .menu button:disabled { color: var(--muted); cursor: default; }
+.section-more { margin-left: auto; }
+.doc-actions { display: flex; align-items: center; gap: 1rem; }
+.row-more { width: 1%; white-space: nowrap; text-align: right; }
+.row-more .more-menu { display: inline-block; }
 .more-menu .menu button:hover { background: var(--accent-soft); color: var(--accent-text); }
 .status-line { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.5rem; min-height: 0; }
 .status-line:empty { display: none; }
@@ -779,7 +792,6 @@ input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px
 .status-pill.later, .status-pill.ignored, .status-pill.filtered_out { background: var(--band); color: var(--muted); border: 1px solid var(--border); }
 .status-pill.expired { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn-text); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.columns-picker { display: grid; gap: 0.4rem; position: relative; }
 .columns-list { position: absolute; top: 1.8rem; left: 0; z-index: 15; width: 18rem; background: var(--surface); box-shadow: 0 12px 32px rgba(17, 17, 31, 0.12); }
 .logo.image { background: #fff; border: 1px solid var(--border); overflow: hidden; padding: 0.2rem; }
 .logo.image img { width: 100%; height: 100%; object-fit: contain; }
@@ -984,7 +996,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .contact-state { font-size: 0.85rem; min-width: 0; }
 .contact-state.answered { color: var(--ok-text); }
 .contact-state.due, .contact-due-line { color: var(--warn-text); }
-.contact-actions { display: inline-flex; gap: 0.9rem; justify-self: end; }
+.contact-actions { display: inline-flex; align-items: center; gap: 0.9rem; justify-self: end; }
 .contacts-list .contact-form { grid-column: 1 / -1; }
 .contact-form { display: flex; flex-wrap: wrap; align-items: end; gap: 0.6rem 0.9rem; width: 100%; margin: 0.2rem 0; }
 .contact-form label, .contact-writer-form label { display: grid; gap: 0.25rem; font-size: 0.85rem; min-width: 0; }
@@ -1000,9 +1012,10 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 
 /* Preuves ORP : une action à la fois (docs/21 §6) */
 .orp-next { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0.8rem 0; }
-.orp-next-links { display: inline-flex; gap: 1rem; margin-left: auto; }
-.more-options { margin: 0 0 1rem; }
-.more-options-body { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: center; font-size: 0.9rem; }
+.orp-next-links { display: inline-flex; align-items: center; gap: 1rem; margin-left: auto; }
+.orp-next-links + .section-more { margin-left: 0; }
+.columns-list.orp-columns { position: static; width: auto; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; box-shadow: none; }
+.orp-columns legend { display: flex; gap: 1rem; align-items: baseline; }
 .diagnostic-link { margin-top: 1.5rem; font-size: 0.9rem; }
 
 /* Suivi en calendrier (docs/22) */
@@ -1244,7 +1257,8 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover,
 .link:hover,
 button.link:hover:not(:disabled) { background: none; box-shadow: none; color: var(--accent-strong); text-shadow: var(--hover-bold); }
 .link.danger:hover { background: none; box-shadow: none; color: var(--down-text); text-shadow: var(--hover-bold); }
-.more-menu .menu button:hover,
+.more-menu .menu button:hover:not(:disabled),
+.more-menu .menu a:hover,
 .account-panel > a:hover,
 .account-panel > .link:hover,
 .settings-toc a:hover,
@@ -1253,7 +1267,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .bell-item:hover .bell-title { color: var(--accent); }
 .account-panel > a.router-link-active,
 .more-menu .menu button[aria-checked="true"] { background: none; color: var(--accent); font-weight: 600; }
-.more-menu .menu button.danger:hover { color: var(--down-text); }
+.more-menu .menu .danger:hover { color: var(--down-text); }
 
 /* --- Accessibilité (docs/28) --- */
 /* Calendrier : une couleur par statut (sans symbole, choix du 2026-10-14) ; « ! » pour une ligne
@@ -1291,6 +1305,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
   .assistant-head-actions { gap: 1.25rem; }
   input[type="checkbox"]:not([role="switch"]), input[type="radio"] { width: 1.25rem; height: 1.25rem; }
   .score-curve { --thumb: 1.75rem; }
+  .more-button { min-width: 2.75rem; min-height: 2.75rem; }
   .filter-switch input { width: 2.75rem; height: 1.6rem; }
   .filter-switch input::after { width: 1.3rem; height: 1.3rem; }
   .filter-switch input:checked::after { transform: translateX(1.15rem); }
@@ -1446,6 +1461,8 @@ html.side-open { overflow: hidden; }
   .mobile-dock > * { flex: 1 1 auto; justify-content: center; text-align: center; min-height: 2.9rem; margin: 0; }
   :root:has(.mobile-dock) main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
   :root:has(.mobile-dock) .assistant-fab { bottom: calc(5.2rem + env(safe-area-inset-bottom)); }
+  /* Un menu « ⋯ » ne passe pas sous la barre du bas (docs/74 §5). */
+  :root:has(.mobile-dock) .more-menu .menu { scroll-margin-bottom: calc(9rem + env(safe-area-inset-bottom)); }
   :root:has(.mobile-dock) .toast { bottom: calc(9rem + env(safe-area-inset-bottom)); }
   .detail-panel:has(.mobile-dock) { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
 

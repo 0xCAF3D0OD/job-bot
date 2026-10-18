@@ -5,6 +5,7 @@ import { api, type Profile, type ProfileList } from "../api/client";
 import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import { plural } from "../format";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
 // Actualités et les Formations leur conviennent.
@@ -75,6 +76,15 @@ async function create(): Promise<void> {
   }
 }
 
+// « Utiliser » visible, le reste dans « ⋯ » (docs/74).
+function profileItems(profile: Profile): MoreMenuItem[] {
+  return [
+    { label: "Dupliquer", test: "profile-duplicate", run: () => void duplicate(profile) },
+    { label: "Renommer", test: "profile-rename", run: () => void rename(profile) },
+    ...(profile.is_main ? [] : [{ label: "Supprimer", test: "profile-delete", danger: true, run: () => void remove(profile) }]),
+  ];
+}
+
 async function duplicate(profile: Profile): Promise<void> {
   apply((await api.POST("/api/profiles/{profile_id}/duplicate", { params: { path: { profile_id: profile.id } } })).data);
 }
@@ -142,30 +152,11 @@ onMounted(async () => {
           >
             Utiliser
           </button>
-          <button
-            type="button"
-            class="link"
-            data-test="profile-duplicate"
-            @click="duplicate(profile)"
-          >
-            Dupliquer
-          </button>
-          <button
-            type="button"
-            class="link"
-            @click="rename(profile)"
-          >
-            Renommer
-          </button>
-          <button
-            v-if="!profile.is_main"
-            type="button"
-            class="link danger"
-            data-test="profile-delete"
-            @click="remove(profile)"
-          >
-            Supprimer
-          </button>
+          <MoreMenu
+            :items="profileItems(profile)"
+            :label="`Actions sur le profil ${profile.name}`"
+            test-id="profile-more"
+          />
         </li>
       </ul>
       <form

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Application, ApplicationStatus } from "../api/client";
 import { applicationStatusLabel, formatMonth, methodLabel } from "../format";
+import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Suivi des candidatures (docs/08), onglet de la page Candidatures (docs/18 §2).
 defineProps<{ items: Application[]; showMonth: boolean }>();
@@ -10,6 +11,23 @@ const emit = defineEmits<{
   status: [application: Application, status: ApplicationStatus];
   remove: [application: Application];
 }>();
+
+// Les actions d'une ligne dans son « ⋯ » (docs/74 §4), la suppression en dernier.
+function rowItems(application: Application): MoreMenuItem[] {
+  const items: MoreMenuItem[] = [];
+  if (application.letter_draft_id) {
+    items.push({ label: "Lettre (Word)", test: "letter-docx", href: `/api/letters/${application.letter_draft_id}/docx`, download: true });
+  }
+  if (application.cv_draft_id) {
+    items.push({ label: "CV (Word)", test: "cv-docx", href: `/api/cvs/${application.cv_draft_id}/docx`, download: true });
+  }
+  if (application.application_url?.startsWith("http")) {
+    items.push({ label: "Ouvrir l'annonce", test: "application-link", href: application.application_url });
+  }
+  items.push({ label: "Modifier", test: "edit-application", run: () => emit("edit", application) });
+  items.push({ label: "Supprimer", test: "remove-application", danger: true, run: () => emit("remove", application) });
+  return items;
+}
 </script>
 
 <template>
@@ -54,14 +72,6 @@ const emit = defineEmits<{
         </td>
         <td>
           {{ application.job_title }}
-          <a
-            v-if="application.application_url?.startsWith('http')"
-            :href="application.application_url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="link small-link"
-            data-test="application-link"
-          >Lien</a>
         </td>
         <td>{{ methodLabel[application.method ?? "electronique"] }}</td>
         <td>
@@ -81,36 +91,12 @@ const emit = defineEmits<{
             </option>
           </select>
         </td>
-        <td class="row-actions">
-          <a
-            v-if="application.letter_draft_id"
-            class="link"
-            :href="`/api/letters/${application.letter_draft_id}/docx`"
-            download
-            data-test="letter-docx"
-          >Lettre</a>
-          <a
-            v-if="application.cv_draft_id"
-            class="link"
-            :href="`/api/cvs/${application.cv_draft_id}/docx`"
-            download
-            data-test="cv-docx"
-          >CV</a>
-          <button
-            type="button"
-            class="link"
-            data-test="edit-application"
-            @click="emit('edit', application)"
-          >
-            Modifier
-          </button>
-          <button
-            type="button"
-            class="link danger"
-            @click="emit('remove', application)"
-          >
-            Supprimer
-          </button>
+        <td class="row-more">
+          <MoreMenu
+            :items="rowItems(application)"
+            :label="`Actions sur la candidature chez ${application.company}`"
+            test-id="row-more"
+          />
         </td>
       </tr>
     </tbody>

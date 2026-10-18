@@ -68,8 +68,10 @@ describe("Plateforme (docs/65 §5)", () => {
     const prompt = vi.spyOn(window, "prompt").mockReturnValueOnce("autre").mockReturnValueOnce("camille");
     const wrapper = mount(PlatformPanel);
     await flushPromises();
+    await wrapper.find("[data-test=account-more-camille]").trigger("click");
     await wrapper.find("[data-test=delete-camille]").trigger("click");
     expect(DELETE).not.toHaveBeenCalled();
+    await wrapper.find("[data-test=account-more-camille]").trigger("click");
     await wrapper.find("[data-test=delete-camille]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalledWith("/api/platform/accounts/{account_id}", { params: { path: { account_id: 2 } } });

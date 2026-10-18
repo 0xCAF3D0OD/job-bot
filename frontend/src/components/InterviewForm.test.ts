@@ -72,7 +72,7 @@ describe("Carte et panneau d'une candidature, retour d'entretien (docs/23 §3, d
     expect(wrapper.emitted("interview")![0]).toEqual([expect.objectContaining({ id: 3 }), null]);
   });
 
-  it("retour fait : résumé d'une ligne et « Voir le retour » dans le panneau", () => {
+  it("retour fait : résumé d'une ligne et « Voir le retour » dans le panneau", async () => {
     const interview = { id: 9, application_id: 3, kind: "technique", held_at: "2026-10-06", rating: 4, next_step: "reponse", next_step_at: "2026-10-20" };
     const wrapper = mount(ApplicationPanel, {
       props: { application: { ...application, interviews: [interview] } as never },
@@ -80,6 +80,8 @@ describe("Carte et panneau d'une candidature, retour d'entretien (docs/23 §3, d
     });
     expect(wrapper.find("[data-test=interview-summary]").text()).toBe("Technique · ressenti 4/5 · suite : une réponse attendue avant le 20.10.2026");
     expect(wrapper.find("[data-test=interview-feedback]").exists()).toBe(false);
+    // « Voir le retour » est dans le « ⋯ » des entretiens (docs/74).
+    await wrapper.find("[data-test=interviews-more]").trigger("click");
     expect(wrapper.find("[data-test=interview-open]").exists()).toBe(true);
   });
 });
