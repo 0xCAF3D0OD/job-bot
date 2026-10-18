@@ -1,7 +1,8 @@
 """Sessions et limitation des essais de connexion (docs/18 §1).
 
 Le cookie porte un jeton aléatoire ; la base n'en garde que l'empreinte SHA-256. Une session
-dure 30 jours et se prolonge à l'usage (au plus une écriture par jour).
+dure 30 jours et se prolonge à l'usage (au plus une écriture par jour), jusqu'à 90 jours après
+la connexion : il faut alors se reconnecter (docs/78 §2).
 """
 
 import hashlib
@@ -17,9 +18,11 @@ from jobbot.db.models import User, UserSession
 
 COOKIE = "jobbot_session"
 SESSION_LIFETIME = timedelta(days=30)
+SESSION_MAX_AGE = timedelta(days=90)
 RENEW_AFTER = timedelta(days=1)
 FREE_ATTEMPTS = 5
 MAX_WAIT_S = 300
+FORGET_AFTER_S = 24 * 3600
 
 
 def token_hash(token: str) -> str:
@@ -65,13 +68,14 @@ async def authenticate(session: AsyncSession, token: str | None) -> Authenticate
     if row is None:
         return None
     stored, username = row
-    if stored.expires_at <= now:
+    limit = stored.created_at + SESSION_MAX_AGE
+    if stored.expires_at <= now or limit <= now:
         await session.delete(stored)
         return None
-    renewed = now - stored.last_seen_at >= RENEW_AFTER
+    renewed = now - stored.last_seen_at >= RENEW_AFTER and stored.expires_at < limit
     if renewed:
         stored.last_seen_at = now
-        stored.expires_at = now + SESSION_LIFETIME
+        stored.expires_at = min(now + SESSION_LIFETIME, limit)
     return Authenticated(stored.user_id, username, renewed)
 
 
@@ -89,13 +93,20 @@ async def end_all_sessions(session: AsyncSession, user_id: int) -> int:
 
 @dataclass
 class Throttle:
-    """Après 5 essais ratés (par adresse et par identifiant), attente croissante : 1 s, 2 s,
-    4 s… jusqu'à 5 minutes. En mémoire : remis à zéro au redémarrage de l'API."""
+    """Après 5 essais ratés (par adresse, et par adresse et identifiant), attente croissante :
+    1 s, 2 s, 4 s… jusqu'à 5 minutes. Compter par identifiant seul laisserait un inconnu
+    bloquer la connexion de quelqu'un d'autre (docs/78 §2). En mémoire : remis à zéro au
+    redémarrage de l'API ; un essai raté est oublié après une journée."""
 
     failures: dict[str, tuple[int, float]] = field(default_factory=dict)
 
+    def _forget_old(self, now: float) -> None:
+        for key in [k for k, (_, last) in self.failures.items() if now - last > FORGET_AFTER_S]:
+            del self.failures[key]
+
     def wait(self, *keys: str) -> int:
         now = time.monotonic()
+        self._forget_old(now)
         waits = [0]
         for key in keys:
             count, last = self.failures.get(key, (0, 0.0))

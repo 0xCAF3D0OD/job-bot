@@ -16,7 +16,8 @@ describe("Candidature spontanée (docs/39)", () => {
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
     await router.push("/candidatures/offres");
     POST.mockResolvedValueOnce({ data: { id: 77 } });
-    GET.mockResolvedValueOnce({
+    // La recherche au registre est une écriture (docs/78 §2).
+    POST.mockResolvedValueOnce({
       data: { candidates: [{ uid: "CHE-1", name: "Exemple SA", address: "Rue 1\n1000 Lausanne", canton: "VD" }], web_address: null },
     });
     POST.mockResolvedValueOnce({ data: { company_address: "Rue 1\n1000 Lausanne", company_address_source: "registry" } });

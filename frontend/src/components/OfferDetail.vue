@@ -106,7 +106,7 @@ async function searchRegistry(): Promise<void> {
   registryMessage.value = "";
   proposals.value = [];
   try {
-    const { data } = await api.GET("/api/offers/{offer_id}/address-candidates", {
+    const { data } = await api.POST("/api/offers/{offer_id}/address-candidates", {
       params: { path: { offer_id: props.offer.id } },
     });
     if (!data) {

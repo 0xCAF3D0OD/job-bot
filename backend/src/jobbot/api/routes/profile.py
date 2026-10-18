@@ -182,10 +182,14 @@ async def get_document_text(request: Request, document_id: int) -> DocumentText:
 async def get_document_file(request: Request, document_id: int) -> Response:
     runtime = _runtime(request)
     document = await _get_document(runtime, document_id)
+    doc_type = DocumentType(document.doc_type)
+    # Un PDF s'affiche ; un texte déposé se télécharge, sans jamais être pris pour une page
+    # (docs/78 §2).
+    disposition = "inline" if doc_type is DocumentType.PDF else "attachment"
     return Response(
         runtime.storage.get(document.storage_key),
-        media_type=CONTENT_TYPES[DocumentType(document.doc_type)],
-        headers={"Content-Disposition": "inline", "Cache-Control": "no-store"},
+        media_type=CONTENT_TYPES[doc_type],
+        headers={"Content-Disposition": disposition, "Cache-Control": "no-store"},
     )
 
 

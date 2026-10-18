@@ -121,7 +121,7 @@ async def login(request: Request, body: LoginIn, response: Response) -> None:
     runtime = _runtime(request)
     ip = request.client.host if request.client else "inconnue"
     username = body.username.strip()
-    keys = (f"ip:{ip}", f"user:{username.casefold()}")
+    keys = (f"ip:{ip}", f"ip-user:{ip}:{username.casefold()}")
     wait = throttle.wait(*keys)
     if wait:
         raise HTTPException(

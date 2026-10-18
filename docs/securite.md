@@ -37,25 +37,22 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 
 - Pas d'inscription ouverte : l'exploitant **invite** par un lien à usage unique (7 jours).
 - Mot de passe de **12 caractères au moins**. Après 5 essais ratés, une attente croissante.
-- Une session dure 30 jours et se prolonge à l'usage. « Se déconnecter partout » ferme toutes les sessions du compte.
-- **Suspendre** un compte ferme ses sessions et arrête ses tâches ; ses données sont gardées.
+- Une session dure 30 jours et se prolonge à l'usage, au plus 90 jours après la connexion. « Se déconnecter partout » ferme toutes les sessions du compte.
+- **Suspendre** un compte ferme ses sessions, révoque ses jetons d'extension et d'agenda et arrête ses tâches ; ses données sont gardées.
 - La connexion ne se désactive (`JOBBOT_AUTH_ENABLED=false`) que pour un essai sur son propre ordinateur, jamais sur une plateforme joignable par d'autres.
 - Le serveur se connecte à la base avec des rôles **sans privilège** : `jobbot_app` pour l'API, `jobbot_worker` pour le worker. Seules les mises à jour du schéma utilisent le propriétaire des tables.
 
 - La base **refuse tout lien entre deux comptes** : une candidature ne peut désigner qu'une offre du même compte, et ainsi de suite (depuis 0.64.1).
 - Une tâche lancée par un bouton ne tourne **que pour le compte qui a cliqué** (depuis 0.64.1).
 
-À venir (docs/78 §5), en **0.64.2** :
-  - la suspension coupera aussi les jetons de l'extension et de l'agenda ;
-  - une session durera au plus 90 jours ;
-  - le mode sans connexion sera refusé hors de l'ordinateur lui-même.
+- Un compte suspendu perd aussi ses jetons d'extension et d'agenda ; une session dure au plus **90 jours** ; les essais de connexion sont comptés par adresse, pour qu'un inconnu ne bloque pas ta connexion ; le mode sans connexion est refusé hors de l'ordinateur lui-même (depuis 0.64.2).
 
 ## 5. En cas d'incident
 
 Un compte qui agit de façon étrange, un secret qui a fuité, une faille signalée : dans l'ordre.
 
 1. **Suspendre** le compte touché (« La plateforme », menu du compte, « Suspendre »).
-2. **Se déconnecter partout** sur les comptes concernés, et révoquer leurs jetons d'extension et d'agenda (Réglages).
+2. **Se déconnecter partout** sur les comptes concernés ; la suspension révoque déjà leurs jetons d'extension et d'agenda.
 3. **Changer les secrets** touchés : mot de passe de la base, clé de l'IA (sur la console d'Anthropic), mot de passe d'application de la boîte, sujet ntfy.
 4. **Garder les journaux** du serveur tels quels (`docker compose logs`, journal de l'API), avant tout redémarrage qui les effacerait.
 5. **Prévenir les personnes concernées** : ce qui s'est passé, quelles données, ce qui est fait.
@@ -65,7 +62,7 @@ Un compte qui agit de façon étrange, un secret qui a fuité, une faille signal
 ## 6. Les contrôles réguliers
 
 - **À chaque version** : tous les tests, dont la séparation des comptes (chaque route de l'API appelée par un second compte) et les règles de chaque table (`tests/test_policies.py`).
-- **Les bibliothèques** : `pip-audit` et `npm audit` avant chaque revue ; chaque semaine automatiquement sur GitHub à partir de 0.64.2.
+- **Les bibliothèques** : `pip-audit` et `npm audit` chaque lundi sur GitHub (`.github/workflows/audit.yml`), et avant chaque revue.
 - **Une revue de sécurité** comme celle de docs/78 tous les six mois, ou avant d'ouvrir la plateforme à de nouveaux invités.
 
 ## 7. Ce qui est accepté, et pourquoi

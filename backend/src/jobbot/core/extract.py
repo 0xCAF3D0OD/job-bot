@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 MAX_SIZE = 10 * 1024 * 1024
+MAX_DOCX_UNPACKED = 100 * 1024 * 1024
+MAX_DOCX_ENTRIES = 2000
 
 
 class DocumentType(StrEnum):
@@ -71,6 +73,12 @@ def _is_docx(data: bytes) -> bool:
         return False
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            entries = archive.infolist()
+            # Une archive qui gonflerait démesurément une fois dépliée est refusée (docs/78 §2) ;
+            # zipfile ne déplie jamais au-delà de la taille annoncée.
+            unpacked = sum(entry.file_size for entry in entries)
+            if len(entries) > MAX_DOCX_ENTRIES or unpacked > MAX_DOCX_UNPACKED:
+                return False
             return "word/document.xml" in archive.namelist()
     except zipfile.BadZipFile:
         return False

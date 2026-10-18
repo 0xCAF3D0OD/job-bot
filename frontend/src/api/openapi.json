@@ -4825,7 +4825,7 @@
       }
     },
     "/api/offers/{offer_id}/address-candidates": {
-      "get": {
+      "post": {
         "tags": [
           "registry"
         ],

@@ -4,6 +4,7 @@ Chaque secret accepte une variante `_FILE` (chemin d'un fichier qui contient la 
 pour les secrets Docker et les Secrets Kubernetes montés en fichier.
 """
 
+import ipaddress
 import os
 from enum import StrEnum
 from pathlib import Path
@@ -98,6 +99,10 @@ class Settings(BaseSettings):
     # Connexion (docs/18 §1) : sans session, l'API ne sert que les Actualités.
     # false seulement pour un essai local : toutes les pages redeviennent ouvertes.
     auth_enabled: bool = True
+    # Intermédiaires (reverse proxy) dont l'API croit l'en-tête X-Forwarded-For : l'adresse
+    # réelle du visiteur sert à limiter les essais de connexion (docs/78 §2). « * » : tous,
+    # seulement si l'API n'est joignable que par son intermédiaire (conteneur).
+    trusted_proxies: str = "127.0.0.1"
 
     # Démo publique (docs/72) : installation à part, sans connexion, en lecture seule, sur le
     # compte fictif rempli par `jobbot demo-seed`. Jamais sur une vraie plateforme.
@@ -125,6 +130,12 @@ class Settings(BaseSettings):
             raise ValueError(
                 "JOBBOT_DEMO : retirer de cette installation la clé de l'IA, la boîte e-mail "
                 "et ntfy"
+            )
+        if not self.auth_enabled and (self.is_prod or not _loopback(self.api_host)):
+            # Sans connexion, toute requête agit au nom de l'exploitant (docs/78 §2).
+            raise ValueError(
+                "JOBBOT_AUTH_ENABLED=false : seulement pour un essai sur son ordinateur "
+                "(JOBBOT_API_HOST=127.0.0.1, JOBBOT_ENV=dev)"
             )
         self.log_level = self.log_level.upper()
         if self.log_format is None:
@@ -166,6 +177,13 @@ class Settings(BaseSettings):
     def libpq_url(self) -> str:
         """URL sans le suffixe de pilote SQLAlchemy, pour psycopg et procrastinate."""
         return libpq(self.sqlalchemy_url)
+
+
+def _loopback(host: str) -> bool:
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return host == "localhost"
 
 
 def libpq(url: str) -> str:

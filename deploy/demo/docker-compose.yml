@@ -20,6 +20,8 @@ x-jobbot: &jobbot
     JOBBOT_DEMO: "true"
     JOBBOT_ENV: prod
     JOBBOT_API_HOST: 0.0.0.0
+    # Seul Caddy joint l'API (aucun port publié) : elle croit l'adresse qu'il transmet.
+    JOBBOT_TRUSTED_PROXIES: "*"
     JOBBOT_API_PORT: "8000"
     JOBBOT_STORAGE_PATH: /data
     JOBBOT_SCHEDULER_ENABLED: "false"

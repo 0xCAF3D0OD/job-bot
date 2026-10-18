@@ -158,7 +158,7 @@ async def test_endpoint_returns_web_address(rt: Runtime, monkeypatch: pytest.Mon
     offer_id = await add(rt, 1, "Exemple Group")
     app = create_app(rt.settings, rt)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
-        body = (await api.get(f"/api/offers/{offer_id}/address-candidates")).json()
+        body = (await api.post(f"/api/offers/{offer_id}/address-candidates")).json()
         assert body["web_address"] == "Rue de l'Exemple 3\n1003 Lausanne"
         assert body["web_source_url"] == "https://exemple.ch/contact"
         offer = (await api.get(f"/api/offers/{offer_id}")).json()
