@@ -15,6 +15,8 @@ router = APIRouter(prefix="/api", tags=["maintenance"])
 class MaintenanceOut(BaseModel):
     active: bool
     reason: Literal["announced", "update"] | None
+    # « lecture » : les invités consultent encore, sans enregistrer (docs/80).
+    mode: Literal["complete", "lecture"]
     message: str | None
     # L'exploitant pendant une maintenance annoncée : il passe, les autres attendent.
     bypass: bool
@@ -26,5 +28,9 @@ async def get_maintenance(request: Request) -> MaintenanceOut:
     state, owner = await request.app.state.maintenance.state(runtime)
     bypass = state.reason == "announced" and owner is not None and accounts.current() == owner
     return MaintenanceOut(
-        active=state.active, reason=state.reason, message=state.message, bypass=bypass
+        active=state.active,
+        reason=state.reason,
+        mode=state.mode,
+        message=state.message,
+        bypass=bypass,
     )

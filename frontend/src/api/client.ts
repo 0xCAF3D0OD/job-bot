@@ -24,6 +24,8 @@ export const DEMO_REFUSED_EVENT = "jobbot:demo-refused";
 // Maintenance (docs/79) : l'API répond « en maintenance », ou ne répond plus (elle redémarre,
 // l'intermédiaire renvoie 502 à 504) ; la page d'attente se pose par-dessus, le message en détail.
 export const MAINTENANCE_EVENT = "jobbot:maintenance";
+// Maintenance en lecture seule (docs/80) : une écriture refusée ; on consulte encore.
+export const MAINTENANCE_READ_EVENT = "jobbot:maintenance-read";
 
 function maintenance(message: string | null = null): void {
   globalThis.dispatchEvent?.(new CustomEvent(MAINTENANCE_EVENT, { detail: message }));
@@ -40,9 +42,15 @@ api.use({
       globalThis.dispatchEvent?.(new Event(UNAUTHORIZED_EVENT));
     }
     if ([502, 503, 504].includes(response.status)) {
-      const body = (await response.clone().json().catch(() => null)) as { maintenance?: boolean; message?: string | null } | null;
-      // Un 503 de l'API sans « maintenance » (IA indisponible…) reste une erreur de la page.
-      if (response.status !== 503 || !body || body.maintenance) maintenance(body?.message ?? null);
+      const body = (await response.clone().json().catch(() => null)) as
+        | { maintenance?: boolean; mode?: string; message?: string | null }
+        | null;
+      if (body?.maintenance && body.mode === "lecture") {
+        globalThis.dispatchEvent?.(new CustomEvent(MAINTENANCE_READ_EVENT, { detail: body.message ?? null }));
+      } else if (response.status !== 503 || !body || body.maintenance) {
+        // Un 503 de l'API sans « maintenance » (IA indisponible…) reste une erreur de la page.
+        maintenance(body?.message ?? null);
+      }
     }
     if (response.status === 403) {
       const body = (await response.clone().json().catch(() => null)) as { demo?: boolean; detail?: string } | null;

@@ -17,7 +17,7 @@ import psycopg
 import uvicorn
 from fastapi import FastAPI
 
-from jobbot import accounts
+from jobbot import accounts, maintenance
 from jobbot.api.middleware import SecurityMiddleware
 from jobbot.health import health_router
 from jobbot.log import get_logger
@@ -26,6 +26,7 @@ from jobbot.settings import Settings, libpq
 from jobbot.worker import tasks as _tasks  # noqa: F401  (enregistre les tâches)
 from jobbot.worker.jobs import JOBS, execute
 from jobbot.worker.queue import QUEUE
+from jobbot.worker.tasks.heartbeat import HEARTBEAT_JOB
 
 log = get_logger(__name__)
 
@@ -48,6 +49,11 @@ def build_procrastinate_app(runtime: Runtime) -> procrastinate.App:
                 datetime.fromtimestamp(timestamp, UTC)
             ):
                 log.debug("job_skipped_outside_active_hours", job=_name)
+                return
+            # Maintenance annoncée : la tâche attend, sauf celle de l'exploitant et le signe de
+            # vie du worker (docs/80 §3).
+            if _name != HEARTBEAT_JOB and await maintenance.worker_paused(runtime, account):
+                log.info("job_skipped_maintenance", job=_name)
                 return
             # Mise en file par un bouton : pour le compte qui a cliqué, lui seul (docs/78 §3.4).
             with accounts.use(account):

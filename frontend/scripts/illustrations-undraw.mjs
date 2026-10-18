@@ -14,7 +14,8 @@
 // - classes et animations préfixées par le nom (`a-<nom>-…`), pour ne pas se mêler entre
 //   illustrations ; le « réduire les animations » limité à l'illustration ;
 // - animations jouées **une seule fois** à l'apparition (docs/59 §5) : la boucle devient un
-//   passage, qui finit sur l'image d'origine.
+//   passage, qui finit sur l'image d'origine ; sauf la maintenance, qui bouge tant que l'attente
+//   dure (docs/80 §2).
 // Aucune forme n'est touchée : le script s'arrête si un tracé ou une forme diffère.
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -28,6 +29,7 @@ export const ILLUSTRATIONS = [
   "lock-screen-notifications",
   "login",
   "mailbox",
+  "maintenance",
   "message-sent",
   "morning-plans",
   "my-resume",
@@ -38,7 +40,10 @@ export const ILLUSTRATIONS = [
 
 const OUT = new URL("../reserve/illustrations-undraw/", import.meta.url);
 const LOADING = new URL("../src/assets/dessins/", import.meta.url);
-const LOADING_NAMES = ["absorbed", "certification", "done", "mailbox", "message-sent", "morning-plans", "stepping-up"];
+const LOADING_NAMES = ["absorbed", "certification", "done", "mailbox", "maintenance", "message-sent", "morning-plans", "stepping-up"];
+// Le dessin de la page de maintenance bouge tant que l'attente dure (docs/80 §2) : sa boucle
+// est gardée.
+const LOOPING = ["maintenance"];
 
 function find(dirs, name) {
   for (const dir of dirs) {
@@ -62,7 +67,10 @@ function prepare(svg, name) {
     .replace(/(fill|stroke|stop-color)="(#[0-9a-fA-F]{3,6})"/g, (_m, attr, hex) => `${attr}="${hex.toLowerCase()}"`)
     .replace(
       /<style>([\s\S]*?)<\/style>/g,
-      (_m, css) => `<style>${prefix(css).replace(/\*\s*\{/g, ".illu * {").replace(/\binfinite\b/g, "1")}</style>`,
+      (_m, css) => {
+        const scoped = prefix(css).replace(/\*\s*\{/g, ".illu * {");
+        return `<style>${LOOPING.includes(name) ? scoped : scoped.replace(/\binfinite\b/g, "1")}</style>`;
+      },
     )
     .replace(/\sclass="([^"]*)"/g, (_m, names) => ` class="${prefix(names)}"`)
     .replace(/\sstyle="([^"]*)"/g, (_m, css) => ` style="${prefix(css)}"`);

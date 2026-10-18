@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { api, DEMO_REFUSED_EVENT, MAINTENANCE_EVENT, PROFILE_HEADER, PROFILE_KEY, UNAUTHORIZED_EVENT } from "./client";
+import { api, DEMO_REFUSED_EVENT, MAINTENANCE_EVENT, MAINTENANCE_READ_EVENT, PROFILE_HEADER, PROFILE_KEY, UNAUTHORIZED_EVENT } from "./client";
 
 afterEach(() => {
   localStorage.clear();
@@ -75,5 +75,20 @@ describe("maintenance (docs/79)", () => {
     ).rejects.toThrow();
     window.removeEventListener(MAINTENANCE_EVENT, listener);
     expect(heard).toEqual(["Dix minutes", null, null]);
+  });
+});
+
+describe("maintenance en lecture seule (docs/80)", () => {
+  it("une écriture refusée prévient sans poser la page d'attente", async () => {
+    const waiting = vi.fn();
+    const read: (string | null)[] = [];
+    const listener = (event: Event) => read.push((event as CustomEvent<string | null>).detail);
+    window.addEventListener(MAINTENANCE_EVENT, waiting);
+    window.addEventListener(MAINTENANCE_READ_EVENT, listener);
+    await api.POST("/api/news/seen", respond(503, { detail: "…", maintenance: true, mode: "lecture", message: "Sauvegarde" }));
+    window.removeEventListener(MAINTENANCE_EVENT, waiting);
+    window.removeEventListener(MAINTENANCE_READ_EVENT, listener);
+    expect(read).toEqual(["Sauvegarde"]);
+    expect(waiting).not.toHaveBeenCalled();
   });
 });

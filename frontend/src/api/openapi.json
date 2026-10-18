@@ -12773,6 +12773,14 @@
             ],
             "title": "Reason"
           },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "lecture"
+            ],
+            "title": "Mode"
+          },
           "message": {
             "anyOf": [
               {
@@ -12793,6 +12801,7 @@
         "required": [
           "active",
           "reason",
+          "mode",
           "message",
           "bypass"
         ],

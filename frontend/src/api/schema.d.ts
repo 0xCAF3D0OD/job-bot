@@ -4359,6 +4359,11 @@ export interface components {
             active: boolean;
             /** Reason */
             reason: ("announced" | "update") | null;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "complete" | "lecture";
             /** Message */
             message: string | null;
             /** Bypass */
