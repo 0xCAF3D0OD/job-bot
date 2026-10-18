@@ -2539,3 +2539,10 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   .welcome-card.chosen, .welcome-chip.chosen, .welcome-day.chosen { animation: none; }
   .welcome-forward-enter-active, .welcome-back-enter-active { transition: none; }
 }
+
+/* Relier ce navigateur (docs/71 §4). */
+.extension-link { max-width: 36rem; }
+.extension-link ul { margin: 0 0 0.75rem; padding-left: 1.2rem; }
+.extension-link .form-actions { display: flex; gap: 1rem; align-items: center; margin-top: 1rem; }
+.extension-link-done { color: var(--accent); font-weight: 500; }
+.extension-tokens-title { font-weight: 600; margin: 0.75rem 0 0.25rem; }

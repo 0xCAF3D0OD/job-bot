@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 PG_BIN ?= $(shell brew --prefix postgresql@17 2>/dev/null)/bin
 
-.PHONY: setup migrate dev test lint openapi check-openapi check
+.PHONY: setup migrate dev test lint openapi check-openapi check extension
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -45,3 +45,14 @@ openapi: ## régénère le contrat OpenAPI et les types du frontend
 
 check-openapi: openapi ## échoue si les types du frontend ne correspondent plus au backend
 	git diff --exit-code -- frontend/src/api
+
+# Seulement ce que l'extension utilise : ni le relevé de Job-Room, ni le script de relevé, ni
+# les textes de la boutique (docs/71 §6).
+EXTENSION_FILES := manifest.json background.js popup.html popup.css popup.js fill.js fill-job-room.js icons
+
+extension: ## paquet de l'extension pour la boutique de Mozilla (extension/web-ext-artifacts/)
+	cd extension && mkdir -p web-ext-artifacts \
+		&& version=$$(node -p "require('./manifest.json').version") \
+		&& rm -f web-ext-artifacts/joba1-$$version.zip \
+		&& zip -q -X -r web-ext-artifacts/joba1-$$version.zip $(EXTENSION_FILES) \
+		&& echo "extension/web-ext-artifacts/joba1-$$version.zip"

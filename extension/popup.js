@@ -1,8 +1,8 @@
-// Panneau de l'extension (docs/25 §3.1) : candidature reconnue, « Remplir le formulaire »,
+// Panneau de l'extension (docs/25 §3.1, docs/71) : candidature reconnue, « Remplir le formulaire »,
 // questions libres, « J'ai envoyé ». Sur Job-Room (docs/70) : les candidatures à déclarer,
 // « Remplir dans Job-Room », « C'est déclaré ». Le jeton reste dans le stockage local du
 // navigateur.
-// Chrome, Edge, Brave et Firefox (128 et plus) : même code, API `chrome.*` à promesses.
+// Chrome, Edge, Brave et Firefox (140 et plus) : même code, API `chrome.*` à promesses.
 
 const $ = (id) => document.getElementById(id);
 const show = (id, on = true) => ($(id).hidden = !on);
@@ -11,6 +11,8 @@ let config = { base: "", token: "" };
 let tab = null;
 let offerId = null;
 let frameQuestions = []; // { frameId, key, label }
+// Ouvert dans un onglet à l'installation (docs/71 §3) plutôt que depuis l'icône.
+const welcomeTab = new URLSearchParams(location.search).has("accueil");
 
 function say(id, text) {
   $(id).textContent = text || "";
@@ -30,7 +32,9 @@ async function call(path, options = {}) {
   if (response.status === 401) throw new Error("Jeton refusé : relie à nouveau l'extension.");
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
-    throw new Error(typeof detail?.detail === "string" ? detail.detail : `Erreur ${response.status}`);
+    const error = new Error(typeof detail?.detail === "string" ? detail.detail : `Erreur ${response.status}`);
+    error.status = response.status;
+    throw error;
   }
   return response;
 }
@@ -50,23 +54,38 @@ function setupError(error) {
   say("setup-error", offline ? "Plateforme injoignable à cette adresse." : error.message);
 }
 
+// « Relier » : par la page de la plateforme (docs/71 §4), ou avec un jeton collé.
 async function link() {
   say("setup-error", "");
+  say("setup-message", "");
   try {
     const base = origin($("base").value);
     const token = $("token").value.trim();
-    if (!token.startsWith("jbx_")) throw new Error("Le jeton commence par « jbx_ ».");
+    if (token && !token.startsWith("jbx_")) throw new Error("Le jeton commence par « jbx_ ».");
     config = { base, token };
     // Enregistré en même temps que la demande d'autorisation : Firefox ferme souvent le
     // panneau pendant cette demande, et on reprend à la réouverture (« Autoriser l'accès »).
     // La demande part sans attendre : Firefox l'exige dans le geste même du clic.
-    const saving = chrome.storage.local.set(config);
+    const saving = token ? chrome.storage.local.set(config) : chrome.storage.local.set({ base }).then(() => chrome.storage.local.remove("token"));
     const asking = requestAccess();
     await saving;
-    await connect(await asking);
+    const granted = await asking;
+    if (token) await connect(granted);
+    else await linkByPage(granted);
   } catch (error) {
     setupError(error);
   }
+}
+
+// La page « Relier ce navigateur » de la plateforme s'ouvre ; le fond y lit le jeton.
+async function linkByPage(granted) {
+  if (!granted) throw new Error("Autorisation refusée : l'extension ne peut pas joindre ta plateforme.");
+  const answer = await chrome.runtime.sendMessage({ type: "link", base: config.base });
+  if (!answer?.ok) throw new Error(answer?.error || "La page de ta plateforme ne s'est pas ouverte.");
+  say(
+    "setup-message",
+    "Ta plateforme s'est ouverte dans un nouvel onglet : clique sur « Relier ce navigateur ». Si elle ne le propose pas, elle date d'avant la 0.58 : relie avec un jeton.",
+  );
 }
 
 // Autorisation par hôte, sans le port : Firefox refuse un port dans le motif demandé, et un
@@ -89,7 +108,9 @@ async function connect(granted) {
 async function authorize() {
   say("setup-error", "");
   try {
-    await connect(await requestAccess());
+    const granted = await requestAccess();
+    if (config.token) await connect(granted);
+    else await linkByPage(granted);
   } catch (error) {
     setupError(error);
   }
@@ -365,7 +386,9 @@ async function startJobRoom() {
     const { items } = await (await call("/api/extension/job-room")).json();
     renderToDeclare(items);
   } catch (error) {
-    say("jr-error", error.name === "TypeError" ? "Plateforme injoignable." : error.message);
+    // Extension mise à jour par la boutique, plateforme d'avant la 0.57 (docs/71 §5).
+    if (error.status === 404) say("jr-error", "Mets ta plateforme jobA1 à jour (0.57 ou plus) pour remplir Job-Room.");
+    else say("jr-error", error.name === "TypeError" ? "Plateforme injoignable." : error.message);
   }
 }
 
@@ -464,11 +487,33 @@ $("choices").addEventListener("change", (event) => {
   $("fill").disabled = !offerId;
 });
 
+// Le jeton arrive par le fond (liaison par la page de la plateforme).
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area !== "local" || !changes.token?.newValue) return;
+  config = { base: changes.base?.newValue ?? config.base, token: changes.token.newValue };
+  say("setup-message", "");
+  if (welcomeTab) {
+    show("setup", false);
+    show("linked");
+  } else {
+    await start();
+  }
+});
+
+if (welcomeTab) {
+  document.body.classList.add("accueil");
+  show("welcome");
+}
+
 chrome.storage.local.get(["base", "token"]).then(async (stored) => {
-  if (stored.base && stored.token) {
+  if (stored.base && stored.token && !welcomeTab) {
     config = { base: stored.base, token: stored.token };
     await start();
+  } else if (stored.base && stored.token) {
+    show("linked");
   } else {
+    if (stored.base) $("base").value = stored.base;
+    config = { base: stored.base || "", token: "" };
     show("setup");
   }
 });

@@ -54,5 +54,11 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); border-radius: 3px; }
 footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem; padding-top: 0.6rem; border-top: 1px solid var(--border); font-size: 12px; }
 #fields { display: grid; gap: 0.6rem; }
+details { display: grid; gap: 0.5rem; }
+summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+details[open] summary { margin-bottom: 0.5rem; }
+h1 { font-size: 18px; margin: 0; }
+/* Onglet d'accueil, ouvert à l'installation (docs/71 §3) : la même page, plus large. */
+body.accueil { box-sizing: border-box; width: 100%; max-width: 28rem; margin: 3rem auto; padding: 0 1rem; font-size: 14px; }
 /* « hidden » l'emporte sur les display ci-dessus (sections, champs). */
 [hidden] { display: none !important; }

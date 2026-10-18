@@ -9984,12 +9984,20 @@
           "version": {
             "type": "string",
             "title": "Version"
+          },
+          "features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Features"
           }
         },
         "type": "object",
         "required": [
           "platform",
-          "version"
+          "version",
+          "features"
         ],
         "title": "ExtensionMe"
       },

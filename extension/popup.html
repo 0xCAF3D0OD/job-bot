@@ -11,20 +11,32 @@
       <strong>jobA1</strong>
     </header>
 
-    <!-- Relier l'extension à la plateforme, une fois. -->
+    <!-- Relier l'extension à la plateforme, une fois (docs/71 §3). -->
     <section id="setup" hidden>
-      <p class="hint">Relie l'extension à ta plateforme : crée un jeton dans Réglages › Extension du navigateur.</p>
+      <h1 id="welcome" hidden>Relier jobA1</h1>
+      <p class="hint">Relie l'extension à ta plateforme jobA1 : indique son adresse, puis « Relier ».</p>
       <div id="fields">
         <label>Adresse de ta plateforme
           <input id="base" type="text" inputmode="url" placeholder="https://joba1.exemple.ch">
         </label>
-        <label>Jeton
-          <input id="token" type="password" autocomplete="off" placeholder="jbx_…">
-        </label>
+        <details id="manual">
+          <summary>Relier avec un jeton</summary>
+          <p class="hint">Crée un jeton dans Réglages › Extension du navigateur, puis colle-le ici.</p>
+          <label>Jeton
+            <input id="token" type="password" autocomplete="off" placeholder="jbx_…">
+          </label>
+        </details>
       </div>
       <button id="link" class="primary" type="button">Relier</button>
       <button id="authorize" class="primary" type="button" hidden>Autoriser l'accès à ma plateforme</button>
+      <p id="setup-message" class="hint" hidden></p>
       <p id="setup-error" class="error" hidden></p>
+    </section>
+
+    <!-- Relié depuis l'onglet d'accueil. -->
+    <section id="linked" hidden>
+      <p class="ok">C'est relié.</p>
+      <p class="hint">Épingle l'icône jobA1 dans la barre du navigateur : elle remplit les formulaires de candidature et Job-Room. Tu peux fermer cet onglet.</p>
     </section>
 
     <!-- Sur le formulaire de l'employeur. -->
