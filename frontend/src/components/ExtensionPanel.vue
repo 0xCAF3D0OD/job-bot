@@ -90,8 +90,9 @@ onMounted(load);
         label="Comment l'installer"
       >
         <p>
-          Firefox : <code>about:debugging#/runtime/this-firefox</code> › « Charger un module complémentaire
-          temporaire » › le fichier <code>extension/manifest.json</code> du dépôt (à refaire après un redémarrage).
+          Firefox : <code>make extension</code> dans le dépôt, puis <code>about:debugging#/runtime/this-firefox</code> ›
+          « Charger un module complémentaire temporaire » › le fichier
+          <code>extension/web-ext-artifacts/joba1-…zip</code> (à refaire après un redémarrage).
           Chrome, Edge ou Brave : <code>chrome://extensions</code>, mode développeur, « Charger l'extension non
           empaquetée » › le dossier <code>extension/</code>.
         </p>

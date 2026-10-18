@@ -25,12 +25,14 @@
   }
 }
 
-body { width: 320px; margin: 0; padding: 0.9rem; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.45; }
+body { box-sizing: border-box; width: 340px; overflow-x: hidden; margin: 0; padding: 0.9rem; background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.45; }
 header { display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.7rem; font-size: 15px; }
 .mark { width: 0.8rem; height: 0.8rem; border-radius: 4px; background: var(--accent); box-shadow: inset 0 0 0 3px var(--accent), inset 0 0 0 6px #58dcc5; }
-section { display: grid; gap: 0.6rem; }
+/* Une seule colonne, jamais plus large que le panneau : un long intitulé (une offre, une
+   liste) se coupe au lieu d'élargir le panneau hors de l'écran. */
+section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
 label { display: grid; gap: 0.25rem; font-weight: 500; }
-input, select { font: inherit; padding: 0.45rem 0.55rem; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: inherit; }
+input, select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; font: inherit; padding: 0.45rem 0.55rem; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: inherit; }
 button { font: inherit; cursor: pointer; border-radius: 8px; padding: 0.5rem 0.8rem; border: 1px solid var(--border); background: transparent; color: inherit; }
 button:disabled { opacity: 0.55; cursor: default; }
 button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }

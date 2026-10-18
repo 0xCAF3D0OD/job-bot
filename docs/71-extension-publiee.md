@@ -105,3 +105,11 @@ Tant que la fiche n'est pas en ligne, « Installer l'extension » renvoie au mod
 - **Réglages** : « Installer l'extension » renvoie au mode d'emploi tant que la fiche n'est pas en ligne (`STORE_URL` vide dans `ExtensionPanel.vue`). Puis les navigateurs reliés, et « Relier avec un jeton » replié.
 - **Essayé** : la page « Relier ce navigateur » sur l'instance de test (jeton posé, adresse `?etat=pret`, « C'est relié » une fois le jeton effacé), les Réglages, le panneau de l'extension dans Chrome sans fenêtre (API de l'extension imitée), le paquet (`make extension`, 12 fichiers).
 - **Non essayé** : l'extension installée et reliée en vrai (le navigateur de test ne charge pas d'extension). C'est l'essai de ton côté, avant l'envoi à Mozilla.
+
+## Complément 0.58.1 : premier essai réel
+
+- **Installation d'essai** : chargée depuis `~/Documents/job-bot/extension/manifest.json`, la page de fond ne se charge pas (« Échec du chargement pour l'élément <script> … background.js ») ; le même dossier, copié ailleurs, se charge dans un Firefox vierge. macOS ne laisse Firefox lire, dans `~/Documents`, que le fichier choisi (`manifest.json` porte seul l'autorisation `com.apple.macl`). Le **paquet** (`make extension`, un seul fichier) se charge bien : le mode d'emploi et les Réglages l'indiquent désormais. La boutique installera de toute façon un paquet.
+- **Job-Room** : avec l'extension chargée depuis le paquet, le remplissage fonctionne sur le vrai Job-Room (date, mode, entreprise… encadrés en violet).
+- **Panneau trop large** : une longue candidature dans la liste élargissait le panneau hors de l'écran. Le panneau garde sa largeur (une colonne, champs à 100 %) ; l'intitulé se coupe avec « … » et s'affiche en entier au survol.
+- **Champs facultatifs signalés à tort** : Job-Room écrit `required="false"` sur ses champs facultatifs, et la seule présence de l'attribut rend `required` vrai. Seul `aria-required="true"` compte désormais : case postale, personne contactée, courriel, téléphone et lien vides ne sont plus « à faire ».
+- Extension 0.58.1.

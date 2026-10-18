@@ -131,7 +131,9 @@
       }
       if (el.value && !options?.always) continue;
       if (!value) {
-        if (el.required || el.getAttribute("aria-required") === "true") todo(el, label, "");
+        // Job-Room écrit required="false" sur ses champs facultatifs : l'attribut présent suffit
+        // à rendre `el.required` vrai. Seul aria-required dit juste.
+        if (el.getAttribute("aria-required") === "true") todo(el, label, "");
         continue;
       }
       setValue(el, value);

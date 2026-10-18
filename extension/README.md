@@ -11,9 +11,13 @@ n'enregistre rien : « Sauvegarder » reste le tien.
 ## Installer
 
 - **Firefox** : bientôt dans la boutique de Mozilla (« Ajouter à Firefox », mises à jour
-  automatiques). En attendant, pour essayer : `about:debugging#/runtime/this-firefox` →
-  **Charger un module complémentaire temporaire…** → `extension/manifest.json` (Firefox
-  l'enlève à chaque redémarrage). Firefox 140 ou plus.
+  automatiques). En attendant, pour essayer : `make extension`, puis
+  `about:debugging#/runtime/this-firefox` → **Charger un module complémentaire temporaire…** →
+  le fichier `extension/web-ext-artifacts/joba1-<version>.zip`. Firefox l'enlève à chaque
+  redémarrage. Firefox 140 ou plus.
+  - Charger le **zip** plutôt que `manifest.json` : depuis un dossier de `~/Documents`, macOS ne
+    laisse Firefox lire que le fichier choisi, et la page de fond (`background.js`) ne se charge
+    pas (« Échec du chargement pour l'élément <script> »).
 - **Chrome, Edge, Brave** : `chrome://extensions`, **mode développeur**, **Charger l'extension
   non empaquetée** → ce dossier `extension/`.
 
