@@ -97,3 +97,5 @@ Vérification :
 - **Lecteurs d'écran** : un lien de menu vers une autre page annonce « (nouvel onglet) ».
 - **Vérifié** sur captures avec la démo, ordinateur et téléphone : Entreprise, tableau du Suivi, Preuves ORP. Les profils d'essai et les comptes ne s'affichent que pour l'exploitant : vérifiés par les tests.
 
+- **Alignement** (retour du 2026-10-18) : le « ⋯ » était un caractère de texte, posé plus bas que le centre selon la police. Ce sont maintenant trois points dessinés, centrés dans un bouton de 2,25 rem. Mesuré dans le navigateur, ordinateur et téléphone : écart de 0 px avec le texte voisin (« ← Offres », titres des parties, « Recopier dans Job-Room », lignes du Suivi, contacts). Dans l'en-tête d'une candidature, il est centré sur la première ligne quand le texte passe à la ligne. Le « ⋯ » d'un contact est sur la ligne de son nom.
+- **Panneau d'une candidature trop large** (vu en vérifiant l'alignement) : un long lien dans « Pour l'ORP » élargissait le panneau au-delà de l'écran et coupait le « ⋯ » et les « Copier ». Le lien passe maintenant à la ligne.

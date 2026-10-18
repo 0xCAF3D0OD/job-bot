@@ -210,13 +210,12 @@ onMounted(async () => {
           class="job-room-count"
           data-test="job-room-count"
         >{{ declareCount }}</span>
+        <MoreMenu
+          :items="monthItems"
+          label="Plus d'actions sur ce mois"
+          test-id="orp-more"
+        />
       </span>
-      <MoreMenu
-        class="section-more"
-        :items="monthItems"
-        label="Plus d'actions sur ce mois"
-        test-id="orp-more"
-      />
     </div>
     <fieldset
       v-if="data.count && pickingColumns"

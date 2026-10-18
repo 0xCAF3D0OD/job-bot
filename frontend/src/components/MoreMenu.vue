@@ -110,7 +110,25 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
       :data-test="testId"
       @click="toggle"
     >
-      ⋯
+      <!-- Trois points dessinés : centrés quelle que soit la police (docs/74). -->
+      <svg
+        viewBox="0 0 20 4"
+        width="20"
+        height="4"
+        aria-hidden="true"
+      ><circle
+        cx="2"
+        cy="2"
+        r="2"
+      /><circle
+        cx="10"
+        cy="2"
+        r="2"
+      /><circle
+        cx="18"
+        cy="2"
+        r="2"
+      /></svg>
     </button>
     <ul
       v-if="open"
