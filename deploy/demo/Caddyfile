@@ -1,0 +1,58 @@
+# Démo en ligne de jobA1 (docs/77). DEMO_DOMAIN : l'adresse de la démo (demo.joba1.ch…) ;
+# Caddy obtient tout seul son certificat HTTPS. Pour un essai local : http://localhost.
+{
+	admin off
+}
+
+{$DEMO_DOMAIN} {
+	encode zstd gzip
+
+	# Rien de lourd à envoyer : la démo refuse toute écriture.
+	request_body {
+		max_size 1MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		# Des offres d'emploi fictives n'ont rien à faire dans les moteurs de recherche.
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+
+	# Ni métriques, ni documentation de l'API, ni état technique depuis Internet.
+	@private path /metrics /metrics/* /readyz /version /api/docs /api/docs/* /api/openapi.json /api/redoc
+	handle @private {
+		respond 404
+	}
+
+	handle /robots.txt {
+		respond "User-agent: *
+Disallow: /
+"
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	handle /healthz {
+		reverse_proxy api:8000
+	}
+
+	# L'interface : une application d'une page, `index.html` pour toute autre adresse.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Journal d'accès : 7 jours au plus, rien d'autre n'est gardé sur les visites.
+	log {
+		output file /data/access.log {
+			roll_keep_for 168h
+		}
+	}
+}
