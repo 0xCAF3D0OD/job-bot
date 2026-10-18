@@ -6,10 +6,11 @@
 //   node scripts/illustrations-undraw.mjs <dossier des versions animées> [<dossier des originaux>…]
 //
 // Pour chaque nom de ILLUSTRATIONS, prend la version animée (sinon l'original), et écrit
-// src/assets/illustrations/<nom>.svg :
-// - sans largeur ni hauteur fixes (la taille vient du composant `Illustration`) ;
+// src/assets/dessins/<nom>.svg (les sept des pages qui chargent) ou reserve/illustrations-undraw/ :
+// - sans largeur ni hauteur fixes (la taille vient de la feuille de style) ;
 // - couleurs en minuscules, pour que la feuille de style les reprenne au thème
-//   (`.illu [fill="#6c63ff"]`, docs/58 §2) ;
+//   (`.drawing [fill="#6c63ff"]`) ; le « réduire les animations » des dessins vise `.illu *` :
+//   LoadingDrawing garde donc la classe `illu` ;
 // - classes et animations préfixées par le nom (`a-<nom>-…`), pour ne pas se mêler entre
 //   illustrations ; le « réduire les animations » limité à l'illustration ;
 // - animations jouées **une seule fois** à l'apparition (docs/59 §5) : la boucle devient un

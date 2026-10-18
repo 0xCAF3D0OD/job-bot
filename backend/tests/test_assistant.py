@@ -359,3 +359,10 @@ def test_guide_follows_the_pages() -> None:
     # Ce qui est venu de 0.48.2 (docs/64) : ce que donnent les critères, la dépense du mois.
     assert "Ce que donnent tes critères" in service.INSTRUCTIONS
     assert "dépense du mois" in service.INSTRUCTIONS and "« criteres »" in service.INSTRUCTIONS
+    # 0.56.2 (docs/69 §2) : les Actualités ne sont plus publiques ; « La plateforme », l'accueil
+    # et « Tes données » sont connus, avec leurs liens.
+    assert "Accessible sans connexion" not in service.INSTRUCTIONS
+    assert "seules les Actualités sont publiques" not in service.INSTRUCTIONS
+    assert "La plateforme" in service.INSTRUCTIONS and "`/la-plateforme`" in service.INSTRUCTIONS
+    assert "`/tes-donnees`" in service.INSTRUCTIONS and "`/bienvenue`" in service.INSTRUCTIONS
+    assert "Refaire l'accueil" in service.INSTRUCTIONS and "date de remise" in service.INSTRUCTIONS

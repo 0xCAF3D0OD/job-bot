@@ -10,7 +10,8 @@ export type Block =
 const ITEM = /^\s*(?:[-*•]|(\d+)[.)])\s+(.*)$/;
 
 // Chemins de la plateforme que l'assistant peut proposer (docs/24, guide « Liens »).
-const INTERNAL = /^\/(aujourdhui|candidatures(\/(offres|suivi|alertes))?|candidatures\/offres\/\d+\/preparer|actualites|formations|profil|reglages(\/diagnostic)?)(\?[\w=&%.-]*)?$/;
+const INTERNAL =
+  /^\/(aujourdhui|candidatures(\/(offres|suivi|alertes|bilan))?|candidatures\/offres\/\d+\/preparer|actualites|formations|profil|reglages(\/diagnostic)?|tes-donnees|bienvenue|la-plateforme)(\?[\w=&%.-]*)?$/;
 const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
 function emphasis(text: string): Inline[] {

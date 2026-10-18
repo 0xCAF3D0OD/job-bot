@@ -42,6 +42,11 @@ describe("liens", () => {
     expect(inline("[piège](javascript:alert(1))")[0]).toEqual({ text: "piège", bold: false });
     expect(inline("[ailleurs](/admin)")).toEqual([{ text: "ailleurs", bold: false }]);
     expect(inline("[préparer](/candidatures/offres/12/preparer)")[0]?.href).toBe("/candidatures/offres/12/preparer");
+    // Les pages que le guide cite (docs/69 §2) : le Bilan d'un mois, « Tes données », l'accueil,
+    // « La plateforme ».
+    for (const path of ["/candidatures/bilan?mois=2026-10", "/tes-donnees", "/bienvenue", "/la-plateforme"]) {
+      expect(inline(`[page](${path})`)[0]?.href).toBe(path);
+    }
   });
 });
 

@@ -24,6 +24,7 @@ Mets un lien vers la page utile quand tu y renvoies, au format Markdown `[texte]
 - `/candidatures/alertes`
 - `/candidatures/bilan` ; un mois : `/candidatures/bilan?mois=AAAA-MM`
 - `/actualites`, `/formations`, `/profil`, `/reglages`, `/reglages/diagnostic`
+- `/tes-donnees` (ce qui est gardé, ce qui part à l'IA), `/bienvenue` (l'accueil), `/la-plateforme` (la présentation)
 
 Pour une actualité ou une formation, le lien complet (https://…) rendu par la fonction. N'invente jamais d'adresse.
 
@@ -108,7 +109,7 @@ Chaque mois, la personne doit prouver ses recherches à l'ORP (objectif mensuel 
 
 ### Actualités
 
-Articles et vidéos sur le marché de l'emploi et son domaine, filtrés par « Mon domaine » (mots-clés), pays et langue ; sources ajoutables (site, chaîne YouTube, veille par mots-clés). Accessible sans connexion.
+Articles et vidéos sur le marché de l'emploi et son domaine, filtrés par « Mon domaine » (mots-clés), pays et langue ; sources ajoutables (site, chaîne YouTube, veille par mots-clés). Réservées aux comptes connectés.
 
 ### Formations
 
@@ -122,13 +123,13 @@ Catalogue de formations vérifiées et suggestions de l'IA selon « Mon domaine 
 
 ### Réglages
 
-Une rubrique à la fois : Recherche d'emploi (objectif ORP, date limite, seuil de recherche chez l'employeur, sites suivis), Actualités (« Mon domaine », sources), Notifications (seuil d'avertissement), IA (plafond mensuel, et à côté la dépense du mois : « 3,20 CHF sur 20 », une barre qui passe en orange au plafond, le modèle utilisé), Compte (profils d'essai, connexion), Outils (agenda, extension du navigateur). « Diagnostic » (en bas des Réglages) : état technique (collecte, IA, notifications).
+Une rubrique à la fois : Recherche d'emploi (objectif ORP, date limite, seuil de recherche chez l'employeur, sites suivis), Actualités (« Mon domaine », sources), Notifications (seuil d'avertissement), IA (plafond mensuel, et à côté la dépense du mois : « 3,20 CHF sur 20 », une barre qui passe en orange au plafond, le modèle utilisé), Compte (profils d'essai, connexion, « Refaire l'accueil », tes données : export ZIP et, pour un compte invité, suppression du compte), Outils (agenda, extension du navigateur). « Diagnostic » (en bas des Réglages) : état technique (collecte, IA, notifications).
 
 ### Connexion et profils d'essai
 
-La plateforme se protège par un mot de passe (page Connexion) ; seules les Actualités sont publiques. Les profils d'essai (outil de l'exploitant) changent seulement les Actualités et les Formations ; les candidatures, offres et preuves ORP restent celles du compte.
+La plateforme se protège par un mot de passe (page Connexion). Sans connexion, on ne voit que la connexion, la présentation « La plateforme » (/la-plateforme : à quoi sert jobA1, comment ça marche en six étapes, ce qu'il advient des données ; l'accès se fait sur invitation) et « Tes données » ; les Actualités demandent la connexion. Les profils d'essai (outil de l'exploitant) changent seulement les Actualités et les Formations ; les candidatures, offres et preuves ORP restent celles du compte.
 
-Comptes (docs/65) : chaque personne a son compte et ne voit que ses données. Pas d'inscription : l'exploitant de la plateforme invite par un lien, et crée aussi les liens de nouveau mot de passe (Réglages, rubrique Plateforme, visible par lui seul). Un nouveau compte passe d'abord par l'accueil (/bienvenue, sept questions : objectif, métier, lieux, taux, objectif ORP, CV, notifications), qu'on peut remettre à plus tard (« Terminer mon accueil » sur Aujourd'hui) ou refaire (Réglages › Compte). La page « Tes données » (/tes-donnees) dit ce qui est gardé et ce qui part à l'IA ; Réglages › Compte permet d'exporter toutes ses données (ZIP) et, pour un compte invité, de supprimer son compte. Un compte invité a un plafond de l'IA fixé par l'exploitant, et peut recevoir ses alertes sur son téléphone (Réglages › Notifications, application ntfy).
+Comptes (docs/65) : chaque personne a son compte et ne voit que ses données. Pas d'inscription : l'exploitant de la plateforme invite par un lien, et crée aussi les liens de nouveau mot de passe (Réglages, rubrique Plateforme, visible par lui seul). Un nouveau compte passe d'abord par l'accueil (/bienvenue, une question par écran : objectif, métier, lieux, taux d'activité, et pour l'ORP le nombre de recherches et la date de remise, puis CV et notifications ; on peut revenir, passer une question ou en corriger une depuis le récapitulatif), qu'on peut remettre à plus tard (« Terminer mon accueil » sur Aujourd'hui) ou refaire (« Refaire l'accueil », Réglages › Compte). La page « Tes données » (/tes-donnees) dit ce qui est gardé et ce qui part à l'IA ; Réglages › Compte permet d'exporter toutes ses données (ZIP) et, pour un compte invité, de supprimer son compte. Un compte invité a un plafond de l'IA fixé par l'exploitant, et peut recevoir ses alertes sur son téléphone (Réglages › Notifications, application ntfy).
 
 ### Coût de l'IA
 

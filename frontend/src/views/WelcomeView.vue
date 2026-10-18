@@ -122,6 +122,15 @@ const RATES: { value: number | null; title: string }[] = [
 ];
 const TARGETS = [4, 6, 8, 10, 12];
 
+// En changeant d'écran, le bouton qui avait le focus disparaît : le focus va au titre du nouvel
+// écran, pour que le clavier et les lecteurs d'écran ne perdent pas leur place (docs/69 §4).
+function focusTitle(el: Element): void {
+  const title = el.querySelector<HTMLElement>("h1");
+  if (!title) return;
+  title.setAttribute("tabindex", "-1");
+  title.focus({ preventScroll: true });
+}
+
 async function remember(changes: Record<string, unknown>): Promise<void> {
   await api.PUT("/api/welcome", { body: changes });
 }
@@ -346,6 +355,7 @@ function edit(key: StepKey): void {
     <Transition
       :name="`welcome-${direction}`"
       mode="out-in"
+      @after-enter="focusTitle"
     >
       <div
         :key="step"
@@ -605,12 +615,13 @@ function edit(key: StepKey): void {
 
         <template v-else-if="step === 'next'">
           <div class="welcome-speaker">
-            <p
+            <!-- La bulle est le titre de l'écran (docs/69 §4). -->
+            <h1
               class="welcome-bubble"
               data-test="welcome-bubble"
             >
               Prochaine étape : créer tes alertes sur les sites d'emploi. La recherche est déjà remplie.
-            </p>
+            </h1>
             <Illustration
               name="messager"
               class="welcome-character"

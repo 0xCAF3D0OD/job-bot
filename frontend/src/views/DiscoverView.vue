@@ -82,11 +82,14 @@ function trace(): void {
 }
 
 // La part du chemin parcourue suit le milieu de l'écran ; les pastilles dépassées se remplissent.
+// « Réduire les animations » : le chemin est entier d'emblée, il ne suit pas le défilement.
+const still = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 function follow(): void {
   const box = journey.value?.getBoundingClientRect();
   if (!box) return;
   const middle = window.innerHeight * 0.6 - box.top;
-  progress.value = Math.max(0, Math.min(1, middle / box.height));
+  progress.value = still ? 1 : Math.max(0, Math.min(1, middle / box.height));
   const nodes = [...journey.value!.querySelectorAll<HTMLElement>(".discover-node")];
   reached.value = nodes.filter((n) => n.getBoundingClientRect().top + n.offsetHeight / 2 < window.innerHeight * 0.6).length;
 }
@@ -191,7 +194,10 @@ onBeforeUnmount(() => {
             />
           </div>
           <div class="discover-say">
-            <span :class="['discover-node', { reached: i < reached }]">{{ i + 1 }}</span>
+            <span
+              :class="['discover-node', { reached: i < reached }]"
+              aria-hidden="true"
+            >{{ i + 1 }}</span>
             <div class="discover-bubble">
               <h3>{{ scene.title }}</h3>
               <p>{{ scene.text }}</p>
@@ -200,10 +206,13 @@ onBeforeUnmount(() => {
         </li>
         <li
           class="discover-scene discover-end shown"
-          data-index="6"
+          :data-index="SCENES.length"
         >
           <div class="discover-say">
-            <span :class="['discover-node', 'goal', { reached: reached > SCENES.length }]">★</span>
+            <span
+              :class="['discover-node', 'goal', { reached: reached > SCENES.length }]"
+              aria-hidden="true"
+            >★</span>
             <div class="discover-data">
               <h2>Tes données restent à toi</h2>
               <p>
