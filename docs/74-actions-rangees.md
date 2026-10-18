@@ -99,3 +99,15 @@ Vérification :
 
 - **Alignement** (retour du 2026-10-18) : le « ⋯ » était un caractère de texte, posé plus bas que le centre selon la police. Ce sont maintenant trois points dessinés, centrés dans un bouton de 2,25 rem. Mesuré dans le navigateur, ordinateur et téléphone : écart de 0 px avec le texte voisin (« ← Offres », titres des parties, « Recopier dans Job-Room », lignes du Suivi, contacts). Dans l'en-tête d'une candidature, il est centré sur la première ligne quand le texte passe à la ligne. Le « ⋯ » d'un contact est sur la ligne de son nom.
 - **Panneau d'une candidature trop large** (vu en vérifiant l'alignement) : un long lien dans « Pour l'ORP » élargissait le panneau au-delà de l'écran et coupait le « ⋯ » et les « Copier ». Le lien passe maintenant à la ligne.
+
+## Complément : un seul cadre par bloc
+
+- **Le constat** (retour du 2026-10-18) : un tableau ou une liste garde son propre cadre (bordure, coins arrondis) même rangé dans une carte ou un volet. On voit deux cadres l'un dans l'autre, ce qui alourdit l'affichage.
+- **La règle** : dans une carte ou un volet, un tableau, une liste ou un repliable perd son cadre. Il reste des lignes séparées par un filet fin, alignées sur le texte de la carte. Un volet qui contient un tableau n'a plus de trait à gauche.
+- **Les cas trouvés**, en parcourant toutes les pages de la démo, volets ouverts, à la recherche d'un cadre dans un cadre :
+  - Suivi › Formulaire ORP du mois, le tableau des preuves (sur téléphone, chaque ligne était aussi une carte dans le volet) ;
+  - Alertes › le journal des alertes reçues ;
+  - Réglages › Recherche › Sites suivis ;
+  - Réglages › Actualités › Sources ;
+  - Réglages › Outils › « Comment l'ajouter » (agenda, extension).
+- **Après** : le même parcours ne trouve plus aucun cadre dans un cadre, sur ordinateur. Captures avant et après sur ordinateur et téléphone. La règle est écrite une fois dans le style commun : un tableau ou une liste ajouté plus tard dans une carte suivra la même règle.
