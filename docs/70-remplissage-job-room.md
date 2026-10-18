@@ -108,3 +108,11 @@ Rien ne change dans les droits de l'extension : la recharger suffit (Firefox : n
   - les routes avec un vrai jeton ;
   - la migration 0051 sur une copie de ta base (13 candidatures), aller et retour.
 - **Non essayé** : le vrai Job-Room (il faut ta connexion) et le panneau dans le navigateur (le navigateur de test ne charge pas d'extension). C'est l'essai réel de ton côté.
+
+## Complément : premier essai réel (2026-10-18)
+
+- **Constat** : la case « Par voie électronique » est cochée, mais la date et l'entreprise restent vides, avec « Champ obligatoire ».
+- **Première hypothèse, écartée** : un cadre ou une étiquette au même identifiant, placé avant le champ. Le relevé des identifiants montre que le champ vient bien en premier ; seuls les messages d'erreur (`…-validation`) et l'aide (`…-help`) portent un identifiant voisin, après lui.
+- **Gardé quand même** : la recherche se limite aux champs (`input`, `select`, `textarea`), et chaque valeur est relue après la saisie. Si la page ne l'a pas prise, le champ passe en orange avec sa valeur à copier, au lieu d'être compté comme rempli.
+- **Cause trouvée** : le même remplissage, tapé depuis la console de la page, est accepté par Job-Room (valeur gardée, champ `ng-valid ng-dirty`). C'est donc l'**espace isolé de l'extension dans Firefox** qui empêche Angular de voir la saisie ; un clic sur une case passe, une valeur tapée non.
+- **Correction (0.57.1)** : le remplissage de Job-Room tourne **dans la page elle-même** (`world: "MAIN"`, Firefox 128 et Chrome). Le formulaire des employeurs reste dans l'espace isolé, où il fonctionne. Job-Room ne reçoit que les valeurs de la candidature à saisir, celles qui vont de toute façon dans ses champs ; extension 0.57.1, sans nouvelle permission.

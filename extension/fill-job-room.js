@@ -1,5 +1,6 @@
 // Remplissage du formulaire Job-Room (docs/70 §4, §5). Injecté par l'extension dans l'onglet de
-// Job-Room où tu as cliqué sur son icône, seulement à ce moment-là. Il remplit la saisie d'une
+// Job-Room où tu as cliqué sur son icône, seulement à ce moment-là, et dans la page elle-même :
+// depuis l'espace isolé de l'extension, Firefox cache la saisie à Job-Room. Il remplit la saisie d'une
 // recherche d'emploi, choisit les réponses de la déclaration (mode, assignation, taux,
 // résultat), et n'enregistre rien : « Sauvegarder » reste le tien. Il ne lit rien d'autre de la
 // page que les champs qu'il remplit.
@@ -21,7 +22,9 @@
       .replace(/\s+/g, " ")
       .trim();
 
-  const byId = (part) => document.querySelector(`[id*="${part}"]`);
+  // Le champ lui-même : son cadre, son étiquette ou son message d'erreur peuvent porter un
+  // identifiant voisin (« …company.name-0-label »), placé avant lui dans la page.
+  const byId = (part) => document.querySelector(["input", "select", "textarea"].map((tag) => `${tag}[id*="${part}"]`).join(", "));
   const radio = (code) => document.querySelector(`input[type="radio"][id$="-${code}"]`);
 
   // Textes, dans l'ordre du formulaire. `always` : la valeur de la candidature remplace celle
@@ -133,7 +136,9 @@
       }
       setValue(el, value);
       leave(el);
-      done(el, label);
+      // Vérifié après coup : si la page n'a pas pris la valeur, le champ reste à faire.
+      if (el.value === value) done(el, label);
+      else todo(el, label, value);
     }
 
     // Pays, avant « NPA / Lieu » : les suggestions en dépendent.
