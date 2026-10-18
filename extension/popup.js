@@ -4,6 +4,7 @@
 // navigateur.
 // Chrome, Edge, Brave et Firefox (140 et plus) : même code, API `chrome.*` à promesses.
 
+
 const $ = (id) => document.getElementById(id);
 const show = (id, on = true) => ($(id).hidden = !on);
 
@@ -425,13 +426,19 @@ async function fillJobRoom() {
     // laisse pas Job-Room (Angular) voir la saisie ; les champs restaient vides (docs/70,
     // complément 0.57.1). Le script ne reçoit que la candidature à saisir.
     const target = { tabId: tab.id };
-    await chrome.scripting.executeScript({ target, world: "MAIN", files: ["fill-job-room.js"] });
-    const [{ result }] = await chrome.scripting.executeScript({
+    const [{ result: raw }] = await chrome.scripting.executeScript({
       target,
       world: "MAIN",
-      func: (input) => globalThis.jobbotJobRoom.fill(input),
+      func: globalThis.jobbotFillJobRoom,
       args: [data],
     });
+    // Le rapport vient de la page : seulement des textes, en nombre borné.
+    const text = (v) => (typeof v === "string" ? v.slice(0, 200) : "");
+    const result = raw && {
+      form: raw.form === true,
+      filled: (Array.isArray(raw.filled) ? raw.filled : []).map(text).slice(0, 40),
+      todo: (Array.isArray(raw.todo) ? raw.todo : []).slice(0, 40).map((t) => ({ label: text(t?.label), value: text(t?.value) })),
+    };
     const report = $("jr-report");
     report.replaceChildren();
     if (!result?.form) {

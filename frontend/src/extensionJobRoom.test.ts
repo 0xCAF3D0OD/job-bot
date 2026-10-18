@@ -5,7 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import releve from "../../extension/fixtures/job-room-formulaire.json";
 
 type Report = { form: boolean; filled: string[]; todo: { label: string; value: string }[] };
-type JobRoom = { fill: (data: unknown) => Promise<Report> };
+let fillJobRoom: (data: unknown) => Promise<Report>;
 type Element = (typeof releve.elements)[number] & Record<string, unknown>;
 
 // Les suggestions de « NPA / Lieu », comme Job-Room les propose après la saisie du NPA.
@@ -13,8 +13,9 @@ const PLACES = ["1000 Lausanne", "1003 Lausanne", "1211 Genève 3", "1212 Grand-
 
 beforeAll(async () => {
   globalThis.CSS ??= { escape: (v: string) => v } as typeof CSS;
-  // @ts-expect-error script de l'extension, sans types (injecté tel quel dans les pages)
+  // @ts-expect-error script de l'extension, sans types (passé tel quel aux pages)
   await import("../../extension/fill-job-room.js");
+  fillJobRoom = (globalThis as unknown as { jobbotFillJobRoom: typeof fillJobRoom }).jobbotFillJobRoom;
 });
 
 function escape(text: string): string {
@@ -89,7 +90,8 @@ const values = {
   result: "PENDING",
 };
 
-const jobRoom = (): JobRoom => (globalThis as unknown as { jobbotJobRoom: JobRoom }).jobbotJobRoom;
+// La fonction ne laisse rien dans la page : elle se passe en entier à `executeScript`.
+const jobRoom = () => ({ fill: fillJobRoom });
 const input = (part: string): HTMLInputElement =>
   document.querySelector(`input[id*="${part}"], select[id*="${part}"]`)!;
 const checked = (id: string): boolean => (document.getElementById(id) as HTMLInputElement).checked;
@@ -175,5 +177,40 @@ describe("remplissage de Job-Room", () => {
   it("ne fait rien hors du formulaire de saisie", async () => {
     document.body.innerHTML = "<main><h1>Mes recherches d'emploi</h1></main>";
     expect(await jobRoom().fill(values)).toEqual({ form: false, filled: [], todo: [] });
+  });
+
+  it("se passe en entier à la page : rien d'autre, pas de variable globale (docs/76 §5)", async () => {
+    // `executeScript({ func })` ne transmet que le texte de la fonction : on la recrée de même.
+    const copy = new Function(`return (${fillJobRoom.toString()})`)() as typeof fillJobRoom;
+    const report = await copy(values);
+    expect(report.form).toBe(true);
+    // L'ancienne porte d'entrée, qu'une page pouvait préparer, n'existe plus.
+    expect((globalThis as Record<string, unknown>).jobbotJobRoom).toBeUndefined();
+  });
+
+  it("un champ devenu zone de texte se remplit ; un autre mode déjà coché est signalé", async () => {
+    const company = input("company.name");
+    const area = document.createElement("textarea");
+    area.id = company.id;
+    company.replaceWith(area);
+    const mail = document.querySelector<HTMLInputElement>('input[id*="apply-channel.mail"]')!;
+    mail.checked = true;
+    const report = await jobRoom().fill(values);
+    expect(area.value).toBe("Acme SA");
+    expect(report.todo.map((t) => t.label)).toContain("Autre mode coché");
+  });
+
+  it("l'assignation ORP vise la question de l'ORP, pas le premier oui / non", async () => {
+    const other = document.createElement("div");
+    other.innerHTML = '<p>Autre question ?</p><input type="radio" id="autre-true"><input type="radio" id="autre-false">';
+    document.querySelector("form")!.prepend(other);
+    const orp = document.getElementById("alv-radio-button-0-false")!;
+    const groupBox = document.createElement("div");
+    groupBox.innerHTML = "<p>Assignation par l'ORP ?</p>";
+    orp.closest("label")!.before(groupBox);
+    groupBox.append(document.getElementById("alv-radio-button-0-true")!.closest("label")!, orp.closest("label")!);
+    await jobRoom().fill(values);
+    expect(checked("alv-radio-button-0-false")).toBe(true);
+    expect(checked("autre-false")).toBe(false);
   });
 });

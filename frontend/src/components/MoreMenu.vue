@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, useId } from "vue";
 
 // Menu « ⋯ » commun (docs/50 §1) : Échap ferme le seul menu et rend le focus à « ⋯ »,
 // un clic ailleurs le ferme, les flèches passent d'une action à l'autre.
@@ -17,11 +17,18 @@ export type MoreMenuItem = {
   danger?: boolean;
 };
 
-const props = withDefaults(defineProps<{ items: MoreMenuItem[]; label?: string; testId?: string }>(), {
-  label: "Plus d'actions",
-  testId: "more",
-});
+// `inline` : faux quand une autre action est déjà visible à côté (une seule visible par partie).
+const props = withDefaults(
+  defineProps<{ items: MoreMenuItem[]; label?: string; testId?: string; inline?: boolean }>(),
+  { label: "Actions", testId: "more", inline: true },
+);
 
+// Une seule action ordinaire : pas de menu, l'action directement (docs/76 §3).
+const direct = computed(() => {
+  const [only] = props.items;
+  return props.inline && props.items.length === 1 && only && !only.danger ? only : null;
+});
+const toggleId = useId();
 const open = ref(false);
 const up = ref(false);
 const alignLeft = ref(false);
@@ -29,8 +36,9 @@ const root = ref<HTMLElement | null>(null);
 const menu = ref<HTMLElement | null>(null);
 const toggleButton = ref<HTMLButtonElement | null>(null);
 
-function entries(): HTMLButtonElement[] {
-  return [...(root.value?.querySelectorAll<HTMLButtonElement>("[role=menuitem]") ?? [])];
+// Les actions qu'on peut atteindre au clavier (pas celles indisponibles).
+function entries(): HTMLElement[] {
+  return [...(root.value?.querySelectorAll<HTMLElement>("[role=menuitem]:not(:disabled)") ?? [])];
 }
 
 async function toggle(): Promise<void> {
@@ -78,11 +86,15 @@ function onKeydown(event: KeyboardEvent): void {
     event.preventDefault();
     event.stopPropagation();
     close(true);
-  } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+  } else if (event.key === "Tab") {
+    // Tab quitte le menu : il se ferme, le focus suit son cours.
+    close();
+  } else if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
     event.preventDefault();
     const list = entries();
-    const at = list.indexOf(document.activeElement as HTMLButtonElement);
-    const next = event.key === "ArrowDown" ? at + 1 : at - 1;
+    const at = list.indexOf(document.activeElement as HTMLElement);
+    const next =
+      event.key === "Home" ? 0 : event.key === "End" ? list.length - 1 : event.key === "ArrowDown" ? at + 1 : at - 1;
     list[(next + list.length) % list.length]?.focus();
   }
 }
@@ -95,12 +107,40 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
 </script>
 
 <template>
+  <a
+    v-if="direct?.href"
+    class="link more-direct"
+    :href="direct.href"
+    :data-test="direct.test"
+    v-bind="direct.download ? { download: '' } : { target: '_blank', rel: 'noopener noreferrer' }"
+  >{{ direct.label }}<span
+    v-if="!direct.download"
+    aria-hidden="true"
+  > ↗</span><span
+    v-if="!direct.download"
+    class="visually-hidden"
+  > (nouvel onglet)</span></a>
+  <button
+    v-else-if="direct"
+    type="button"
+    class="link more-direct"
+    :disabled="direct.disabled"
+    :data-test="direct.test"
+    @click="direct.run?.()"
+  >
+    {{ direct.label }}<span
+      v-if="direct.count"
+      class="menu-count"
+    > ({{ direct.count }})</span>
+  </button>
   <div
+    v-else
     ref="root"
     class="more-menu"
     @keydown="onKeydown"
   >
     <button
+      :id="toggleId"
       ref="toggleButton"
       type="button"
       class="more-button"
@@ -135,6 +175,7 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
       ref="menu"
       :class="['menu', { up, 'align-left': alignLeft }]"
       role="menu"
+      :aria-labelledby="toggleId"
     >
       <template
         v-for="(item, index) in props.items"

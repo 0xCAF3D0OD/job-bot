@@ -4,35 +4,30 @@ Les enseignements se calculent sur la plateforme, sans IA. Les conseils de l'IA 
 que sur demande, avec les retours et les blocs de profil seulement (ni nom, ni coordonnées).
 """
 
-import json
-import re
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from importlib import resources
 from typing import Any
 
-import anthropic
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import Application, Evaluation, Interview, Offer, Setting
-from jobbot.llm.client import Refused
+from jobbot.llm.common import SONNET, call, check_budget, clean, parse_reponse
 from jobbot.runtime import Runtime
-from jobbot.scoring import service as scoring_service
-from jobbot.scoring.service import account_problem, active_profile, budget_state, record_call
+from jobbot.scoring.service import active_profile
 
 PREPARED_KEY = "interview_prepared"
 COACH_KEY = "interview_coaching"
 # Points « à préparer » ajoutés depuis le retour d'un entraînement (docs/75 §7).
 EXTRA_KEY = "interview_to_prepare_extra"
-MODEL = "claude-sonnet-5"
+MODEL = SONNET
 MAX_TOKENS = 3_000
 ESTIMATE_USD = Decimal("0.06")
 INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/coach-v1.md").read_text("utf-8")
-_ANSWER = re.compile(r"<reponse>\s*(\{.*\})\s*</reponse>", re.S)
 
 
 @dataclass
@@ -156,14 +151,8 @@ class Coaching:
 
 
 def parse_answer(text: str) -> tuple[list[str], list[dict[str, str]], list[str]] | None:
-    matches = _ANSWER.findall(text)
-    if not matches:
-        return None
-    try:
-        data = json.loads(matches[-1])
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(data, dict):
+    data = parse_reponse(text)
+    if data is None:
         return None
 
     def strings(values: Any, limit: int) -> list[str]:
@@ -183,14 +172,34 @@ def parse_answer(text: str) -> tuple[list[str], list[dict[str, str]], list[str]]
     return strings(data.get("pistes"), 6), answers, strings(data.get("questions_to_ask"), 3)
 
 
-def _clean(value: str) -> str:
-    return value.replace("<", " ").replace(">", " ")
+async def offer_context(
+    session: AsyncSession, application_id: int | None, *, excerpt: int = 800
+) -> str:
+    """Le poste visé : intitulé, entreprise, puis le résumé de l'offre, ou un extrait de
+    l'annonce ; vide sans candidature."""
+    application = await session.get(Application, application_id) if application_id else None
+    if application is None:
+        return ""
+    text = f"Poste : {application.job_title}\nEntreprise : {application.company}"
+    if application.offer_id:
+        evaluation = await session.scalar(
+            select(Evaluation).where(Evaluation.offer_id == application.offer_id)
+        )
+        offer = await session.get(Offer, application.offer_id)
+        if evaluation and evaluation.summary_role:
+            text += f"\nLe poste : {evaluation.summary_role}"
+            text += f"\nCe qu'il demande : {evaluation.summary_asks or '?'}"
+        elif offer and (offer.description or offer.snippet):
+            text += f"\nAnnonce : {(offer.description or offer.snippet or '')[:excerpt]}"
+    return text
+
+
+def profile_text(chunks: list[Any]) -> str:
+    return "\n".join(f"- [{c.kind}] {c.title} : {c.content}" for c in chunks)
 
 
 async def _context(session: AsyncSession, application_id: int | None) -> tuple[str, str, str]:
-    profile = "\n".join(
-        f"- [{c.kind}] {c.title} : {c.content}" for c in await active_profile(session)
-    )
+    profile = profile_text(await active_profile(session))
     rows = (
         await session.execute(
             select(Interview, Application.job_title)
@@ -214,58 +223,31 @@ async def _context(session: AsyncSession, application_id: int | None) -> tuple[s
             if value:
                 parts.append(f"{label} : {value}")
         notes.append("- " + " | ".join(parts))
-    upcoming = ""
-    if application_id:
-        application = await session.get(Application, application_id)
-        if application is not None:
-            upcoming = f"Poste : {application.job_title} ; entreprise : {application.company}"
-            if application.offer_id:
-                evaluation = await session.scalar(
-                    select(Evaluation).where(Evaluation.offer_id == application.offer_id)
-                )
-                offer = await session.get(Offer, application.offer_id)
-                if evaluation and evaluation.summary_role:
-                    upcoming += (
-                        f"\nPoste : {evaluation.summary_role}\nDemande : {evaluation.summary_asks}"
-                    )
-                elif offer and offer.snippet:
-                    upcoming += f"\nExtrait : {offer.snippet[:800]}"
-    return _clean(profile)[:12000], _clean("\n".join(notes))[:8000], _clean(upcoming)[:2000]
+    upcoming = await offer_context(session, application_id)
+    return clean(profile)[:12000], clean("\n".join(notes))[:8000], clean(upcoming)[:2000]
 
 
 async def coach(runtime: Runtime, application_id: int | None) -> Coaching:
-    settings = runtime.settings
-    if not settings.llm_configured:
-        raise CoachUnavailable("IA non configurée (réglage d'installation, voir le README)")
     async with runtime.sessionmaker() as session:
         profile, notes, upcoming = await _context(session, application_id)
-        spend, budget, rate = await budget_state(session, datetime.now(UTC))
+    rate = await check_budget(runtime, ESTIMATE_USD, CoachUnavailable)
     if not notes:
         raise CoachUnavailable("aucun retour d'entretien à analyser")
-    if spend + ESTIMATE_USD * rate > budget:
-        raise CoachUnavailable("plafond mensuel de l'IA atteint")
     content = f"<profil>\n{profile}\n</profil>\n<retours>\n{notes}\n</retours>"
     if upcoming:
         content += f"\n<prochain>\n{upcoming}\n</prochain>"
     params = {
-        "model": MODEL,
+        "model": SONNET,
         "max_tokens": MAX_TOKENS,
         "system": [{"type": "text", "text": INSTRUCTIONS}],
         "messages": [{"role": "user", "content": content}],
     }
-    try:
-        raw = await scoring_service.make_client(settings).score(params)
-    except Refused:
-        raise CoachUnavailable("réponse refusée par l'IA") from None
-    except anthropic.APIStatusError as exc:
-        if problem := account_problem(exc):
-            raise CoachUnavailable(problem) from None
-        raise
+    # L'appel est compté même si la réponse est illisible (docs/76 §5).
+    raw, _ = await call(runtime, params, rate, purpose="coach", error=CoachUnavailable)
     parsed = parse_answer(raw.text)
+    if parsed is None:
+        raise CoachUnavailable("réponse illisible, réessaie")
     async with runtime.sessionmaker.begin() as session:
-        await record_call(session, raw, offer_id=None, rate=rate, purpose="coach")
-        if parsed is None:
-            raise CoachUnavailable("réponse illisible, réessaie")
         coaching = Coaching(datetime.now(UTC), application_id, *parsed)
         value = {**coaching.__dict__, "created_at": coaching.created_at.isoformat()}
         await session.execute(

@@ -212,7 +212,7 @@ onMounted(async () => {
         >{{ declareCount }}</span>
         <MoreMenu
           :items="monthItems"
-          label="Plus d'actions sur ce mois"
+          label="Actions sur le mois"
           test-id="orp-more"
         />
       </span>

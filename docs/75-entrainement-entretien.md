@@ -94,7 +94,7 @@ Le recruteur n'a pas de nom : il parle au nom de « l'entreprise ».
 | Où | Quoi |
 |---|---|
 | Base | une table `interview_practices` : candidature (facultative), type, ton, langue, état (en cours, terminé), échanges, retour, coût ; migration **0052** |
-| Serveur | démarrer, répondre (en flux, comme l'assistant), passer, terminer, lire, supprimer ; deux consignes versionnées, `recruiter-v1.md` et `practice-feedback-v1.md` ; contrôle du plafond avant chaque échange |
+| Serveur | démarrer, répondre (d'un bloc, voir les écarts), passer, terminer, lire, supprimer ; deux consignes versionnées, `recruiter-v1.md` et `practice-feedback-v1.md` ; contrôle du plafond avant chaque échange |
 | Interface | la page d'entraînement ; « M'entraîner » dans les Entretiens, la fiche « Préparer l'entretien » et « Mes enseignements » ; la partie « Mes entraînements » |
 | Tests | avec une IA simulée : ordre des questions, une seule relance, rien de personnel envoyé, plafond, un entraînement absent de « Mes enseignements » et des preuves |
 

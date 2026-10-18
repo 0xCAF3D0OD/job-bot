@@ -248,8 +248,12 @@ async def coach_interviews(request: Request, body: CoachIn) -> InsightsOut:
     return await _insights(_runtime(request))
 
 
+class ToPrepareIn(BaseModel):
+    text: Annotated[str, Field(min_length=1, max_length=practice.POINT_MAX)]
+
+
 @router.post("/interviews/insights/to-prepare", operation_id="addInterviewToPrepare")
-async def add_to_prepare(request: Request, body: PreparedIn) -> InsightsOut:
+async def add_to_prepare(request: Request, body: ToPrepareIn) -> InsightsOut:
     """Ajoute un point à travailler, tiré du retour d'un entraînement (docs/75 §7)."""
     async with _runtime(request).sessionmaker.begin() as session:
         await service.add_to_prepare(session, body.text.strip())
@@ -258,10 +262,10 @@ async def add_to_prepare(request: Request, body: PreparedIn) -> InsightsOut:
 
 # --- S'entraîner à l'entretien (docs/75) ---------------------------------------------------
 
-PracticeKind = Literal["rh", "manager", "technique"]
-Tone = Literal["bienveillant", "exigeant"]
-Language = Literal["fr", "en", "de"]
-Level = Literal["solide", "a_preciser", "a_retravailler"]
+PracticeKind = practice.Kind
+Tone = practice.Tone
+Language = practice.Language
+Level = practice.Level
 
 
 class PracticeIn(BaseModel):
@@ -273,6 +277,14 @@ class PracticeIn(BaseModel):
 
 class PracticeAnswerIn(BaseModel):
     text: Annotated[str, Field(min_length=1, max_length=practice.ANSWER_MAX)]
+
+    @field_validator("text")
+    @classmethod
+    def _filled(cls, value: str) -> str:
+        # Une réponse faite d'espaces est refusée comme une réponse vide (422).
+        if not value.strip():
+            raise ValueError("réponse vide")
+        return value.strip()
 
 
 class PracticeTurn(BaseModel):
@@ -350,7 +362,7 @@ async def _one(runtime: Runtime, practice_id: int) -> PracticeOut:
     async with runtime.sessionmaker() as session:
         item = await session.get(InterviewPractice, practice_id)
         if item is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Entraînement introuvable")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "entraînement introuvable")
         return await _practice_out(session, item)
 
 
@@ -376,15 +388,12 @@ async def practice_defaults(
                 .order_by(Interview.id.desc())
                 .limit(1)
             )
-            if last == "manager":
-                kind = "manager"
-            elif last == "technique":
-                kind = "technique"
+            kind = practice.as_kind(last) or kind
             application = await session.get(Application, application_id)
             if application is not None and application.offer_id:
                 offer = await session.get(Offer, application.offer_id)
                 if offer is not None:
-                    language = practice.guess_language(  # type: ignore[assignment]
+                    language = practice.guess_language(
                         f"{offer.title} {offer.description or offer.snippet or ''}"
                     )
     return PracticeDefaults(
@@ -492,5 +501,5 @@ async def delete_practice(request: Request, practice_id: int) -> None:
     async with _runtime(request).sessionmaker.begin() as session:
         item = await session.get(InterviewPractice, practice_id)
         if item is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Entraînement introuvable")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "entraînement introuvable")
         await session.delete(item)

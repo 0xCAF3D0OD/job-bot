@@ -7,8 +7,12 @@
 //
 // Les champs sont reconnus par leur identifiant, qui porte les clés du formulaire (relevé du
 // 2026-10-18, extension/fixtures/job-room-formulaire.json) : les mêmes dans toutes les langues.
-(() => {
-  if (globalThis.jobbotJobRoom) return;
+//
+// Une seule fonction, sans rien autour : chargée par le panneau de l'extension, qui la passe
+// telle quelle à la page (`executeScript({ func })`). La page n'a donc rien de global qu'elle
+// pourrait fournir à sa place, et une mise à jour de l'extension sert tout de suite
+// (docs/76 §5).
+function fillJobRoom(data) {
 
   const FILLED = "2px solid #635bff";
   const TODO = "2px solid #e08a2e";
@@ -26,6 +30,18 @@
   // identifiant voisin (« …company.name-0-label »), placé avant lui dans la page.
   const byId = (part) => document.querySelector(["input", "select", "textarea"].map((tag) => `${tag}[id*="${part}"]`).join(", "));
   const radio = (code) => document.querySelector(`input[type="radio"][id$="-${code}"]`);
+  // « Assignée par l'ORP ? » : le oui / non dont la question parle de l'ORP (RAV, URC), pas le
+  // premier oui / non de la page ; le premier seulement si aucune question ne le dit.
+  const assignedRadio = (code) => {
+    const all = [...document.querySelectorAll(`input[type="radio"][id$="-${code}"]`)];
+    // Le groupe d'un oui / non : le plus petit bloc qui contient ses deux boutons.
+    const group = (el) => {
+      let node = el.parentElement;
+      while (node && node.querySelectorAll('input[type="radio"]').length < 2) node = node.parentElement;
+      return node && node.querySelectorAll('input[type="radio"]').length === 2 ? node : null;
+    };
+    return all.find((el) => /\b(ORP|RAV|URC)\b/.test(group(el)?.textContent || "")) || all[0] || null;
+  };
 
   // Textes, dans l'ordre du formulaire. `always` : la valeur de la candidature remplace celle
   // que Job-Room propose (la date du jour) ; sinon, un champ déjà rempli n'est pas touché.
@@ -60,7 +76,10 @@
 
   // Valeur posée comme une saisie au clavier : Angular la voit passer.
   function setValue(el, value) {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    // Le setter du bon type de champ : celui d'un `input` lève une erreur sur un `textarea`.
+    const proto =
+      el.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : el.tagName === "SELECT" ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
     if (setter) setter.call(el, value);
     else el.value = value;
     el.dispatchEvent(new Event("input", { bubbles: true }));
@@ -165,8 +184,13 @@
     const channel = data.channel && byId(`apply-channel.${data.channel}`);
     if (channel && choose(channel)) done(channel, CHANNELS[data.channel]);
     else todo(null, "Comment avez-vous postulé ?", CHANNELS[data.channel] || "");
+    // Un autre mode déjà coché (par toi, ou par Job-Room) : à vérifier, en orange.
+    for (const other of Object.keys(CHANNELS)) {
+      const box = other !== data.channel && byId(`apply-channel.${other}`);
+      if (box?.checked) todo(box, "Autre mode coché", `${CHANNELS[other]} : à décocher si besoin`);
+    }
 
-    const assigned = radio(data.assigned ? "true" : "false");
+    const assigned = assignedRadio(data.assigned ? "true" : "false");
     if (assigned && choose(assigned)) done(assigned, `Assignation ORP : ${data.assigned ? "oui" : "non"}`);
     else todo(null, "Assignation par l'ORP", data.assigned ? "Oui" : "Non");
 
@@ -186,5 +210,8 @@
     return report;
   }
 
-  globalThis.jobbotJobRoom = { fill };
-})();
+  return fill(data);
+}
+
+// Pour le panneau (et les tests) : visible dans l'extension seulement, jamais dans la page.
+globalThis.jobbotFillJobRoom = fillJobRoom;

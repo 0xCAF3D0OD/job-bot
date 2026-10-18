@@ -72,6 +72,15 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
   }
   return items;
 });
+const documentItems = computed<MoreMenuItem[]>(() => {
+  const a = props.application;
+  const items: MoreMenuItem[] = [];
+  if (a.cv_draft_id) items.push({ label: "CV (Word)", test: "panel-cv", href: `/api/cvs/${a.cv_draft_id}/docx`, download: true });
+  if (a.application_url?.startsWith("http")) {
+    items.push({ label: "Ouvrir l'annonce", test: "panel-link", href: a.application_url });
+  }
+  return items;
+});
 const followUpOpen = ref(false);
 function onFollowedUp(): void {
   followUpOpen.value = false;
@@ -331,27 +340,29 @@ const onStatus = (event: Event): void =>
       class="panel-section"
       data-test="section-documents"
     >
-      <h3>Documents</h3>
-      <p class="panel-section-links">
+      <div class="panel-section-head">
+        <h3>Documents</h3>
+        <MoreMenu
+          v-if="documentItems.length"
+          class="section-more"
+          :items="documentItems"
+          :inline="!application.letter_draft_id"
+          label="Actions sur les documents"
+          test-id="documents-more"
+        />
+      </div>
+      <!-- La lettre visible ; le CV et l'annonce dans « ⋯ », mêmes libellés que le tableau
+           du Suivi (docs/76 §3). -->
+      <p
+        v-if="application.letter_draft_id"
+        class="panel-section-links"
+      >
         <a
-          v-if="application.letter_draft_id"
           class="link"
           :href="`/api/letters/${application.letter_draft_id}/docx`"
           download
-        >Lettre</a>
-        <a
-          v-if="application.cv_draft_id"
-          class="link"
-          :href="`/api/cvs/${application.cv_draft_id}/docx`"
-          download
-        >CV</a>
-        <a
-          v-if="application.application_url?.startsWith('http')"
-          class="link"
-          :href="application.application_url"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Lien de candidature</a>
+          data-test="panel-letter"
+        >Lettre (Word)</a>
       </p>
     </section>
 

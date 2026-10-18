@@ -191,7 +191,8 @@ describe("OffersView", () => {
     const cards = wrapper.findAll("[data-test=offer]");
     // Une ligne (docs/73 §4) : le site et « chez l'employeur » sont dans le panneau.
     expect(cards[0]?.text()).not.toContain("chez l'employeur");
-    expect(cards[0]?.text()).toContain("à noter");
+    // Pas encore notée : un cercle vide, qui le dit (docs/76 §3).
+    expect(cards[0]?.find("[data-test=score]").attributes("aria-label")).toContain("à noter");
     expect(cards[0]?.find("[data-test=offer-alert]").exists()).toBe(false);
     expect(cards[1]?.find("[data-test=offer-alert]").text()).toBe("Type : stage (« stage »)");
 
@@ -235,7 +236,7 @@ describe("note et résumé", () => {
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
     expect(scored?.find("[data-test=offer-date]").exists()).toBe(true);
     expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
-    expect(unscored?.text()).toContain("à noter");
+    expect(unscored?.find("[data-test=score]").classes()).toContain("pending");
 
     await scored?.trigger("click");
     expect(wrapper.find("[data-test=ai]").text()).toContain("82/100");

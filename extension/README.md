@@ -2,7 +2,9 @@
 
 Remplit le formulaire de candidature de l'employeur avec tes données jobA1 : coordonnées,
 CV et lettre en PDF, texte de la lettre, et, sur demande, une proposition de réponse aux
-questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune case.
+questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune case de
+consentement ; sur Job-Room, elle choisit les réponses de la déclaration (mode, assignation,
+taux, résultat), que tu vérifies avant de sauvegarder.
 
 Sur Job-Room, elle remplit la saisie d'une recherche d'emploi avec une candidature de ton Suivi.
 Là, elle choisit aussi les réponses de la déclaration (mode, assignation, taux, résultat), mais

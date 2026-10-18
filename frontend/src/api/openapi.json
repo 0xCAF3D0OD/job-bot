@@ -6991,7 +6991,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PreparedIn"
+                "$ref": "#/components/schemas/ToPrepareIn"
               }
             }
           },
@@ -16956,6 +16956,21 @@
         ],
         "title": "ToConfirm",
         "description": "Un site demande de confirmer l'alerte (docs/65 §3) : le lien est à ouvrir soi-même."
+      },
+      "ToPrepareIn": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ToPrepareIn"
       },
       "TodayOut": {
         "properties": {

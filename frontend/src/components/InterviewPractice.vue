@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { api, type Application, type Practice, type PracticeDefaults } from "../api/client";
 import AiWriting from "./AiWriting.vue";
@@ -43,6 +43,14 @@ const busy = ref<"" | "start" | "turn" | "feedback">("");
 const message = ref("");
 const added = ref<string[]>([]);
 const thread = ref<HTMLElement | null>(null);
+const dialog = ref<HTMLElement | null>(null);
+// Le focus revient où il était à la fermeture (docs/76 §4).
+let opener: HTMLElement | null = null;
+// Seule la dernière parole du recruteur est annoncée, pas ta propre réponse.
+const announced = computed(() => {
+  const last = practice.value?.turns.at(-1);
+  return last?.role === "recruteur" ? last.text : "";
+});
 const field = ref<HTMLTextAreaElement | null>(null);
 
 const title = computed(() => practice.value?.company ?? props.application?.company ?? "Entretien type");
@@ -64,7 +72,8 @@ function detail(error: unknown): string {
 
 async function scrollDown(): Promise<void> {
   await nextTick();
-  thread.value?.scrollTo?.({ top: thread.value.scrollHeight, behavior: "smooth" });
+  const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  thread.value?.scrollTo?.({ top: thread.value.scrollHeight, behavior: reduced ? "auto" : "smooth" });
   field.value?.focus();
 }
 
@@ -123,7 +132,9 @@ function skip(): Promise<void> {
 
 function retry(): Promise<void> {
   const id = practice.value!.id;
-  return run("turn", () => api.POST("/api/interview-practices/{practice_id}/retry", { params: { path: { practice_id: id } } }));
+  // Après la dernière question, « Réessayer » redemande le retour (docs/76 §3).
+  const last = practice.value!.question >= practice.value!.questions;
+  return run(last ? "feedback" : "turn", () => api.POST("/api/interview-practices/{practice_id}/retry", { params: { path: { practice_id: id } } }));
 }
 
 function finish(): Promise<void> {
@@ -166,12 +177,51 @@ watch(
   () => void scrollDown(),
 );
 
+// Le focus reste dans la fenêtre ; Échap la ferme d'où qu'il soit.
+function focusables(): HTMLElement[] {
+  return [
+    ...(dialog.value?.querySelectorAll<HTMLElement>(
+      "button:not(:disabled), a[href], textarea, summary, [tabindex]:not([tabindex='-1'])",
+    ) ?? []),
+  ];
+}
+function onDocumentKey(event: KeyboardEvent): void {
+  if (event.key === "Escape" && !event.defaultPrevented) {
+    emit("close");
+  } else if (event.key === "Tab") {
+    const list = focusables();
+    const first = list[0];
+    const last = list.at(-1);
+    if (!first || !last) return;
+    const inside = dialog.value?.contains(document.activeElement);
+    if (event.shiftKey && (document.activeElement === first || !inside)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !inside)) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+}
+// À l'ouverture : « Commencer », ou le champ de réponse, sinon la première action.
+async function focusFirst(): Promise<void> {
+  await nextTick();
+  (dialog.value?.querySelector<HTMLElement>("[data-test=practice-start]:not(:disabled), textarea") ?? focusables()[0])?.focus();
+}
+onUnmounted(() => {
+  document.removeEventListener("keydown", onDocumentKey);
+  opener?.focus?.();
+});
+
 onMounted(async () => {
+  opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  document.addEventListener("keydown", onDocumentKey);
   if (props.practiceId) {
     practice.value =
       (await api.GET("/api/interview-practices/{practice_id}", { params: { path: { practice_id: props.practiceId } } })).data ??
       null;
     void scrollDown();
+    await focusFirst();
     return;
   }
   const query = props.application ? { application_id: props.application.id } : {};
@@ -180,6 +230,7 @@ onMounted(async () => {
     kind.value = defaults.value.kind;
     language.value = defaults.value.language;
   }
+  await focusFirst();
 });
 </script>
 
@@ -189,13 +240,19 @@ onMounted(async () => {
     @click.self="emit('close')"
   >
     <article
+      ref="dialog"
       :class="['practice-screen', { running: practice }]"
       role="dialog"
       aria-modal="true"
       :aria-label="`S'entraîner : ${title}`"
       data-test="practice"
-      @keydown.esc="emit('close')"
     >
+      <p
+        class="visually-hidden"
+        aria-live="polite"
+      >
+        {{ announced }}
+      </p>
       <header class="practice-head">
         <div>
           <h3>{{ title }}</h3>
@@ -221,7 +278,7 @@ onMounted(async () => {
           <MoreMenu
             v-if="headItems.length"
             :items="headItems"
-            label="Plus d'actions sur l'entraînement"
+            label="Actions sur l'entraînement"
             test-id="practice-more"
           />
           <button
@@ -342,7 +399,6 @@ onMounted(async () => {
         <div
           ref="thread"
           class="practice-thread"
-          aria-live="polite"
         >
           <p
             v-for="(turn, index) in practice.turns"

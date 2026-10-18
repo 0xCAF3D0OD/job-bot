@@ -27,7 +27,7 @@ jobA1 est une plateforme de recherche d'emploi pour la Suisse, que tu héberges 
 
 **Ce qu'elle ne fait jamais**
 - Elle n'envoie ni n'enregistre rien à ta place, et ne coche aucune case de consentement.
-- Elle n'agit que sur l'onglet où tu cliques sur son icône, au moment où tu cliques.
+- Elle n'agit que sur l'onglet où tu cliques sur son icône, au moment où tu cliques ; seule exception, la page « Relier ce navigateur » de ta plateforme, ouverte par elle, où elle lit son jeton.
 - Elle ne parle qu'à ta plateforme jobA1, à l'adresse que tu as donnée.
 
 Il faut une plateforme jobA1 (code ouvert : https://github.com/0xCAF3D0OD/job-bot). Pour relier l'extension, indique son adresse, puis clique sur « Relier ce navigateur » sur la page qui s'ouvre.
@@ -63,6 +63,6 @@ Autre (et, si proposé : Productivité).
 
 - L'extension a besoin d'une plateforme jobA1. Pour l'essayer : cloner le dépôt, `make setup`, `make migrate`, `make dev` (macOS, PostgreSQL 17), puis relier l'extension à `http://localhost:5173`.
 - Accès demandé à une seule adresse, celle de la plateforme, au moment de relier (`optional_host_permissions`).
-- `fill.js` (formulaires des employeurs) est injecté dans l'onglet actif au clic, dans l'espace isolé ; `fill-job-room.js` est injecté dans la page de Job-Room (`world: "MAIN"`) au clic, car Job-Room (Angular) ne voit pas une saisie faite depuis l'espace isolé de Firefox.
+- `fill.js` (formulaires des employeurs) est injecté dans l'onglet actif au clic, dans l'espace isolé ; la fonction de `fill-job-room.js` est passée à la page de Job-Room (`world: "MAIN"`, `func`) au clic, car Job-Room (Angular) ne voit pas une saisie faite depuis l'espace isolé de Firefox ; elle ne reçoit que la candidature à saisir, jamais le jeton, et ne laisse rien dans la page.
 - `background.js` ouvre l'onglet d'accueil à l'installation, et lit le jeton de liaison dans l'onglet de la plateforme que l'extension a elle-même ouvert, sur l'adresse autorisée.
 - Données déclarées : `browsingActivity` (adresse de l'onglet) et `websiteContent` (texte d'une question), vers la plateforme de l'utilisateur seulement.

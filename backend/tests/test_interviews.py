@@ -176,3 +176,34 @@ async def test_insights_prepared_and_coach(
         await conn.execute(
             text("DELETE FROM settings WHERE key IN ('interview_prepared', 'interview_coaching')")
         )
+
+
+async def test_coach_counts_an_unreadable_answer(
+    client: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Une réponse illisible coûte quand même : son appel reste compté (docs/76 §5)."""
+    from jobbot.interviews import service
+    from jobbot.llm.client import RawResult
+    from jobbot.llm.pricing import Usage
+    from jobbot.scoring import service as scoring
+
+    await reset(runtime)
+    app_id = await add_application(runtime)
+    await client.post(f"/api/applications/{app_id}/interviews", json={"rating": 3})
+
+    class Fake:
+        async def score(self, params: dict[str, Any]) -> RawResult:
+            return RawResult("pas de balise", service.MODEL, Usage(4000, 0, 0, 800), "end_turn")
+
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Fake())
+    monkeypatch.setattr(type(runtime.settings), "llm_configured", property(lambda _self: True))
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM llm_calls WHERE purpose = 'coach'"))
+    refused = await client.post("/api/interviews/coach", json={})
+    assert refused.status_code == 409 and "illisible" in refused.json()["detail"]
+    async with runtime.engine.begin() as conn:
+        counted = await conn.scalar(text("SELECT count(*) FROM llm_calls WHERE purpose = 'coach'"))
+    assert counted == 1
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text("DELETE FROM llm_calls WHERE purpose = 'coach'"))
+    await reset(runtime)

@@ -11,6 +11,7 @@ from sqlalchemy import text
 
 from jobbot.db.models import Application, Contact, Interview
 from jobbot.interviews import practice
+from jobbot.llm import common
 from jobbot.llm.client import RawResult, Refused
 from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
@@ -248,7 +249,7 @@ async def test_finish_early_retry_and_budget(
     async def low_budget(*_args: Any) -> tuple[Decimal, Decimal, Decimal]:
         return Decimal("0.9"), Decimal("1"), Decimal("0.8")
 
-    monkeypatch.setattr(practice, "budget_state", low_budget)
+    monkeypatch.setattr(common, "budget_state", low_budget)
     refused = await client.post("/api/interview-practices", json={})
     assert refused.status_code == 409 and "plafond" in refused.json()["detail"]
     await reset(runtime)
@@ -282,4 +283,90 @@ async def test_two_answers_at_once_keep_one(client: AsyncClient, runtime: Runtim
     body = (await client.get(f"/api/interview-practices/{practice_id}")).json()
     assert [t["role"] for t in body["turns"]] == ["recruteur", "candidat", "recruteur"]
     assert len(fake.calls) == 2
+    await reset(runtime)
+
+
+def test_unreadable_answers() -> None:
+    """Réponses de l'IA sans balise, en JSON faux, ou en liste : rien n'est inventé."""
+    for raw in ("Bonjour", "<reponse>{faux}</reponse>", '<reponse>["a"]</reponse>'):
+        assert practice.parse_turn(raw) is None
+        assert practice.parse_feedback(raw, {1}) is None
+    long_point = "x" * 500
+    parsed = practice.parse_feedback(
+        f'<reponse>{{"questions": [], "strengths": [], "work_on": ["{long_point}"]}}</reponse>',
+        set(),
+    )
+    assert parsed is not None and len(parsed["work_on"][0]) == practice.POINT_MAX
+
+
+async def test_edges(client: AsyncClient, runtime: Runtime, ai: Any) -> None:
+    await reset(runtime)
+    # Candidature inconnue (ou d'un autre compte) : 404.
+    ai([question(1)])
+    assert (
+        await client.post("/api/interview-practices", json={"application_id": 999_999})
+    ).status_code == 404
+    # Pas de première question : l'entraînement n'est pas gardé.
+    ai([])
+    assert (await client.post("/api/interview-practices", json={})).status_code == 409
+    assert (await client.get("/api/interview-practices")).json() == []
+
+    fake = ai([question(1)])
+    practice_id = (await client.post("/api/interview-practices", json={})).json()["id"]
+    # « Réessayer » alors que le recruteur a déjà parlé : rien ne se passe, rien n'est payé.
+    calls = len(fake.calls)
+    body = (await client.post(f"/api/interview-practices/{practice_id}/retry")).json()
+    assert len(body["turns"]) == 1 and len(fake.calls) == calls
+    # Une réponse faite d'espaces est refusée comme une réponse vide.
+    blank = await client.post(f"/api/interview-practices/{practice_id}/answer", json={"text": "  "})
+    assert blank.status_code == 422
+    fake.script = [question(2)]
+    await client.post(f"/api/interview-practices/{practice_id}/answer", json={"text": "Oui"})
+    done = (await client.post(f"/api/interview-practices/{practice_id}/finish")).json()
+    assert done["status"] == "termine"
+    # « Terminer » une seconde fois : rien de plus.
+    calls = len(fake.calls)
+    again = await client.post(f"/api/interview-practices/{practice_id}/finish")
+    assert again.status_code == 200 and len(fake.calls) == calls
+    # « Ajouter à À préparer » : un texte seul, 200 caractères au plus.
+    assert (
+        await client.post("/api/interviews/insights/to-prepare", json={"text": "Un point"})
+    ).status_code == 200
+    assert (
+        await client.post("/api/interviews/insights/to-prepare", json={"text": "x" * 201})
+    ).status_code == 422
+    await reset(runtime)
+
+
+async def test_retry_after_last_question_asks_feedback(
+    client: AsyncClient, runtime: Runtime, ai: Any
+) -> None:
+    """Le retour a échoué après la dernière réponse : « Réessayer » le redemande, sans relancer
+    le recruteur (docs/76 §3)."""
+    await reset(runtime)
+    fake = ai([question(n) for n in range(1, 6)])
+    practice_id = (await client.post("/api/interview-practices", json={})).json()["id"]
+    url = f"/api/interview-practices/{practice_id}"
+    for _ in range(4):
+        await client.post(f"{url}/skip")
+    # Le recruteur n'a plus de réplique : la dernière réponse attend le retour.
+    original = Fake.score
+
+    async def broken(params: dict[str, Any]) -> RawResult:
+        if params["system"][0]["text"] == practice.FEEDBACK:
+            raise Refused
+        result: RawResult = await original(fake, params)
+        return result
+
+    fake.score = broken
+    failed = await client.post(f"{url}/answer", json={"text": "Ma dernière réponse"})
+    assert failed.status_code == 409
+    assert (await client.get(url)).json()["waiting"] is True
+    del fake.score
+    calls = len(fake.calls)
+    body = (await client.post(f"{url}/retry")).json()
+    assert body["status"] == "termine"
+    # Un seul appel, celui du retour.
+    assert len(fake.calls) == calls + 1
+    assert fake.calls[-1]["system"][0]["text"] == practice.FEEDBACK
     await reset(runtime)

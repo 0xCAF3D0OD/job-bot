@@ -112,9 +112,10 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark").text());
     expect(marks).toEqual(["✓", "✓", "!", "✗"]);
     expect(wrapper.find("[data-test=facts]").text()).toContain("80–100 %");
-    // L'annonce chez l'employeur est le bouton : celle d'Indeed est dans le « ⋯ » de l'annonce.
-    await wrapper.find("[data-test=ad-more]").trigger("click");
-    expect(wrapper.find("[data-test=section-ad]").text()).toContain("Voir sur Indeed");
+    // L'annonce chez l'employeur est le bouton ; celle d'Indeed, seule autre, s'affiche
+    // directement, sans « ⋯ » pour une seule action (docs/76 §3).
+    expect(wrapper.find("[data-test=ad-more]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=source-indeed]").text()).toContain("Voir sur Indeed");
     expect(wrapper.find("[data-test=company-section] [data-test=address]").exists()).toBe(true);
     expect(wrapper.find("[data-test=description]").classes()).toContain("folded");
     await wrapper.find("[data-test=read-more]").trigger("click");

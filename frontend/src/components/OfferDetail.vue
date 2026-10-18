@@ -298,6 +298,7 @@ watch(
         <MoreMenu
           v-if="menuItems.length"
           :items="menuItems"
+          label="Actions sur l'offre"
         />
         <button
           type="button"
@@ -617,7 +618,7 @@ watch(
           v-if="announceItems.length"
           class="section-more"
           :items="announceItems"
-          label="Voir l'annonce sur les sites"
+          label="Actions sur l'annonce"
           test-id="ad-more"
         />
       </div>
