@@ -139,7 +139,7 @@ async def run_filter(runtime: Runtime) -> FilterResult:
                     criteria_hash=digest,
                 )
                 .on_conflict_do_update(
-                    index_elements=["offer_id"],
+                    index_elements=["user_id", "offer_id"],
                     set_={
                         "filter_passed": evaluation.passed,
                         "filter_reasons": reasons,

@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select
 
+from jobbot import accounts
 from jobbot.db.models import Evaluation, JobRun, JobRunStatus, LlmBatch, Offer
 from jobbot.llm.scoring import COMPATIBLE_VERSIONS, profile_hash
 from jobbot.runtime import Runtime
@@ -91,6 +92,14 @@ async def get_scoring_status(request: Request) -> ScoringStatus:
             .order_by(JobRun.finished_at.desc())
             .limit(1)
         )
+        # Le passage est commun à tous les comptes, son message peut venir d'un autre : chacun
+        # voit son propre échec, l'exploitant seul le détail (docs/78 §3.4).
+        last_error = None
+        if latest is not None and latest.status == JobRunStatus.FAILURE:
+            if await accounts.is_owner(session):
+                last_error = latest.error
+            elif accounts.current() in (latest.failed_accounts or []):
+                last_error = "la dernière notation a échoué : voir avec l'exploitant"
         pending = (
             await session.scalar(
                 select(func.count()).select_from(LlmBatch).where(LlmBatch.status == "in_progress")
@@ -110,7 +119,7 @@ async def get_scoring_status(request: Request) -> ScoringStatus:
         stale=stale,
         failed=failed,
         pending_batches=pending,
-        last_error=latest.error if latest and latest.status == JobRunStatus.FAILURE else None,
+        last_error=last_error,
     )
 
 

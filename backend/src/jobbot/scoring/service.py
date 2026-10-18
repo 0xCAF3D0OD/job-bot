@@ -253,7 +253,7 @@ async def _store(
         .values(
             offer_id=offer_id, filter_passed=True, filter_reasons=[], criteria_hash="", **values
         )
-        .on_conflict_do_update(index_elements=["offer_id"], set_=values)
+        .on_conflict_do_update(index_elements=["user_id", "offer_id"], set_=values)
     )
 
 

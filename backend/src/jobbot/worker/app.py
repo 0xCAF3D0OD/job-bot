@@ -17,6 +17,7 @@ import psycopg
 import uvicorn
 from fastapi import FastAPI
 
+from jobbot import accounts
 from jobbot.health import health_router
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -38,17 +39,22 @@ def build_procrastinate_app(runtime: Runtime) -> procrastinate.App:
     for spec in JOBS.values():
         name = spec.name
 
-        async def run(timestamp: int | None = None, _name: str = name) -> None:
+        async def run(
+            timestamp: int | None = None, account: int | None = None, _name: str = name
+        ) -> None:
             # timestamp n'est fourni que par le planificateur : c'est une exécution planifiée.
             if timestamp is not None and not JOBS[_name].is_active_at(
                 datetime.fromtimestamp(timestamp, UTC)
             ):
                 log.debug("job_skipped_outside_active_hours", job=_name)
                 return
-            await execute(runtime, _name)
+            # Mise en file par un bouton : pour le compte qui a cliqué, lui seul (docs/78 §3.4).
+            with accounts.use(account):
+                await execute(runtime, _name)
 
-        # queueing_lock : jamais deux exécutions de la même tâche en attente ;
-        # lock : jamais deux exécutions simultanées, même avec plusieurs workers.
+        # queueing_lock : jamais deux exécutions de la même tâche en attente (par compte, pour
+        # une tâche mise en file par un bouton) ; lock : jamais deux exécutions simultanées,
+        # même avec plusieurs workers.
         task = app.task(name=name, queue=QUEUE, queueing_lock=name, lock=name)(run)
         if runtime.settings.scheduler_enabled and spec.cron:
             app.periodic(cron=spec.cron, periodic_id=name)(task)

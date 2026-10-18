@@ -242,3 +242,22 @@ async def test_followed_source_survives_an_unfollow(
         await session.execute(select(func.drop_unfollowed_news_source(source_id)))
     async with runtime.sessionmaker() as session:
         assert await session.get(NewsSource, source_id) is None
+
+
+async def test_personal_uniques_are_per_account() -> None:
+    """Une unicité qui vaudrait pour toute la plateforme dirait à un compte, par un refus,
+    qu'une ligne existe chez un autre (migration 0055). Seules exceptions : les empreintes
+    de jetons et le numéro de lot de l'IA, tirés au hasard."""
+    rows = await catalog(
+        "select conrelid::regclass::text, pg_get_constraintdef(oid) from pg_constraint "
+        "where contype = 'u'"
+    )
+    allowed = {"UNIQUE (token_hash)", "UNIQUE (provider_batch_id)"}
+    global_ = [
+        (table, definition)
+        for table, definition in rows
+        if table in policies.PERSONAL
+        and "user_id" not in str(definition)
+        and definition not in allowed
+    ]
+    assert global_ == []

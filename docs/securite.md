@@ -42,9 +42,10 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 - La connexion ne se désactive (`JOBBOT_AUTH_ENABLED=false`) que pour un essai sur son propre ordinateur, jamais sur une plateforme joignable par d'autres.
 - Le serveur se connecte à la base avec des rôles **sans privilège** : `jobbot_app` pour l'API, `jobbot_worker` pour le worker. Seules les mises à jour du schéma utilisent le propriétaire des tables.
 
-À venir (docs/78 §5) :
-- **0.64.1** : la base refusera tout lien entre deux comptes, et les tâches lancées par un bouton ne tourneront que pour le compte qui a cliqué ;
-- **0.64.2** :
+- La base **refuse tout lien entre deux comptes** : une candidature ne peut désigner qu'une offre du même compte, et ainsi de suite (depuis 0.64.1).
+- Une tâche lancée par un bouton ne tourne **que pour le compte qui a cliqué** (depuis 0.64.1).
+
+À venir (docs/78 §5), en **0.64.2** :
   - la suspension coupera aussi les jetons de l'extension et de l'agenda ;
   - une session durera au plus 90 jours ;
   - le mode sans connexion sera refusé hors de l'ordinateur lui-même.

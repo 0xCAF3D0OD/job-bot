@@ -74,6 +74,8 @@ class JobRun(Base):
     items_in: Mapped[int | None]
     items_out: Mapped[int | None]
     error: Mapped[str | None] = mapped_column(Text)
+    # Les comptes pour qui la tâche a échoué (docs/78 §3.4).
+    failed_accounts: Mapped[list[int] | None] = mapped_column(ARRAY(BigInteger))
 
 
 # --- Collecte (0.2) -------------------------------------------------------------------
@@ -203,7 +205,7 @@ class OfferLink(Base):
     __tablename__ = "offer_links"
 
     user_id: Mapped[int] = account_column()
-    __table_args__ = (UniqueConstraint("offer_id", "source"),)
+    __table_args__ = (UniqueConstraint("user_id", "offer_id", "source"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"))
@@ -251,11 +253,12 @@ class Evaluation(Base):
     """Résultat du filtre pour une offre ; la note IA s'y ajoutera en 0.4."""
 
     __tablename__ = "evaluations"
+    __table_args__ = (UniqueConstraint("user_id", "offer_id"),)
 
     user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"), unique=True)
+    offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"))
     filter_passed: Mapped[bool]
     # Liste de {"rule": …, "message": …}
     filter_reasons: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
@@ -422,13 +425,13 @@ class Application(Base):
     """Une candidature envoyée par Kevin : suivi et données du formulaire ORP (docs/08)."""
 
     __tablename__ = "applications"
+    __table_args__ = (UniqueConstraint("user_id", "offer_id"),)
 
     user_id: Mapped[int] = account_column()
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    offer_id: Mapped[int | None] = mapped_column(
-        ForeignKey("offers.id", ondelete="SET NULL"), unique=True
-    )
+    # Une candidature par offre, dans le compte (migration 0055).
+    offer_id: Mapped[int | None] = mapped_column(ForeignKey("offers.id", ondelete="SET NULL"))
     sent_at: Mapped[date] = mapped_column(Date)
     method: Mapped[str] = mapped_column(Text)
     assigned_by_orp: Mapped[bool] = mapped_column(default=False)
@@ -479,7 +482,7 @@ class Draft(Base):
     __tablename__ = "drafts"
 
     user_id: Mapped[int] = account_column()
-    __table_args__ = (UniqueConstraint("offer_id", "kind", "version"),)
+    __table_args__ = (UniqueConstraint("user_id", "offer_id", "kind", "version"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     offer_id: Mapped[int] = mapped_column(ForeignKey("offers.id", ondelete="CASCADE"))

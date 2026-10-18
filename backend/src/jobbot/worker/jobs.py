@@ -31,6 +31,8 @@ class RunContext:
     run_id: uuid.UUID = field(default_factory=uuid.uuid4)
     items_in: int | None = None
     items_out: int | None = None
+    # Les comptes pour qui la tâche a échoué : chacun voit son échec, l'exploitant le détail.
+    failed_accounts: list[int] = field(default_factory=list)
 
 
 JobFunc = Callable[[Runtime, RunContext], Awaitable[None]]
@@ -117,6 +119,7 @@ async def execute(runtime: Runtime, name: str) -> bool:
                         items_in=ctx.items_in,
                         items_out=ctx.items_out,
                         error=error,
+                        failed_accounts=ctx.failed_accounts or None,
                     )
                 )
             JOB_RUNS.labels(job=name, status=status.value).inc()
@@ -145,7 +148,11 @@ async def _run_for_accounts(runtime: Runtime, spec: JobSpec, ctx: RunContext) ->
     current = accounts.current()
     if current is not None:
         if spec.scope == "accounts" or current == owner:
-            await spec.func(runtime, ctx)
+            try:
+                await spec.func(runtime, ctx)
+            except Exception:
+                ctx.failed_accounts.append(current)
+                raise
         return
     failure: Exception | None = None
     for account in [owner] if spec.scope == "owner" else everyone:
@@ -154,6 +161,7 @@ async def _run_for_accounts(runtime: Runtime, spec: JobSpec, ctx: RunContext) ->
                 await spec.func(runtime, ctx)
             except Exception as exc:
                 log.exception("job_failed_for_account")
+                ctx.failed_accounts.append(account)
                 failure = failure or exc
     if failure is not None:
         raise failure
