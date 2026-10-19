@@ -134,3 +134,85 @@ describe("AssistantPanel, propositions (docs/52)", () => {
     expect(wrapper.find("[data-test=assistant-action-confirm]").exists()).toBe(false);
   });
 });
+
+describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
+  // Un flux qu'on fait avancer à la main : chaque appel à `push` livre un morceau, `end` le ferme.
+  function manualStream() {
+    const pending: ((chunk: { done: boolean; value?: Uint8Array }) => void)[] = [];
+    const queue: { done: boolean; value?: Uint8Array }[] = [];
+    const deliver = (chunk: { done: boolean; value?: Uint8Array }) => {
+      const waiter = pending.shift();
+      if (waiter) waiter(chunk);
+      else queue.push(chunk);
+    };
+    return {
+      response: {
+        ok: true,
+        status: 200,
+        body: {
+          getReader: () => ({
+            read: () => {
+              const next = queue.shift();
+              return next ? Promise.resolve(next) : new Promise((resolve) => pending.push(resolve));
+            },
+          }),
+        },
+      },
+      push: (event: string, data: unknown) =>
+        deliver({ done: false, value: new TextEncoder().encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`) }),
+      end: () => deliver({ done: true }),
+    };
+  }
+  const mood = (wrapper: Awaited<ReturnType<typeof mountPanel>>, selector: string) =>
+    wrapper.find(`${selector} [data-test=assistant-mascot]`).attributes("data-mood");
+
+  it("réfléchit pendant la réponse, a trouvé à l'arrivée, puis revient à l'écoute", async () => {
+    const first = manualStream();
+    const second = manualStream();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(first.response).mockResolvedValueOnce(second.response));
+    const wrapper = await mountPanel();
+    expect(mood(wrapper, ".assistant-head")).toBe("listening");
+
+    await wrapper.find("[data-test=assistant-input]").setValue("Où en est ma semaine ?");
+    await wrapper.find("form.assistant-form").trigger("submit");
+    await flushPromises();
+    expect(mood(wrapper, ".assistant-head")).toBe("thinking");
+    expect(mood(wrapper, "[data-test=assistant-status]")).toBe("thinking");
+    expect(wrapper.find(".assistant-line.assistant [data-test=assistant-mascot]").exists()).toBe(false);
+
+    first.push("text", { text: "Il te reste 2 candidatures." });
+    await flushPromises();
+    expect(mood(wrapper, ".assistant-line.assistant")).toBe("thinking");
+    expect(wrapper.find("[data-test=assistant-status] [data-test=assistant-mascot]").exists()).toBe(false);
+
+    vi.useFakeTimers();
+    first.end();
+    await flushPromises();
+    expect(mood(wrapper, ".assistant-head")).toBe("found");
+    expect(mood(wrapper, ".assistant-line.assistant")).toBe("found");
+    vi.advanceTimersByTime(2000);
+    await flushPromises();
+    vi.useRealTimers();
+    expect(mood(wrapper, ".assistant-head")).toBe("listening");
+    expect(mood(wrapper, ".assistant-line.assistant")).toBe("found");
+
+    // À la question suivante, la réponse précédente repasse à l'écoute.
+    await wrapper.find("[data-test=assistant-input]").setValue("Et la suivante ?");
+    await wrapper.find("form.assistant-form").trigger("submit");
+    await flushPromises();
+    expect(mood(wrapper, ".assistant-line.assistant")).toBe("listening");
+    second.end();
+    await flushPromises();
+  });
+
+  it("une erreur reste à l'écoute", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({ detail: "Indisponible" }) })));
+    const wrapper = await mountPanel();
+    await wrapper.find("[data-test=assistant-input]").setValue("Bonjour");
+    await wrapper.find("form.assistant-form").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find(".assistant-line.assistant").text()).toContain("Indisponible");
+    expect(mood(wrapper, ".assistant-line.assistant")).toBe("listening");
+    expect(mood(wrapper, ".assistant-head")).toBe("listening");
+  });
+});

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type ChatAction, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT } from "../api/client";
@@ -9,7 +9,7 @@ import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssis
 import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
 import CopyLabel from "./CopyLabel.vue";
-import AssistantMascot from "./AssistantMascot.vue";
+import AssistantMascot, { type MascotMood } from "./AssistantMascot.vue";
 import EngagementMoment from "./EngagementMoment.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
@@ -31,7 +31,28 @@ const scroller = ref<HTMLElement | null>(null);
 const input = ref<HTMLTextAreaElement | null>(null);
 let controller: AbortController | null = null;
 
+// Les visages de la mascotte (docs/99) : elle réfléchit pendant la réponse, puis « a trouvé »
+// sur la réponse qui vient d'arriver (2 s dans l'en-tête, jusqu'à la question suivante en ligne).
+const replying = ref<Line | null>(null);
+const found = ref<Line | null>(null);
+const headFound = ref(false);
+let headTimer: ReturnType<typeof setTimeout> | undefined;
+const headMood = computed<MascotMood>(() => (busy.value ? "thinking" : headFound.value ? "found" : "listening"));
+const waiting = computed(() => busy.value && !replying.value?.content && !replying.value?.actions?.length);
+function lineMood(line: Line): MascotMood {
+  if (line.error) return "listening";
+  if (busy.value && line === replying.value) return "thinking";
+  return line === found.value ? "found" : "listening";
+}
+function showFound(reply: Line): void {
+  found.value = reply;
+  headFound.value = true;
+  clearTimeout(headTimer);
+  headTimer = setTimeout(() => (headFound.value = false), 2000);
+}
+
 onMounted(() => void check());
+onBeforeUnmount(() => clearTimeout(headTimer));
 
 async function loadRecent(): Promise<void> {
   const { data } = await api.GET("/api/assistant/conversations");
@@ -92,6 +113,7 @@ function startOver(): void {
   controller?.abort();
   conversationId.value = null;
   lines.value = [];
+  found.value = null;
   void loadRecent();
   input.value?.focus();
 }
@@ -122,6 +144,9 @@ async function send(text: string = draft.value): Promise<void> {
   lines.value.push({ role: "user", content: question });
   lines.value.push({ role: "assistant", content: "" });
   const reply = lines.value[lines.value.length - 1] as Line;
+  replying.value = reply;
+  found.value = null;
+  headFound.value = false;
   controller = new AbortController();
   const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "text/event-stream" };
   const profile = storedProfile();
@@ -178,7 +203,9 @@ async function send(text: string = draft.value): Promise<void> {
     }
   } finally {
     if (!reply.content && !reply.actions?.length) lines.value.splice(lines.value.indexOf(reply), 1);
+    else if (!reply.error && lines.value[lines.value.length - 1] === reply) showFound(reply);
     busy.value = false;
+    replying.value = null;
     reading.value = null;
     controller = null;
     scrollDown();
@@ -282,7 +309,10 @@ const headItems: MoreMenuItem[] = [
       @keydown="onKey"
     >
       <header class="assistant-head">
-        <strong class="assistant-title"><AssistantMascot :size="26" />Assistant</strong>
+        <strong class="assistant-title"><AssistantMascot
+          :size="26"
+          :mood="headMood"
+        />Assistant</strong>
         <div class="assistant-head-actions">
           <button
             v-if="lines.length"
@@ -361,8 +391,9 @@ const headItems: MoreMenuItem[] = [
         >
           <!-- La mascotte devant chaque réponse (docs/97). -->
           <AssistantMascot
-            v-if="line.role === 'assistant'"
+            v-if="line.role === 'assistant' && (line.content || line.actions?.length)"
             :size="24"
+            :mood="lineMood(line)"
             class="assistant-line-mascot"
           />
           <p
@@ -523,6 +554,11 @@ const headItems: MoreMenuItem[] = [
           class="muted assistant-status"
           data-test="assistant-status"
         >
+          <AssistantMascot
+            v-if="waiting"
+            :size="24"
+            mood="thinking"
+          />
           {{ reading ? `Je consulte ${reading}…` : "…" }}
         </p>
       </div>
