@@ -177,3 +177,56 @@ async def test_the_detailed_reading(
     content = calls[0]["messages"][0]["content"]
     assert "Camille" not in content and "s'est efforcée de" in content
     assert "<reperes>" in content
+
+
+async def test_the_letters(
+    client: AsyncClient, runtime: Runtime, documents: list[int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """0.69.1 : la lettre de correction (modèle, puis IA) et le certificat intermédiaire."""
+    from jobbot.certificates import letters
+    from jobbot.scoring import service as scoring
+
+    good, weak, german = documents
+    for document_id in documents:
+        await client.put(f"/api/documents/{document_id}/kind", json={"kind": "certificate"})
+    page = (await client.get("/api/certificates")).json()
+    assert [c["end_year"] for c in page["certificates"]] == [2025, 2024, 2020]
+    template = (await client.get(f"/api/certificates/{weak}/correction")).json()
+    assert template["ai"] is False and template["subject"].startswith("Demande de correction")
+    assert (
+        "- « dans l'ensemble à notre satisfaction » : je vous propose « toujours à notre "
+        in (template["text"])
+    )
+    assert "- « Nous nous sommes séparés » : je vous propose ne pas mentionner" in template["text"]
+    assert "art." not in template["text"].lower()
+    assert (await client.get(f"/api/certificates/{german}/correction")).json()["subject"] == (
+        "Bitte um Berichtigung meines Arbeitszeugnisses"
+    )
+    # Avec l'IA, sans clé : le modèle simple, et pourquoi.
+    fallback = (await client.post(f"/api/certificates/{weak}/correction")).json()
+    assert fallback["ai"] is False and "IA non configurée" in fallback["reason"]
+    calls: list[dict[str, Any]] = []
+
+    class Fake:
+        async def score(self, params: dict[str, Any]) -> RawResult:
+            calls.append(params)
+            return RawResult(
+                "Madame, Monsieur,\n\nMerci pour le certificat.",
+                letters.MODEL,
+                Usage(1800, 0, 0, 300),
+                "end_turn",
+            )
+
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Fake())
+    monkeypatch.setattr(type(runtime.settings), "llm_configured", property(lambda _self: True))
+    written = (await client.post(f"/api/certificates/{weak}/correction")).json()
+    assert written["ai"] is True and written["text"].startswith("Madame, Monsieur,")
+    content = calls[0]["messages"][0]["content"]
+    assert "Camille" not in content and "<points>" in content
+    assert (await client.get(f"/api/certificates/{good}/correction")).status_code == 200
+    assert (await client.get("/api/certificates/999999/correction")).status_code == 409
+    interim = (await client.get("/api/certificates/intermediaire")).json()
+    assert interim["subject"] == "Demande de certificat de travail intermédiaire"
+    assert "intermédiaire" in interim["text"]
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM llm_calls WHERE purpose = 'certificate_letter'"))

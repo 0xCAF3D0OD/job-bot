@@ -4985,6 +4985,144 @@
         }
       }
     },
+    "/api/certificates/{document_id}/correction": {
+      "get": {
+        "tags": [
+          "certificates"
+        ],
+        "summary": "Draft Certificate Correction",
+        "description": "La lettre de demande de correction, sur un modèle simple, à relire et envoyer toi-même.",
+        "operationId": "draftCertificateCorrection",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateLetterOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pas un certificat, ou texte illisible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "certificates"
+        ],
+        "summary": "Write Certificate Correction",
+        "description": "La même lettre, rédigée par l'IA (environ 0,02 CHF) ; le modèle simple si l'IA manque.",
+        "operationId": "writeCertificateCorrection",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateLetterOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pas un certificat, ou texte illisible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/certificates/intermediaire": {
+      "get": {
+        "tags": [
+          "certificates"
+        ],
+        "summary": "Draft Interim Certificate",
+        "description": "La demande de certificat intermédiaire, encore en poste ou en préavis (sans IA).",
+        "operationId": "draftInterimCertificate",
+        "parameters": [
+          {
+            "name": "langue",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "fr",
+                "de"
+              ],
+              "type": "string",
+              "default": "fr",
+              "title": "Langue"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateLetterOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rhythm/semaines": {
       "get": {
         "tags": [
@@ -9416,6 +9554,40 @@
         ],
         "title": "CatalogSourceOut"
       },
+      "CertificateLetterOut": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "ai": {
+            "type": "boolean",
+            "title": "Ai"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "text",
+          "ai"
+        ],
+        "title": "CertificateLetterOut"
+      },
       "CertificateOut": {
         "properties": {
           "document_id": {
@@ -9515,6 +9687,17 @@
               }
             ],
             "title": "Ai At"
+          },
+          "end_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Year"
           }
         },
         "type": "object",

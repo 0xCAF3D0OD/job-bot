@@ -3,18 +3,22 @@ import { onMounted, ref, watch } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import CertificateLetter from "./CertificateLetter.vue";
 
 // Les certificats de travail, décodés (docs/87) : la note, les formules codées, ce qui
 // dessert, le conseil ; la lecture de l'IA sur demande.
 type Page = components["schemas"]["CertificatesPage"];
 type Certificate = Page["certificates"][number];
 
-const props = defineProps<{ version: number }>();
+// `documents` : des documents existent ; sans certificat, une phrase dit comment en marquer un.
+const props = defineProps<{ version: number; documents?: number }>();
 const emit = defineEmits<{ loaded: [count: number] }>();
 const page = ref<Page | null>(null);
 const reading = ref<number | null>(null);
 const message = ref("");
 const open = ref<number | null>(null);
+// La lettre ouverte (0.69.1) : la correction d'un certificat, ou le certificat intermédiaire (0).
+const letter = ref<{ documentId?: number; language?: "fr" | "de" } | null>(null);
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/certificates");
@@ -45,6 +49,22 @@ onMounted(() => void load());
 </script>
 
 <template>
+  <p
+    v-if="page && !page.certificates.length && documents"
+    class="hint certificates-hint"
+    data-test="certificates-hint"
+  >
+    Un certificat de travail parmi tes documents ? Ouvre-le, puis ⋯ › « C'est un certificat de travail » : jobA1 te dit
+    ce qu'il dit vraiment. Encore en poste ou en préavis ?
+    <button
+      type="button"
+      class="link"
+      data-test="interim-letter"
+      @click="letter = {}"
+    >
+      Demande un certificat intermédiaire
+    </button>
+  </p>
   <section
     v-if="page?.certificates.length"
     class="certificates"
@@ -66,6 +86,17 @@ onMounted(() => void load());
       class="notice error"
     >
       {{ message }}
+    </p>
+    <p class="hint">
+      Encore en poste ou en préavis ?
+      <button
+        type="button"
+        class="link"
+        data-test="interim-letter"
+        @click="letter = {}"
+      >
+        Demande un certificat intermédiaire
+      </button>
     </p>
     <article
       v-for="item in page.certificates"
@@ -161,9 +192,27 @@ onMounted(() => void load());
           >
             {{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}
           </button>
-          <span class="hint">Environ 0,03 CHF. Ni ton nom ni celui des personnes ne partent à l'IA.</span>
+          <button
+            v-if="item.advice !== 'attach'"
+            type="button"
+            class="link"
+            :data-test="`certificate-correction-${item.document_id}`"
+            @click="letter = { documentId: item.document_id }"
+          >
+            Demander une correction
+          </button>
         </div>
       </template>
     </article>
+    <p class="hint">
+      « Lire en détail » : environ 0,03 CHF. Ton nom, et les personnes citées avec un titre (M., Mme…) ou en signature,
+      sont retirés avant l'IA ; un nom cité seul dans une phrase pourrait partir.
+    </p>
   </section>
+  <CertificateLetter
+    v-if="letter"
+    :document-id="letter.documentId"
+    :language="letter.language"
+    @close="letter = null"
+  />
 </template>

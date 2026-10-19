@@ -8,6 +8,7 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import ContactsPanel from "../components/ContactsPanel.vue";
 import CvPanel from "../components/CvPanel.vue";
 import OfferBrief from "../components/OfferBrief.vue";
+import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
@@ -362,6 +363,8 @@ onMounted(() => void load());
               data-test="apply-sheet"
             >
               <h3>À recopier sur le site de l'employeur</h3>
+              <!-- Visible aussi sur téléphone, où la section « Postuler » laisse place au bouton fixé. -->
+              <PrepCertificates />
               <FormSheet
                 class="reading-width"
                 :letter-text="currentLetterText"

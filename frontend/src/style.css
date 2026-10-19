@@ -2720,4 +2720,8 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 @media (prefers-color-scheme: dark) {
   .certificate .badge.warn { background: #3a2a1a; color: #f3b67a; }
 }
+.certificate-letter textarea { width: 100%; font: inherit; line-height: 1.5; }
+.certificate-letter p { margin: 0; }
+.prep-certificates { display: grid; gap: 0.35rem; margin: 0.4rem 0 0.8rem; }
+.prep-certificates p { margin: 0; }
 
