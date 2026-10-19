@@ -2,6 +2,8 @@
 import { computed, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import IllustratedSide from "./IllustratedSide.vue";
 import type { IllustrationName } from "./Illustration.vue";
 
@@ -122,13 +124,12 @@ function nextSite(): void {
             data-test="wizard-search"
           >
             {{ search.terms }} · {{ search.location || "toute la Suisse" }}
-            <button
-              type="button"
-              :aria-label="`Retirer ${search.terms}`"
+            <IconButton
+              icon="close"
+              :label="`Retirer ${search.terms}`"
+              data-test="wizard-remove"
               @click="remove(search.id)"
-            >
-              ×
-            </button>
+            />
           </li>
         </ul>
         <form
@@ -151,12 +152,12 @@ function nextSite(): void {
             placeholder="Lieu (Lausanne)"
             aria-label="Lieu"
           >
-          <button
+          <IconButton
+            icon="plus"
+            label="Ajouter la recherche"
             type="submit"
-            class="secondary small"
-          >
-            Ajouter
-          </button>
+            data-test="wizard-add-submit"
+          />
         </form>
         <div class="form-actions">
           <button
@@ -199,7 +200,7 @@ function nextSite(): void {
               rel="noopener noreferrer"
               class="button-link"
               data-test="wizard-open"
-            >Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}</a>
+            ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </template>
           <a
             v-for="link in remoteLinks"
@@ -209,7 +210,7 @@ function nextSite(): void {
             rel="noopener noreferrer"
             class="button-link"
             data-test="wizard-open-remote"
-          >Ouvrir {{ site.name }} en télétravail : {{ link.terms }}</a>
+          ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} en télétravail : {{ link.terms }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
         </div>
         <div class="form-actions">
           <button
@@ -227,7 +228,7 @@ function nextSite(): void {
             data-test="wizard-skip"
             @click="nextSite"
           >
-            Passer ce site
+            <span class="with-icon">Passer ce site<AppIcon name="arrow-right" /></span>
           </button>
         </div>
       </template>

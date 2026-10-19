@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 
+import AppIcon from "../components/AppIcon.vue";
 import DiscoverMock, { type MockKind } from "../components/DiscoverMock.vue";
 import Illustration, { type IllustrationName } from "../components/Illustration.vue";
 import { useAuth } from "../composables/useAuth";
@@ -222,7 +223,7 @@ onBeforeUnmount(() => {
             <span
               :class="['discover-node', 'goal', { reached: reached > SCENES.length }]"
               aria-hidden="true"
-            >★</span>
+            ><AppIcon name="star" /></span>
             <div class="discover-data">
               <h2>Tes données restent à toi</h2>
               <p>

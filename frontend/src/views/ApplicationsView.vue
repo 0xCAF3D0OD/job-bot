@@ -10,6 +10,8 @@ import {
   type InterviewIn,
   type OrpMonth,
 } from "../api/client";
+import AppIcon from "../components/AppIcon.vue";
+import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationPanel from "../components/ApplicationPanel.vue";
@@ -92,9 +94,9 @@ const monthMenu = computed<MoreMenuItem[]>(() => {
   const data = orp.value;
   if (!data) return [];
   return [
-    { label: "Télécharger le PDF", test: "pdf", run: () => void sheet.value?.printPdf() },
+    { label: "Télécharger le PDF", test: "pdf", icon: "download", run: () => void sheet.value?.printPdf() },
     ...(data.searches.length
-      ? [{ label: "PDF avec le journal des recherches", test: "pdf-with-searches", count: data.searches.length, run: () => void sheet.value?.printPdf(true) }]
+      ? [{ label: "PDF avec le journal des recherches", test: "pdf-with-searches", icon: "download" as const, count: data.searches.length, run: () => void sheet.value?.printPdf(true) }]
       : []),
     { label: "Télécharger en CSV (Excel)", test: "csv", href: `/api/orp/${data.month}/csv`, download: true },
   ];
@@ -397,25 +399,19 @@ onUnmounted(() => assistant.setFocus(null));
     <template v-if="orp">
       <div class="applications-head">
         <div class="month-nav">
-          <button
-            type="button"
-            class="secondary small"
-            aria-label="Mois précédent"
+          <IconButton
+            icon="arrow-left"
+            label="Mois précédent"
             data-test="prev-month"
             @click="go(-1)"
-          >
-            ←
-          </button>
+          />
           <strong data-test="month">{{ formatMonth(orp.month) }}</strong>
-          <button
-            type="button"
-            class="secondary small"
-            aria-label="Mois suivant"
+          <IconButton
+            icon="arrow-right"
+            label="Mois suivant"
             data-test="next-month"
             @click="go(1)"
-          >
-            →
-          </button>
+          />
         </div>
         <div
           class="month-goal"
@@ -449,7 +445,7 @@ onUnmounted(() => assistant.setFocus(null));
             data-test="layout-calendar"
             @click="setLayout('calendar')"
           >
-            Calendrier
+            <span class="with-icon"><AppIcon name="calendar" />Calendrier</span>
           </button>
           <button
             type="button"
@@ -458,19 +454,16 @@ onUnmounted(() => assistant.setFocus(null));
             data-test="layout-list"
             @click="setLayout('list')"
           >
-            Liste
+            <span class="with-icon"><AppIcon name="list-check" />Liste</span>
           </button>
         </div>
-        <button
-          type="button"
-          class="secondary small add-application"
-          aria-label="Ajouter une candidature"
-          title="Ajouter une candidature"
+        <IconButton
+          icon="plus"
+          label="Ajouter une candidature"
+          class="add-application"
           data-test="add-application"
           @click="addManual"
-        >
-          ＋
-        </button>
+        />
         <MoreMenu
           v-if="orp.count"
           :items="monthMenu"

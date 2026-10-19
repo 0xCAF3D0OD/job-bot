@@ -30,6 +30,15 @@ Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur 
 3. Gardent leur forme : zones de texte, cases, curseurs, étiquettes, la capsule.
 4. Avant une PR d'interface, l'audit des rangées (`frontend/scripts/alignement.py`) est vide.
 
+## Iconographie (docs/101)
+
+1. **Le style** : grille de 24 px, trait de 1,8 px arrondi, coins doux, couleur du texte. Les icônes sont dans `frontend/src/icons.ts` et s'affichent avec `AppIcon` ; aucun caractère (× ← → ↗ ＋ ✓ …) ni émoji ne sert d'icône (un test le vérifie).
+2. **Icône et texte** là où on se repère : menus, onglets, boutons principaux, lignes des menus ⋯.
+3. **L'icône remplace l'étiquette** dans les métadonnées (lieu, entreprise, date, taux, télétravail, source…) ; l'étiquette reste pour les lecteurs d'écran.
+4. **Icône seule** pour les actions secondaires (copier, supprimer, modifier, garder, fermer, flèches, ajouter, ouvrir ailleurs, filtrer, actualiser), avec `IconButton` : son nom annoncé et montré en infobulle au survol et au focus. Gardent leur texte : les choix qui engagent, « Annuler », les formats de fichier.
+5. **Le point pêche** (l'icône `ai`) marque uniquement les actions qui lancent l'IA. L'étincelle à 4 branches est réservée à l'IA (la rubrique IA des Réglages, la mascotte).
+6. **Ne sont pas des icônes de l'iconographie** : le logo, la mascotte, les logos d'entreprises et de connexion, les graphiques.
+
 ## Illustrations (docs/62, docs/67)
 
 1. Une illustration seulement si l'écran n'a rien d'autre à montrer (vide, erreur, première fois) ou pour marquer un moment (réussite, transition d'une page qui charge).

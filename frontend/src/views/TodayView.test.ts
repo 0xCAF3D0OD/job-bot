@@ -220,7 +220,11 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } });
     const offer = wrapper.find("[data-test=best-offer]");
     expect(offer.text()).toContain("Ingénieur DevOps");
-    expect(offer.text()).toContain("Acme SA · Lausanne");
+    // Métadonnées en icônes (docs/101) : l'entreprise (immeuble), le lieu (repère).
+    expect(offer.find("[data-icon=building]").exists()).toBe(true);
+    expect(offer.find("[data-icon=pin]").exists()).toBe(true);
+    expect(offer.text()).toContain("Acme SA");
+    expect(offer.text()).toContain("Lausanne");
     expect(offer.attributes("href")).toBe("/candidatures/offres?offre=1");
     const preparing = wrapper.find("[data-test=preparing]");
     expect(preparing.text()).toContain("SRE");

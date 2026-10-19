@@ -6,6 +6,7 @@ import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import { plural } from "../format";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
@@ -80,8 +81,8 @@ async function create(): Promise<void> {
 // « Utiliser » visible, le reste dans « ⋯ » (docs/74).
 function profileItems(profile: Profile): MoreMenuItem[] {
   return [
-    { label: "Dupliquer", test: "profile-duplicate", run: () => void duplicate(profile) },
-    { label: "Renommer", test: "profile-rename", run: () => void rename(profile) },
+    { label: "Dupliquer", test: "profile-duplicate", icon: "copy", run: () => void duplicate(profile) },
+    { label: "Renommer", test: "profile-rename", icon: "pencil", run: () => void rename(profile) },
     ...(profile.is_main ? [] : [{ label: "Supprimer", test: "profile-delete", danger: true, run: () => void remove(profile) }]),
   ];
 }
@@ -142,8 +143,8 @@ onMounted(async () => {
           </span>
           <span
             v-if="current?.id === profile.id"
-            class="hint"
-          >utilisé ✓</span>
+            class="hint with-icon"
+          ><AppIcon name="done" />utilisé</span>
           <button
             v-else
             type="button"
@@ -206,7 +207,7 @@ onMounted(async () => {
             @click="propose"
           >
             <HoverNote :text="proposing ? '' : 'Environ 0,001 $.'">
-              {{ proposing ? "Proposition…" : "Proposer des mots-clés" }}
+              <span class="with-icon"><AppIcon name="ai" />{{ proposing ? "Proposition…" : "Proposer des mots-clés" }}</span>
             </HoverNote>
           </button>
         </div>
@@ -264,7 +265,7 @@ onMounted(async () => {
           data-test="add-profile-open"
           @click="adding = true"
         >
-          Créer un profil d'essai
+          <span class="with-icon"><AppIcon name="plus" />Créer un profil d'essai</span>
         </button>
       </div>
       <p

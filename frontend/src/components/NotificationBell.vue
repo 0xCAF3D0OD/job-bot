@@ -123,7 +123,7 @@ onUnmounted(() => {
               data-test="read-all"
               @click="readAll"
             >
-              Tout marquer comme lu
+              <span class="with-icon"><AppIcon name="done" />Tout marquer comme lu</span>
             </button>
           </div>
           <p

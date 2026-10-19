@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 
+import AppIcon from "./AppIcon.vue";
+
 // Ligne dépliable (docs/32 §2.1), au style des filtres des offres : le titre, un résumé en
-// gris, une flèche › qui tourne ; le contenu glisse, souligné d'un trait vertical. Dans un
+// gris, un chevron qui tourne ; le contenu glisse, souligné d'un trait vertical. Dans un
 // même groupe, une seule ligne ouverte à la fois.
 const props = withDefaults(defineProps<{ title: string; value?: string; group?: string; startOpen?: boolean }>(), {
   value: "",
@@ -47,7 +49,7 @@ const openInGroup = reactive<Record<string, string | null>>({});
       <span
         class="disclosure-chevron"
         aria-hidden="true"
-      >›</span>
+      ><AppIcon name="chevron" /></span>
     </button>
     <div
       :id="id"

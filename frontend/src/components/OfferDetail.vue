@@ -4,6 +4,8 @@ import { computed, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { expiredText, formatDate, rateText, remoteText, sourceLabel } from "../format";
+import type { IconName } from "../icons";
+import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -12,6 +14,7 @@ import SidePanel from "./SidePanel.vue";
 import { useAssistant } from "../composables/useAssistant";
 
 import HoverNote from "./HoverNote.vue";
+import IconButton from "./IconButton.vue";
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }>();
 
 function sources(ids: number[]): string {
@@ -157,17 +160,24 @@ const statusLabel = computed(() =>
 const pillClass = computed(() =>
   props.offer.expired_at && props.offer.status !== "applied" ? "expired" : props.offer.status,
 );
-// « À savoir » (docs/45) : une ligne par fait, ✓ sûr, ! à vérifier, ✗ raison d'un écart.
-type Fact = { mark: "ok" | "check" | "no"; text: string; excerpt?: string; scam?: boolean };
-const MARKS: Record<Fact["mark"], string> = { ok: "✓", check: "!", no: "✗" };
+// « À savoir » (docs/45, docs/101) : taux, télétravail et contrat en pastilles, puis une ligne par
+// fait : cercle coché sûr, alerte à vérifier, croix raison d'un écart, œil pour les passages.
+type Fact = { mark: "ok" | "check" | "no" | "seen"; text: string; hidden?: string; excerpt?: string; scam?: boolean };
+const MARKS: Record<Fact["mark"], IconName> = { ok: "check-circle", check: "alert", no: "x-circle", seen: "eye" };
+const terms = computed(() => {
+  const o = props.offer;
+  const rate = rateText(o.rate_min, o.rate_max);
+  const remote = remoteText(o);
+  return [
+    { test: "rate", icon: "rate" as IconName, hidden: rate ? "Taux : " : "", text: rate || "Taux non indiqué" },
+    ...(remote ? [{ test: "remote", icon: "home" as IconName, hidden: "", text: remote }] : []),
+    ...(o.employment_type ? [{ test: "contract", icon: "briefcase" as IconName, hidden: "Contrat : ", text: o.employment_type }] : []),
+  ];
+});
 const facts = computed<Fact[]>(() => {
   const o = props.offer;
-  const terms = [rateText(o.rate_min, o.rate_max) || "taux non indiqué", remoteText(o), o.employment_type]
-    .filter(Boolean)
-    .join(" · ");
   const list: Fact[] = [
-    { mark: "ok", text: terms.charAt(0).toUpperCase() + terms.slice(1) },
-    { mark: "ok", text: `Vue ${o.seen_count} fois, depuis le ${formatDate(o.first_seen_at)}` },
+    { mark: "seen", hidden: "Vue ", text: `${o.seen_count} fois, depuis le ${formatDate(o.first_seen_at)}` },
   ];
   if (o.remote_from_switzerland === false) list.push({ mark: "check", text: "Télétravail pas ouvert depuis la Suisse" });
   for (const doubt of o.doubts ?? []) {
@@ -210,20 +220,22 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
   if (o.status !== "applied") {
-    items.push({ label: "J'ai postulé", test: "mark-applied", run: () => emit("applied") });
+    items.push({ label: "J'ai postulé", test: "mark-applied", icon: "check-circle", run: () => emit("applied") });
     if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
-      items.push({ label: "Remettre à examiner", test: "back-to-review", run: () => emit("status", "to_review") });
+      items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
-      items.push({ label: "Plus tard", test: "later", run: () => emit("status", "later") });
-      items.push({ label: "Ignorer", test: "ignore", run: () => emit("status", "ignored") });
+      items.push({ label: "Plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
+      items.push({ label: "Ignorer", test: "ignore", icon: "x-circle", run: () => emit("status", "ignored") });
     }
     items.push(
       o.expired_at
-        ? { label: "Pas expirée", test: "not-expired", run: () => emit("expiry", false) }
-        : { label: "Signaler comme expirée", test: "flag-expired", run: () => emit("expiry", true) },
+        ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
+        : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
     );
   }
-  if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", run: askAssistant });
+  if (assistant.available.value) {
+    items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  }
   return items;
 });
 
@@ -237,20 +249,27 @@ const canSearchEmployer = computed(
 const companyItems = computed<MoreMenuItem[]>(() => {
   const o = props.offer;
   const items: MoreMenuItem[] = [];
-  if (o.company_address) items.push({ label: "Modifier l'adresse", test: "edit-address", run: startAddress });
+  if (o.company_address) items.push({ label: "Modifier l'adresse", test: "edit-address", icon: "pencil", run: startAddress });
   if (o.company && o.company_address_source !== "manual" && o.company_address_source !== "page") {
-    items.push({ label: "Chercher l'adresse", test: "search-registry", disabled: searching.value, run: () => void searchRegistry() });
+    items.push({
+      label: "Chercher l'adresse",
+      test: "search-registry",
+      icon: "ai",
+      disabled: searching.value,
+      run: () => void searchRegistry(),
+    });
   }
   if (canSearchEmployer.value) {
     items.push({
       label: o.employer_checked_at ? "Chercher à nouveau chez l'employeur" : "Chercher l'offre chez l'employeur",
       test: "find-employer",
+      icon: "ai",
       disabled: employerBusy.value,
       run: () => void findEmployer(),
     });
   }
   if (o.company) {
-    items.push({ label: "Contacts", test: "open-contacts", count: contactsCount.value, run: () => (contactsOpen.value = true) });
+    items.push({ label: "Contacts", test: "open-contacts", icon: "users", count: contactsCount.value, run: () => (contactsOpen.value = true) });
   }
   if (o.company_address_source === "web" && o.company_address_url) {
     items.push({ label: "Vérifier la source de l'adresse", test: "address-source", href: o.company_address_url });
@@ -300,27 +319,33 @@ watch(
           :items="menuItems"
           label="Actions sur l'offre"
         />
-        <button
-          type="button"
-          class="close"
-          aria-label="Fermer le détail"
+        <!-- Fermer (croix) sur écran moyen ; sur téléphone, le retour aux offres (docs/101). -->
+        <IconButton
+          icon="close"
+          label="Fermer le détail"
+          class="detail-close"
           data-test="close-detail"
           @click="$emit('close')"
+        />
+        <button
+          type="button"
+          class="link detail-back"
+          data-test="back-detail"
+          @click="$emit('close')"
         >
-          <span
-            class="close-x"
-            aria-hidden="true"
-          >×</span>
-          <span
-            class="close-back"
-            aria-hidden="true"
-          >← Offres</span>
+          <span class="with-icon"><AppIcon name="arrow-left" /><span><span class="visually-hidden">Retour aux </span>Offres</span></span>
         </button>
       </div>
     </div>
     <div>
       <h2>{{ offer.title }}</h2>
-      <span class="detail">{{ [offer.company ?? "Entreprise non indiquée", offer.location].filter(Boolean).join(" · ") }}</span>
+      <span
+        class="detail meta-line"
+        data-test="detail-meta"
+      >
+        <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company ?? "Entreprise non indiquée" }}</span>
+        <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
+      </span>
       <div class="status-line">
         <span
           v-if="statusLabel"
@@ -364,7 +389,7 @@ watch(
         rel="noopener noreferrer"
         class="button-link"
         :data-test="offer.employer_url ? 'employer' : 'apply'"
-      >{{ postLink.label }}</a>
+      ><span class="with-icon"><AppIcon name="send" />{{ postLink.label }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
     </div>
 
     <section
@@ -449,6 +474,22 @@ watch(
     >
       <h3>À savoir</h3>
       <ul
+        class="meta-chips offer-terms"
+        data-test="terms"
+      >
+        <li
+          v-for="term in terms"
+          :key="term.test"
+          class="meta-chip"
+          :data-test="`term-${term.test}`"
+        >
+          <AppIcon :name="term.icon" /><span><span
+            v-if="term.hidden"
+            class="visually-hidden"
+          >{{ term.hidden }}</span>{{ term.text }}</span>
+        </li>
+      </ul>
+      <ul
         class="offer-facts"
         data-test="facts"
       >
@@ -459,10 +500,13 @@ watch(
         >
           <span
             class="fact-mark"
-            aria-hidden="true"
-          >{{ MARKS[fact.mark] }}</span>
+            :data-mark="fact.mark"
+          ><AppIcon :name="MARKS[fact.mark]" /></span>
           <span>
-            {{ fact.text }}
+            <span
+              v-if="fact.hidden"
+              class="visually-hidden"
+            >{{ fact.hidden }}</span>{{ fact.text }}
             <q v-if="fact.excerpt">{{ fact.excerpt }}</q>
           </span>
         </li>
@@ -488,7 +532,10 @@ watch(
         data-test="address"
       >
         <template v-if="!editingAddress">
-          <span class="muted">Adresse :</span>
+          <span
+            class="address-icon"
+            data-test="address-icon"
+          ><AppIcon name="pin" /><span class="visually-hidden">Adresse : </span></span>
           <span v-if="offer.company_address">
             {{ offer.company_address.split("\n").join(", ") }}
             <span class="hint">· {{ ADDRESS_SOURCE[offer.company_address_source ?? "manual"] }}</span>
@@ -501,7 +548,7 @@ watch(
               data-test="add-address"
               @click="startAddress"
             >
-              Ajouter l'adresse
+              <span class="with-icon"><AppIcon name="plus" />Ajouter l'adresse</span>
             </button>
           </template>
         </template>
@@ -638,7 +685,7 @@ watch(
           data-test="read-more"
           @click="openText"
         >
-          Lire toute l'annonce ⌄
+          <span class="with-icon">Lire toute l'annonce<AppIcon name="chevron-down" /></span>
         </button>
       </template>
       <p

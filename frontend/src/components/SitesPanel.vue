@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import SidePanel from "./SidePanel.vue";
 import { secureAddress, senders, useChecks } from "../validators";
 import { plural } from "../format";
@@ -205,14 +207,13 @@ onMounted(() => void load());
             v-if="!opened.builtin && owner"
             class="calm-panel-foot"
           >
-            <button
-              type="button"
-              class="link danger"
+            <IconButton
+              icon="trash"
+              label="Retirer ce site"
+              danger
               :data-test="`remove-${opened.slug}`"
               @click="remove(opened)"
-            >
-              Retirer ce site
-            </button>
+            />
           </p>
         </div>
       </SidePanel>
@@ -238,14 +239,12 @@ onMounted(() => void load());
               >{{ suggestion.name }}</a>
               <span class="muted"> · {{ suggestion.note }}</span>
             </span>
-            <button
-              type="button"
-              class="link"
+            <IconButton
+              icon="plus"
+              :label="`Ajouter ${suggestion.name}`"
               :data-test="`suggest-${suggestion.name}`"
               @click="addSuggestion(suggestion)"
-            >
-              Ajouter
-            </button>
+            />
           </li>
         </ul>
       </div>
@@ -307,7 +306,7 @@ onMounted(() => void load());
             class="secondary small"
             data-test="save-site"
           >
-            Ajouter
+            <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
           </button>
           <button
             type="button"
@@ -329,7 +328,7 @@ onMounted(() => void load());
           data-test="add-site"
           @click="adding = true"
         >
-          Ajouter un site
+          <span class="with-icon"><AppIcon name="plus" />Ajouter un site</span>
         </button>
         <button
           v-if="unrecognized"
@@ -339,7 +338,7 @@ onMounted(() => void load());
           data-test="reread"
           @click="reread"
         >
-          {{ busy ? "Relecture…" : `Relire les alertes non reconnues (${unrecognized})` }}
+          <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Relecture…" : `Relire les alertes non reconnues (${unrecognized})` }}</span>
         </button>
       </div>
       <p

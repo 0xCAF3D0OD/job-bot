@@ -9,6 +9,7 @@ import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssis
 import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
 import CopyLabel from "./CopyLabel.vue";
+import IconButton from "./IconButton.vue";
 import AssistantMascot, { type MascotMood } from "./AssistantMascot.vue";
 import EngagementMoment from "./EngagementMoment.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -329,15 +330,12 @@ const headItems: MoreMenuItem[] = [
             label="Actions sur la discussion"
             test-id="assistant-more"
           />
-          <button
-            type="button"
-            class="assistant-close"
-            aria-label="Fermer l'assistant"
+          <IconButton
+            icon="close"
+            label="Fermer l'assistant"
             data-test="assistant-close"
             @click="open = false"
-          >
-            ×
-          </button>
+          />
         </div>
       </header>
 
@@ -569,14 +567,13 @@ const headItems: MoreMenuItem[] = [
         data-test="assistant-focus"
       >
         <span>À propos de : {{ focus.label }}</span>
-        <button
-          type="button"
-          class="assistant-close"
-          aria-label="Ne plus parler de cet élément"
+        <IconButton
+          icon="close"
+          class="chip-remove"
+          label="Ne plus parler de cet élément"
+          data-test="assistant-focus-clear"
           @click="setFocus(null)"
-        >
-          ×
-        </button>
+        />
       </p>
       <p
         v-if="emptyHint && !draft.trim()"

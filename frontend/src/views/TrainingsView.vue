@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
+import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import DomainField from "../components/DomainField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
@@ -174,6 +175,10 @@ watch(
 const opened = computed(() => items.value.find((t) => t.id === openId.value) ?? null);
 const filtersOpen = ref(false);
 const activeFilters = computed(() => [kind.value, price.value, language.value].filter(Boolean).length);
+// Le nom du bouton Filtrer, annoncé et en infobulle, avec le nombre de filtres actifs (docs/101).
+const filterLabel = computed(() =>
+  activeFilters.value ? `Filtrer, ${activeFilters.value} ${activeFilters.value > 1 ? "actifs" : "actif"}` : "Filtrer",
+);
 
 onMounted(() => void load());
 </script>
@@ -192,7 +197,7 @@ onMounted(() => void load());
           :aria-current="tab === 'catalog' ? 'true' : undefined"
           data-test="tab-catalog"
         >
-          Catalogue
+          <span class="with-icon"><AppIcon name="book" />Catalogue</span>
         </RouterLink>
         <RouterLink
           :to="{ query: { onglet: 'miennes' } }"
@@ -200,8 +205,7 @@ onMounted(() => void load());
           :aria-current="tab === 'mine' ? 'true' : undefined"
           data-test="tab-mine"
         >
-          Suivies
-          <span
+          <span class="with-icon"><AppIcon name="bookmark" />Suivies</span>{{ " " }}<span
             v-if="mineCount"
             class="tab-count"
           >{{ mineCount }}</span>
@@ -256,15 +260,24 @@ onMounted(() => void load());
             Tout
           </button>
         </div>
+        <!-- Filtrer : l'entonnoir seul, le nombre de filtres actifs en pastille (docs/101). -->
         <button
           v-if="phone"
           type="button"
-          class="secondary small training-filter-toggle"
+          class="icon-button icon-only filter-toggle training-filter-toggle"
+          :aria-label="filterLabel"
+          :data-label="filterLabel"
           :aria-expanded="filtersOpen"
           data-test="training-filter-toggle"
           @click="filtersOpen = !filtersOpen"
         >
-          Filtrer{{ activeFilters ? ` · ${activeFilters}` : "" }}
+          <AppIcon name="filter" />
+          <span
+            v-if="activeFilters"
+            class="icon-badge"
+            aria-hidden="true"
+            data-test="training-filter-count"
+          >{{ activeFilters }}</span>
         </button>
         <PushTransition :enabled="phone">
           <div
@@ -333,7 +346,7 @@ onMounted(() => void load());
             @click="suggest"
           >
             <HoverNote :text="suggesting ? '' : 'Environ 0,02 à 0,05 $.'">
-              {{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}
+              <span class="with-icon"><AppIcon name="ai" />{{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}</span>
             </HoverNote>
           </button>
         </span>

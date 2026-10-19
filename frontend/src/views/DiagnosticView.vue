@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
 import StatusPanel from "../components/StatusPanel.vue";
 
@@ -15,7 +16,7 @@ import StatusPanel from "../components/StatusPanel.vue";
         to="/reglages"
         class="back-link"
       >
-        ← Retour aux réglages
+        <span class="with-icon"><AppIcon name="arrow-left" />Retour aux réglages</span>
       </RouterLink>
       <StatusPanel />
     </div>

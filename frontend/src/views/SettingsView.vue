@@ -13,7 +13,8 @@ import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
 import PlatformPanel from "../components/PlatformPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
-import SettingsSection from "../components/SettingsSection.vue";
+import AppIcon from "../components/AppIcon.vue";
+import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 import HoverNote from "../components/HoverNote.vue";
@@ -203,7 +204,12 @@ const active = computed<SectionId>(() => {
           :aria-current="active === section.id ? 'page' : undefined"
           :data-test="`toc-${section.id}`"
         >
-          {{ section.label }}
+          <span class="with-icon">
+            <AppIcon
+              v-if="SETTINGS_ICONS[section.id]"
+              :name="SETTINGS_ICONS[section.id]!"
+            />{{ section.label }}
+          </span>
         </RouterLink>
       </nav>
       <div class="settings-sections">
@@ -670,7 +676,7 @@ const active = computed<SectionId>(() => {
             to="/reglages/diagnostic"
             data-test="diagnostic-link"
           >
-            Diagnostic technique (collecte, IA, tâches) →
+            <span class="with-icon">Diagnostic technique (collecte, IA, tâches)<AppIcon name="arrow-right" /></span>
           </RouterLink>
         </p>
       </div>

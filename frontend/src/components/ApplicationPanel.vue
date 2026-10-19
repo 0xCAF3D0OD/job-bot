@@ -6,6 +6,7 @@ import { followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../a
 import { useAssistant } from "../composables/useAssistant";
 import { applicationStatusLabel } from "../format";
 import { contactName, toFollowUp } from "../contactLabels";
+import AppIcon from "./AppIcon.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -55,19 +56,20 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
     items.push({
       label: "Ajouter à mon agenda",
       test: "interview-calendar",
+      icon: "calendar",
       href: `/api/applications/${a.id}/interview.ics?origin=${encodeURIComponent(origin)}`,
       download: true,
     });
   }
   // S'entraîner avec l'IA (docs/75), seulement si l'IA est configurée.
   if (assistant.available.value) {
-    items.push({ label: "M'entraîner", test: "interview-practice", run: () => emit("practice", a) });
+    items.push({ label: "M'entraîner", test: "interview-practice", icon: "ai", run: () => emit("practice", a) });
   }
   const last = latest.value;
   if (last) {
-    items.push({ label: "Voir le retour", test: "interview-open", run: () => emit("interview", a, last) });
+    items.push({ label: "Voir le retour", test: "interview-open", icon: "eye", run: () => emit("interview", a, last) });
     if (!feedback.value) {
-      items.push({ label: "Ajouter un autre entretien", test: "interview-add", run: () => emit("interview", a, null) });
+      items.push({ label: "Ajouter un autre entretien", test: "interview-add", icon: "plus", run: () => emit("interview", a, null) });
     }
   }
   return items;
@@ -75,7 +77,7 @@ const interviewItems = computed<MoreMenuItem[]>(() => {
 const documentItems = computed<MoreMenuItem[]>(() => {
   const a = props.application;
   const items: MoreMenuItem[] = [];
-  if (a.cv_draft_id) items.push({ label: "CV (Word)", test: "panel-cv", href: `/api/cvs/${a.cv_draft_id}/docx`, download: true });
+  if (a.cv_draft_id) items.push({ label: "CV (Word)", test: "panel-cv", icon: "download", href: `/api/cvs/${a.cv_draft_id}/docx`, download: true });
   if (a.application_url?.startsWith("http")) {
     items.push({ label: "Ouvrir l'annonce", test: "panel-link", href: a.application_url });
   }
@@ -118,8 +120,8 @@ function askAssistant(): void {
   assistant.askAbout({ applicationId: a.id, label: `candidature ${a.job_title} chez ${a.company}` });
 }
 const menuItems = computed<MoreMenuItem[]>(() => [
-  { label: "Modifier", test: "panel-edit", run: () => emit("edit", props.application) },
-  ...(assistant.available.value ? [{ label: "Demander à l'assistant", test: "panel-ask", run: askAssistant }] : []),
+  { label: "Modifier", test: "panel-edit", icon: "pencil", run: () => emit("edit", props.application) },
+  ...(assistant.available.value ? [{ label: "Demander à l'assistant", test: "panel-ask", icon: "ai" as const, run: askAssistant }] : []),
   { label: "Supprimer", test: "panel-remove", danger: true, run: () => emit("remove", props.application) },
 ]);
 
@@ -134,8 +136,9 @@ const onStatus = (event: Event): void =>
     data-test="application-panel"
   >
     <div class="application-panel-head">
-      <p class="muted">
-        {{ application.job_title }} · envoyée le {{ shortDate.format(new Date(application.sent_at)) }}
+      <p class="muted meta-line">
+        <span>{{ application.job_title }}</span>
+        <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ shortDate.format(new Date(application.sent_at)) }}</span>
         <span
           v-if="application.assigned_by_orp"
           class="badge"
@@ -186,7 +189,7 @@ const onStatus = (event: Event): void =>
           data-test="panel-follow-up-open"
           @click="followUpOpen = true"
         >
-          Relancer
+          <span class="with-icon"><AppIcon name="reply" />Relancer</span>
         </button>
       </p>
       <p
@@ -361,7 +364,7 @@ const onStatus = (event: Event): void =>
           :href="`/api/letters/${application.letter_draft_id}/docx`"
           download
           data-test="panel-letter"
-        >Lettre (Word)</a>
+        ><span class="with-icon"><AppIcon name="download" />Lettre (Word)</span></a>
       </p>
     </section>
 

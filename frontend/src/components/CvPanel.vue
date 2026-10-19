@@ -4,6 +4,8 @@ import { computed, nextTick, onMounted, ref } from "vue";
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import OfferBrief from "./OfferBrief.vue";
 import AiWriting from "./AiWriting.vue";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
@@ -309,7 +311,7 @@ onMounted(() => void load());
             @click="write"
           >
             <HoverNote :text="writing ? '' : 'Environ 0,05 $.'">
-              {{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}
+              <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}</span>
             </HoverNote>
           </button>
         </div>
@@ -346,25 +348,20 @@ onMounted(() => void load());
                 {{ block.title }}
               </label>
               <template v-if="block.selected">
-                <button
-                  type="button"
-                  class="move secondary"
+                <IconButton
+                  icon="arrow-up"
+                  :label="`Monter ${block.title}`"
                   :disabled="saving || !canMove(block.id, block.section, -1)"
-                  :aria-label="`Monter ${block.title}`"
                   data-test="move-up"
                   @click="move(block.id, block.section, -1)"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  class="move secondary"
+                />
+                <IconButton
+                  icon="arrow-down"
+                  :label="`Descendre ${block.title}`"
                   :disabled="saving || !canMove(block.id, block.section, 1)"
-                  :aria-label="`Descendre ${block.title}`"
+                  data-test="move-down"
                   @click="move(block.id, block.section, 1)"
-                >
-                  ↓
-                </button>
+                />
               </template>
             </li>
           </template>
@@ -399,13 +396,13 @@ onMounted(() => void load());
             :href="`/api/cvs/${selected.id}/pdf`"
             download
             data-test="cv-pdf"
-          >PDF</a>
+          ><span class="with-icon"><AppIcon name="download" />PDF</span></a>
           <a
             class="secondary"
             :href="`/api/cvs/${selected.id}/docx`"
             download
             data-test="cv-docx"
-          >Word</a>
+          ><span class="with-icon"><AppIcon name="download" />Word</span></a>
         </div>
       </div>
 

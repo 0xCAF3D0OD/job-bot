@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 
+import AppIcon from "./AppIcon.vue";
 
 // Panneau latéral (docs/32 §2.2) : le contenu long et secondaire glisse depuis la droite,
-// la page dessous ne bouge pas. Fermeture par ×, Échap ou clic à côté. Le contenu reste
+// la page dessous ne bouge pas. Fermeture par la croix, Échap ou clic à côté. Le contenu reste
 // monté une fois la page ouverte (comptes, formulaires en cours).
 const props = defineProps<{ open: boolean; title: string }>();
 const emit = defineEmits<{ close: [] }>();
@@ -118,15 +119,17 @@ const openStack: symbol[] = [];
       >
         <header class="side-panel-head">
           <h2>{{ title }}</h2>
+          <!-- Le bouton de IconButton (docs/101), écrit ici pour garder la référence du focus. -->
           <button
             ref="closeButton"
             type="button"
-            class="assistant-close"
+            class="icon-button icon-only side-panel-close"
             aria-label="Fermer"
+            data-label="Fermer"
             data-test="side-close"
             @click="emit('close')"
           >
-            ×
+            <AppIcon name="close" />
           </button>
         </header>
         <div class="side-panel-body">

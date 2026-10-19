@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from "vue";
 
 import { api, type ParseStatus, type Search, type SearchDetail, type Source } from "../api/client";
 import { useCollect } from "../composables/useCollect";
+import AppIcon from "./AppIcon.vue";
 import { SITE_NAMES, formatDateTime, parseStatusLabel, plural, rateText, sourceLabel } from "../format";
 
 const PAGE_SIZE = 50;
@@ -184,8 +185,13 @@ onMounted(() => void load());
                     class="badge new"
                   >nouvelle</span>
                   <strong>{{ offer.title }}</strong>
-                  <span class="detail">
-                    {{ [offer.company, offer.location, rateText(offer.rate_min, offer.rate_max)].filter(Boolean).join(" · ") }}
+                  <span
+                    class="detail meta-line"
+                    data-test="detail-offer-meta"
+                  >
+                    <span v-if="offer.company"><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company }}</span>
+                    <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
+                    <span v-if="rateText(offer.rate_min, offer.rate_max)"><AppIcon name="rate" /><span class="visually-hidden">Taux : </span>{{ rateText(offer.rate_min, offer.rate_max) }}</span>
                   </span>
                   <a
                     v-for="link in offer.links"
@@ -194,7 +200,7 @@ onMounted(() => void load());
                     target="_blank"
                     rel="noopener noreferrer"
                     class="link"
-                  >voir sur {{ sourceLabel[link.source] }}</a>
+                  ><span class="with-icon"><AppIcon name="external" />voir sur {{ sourceLabel[link.source] }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
                 </li>
               </ul>
             </td>
@@ -210,7 +216,7 @@ onMounted(() => void load());
       :disabled="loading"
       @click="load(true)"
     >
-      Afficher plus
+      <span class="with-icon"><AppIcon name="chevron-down" />Afficher plus</span>
     </button>
   </div>
 </template>

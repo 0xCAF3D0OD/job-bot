@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+import IconButton from "./IconButton.vue";
+
 const model = defineModel<string[]>({ required: true });
 const props = defineProps<{ id: string; placeholder?: string }>();
 
@@ -38,13 +40,12 @@ function remove(value: string): void {
         class="tag"
       >
         {{ value }}
-        <button
-          type="button"
-          :aria-label="`Retirer ${value}`"
+        <IconButton
+          icon="close"
+          class="chip-remove"
+          :label="`Retirer ${value}`"
           @click="remove(value)"
-        >
-          ×
-        </button>
+        />
       </li>
     </ul>
     <div class="tag-add">
@@ -55,13 +56,12 @@ function remove(value: string): void {
         :placeholder="placeholder"
         @keydown.enter.prevent="add"
       >
-      <button
-        type="button"
-        class="secondary small"
+      <IconButton
+        icon="plus"
+        label="Ajouter"
+        data-test="tag-add"
         @click="add"
-      >
-        Ajouter
-      </button>
+      />
     </div>
   </div>
 </template>

@@ -4,7 +4,9 @@ import { computed, reactive, ref } from "vue";
 import { api, type Training } from "../api/client";
 import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
+import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
+import IconButton from "./IconButton.vue";
 
 // Contenu d'une formation (docs/16 §5). Deux présentations (docs/44) : la carte du catalogue,
 // calme (description sur 3 lignes, une ligne en bas : « Suivre », ou l'état et « Gérer ») ;
@@ -159,7 +161,10 @@ const stateText = computed(() => {
 
 <template>
   <div class="training-head">
-    <span class="news-meta">{{ KINDS[training.kind] }} · {{ training.provider }}</span>
+    <span class="news-meta meta-line">
+      <span>{{ KINDS[training.kind] }}</span>
+      <span><AppIcon name="building" /><span class="visually-hidden">Organisme : </span>{{ training.provider }}</span>
+    </span>
     <span
       v-if="training.mark?.funding_status"
       :class="['badge', training.mark.funding_status === 'refused' ? 'warn' : 'new']"
@@ -179,7 +184,7 @@ const stateText = computed(() => {
     target="_blank"
     rel="noopener noreferrer"
     data-test="official-page"
-  >Page officielle</a>
+  ><span class="with-icon"><AppIcon name="external" />Page officielle<span class="visually-hidden"> (nouvel onglet)</span></span></a>
   <a
     v-else
     class="training-title"
@@ -190,14 +195,15 @@ const stateText = computed(() => {
     v-for="(part, index) in highlight(training.title, training.matched)"
     :key="index"
   ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></a>
-  <p class="training-facts">
-    <span :title="FORMATS[training.format]">{{ SHORT_FORMATS[training.format] ?? FORMATS[training.format] }}</span> · {{ languageLabel(training.language) }} · {{ PRICES[training.price] }}
-    <template v-if="training.level">
-      · {{ LEVELS[training.level] }}
-    </template>
-    <template v-if="training.duration">
-      · {{ training.duration }}
-    </template>
+  <!-- Les faits avec les icônes de la carte (docs/101) : le mot reste pour un lecteur d'écran. -->
+  <p
+    class="training-facts meta-line"
+    data-test="training-facts"
+  >
+    <span><AppIcon name="globe" /><span class="visually-hidden">Format et langue : </span><span :title="FORMATS[training.format]">{{ SHORT_FORMATS[training.format] ?? FORMATS[training.format] }}</span>, {{ languageLabel(training.language) }}</span>
+    <span><AppIcon name="tag" /><span class="visually-hidden">Prix : </span>{{ PRICES[training.price] }}</span>
+    <span v-if="training.level"><AppIcon name="stats" /><span class="visually-hidden">Niveau : </span>{{ LEVELS[training.level] }}</span>
+    <span v-if="training.duration"><AppIcon name="clock" /><span class="visually-hidden">Durée : </span>{{ training.duration }}</span>
   </p>
   <p
     v-if="training.description"
@@ -215,37 +221,32 @@ const stateText = computed(() => {
     v-if="!training.verified"
     class="training-actions"
   >
-    <button
-      type="button"
-      class="secondary small"
+    <IconButton
+      icon="bookmark"
+      label="Garder"
       data-test="keep"
       @click="emit('review', true)"
-    >
-      Garder
-    </button>
-    <button
-      type="button"
-      class="link danger"
+    />
+    <IconButton
+      icon="trash"
+      label="Écarter"
+      danger
       data-test="dismiss"
       @click="emit('review', false)"
-    >
-      Écarter
-    </button>
+    />
   </div>
   <div
     v-if="variant === 'card'"
     class="training-foot"
     data-test="training-foot"
   >
-    <button
+    <IconButton
       v-if="!training.mark"
-      type="button"
-      class="secondary small"
+      icon="bookmark"
+      label="Suivre"
       data-test="follow"
       @click="emit('manage')"
-    >
-      Suivre
-    </button>
+    />
     <template v-else>
       <span
         class="training-state"
@@ -339,7 +340,7 @@ const stateText = computed(() => {
             data-test="prepare-funding"
             @click="prepareRequest"
           >
-            {{ preparing ? "Préparation…" : "Préparer la demande à l'ORP" }}
+            <span class="with-icon"><AppIcon name="file" />{{ preparing ? "Préparation…" : "Préparer la demande à l'ORP" }}</span>
           </button>
           <template v-else>
             <textarea

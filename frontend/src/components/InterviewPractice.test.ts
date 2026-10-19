@@ -116,7 +116,8 @@ describe("InterviewPractice", () => {
     expect(POST).toHaveBeenCalledWith("/api/interviews/insights/to-prepare", {
       body: { text: "Préparer un exemple chiffré", done: false },
     });
-    expect(wrapper.text()).toContain("Ajouté à « À préparer » ✓");
+    expect(wrapper.find("[data-test=practice-added]").text()).toBe("Ajouté à « À préparer »");
+    expect(wrapper.find("[data-test=practice-added] [data-icon=done]").exists()).toBe(true);
   });
 
   it("dit l'erreur de l'IA et propose « Réessayer » quand le recruteur n'a pas répondu", async () => {

@@ -3,7 +3,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, BACKGROUND, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
+import AppIcon from "../components/AppIcon.vue";
 import DomainField from "../components/DomainField.vue";
+import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
@@ -79,6 +81,10 @@ const filtersRoot = ref<HTMLElement | null>(null);
 // la ligne des filtres, qui pousse la liste en douceur. Ordinateur : le menu déroulant.
 const filtersPopover = ref<HTMLElement | null>(null);
 const activeFilters = computed(() => (preferences.value?.countries.length ?? 0) + (preferences.value?.languages.length ?? 0));
+// Le nom du bouton Filtrer, annoncé et en infobulle, avec le nombre de filtres actifs (docs/101).
+const filterLabel = computed(() =>
+  activeFilters.value ? `Filtrer, ${activeFilters.value} ${activeFilters.value > 1 ? "actifs" : "actif"}` : "Filtrer",
+);
 const canFilter = computed(() => (page.value?.countries.length ?? 0) > 1 || (page.value?.languages.length ?? 0) > 1);
 
 function onDocument(event: Event): void {
@@ -203,8 +209,7 @@ onUnmounted(() => {
           :aria-current="tab === 'jobs' ? 'true' : undefined"
           data-test="tab-articles"
         >
-          Emploi
-          <span
+          <span class="with-icon"><AppIcon name="briefcase" />Emploi</span>{{ " " }}<span
             v-if="counts.jobs"
             class="tab-count"
           >{{ counts.jobs }}</span>
@@ -215,8 +220,7 @@ onUnmounted(() => {
           :aria-current="tab === 'economy' ? 'true' : undefined"
           data-test="tab-economy"
         >
-          Économie
-          <span
+          <span class="with-icon"><AppIcon name="trend" />Économie</span>{{ " " }}<span
             v-if="counts.economy"
             class="tab-count"
           >{{ counts.economy }}</span>
@@ -227,8 +231,7 @@ onUnmounted(() => {
           :aria-current="tab === 'videos' ? 'true' : undefined"
           data-test="tab-videos"
         >
-          Vidéos
-          <span
+          <span class="with-icon"><AppIcon name="play" />Vidéos</span>{{ " " }}<span
             v-if="counts.videos"
             class="tab-count"
           >{{ counts.videos }}</span>
@@ -270,15 +273,24 @@ onUnmounted(() => {
           class="news-filter-menu"
           @keydown.esc="closeFilters"
         >
+          <!-- Filtrer : l'entonnoir seul, le nombre de filtres actifs en pastille (docs/101). -->
           <button
             type="button"
-            class="secondary small"
+            class="icon-button icon-only filter-toggle"
+            :aria-label="filterLabel"
+            :data-label="filterLabel"
             :aria-expanded="filtersOpen"
             aria-controls="news-filter-popover"
             data-test="news-filter-toggle"
             @click="toggleFilters"
           >
-            Filtrer{{ activeFilters ? ` · ${activeFilters}` : "" }}
+            <AppIcon name="filter" />
+            <span
+              v-if="activeFilters"
+              class="icon-badge"
+              aria-hidden="true"
+              data-test="news-filter-count"
+            >{{ activeFilters }}</span>
           </button>
           <Teleport
             to="#news-filter-drop"
@@ -434,15 +446,13 @@ onUnmounted(() => {
         >Relevé en cours…</span>
         <template v-else>
           <span v-if="page.fetched_at">Relevé {{ since(page.fetched_at) }}</span>
-          <button
+          <IconButton
             v-if="!me?.demo"
-            type="button"
-            class="link"
+            icon="refresh"
+            label="Relever"
             data-test="news-refresh"
             @click="refresh"
-          >
-            Relever
-          </button>
+          />
         </template>
       </p>
     </div>

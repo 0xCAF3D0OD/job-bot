@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
+import AppIcon from "../components/AppIcon.vue";
 import CriteriaForm from "../components/CriteriaForm.vue";
 import IdentityForm from "../components/IdentityForm.vue";
 import PageHero from "../components/PageHero.vue";
@@ -10,9 +11,9 @@ import ProfileParcours from "../components/ProfileParcours.vue";
 // Tout ce qui te concerne au même endroit (docs/10 §2 a) ; l'onglet est dans l'URL.
 const TABS = [
   // Sur téléphone, un nom court qui tient sur une ligne (docs/36 §5).
-  { key: "recherche", label: "Critères", short: "Critères" },
-  { key: "parcours", label: "Parcours", short: "Parcours" },
-  { key: "coordonnees", label: "Coordonnées", short: "Coordonnées" },
+  { key: "recherche", label: "Critères", icon: "filter", short: "Critères" },
+  { key: "parcours", label: "Parcours", icon: "folder", short: "Parcours" },
+  { key: "coordonnees", label: "Coordonnées", icon: "mail", short: "Coordonnées" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -40,8 +41,11 @@ const tab = computed<Tab>(() => {
         :class="{ active: tab === entry.key }"
         :data-test="`tab-${entry.key}`"
       >
-        <span class="label-long">{{ entry.label }}</span>
-        <span class="label-short">{{ entry.short }}</span>
+        <span class="with-icon">
+          <AppIcon :name="entry.icon" />
+          <span class="label-long">{{ entry.label }}</span>
+          <span class="label-short">{{ entry.short }}</span>
+        </span>
       </RouterLink>
     </nav>
   </PageHero>

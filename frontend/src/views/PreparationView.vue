@@ -12,6 +12,7 @@ import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
+import AppIcon from "../components/AppIcon.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { useAssistant } from "../composables/useAssistant";
@@ -249,7 +250,7 @@ onMounted(() => void load());
         class="back-link"
         data-test="back-to-offers"
       >
-        ← Offres
+        <AppIcon name="arrow-left" />Offres
       </RouterLink>
     </p>
     <nav
@@ -262,33 +263,33 @@ onMounted(() => void load());
         :class="{ active: tab === 'letter' }"
         data-test="tab-letter"
       >
-        <span class="step-number">1</span> Lettre<span
+        <span class="step-number">1</span><span class="with-icon"><AppIcon name="mail" />Lettre</span><span
           v-if="currentLetterId"
           class="step-done"
-          aria-label="faite"
-        > ✓</span>
+          data-test="step-done"
+        ><AppIcon name="done" /><span class="visually-hidden">faite</span></span>
       </RouterLink>
       <RouterLink
         :to="{ query: { doc: 'cv' } }"
         :class="{ active: tab === 'cv' }"
         data-test="tab-cv"
       >
-        <span class="step-number">2</span> CV<span
+        <span class="step-number">2</span><span class="with-icon"><AppIcon name="file" />CV</span><span
           v-if="currentCvId"
           class="step-done"
-          aria-label="fait"
-        > ✓</span>
+          data-test="step-done"
+        ><AppIcon name="done" /><span class="visually-hidden">fait</span></span>
       </RouterLink>
       <RouterLink
         :to="{ query: { doc: 'postuler' } }"
         :class="{ active: tab === 'apply' }"
         data-test="tab-apply"
       >
-        <span class="step-number">3</span> Postuler<span
+        <span class="step-number">3</span><span class="with-icon"><AppIcon name="send" />Postuler</span><span
           v-if="offer.status === 'applied'"
           class="step-done"
-          aria-label="fait"
-        > ✓</span>
+          data-test="step-done"
+        ><AppIcon name="done" /><span class="visually-hidden">fait</span></span>
       </RouterLink>
     </nav>
   </PageHero>
@@ -299,8 +300,11 @@ onMounted(() => void load());
         v-if="notFound"
         class="notice error"
       >
-        Cette offre n'existe plus. <RouterLink to="/candidatures/offres">
-          Retour aux offres
+        Cette offre n'existe plus. <RouterLink
+          to="/candidatures/offres"
+          class="with-icon"
+        >
+          <AppIcon name="arrow-left" />Retour aux offres
         </RouterLink>
       </p>
 
@@ -322,7 +326,7 @@ onMounted(() => void load());
           class="button-link primary-link"
           data-test="next-offers"
         >
-          Revenir aux offres
+          <span class="with-icon"><AppIcon name="arrow-left" />Revenir aux offres</span>
         </RouterLink>
         <RouterLink
           to="/candidatures/suivi"
@@ -562,7 +566,7 @@ onMounted(() => void load());
                 @click="write"
               >
                 <HoverNote :text="writing ? '' : 'Environ 0,10 $.'">
-                  {{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}
+                  <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}</span>
                 </HoverNote>
               </button>
             </div>
@@ -597,13 +601,13 @@ onMounted(() => void load());
                 :href="`/api/letters/${selected.id}/pdf`"
                 download
                 data-test="pdf"
-              >PDF</a>
+              ><span class="with-icon"><AppIcon name="download" />PDF</span></a>
               <a
                 class="secondary"
                 :href="`/api/letters/${selected.id}/docx`"
                 download
                 data-test="docx"
-              >Word</a>
+              ><span class="with-icon"><AppIcon name="download" />Word</span></a>
             </div>
           </div>
 

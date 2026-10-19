@@ -3,6 +3,8 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api } from "../api/client";
+import AppIcon from "../components/AppIcon.vue";
+import type { IconName } from "../icons";
 import type { JobsTab } from "../router";
 
 // Rubrique Candidatures (docs/19 §2, docs/42, docs/83) : cinq onglets toujours visibles sous le titre.
@@ -15,32 +17,37 @@ const counts = ref({ offres: 0, suivi: 0, alertes: 0, bilan: 0, "rendez-vous": 0
 const TABS: {
   key: JobsTab;
   label: string;
+  icon: IconName;
   tabShort?: string;
   path: string;
   hint: string;
 }[] = [
-  { key: "offres", label: "Offres", path: "/candidatures/offres", hint: "à examiner" },
+  { key: "offres", label: "Offres", icon: "briefcase", path: "/candidatures/offres", hint: "à examiner" },
   {
     key: "suivi",
     label: "Suivi",
+    icon: "list-check",
     path: "/candidatures/suivi",
     hint: "à relancer ou à compléter",
   },
   {
     key: "alertes",
     label: "Alertes",
+    icon: "bell",
     path: "/candidatures/alertes",
     hint: "alertes créées sans rien envoyé",
   },
   {
     key: "bilan",
     label: "Bilan",
+    icon: "stats",
     path: "/candidatures/bilan",
     hint: "",
   },
   {
     key: "rendez-vous",
     label: "Rendez-vous",
+    icon: "calendar",
     tabShort: "RDV",
     path: "/candidatures/rendez-vous-orp",
     hint: "",
@@ -91,17 +98,20 @@ onMounted(() => void refresh());
         :aria-current="tab === item.key ? 'page' : undefined"
         :data-test="`jobs-tab-${item.key}`"
       >
-        <span
-          v-if="item.tabShort"
-          class="label-long"
-        >{{ item.label }}</span>
-        <span
-          v-if="item.tabShort"
-          class="label-short"
-          :aria-label="item.label"
-        >{{ item.tabShort }}</span>
-        {{ item.tabShort ? "" : item.label }}
-        <span
+        <!-- L'icône devant le nom (docs/101, règle 1). -->
+        <span class="with-icon">
+          <AppIcon :name="item.icon" />
+          <span
+            v-if="item.tabShort"
+            class="label-long"
+          >{{ item.label }}</span>
+          <span
+            v-if="item.tabShort"
+            class="label-short"
+            :aria-label="item.label"
+          >{{ item.tabShort }}</span>
+          {{ item.tabShort ? "" : item.label }}
+        </span>{{ " " }}<span
           v-if="badge(item.key)"
           class="tab-count"
           :title="`${badge(item.key)} ${item.hint}`"

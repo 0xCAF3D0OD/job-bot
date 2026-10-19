@@ -4,6 +4,8 @@ import { onMounted, ref } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import { browserName } from "../browserName";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
 import HoverNote from "./HoverNote.vue";
@@ -75,7 +77,7 @@ onMounted(load);
             rel="noopener noreferrer"
             class="button-link"
             data-test="extension-install"
-          >Installer l'extension (Firefox)</a>
+          ><span class="with-icon"><AppIcon name="external" />Installer l'extension (Firefox)<span class="visually-hidden"> (nouvel onglet)</span></span></a>
           <template v-else>
             Installe l'extension : voir « Comment l'installer ».
           </template>
@@ -107,14 +109,13 @@ onMounted(load);
             :key="token.id"
           >
             <span>{{ token.name }} <span class="muted">· utilisé {{ day(token.last_used_at) }}</span></span>
-            <button
-              type="button"
-              class="link danger"
+            <IconButton
+              icon="trash"
+              :label="`Révoquer ${token.name}`"
+              danger
               data-test="extension-revoke"
               @click="revoke(token)"
-            >
-              Révoquer
-            </button>
+            />
           </li>
         </ul>
       </template>
@@ -144,7 +145,7 @@ onMounted(load);
             data-test="extension-create"
             @click="create"
           >
-            Créer un jeton
+            <span class="with-icon"><AppIcon name="plus" />Créer un jeton</span>
           </button>
         </div>
       </MoreInfo>

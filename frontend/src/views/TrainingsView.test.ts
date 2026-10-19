@@ -121,7 +121,7 @@ describe("TrainingsView", () => {
     DELETE.mockResolvedValue({});
     const wrapper = await mountView();
     const heart = () => wrapper.findAll("[data-test=interest]")[0]!;
-    expect(heart().attributes("aria-label")).toBe("Marquer comme intéressé");
+    expect(heart().attributes("aria-label")).toBe("Garder");
     await heart().trigger("click");
     await flushPromises();
     expect(PUT.mock.calls[0]![1].body.status).toBe("interested");
@@ -179,9 +179,11 @@ describe("TrainingsView", () => {
     expect(wrapper.find(".training-tiles").exists()).toBe(true);
     expect(wrapper.find("[data-test=orp-note]").classes()).toContain("disclosure");
     const toggle = wrapper.find("[data-test=training-filter-toggle]");
-    expect(toggle.text()).toBe("Filtrer");
+    expect(toggle.attributes("aria-label")).toBe("Filtrer");
+    expect(toggle.find("[data-test=training-filter-count]").exists()).toBe(false);
     await wrapper.find("[data-test=filter-kind]").setValue("certification");
-    expect(toggle.text()).toBe("Filtrer · 1");
+    expect(toggle.attributes("aria-label")).toBe("Filtrer, 1 actif");
+    expect(toggle.find("[data-test=training-filter-count]").text()).toBe("1");
 
     await wrapper.find("[data-test=training-open]").trigger("click");
     expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("Certified Kubernetes Administrator (CKA)");

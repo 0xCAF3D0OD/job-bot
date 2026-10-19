@@ -15,7 +15,9 @@ import SidePanel from "./SidePanel.vue";
 import TagInput from "./TagInput.vue";
 import { formatDate, plural } from "../format";
 
+import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
+import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import CertificatesSection from "./CertificatesSection.vue";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
@@ -254,6 +256,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     {
       label: certificate ? "Ce n'est pas un certificat de travail" : "C'est un certificat de travail",
       test: "toggle-certificate",
+      icon: "file",
       run: () => void setCertificate(doc, !certificate),
     },
     { label: "Supprimer ce document", test: "remove-document", danger: true, run: () => void removeDocument(doc) },
@@ -312,7 +315,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           :data-test="`propose-${doc.id}`"
           @click="propose(doc)"
         >
-          {{ proposing === doc.id ? "L'IA lit le document… (≈ 30 s)" : "Proposer des blocs" }}
+          <span class="with-icon"><AppIcon name="ai" />{{ proposing === doc.id ? "L'IA lit le document… (≈ 30 s)" : "Proposer des blocs" }}</span>
         </button>
       </li>
     </ul>
@@ -326,7 +329,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         data-test="file-input"
         @change="onFile"
       >
-      <span class="drop-title">{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
+      <span class="drop-title with-icon"><AppIcon name="upload" />{{ uploading ? "Envoi…" : documents.length ? "Déposer un document" : "Dépose ton CV" }}</span>
       <span class="detail">
         PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l'IA en tire tes premiers blocs." }}
       </span>
@@ -355,7 +358,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             data-test="chunk-from-selection"
             @click="chunkFromSelection"
           >
-            Créer un bloc avec la sélection
+            <span class="with-icon"><AppIcon name="plus" />Créer un bloc avec la sélection</span>
           </button>
           <MoreMenu
             v-if="documentItems.length"
@@ -384,7 +387,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         data-test="new-chunk"
         @click="newChunk()"
       >
-        Nouveau bloc
+        <span class="with-icon"><AppIcon name="plus" />Nouveau bloc</span>
       </button>
     </div>
     <div
@@ -528,14 +531,13 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         v-if="editedChunk"
         class="calm-panel-foot"
       >
-        <button
-          type="button"
-          class="link danger"
+        <IconButton
+          icon="trash"
+          label="Supprimer ce bloc"
+          danger
           data-test="remove-chunk"
           @click="removeChunk(editedChunk)"
-        >
-          Supprimer ce bloc
-        </button>
+        />
       </p>
     </form>
   </SidePanel>

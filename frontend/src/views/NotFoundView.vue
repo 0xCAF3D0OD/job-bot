@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppIcon from "../components/AppIcon.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
 
 // Page introuvable (docs/59 §5) : une adresse qui ne mène nulle part le dit, au lieu de
@@ -19,7 +20,7 @@ import IllustratedSide from "../components/IllustratedSide.vue";
           to="/aujourdhui"
           class="button-link"
         >
-          Revenir à Aujourd'hui
+          <span class="with-icon"><AppIcon name="arrow-left" />Revenir à Aujourd'hui</span>
         </RouterLink>
       </IllustratedSide>
     </div>

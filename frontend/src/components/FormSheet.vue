@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Identity } from "../api/client";
+import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
@@ -79,14 +80,14 @@ async function copy(label: string, value: string): Promise<void> {
         :href="`/api/cvs/${cvId}/pdf`"
         download
         data-test="sheet-cv"
-      >CV (PDF)</a>
+      ><span class="with-icon"><AppIcon name="download" />CV (PDF)</span></a>
       <a
         v-if="letterId"
         class="link"
         :href="`/api/letters/${letterId}/pdf`"
         download
         data-test="sheet-letter"
-      >Lettre (PDF)</a>
+      ><span class="with-icon"><AppIcon name="download" />Lettre (PDF)</span></a>
     </p>
     <dl>
       <template

@@ -2,6 +2,7 @@
 import { ref } from "vue";
 
 import { api } from "../api/client";
+import IconButton from "./IconButton.vue";
 
 // « Mon domaine » sur place (docs/43 n° 4) : tant qu'il est vide, ses mots-clés se saisissent
 // ici, sans passer par Réglages. Les mêmes mots filtrent Actualités et Formations.
@@ -50,14 +51,13 @@ async function save(): Promise<void> {
         enterkeyhint="done"
         data-test="domain-field-input"
       >
-      <button
+      <IconButton
+        icon="plus"
         type="submit"
-        class="secondary"
+        label="Ajouter"
         :disabled="saving || !value.trim()"
         data-test="domain-field-save"
-      >
-        Ajouter
-      </button>
+      />
     </div>
     <p
       v-if="error"

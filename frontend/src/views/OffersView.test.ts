@@ -207,7 +207,7 @@ describe("OffersView", () => {
     expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
 
     await cards[1]?.trigger("click");
-    expect(wrapper.find("[data-test=facts] .no").text()).toContain("✗Type : stage");
+    expect(wrapper.find("[data-test=facts] .no").text()).toContain("Type : stage");
   });
 });
 

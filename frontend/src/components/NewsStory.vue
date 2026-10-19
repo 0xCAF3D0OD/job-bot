@@ -2,6 +2,7 @@
 import type { NewsItem } from "../api/client";
 import { since } from "../format";
 import { highlight } from "../newsLabels";
+import AppIcon from "./AppIcon.vue";
 
 // Une actualité à la manière de RTS (docs/35) : l'image (ou une vignette texte), la source en
 // petit, le titre, l'heure. Trois tailles : en tête, second rang, ligne.
@@ -33,10 +34,10 @@ function shortSource(source: string): string {
         v-if="item.kind === 'videos'"
         class="news-play"
         aria-hidden="true"
-      >▶</span>
+      ><AppIcon name="play" /></span>
     </span>
     <span class="news-story-body">
-      <span class="news-kicker">{{ shortSource(item.source) }}</span>
+      <span class="news-kicker with-icon"><AppIcon name="globe" /><span class="visually-hidden">Source : </span>{{ shortSource(item.source) }}</span>
       <strong class="news-title news-story-title"><template
         v-for="(part, index) in highlight(item.title, item.matched)"
         :key="index"

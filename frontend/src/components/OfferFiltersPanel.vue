@@ -176,7 +176,7 @@ const more = ref(secondaryActive.value > 0);
         data-test="row-view"
         @click="open('view')"
       >
-        <span>Statut</span><span class="filter-row-value">{{ viewValue }}</span>
+        <span class="with-icon"><AppIcon name="list-check" />Statut</span><span class="filter-row-value">{{ viewValue }}</span>
       </button>
       <div
         v-if="page === 'view'"
@@ -202,7 +202,7 @@ const more = ref(secondaryActive.value > 0);
         data-test="row-sort"
         @click="open('sort')"
       >
-        <span>Tri</span><span class="filter-row-value">{{ sortValue }}</span>
+        <span class="with-icon"><AppIcon name="arrow-down" />Tri</span><span class="filter-row-value">{{ sortValue }}</span>
       </button>
       <div
         v-if="page === 'sort'"
@@ -227,7 +227,7 @@ const more = ref(secondaryActive.value > 0);
       v-if="visible.includes('score')"
       class="filter-card filter-card-body"
     >
-      <span class="filter-card-title">Note</span>
+      <span class="filter-card-title with-icon"><AppIcon name="star" />Note</span>
       <ScoreCurve
         :bins="facets.scores ?? []"
         :min="filters.minScore"
@@ -244,9 +244,9 @@ const more = ref(secondaryActive.value > 0);
       data-test="more-filters"
       @click="more = !more"
     >
-      {{ more ? "Moins de filtres" : "Plus de filtres" }}<template v-if="secondaryActive">
+      <span class="with-icon"><AppIcon name="filter" />{{ more ? "Moins de filtres" : "Plus de filtres" }}<template v-if="secondaryActive">
         ({{ secondaryActive }})
-      </template>
+      </template></span>
     </button>
 
     <div
@@ -261,7 +261,7 @@ const more = ref(secondaryActive.value > 0);
           data-test="row-remote"
           @click="open('remote')"
         >
-          <span>Télétravail</span><span class="filter-row-value">{{ remoteValue }}</span>
+          <span class="with-icon"><AppIcon name="home" />Télétravail</span><span class="filter-row-value">{{ remoteValue }}</span>
         </button>
         <div
           v-if="page === 'remote'"
@@ -289,7 +289,7 @@ const more = ref(secondaryActive.value > 0);
           data-test="row-rate"
           @click="open('rate')"
         >
-          <span>Taux minimum (%)</span><span class="filter-row-value">{{ filters.minRate ?? "tous" }}</span>
+          <span class="with-icon"><AppIcon name="rate" />Taux minimum (%)</span><span class="filter-row-value">{{ filters.minRate ?? "tous" }}</span>
         </button>
         <div
           v-if="page === 'rate'"
@@ -312,7 +312,7 @@ const more = ref(secondaryActive.value > 0);
         v-if="visible.includes('external')"
         class="filter-row filter-switch"
       >
-        <span>Chez l'employeur uniquement</span>
+        <span class="with-icon"><AppIcon name="building" />Chez l'employeur uniquement</span>
         <input
           type="checkbox"
           role="switch"
@@ -325,7 +325,7 @@ const more = ref(secondaryActive.value > 0);
         v-if="visible.includes('doubtful')"
         class="filter-row filter-switch"
       >
-        <span>Masquer les offres à vérifier</span>
+        <span class="with-icon"><AppIcon name="alert" />Masquer les offres à vérifier</span>
         <input
           type="checkbox"
           role="switch"
@@ -348,7 +348,7 @@ const more = ref(secondaryActive.value > 0);
           data-test="row-sources"
           @click="open('sources')"
         >
-          <span>Sites</span><span class="filter-row-value">{{ sourcesValue }}</span>
+          <span class="with-icon"><AppIcon name="globe" />Sites</span><span class="filter-row-value">{{ sourcesValue }}</span>
         </button>
         <div
           v-if="page === 'sources'"
@@ -378,7 +378,7 @@ const more = ref(secondaryActive.value > 0);
           data-test="row-cantons"
           @click="open('cantons')"
         >
-          <span>Cantons</span><span class="filter-row-value">{{ cantonsValue }}</span>
+          <span class="with-icon"><AppIcon name="pin" />Cantons</span><span class="filter-row-value">{{ cantonsValue }}</span>
         </button>
         <div
           v-if="page === 'cantons'"
@@ -448,7 +448,7 @@ const more = ref(secondaryActive.value > 0);
         data-test="reset"
         @click="emit('reset')"
       >
-        Effacer tout ({{ activeCount(filters) }})
+        <span class="with-icon"><AppIcon name="close" />Effacer tout ({{ activeCount(filters) }})</span>
       </button>
       <button
         type="button"

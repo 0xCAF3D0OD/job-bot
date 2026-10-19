@@ -14,6 +14,7 @@ import IllustratedSide from "../components/IllustratedSide.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
 import HoverNote from "../components/HoverNote.vue";
+import IconButton from "../components/IconButton.vue";
 import { firstTime } from "../composables/useIntro";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -179,25 +180,19 @@ const intro = firstTime("bilan-funnel");
         v-if="period === 'month'"
         class="month-nav"
       >
-        <button
-          type="button"
-          class="secondary small"
-          aria-label="Mois précédent"
+        <IconButton
+          icon="arrow-left"
+          label="Mois précédent"
           data-test="prev-month"
           @click="go(-1)"
-        >
-          ←
-        </button>
+        />
         <strong data-test="month">{{ formatMonth(month) }}</strong>
-        <button
-          type="button"
-          class="secondary small"
-          aria-label="Mois suivant"
+        <IconButton
+          icon="arrow-right"
+          label="Mois suivant"
           data-test="next-month"
           @click="go(1)"
-        >
-          →
-        </button>
+        />
       </div>
     </div>
 

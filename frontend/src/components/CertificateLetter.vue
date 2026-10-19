@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import HoverNote from "./HoverNote.vue";
 import SidePanel from "./SidePanel.vue";
@@ -105,7 +106,7 @@ onMounted(() => void load());
             @click="load(true)"
           >
             <HoverNote text="Environ 0,02 CHF. Le certificat part sans ton nom ni les personnes citées.">
-              {{ busy ? "L'IA rédige…" : "Rédiger avec l'IA" }}
+              <span class="with-icon"><AppIcon name="ai" />{{ busy ? "L'IA rédige…" : "Rédiger avec l'IA" }}</span>
             </HoverNote>
           </button>
         </div>

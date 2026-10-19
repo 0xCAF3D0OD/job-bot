@@ -8,7 +8,7 @@ import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
 import { useNewsCount } from "../composables/useNewsCount";
 import AppIcon from "./AppIcon.vue";
 
-// Progresser dans la capsule (docs/92) : l'étincelle, entre la cloche et ton initiale, déroule
+// Progresser dans la capsule (docs/92) : le livre (docs/101), entre la cloche et ton initiale, déroule
 // un aperçu — les dernières actualités de ton domaine et tes formations en cours. Un point
 // violet dit qu'il y a du nouveau à lire ; il s'efface quand on ouvre l'aperçu.
 const route = useRoute();
@@ -69,7 +69,7 @@ function close(): void {
       data-test="progress-zone"
       @click="open = !open"
     >
-      <AppIcon name="spark" />
+      <AppIcon name="book" />
       <span
         v-if="count"
         class="progress-dot"
@@ -89,7 +89,7 @@ function close(): void {
         data-test="progress-preview"
       >
         <p class="preview-title">
-          Actualités
+          <span class="with-icon"><AppIcon name="news" />Actualités</span>
         </p>
         <ul
           v-if="news.length"
@@ -128,7 +128,7 @@ function close(): void {
         </p>
         <template v-if="trainings.length">
           <p class="preview-title">
-            Formations en cours
+            <span class="with-icon"><AppIcon name="book" />Formations en cours</span>
           </p>
           <ul
             class="preview-trainings"

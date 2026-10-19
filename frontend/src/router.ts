@@ -27,11 +27,14 @@ import ProfileView from "./views/ProfileView.vue";
 import SettingsView from "./views/SettingsView.vue";
 import TodayView from "./views/TodayView.vue";
 import TrainingsView from "./views/TrainingsView.vue";
+import type { IconName } from "./icons";
 
 export interface NavEntry {
   path: string;
   name: string;
   label: string;
+  // L'icône devant le nom dans le menu (docs/101).
+  icon?: IconName;
   // Version du cadrage (docs/01-cadrage.md §11) qui livre la page.
   since?: string;
   description?: string;
@@ -40,11 +43,11 @@ export interface NavEntry {
 // Menu (docs/19 §1) : une entrée par question. Offres, suivi, preuves ORP et alertes sont
 // des onglets de la rubrique Candidatures ; l'État est une section des Réglages.
 export const navigation: NavEntry[] = [
-  { path: "/aujourdhui", name: "today", label: "Aujourd'hui" },
-  { path: "/candidatures", name: "jobs", label: "Candidatures" },
-  { path: "/progresser", name: "progress", label: "Progresser" },
-  { path: "/profil", name: "profile", label: "Profil" },
-  { path: "/reglages", name: "settings", label: "Réglages" },
+  { path: "/aujourdhui", name: "today", label: "Aujourd'hui", icon: "calendar" },
+  { path: "/candidatures", name: "jobs", label: "Candidatures", icon: "check-circle" },
+  { path: "/progresser", name: "progress", label: "Progresser", icon: "book" },
+  { path: "/profil", name: "profile", label: "Profil", icon: "user" },
+  { path: "/reglages", name: "settings", label: "Réglages", icon: "settings" },
 ];
 // Le menu principal : les deux pages de travail (docs/89, docs/90, docs/92). Progresser
 // s'ouvre depuis l'étincelle de la capsule, Profil et Réglages depuis le menu du compte ; ils

@@ -47,7 +47,7 @@ afterEach(() => {
 });
 
 describe("Progresser dans la capsule (docs/92)", () => {
-  it("l'étincelle ouvre l'aperçu : actualités, formations en cours, liens ; le point s'efface", async () => {
+  it("le livre ouvre l'aperçu : actualités, formations en cours, liens ; le point s'efface", async () => {
     answer([
       { id: 7, title: "CKA", provider: "CNCF", mark: { status: "in_progress", progress: "Module 3 sur 6" } },
       { id: 8, title: "AWS", provider: "AWS", mark: { status: "interested" } },

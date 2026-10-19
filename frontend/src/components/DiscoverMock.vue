@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppIcon from "./AppIcon.vue";
+
 // Un bout de la plateforme, en arrière-plan d'une scène de la présentation (docs/67, complément) :
 // dessiné ici, aux couleurs du thème, avec des exemples inventés ; jamais une capture.
 export type MockKind = "alerts" | "offers" | "apply" | "follow" | "orp" | "news";
@@ -67,7 +69,7 @@ const TITLES: Record<MockKind, string> = {
       <span class="dmock-line short" />
       <span class="dmock-line" />
       <div class="dmock-row plain">
-        <span class="dmock-tag">✓ CV adapté</span>
+        <span class="dmock-tag with-icon"><AppIcon name="done" />CV adapté</span>
         <span class="dmock-button">Copier la lettre</span>
       </div>
     </div>
@@ -98,7 +100,7 @@ const TITLES: Record<MockKind, string> = {
         :key="n"
         class="dmock-row"
       >
-        <span class="dmock-check">✓</span>
+        <span class="dmock-check"><AppIcon name="done" /></span>
         <span class="dmock-line" />
       </div>
       <div class="dmock-row plain">

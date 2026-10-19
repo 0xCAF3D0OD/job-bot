@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import { plural } from "../format";
+import AppIcon from "./AppIcon.vue";
 
 // Tes données (docs/65 §6) : ce qui est gardé, l'export complet, la suppression du compte.
 type Summary = {
@@ -75,7 +76,7 @@ async function remove(): Promise<void> {
           download
           class="button-link"
           data-test="export"
-        >Exporter mes données (ZIP)</a>
+        ><span class="with-icon"><AppIcon name="download" />Exporter mes données (ZIP)</span></a>
       </div>
       <template v-if="summary?.can_delete">
         <button
@@ -85,7 +86,7 @@ async function remove(): Promise<void> {
           data-test="delete-account"
           @click="confirming = true"
         >
-          Supprimer mon compte
+          <span class="with-icon"><AppIcon name="trash" />Supprimer mon compte</span>
         </button>
         <form
           v-else

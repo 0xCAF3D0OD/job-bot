@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type ScoringStatus } from "../api/client";
 import { plural } from "../format";
+import AppIcon from "./AppIcon.vue";
 
 const status = ref<ScoringStatus | null>(null);
 // Offres déjà notées dont le télétravail n'est pas relevé (docs/26 §2).
@@ -82,7 +83,7 @@ defineExpose({ load });
         data-test="rescore"
         @click="rescore"
       >
-        Renoter {{ plural(status.stale, "offre", "offres") }}
+        <span class="with-icon"><AppIcon name="ai" />Renoter {{ plural(status.stale, "offre", "offres") }}</span>
       </button>
     </div>
 
@@ -143,7 +144,7 @@ defineExpose({ load });
         :disabled="busy"
         @click="readRemote"
       >
-        Relire ({{ Number(remote.estimate_usd) >= 0.01 ? `environ ${remote.estimate_usd.replace(".", ",")} $` : "moins de 0,01 $" }})
+        <span class="with-icon"><AppIcon name="ai" />Relire ({{ Number(remote.estimate_usd) >= 0.01 ? `environ ${remote.estimate_usd.replace(".", ",")} $` : "moins de 0,01 $" }})</span>
       </button>
     </p>
     <p

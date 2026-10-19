@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, useId } from "vue";
 
+import type { IconName } from "../icons";
+import AppIcon from "./AppIcon.vue";
+
 // Menu « ⋯ » commun (docs/50 §1) : Échap ferme le seul menu et rend le focus à « ⋯ »,
 // un clic ailleurs le ferme, les flèches passent d'une action à l'autre.
 // docs/74 §5 : une action peut être un lien (page externe « ↗ » ou fichier à télécharger),
 // porter un nombre ; les suppressions viennent en dernier, après un filet.
+// docs/101 : chaque action a son icône devant le nom ; sans icône donnée, un lien externe prend
+// « ouvrir ailleurs », un fichier « télécharger », une suppression la corbeille.
 export type MoreMenuItem = {
   label: string;
   test: string;
@@ -15,7 +20,14 @@ export type MoreMenuItem = {
   count?: number;
   disabled?: boolean;
   danger?: boolean;
+  icon?: IconName;
 };
+
+function iconOf(item: MoreMenuItem): IconName | null {
+  if (item.icon) return item.icon;
+  if (item.href) return item.download ? "download" : "external";
+  return item.danger ? "trash" : null;
+}
 
 // `inline` : faux quand une autre action est déjà visible à côté (une seule visible par partie).
 const props = withDefaults(
@@ -113,10 +125,7 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
     :href="direct.href"
     :data-test="direct.test"
     v-bind="direct.download ? { download: '' } : { target: '_blank', rel: 'noopener noreferrer' }"
-  >{{ direct.label }}<span
-    v-if="!direct.download"
-    aria-hidden="true"
-  > ↗</span><span
+  ><span class="with-icon">{{ direct.label }}<AppIcon :name="direct.download ? 'download' : 'external'" /></span><span
     v-if="!direct.download"
     class="visually-hidden"
   > (nouvel onglet)</span></a>
@@ -150,25 +159,8 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
       :data-test="testId"
       @click="toggle"
     >
-      <!-- Trois points dessinés : centrés quelle que soit la police (docs/74). -->
-      <svg
-        viewBox="0 0 20 4"
-        width="20"
-        height="4"
-        aria-hidden="true"
-      ><circle
-        cx="2"
-        cy="2"
-        r="2"
-      /><circle
-        cx="10"
-        cy="2"
-        r="2"
-      /><circle
-        cx="18"
-        cy="2"
-        r="2"
-      /></svg>
+      <!-- Les trois points de l'iconographie : centrés quelle que soit la police (docs/74, docs/101). -->
+      <AppIcon name="more" />
     </button>
     <ul
       v-if="open"
@@ -195,10 +187,10 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
             :data-test="item.test"
             v-bind="item.download ? { download: '' } : { target: '_blank', rel: 'noopener noreferrer' }"
             @click="choose(item)"
-          >{{ item.label }}<span
-            v-if="!item.download"
-            aria-hidden="true"
-          > ↗</span><span
+          ><AppIcon
+            v-if="iconOf(item)"
+            :name="iconOf(item)!"
+          />{{ item.label }}<span
             v-if="!item.download"
             class="visually-hidden"
           > (nouvel onglet)</span></a>
@@ -211,7 +203,10 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
             :data-test="item.test"
             @click="choose(item)"
           >
-            {{ item.label }}<span
+            <AppIcon
+              v-if="iconOf(item)"
+              :name="iconOf(item)!"
+            />{{ item.label }}<span
               v-if="item.count"
               class="menu-count"
             > ({{ item.count }})</span>

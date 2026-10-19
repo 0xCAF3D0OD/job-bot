@@ -3,6 +3,7 @@ import { computed } from "vue";
 
 import type { Offer } from "../api/client";
 import { dayShort } from "../format";
+import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ScoreRing from "./ScoreRing.vue";
 
@@ -47,10 +48,14 @@ const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" "
           data-test="spontaneous-badge"
         >Spontanée</span>
       </span>
-      <span class="offer-row-sub">{{ offer.company ?? "Entreprise non indiquée" }}<template v-if="offer.location"> · {{ offer.location }}</template><span
-        v-if="showDate"
-        data-test="offer-date"
-      > · {{ dayShort(offer.first_seen_at) }}</span></span>
+      <span class="offer-row-sub meta-line">
+        <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company ?? "Entreprise non indiquée" }}</span>
+        <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
+        <span
+          v-if="showDate"
+          data-test="offer-date"
+        ><AppIcon name="clock" /><span class="visually-hidden">Repérée le </span>{{ dayShort(offer.first_seen_at) }}</span>
+      </span>
       <span
         v-if="alert"
         :class="['offer-row-alert', alert.kind]"

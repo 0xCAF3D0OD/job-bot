@@ -2,6 +2,8 @@
 import { ref } from "vue";
 
 import type { Interview, InterviewIn } from "../api/client";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import {
   DURATIONS,
   FORMATS,
@@ -257,14 +259,13 @@ function submit(): void {
                 type="checkbox"
               > {{ question.text }}
             </label>
-            <button
-              type="button"
-              class="link danger"
-              :aria-label="`Retirer ${question.text}`"
+            <IconButton
+              icon="close"
+              :label="`Retirer ${question.text}`"
+              danger
+              data-test="remove-question"
               @click="form.questions.splice(index, 1)"
-            >
-              ×
-            </button>
+            />
           </li>
         </ul>
         <div class="choice-row">
@@ -276,7 +277,7 @@ function submit(): void {
             data-test="suggested-question"
             @click="addQuestion(text)"
           >
-            + {{ text }}
+            <span class="with-icon"><AppIcon name="plus" />{{ text }}</span>
           </button>
         </div>
         <div class="inline-form">
@@ -289,13 +290,12 @@ function submit(): void {
             data-test="new-question"
             @keydown.enter.prevent="addQuestion(newQuestion)"
           >
-          <button
-            type="button"
-            class="secondary small"
+          <IconButton
+            icon="plus"
+            label="Ajouter la question"
+            data-test="add-question"
             @click="addQuestion(newQuestion)"
-          >
-            Ajouter
-          </button>
+          />
         </div>
         <div class="choice-row">
           <span class="choice-label">Question sur le salaire</span>
@@ -458,14 +458,14 @@ function submit(): void {
         >
           Annuler
         </button>
-        <button
+        <IconButton
           v-if="initial"
-          type="button"
-          class="link danger"
+          icon="trash"
+          label="Supprimer ce retour"
+          danger
+          data-test="remove-interview"
           @click="emit('remove')"
-        >
-          Supprimer ce retour
-        </button>
+        />
       </div>
     </form>
   </div>

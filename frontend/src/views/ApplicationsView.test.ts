@@ -412,7 +412,7 @@ describe("Panneau défilant (retour d'usage du 2026-10-07)", () => {
 });
 
 describe("Suivi, revue des pages (docs/43 n° 14)", () => {
-  it("ligne 1 : mois, compteur, Calendrier / Liste, ＋ ; ligne 2 seulement s'il y a à faire", async () => {
+  it("ligne 1 : mois, compteur, Calendrier / Liste, « + » ; ligne 2 seulement s'il y a à faire", async () => {
     mockApi(() => month());
     const { wrapper } = await mountView();
     const head = wrapper.find(".applications-head");
