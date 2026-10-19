@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { api, type Inbox, type InboxItem } from "../api/client";
 import { plural, since } from "../format";
 import AppIcon from "./AppIcon.vue";
+import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
 import { usePhone } from "../composables/usePhone";
 import PushTransition from "./PushTransition.vue";
 
@@ -13,11 +14,12 @@ const REFRESH_MS = 60_000;
 
 const router = useRouter();
 const inbox = ref<Inbox>({ unread: 0, items: [] });
-const open = ref(false);
+// Dans la capsule (docs/91), une seule chose ouverte à la fois : la cloche ou le compte.
+const { open, inCapsule } = useCapsuleZone("bell");
 const root = ref<HTMLElement | null>(null);
 // Sur téléphone, la carte s'ouvre sous la barre du haut, sur toute la largeur de l'écran, et
 // pousse la page vers le bas (retour du 2026-10-15) : elle est rendue dans #bell-drop. Sur
-// ordinateur, elle reste le menu déroulant sous la cloche.
+// ordinateur, elle se déroule dans la capsule (docs/91).
 const panel = ref<HTMLElement | null>(null);
 const { phone } = usePhone();
 let timer: ReturnType<typeof setInterval> | undefined;
@@ -84,7 +86,8 @@ onUnmounted(() => {
   >
     <button
       type="button"
-      class="bell-button"
+      class="bell-button capsule-zone"
+      data-capsule-zone="bell"
       :aria-label="inbox.unread ? `Alertes, ${plural(inbox.unread, 'non lue', 'non lues')}` : 'Alertes'"
       :aria-expanded="open"
       data-test="bell"
@@ -98,9 +101,9 @@ onUnmounted(() => {
       >{{ badge }}</span>
     </button>
     <Teleport
-      to="#bell-drop"
+      :to="phone ? '#bell-drop' : CAPSULE_BODY"
       defer
-      :disabled="!phone"
+      :disabled="!phone && !inCapsule"
     >
       <PushTransition :enabled="phone">
         <div

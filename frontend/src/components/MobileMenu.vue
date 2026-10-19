@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, watch } from "vue";
 import { useRoute } from "vue-router";
 
+import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { useProgressMemory } from "../composables/useProgressMemory";
 import type { NavEntry } from "../router";
-import SidePanel from "./SidePanel.vue";
 
-// Menu « burger » (docs/33 §2, docs/89, docs/90) : sur un écran étroit, ☰ ferme la capsule à
-// droite et ne montre que les trois pages ; le compte, la collecte et Réglages sont sous ton initiale.
+// Menu « burger » (docs/33 §2, docs/89, docs/90, docs/91) : sur un écran étroit, ☰ déroule la
+// capsule sur toute la largeur et montre les trois pages ; ☰ devient ✕. Le compte, la collecte
+// et Réglages sont sous ton initiale.
 const props = defineProps<{ menu: NavEntry[]; newsCount: number }>();
 
-const open = ref(false);
+const { open, inCapsule } = useCapsuleZone("menu");
 const route = useRoute();
 const { last: lastJobsPage } = useJobsMemory();
 const { last: lastProgressPage } = useProgressMemory();
@@ -34,23 +35,28 @@ watch(
 <template>
   <button
     type="button"
-    class="icon-button burger"
+    :class="['icon-button', 'burger', 'capsule-zone', { open }]"
+    data-capsule-zone="menu"
     :aria-expanded="open"
-    aria-label="Menu"
+    :aria-label="open ? 'Fermer le menu' : 'Menu'"
     data-test="burger"
-    @click="open = true"
+    @click="open = !open"
   >
     <span
       class="burger-lines"
       aria-hidden="true"
     />
   </button>
-  <SidePanel
-    :open="open"
-    title="Menu"
-    @close="open = false"
+  <Teleport
+    :to="CAPSULE_BODY"
+    defer
+    :disabled="!inCapsule"
   >
-    <nav aria-label="Navigation principale (menu)">
+    <nav
+      v-if="open"
+      class="capsule-nav"
+      aria-label="Navigation principale (menu)"
+    >
       <ul class="mobile-nav">
         <li
           v-for="entry in entries"
@@ -73,5 +79,5 @@ watch(
         </li>
       </ul>
     </nav>
-  </SidePanel>
+  </Teleport>
 </template>

@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { useAuth } from "../composables/useAuth";
+import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
 import { useCollect } from "../composables/useCollect";
 import { useProfiles } from "../composables/useProfiles";
 import AppIcon from "./AppIcon.vue";
@@ -15,7 +16,8 @@ const router = useRouter();
 const { me, logout } = useAuth();
 const { list, current, load, choose } = useProfiles();
 const { running, collectNow } = useCollect();
-const open = ref(false);
+// Dans la capsule (docs/91), le menu se déroule dans son cadre ; une chose ouverte à la fois.
+const { open, inCapsule } = useCapsuleZone("account");
 const root = ref<HTMLElement | null>(null);
 const trigger = ref<HTMLButtonElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
@@ -47,7 +49,8 @@ async function toggle(): Promise<void> {
   open.value = !open.value;
   if (open.value) {
     await nextTick();
-    items()[0]?.focus();
+    // Sans défilement : la capsule se déroule encore, la rangée du haut doit rester visible.
+    items()[0]?.focus({ preventScroll: true });
   }
 }
 
@@ -67,7 +70,8 @@ function onPanelKeydown(event: KeyboardEvent): void {
 }
 
 function onDocumentClick(event: MouseEvent): void {
-  if (open.value && root.value && !root.value.contains(event.target as Node)) open.value = false;
+  const target = event.target as Node;
+  if (open.value && root.value && !root.value.contains(target) && !panel.value?.contains(target)) open.value = false;
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -99,7 +103,8 @@ onUnmounted(() => {
     <button
       ref="trigger"
       type="button"
-      :class="['account-trigger', { active }]"
+      :class="['account-trigger', 'capsule-zone', { active }]"
+      data-capsule-zone="account"
       :aria-expanded="open"
       aria-haspopup="menu"
       :aria-label="me?.username ? `Compte : ${me.username}` : 'Compte'"
@@ -120,89 +125,95 @@ onUnmounted(() => {
         class="account-chevron"
       />
     </button>
-    <div
-      v-if="open"
-      ref="panel"
-      class="account-panel"
-      role="menu"
-      aria-label="Compte"
-      data-test="account-panel"
-      @keydown="onPanelKeydown"
+    <Teleport
+      :to="CAPSULE_BODY"
+      defer
+      :disabled="!inCapsule"
     >
-      <p
-        v-if="me?.username"
-        class="account-name"
+      <div
+        v-if="open"
+        ref="panel"
+        class="account-panel"
+        role="menu"
+        aria-label="Compte"
+        data-test="account-panel"
+        @keydown="onPanelKeydown"
       >
-        Connecté : <strong>{{ me.username }}</strong>
-      </p>
-      <label
-        v-if="list && list.items.length > 1"
-        class="account-profile"
-      >Profil affiché
-        <select
-          :value="current?.id"
-          data-test="profile-switcher"
-          @change="onChange"
+        <p
+          v-if="me?.username"
+          class="account-name"
         >
-          <option
-            v-for="profile in list.items"
-            :key="profile.id"
-            :value="profile.id"
+          Connecté : <strong>{{ me.username }}</strong>
+        </p>
+        <label
+          v-if="list && list.items.length > 1"
+          class="account-profile"
+        >Profil affiché
+          <select
+            :value="current?.id"
+            data-test="profile-switcher"
+            @change="onChange"
           >
-            {{ profile.is_main ? "👤 " : "🧪 " }}{{ profile.name }}
-          </option>
-        </select>
-      </label>
-      <RouterLink
-        to="/profil"
-        role="menuitem"
-        data-test="account-profile"
-      >
-        Profil
-      </RouterLink>
-      <RouterLink
-        to="/reglages"
-        role="menuitem"
-        data-test="account-settings"
-      >
-        Réglages
-      </RouterLink>
-      <RouterLink
-        to="/tes-donnees"
-        role="menuitem"
-        data-test="account-privacy"
-      >
-        Données personnelles
-      </RouterLink>
-      <RouterLink
-        to="/reglages/diagnostic"
-        role="menuitem"
-        data-test="account-diagnostic"
-      >
-        Diagnostic
-      </RouterLink>
-      <!-- La démo ne collecte rien (docs/72). -->
-      <button
-        v-if="!me?.demo"
-        type="button"
-        class="link"
-        role="menuitem"
-        :disabled="running"
-        data-test="account-collect"
-        @click="collect"
-      >
-        Collecter maintenant
-      </button>
-      <button
-        v-if="me?.auth_enabled"
-        type="button"
-        class="link account-logout"
-        role="menuitem"
-        data-test="logout"
-        @click="signOut"
-      >
-        Se déconnecter
-      </button>
-    </div>
+            <option
+              v-for="profile in list.items"
+              :key="profile.id"
+              :value="profile.id"
+            >
+              {{ profile.is_main ? "👤 " : "🧪 " }}{{ profile.name }}
+            </option>
+          </select>
+        </label>
+        <RouterLink
+          to="/profil"
+          role="menuitem"
+          data-test="account-profile"
+        >
+          Profil
+        </RouterLink>
+        <RouterLink
+          to="/reglages"
+          role="menuitem"
+          data-test="account-settings"
+        >
+          Réglages
+        </RouterLink>
+        <RouterLink
+          to="/tes-donnees"
+          role="menuitem"
+          data-test="account-privacy"
+        >
+          Données personnelles
+        </RouterLink>
+        <RouterLink
+          to="/reglages/diagnostic"
+          role="menuitem"
+          data-test="account-diagnostic"
+        >
+          Diagnostic
+        </RouterLink>
+        <!-- La démo ne collecte rien (docs/72). -->
+        <button
+          v-if="!me?.demo"
+          type="button"
+          class="link"
+          role="menuitem"
+          :disabled="running"
+          data-test="account-collect"
+          @click="collect"
+        >
+          Collecter maintenant
+        </button>
+        <button
+          v-if="me?.auth_enabled"
+          type="button"
+          class="link account-logout"
+          role="menuitem"
+          data-test="logout"
+          @click="signOut"
+        >
+          Se déconnecter
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>

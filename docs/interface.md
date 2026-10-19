@@ -14,7 +14,7 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 
 ## La barre du haut (docs/89)
 
-Trois pages dans le menu principal (docs/90) : Aujourd'hui, Candidatures, Progresser. À droite, une capsule : la cloche, puis l'initiale du compte, qui ouvre le menu du compte (Profil, Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion) ; sur téléphone, ☰ s'y ajoute et ne montre que les trois pages. Du nouveau à lire : un point, pas un chiffre ; un chiffre dit ce qui attend une action.
+Trois pages dans le menu principal (docs/90) : Aujourd'hui, Candidatures, Progresser. À droite, une capsule : la cloche, puis l'initiale du compte, qui ouvre le menu du compte (Profil, Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion) ; sur téléphone, ☰ s'y ajoute et ne montre que les trois pages. Du nouveau à lire : un point, pas un chiffre ; un chiffre dit ce qui attend une action. Dans la capsule, des zones sans cadre ni fond, séparées par des filets ; ouvrir l'une déroule le cadre vers le bas, et son contenu apparaît dedans (docs/91). Les menus « ⋯ » ont le même style : bordure fine, coins de 10 px, presque pas d'ombre, un déroulé court.
 
 ## Illustrations (docs/62, docs/67)
 
@@ -27,7 +27,7 @@ Trois pages dans le menu principal (docs/90) : Aujourd'hui, Candidatures, Progre
 ## Mouvement (docs/59)
 
 1. Le mouvement répond à une action (appui, survol, choix, envoi) ; rien ne bouge tout seul en boucle, sauf une vraie attente (rédaction par l'IA, page de maintenance : son dessin unDraw bouge tant que l'attente dure, docs/80).
-2. Trois durées : 150 ms (survol, appui), 250 ms (un état qui change), 500 ms (une entrée). Exceptions écrites : la carte d'une réussite monte en 420 ms avec un léger rebond (docs/61 §1) ; la transition d'une page qui charge entre et sort en 400 ms et reste au moins 1,2 s, rien si la page arrive en moins de 0,15 s (docs/63 §3) ; en sombre, la connexion joue une fois la vidéo du soir qui tombe (9 s), puis reste sur l'image du soir (docs/67, complément 0.55.3) ; le personnage du titre, une fois connecté, ne bouge qu'au survol du titre (docs/68) ; sur la connexion, le ciel suit la vidéo (9 s) et la phrase change de couleur en 1,2 s à 5,5 s de la vidéo (docs/67, compléments 0.55.3 à 0.55.5) ; le chemin de La plateforme suit le défilement (120 ms), entier d'emblée si « réduire les animations » (docs/67).
+2. Trois durées : 150 ms (survol, appui), 250 ms (un état qui change), 500 ms (une entrée). Exceptions écrites : la carte d'une réussite monte en 420 ms avec un léger rebond (docs/61 §1) ; la transition d'une page qui charge entre et sort en 400 ms et reste au moins 1,2 s, rien si la page arrive en moins de 0,15 s (docs/63 §3) ; en sombre, la connexion joue une fois la vidéo du soir qui tombe (9 s), puis reste sur l'image du soir (docs/67, complément 0.55.3) ; le personnage du titre, une fois connecté, ne bouge qu'au survol du titre (docs/68) ; sur la connexion, le ciel suit la vidéo (9 s) et la phrase change de couleur en 1,2 s à 5,5 s de la vidéo (docs/67, compléments 0.55.3 à 0.55.5) ; le chemin de La plateforme suit le défilement (120 ms), entier d'emblée si « réduire les animations » (docs/67) ; la capsule se déroule en 350 ms et un menu « ⋯ » en 250 ms, sur la courbe `cubic-bezier(0.72, 0.01, 0, 1)` prise à Sphere, leur contenu en fondu (docs/91).
 3. « Réduire les animations » : les retours restent (couleurs, coches, textes), sans mouvement.
 
 ## Accès à un contenu (docs/57)
