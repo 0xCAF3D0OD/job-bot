@@ -8,6 +8,7 @@ const POST = vi.fn();
 vi.mock("../api/client", () => ({
   api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a) },
 }));
+const global = { stubs: { teleport: true } };
 afterEach(() => vi.resetAllMocks());
 
 // Les certificats de travail, décodés (docs/87).
@@ -77,4 +78,51 @@ describe("Certificats de travail", () => {
     await flushPromises();
     expect(wrapper.find("[role=status]").text()).toBe("plafond mensuel de l'IA atteint");
   });
+
+  it("la lettre de correction, puis rédigée par l'IA ; le certificat intermédiaire (0.69.1)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/certificates"
+            ? page
+            : { subject: "Demande de correction de mon certificat de travail", text: "Madame, Monsieur,\n- « dans l'ensemble »", ai: false, reason: null },
+      }),
+    );
+    const wrapper = mount(CertificatesSection, { props: { version: 0 }, global });
+    await flushPromises();
+    await wrapper.find("[data-test=certificate-correction-2]").trigger("click");
+    await flushPromises();
+    expect(GET).toHaveBeenCalledWith("/api/certificates/{document_id}/correction", {
+      params: { path: { document_id: 2 } },
+    });
+    const letter = wrapper.find("[data-test=certificate-letter]");
+    expect(letter.text()).toContain("Demande de correction de mon certificat de travail");
+    expect((letter.find("textarea").element as HTMLTextAreaElement).value).toContain("« dans l'ensemble »");
+    POST.mockResolvedValue({ data: { subject: "Demande de correction de mon certificat de travail", text: "Écrit par l'IA.", ai: true } });
+    await letter.find("[data-test=certificate-letter-ai]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenLastCalledWith("/api/certificates/{document_id}/correction", {
+      params: { path: { document_id: 2 } },
+    });
+    expect((wrapper.find("[data-test=certificate-letter-text]").element as HTMLTextAreaElement).value).toBe("Écrit par l'IA.");
+    expect(wrapper.find("[data-test=certificate-letter-ai]").exists()).toBe(false);
+  });
+
+  it("sans certificat : comment en marquer un, et le certificat intermédiaire", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/certificates"
+            ? { certificates: [], summary: null }
+            : { subject: "Demande de certificat de travail intermédiaire", text: "Madame, Monsieur,", ai: false },
+      }),
+    );
+    const wrapper = mount(CertificatesSection, { props: { version: 0, documents: 2 }, global });
+    await flushPromises();
+    await wrapper.find("[data-test=certificates-hint] [data-test=interim-letter]").trigger("click");
+    await flushPromises();
+    expect(GET).toHaveBeenCalledWith("/api/certificates/intermediaire", { params: { query: { langue: "fr" } } });
+    expect(wrapper.find("[data-test=certificate-letter]").text()).toContain("intermédiaire");
+  });
 });
+

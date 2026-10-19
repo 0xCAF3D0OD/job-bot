@@ -1866,6 +1866,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/certificates/{document_id}/correction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Draft Certificate Correction
+         * @description La lettre de demande de correction, sur un modèle simple, à relire et envoyer toi-même.
+         */
+        get: operations["draftCertificateCorrection"];
+        put?: never;
+        /**
+         * Write Certificate Correction
+         * @description La même lettre, rédigée par l'IA (environ 0,02 CHF) ; le modèle simple si l'IA manque.
+         */
+        post: operations["writeCertificateCorrection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/certificates/intermediaire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Draft Interim Certificate
+         * @description La demande de certificat intermédiaire, encore en poste ou en préavis (sans IA).
+         */
+        get: operations["draftInterimCertificate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rhythm/semaines": {
         parameters: {
             query?: never;
@@ -3354,6 +3398,17 @@ export interface components {
             /** Added */
             added: boolean;
         };
+        /** CertificateLetterOut */
+        CertificateLetterOut: {
+            /** Subject */
+            subject: string;
+            /** Text */
+            text: string;
+            /** Ai */
+            ai: boolean;
+            /** Reason */
+            reason?: string | null;
+        };
         /** CertificateOut */
         CertificateOut: {
             /** Document Id */
@@ -3384,6 +3439,8 @@ export interface components {
             ai: components["schemas"]["AiReadingOut"] | null;
             /** Ai At */
             ai_at: string | null;
+            /** End Year */
+            end_year?: number | null;
         };
         /** CertificatesPage */
         CertificatesPage: {
@@ -10520,6 +10577,113 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draftCertificateCorrection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateLetterOut"];
+                };
+            };
+            /** @description Pas un certificat, ou texte illisible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    writeCertificateCorrection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateLetterOut"];
+                };
+            };
+            /** @description Pas un certificat, ou texte illisible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draftInterimCertificate: {
+        parameters: {
+            query?: {
+                langue?: "fr" | "de";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateLetterOut"];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from jobbot.certificates import formulas, service
+from jobbot.certificates import formulas, letters, service
 from jobbot.db.models import CertificateReading, Document
 from jobbot.runtime import Runtime
 
@@ -63,6 +63,15 @@ class CertificateOut(BaseModel):
     notes: list[NoteOut]
     ai: AiReadingOut | None
     ai_at: datetime | None
+    # La dernière année citée (fin de l'emploi) : les plus récents d'abord (0.69.1).
+    end_year: int | None = None
+
+
+class CertificateLetterOut(BaseModel):
+    subject: str
+    text: str
+    ai: bool
+    reason: str | None = None
 
 
 class CertificatesPage(BaseModel):
@@ -130,8 +139,10 @@ async def _page(runtime: Runtime) -> CertificatesPage:
                     notes=[NoteOut(**n) for n in reading.notes],
                     ai=ai,
                     ai_at=reading.ai_at,
+                    end_year=letters.end_year(document.extracted_text or ""),
                 )
             )
+    items.sort(key=lambda c: c.end_year or 0, reverse=True)
     return CertificatesPage(certificates=items, summary=_summary(items))
 
 
@@ -179,3 +190,40 @@ async def read_certificate(
     except service.ReadingUnavailable as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
     return await _page(runtime)
+
+
+@router.get(
+    "/certificates/{document_id}/correction",
+    operation_id="draftCertificateCorrection",
+    responses={409: {"description": "Pas un certificat, ou texte illisible"}},
+)
+async def draft_certificate_correction(request: Request, document_id: int) -> CertificateLetterOut:
+    """La lettre de demande de correction, sur un modèle simple, à relire et envoyer toi-même."""
+    try:
+        letter = await letters.correction(_runtime(request), document_id, use_ai=False)
+    except letters.LetterUnavailable as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    return CertificateLetterOut(**letter.__dict__)
+
+
+@router.post(
+    "/certificates/{document_id}/correction",
+    operation_id="writeCertificateCorrection",
+    responses={409: {"description": "Pas un certificat, ou texte illisible"}},
+)
+async def write_certificate_correction(request: Request, document_id: int) -> CertificateLetterOut:
+    """La même lettre, rédigée par l'IA (environ 0,02 CHF) ; le modèle simple si l'IA manque."""
+    try:
+        letter = await letters.correction(_runtime(request), document_id, use_ai=True)
+    except letters.LetterUnavailable as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    return CertificateLetterOut(**letter.__dict__)
+
+
+@router.get("/certificates/intermediaire", operation_id="draftInterimCertificate")
+async def draft_interim_certificate(
+    request: Request, langue: Literal["fr", "de"] = "fr"
+) -> CertificateLetterOut:
+    """La demande de certificat intermédiaire, encore en poste ou en préavis (sans IA)."""
+    letter = await letters.interim(_runtime(request), langue)
+    return CertificateLetterOut(**letter.__dict__)

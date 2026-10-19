@@ -41,7 +41,6 @@ const EMPTY_CHUNK: ChunkForm = {
 const documents = ref<DocumentOut[]>([]);
 // Les certificats de travail (docs/87) : la section se recharge quand un document change.
 const certificatesVersion = ref(0);
-const hasCertificates = computed(() => documents.value.some((d) => d.kind === "certificate"));
 
 async function setCertificate(doc: DocumentOut, certificate: boolean): Promise<void> {
   await api.PUT("/api/documents/{document_id}/kind", {
@@ -333,15 +332,10 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       </span>
     </label>
 
-    <p
-      v-if="documents.length && !hasCertificates"
-      class="hint certificates-hint"
-      data-test="certificates-hint"
-    >
-      Un certificat de travail parmi tes documents ? Ouvre-le, puis ⋯ › « C'est un certificat de travail » :
-      jobA1 te dit ce qu'il dit vraiment.
-    </p>
-    <CertificatesSection :version="certificatesVersion" />
+    <CertificatesSection
+      :version="certificatesVersion"
+      :documents="documents.length"
+    />
 
     <SidePanel
       v-if="openText"

@@ -115,3 +115,22 @@ Vérifié à chaque fois :
   - les tests de l'interface, dont 3 nouveaux ;
   - sur une démo de brouillon : la section sur ordinateur (clair) et téléphone (sombre), sans débordement.
 
+## Écarts avec le cadrage (0.69.1)
+
+- **La lettre de correction** s'ouvre d'abord sur un modèle simple, sans IA et gratuit. Il cite chaque passage qui dessert, avec une proposition :
+  - « toujours à notre entière satisfaction » pour une formule de prestation faible ;
+  - une phrase sans « s'efforcer » ;
+  - ne pas mentionner le motif du départ ;
+  - ajouter une formule de fin.
+
+  « Rédiger avec l'IA » (environ 0,02 CHF) la reformule, sans ton nom ni les personnes nommées ; ta signature est ajoutée par jobA1. La lettre est en allemand pour un certificat en allemand.
+- **La lettre modèle se lit sans rien enregistrer** (GET) : elle marche aussi dans la démo. La version de l'IA passe par POST.
+- **« Demander une correction »** est proposé pour les certificats *à faire corriger* et *si on le demande*, pas pour ceux *à joindre*.
+- **Le certificat intermédiaire** : un lien sous la liste des documents, et en tête de la section des certificats. La lettre est un modèle, sans IA.
+- **Dans Préparer ma candidature**, les certificats *à joindre* sont dans la section « À recopier sur le site de l'employeur », visible aussi sur téléphone ; ceux *à faire corriger* sont rappelés à part. L'ordre suit la dernière année citée dans chaque certificat, la plus récente d'abord.
+- **La limite du retrait des noms** est maintenant dite sur la page : un nom cité seul dans une phrase, sans titre, pourrait partir à l'IA.
+- **Vérifié** :
+  - 530 tests serveur, dont 1 nouveau sur les lettres ;
+  - 312 tests de l'interface, dont 4 nouveaux (le test du routeur dépasse son délai dans la suite complète, comme sur main) ;
+  - sur une démo de brouillon : la lettre ouverte (ordinateur), et « Postuler » avec les certificats (téléphone, sombre), sans débordement.
+
