@@ -207,6 +207,19 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(wrapper.find(".orp-sheet .orp-url").text()).toBe("https://emploi.exemple.ch/postuler/1");
   });
 
+  it("Déclaration Job-Room : dit ce qui reste à faire (0.67.3)", async () => {
+    mockApi();
+    let { wrapper } = await mountView();
+    expect(wrapper.find("[data-test=orp-details]").text()).toContain("Déclaration Job-Room");
+    expect(wrapper.find("[data-test=orp-details]").text()).toContain("1 ligne à compléter");
+    mockApi(() => month({ rows: [row(1), row(2)], to_declare: 1 }));
+    ({ wrapper } = await mountView());
+    expect(wrapper.find("[data-test=orp-details]").text()).toContain("1 à déclarer");
+    mockApi(() => month({ rows: [row(1), row(2)], to_declare: 0 }));
+    ({ wrapper } = await mountView());
+    expect(wrapper.find("[data-test=orp-details]").text()).toContain("tout est déclaré");
+  });
+
   it("une action à la fois : compléter tant qu'une ligne manque", async () => {
     // La ligne 2 (sans adresse) correspond à la candidature 2.
     mockApi(() => month(), [{ ...application, id: 2 }]);

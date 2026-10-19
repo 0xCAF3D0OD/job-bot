@@ -74,6 +74,14 @@ const monthItems = computed(() => all.value.filter((a) => a.orp_month === month.
 const items = computed(() => (allMonths.value ? all.value : monthItems.value));
 const rowsById = computed(() => new Map((orp.value?.rows ?? []).map((r) => [r.application_id, r])));
 const incomplete = computed(() => new Set((orp.value?.rows ?? []).filter((r) => r.missing.length).map((r) => r.application_id)));
+// Ce qui reste à faire pour le mois (0.67.3) : compléter, puis déclarer dans Job-Room.
+const declareStatus = computed(() => {
+  if (incomplete.value.size) return `${plural(incomplete.value.size, "ligne", "lignes")} à compléter`;
+  const count = orp.value?.count ?? 0;
+  const left = orp.value?.to_declare ?? 0;
+  if (!count) return "aucune candidature";
+  return left ? `${left} à déclarer` : "tout est déclaré";
+});
 const firstIncomplete = computed(() => monthItems.value.find((a) => incomplete.value.has(a.id)) ?? null);
 const progress = computed(() => (orp.value?.target ? Math.min(1, orp.value.count / orp.value.target) : null));
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric" });
@@ -607,8 +615,8 @@ onUnmounted(() => assistant.setFocus(null));
         />
         <DisclosureRow
           class="orp-details"
-          title="Formulaire ORP du mois"
-          :value="incomplete.size ? `${plural(incomplete.size, 'ligne', 'lignes')} à compléter` : 'tableau, PDF, CSV, Job-Room'"
+          title="Déclaration Job-Room"
+          :value="declareStatus"
           group="suivi"
           data-test="orp-details"
         >
