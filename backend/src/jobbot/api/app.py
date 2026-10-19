@@ -101,8 +101,11 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
 
     # Ajouté avant le contexte de requête : celui-ci l'enveloppe et journalise aussi les refus.
     # À l'intérieur de la connexion : il sait si la requête vient de l'exploitant (docs/79).
-    app.add_middleware(MaintenanceMiddleware)
+    app.add_middleware(MaintenanceMiddleware, only="announced")
     app.add_middleware(AuthMiddleware)
+    # Avant la connexion, qui lit la base : une base pas encore à jour répond « maintenance »
+    # plutôt qu'une erreur (docs/81 §2).
+    app.add_middleware(MaintenanceMiddleware, only="update")
     app.add_middleware(RequestContextMiddleware)
     # Le plus à l'extérieur : ses en-têtes vont aussi sur les refus des autres.
     app.add_middleware(SecurityMiddleware)

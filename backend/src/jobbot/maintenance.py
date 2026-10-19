@@ -129,10 +129,12 @@ async def _refuse(send: Send, state: State) -> None:
 
 
 class MaintenanceMiddleware:
-    """Placé à l'intérieur de la connexion : il sait si la requête vient de l'exploitant."""
+    """Deux passages (docs/81 §2) : « base pas à jour » avant la connexion, qui lit elle-même la
+    base ; « maintenance annoncée » après, pour savoir si la requête vient de l'exploitant."""
 
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, only: Reason) -> None:
         self.app = app
+        self.only = only
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         path: str = scope.get("path", "")
@@ -141,6 +143,9 @@ class MaintenanceMiddleware:
             return
         app_state = scope["app"].state
         state, owner = await app_state.maintenance.state(app_state.runtime)
+        if state.reason != self.only:
+            await self.app(scope, receive, send)
+            return
         bypass = state.reason == "announced" and owner is not None and accounts.current() == owner
         reading = state.mode == "lecture" and scope.get("method", "GET") in SAFE_METHODS
         if state.active and not bypass and not reading:
@@ -151,7 +156,11 @@ class MaintenanceMiddleware:
 
 async def worker_paused(runtime: Runtime, account: int | None) -> bool:
     """Pendant une maintenance annoncée, les tâches de fond attendent (docs/80 §3) : sinon la
-    collecte ou la notation écriraient quand même. Une tâche lancée par l'exploitant passe."""
+    collecte ou la notation écriraient quand même. Une tâche lancée par l'exploitant passe.
+    Tant que la base n'est pas à jour, toutes attendent (docs/81 §2)."""
+    check = await check_database(runtime.engine)
+    if check.ok and not check.up_to_date:
+        return True
     async with runtime.sessionmaker() as session:
         if await announced(session) is None:
             return False

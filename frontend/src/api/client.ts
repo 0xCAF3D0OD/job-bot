@@ -26,6 +26,10 @@ export const DEMO_REFUSED_EVENT = "jobbot:demo-refused";
 export const MAINTENANCE_EVENT = "jobbot:maintenance";
 // Maintenance en lecture seule (docs/80) : une écriture refusée ; on consulte encore.
 export const MAINTENANCE_READ_EVENT = "jobbot:maintenance-read";
+// Une écriture que la page fait d'elle-même, sans clic (la visite des Actualités…) : refusée
+// pendant une maintenance en lecture seule, elle est abandonnée sans message (docs/81 §2).
+export const BACKGROUND_HEADER = "X-Jobbot-Background";
+export const BACKGROUND = { headers: { [BACKGROUND_HEADER]: "1" } };
 
 function maintenance(message: string | null = null): void {
   globalThis.dispatchEvent?.(new CustomEvent(MAINTENANCE_EVENT, { detail: message }));
@@ -46,6 +50,7 @@ api.use({
         | { maintenance?: boolean; mode?: string; message?: string | null }
         | null;
       if (body?.maintenance && body.mode === "lecture") {
+        if (request.headers.get(BACKGROUND_HEADER)) return response;
         globalThis.dispatchEvent?.(new CustomEvent(MAINTENANCE_READ_EVENT, { detail: body.message ?? null }));
       } else if (response.status !== 503 || !body || body.maintenance) {
         // Un 503 de l'API sans « maintenance » (IA indisponible…) reste une erreur de la page.

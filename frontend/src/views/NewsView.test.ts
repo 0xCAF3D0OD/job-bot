@@ -10,6 +10,7 @@ const GET = vi.fn();
 const POST = vi.fn();
 const PUT = vi.fn();
 vi.mock("../api/client", () => ({
+  BACKGROUND: { headers: { "X-Jobbot-Background": "1" } },
   api: {
     GET: (...a: unknown[]) => GET(...a),
     POST: (...a: unknown[]) => POST(...a),
@@ -141,7 +142,8 @@ describe("NewsView", () => {
     expect(cards[0]!.find("img").exists()).toBe(false);
     expect(wrapper.find("[data-test=tab-articles]").text()).toContain("3");
     expect(wrapper.find("[data-test=tab-economy]").text()).toContain("1");
-    expect(POST).toHaveBeenCalledWith("/api/news/seen");
+    // Une écriture de la page elle-même : sans message pendant une maintenance (docs/81 §2).
+    expect(POST).toHaveBeenCalledWith("/api/news/seen", { headers: { "X-Jobbot-Background": "1" } });
     expect(wrapper.text()).toContain("Relevé il y a 2 h");
   });
 
@@ -229,14 +231,14 @@ describe("NewsView", () => {
     me.value = { demo: true };
     mockApi(pageOf([item(1, "articles")], { new_articles: 3 }));
     await mountView();
-    expect(POST).not.toHaveBeenCalledWith("/api/news/seen");
+    expect(POST).not.toHaveBeenCalledWith("/api/news/seen", expect.anything());
   });
 
   it("sans connexion : lecture seule, rien n'est enregistré", async () => {
     loggedIn.value = false;
     mockApi(pageOf([item(1, "articles")], { new_articles: 3 }));
     const { wrapper } = await mountView();
-    expect(POST).not.toHaveBeenCalledWith("/api/news/seen");
+    expect(POST).not.toHaveBeenCalledWith("/api/news/seen", expect.anything());
     await wrapper.find("[data-test=filter-domain]").trigger("click");
     await flushPromises();
     expect(PUT).not.toHaveBeenCalled();

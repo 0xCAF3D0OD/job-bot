@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
-import { api, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
+import { api, BACKGROUND, type NewsItem, type NewsPage, type NewsPreferences } from "../api/client";
 import DomainField from "../components/DomainField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
@@ -134,7 +134,9 @@ async function load(): Promise<void> {
     // La visite remet les compteurs à zéro (pour la prochaine fois).
     // Sans connexion, rien n'est enregistré (docs/18 §1) ; dans la démo non plus : la visite
     // n'y déclenche pas le message « rien n'est enregistré » (docs/72).
-    if (loggedIn.value && !me.value?.demo) await api.POST("/api/news/seen");
+    // Pendant une maintenance en lecture seule, la visite n'est pas notée, sans message
+    // (docs/81 §2).
+    if (loggedIn.value && !me.value?.demo) await api.POST("/api/news/seen", BACKGROUND);
     reset();
   }
   loaded.value = true;

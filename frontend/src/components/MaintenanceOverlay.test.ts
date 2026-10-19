@@ -48,6 +48,7 @@ describe("page de maintenance (docs/79)", () => {
     const wrapper = mount(Host, { attachTo: "#app" });
     await flushPromises();
     await wrapper.find("[data-test=draft]").setValue("Ma lettre à moitié écrite");
+    (wrapper.find("[data-test=draft]").element as HTMLTextAreaElement).focus();
 
     window.dispatchEvent(new CustomEvent(MAINTENANCE_EVENT, { detail: null }));
     await flushPromises();
@@ -64,6 +65,8 @@ describe("page de maintenance (docs/79)", () => {
     expect(document.querySelector("[data-test=maintenance]")).toBeNull();
     expect(document.getElementById("app")?.hasAttribute("inert")).toBe(false);
     expect((wrapper.find("[data-test=draft]").element as HTMLTextAreaElement).value).toBe("Ma lettre à moitié écrite");
+    // Le curseur revient dans la lettre (docs/81 §2).
+    expect(document.activeElement).toBe(wrapper.find("[data-test=draft]").element);
     expect(fetch).toHaveBeenCalledTimes(2);
     wrapper.unmount();
   });

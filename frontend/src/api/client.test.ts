@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { api, DEMO_REFUSED_EVENT, MAINTENANCE_EVENT, MAINTENANCE_READ_EVENT, PROFILE_HEADER, PROFILE_KEY, UNAUTHORIZED_EVENT } from "./client";
+import { api, BACKGROUND, DEMO_REFUSED_EVENT, MAINTENANCE_EVENT, MAINTENANCE_READ_EVENT, PROFILE_HEADER, PROFILE_KEY, UNAUTHORIZED_EVENT } from "./client";
 
 afterEach(() => {
   localStorage.clear();
@@ -90,5 +90,18 @@ describe("maintenance en lecture seule (docs/80)", () => {
     window.removeEventListener(MAINTENANCE_READ_EVENT, listener);
     expect(read).toEqual(["Sauvegarde"]);
     expect(waiting).not.toHaveBeenCalled();
+  });
+});
+
+describe("écriture de la page elle-même (docs/81)", () => {
+  it("refusée par une maintenance en lecture seule, elle est abandonnée sans message", async () => {
+    const read = vi.fn();
+    window.addEventListener(MAINTENANCE_READ_EVENT, read);
+    const refusal = { detail: "…", maintenance: true, mode: "lecture", message: null };
+    await api.POST("/api/news/seen", { ...BACKGROUND, ...respond(503, refusal) });
+    expect(read).not.toHaveBeenCalled();
+    await api.POST("/api/news/seen", respond(503, refusal));
+    expect(read).toHaveBeenCalledTimes(1);
+    window.removeEventListener(MAINTENANCE_READ_EVENT, read);
   });
 });

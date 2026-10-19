@@ -170,3 +170,30 @@ async def test_background_tasks_wait_except_the_owners(
     async with runtime.sessionmaker.begin() as session:
         await maintenance.lift(session)
     assert not await maintenance.worker_paused(runtime, None)
+
+
+async def test_outdated_database_answers_before_the_login(
+    runtime: Runtime, guest: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Base pas à jour : la réponse « maintenance » vient avant la connexion, qui lit elle-même
+    la base ; et les tâches de fond attendent toutes (docs/81 §2)."""
+
+    async def broken(*_args: object) -> None:
+        raise RuntimeError("une session lue sur une base pas encore à jour")
+
+    async for api in secured_client():
+        login = await api.post("/api/auth/login", json={"username": GUEST, "password": PASSWORD})
+        assert login.status_code == 204
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("UPDATE alembic_version SET version_num = '0001'"))
+        try:
+            monkeypatch.setattr("jobbot.accounts.account_of_session", broken)
+            waiting = await api.get("/api/applications")
+            assert waiting.status_code == 503 and waiting.json()["reason"] == "update"
+            assert await maintenance.worker_paused(runtime, None)
+        finally:
+            async with admin_engine().begin() as conn:
+                await conn.execute(
+                    text("UPDATE alembic_version SET version_num = :h"), {"h": head_revision()}
+                )
+    assert not await maintenance.worker_paused(runtime, None)
