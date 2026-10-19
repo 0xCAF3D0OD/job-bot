@@ -29,6 +29,7 @@ from jobbot.db.models import (
 )
 from jobbot.letters.service import load_identity
 from jobbot.notify import interviews as interview_reminders
+from jobbot.orp import meeting as orp_meeting
 from jobbot.orp.service import load_due_day
 from jobbot.runtime import Runtime
 from jobbot.worker.tasks.collect import COLLECT_JOB
@@ -110,6 +111,8 @@ class TodayOut(BaseModel):
     # Les 7 derniers jours (le plus ancien d'abord) et les 3 mois précédents (docs/54).
     week: list[DayActivity] = []
     orp_history: list[MonthResult] = []
+    # Rendez-vous ORP aujourd'hui ou demain : la feuille est prête (docs/83).
+    orp_meeting_at: datetime | None = None
 
 
 class OnboardingIn(BaseModel):
@@ -334,6 +337,12 @@ async def get_today(request: Request) -> TodayOut:
         if previous_count and (previous_record is None or not previous_record.submitted_at)
         else None
     )
+    async with runtime.sessionmaker() as session:
+        meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
+    soon = meeting is not None and (
+        meeting.starts_at.astimezone(LOCAL_TZ).date()
+        - datetime.now(UTC).astimezone(LOCAL_TZ).date()
+    ) <= timedelta(days=1)
     return TodayOut(
         checklist=checklist,
         checklist_dismissed=bool(values.get("onboarding_dismissed")),
@@ -353,6 +362,7 @@ async def get_today(request: Request) -> TodayOut:
         upcoming_interviews=upcoming_interviews,
         week=week,
         orp_history=orp_history,
+        orp_meeting_at=meeting.starts_at if meeting is not None and soon else None,
     )
 
 

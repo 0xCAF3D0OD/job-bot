@@ -1727,6 +1727,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orp-meeting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Orp Meeting */
+        get: operations["getOrpMeeting"];
+        /**
+         * Save Orp Meeting
+         * @description La date du prochain rendez-vous (créé s'il n'y en a pas).
+         */
+        put: operations["saveOrpMeeting"];
+        post?: never;
+        /** Delete Orp Meeting */
+        delete: operations["deleteOrpMeeting"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orp-meeting/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Orp Meeting Questions */
+        put: operations["saveOrpMeetingQuestions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orp-meeting/feuille.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Orp Meeting Sheet
+         * @description La feuille sur une page A4 ; ton nom seulement si tu le donnes (`name`).
+         */
+        get: operations["getOrpMeetingSheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/today": {
         parameters: {
             query?: never;
@@ -4430,6 +4489,37 @@ export interface components {
             /** Demo Url */
             demo_url?: string | null;
         };
+        /** MeetingIn */
+        MeetingIn: {
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Place */
+            place?: string | null;
+            /** Advisor */
+            advisor?: string | null;
+        };
+        /** MeetingOut */
+        MeetingOut: {
+            /** Id */
+            id: number;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Place */
+            place: string | null;
+            /** Advisor */
+            advisor: string | null;
+        };
+        /** MeetingPage */
+        MeetingPage: {
+            meeting: components["schemas"]["MeetingOut"] | null;
+            preparation: components["schemas"]["PreparationOut"];
+        };
         /** MessageIn */
         MessageIn: {
             /** Offer Id */
@@ -4455,6 +4545,17 @@ export interface components {
             text: string;
             /** Limit */
             limit: number | null;
+        };
+        /** MissingOut */
+        MissingOut: {
+            /** Skill */
+            skill: string;
+            /** Count */
+            count: number;
+            /** Training Id */
+            training_id: number | null;
+            /** Training Title */
+            training_title: string | null;
         };
         /**
          * MonthResult
@@ -4681,6 +4782,15 @@ export interface components {
             personal: boolean;
             /** Topic */
             topic?: string | null;
+        };
+        /** ObligationOut */
+        ObligationOut: {
+            /** Text */
+            text: string;
+            /** Due */
+            due: string | null;
+            /** Done */
+            done: boolean;
         };
         /** OfferAddressIn */
         OfferAddressIn: {
@@ -5218,6 +5328,23 @@ export interface components {
              */
             skipped: boolean;
         };
+        /** PreparationOut */
+        PreparationOut: {
+            /** Summaries */
+            summaries: string[];
+            /** Works */
+            works: string | null;
+            /** Blockers */
+            blockers: string[];
+            /** Missing */
+            missing: components["schemas"]["MissingOut"][];
+            /** Offers */
+            offers: number;
+            /** Questions */
+            questions: components["schemas"]["QuestionIO"][];
+            /** Obligations */
+            obligations: components["schemas"]["ObligationOut"][];
+        };
         /** PrepareItem */
         PrepareItem: {
             /** Text */
@@ -5311,6 +5438,18 @@ export interface components {
             /** Occupation */
             occupation?: string | null;
         };
+        /** QuestionIO */
+        QuestionIO: {
+            /** Key */
+            key: string;
+            /** Text */
+            text: string;
+            /**
+             * Checked
+             * @default false
+             */
+            checked: boolean;
+        };
         /** QuestionStatOut */
         QuestionStatOut: {
             /** Text */
@@ -5319,6 +5458,11 @@ export interface components {
             count: number;
             /** Difficult */
             difficult: number;
+        };
+        /** QuestionsIn */
+        QuestionsIn: {
+            /** Questions */
+            questions: components["schemas"]["QuestionIO"][];
         };
         /** RegistryCandidate */
         RegistryCandidate: {
@@ -5884,6 +6028,8 @@ export interface components {
              * @default []
              */
             orp_history: components["schemas"]["MonthResult"][];
+            /** Orp Meeting At */
+            orp_meeting_at?: string | null;
         };
         /** TokenCreated */
         TokenCreated: {
@@ -9796,6 +9942,150 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOrpMeeting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingPage"];
+                };
+            };
+        };
+    };
+    saveOrpMeeting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteOrpMeeting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingPage"];
+                };
+            };
+        };
+    };
+    saveOrpMeetingQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingPage"];
+                };
+            };
+            /** @description Pas de rendez-vous prévu */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOrpMeetingSheet: {
+        parameters: {
+            query?: {
+                name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
             };
             /** @description Validation Error */
             422: {

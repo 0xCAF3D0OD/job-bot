@@ -4667,6 +4667,176 @@
         }
       }
     },
+    "/api/orp-meeting": {
+      "get": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Get Orp Meeting",
+        "operationId": "getOrpMeeting",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingPage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Save Orp Meeting",
+        "description": "La date du prochain rendez-vous (créé s'il n'y en a pas).",
+        "operationId": "saveOrpMeeting",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetingIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Delete Orp Meeting",
+        "operationId": "deleteOrpMeeting",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orp-meeting/questions": {
+      "put": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Save Orp Meeting Questions",
+        "operationId": "saveOrpMeetingQuestions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingPage"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Pas de rendez-vous prévu"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orp-meeting/feuille.pdf": {
+      "get": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Get Orp Meeting Sheet",
+        "description": "La feuille sur une page A4 ; ton nom seulement si tu le donnes (`name`).",
+        "operationId": "getOrpMeetingSheet",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/today": {
       "get": {
         "tags": [
@@ -13003,6 +13173,110 @@
         ],
         "title": "Me"
       },
+      "MeetingIn": {
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "advisor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "starts_at"
+        ],
+        "title": "MeetingIn"
+      },
+      "MeetingOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "advisor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Advisor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "starts_at",
+          "place",
+          "advisor"
+        ],
+        "title": "MeetingOut"
+      },
+      "MeetingPage": {
+        "properties": {
+          "meeting": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeetingOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preparation": {
+            "$ref": "#/components/schemas/PreparationOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meeting",
+          "preparation"
+        ],
+        "title": "MeetingPage"
+      },
       "MessageIn": {
         "properties": {
           "offer_id": {
@@ -13077,6 +13351,48 @@
           "limit"
         ],
         "title": "MessageOut"
+      },
+      "MissingOut": {
+        "properties": {
+          "skill": {
+            "type": "string",
+            "title": "Skill"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "training_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Id"
+          },
+          "training_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill",
+          "count",
+          "training_id",
+          "training_title"
+        ],
+        "title": "MissingOut"
       },
       "MonthResult": {
         "properties": {
@@ -13776,6 +14092,37 @@
           "server"
         ],
         "title": "NotificationsStatus"
+      },
+      "ObligationOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "due": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "due",
+          "done"
+        ],
+        "title": "ObligationOut"
       },
       "OfferAddressIn": {
         "properties": {
@@ -15374,6 +15721,71 @@
         ],
         "title": "PracticeTurn"
       },
+      "PreparationOut": {
+        "properties": {
+          "summaries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Summaries"
+          },
+          "works": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Works"
+          },
+          "blockers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Blockers"
+          },
+          "missing": {
+            "items": {
+              "$ref": "#/components/schemas/MissingOut"
+            },
+            "type": "array",
+            "title": "Missing"
+          },
+          "offers": {
+            "type": "integer",
+            "title": "Offers"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionIO"
+            },
+            "type": "array",
+            "title": "Questions"
+          },
+          "obligations": {
+            "items": {
+              "$ref": "#/components/schemas/ObligationOut"
+            },
+            "type": "array",
+            "title": "Obligations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "summaries",
+          "works",
+          "blockers",
+          "missing",
+          "offers",
+          "questions",
+          "obligations"
+        ],
+        "title": "PreparationOut"
+      },
       "PrepareItem": {
         "properties": {
           "text": {
@@ -15671,6 +16083,31 @@
         "type": "object",
         "title": "ProfileUpdate"
       },
+      "QuestionIO": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "maxLength": 80,
+            "title": "Key"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Text"
+          },
+          "checked": {
+            "type": "boolean",
+            "title": "Checked",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "text"
+        ],
+        "title": "QuestionIO"
+      },
       "QuestionStatOut": {
         "properties": {
           "text": {
@@ -15693,6 +16130,23 @@
           "difficult"
         ],
         "title": "QuestionStatOut"
+      },
+      "QuestionsIn": {
+        "properties": {
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionIO"
+            },
+            "type": "array",
+            "maxItems": 40,
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "questions"
+        ],
+        "title": "QuestionsIn"
       },
       "RegistryCandidate": {
         "properties": {
@@ -17298,6 +17752,18 @@
             "type": "array",
             "title": "Orp History",
             "default": []
+          },
+          "orp_meeting_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orp Meeting At"
           }
         },
         "type": "object",

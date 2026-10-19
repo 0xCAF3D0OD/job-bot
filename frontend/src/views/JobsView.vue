@@ -5,13 +5,22 @@ import { useRoute } from "vue-router";
 import { api } from "../api/client";
 import type { JobsTab } from "../router";
 
-// Rubrique Candidatures (docs/19 §2, docs/42) : quatre onglets toujours visibles sous le titre.
+// Rubrique Candidatures (docs/19 §2, docs/42, docs/83) : cinq onglets toujours visibles sous le titre.
 const route = useRoute();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
-const counts = ref({ offres: 0, suivi: 0, alertes: 0, bilan: 0 });
+const counts = ref({ offres: 0, suivi: 0, alertes: 0, bilan: 0, "rendez-vous": 0 });
 
 // `short` : le titre sur téléphone, sur une ligne (docs/36 §2).
-const TABS: { key: JobsTab; label: string; path: string; title: string; short: string; hint: string }[] = [
+// `tabShort` : l'onglet sur téléphone, quand son nom ne tient pas avec les autres.
+const TABS: {
+  key: JobsTab;
+  label: string;
+  tabShort?: string;
+  path: string;
+  title: string;
+  short: string;
+  hint: string;
+}[] = [
   { key: "offres", label: "Offres", path: "/candidatures/offres", title: "Les offres pour toi", short: "Les offres pour toi", hint: "à examiner" },
   {
     key: "suivi",
@@ -37,6 +46,15 @@ const TABS: { key: JobsTab; label: string; path: string; title: string; short: s
     short: "Ton bilan",
     hint: "",
   },
+  {
+    key: "rendez-vous",
+    label: "Rendez-vous",
+    tabShort: "RDV",
+    path: "/candidatures/rendez-vous-orp",
+    title: "Ton rendez-vous ORP",
+    short: "Rendez-vous ORP",
+    hint: "",
+  },
 ];
 const current = computed(() => TABS.find((t) => t.key === tab.value) ?? TABS[0]!);
 
@@ -57,6 +75,7 @@ async function refresh(): Promise<void> {
     suivi: (today.data?.to_follow_up ?? 0) + (orp.data?.incomplete ?? 0),
     alertes: today.data?.alerts_waiting ?? 0,
     bilan: 0,
+    "rendez-vous": 0,
   };
 }
 
@@ -86,7 +105,16 @@ onMounted(() => void refresh());
         :aria-current="tab === item.key ? 'page' : undefined"
         :data-test="`jobs-tab-${item.key}`"
       >
-        {{ item.label }}
+        <span
+          v-if="item.tabShort"
+          class="label-long"
+        >{{ item.label }}</span>
+        <span
+          v-if="item.tabShort"
+          class="label-short"
+          :aria-label="item.label"
+        >{{ item.tabShort }}</span>
+        {{ item.tabShort ? "" : item.label }}
         <span
           v-if="badge(item.key)"
           class="tab-count"

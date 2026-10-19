@@ -40,6 +40,7 @@ PERSONAL = (
     "offer_links",
     "offer_sightings",
     "offers",
+    "orp_meetings",
     "orp_months",
     "profile_chunks",
     "profile_sources",
