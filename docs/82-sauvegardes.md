@@ -104,3 +104,12 @@ Je te donnerai les commandes exactes.
   - la base d'essai est bien effacée à chaque fois ;
   - captures de Réglages › Plateforme.
 - **Tests** : 508 côté serveur, dont 8 nouveaux (`test_backup.py`, et `~` dans le dossier développé en dossier personnel), et 297 côté interface, dont 1 nouveau.
+
+## Complément 0.66.1 : restaurer par le seul nom
+
+À la première utilisation, `jobbot restore jobA1-….jobA1backup --essai` répondait « Fichier introuvable ». La commande cherchait le fichier dans le dossier courant, alors que `jobbot backup --list` n'affiche que les noms. Désormais :
+- un nom seul est cherché dans le dossier des sauvegardes ;
+- `--list` affiche aussi le dossier ;
+- le message d'un fichier introuvable dit où il a cherché.
+
+Test ajouté.

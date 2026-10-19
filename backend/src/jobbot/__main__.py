@@ -259,6 +259,8 @@ def cmd_backup(args: argparse.Namespace) -> int:
         present = backup.saved(settings)
         if not present:
             print(f"Aucune sauvegarde dans {settings.backup_path}.")
+        else:
+            print(f"Dans {settings.backup_path} :")
         for item in present:
             print(f"{item.path.name}  {_size(item.size)}")
         return 0
@@ -293,7 +295,15 @@ def cmd_restore(args: argparse.Namespace) -> int:
     settings = _settings()
     path = Path(args.file).expanduser()
     if not path.is_file():
-        print(f"Fichier introuvable : {path}.", file=sys.stderr)
+        # Le seul nom, tel que `jobbot backup --list` l'affiche : cherché dans le dossier des
+        # sauvegardes (docs/82, 0.66.1).
+        path = settings.backup_path / args.file
+    if not path.is_file():
+        print(
+            f"Fichier introuvable : {args.file}, ni ici ni dans {settings.backup_path}. "
+            "« jobbot backup --list » donne les noms.",
+            file=sys.stderr,
+        )
         return 1
 
     async def with_runtime(work: object) -> object:
@@ -498,7 +508,9 @@ def main(argv: list[str] | None = None) -> int:
     save.add_argument("--list", action="store_true", help="les sauvegardes présentes")
     save.set_defaults(func=cmd_backup)
     back = sub.add_parser("restore", help="essaie ou restaure une sauvegarde (docs/82)")
-    back.add_argument("file", help="le fichier .jobA1backup")
+    back.add_argument(
+        "file", help="le fichier .jobA1backup, ou son seul nom (dossier des sauvegardes)"
+    )
     back.add_argument(
         "--essai", action="store_true", help="dans une base à part, sans rien toucher"
     )

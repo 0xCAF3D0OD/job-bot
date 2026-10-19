@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/82-sauvegardes.md](docs/82-sauvegardes.md) (0.66.0)
+- Version en cours : [docs/82-sauvegardes.md](docs/82-sauvegardes.md) (0.66.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -114,7 +114,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.65.0 | La page de maintenance : par-dessus l'écran pendant une mise à jour, `jobbot maintenance on/off`, `make update` | livrée |
 | 0.65.1 | Maintenance en lecture seule (`--lecture`), tâches de fond en pause, le dessin unDraw animé sur la page d'attente | livrée |
 | 0.65.2 | Revue : Actualités sans message pendant une maintenance en lecture seule, curseur retrouvé après la page d'attente, base pas à jour avant la connexion, worker en pause ; documentation à jour | livrée |
-| 0.66.0 | Les sauvegardes automatiques : chaque nuit, chiffrées, gardées 7 jours, 4 semaines et 6 mois, essayées chaque dimanche ; `jobbot backup`, `jobbot restore` | en cours |
+| 0.66.0 | Les sauvegardes automatiques : chaque nuit, chiffrées, gardées 7 jours, 4 semaines et 6 mois, essayées chaque dimanche ; `jobbot backup`, `jobbot restore` | livrée |
+| 0.66.1 | `jobbot restore` trouve une sauvegarde par son seul nom | en cours |
 
 ## Lancer en local
 
