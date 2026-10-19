@@ -85,3 +85,14 @@ def test_three_database_accesses(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("JOBBOT_MIGRATE_DATABASE_URL", "postgresql://db/jobbot")
     with pytest.raises(ConfigError, match="JOBBOT_MIGRATE_DATABASE_URL : doit commencer"):
         load_settings()
+
+
+def test_backup_folder_in_the_home(monkeypatch: pytest.MonkeyPatch) -> None:
+    """« ~ » dans le dossier des sauvegardes (docs/82) : le dossier personnel."""
+    monkeypatch.setenv("JOBBOT_DATABASE_URL", "postgresql+psycopg://localhost/jobbot")
+    monkeypatch.setenv("JOBBOT_BACKUP_PATH", "~/Library/Mobile Documents/com~apple~CloudDocs/jobA1")
+    settings = load_settings()
+    assert (
+        settings.backup_path == Path.home() / "Library/Mobile Documents/com~apple~CloudDocs/jobA1"
+    )
+    assert not settings.backup_configured

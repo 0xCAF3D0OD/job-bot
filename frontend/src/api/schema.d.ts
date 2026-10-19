@@ -3071,6 +3071,32 @@ export interface components {
             /** Model */
             model: string;
         };
+        /**
+         * BackupOut
+         * @description Les sauvegardes (docs/82) : réglées ou non, la dernière, le dernier essai.
+         */
+        BackupOut: {
+            /** Configured */
+            configured: boolean;
+            /** Folder */
+            folder: string;
+            /** Count */
+            count: number;
+            /** Last At */
+            last_at: string | null;
+            /** Last Size */
+            last_size: number | null;
+            /** Last Error */
+            last_error: string | null;
+            /** Test At */
+            test_at: string | null;
+            /** Test Ok */
+            test_ok: boolean | null;
+            /** Test Error */
+            test_error: string | null;
+            /** Late */
+            late: boolean;
+        };
         /** Body_uploadDocument */
         Body_uploadDocument: {
             /** File */
@@ -5048,6 +5074,7 @@ export interface components {
              * @default false
              */
             database_admin: boolean;
+            backup?: components["schemas"]["BackupOut"] | null;
         };
         /** PlatformSettingsIn */
         PlatformSettingsIn: {

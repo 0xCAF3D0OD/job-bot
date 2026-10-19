@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select, text, update
 
-from jobbot import accounts, platform
+from jobbot import accounts, backup, platform
 from jobbot.api.owner import require_owner
 from jobbot.auth import links
 from jobbot.auth.service import end_all_sessions
@@ -50,6 +50,22 @@ class InvitationOut(BaseModel):
     expires_at: datetime
 
 
+class BackupOut(BaseModel):
+    """Les sauvegardes (docs/82) : réglées ou non, la dernière, le dernier essai."""
+
+    configured: bool
+    folder: str
+    count: int
+    last_at: datetime | None
+    last_size: int | None
+    last_error: str | None
+    test_at: datetime | None
+    test_ok: bool | None
+    test_error: str | None
+    # Dernière réussie il y a plus de 36 heures, ou dernière en échec : en rouge.
+    late: bool
+
+
 class PlatformOut(BaseModel):
     accounts: list[AccountOut]
     invitations: list[InvitationOut]
@@ -58,6 +74,7 @@ class PlatformOut(BaseModel):
     auth_enabled: bool
     # L'API se connecte à la base en administrateur (docs/78 §3.1) : à corriger dans les réglages.
     database_admin: bool = False
+    backup: BackupOut | None = None
 
 
 class LinkCreated(BaseModel):
@@ -114,6 +131,7 @@ async def get_platform(request: Request) -> PlatformOut:
         total = await platform.total_ai_budget(session)
         spend = await session.scalar(select(func.platform_month_spend(start))) or 0
         database_admin = await connected_as_admin(session)
+        saved_status = await platform.get(session, backup.STATUS_KEY, {})
     return PlatformOut(
         accounts=[
             AccountOut(
@@ -146,6 +164,31 @@ async def get_platform(request: Request) -> PlatformOut:
         ai_month_spend_chf=Decimal(str(spend)).quantize(Decimal("0.01")),
         auth_enabled=runtime.settings.auth_enabled,
         database_admin=database_admin,
+        backup=_backup(runtime, saved_status if isinstance(saved_status, dict) else {}),
+    )
+
+
+def _backup(runtime: Runtime, status: dict[str, object]) -> BackupOut:
+    settings = runtime.settings
+
+    def when(key: str) -> datetime | None:
+        value = status.get(key)
+        return datetime.fromisoformat(value) if isinstance(value, str) else None
+
+    size = status.get("last_size")
+    ok = status.get("test_ok")
+    error, test_error = status.get("last_error"), status.get("test_error")
+    return BackupOut(
+        configured=settings.backup_configured,
+        folder=str(settings.backup_path),
+        count=len(backup.saved(settings)),
+        last_at=when("last_at"),
+        last_size=size if isinstance(size, int) else None,
+        last_error=error if isinstance(error, str) else None,
+        test_at=when("test_at"),
+        test_ok=ok if isinstance(ok, bool) else None,
+        test_error=test_error if isinstance(test_error, str) else None,
+        late=settings.backup_configured and backup.late(status, datetime.now(UTC)),
     )
 
 

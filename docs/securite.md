@@ -22,11 +22,13 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 - **Ce qui part à l'IA** (Anthropic, aux États-Unis) : le texte des offres, le profil (blocs du CV), les réponses d'entraînement ; **jamais** les noms des contacts ni les coordonnées de la personne. Chaque appel est journalisé et compté dans un plafond mensuel.
 - **Ce qui part ailleurs** : seulement les adresses listées dans `docs/exploitation.md`, « Accès sortants ». Le serveur ne va jamais chercher une adresse interne (localhost, réseau privé).
 - **Combien de temps** : tant que le compte existe, sauf les discussions avec l'assistant (30 jours) et les notifications (90 jours). Un invité **exporte** toutes ses données (Réglages › Compte, archive ZIP) et **supprime** son compte avec son mot de passe : ses lignes et son dossier sont effacés.
+- **Les sauvegardes** (depuis 0.66, docs/82) : chaque nuit, la base et les fichiers, chiffrés, dans le dossier choisi par l'exploitant ; gardées 6 mois au plus, puis effacées. Un compte supprimé y reste jusqu'à 6 mois : la page « Confidentialité » le dit.
 - **La démo** n'a que des données fictives, remises à neuf chaque nuit, en lecture seule.
 
 ## 3. Les secrets
 
 - Les secrets (mot de passe de la base, clé de l'IA, boîte e-mail, sujet ntfy) ne vivent que dans le fichier `.env` du serveur ou dans des fichiers `_FILE`. **Jamais** dans git, ni dans un journal, ni dans une capture d'écran partagée.
+- **La phrase des sauvegardes** (`JOBBOT_BACKUP_PASSPHRASE`) : aussi gardée hors de l'ordinateur (gestionnaire de mots de passe, papier) ; sans elle, les sauvegardes sont illisibles. La changer ne rechiffre pas les anciennes sauvegardes : elles restent lisibles avec l'ancienne.
 - La base ne garde des mots de passe et des jetons (sessions, invitations, extension, agenda) que leur **empreinte** : scrypt pour les mots de passe, SHA-256 pour les jetons.
 - **Quand changer un secret** :
   - au départ d'une personne qui y avait accès ;
@@ -51,13 +53,14 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 
 Un compte qui agit de façon étrange, un secret qui a fuité, une faille signalée : dans l'ordre.
 
-1. **Suspendre** le compte touché (« La plateforme », menu du compte, « Suspendre »).
+1. **Suspendre** le compte touché (Réglages › Plateforme, menu du compte, « Suspendre »).
 2. **Se déconnecter partout** sur les comptes concernés ; la suspension révoque déjà leurs jetons d'extension et d'agenda.
 3. **Changer les secrets** touchés : mot de passe de la base, clé de l'IA (sur la console d'Anthropic), mot de passe d'application de la boîte, sujet ntfy.
 4. **Garder les journaux** du serveur tels quels (`docker compose logs`, journal de l'API), avant tout redémarrage qui les effacerait.
 5. **Prévenir les personnes concernées** : ce qui s'est passé, quelles données, ce qui est fait.
 6. Si leurs données sont **probablement en danger** (fuite, accès d'un tiers), **annoncer l'incident au PFPDT** (Préposé fédéral à la protection des données et à la transparence) dès que possible (nLPD, art. 24), par son formulaire en ligne.
-7. Corriger, puis noter l'incident et sa correction dans une PR (sans données personnelles).
+7. Si des données ont été abîmées ou effacées : `jobbot restore <sauvegarde> --essai`, puis `jobbot restore <sauvegarde>` (docs/82).
+8. Corriger, puis noter l'incident et sa correction dans une PR (sans données personnelles).
 
 ## 6. Les contrôles réguliers
 

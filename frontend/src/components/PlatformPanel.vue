@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import { api, type AccountOut, type PlatformOut } from "../api/client";
-import { formatDate, plural } from "../format";
+import { formatDate, plural, since } from "../format";
 import CopyLabel from "./CopyLabel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
@@ -138,6 +138,13 @@ onMounted(async () => {
   await load();
   await loadMentions();
 });
+
+// Taille d'une sauvegarde (docs/82) : en Mo, ou en Ko sous le Mo.
+function size(bytes: number | null | undefined): string {
+  if (!bytes) return "taille inconnue";
+  if (bytes < 1_000_000) return `${Math.max(1, Math.round(bytes / 1000))} Ko`;
+  return `${(bytes / 1_000_000).toLocaleString("fr-CH", { maximumFractionDigits: 1 })} Mo`;
+}
 </script>
 
 <template>
@@ -280,6 +287,52 @@ onMounted(async () => {
             </button>
           </li>
         </ul>
+      </fieldset>
+    </div>
+    <div
+      v-if="platform.backup"
+      class="form-card settings-next-card"
+      data-test="platform-backup"
+    >
+      <fieldset>
+        <legend>Sauvegardes</legend>
+        <p
+          v-if="!platform.backup.configured"
+          class="notice error"
+          data-test="backup-not-configured"
+        >
+          Les sauvegardes ne sont pas réglées : écris une phrase secrète dans le fichier <code>.env</code>
+          (<code>JOBBOT_BACKUP_PASSPHRASE</code>), puis redémarre la plateforme. Voir <code>docs/82-sauvegardes.md</code>.
+        </p>
+        <template v-else>
+          <p
+            v-if="platform.backup.late"
+            class="notice error"
+            role="alert"
+            data-test="backup-late"
+          >
+            {{ platform.backup.last_error
+              ? `La dernière sauvegarde a échoué : ${platform.backup.last_error}.`
+              : "Aucune sauvegarde depuis plus de 36 heures." }}
+          </p>
+          <p data-test="backup-last">
+            {{ platform.backup.last_at
+              ? `Dernière sauvegarde ${since(platform.backup.last_at)}, ${size(platform.backup.last_size)}.`
+              : "Pas encore de sauvegarde : la première se fait dans l'heure." }}
+            {{ plural(platform.backup.count, "sauvegarde gardée", "sauvegardes gardées") }} dans
+            <code>{{ platform.backup.folder }}</code>.
+          </p>
+          <p
+            class="hint"
+            data-test="backup-test"
+          >
+            {{ platform.backup.test_at
+              ? platform.backup.test_ok
+                ? `Dernier essai de restauration ${since(platform.backup.test_at)} : réussi.`
+                : `Dernier essai de restauration ${since(platform.backup.test_at)} : échec (${platform.backup.test_error}).`
+              : "Pas encore d'essai de restauration : il se fait chaque dimanche." }}
+          </p>
+        </template>
       </fieldset>
     </div>
     <form

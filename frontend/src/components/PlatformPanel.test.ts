@@ -36,6 +36,18 @@ const PLATFORM = {
   ai_month_spend_chf: "0.80",
   auth_enabled: true,
   database_admin: false,
+  backup: {
+    configured: true,
+    folder: "/Users/x/iCloud/jobA1",
+    count: 3,
+    last_at: new Date(Date.now() - 5 * 3600_000).toISOString(),
+    last_size: 42_000_000,
+    last_error: null,
+    test_at: null,
+    test_ok: null,
+    test_error: null,
+    late: false,
+  },
 };
 
 describe("Plateforme (docs/65 §5)", () => {
@@ -61,6 +73,25 @@ describe("Plateforme (docs/65 §5)", () => {
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     expect(wrapper.find("[data-test=platform-database-admin]").text()).toContain("jobbot_app");
+  });
+
+  it("les sauvegardes : la dernière, l'essai, et ce qui ne va pas (docs/82)", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    const fine = mount(PlatformPanel);
+    await flushPromises();
+    expect(fine.find("[data-test=backup-last]").text()).toContain("il y a 5 h, 42 Mo");
+    expect(fine.find("[data-test=backup-last]").text()).toContain("3 sauvegardes gardées");
+    expect(fine.find("[data-test=backup-late]").exists()).toBe(false);
+    GET.mockResolvedValue({
+      data: { ...PLATFORM, backup: { ...PLATFORM.backup, late: true, last_error: "pg_dump introuvable" } },
+    });
+    const late = mount(PlatformPanel);
+    await flushPromises();
+    expect(late.find("[data-test=backup-late]").text()).toContain("pg_dump introuvable");
+    GET.mockResolvedValue({ data: { ...PLATFORM, backup: { ...PLATFORM.backup, configured: false } } });
+    const missing = mount(PlatformPanel);
+    await flushPromises();
+    expect(missing.find("[data-test=backup-not-configured]").text()).toContain("JOBBOT_BACKUP_PASSPHRASE");
   });
 
   it("une invitation : le lien, montré une fois", async () => {
