@@ -6,6 +6,7 @@ de `demo/data.py`. Les dates suivent le jour du remplissage : relancée chaque n
 a toujours l'air d'être « cette semaine ». Refuse une base qui contient un vrai compte.
 """
 
+import hashlib
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 
@@ -13,6 +14,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts, demo
+from jobbot.certificates import service as certificates
 from jobbot.core.filter import ContractType, Criteria
 from jobbot.core.orp import LOCAL_TZ, shift_month
 from jobbot.db.models import (
@@ -20,6 +22,7 @@ from jobbot.db.models import (
     AlertSetup,
     Application,
     Contact,
+    Document,
     Draft,
     Evaluation,
     Interview,
@@ -637,4 +640,46 @@ async def seed(runtime: Runtime, today: date | None = None) -> int:
             count = await _applications(session, offers, chunks, today)
             profile = await session.get(Profile, profile.id) or profile
             await _around(session, profile, today)
+            await _certificates(runtime, session, visitor)
     return count
+
+
+# Deux certificats de travail fictifs (docs/87) : un très bon, un à faire corriger.
+CERTIFICATES = (
+    (
+        "Certificat Prototype Fintech SA.txt",
+        "Certificat de travail\n\nMadame Camille Exemple a travaillé chez Prototype Fintech SA "
+        "du 1er mars 2021 au 30 juin 2025 en qualité d'ingénieure système.\n\nElle a accompli "
+        "ses tâches toujours à notre plus grande satisfaction. Son comportement envers ses "
+        "supérieurs et ses collègues a toujours été irréprochable.\n\nMadame Exemple nous quitte "
+        "à sa demande. Nous regrettons vivement son départ, la remercions pour son engagement et "
+        "lui souhaitons plein succès pour la suite.\n",
+    ),
+    (
+        "Certificat Bac à sable SA.txt",
+        "Certificat de travail\n\nMadame Camille Exemple a travaillé chez Bac à sable SA comme "
+        "technicienne support de 2018 à 2020.\n\nElle s'est efforcée de mener à bien les tâches "
+        "confiées, dans l'ensemble à notre satisfaction. Son comportement envers ses collègues "
+        "et ses supérieurs était correct.\n",
+    ),
+)
+
+
+async def _certificates(runtime: Runtime, session: AsyncSession, visitor: int) -> None:
+    for n, (filename, body) in enumerate(CERTIFICATES):
+        content = body.encode()
+        key = f"accounts/{visitor}/documents/demo-certificat-{n}.txt"
+        runtime.storage.put(key, content)
+        document = Document(
+            filename=filename,
+            doc_type="txt",
+            size=len(content),
+            sha256=hashlib.sha256(content).hexdigest(),
+            storage_key=key,
+            text_status="ok",
+            extracted_text=body,
+            kind=certificates.CERTIFICATE,
+        )
+        session.add(document)
+        await session.flush()
+        await certificates.save(session, document)

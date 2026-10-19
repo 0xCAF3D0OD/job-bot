@@ -23,6 +23,7 @@ PERSONAL = (
     "alert_setups",
     "applications",
     "calendar_tokens",
+    "certificate_readings",
     "chat_actions",
     "chat_conversations",
     "chat_messages",

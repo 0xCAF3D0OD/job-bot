@@ -67,7 +67,7 @@ async def guest(runtime: Runtime) -> AsyncIterator[int]:
 
 
 async def test_every_link_between_accounts_includes_the_account() -> None:
-    """Les 21 clés étrangères entre tables personnelles comprennent le compte : la base refuse
+    """Les 22 clés étrangères entre tables personnelles comprennent le compte : la base refuse
     tout lien vers une ligne d'un autre compte."""
     rows = await catalog(
         "select con.conrelid::regclass::text, con.confrelid::regclass::text, "
@@ -75,7 +75,7 @@ async def test_every_link_between_accounts_includes_the_account() -> None:
     )
     personal = set(policies.PERSONAL)
     links = [(t, p, d) for t, p, d in rows if t in personal and p in personal]
-    assert len(links) == 21
+    assert len(links) == 22  # dont la lecture d'un certificat (docs/87)
     for table, parent, definition in links:
         assert definition.startswith("FOREIGN KEY (user_id, "), (table, definition)
         assert f"REFERENCES {parent}(user_id, id)" in definition, (table, definition)
