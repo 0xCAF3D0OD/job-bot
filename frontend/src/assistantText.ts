@@ -11,7 +11,7 @@ const ITEM = /^\s*(?:[-*•]|(\d+)[.)])\s+(.*)$/;
 
 // Chemins de la plateforme que l'assistant peut proposer (docs/24, guide « Liens »).
 const INTERNAL =
-  /^\/(aujourdhui|candidatures(\/(offres|suivi|alertes|bilan))?|candidatures\/offres\/\d+\/preparer|actualites|formations|profil|reglages(\/diagnostic)?|tes-donnees|bienvenue|la-plateforme|extension\/relier)(\?[\w=&%.-]*)?$/;
+  /^\/(aujourdhui|candidatures(\/(offres|suivi|alertes|bilan))?|candidatures\/offres\/\d+\/preparer|progresser\/(actualites|formations)|actualites|formations|profil|reglages(\/diagnostic)?|tes-donnees|bienvenue|la-plateforme|extension\/relier)(\?[\w=&%.-]*)?$/;
 const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
 
 function emphasis(text: string): Inline[] {

@@ -112,7 +112,7 @@ async def notify_funding(runtime: Runtime) -> int:
                 tags=["mortar_board"],
             ),
             kind="training_funding",
-            link="/formations?onglet=miennes",
+            link="/progresser/formations?onglet=miennes",
         )
         async with runtime.sessionmaker.begin() as session:
             mark = await session.get(TrainingMark, (profile_id, training_id))

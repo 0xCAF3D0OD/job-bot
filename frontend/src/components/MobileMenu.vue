@@ -3,21 +3,23 @@ import { computed, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { useJobsMemory } from "../composables/useJobsMemory";
+import { useProgressMemory } from "../composables/useProgressMemory";
 import type { NavEntry } from "../router";
 import SidePanel from "./SidePanel.vue";
 
-// Menu « burger » (docs/33 §2, docs/89) : sur un écran étroit, ☰ ferme la capsule à droite et
-// ne montre que les cinq pages ; le compte, la collecte et Réglages sont sous ton initiale.
+// Menu « burger » (docs/33 §2, docs/89, docs/90) : sur un écran étroit, ☰ ferme la capsule à
+// droite et ne montre que les trois pages ; le compte, la collecte et Réglages sont sous ton initiale.
 const props = defineProps<{ menu: NavEntry[]; newsCount: number }>();
 
 const open = ref(false);
 const route = useRoute();
 const { last: lastJobsPage } = useJobsMemory();
+const { last: lastProgressPage } = useProgressMemory();
 
 const entries = computed(() =>
   props.menu.map((entry) => ({
     ...entry,
-    to: entry.name === "jobs" ? lastJobsPage.value : entry.path,
+    to: entry.name === "jobs" ? lastJobsPage.value : entry.name === "progress" ? lastProgressPage.value : entry.path,
     active: entry.name === "jobs" ? route.path.startsWith("/candidatures") : route.path.startsWith(entry.path),
   })),
 );
@@ -63,9 +65,10 @@ watch(
           >
             {{ entry.label }}
             <span
-              v-if="entry.name === 'news' && newsCount"
-              class="nav-count"
-            >{{ newsCount }}</span>
+              v-if="entry.name === 'progress' && newsCount"
+              class="nav-dot"
+              :aria-label="`${newsCount} nouveaux`"
+            />
           </RouterLink>
         </li>
       </ul>

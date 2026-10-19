@@ -29,7 +29,7 @@ afterEach(() => {
 });
 
 describe("Menu du compte (docs/89)", () => {
-  it("l'initiale ouvre Réglages, Données personnelles, Diagnostic, la collecte et la déconnexion", async () => {
+  it("l'initiale ouvre Profil, Réglages, Données personnelles, Diagnostic, la collecte et la déconnexion", async () => {
     const { router, wrapper } = await mountAt("/aujourdhui");
     const trigger = wrapper.find("[data-test=account-menu]");
     expect(trigger.text()).toContain("K");
@@ -37,12 +37,13 @@ describe("Menu du compte (docs/89)", () => {
     await trigger.trigger("click");
     await flushPromises();
     expect(wrapper.text()).toContain("Connecté : kevin");
+    expect(wrapper.find("[data-test=account-profile]").attributes("href")).toBe("/profil");
     expect(wrapper.find("[data-test=account-settings]").attributes("href")).toBe("/reglages");
     expect(wrapper.find("[data-test=account-privacy]").attributes("href")).toBe("/tes-donnees");
     expect(wrapper.find("[data-test=account-diagnostic]").attributes("href")).toBe("/reglages/diagnostic");
     expect(wrapper.find("[data-test=logout]").exists()).toBe(true);
     // Le premier choix prend le focus ; une page choisie ferme le menu.
-    expect(document.activeElement?.getAttribute("data-test")).toBe("account-settings");
+    expect(document.activeElement?.getAttribute("data-test")).toBe("account-profile");
     await wrapper.find("[data-test=account-collect]").trigger("click");
     expect(collectNow).toHaveBeenCalled();
     expect(wrapper.find("[data-test=account-panel]").exists()).toBe(false);
@@ -60,7 +61,7 @@ describe("Menu du compte (docs/89)", () => {
     await flushPromises();
     const panel = wrapper.find("[data-test=account-panel]");
     await panel.trigger("keydown", { key: "ArrowDown" });
-    expect(document.activeElement?.getAttribute("data-test")).toBe("account-privacy");
+    expect(document.activeElement?.getAttribute("data-test")).toBe("account-settings");
     await panel.trigger("keydown", { key: "ArrowUp" });
     await panel.trigger("keydown", { key: "ArrowUp" });
     expect(document.activeElement?.getAttribute("data-test")).toBe("logout");

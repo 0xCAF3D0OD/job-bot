@@ -31,6 +31,13 @@ describe("routes réservées (docs/18 §1)", () => {
     const { router } = await import("./router");
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("trainings");
+    // Progresser (docs/90) : les anciennes adresses mènent au bon onglet, avec leurs paramètres.
+    await router.push("/formations?onglet=miennes");
+    expect(router.currentRoute.value.fullPath).toBe("/progresser/formations?onglet=miennes");
+    await router.push("/actualites?rubrique=videos");
+    expect(router.currentRoute.value.fullPath).toBe("/progresser/actualites?rubrique=videos");
+    await router.push("/progresser");
+    expect(router.currentRoute.value.path).toBe("/progresser/actualites");
     await router.push("/connexion?suite=/offres");
     expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres");
     // Rubrique Candidatures (docs/19 §2) : /candidatures ouvre les Offres, anciens liens redirigés.

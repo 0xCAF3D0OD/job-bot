@@ -380,6 +380,10 @@ def test_guide_follows_the_pages() -> None:
     assert "assistant-v9" not in service.INSTRUCTIONS
     # 0.70.2 (docs/89) : la capsule à droite, le menu du compte.
     assert "assistant-v10" not in service.INSTRUCTIONS
+    # 0.70.3 (docs/90) : trois pages, Progresser, Profil dans le menu du compte.
+    assert "assistant-v11" not in service.INSTRUCTIONS
+    assert "/progresser/formations" in service.INSTRUCTIONS
+    assert "trois pages" in service.INSTRUCTIONS
     assert "menu du compte" in service.INSTRUCTIONS
     assert "Collecter maintenant" in service.INSTRUCTIONS
     assert "« Effet des critères »" in service.INSTRUCTIONS

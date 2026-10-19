@@ -476,7 +476,7 @@ const { me } = useAuth();
           <header class="dash-card-head">
             <h2>
               <RouterLink
-                to="/formations"
+                to="/progresser/formations"
                 class="dash-title-link"
               >
                 <span class="dash-bubble small"><AppIcon name="book" /></span>
@@ -493,7 +493,7 @@ const { me } = useAuth();
               :key="training.id"
             >
               <span>
-                <RouterLink to="/formations"><strong>{{ training.title }}</strong></RouterLink><br>
+                <RouterLink to="/progresser/formations"><strong>{{ training.title }}</strong></RouterLink><br>
                 <span class="muted">En cours{{ training.mark?.progress ? ` · ${training.mark.progress}` : "" }} · {{ training.provider }}</span>
               </span>
             </li>
@@ -516,7 +516,7 @@ const { me } = useAuth();
             v-else
             class="hint"
           >
-            Aucune formation suivie : marque celles qui t'intéressent dans <RouterLink to="/formations">
+            Aucune formation suivie : marque celles qui t'intéressent dans <RouterLink to="/progresser/formations">
               Formations
             </RouterLink>.
           </p>
@@ -529,7 +529,7 @@ const { me } = useAuth();
           <header class="dash-card-head">
             <h2>
               <RouterLink
-                to="/actualites"
+                to="/progresser/actualites"
                 class="dash-title-link"
               >
                 <span class="dash-bubble small"><AppIcon name="news" /></span>
