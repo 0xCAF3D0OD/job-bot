@@ -14,7 +14,7 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 
 ## La barre du haut (docs/89)
 
-Trois pages dans le menu principal (docs/90) : Aujourd'hui, Candidatures, Progresser. À droite, une capsule : la cloche, puis l'initiale du compte, qui ouvre le menu du compte (Profil, Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion) ; sur téléphone, ☰ s'y ajoute et ne montre que les trois pages. Du nouveau à lire : un point, pas un chiffre ; un chiffre dit ce qui attend une action. Dans la capsule, des zones sans cadre ni fond, séparées par des filets ; ouvrir l'une déroule le cadre vers le bas, et son contenu apparaît dedans (docs/91). Les menus « ⋯ » ont le même style : bordure fine, coins de 10 px, presque pas d'ombre, un déroulé court.
+Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur téléphone, une barre d'onglets en bas de l'écran, cachée sur les écrans de travail (Préparer, l'accueil). À droite, une capsule : la cloche (un chiffre rouge, ce qui attend une action), l'étincelle de Progresser (un point violet, du nouveau à lire ; elle déroule un aperçu des actualités et des formations en cours), puis l'initiale du compte, qui ouvre le menu du compte (Profil, Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion). Du nouveau à lire : un point, pas un chiffre ; un chiffre dit ce qui attend une action. Dans la capsule, des zones sans cadre ni fond, séparées par des filets ; ouvrir l'une déroule le cadre vers le bas, et son contenu apparaît dedans (docs/91). Les menus « ⋯ » ont le même style : bordure fine, coins de 10 px, presque pas d'ombre, un déroulé court.
 
 ## Illustrations (docs/62, docs/67)
 

@@ -46,10 +46,10 @@ export const navigation: NavEntry[] = [
   { path: "/profil", name: "profile", label: "Profil" },
   { path: "/reglages", name: "settings", label: "Réglages" },
 ];
-// Le menu principal : deux pages de travail et une pour avancer (docs/89, docs/90). Profil et
-// Réglages s'ouvrent depuis le menu du compte, dans la capsule à droite ; ils gardent leur
-// adresse et leur titre.
-export const mainMenu: NavEntry[] = navigation.filter((entry) => !["profile", "settings"].includes(entry.name));
+// Le menu principal : les deux pages de travail (docs/89, docs/90, docs/92). Progresser
+// s'ouvre depuis l'étincelle de la capsule, Profil et Réglages depuis le menu du compte ; ils
+// gardent leur adresse et leur titre.
+export const mainMenu: NavEntry[] = navigation.filter((entry) => ["today", "jobs"].includes(entry.name));
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
 export type JobsTab = "offres" | "suivi" | "alertes" | "bilan" | "rendez-vous";
