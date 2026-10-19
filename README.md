@@ -121,7 +121,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.67.2 | Après le rendez-vous ORP : ce qui a été convenu, le carnet, l'agenda et le rappel de la veille, l'objectif et les formations mis à jour ; le message rédigé par l'IA, sur demande | livrée |
 | 0.67.3 | « Déclaration Job-Room » dit ce qui reste à faire ; cases du calendrier à la même taille | livrée |
 | 0.67.4 | La déclaration Job-Room en liste courte, sous « À relancer » ; PDF et CSV dans le ⋯ du mois | livrée |
-| 0.67.5 | Nouvelles images et nouvelle vidéo de la page de connexion | en cours |
+| 0.67.5 | Nouvelles images et nouvelle vidéo de la page de connexion | livrée |
+| 0.67.6 | Connexion : la phrase passe en blanc à 3 s de la vidéo du soir | en cours |
 
 ## Lancer en local
 

@@ -2314,13 +2314,13 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Le soir installé, l'image du jour ne transparaît plus au bord de celle du soir. */
 .auth-scene.night .day-image { visibility: hidden; }
 /* Ses couleurs suivent le ciel, pas le thème : foncées le jour, claires le soir (elles basculent
-   au milieu de la vidéo). */
+   à 3 s, dès que le ciel de la vidéo s'assombrit ; 0.67.6). */
 .auth-caption { position: absolute; left: 0; top: 0; display: grid; gap: 0.35rem; max-width: min(26rem, 70%); padding: 2rem 2rem 0; text-align: left; }
 .auth-tagline { margin: 0; font-size: 1.5rem; font-weight: 600; color: #1f1d33; transition: color 1.2s ease; }
 .auth-pitch { margin: 0; color: #4a4860; transition: color 1.2s ease; }
 .auth-scene.dusk .auth-tagline, .auth-scene.night .auth-tagline { color: #fff; text-shadow: 0 1px 8px rgb(20 18 50 / 35%); }
 .auth-scene.dusk .auth-pitch, .auth-scene.night .auth-pitch { color: rgb(255 255 255 / 85%); text-shadow: 0 1px 8px rgb(20 18 50 / 35%); }
-.auth-scene.dusk .auth-tagline, .auth-scene.dusk .auth-pitch { transition-delay: 5.5s; }
+.auth-scene.dusk .auth-tagline, .auth-scene.dusk .auth-pitch { transition-delay: 3s; }
 .auth-panel { display: grid; place-items: center; padding: 3rem 1.5rem; background: var(--bg); }
 .auth-box { display: grid; gap: 1rem; width: min(100%, 24rem); }
 .auth-box h1 { margin: 0; font-size: 1.6rem; }
