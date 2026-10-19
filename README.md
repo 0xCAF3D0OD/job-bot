@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/80-maintenance-lecture.md](docs/80-maintenance-lecture.md) (0.65.1)
+- Version en cours : [docs/81-revue-0.63-0.65.md](docs/81-revue-0.63-0.65.md) (0.65.2)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -112,7 +112,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.64.1 | Aucun lien entre deux comptes dans la base, tâches qui gardent leur compte, erreur de notation par compte | livrée |
 | 0.64.2 | Connexion : jetons coupés à la suspension, essais comptés par adresse, session de 90 jours au plus, mode sans connexion verrouillé ; en-têtes de sécurité, taille des envois, audit hebdomadaire des bibliothèques | livrée |
 | 0.65.0 | La page de maintenance : par-dessus l'écran pendant une mise à jour, `jobbot maintenance on/off`, `make update` | livrée |
-| 0.65.1 | Maintenance en lecture seule (`--lecture`), tâches de fond en pause, le dessin unDraw animé sur la page d'attente | en cours |
+| 0.65.1 | Maintenance en lecture seule (`--lecture`), tâches de fond en pause, le dessin unDraw animé sur la page d'attente | livrée |
+| 0.65.2 | Revue : Actualités sans message pendant une maintenance en lecture seule, curseur retrouvé après la page d'attente, base pas à jour avant la connexion, worker en pause ; documentation à jour | en cours |
 
 ## Lancer en local
 
@@ -146,6 +147,7 @@ L'interface est sur http://localhost:5173 (page Aujourd'hui), l'API sur http://1
 |---|---|
 | `make setup` | dépendances backend et frontend, bases `jobbot` et `jobbot_test`, copie de `.env.example` en `.env` |
 | `make migrate` | applique les migrations |
+| `make update` | met la plateforme à jour : maintenance annoncée, `git pull`, dépendances, migrations, maintenance levée ; il reste à redémarrer `make dev` (docs/79) |
 | `make check` | vérifie configuration et base |
 | `make dev` | API + worker + frontend |
 | `make demo` | la démo, avec des données fictives du jour, sur sa propre base (`jobbot_demo`) et ses propres ports (http://localhost:5200), à côté de `make dev` ; ouvre le navigateur ; Ctrl-C l'arrête |

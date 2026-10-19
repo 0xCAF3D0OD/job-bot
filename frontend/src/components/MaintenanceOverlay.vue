@@ -15,13 +15,20 @@ function setInert(on: boolean): void {
   else app.removeAttribute("inert");
 }
 
+// L'élément où l'on était (la lettre en cours…) retrouve le curseur au retour (docs/81 §2).
+let before: HTMLElement | null = null;
+
 watch(
   () => props.waiting,
   async (on) => {
+    if (on) before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setInert(on);
     if (on) {
       await nextTick();
       panel.value?.focus();
+    } else if (before?.isConnected) {
+      before.focus();
+      before = null;
     }
   },
   { immediate: true },
