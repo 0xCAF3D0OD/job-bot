@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { LOGO_DIAMOND, LOGO_DIAMOND_SMALL_SIZE, LOGO_LOOPS, LOGO_VIEWBOX } from "../brandPaths";
+import { LOGO_DIAMOND, LOGO_DIAMOND_SMALL_SIZE, LOGO_LOOP, LOGO_VIEWBOX } from "../brandPaths";
 
-// Le logo jobA1 (docs/97, docs/98) : deux boucles au stylo bleu autour d'un diamant pêche
-// tracé au stylo. Le trait s'épaissit quand le logo rapetisse, aux paliers de la planche ; sous
-// 24 px, une seule boucle et un diamant plus grand. Décoratif : le nom à côté dit ce que c'est.
+// Le logo jobA1 (docs/100) : un trait bleu qui entoure une fois et dépasse, le diamant pêche
+// au même trait. Le trait s'épaissit quand le logo rapetisse, aux paliers de la planche ; à
+// 32 px et moins, trait épais et diamant un peu plus grand. Décoratif : le nom à côté le dit.
 const props = withDefaults(defineProps<{ size?: number }>(), { size: 28 });
 const tier = computed(() => {
-  if (props.size >= 100) return { loop: 2.6, loops: 2, diamond: LOGO_DIAMOND };
-  if (props.size >= 50) return { loop: 3.8, loops: 2, diamond: LOGO_DIAMOND };
-  if (props.size >= 40) return { loop: 4, loops: 2, diamond: LOGO_DIAMOND };
-  if (props.size >= 24) return { loop: 5, loops: 2, diamond: LOGO_DIAMOND };
-  return { loop: 10, loops: 1, diamond: LOGO_DIAMOND_SMALL_SIZE };
+  if (props.size >= 100) return { loop: 3.6, diamond: 3.6, path: LOGO_DIAMOND };
+  if (props.size >= 60) return { loop: 5, diamond: 5, path: LOGO_DIAMOND };
+  if (props.size > 32) return { loop: 5.5, diamond: 5.5, path: LOGO_DIAMOND };
+  return { loop: 8.5, diamond: 8, path: LOGO_DIAMOND_SMALL_SIZE };
 });
-const loops = computed(() => LOGO_LOOPS.slice(0, tier.value.loops));
 </script>
 
 <template>
@@ -27,16 +25,14 @@ const loops = computed(() => LOGO_LOOPS.slice(0, tier.value.loops));
     data-test="brand-logo"
   >
     <path
-      v-for="(loop, index) in loops"
-      :key="index"
-      :d="loop"
+      :d="LOGO_LOOP"
       class="brand-logo-loop"
       :stroke-width="tier.loop"
     />
     <path
-      :d="tier.diamond"
+      :d="tier.path"
       class="brand-logo-diamond"
-      :stroke-width="Math.round(tier.loop * 1.1 * 100) / 100"
+      :stroke-width="tier.diamond"
     />
   </svg>
 </template>
