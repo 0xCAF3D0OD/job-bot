@@ -101,3 +101,18 @@ La démo en ligne en profite : un rendez-vous fictif rempli, pour montrer la pag
 - **Vérifié** :
   - 513 tests serveur, dont 4 nouveaux (`test_orp_meeting.py`) ; la table entre dans la famille personnelle, vérifiée par `test_policies.py`. 299 tests de l'interface, dont 2 nouveaux ;
   - sur une démo de brouillon : la page sur ordinateur (clair) et téléphone (sombre), aucune erreur d'API, et la feuille PDF téléchargée et relue.
+
+## Écarts avec le cadrage (0.67.2)
+
+- **Le rendez-vous suivant** se note avec ce qui a été convenu. S'il existe déjà, il est déplacé, pas doublé. Il garde le lieu et le conseiller du précédent.
+- **« Ce qui a été convenu »** se note dès le début du rendez-vous, depuis la carte du prochain rendez-vous, puis depuis le carnet. Un rendez-vous à venir le refuse.
+- **Les mesures** : les formations suivies, à cocher, passent en « financement accepté ». Les autres mesures (stage, cours…) s'écrivent une par ligne.
+- **Le carnet** garde aussi les questions cochées pour chaque rendez-vous.
+- **L'agenda** reçoit seulement la date, sans le lieu ni le conseiller, comme les entretiens (docs/40).
+- **Le message rédigé par l'IA** (« Le message pour ton conseiller ») : environ 0,02 CHF. L'IA ne reçoit ni le lieu ni le conseiller, et la ligne du rendez-vous est retirée des obligations envoyées. Le message se copie ; il n'entre pas dans le PDF.
+- **La démo** montre un rendez-vous passé, avec ce qui a été convenu, dans le carnet.
+- **Vérifié** :
+  - 516 tests serveur, dont 3 nouveaux (convenu, rappel et agenda, message de l'IA avec un faux client) ; le test des comptes essaie aussi un rendez-vous d'un autre compte ;
+  - 301 tests de l'interface, dont 2 nouveaux ;
+  - sur une démo de brouillon : la page sur ordinateur (clair) et téléphone (sombre), le formulaire ouvert, aucune erreur d'API.
+

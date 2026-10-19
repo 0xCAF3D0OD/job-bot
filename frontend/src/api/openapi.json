@@ -4837,6 +4837,90 @@
         }
       }
     },
+    "/api/orp-meeting/{meeting_id}/convenu": {
+      "put": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Save Orp Meeting Outcome",
+        "description": "Ce qui a été convenu : l'objectif, les formations accordées et le rendez-vous suivant\nsont mis à jour en même temps.",
+        "operationId": "saveOrpMeetingOutcome",
+        "parameters": [
+          {
+            "name": "meeting_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Meeting Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OutcomeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingPage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Rendez-vous introuvable"
+          },
+          "409": {
+            "description": "À venir"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orp-meeting/redaction": {
+      "post": {
+        "tags": [
+          "orp"
+        ],
+        "summary": "Write Orp Meeting Sheet",
+        "description": "La feuille rédigée par l'IA (moins de 0,05 $), gardée avec le rendez-vous.",
+        "operationId": "writeOrpMeetingSheet",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingPage"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible ou pas de rendez-vous"
+          }
+        }
+      }
+    },
     "/api/today": {
       "get": {
         "tags": [
@@ -11129,6 +11213,29 @@
         ],
         "title": "FollowUpDraftOut"
       },
+      "FollowedTrainingOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "accepted": {
+            "type": "boolean",
+            "title": "Accepted"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "accepted"
+        ],
+        "title": "FollowedTrainingOut"
+      },
       "FundingExample": {
         "properties": {
           "title": {
@@ -13173,6 +13280,31 @@
         ],
         "title": "Me"
       },
+      "MeasureIO": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Text"
+          },
+          "training_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Training Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "MeasureIO"
+      },
       "MeetingIn": {
         "properties": {
           "starts_at": {
@@ -13243,6 +13375,90 @@
               }
             ],
             "title": "Advisor"
+          },
+          "outcome_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome At"
+          },
+          "agreed_target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreed Target"
+          },
+          "measures": {
+            "items": {
+              "$ref": "#/components/schemas/MeasureIO"
+            },
+            "type": "array",
+            "title": "Measures",
+            "default": []
+          },
+          "assignments": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignments"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "asked": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Asked",
+            "default": []
+          },
+          "next_starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Starts At"
+          },
+          "sheet_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet Text"
           }
         },
         "type": "object",
@@ -13268,12 +13484,40 @@
           },
           "preparation": {
             "$ref": "#/components/schemas/PreparationOut"
+          },
+          "past": {
+            "items": {
+              "$ref": "#/components/schemas/MeetingOut"
+            },
+            "type": "array",
+            "title": "Past"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "trainings": {
+            "items": {
+              "$ref": "#/components/schemas/FollowedTrainingOut"
+            },
+            "type": "array",
+            "title": "Trainings"
           }
         },
         "type": "object",
         "required": [
           "meeting",
-          "preparation"
+          "preparation",
+          "past",
+          "target",
+          "trainings"
         ],
         "title": "MeetingPage"
       },
@@ -15285,6 +15529,70 @@
           "results_count"
         ],
         "title": "OrpSearchOut"
+      },
+      "OutcomeIn": {
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "measures": {
+            "items": {
+              "$ref": "#/components/schemas/MeasureIO"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Measures",
+            "default": []
+          },
+          "assignments": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignments"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "next_starts_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Starts At"
+          }
+        },
+        "type": "object",
+        "title": "OutcomeIn"
       },
       "ParseStatus": {
         "type": "string",

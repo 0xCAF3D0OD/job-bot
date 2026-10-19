@@ -505,6 +505,27 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
             ],
         )
     )
+    # Le précédent, il y a cinq semaines : ce qui a été convenu, dans le carnet.
+    previous = today - timedelta(days=35)
+    session.add(
+        OrpMeeting(
+            starts_at=_at(previous - timedelta(days=(previous.weekday() - 1) % 7), 10, 0),
+            place="ORP de Lausanne",
+            questions=[
+                {
+                    "key": "measure",
+                    "text": "Une mesure est-elle possible (stage, cours, programme d'emploi "
+                    "temporaire) ?",
+                    "checked": True,
+                }
+            ],
+            outcome_at=_at(previous, 12, 0),
+            agreed_target=data.ORP_TARGET,
+            measures=[{"text": "Atelier « Valoriser son CV »", "training_id": None}],
+            assignments="Une assignation à suivre, reçue par courrier.",
+            note="Le conseiller propose de viser aussi les postes en anglais.",
+        )
+    )
     # La dernière collecte : ce matin (la démo n'en lance aucune).
     session.add(
         JobRun(

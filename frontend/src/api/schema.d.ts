@@ -1786,6 +1786,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orp-meeting/{meeting_id}/convenu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Orp Meeting Outcome
+         * @description Ce qui a été convenu : l'objectif, les formations accordées et le rendez-vous suivant
+         *     sont mis à jour en même temps.
+         */
+        put: operations["saveOrpMeetingOutcome"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orp-meeting/redaction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Write Orp Meeting Sheet
+         * @description La feuille rédigée par l'IA (moins de 0,05 $), gardée avec le rendez-vous.
+         */
+        post: operations["writeOrpMeetingSheet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/today": {
         parameters: {
             query?: never;
@@ -3897,6 +3938,15 @@ export interface components {
             /** Reason */
             reason: string | null;
         };
+        /** FollowedTrainingOut */
+        FollowedTrainingOut: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Accepted */
+            accepted: boolean;
+        };
         /** FundingExample */
         FundingExample: {
             /** Title */
@@ -4489,6 +4539,13 @@ export interface components {
             /** Demo Url */
             demo_url?: string | null;
         };
+        /** MeasureIO */
+        MeasureIO: {
+            /** Text */
+            text: string;
+            /** Training Id */
+            training_id?: number | null;
+        };
         /** MeetingIn */
         MeetingIn: {
             /**
@@ -4514,11 +4571,39 @@ export interface components {
             place: string | null;
             /** Advisor */
             advisor: string | null;
+            /** Outcome At */
+            outcome_at?: string | null;
+            /** Agreed Target */
+            agreed_target?: number | null;
+            /**
+             * Measures
+             * @default []
+             */
+            measures: components["schemas"]["MeasureIO"][];
+            /** Assignments */
+            assignments?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Asked
+             * @default []
+             */
+            asked: string[];
+            /** Next Starts At */
+            next_starts_at?: string | null;
+            /** Sheet Text */
+            sheet_text?: string | null;
         };
         /** MeetingPage */
         MeetingPage: {
             meeting: components["schemas"]["MeetingOut"] | null;
             preparation: components["schemas"]["PreparationOut"];
+            /** Past */
+            past: components["schemas"]["MeetingOut"][];
+            /** Target */
+            target: number | null;
+            /** Trainings */
+            trainings: components["schemas"]["FollowedTrainingOut"][];
         };
         /** MessageIn */
         MessageIn: {
@@ -5156,6 +5241,22 @@ export interface components {
             label: string | null;
             /** Results Count */
             results_count: number;
+        };
+        /** OutcomeIn */
+        OutcomeIn: {
+            /** Target */
+            target?: number | null;
+            /**
+             * Measures
+             * @default []
+             */
+            measures: components["schemas"]["MeasureIO"][];
+            /** Assignments */
+            assignments?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Next Starts At */
+            next_starts_at?: string | null;
         };
         /**
          * ParseStatus
@@ -10095,6 +10196,82 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    saveOrpMeetingOutcome: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OutcomeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingPage"];
+                };
+            };
+            /** @description Rendez-vous introuvable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description À venir */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    writeOrpMeetingSheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingPage"];
+                };
+            };
+            /** @description IA indisponible ou pas de rendez-vous */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

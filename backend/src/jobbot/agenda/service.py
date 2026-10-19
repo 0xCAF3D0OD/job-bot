@@ -1,4 +1,5 @@
-"""Tes dates dans ton agenda (docs/40) : entretiens, suites attendues, remise ORP, relances.
+"""Tes dates dans ton agenda (docs/40) : entretiens, suites attendues, remise ORP, relances,
+rendez-vous ORP (docs/83).
 
 Le minimum : entreprise, poste et date ; ni adresse, ni contact, ni note. Un fichier par
 entretien, ou un abonnement protégé par un jeton secret révocable.
@@ -13,7 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jobbot.agenda.ics import Event
 from jobbot.auth.service import token_hash
 from jobbot.core.orp import due_date, shift_month
-from jobbot.db.models import Application, ApplicationStatus, CalendarToken, Interview, OrpMonth
+from jobbot.db.models import (
+    Application,
+    ApplicationStatus,
+    CalendarToken,
+    Interview,
+    OrpMeeting,
+    OrpMonth,
+)
 from jobbot.followups.service import FOLLOW_UP_AFTER, local_today
 from jobbot.letters.document import MONTHS
 from jobbot.orp.service import load_due_day
@@ -109,6 +117,19 @@ async def events(session: AsyncSession, base_url: str) -> list[Event]:
                 start=day,
                 url=f"{base_url}/candidatures/suivi",
                 alarms=DUE_ALARMS,
+            )
+        )
+    # Rendez-vous ORP : la date seulement, ni lieu ni conseiller.
+    for appointment in await session.scalars(
+        select(OrpMeeting).where(OrpMeeting.starts_at >= since)
+    ):
+        found.append(
+            Event(
+                uid=f"orp-meeting-{appointment.id}@joba1",
+                summary="Rendez-vous ORP",
+                start=appointment.starts_at,
+                url=f"{base_url}/candidatures/rendez-vous-orp",
+                alarms=INTERVIEW_ALARMS,
             )
         )
     return sorted(found, key=lambda e: (str(e.start)[:10], e.uid))

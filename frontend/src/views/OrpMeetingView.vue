@@ -3,14 +3,17 @@ import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import CopyLabel from "../components/CopyLabel.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import MoreMenu from "../components/MoreMenu.vue";
+import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import { plural } from "../format";
 
 // Le rendez-vous ORP (docs/83) : la feuille pour le conseiller, tirée de tes données, sans IA.
 // Rien n'est envoyé à l'ORP : tu la télécharges, l'imprimes ou la lis toi-même.
 type Page = components["schemas"]["MeetingPage"];
 type Question = components["schemas"]["QuestionIO"];
+type Meeting = components["schemas"]["MeetingOut"];
 
 const page = ref<Page | null>(null);
 const failed = ref(false);
@@ -21,6 +24,11 @@ const advisor = ref("");
 const custom = ref("");
 const name = ref("");
 const message = ref("");
+// Le rendez-vous dont on note ce qui a été convenu (0.67.2).
+const noting = ref<number | null>(null);
+const writing = ref(false);
+const writeMessage = ref("");
+const copied = ref(false);
 
 const meeting = computed(() => page.value?.meeting ?? null);
 const prep = computed(() => page.value?.preparation ?? null);
@@ -33,6 +41,52 @@ const meetingText = computed(() => {
   const who = meeting.value.advisor ? ` avec ${meeting.value.advisor}` : "";
   return `Le ${dateFormat.format(at)} à ${timeFormat.format(at)}${where}${who}.`;
 });
+const started = computed(() => !!meeting.value && new Date(meeting.value.starts_at) <= new Date());
+
+function dayText(iso: string): string {
+  const at = new Date(iso);
+  return `${dateFormat.format(at)} à ${timeFormat.format(at)}`;
+}
+
+// Ce qui a été convenu, en lignes courtes : pour le prochain rendez-vous et le carnet.
+function agreed(item: Meeting): { label: string; text: string }[] {
+  const lines: { label: string; text: string }[] = [];
+  if (item.agreed_target) lines.push({ label: "Objectif", text: `${item.agreed_target} candidatures par mois` });
+  if (item.measures.length) lines.push({ label: "Mesures", text: item.measures.map((m) => m.text).join(", ") });
+  if (item.assignments) lines.push({ label: "Assignations", text: item.assignments });
+  if (item.next_starts_at) lines.push({ label: "Rendez-vous suivant", text: dayText(item.next_starts_at) });
+  if (item.note) lines.push({ label: "Note", text: item.note });
+  return lines;
+}
+
+function outcomeSaved(data: Page): void {
+  page.value = data;
+  noting.value = null;
+}
+
+async function writeSheet(): Promise<void> {
+  writing.value = true;
+  writeMessage.value = "";
+  copied.value = false;
+  try {
+    const { data, error } = await api.POST("/api/orp-meeting/redaction");
+    if (data) page.value = data;
+    else writeMessage.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible de rédiger pour l'instant.";
+  } finally {
+    writing.value = false;
+  }
+}
+
+async function copySheet(): Promise<void> {
+  if (!meeting.value?.sheet_text) return;
+  try {
+    await navigator.clipboard.writeText(meeting.value.sheet_text);
+    copied.value = true;
+  } catch {
+    copied.value = false;
+  }
+}
+
 const sheetLink = computed(() => {
   const who = name.value.trim();
   return `/api/orp-meeting/feuille.pdf${who ? `?name=${encodeURIComponent(who)}` : ""}`;
@@ -137,6 +191,41 @@ onMounted(() => void load());
         >
           {{ meetingText }}
         </p>
+        <template v-if="meeting && started && !editing">
+          <OrpOutcomeForm
+            v-if="noting === meeting.id"
+            :meeting="meeting"
+            :target="page.target"
+            :trainings="page.trainings"
+            @saved="outcomeSaved"
+            @cancel="noting = null"
+          />
+          <template v-else>
+            <dl
+              v-if="meeting.outcome_at"
+              class="orp-agreed"
+              data-test="meeting-agreed"
+            >
+              <template
+                v-for="line in agreed(meeting)"
+                :key="line.label"
+              >
+                <dt>{{ line.label }}</dt>
+                <dd>{{ line.text }}</dd>
+              </template>
+            </dl>
+            <div class="form-actions">
+              <button
+                type="button"
+                :class="{ secondary: !!meeting.outcome_at }"
+                data-test="meeting-outcome"
+                @click="noting = meeting.id"
+              >
+                {{ meeting.outcome_at ? "Modifier ce qui a été convenu" : "Noter ce qui a été convenu" }}
+              </button>
+            </div>
+          </template>
+        </template>
         <form
           v-else-if="editing || !meeting"
           class="orp-meeting-form"
@@ -359,7 +448,107 @@ onMounted(() => void load());
             >Télécharger la feuille (PDF)</a>
           </div>
         </section>
+
+        <section
+          v-if="meeting"
+          class="form-card"
+          data-test="sheet-ai"
+        >
+          <h2>Le message pour ton conseiller</h2>
+          <p
+            v-if="meeting.sheet_text"
+            class="orp-sheet-text"
+            data-test="sheet-text"
+          >
+            {{ meeting.sheet_text }}
+          </p>
+          <p
+            v-else
+            class="muted"
+          >
+            L'IA rédige la feuille en un message suivi, à envoyer avant le rendez-vous.
+          </p>
+          <div class="form-actions">
+            <button
+              type="button"
+              :class="{ secondary: !!meeting.sheet_text }"
+              :disabled="writing"
+              data-test="sheet-write"
+              @click="writeSheet"
+            >
+              {{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}
+            </button>
+            <button
+              v-if="meeting.sheet_text"
+              type="button"
+              class="link"
+              @click="copySheet"
+            >
+              <CopyLabel :done="copied" />
+            </button>
+          </div>
+          <p
+            v-if="writeMessage"
+            role="status"
+            class="notice error"
+          >
+            {{ writeMessage }}
+          </p>
+          <p class="hint">
+            Environ 0,02 CHF. Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
+          </p>
+        </section>
       </div>
+
+      <section
+        v-if="page.past.length"
+        class="form-card orp-log"
+        data-test="meeting-log"
+      >
+        <h2>Le carnet</h2>
+        <ul>
+          <li
+            v-for="item in page.past"
+            :key="item.id"
+          >
+            <h3>{{ dayText(item.starts_at) }}<span v-if="item.place"> · {{ item.place }}</span></h3>
+            <OrpOutcomeForm
+              v-if="noting === item.id"
+              :meeting="item"
+              :target="page.target"
+              :trainings="page.trainings"
+              @saved="outcomeSaved"
+              @cancel="noting = null"
+            />
+            <template v-else>
+              <dl
+                v-if="item.outcome_at"
+                class="orp-agreed"
+              >
+                <template v-if="item.asked.length">
+                  <dt>Questions</dt>
+                  <dd>{{ item.asked.join(" · ") }}</dd>
+                </template>
+                <template
+                  v-for="line in agreed(item)"
+                  :key="line.label"
+                >
+                  <dt>{{ line.label }}</dt>
+                  <dd>{{ line.text }}</dd>
+                </template>
+              </dl>
+              <button
+                type="button"
+                :class="item.outcome_at ? 'link' : 'secondary small'"
+                :data-test="`log-outcome-${item.id}`"
+                @click="noting = item.id"
+              >
+                {{ item.outcome_at ? "Modifier" : "Noter ce qui a été convenu" }}
+              </button>
+            </template>
+          </li>
+        </ul>
+      </section>
     </template>
   </section>
 </template>

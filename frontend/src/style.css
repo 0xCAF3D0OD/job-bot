@@ -2656,6 +2656,21 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .orp-meeting-questions input { margin-top: 0.2rem; }
 .orp-meeting-duties li.done { color: var(--muted); }
 .orp-meeting .inline-field { margin-top: 0.75rem; }
+.orp-outcome { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0.75rem; }
+.orp-outcome label { display: grid; gap: 0.3rem; }
+.orp-outcome fieldset { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+.orp-outcome .orp-outcome-check { display: flex; gap: 0.45rem; align-items: center; }
+.orp-outcome .form-actions, .orp-outcome .notice { grid-column: 1 / -1; }
+.orp-agreed { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.3rem 0.9rem; margin: 0.75rem 0; }
+.orp-agreed dt { color: var(--muted); }
+.orp-agreed dd { margin: 0; white-space: pre-line; }
+.orp-sheet-text { white-space: pre-line; }
+.orp-log ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; }
+.orp-log li + li { border-top: 1px solid var(--border); padding-top: 1.1rem; }
+.orp-log h3 { margin: 0; font-size: 0.95rem; font-weight: 600; }
+.orp-log h3::first-letter { text-transform: uppercase; }
 @media (max-width: 820px) {
-  .orp-meeting-form, .orp-meeting-sheet { grid-template-columns: minmax(0, 1fr); }
+  .orp-meeting-form, .orp-meeting-sheet, .orp-outcome { grid-template-columns: minmax(0, 1fr); }
+  .orp-agreed { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+  .orp-agreed dd + dt { margin-top: 0.45rem; }
 }
