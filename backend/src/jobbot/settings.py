@@ -23,6 +23,7 @@ SECRET_FIELDS = (
     "imap_password",
     "anthropic_api_key",
     "ntfy_topic",
+    "backup_passphrase",
 )
 
 
@@ -66,6 +67,10 @@ class Settings(BaseSettings):
     scheduler_enabled: bool = True
     storage_backend: StorageBackend = StorageBackend.LOCAL
     storage_path: Path = Path("./data")
+    # Sauvegardes (docs/82) : leur dossier (un dossier synchronisé hors de l'ordinateur, de
+    # préférence), et la phrase qui les chiffre. Sans phrase, aucune sauvegarde n'est faite.
+    backup_path: Path = Path("./sauvegardes")
+    backup_passphrase: SecretStr | None = None
     cors_origins: list[str] = Field(default_factory=list)
     version: str = "dev"
 
@@ -110,6 +115,12 @@ class Settings(BaseSettings):
     # Adresse d'une démo en ligne : « La plateforme » propose « Voir la démo » (toute installation).
     demo_url: str | None = None
 
+    @field_validator("backup_path")
+    @classmethod
+    def _home(cls, value: Path) -> Path:
+        # « ~/Library/… » dans .env : le dossier de la personne, pas un dossier nommé « ~ ».
+        return value.expanduser()
+
     @field_validator("worker_database_url", "migrate_database_url", mode="before")
     @classmethod
     def _empty_is_unset(cls, value: object) -> object:
@@ -150,6 +161,11 @@ class Settings(BaseSettings):
     def imap_configured(self) -> bool:
         password = self.imap_password.get_secret_value() if self.imap_password else ""
         return bool(self.imap_user.strip() and password)
+
+    @property
+    def backup_configured(self) -> bool:
+        phrase = self.backup_passphrase.get_secret_value() if self.backup_passphrase else ""
+        return bool(phrase.strip())
 
     @property
     def llm_configured(self) -> bool:

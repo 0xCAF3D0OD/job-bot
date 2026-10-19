@@ -1,5 +1,7 @@
 # Données personnelles : jamais dans git (dépôt public)
 data/
+# Sauvegardes (docs/82), quand leur dossier est celui du dépôt.
+sauvegardes/
 .env
 .env.*
 !.env.example

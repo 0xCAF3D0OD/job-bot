@@ -56,6 +56,7 @@ def test_scheduler_can_be_disabled(settings: Settings) -> None:
     enabled = build_procrastinate_app(runtime)
     periodic = enabled.periodic_registry.periodic_tasks.values()
     assert sorted(t.periodic_id for t in periodic) == [
+        "backup",
         "collect",
         "employer",
         "heartbeat",

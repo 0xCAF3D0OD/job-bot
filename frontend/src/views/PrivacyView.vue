@@ -39,6 +39,11 @@ onMounted(async () => {
         Tout reste jusqu'à ce que tu supprimes ton compte, sauf les discussions avec l'assistant (effacées après 30 jours)
         et les notifications (90 jours).
       </p>
+      <p>
+        La plateforme est sauvegardée chaque nuit, dans un fichier chiffré que seul l'exploitant peut ouvrir. Les
+        sauvegardes sont gardées <strong>6 mois au plus</strong> : un compte supprimé y reste donc jusqu'à 6 mois, puis
+        disparaît avec elles. Il ne revient que si toute la plateforme est restaurée à une date antérieure.
+      </p>
 
       <h2>Qui y a accès</h2>
       <p>

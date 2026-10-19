@@ -244,6 +244,116 @@ def cmd_anonymize_sample(args: argparse.Namespace) -> int:
     return asyncio.run(run())
 
 
+def _size(size: int) -> str:
+    return f"{size / 1_000_000:.1f} Mo" if size >= 1_000_000 else f"{max(1, round(size / 1000))} Ko"
+
+
+def cmd_backup(args: argparse.Namespace) -> int:
+    """Une sauvegarde tout de suite, ou la liste des sauvegardes (docs/82)."""
+    from jobbot import backup
+    from jobbot.runtime import Runtime
+    from jobbot.worker.tasks.backup import save_now
+
+    settings = _settings()
+    if args.list:
+        present = backup.saved(settings)
+        if not present:
+            print(f"Aucune sauvegarde dans {settings.backup_path}.")
+        for item in present:
+            print(f"{item.path.name}  {_size(item.size)}")
+        return 0
+
+    async def run() -> backup.Saved:
+        runtime = Runtime.create(settings, "admin")
+        try:
+            return await save_now(runtime)
+        finally:
+            await runtime.dispose()
+
+    try:
+        made = asyncio.run(run())
+    except backup.BackupError as exc:
+        print(f"Sauvegarde impossible : {exc}.", file=sys.stderr)
+        return 1
+    print(f"Sauvegarde faite : {made.path} ({_size(made.size)}).")
+    return 0
+
+
+def cmd_restore(args: argparse.Namespace) -> int:
+    """Essaie une sauvegarde dans une base à part (`--essai`), ou remet toute la plateforme à
+    cette sauvegarde, pendant une maintenance complète (docs/82 §4)."""
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from jobbot import backup, maintenance
+    from jobbot.db.schema import sync_role_passwords, upgrade
+    from jobbot.runtime import Runtime
+    from jobbot.worker.tasks.backup import write_status
+
+    settings = _settings()
+    path = Path(args.file).expanduser()
+    if not path.is_file():
+        print(f"Fichier introuvable : {path}.", file=sys.stderr)
+        return 1
+
+    async def with_runtime(work: object) -> object:
+        runtime = Runtime.create(settings, "admin")
+        try:
+            return await work(runtime)  # type: ignore[operator]
+        finally:
+            await runtime.dispose()
+
+    async def upkeep(runtime: Runtime, on: bool) -> None:
+        async with runtime.sessionmaker.begin() as session:
+            if on:
+                await maintenance.announce(session, "Restauration d'une sauvegarde")
+            else:
+                await maintenance.lift(session)
+
+    try:
+        if args.essai:
+            result = backup.restore_test(settings, path)
+            asyncio.run(
+                with_runtime(
+                    lambda rt: write_status(
+                        rt, test_at=datetime.now(UTC).isoformat(), test_ok=True, test_error=None
+                    )
+                )
+            )
+            print(
+                f"Essai réussi : {plural(result['tables'], 'table', 'tables')}, "
+                f"{plural(result['rows'], 'ligne', 'lignes')}, "
+                f"{plural(result['files'], 'fichier', 'fichiers')}. Rien n'a été touché."
+            )
+            return 0
+        print(f"Toute la plateforme va revenir à la sauvegarde {path.name} :")
+        print(
+            "ce qui a changé depuis sera perdu (une sauvegarde de l'état actuel est faite avant)."
+        )
+        if input("Écris « restaurer » pour continuer : ").strip() != "restaurer":
+            print("Rien n'est changé.")
+            return 1
+        asyncio.run(with_runtime(lambda rt: upkeep(rt, True)))
+        print("Maintenance annoncée. Essai de la sauvegarde…")
+        backup.restore_test(settings, path)
+        before = backup.make_backup(settings, label="avant-restauration")
+        print(f"État actuel sauvegardé : {before.path.name}. Restauration…")
+        backup.restore(settings, path)
+        asyncio.run(with_runtime(lambda rt: upkeep(rt, True)))
+        upgrade(settings)
+        sync_role_passwords(settings)
+        asyncio.run(with_runtime(lambda rt: upkeep(rt, False)))
+    except backup.BackupError as exc:
+        print(f"Restauration impossible : {exc}.", file=sys.stderr)
+        if not args.essai:
+            print(
+                "Si la maintenance est restée annoncée : jobbot maintenance off.", file=sys.stderr
+            )
+        return 1
+    print("Restauration faite, maintenance levée. Redémarre l'API et le worker (make dev).")
+    return 0
+
+
 def cmd_maintenance(args: argparse.Namespace) -> int:
     """Annonce ou lève une maintenance (docs/79) : entre les deux, l'API répond « en
     maintenance » à tous, sauf à l'exploitant."""
@@ -384,6 +494,15 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser(
         "demo-seed", help="remplit une base de démo avec des données fictives (docs/72)"
     ).set_defaults(func=cmd_demo_seed)
+    save = sub.add_parser("backup", help="une sauvegarde tout de suite (docs/82)")
+    save.add_argument("--list", action="store_true", help="les sauvegardes présentes")
+    save.set_defaults(func=cmd_backup)
+    back = sub.add_parser("restore", help="essaie ou restaure une sauvegarde (docs/82)")
+    back.add_argument("file", help="le fichier .jobA1backup")
+    back.add_argument(
+        "--essai", action="store_true", help="dans une base à part, sans rien toucher"
+    )
+    back.set_defaults(func=cmd_restore)
     upkeep = sub.add_parser("maintenance", help="annonce ou lève une maintenance (docs/79)")
     upkeep.add_argument("action", choices=["on", "off", "status"])
     upkeep.add_argument("message", nargs="*", help="message montré pendant la maintenance")

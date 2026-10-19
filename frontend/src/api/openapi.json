@@ -8672,6 +8672,109 @@
         ],
         "title": "AssistantStatus"
       },
+      "BackupOut": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "folder": {
+            "type": "string",
+            "title": "Folder"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "last_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last At"
+          },
+          "last_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Size"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "test_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test At"
+          },
+          "test_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Ok"
+          },
+          "test_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Error"
+          },
+          "late": {
+            "type": "boolean",
+            "title": "Late"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured",
+          "folder",
+          "count",
+          "last_at",
+          "last_size",
+          "last_error",
+          "test_at",
+          "test_ok",
+          "test_error",
+          "late"
+        ],
+        "title": "BackupOut",
+        "description": "Les sauvegardes (docs/82) : réglées ou non, la dernière, le dernier essai."
+      },
       "Body_uploadDocument": {
         "properties": {
           "file": {
@@ -14893,6 +14996,16 @@
             "type": "boolean",
             "title": "Database Admin",
             "default": false
+          },
+          "backup": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BackupOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
