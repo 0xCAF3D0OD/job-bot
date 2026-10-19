@@ -7,7 +7,6 @@ import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import BrandMark from "./components/BrandMark.vue";
-import HandLoop from "./components/HandLoop.vue";
 import HeaderCapsule from "./components/HeaderCapsule.vue";
 import ProgressPreview from "./components/ProgressPreview.vue";
 import TabBar from "./components/TabBar.vue";
@@ -109,8 +108,6 @@ onUnmounted(() => {
               :aria-current="isCurrent(entry) ? 'page' : undefined"
             >
               {{ entry.label }}
-              <!-- La page en cours, entourée à main levée (docs/96). -->
-              <HandLoop v-if="isCurrent(entry)" />
             </RouterLink>
           </li>
         </ul>

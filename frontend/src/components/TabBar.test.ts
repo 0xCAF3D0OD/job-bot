@@ -27,14 +27,6 @@ describe("La barre d'onglets du téléphone (docs/92)", () => {
     expect(jobs.attributes("href")).toBe("/candidatures/suivi");
     expect(jobs.text()).toContain("4");
     expect(wrapper.find("[data-test=tab-today]").attributes("href")).toBe("/aujourdhui");
-    // La boucle à main levée autour de l'icône de l'onglet choisi, décorative (docs/96).
-    expect(jobs.find("[data-test=hand-loop]").exists()).toBe(true);
-    expect(jobs.find("[data-test=hand-loop]").attributes("aria-hidden")).toBe("true");
-    expect(wrapper.find("[data-test=tab-today] [data-test=hand-loop]").exists()).toBe(false);
-    await router.push("/aujourdhui");
-    await flushPromises();
-    expect(wrapper.find("[data-test=tab-today] [data-test=hand-loop]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=tab-jobs] [data-test=hand-loop]").exists()).toBe(false);
     await router.push("/candidatures/offres/12/preparer");
     await flushPromises();
     expect(wrapper.find("[data-test=tab-bar]").exists()).toBe(false);
