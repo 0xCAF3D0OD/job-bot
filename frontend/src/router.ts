@@ -45,6 +45,9 @@ export const navigation: NavEntry[] = [
   { path: "/profil", name: "profile", label: "Profil" },
   { path: "/reglages", name: "settings", label: "Réglages" },
 ];
+// Le menu principal ne garde que la recherche (docs/89) : Réglages s'ouvre depuis le menu du
+// compte, dans la capsule à droite. La page garde son adresse et son titre.
+export const mainMenu: NavEntry[] = navigation.filter((entry) => entry.name !== "settings");
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
 export type JobsTab = "offres" | "suivi" | "alertes" | "bilan" | "rendez-vous";

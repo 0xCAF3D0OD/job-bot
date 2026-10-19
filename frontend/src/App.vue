@@ -19,9 +19,9 @@ import { useCollect } from "./composables/useCollect";
 import { useFileDownloads } from "./composables/useFileDownloads";
 import { useMaintenance } from "./composables/useMaintenance";
 import { useProfiles } from "./composables/useProfiles";
-import { navigation, type NavEntry, PUBLIC_ROUTES } from "./router";
+import { mainMenu, type NavEntry, PUBLIC_ROUTES } from "./router";
 
-const { message, running, failed, collectNow } = useCollect();
+const { message, failed } = useCollect();
 // Maintenance (docs/79) : la page d'attente, et le rappel à l'exploitant qui passe quand même.
 const {
   waiting: maintenanceWaiting,
@@ -39,9 +39,9 @@ useFileDownloads();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 const { last: lastJobsPage } = useJobsMemory();
-// Six entrées (docs/19 §1) ; sans connexion, seulement la présentation de la plateforme (docs/67).
+// Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
 const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme" }];
-const menu = computed(() => (loggedIn.value ? navigation : DISCOVER));
+const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
 
 function onUnauthorized(): void {
   expired();
@@ -119,23 +119,26 @@ onUnmounted(() => {
         v-if="loggedIn"
         class="topbar-actions"
       >
-        <NotificationBell />
-        <!-- La démo ne collecte rien (docs/72). -->
-        <button
-          v-if="!me?.demo"
-          type="button"
-          class="secondary small collect-top"
-          :disabled="running"
-          data-test="collect-top"
-          @click="collectNow"
+        <!-- La capsule (docs/89) : la cloche, ton initiale (le menu du compte), ☰ sur téléphone. -->
+        <div
+          class="capsule"
+          data-test="capsule"
         >
-          Collecter
-        </button>
-        <AccountMenu />
-        <MobileMenu
-          :menu="menu"
-          :news-count="newsCount"
-        />
+          <NotificationBell />
+          <span
+            class="capsule-sep"
+            aria-hidden="true"
+          />
+          <AccountMenu />
+          <span
+            class="capsule-sep burger-sep"
+            aria-hidden="true"
+          />
+          <MobileMenu
+            :menu="menu"
+            :news-count="newsCount"
+          />
+        </div>
       </div>
       <div
         v-else-if="me"

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { navigation } from "./router";
+import { mainMenu, navigation } from "./router";
 
 // Une interface qui s'affiche au lieu de parler (docs/88) : le titre d'une page reprend son
 // entrée du menu, et aucun titre ne commence par « Ton », « Ta », « Tes »… Les prix sortent
@@ -27,7 +27,17 @@ function template(source: string): string {
 }
 
 describe("titres (docs/88)", () => {
-  it("chaque page affiche comme titre l'entrée du menu", () => {
+  it("le menu principal garde les cinq pages de la recherche (docs/89)", () => {
+    expect(mainMenu.map((entry) => entry.label)).toEqual([
+      "Aujourd'hui",
+      "Candidatures",
+      "Actualités",
+      "Formations",
+      "Profil",
+    ]);
+  });
+
+  it("chaque page affiche comme titre son nom de page, Réglages compris", () => {
     for (const entry of navigation) {
       const view = VIEWS[entry.name];
       expect(view, entry.name).toBeDefined();
