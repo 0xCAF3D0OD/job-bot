@@ -23,6 +23,13 @@ Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur 
 3. Si une carte se serre, on retire un élément plutôt que de réduire les marges.
 4. Les logos d'entreprise sont des carrés aux coins arrondis (0,6 rem) ; restent ronds la note, l'initiale du compte et les pastilles.
 
+## Les contrôles (docs/94)
+
+1. Une seule hauteur, `--control-h` : 2,5 rem sur ordinateur, 2,75 rem sur téléphone, pour les boutons, liens en bouton, listes de choix, champs d'une ligne, sélecteurs, ⋯ et boutons ronds (cercles de la même hauteur).
+2. Dans une rangée, tout est centré ; l'écart vient de la rangée, jamais d'une marge propre à un élément.
+3. Gardent leur forme : zones de texte, cases, curseurs, étiquettes, la capsule.
+4. Avant une PR d'interface, l'audit des rangées (`frontend/scripts/alignement.py`) est vide.
+
 ## Illustrations (docs/62, docs/67)
 
 1. Une illustration seulement si l'écran n'a rien d'autre à montrer (vide, erreur, première fois) ou pour marquer un moment (réussite, transition d'une page qui charge).
