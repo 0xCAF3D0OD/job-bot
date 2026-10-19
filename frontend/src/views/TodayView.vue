@@ -6,6 +6,7 @@ import { useRouter } from "vue-router";
 import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import DashTile from "../components/dash/DashTile.vue";
+import RhythmCard from "../components/RhythmCard.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
 import WeekChart from "../components/dash/WeekChart.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
@@ -52,7 +53,10 @@ const JOURNEY: Record<Today["journey"][number]["key"], { label: string; to: stri
 
 const today = ref<Today | null>(null);
 usePageReady("today", () => !!today.value);
+const DOSE = 3;
 const best = ref<Offer[]>([]);
+// Un jour sans recherche (docs/86) : aucune liste à traiter.
+const restDay = computed(() => today.value?.rhythm?.research_today === false);
 // Blocs par catégorie (docs/19 §3).
 const preparing = ref<Offer[]>([]);
 const news = ref<NewsItem[]>([]);
@@ -156,7 +160,8 @@ async function loadTrainings(): Promise<void> {
 async function load(): Promise<void> {
   const [day, offers, current] = await Promise.all([
     api.GET("/api/today"),
-    api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 5 } } }),
+    // La dose du jour (docs/86) : les 3 meilleures, pas toute la pile.
+    api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE } } }),
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 20 } } }),
   ]);
   today.value = day.data ?? null;
@@ -311,133 +316,150 @@ const { me } = useAuth();
       </div>
 
       <div class="dash-row dash-mid">
-        <section
-          class="dash-card dash-table"
-          data-test="best"
-        >
-          <header class="dash-card-head">
-            <h2>À examiner en priorité</h2>
-            <div
-              class="segmented small"
-              role="radiogroup"
-              aria-label="Offres affichées"
-            >
-              <button
-                type="button"
-                role="radio"
-                :aria-checked="tableTab === 'best'"
-                data-test="tab-best"
-                @click="tableTab = 'best'"
-              >
-                Mieux notées
-              </button>
-              <button
-                type="button"
-                role="radio"
-                :aria-checked="tableTab === 'preparing'"
-                data-test="tab-preparing"
-                @click="tableTab = 'preparing'"
-              >
-                Commencées<span
-                  v-if="preparing.length"
-                  class="tab-count"
-                >{{ preparing.length }}</span>
-              </button>
-            </div>
-          </header>
-          <div v-show="tableTab === 'best'">
-            <p
-              v-if="!best.length"
-              class="hint"
-            >
-              Aucune offre notée en attente.
-            </p>
-            <table
-              v-else
-              class="dash-offers"
-            >
-              <thead>
-                <tr>
-                  <th>Offre</th>
-                  <th>Note</th>
-                  <th class="dash-col-place">
-                    Lieu
-                  </th>
-                  <th class="dash-col-date">
-                    Reçue
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="offer in best"
-                  :key="offer.id"
-                  class="row-link"
-                  @click="router.push(offerLink(offer.id))"
-                >
-                  <td>
-                    <span class="dash-offer">
-                      <CompanyLogo :offer="offer" />
-                      <span>
-                        <RouterLink
-                          :to="offerLink(offer.id)"
-                          class="row-link-title"
-                          @click.stop
-                        ><strong>{{ offer.title }}</strong></RouterLink>
-                        <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
-                      </span>
-                    </span>
-                  </td>
-                  <td><ScoreRing :score="offer.score!" /></td>
-                  <td class="dash-col-place muted">
-                    {{ offer.location || "—" }}
-                  </td>
-                  <td class="dash-col-date muted">
-                    {{ offer.first_seen_at ? shortDate.format(new Date(offer.first_seen_at)) : "—" }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div
-            v-show="tableTab === 'preparing'"
-            data-test="preparing"
+        <!-- Ta semaine (docs/86), puis la dose du jour. -->
+        <div class="dash-main">
+          <RhythmCard
+            v-if="today.rhythm"
+            :week="today.rhythm"
+          />
+          <section
+            class="dash-card dash-table"
+            data-test="best"
           >
-            <p
-              v-if="!preparing.length"
-              class="hint"
-            >
-              Aucune candidature en préparation.
-            </p>
-            <table
-              v-else
-              class="dash-offers"
-            >
-              <tbody>
-                <tr
-                  v-for="offer in preparing"
-                  :key="offer.id"
-                  class="row-link"
-                  @click="router.push(`/candidatures/offres/${offer.id}/preparer`)"
+            <header class="dash-card-head">
+              <h2>{{ restDay ? "Jour sans recherche" : "La dose du jour" }}</h2>
+              <div
+                class="segmented small"
+                role="radiogroup"
+                aria-label="Offres affichées"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  :aria-checked="tableTab === 'best'"
+                  data-test="tab-best"
+                  @click="tableTab = 'best'"
                 >
-                  <td>
-                    <span class="dash-offer">
-                      <CompanyLogo :offer="offer" />
-                      <span>
-                        <RouterLink
-                          :to="`/candidatures/offres/${offer.id}/preparer`"
-                          class="row-link-title"
-                          @click.stop
-                        ><strong>{{ offer.title }}</strong></RouterLink>
-                        <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
+                  Mieux notées
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  :aria-checked="tableTab === 'preparing'"
+                  data-test="tab-preparing"
+                  @click="tableTab = 'preparing'"
+                >
+                  Commencées<span
+                    v-if="preparing.length"
+                    class="tab-count"
+                  >{{ preparing.length }}</span>
+                </button>
+              </div>
+            </header>
+            <div v-show="tableTab === 'best'">
+              <p
+                v-if="restDay"
+                class="hint"
+                data-test="rest-day"
+              >
+                Rien à traiter aujourd'hui. Les offres t'attendent dans
+                <RouterLink to="/candidatures/offres">
+                  Offres
+                </RouterLink>, pour ton prochain jour de recherche.
+              </p>
+              <p
+                v-else-if="!best.length"
+                class="hint"
+              >
+                Aucune offre notée en attente.
+              </p>
+              <table
+                v-else
+                class="dash-offers"
+              >
+                <thead>
+                  <tr>
+                    <th>Offre</th>
+                    <th>Note</th>
+                    <th class="dash-col-place">
+                      Lieu
+                    </th>
+                    <th class="dash-col-date">
+                      Reçue
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="offer in best"
+                    :key="offer.id"
+                    class="row-link"
+                    @click="router.push(offerLink(offer.id))"
+                  >
+                    <td>
+                      <span class="dash-offer">
+                        <CompanyLogo :offer="offer" />
+                        <span>
+                          <RouterLink
+                            :to="offerLink(offer.id)"
+                            class="row-link-title"
+                            @click.stop
+                          ><strong>{{ offer.title }}</strong></RouterLink>
+                          <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
+                        </span>
                       </span>
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+                    </td>
+                    <td><ScoreRing :score="offer.score!" /></td>
+                    <td class="dash-col-place muted">
+                      {{ offer.location || "—" }}
+                    </td>
+                    <td class="dash-col-date muted">
+                      {{ offer.first_seen_at ? shortDate.format(new Date(offer.first_seen_at)) : "—" }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div
+              v-show="tableTab === 'preparing'"
+              data-test="preparing"
+            >
+              <p
+                v-if="!preparing.length"
+                class="hint"
+              >
+                Aucune candidature en préparation.
+              </p>
+              <table
+                v-else
+                class="dash-offers"
+              >
+                <tbody>
+                  <tr
+                    v-for="offer in preparing"
+                    :key="offer.id"
+                    class="row-link"
+                    @click="router.push(`/candidatures/offres/${offer.id}/preparer`)"
+                  >
+                    <td>
+                      <span class="dash-offer">
+                        <CompanyLogo :offer="offer" />
+                        <span>
+                          <RouterLink
+                            :to="`/candidatures/offres/${offer.id}/preparer`"
+                            class="row-link-title"
+                            @click.stop
+                          ><strong>{{ offer.title }}</strong></RouterLink>
+                          <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
+                        </span>
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
         <OrpGauge
           :count="today.month_count"
           :target="today.month_target ?? null"

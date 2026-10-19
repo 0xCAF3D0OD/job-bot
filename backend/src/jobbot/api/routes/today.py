@@ -31,6 +31,7 @@ from jobbot.letters.service import load_identity
 from jobbot.notify import interviews as interview_reminders
 from jobbot.orp import meeting as orp_meeting
 from jobbot.orp.service import load_due_day
+from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
 from jobbot.worker.tasks.collect import COLLECT_JOB
 
@@ -85,6 +86,21 @@ class MonthResult(BaseModel):
     count: int
 
 
+class RhythmDay(BaseModel):
+    day: date
+    research: bool
+    sent: int
+
+
+class RhythmWeek(BaseModel):
+    """Le bon rythme (docs/86) : la part de l'objectif ORP pour cette semaine."""
+
+    target: int | None
+    count: int
+    days: list[RhythmDay]
+    research_today: bool
+
+
 class TodayOut(BaseModel):
     # Démarrage : affiché tant qu'une étape manque, sauf si Kevin l'a masqué.
     checklist: list[ChecklistItem]
@@ -113,6 +129,8 @@ class TodayOut(BaseModel):
     orp_history: list[MonthResult] = []
     # Rendez-vous ORP aujourd'hui ou demain : la feuille est prête (docs/83).
     orp_meeting_at: datetime | None = None
+    # Ta semaine (docs/86) : la part de l'objectif, et si aujourd'hui est un jour de recherche.
+    rhythm: RhythmWeek | None = None
 
 
 class OnboardingIn(BaseModel):
@@ -339,6 +357,7 @@ async def get_today(request: Request) -> TodayOut:
     )
     async with runtime.sessionmaker() as session:
         meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
+        this_week = await rhythm.week(session, rhythm.local_today())
     soon = meeting is not None and (
         meeting.starts_at.astimezone(LOCAL_TZ).date()
         - datetime.now(UTC).astimezone(LOCAL_TZ).date()
@@ -363,6 +382,12 @@ async def get_today(request: Request) -> TodayOut:
         week=week,
         orp_history=orp_history,
         orp_meeting_at=meeting.starts_at if meeting is not None and soon else None,
+        rhythm=RhythmWeek(
+            target=this_week.target,
+            count=this_week.count,
+            days=[RhythmDay(day=d.day, research=d.research, sent=d.sent) for d in this_week.days],
+            research_today=this_week.research_today,
+        ),
     )
 
 

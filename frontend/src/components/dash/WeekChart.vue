@@ -5,7 +5,8 @@ import type { Today } from "../../api/client";
 import { localDate, plural } from "../../format";
 import { firstTime } from "../../composables/useIntro";
 
-// « Ta semaine » (docs/54 §2) : barres des 7 derniers jours, offres reçues ou candidatures
+// « Tes 7 derniers jours » (docs/54 §2 ; renommé en 0.68.0, « Ta semaine » est le rythme,
+// docs/86) : barres des 7 derniers jours, offres reçues ou candidatures
 // envoyées ; la valeur dans une bulle sombre au survol (ou au focus) d'une barre.
 const props = defineProps<{ week: Today["week"] }>();
 const kind = ref<"offers" | "applications">("offers");
@@ -28,7 +29,7 @@ const intro = firstTime("week-chart");
     data-test="week-chart"
   >
     <header class="dash-card-head">
-      <h2>Ta semaine</h2>
+      <h2>Tes 7 derniers jours</h2>
       <div
         class="segmented small"
         role="radiogroup"

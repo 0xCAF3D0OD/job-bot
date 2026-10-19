@@ -156,6 +156,9 @@ async def test_api_settings(api: AsyncClient) -> None:
         "llm_monthly_budget_chf": 10,
         "orp_due_day": 5,
         "employer_search_threshold": 70,
+        "rhythm_days": [0, 1, 2, 3, 4],
+        "offers_notify_mode": "daily",
+        "offers_notify_hour": 9,
     }
     new = {
         "orp_monthly_target": 8,
@@ -163,6 +166,9 @@ async def test_api_settings(api: AsyncClient) -> None:
         "llm_monthly_budget_chf": 5,
         "orp_due_day": 10,
         "employer_search_threshold": 70,
+        "rhythm_days": [0, 1, 2, 3, 4],
+        "offers_notify_mode": "daily",
+        "offers_notify_hour": 9,
     }
     assert (await api.put("/api/settings", json=new)).json() == new
     assert (await api.get("/api/settings")).json() == new

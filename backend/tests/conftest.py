@@ -6,6 +6,8 @@ Le schéma public est recréé au début de la session, puis les migrations sont
 
 import os
 from collections.abc import AsyncIterator, Iterator
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -17,6 +19,7 @@ from jobbot import accounts
 from jobbot.api.app import create_app
 from jobbot.api.routes import trainings as trainings_routes
 from jobbot.db.schema import upgrade
+from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
@@ -64,6 +67,16 @@ def migrated_database(settings: Settings) -> Iterator[None]:
     engine.dispose()
     upgrade(settings)
     yield
+
+
+# Un mardi à 10 h, heure suisse : un jour de recherche, après l'heure du message des offres
+# (docs/86). Sans cela, les notifications dépendraient du jour où les tests tournent.
+RHYTHM_NOW = datetime(2026, 10, 20, 10, 0, tzinfo=ZoneInfo("Europe/Zurich"))
+
+
+@pytest.fixture(autouse=True)
+def rhythm_clock(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(rhythm, "now", lambda: RHYTHM_NOW)
 
 
 @pytest.fixture(autouse=True)

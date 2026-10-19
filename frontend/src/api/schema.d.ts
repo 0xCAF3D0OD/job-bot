@@ -5583,6 +5583,32 @@ export interface components {
              */
             result: "queued" | "already_queued";
         };
+        /** RhythmDay */
+        RhythmDay: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Research */
+            research: boolean;
+            /** Sent */
+            sent: number;
+        };
+        /**
+         * RhythmWeek
+         * @description Le bon rythme (docs/86) : la part de l'objectif ORP pour cette semaine.
+         */
+        RhythmWeek: {
+            /** Target */
+            target: number | null;
+            /** Count */
+            count: number;
+            /** Days */
+            days: components["schemas"]["RhythmDay"][];
+            /** Research Today */
+            research_today: boolean;
+        };
         /** ScorePoint */
         ScorePoint: {
             /** Text */
@@ -5923,6 +5949,19 @@ export interface components {
              * @default 70
              */
             employer_search_threshold: number;
+            /** Rhythm Days */
+            rhythm_days?: number[];
+            /**
+             * Offers Notify Mode
+             * @default daily
+             * @enum {string}
+             */
+            offers_notify_mode: "daily" | "instant";
+            /**
+             * Offers Notify Hour
+             * @default 9
+             */
+            offers_notify_hour: number;
         };
         /** SiteActive */
         SiteActive: {
@@ -6104,6 +6143,7 @@ export interface components {
             orp_history: components["schemas"]["MonthResult"][];
             /** Orp Meeting At */
             orp_meeting_at?: string | null;
+            rhythm?: components["schemas"]["RhythmWeek"] | null;
         };
         /** TokenCreated */
         TokenCreated: {

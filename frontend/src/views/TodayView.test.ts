@@ -99,6 +99,21 @@ describe("TodayView", () => {
     expect(wrapper.text()).toContain("Ingénieur DevOps");
   });
 
+  it("le bon rythme : la dose du jour, ou un jour sans recherche (docs/86)", async () => {
+    const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({ day: `2026-10-${d}`, research: i < 5, sent: 0 }));
+    mockGet(today({ rhythm: { target: 3, count: 1, days, research_today: true } }));
+    let wrapper = await mountView();
+    expect(wrapper.find("[data-test=rhythm-count]").text()).toBe("1 / 3 candidatures");
+    expect(wrapper.find("[data-test=best] h2").text()).toBe("La dose du jour");
+    expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } });
+    expect(wrapper.text()).toContain("Ingénieur DevOps");
+    mockGet(today({ rhythm: { target: 3, count: 1, days, research_today: false } }));
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=best] h2").text()).toBe("Jour sans recherche");
+    expect(wrapper.find("[data-test=rest-day]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=best] table").exists()).toBe(false);
+  });
+
   it("tout fait ou masqué : la liste disparaît", async () => {
     mockGet(today({ checklist_dismissed: true }));
     const wrapper = await mountView();

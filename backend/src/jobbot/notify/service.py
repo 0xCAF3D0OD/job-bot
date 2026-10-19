@@ -3,6 +3,9 @@
 - Nouvelles offres dont la note atteint le seuil des Réglages : une notification groupée
   par passage, une seule fois par offre.
 - Dépense de l'IA à 80 % du plafond mensuel : une notification par mois.
+- Le bon rythme (docs/86) : par défaut, les offres arrivent en un seul message par jour, dès
+  l'heure choisie, un jour de recherche ; les jours sans recherche, rien ne part vers le
+  téléphone, sauf les rappels qui ont une date limite (la cloche garde tout).
 
 Envoi en JSON (UTF-8 sûr pour les accents), au serveur JOBBOT_NTFY_URL, sur le sujet
 secret JOBBOT_NTFY_TOPIC. Sans sujet, rien ne part vers le téléphone ; chaque alerte est aussi
@@ -18,11 +21,12 @@ from typing import Any
 
 import httpx
 from pydantic import SecretStr
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
+from jobbot.core.orp import LOCAL_TZ
 from jobbot.core.plural import plural
 from jobbot.db.models import (
     Application,
@@ -34,6 +38,7 @@ from jobbot.db.models import (
     Setting,
 )
 from jobbot.log import get_logger
+from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
 from jobbot.scoring.service import budget_state
 from jobbot.settings import Settings
@@ -43,6 +48,10 @@ log = get_logger(__name__)
 MAX_LISTED = 8
 BUDGET_ALERT_RATIO = Decimal("0.8")
 BUDGET_ALERT_KEY = "budget_alert_month"
+DIGEST_KEY = "offers_digest_day"
+# Ce qui peut attendre un jour de recherche (docs/86 §2) ; les rappels datés (remise ORP,
+# rendez-vous de demain) et les alertes techniques passent toujours.
+QUIET_KINDS = frozenset({"offers", "follow_up", "interview", "contact", "funding", "orp_target"})
 
 
 @dataclass(frozen=True)
@@ -95,12 +104,15 @@ send: Callable[[Settings, Message], Awaitable[None]] = http_send
 
 async def deliver(runtime: Runtime, message: Message, *, kind: str, link: str) -> None:
     """Une alerte : toujours dans la cloche (docs/15 §1), et sur le téléphone si ntfy est
-    configuré. Un échec de ntfy n'empêche pas l'alerte d'être dans la cloche."""
+    configuré, sauf un jour sans recherche pour ce qui peut attendre (docs/86). Un échec de
+    ntfy n'empêche pas l'alerte d'être dans la cloche."""
     async with runtime.sessionmaker.begin() as session:
         session.add(
             Notification(kind=kind, title=message.title, message=message.message, link=link)
         )
         target = await phone_settings(session, runtime.settings)
+        if kind in QUIET_KINDS and not await rhythm.is_research_day(session):
+            target = None
     if target is None:
         return
     try:
@@ -149,10 +161,27 @@ async def _threshold(runtime: Runtime) -> int:
     return int(value) if value is not None else 70
 
 
-async def notify_new_scores(runtime: Runtime) -> NotifyResult:
+async def _digest_due(runtime: Runtime, now: datetime) -> bool:
+    """Le message du jour (docs/86) : un jour de recherche, dès l'heure choisie, une fois."""
+    local = now.astimezone(LOCAL_TZ)
+    async with runtime.sessionmaker() as session:
+        settings = await rhythm.load(session)
+        last = await session.scalar(select(Setting.value).where(Setting.key == DIGEST_KEY))
+    if settings.mode == "instant":
+        return True
+    return (
+        local.weekday() in settings.days
+        and local.hour >= settings.hour
+        and last != local.date().isoformat()
+    )
+
+
+async def notify_new_scores(runtime: Runtime, now: datetime | None = None) -> NotifyResult:
     settings = runtime.settings
     result = NotifyResult(configured=settings.ntfy_configured)
     threshold = await _threshold(runtime)
+    moment = now or rhythm.now()
+    due = await _digest_due(runtime, moment)
     async with runtime.sessionmaker() as session:
         rows = (
             await session.execute(
@@ -167,7 +196,7 @@ async def notify_new_scores(runtime: Runtime) -> NotifyResult:
                 .order_by(Evaluation.score.desc(), Offer.first_seen_at.desc())
             )
         ).all()
-    if rows:
+    if rows and due:
         await deliver(
             runtime,
             offers_message(settings, [(r[1] or 0, r[2], r[3], r[4]) for r in rows]),
@@ -180,14 +209,25 @@ async def notify_new_scores(runtime: Runtime) -> NotifyResult:
                 .where(Evaluation.id.in_([r[0] for r in rows]))
                 .values(notified_at=datetime.now(UTC))
             )
+            day = moment.astimezone(LOCAL_TZ).date().isoformat()
+            await session.execute(
+                insert(Setting)
+                .values(key=DIGEST_KEY, value=day)
+                .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": day})
+            )
         result.offers = len(rows)
 
     # Les notes trop basses ne seront jamais signalées : on les marque aussi, pour ne
     # pas les signaler si le seuil baisse plus tard (seules les nouvelles notes comptent).
+    # Les bonnes notes pas encore envoyées attendent le message du jour.
     async with runtime.sessionmaker.begin() as session:
         await session.execute(
             update(Evaluation)
-            .where(Evaluation.notified_at.is_(None), Evaluation.scored_at.is_not(None))
+            .where(
+                Evaluation.notified_at.is_(None),
+                Evaluation.scored_at.is_not(None),
+                or_(Evaluation.score.is_(None), Evaluation.score < threshold),
+            )
             .values(notified_at=datetime.now(UTC))
         )
 
