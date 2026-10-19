@@ -3,6 +3,7 @@ import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw
 
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
+import { useProgressMemory } from "./composables/useProgressMemory";
 import { startPage } from "./composables/usePageTransition";
 import AlertsView from "./views/AlertsView.vue";
 import InsightsView from "./views/InsightsView.vue";
@@ -21,6 +22,7 @@ import OffersView from "./views/OffersView.vue";
 import NotFoundView from "./views/NotFoundView.vue";
 import PlaceholderView from "./views/PlaceholderView.vue";
 import PreparationView from "./views/PreparationView.vue";
+import ProgressView from "./views/ProgressView.vue";
 import ProfileView from "./views/ProfileView.vue";
 import SettingsView from "./views/SettingsView.vue";
 import TodayView from "./views/TodayView.vue";
@@ -40,22 +42,22 @@ export interface NavEntry {
 export const navigation: NavEntry[] = [
   { path: "/aujourdhui", name: "today", label: "Aujourd'hui" },
   { path: "/candidatures", name: "jobs", label: "Candidatures" },
-  { path: "/actualites", name: "news", label: "Actualités" },
-  { path: "/formations", name: "trainings", label: "Formations" },
+  { path: "/progresser", name: "progress", label: "Progresser" },
   { path: "/profil", name: "profile", label: "Profil" },
   { path: "/reglages", name: "settings", label: "Réglages" },
 ];
-// Le menu principal ne garde que la recherche (docs/89) : Réglages s'ouvre depuis le menu du
-// compte, dans la capsule à droite. La page garde son adresse et son titre.
-export const mainMenu: NavEntry[] = navigation.filter((entry) => entry.name !== "settings");
+// Le menu principal : deux pages de travail et une pour avancer (docs/89, docs/90). Profil et
+// Réglages s'ouvrent depuis le menu du compte, dans la capsule à droite ; ils gardent leur
+// adresse et leur titre.
+export const mainMenu: NavEntry[] = navigation.filter((entry) => !["profile", "settings"].includes(entry.name));
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
 export type JobsTab = "offres" | "suivi" | "alertes" | "bilan" | "rendez-vous";
+// Onglets de Progresser (docs/90).
+export type ProgressTab = "actualites" | "formations";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, Component> = {
-  news: NewsView,
-  trainings: TrainingsView,
   profile: ProfileView,
   settings: SettingsView,
   today: TodayView,
@@ -83,8 +85,11 @@ export const routes: RouteRecordRaw[] = [
     }),
   },
   { path: "/etat", redirect: "/reglages/diagnostic" },
+  // Actualités et Formations sont dans Progresser (docs/90) : les anciens liens y mènent.
+  { path: "/actualites", redirect: (to) => ({ path: "/progresser/actualites", query: to.query }) },
+  { path: "/formations", redirect: (to) => ({ path: "/progresser/formations", query: to.query }) },
   ...navigation
-    .filter((entry) => entry.name !== "jobs")
+    .filter((entry) => entry.name !== "jobs" && entry.name !== "progress")
     .map(
       (entry): RouteRecordRaw => ({
         path: entry.path,
@@ -125,6 +130,16 @@ export const routes: RouteRecordRaw[] = [
         component: OrpMeetingView,
         meta: { tab: "rendez-vous" },
       },
+    ],
+  },
+  {
+    path: "/progresser",
+    component: ProgressView,
+    children: [
+      // /progresser seul : le dernier onglet choisi, sinon les Actualités.
+      { path: "", redirect: () => useProgressMemory().last.value },
+      { path: "actualites", name: "news", component: NewsView, meta: { tab: "actualites" } },
+      { path: "formations", name: "trainings", component: TrainingsView, meta: { tab: "formations" } },
     ],
   },
   // Diagnostic technique, sorti des Réglages (docs/21 §6).
@@ -179,5 +194,6 @@ router.beforeEach(async (to) => {
 // seulement un filtre, un mois ou un onglet dans la page.
 router.afterEach((to, from) => {
   useJobsMemory().remember(to.fullPath);
+  useProgressMemory().remember(to.fullPath);
   if (to.name !== from.name) startPage(typeof to.name === "string" ? to.name : null);
 });

@@ -8,7 +8,7 @@ import { useProfiles } from "../composables/useProfiles";
 import AppIcon from "./AppIcon.vue";
 
 // Menu du compte (docs/19 §1, docs/89) : dans la capsule à droite, sous ton initiale. Il porte
-// ce qui n'est pas la recherche : Réglages, Données personnelles, Diagnostic, la collecte, le
+// ce qui n'est pas la recherche : Profil, Réglages, Données personnelles, Diagnostic, la collecte, le
 // profil affiché et la déconnexion. Toujours là, sur ordinateur comme sur téléphone.
 const route = useRoute();
 const router = useRouter();
@@ -22,7 +22,7 @@ const panel = ref<HTMLElement | null>(null);
 
 const initial = computed(() => me.value?.username?.trim().charAt(0).toUpperCase() ?? "");
 // Une page du menu ouverte : l'initiale est marquée comme active.
-const active = computed(() => ["/reglages", "/tes-donnees"].some((path) => route.path.startsWith(path)));
+const active = computed(() => ["/profil", "/reglages", "/tes-donnees"].some((path) => route.path.startsWith(path)));
 
 function onChange(event: Event): void {
   choose(Number((event.target as HTMLSelectElement).value));
@@ -153,6 +153,13 @@ onUnmounted(() => {
           </option>
         </select>
       </label>
+      <RouterLink
+        to="/profil"
+        role="menuitem"
+        data-test="account-profile"
+      >
+        Profil
+      </RouterLink>
       <RouterLink
         to="/reglages"
         role="menuitem"

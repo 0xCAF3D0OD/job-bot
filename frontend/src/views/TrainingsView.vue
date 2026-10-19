@@ -6,7 +6,6 @@ import { api, type Training } from "../api/client";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import DomainField from "../components/DomainField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import PageHero from "../components/PageHero.vue";
 import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
 import TrainingCardBody from "../components/TrainingCardBody.vue";
@@ -166,35 +165,34 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <PageHero
-    title="Formations"
-  >
-    <nav
-      class="prep-tabs"
-      aria-label="Formations"
-    >
-      <RouterLink
-        :to="{ query: {} }"
-        :class="{ active: tab === 'catalog' }"
-        data-test="tab-catalog"
-      >
-        Catalogue
-      </RouterLink>
-      <RouterLink
-        :to="{ query: { onglet: 'miennes' } }"
-        :class="{ active: tab === 'mine' }"
-        data-test="tab-mine"
-      >
-        Mes formations
-        <span
-          v-if="mineCount"
-          class="tab-count"
-        >{{ mineCount }}</span>
-      </RouterLink>
-    </nav>
-  </PageHero>
   <section class="band">
     <div class="container">
+      <!-- Catalogue ou Suivies, dans l'onglet Formations de Progresser (docs/90). -->
+      <nav
+        class="sub-tabs"
+        aria-label="Formations affichées"
+      >
+        <RouterLink
+          :to="{ query: {} }"
+          :class="{ active: tab === 'catalog' }"
+          :aria-current="tab === 'catalog' ? 'true' : undefined"
+          data-test="tab-catalog"
+        >
+          Catalogue
+        </RouterLink>
+        <RouterLink
+          :to="{ query: { onglet: 'miennes' } }"
+          :class="{ active: tab === 'mine' }"
+          :aria-current="tab === 'mine' ? 'true' : undefined"
+          data-test="tab-mine"
+        >
+          Suivies
+          <span
+            v-if="mineCount"
+            class="tab-count"
+          >{{ mineCount }}</span>
+        </RouterLink>
+      </nav>
       <component
         :is="phone ? DisclosureRow : 'aside'"
         :class="phone ? 'orp-note-row' : 'orp-note'"

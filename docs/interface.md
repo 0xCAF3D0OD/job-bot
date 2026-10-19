@@ -14,7 +14,7 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 
 ## La barre du haut (docs/89)
 
-Cinq pages dans le menu principal, celles de la recherche. À droite, une capsule : la cloche, puis l'initiale du compte, qui ouvre le menu du compte (Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion) ; sur téléphone, ☰ s'y ajoute et ne montre que les cinq pages.
+Trois pages dans le menu principal (docs/90) : Aujourd'hui, Candidatures, Progresser. À droite, une capsule : la cloche, puis l'initiale du compte, qui ouvre le menu du compte (Profil, Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion) ; sur téléphone, ☰ s'y ajoute et ne montre que les trois pages. Du nouveau à lire : un point, pas un chiffre ; un chiffre dit ce qui attend une action.
 
 ## Illustrations (docs/62, docs/67)
 

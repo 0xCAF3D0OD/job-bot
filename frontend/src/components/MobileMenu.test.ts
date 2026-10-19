@@ -10,7 +10,7 @@ vi.mock("../composables/useJobsMemory", () => ({ useJobsMemory: () => ({ last: r
 const menu = [
   { path: "/aujourdhui", name: "today", label: "Aujourd'hui" },
   { path: "/candidatures", name: "jobs", label: "Candidatures" },
-  { path: "/actualites", name: "news", label: "Actualités" },
+  { path: "/progresser", name: "progress", label: "Progresser" },
 ];
 
 describe("Menu burger (docs/33 §2, docs/89)", () => {
@@ -27,12 +27,13 @@ describe("Menu burger (docs/33 §2, docs/89)", () => {
     const jobs = wrapper.find("[data-test=burger-jobs]");
     expect(jobs.classes()).toContain("active");
     expect(jobs.attributes("href")).toBe("/candidatures/suivi");
-    expect(wrapper.find("[data-test=burger-news]").text()).toContain("3");
+    // Du nouveau à lire : un point, pas un chiffre (docs/90).
+    expect(wrapper.find("[data-test=burger-progress] .nav-dot").attributes("aria-label")).toBe("3 nouveaux");
     // Le compte, la collecte et Réglages sont dans le menu du compte (docs/89).
     expect(wrapper.text()).not.toContain("Connecté");
     expect(wrapper.find("[data-test=burger-collect]").exists()).toBe(false);
 
-    await router.push("/actualites");
+    await router.push("/progresser/actualites");
     await flushPromises();
     expect(burger.attributes("aria-expanded")).toBe("false");
   });

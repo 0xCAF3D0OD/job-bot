@@ -14,6 +14,7 @@ import PageTransition from "./components/PageTransition.vue";
 import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
+import { useProgressMemory } from "./composables/useProgressMemory";
 import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { useFileDownloads } from "./composables/useFileDownloads";
@@ -39,6 +40,7 @@ useFileDownloads();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 const { last: lastJobsPage } = useJobsMemory();
+const { last: lastProgressPage } = useProgressMemory();
 // Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
 const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme" }];
 const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
@@ -102,15 +104,17 @@ onUnmounted(() => {
             :key="entry.name"
           >
             <RouterLink
-              :to="entry.name === 'jobs' ? lastJobsPage : entry.path"
+              :to="entry.name === 'jobs' ? lastJobsPage : entry.name === 'progress' ? lastProgressPage : entry.path"
               :class="{ 'router-link-active': entry.name === 'jobs' && route.path.startsWith('/candidatures') }"
             >
               {{ entry.label }}
+              <!-- Du nouveau à lire : un point, pas un chiffre (docs/90) ; le chiffre est sur l'onglet. -->
               <span
-                v-if="entry.name === 'news' && newsCount"
-                class="nav-count"
+                v-if="entry.name === 'progress' && newsCount"
+                class="nav-dot"
                 data-test="news-count"
-              >{{ newsCount }}</span>
+                :aria-label="`${newsCount} nouveaux`"
+              />
             </RouterLink>
           </li>
         </ul>

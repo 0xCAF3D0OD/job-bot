@@ -7,7 +7,6 @@ import DomainField from "../components/DomainField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
-import PageHero from "../components/PageHero.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
@@ -191,51 +190,50 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <PageHero
-    title="Actualités"
-  >
-    <nav
-      class="prep-tabs"
-      aria-label="Actualités"
-    >
-      <RouterLink
-        :to="{ query: {} }"
-        :class="{ active: tab === 'jobs' }"
-        data-test="tab-articles"
-      >
-        <span class="label-long">Marché de l'emploi</span>
-        <span class="label-short">Emploi</span>
-        <span
-          v-if="counts.jobs"
-          class="tab-count"
-        >{{ counts.jobs }}</span>
-      </RouterLink>
-      <RouterLink
-        :to="{ query: { rubrique: 'economie' } }"
-        :class="{ active: tab === 'economy' }"
-        data-test="tab-economy"
-      >
-        Économie
-        <span
-          v-if="counts.economy"
-          class="tab-count"
-        >{{ counts.economy }}</span>
-      </RouterLink>
-      <RouterLink
-        :to="{ query: { rubrique: 'videos' } }"
-        :class="{ active: tab === 'videos' }"
-        data-test="tab-videos"
-      >
-        Vidéos
-        <span
-          v-if="counts.videos"
-          class="tab-count"
-        >{{ counts.videos }}</span>
-      </RouterLink>
-    </nav>
-  </PageHero>
   <section class="band">
     <div class="container">
+      <!-- Les rubriques, dans l'onglet Actualités de Progresser (docs/90). -->
+      <nav
+        class="sub-tabs"
+        aria-label="Rubrique"
+      >
+        <RouterLink
+          :to="{ query: {} }"
+          :class="{ active: tab === 'jobs' }"
+          :aria-current="tab === 'jobs' ? 'true' : undefined"
+          data-test="tab-articles"
+        >
+          Emploi
+          <span
+            v-if="counts.jobs"
+            class="tab-count"
+          >{{ counts.jobs }}</span>
+        </RouterLink>
+        <RouterLink
+          :to="{ query: { rubrique: 'economie' } }"
+          :class="{ active: tab === 'economy' }"
+          :aria-current="tab === 'economy' ? 'true' : undefined"
+          data-test="tab-economy"
+        >
+          Économie
+          <span
+            v-if="counts.economy"
+            class="tab-count"
+          >{{ counts.economy }}</span>
+        </RouterLink>
+        <RouterLink
+          :to="{ query: { rubrique: 'videos' } }"
+          :class="{ active: tab === 'videos' }"
+          :aria-current="tab === 'videos' ? 'true' : undefined"
+          data-test="tab-videos"
+        >
+          Vidéos
+          <span
+            v-if="counts.videos"
+            class="tab-count"
+          >{{ counts.videos }}</span>
+        </RouterLink>
+      </nav>
       <div
         v-if="preferences && page"
         class="news-filters"
