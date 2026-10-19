@@ -123,7 +123,7 @@ onMounted(async () => {
   >
     <fieldset>
       <legend>
-        Tes profils
+        Profils d'essai
       </legend>
       <ul class="sites-list">
         <li
@@ -184,7 +184,7 @@ onMounted(async () => {
             data-test="profile-occupation"
           >
         </label>
-        <label class="wide">« Mon domaine » : mots-clés séparés par des virgules
+        <label class="wide">« Domaine » : mots-clés séparés par des virgules
           <input
             v-model="form.keywords"
             type="text"

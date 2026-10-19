@@ -10,40 +10,32 @@ const route = useRoute();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
 const counts = ref({ offres: 0, suivi: 0, alertes: 0, bilan: 0, "rendez-vous": 0 });
 
-// `short` : le titre sur téléphone, sur une ligne (docs/36 §2).
+// Le titre reste « Candidatures » (docs/88) : l'onglet souligné dit où l'on est.
 // `tabShort` : l'onglet sur téléphone, quand son nom ne tient pas avec les autres.
 const TABS: {
   key: JobsTab;
   label: string;
   tabShort?: string;
   path: string;
-  title: string;
-  short: string;
   hint: string;
 }[] = [
-  { key: "offres", label: "Offres", path: "/candidatures/offres", title: "Les offres pour toi", short: "Les offres pour toi", hint: "à examiner" },
+  { key: "offres", label: "Offres", path: "/candidatures/offres", hint: "à examiner" },
   {
     key: "suivi",
     label: "Suivi",
     path: "/candidatures/suivi",
-    title: "Tes candidatures et tes preuves ORP",
-    short: "Ton suivi",
     hint: "à relancer ou à compléter",
   },
   {
     key: "alertes",
     label: "Alertes",
     path: "/candidatures/alertes",
-    title: "Tes alertes emploi",
-    short: "Tes alertes",
     hint: "alertes créées sans rien envoyé",
   },
   {
     key: "bilan",
     label: "Bilan",
     path: "/candidatures/bilan",
-    title: "Ce qui marche dans ta recherche",
-    short: "Ton bilan",
     hint: "",
   },
   {
@@ -51,12 +43,9 @@ const TABS: {
     label: "Rendez-vous",
     tabShort: "RDV",
     path: "/candidatures/rendez-vous-orp",
-    title: "Ton rendez-vous ORP",
-    short: "Rendez-vous ORP",
     hint: "",
   },
 ];
-const current = computed(() => TABS.find((t) => t.key === tab.value) ?? TABS[0]!);
 
 // Le mois choisi suit d'un onglet à l'autre (Suivi et Preuves ORP).
 function link(path: string) {
@@ -89,10 +78,7 @@ onMounted(() => void refresh());
 
 <template>
   <div class="jobs-head">
-    <h1>
-      <span class="label-long">{{ current.title }}</span>
-      <span class="label-short">{{ current.short }}</span>
-    </h1>
+    <h1>Candidatures</h1>
     <nav
       class="prep-tabs jobs-tabs"
       aria-label="Candidatures"

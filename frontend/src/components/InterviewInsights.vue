@@ -49,7 +49,7 @@ onMounted(() => void load());
   <DisclosureRow
     v-if="data"
     class="insights"
-    title="Mes enseignements"
+    title="Enseignements"
     :value="data.count ? `${plural(data.count, 'entretien', 'entretiens')} · ressenti ${data.average_rating}/5` : 'aucun entretien'"
     data-test="insights"
   >

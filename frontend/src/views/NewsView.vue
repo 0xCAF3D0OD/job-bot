@@ -192,9 +192,7 @@ onUnmounted(() => {
 
 <template>
   <PageHero
-    title="Le marché de l'emploi, et de quoi progresser"
-    short="Actualités"
-    subtitle="L'emploi et ton domaine : articles et vidéos récents."
+    title="Actualités"
   >
     <nav
       class="prep-tabs"
@@ -256,7 +254,7 @@ onUnmounted(() => {
             data-test="filter-domain"
             @click="chooseDomain"
           >
-            Mon domaine
+            Domaine
           </button>
           <button
             type="button"

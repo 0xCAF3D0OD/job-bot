@@ -20,8 +20,7 @@ onMounted(async () => {
 
 <template>
   <PageHero
-    title="Tes données"
-    subtitle="Ce que jobA1 garde sur toi, et ce que tu peux en faire."
+    title="Données personnelles"
   />
   <section class="band">
     <div class="container narrow privacy-page">

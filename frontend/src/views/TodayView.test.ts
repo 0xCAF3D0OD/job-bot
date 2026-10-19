@@ -104,7 +104,7 @@ describe("TodayView", () => {
     mockGet(today({ rhythm: { target: 3, count: 1, days, research_today: true } }));
     let wrapper = await mountView();
     expect(wrapper.find("[data-test=rhythm-count]").text()).toBe("1 / 3 candidatures");
-    expect(wrapper.find("[data-test=best] h2").text()).toBe("La dose du jour");
+    expect(wrapper.find("[data-test=best] h2").text()).toBe("Meilleures offres");
     expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } });
     expect(wrapper.text()).toContain("Ingénieur DevOps");
     mockGet(today({ rhythm: { target: 3, count: 1, days, research_today: false } }));

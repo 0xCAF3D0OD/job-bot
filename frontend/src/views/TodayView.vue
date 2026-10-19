@@ -189,8 +189,8 @@ const { me } = useAuth();
 
 <template>
   <PageHero
-    :title="dateTitle.charAt(0).toUpperCase() + dateTitle.slice(1)"
-    subtitle="Le point sur ta recherche, et ce qu'il reste à faire."
+    title="Aujourd'hui"
+    :eyebrow="dateTitle"
   />
   <section class="band">
     <div
@@ -327,7 +327,7 @@ const { me } = useAuth();
             data-test="best"
           >
             <header class="dash-card-head">
-              <h2>{{ today.rhythm?.pause_until ? "En pause" : restDay ? "Jour sans recherche" : "La dose du jour" }}</h2>
+              <h2>{{ today.rhythm?.pause_until ? "En pause" : restDay ? "Jour sans recherche" : "Meilleures offres" }}</h2>
               <div
                 class="segmented small"
                 role="radiogroup"

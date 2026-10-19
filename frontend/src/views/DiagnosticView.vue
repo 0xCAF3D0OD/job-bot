@@ -8,7 +8,6 @@ import StatusPanel from "../components/StatusPanel.vue";
 <template>
   <PageHero
     title="Diagnostic"
-    subtitle="L'état de la collecte, de l'IA et des tâches automatiques."
   />
   <section class="band">
     <div class="container">

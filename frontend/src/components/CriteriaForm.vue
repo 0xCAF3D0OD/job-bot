@@ -147,7 +147,7 @@ onMounted(() => void load());
         data-test="criteria-summary"
       >
         <h2 class="criteria-summary-title">
-          Tes prérequis
+          Prérequis
         </h2>
         <dl class="summary-rows">
           <div
@@ -165,7 +165,7 @@ onMounted(() => void load());
             data-test="edit-criteria"
             @click="editing = true"
           >
-            Modifier ce que je cherche
+            Modifier les prérequis
           </button>
           <span
             v-if="message"

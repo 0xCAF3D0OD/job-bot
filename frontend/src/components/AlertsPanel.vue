@@ -103,7 +103,7 @@ onMounted(() => void load());
     data-test="alerts-panel"
   >
     <h2 class="section-title first">
-      Mes alertes
+      Alertes
     </h2>
     <p
       class="notice"

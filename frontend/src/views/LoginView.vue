@@ -110,7 +110,7 @@ onMounted(() => void load());
       <p class="hint auth-foot">
         Pas encore de compte ? L'accès se fait sur invitation.
         <RouterLink to="/tes-donnees">
-          Tes données
+          Données personnelles
         </RouterLink>
       </p>
     </template>

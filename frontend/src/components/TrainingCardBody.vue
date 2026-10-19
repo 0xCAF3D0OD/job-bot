@@ -8,8 +8,8 @@ import CopyLabel from "./CopyLabel.vue";
 
 // Contenu d'une formation (docs/16 §5). Deux présentations (docs/44) : la carte du catalogue,
 // calme (description sur 3 lignes, une ligne en bas : « Suivre », ou l'état et « Gérer ») ;
-// le panneau latéral, avec tout le suivi en trois sections (Mon suivi, Financement ORP,
-// Mon profil).
+// le panneau latéral, avec tout le suivi en trois sections (Suivi, Financement ORP,
+// Profil).
 export type TrainingStatus = "interested" | "in_progress" | "done";
 export type MarkExtra = { progress?: string | null; done_at?: string | null; certified?: boolean | null };
 type Status = TrainingStatus;
@@ -266,7 +266,7 @@ const stateText = computed(() => {
       class="panel-section"
       data-test="section-follow"
     >
-      <h3>Mon suivi</h3>
+      <h3>Suivi</h3>
       <div class="training-actions">
         <div
           class="segmented"
@@ -417,7 +417,7 @@ const stateText = computed(() => {
       class="panel-section"
       data-test="section-profile"
     >
-      <h3>Mon profil</h3>
+      <h3>Profil</h3>
       <div
         class="training-profile"
         data-test="training-profile"

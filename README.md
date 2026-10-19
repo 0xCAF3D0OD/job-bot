@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/87-certificats-de-travail.md](docs/87-certificats-de-travail.md) (0.69.1)
+- Version en cours : [docs/88-interface-sobre.md](docs/88-interface-sobre.md) (0.70.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -126,7 +126,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.68.0 | Le bon rythme : l'objectif ORP réparti par semaine, la dose du jour, les jours sans recherche, un message d'offres par jour | livrée |
 | 0.68.1 | La pause, le message de fin de semaine, tes semaines dans le Bilan, le rythme dans l'assistant | livrée |
 | 0.69.0 | Les certificats de travail décodés : formules codées, note, conseil ; lecture détaillée par l'IA sur demande | livrée |
-| 0.69.1 | Certificats : la lettre de correction, le certificat intermédiaire, les certificats à joindre dans Préparer | en cours |
+| 0.69.1 | Certificats : la lettre de correction, le certificat intermédiaire, les certificats à joindre dans Préparer | livrée |
+| 0.70.0 | Une interface qui s'affiche : titres = menu, sans sous-titres, étiquettes sans « ton », « ta », « tes » | en cours |
 
 ## Lancer en local
 

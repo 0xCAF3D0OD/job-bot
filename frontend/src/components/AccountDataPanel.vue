@@ -57,7 +57,7 @@ async function remove(): Promise<void> {
     data-test="account-data"
   >
     <fieldset>
-      <legend>Tes données</legend>
+      <legend>Données personnelles</legend>
       <p
         v-if="summary"
         class="hint"

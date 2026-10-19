@@ -248,11 +248,11 @@ const intro = firstTime("bilan-funnel");
           data-test="funnel"
         >
           <header class="dash-card-head">
-            <h2>Ton parcours</h2>
+            <h2>Parcours</h2>
           </header>
           <ol
             :class="['bilan-funnel', { intro }]"
-            aria-label="Ton parcours"
+            aria-label="Parcours"
           >
             <li
               v-for="step in STEPS"

@@ -297,7 +297,7 @@ onMounted(() => void load());
       </section>
 
       <section class="contacts-block">
-        <h3>Mes prises de contact</h3>
+        <h3>Prises de contact</h3>
         <p
           v-if="actionError"
           class="notice error"

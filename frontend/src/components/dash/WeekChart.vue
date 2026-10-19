@@ -29,7 +29,7 @@ const intro = firstTime("week-chart");
     data-test="week-chart"
   >
     <header class="dash-card-head">
-      <h2>Tes 7 derniers jours</h2>
+      <h2>7 derniers jours</h2>
       <div
         class="segmented small"
         role="radiogroup"

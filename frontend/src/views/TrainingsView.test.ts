@@ -172,7 +172,7 @@ describe("TrainingsView", () => {
     POST.mockResolvedValue({ data: { ...done, chunk_id: 42 } });
     const wrapper = await mountView();
     await openPanel(wrapper);
-    expect(wrapper.find("[data-test=section-profile] h3").text()).toBe("Mon profil");
+    expect(wrapper.find("[data-test=section-profile] h3").text()).toBe("Profil");
     await wrapper.find("[data-test=add-to-profile]").trigger("click");
     expect((wrapper.find("[data-test=block-title]").element as HTMLInputElement).value).toBe(
       "Certified Kubernetes Administrator (CKA) (The Linux Foundation / CNCF)",
