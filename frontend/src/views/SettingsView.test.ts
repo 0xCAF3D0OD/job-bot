@@ -88,7 +88,14 @@ describe("SettingsView, date limite ORP", () => {
     await wrapper.find("[data-test=settings-form]").trigger("submit");
     await flushPromises();
     expect(put).toHaveBeenCalledWith("/api/settings", {
-      body: { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 10 },
+      body: {
+        orp_monthly_target: 20,
+        notify_score_threshold: 70,
+        llm_monthly_budget_chf: 10,
+        orp_due_day: 10,
+        rhythm_pause_from: null,
+        rhythm_pause_until: null,
+      },
     });
   });
 });
@@ -180,6 +187,17 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
     expect(body.rhythm_days).toEqual([0, 1, 3, 4]);
     expect(body.offers_notify_hour).toBe(8);
     expect(body.offers_notify_mode).toBe("daily");
+    // Une pause, puis la terminer.
+    await form.find("[data-test=pause-from]").setValue("2026-10-26");
+    await form.find("[data-test=pause-until]").setValue("2026-11-01");
+    await form.trigger("submit");
+    await flushPromises();
+    const paused = (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
+    expect([paused.rhythm_pause_from, paused.rhythm_pause_until]).toEqual(["2026-10-26", "2026-11-01"]);
+    await form.find("[data-test=pause-end]").trigger("click");
+    await flushPromises();
+    const ended = (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
+    expect(ended.rhythm_pause_from).toBeNull();
     // « Dès qu'elles arrivent » : l'heure ne sert plus.
     await form.find("[data-test=rhythm-instant]").setValue(true);
     expect(form.find("[data-test=rhythm-hour]").attributes("disabled")).toBeDefined();

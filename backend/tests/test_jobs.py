@@ -62,6 +62,7 @@ def test_scheduler_can_be_disabled(settings: Settings) -> None:
         "heartbeat",
         "news",
         "reminders",
+        "rhythm",
         "score",
     ]
     disabled = build_procrastinate_app(Runtime.create(make_settings(scheduler_enabled=False)))

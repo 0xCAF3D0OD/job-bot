@@ -11,6 +11,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
+import RhythmWeeks from "../components/RhythmWeeks.vue";
 import { firstTime } from "../composables/useIntro";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -352,6 +353,11 @@ const intro = firstTime("bilan-funnel");
           Réponses sur candidatures envoyées. Un refus est une réponse ; « Sans réponse » n'en est pas une.
         </p>
       </template>
+
+      <RhythmWeeks
+        v-if="period !== 'all'"
+        :month="month"
+      />
 
       <section
         v-if="period === 'month' && insights.orp_summary"

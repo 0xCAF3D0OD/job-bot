@@ -2,7 +2,7 @@
 offres une fois par jour, et le téléphone silencieux les jours sans recherche."""
 
 from collections.abc import AsyncIterator
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -19,10 +19,11 @@ from jobbot.settings import Settings
 from .conftest import admin_engine, make_settings
 
 ZURICH = ZoneInfo("Europe/Zurich")
-WEEKDAYS = (0, 1, 2, 3, 4)
+WEEKDAYS = rhythm.Rhythm((0, 1, 2, 3, 4))
 KEYS = (
     "'orp_monthly_target', 'rhythm_days', 'offers_notify_mode', 'offers_notify_hour', "
-    "'offers_digest_day', 'notify_score_threshold'"
+    "'offers_digest_day', 'notify_score_threshold', 'rhythm_pause_from', 'rhythm_pause_until', "
+    "'rhythm_signal_week'"
 )
 
 
@@ -60,7 +61,7 @@ def test_the_month_spread_over_the_weeks() -> None:
     assert rhythm.week_target(10, 4, date(2026, 10, 28), WEEKDAYS) == 6
     assert rhythm.week_target(10, 12, date(2026, 10, 14), WEEKDAYS) == 0  # objectif atteint
     # Trois jours de recherche : 13 jours en octobre, 3 cette semaine.
-    assert rhythm.week_target(10, 0, date(2026, 10, 5), (0, 2, 4)) == 3
+    assert rhythm.week_target(10, 0, date(2026, 10, 5), rhythm.Rhythm((0, 2, 4))) == 3
     # Un week-end, sans jour de recherche cette semaine-là.
     assert rhythm.week_target(10, 0, date(2026, 11, 1), WEEKDAYS) == 0
 
@@ -175,3 +176,124 @@ async def test_the_rhythm_settings(client: AsyncClient, rt: Runtime) -> None:
     ]
     for wrong in wrongs:
         assert (await client.put("/api/settings", json={**current, **wrong})).status_code == 422
+
+
+def test_a_pause_lowers_the_pace_without_debt() -> None:
+    # Deux semaines de pause sur 22 jours de recherche : 12 jours ouverts, l'objectif du mois
+    # passe à 6 pour le rythme (10 x 12 / 22, arrondi au-dessus), et rien n'est à rattraper.
+    paused = rhythm.Rhythm(
+        (0, 1, 2, 3, 4), pause_from=date(2026, 10, 5), pause_until=date(2026, 10, 18)
+    )
+    assert not paused.research(date(2026, 10, 12)) and paused.research(date(2026, 10, 19))
+    assert rhythm.week_target(10, 1, date(2026, 10, 7), paused) == 0
+    assert rhythm.week_target(10, 1, date(2026, 10, 19), paused) == 3  # 5 sur 10 jours
+    assert rhythm.week_target(10, 1, date(2026, 10, 19), WEEKDAYS) == 5  # sans pause : 9
+
+
+async def _settings(rt: Runtime, **values: object) -> None:
+    async with rt.sessionmaker.begin() as session:
+        for key, value in values.items():
+            session.add(Setting(key=key, value=value))
+
+
+async def test_the_weeks_of_the_month_and_the_pause(client: AsyncClient, rt: Runtime) -> None:
+    await _settings(
+        rt,
+        orp_monthly_target=10,
+        rhythm_pause_from="2026-10-12",
+        rhythm_pause_until="2026-10-18",
+    )
+    for day in (date(2026, 10, 1), date(2026, 10, 2), date(2026, 10, 6)):
+        await _application(rt, day)
+    async with rt.sessionmaker() as session:
+        weeks = await rhythm.month_weeks(session, "2026-10", date(2026, 10, 20))
+        assert not await rhythm.is_research_day(session, date(2026, 10, 14))
+    assert [(w.start.day, w.end.day, w.state) for w in weeks] == [
+        (1, 4, "done"),
+        (5, 11, "missed"),
+        (12, 18, "pause"),
+        (19, 25, "current"),
+        (26, 31, "upcoming"),
+    ]
+    assert weeks[0].count == 2 and weeks[1].count == 1
+    page = (await client.get("/api/rhythm/semaines", params={"month": "2026-10"})).json()
+    assert [w["state"] for w in page["weeks"]][:3] == ["done", "missed", "pause"]
+    assert (await client.get("/api/rhythm/semaines", params={"month": "oct"})).status_code == 422
+
+
+async def test_the_pause_in_the_settings(client: AsyncClient, rt: Runtime) -> None:
+    current = (await client.get("/api/settings")).json()
+    assert current["rhythm_pause_from"] is None
+    pause = {**current, "rhythm_pause_from": "2026-10-26", "rhythm_pause_until": "2026-11-01"}
+    saved = (await client.put("/api/settings", json=pause)).json()
+    assert saved["rhythm_pause_until"] == "2026-11-01"
+    async with rt.sessionmaker() as session:
+        loaded = await rhythm.load(session)
+    assert loaded.paused(date(2026, 10, 28)) and not loaded.paused(date(2026, 11, 2))
+    for wrong in (
+        {"rhythm_pause_from": "2026-10-26", "rhythm_pause_until": None},
+        {"rhythm_pause_from": "2026-11-02", "rhythm_pause_until": "2026-10-26"},
+    ):
+        assert (await client.put("/api/settings", json={**current, **wrong})).status_code == 422
+    ended = (await client.put("/api/settings", json=current)).json()
+    assert ended["rhythm_pause_from"] is None
+
+
+async def _scored_application(rt: Runtime, n: int, sent_at: date, score: int) -> None:
+    async with rt.sessionmaker.begin() as session:
+        offer = Offer(
+            fingerprint=f"s{n}",
+            title=f"Poste {n}",
+            company="Acme SA",
+            first_seen_at=datetime(2026, 10, 1, tzinfo=UTC),
+            last_seen_at=datetime(2026, 10, 1, tzinfo=UTC),
+            status=OfferStatus.APPLIED,
+        )
+        session.add(offer)
+        await session.flush()
+        session.add(
+            Evaluation(
+                offer_id=offer.id,
+                filter_passed=True,
+                filter_reasons=[],
+                criteria_hash="x",
+                score=score,
+                scored_at=datetime(2026, 10, 1, tzinfo=UTC),
+            )
+        )
+        session.add(
+            Application(
+                offer_id=offer.id,
+                sent_at=sent_at,
+                method="electronique",
+                company="Acme SA",
+                job_title=f"Poste {n}",
+                orp_month=f"{sent_at:%Y-%m}",
+            )
+        )
+
+
+async def test_the_end_of_week_signal(rt: Runtime, sent: list[Message]) -> None:
+    from jobbot.notify.rhythm import notify_week
+
+    await _settings(rt, orp_monthly_target=10)
+    friday, thursday = date(2026, 10, 23), date(2026, 10, 22)
+    async with rt.sessionmaker() as session:
+        assert await rhythm.signal(session, thursday) is None  # pas le dernier jour
+        late = await rhythm.signal(session, friday)
+    # Rien cette semaine : 5 attendues (10 sur 10 jours restants, 5 cette semaine).
+    assert late is not None and late.kind == "late"
+    assert (late.title, late.message) == ("0 sur 5 cette semaine", "Lundi, reprends à ton rythme.")
+    for n in range(5):
+        await _scored_application(rt, n, date(2026, 10, 19 + n % 5), 80)
+    assert await notify_week(rt, friday) == 1
+    assert await notify_week(rt, friday) == 0  # une fois par semaine
+    assert sent[-1].title == "Semaine faite : 5 candidatures"
+    assert sent[-1].message == "Octobre : 5 / 10. Le reste du temps est à toi."
+    # Beaucoup plus, dont des offres peu notées : « trop ».
+    for n in range(5, 9):
+        await _scored_application(rt, n, date(2026, 10, 22), 35)
+    async with rt.sessionmaker() as session:
+        too_much = await rhythm.signal(session, friday)
+    assert too_much is not None and too_much.kind == "too_much"
+    assert too_much.title == "9 candidatures cette semaine, dont 4 peu notées"

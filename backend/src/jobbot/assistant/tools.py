@@ -38,6 +38,7 @@ from jobbot.interviews import service as interview_service
 from jobbot.notify import interviews as interview_reminders
 from jobbot.notify.service import REMIND_AFTER_DAYS
 from jobbot.orp.service import load_due_day, load_target, month_counts
+from jobbot.rhythm import service as rhythm
 from jobbot.scoring.service import active_profile
 from jobbot.sources.sites import followed
 
@@ -54,7 +55,8 @@ TOOLS: list[dict[str, Any]] = [
     {
         "name": "situation",
         "description": "Vue d'ensemble du jour : offres à examiner, candidatures à relancer, "
-        "compteur ORP du mois, entretiens sans retour, alertes qui n'arrivent pas. "
+        "compteur ORP du mois, entretiens sans retour, alertes qui n'arrivent pas, et le rythme "
+        "(jours de recherche, objectif de la semaine, pause). "
         "À appeler pour « que faire aujourd'hui ? » ou « où en suis-je ? ».",
         "input_schema": {"type": "object", "properties": {}},
     },
@@ -229,6 +231,8 @@ async def _situation(session: AsyncSession, _profile: int, _params: dict[str, An
     )
     counts = await month_counts(session, month)
     pending = await interview_reminders.to_review(session, today)
+    settings = await rhythm.load(session)
+    week = await rhythm.week(session, rhythm.local_today())
     return {
         "date": today.isoformat(),
         "offres_a_examiner": to_review or 0,
@@ -249,6 +253,22 @@ async def _situation(session: AsyncSession, _profile: int, _params: dict[str, An
             for p in pending
         ],
         "alertes_sans_envoi_depuis_3_jours": await alert_service.waiting(session),
+        # Le bon rythme (docs/86).
+        "rythme": {
+            "jours_de_recherche": [rhythm.DAY_NAMES[d] for d in settings.days],
+            "aujourd_hui_jour_de_recherche": week.research_today,
+            "semaine": {"objectif": week.target, "candidatures": week.count},
+            "pause": (
+                {"du": _day(settings.pause_from), "au": _day(settings.pause_until)}
+                if settings.pause_from and settings.pause_until
+                else None
+            ),
+            "offres_notifiees": (
+                f"un message par jour, dès {settings.hour} h"
+                if settings.mode == "daily"
+                else "dès qu'elles arrivent"
+            ),
+        },
     }
 
 

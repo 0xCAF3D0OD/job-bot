@@ -159,6 +159,8 @@ async def test_api_settings(api: AsyncClient) -> None:
         "rhythm_days": [0, 1, 2, 3, 4],
         "offers_notify_mode": "daily",
         "offers_notify_hour": 9,
+        "rhythm_pause_from": None,
+        "rhythm_pause_until": None,
     }
     new = {
         "orp_monthly_target": 8,
@@ -169,6 +171,8 @@ async def test_api_settings(api: AsyncClient) -> None:
         "rhythm_days": [0, 1, 2, 3, 4],
         "offers_notify_mode": "daily",
         "offers_notify_hour": 9,
+        "rhythm_pause_from": None,
+        "rhythm_pause_until": None,
     }
     assert (await api.put("/api/settings", json=new)).json() == new
     assert (await api.get("/api/settings")).json() == new

@@ -327,7 +327,7 @@ const { me } = useAuth();
             data-test="best"
           >
             <header class="dash-card-head">
-              <h2>{{ restDay ? "Jour sans recherche" : "La dose du jour" }}</h2>
+              <h2>{{ today.rhythm?.pause_until ? "En pause" : restDay ? "Jour sans recherche" : "La dose du jour" }}</h2>
               <div
                 class="segmented small"
                 role="radiogroup"

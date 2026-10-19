@@ -1809,6 +1809,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/rhythm/semaines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rhythm Weeks */
+        get: operations["getRhythmWeeks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/today": {
         parameters: {
             query?: never;
@@ -4643,6 +4660,29 @@ export interface components {
             /** Target */
             target: number | null;
         };
+        /** MonthWeekOut */
+        MonthWeekOut: {
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Target */
+            target: number | null;
+            /** Count */
+            count: number;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "done" | "missed" | "current" | "upcoming" | "pause";
+        };
+        /** MonthWeeksOut */
+        MonthWeeksOut: {
+            /** Month */
+            month: string;
+            /** Weeks */
+            weeks: components["schemas"]["MonthWeekOut"][];
+        };
         /** NewsCatalog */
         NewsCatalog: {
             /** Domains */
@@ -5594,6 +5634,11 @@ export interface components {
             research: boolean;
             /** Sent */
             sent: number;
+            /**
+             * Paused
+             * @default false
+             */
+            paused: boolean;
         };
         /**
          * RhythmWeek
@@ -5608,6 +5653,8 @@ export interface components {
             days: components["schemas"]["RhythmDay"][];
             /** Research Today */
             research_today: boolean;
+            /** Pause Until */
+            pause_until?: string | null;
         };
         /** ScorePoint */
         ScorePoint: {
@@ -5962,6 +6009,10 @@ export interface components {
              * @default 9
              */
             offers_notify_hour: number;
+            /** Rhythm Pause From */
+            rhythm_pause_from?: string | null;
+            /** Rhythm Pause Until */
+            rhythm_pause_until?: string | null;
         };
         /** SiteActive */
         SiteActive: {
@@ -10232,6 +10283,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getRhythmWeeks: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthWeeksOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
