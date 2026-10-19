@@ -6,14 +6,14 @@ import {
   MASCOT_EYE_LEFT,
   MASCOT_EYE_RIGHT,
   MASCOT_FACE,
-  MASCOT_O,
+  MASCOT_MOUTH_DOT,
   MASCOT_OPEN_SMILE,
   MASCOT_SMILE,
   mascotSparkle,
 } from "../brandPaths";
 
 // La mascotte de l'assistant (docs/99) : un visage rond, trois expressions.
-// « listening » : à l'écoute ; « thinking » : réfléchit ; « found » : a trouvé.
+// « listening » : à l'écoute ; « thinking » : réfléchit (trois points) ; « found » : a trouvé.
 // Les traits, les points et les étincelles grossissent aux petites tailles (paliers de docs/97).
 // Décorative : « Assistant » à côté dit ce que c'est.
 export type MascotMood = "listening" | "thinking" | "found";
@@ -59,11 +59,10 @@ const sparkle = (eye: { x: number; y: number }) => mascotSparkle(eye.x, eye.y, w
         class="mascot-dot"
       />
       <circle
-        :cx="MASCOT_O.x"
-        :cy="MASCOT_O.y"
-        :r="MASCOT_O.r"
-        class="mascot-line"
-        :stroke-width="widths.smile * 0.6"
+        :cx="MASCOT_MOUTH_DOT.x"
+        :cy="MASCOT_MOUTH_DOT.y"
+        :r="widths.dot"
+        class="mascot-dot"
       />
     </g>
     <g

@@ -5,17 +5,19 @@ import AssistantMascot from "./AssistantMascot.vue";
 import BrandMark from "./BrandMark.vue";
 
 describe("Le logo et la mascotte (docs/97)", () => {
-  it("le logo : deux boucles et le diamant en contour ; sous 24 px, une seule boucle (docs/98)", () => {
-    const big = mount(BrandMark, { props: { size: 150 } });
-    expect(big.findAll(".brand-logo-loop")).toHaveLength(2);
-    expect(big.find(".brand-logo-loop").attributes("stroke-width")).toBe("2.6");
-    expect(big.find(".brand-logo-diamond").attributes("stroke-width")).toBe("2.86");
+  it("le logo (docs/100) : une boucle et le diamant au même trait ; plus épais à 32 px et moins", () => {
+    const big = mount(BrandMark, { props: { size: 104 } });
+    expect(big.findAll(".brand-logo-loop")).toHaveLength(1);
+    expect(big.find(".brand-logo-loop").attributes("stroke-width")).toBe("3.6");
+    expect(big.find(".brand-logo-diamond").attributes("stroke-width")).toBe("3.6");
+    expect(mount(BrandMark, { props: { size: 48 } }).find(".brand-logo-loop").attributes("stroke-width")).toBe("5.5");
     const bar = mount(BrandMark, { props: { size: 28 } });
-    expect(bar.findAll(".brand-logo-loop")).toHaveLength(2);
-    expect(bar.find(".brand-logo-loop").attributes("stroke-width")).toBe("5");
+    expect(bar.findAll(".brand-logo-loop")).toHaveLength(1);
+    expect(bar.find(".brand-logo-loop").attributes("stroke-width")).toBe("8.5");
     const tab = mount(BrandMark, { props: { size: 16 } });
     expect(tab.findAll(".brand-logo-loop")).toHaveLength(1);
-    expect(tab.find(".brand-logo-diamond").attributes("stroke-width")).toBe("11");
+    expect(tab.find(".brand-logo-diamond").attributes("stroke-width")).toBe("8");
+    expect(tab.find(".brand-logo-diamond").attributes("d")).not.toBe(big.find(".brand-logo-diamond").attributes("d"));
     expect(big.attributes("aria-hidden")).toBe("true");
   });
 
@@ -29,8 +31,8 @@ describe("Le logo et la mascotte (docs/97)", () => {
     expect(mount(AssistantMascot, { props: { size: 16 } }).find(".mascot-line").attributes("stroke-width")).toBe("10.8");
 
     const thinking = mount(AssistantMascot, { props: { size: 150, mood: "thinking" } });
-    expect(thinking.findAll(".mascot-dot")).toHaveLength(2);
-    expect(thinking.findAll(".mascot-line")).toHaveLength(1);
+    expect(thinking.findAll(".mascot-dot")).toHaveLength(3);
+    expect(thinking.find(".mascot-line").exists()).toBe(false);
     expect(thinking.find(".mascot-star").exists()).toBe(false);
 
     const found = mount(AssistantMascot, { props: { size: 150, mood: "found" } });
