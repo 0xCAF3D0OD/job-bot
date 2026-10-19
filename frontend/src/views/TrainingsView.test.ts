@@ -55,9 +55,9 @@ async function mountView(path = "/formations") {
   return wrapper;
 }
 
-// Le suivi se fait dans le panneau latéral (docs/44 §2) : « Suivre » ou « Gérer » l'ouvre.
+// Le suivi se fait dans le panneau latéral (docs/44 §2) : la carte entière l'ouvre (docs/93).
 async function openPanel(wrapper: Awaited<ReturnType<typeof mountView>>): Promise<void> {
-  await wrapper.find("[data-test=follow], [data-test=manage]").trigger("click");
+  await wrapper.find("[data-test=training-open]").trigger("click");
   await flushPromises();
 }
 
@@ -71,9 +71,10 @@ describe("TrainingsView", () => {
     expect(cards).toHaveLength(2);
     expect(cards[0]!.findAll("mark").map((m) => m.text())).toEqual(["Kubernetes", "CKA"]);
     // Format court sur la carte, complet dans l'infobulle ; la mention du financement est
-    // dans l'encadré du haut, plus sur chaque carte (docs/43 n° 20, 22).
-    expect(cards[0]!.text()).toContain("examen en ligne ·");
-    expect(cards[0]!.find(".training-facts span").attributes("title")).toBe("examen en ligne surveillé");
+    // dans l'encadré du haut, plus sur chaque carte (docs/43 n° 20, 22). Trois faits (docs/93).
+    expect(cards[0]!.findAll(".tile-facts li")).toHaveLength(3);
+    expect(cards[0]!.find("[data-test=training-second]").text()).toContain("Examen en ligne ·");
+    expect(cards[0]!.find("[data-test=training-second] span").attributes("title")).toBe("examen en ligne surveillé");
     expect(cards[0]!.text()).not.toContain("Financement possible");
     expect(wrapper.find("[data-test=training-section-certifications] h2").text()).toBe("Certifications");
 
@@ -102,12 +103,36 @@ describe("TrainingsView", () => {
     await wrapper.find("[data-test=progress]").setValue("module 4/12");
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body.progress).toBe("module 4/12");
-    // Sur la carte, une seule ligne : l'état et « Gérer ».
-    expect(wrapper.find("[data-test=training] [data-test=training-state]").text()).toBe("En cours · module 4/12");
+    // Sur la carte : l'état en étiquette, l'avancement à la place du format (docs/93).
+    expect(wrapper.find("[data-test=training] [data-test=training-state]").text()).toBe("En cours");
+    expect(wrapper.find("[data-test=training] [data-test=training-second]").text()).toBe("module 4/12");
     expect(wrapper.find("[data-test=tab-mine]").text()).toContain("1");
     await wrapper.find("[data-test=mark-in_progress]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalled();
+  });
+
+  it("le cœur : intéressé, puis retiré ; en cours, il ouvre le panneau (docs/93)", async () => {
+    const inProgress = { status: "in_progress", progress: "module 2/6", done_at: null, certified: null };
+    GET.mockResolvedValue({ data: page([training(1), training(2, { title: "Autre", mark: inProgress })]) });
+    PUT.mockImplementation((_p: string, { body }: { body: Record<string, unknown> }) =>
+      Promise.resolve({ data: { progress: null, done_at: null, certified: null, ...body } }),
+    );
+    DELETE.mockResolvedValue({});
+    const wrapper = await mountView();
+    const heart = () => wrapper.findAll("[data-test=interest]")[0]!;
+    expect(heart().attributes("aria-label")).toBe("Marquer comme intéressé");
+    await heart().trigger("click");
+    await flushPromises();
+    expect(PUT.mock.calls[0]![1].body.status).toBe("interested");
+    expect(heart().attributes("aria-pressed")).toBe("true");
+    await heart().trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledTimes(1);
+    await wrapper.findAll("[data-test=interest]")[1]!.trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledTimes(1);
+    expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("Autre");
   });
 
   it("suggestions de l'IA : recherche, garder, écarter", async () => {
@@ -134,12 +159,12 @@ describe("TrainingsView", () => {
     GET.mockResolvedValue({ data: page([training(1, { mark: { status: "done", progress: null, done_at: "2026-09-30", certified: true } }), training(2)]) });
     const wrapper = await mountView("/formations?onglet=miennes");
     expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);
-    expect(wrapper.find("[data-test=training-state]").text()).toBe("Terminée · certificat");
+    expect(wrapper.find("[data-test=training-state]").text()).toBe("Terminée");
     await openPanel(wrapper);
     expect((wrapper.find("[data-test=certified]").element as HTMLInputElement).checked).toBe(true);
   });
 
-  it("téléphone : liste fine, fiche en plein écran, filtres derrière « Filtrer », encadré ORP replié", async () => {
+  it("téléphone : les mêmes cartes, fiche en plein écran, filtres derrière « Filtrer », encadré ORP replié", async () => {
     const original = globalThis.matchMedia;
     globalThis.matchMedia = ((query: string) =>
       ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
@@ -150,19 +175,19 @@ describe("TrainingsView", () => {
     const wrapper = mount(TrainingsView, { global: { plugins: [router], stubs: { teleport: true } } });
     await flushPromises();
 
-    expect(wrapper.findAll("[data-test=training-row]")).toHaveLength(2);
-    expect(wrapper.find(".training-grid").exists()).toBe(false);
+    expect(wrapper.findAll("[data-test=training]")).toHaveLength(2);
+    expect(wrapper.find(".training-tiles").exists()).toBe(true);
     expect(wrapper.find("[data-test=orp-note]").classes()).toContain("disclosure");
     const toggle = wrapper.find("[data-test=training-filter-toggle]");
     expect(toggle.text()).toBe("Filtrer");
     await wrapper.find("[data-test=filter-kind]").setValue("certification");
     expect(toggle.text()).toBe("Filtrer · 1");
 
-    await wrapper.find("[data-test=training-row]").trigger("click");
+    await wrapper.find("[data-test=training-open]").trigger("click");
     expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("Certified Kubernetes Administrator (CKA)");
     await wrapper.find("[data-test=side-panel] [data-test=mark-interested]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=training-row] .badge").text()).toBe("Intéressé");
+    expect(wrapper.find("[data-test=training] [data-test=training-state]").text()).toBe("Intéressé");
     globalThis.matchMedia = original;
   });
 

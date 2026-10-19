@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Icônes au trait, dessinées pour jobA1 (style de la maquette, aucun fichier repris).
 // Pictogrammes des bulles d'Aujourd'hui (docs/54) : inbox, send, refresh, file, trend, book, news ;
-// du Bilan (docs/55) : reply, clock, star ; des Réglages (docs/62) : spark, shield, plug.
+// du Bilan (docs/55) : reply, clock, star ; des Réglages (docs/62) : spark, shield, plug ;
+// des cartes de formation (docs/93) : building (l'organisme), tag (le prix).
 defineProps<{
   name:
     | "pin"
@@ -26,7 +27,9 @@ defineProps<{
     | "star"
     | "spark"
     | "shield"
-    | "plug";
+    | "plug"
+    | "building"
+    | "tag";
 }>();
 </script>
 
@@ -150,6 +153,18 @@ defineProps<{
     </template>
     <template v-else-if="name === 'star'">
       <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />
+    </template>
+    <template v-else-if="name === 'building'">
+      <path d="M5 20.5V5.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15" />
+      <path d="M15 9.5h3a1 1 0 0 1 1 1v10M3.5 20.5h17M8.5 8.5h3M8.5 12h3M8.5 15.5h3" />
+    </template>
+    <template v-else-if="name === 'tag'">
+      <path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z" />
+      <circle
+        cx="8"
+        cy="8"
+        r="1.3"
+      />
     </template>
     <template v-else-if="name === 'spark'">
       <path d="M12 3.5l1.8 5.2 5.2 1.8-5.2 1.8L12 17.5l-1.8-5.2L5 10.5l5.2-1.8z" />
