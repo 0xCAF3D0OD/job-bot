@@ -6,6 +6,7 @@ import { useJobsMemory } from "./composables/useJobsMemory";
 import { startPage } from "./composables/usePageTransition";
 import AlertsView from "./views/AlertsView.vue";
 import InsightsView from "./views/InsightsView.vue";
+import OrpMeetingView from "./views/OrpMeetingView.vue";
 import DiagnosticView from "./views/DiagnosticView.vue";
 import AccessView from "./views/AccessView.vue";
 import DiscoverView from "./views/DiscoverView.vue";
@@ -46,7 +47,7 @@ export const navigation: NavEntry[] = [
 ];
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
-export type JobsTab = "offres" | "suivi" | "alertes" | "bilan";
+export type JobsTab = "offres" | "suivi" | "alertes" | "bilan" | "rendez-vous";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, Component> = {
@@ -114,6 +115,13 @@ export const routes: RouteRecordRaw[] = [
       { path: "journal", redirect: "/candidatures/alertes" },
       // Ce qui marche dans ta recherche (docs/42).
       { path: "bilan", name: "insights", component: InsightsView, meta: { tab: "bilan" } },
+      // Le rendez-vous avec le conseiller ORP (docs/83).
+      {
+        path: "rendez-vous-orp",
+        name: "orp-meeting",
+        component: OrpMeetingView,
+        meta: { tab: "rendez-vous" },
+      },
     ],
   },
   // Diagnostic technique, sorti des Réglages (docs/21 §6).

@@ -83,6 +83,13 @@ function startOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
+// Rendez-vous ORP aujourd'hui ou demain (docs/83) : sa feuille est prête.
+function meetingText(iso: string): string {
+  const at = new Date(iso);
+  const day = startOfDay(at) === startOfDay(new Date()) ? "aujourd'hui" : "demain";
+  return `Rendez-vous ORP ${day} à ${time.format(at)} : ta feuille est prête.`;
+}
+
 function interviewText(iso: string, company: string): string {
   const at = new Date(iso);
   const day = startOfDay(at) === startOfDay(new Date()) ? "aujourd'hui" : "demain";
@@ -204,6 +211,16 @@ const { me } = useAuth();
         {{ interviewText(item.at, item.company) }}.
         <RouterLink to="/candidatures/suivi">
           Préparer
+        </RouterLink>
+      </p>
+      <p
+        v-if="today.orp_meeting_at"
+        class="notice today-urgent"
+        data-test="orp-meeting-soon"
+      >
+        {{ meetingText(today.orp_meeting_at) }}
+        <RouterLink to="/candidatures/rendez-vous-orp">
+          Voir la feuille
         </RouterLink>
       </p>
       <p

@@ -476,7 +476,7 @@ async def test_database_refuses_other_account(
     owner, other = two_accounts
     await seed_account_a(runtime)
     tables = await account_tables(runtime)
-    assert len(tables) == 29
+    assert len(tables) == 30
     with accounts.use(other):
         async with runtime.sessionmaker() as session:
             for table in tables:

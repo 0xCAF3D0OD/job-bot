@@ -512,6 +512,24 @@ class OrpMonth(Base):
     reminders_sent: Mapped[Any] = mapped_column(JSONB, default=dict)
 
 
+class OrpMeeting(Base):
+    """Un rendez-vous avec le conseiller ORP (docs/83) : sa date, et les questions préparées."""
+
+    __tablename__ = "orp_meetings"
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    # Lieu ou « visio » ; conseiller : facultatifs.
+    place: Mapped[str | None] = mapped_column(Text)
+    advisor: Mapped[str | None] = mapped_column(Text)
+    # Questions au conseiller : [{key, text, checked}] ; `key` relie une question proposée à sa
+    # règle (« funding:12 »), « custom:… » pour une question écrite à la main.
+    questions: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Company(Base):
     """Recherche d'une entreprise dans le registre IDE, mise en cache (docs/12 §2.2)."""
 

@@ -544,7 +544,7 @@ p.badge.reason { margin: 0; }
 .form-grid label { display: grid; gap: 0.3rem; font-size: 0.82rem; color: var(--muted); }
 .form-grid label.wide { grid-column: 1 / -1; }
 .form-grid input, .form-grid select { width: 100%; font: inherit; color: var(--text); }
-input[type="date"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+input[type="date"], input[type="datetime-local"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 @media (max-width: 640px) { .form-grid { grid-template-columns: minmax(0, 1fr); } }
 .form-grid textarea { width: 100%; }
 .applications-head { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
@@ -2636,3 +2636,26 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .maintenance-bypass { margin: 0; padding: 0.6rem 1rem; text-align: center; background: var(--surface); border-bottom: 1px solid var(--down); color: var(--down-text); font-size: 0.92rem; }
 /* Lecture seule (docs/80) : une information, pas une alerte. */
 .maintenance-bypass.reading { border-bottom-color: var(--border); color: var(--text); }
+
+/* Le rendez-vous ORP (docs/83) : la date en tête, puis la feuille, une section par carte. */
+.orp-meeting { display: grid; gap: 1rem; }
+.orp-meeting-intro { max-width: 46rem; }
+.orp-meeting h2 { margin: 0 0 0.6rem; font-size: 1.05rem; }
+.orp-meeting-when { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.orp-meeting-when h2 { margin: 0; }
+.orp-meeting-form { display: grid; gap: 0.75rem; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; margin-top: 0.75rem; }
+.orp-meeting-form label, .orp-meeting-sheet label { display: grid; gap: 0.3rem; }
+.orp-meeting-form .form-actions { grid-column: 1 / -1; }
+.orp-meeting-sheet { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.orp-meeting .inline-field input { flex: 1; min-width: 0; }
+.orp-meeting-sheet ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+.orp-meeting-sheet p { margin: 0 0 0.5rem; }
+.orp-meeting-works { font-weight: 500; }
+.orp-meeting-questions { list-style: none; padding-left: 0 !important; }
+.orp-meeting-questions label { display: flex !important; gap: 0.5rem; align-items: flex-start; }
+.orp-meeting-questions input { margin-top: 0.2rem; }
+.orp-meeting-duties li.done { color: var(--muted); }
+.orp-meeting .inline-field { margin-top: 0.75rem; }
+@media (max-width: 820px) {
+  .orp-meeting-form, .orp-meeting-sheet { grid-template-columns: minmax(0, 1fr); }
+}

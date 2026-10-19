@@ -30,6 +30,7 @@ from jobbot.db.models import (
     Offer,
     OfferLink,
     OfferSighting,
+    OrpMeeting,
     OrpMonth,
     Profile,
     ProfileChunk,
@@ -487,6 +488,23 @@ async def _applications(
 
 
 async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
+    # Le prochain rendez-vous ORP, la semaine prochaine (docs/83) : sa feuille est prête.
+    session.add(
+        OrpMeeting(
+            # Un mardi, au moins cinq jours plus tard : jamais un week-end.
+            starts_at=_at(
+                today + timedelta(days=5 + (1 - (today + timedelta(days=5)).weekday()) % 7), 9, 30
+            ),
+            place="ORP de Lausanne",
+            questions=[
+                {
+                    "key": "custom:1",
+                    "text": "Puis-je suivre un cours d'allemand pendant ma recherche ?",
+                    "checked": True,
+                }
+            ],
+        )
+    )
     # La dernière collecte : ce matin (la démo n'en lance aucune).
     session.add(
         JobRun(
