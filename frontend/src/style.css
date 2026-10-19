@@ -1128,8 +1128,9 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 
 /* --- Assistant (docs/24) --- */
 /* Jamais plein (docs/29 §1) : il ne concurrence pas l'action principale de la page. */
-.assistant-fab { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 25; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.1rem; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--accent); color: var(--accent-text); font-weight: 500; box-shadow: 0 8px 24px rgba(17, 17, 31, 0.14); }
-.assistant-fab:hover { background: var(--accent-soft); border-color: var(--accent-strong); }
+.assistant-fab { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 25; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.1rem; border-radius: 999px; background: var(--surface); border: 2px solid var(--mascot-face); color: var(--mascot-face); font-weight: 600; box-shadow: 0 8px 24px rgba(17, 17, 31, 0.14); }
+/* Au bleu de la mascotte (docs/99). */
+.assistant-fab:hover { background: color-mix(in srgb, var(--mascot-face) 8%, var(--surface)); }
 .assistant-panel { position: fixed; right: 1rem; bottom: 1rem; top: 5.2rem; z-index: 45; width: min(26rem, calc(100vw - 2rem)); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 18px 48px rgba(17, 17, 31, 0.18); overflow: hidden; }
 .assistant-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--divider); }
 .assistant-head-actions { display: flex; align-items: center; gap: 0.75rem; }
@@ -1153,7 +1154,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .assistant-plain { white-space: pre-wrap; }
 .assistant-copy { margin: 0 0 0.45rem; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); padding: 0.55rem 0.7rem; }
 .assistant-copy pre { margin: 0 0 0.3rem; white-space: pre-wrap; font-family: inherit; font-size: 0.88rem; }
-.assistant-status { font-size: 0.85rem; }
+.assistant-status { font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
 .assistant-form { display: flex; gap: 0.5rem; align-items: flex-end; padding: 0.7rem 0.9rem; border-top: 1px solid var(--divider); }
 .assistant-form textarea { flex: 1; resize: none; font: inherit; font-size: 0.92rem; }
 @media (max-width: 640px) {
@@ -2901,6 +2902,11 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .mascot-face { fill: var(--mascot-face); }
 .mascot-line { fill: none; stroke: var(--mascot-line); stroke-linecap: round; stroke-linejoin: round; }
 .mascot-star { fill: var(--mascot-star); }
+.mascot-dot, .mascot-mouth { fill: var(--mascot-line); }
+/* Le changement de visage : un fondu court (docs/99). */
+.mascot-expression { animation: mascot-in 150ms ease-out; }
+@keyframes mascot-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mascot-expression { animation: none; } }
 .assistant-title { display: inline-flex; align-items: center; gap: 0.5rem; }
 .assistant-line.assistant { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); column-gap: 0.6rem; }
 .assistant-line.assistant > .assistant-line-mascot { grid-column: 1; grid-row: 1 / span 20; margin-top: 0.1rem; }

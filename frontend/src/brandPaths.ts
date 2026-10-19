@@ -11,13 +11,27 @@ export const LOGO_LOOPS = [
 export const LOGO_DIAMOND = "M50.8 32.0 C 52.2 45.0, 55.0 48.4, 68.5 51.4 C 55.5 53.8, 52.4 57.0, 49.6 68.5 C 47.4 57.2, 44.2 53.4, 32.5 50.4 C 44.8 48.2, 47.8 44.5, 50.2 35.0 L 51.6 30.0";
 export const LOGO_DIAMOND_SMALL_SIZE = "M51.0 27.8 C 52.7 43.7, 56.1 47.8, 72.6 51.5 C 56.7 54.4, 52.9 58.3, 49.5 72.3 C 46.8 58.6, 42.9 53.9, 28.7 50.3 C 43.7 47.6, 47.3 43.1, 50.2 31.5 L 52.0 25.4";
 
-// La mascotte de l'assistant (docs/97), piste « Sans le trait autour » : le visage plein avec
-// la pointe du nez, l'œil fermé, l'étoile à la place de l'autre œil, le sourire.
-// viewBox « 0 0 100 100 ».
-export const MASCOT_FACE =
-  "M47 14 C 65 14, 77 24, 80 37 L 91 46.5 C 92.5 48, 92 49.5, 90.5 50 L 79.5 56 C 76.5 74, 63 86, 46 86 C 26 86, 12 70, 12 50 C 12 29, 27 14, 47 14 Z";
-export const MASCOT_EYE = "M26 44 C 28.5 36, 38.5 36, 41 44";
-export const MASCOT_SMILE = "M28 62 C 37 73, 54 74, 64 63";
-// L'étoile, plus grande aux petites tailles (28 px et moins), comme sur la planche.
-export const MASCOT_STAR = "M56 31 Q56 40 65 40 Q56 40 56 49 Q56 40 47 40 Q56 40 56 31 Z";
-export const MASCOT_STAR_SMALL_SIZE = "M56 29 Q56 40 67 40 Q56 40 56 51 Q56 40 45 40 Q56 40 56 29 Z";
+// La mascotte de l'assistant (docs/99), planche « La mascotte de l'Assistant » : un visage rond
+// avec la pointe d'une bulle à droite, et trois expressions. viewBox « 0 0 100 100 ».
+export const MASCOT_FACE = "M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z";
+// L'étincelle à 4 branches, qui ne vit que dans l'IA.
+export function mascotSparkle(cx: number, cy: number, r: number): string {
+  // Les creux tirés vers les coins (k) donnent des branches dodues, comme sur la planche.
+  const k = r * 0.16;
+  return [
+    `M${cx} ${cy - r}`,
+    `Q${cx + k} ${cy - k} ${cx + r} ${cy}`,
+    `Q${cx + k} ${cy + k} ${cx} ${cy + r}`,
+    `Q${cx - k} ${cy + k} ${cx - r} ${cy}`,
+    `Q${cx - k} ${cy - k} ${cx} ${cy - r} Z`,
+  ].join(" ");
+}
+export const MASCOT_EYE_LEFT = { x: 33, y: 42 };
+export const MASCOT_EYE_RIGHT = { x: 59, y: 42 };
+// À l'écoute : l'œil fermé en arc, l'étincelle, le sourire.
+export const MASCOT_CLOSED_EYE = "M26 45 C 28.5 37, 37.5 37, 40 45";
+export const MASCOT_SMILE = "M29 60 C 37 71, 55 71, 63 60";
+// Réfléchit : un petit « o » au trait.
+export const MASCOT_O = { x: 46, y: 63, r: 5.5 };
+// A trouvé : le grand sourire ouvert, plein.
+export const MASCOT_OPEN_SMILE = "M31 58 C 31 57, 32 56.5, 33 56.5 L 59 56.5 C 60 56.5, 61 57, 61 58 C 60.5 68.5, 54 74.5, 46 74.5 C 38 74.5, 31.5 68.5, 31 58 Z";
