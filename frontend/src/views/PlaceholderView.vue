@@ -8,7 +8,6 @@ defineProps<{ entry: NavEntry }>();
 <template>
   <PageHero
     :title="entry.label"
-    :subtitle="entry.description"
   />
   <section class="band">
     <div class="container">

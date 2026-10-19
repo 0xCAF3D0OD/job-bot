@@ -41,7 +41,7 @@ onMounted(() => void load());
     data-test="rhythm-weeks"
   >
     <header class="dash-card-head">
-      <h2>Tes semaines</h2>
+      <h2>Semaines</h2>
       <span class="muted">{{ formatMonth(data.month) }}</span>
     </header>
     <ol>

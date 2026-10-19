@@ -285,7 +285,7 @@ onMounted(() => void load());
           class="form-card"
           data-test="sheet-summary"
         >
-          <h2>Ton mois en bref</h2>
+          <h2>Mois en bref</h2>
           <p
             v-for="line in prep.summaries"
             :key="line"
@@ -353,7 +353,7 @@ onMounted(() => void load());
           class="form-card"
           data-test="sheet-questions"
         >
-          <h2>Tes questions au conseiller</h2>
+          <h2>Questions au conseiller</h2>
           <p
             v-if="!meeting"
             class="hint"
@@ -413,7 +413,7 @@ onMounted(() => void load());
           class="form-card"
           data-test="sheet-obligations"
         >
-          <h2>Tes obligations et leurs dates</h2>
+          <h2>Obligations et échéances</h2>
           <ul class="orp-meeting-duties">
             <li
               v-for="item in prep.obligations"

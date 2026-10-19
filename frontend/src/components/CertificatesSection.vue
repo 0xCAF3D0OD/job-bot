@@ -62,7 +62,7 @@ onMounted(() => void load());
       data-test="interim-letter"
       @click="letter = {}"
     >
-      Demande un certificat intermédiaire
+      Demander un certificat intermédiaire
     </button>
   </p>
   <section
@@ -95,7 +95,7 @@ onMounted(() => void load());
         data-test="interim-letter"
         @click="letter = {}"
       >
-        Demande un certificat intermédiaire
+        Demander un certificat intermédiaire
       </button>
     </p>
     <article

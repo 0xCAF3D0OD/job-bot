@@ -355,11 +355,11 @@ async def test_criteria_tool(runtime: Runtime) -> None:
 def test_guide_follows_the_pages() -> None:
     # Les « ? » ont laissé la place à l'assistant (docs/53) : son guide décrit les pages
     # actuelles, Aujourd'hui en tableau de bord et le Bilan (docs/56).
-    assert "Objectif ORP" in service.INSTRUCTIONS and "Ta semaine" in service.INSTRUCTIONS
+    assert "Objectif ORP" in service.INSTRUCTIONS and "7 derniers jours" in service.INSTRUCTIONS
     assert "Ce qui donne des réponses dans sa recherche" in service.INSTRUCTIONS
     assert "`/candidatures/bilan?mois=AAAA-MM`" in service.INSTRUCTIONS
     # Ce qui est venu de 0.48.2 (docs/64) : ce que donnent les critères, la dépense du mois.
-    assert "Ce que donnent tes critères" in service.INSTRUCTIONS
+    assert "Effet des critères" in service.INSTRUCTIONS
     assert "dépense du mois" in service.INSTRUCTIONS and "« criteres »" in service.INSTRUCTIONS
     # 0.56.2 (docs/69 §2) : les Actualités ne sont plus publiques ; « La plateforme », l'accueil
     # et « Tes données » sont connus, avec leurs liens.
@@ -376,6 +376,11 @@ def test_guide_follows_the_pages() -> None:
     assert "À déclarer dans Job-Room" in service.INSTRUCTIONS
     # 0.62.2 (docs/76 §2) : les « ⋯ », l'entraînement, l'extension en un clic, la démo.
     assert "assistant-v8" not in service.INSTRUCTIONS  # la consigne ne se cite pas elle-même
+    # 0.70.0 (docs/88) : les titres sont les noms du menu, sans « Ton », « Ta », « Tes ».
+    assert "assistant-v9" not in service.INSTRUCTIONS
+    assert "« Effet des critères »" in service.INSTRUCTIONS
+    assert "Ce que je cherche" not in service.INSTRUCTIONS
+    assert "Ta semaine" not in service.INSTRUCTIONS
     assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS
     assert "S'entraîner à l'entretien" in service.INSTRUCTIONS
     assert "M'entraîner pour cet entretien" in service.INSTRUCTIONS

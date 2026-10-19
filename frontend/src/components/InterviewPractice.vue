@@ -484,7 +484,7 @@ onMounted(async () => {
       >
         <section class="practice-summary">
           <div>
-            <h4>Tes points forts</h4>
+            <h4>Points forts</h4>
             <ul>
               <li
                 v-for="item in practice.feedback.strengths"

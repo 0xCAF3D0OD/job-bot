@@ -45,7 +45,7 @@ function dayLabel(day: Week["days"][number], index: number): string {
     data-test="rhythm"
   >
     <header class="rhythm-head">
-      <h2>Ta semaine</h2>
+      <h2>Semaine</h2>
       <p
         v-if="week.target !== null && !week.pause_until"
         class="rhythm-count"
@@ -84,7 +84,7 @@ function dayLabel(day: Week["days"][number], index: number): string {
       class="hint"
     >
       <RouterLink :to="{ path: '/reglages', query: { rubrique: 'recherche' } }">
-        Indique ton objectif mensuel
+        Indiquer l'objectif mensuel
       </RouterLink> pour le répartir sur tes semaines.
     </p>
   </section>

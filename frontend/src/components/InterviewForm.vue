@@ -175,7 +175,7 @@ function submit(): void {
       </fieldset>
 
       <fieldset>
-        <legend>Ton ressenti</legend>
+        <legend>Ressenti</legend>
         <div class="choice-row">
           <span class="choice-label">Globalement *</span>
           <span

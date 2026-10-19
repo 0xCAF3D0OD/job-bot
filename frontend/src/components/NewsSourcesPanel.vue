@@ -168,7 +168,7 @@ const addItems: MoreMenuItem[] = [
   >
     <fieldset v-if="preferences">
       <legend>
-        Mon domaine
+        Domaine
       </legend>
       <ul
         class="keyword-chips"
@@ -313,7 +313,7 @@ const addItems: MoreMenuItem[] = [
               data-test="source-labour"
               @change="update(opened, { labour_market: !opened.labour_market })"
             >
-            <HoverNote text="Avec « Mon domaine », une source « marché de l'emploi » garde ses articles sur l'emploi (chômage, salaires, embauches).">
+            <HoverNote text="Avec « Domaine », une source « marché de l'emploi » garde ses articles sur l'emploi (chômage, salaires, embauches).">
               Marché de l'emploi
             </HoverNote>
           </label>

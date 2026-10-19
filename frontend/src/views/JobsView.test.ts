@@ -32,13 +32,13 @@ async function mountJobs(path: string) {
 }
 
 describe("JobsView (docs/19 §2)", () => {
-  it("trois onglets, titre de l'onglet, pastilles, mois conservé", async () => {
+  it("trois onglets, titre du menu, pastilles, mois conservé", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/today" ? { to_review: 12, to_follow_up: 2, alerts_waiting: 1 } : { incomplete: 1 } }),
     );
     const { wrapper, router } = await mountJobs("/candidatures/alertes?mois=2026-09");
-    expect(wrapper.find("h1 .label-long").text()).toBe("Tes alertes emploi");
-    expect(wrapper.find("h1 .label-short").text()).toBe("Tes alertes");
+    // Le titre reste celui du menu (docs/88) : l'onglet souligné dit où l'on est.
+    expect(wrapper.find("h1").text()).toBe("Candidatures");
     const tabs = ["offres", "suivi", "alertes"].map((k) => wrapper.find(`[data-test=jobs-tab-${k}]`));
     // Suivi : à relancer (2) + lignes ORP à compléter (1), docs/22 §1.
     expect(tabs.map((t) => t.text())).toEqual(["Offres 12", "Suivi 3", "Alertes 1"]);
@@ -49,7 +49,7 @@ describe("JobsView (docs/19 §2)", () => {
     await tabs[0]!.trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.name).toBe("offers");
-    expect(wrapper.find("h1 .label-long").text()).toBe("Les offres pour toi");
+    expect(wrapper.find("h1").text()).toBe("Candidatures");
     expect(GET).toHaveBeenCalledTimes(4); // pastilles relues au changement d'onglet
   });
 });

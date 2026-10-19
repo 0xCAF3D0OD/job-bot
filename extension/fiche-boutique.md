@@ -57,7 +57,7 @@ Autre (et, si proposé : Productivité).
 >
 > **Ce qui reste dans le navigateur** : l'adresse de ta plateforme et le jeton qui relie l'extension à ton compte (stockage local de l'extension). « Délier » les efface ; le jeton peut aussi être révoqué dans les Réglages de ta plateforme.
 >
-> Ce que ta plateforme fait de tes données est décrit sur sa page « Tes données » (`/tes-donnees`).
+> Ce que ta plateforme fait de tes données est décrit sur sa page « Données personnelles » (`/tes-donnees`).
 
 ## Notes pour la relecture de Mozilla
 

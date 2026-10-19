@@ -133,7 +133,7 @@ async function review(training: Training, keep: boolean): Promise<void> {
 async function suggest(): Promise<void> {
   // Bouton toujours actif (docs/29 §3) : sans domaine, il dit quoi faire.
   if (!hasDomain.value) {
-    message.value = "Définis d'abord ton domaine : bouton « Mon domaine ».";
+    message.value = "Définis d'abord ton domaine : bouton « Domaine ».";
     return;
   }
   suggesting.value = true;
@@ -167,8 +167,7 @@ onMounted(() => void load());
 
 <template>
   <PageHero
-    title="Se former dans son domaine"
-    subtitle="Certifications et cours en ligne pour ton domaine."
+    title="Formations"
   >
     <nav
       class="prep-tabs"
@@ -233,7 +232,7 @@ onMounted(() => void load());
             data-test="filter-domain"
             @click="setDomain(true)"
           >
-            Mon domaine
+            Domaine
           </button>
           <button
             type="button"

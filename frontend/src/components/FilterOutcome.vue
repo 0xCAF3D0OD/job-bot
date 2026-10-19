@@ -28,7 +28,7 @@ function share(part: number, total: number): string {
     class="filter-outcome"
     data-test="filter-outcome"
   >
-    <h2>Ce que donnent tes critères</h2>
+    <h2>Effet des critères</h2>
     <p class="muted">
       Ces 3 derniers mois
     </p>

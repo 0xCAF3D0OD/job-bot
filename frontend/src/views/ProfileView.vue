@@ -10,9 +10,9 @@ import ProfileParcours from "../components/ProfileParcours.vue";
 // Tout ce qui te concerne au même endroit (docs/10 §2 a) ; l'onglet est dans l'URL.
 const TABS = [
   // Sur téléphone, un nom court qui tient sur une ligne (docs/36 §5).
-  { key: "recherche", label: "Ce que je cherche", short: "Recherche" },
-  { key: "parcours", label: "Mon parcours", short: "Parcours" },
-  { key: "coordonnees", label: "Mes coordonnées", short: "Coordonnées" },
+  { key: "recherche", label: "Critères", short: "Critères" },
+  { key: "parcours", label: "Parcours", short: "Parcours" },
+  { key: "coordonnees", label: "Coordonnées", short: "Coordonnées" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -27,8 +27,7 @@ const tab = computed<Tab>(() => {
 
 <template>
   <PageHero
-    title="Toi et ta recherche"
-    subtitle="Ce que tu cherches, ton parcours et tes coordonnées."
+    title="Profil"
   >
     <nav
       class="prep-tabs"

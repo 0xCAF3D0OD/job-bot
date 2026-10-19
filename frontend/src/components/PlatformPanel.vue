@@ -342,11 +342,11 @@ function size(bytes: number | null | undefined): string {
     >
       <fieldset>
         <legend>
-          <label for="platform-mentions">Mentions de la page « Tes données »</label>
+          <label for="platform-mentions">Mentions de la page « Données personnelles »</label>
         </legend>
         <p class="hint">
           Responsable, contact, hébergement. Public, sur <RouterLink to="/tes-donnees">
-            la page Tes données
+            la page Données personnelles
           </RouterLink>.
         </p>
         <textarea

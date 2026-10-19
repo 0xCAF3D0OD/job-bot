@@ -115,7 +115,7 @@ onMounted(async () => {
         </p>
       </section>
       <section v-if="application.interviews?.length">
-        <h4>Tes entretiens précédents ici</h4>
+        <h4>Entretiens précédents ici</h4>
         <ul>
           <li
             v-for="item in application.interviews"
@@ -181,7 +181,7 @@ onMounted(async () => {
         v-if="practices.length"
         data-test="prep-practices"
       >
-        <h4>Mes entraînements</h4>
+        <h4>Entraînements</h4>
         <ul class="practice-history">
           <li
             v-for="item in practices"

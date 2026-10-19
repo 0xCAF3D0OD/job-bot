@@ -187,7 +187,7 @@ const active = computed<SectionId>(() => {
 
 <template>
   <PageHero
-    title="Tes réglages"
+    title="Réglages"
   />
   <section class="band">
     <div class="settings-layout">
@@ -304,7 +304,7 @@ const active = computed<SectionId>(() => {
             @submit.prevent="save"
           >
             <fieldset>
-              <legend>Mes jours de recherche</legend>
+              <legend>Jours de recherche</legend>
               <div class="rhythm-week">
                 <label
                   v-for="day in WEEK"

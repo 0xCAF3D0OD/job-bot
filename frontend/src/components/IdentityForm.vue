@@ -92,7 +92,7 @@ onMounted(async () => {
   >
     <fieldset>
       <legend>
-        Mes coordonnées
+        Coordonnées
       </legend>
       <p
         v-if="missing.length"

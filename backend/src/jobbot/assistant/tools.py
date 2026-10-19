@@ -130,7 +130,7 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "criteres",
-        "description": "Les critères du filtre (Profil, onglet « Ce que je cherche ») et ce qu'ils "
+        "description": "Les critères du filtre (Profil, onglet « Critères ») et ce qu'ils "
         "donnent sur les 3 derniers mois : offres reçues, offres retenues, raisons d'écart "
         "les plus fréquentes. À appeler pour « pourquoi si peu d'offres ? ».",
         "input_schema": {"type": "object", "properties": {}},

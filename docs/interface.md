@@ -2,6 +2,14 @@
 
 Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle renvoie au document qui l'a posée.
 
+## Titres et textes (docs/88)
+
+1. Le titre d'une page reprend mot pour mot son entrée du menu, sans sous-titre ; une petite précision peut se mettre au-dessus, en capitales (la date d'Aujourd'hui). Les pages de présentation (connexion, Découvrir, accueil) gardent leurs phrases.
+2. Titres de cartes, d'onglets, de sections et légendes : un nom, sans « ton », « ta », « tes », « mon », « ma », « mes ».
+3. Boutons et liens d'action : un verbe à l'infinitif (« Demander un certificat intermédiaire »).
+4. Le tutoiement reste dans les phrases : messages, erreurs, états vides.
+5. Un test (`frontend/src/titles.test.ts`) vérifie les règles 1 et 2.
+
 ## Illustrations (docs/62, docs/67)
 
 1. Une illustration seulement si l'écran n'a rien d'autre à montrer (vide, erreur, première fois) ou pour marquer un moment (réussite, transition d'une page qui charge).

@@ -30,7 +30,7 @@ async function everywhere(): Promise<void> {
   >
     <fieldset>
       <legend>
-        Ton compte
+        Compte
       </legend>
       <p class="hint">
         Connecté en tant que <strong>{{ me.username }}</strong>.
