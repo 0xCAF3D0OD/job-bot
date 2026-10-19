@@ -370,8 +370,10 @@ def test_guide_follows_the_pages() -> None:
     assert "Refaire l'accueil" in service.INSTRUCTIONS and "date de remise" in service.INSTRUCTIONS
     # 0.57.0 (docs/70) : l'extension remplit Job-Room, « Marquer comme déclarée ».
     assert "Copier pour Job-Room" not in service.INSTRUCTIONS
-    assert "Recopier dans Job-Room" in service.INSTRUCTIONS
     assert "Marquer comme déclarée" in service.INSTRUCTIONS
+    # 0.67.4 (docs/85) : la liste « À déclarer » remplace la vue champ par champ.
+    assert "Recopier dans Job-Room" not in service.INSTRUCTIONS
+    assert "À déclarer dans Job-Room" in service.INSTRUCTIONS
     # 0.62.2 (docs/76 §2) : les « ⋯ », l'entraînement, l'extension en un clic, la démo.
     assert "assistant-v8" not in service.INSTRUCTIONS  # la consigne ne se cite pas elle-même
     assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS

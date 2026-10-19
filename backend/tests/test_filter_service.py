@@ -230,16 +230,3 @@ async def test_api_offer_filters(api: AsyncClient, fresh: Runtime) -> None:
                 "DELETE FROM settings WHERE key IN ('offer_filters_visible', 'offer_filters_known')"
             )
         )
-
-
-async def test_api_orp_columns(api: AsyncClient, fresh: Runtime) -> None:
-    async with fresh.engine.begin() as conn:
-        await conn.execute(text("DELETE FROM settings WHERE key = 'orp_columns_visible'"))
-    default = (await api.get("/api/orp-columns")).json()["visible"]
-    assert default == ["address", "contact", "rate", "method", "assigned", "result", "url"]
-    saved = (await api.put("/api/orp-columns", json={"visible": ["url", "result"]})).json()
-    assert saved == {"visible": ["result", "url"]}
-    assert (await api.get("/api/orp-columns")).json() == saved
-    assert (await api.put("/api/orp-columns", json={"visible": ["salaire"]})).status_code == 422
-    async with fresh.engine.begin() as conn:
-        await conn.execute(text("DELETE FROM settings WHERE key = 'orp_columns_visible'"))

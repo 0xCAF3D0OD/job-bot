@@ -651,23 +651,10 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: 0.55r
 
 /* Page ORP (docs/09) */
 .table-scroll { overflow-x: auto; position: relative; }
-.orp-table td { vertical-align: top; font-size: 0.88rem; }
-.orp-table tr.incomplete td { background: color-mix(in srgb, var(--warn) 8%, transparent); }
-.job-room { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); }
-.job-room-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.2rem; min-width: 0; }
-.job-room-card h3 { font-size: 0.95rem; margin: 0 0 0.6rem; }
-.job-room-card dl { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.3rem 0.8rem; margin: 0; font-size: 0.86rem; }
-.job-room-card dt { color: var(--muted); }
-.job-room-card dd { margin: 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; min-width: 0; }
 /* Un long lien (Workday, Indeed…) se coupe au lieu de pousser le bouton hors de la carte. */
-.job-room-card dd > span { min-width: 0; overflow-wrap: anywhere; }
-.job-room-card dd > button { flex: none; }
-.job-room-card h3 { overflow-wrap: anywhere; }
 /* Déclarée dans Job-Room (docs/70 §6). */
 .job-room-declared { display: flex; flex-wrap: wrap; gap: 0.3rem 0.7rem; align-items: baseline; margin: 0 0 0.75rem; font-size: 0.86rem; }
 .job-room-declared .done { color: var(--accent); font-weight: 500; }
-.job-room-count { color: var(--muted); }
-.job-room-hint { margin: 0 0 0.9rem; font-size: 0.88rem; }
 .orp-sheet { display: none; }
 #print-root .orp-sheet { display: block; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
 .orp-sheet .orp-sheet-title { font-size: 12pt; margin: 0 0 4mm; }
@@ -911,8 +898,6 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .today-list a:hover strong { color: var(--accent); }
 
 /* Saisie Job-Room : une section par étape de leur formulaire */
-.job-room-step { margin-top: 0.7rem; }
-.job-room-step h4 { margin: 0 0 0.3rem; font-size: 0.82rem; color: var(--muted); font-weight: 600; }
 .job-room-choice { color: var(--accent); }
 
 /* Préparation : retour aux offres toujours visible */
@@ -1001,10 +986,6 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .contact-message-foot .over-limit { color: var(--down-text); }
 
 /* Preuves ORP : une action à la fois (docs/21 §6) */
-.orp-next { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0.8rem 0; }
-.orp-next-links { display: inline-flex; align-items: center; gap: 1rem; margin-left: auto; }
-.columns-list.orp-columns { position: static; width: auto; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; box-shadow: none; }
-.orp-columns legend { display: flex; gap: 1rem; align-items: baseline; }
 .diagnostic-link { margin-top: 1.5rem; font-size: 0.9rem; }
 
 /* Suivi en calendrier (docs/22) */
@@ -1032,13 +1013,24 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .day-marks .mark { font-size: 0.65rem; border-radius: 4px; padding: 0 0.25rem; width: fit-content; }
 .day-marks .mark.interview { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent-text); }
 .day-marks .mark.remind { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn-text); }
-.suivi-panel { display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.suivi-panel { display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; min-width: 0; }
 .panel-scroll { flex: 1; min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: 0.7rem; padding: 0.2rem 0.2rem 0.4rem 0; scrollbar-width: thin; }
 /* Estompage : en haut seulement si des cartes sont au-dessus, en bas si d'autres suivent. */
 .panel-scroll.fade-top { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); }
 .panel-scroll.fade-bottom { -webkit-mask-image: linear-gradient(to top, transparent 0, #000 3rem); mask-image: linear-gradient(to top, transparent 0, #000 3rem); }
 .panel-scroll.fade-top.fade-bottom { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); }
 .suivi-panel .suivi-panel-title { margin: 0; font-size: 1rem; }
+/* À déclarer dans Job-Room (docs/85) : sous « À relancer », une ligne par candidature, cliquable. */
+.suivi-declare { flex: 0 1 auto; max-height: 45%; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.9rem; border-top: 1px solid var(--border); }
+.suivi-declare-count { display: inline-flex; margin-left: 0.4rem; padding: 0 0.5rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 0.78rem; font-weight: 600; vertical-align: middle; }
+.suivi-declare ul { min-width: 0; list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; scrollbar-width: thin; }
+.suivi-declare-row { width: 100%; display: flex; align-items: baseline; gap: 0.6rem; padding: 0.5rem 0.4rem; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
+.suivi-declare li + li .suivi-declare-row { border-top: 1px solid var(--divider); border-radius: 0; }
+.suivi-declare-row:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.suivi-declare-row:hover strong { color: var(--accent-text); }
+.suivi-declare-day { flex: none; width: 3.6rem; color: var(--muted); font-size: 0.82rem; }
+.suivi-declare-what { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suivi-declare .badge { flex: none; }
 .application-card { display: grid; gap: 0; padding: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
 /* Carte calme (docs/46 §2) : qui, quoi, le statut ; en bas, une seule prochaine étape. */
 .application-card-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.6rem; align-items: baseline; width: 100%; padding: 0.7rem 0.85rem 0.6rem; border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; white-space: normal; }
@@ -1070,7 +1062,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 /* Un long lien passe à la ligne au lieu d'élargir le panneau (docs/74). */
 .card-job-room dd > span { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 900px) {
-  .suivi-grid { grid-template-columns: 1fr; }
+  .suivi-grid { grid-template-columns: minmax(0, 1fr); }
   .panel-scroll { max-height: 70vh; }
   .suivi-calendar .day { min-height: 3.6rem; }
   .day-marks .mark { display: none; }
@@ -1466,18 +1458,6 @@ html.side-open { overflow: hidden; }
   .detail-panel .close { width: auto; font-size: 0.95rem; color: var(--accent-text); }
   .detail-panel .close .close-x { display: none; }
   .detail-panel .close .close-back { display: inline; }
-
-  /* Déclaration Job-Room (le formulaire ORP du mois) : une fiche par candidature, les colonnes en lignes. */
-  .orp-table, .orp-table tbody { display: block; }
-  .orp-table thead { display: none; }
-  .orp-table tr { display: grid; gap: 0.3rem; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
-  .orp-table td { display: flex; gap: 0.6rem; padding: 0; border: 0; }
-  .orp-table td[data-label]::before { content: attr(data-label); flex: none; width: 5rem; color: var(--muted); font-size: 0.8rem; }
-  .orp-table .orp-cell-date { font-size: 0.8rem; color: var(--muted); }
-  .orp-table .orp-cell-company { display: block; }
-  .orp-table .orp-cell-actions { justify-content: flex-end; }
-  .orp-table tr.incomplete { border-color: var(--warn); }
-  .orp-table tr.incomplete td { background: none; }
 }
 /* Écran d’accueil, plein écran (docs/33 §3.5) : la barre du haut évite l’encoche. */
 .topbar { padding-top: env(safe-area-inset-top); }
@@ -2619,9 +2599,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .form-card .disclosure > .disclosure-panel .disclosure-body { margin-left: 0.1rem; margin-right: 0; }
 @media (max-width: 820px) {
   /* Sur téléphone, les lignes des preuves ne sont plus des cartes dans le volet. */
-  :is(.disclosure, .disclosure-list) .orp-table tr { margin: 0; padding: 0.8rem 0; border: 0; border-bottom: 1px solid var(--divider); border-radius: 0; background: none; }
-  :is(.disclosure, .disclosure-list) .orp-table tr:last-child { border-bottom: 0; }
-  :is(.disclosure, .disclosure-list) .orp-table tr.incomplete { padding-left: 0.7rem; box-shadow: inset 3px 0 0 var(--warn); }
 }
 /* Une seule action ordinaire, sans menu (docs/76 §3) : alignée comme le « ⋯ ». */
 .more-direct { white-space: nowrap; font-size: 0.9rem; }

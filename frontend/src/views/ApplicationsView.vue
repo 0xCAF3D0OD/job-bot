@@ -11,7 +11,6 @@ import {
   type OrpMonth,
 } from "../api/client";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import DisclosureRow from "../components/DisclosureRow.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationPanel from "../components/ApplicationPanel.vue";
 import SidePanel from "../components/SidePanel.vue";
@@ -24,6 +23,7 @@ import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
+import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import EngagementMoment from "../components/EngagementMoment.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
@@ -74,13 +74,30 @@ const monthItems = computed(() => all.value.filter((a) => a.orp_month === month.
 const items = computed(() => (allMonths.value ? all.value : monthItems.value));
 const rowsById = computed(() => new Map((orp.value?.rows ?? []).map((r) => [r.application_id, r])));
 const incomplete = computed(() => new Set((orp.value?.rows ?? []).filter((r) => r.missing.length).map((r) => r.application_id)));
-// Ce qui reste à faire pour le mois (0.67.3) : compléter, puis déclarer dans Job-Room.
-const declareStatus = computed(() => {
-  if (incomplete.value.size) return `${plural(incomplete.value.size, "ligne", "lignes")} à compléter`;
-  const count = orp.value?.count ?? 0;
-  const left = orp.value?.to_declare ?? 0;
-  if (!count) return "aucune candidature";
-  return left ? `${left} à déclarer` : "tout est déclaré";
+// À déclarer dans Job-Room (docs/85) : les candidatures du mois pas encore marquées déclarées,
+// date · entreprise · poste ; un clic ouvre le panneau, avec l'offre et les champs à copier.
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+const toDeclare = computed(() =>
+  (orp.value?.rows ?? [])
+    .filter((r) => !r.declared_at)
+    .map((r) => {
+      const application = all.value.find((a) => a.id === r.application_id);
+      const day = application ? shortDate.format(new Date(`${application.sent_at}T12:00:00`)) : r.date;
+      return { id: r.application_id, day, company: r.company, title: r.job_title, incomplete: r.missing.length > 0 };
+    }),
+);
+// Le PDF et le CSV du mois, dans le « ⋯ » de la barre du mois (docs/85 §3).
+const sheet = ref<InstanceType<typeof OrpSheet> | null>(null);
+const monthMenu = computed<MoreMenuItem[]>(() => {
+  const data = orp.value;
+  if (!data) return [];
+  return [
+    { label: "Télécharger le PDF", test: "pdf", run: () => void sheet.value?.printPdf() },
+    ...(data.searches.length
+      ? [{ label: "PDF avec le journal des recherches", test: "pdf-with-searches", count: data.searches.length, run: () => void sheet.value?.printPdf(true) }]
+      : []),
+    { label: "Télécharger en CSV (Excel)", test: "csv", href: `/api/orp/${data.month}/csv`, download: true },
+  ];
 });
 const firstIncomplete = computed(() => monthItems.value.find((a) => incomplete.value.has(a.id)) ?? null);
 const progress = computed(() => (orp.value?.target ? Math.min(1, orp.value.count / orp.value.target) : null));
@@ -186,11 +203,6 @@ function today(): string {
 function edit(application: Application): void {
   error.value = "";
   editing.value = { id: application.id, value: { ...application } };
-}
-
-function editById(id: number): void {
-  const application = all.value.find((a) => a.id === id);
-  if (application) edit(application);
 }
 
 function addManual(): void {
@@ -451,6 +463,12 @@ onUnmounted(() => assistant.setFocus(null));
         >
           ＋
         </button>
+        <MoreMenu
+          v-if="orp.count"
+          :items="monthMenu"
+          label="Actions sur le mois"
+          test-id="orp-more"
+        />
       </div>
 
       <!-- Ligne 2, seulement s'il y a à faire : l'état ORP et son action (docs/43 n° 14). -->
@@ -499,6 +517,12 @@ onUnmounted(() => assistant.setFocus(null));
           </button>
         </div>
       </div>
+
+      <OrpSheet
+        ref="sheet"
+        :data="orp"
+        @reload="load"
+      />
 
       <EngagementMoment
         v-if="celebrating"
@@ -578,6 +602,46 @@ onUnmounted(() => assistant.setFocus(null));
               @changed="load"
             />
           </div>
+          <section
+            v-if="!selectedDay && orp.count"
+            class="suivi-declare"
+            data-test="declare"
+          >
+            <h2 class="suivi-panel-title">
+              À déclarer dans Job-Room
+              <span
+                v-if="toDeclare.length"
+                class="suivi-declare-count"
+              >{{ toDeclare.length }}</span>
+            </h2>
+            <p
+              v-if="!toDeclare.length"
+              class="hint"
+              data-test="declare-done"
+            >
+              Tout est déclaré.
+            </p>
+            <ul v-else>
+              <li
+                v-for="item in toDeclare"
+                :key="item.id"
+              >
+                <button
+                  type="button"
+                  class="suivi-declare-row"
+                  :data-test="`declare-${item.id}`"
+                  @click="openId = item.id"
+                >
+                  <span class="suivi-declare-day">{{ item.day }}</span>
+                  <span class="suivi-declare-what"><strong>{{ item.company }}</strong> · {{ item.title }}</span>
+                  <span
+                    v-if="item.incomplete"
+                    class="badge warn"
+                  >à compléter</span>
+                </button>
+              </li>
+            </ul>
+          </section>
         </aside>
       </div>
 
@@ -613,20 +677,6 @@ onUnmounted(() => assistant.setFocus(null));
           ref="insightsPanel"
           group="suivi"
         />
-        <DisclosureRow
-          class="orp-details"
-          title="Déclaration Job-Room"
-          :value="declareStatus"
-          group="suivi"
-          data-test="orp-details"
-        >
-          <OrpSheet
-            :data="orp"
-            embedded
-            @reload="load"
-            @edit="editById"
-          />
-        </DisclosureRow>
       </div>
     </template>
     <LoadingBlocks
