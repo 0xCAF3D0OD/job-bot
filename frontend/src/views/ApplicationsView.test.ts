@@ -91,12 +91,8 @@ const application = {
 };
 
 // Page Candidatures réunie (docs/18 §2) : /api/orp donne le mois et l'état, /api/applications la liste.
-function mockApi(orpMonth: () => unknown = () => month(), applications: unknown[] = [application], columns: unknown = undefined): void {
-  GET.mockImplementation((path: string) =>
-    Promise.resolve({
-      data: path === "/api/orp" ? orpMonth() : path === "/api/orp-columns" ? columns : applications,
-    }),
-  );
+function mockApi(orpMonth: () => unknown = () => month(), applications: unknown[] = [application]): void {
+  GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/orp" ? orpMonth() : applications }));
 }
 
 // Onglets de la rubrique Candidatures (docs/19 §2) : la vue vient de la route.
@@ -194,30 +190,47 @@ describe("Candidatures, onglet Preuves ORP", () => {
     const { wrapper } = await mountView("/candidatures/preuves");
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: undefined } } });
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves à remettre avant le 5 novembre 2026");
-    expect(wrapper.findAll("[data-test=orp-row]")).toHaveLength(2);
-    expect(wrapper.find("[data-test=incomplete]").text()).toContain("1 ligne");
-    // PDF, CSV et colonnes dans le « ⋯ » du mois (docs/74).
+    // PDF et CSV dans le « ⋯ » de la barre du mois (docs/85 §3) ; plus de colonnes à choisir.
     await wrapper.find("[data-test=orp-more]").trigger("click");
     expect(wrapper.find("[data-test=csv]").attributes("href")).toBe("/api/orp/2026-10/csv");
     expect(wrapper.find("[data-test=csv]").attributes("download")).toBe("");
     expect(wrapper.find("[data-test=pdf]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=columns]").exists()).toBe(false);
     // La version imprimée reprend l'en-tête et laisse le n° AVS à remplir.
     expect(wrapper.find(".orp-sheet").text()).toContain("N° AVS : ____");
     // Le lien de la candidature est dans le PDF, sous le poste.
     expect(wrapper.find(".orp-sheet .orp-url").text()).toBe("https://emploi.exemple.ch/postuler/1");
   });
 
-  it("Déclaration Job-Room : dit ce qui reste à faire (0.67.3)", async () => {
-    mockApi();
-    let { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=orp-details]").text()).toContain("Déclaration Job-Room");
-    expect(wrapper.find("[data-test=orp-details]").text()).toContain("1 ligne à compléter");
-    mockApi(() => month({ rows: [row(1), row(2)], to_declare: 1 }));
-    ({ wrapper } = await mountView());
-    expect(wrapper.find("[data-test=orp-details]").text()).toContain("1 à déclarer");
-    mockApi(() => month({ rows: [row(1), row(2)], to_declare: 0 }));
-    ({ wrapper } = await mountView());
-    expect(wrapper.find("[data-test=orp-details]").text()).toContain("tout est déclaré");
+  it("À déclarer dans Job-Room : une ligne par candidature, cliquable (docs/85)", async () => {
+    localStorage.setItem("jobbot-suivi-vue", "calendar");
+    const declared = { ...application, id: 1, company: "Déjà SA" };
+    const left = { ...application, id: 2, company: "Reste SA", sent_at: "2026-10-02" };
+    const rows = [row(1, { declared_at: "2026-10-12", company: "Déjà SA" }), row(2, { company: "Reste SA", missing: ["adresse de l'entreprise"] })];
+    const months = [month({ to_declare: 1, rows }), month({ to_declare: 0, rows: [rows[0], { ...rows[1], declared_at: "2026-10-19" }] })];
+    mockApi(() => months.shift() ?? month({ to_declare: 0, rows: [rows[0]] }), [declared, left]);
+    PUT.mockResolvedValue({ response: { status: 204 } });
+    const { wrapper } = await mountView();
+    const list = wrapper.find("[data-test=declare]");
+    expect(list.text()).toContain("À déclarer dans Job-Room");
+    expect(list.findAll("li")).toHaveLength(1);
+    const item = list.find("[data-test=declare-2]");
+    expect(item.text()).toContain("2 oct.");
+    expect(item.text()).toContain("Reste SA · Ingénieur DevOps junior");
+    expect(item.text()).toContain("à compléter");
+    // Un clic ouvre le panneau : l'offre, « Modifier », les champs et « Marquer comme déclarée ».
+    await item.trigger("click");
+    const panel = wrapper.find("[data-test=application-panel]");
+    expect(panel.find("[data-test=card-job-room-fields]").exists()).toBe(true);
+    await panel.find("[data-test=job-room-mark]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}/job-room", {
+      params: { path: { application_id: 2 } },
+    });
+    expect(wrapper.find("[data-test=declare-done]").text()).toBe("Tout est déclaré.");
+    // Le panneau d'un jour choisi n'affiche pas la liste.
+    await wrapper.find("[data-test=day-2026-10-02]").trigger("click");
+    expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
   });
 
   it("une action à la fois : compléter tant qu'une ligne manque", async () => {
@@ -236,9 +249,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi(() => month(), [{ ...application, id: 2, sent_at: "2026-10-02", status: "refus" }]);
     PUT.mockResolvedValue({ data: { id: 2 } });
     const { wrapper } = await mountView("/candidatures/preuves");
-    // Chaque ligne se modifie ; « À compléter » ouvre le même formulaire.
-    expect(wrapper.findAll("[data-test=edit-row]")).toHaveLength(2);
-    await wrapper.find("[data-test=complete]").trigger("click");
+    await wrapper.find("[data-test=complete-next]").trigger("click");
     await flushPromises();
     const form = wrapper.find("form.application-form");
     expect(form.exists()).toBe(true);
@@ -270,57 +281,6 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(DELETE).toHaveBeenCalled();
   });
 
-  it("saisie Job-Room : copie un champ", async () => {
-    mockApi();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText } });
-    const { wrapper } = await mountView("/candidatures/preuves");
-    await wrapper.find("[data-test=job-room]").trigger("click");
-    expect(wrapper.findAll("[data-test=job-room-row]")).toHaveLength(2);
-    // Une section par étape du formulaire Job-Room ; les choix sont à cocher, pas à copier.
-    const first = wrapper.findAll("[data-test=job-room-row]")[0]!;
-    expect(first.findAll("h4").map((h) => h.text())).toEqual([
-      "Quand avez-vous postulé ?",
-      "Comment avez-vous postulé ?",
-      "Auprès de quelle entreprise ?",
-      "Résultat",
-    ]);
-    expect(first.find("[data-test=job-room-choice]").text()).toBe("à cocher : Par voie électronique");
-    expect(first.findAll("[data-test=copy]")).toHaveLength(3);
-    await wrapper.findAll("[data-test=copy]")[1]!.trigger("click");
-    await flushPromises();
-    expect(writeText).toHaveBeenCalledWith("Acme SA");
-    expect(wrapper.findAll("[data-test=copy]")[1]!.text()).toBe("✓ Copié");
-  });
-
-  it("Job-Room : marquer comme déclarée, puis annuler (docs/70 §6)", async () => {
-    // Rien de déclaré : pas de compte (pour qui remet le PDF, il serait toujours plein).
-    const months = [
-      month(),
-      month({ to_declare: 1, rows: [row(1, { declared_at: "2026-10-12" }), row(2)] }),
-    ];
-    mockApi(() => months.shift() ?? month({ to_declare: 1, rows: [row(1, { declared_at: "2026-10-12" }), row(2)] }));
-    PUT.mockResolvedValue({ response: { status: 204 } });
-    DELETE.mockResolvedValue({ response: { status: 204 } });
-    const { wrapper } = await mountView("/candidatures/preuves");
-    expect(wrapper.find("[data-test=job-room-count]").exists()).toBe(false);
-    await wrapper.find("[data-test=job-room]").trigger("click");
-    await wrapper.find("[data-test=job-room-row] [data-test=job-room-mark]").trigger("click");
-    await flushPromises();
-    expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}/job-room", {
-      params: { path: { application_id: 1 } },
-    });
-    const first = wrapper.findAll("[data-test=job-room-row]")[0]!;
-    expect(first.find("[data-test=job-room-declared]").text()).toContain("Déclarée dans Job-Room le 12.10");
-    await first.find("[data-test=job-room-undo]").trigger("click");
-    await flushPromises();
-    expect(DELETE).toHaveBeenCalledWith("/api/applications/{application_id}/job-room", {
-      params: { path: { application_id: 1 } },
-    });
-    await wrapper.find("[data-test=job-room]").trigger("click");
-    expect(wrapper.find("[data-test=job-room-count]").text()).toBe("1 à déclarer");
-  });
-
   it("navigation de mois : passe par l'URL", async () => {
     mockApi();
     const { wrapper, router } = await mountView("/candidatures/preuves");
@@ -331,27 +291,6 @@ describe("Candidatures, onglet Preuves ORP", () => {
   });
 });
 
-
-describe("Candidatures, colonnes des preuves", () => {
-  it("masque une colonne à l'écran et enregistre le choix", async () => {
-    mockApi(() => month(), [], { visible: ["result", "url"] });
-    PUT.mockResolvedValue({ data: { visible: ["result"] } });
-    const { wrapper } = await mountView("/candidatures/preuves");
-    const headers = () => wrapper.findAll(".orp-table th").map((th) => th.text());
-    expect(headers()).toEqual(["Date", "Entreprise", "Poste", "Résultat", "Lien", "Actions"]);
-    // La ligne sans adresse garde son « À compléter » même si la colonne adresse est masquée.
-    expect(wrapper.find("[data-test=complete]").exists()).toBe(true);
-
-    await wrapper.find("[data-test=orp-more]").trigger("click");
-    await wrapper.find("[data-test=columns]").trigger("click");
-    await wrapper.find("[data-test=column-url]").setValue(false);
-    await flushPromises();
-    expect(PUT).toHaveBeenCalledWith("/api/orp-columns", { body: { visible: ["result"] } });
-    expect(headers()).not.toContain("Lien");
-    // Le PDF garde toutes les colonnes.
-    expect(wrapper.find(".orp-sheet").text()).toContain("Personne de contact, téléphone");
-  });
-});
 
 describe("Suivi en calendrier (docs/22)", () => {
   it("pastilles par jour, cartes au clic, à relancer par défaut, copie Job-Room", async () => {
