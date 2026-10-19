@@ -5,6 +5,7 @@ import { api, type Contact, type ContactIn, type ContactsPage } from "../api/cli
 import { CHANNELS, contactName, isoDay, ROLES, toFollowUp } from "../contactLabels";
 import CopyLabel from "./CopyLabel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Contacts dans l'entreprise (docs/31) : recherches LinkedIn déjà remplies, ouvertes dans
 // un nouvel onglet, et suivi des prises de contact. Rien n'est lu sur LinkedIn. Affiché dans
@@ -256,11 +257,9 @@ onMounted(() => void load());
               :disabled="writing"
               data-test="contact-write"
             >
-              {{ writing ? "Rédaction…" : written ? "Rédiger à nouveau" : "Rédiger un message" }}
-              <span
-                v-if="!writing"
-                class="cost"
-              >· 0,002 $</span>
+              <HoverNote :text="writing ? '' : 'Environ 0,002 $.'">
+                {{ writing ? "Rédaction…" : written ? "Rédiger à nouveau" : "Rédiger un message" }}
+              </HoverNote>
             </button>
           </div>
         </form>

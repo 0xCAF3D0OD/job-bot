@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import { api, type Application } from "../api/client";
 import CopyLabel from "./CopyLabel.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Relancer une candidature (docs/38) : un court message (IA ou modèle simple), à copier ou à
 // ouvrir dans ta messagerie ; rien n'est envoyé par la plateforme. Puis « Marquer comme relancée ».
@@ -87,11 +88,9 @@ async function markDone(): Promise<void> {
       data-test="follow-up-write"
       @click="write"
     >
-      {{ writing ? "Rédaction…" : "Rédiger la relance" }}
-      <span
-        v-if="!writing"
-        class="cost"
-      >· 0,002 $</span>
+      <HoverNote :text="writing ? '' : 'Environ 0,002 $.'">
+        {{ writing ? "Rédaction…" : "Rédiger la relance" }}
+      </HoverNote>
     </button>
     <template v-else>
       <p

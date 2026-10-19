@@ -4,6 +4,7 @@ import { onMounted, ref, watch } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import CertificateLetter from "./CertificateLetter.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Les certificats de travail, décodés (docs/87) : la note, les formules codées, ce qui
 // dessert, le conseil ; la lecture de l'IA sur demande.
@@ -54,8 +55,7 @@ onMounted(() => void load());
     class="hint certificates-hint"
     data-test="certificates-hint"
   >
-    Un certificat de travail parmi tes documents ? Ouvre-le, puis ⋯ › « C'est un certificat de travail » : jobA1 te dit
-    ce qu'il dit vraiment. Encore en poste ou en préavis ?
+    Un certificat parmi tes documents ? Ouvre-le, puis ⋯ › « C'est un certificat de travail ». Encore en poste ?
     <button
       type="button"
       class="link"
@@ -134,7 +134,9 @@ onMounted(() => void load());
           :data-test="`certificate-details-${item.document_id}`"
           @click="open = open === item.document_id ? null : item.document_id"
         >
-          {{ open === item.document_id ? "Masquer le détail" : "Voir phrase par phrase" }}
+          <HoverNote text="Une lecture reste une interprétation : la phrase d'origine fait foi.">
+            {{ open === item.document_id ? "Masquer le détail" : "Voir phrase par phrase" }}
+          </HoverNote>
         </button>
         <div
           v-if="open === item.document_id"
@@ -178,9 +180,6 @@ onMounted(() => void load());
               {{ item.ai.order }}
             </li>
           </ul>
-          <p class="hint">
-            Une lecture reste une interprétation : la phrase d'origine fait foi.
-          </p>
         </div>
         <div class="form-actions">
           <button
@@ -190,7 +189,9 @@ onMounted(() => void load());
             :data-test="`certificate-read-${item.document_id}`"
             @click="readInDetail(item)"
           >
-            {{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}
+            <HoverNote text="Environ 0,03 CHF.">
+              {{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}
+            </HoverNote>
           </button>
           <button
             v-if="item.advice !== 'attach'"
@@ -205,8 +206,8 @@ onMounted(() => void load());
       </template>
     </article>
     <p class="hint">
-      « Lire en détail » : environ 0,03 CHF. Ton nom, et les personnes citées avec un titre (M., Mme…) ou en signature,
-      sont retirés avant l'IA ; un nom cité seul dans une phrase pourrait partir.
+      Avant l'IA, ton nom et les personnes citées avec un titre ou en signature sont retirés ; un nom seul dans une
+      phrase pourrait partir.
     </p>
   </section>
   <CertificateLetter

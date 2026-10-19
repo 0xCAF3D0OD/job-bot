@@ -12,6 +12,7 @@ import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
+import HoverNote from "../components/HoverNote.vue";
 import { firstTime } from "../composables/useIntro";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -311,7 +312,9 @@ const intro = firstTime("bilan-funnel");
             <header class="dash-card-head">
               <h2>
                 <span class="dash-bubble small"><AppIcon :name="ICONS[comparison.key] ?? 'search'" /></span>
-                {{ comparison.title }}
+                <HoverNote text="Réponses sur candidatures envoyées. Un refus est une réponse ; « Sans réponse » n'en est pas une.">
+                  {{ comparison.title }}
+                </HoverNote>
               </h2>
             </header>
             <ul
@@ -349,9 +352,6 @@ const intro = firstTime("bilan-funnel");
             </p>
           </section>
         </div>
-        <p class="hint bilan-note">
-          Réponses sur candidatures envoyées. Un refus est une réponse ; « Sans réponse » n'en est pas une.
-        </p>
       </template>
 
       <RhythmWeeks

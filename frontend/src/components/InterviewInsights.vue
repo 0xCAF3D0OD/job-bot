@@ -6,6 +6,7 @@ import InterviewCoaching from "./InterviewCoaching.vue";
 import InterviewPractice from "./InterviewPractice.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import AiWriting from "./AiWriting.vue";
+import HoverNote from "./HoverNote.vue";
 import { plural } from "../format";
 
 // « Mes enseignements » (docs/23 §3) : tous les retours d'entretien, regroupés, sans IA ;
@@ -164,11 +165,9 @@ onMounted(() => void load());
         data-test="coach"
         @click="coach"
       >
-        {{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}
-        <span
-          v-if="!busy"
-          class="cost"
-        >· 0,03 $</span>
+        <HoverNote :text="busy ? '' : 'Environ 0,03 $.'">
+          {{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}
+        </HoverNote>
       </button>
       <p
         v-if="message"
@@ -188,9 +187,10 @@ onMounted(() => void load());
         data-test="insights-practice"
         @click="practicing = true"
       >
-        M'entraîner sur un entretien type
+        <HoverNote text="Cinq questions de l'IA, une à la fois, puis un retour. Environ 0,20 CHF ; tu peux répondre en dictant.">
+          M'entraîner sur un entretien type
+        </HoverNote>
       </button>
-      <span class="hint">Cinq questions de l'IA sur ton métier, puis un retour.</span>
     </p>
     <Teleport to="body">
       <InterviewPractice

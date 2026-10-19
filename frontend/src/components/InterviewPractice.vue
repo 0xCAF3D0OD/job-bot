@@ -368,9 +368,6 @@ onMounted(async () => {
               </button>
             </div>
           </fieldset>
-          <p class="hint">
-            Environ 0,20 CHF. Tu peux répondre en dictant.
-          </p>
           <p
             v-if="message"
             class="notice error"

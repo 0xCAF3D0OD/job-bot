@@ -4,6 +4,7 @@ import { computed, nextTick, onMounted, ref } from "vue";
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
 import OfferBrief from "./OfferBrief.vue";
 import AiWriting from "./AiWriting.vue";
+import HoverNote from "./HoverNote.vue";
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
 const props = defineProps<{ offer: Offer; primary?: boolean }>();
@@ -307,11 +308,9 @@ onMounted(() => void load());
             data-test="write-cv"
             @click="write"
           >
-            {{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}
-            <span
-              v-if="!writing"
-              class="cost"
-            >· 0,05 $</span>
+            <HoverNote :text="writing ? '' : 'Environ 0,05 $.'">
+              {{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}
+            </HoverNote>
           </button>
         </div>
       </div>

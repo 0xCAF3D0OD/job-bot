@@ -5,6 +5,7 @@ import { api, type Application, type InterviewInsights, type Offer, type Practic
 import InterviewCoaching from "./InterviewCoaching.vue";
 import InterviewPractice from "./InterviewPractice.vue";
 import AiWriting from "./AiWriting.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
 // rencontrées, ce qui reste à préparer, les questions à poser ; pistes de l'IA à la demande.
@@ -100,9 +101,10 @@ onMounted(async () => {
           data-test="prep-practice"
           @click="practicing = true"
         >
-          M'entraîner pour cet entretien
+          <HoverNote text="Cinq questions de l'IA, une à la fois, puis un retour. Environ 0,20 CHF ; tu peux répondre en dictant.">
+            M'entraîner pour cet entretien
+          </HoverNote>
         </button>
-        <span class="hint">Un entretien blanc avec l'IA, cinq questions et un retour.</span>
       </div>
       <section v-if="offer?.summary_role">
         <h4>Le poste</h4>
@@ -223,11 +225,9 @@ onMounted(async () => {
           data-test="prep-coach"
           @click="coach"
         >
-          {{ busy ? "Analyse en cours…" : "Pistes de l'IA" }}
-          <span
-            v-if="!busy"
-            class="cost"
-          >· 0,03 $</span>
+          <HoverNote :text="busy ? '' : 'Environ 0,03 $.'">
+            {{ busy ? "Analyse en cours…" : "Pistes de l'IA" }}
+          </HoverNote>
         </button>
         <button
           type="button"

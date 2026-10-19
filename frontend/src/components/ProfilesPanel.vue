@@ -6,6 +6,7 @@ import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import { plural } from "../format";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
 // Actualités et les Formations leur conviennent.
@@ -204,8 +205,9 @@ onMounted(async () => {
             data-test="propose-keywords"
             @click="propose"
           >
-            {{ proposing ? "Proposition…" : "Proposer des mots-clés" }}
-            <span class="cost">· 0,001 $</span>
+            <HoverNote :text="proposing ? '' : 'Environ 0,001 $.'">
+              {{ proposing ? "Proposition…" : "Proposer des mots-clés" }}
+            </HoverNote>
           </button>
         </div>
         <div class="wide chip-group">

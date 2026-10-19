@@ -304,7 +304,11 @@ const active = computed<SectionId>(() => {
             @submit.prevent="save"
           >
             <fieldset>
-              <legend>Jours de recherche</legend>
+              <legend>
+                <HoverNote text="Les autres jours, rien n'arrive sur ton téléphone, sauf les rappels avec une date limite.">
+                  Jours de recherche
+                </HoverNote>
+              </legend>
               <div class="rhythm-week">
                 <label
                   v-for="day in WEEK"
@@ -321,12 +325,13 @@ const active = computed<SectionId>(() => {
                   {{ day.label }}
                 </label>
               </div>
-              <p class="hint">
-                Les autres jours, rien n'arrive sur ton téléphone, sauf les rappels avec une date limite.
-              </p>
             </fieldset>
             <fieldset data-test="rhythm-pause">
-              <legend>Une pause</legend>
+              <legend>
+                <HoverNote text="Vacances, maladie : ni meilleures offres ni message d'offres, et pas de retard au retour.">
+                  Une pause
+                </HoverNote>
+              </legend>
               <div class="rhythm-pause">
                 <label>
                   Du
@@ -356,8 +361,7 @@ const active = computed<SectionId>(() => {
                 </button>
               </div>
               <p class="hint">
-                Vacances, maladie : ni dose ni message d'offres, et pas de retard au retour. Annonce-la à ton
-                conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.
+                Annonce-la à ton conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.
               </p>
             </fieldset>
             <fieldset>
