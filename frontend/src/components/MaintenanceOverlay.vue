@@ -62,7 +62,7 @@ watch(
               {{ message || "La plateforme se met à jour, ou la connexion est coupée." }}
             </p>
             <p class="muted">
-              On réessaie toutes les 10 secondes. Ta page t'attend telle quelle : ce que tu étais en train d'écrire n'est pas perdu.
+              On réessaie toutes les 10 s. Ce que tu écrivais n'est pas perdu.
             </p>
           </div>
         </div>

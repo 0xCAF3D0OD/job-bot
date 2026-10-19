@@ -239,8 +239,7 @@ function nextSite(): void {
             à <strong>{{ page.mailbox }}</strong>
           </template><template v-else>
             dans ta boîte
-          </template>, souvent dès le lendemain. Elles apparaîtront ici au premier envoi ; si un site
-          demande de confirmer l'alerte, son lien apparaîtra aussi ici.
+          </template>, souvent dès le lendemain. Tu les verras ici, avec le lien de confirmation si un site en demande un.
         </p>
         <div class="form-actions">
           <button

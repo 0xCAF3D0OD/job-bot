@@ -296,8 +296,7 @@ const onStatus = (event: Event): void =>
         class="remote-orp"
         data-test="remote-orp"
       >
-        100 % télétravail{{ application.remote_region ? ` · ${application.remote_region}` : "" }} : si l'employeur est à
-        l'étranger, vérifie contrat et assurances sociales avec ton conseiller ORP.
+        Employeur à l'étranger ? Vérifie le contrat et les assurances avec ton conseiller.
       </p>
       <JobRoomDeclared
         v-if="orpRow"

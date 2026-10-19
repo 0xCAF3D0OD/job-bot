@@ -34,42 +34,47 @@ onMounted(async () => {
       </ul>
 
       <h2>Où, et combien de temps</h2>
-      <p>
-        Sur le serveur de la plateforme : une base de données et un dossier de fichiers, chacun séparé par compte.
-        Tout reste jusqu'à ce que tu supprimes ton compte, sauf les discussions avec l'assistant (effacées après 30 jours)
-        et les notifications (90 jours).
-      </p>
-      <p>
-        La plateforme est sauvegardée chaque nuit, dans un fichier chiffré que seul l'exploitant peut ouvrir. Les
-        sauvegardes sont gardées <strong>6 mois au plus</strong> : un compte supprimé y reste donc jusqu'à 6 mois, puis
-        disparaît avec elles. Il ne revient que si toute la plateforme est restaurée à une date antérieure.
-      </p>
+      <ul>
+        <li>Sur le serveur de la plateforme : une base de données et un dossier de fichiers, séparés par compte.</li>
+        <li>Jusqu'à ce que tu supprimes ton compte. Sauf les discussions avec l'assistant (30 jours) et les notifications (90 jours).</li>
+        <li>
+          Une sauvegarde chiffrée chaque nuit, que seul l'exploitant peut ouvrir, gardée <strong>6 mois au plus</strong>.
+          Un compte supprimé y reste jusqu'à 6 mois ; il ne revient que si toute la plateforme est restaurée.
+        </li>
+      </ul>
 
       <h2>Qui y a accès</h2>
-      <p>
-        Toi seul, par ta connexion. Aucun autre compte ne voit tes données. L'exploitant de la plateforme voit seulement
-        ton usage (dernière connexion, dépense de l'IA du mois, nombre d'offres reçues) ; il administre le serveur, mais
-        la plateforme ne lui montre jamais tes offres, candidatures, documents ou discussions. Il s'engage à ne pas les
-        lire, sauf à ta demande ou par obligation légale.
-      </p>
+      <ul>
+        <li><strong>Toi seul</strong>, par ta connexion. Aucun autre compte ne voit tes données.</li>
+        <li>
+          L'exploitant voit seulement ton usage : dernière connexion, dépense de l'IA du mois, nombre d'offres reçues.
+        </li>
+        <li>
+          Il administre le serveur, mais la plateforme ne lui montre jamais tes offres, candidatures, documents ou
+          discussions. Il s'engage à ne pas les lire, sauf à ta demande ou par obligation légale.
+        </li>
+      </ul>
 
-      <h2>Ce qui part à l'IA</h2>
+      <h2>Ce qui part à l'IA (Anthropic)</h2>
+      <ul>
+        <li>Le texte des offres, tes blocs de profil et ce que tu demandes : pour noter, rédiger et répondre.</li>
+        <li>Le texte de ton CV, quand tu demandes des propositions de blocs.</li>
+        <li>Le contenu des alertes des sites que l'IA lit.</li>
+        <li>
+          <strong>Jamais tes coordonnées</strong> (nom, adresse, téléphone, e-mail) ni les noms de tes contacts : la
+          plateforme les ajoute elle-même aux lettres.
+        </li>
+      </ul>
       <p>
-        Pour noter les offres, rédiger les lettres et répondre à l'assistant, la plateforme envoie à l'IA (Anthropic) le
-        texte des offres, tes blocs de profil et ce que tu lui demandes ; le texte de ton CV quand tu demandes des
-        propositions de blocs ; le contenu des alertes des sites que l'IA lit. <strong>Jamais tes coordonnées</strong> (nom,
-        adresse, téléphone, e-mail), ni les noms de tes contacts : la plateforme les ajoute elle-même aux lettres.
-      </p>
-      <p>
-        Les notifications sur ton téléphone passent par le service ntfy seulement si tu les as activées.
+        Les notifications sur ton téléphone passent par le service ntfy, seulement si tu les as activées.
       </p>
 
       <h2>Ce que tu peux faire</h2>
-      <p>
-        Dans Réglages, rubrique Compte :
-        <strong>exporter</strong> toutes tes données (une archive avec tes données, tes documents et tes e-mails d'alerte),
-        ou <strong>supprimer</strong> ton compte : tout est effacé, fichiers compris.
-      </p>
+      <p>Dans Réglages, rubrique Compte :</p>
+      <ul>
+        <li><strong>Exporter</strong> tout : une archive avec tes données, tes documents et tes e-mails d'alerte.</li>
+        <li><strong>Supprimer</strong> ton compte : tout est effacé, fichiers compris.</li>
+      </ul>
       <p v-if="loggedIn">
         <RouterLink
           :to="{ path: '/reglages', query: { rubrique: 'compte' } }"

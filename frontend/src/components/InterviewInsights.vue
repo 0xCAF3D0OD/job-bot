@@ -59,8 +59,7 @@ onMounted(() => void load());
       class="hint reading-width"
       data-test="insights-empty"
     >
-      Rien pour l'instant. Après un entretien, passe la candidature au statut « Entretien » (avec sa date), puis
-      clique sur « Faire le point sur l'entretien » dans sa carte : tes enseignements se construiront ici.
+      Rien pour l'instant. Après un entretien, clique sur « Faire le point sur l'entretien » dans sa candidature.
     </p>
     <div
       v-if="data.count"

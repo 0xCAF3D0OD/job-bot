@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/83-rendez-vous-orp.md](docs/83-rendez-vous-orp.md) (0.67.0)
+- Version en cours : [docs/84-textes-courts.md](docs/84-textes-courts.md) (0.67.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -116,7 +116,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.65.2 | Revue : Actualités sans message pendant une maintenance en lecture seule, curseur retrouvé après la page d'attente, base pas à jour avant la connexion, worker en pause ; documentation à jour | livrée |
 | 0.66.0 | Les sauvegardes automatiques : chaque nuit, chiffrées, gardées 7 jours, 4 semaines et 6 mois, essayées chaque dimanche ; `jobbot backup`, `jobbot restore` | livrée |
 | 0.66.1 | `jobbot restore` trouve une sauvegarde par son seul nom | livrée |
-| 0.67.0 | Le rendez-vous ORP : une feuille pour le conseiller (mois en bref, ce qui bloque, ce qui te manque, questions, obligations), en PDF ; rappel la veille | en cours |
+| 0.67.0 | Le rendez-vous ORP : une feuille pour le conseiller (mois en bref, ce qui bloque, ce qui te manque, questions, obligations), en PDF ; rappel la veille | livrée |
+| 0.67.1 | Des textes plus courts dans l'interface ; la page Tes données en listes | en cours |
 
 ## Lancer en local
 

@@ -299,8 +299,7 @@ onMounted(async () => {
         class="practice-setup"
       >
         <p class="practice-intro">
-          Un entretien blanc, par écrit : l'IA joue le recruteur et te pose cinq questions, une à la fois.
-          À la fin, un retour question par question. Rien n'est compté comme un vrai entretien.
+          L'IA joue le recruteur : 5 questions, puis un retour.
         </p>
         <p
           v-if="defaults && !defaults.can_practice"
@@ -370,8 +369,7 @@ onMounted(async () => {
             </div>
           </fieldset>
           <p class="hint">
-            Environ 0,15 à 0,25 CHF, compté dans ton plafond mensuel de l'IA. Pour répondre à l'oral,
-            utilise la dictée de ton ordinateur ou de ton téléphone dans le champ de réponse.
+            Environ 0,20 CHF. Tu peux répondre en dictant.
           </p>
           <p
             v-if="message"

@@ -70,7 +70,7 @@ Une table **`orp_meetings`**, par compte : date, lieu ou visio, conseiller (facu
 | Version | Contenu |
 |---|---|
 | **0.67.0** | La page « avant » : le résumé, ce qui bloque, ce qui manque, les questions, les obligations ; la feuille imprimable et en PDF ; la carte de la veille dans Aujourd'hui |
-| **0.67.1** | Le « après » : ce qui a été convenu, le carnet, l'agenda et le rappel, l'objectif et les formations mis à jour ; la feuille rédigée par l'IA, sur demande |
+| **0.67.2** | Le « après » : ce qui a été convenu, le carnet, l'agenda et le rappel, l'objectif et les formations mis à jour ; la feuille rédigée par l'IA, sur demande |
 
 Vérifié à chaque fois :
 - tests serveur et interface ;
@@ -86,7 +86,7 @@ La démo en ligne en profite : un rendez-vous fictif rempli, pour montrer la pag
 3. **Les questions proposées**, sans conseil juridique (§1, §5).
 4. **La feuille** imprimable et en PDF ; l'IA seulement sur demande, pour un texte suivi (§3, §4).
 5. **Le carnet**, l'agenda et l'objectif mis à jour après le rendez-vous (§1).
-6. **Deux PR, 0.67.0 et 0.67.1**, avec une table `orp_meetings` dans la famille personnelle (§6, §7).
+6. **Deux PR, 0.67.0 et 0.67.1** (le « après » est devenu la 0.67.2, voir docs/84), avec une table `orp_meetings` dans la famille personnelle (§6, §7).
 
 ## Écarts avec le cadrage (0.67.0)
 
