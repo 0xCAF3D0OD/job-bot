@@ -348,8 +348,7 @@ const active = computed<SectionId>(() => {
                 </template>
                 <template v-else>
                   <p class="hint">
-                    Reçois les offres bien notées, les relances et le rappel des preuves ORP sur ton téléphone, avec
-                    l'application gratuite ntfy.
+                    Les offres bien notées, les relances et le rappel ORP, avec l'application gratuite ntfy.
                   </p>
                   <button
                     type="button"
@@ -389,7 +388,7 @@ const active = computed<SectionId>(() => {
                 v-else
                 class="hint"
               >
-                Non configurées (application ntfy sur ton téléphone ; réglage d'installation, voir le README).
+                Non configurées : réglage d'installation, voir le README.
               </p>
             </fieldset>
           </div>

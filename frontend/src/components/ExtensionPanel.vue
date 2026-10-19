@@ -64,7 +64,7 @@ onMounted(load);
         Extension du navigateur
       </legend>
       <p class="hint">
-        Elle remplit les formulaires de candidature et la saisie Job-Room avec tes données. Rien n'est envoyé à ta place.
+        Elle remplit tes candidatures et Job-Room. Rien n'est envoyé à ta place.
       </p>
       <ol class="extension-steps">
         <li>
@@ -77,7 +77,7 @@ onMounted(load);
             data-test="extension-install"
           >Installer l'extension (Firefox)</a>
           <template v-else>
-            Installe l'extension : bientôt dans la boutique de Mozilla ; en attendant, voir « Comment l'installer ».
+            Installe l'extension : voir « Comment l'installer ».
           </template>
         </li>
         <li>

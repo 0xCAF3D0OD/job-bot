@@ -264,7 +264,7 @@ function size(bytes: number | null | undefined): string {
             />
           </button>
           <p class="hint">
-            Montré une seule fois : transmets-le toi-même (message, e-mail). Il ne sert qu'une fois.
+            Montré une seule fois, valable une fois : transmets-le toi-même.
           </p>
         </div>
         <ul
@@ -345,8 +345,7 @@ function size(bytes: number | null | undefined): string {
           <label for="platform-mentions">Mentions de la page « Tes données »</label>
         </legend>
         <p class="hint">
-          Qui est responsable des données, comment te joindre, où la plateforme est hébergée. Lisible par tous, même sans
-          connexion, sur <RouterLink to="/tes-donnees">
+          Responsable, contact, hébergement. Public, sur <RouterLink to="/tes-donnees">
             la page Tes données
           </RouterLink>.
         </p>
@@ -393,8 +392,7 @@ function size(bytes: number | null | undefined): string {
           <span>CHF / mois</span>
         </div>
         <p class="hint">
-          Dépensé ce mois, tous comptes : {{ money(platform.ai_month_spend_chf) }} CHF. Au-delà, l'IA s'arrête pour tous
-          jusqu'au mois suivant.
+          Ce mois, tous comptes : {{ money(platform.ai_month_spend_chf) }} CHF. Au-delà, l'IA s'arrête pour tous jusqu'au mois suivant.
         </p>
       </fieldset>
       <div class="form-actions">

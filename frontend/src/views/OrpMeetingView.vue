@@ -115,8 +115,7 @@ onMounted(() => void load());
     <LoadingBlocks v-else-if="!page" />
     <template v-else>
       <p class="muted orp-meeting-intro">
-        Une feuille pour ton conseiller, tirée de tes données : ce qui s'est passé, ce qui bloque, tes questions et tes
-        dates. Rien n'est envoyé à l'ORP.
+        Une feuille pour ton conseiller. Rien n'est envoyé à l'ORP.
       </p>
 
       <div
@@ -317,7 +316,7 @@ onMounted(() => void load());
             {{ message }}
           </p>
           <p class="hint">
-            jobA1 propose la question ; la réponse sur tes droits (gain intermédiaire, mesures) est celle de ton conseiller.
+            Sur tes droits, c'est ton conseiller qui répond.
           </p>
         </section>
 
@@ -359,9 +358,6 @@ onMounted(() => void load());
               data-test="sheet-pdf"
             >Télécharger la feuille (PDF)</a>
           </div>
-          <p class="hint">
-            Une page A4, avec tes questions cochées : à imprimer, à envoyer à ton conseiller ou à lire pendant le rendez-vous.
-          </p>
         </section>
       </div>
     </template>

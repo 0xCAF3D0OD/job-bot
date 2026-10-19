@@ -226,8 +226,7 @@ onBeforeUnmount(() => {
             <div class="discover-data">
               <h2>Tes données restent à toi</h2>
               <p>
-                Ton compte est séparé de ceux des autres. Tu peux tout exporter, ou supprimer ton compte. Tes coordonnées et
-                les noms de tes contacts ne partent jamais à l'IA.
+                Ton compte est séparé des autres. Tes coordonnées ne partent jamais à l'IA.
               </p>
               <RouterLink to="/tes-donnees">
                 Ce qui est gardé, et ce qui part à l'IA

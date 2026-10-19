@@ -320,8 +320,7 @@ const headItems: MoreMenuItem[] = [
       >
         <template v-if="!lines.length">
           <p class="muted assistant-intro">
-            Pose une question sur la plateforme ou sur tes données : offres, candidatures, preuves ORP, entretiens.
-            L'assistant lit et conseille ; il peut te proposer un changement, que tu confirmes d'un clic.
+            Pose une question sur tes offres, candidatures ou preuves ORP. Il propose, tu confirmes.
           </p>
           <div class="assistant-suggestions">
             <button
