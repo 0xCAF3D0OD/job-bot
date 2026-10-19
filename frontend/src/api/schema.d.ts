@@ -4093,6 +4093,27 @@ export interface components {
             /** Month */
             month?: string | null;
         };
+        /**
+         * FollowUp
+         * @description Une candidature à relancer, en tête d'« À faire » sur Aujourd'hui (docs/95).
+         */
+        FollowUp: {
+            /** Application Id */
+            application_id: number;
+            /** Company */
+            company: string;
+            /** Job Title */
+            job_title: string;
+            /** Orp Month */
+            orp_month: string;
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+            /** Status */
+            status: string;
+        };
         /** FollowUpDraftOut */
         FollowUpDraftOut: {
             /** Subject */
@@ -6340,6 +6361,11 @@ export interface components {
             month_target: number | null;
             /** To Follow Up */
             to_follow_up: number;
+            /**
+             * Follow Ups
+             * @default []
+             */
+            follow_ups: components["schemas"]["FollowUp"][];
             /** Orp Due Month */
             orp_due_month: string | null;
             /** Orp Due Date */

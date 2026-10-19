@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api } from "../api/client";
+import { api, type Today } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import DashTile from "../components/dash/DashTile.vue";
@@ -12,6 +12,7 @@ import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
+import OrpGauge from "../components/dash/OrpGauge.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { firstTime } from "../composables/useIntro";
 import { usePageReady } from "../composables/usePageTransition";
@@ -51,8 +52,19 @@ function go(delta: number): void {
   void router.push({ query: { mois: shiftMonth(month.value, delta) } });
 }
 
+// L'objectif ORP du mois en cours et les trois mois précédents (docs/95) : la jauge quittée
+// d'Aujourd'hui, montrée quand on regarde le mois en cours ou les dernières semaines.
+const orp = ref<{ count: number; target: number | null; month: string; history: Today["orp_history"] } | null>(null);
+const showGauge = computed(() => period.value === "recent" || (period.value === "month" && month.value === currentMonth()));
+
+async function loadOrp(): Promise<void> {
+  const { data } = await api.GET("/api/today");
+  if (data?.month) orp.value = { count: data.month_count, target: data.month_target ?? null, month: data.month, history: data.orp_history ?? [] };
+}
+
 async function load(): Promise<void> {
   error.value = "";
+  if (!orp.value) void loadOrp().catch(() => undefined);
   try {
     const { data } = await api.GET("/api/insights", {
       params: { query: period.value === "month" ? { period: "month", month: month.value } : { period: period.value } },
@@ -354,6 +366,13 @@ const intro = firstTime("bilan-funnel");
         </div>
       </template>
 
+      <OrpGauge
+        v-if="showGauge && orp"
+        :count="orp.count"
+        :target="orp.target"
+        :month="orp.month"
+        :history="orp.history"
+      />
       <RhythmWeeks
         v-if="period !== 'all'"
         :month="month"

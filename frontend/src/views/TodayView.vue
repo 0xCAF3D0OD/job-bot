@@ -1,23 +1,18 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 
-import { api, type NewsItem, type Offer, type Today, type Training } from "../api/client";
+import { api, type Offer, type Today } from "../api/client";
 import CompanyLogo from "../components/CompanyLogo.vue";
-import DashTile from "../components/dash/DashTile.vue";
 import RhythmCard from "../components/RhythmCard.vue";
-import OrpGauge from "../components/dash/OrpGauge.vue";
-import WeekChart from "../components/dash/WeekChart.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import AppIcon from "../components/AppIcon.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
-import { formatMonth, localDate, plural } from "../format";
+import { colorIndex, formatMonth, localDate, plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -57,24 +52,12 @@ const DOSE = 3;
 const best = ref<Offer[]>([]);
 // Un jour sans recherche (docs/86) : aucune liste à traiter.
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
-// Blocs par catégorie (docs/19 §3).
+const rhythmPaused = computed(() => !!today.value?.rhythm?.pause_until);
 const preparing = ref<Offer[]>([]);
-const news = ref<NewsItem[]>([]);
-const trainingsInProgress = ref<Training[]>([]);
-const trainingIdeas = ref<Training[]>([]);
 const { message } = useCollect();
 
 // Tableau « À examiner en priorité » (docs/54 §2) : deux onglets, le choix n'est pas retenu.
 const tableTab = ref<"best" | "preparing">("best");
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
-
-// Tuiles : courbes des 7 derniers jours et tendance de la semaine (docs/54 §2).
-const offersWeek = computed(() => today.value?.week?.map((d) => d.offers) ?? []);
-const sentWeek = computed(() => today.value?.week?.map((d) => d.applications) ?? []);
-const sum = (values: number[]): number => values.reduce((n, v) => n + v, 0);
-
-// Comme le menu : retour à la candidature commencée ou à l'onglet quitté.
-const router = useRouter();
 const offerLink = (id: number) => ({ path: "/candidatures/offres", query: { offre: id } });
 
 // Le plus urgent en tête (docs/43 n° 30) : entretien aujourd'hui ou demain, remise ORP dans
@@ -114,12 +97,93 @@ const orpText = computed(() => {
   return `Preuves de ${month} à remettre ${when}.`;
 });
 
-// Une seule chose en orange (docs/43 n° 31) : la plus urgente.
-const warn = computed<"orp" | "follow-up" | null>(() => {
-  if (!today.value) return null;
-  if (orpUrgent.value) return "orp";
-  if (today.value.to_follow_up || today.value.contacts_to_follow_up) return "follow-up";
-  return today.value.orp_due_month ? "orp" : null;
+// La phrase du jour (docs/95 §1) : ce qu'il y a à faire, les nombres en avant.
+type Part = { text: string; strong?: boolean };
+const weekLeft = computed(() => {
+  const week = today.value?.rhythm;
+  if (!week || week.target === null || week.pause_until) return 0;
+  return Math.max(0, week.target - week.count);
+});
+const sentence = computed<Part[]>(() => {
+  const t = today.value;
+  if (!t) return [];
+  const pause = t.rhythm?.pause_until;
+  if (pause) return [{ text: `En pause jusqu'au ${longDate.format(localDate(pause))}.` }];
+  if (restDay.value) return [{ text: "Jour sans recherche. Les offres t'attendent pour ton prochain jour." }];
+  const items: Part[][] = [];
+  if (t.to_review) items.push([{ text: plural(t.to_review, "offre", "offres"), strong: true }, { text: " à examiner" }]);
+  if (t.to_follow_up) items.push([{ text: plural(t.to_follow_up, "relance", "relances"), strong: true }]);
+  if (weekLeft.value) {
+    items.push([{ text: `encore ${plural(weekLeft.value, "candidature", "candidatures")} pour tenir ta semaine` }]);
+  }
+  if (!items.length) {
+    const weekDone = t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target;
+    return [{ text: weekDone ? "Tout est à jour. Ta semaine est faite." : "Tout est à jour." }];
+  }
+  const parts: Part[] = [];
+  items.forEach((item, index) => {
+    if (index) parts.push({ text: index === items.length - 1 ? " et " : ", " });
+    parts.push(...item);
+  });
+  parts.push({ text: "." });
+  const first = parts[0]!;
+  parts[0] = { ...first, text: first.text.charAt(0).toUpperCase() + first.text.slice(1) };
+  return parts;
+});
+// Une seule action, la plus utile (docs/95 §1).
+const cta = computed(() => {
+  const t = today.value;
+  if (!t || restDay.value || t.rhythm?.pause_until) return null;
+  if (t.to_review) return { label: "Examiner les offres", to: "/candidatures/offres" };
+  if (t.to_follow_up) return { label: "Relancer", to: "/candidatures/suivi" };
+  return null;
+});
+
+// Ce qui a une date, trois au plus (docs/95 §2) : le plus proche d'abord.
+const banners = computed(() => {
+  const t = today.value;
+  if (!t) return [];
+  const list: { key: string; test: string; text: string; action: string; to: string | Record<string, unknown> }[] = [];
+  if (t.orp_meeting_at) {
+    list.push({ key: "meeting", test: "orp-meeting-soon", text: meetingText(t.orp_meeting_at), action: "Voir la feuille", to: "/candidatures/rendez-vous-orp" });
+  }
+  for (const item of t.upcoming_interviews ?? []) {
+    list.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", text: `${interviewText(item.at, item.company)}.`, action: "Préparer", to: "/candidatures/suivi" });
+  }
+  if (t.orp_due_month) {
+    list.push({
+      key: "orp",
+      test: orpUrgent.value ? "orp-urgent" : "orp-due",
+      text: orpText.value,
+      action: "Préparer la remise",
+      to: { path: "/candidatures/suivi", query: { mois: t.orp_due_month } },
+    });
+  }
+  for (const item of t.interviews_to_review ?? []) {
+    list.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", text: `Comment s'est passé ton entretien chez ${item.company} ?`, action: "Faire le point", to: item.link });
+  }
+  if (t.alerts_waiting) {
+    list.push({
+      key: "alerts",
+      test: "alerts-waiting",
+      text: t.alerts_waiting === 1 ? "1 alerte créée depuis 3 jours n'a encore rien envoyé." : `${t.alerts_waiting} alertes créées depuis 3 jours n'ont encore rien envoyé.`,
+      action: "Vérifier mes alertes",
+      to: "/candidatures/alertes",
+    });
+  }
+  return list.slice(0, 3);
+});
+
+// Mois ORP (docs/95 §4).
+const monthName = computed(() => (today.value ? (formatMonth(today.value.month).split(" ")[0] ?? "") : ""));
+const monthLeft = computed(() => {
+  const t = today.value;
+  if (!t?.month_target) return "";
+  const left = t.month_target - t.month_count;
+  if (left <= 0) return "Objectif atteint.";
+  const [year, monthNumber] = t.month.split("-").map(Number);
+  const last = new Date(year!, monthNumber!, 0);
+  return `Encore ${left} d'ici le ${longDate.format(last)}.`;
 });
 
 const steps = computed(() => today.value?.checklist ?? []);
@@ -135,27 +199,11 @@ const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "nume
   new Date(),
 );
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
-
-async function loadNews(): Promise<void> {
-  // Les dernières de « Mon domaine » ; à défaut, celles qui parlent d'emploi. Rien d'autre :
-  // sans actualité utile, la section disparaît (docs/43 n° 9).
-  const mine = await api.GET("/api/news", { params: { query: { kind: "articles", limit: 3, domain_only: true } } });
-  const items = (mine.data?.items ?? []).filter((i) => i.matched.length);
-  if (items.length) {
-    news.value = items;
-    return;
-  }
-  const jobs = await api.GET("/api/news", { params: { query: { kind: "articles", limit: 3, topic: "jobs" } } });
-  news.value = jobs.data?.items ?? [];
-}
-
-async function loadTrainings(): Promise<void> {
-  const { data } = await api.GET("/api/trainings", { params: { query: { domain_only: true } } });
-  const items = data?.items ?? [];
-  trainingsInProgress.value = items.filter((t) => t.mark?.status === "in_progress").slice(0, 3);
-  // Jusqu'à trois en tout (docs/63 §2) : en cours d'abord, puis des suggestions vérifiées.
-  trainingIdeas.value = items.filter((t) => !t.mark && t.verified).slice(0, Math.max(0, 3 - trainingsInProgress.value.length));
-}
+// L'étiquette au-dessus du titre : la date et la dernière collecte.
+const eyebrow = computed(() => {
+  const collect = message.value || (today.value?.last_collect_at ? `collecte ${sinceText(today.value.last_collect_at)}` : "");
+  return collect ? `${dateTitle} · ${collect}` : dateTitle;
+});
 
 async function load(): Promise<void> {
   const [day, offers, current] = await Promise.all([
@@ -167,9 +215,6 @@ async function load(): Promise<void> {
   today.value = day.data ?? null;
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 5);
-  // Actualités et formations : chargées à part, une panne n'empêche pas le reste.
-  void loadNews().catch(() => undefined);
-  void loadTrainings().catch(() => undefined);
 }
 
 async function dismissJourney(): Promise<void> {
@@ -190,7 +235,7 @@ const { me } = useAuth();
 <template>
   <PageHero
     title="Aujourd'hui"
-    :eyebrow="dateTitle"
+    :eyebrow="eyebrow"
   />
   <section class="band">
     <div
@@ -206,362 +251,245 @@ const { me } = useAuth();
       >
         <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
       </RouterLink>
-      <!-- Le plus urgent en tête (docs/43 n° 30). -->
-      <p
-        v-for="item in today.upcoming_interviews"
-        :key="item.application_id"
-        class="notice today-urgent"
-        data-test="upcoming-interview"
-      >
-        {{ interviewText(item.at, item.company) }}.
-        <RouterLink to="/candidatures/suivi">
-          Préparer
-        </RouterLink>
-      </p>
-      <p
-        v-if="today.orp_meeting_at"
-        class="notice today-urgent"
-        data-test="orp-meeting-soon"
-      >
-        {{ meetingText(today.orp_meeting_at) }}
-        <RouterLink to="/candidatures/rendez-vous-orp">
-          Voir la feuille
-        </RouterLink>
-      </p>
-      <p
-        v-if="orpUrgent && today.orp_due_month"
-        class="notice today-urgent"
-        data-test="orp-urgent"
-      >
-        {{ orpText }}
-        <RouterLink :to="{ path: '/candidatures/suivi', query: { mois: today.orp_due_month } }">
-          Préparer la remise
-        </RouterLink>
-      </p>
 
-      <p
-        v-for="item in today.interviews_to_review"
-        :key="`${item.application_id}-${item.interview_on}`"
-        class="notice"
-        data-test="interview-to-review"
-      >
-        Comment s'est passé ton entretien chez {{ item.company }} ?
-        <RouterLink :to="item.link">
-          Faire le point
+      <!-- La phrase du jour, en grand, et une seule action (docs/95 §1, d'après Sphere). -->
+      <div class="today-lead">
+        <p
+          class="today-sentence"
+          data-test="today-sentence"
+        >
+          <template
+            v-for="(part, index) in sentence"
+            :key="index"
+          >
+            <strong v-if="part.strong">{{ part.text }}</strong><template v-else>
+              {{ part.text }}
+            </template>
+          </template>
+        </p>
+        <RouterLink
+          v-if="cta"
+          :to="cta.to"
+          class="button-link primary-link today-cta"
+          data-test="today-cta"
+        >
+          {{ cta.label }}
         </RouterLink>
-      </p>
-      <p
-        v-if="today.alerts_waiting"
-        class="notice"
-        data-test="alerts-waiting"
-      >
-        {{ today.alerts_waiting === 1 ? "1 alerte créée depuis 3 jours n'a encore rien envoyé." : `${today.alerts_waiting} alertes créées depuis 3 jours n'ont encore rien envoyé.` }}
-        <RouterLink to="/candidatures/alertes">
-          Vérifier mes alertes
-        </RouterLink>
-      </p>
-      <p class="dash-meta">
-        <span
-          class="today-collect"
-          data-test="last-collect"
-        >{{ message || (today.last_collect_at ? `Collecte ${sinceText(today.last_collect_at)}` : "Pas encore de collecte") }}</span>
-      </p>
-
-      <!-- Tableau de bord (docs/54) : quatre tuiles et la semaine, puis les offres et l'ORP. -->
-      <div class="dash-row dash-top">
-        <div class="dash-tiles">
-          <DashTile
-            to="/candidatures/offres"
-            icon="inbox"
-            label="À examiner"
-            :value="String(today.to_review)"
-            :trend="`+${sum(offersWeek)} cette semaine`"
-            :rising="sum(offersWeek) > 0"
-            :values="offersWeek"
-            tone="accent"
-            data-test="stat-review"
-          />
-          <DashTile
-            to="/candidatures/suivi"
-            icon="send"
-            :label="(formatMonth(today.month).split(' ')[0] ?? '').replace(/^./, (c) => c.toUpperCase())"
-            :value="`${today.month_count}${today.month_target ? ` / ${today.month_target}` : ''}`"
-            :trend="`+${sum(sentWeek)} cette semaine`"
-            :rising="sum(sentWeek) > 0"
-            :values="sentWeek"
-            data-test="stat-month"
-          />
-          <DashTile
-            to="/candidatures/suivi"
-            icon="refresh"
-            label="À relancer"
-            :value="String(today.to_follow_up)"
-            :trend="today.contacts_to_follow_up ? `dont ${plural(today.contacts_to_follow_up, 'contact', 'contacts')}` : 'candidatures'"
-            :tone="warn === 'follow-up' ? 'warn' : undefined"
-            :class="{ warn: warn === 'follow-up' }"
-            data-test="stat-follow-up"
-          />
-          <DashTile
-            :to="today.orp_due_month ? { path: '/candidatures/suivi', query: { mois: today.orp_due_month } } : '/candidatures/suivi'"
-            icon="file"
-            label="Preuves ORP"
-            :value="today.orp_due_month && today.orp_due_date ? longDate.format(new Date(today.orp_due_date)) : 'À jour'"
-            :trend="today.orp_due_month ? `${formatMonth(today.orp_due_month).split(' ')[0]} à remettre` : 'rien à remettre'"
-            :tone="warn === 'orp' ? 'warn' : 'mint'"
-            :class="{ warn: warn === 'orp' }"
-            data-test="stat-orp"
-          />
-        </div>
-        <WeekChart :week="today.week ?? []" />
       </div>
 
-      <div class="dash-row dash-mid">
-        <!-- Ta semaine (docs/86), puis la dose du jour. -->
-        <div class="dash-main">
+      <!-- Ce qui a une date, trois au plus (docs/95 §2). -->
+      <ul
+        v-if="banners.length"
+        class="today-banners"
+      >
+        <li
+          v-for="banner in banners"
+          :key="banner.key"
+          class="today-banner"
+          :data-test="banner.test"
+        >
+          <span>{{ banner.text }}</span>
+          <RouterLink :to="banner.to">
+            {{ banner.action }}
+          </RouterLink>
+        </li>
+      </ul>
+
+      <div class="today-grid">
+        <!-- À faire (docs/95 §3) : les meilleures offres, puis les relances. -->
+        <section
+          class="dash-card today-todo"
+          data-test="best"
+        >
+          <h2>À faire</h2>
+          <div class="today-sub">
+            <p class="today-sub-title">
+              {{ restDay ? "Jour sans recherche" : rhythmPaused ? "En pause" : "Meilleures offres" }}
+            </p>
+            <div
+              class="segmented small"
+              role="radiogroup"
+              aria-label="Offres affichées"
+            >
+              <button
+                type="button"
+                role="radio"
+                :aria-checked="tableTab === 'best'"
+                data-test="tab-best"
+                @click="tableTab = 'best'"
+              >
+                Mieux notées
+              </button>
+              <button
+                type="button"
+                role="radio"
+                :aria-checked="tableTab === 'preparing'"
+                data-test="tab-preparing"
+                @click="tableTab = 'preparing'"
+              >
+                Commencées<span
+                  v-if="preparing.length"
+                  class="tab-count"
+                >{{ preparing.length }}</span>
+              </button>
+            </div>
+          </div>
+          <div v-show="tableTab === 'best'">
+            <p
+              v-if="restDay"
+              class="hint"
+              data-test="rest-day"
+            >
+              Rien à traiter aujourd'hui : les offres t'attendent pour ton prochain jour de recherche.
+            </p>
+            <p
+              v-else-if="!best.length"
+              class="hint"
+            >
+              Aucune offre notée en attente.
+            </p>
+            <ul
+              v-else
+              class="today-rows"
+            >
+              <li
+                v-for="offer in best"
+                :key="offer.id"
+              >
+                <RouterLink
+                  :to="offerLink(offer.id)"
+                  class="today-row"
+                  data-test="best-offer"
+                >
+                  <CompanyLogo :offer="offer" />
+                  <span class="today-row-main">
+                    <strong>{{ offer.title }}</strong>
+                    <span class="muted">{{ [offer.company || "Entreprise non indiquée", offer.location].filter(Boolean).join(" · ") }}</span>
+                  </span>
+                  <ScoreRing :score="offer.score!" />
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+          <div
+            v-show="tableTab === 'preparing'"
+            data-test="preparing"
+          >
+            <p
+              v-if="!preparing.length"
+              class="hint"
+            >
+              Aucune candidature en préparation.
+            </p>
+            <ul
+              v-else
+              class="today-rows"
+            >
+              <li
+                v-for="offer in preparing"
+                :key="offer.id"
+              >
+                <RouterLink
+                  :to="`/candidatures/offres/${offer.id}/preparer`"
+                  class="today-row"
+                >
+                  <CompanyLogo :offer="offer" />
+                  <span class="today-row-main">
+                    <strong>{{ offer.title }}</strong>
+                    <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
+                  </span>
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+
+          <template v-if="today.follow_ups?.length">
+            <p class="today-sub-title today-sub-gap">
+              À relancer
+            </p>
+            <ul
+              class="today-rows"
+              data-test="follow-ups"
+            >
+              <li
+                v-for="item in today.follow_ups"
+                :key="item.application_id"
+              >
+                <RouterLink
+                  :to="{ path: '/candidatures/suivi', query: { mois: item.orp_month, candidature: String(item.application_id) } }"
+                  class="today-row"
+                >
+                  <span
+                    class="logo"
+                    :class="`c${colorIndex(item.company)}`"
+                  >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
+                  <span class="today-row-main">
+                    <strong>{{ item.company }}</strong>
+                    <span class="muted">{{ item.job_title }} · {{ item.status === "relancee" ? "sans réponse depuis la relance" : `envoyée le ${longDate.format(localDate(item.sent_at))}` }}</span>
+                  </span>
+                  <span class="today-row-action">Relancer</span>
+                </RouterLink>
+              </li>
+            </ul>
+            <RouterLink
+              v-if="today.to_follow_up > today.follow_ups.length"
+              to="/candidatures/suivi"
+              class="today-more"
+            >
+              Toutes les relances ({{ today.to_follow_up }})
+            </RouterLink>
+          </template>
+        </section>
+
+        <!-- Mois ORP (docs/95 §4) : le compte du mois, puis la semaine. -->
+        <section
+          class="dash-card today-month"
+          data-test="orp-month"
+        >
+          <h2>Mois ORP</h2>
+          <p
+            class="today-month-count"
+            data-test="month-count"
+          >
+            <strong>{{ today.month_count }}</strong>
+            <span>{{ today.month_target ? ` / ${today.month_target} candidatures en ${monthName}` : ` ${today.month_count === 1 ? "candidature" : "candidatures"} en ${monthName}` }}</span>
+          </p>
+          <template v-if="today.month_target">
+            <div
+              class="today-bar"
+              role="progressbar"
+              :aria-valuenow="today.month_count"
+              :aria-valuemax="today.month_target"
+              aria-label="Objectif ORP du mois"
+            >
+              <span :style="{ width: `${Math.min(100, Math.round((today.month_count / today.month_target) * 100))}%` }" />
+            </div>
+            <p
+              class="muted today-month-left"
+              data-test="month-left"
+            >
+              {{ monthLeft }}
+            </p>
+          </template>
           <RhythmCard
             v-if="today.rhythm"
             :week="today.rhythm"
+            nested
           />
-          <section
-            class="dash-card dash-table"
-            data-test="best"
+          <RouterLink
+            to="/candidatures/bilan"
+            class="today-more"
           >
-            <header class="dash-card-head">
-              <h2>{{ today.rhythm?.pause_until ? "En pause" : restDay ? "Jour sans recherche" : "Meilleures offres" }}</h2>
-              <div
-                class="segmented small"
-                role="radiogroup"
-                aria-label="Offres affichées"
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  :aria-checked="tableTab === 'best'"
-                  data-test="tab-best"
-                  @click="tableTab = 'best'"
-                >
-                  Mieux notées
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  :aria-checked="tableTab === 'preparing'"
-                  data-test="tab-preparing"
-                  @click="tableTab = 'preparing'"
-                >
-                  Commencées<span
-                    v-if="preparing.length"
-                    class="tab-count"
-                  >{{ preparing.length }}</span>
-                </button>
-              </div>
-            </header>
-            <div v-show="tableTab === 'best'">
-              <p
-                v-if="restDay"
-                class="hint"
-                data-test="rest-day"
-              >
-                Rien à traiter aujourd'hui. Les offres t'attendent dans
-                <RouterLink to="/candidatures/offres">
-                  Offres
-                </RouterLink>, pour ton prochain jour de recherche.
-              </p>
-              <p
-                v-else-if="!best.length"
-                class="hint"
-              >
-                Aucune offre notée en attente.
-              </p>
-              <table
-                v-else
-                class="dash-offers"
-              >
-                <thead>
-                  <tr>
-                    <th>Offre</th>
-                    <th>Note</th>
-                    <th class="dash-col-place">
-                      Lieu
-                    </th>
-                    <th class="dash-col-date">
-                      Reçue
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="offer in best"
-                    :key="offer.id"
-                    class="row-link"
-                    @click="router.push(offerLink(offer.id))"
-                  >
-                    <td>
-                      <span class="dash-offer">
-                        <CompanyLogo :offer="offer" />
-                        <span>
-                          <RouterLink
-                            :to="offerLink(offer.id)"
-                            class="row-link-title"
-                            @click.stop
-                          ><strong>{{ offer.title }}</strong></RouterLink>
-                          <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
-                        </span>
-                      </span>
-                    </td>
-                    <td><ScoreRing :score="offer.score!" /></td>
-                    <td class="dash-col-place muted">
-                      {{ offer.location || "—" }}
-                    </td>
-                    <td class="dash-col-date muted">
-                      {{ offer.first_seen_at ? shortDate.format(new Date(offer.first_seen_at)) : "—" }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div
-              v-show="tableTab === 'preparing'"
-              data-test="preparing"
-            >
-              <p
-                v-if="!preparing.length"
-                class="hint"
-              >
-                Aucune candidature en préparation.
-              </p>
-              <table
-                v-else
-                class="dash-offers"
-              >
-                <tbody>
-                  <tr
-                    v-for="offer in preparing"
-                    :key="offer.id"
-                    class="row-link"
-                    @click="router.push(`/candidatures/offres/${offer.id}/preparer`)"
-                  >
-                    <td>
-                      <span class="dash-offer">
-                        <CompanyLogo :offer="offer" />
-                        <span>
-                          <RouterLink
-                            :to="`/candidatures/offres/${offer.id}/preparer`"
-                            class="row-link-title"
-                            @click.stop
-                          ><strong>{{ offer.title }}</strong></RouterLink>
-                          <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
-                        </span>
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-        <OrpGauge
-          :count="today.month_count"
-          :target="today.month_target ?? null"
-          :month="today.month"
-          :history="today.orp_history ?? []"
-        />
-      </div>
-
-      <div class="dash-row dash-bottom">
-        <section
-          class="dash-card"
-          data-test="today-trainings"
-        >
-          <header class="dash-card-head">
-            <h2>
-              <RouterLink
-                to="/progresser/formations"
-                class="dash-title-link"
-              >
-                <span class="dash-bubble small"><AppIcon name="book" /></span>
-                Progresser
-              </RouterLink>
-            </h2>
-          </header>
-          <ul
-            v-if="trainingsInProgress.length || trainingIdeas.length"
-            class="today-list"
-          >
-            <li
-              v-for="training in trainingsInProgress"
-              :key="training.id"
-            >
-              <span>
-                <RouterLink to="/progresser/formations"><strong>{{ training.title }}</strong></RouterLink><br>
-                <span class="muted">En cours{{ training.mark?.progress ? ` · ${training.mark.progress}` : "" }} · {{ training.provider }}</span>
-              </span>
-            </li>
-            <li
-              v-for="trainingIdea in trainingIdeas"
-              :key="trainingIdea.id"
-              data-test="training-idea"
-            >
-              <span>
-                <a
-                  :href="trainingIdea.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                ><strong>{{ trainingIdea.title }}</strong></a><br>
-                <span class="muted">À découvrir, dans ton domaine · {{ trainingIdea.provider }}</span>
-              </span>
-            </li>
-          </ul>
-          <p
-            v-else
-            class="hint"
-          >
-            Aucune formation suivie : marque celles qui t'intéressent dans <RouterLink to="/progresser/formations">
-              Formations
-            </RouterLink>.
-          </p>
-        </section>
-        <section
-          v-if="news.length"
-          class="dash-card"
-          data-test="today-news"
-        >
-          <header class="dash-card-head">
-            <h2>
-              <RouterLink
-                to="/progresser/actualites"
-                class="dash-title-link"
-              >
-                <span class="dash-bubble small"><AppIcon name="news" /></span>
-                Comprendre le marché
-              </RouterLink>
-            </h2>
-          </header>
-          <ul class="today-list">
-            <li
-              v-for="item in news"
-              :key="item.id"
-            >
-              <span>
-                <a
-                  :href="item.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                ><strong>{{ item.title }}</strong></a><br>
-                <span class="muted">{{ item.source }} · {{ longDate.format(new Date(item.published_at)) }}</span>
-              </span>
-            </li>
-          </ul>
+            Voir le bilan
+          </RouterLink>
         </section>
       </div>
 
-      <!-- Les deux guides, repliés sous l'essentiel du jour, sur ordinateur comme sur téléphone
-           (docs/34 §4, docs/43 n° 6). -->
       <div class="today-guides">
         <div class="today-guides-rows">
           <component
             :is="DisclosureRow"
-            v-if="!today.journey_dismissed && today.journey.length"
+            v-if="!today.journey_dismissed && today.journey.length && journeyDone < today.journey.length"
             class="journey today-help-row"
             title="Comment ça marche"
             :value="`${journeyDone} / ${today.journey.length}`"

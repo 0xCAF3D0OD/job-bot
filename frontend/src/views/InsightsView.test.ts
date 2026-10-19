@@ -125,4 +125,20 @@ describe("Bilan (docs/42, docs/55)", () => {
     const { wrapper } = await mountView();
     expect(wrapper.find("[role=alert]").text()).toContain("Bilan indisponible");
   });
+
+  it("la jauge de l'objectif ORP, quittée d'Aujourd'hui (docs/95)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/today"
+            ? { month: "2026-10", month_count: 3, month_target: 20, orp_history: [{ month: "2026-09", count: 20 }] }
+            : report(),
+      }),
+    );
+    const { wrapper } = await mountView();
+    const gauge = wrapper.find("[data-test=orp-gauge]");
+    expect(gauge.exists()).toBe(true);
+    expect(gauge.find("[data-test=gauge-count]").text()).toBe("3");
+    expect(gauge.text()).toContain("sur 20");
+  });
 });

@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/94-coherence-des-controles.md](docs/94-coherence-des-controles.md) (0.70.7)
+- Version en cours : [docs/95-aujourdhui-epure.md](docs/95-aujourdhui-epure.md) (0.71.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -134,7 +134,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.70.4 | La capsule qui se déroule : cloche, compte et ☰ s'ouvrent dans son cadre, séparés par des filets ; les menus « ⋯ » au même style | livrée |
 | 0.70.5 | Progresser dans la capsule (l'étincelle et son aperçu) ; deux pages dans le menu, en barre d'onglets sur téléphone | livrée |
 | 0.70.6 | Les formations en cartes aérées (à la manière de Sphere), le cœur « Intéressé » ; les logos en carrés arrondis | livrée |
-| 0.70.7 | Une seule hauteur pour les contrôles, alignés dans leur rangée ; l'audit des rangées | en cours |
+| 0.70.7 | Une seule hauteur pour les contrôles, alignés dans leur rangée ; l'audit des rangées | livrée |
+| 0.71.0 | Aujourd'hui épuré : la phrase du jour et une action, les bandeaux datés, À faire et Mois ORP ; la jauge dans le Bilan | en cours |
 
 ## Lancer en local
 
