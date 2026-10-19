@@ -1268,6 +1268,8 @@ button.filter-row[aria-expanded]:not(.filter-option)::after { content: "›"; co
   }
   .filters-panel { background: none; border: 0; padding: 0; }
   .offers-grid:not(.has-selection) .filters-column { margin-right: 0.5rem; }
+  /* La liste démarre à la hauteur de la recherche (docs/94) : la rangée du haut est alignée. */
+  .offers-list { padding-top: 0.75rem; }
 }
 button.filter-row[aria-expanded]::after { transition: transform 0.15s; }
 button.filter-row[aria-expanded="true"]::after { transform: rotate(90deg); }
@@ -2832,3 +2834,24 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   .tile-heart { width: 2.75rem; height: 2.75rem; }
 }
 @media (prefers-reduced-motion: reduce) { .training-tile { transition: none; } }
+
+/* Une seule hauteur pour les contrôles (docs/94) : boutons, liens en bouton, listes de choix,
+   champs d'une ligne, sélecteurs, ⋯ et boutons ronds ont la même hauteur — 2,5 rem sur
+   ordinateur, 2,75 rem au doigt — et se centrent dans leur rangée. L'écart vient de la rangée,
+   jamais d'une marge propre. Les zones de texte, cases, curseurs, étiquettes et la capsule
+   gardent leur forme. */
+:root { --control-h: 2.5rem; }
+@media (max-width: 820px) { :root { --control-h: 2.75rem; } }
+button:where(.primary, .secondary, .small, :not([class])), .button-link {
+  box-sizing: border-box; min-height: var(--control-h); padding-block: 0;
+}
+select,
+input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type="email"], [type="url"], [type="password"], [type="date"], [type="datetime-local"]) {
+  box-sizing: border-box; height: var(--control-h); padding-block: 0;
+}
+.segmented:not(:has(> button:nth-child(4))) { box-sizing: border-box; height: var(--control-h); align-items: stretch; }
+.segmented:not(:has(> button:nth-child(4))) > button { min-height: 0; padding-block: 0; }
+.more-button, .applications-head .add-application { box-sizing: border-box; width: var(--control-h); min-width: var(--control-h); height: var(--control-h); min-height: var(--control-h); padding: 0; border-radius: 50%; justify-content: center; }
+.tile-heart { width: var(--control-h); height: var(--control-h); }
+/* Dans une rangée de filtres, l'action se centre avec les autres contrôles. */
+.news-filters .news-status { margin: 0; }
