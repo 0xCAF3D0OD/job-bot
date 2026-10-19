@@ -7,6 +7,7 @@ import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 import NotificationBell from "./components/NotificationBell.vue";
 import BrandFigure from "./components/BrandFigure.vue";
 import AccountMenu from "./components/AccountMenu.vue";
+import BrandMark from "./components/BrandMark.vue";
 import HandLoop from "./components/HandLoop.vue";
 import HeaderCapsule from "./components/HeaderCapsule.vue";
 import ProgressPreview from "./components/ProgressPreview.vue";
@@ -90,10 +91,7 @@ onUnmounted(() => {
         class="brand"
         aria-label="jobA1, accueil"
       >
-        <span
-          class="brand-mark"
-          aria-hidden="true"
-        />
+        <BrandMark :size="26" />
         <!-- Connecté : le « 1 » devient le personnage de l'heure (docs/68). -->
         <span
           v-if="loggedIn"

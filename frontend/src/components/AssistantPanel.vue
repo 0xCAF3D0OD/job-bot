@@ -9,6 +9,7 @@ import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssis
 import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
 import CopyLabel from "./CopyLabel.vue";
+import AssistantMascot from "./AssistantMascot.vue";
 import EngagementMoment from "./EngagementMoment.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
@@ -269,10 +270,7 @@ const headItems: MoreMenuItem[] = [
       data-test="assistant-open"
       @click="open = true"
     >
-      <span
-        class="assistant-fab-dot"
-        aria-hidden="true"
-      />
+      <AssistantMascot :size="28" />
       <span class="assistant-fab-label">Assistant</span>
     </button>
     <aside
@@ -284,7 +282,7 @@ const headItems: MoreMenuItem[] = [
       @keydown="onKey"
     >
       <header class="assistant-head">
-        <strong>Assistant</strong>
+        <strong class="assistant-title"><AssistantMascot :size="26" />Assistant</strong>
         <div class="assistant-head-actions">
           <button
             v-if="lines.length"
@@ -361,6 +359,12 @@ const headItems: MoreMenuItem[] = [
           class="assistant-line"
           :class="[line.role, { error: line.error }]"
         >
+          <!-- La mascotte devant chaque réponse (docs/97). -->
+          <AssistantMascot
+            v-if="line.role === 'assistant'"
+            :size="24"
+            class="assistant-line-mascot"
+          />
           <p
             v-if="line.role === 'user' || line.error"
             class="assistant-plain"
