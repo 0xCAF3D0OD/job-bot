@@ -12,6 +12,10 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 6. Pas de prix dans le libellé d'un bouton : le coût d'une action IA est dans sa description au survol (« Environ 0,10 $. »).
 7. Un test (`frontend/src/titles.test.ts`) vérifie les règles 1, 2 et 6.
 
+## La barre du haut (docs/89)
+
+Cinq pages dans le menu principal, celles de la recherche. À droite, une capsule : la cloche, puis l'initiale du compte, qui ouvre le menu du compte (Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion) ; sur téléphone, ☰ s'y ajoute et ne montre que les cinq pages.
+
 ## Illustrations (docs/62, docs/67)
 
 1. Une illustration seulement si l'écran n'a rien d'autre à montrer (vide, erreur, première fois) ou pour marquer un moment (réussite, transition d'une page qui charge).

@@ -378,6 +378,10 @@ def test_guide_follows_the_pages() -> None:
     assert "assistant-v8" not in service.INSTRUCTIONS  # la consigne ne se cite pas elle-même
     # 0.70.0 (docs/88) : les titres sont les noms du menu, sans « Ton », « Ta », « Tes ».
     assert "assistant-v9" not in service.INSTRUCTIONS
+    # 0.70.2 (docs/89) : la capsule à droite, le menu du compte.
+    assert "assistant-v10" not in service.INSTRUCTIONS
+    assert "menu du compte" in service.INSTRUCTIONS
+    assert "Collecter maintenant" in service.INSTRUCTIONS
     assert "« Effet des critères »" in service.INSTRUCTIONS
     assert "Ce que je cherche" not in service.INSTRUCTIONS
     assert "Ta semaine" not in service.INSTRUCTIONS
