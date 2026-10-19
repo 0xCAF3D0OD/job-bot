@@ -27,7 +27,14 @@ function mockGet(configured: boolean): void {
       data:
         path === "/api/notifications"
           ? { configured, server: "https://ntfy.sh" }
-          : { orp_monthly_target: null, notify_score_threshold: 70, llm_monthly_budget_chf: 10 },
+          : {
+              orp_monthly_target: null,
+              notify_score_threshold: 70,
+              llm_monthly_budget_chf: 10,
+              rhythm_days: [0, 1, 2, 3, 4],
+              offers_notify_mode: "daily",
+              offers_notify_hour: 9,
+            },
     }),
   );
 }
@@ -87,11 +94,11 @@ describe("SettingsView, date limite ORP", () => {
 });
 
 describe("SettingsView, une rubrique à la fois (docs/48)", () => {
-  it("six rubriques, une seule affichée ; un ancien lien #agenda mène à Outils", async () => {
+  it("sept rubriques, une seule affichée ; un ancien lien #agenda mène à Outils", async () => {
     mockGet(false);
     const { wrapper, router } = await mountSettings();
     const toc = wrapper.findAll(".settings-toc a").map((a) => a.text());
-    expect(toc).toEqual(["Recherche d'emploi", "Actualités", "Notifications", "IA", "Compte", "Outils"]);
+    expect(toc).toEqual(["Recherche d'emploi", "Rythme", "Actualités", "Notifications", "IA", "Compte", "Outils"]);
     expect(wrapper.find("[data-test=settings-form]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
     // Le seuil de notification est dans sa rubrique, dit en clair.
@@ -156,3 +163,26 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
   });
 });
+
+describe("SettingsView, le bon rythme (docs/86)", () => {
+  it("les jours de recherche et l'heure du message des offres", async () => {
+    mockGet(false);
+    const { wrapper } = await mountSettings("rythme");
+    const form = wrapper.find("[data-test=rhythm-form]");
+    expect((form.find("[data-test=rhythm-day-0]").element as HTMLInputElement).checked).toBe(true);
+    expect((form.find("[data-test=rhythm-day-5]").element as HTMLInputElement).checked).toBe(false);
+    await form.find("[data-test=rhythm-day-2]").setValue(false);
+    await form.find("[data-test=rhythm-hour]").setValue("8");
+    const PUT = vi.mocked((await import("../api/client")).api.PUT).mockResolvedValue({ data: null } as never);
+    await form.trigger("submit");
+    await flushPromises();
+    const body = (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
+    expect(body.rhythm_days).toEqual([0, 1, 3, 4]);
+    expect(body.offers_notify_hour).toBe(8);
+    expect(body.offers_notify_mode).toBe("daily");
+    // « Dès qu'elles arrivent » : l'heure ne sert plus.
+    await form.find("[data-test=rhythm-instant]").setValue(true);
+    expect(form.find("[data-test=rhythm-hour]").attributes("disabled")).toBeDefined();
+  });
+});
+

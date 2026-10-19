@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/85-declaration-job-room.md](docs/85-declaration-job-room.md) (0.67.4)
+- Version en cours : [docs/86-bon-rythme.md](docs/86-bon-rythme.md) (0.68.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -122,7 +122,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.67.3 | « Déclaration Job-Room » dit ce qui reste à faire ; cases du calendrier à la même taille | livrée |
 | 0.67.4 | La déclaration Job-Room en liste courte, sous « À relancer » ; PDF et CSV dans le ⋯ du mois | livrée |
 | 0.67.5 | Nouvelles images et nouvelle vidéo de la page de connexion | livrée |
-| 0.67.6 | Connexion : la phrase passe en blanc à 3 s de la vidéo du soir | en cours |
+| 0.67.6 | Connexion : la phrase passe en blanc à 3 s de la vidéo du soir | livrée |
+| 0.68.0 | Le bon rythme : l'objectif ORP réparti par semaine, la dose du jour, les jours sans recherche, un message d'offres par jour | en cours |
 
 ## Lancer en local
 

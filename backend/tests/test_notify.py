@@ -39,7 +39,12 @@ def sent(monkeypatch: pytest.MonkeyPatch) -> list[Message]:
 async def rt(runtime: Runtime) -> AsyncIterator[Runtime]:
     async with admin_engine().begin() as conn:
         await conn.execute(text("TRUNCATE offers, searches, job_runs, llm_calls CASCADE"))
-        await conn.execute(text("DELETE FROM settings WHERE key = 'budget_alert_month'"))
+        await conn.execute(
+            text(
+                "DELETE FROM settings WHERE key IN ('budget_alert_month', 'offers_digest_day', "
+                "'offers_notify_mode', 'offers_notify_hour', 'rhythm_days')"
+            )
+        )
     r = Runtime.create(make_settings(ntfy_topic="sujet-secret", public_url="http://jobbot.local"))
     yield r
     await r.dispose()

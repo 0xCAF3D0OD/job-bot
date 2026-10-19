@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
+import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
 import PageHero from "../components/PageHero.vue";
 import AccountDataPanel from "../components/AccountDataPanel.vue";
@@ -23,7 +24,21 @@ const form = ref<SettingsModel>({
   llm_monthly_budget_chf: 10,
   orp_due_day: 5,
   employer_search_threshold: 70,
+  rhythm_days: [0, 1, 2, 3, 4],
+  offers_notify_mode: "daily",
+  offers_notify_hour: 9,
 });
+// Le bon rythme (docs/86) : tes jours de recherche, lundi = 0.
+const WEEK = [
+  { value: 0, label: "Lundi" },
+  { value: 1, label: "Mardi" },
+  { value: 2, label: "Mercredi" },
+  { value: 3, label: "Jeudi" },
+  { value: 4, label: "Vendredi" },
+  { value: 5, label: "Samedi" },
+  { value: 6, label: "Dimanche" },
+];
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 const loaded = ref(false);
 const saving = ref(false);
 const message = ref("");
@@ -105,6 +120,10 @@ const summary = computed(() => ({
     form.value.orp_monthly_target ? `objectif ${form.value.orp_monthly_target} / mois` : "objectif à saisir",
     "sites suivis",
   ].join(" · "),
+  rythme: [
+    plural(form.value.rhythm_days?.length ?? 5, "jour de recherche", "jours de recherche"),
+    form.value.offers_notify_mode === "daily" ? `offres à ${form.value.offers_notify_hour} h` : "offres dès qu'elles arrivent",
+  ].join(" · "),
   actualites: "mots-clés et sources",
   notifications: [
     notifications.value ? (notifications.value.configured ? "actives" : "non configurées") : "",
@@ -123,6 +142,7 @@ const summary = computed(() => ({
 // Une rubrique à la fois (docs/48 §2) : le sommaire choisit, l'adresse la retient.
 const SECTIONS = [
   { id: "recherche", label: "Recherche d'emploi" },
+  { id: "rythme", label: "Rythme" },
   { id: "actualites", label: "Actualités" },
   { id: "notifications", label: "Notifications" },
   { id: "ia", label: "IA" },
@@ -253,6 +273,93 @@ const active = computed<SectionId>(() => {
             </div>
           </form>
           <SitesPanel class="settings-status" />
+        </SettingsSection>
+
+        <SettingsSection
+          id="rythme"
+          title="Rythme"
+          :value="summary.rythme"
+          :active="active === 'rythme'"
+        >
+          <form
+            v-if="loaded"
+            class="form-card rhythm-form"
+            data-test="rhythm-form"
+            @submit.prevent="save"
+          >
+            <fieldset>
+              <legend>Mes jours de recherche</legend>
+              <div class="rhythm-week">
+                <label
+                  v-for="day in WEEK"
+                  :key="day.value"
+                  class="check"
+                >
+                  <input
+                    v-model="form.rhythm_days"
+                    type="checkbox"
+                    :value="day.value"
+                    :disabled="form.rhythm_days?.length === 1 && form.rhythm_days.includes(day.value)"
+                    :data-test="`rhythm-day-${day.value}`"
+                  >
+                  {{ day.label }}
+                </label>
+              </div>
+              <p class="hint">
+                Les autres jours, rien n'arrive sur ton téléphone, sauf les rappels avec une date limite.
+              </p>
+            </fieldset>
+            <fieldset>
+              <legend>Les offres bien notées</legend>
+              <label class="check">
+                <input
+                  v-model="form.offers_notify_mode"
+                  type="radio"
+                  value="daily"
+                  data-test="rhythm-daily"
+                >
+                Un message par jour, à
+                <select
+                  v-model.number="form.offers_notify_hour"
+                  aria-label="Heure du message"
+                  :disabled="form.offers_notify_mode !== 'daily'"
+                  data-test="rhythm-hour"
+                >
+                  <option
+                    v-for="hour in HOURS"
+                    :key="hour"
+                    :value="hour"
+                  >
+                    {{ hour }} h
+                  </option>
+                </select>
+              </label>
+              <label class="check">
+                <input
+                  v-model="form.offers_notify_mode"
+                  type="radio"
+                  value="instant"
+                  data-test="rhythm-instant"
+                >
+                Dès qu'elles arrivent
+              </label>
+            </fieldset>
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="secondary"
+                :disabled="saving"
+                data-test="save-rhythm"
+              >
+                Enregistrer
+              </button>
+              <span
+                v-if="message"
+                role="status"
+                class="muted"
+              >{{ message }}</span>
+            </div>
+          </form>
         </SettingsSection>
 
         <SettingsSection

@@ -22,6 +22,7 @@ from jobbot.core.filter import (
 from jobbot.db.models import Criterion, Setting
 from jobbot.filtering.service import load_criteria, save_criteria
 from jobbot.notify import service as notify_service
+from jobbot.rhythm.service import DEFAULT_DAYS, DEFAULT_HOUR
 from jobbot.runtime import Runtime
 from jobbot.scoring.service import budget_details
 from jobbot.worker.queue import enqueue
@@ -84,6 +85,19 @@ class SettingsModel(BaseModel):
     orp_due_day: int = Field(default=5, ge=2, le=28)
     # Recherche automatique de l'annonce chez l'employeur dès cette note (docs/20 §2.1).
     employer_search_threshold: int = Field(default=70, ge=0, le=100)
+    # Le bon rythme (docs/86) : jours de recherche (lundi = 0), et les offres en un message
+    # par jour dès cette heure, ou dès qu'elles arrivent.
+    rhythm_days: list[int] = Field(default_factory=lambda: list(DEFAULT_DAYS), min_length=1)
+    offers_notify_mode: Literal["daily", "instant"] = "daily"
+    offers_notify_hour: int = Field(default=DEFAULT_HOUR, ge=6, le=21)
+
+    @field_validator("rhythm_days")
+    @classmethod
+    def _days(cls, values: list[int]) -> list[int]:
+        days = sorted({d for d in values if 0 <= d <= 6})
+        if not days:
+            raise ValueError("au moins un jour de recherche")
+        return days
 
 
 def _runtime(request: Request) -> Runtime:
