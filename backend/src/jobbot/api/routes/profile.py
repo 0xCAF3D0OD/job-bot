@@ -48,6 +48,8 @@ class DocumentOut(BaseModel):
     text_status: TextStatus
     uploaded_at: datetime
     chunk_count: int = 0
+    # « certificate » : un certificat de travail (docs/87).
+    kind: str | None = None
 
 
 class DocumentText(BaseModel):

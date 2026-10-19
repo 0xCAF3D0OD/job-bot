@@ -1809,6 +1809,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/certificates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Certificates */
+        get: operations["listCertificates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{document_id}/kind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Document Kind
+         * @description Marquer un document comme certificat de travail (il est lu aussitôt, sans IA), ou non.
+         */
+        put: operations["setDocumentKind"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/certificates/{document_id}/lecture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read Certificate
+         * @description La lecture détaillée par l'IA (environ 0,03 CHF), gardée avec le certificat.
+         */
+        post: operations["readCertificate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/rhythm/semaines": {
         parameters: {
             query?: never;
@@ -2868,6 +2925,24 @@ export interface components {
             /** Web Unavailable */
             web_unavailable?: string | null;
         };
+        /** AiReadingOut */
+        AiReadingOut: {
+            /** Grade */
+            grade: number | null;
+            /** Explanation */
+            explanation: string;
+            /** Missing */
+            missing: string[];
+            /** Order */
+            order: string | null;
+            /**
+             * Advice
+             * @enum {string}
+             */
+            advice: "attach" | "on_request" | "correct";
+            /** Advice Text */
+            advice_text: string;
+        };
         /** AlertCell */
         AlertCell: {
             /** Site */
@@ -3278,6 +3353,44 @@ export interface components {
             description: string;
             /** Added */
             added: boolean;
+        };
+        /** CertificateOut */
+        CertificateOut: {
+            /** Document Id */
+            document_id: number;
+            /** Filename */
+            filename: string;
+            /** Readable */
+            readable: boolean;
+            /** Language */
+            language: string | null;
+            /** Grade */
+            grade: number | null;
+            /** Grade Label */
+            grade_label: string | null;
+            /** Explanation */
+            explanation: string;
+            /**
+             * Advice
+             * @enum {string}
+             */
+            advice: "attach" | "on_request" | "correct";
+            /** Advice Label */
+            advice_label: string;
+            /** Passages */
+            passages: components["schemas"]["PassageOut"][];
+            /** Notes */
+            notes: components["schemas"]["jobbot__api__routes__certificates__NoteOut"][];
+            ai: components["schemas"]["AiReadingOut"] | null;
+            /** Ai At */
+            ai_at: string | null;
+        };
+        /** CertificatesPage */
+        CertificatesPage: {
+            /** Certificates */
+            certificates: components["schemas"]["CertificateOut"][];
+            /** Summary */
+            summary: string | null;
         };
         /**
          * ChatActionOut
@@ -3782,6 +3895,8 @@ export interface components {
              * @default 0
              */
             chunk_count: number;
+            /** Kind */
+            kind?: string | null;
         };
         /** DocumentText */
         DocumentText: {
@@ -4046,15 +4161,15 @@ export interface components {
             /** Questions */
             questions: components["schemas"]["QuestionStatOut"][];
             /** Went Well */
-            went_well: components["schemas"]["NoteOut"][];
+            went_well: components["schemas"]["jobbot__api__routes__interviews__NoteOut"][];
             /** Went Badly */
-            went_badly: components["schemas"]["NoteOut"][];
+            went_badly: components["schemas"]["jobbot__api__routes__interviews__NoteOut"][];
             /** To Prepare */
             to_prepare: components["schemas"]["PrepareItem"][];
             /** Missed Questions */
-            missed_questions: components["schemas"]["NoteOut"][];
+            missed_questions: components["schemas"]["jobbot__api__routes__interviews__NoteOut"][];
             /** Employer Feedback */
-            employer_feedback: components["schemas"]["NoteOut"][];
+            employer_feedback: components["schemas"]["jobbot__api__routes__interviews__NoteOut"][];
             coaching: components["schemas"]["CoachingOut"] | null;
             /** Can Coach */
             can_coach: boolean;
@@ -4350,6 +4465,11 @@ export interface components {
             };
             /** Requirement Words */
             requirement_words: string[];
+        };
+        /** KindIn */
+        KindIn: {
+            /** Kind */
+            kind: "certificate" | null;
         };
         /**
          * Language
@@ -4847,15 +4967,6 @@ export interface components {
             /** Labour Market */
             labour_market?: boolean | null;
         };
-        /** NoteOut */
-        NoteOut: {
-            /** Company */
-            company: string;
-            /** Held At */
-            held_at: string | null;
-            /** Text */
-            text: string;
-        };
         /** NotificationOut */
         NotificationOut: {
             /** Id */
@@ -5276,6 +5387,22 @@ export interface components {
          * @enum {string}
          */
         ParseStatus: "parsed" | "empty" | "unrecognized" | "failed";
+        /** PassageOut */
+        PassageOut: {
+            /** Text */
+            text: string;
+            /** Meaning */
+            meaning: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "good" | "neutral" | "bad";
+            /** Category */
+            category: string;
+            /** Level */
+            level?: number | null;
+        };
         /** PhoneIn */
         PhoneIn: {
             /** Enabled */
@@ -6414,12 +6541,31 @@ export interface components {
             page?: string | null;
             focus?: components["schemas"]["FocusIn"] | null;
         };
+        /** NoteOut */
+        jobbot__api__routes__certificates__NoteOut: {
+            /** Text */
+            text: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "good" | "neutral" | "bad";
+        };
         /** QuestionIn */
         jobbot__api__routes__extension__QuestionIn: {
             /** Offer Id */
             offer_id: number;
             /** Question */
             question: string;
+        };
+        /** NoteOut */
+        jobbot__api__routes__interviews__NoteOut: {
+            /** Company */
+            company: string;
+            /** Held At */
+            held_at: string | null;
+            /** Text */
+            text: string;
         };
     };
     responses: never;
@@ -10283,6 +10429,106 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listCertificates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificatesPage"];
+                };
+            };
+        };
+    };
+    setDocumentKind: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KindIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificatesPage"];
+                };
+            };
+            /** @description Document introuvable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readCertificate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificatesPage"];
+                };
+            };
+            /** @description IA indisponible, plafond atteint, ou texte illisible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

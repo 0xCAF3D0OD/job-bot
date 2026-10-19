@@ -45,7 +45,9 @@ function mockApi(): void {
       data:
         path === "/api/documents"
           ? [doc]
-          : path === "/api/profile-chunks"
+          : path === "/api/certificates"
+            ? { certificates: [], summary: null }
+            : path === "/api/profile-chunks"
             ? [chunk]
             : { id: 4, text_status: "ok", text: "Expérience\nAdministrateur Linux chez Acme, 2022-2025" },
     }),
@@ -196,4 +198,23 @@ describe("Mon parcours, panneaux (docs/49)", () => {
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/profile-chunks/{chunk_id}", expect.objectContaining({ params: { path: { chunk_id: 9 } } }));
   });
+
+  it("marquer un document comme certificat de travail (docs/87)", async () => {
+    mockApi();
+    PUT.mockResolvedValue({ data: { certificates: [], summary: null } });
+    const wrapper = mount(ProfileView, { global: { stubs: { teleport: true } } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=certificates-hint]").exists()).toBe(true);
+    await wrapper.find("[data-test=open-document-4]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=document-more]").trigger("click");
+    await wrapper.find("[data-test=toggle-certificate]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/documents/{document_id}/kind", {
+      params: { path: { document_id: 4 } },
+      body: { kind: "certificate" },
+    });
+    expect(GET.mock.calls.filter(([path]) => path === "/api/certificates")).toHaveLength(2);
+  });
 });
+

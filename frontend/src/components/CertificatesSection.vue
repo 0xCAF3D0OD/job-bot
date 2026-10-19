@@ -1,0 +1,169 @@
+<script setup lang="ts">
+import { onMounted, ref, watch } from "vue";
+
+import { api } from "../api/client";
+import type { components } from "../api/schema";
+
+// Les certificats de travail, décodés (docs/87) : la note, les formules codées, ce qui
+// dessert, le conseil ; la lecture de l'IA sur demande.
+type Page = components["schemas"]["CertificatesPage"];
+type Certificate = Page["certificates"][number];
+
+const props = defineProps<{ version: number }>();
+const emit = defineEmits<{ loaded: [count: number] }>();
+const page = ref<Page | null>(null);
+const reading = ref<number | null>(null);
+const message = ref("");
+const open = ref<number | null>(null);
+
+async function load(): Promise<void> {
+  const { data } = await api.GET("/api/certificates");
+  page.value = data ?? null;
+  emit("loaded", data?.certificates.length ?? 0);
+}
+
+async function readInDetail(item: Certificate): Promise<void> {
+  reading.value = item.document_id;
+  message.value = "";
+  try {
+    const { data, error } = await api.POST("/api/certificates/{document_id}/lecture", {
+      params: { path: { document_id: item.document_id } },
+    });
+    if (data) {
+      page.value = data;
+      open.value = item.document_id;
+    } else {
+      message.value = (error as { detail?: string } | undefined)?.detail ?? "Lecture impossible pour l'instant.";
+    }
+  } finally {
+    reading.value = null;
+  }
+}
+
+watch(() => props.version, () => void load());
+onMounted(() => void load());
+</script>
+
+<template>
+  <section
+    v-if="page?.certificates.length"
+    class="certificates"
+    data-test="certificates"
+  >
+    <h2 class="section-title">
+      Certificats de travail
+    </h2>
+    <p
+      v-if="page.summary"
+      class="certificates-summary"
+      data-test="certificates-summary"
+    >
+      {{ page.summary }}
+    </p>
+    <p
+      v-if="message"
+      role="status"
+      class="notice error"
+    >
+      {{ message }}
+    </p>
+    <article
+      v-for="item in page.certificates"
+      :key="item.document_id"
+      :class="['certificate', `advice-${item.advice}`]"
+      :data-test="`certificate-${item.document_id}`"
+    >
+      <header class="certificate-head">
+        <h3>{{ item.filename.replace(/\.[^.]+$/, "") }}</h3>
+        <span
+          v-if="item.grade_label"
+          :class="['badge', `grade-${item.grade}`, { warn: item.grade === 1 }]"
+          data-test="certificate-grade"
+        >{{ item.grade_label }}</span>
+      </header>
+      <p v-if="!item.readable">
+        Texte non lisible : dépose une version PDF avec du texte (pas une photo).
+      </p>
+      <template v-else>
+        <p data-test="certificate-explanation">
+          {{ item.explanation }}
+        </p>
+        <p
+          class="certificate-advice"
+          data-test="certificate-advice"
+        >
+          <strong>{{ item.advice_label.charAt(0).toUpperCase() + item.advice_label.slice(1) }}</strong><template v-if="item.ai?.advice_text">
+            : {{ item.ai.advice_text }}
+          </template>
+        </p>
+        <button
+          type="button"
+          class="link"
+          :aria-expanded="open === item.document_id"
+          :data-test="`certificate-details-${item.document_id}`"
+          @click="open = open === item.document_id ? null : item.document_id"
+        >
+          {{ open === item.document_id ? "Masquer le détail" : "Voir phrase par phrase" }}
+        </button>
+        <div
+          v-if="open === item.document_id"
+          class="certificate-details"
+        >
+          <ul
+            v-if="item.passages.length"
+            class="certificate-passages"
+          >
+            <li
+              v-for="passage in item.passages"
+              :key="passage.text"
+              :class="passage.tone"
+            >
+              <mark>« {{ passage.text }} »</mark>
+              <span>{{ passage.meaning }}</span>
+            </li>
+          </ul>
+          <ul
+            v-if="item.notes.length || item.ai?.missing.length || item.ai?.order"
+            class="certificate-notes"
+          >
+            <li
+              v-for="note in item.notes"
+              :key="note.text"
+              :class="note.tone"
+            >
+              {{ note.text }}
+            </li>
+            <li
+              v-for="line in item.ai?.missing ?? []"
+              :key="line"
+              class="bad"
+            >
+              {{ line }}
+            </li>
+            <li
+              v-if="item.ai?.order"
+              class="neutral"
+            >
+              {{ item.ai.order }}
+            </li>
+          </ul>
+          <p class="hint">
+            Une lecture reste une interprétation : la phrase d'origine fait foi.
+          </p>
+        </div>
+        <div class="form-actions">
+          <button
+            type="button"
+            class="secondary small"
+            :disabled="reading !== null"
+            :data-test="`certificate-read-${item.document_id}`"
+            @click="readInDetail(item)"
+          >
+            {{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}
+          </button>
+          <span class="hint">Environ 0,03 CHF. Ni ton nom ni celui des personnes ne partent à l'IA.</span>
+        </div>
+      </template>
+    </article>
+  </section>
+</template>

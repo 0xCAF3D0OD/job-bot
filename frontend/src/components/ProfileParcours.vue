@@ -17,6 +17,7 @@ import { formatDate, plural } from "../format";
 
 import HoverNote from "./HoverNote.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import CertificatesSection from "./CertificatesSection.vue";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
   { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau." },
@@ -38,6 +39,19 @@ const EMPTY_CHUNK: ChunkForm = {
 };
 
 const documents = ref<DocumentOut[]>([]);
+// Les certificats de travail (docs/87) : la section se recharge quand un document change.
+const certificatesVersion = ref(0);
+const hasCertificates = computed(() => documents.value.some((d) => d.kind === "certificate"));
+
+async function setCertificate(doc: DocumentOut, certificate: boolean): Promise<void> {
+  await api.PUT("/api/documents/{document_id}/kind", {
+    params: { path: { document_id: doc.id } },
+    body: { kind: certificate ? "certificate" : null },
+  });
+  openText.value = null;
+  await loadDocuments();
+  certificatesVersion.value += 1;
+}
 const chunks = ref<Chunk[]>([]);
 // Un seul bouton plein (docs/29 §1.3) : tant qu'il n'y a aucun bloc, « Proposer des blocs » sur
 // le premier document lisible ; ensuite, aucun d'office.
@@ -235,8 +249,14 @@ onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 const documentItems = computed<MoreMenuItem[]>(() => {
   const doc = openDocument.value;
   if (!doc) return [];
+  const certificate = doc.kind === "certificate";
   return [
     { label: "Ouvrir le fichier", test: "open-document-file", href: `/api/documents/${doc.id}/file` },
+    {
+      label: certificate ? "Ce n'est pas un certificat de travail" : "C'est un certificat de travail",
+      test: "toggle-certificate",
+      run: () => void setCertificate(doc, !certificate),
+    },
     { label: "Supprimer ce document", test: "remove-document", danger: true, run: () => void removeDocument(doc) },
   ];
 });
@@ -280,13 +300,13 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         >
           <strong>{{ doc.filename }}</strong>
           <span class="hint">
-            {{ sizeText(doc.size) }} · {{ formatDate(doc.uploaded_at) }} · {{ plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
+            {{ sizeText(doc.size) }} · {{ formatDate(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
               · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
             </template>
           </span>
         </button>
         <button
-          v-if="doc.text_status === 'ok'"
+          v-if="doc.text_status === 'ok' && doc.kind !== 'certificate'"
           type="button"
           :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
           :disabled="proposing !== null"
@@ -312,6 +332,16 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         PDF, DOCX, TXT ou MD · 10 Mo au plus{{ documents.length ? "" : " : l'IA en tire tes premiers blocs." }}
       </span>
     </label>
+
+    <p
+      v-if="documents.length && !hasCertificates"
+      class="hint certificates-hint"
+      data-test="certificates-hint"
+    >
+      Un certificat de travail parmi tes documents ? Ouvre-le, puis ⋯ › « C'est un certificat de travail » :
+      jobA1 te dit ce qu'il dit vraiment.
+    </p>
+    <CertificatesSection :version="certificatesVersion" />
 
     <SidePanel
       v-if="openText"

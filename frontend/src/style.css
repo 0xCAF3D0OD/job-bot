@@ -2693,3 +2693,31 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .rhythm-weeks li.missed .rhythm-weeks-state { background: color-mix(in srgb, var(--orange) 20%, var(--surface)); color: var(--warn-text); }
 .rhythm-weeks li.current .rhythm-weeks-state { background: var(--accent-soft); color: var(--accent-text); }
 
+/* Les certificats de travail (docs/87). */
+.certificates { display: grid; gap: 0.9rem; }
+.certificates-summary { margin: 0; font-weight: 500; }
+.certificates-hint { margin: 0.6rem 0 0; }
+.certificate { display: grid; gap: 0.6rem; padding: 1rem 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.certificate p { margin: 0; }
+.certificate-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.certificate-head h3 { margin: 0; font-size: 1rem; }
+.certificate .badge.grade-4, .certificate .badge.grade-3 { background: color-mix(in srgb, var(--mint) 25%, var(--surface)); color: var(--text); }
+.certificate .badge.grade-2 { background: var(--band); color: var(--text); }
+.certificate.advice-correct { border-left: 3px solid var(--warn); }
+.certificate-advice strong { color: var(--accent-text); }
+.certificate.advice-correct .certificate-advice strong { color: var(--warn-text); }
+.certificate-details { display: grid; gap: 0.6rem; }
+.certificate-passages, .certificate-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.certificate-passages li { display: grid; gap: 0.15rem; }
+.certificate-passages mark { justify-self: start; padding: 0 0.25rem; border-radius: 4px; background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--text); }
+.certificate-passages li.good mark { background: color-mix(in srgb, var(--mint) 30%, transparent); }
+.certificate-passages li.bad mark { background: color-mix(in srgb, var(--orange) 30%, transparent); }
+.certificate-passages span { color: var(--muted); font-size: 0.9rem; }
+.certificate-notes li { padding-left: 0.9rem; position: relative; font-size: 0.92rem; }
+.certificate-notes li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--muted); }
+.certificate-notes li.bad::before { background: var(--warn); }
+.certificate .form-actions { align-items: center; flex-wrap: wrap; gap: 0.5rem 0.9rem; padding-top: 0.25rem; }
+@media (prefers-color-scheme: dark) {
+  .certificate .badge.warn { background: #3a2a1a; color: #f3b67a; }
+}
+

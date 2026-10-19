@@ -4861,6 +4861,130 @@
         }
       }
     },
+    "/api/certificates": {
+      "get": {
+        "tags": [
+          "certificates"
+        ],
+        "summary": "List Certificates",
+        "operationId": "listCertificates",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificatesPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{document_id}/kind": {
+      "put": {
+        "tags": [
+          "certificates"
+        ],
+        "summary": "Set Document Kind",
+        "description": "Marquer un document comme certificat de travail (il est lu aussitôt, sans IA), ou non.",
+        "operationId": "setDocumentKind",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KindIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificatesPage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Document introuvable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/certificates/{document_id}/lecture": {
+      "post": {
+        "tags": [
+          "certificates"
+        ],
+        "summary": "Read Certificate",
+        "description": "La lecture détaillée par l'IA (environ 0,03 CHF), gardée avec le certificat.",
+        "operationId": "readCertificate",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificatesPage"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA indisponible, plafond atteint, ou texte illisible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rhythm/semaines": {
       "get": {
         "tags": [
@@ -7868,6 +7992,66 @@
         ],
         "title": "AddressCandidates"
       },
+      "AiReadingOut": {
+        "properties": {
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order"
+          },
+          "advice": {
+            "type": "string",
+            "enum": [
+              "attach",
+              "on_request",
+              "correct"
+            ],
+            "title": "Advice"
+          },
+          "advice_text": {
+            "type": "string",
+            "title": "Advice Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "grade",
+          "explanation",
+          "missing",
+          "order",
+          "advice",
+          "advice_text"
+        ],
+        "title": "AiReadingOut"
+      },
       "AlertCell": {
         "properties": {
           "site": {
@@ -9231,6 +9415,153 @@
           "added"
         ],
         "title": "CatalogSourceOut"
+      },
+      "CertificateOut": {
+        "properties": {
+          "document_id": {
+            "type": "integer",
+            "title": "Document Id"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "readable": {
+            "type": "boolean",
+            "title": "Readable"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "grade_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Label"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "advice": {
+            "type": "string",
+            "enum": [
+              "attach",
+              "on_request",
+              "correct"
+            ],
+            "title": "Advice"
+          },
+          "advice_label": {
+            "type": "string",
+            "title": "Advice Label"
+          },
+          "passages": {
+            "items": {
+              "$ref": "#/components/schemas/PassageOut"
+            },
+            "type": "array",
+            "title": "Passages"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/components/schemas/jobbot__api__routes__certificates__NoteOut"
+            },
+            "type": "array",
+            "title": "Notes"
+          },
+          "ai": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiReadingOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ai_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "filename",
+          "readable",
+          "language",
+          "grade",
+          "grade_label",
+          "explanation",
+          "advice",
+          "advice_label",
+          "passages",
+          "notes",
+          "ai",
+          "ai_at"
+        ],
+        "title": "CertificateOut"
+      },
+      "CertificatesPage": {
+        "properties": {
+          "certificates": {
+            "items": {
+              "$ref": "#/components/schemas/CertificateOut"
+            },
+            "type": "array",
+            "title": "Certificates"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "certificates",
+          "summary"
+        ],
+        "title": "CertificatesPage"
       },
       "ChatActionOut": {
         "properties": {
@@ -10682,6 +11013,17 @@
             "type": "integer",
             "title": "Chunk Count",
             "default": 0
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
           }
         },
         "type": "object",
@@ -11587,14 +11929,14 @@
           },
           "went_well": {
             "items": {
-              "$ref": "#/components/schemas/NoteOut"
+              "$ref": "#/components/schemas/jobbot__api__routes__interviews__NoteOut"
             },
             "type": "array",
             "title": "Went Well"
           },
           "went_badly": {
             "items": {
-              "$ref": "#/components/schemas/NoteOut"
+              "$ref": "#/components/schemas/jobbot__api__routes__interviews__NoteOut"
             },
             "type": "array",
             "title": "Went Badly"
@@ -11608,14 +11950,14 @@
           },
           "missed_questions": {
             "items": {
-              "$ref": "#/components/schemas/NoteOut"
+              "$ref": "#/components/schemas/jobbot__api__routes__interviews__NoteOut"
             },
             "type": "array",
             "title": "Missed Questions"
           },
           "employer_feedback": {
             "items": {
-              "$ref": "#/components/schemas/NoteOut"
+              "$ref": "#/components/schemas/jobbot__api__routes__interviews__NoteOut"
             },
             "type": "array",
             "title": "Employer Feedback"
@@ -12717,6 +13059,27 @@
         ],
         "title": "KeywordsOut",
         "description": "Mots-clés cherchés par le filtre, affichés sous chaque case du formulaire."
+      },
+      "KindIn": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "certificate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "KindIn"
       },
       "Language": {
         "type": "string",
@@ -14271,37 +14634,6 @@
         "title": "NewsSourceUpdate",
         "description": "Champs à modifier ; ceux absents restent inchangés. Une valeur vide efface pays ou langue."
       },
-      "NoteOut": {
-        "properties": {
-          "company": {
-            "type": "string",
-            "title": "Company"
-          },
-          "held_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Held At"
-          },
-          "text": {
-            "type": "string",
-            "title": "Text"
-          }
-        },
-        "type": "object",
-        "required": [
-          "company",
-          "held_at",
-          "text"
-        ],
-        "title": "NoteOut"
-      },
       "NotificationOut": {
         "properties": {
           "id": {
@@ -15635,6 +15967,50 @@
           "failed"
         ],
         "title": "ParseStatus"
+      },
+      "PassageOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "meaning": {
+            "type": "string",
+            "title": "Meaning"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "good",
+              "neutral",
+              "bad"
+            ],
+            "title": "Tone"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "meaning",
+          "tone",
+          "category"
+        ],
+        "title": "PassageOut"
       },
       "PhoneIn": {
         "properties": {
@@ -18978,6 +19354,29 @@
         ],
         "title": "QuestionIn"
       },
+      "jobbot__api__routes__certificates__NoteOut": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "good",
+              "neutral",
+              "bad"
+            ],
+            "title": "Tone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "tone"
+        ],
+        "title": "NoteOut"
+      },
       "jobbot__api__routes__extension__QuestionIn": {
         "properties": {
           "offer_id": {
@@ -18997,6 +19396,37 @@
           "question"
         ],
         "title": "QuestionIn"
+      },
+      "jobbot__api__routes__interviews__NoteOut": {
+        "properties": {
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "held_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Held At"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company",
+          "held_at",
+          "text"
+        ],
+        "title": "NoteOut"
       }
     }
   }

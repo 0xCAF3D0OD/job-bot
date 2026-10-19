@@ -11,6 +11,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Integer,
     Numeric,
     SmallInteger,
@@ -326,6 +327,42 @@ class Document(Base):
     extracted_text: Mapped[str] = mapped_column(Text, default="")
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+    # « certificate » : un certificat de travail, lu par jobA1 (docs/87).
+    kind: Mapped[str | None] = mapped_column(Text)
+
+
+class CertificateReading(Base):
+    """La lecture d'un certificat de travail (docs/87) : les formules repérées, la note, le
+    conseil ; la lecture de l'IA si elle a été demandée."""
+
+    __tablename__ = "certificate_readings"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id", "document_id"],
+            ["documents.user_id", "documents.id"],
+            name="certificate_readings_document_id_fkey",
+            ondelete="CASCADE",
+        ),
+        UniqueConstraint("user_id", "document_id", name="certificate_readings_document_key"),
+    )
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[int] = mapped_column(BigInteger)
+    language: Mapped[str | None] = mapped_column(Text)
+    # 4 très bon, 3 bon, 2 suffisant, 1 à revoir ; None sans formule de prestation.
+    grade: Mapped[int | None] = mapped_column(SmallInteger)
+    # attach | on_request | correct
+    advice: Mapped[str] = mapped_column(Text)
+    passages: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    notes: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    rules_version: Mapped[str] = mapped_column(Text)
+    ai: Mapped[Any | None] = mapped_column(JSONB)
+    ai_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
 
