@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 import pytest
 from httpx import AsyncClient
@@ -193,3 +194,130 @@ def test_your_choices_survive_new_suggestions() -> None:
         ("custom:2", True),
     ]
     assert OrpMeeting.__tablename__ == "orp_meetings"
+
+
+async def _meeting_at(rt: Runtime, starts_at: datetime, **values: Any) -> int:
+    async with rt.sessionmaker.begin() as session:
+        found = OrpMeeting(starts_at=starts_at, **{"questions": [], "measures": [], **values})
+        session.add(found)
+        await session.flush()
+        return found.id
+
+
+async def test_what_was_agreed_updates_jobA1(client: AsyncClient, rt: Runtime) -> None:
+    """Après le rendez-vous : l'objectif, la formation accordée et le rendez-vous suivant."""
+    training_id = await _situation(rt)
+    soon = await _meeting_at(rt, NOW + timedelta(days=2))
+    refused = await client.put(f"/api/orp-meeting/{soon}/convenu", json={})
+    assert refused.status_code == 409
+    await client.delete("/api/orp-meeting")
+    held = await _meeting_at(
+        rt,
+        NOW - timedelta(days=1),
+        place="ORP de Lausanne",
+        questions=[{"key": "measure", "text": "Une mesure ?", "checked": True}],
+    )
+    following = datetime.combine(TODAY + timedelta(days=30), datetime.min.time(), LOCAL_TZ)
+    page = (
+        await client.put(
+            f"/api/orp-meeting/{held}/convenu",
+            json={
+                "target": 10,
+                "measures": [
+                    {"text": "Terraform Associate", "training_id": training_id},
+                    {"text": "Cours de CV", "training_id": 999999},
+                    {"text": "  "},
+                ],
+                "assignments": "Assignation chez Exemple SA",
+                "note": "  Conseillère satisfaite.  ",
+                "next_starts_at": following.replace(hour=10).isoformat(),
+            },
+        )
+    ).json()
+    assert page["target"] == 10
+    assert page["trainings"] == [
+        {"id": training_id, "title": "Terraform Associate", "accepted": True}
+    ]
+    logged = page["past"][0]
+    assert logged["id"] == held and logged["outcome_at"] is not None
+    assert logged["measures"] == [
+        {"text": "Terraform Associate", "training_id": training_id},
+        {"text": "Cours de CV", "training_id": None},
+    ]
+    assert logged["note"] == "Conseillère satisfaite." and logged["asked"] == ["Une mesure ?"]
+    # Le rendez-vous suivant est créé, au même endroit, et devient « le prochain ».
+    assert page["meeting"]["place"] == "ORP de Lausanne"
+    assert logged["next_starts_at"] == page["meeting"]["starts_at"]
+    # Noté une seconde fois : déplacé, pas doublé.
+    moved = following.replace(hour=14).isoformat()
+    page = (
+        await client.put(f"/api/orp-meeting/{held}/convenu", json={"next_starts_at": moved})
+    ).json()
+    async with rt.sessionmaker() as session:
+        count = await session.scalar(text("select count(*) from orp_meetings"))
+    assert count == 2 and page["meeting"]["starts_at"].startswith(following.date().isoformat())
+    assert page["target"] == 10  # sans objectif donné, l'actuel reste
+    assert (await client.put("/api/orp-meeting/999999/convenu", json={})).status_code == 404
+
+
+async def test_the_eve_reminder_and_the_agenda(rt: Runtime) -> None:
+    from jobbot.agenda.service import events
+    from jobbot.notify.orp_meeting import notify_orp_meeting
+
+    tomorrow = datetime.combine(TODAY + timedelta(days=1), datetime.min.time(), LOCAL_TZ)
+    meeting_id = await _meeting_at(
+        rt, tomorrow.replace(hour=9, minute=30), place="ORP", advisor="Mme Exemple"
+    )
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM notifications WHERE kind = 'orp_meeting'"))
+    assert await notify_orp_meeting(rt) == 1
+    assert await notify_orp_meeting(rt) == 0
+    async with rt.sessionmaker.begin() as session:
+        await session.execute(
+            text("update orp_meetings set starts_at = :at"),
+            {"at": tomorrow.replace(hour=14)},
+        )
+    assert await notify_orp_meeting(rt) == 1  # déplacé : rappelé à nouveau
+    async with rt.sessionmaker() as session:
+        found = [e for e in await events(session, "https://j.example") if "orp-meeting" in e.uid]
+    assert [(e.uid, e.summary, e.description) for e in found] == [
+        (f"orp-meeting-{meeting_id}@joba1", "Rendez-vous ORP", "")
+    ]
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM notifications WHERE kind = 'orp_meeting'"))
+
+
+async def test_the_sheet_written_by_the_ai(
+    client: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from jobbot.llm.client import RawResult
+    from jobbot.llm.pricing import Usage
+    from jobbot.orp import redaction
+    from jobbot.scoring import service as scoring
+
+    await _situation(rt)
+    await _meeting_at(rt, NOW + timedelta(days=3), place="ORP de Lausanne", advisor="Mme Dupont")
+    # Sans IA : refusé, sans rien garder.
+    assert (await client.post("/api/orp-meeting/redaction")).status_code == 409
+    calls: list[dict[str, Any]] = []
+
+    class Fake:
+        async def score(self, params: dict[str, Any]) -> RawResult:
+            calls.append(params)
+            return RawResult(
+                "Bonjour,\n\nVoici où j'en suis.",
+                redaction.MODEL,
+                Usage(1500, 0, 0, 400),
+                "end_turn",
+            )
+
+    monkeypatch.setattr(scoring, "make_client", lambda _settings: Fake())
+    monkeypatch.setattr(type(rt.settings), "llm_configured", property(lambda _self: True))
+    page = (await client.post("/api/orp-meeting/redaction")).json()
+    assert page["meeting"]["sheet_text"] == "Bonjour,\n\nVoici où j'en suis."
+    content = calls[0]["messages"][0]["content"]
+    assert "Terraform" in content and "<questions>" in content
+    # Ni le lieu, ni le conseiller.
+    assert "Lausanne" not in content and "Dupont" not in content
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM llm_calls WHERE purpose = 'orp_sheet'"))

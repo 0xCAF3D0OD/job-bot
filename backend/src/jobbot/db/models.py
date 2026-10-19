@@ -528,6 +528,18 @@ class OrpMeeting(Base):
     # règle (« funding:12 »), « custom:… » pour une question écrite à la main.
     questions: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Après le rendez-vous (0.67.2) : ce qui a été convenu, noté quand `outcome_at` est rempli.
+    outcome_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    agreed_target: Mapped[int | None] = mapped_column(Integer)
+    # Mesures accordées : [{text, training_id}] ; une formation liée passe en « financement
+    # accepté ».
+    measures: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
+    assignments: Mapped[str | None] = mapped_column(Text)
+    note: Mapped[str | None] = mapped_column(Text)
+    # Rappel de la veille envoyé pour cette date : une date changée est rappelée à nouveau.
+    reminded_for: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # La feuille rédigée par l'IA, sur demande.
+    sheet_text: Mapped[str | None] = mapped_column(Text)
 
 
 class Company(Base):

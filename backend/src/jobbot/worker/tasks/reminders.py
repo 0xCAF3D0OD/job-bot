@@ -6,6 +6,7 @@ from jobbot.contacts.service import notify_contacts
 from jobbot.notify.inbox import purge
 from jobbot.notify.interviews import notify_interviews
 from jobbot.notify.orp import notify_orp
+from jobbot.notify.orp_meeting import notify_orp_meeting
 from jobbot.notify.service import notify_reminders
 from jobbot.runtime import Runtime
 from jobbot.trainings.funding import notify_funding
@@ -20,6 +21,7 @@ async def reminders_job(runtime: Runtime, ctx: RunContext) -> None:
     ctx.items_out = (
         await notify_reminders(runtime)
         + await notify_orp(runtime)
+        + await notify_orp_meeting(runtime)  # la veille d'un rendez-vous ORP (docs/83)
         + await notify_interviews(runtime)  # « fais le point » le lendemain (docs/23)
         + await notify_contacts(runtime)  # contact sans réponse depuis 7 jours (docs/31)
         + await notify_funding(runtime)  # financement ORP sans réponse depuis 14 jours (docs/37)

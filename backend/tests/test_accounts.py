@@ -42,6 +42,7 @@ from jobbot.db.models import (
     Notification,
     Offer,
     OfferLink,
+    OrpMeeting,
     OrpMonth,
     Profile,
     ProfileChunk,
@@ -67,6 +68,7 @@ PERSONAL = {
     "document_id",
     "draft_id",
     "interview_id",
+    "meeting_id",
     "notification_id",
     "practice_id",
     "offer_id",
@@ -199,6 +201,10 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
             label=SECRET,
         )
         session.add(action)
+        meeting = OrpMeeting(
+            starts_at=datetime.now(UTC) - timedelta(days=1), place=SECRET, questions=[], measures=[]
+        )
+        session.add(meeting)
         main = await session.scalar(text("select id from profiles where is_main"))
         session.add(TrainingMark(profile_id=main, training_id=training.id, status="interested"))
         await session.execute(
@@ -225,6 +231,7 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
             "document_id": document.id,
             "draft_id": draft.id,
             "interview_id": interview.id,
+            "meeting_id": meeting.id,
             "practice_id": practice.id,
             "notification_id": notification.id,
             "offer_id": offer.id,
