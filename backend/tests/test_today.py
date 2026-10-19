@@ -103,6 +103,12 @@ async def test_checklist_and_day(rt: Runtime) -> None:
         assert day["month_count"] == (2 if old.month == today.month else 1)
         # 12 jours et au moins 14 jours : les deux sont à relancer.
         assert day["to_follow_up"] == 2
+        # Les deux plus anciennes, pour « À faire » (docs/95) : la plus ancienne d'abord.
+        follow_ups = day["follow_ups"]
+        expected = sorted([old.isoformat(), last_month.isoformat()])
+        assert [f["sent_at"] for f in follow_ups] == expected
+        assert follow_ups[0]["company"] == "Acme SA" and follow_ups[0]["status"] == "en_attente"
+        assert all(f["orp_month"] == f["sent_at"][:7] for f in follow_ups)
         assert day["orp_due_month"] == f"{last_month:%Y-%m}"
 
         assert (await api.put("/api/onboarding", json={"dismissed": True})).status_code == 204

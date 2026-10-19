@@ -71,6 +71,18 @@ class UpcomingInterview(BaseModel):
     at: datetime
 
 
+class FollowUp(BaseModel):
+    """Une candidature à relancer, en tête d'« À faire » sur Aujourd'hui (docs/95)."""
+
+    application_id: int
+    company: str
+    job_title: str
+    orp_month: str
+    sent_at: date
+    # « relancee » : relancée sans réponse depuis 14 jours ; sinon en attente depuis 10 jours.
+    status: str
+
+
 class DayActivity(BaseModel):
     """Un jour de la semaine en tableau de bord (docs/54 §5)."""
 
@@ -117,6 +129,8 @@ class TodayOut(BaseModel):
     month_target: int | None
     # Candidatures en attente depuis 10 jours ou plus : à relancer.
     to_follow_up: int
+    # Les 2 plus anciennes à relancer, pour « À faire » (docs/95).
+    follow_ups: list[FollowUp] = []
     # Prochain mois ORP à remettre, s'il y en a un.
     orp_due_month: str | None
     orp_due_date: date | None
@@ -216,24 +230,32 @@ async def get_today(request: Request) -> TodayOut:
         month_count = await count(
             select(func.count()).select_from(Application).where(Application.orp_month == month)
         )
-        to_follow_up = await count(
-            select(func.count())
-            .select_from(Application)
-            .where(
-                or_(
-                    and_(
-                        Application.status == ApplicationStatus.EN_ATTENTE,
-                        Application.sent_at <= today - REMIND_AFTER,
-                    ),
-                    # Relancées sans réponse depuis 14 jours : la même liste que le Suivi
-                    # (docs/38 §4).
-                    and_(
-                        Application.status == ApplicationStatus.RELANCEE,
-                        Application.followed_up_at <= today - NO_ANSWER_AFTER,
-                    ),
-                )
-            )
+        to_remind = or_(
+            and_(
+                Application.status == ApplicationStatus.EN_ATTENTE,
+                Application.sent_at <= today - REMIND_AFTER,
+            ),
+            # Relancées sans réponse depuis 14 jours : la même liste que le Suivi (docs/38 §4).
+            and_(
+                Application.status == ApplicationStatus.RELANCEE,
+                Application.followed_up_at <= today - NO_ANSWER_AFTER,
+            ),
         )
+        to_follow_up = await count(select(func.count()).select_from(Application).where(to_remind))
+        # Les plus anciennes d'abord, comme le Suivi.
+        follow_ups = [
+            FollowUp(
+                application_id=a.id,
+                company=a.company,
+                job_title=a.job_title,
+                orp_month=a.orp_month,
+                sent_at=a.sent_at,
+                status=a.status,
+            )
+            for a in await session.scalars(
+                select(Application).where(to_remind).order_by(Application.sent_at).limit(2)
+            )
+        ]
         previous_count = await count(
             select(func.count()).select_from(Application).where(Application.orp_month == previous)
         )
@@ -375,6 +397,7 @@ async def get_today(request: Request) -> TodayOut:
         month_count=month_count,
         month_target=int(target) if target else None,
         to_follow_up=to_follow_up,
+        follow_ups=follow_ups,
         orp_due_month=due_month,
         orp_due_date=due_date(due_month, due_day) if due_month else None,
         last_collect_at=last_collect_at,

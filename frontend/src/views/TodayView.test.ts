@@ -89,31 +89,6 @@ describe("TodayView", () => {
     expect(wrapper.find("[data-test=step-criteria] a").exists()).toBe(false);
   });
 
-  it("point du jour : offres, mois, relances, échéance ORP, meilleures offres", async () => {
-    mockGet(today());
-    const wrapper = await mountView();
-    expect(wrapper.find("[data-test=stat-review]").text()).toContain("12");
-    expect(wrapper.find("[data-test=stat-month]").text()).toContain("3 / 20");
-    expect(wrapper.find("[data-test=stat-follow-up]").text()).toContain("2");
-    expect(wrapper.find("[data-test=stat-orp]").text()).toContain("5 octobre");
-    expect(wrapper.text()).toContain("Ingénieur DevOps");
-  });
-
-  it("le bon rythme : la dose du jour, ou un jour sans recherche (docs/86)", async () => {
-    const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({ day: `2026-10-${d}`, research: i < 5, sent: 0 }));
-    mockGet(today({ rhythm: { target: 3, count: 1, days, research_today: true } }));
-    let wrapper = await mountView();
-    expect(wrapper.find("[data-test=rhythm-count]").text()).toBe("1 / 3 candidatures");
-    expect(wrapper.find("[data-test=best] h2").text()).toBe("Meilleures offres");
-    expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } });
-    expect(wrapper.text()).toContain("Ingénieur DevOps");
-    mockGet(today({ rhythm: { target: 3, count: 1, days, research_today: false } }));
-    wrapper = await mountView();
-    expect(wrapper.find("[data-test=best] h2").text()).toBe("Jour sans recherche");
-    expect(wrapper.find("[data-test=rest-day]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=best] table").exists()).toBe(false);
-  });
-
   it("tout fait ou masqué : la liste disparaît", async () => {
     mockGet(today({ checklist_dismissed: true }));
     const wrapper = await mountView();
@@ -128,50 +103,14 @@ describe("TodayView", () => {
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/onboarding", { body: { dismissed: true } });
   });
-});
 
-describe("TodayView par catégories (docs/19 §3)", () => {
-  it("candidatures commencées, actualités du domaine, formations", async () => {
-    GET.mockImplementation((path: string, opts?: { params?: { query?: Record<string, unknown> } }) => {
-      const query = opts?.params?.query ?? {};
-      if (path === "/api/today") return Promise.resolve({ data: today() });
-      if (path === "/api/offers" && query.view === "in_progress")
-        return Promise.resolve({
-          data: {
-            items: [
-              { id: 7, title: "SRE", company: "Beta SA", status: "preparing" },
-              { id: 8, title: "Envoyée", company: "Gamma", status: "applied" },
-            ],
-          },
-        });
-      if (path === "/api/offers") return Promise.resolve({ data: { items: [] } });
-      if (path === "/api/news")
-        // « Mon domaine » ne trouve rien : celles qui parlent d'emploi.
-        return Promise.resolve({
-          data: {
-            items: query.domain_only || query.topic !== "jobs"
-              ? []
-              : [{ id: 1, title: "Chômage stable", url: "https://x.example/1", source: "SECO", published_at: "2026-10-06T08:00:00Z", matched: [] }],
-          },
-        });
-      return Promise.resolve({
-        data: {
-          items: [
-            { id: 3, title: "CKA", provider: "Linux Foundation", verified: true, url: "https://t.example", mark: { status: "in_progress", progress: "module 4/12" } },
-            { id: 4, title: "Terraform Associate", provider: "HashiCorp", verified: true, url: "https://h.example", mark: null },
-          ],
-        },
-      });
-    });
+  it("prise en main : l'étape à faire mise en avant, coches dessinées (docs/59)", async () => {
+    mockGet(today());
     const wrapper = await mountView();
-    const preparing = wrapper.find("[data-test=preparing]");
-    expect(preparing.text()).toContain("SRE");
-    expect(preparing.text()).not.toContain("Envoyée");
-    expect(preparing.find("a").attributes("href")).toBe("/candidatures/offres/7/preparer");
-    expect(wrapper.find("[data-test=today-news]").text()).toContain("Chômage stable");
-    const trainings = wrapper.find("[data-test=today-trainings]").text();
-    expect(trainings).toContain("module 4/12");
-    expect(wrapper.find("[data-test=training-idea]").text()).toContain("Terraform Associate");
+    expect(wrapper.find("[data-test=step-identity]").classes()).toContain("next");
+    expect(wrapper.find("[data-test=step-imap]").classes()).not.toContain("next");
+    expect(wrapper.find("[data-test=step-criteria] .tick-svg").exists()).toBe(true);
+    expect(wrapper.find("[data-test=journey-apply]").classes()).toContain("next");
   });
 });
 
@@ -189,106 +128,126 @@ describe("Comment ça marche (docs/21 §3)", () => {
     await wrapper.find("[data-test=dismiss-journey]").trigger("click");
     expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: true } });
   });
+
+  it("terminé, le guide disparaît (docs/95 §5)", async () => {
+    const done = today().journey.map((step) => ({ ...step, done: true }));
+    mockGet(today({ journey: done }));
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=journey]").exists()).toBe(false);
+  });
 });
 
-describe("Aujourd'hui, revue des pages (docs/43)", () => {
-  const isoIn = (days: number): string => {
+describe("Aujourd'hui épuré (docs/95)", () => {
+  const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({ day: `2026-10-${d}`, research: i < 5, sent: 0, paused: false }));
+  const rhythm = (extra: Record<string, unknown> = {}) => ({ target: 3, count: 1, days, research_today: true, ...extra });
+  const isoIn = (n: number): string => {
     const d = new Date();
-    d.setDate(d.getDate() + days);
+    d.setDate(d.getDate() + n);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  it("le plus urgent en tête, une seule case en orange, contacts dans « à relancer »", async () => {
+  it("la phrase du jour : offres, relances, la semaine ; une seule action", async () => {
+    mockGet(today({ rhythm: rhythm() }));
+    const wrapper = await mountView();
+    const sentence = wrapper.find("[data-test=today-sentence]");
+    expect(sentence.text().replace(/\s+/g, " ")).toBe("12 offres à examiner, 2 relances et encore 2 candidatures pour tenir ta semaine.");
+    expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["12 offres", "2 relances"]);
+    const cta = wrapper.find("[data-test=today-cta]");
+    expect(cta.text()).toBe("Examiner les offres");
+    expect(cta.attributes("href")).toBe("/candidatures/offres");
+  });
+
+  it("la phrase suit la situation : relances seules, tout à jour, jour sans recherche, pause", async () => {
+    mockGet(today({ to_review: 0, rhythm: rhythm({ count: 3 }) }));
+    let wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-sentence]").text()).toBe("2 relances.");
+    expect(wrapper.find("[data-test=today-cta]").text()).toBe("Relancer");
+
+    mockGet(today({ to_review: 0, to_follow_up: 0, rhythm: rhythm({ count: 3 }) }));
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-sentence]").text()).toBe("Tout est à jour. Ta semaine est faite.");
+    expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
+
+    mockGet(today({ rhythm: rhythm({ research_today: false }) }));
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-sentence]").text()).toContain("Jour sans recherche");
+    expect(wrapper.find("[data-test=rest-day]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
+
+    mockGet(today({ rhythm: rhythm({ pause_until: "2026-11-03" }) }));
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-sentence]").text()).toBe("En pause jusqu'au 3 novembre.");
+  });
+
+  it("les bandeaux : ce qui a une date, trois au plus, le rendez-vous ORP d'abord", async () => {
     const soon = new Date(Date.now() + 3 * 3600_000).toISOString();
     mockGet(
       today({
         orp_due_date: isoIn(2),
-        contacts_to_follow_up: 1,
+        orp_meeting_at: soon,
         upcoming_interviews: [{ application_id: 4, company: "Bientôt SA", at: soon }],
+        interviews_to_review: [{ application_id: 5, company: "Passé SA", interview_on: "2026-10-15", link: "/candidatures/suivi" }],
+        alerts_waiting: 1,
       }),
     );
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=upcoming-interview]").text()).toMatch(/^Entretien (aujourd'hui|demain) à .* chez Bientôt SA/);
+    const banners = wrapper.findAll(".today-banner");
+    expect(banners).toHaveLength(3);
+    expect(banners.map((b) => b.attributes("data-test"))).toEqual(["orp-meeting-soon", "upcoming-interview", "orp-urgent"]);
+    expect(wrapper.find("[data-test=upcoming-interview]").text()).toMatch(/Entretien (aujourd'hui|demain) à .* chez Bientôt SA/);
     expect(wrapper.find("[data-test=orp-urgent]").text()).toContain("à remettre dans 2 jours");
-    expect(wrapper.find("[data-test=stat-orp]").classes()).toContain("warn");
-    expect(wrapper.find("[data-test=stat-follow-up]").classes()).not.toContain("warn");
-    expect(wrapper.find("[data-test=stat-follow-up]").text()).toContain("dont 1 contact");
-    expect(wrapper.find("[data-test=contacts-to-follow-up]").exists()).toBe(false);
   });
 
-  it("remise ORP lointaine : la relance passe en orange, pas d'urgence ORP ; guides en bas", async () => {
-    mockGet(today({ orp_due_date: isoIn(20) }));
+  it("rien de daté : pas de bandeau", async () => {
+    mockGet(today({ orp_due_month: null, orp_due_date: null }));
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=orp-urgent]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=stat-follow-up]").classes()).toContain("warn");
-    expect(wrapper.find("[data-test=stat-orp]").classes()).not.toContain("warn");
-    const html = wrapper.html();
-    expect(html.indexOf('data-test="journey"')).toBeGreaterThan(html.indexOf('data-test="stat-review"'));
+    expect(wrapper.findAll(".today-banner")).toHaveLength(0);
   });
 
-  it("aucune actualité utile : la section disparaît", async () => {
-    mockGet(today());
-    GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/today" ? today() : { items: [] } }),
-    );
+  it("À faire : les meilleures offres, les commencées, puis les relances", async () => {
+    const followUps = [
+      { application_id: 9, company: "Maquette Médias", job_title: "DevOps", orp_month: "2026-09", sent_at: "2026-09-07", status: "relancee" },
+      { application_id: 10, company: "Témoin SA", job_title: "SRE", orp_month: "2026-09", sent_at: "2026-09-14", status: "en_attente" },
+    ];
+    GET.mockImplementation((path: string, opts?: { params?: { query?: Record<string, unknown> } }) => {
+      const query = opts?.params?.query ?? {};
+      if (path === "/api/today") return Promise.resolve({ data: today({ to_follow_up: 3, follow_ups: followUps }) });
+      if (query.view === "in_progress")
+        return Promise.resolve({ data: { items: [{ id: 7, title: "SRE", company: "Beta SA", status: "preparing" }, { id: 8, title: "Envoyée", company: "Gamma", status: "applied" }] } });
+      return Promise.resolve({ data: { items: [{ id: 1, title: "Ingénieur DevOps", company: "Acme SA", location: "Lausanne", score: 82, links: [] }] } });
+    });
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=today-news]").exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("Comprendre le marché");
-  });
-
-  it("tableau de bord : tuiles avec la semaine, barres, jauge ORP et mois précédents (docs/54)", async () => {
-    mockGet(today());
-    const wrapper = await mountView();
-    const review = wrapper.find("[data-test=stat-review]");
-    expect(review.classes()).toContain("accent");
-    expect(review.text()).toContain("+15 cette semaine");
-    expect(review.find(".sparkline").exists()).toBe(true);
-    expect(wrapper.find("[data-test=stat-month]").text()).toContain("+3 cette semaine");
-
-    const chart = wrapper.find("[data-test=week-chart]");
-    expect(chart.findAll("[data-test=week-bar]")).toHaveLength(7);
-    expect(chart.text()).toContain("15 offres sur 7 jours");
-    await chart.find("[data-test=week-applications]").trigger("click");
-    expect(chart.text()).toContain("3 candidatures sur 7 jours");
-    await chart.findAll("li")[6]!.trigger("focus");
-    expect(chart.find(".bar-tip").text()).toContain("1 candidature");
-
-    const gauge = wrapper.find("[data-test=orp-gauge]");
-    expect(gauge.find("[data-test=gauge-count]").text()).toBe("3");
-    expect(gauge.text()).toContain("sur 20");
-    expect(gauge.findAll(".gauge-history li").map((li) => li.classes())).toEqual([["ok"], ["short"], ["ok"]]);
-
-    // Le tableau : les mieux notées d'abord, les commencées dans le second onglet.
-    const table = wrapper.find("[data-test=best]");
-    expect(table.text()).toContain("Ingénieur DevOps");
-    const shown = () => (table.find("[data-test=preparing]").element as HTMLElement).style.display !== "none";
-    expect(shown()).toBe(false);
-    await table.find("[data-test=tab-preparing]").trigger("click");
-    expect(shown()).toBe(true);
-  });
-
-  it("clic direct : la ligne ouvre l'offre, la jauge le Suivi du mois, sans « › » (docs/57)", async () => {
-    mockGet(today());
-    const wrapper = await mountView();
-    const router = wrapper.vm.$router;
+    expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } });
+    const offer = wrapper.find("[data-test=best-offer]");
+    expect(offer.text()).toContain("Ingénieur DevOps");
+    expect(offer.text()).toContain("Acme SA · Lausanne");
+    expect(offer.attributes("href")).toBe("/candidatures/offres?offre=1");
+    const preparing = wrapper.find("[data-test=preparing]");
+    expect(preparing.text()).toContain("SRE");
+    expect(preparing.text()).not.toContain("Envoyée");
+    expect(preparing.find("a").attributes("href")).toBe("/candidatures/offres/7/preparer");
+    const rows = wrapper.findAll("[data-test=follow-ups] a");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.text()).toContain("sans réponse depuis la relance");
+    expect(rows[0]!.attributes("href")).toBe("/candidatures/suivi?mois=2026-09&candidature=9");
+    expect(wrapper.text()).toContain("Toutes les relances (3)");
+    // Clic direct (docs/57) : pas de « › ».
     expect(wrapper.find("[data-test=best]").text()).not.toContain("›");
-    expect(wrapper.text()).not.toContain("Continuer ›");
-    const row = wrapper.find("[data-test=best] tr.row-link");
-    await row.trigger("click");
-    await flushPromises();
-    expect(router.currentRoute.value.path).toBe("/candidatures/offres");
-    expect(router.currentRoute.value.query.offre).toBeDefined();
-    const gauge = wrapper.find("[data-test=orp-gauge]");
-    expect(gauge.element.tagName).toBe("A");
-    expect(gauge.attributes("href")).toContain("/candidatures/suivi?mois=");
   });
 
-  it("prise en main : l'étape à faire mise en avant, coches dessinées (docs/59)", async () => {
-    mockGet(today());
+  it("Mois ORP : le compte, la barre, ce qu'il reste, la semaine", async () => {
+    mockGet(today({ rhythm: rhythm() }));
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=step-identity]").classes()).toContain("next");
-    expect(wrapper.find("[data-test=step-imap]").classes()).not.toContain("next");
-    expect(wrapper.find("[data-test=step-criteria] .tick-svg").exists()).toBe(true);
-    expect(wrapper.find("[data-test=journey-apply]").classes()).toContain("next");
+    const card = wrapper.find("[data-test=orp-month]");
+    expect(card.find("h2").text()).toBe("Mois ORP");
+    expect(card.find("[data-test=month-count]").text().replace(/\s+/g, " ")).toBe("3 / 20 candidatures en octobre");
+    expect(card.find("[role=progressbar]").attributes("aria-valuenow")).toBe("3");
+    expect(card.find("[data-test=month-left]").text()).toBe("Encore 17 d'ici le 31 octobre.");
+    expect(card.find("[data-test=rhythm-count]").text()).toBe("1 / 3 candidatures");
+    expect(card.text()).toContain("Cette semaine");
+    // Plus de tuiles, de graphique ni de jauge : ils sont dans le Bilan.
+    expect(wrapper.find("[data-test=stat-review]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=week-chart]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-gauge]").exists()).toBe(false);
   });
 });

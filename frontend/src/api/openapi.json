@@ -11683,6 +11683,46 @@
         "title": "FocusIn",
         "description": "Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché."
       },
+      "FollowUp": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "orp_month": {
+            "type": "string",
+            "title": "Orp Month"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "company",
+          "job_title",
+          "orp_month",
+          "sent_at",
+          "status"
+        ],
+        "title": "FollowUp",
+        "description": "Une candidature à relancer, en tête d'« À faire » sur Aujourd'hui (docs/95)."
+      },
       "FollowUpDraftOut": {
         "properties": {
           "subject": {
@@ -18702,6 +18742,14 @@
           "to_follow_up": {
             "type": "integer",
             "title": "To Follow Up"
+          },
+          "follow_ups": {
+            "items": {
+              "$ref": "#/components/schemas/FollowUp"
+            },
+            "type": "array",
+            "title": "Follow Ups",
+            "default": []
           },
           "orp_due_month": {
             "anyOf": [

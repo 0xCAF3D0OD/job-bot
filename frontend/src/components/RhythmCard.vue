@@ -6,7 +6,8 @@ import type { components } from "../api/schema";
 // Ta semaine (docs/86) : la part de l'objectif ORP pour cette semaine, un point par jour, et
 // une phrase qui dit où tu en es, sans reproche.
 type Week = components["schemas"]["RhythmWeek"];
-const props = defineProps<{ week: Week }>();
+// `nested` : dans la carte Mois ORP d'Aujourd'hui (docs/95 §4), sans cadre, un sous-titre.
+const props = defineProps<{ week: Week; nested?: boolean }>();
 
 const LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
 const NAMES = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
@@ -41,11 +42,19 @@ function dayLabel(day: Week["days"][number], index: number): string {
 
 <template>
   <section
-    :class="['dash-card', 'rhythm-card', { done }]"
+    :class="[nested ? 'rhythm-nested' : 'dash-card', 'rhythm-card', { done }]"
     data-test="rhythm"
   >
     <header class="rhythm-head">
-      <h2>Semaine</h2>
+      <h3
+        v-if="nested"
+        class="today-sub-title"
+      >
+        Cette semaine
+      </h3>
+      <h2 v-else>
+        Semaine
+      </h2>
       <p
         v-if="week.target !== null && !week.pause_until"
         class="rhythm-count"

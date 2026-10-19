@@ -272,6 +272,14 @@ async function remove(application: Application): Promise<void> {
 // Panneau d'une candidature (docs/46 §3), depuis une carte ou la liste. Les formulaires
 // (Modifier, entretien) s'ouvrent à sa place : ils passeraient sinon dessous.
 const openId = ref<number | null>(null);
+// Une candidature ouverte depuis Aujourd'hui (docs/95 §3) : `?candidature=ID`, avec son mois.
+watch(
+  () => route.query.candidature,
+  (id) => {
+    if (typeof id === "string" && Number(id)) openId.value = Number(id);
+  },
+  { immediate: true },
+);
 const opened = computed(() => (openId.value === null ? null : (all.value.find((a) => a.id === openId.value) ?? null)));
 function fromPanel<T extends unknown[]>(action: (...args: T) => unknown): (...args: T) => void {
   return (...args: T) => {
