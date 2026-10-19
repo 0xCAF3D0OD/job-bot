@@ -1385,8 +1385,6 @@ button, .button-link { max-width: 100%; }
 /* Bulle temporaire (docs/32 §4) */
 .toast { display: flex; align-items: flex-start; gap: 0.75rem; }
 .toast-close { flex: none; margin: -0.15rem -0.3rem 0 auto; }
-.cost { font-weight: 400; }
-.secondary .cost, button.link .cost { color: var(--muted); }
 .side-panel-body .form-sheet { margin: 0; padding: 0; border: 0; }
 .columns-list legend { font-size: 0.85rem; color: var(--muted); }
 
@@ -1814,6 +1812,8 @@ html.side-open { overflow: hidden; }
 @media (hover: hover) {
   .hover-note { text-decoration: underline dotted var(--faint); text-underline-offset: 0.25em; cursor: help; }
 }
+/* Dans un bouton (docs/88, 0.70.1 : le prix d'une action IA), le bouton garde son aspect. */
+button .hover-note { text-decoration: none; cursor: inherit; }
 .hover-note-bubble {
   position: absolute; left: 0; top: calc(100% + 0.4rem); z-index: 40; width: max-content; max-width: min(22rem, 80vw);
   padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
@@ -1981,7 +1981,6 @@ html.side-open { overflow: hidden; }
 .bilan-groups li.few .bilan-track { background: none; border: 1px dashed var(--border); }
 .bilan-groups li.few .bilan-bar { background: var(--muted); opacity: 0.35; }
 .bilan-few { grid-column: 2 / -1; color: var(--muted); font-size: 0.78rem; }
-.bilan-note { margin: 0; }
 .bilan-summary p { margin: 0; line-height: 1.55; }
 @media (prefers-reduced-motion: reduce) { .bilan-bar { transition: none; } }
 @media (max-width: 820px) {

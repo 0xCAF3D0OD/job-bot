@@ -13,6 +13,7 @@ import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
 import SuccessCard from "../components/SuccessCard.vue";
+import HoverNote from "../components/HoverNote.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { expiredText, ofMonth } from "../format";
@@ -344,9 +345,6 @@ onMounted(() => void load());
                  section disparaît, les étapes se renumérotent (docs/51 n° 4). -->
             <section class="panel-section apply-step apply-step-post">
               <h3>Postuler</h3>
-              <p class="hint">
-                Sur son site, joins ta lettre et ton CV en PDF ; recopie les champs ci-dessous dans son formulaire de candidature.
-              </p>
               <div class="mobile-dock">
                 <a
                   v-if="applyLink"
@@ -373,10 +371,11 @@ onMounted(() => void load());
               />
             </section>
             <section class="panel-section apply-step">
-              <h3>J'ai postulé</h3>
-              <p class="hint">
-                La candidature passe dans ton suivi, avec ta lettre et ton CV, et compte dans tes preuves ORP du mois.
-              </p>
+              <h3>
+                <HoverNote text="La candidature passe dans ton suivi, avec ta lettre et ton CV, et compte dans tes preuves ORP du mois.">
+                  J'ai postulé
+                </HoverNote>
+              </h3>
               <button
                 type="button"
                 class="secondary small apply-done"
@@ -562,11 +561,9 @@ onMounted(() => void load());
                 data-test="write"
                 @click="write"
               >
-                {{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}
-                <span
-                  v-if="!writing"
-                  class="cost"
-                >· 0,10 $</span>
+                <HoverNote :text="writing ? '' : 'Environ 0,10 $.'">
+                  {{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}
+                </HoverNote>
               </button>
             </div>
           </div>

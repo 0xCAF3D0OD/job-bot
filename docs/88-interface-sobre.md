@@ -85,3 +85,24 @@ Sphere est un **site vitrine** de cabinet de recrutement, fait pour séduire en 
 - **L'assistant passe en `assistant-v9`** : les nouveaux noms, rien d'autre.
 - **Gardés** : la connexion, la présentation (Découvrir) et l'accueil, qui sont des pages de présentation.
 - **Vérifié** : 314 tests de l'interface (2 nouveaux : le titre de chaque page est celui du menu, et aucun titre ne commence par un possessif), 530 tests serveur, lint et typecheck. Captures sur la démo, ordinateur et téléphone : Aujourd'hui, Candidatures, Profil, Actualités, sans débordement.
+
+## Écarts de la 0.70.1
+
+- **Pas de « ? »** : le cadrage prévoyait un « ? » à côté des titres, mais docs/53 les a retirés le 2026-10-15 (« les ? n'ont plus lieu d'être si l'assistant permet d'expliquer le contenu »). Ce qui sort du texte passe donc en **description au survol** (`HoverNote`, 3 s de souris immobile) sur le titre ou le bouton concerné ; sur téléphone, l'assistant répond.
+- **Le tri des 103 textes `hint`** : la plupart sont des métadonnées (date, taille, compteur), des états vides, des erreurs ou des avertissements (« Montré une seule fois… ») ; ils restent. 14 changent :
+
+| Où | Avant | Après |
+|---|---|---|
+| Extension du navigateur | une phrase sous le titre | au survol du titre |
+| S'entraîner (Enseignements, Préparer l'entretien) | une phrase à côté du bouton ; le prix dans l'entraînement | au survol du bouton, avec le prix |
+| Bilan, comparaisons | la note sous les cartes | au survol du titre de chaque carte |
+| Rendez-vous ORP, feuille | « Environ 0,02 CHF. Ni ton nom… » | « Ni ton nom… » ; le prix au survol du bouton |
+| Préparer › Postuler | la marche à suivre | retirée (le bouton et « À recopier » suivent) |
+| Préparer › J'ai postulé | ce que fait « Marquer comme envoyée » | au survol du titre |
+| Réglages › Rythme | deux explications | au survol des légendes ; reste « Annonce-la à ton conseiller… » |
+| Certificats | trois textes, le prix | une ligne sur ce qui part à l'IA ; le prix au survol de « Lire en détail », l'interprétation au survol de « Voir phrase par phrase » |
+| Lettre de correction | « (≈ 0,02 CHF) » dans le bouton, deux phrases | le prix au survol ; une phrase (le désaccord) |
+
+- **Les prix des boutons IA** : en plus des deux prévus, **sept boutons** affichaient leur coût (« · 0,10 $ ») : lettre, CV, relance, message de contact, pistes d'entretien (deux), mots-clés, formations. Tous passent au survol (« Environ 0,10 $. »). Un test l'empêche de revenir.
+- **Dans un bouton**, la description au survol ne souligne pas le libellé : le bouton garde son aspect.
+- **Vérifié** : 315 tests de l'interface (1 nouveau : aucun prix dans un bouton), lint et typecheck ; captures sur la démo (Réglages › Rythme, Préparer, bulle « Environ 0,10 $. » sur « Rédiger la lettre »). Les erreurs non gérées de `NewsView.test.ts` et `InsightsView.test.ts` existent déjà sur main.

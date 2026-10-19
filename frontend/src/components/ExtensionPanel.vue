@@ -6,6 +6,7 @@ import type { components } from "../api/schema";
 import { browserName } from "../browserName";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Extension du navigateur (docs/25 §4, docs/71) : installée depuis la boutique de Mozilla, reliée
 // en un clic (« Relier ce navigateur ») ; le jeton à copier reste, replié.
@@ -61,11 +62,10 @@ onMounted(load);
   >
     <fieldset>
       <legend>
-        Extension du navigateur
+        <HoverNote text="Elle remplit tes candidatures et Job-Room. Rien n'est envoyé à ta place.">
+          Extension du navigateur
+        </HoverNote>
       </legend>
-      <p class="hint">
-        Elle remplit tes candidatures et Job-Room. Rien n'est envoyé à ta place.
-      </p>
       <ol class="extension-steps">
         <li>
           <a

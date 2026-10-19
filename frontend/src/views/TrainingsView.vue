@@ -320,11 +320,9 @@ onMounted(() => void load());
             data-test="suggest"
             @click="suggest"
           >
-            {{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}
-            <span
-              v-if="!suggesting"
-              class="cost"
-            >· 0,02 à 0,05 $</span>
+            <HoverNote :text="suggesting ? '' : 'Environ 0,02 à 0,05 $.'">
+              {{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}
+            </HoverNote>
           </button>
         </span>
       </div>

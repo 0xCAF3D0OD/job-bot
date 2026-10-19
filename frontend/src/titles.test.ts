@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { navigation } from "./router";
 
 // Une interface qui s'affiche au lieu de parler (docs/88) : le titre d'une page reprend son
-// entrée du menu, et aucun titre ne commence par « Ton », « Ta », « Tes »…
+// entrée du menu, et aucun titre ne commence par « Ton », « Ta », « Tes »… Les prix sortent
+// des boutons (0.70.1) : ils sont dans la description au survol.
 const sources = import.meta.glob<string>(["./views/*.vue", "./components/**/*.vue"], {
   query: "?raw",
   import: "default",
@@ -48,6 +49,19 @@ describe("titres (docs/88)", () => {
       ];
       for (const match of headings) {
         if (POSSESSIVE.test(match[2]!)) found.push(`${path} : ${match[2]}`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
+  it("aucun prix dans le libellé d'un bouton (0.70.1)", () => {
+    const found: string[] = [];
+    for (const [path, source] of Object.entries(sources)) {
+      for (const match of template(source).matchAll(/<button\b[^>]*>([\s\S]*?)<\/button>/g)) {
+        const label = match[1]!.replace(/<HoverNote\b[^>]*>/g, "");
+        if (/CHF|\d\s?\$/.test(label.replace(/\{\{[\s\S]*?\}\}/g, (expr) => (/CHF/.test(expr) ? "CHF" : "")))) {
+          found.push(`${path} : ${label.trim().slice(0, 60)}`);
+        }
       }
     }
     expect(found).toEqual([]);

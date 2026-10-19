@@ -7,6 +7,7 @@ import CopyLabel from "../components/CopyLabel.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import MoreMenu from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
+import HoverNote from "../components/HoverNote.vue";
 import { plural } from "../format";
 
 // Le rendez-vous ORP (docs/83) : la feuille pour le conseiller, tirée de tes données, sans IA.
@@ -476,7 +477,9 @@ onMounted(() => void load());
               data-test="sheet-write"
               @click="writeSheet"
             >
-              {{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}
+              <HoverNote text="Environ 0,02 CHF.">
+                {{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}
+              </HoverNote>
             </button>
             <button
               v-if="meeting.sheet_text"
@@ -495,7 +498,7 @@ onMounted(() => void load());
             {{ writeMessage }}
           </p>
           <p class="hint">
-            Environ 0,02 CHF. Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
+            Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
           </p>
         </section>
       </div>

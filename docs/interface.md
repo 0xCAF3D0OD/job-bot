@@ -8,7 +8,9 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 2. Titres de cartes, d'onglets, de sections et légendes : un nom, sans « ton », « ta », « tes », « mon », « ma », « mes ».
 3. Boutons et liens d'action : un verbe à l'infinitif (« Demander un certificat intermédiaire »).
 4. Le tutoiement reste dans les phrases : messages, erreurs, états vides.
-5. Un test (`frontend/src/titles.test.ts`) vérifie les règles 1 et 2.
+5. Un texte d'aide reste affiché pour une erreur (avec quoi faire), un avertissement avant une action irréversible, ou ce qui part à l'IA, en une ligne. Ce qui explique passe en description au survol (`HoverNote`, docs/53) ou disparaît : l'assistant répond au reste.
+6. Pas de prix dans le libellé d'un bouton : le coût d'une action IA est dans sa description au survol (« Environ 0,10 $. »).
+7. Un test (`frontend/src/titles.test.ts`) vérifie les règles 1, 2 et 6.
 
 ## Illustrations (docs/62, docs/67)
 

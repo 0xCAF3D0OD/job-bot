@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import CopyLabel from "./CopyLabel.vue";
+import HoverNote from "./HoverNote.vue";
 import SidePanel from "./SidePanel.vue";
 
 // Les lettres autour des certificats (docs/87 §4, 0.69.1) : demander une correction, ou un
@@ -103,12 +104,13 @@ onMounted(() => void load());
             data-test="certificate-letter-ai"
             @click="load(true)"
           >
-            {{ busy ? "L'IA rédige…" : "Rédiger avec l'IA (≈ 0,02 CHF)" }}
+            <HoverNote text="Environ 0,02 CHF. Le certificat part sans ton nom ni les personnes citées.">
+              {{ busy ? "L'IA rédige…" : "Rédiger avec l'IA" }}
+            </HoverNote>
           </button>
         </div>
         <p class="hint">
-          Relis-la, puis envoie-la toi-même. La lettre demande poliment : pour un désaccord, parle-en à ton
-          conseiller ORP ou à un service juridique.
+          Pour un désaccord, parle-en à ton conseiller ORP ou à un service juridique.
         </p>
       </template>
     </div>
