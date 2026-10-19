@@ -2305,9 +2305,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
    plus larges que ce qui garde le garçon et la fille (au plus une hauteur égale à la largeur), et
    centrées sur eux (47 % de l'image). Au-dessus, la couleur du ciel prolonge l'image ; elle tombe
    avec la vidéo. */
-.auth-scene { position: absolute; inset: 0; overflow: hidden; container-type: size; background: #f4f3f8; transition: background-color 600ms var(--ease-out); }
-.auth-scene.dusk { background: #5a609e; transition: background-color 9s ease-in; }
-.auth-scene.night { background: #5a609e; }
+.auth-scene { position: absolute; inset: 0; overflow: hidden; container-type: size; background: #f0f4f9; transition: background-color 600ms var(--ease-out); }
+.auth-scene.dusk { background: #7580be; transition: background-color 9s ease-in; }
+.auth-scene.night { background: #7580be; }
 .auth-scene-media { --h: round(up, clamp(66.7cqw, 100cqh, 100cqw), 1px); position: absolute; bottom: 0; left: clamp(calc(100cqw - var(--h) * 1.4994), calc(50cqw - var(--h) * 0.705), 0px); width: calc(var(--h) * 1.4994); height: var(--h); max-width: none; object-fit: cover; }
 .auth-scene .film { opacity: 0; transition: opacity 600ms var(--ease-out); }
 .auth-scene.dusk .film { opacity: 1; transition: none; }
