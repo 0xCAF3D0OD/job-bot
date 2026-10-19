@@ -91,13 +91,6 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   gap: 1.5rem;
 }
 .brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 1.2rem; color: var(--text); text-decoration: none; letter-spacing: -0.02em; }
-.brand-mark {
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: inset 0 -0.45rem 0 0 color-mix(in srgb, var(--accent) 55%, #fff);
-}
 .topbar nav.main-nav { min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .nav { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; gap: 1.75rem; flex-wrap: nowrap; white-space: nowrap; }
 .nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; padding: 0.25rem 0; border-bottom: 2px solid transparent; }
@@ -1137,7 +1130,6 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 /* Jamais plein (docs/29 §1) : il ne concurrence pas l'action principale de la page. */
 .assistant-fab { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 25; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.1rem; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--accent); color: var(--accent-text); font-weight: 500; box-shadow: 0 8px 24px rgba(17, 17, 31, 0.14); }
 .assistant-fab:hover { background: var(--accent-soft); border-color: var(--accent-strong); }
-.assistant-fab-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mint) 25%, transparent); }
 .assistant-panel { position: fixed; right: 1rem; bottom: 1rem; top: 5.2rem; z-index: 45; width: min(26rem, calc(100vw - 2rem)); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 18px 48px rgba(17, 17, 31, 0.18); overflow: hidden; }
 .assistant-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--divider); }
 .assistant-head-actions { display: flex; align-items: center; gap: 0.75rem; }
@@ -2908,3 +2900,21 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .tab-bar-icon .hand-loop { top: -0.2rem; left: -0.25rem; width: calc(100% + 0.5rem); height: calc(100% + 0.4rem); }
 /* Le menu défile à l'horizontale s'il manque de place : il garde de quoi montrer la boucle. */
 .topbar nav.main-nav .nav { padding: 0.7rem 1.1rem; }
+
+/* Le logo et la mascotte (docs/97), aux couleurs de la planche : bleu stylo et étoile pêche ;
+   en sombre, le bleu clair et la pêche adoucie. */
+:root { --logo-ink: #2340c8; --logo-star: #f4a261; --mascot-face: #2340c8; --mascot-line: #fff; --mascot-star: #f4a261; }
+@media (prefers-color-scheme: dark) {
+  :root { --logo-ink: #9db0ff; --logo-star: #e8b48a; --mascot-face: #9db0ff; --mascot-line: #12121f; }
+}
+.brand-logo { flex: none; display: block; overflow: visible; }
+.brand-logo-loop { fill: none; stroke: var(--logo-ink); stroke-linecap: round; stroke-linejoin: round; }
+.brand-logo-star { fill: var(--logo-star); }
+.assistant-mascot { flex: none; display: block; overflow: visible; }
+.mascot-face { fill: var(--mascot-face); }
+.mascot-line { fill: none; stroke: var(--mascot-line); stroke-linecap: round; stroke-linejoin: round; }
+.mascot-star { fill: var(--mascot-star); }
+.assistant-title { display: inline-flex; align-items: center; gap: 0.5rem; }
+.assistant-line.assistant { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); column-gap: 0.6rem; }
+.assistant-line.assistant > .assistant-line-mascot { grid-column: 1; grid-row: 1 / span 20; margin-top: 0.1rem; }
+.assistant-line.assistant > :not(.assistant-line-mascot) { grid-column: 2; }

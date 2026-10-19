@@ -84,6 +84,12 @@ describe("AssistantPanel, propositions (docs/52)", () => {
       await flushPromises();
     }
 
+    // La mascotte (docs/97) : dans l'en-tête et devant la réponse, pas devant la question.
+    expect(wrapper.find(".assistant-head [data-test=assistant-mascot]").exists()).toBe(true);
+    expect(wrapper.find(".assistant-line.assistant [data-test=assistant-mascot]").exists()).toBe(true);
+    expect(wrapper.find(".assistant-line.user [data-test=assistant-mascot]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=assistant-mascot]").attributes("aria-hidden")).toBe("true");
+
     const card = wrapper.find("[data-test=assistant-action]");
     expect(card.text()).toContain("Passer « Cloud Architect » (Jura Data SA) en Plus tard");
     expect(POST).not.toHaveBeenCalled();
