@@ -108,3 +108,16 @@ Vérifié à chaque fois :
   - les tests de l'interface, dont 4 nouveaux ;
   - sur une démo de brouillon : un jour de recherche et un jour sans recherche, sur ordinateur (clair) et téléphone (sombre), sans débordement ; la rubrique Rythme des Réglages.
 
+## Écarts avec le cadrage (0.68.1)
+
+- **La pause sans dette** : ses jours de recherche sont retirés du mois, et l'objectif est réduit d'autant pour le rythme. Par exemple, une semaine de pause sur 22 jours de recherche ramène 10 candidatures à 8 pour le rythme. L'objectif ORP affiché (jauge, preuves) ne change pas.
+- **Pendant la pause**, la page Aujourd'hui affiche « En pause » à la place de la dose, et « Ta semaine » dit « En pause jusqu'au … Pense à l'annoncer à ton conseiller », sans compte. La pause coupe aussi le téléphone et le message des offres, comme un jour sans recherche.
+- **Le signal de la semaine** part à 17 h, le dernier jour de recherche de la semaine, une fois par semaine (tâche `rhythm`). « Trop » demande une fois et demie le rythme, avec au moins 2 candidatures de plus que lui, et au moins 2 envois sur des offres notées sous 50.
+- **Tes semaines**, dans le Bilan (période récente ou un mois) : une ligne par semaine du mois, « faite », « en dessous », « en pause », « en cours » ou « à venir ». L'objectif de chaque semaine passée est recalculé avec les réglages d'aujourd'hui.
+- **L'assistant** voit le rythme dans « situation ». Il peut proposer de changer les jours de recherche (`rythme_jours`), ou de faire ou terminer une pause (`pause`), avec confirmation et annulation comme pour le reste. Il ne peut jamais toucher à l'objectif ORP.
+- **Réglages sur téléphone** : un résumé de rubrique un peu long élargissait la page de quelques pixels ; la colonne des rubriques ne dépasse plus l'écran.
+- **Vérifié** :
+  - 525 tests serveur, dont 4 nouveaux sur le rythme et 1 sur l'assistant ;
+  - 305 tests de l'interface, dont 2 nouveaux (la pause dans « Ta semaine », « Tes semaines ») et la pause dans le test des Réglages ;
+  - sur une démo de brouillon avec une pause cette semaine : Aujourd'hui, le Bilan et les Réglages, sur ordinateur (clair) et téléphone (sombre), sans débordement.
+

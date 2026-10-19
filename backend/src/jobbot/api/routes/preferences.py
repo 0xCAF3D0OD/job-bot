@@ -1,11 +1,11 @@
 """Prérequis (filtre) et réglages, saisis dans l'interface (docs/04 §3 et §6)."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request, status
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 
@@ -90,6 +90,21 @@ class SettingsModel(BaseModel):
     rhythm_days: list[int] = Field(default_factory=lambda: list(DEFAULT_DAYS), min_length=1)
     offers_notify_mode: Literal["daily", "instant"] = "daily"
     offers_notify_hour: int = Field(default=DEFAULT_HOUR, ge=6, le=21)
+    # La pause (0.68.1) : du … au …, comprises ; ni dose, ni offres, ni signal de retard.
+    rhythm_pause_from: date | None = None
+    rhythm_pause_until: date | None = None
+
+    @model_validator(mode="after")
+    def _pause(self) -> "SettingsModel":
+        if (self.rhythm_pause_from is None) != (self.rhythm_pause_until is None):
+            raise ValueError("une pause a un début et une fin")
+        if (
+            self.rhythm_pause_from
+            and self.rhythm_pause_until
+            and self.rhythm_pause_until < self.rhythm_pause_from
+        ):
+            raise ValueError("la pause finit avant de commencer")
+        return self
 
     @field_validator("rhythm_days")
     @classmethod
@@ -174,7 +189,7 @@ async def get_settings(request: Request) -> SettingsModel:
 @router.put("/settings", operation_id="saveSettings")
 async def put_settings(request: Request, body: SettingsModel) -> SettingsModel:
     async with _runtime(request).sessionmaker.begin() as session:
-        values = body.model_dump()
+        values = body.model_dump(mode="json")
         if not await accounts.is_owner(session):
             # Fixé par l'exploitant : un compte invité ne le change pas.
             values.pop("llm_monthly_budget_chf")

@@ -27,6 +27,8 @@ const form = ref<SettingsModel>({
   rhythm_days: [0, 1, 2, 3, 4],
   offers_notify_mode: "daily",
   offers_notify_hour: 9,
+  rhythm_pause_from: null,
+  rhythm_pause_until: null,
 });
 // Le bon rythme (docs/86) : tes jours de recherche, lundi = 0.
 const WEEK = [
@@ -97,10 +99,21 @@ async function setPhone(enabled: boolean): Promise<void> {
   testMessage.value = "";
 }
 
+async function endPause(): Promise<void> {
+  form.value.rhythm_pause_from = null;
+  form.value.rhythm_pause_until = null;
+  await save();
+}
+
 async function save(): Promise<void> {
   saving.value = true;
   try {
-    const body = { ...form.value, orp_monthly_target: form.value.orp_monthly_target || null };
+    const body = {
+      ...form.value,
+      orp_monthly_target: form.value.orp_monthly_target || null,
+      rhythm_pause_from: form.value.rhythm_pause_from || null,
+      rhythm_pause_until: form.value.rhythm_pause_until || null,
+    };
     const { data } = await api.PUT("/api/settings", { body });
     message.value = data ? "Réglages enregistrés." : "L'enregistrement a échoué : vérifie les valeurs.";
     if (data) form.value = data;
@@ -123,7 +136,10 @@ const summary = computed(() => ({
   rythme: [
     plural(form.value.rhythm_days?.length ?? 5, "jour de recherche", "jours de recherche"),
     form.value.offers_notify_mode === "daily" ? `offres à ${form.value.offers_notify_hour} h` : "offres dès qu'elles arrivent",
-  ].join(" · "),
+    form.value.rhythm_pause_until ? "en pause" : "",
+  ]
+    .filter(Boolean)
+    .join(" · "),
   actualites: "mots-clés et sources",
   notifications: [
     notifications.value ? (notifications.value.configured ? "actives" : "non configurées") : "",
@@ -307,6 +323,41 @@ const active = computed<SectionId>(() => {
               </div>
               <p class="hint">
                 Les autres jours, rien n'arrive sur ton téléphone, sauf les rappels avec une date limite.
+              </p>
+            </fieldset>
+            <fieldset data-test="rhythm-pause">
+              <legend>Une pause</legend>
+              <div class="rhythm-pause">
+                <label>
+                  Du
+                  <input
+                    v-model="form.rhythm_pause_from"
+                    type="date"
+                    data-test="pause-from"
+                  >
+                </label>
+                <label>
+                  Au
+                  <input
+                    v-model="form.rhythm_pause_until"
+                    type="date"
+                    :min="form.rhythm_pause_from ?? undefined"
+                    data-test="pause-until"
+                  >
+                </label>
+                <button
+                  v-if="form.rhythm_pause_from"
+                  type="button"
+                  class="link"
+                  data-test="pause-end"
+                  @click="endPause"
+                >
+                  Terminer la pause
+                </button>
+              </div>
+              <p class="hint">
+                Vacances, maladie : ni dose ni message d'offres, et pas de retard au retour. Annonce-la à ton
+                conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.
               </p>
             </fieldset>
             <fieldset>

@@ -254,3 +254,59 @@ async def _offer_in(session: AsyncSession) -> int:
     session.add(offer)
     await session.flush()
     return offer.id
+
+
+async def test_the_rhythm_through_the_assistant(runtime: Runtime) -> None:
+    """Le bon rythme (docs/86, 0.68.1) : jours de recherche et pause, confirmés puis annulés."""
+    from sqlalchemy import text
+
+    from jobbot.followups.service import local_today
+    from jobbot.rhythm import service as rhythm
+
+    await reset(runtime)
+    keys = "('rhythm_days', 'rhythm_pause_from', 'rhythm_pause_until')"
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text(f"DELETE FROM settings WHERE key IN {keys}"))
+    start = local_today() + timedelta(days=7)
+    end = start + timedelta(days=6)
+    async with runtime.sessionmaker.begin() as session:
+        conversation = ChatConversation(title="t")
+        session.add(conversation)
+        await session.flush()
+        days = await actions.propose(
+            session, conversation.id, {"type": "rythme_jours", "id": 0, "valeur": "4,0,2"}, 0
+        )
+        pause = await actions.propose(
+            session,
+            conversation.id,
+            {"type": "pause", "id": 0, "valeur": f"{start}/{end}"},
+            1,
+        )
+        assert days.label == "Garder comme jours de recherche : lundi, mercredi, vendredi"
+        assert pause.label.startswith("Faire une pause du ")
+        for wrong in ("0,1,2,3,4", "8", ""):
+            with pytest.raises(actions.ActionRefused):
+                await actions.propose(
+                    session, conversation.id, {"type": "rythme_jours", "id": 0, "valeur": wrong}, 2
+                )
+        with pytest.raises(actions.ActionRefused):
+            await actions.propose(
+                session, conversation.id, {"type": "pause", "id": 0, "valeur": "fin"}, 2
+            )
+        await actions.confirm(session, days)
+        await actions.confirm(session, pause)
+    async with runtime.sessionmaker() as session:
+        loaded = await rhythm.load(session)
+    assert loaded.days == (0, 2, 4) and loaded.paused(start + timedelta(days=1))
+    async with runtime.sessionmaker.begin() as session:
+        stored = await session.get(ChatAction, days.id)
+        assert stored is not None
+        await actions.undo(session, stored)
+        stored_pause = await session.get(ChatAction, pause.id)
+        assert stored_pause is not None
+        await actions.undo(session, stored_pause)
+    async with runtime.sessionmaker() as session:
+        loaded = await rhythm.load(session)
+    assert loaded.days == rhythm.DEFAULT_DAYS and loaded.pause_from is None
+    async with runtime.engine.begin() as conn:
+        await conn.execute(text(f"DELETE FROM settings WHERE key IN {keys}"))

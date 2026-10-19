@@ -90,6 +90,7 @@ class RhythmDay(BaseModel):
     day: date
     research: bool
     sent: int
+    paused: bool = False
 
 
 class RhythmWeek(BaseModel):
@@ -99,6 +100,8 @@ class RhythmWeek(BaseModel):
     count: int
     days: list[RhythmDay]
     research_today: bool
+    # En pause aujourd'hui (0.68.1) : jusqu'à cette date, comprise.
+    pause_until: date | None = None
 
 
 class TodayOut(BaseModel):
@@ -385,8 +388,12 @@ async def get_today(request: Request) -> TodayOut:
         rhythm=RhythmWeek(
             target=this_week.target,
             count=this_week.count,
-            days=[RhythmDay(day=d.day, research=d.research, sent=d.sent) for d in this_week.days],
+            days=[
+                RhythmDay(day=d.day, research=d.research, sent=d.sent, paused=d.paused)
+                for d in this_week.days
+            ],
             research_today=this_week.research_today,
+            pause_until=this_week.pause_until,
         ),
     )
 

@@ -170,7 +170,7 @@ async def _digest_due(runtime: Runtime, now: datetime) -> bool:
     if settings.mode == "instant":
         return True
     return (
-        local.weekday() in settings.days
+        settings.research(local.date())
         and local.hour >= settings.hour
         and last != local.date().isoformat()
     )

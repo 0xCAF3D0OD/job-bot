@@ -4861,6 +4861,56 @@
         }
       }
     },
+    "/api/rhythm/semaines": {
+      "get": {
+        "tags": [
+          "rhythm"
+        ],
+        "summary": "Get Rhythm Weeks",
+        "operationId": "getRhythmWeeks",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthWeeksOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/today": {
       "get": {
         "tags": [
@@ -13627,6 +13677,74 @@
         ],
         "title": "MonthSummary"
       },
+      "MonthWeekOut": {
+        "properties": {
+          "start": {
+            "type": "string",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "title": "End"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "done",
+              "missed",
+              "current",
+              "upcoming",
+              "pause"
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "target",
+          "count",
+          "state"
+        ],
+        "title": "MonthWeekOut"
+      },
+      "MonthWeeksOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "weeks": {
+            "items": {
+              "$ref": "#/components/schemas/MonthWeekOut"
+            },
+            "type": "array",
+            "title": "Weeks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "weeks"
+        ],
+        "title": "MonthWeeksOut"
+      },
       "NewsCatalog": {
         "properties": {
           "domains": {
@@ -16482,6 +16600,11 @@
           "sent": {
             "type": "integer",
             "title": "Sent"
+          },
+          "paused": {
+            "type": "boolean",
+            "title": "Paused",
+            "default": false
           }
         },
         "type": "object",
@@ -16519,6 +16642,18 @@
           "research_today": {
             "type": "boolean",
             "title": "Research Today"
+          },
+          "pause_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pause Until"
           }
         },
         "type": "object",
@@ -17595,6 +17730,30 @@
             "minimum": 6.0,
             "title": "Offers Notify Hour",
             "default": 9
+          },
+          "rhythm_pause_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rhythm Pause From"
+          },
+          "rhythm_pause_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rhythm Pause Until"
           }
         },
         "type": "object",

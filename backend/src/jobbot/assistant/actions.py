@@ -9,11 +9,21 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.api.routes.orp import mark_changed
-from jobbot.db.models import Application, ApplicationStatus, ChatAction, Offer, OfferStatus
+from jobbot.db.models import (
+    Application,
+    ApplicationStatus,
+    ChatAction,
+    Offer,
+    OfferStatus,
+    Setting,
+)
 from jobbot.followups.service import local_today
+from jobbot.letters.document import MONTHS
+from jobbot.rhythm.service import DAY_NAMES, DEFAULT_DAYS
 
 NAME = "proposer_action"
 MAX_PER_ANSWER = 3
@@ -30,6 +40,8 @@ APPLICATION_STATUSES = {
     ApplicationStatus.ENGAGEMENT: "Engagement",
 }
 EXPIRY = {"expired": "expirée", "alive": "pas expirée"}
+# Le bon rythme (docs/86, 0.68.1) : réglages du compte, sans cible (id 0).
+RHYTHM_KEYS = ("rhythm_days", "rhythm_pause_from", "rhythm_pause_until")
 
 TOOL: dict[str, Any] = {
     "name": NAME,
@@ -37,16 +49,28 @@ TOOL: dict[str, Any] = {
     "n'est fait sans sa confirmation, et tu ne peux pas confirmer. Seulement : trier une offre "
     "(type offre_statut : later, ignored, to_review), la signaler expirée ou non (offre_expiree : "
     "expired, alive), changer le statut d'une candidature (candidature_statut : relancee, "
-    "sans_reponse, refus, engagement). Trois propositions au plus par réponse. Jamais pour créer "
-    "ou supprimer une candidature, envoyer un message ou toucher au profil : donne le lien.",
+    "sans_reponse, refus, engagement), régler les jours de recherche (rythme_jours, id 0, "
+    "valeur : numéros des jours séparés par des virgules, lundi = 0, par exemple « 0,2,4 »), "
+    "faire une pause (pause, id 0, valeur « AAAA-MM-JJ/AAAA-MM-JJ », ou « fin » pour la "
+    "terminer). Trois propositions au plus par réponse. Jamais pour créer ou supprimer une "
+    "candidature, envoyer un message ou toucher au profil : donne le lien.",
     "input_schema": {
         "type": "object",
         "properties": {
             "type": {
                 "type": "string",
-                "enum": ["offre_statut", "offre_expiree", "candidature_statut"],
+                "enum": [
+                    "offre_statut",
+                    "offre_expiree",
+                    "candidature_statut",
+                    "rythme_jours",
+                    "pause",
+                ],
             },
-            "id": {"type": "integer", "description": "id de l'offre ou de la candidature"},
+            "id": {
+                "type": "integer",
+                "description": "id de l'offre ou de la candidature ; 0 pour le rythme",
+            },
             "valeur": {"type": "string"},
         },
         "required": ["type", "id", "valeur"],
@@ -57,6 +81,8 @@ _KINDS = {
     "offre_statut": "offer_status",
     "offre_expiree": "offer_expiry",
     "candidature_statut": "application_status",
+    "rythme_jours": "rhythm_days",
+    "pause": "rhythm_pause",
 }
 
 
@@ -75,8 +101,78 @@ async def _offer(session: AsyncSession, offer_id: int) -> Offer:
     return offer
 
 
+def _rhythm_days(value: str) -> list[int]:
+    try:
+        days = sorted({int(part) for part in value.split(",") if part.strip()})
+    except ValueError:
+        raise ActionRefused("jours attendus : 0 à 6, séparés par des virgules") from None
+    if not days or any(d < 0 or d > 6 for d in days):
+        raise ActionRefused("jours attendus : 0 à 6, au moins un")
+    return days
+
+
+def _pause(value: str) -> tuple[date, date] | None:
+    """« fin » : None ; sinon les deux dates de la pause."""
+    if value == "fin":
+        return None
+    try:
+        start, end = (date.fromisoformat(part) for part in value.split("/"))
+    except ValueError:
+        raise ActionRefused("pause attendue : AAAA-MM-JJ/AAAA-MM-JJ, ou « fin »") from None
+    if end < start:
+        raise ActionRefused("la pause finit avant de commencer")
+    if end < local_today():
+        raise ActionRefused("cette pause est déjà passée")
+    return start, end
+
+
+def _long(day: date) -> str:
+    return f"{'1er' if day.day == 1 else day.day} {MONTHS['fr'][day.month - 1]}"
+
+
+async def _settings(session: AsyncSession) -> dict[str, Any]:
+    rows = await session.scalars(select(Setting).where(Setting.key.in_(RHYTHM_KEYS)))
+    return {s.key: s.value for s in rows}
+
+
+async def _put(session: AsyncSession, key: str, value: Any) -> None:
+    await session.execute(
+        insert(Setting)
+        .values(key=key, value=value)
+        .on_conflict_do_update(index_elements=["user_id", "key"], set_={"value": value})
+    )
+
+
+def _rhythm_value(kind: str, current: dict[str, Any]) -> str:
+    """L'état actuel, écrit comme la valeur d'une proposition (pour comparer)."""
+    if kind == "rhythm_days":
+        days = current.get("rhythm_days") or list(DEFAULT_DAYS)
+        return ",".join(str(d) for d in sorted(days))
+    start, end = current.get("rhythm_pause_from"), current.get("rhythm_pause_until")
+    return f"{start}/{end}" if start and end else "fin"
+
+
+async def _check_rhythm(session: AsyncSession, kind: str, value: str) -> str:
+    current = await _settings(session)
+    if kind == "rhythm_days":
+        days = _rhythm_days(value)
+        if _rhythm_value(kind, current) == ",".join(str(d) for d in days):
+            raise ActionRefused("ce sont déjà tes jours de recherche")
+        return "Garder comme jours de recherche : " + ", ".join(DAY_NAMES[d] for d in days)
+    pause = _pause(value)
+    if pause is None:
+        if _rhythm_value(kind, current) == "fin":
+            raise ActionRefused("aucune pause en cours")
+        return "Terminer la pause"
+    if _rhythm_value(kind, current) == f"{pause[0]}/{pause[1]}":
+        raise ActionRefused("cette pause est déjà enregistrée")
+    return f"Faire une pause du {_long(pause[0])} au {_long(pause[1])}"
+
+
 async def _check(session: AsyncSession, kind: str, target_id: int, value: str) -> str:
     """Vérifie que le changement est permis maintenant ; rend la phrase de la proposition."""
+    if kind in ("rhythm_days", "rhythm_pause"):
+        return await _check_rhythm(session, kind, value)
     if kind == "offer_status":
         if value not in OFFER_STATUSES:
             raise ActionRefused("statut d'offre non proposable (later, ignored, to_review)")
@@ -161,7 +257,15 @@ async def confirm(session: AsyncSession, action: ChatAction) -> None:
     except ActionRefused:
         action.state, action.decided_at = "stale", datetime.now(UTC)
         raise
-    if action.kind == "offer_status":
+    if action.kind in ("rhythm_days", "rhythm_pause"):
+        action.previous = await _settings(session)
+        if action.kind == "rhythm_days":
+            await _put(session, "rhythm_days", _rhythm_days(action.value))
+        else:
+            pause = _pause(action.value)
+            await _put(session, "rhythm_pause_from", pause[0].isoformat() if pause else None)
+            await _put(session, "rhythm_pause_until", pause[1].isoformat() if pause else None)
+    elif action.kind == "offer_status":
         offer = await _offer(session, action.target_id)
         action.previous = {"status": str(offer.status)}
         offer.status = OfferStatus(action.value)
@@ -196,7 +300,17 @@ async def undo(session: AsyncSession, action: ChatAction) -> None:
     if action.state != "done" or not isinstance(action.previous, dict):
         raise ActionRefused("rien à annuler")
     previous = action.previous
-    if action.kind == "offer_status":
+    if action.kind in ("rhythm_days", "rhythm_pause"):
+        if _rhythm_value(action.kind, await _settings(session)) != (
+            ",".join(str(d) for d in _rhythm_days(action.value))
+            if action.kind == "rhythm_days"
+            else action.value
+        ):
+            raise ActionRefused("le rythme a changé depuis : rien n'est annulé")
+        keys = ("rhythm_days",) if action.kind == "rhythm_days" else RHYTHM_KEYS[1:]
+        for key in keys:
+            await _put(session, key, previous.get(key))
+    elif action.kind == "offer_status":
         offer = await _offer(session, action.target_id)
         if offer.status != action.value:
             raise ActionRefused("l'offre a changé depuis : rien n'est annulé")

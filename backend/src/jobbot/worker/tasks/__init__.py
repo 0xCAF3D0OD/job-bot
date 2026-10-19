@@ -9,6 +9,7 @@ from jobbot.worker.tasks import (
     heartbeat,
     news,
     reminders,
+    rhythm,
     score,
 )
 
@@ -21,5 +22,6 @@ __all__ = [
     "heartbeat",
     "news",
     "reminders",
+    "rhythm",
     "score",
 ]

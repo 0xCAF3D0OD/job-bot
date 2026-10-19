@@ -878,7 +878,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .settings-toc { position: sticky; top: 6rem; display: grid; gap: 0.2rem; padding-top: 0.4rem; }
 .settings-toc a { padding: 0.35rem 0.6rem; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 0.9rem; }
 .settings-toc a:hover { background: var(--surface); color: var(--text); }
-.settings-sections { display: grid; gap: 1rem; min-width: 0; }
+.settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; min-width: 0; }
 .settings-sections > .section-title { margin: 1.5rem 0 0; scroll-margin-top: 6rem; }
 .settings-sections > .section-title:first-child { margin-top: 0; }
 /* Une petite icône au trait devant le titre de la rubrique (docs/62 §1). */
@@ -1841,6 +1841,7 @@ html.side-open { overflow: hidden; }
 .rhythm-dot { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid var(--border); font-size: 0.72rem; font-weight: 600; color: #fff; }
 .rhythm-days li.sent .rhythm-dot { background: var(--accent); border-color: var(--accent); }
 .rhythm-days li.rest .rhythm-dot { border-style: dashed; opacity: 0.6; }
+.rhythm-days li.paused .rhythm-dot { border-style: dotted; background: var(--band); }
 .rhythm-days li.today { color: var(--text); font-weight: 600; }
 .rhythm-days li.today .rhythm-dot { box-shadow: 0 0 0 3px var(--accent-soft); }
 .rhythm-sentence { margin: 0; }
@@ -2678,4 +2679,17 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .rhythm-week { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
 .rhythm-form .check { display: flex; align-items: center; gap: 0.5rem; }
 .rhythm-form select { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.3rem 0.5rem; }
+.rhythm-pause { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem 1rem; }
+.rhythm-pause label { display: grid; gap: 0.3rem; flex: 1 1 9rem; min-width: 0; }
+.rhythm-pause input { width: 100%; min-width: 0; }
+
+/* Bilan : tes semaines (docs/86, 0.68.1). */
+.rhythm-weeks ol { list-style: none; margin: 0; padding: 0; display: grid; }
+.rhythm-weeks li { display: grid; grid-template-columns: minmax(0, 1fr) auto 6.5rem; gap: 1rem; align-items: baseline; padding: 0.6rem 0; }
+.rhythm-weeks li + li { border-top: 1px solid var(--divider); }
+.rhythm-weeks-count { font-variant-numeric: tabular-nums; font-weight: 600; }
+.rhythm-weeks-state { justify-self: end; font-size: 0.82rem; padding: 0.1rem 0.6rem; border-radius: 999px; background: var(--band); color: var(--muted); }
+.rhythm-weeks li.done .rhythm-weeks-state { background: color-mix(in srgb, var(--mint) 25%, var(--surface)); color: var(--text); }
+.rhythm-weeks li.missed .rhythm-weeks-state { background: color-mix(in srgb, var(--orange) 20%, var(--surface)); color: var(--warn-text); }
+.rhythm-weeks li.current .rhythm-weeks-state { background: var(--accent-soft); color: var(--accent-text); }
 

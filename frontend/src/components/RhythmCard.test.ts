@@ -38,4 +38,14 @@ describe("Ta semaine", () => {
     expect(free.find("[data-test=rhythm-count]").exists()).toBe(false);
     expect(free.text()).toContain("pour le répartir sur tes semaines");
   });
+
+  it("en pause : jusqu'à quand, et l'annoncer au conseiller", () => {
+    const paused = days.map((d, i) => ({ ...d, research: false, paused: i < 5 }));
+    const wrapper = mountCard({ days: paused, research_today: false, pause_until: "2026-11-01" });
+    expect(wrapper.find("[data-test=rhythm-sentence]").text()).toBe(
+      "En pause jusqu'au 1 novembre. Pense à l'annoncer à ton conseiller.",
+    );
+    expect(wrapper.findAll(".rhythm-days li")[0]!.attributes("aria-label")).toBe("lundi, en pause, 1 candidature");
+  });
 });
+
