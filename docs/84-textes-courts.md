@@ -27,3 +27,14 @@
 - **Notifications non configurées** : « réglage d'installation » reste, pour que l'invité sache que ce n'est pas à lui de le régler.
 - **Le « après » du rendez-vous ORP** (docs/83) devient la **0.67.2**.
 - **Vérifié** : 299 tests de l'interface, lint et typecheck ; la page Tes données capturée sur ordinateur et téléphone.
+
+## 0.67.3 : le Suivi plus clair
+
+Validé le 2026-10-19, après ta question : « Formulaire ORP du mois » a-t-il encore du sens, si l'extension remplit Job-Room ?
+
+- **Le titre devient « Déclaration Job-Room »**, et à droite, ce qui reste à faire : « 1 ligne à compléter », « 4 à déclarer », « tout est déclaré » ou « aucune candidature ». Avant, il listait des formats (« tableau, PDF, CSV, Job-Room »).
+- **Le tableau reste** : c'est lui que l'extension recopie, et il sert à vérifier avant de déclarer. Le PDF et le CSV étaient déjà dans le menu ⋯.
+- **Les cases du calendrier ont toutes la même taille** : chaque semaine prend la hauteur de la plus haute. Les semaines sans candidature ne sont plus plus basses (retour sur docs/63 §2).
+- **L'assistant** connaît le nouveau nom (assistant-v8, la ligne de la carte).
+- **Vérifié** : tests de l'interface, dont 1 nouveau ; captures sur une démo de brouillon, avec une seule hauteur de case (83 px sur ordinateur, 58 px sur téléphone).
+

@@ -1010,7 +1010,8 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 /* Suivi en calendrier (docs/22) */
 .layout-switch { width: 14rem; margin: 0; }
 .suivi-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr); gap: 1.25rem; align-items: start; }
-.suivi-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; }
+/* Toutes les cases à la même taille : chaque semaine prend la hauteur de la plus haute (0.67.3). */
+.suivi-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto; grid-auto-rows: 1fr; gap: 0.35rem; }
 .suivi-calendar .weekday { font-size: 0.75rem; color: var(--muted); text-align: center; padding-bottom: 0.2rem; }
 .suivi-calendar .day { min-height: 5.2rem; display: flex; flex-direction: column; align-items: stretch; gap: 0.25rem; padding: 0.35rem 0.4rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
 .suivi-calendar .day.empty { border: none; background: transparent; cursor: default; }
@@ -1466,7 +1467,7 @@ html.side-open { overflow: hidden; }
   .detail-panel .close .close-x { display: none; }
   .detail-panel .close .close-back { display: inline; }
 
-  /* Formulaire ORP du mois : une fiche par candidature, les colonnes en lignes. */
+  /* Déclaration Job-Room (le formulaire ORP du mois) : une fiche par candidature, les colonnes en lignes. */
   .orp-table, .orp-table tbody { display: block; }
   .orp-table thead { display: none; }
   .orp-table tr { display: grid; gap: 0.3rem; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
@@ -2246,7 +2247,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .reading-width { max-width: 40rem; }
 
 /* Des blocs à leur taille (docs/63 §2). */
-.suivi-calendar .day.quiet { min-height: 3.4rem; }
 .dash-bottom { align-items: start; }
 @media (min-width: 821px) {
   /* Réglages : les rubriques à la largeur de lecture. */

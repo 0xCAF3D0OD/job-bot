@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/83-rendez-vous-orp.md](docs/83-rendez-vous-orp.md) (0.67.2)
+- Version en cours : [docs/84-textes-courts.md](docs/84-textes-courts.md) (0.67.3)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -118,7 +118,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.66.1 | `jobbot restore` trouve une sauvegarde par son seul nom | livrée |
 | 0.67.0 | Le rendez-vous ORP : une feuille pour le conseiller (mois en bref, ce qui bloque, ce qui te manque, questions, obligations), en PDF ; rappel la veille | livrée |
 | 0.67.1 | Des textes plus courts dans l'interface ; la page Tes données en listes | livrée |
-| 0.67.2 | Après le rendez-vous ORP : ce qui a été convenu, le carnet, l'agenda et le rappel de la veille, l'objectif et les formations mis à jour ; le message rédigé par l'IA, sur demande | en cours |
+| 0.67.2 | Après le rendez-vous ORP : ce qui a été convenu, le carnet, l'agenda et le rappel de la veille, l'objectif et les formations mis à jour ; le message rédigé par l'IA, sur demande | livrée |
+| 0.67.3 | « Déclaration Job-Room » dit ce qui reste à faire ; cases du calendrier à la même taille | en cours |
 
 ## Lancer en local
 
