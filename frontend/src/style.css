@@ -2895,3 +2895,16 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
   .today-grid .dash-card { padding: 1.25rem; }
   .today-lead { margin-bottom: 1.5rem; }
 }
+
+/* La page en cours, entourée à main levée (docs/96) : la boucle remplace le trait souligné du
+   menu et entoure l'icône de l'onglet choisi sur téléphone. Elle se dessine en 0,6 s. */
+.hand-loop { position: absolute; top: -0.55rem; left: -0.95rem; width: calc(100% + 1.9rem); height: calc(100% + 1.1rem); overflow: visible; pointer-events: none; }
+.hand-loop path { fill: none; stroke: var(--accent); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; animation: hand-draw 600ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes hand-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .hand-loop path { animation: none; } }
+.nav a { position: relative; }
+.nav a.router-link-active { border-bottom-color: transparent; font-weight: 500; color: var(--text); }
+.tab-bar-icon { width: 2.75rem; height: 1.75rem; }
+.tab-bar-icon .hand-loop { top: -0.2rem; left: -0.25rem; width: calc(100% + 0.5rem); height: calc(100% + 0.4rem); }
+/* Le menu défile à l'horizontale s'il manque de place : il garde de quoi montrer la boucle. */
+.topbar nav.main-nav .nav { padding: 0.7rem 1.1rem; }

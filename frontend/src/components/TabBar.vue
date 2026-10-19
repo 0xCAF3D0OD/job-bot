@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { api } from "../api/client";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import AppIcon from "./AppIcon.vue";
+import HandLoop from "./HandLoop.vue";
 
 // La barre d'onglets du téléphone (docs/92) : les deux pages de travail, en bas de l'écran,
 // avec une icône et un nom ; Candidatures porte le nombre d'offres à examiner. Les écrans de
@@ -51,6 +52,7 @@ onMounted(() => void refresh());
     >
       <span class="tab-bar-icon">
         <AppIcon :name="tab.icon" />
+        <HandLoop v-if="tab.active" />
         <span
           v-if="tab.name === 'jobs' && toReview"
           class="tab-bar-count"
