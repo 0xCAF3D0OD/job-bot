@@ -218,9 +218,10 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 .logo {
   display: grid;
   place-items: center;
-  width: 2.3rem;
-  height: 2.3rem;
-  border-radius: 50%;
+  width: 2.4rem;
+  height: 2.4rem;
+  /* Un carré aux coins arrondis, comme les vignettes de Sphere (docs/93 §2). */
+  border-radius: 0.6rem;
   color: #fff;
   font-weight: 600;
   font-size: 0.95rem;
@@ -229,7 +230,7 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 .logo.c1 { background: var(--orange); }
 .logo.c2 { background: var(--mint); }
 .logo.c3 { background: var(--sky); }
-.logo.large { width: 3rem; height: 3rem; font-size: 1.2rem; }
+.logo.large { width: 3rem; height: 3rem; border-radius: 0.75rem; font-size: 1.2rem; }
 .job-title { font-weight: 500; font-size: 0.98rem; line-height: 1.3; display: block; }
 
 .detail-panel { position: sticky; top: 5.5rem; background: var(--panel); border-radius: 16px; padding: 2rem; display: grid; gap: 1.25rem; }
@@ -1572,7 +1573,7 @@ html.side-open { overflow: hidden; }
 
   /* Offres (docs/73) : la même ligne, un peu plus serrée sur les côtés. */
   .offer-row { gap: 0.75rem; padding: 0.8rem 0.9rem; }
-  .offer-row .logo:not(.large) { width: 2rem; height: 2rem; font-size: 0.8rem; }
+  .offer-row .logo:not(.large) { width: 2rem; height: 2rem; border-radius: 0.5rem; font-size: 0.8rem; }
   .offer-row-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .job-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
@@ -2799,3 +2800,35 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   :root:has(.tab-bar):has(main .mobile-dock) .assistant-fab { bottom: calc(var(--tabbar-h) + 5.2rem + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) .toast { bottom: calc(var(--tabbar-h) + 1rem + env(safe-area-inset-bottom)); }
 }
+
+/* Les formations en cartes (docs/93), à la manière des offres de Sphere, et aérées : 1,5 rem
+   de marge intérieure, 1 rem entre les étiquettes, le titre et les faits, un interligne de
+   1,5. La carte entière ouvre le panneau (le bouton du titre la recouvre), le cœur passe
+   au-dessus. */
+.training-tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(max(18rem, calc((100% - 2.5rem) / 3)), 1fr)); }
+.training-tiles > li { display: flex; }
+.training-tile { position: relative; flex: 1; display: flex; flex-direction: column; padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; transition: border-color 150ms, box-shadow 150ms; }
+.training-tile:hover { border-color: var(--accent); box-shadow: 0 6px 18px rgb(17 17 31 / 6%); }
+.tile-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tile-tag { display: inline-flex; align-items: center; height: 1.4rem; padding: 0 0.6rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.03em; }
+.tile-tag.strong { background: var(--text); color: var(--surface); text-transform: uppercase; }
+.tile-tag.warn { background: #fff1e4; color: var(--warn-text); }
+@media (prefers-color-scheme: dark) { .tile-tag.warn { background: #3a2a1a; color: #f3b67a; } }
+.tile-title { margin: 1rem 0 0; font-size: 1.15rem; font-weight: 500; line-height: 1.3; }
+.tile-open { all: unset; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: var(--text); }
+.tile-open::after { content: ""; position: absolute; inset: 0; border-radius: 16px; }
+.tile-open:focus-visible { outline: none; }
+.tile-open:focus-visible::after { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tile-open mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; padding: 0 0.1em; }
+.tile-facts { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.5rem; font-size: 0.88rem; line-height: 1.5; color: var(--muted); }
+.tile-facts li { display: flex; gap: 0.6rem; align-items: flex-start; }
+.tile-facts .icon { flex: none; width: 1rem; height: 1rem; margin-top: 0.2rem; }
+.tile-foot { position: relative; z-index: 1; display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; margin-top: auto; padding-top: 1.25rem; }
+.tile-heart { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; padding: 0; border-radius: 50%; border: 0; background: var(--band); color: var(--muted); }
+.tile-heart:hover { color: var(--accent-text); }
+.tile-heart.on { background: var(--accent-soft); color: var(--accent-text); }
+@media (max-width: 820px) {
+  .training-tile { padding: 1.25rem; }
+  .tile-heart { width: 2.75rem; height: 2.75rem; }
+}
+@media (prefers-reduced-motion: reduce) { .training-tile { transition: none; } }

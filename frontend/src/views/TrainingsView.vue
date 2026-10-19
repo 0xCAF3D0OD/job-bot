@@ -8,11 +8,12 @@ import DomainField from "../components/DomainField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
+import TrainingCard from "../components/TrainingCard.vue";
 import TrainingCardBody from "../components/TrainingCardBody.vue";
 import { usePhone } from "../composables/usePhone";
 import { usePageReady } from "../composables/usePageTransition";
-import { highlight, languageLabel } from "../newsLabels";
-import { KINDS, ORP_LINKS, PRICES, STATUSES } from "../trainingLabels";
+import { languageLabel } from "../newsLabels";
+import { KINDS, ORP_LINKS, PRICES } from "../trainingLabels";
 import { plural } from "../format";
 
 import HoverNote from "../components/HoverNote.vue";
@@ -118,6 +119,11 @@ async function mark(
     },
   });
   if (data) replace({ ...training, mark: data });
+}
+
+// Le cœur d'une carte (docs/93) : « Intéressé », ou retirer cette seule marque.
+async function toggleInterest(training: Training): Promise<void> {
+  await mark(training, training.mark?.status === "interested" ? null : "interested");
 }
 
 async function review(training: Training, keep: boolean): Promise<void> {
@@ -367,53 +373,17 @@ onMounted(() => void load());
           <h2 class="news-group-title">
             {{ section.label }}
           </h2>
-          <ul
-            v-if="phone"
-            class="news-rows training-rows"
-          >
+          <!-- Des cartes, sur ordinateur comme sur téléphone (docs/93). -->
+          <ul class="training-tiles">
             <li
               v-for="training in section.items"
               :key="training.id"
               data-test="training"
             >
-              <button
-                type="button"
-                class="news-row training-row"
-                :aria-expanded="openId === training.id"
-                data-test="training-row"
-                @click="openId = training.id"
-              >
-                <span class="news-row-main">
-                  <span class="news-title"><template
-                    v-for="(part, index) in highlight(training.title, training.matched)"
-                    :key="index"
-                  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
-                  <span class="training-row-facts">{{ KINDS[training.kind] }} · {{ training.provider }} · {{ PRICES[training.price] }}</span>
-                </span>
-                <span
-                  v-if="training.mark"
-                  class="badge"
-                >{{ STATUSES[training.mark.status] }}</span>
-                <span
-                  v-else-if="!training.verified"
-                  class="badge warn"
-                >à vérifier</span>
-              </button>
-            </li>
-          </ul>
-          <ul
-            v-else
-            class="training-grid"
-          >
-            <li
-              v-for="training in section.items"
-              :key="training.id"
-              class="training-card"
-              data-test="training"
-            >
-              <TrainingCardBody
+              <TrainingCard
                 :training="training"
-                @manage="openId = training.id"
+                @open="openId = training.id"
+                @interest="toggleInterest(training)"
                 @review="(keep) => review(training, keep)"
               />
             </li>
