@@ -21,35 +21,44 @@ SOURCE = (FRONT / "src" / "brandPaths.ts").read_text("utf-8")
 
 BLUE, STAR, DARK_INK, DARK_STAR = "#2340C8", "#F4A261", "#9DB0FF", "#E8B48A"
 LOOPS = re.search(r"LOGO_LOOPS = \[\s*\"([^\"]+)\",\s*\"([^\"]+)\"", SOURCE)
-STAR_PATH = re.search(r'LOGO_STAR = "([^"]+)"', SOURCE)
-assert LOOPS and STAR_PATH, "tracés introuvables dans src/brandPaths.ts"
+DIAMOND = re.search(r'LOGO_DIAMOND = "([^"]+)"', SOURCE)
+DIAMOND_SMALL = re.search(r'LOGO_DIAMOND_SMALL_SIZE = "([^"]+)"', SOURCE)
+assert LOOPS and DIAMOND and DIAMOND_SMALL, "tracés introuvables dans src/brandPaths.ts"
 
 
-def logo(ink: str, star: str, stroke: float) -> str:
-    loops = "".join(
-        f'<path d="{d}" fill="none" stroke="{ink}" stroke-width="{stroke}" '
+def line(d: str, color: str, stroke: float) -> str:
+    return (
+        f'<path d="{d}" fill="none" stroke="{color}" stroke-width="{stroke}" '
         'stroke-linecap="round" stroke-linejoin="round"/>'
-        for d in LOOPS.groups()
     )
-    return f'{loops}<path d="{STAR_PATH.group(1)}" fill="{star}"/>'
+
+
+def logo(ink: str, star: str, stroke: float, small: bool = False) -> str:
+    # Deux boucles et le diamant en contour (docs/98) ; petit : une boucle, un diamant plus grand.
+    loops = LOOPS.groups()[:1] if small else LOOPS.groups()
+    diamond = (DIAMOND_SMALL if small else DIAMOND).group(1)
+    return "".join(line(d, ink, stroke) for d in loops) + line(
+        diamond, star, round(stroke * 1.1, 2)
+    )
 
 
 def favicon_svg() -> str:
-    # Le favicon SVG suit le mode sombre du navigateur.
-    loops = "".join(f'<path class="i" d="{d}"/>' for d in LOOPS.groups())
+    # L'onglet : la petite version de la planche (une boucle, le grand diamant, trait de 8),
+    # qui suit le mode sombre du navigateur.
+    common = "fill:none;stroke-linecap:round;stroke-linejoin:round"
     style = (
-        f".i{{fill:none;stroke:{BLUE};stroke-width:6;stroke-linecap:round;stroke-linejoin:round}}"
-        f".s{{fill:{STAR}}}"
-        f"@media (prefers-color-scheme:dark){{.i{{stroke:{DARK_INK}}}.s{{fill:{DARK_STAR}}}}}"
+        f".i{{{common};stroke:{BLUE};stroke-width:8}}.s{{{common};stroke:{STAR};stroke-width:8.8}}"
+        f"@media (prefers-color-scheme:dark){{.i{{stroke:{DARK_INK}}}.s{{stroke:{DARK_STAR}}}}}"
     )
     return (
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 92 92">'
-        f'<style>{style}</style>{loops}<path class="s" d="{STAR_PATH.group(1)}"/></svg>\n'
+        f'<style>{style}</style><path class="i" d="{LOOPS.group(1)}"/>'
+        f'<path class="s" d="{DIAMOND_SMALL.group(1)}"/></svg>\n'
     )
 
 
 def app_icon(size: int, logo_share: float) -> str:
-    # Le logo blanc et l'étoile pêche sur un carré bleu plein (l'icône « app » de la planche),
+    # Le logo blanc et le diamant pêche sur un carré bleu plein (l'icône « app » de la planche),
     # dans un seul dessin : la vue s'élargit autour du logo (92 unités) selon sa part.
     total = 92 / logo_share
     start = 4 - (total - 92) / 2
@@ -61,18 +70,21 @@ def app_icon(size: int, logo_share: float) -> str:
     )
 
 
-def plain(size: int, stroke: float) -> str:
+def plain(size: int, stroke: float, small: bool = False) -> str:
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" '
-        f'viewBox="4 4 92 92" style="display:block">{logo(BLUE, STAR, stroke)}</svg>'
+        f'viewBox="4 4 92 92" style="display:block">{logo(BLUE, STAR, stroke, small)}</svg>'
     )
 
 
-async def render(page, svg: str, size: int, target: Path) -> None:
-    await page.set_viewport_size({"width": size, "height": size})
+async def render(browser, svg: str, size: int, target: Path) -> None:
+    # Une page neuve par icône, à sa taille : changer la taille d'une page déjà rendue
+    # laissait parfois l'ancien rendu dans la capture.
+    page = await browser.new_page(viewport={"width": size, "height": size})
     body = f'<html><body style="margin:0;background:transparent">{svg}</body></html>'
     await page.set_content(body)
     await page.screenshot(path=str(target), omit_background=True)
+    await page.close()
     print("écrit", target.relative_to(FRONT))
 
 
@@ -83,13 +95,12 @@ async def main() -> None:
         chrome = os.environ.get("CHROME")
         launch = {"executable_path": chrome} if chrome else {}
         browser = await p.chromium.launch(**launch)
-        page = await browser.new_page()
-        await render(page, plain(32, 6), 32, PUBLIC / "favicon-32.png")
-        await render(page, app_icon(180, 0.64), 180, PUBLIC / "apple-touch-icon.png")
-        await render(page, app_icon(192, 0.64), 192, PUBLIC / "icon-192.png")
-        await render(page, app_icon(512, 0.64), 512, PUBLIC / "icon-512.png")
+        await render(browser, plain(32, 8, small=True), 32, PUBLIC / "favicon-32.png")
+        await render(browser, app_icon(180, 0.64), 180, PUBLIC / "apple-touch-icon.png")
+        await render(browser, app_icon(192, 0.64), 192, PUBLIC / "icon-192.png")
+        await render(browser, app_icon(512, 0.64), 512, PUBLIC / "icon-512.png")
         # « maskable » : le logo dans la zone sûre (le cercle de 80 %), donc plus petit.
-        await render(page, app_icon(512, 0.5), 512, PUBLIC / "icon-maskable-512.png")
+        await render(browser, app_icon(512, 0.5), 512, PUBLIC / "icon-maskable-512.png")
         await browser.close()
 
 

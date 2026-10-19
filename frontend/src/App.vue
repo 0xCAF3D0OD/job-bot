@@ -5,7 +5,6 @@ import { useRoute, useRouter } from "vue-router";
 import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 
 import NotificationBell from "./components/NotificationBell.vue";
-import BrandFigure from "./components/BrandFigure.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import BrandMark from "./components/BrandMark.vue";
 import HandLoop from "./components/HandLoop.vue";
@@ -91,15 +90,9 @@ onUnmounted(() => {
         class="brand"
         aria-label="jobA1, accueil"
       >
-        <BrandMark :size="26" />
-        <!-- Connecté : le « 1 » devient le personnage de l'heure (docs/68). -->
-        <span
-          v-if="loggedIn"
-          class="brand-name"
-        >jobA<BrandFigure /></span>
-        <template v-else>
-          jobA1
-        </template>
+        <!-- Le logo et « jobA1 » en entier, connecté ou non (docs/98). -->
+        <BrandMark :size="28" />
+        jobA1
       </RouterLink>
       <nav
         class="main-nav"

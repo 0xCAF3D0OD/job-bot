@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/97-logos.md](docs/97-logos.md) (0.71.2)
+- Version en cours : [docs/98-logo-diamant.md](docs/98-logo-diamant.md) (0.71.3)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -137,7 +137,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.70.7 | Une seule hauteur pour les contrôles, alignés dans leur rangée ; l'audit des rangées | livrée |
 | 0.71.0 | Aujourd'hui épuré : la phrase du jour et une action, les bandeaux datés, À faire et Mois ORP ; la jauge dans le Bilan | livrée |
 | 0.71.1 | La page en cours entourée à main levée, dans le menu et la barre d'onglets | livrée |
-| 0.71.2 | Le nouveau logo (deux boucles bleues autour de l'étoile) et la mascotte de l'assistant ; icônes régénérées | en cours |
+| 0.71.2 | Le nouveau logo (deux boucles bleues autour de l'étoile) et la mascotte de l'assistant ; icônes régénérées | livrée |
+| 0.71.3 | Le logo au diamant en contour ; « jobA1 » en entier, sans le personnage de l'heure | en cours |
 
 ## Lancer en local
 
