@@ -205,3 +205,17 @@ def test_restore_asks_to_write_the_word(
         )
         == 0
     )
+
+
+def test_restore_finds_a_name_in_the_backup_folder(
+    plateforme: Settings, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Le seul nom, tel que `jobbot backup --list` l'affiche, suffit (0.66.1)."""
+    from jobbot import __main__ as cli
+
+    made = backup.make_backup(plateforme)
+    monkeypatch.setattr(cli, "_settings", lambda: plateforme)
+    assert cli.cmd_restore(argparse.Namespace(file=made.path.name, essai=True)) == 0
+    assert "Essai réussi" in capsys.readouterr().out
+    assert cli.cmd_restore(argparse.Namespace(file="jobA1-inconnue.jobA1backup", essai=True)) == 1
+    assert "backup --list" in capsys.readouterr().err
