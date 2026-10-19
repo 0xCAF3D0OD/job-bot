@@ -9,7 +9,7 @@ import { usePhone } from "../composables/usePhone";
 // sont des zones séparées par des filets ; ouvrir l'une agrandit le cadre vers le bas, et son
 // contenu apparaît dedans (rendu dans #capsule-body). La rangée du haut ne bouge pas. Sur
 // téléphone, la cloche garde sa carte qui pousse la page (retour du 2026-10-15).
-const WIDTHS: Record<CapsuleZone, number> = { account: 240, bell: 384, menu: 240 };
+const WIDTHS: Record<CapsuleZone, number> = { account: 240, bell: 384, progress: 416, menu: 240 };
 const GUTTER = 32;
 
 const route = useRoute();

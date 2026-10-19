@@ -8,14 +8,14 @@ import NotificationBell from "./components/NotificationBell.vue";
 import BrandFigure from "./components/BrandFigure.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import HeaderCapsule from "./components/HeaderCapsule.vue";
-import MobileMenu from "./components/MobileMenu.vue";
+import ProgressPreview from "./components/ProgressPreview.vue";
+import TabBar from "./components/TabBar.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
 import PageTransition from "./components/PageTransition.vue";
 import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
-import { useProgressMemory } from "./composables/useProgressMemory";
 import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { useFileDownloads } from "./composables/useFileDownloads";
@@ -33,7 +33,7 @@ const {
   refused: maintenanceRefused,
 } = useMaintenance();
 
-const { count: newsCount, start: startNewsCount } = useNewsCount();
+const { start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
 const route = useRoute();
 // Fichiers préparés : le retour sur le lien lui-même (docs/59 §4).
@@ -41,7 +41,6 @@ useFileDownloads();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 const { last: lastJobsPage } = useJobsMemory();
-const { last: lastProgressPage } = useProgressMemory();
 // Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
 const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme" }];
 const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
@@ -108,17 +107,10 @@ onUnmounted(() => {
             :key="entry.name"
           >
             <RouterLink
-              :to="entry.name === 'jobs' ? lastJobsPage : entry.name === 'progress' ? lastProgressPage : entry.path"
+              :to="entry.name === 'jobs' ? lastJobsPage : entry.path"
               :class="{ 'router-link-active': entry.name === 'jobs' && route.path.startsWith('/candidatures') }"
             >
               {{ entry.label }}
-              <!-- Du nouveau à lire : un point, pas un chiffre (docs/90) ; le chiffre est sur l'onglet. -->
-              <span
-                v-if="entry.name === 'progress' && newsCount"
-                class="nav-dot"
-                data-test="news-count"
-                :aria-label="`${newsCount} nouveaux`"
-              />
             </RouterLink>
           </li>
         </ul>
@@ -127,23 +119,20 @@ onUnmounted(() => {
         v-if="loggedIn"
         class="topbar-actions"
       >
-        <!-- La capsule (docs/89, docs/91) : la cloche, ton initiale (le menu du compte), ☰ sur
-             téléphone ; elle se déroule pour montrer ce qu'on ouvre. -->
+        <!-- La capsule (docs/89, docs/91, docs/92) : la cloche, l'étincelle de Progresser et ton
+             initiale ; elle se déroule pour montrer ce qu'on ouvre. -->
         <HeaderCapsule>
           <NotificationBell />
           <span
             class="capsule-sep"
             aria-hidden="true"
           />
-          <AccountMenu />
+          <ProgressPreview />
           <span
-            class="capsule-sep burger-sep"
+            class="capsule-sep"
             aria-hidden="true"
           />
-          <MobileMenu
-            :menu="menu"
-            :news-count="newsCount"
-          />
+          <AccountMenu />
         </HeaderCapsule>
       </div>
       <div
@@ -238,6 +227,8 @@ onUnmounted(() => {
   <main>
     <RouterView />
   </main>
+  <!-- Sur téléphone, les deux pages de travail en bas de l'écran (docs/92). -->
+  <TabBar v-if="loggedIn" />
   <MaintenanceOverlay
     :waiting="maintenanceWaiting"
     :message="maintenanceMessage"

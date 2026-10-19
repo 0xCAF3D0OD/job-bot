@@ -383,7 +383,9 @@ def test_guide_follows_the_pages() -> None:
     # 0.70.3 (docs/90) : trois pages, Progresser, Profil dans le menu du compte.
     assert "assistant-v11" not in service.INSTRUCTIONS
     assert "/progresser/formations" in service.INSTRUCTIONS
-    assert "trois pages" in service.INSTRUCTIONS
+    # 0.70.5 (docs/92) : deux pages, Progresser dans la capsule, la barre d'onglets.
+    assert "assistant-v12" not in service.INSTRUCTIONS
+    assert "deux pages" in service.INSTRUCTIONS and "étincelle" in service.INSTRUCTIONS
     assert "menu du compte" in service.INSTRUCTIONS
     assert "Collecter maintenant" in service.INSTRUCTIONS
     assert "« Effet des critères »" in service.INSTRUCTIONS

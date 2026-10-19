@@ -3,7 +3,7 @@ import { computed, inject, type InjectionKey, ref, type Ref } from "vue";
 // La capsule qui se déroule (docs/91) : la cloche, le compte et ☰ s'ouvrent dans le même
 // cadre, une seule chose à la fois. La capsule (HeaderCapsule) fournit cet état ; hors de la
 // capsule (un test, un écran sans barre), chaque zone garde son propre état.
-export type CapsuleZone = "bell" | "account" | "menu";
+export type CapsuleZone = "bell" | "progress" | "account" | "menu";
 
 export interface Capsule {
   active: Ref<CapsuleZone | null>;

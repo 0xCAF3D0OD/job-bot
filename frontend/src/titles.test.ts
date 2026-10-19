@@ -26,8 +26,8 @@ function template(source: string): string {
 }
 
 describe("titres (docs/88)", () => {
-  it("le menu principal : deux pages de travail et une pour avancer (docs/90)", () => {
-    expect(mainMenu.map((entry) => entry.label)).toEqual(["Aujourd'hui", "Candidatures", "Progresser"]);
+  it("le menu principal : les deux pages de travail (docs/92)", () => {
+    expect(mainMenu.map((entry) => entry.label)).toEqual(["Aujourd'hui", "Candidatures"]);
   });
 
   it("chaque page affiche comme titre son nom de page, Réglages compris", () => {

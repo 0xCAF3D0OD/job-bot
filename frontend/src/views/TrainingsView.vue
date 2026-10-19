@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
@@ -157,6 +157,14 @@ async function suggest(): Promise<void> {
 // « Filtrer », l'encadré ORP replié. Sur ordinateur, rien ne change.
 const { phone } = usePhone();
 const openId = ref<number | null>(null);
+// Une formation ouverte depuis l'aperçu de la capsule (docs/92) : `?formation=ID`.
+watch(
+  () => route.query.formation,
+  (id) => {
+    if (typeof id === "string" && Number(id)) openId.value = Number(id);
+  },
+  { immediate: true },
+);
 const opened = computed(() => items.value.find((t) => t.id === openId.value) ?? null);
 const filtersOpen = ref(false);
 const activeFilters = computed(() => [kind.value, price.value, language.value].filter(Boolean).length);
