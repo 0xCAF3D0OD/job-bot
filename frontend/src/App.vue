@@ -7,6 +7,7 @@ import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 import NotificationBell from "./components/NotificationBell.vue";
 import BrandFigure from "./components/BrandFigure.vue";
 import AccountMenu from "./components/AccountMenu.vue";
+import HandLoop from "./components/HandLoop.vue";
 import HeaderCapsule from "./components/HeaderCapsule.vue";
 import ProgressPreview from "./components/ProgressPreview.vue";
 import TabBar from "./components/TabBar.vue";
@@ -44,6 +45,11 @@ const { last: lastJobsPage } = useJobsMemory();
 // Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
 const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme" }];
 const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
+// La page en cours dans le menu : Candidatures couvre tous ses onglets et ses fiches.
+function isCurrent(entry: NavEntry): boolean {
+  if (entry.name === "jobs") return route.path.startsWith("/candidatures");
+  return route.path === entry.path || route.path.startsWith(`${entry.path}/`);
+}
 
 function onUnauthorized(): void {
   expired();
@@ -108,9 +114,12 @@ onUnmounted(() => {
           >
             <RouterLink
               :to="entry.name === 'jobs' ? lastJobsPage : entry.path"
-              :class="{ 'router-link-active': entry.name === 'jobs' && route.path.startsWith('/candidatures') }"
+              :class="{ 'router-link-active': isCurrent(entry) }"
+              :aria-current="isCurrent(entry) ? 'page' : undefined"
             >
               {{ entry.label }}
+              <!-- La page en cours, entourée à main levée (docs/96). -->
+              <HandLoop v-if="isCurrent(entry)" />
             </RouterLink>
           </li>
         </ul>
