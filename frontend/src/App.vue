@@ -7,6 +7,7 @@ import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 import NotificationBell from "./components/NotificationBell.vue";
 import BrandFigure from "./components/BrandFigure.vue";
 import AccountMenu from "./components/AccountMenu.vue";
+import HeaderCapsule from "./components/HeaderCapsule.vue";
 import MobileMenu from "./components/MobileMenu.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
@@ -97,7 +98,10 @@ onUnmounted(() => {
           jobA1
         </template>
       </RouterLink>
-      <nav aria-label="Navigation principale">
+      <nav
+        class="main-nav"
+        aria-label="Navigation principale"
+      >
         <ul class="nav">
           <li
             v-for="entry in menu"
@@ -123,11 +127,9 @@ onUnmounted(() => {
         v-if="loggedIn"
         class="topbar-actions"
       >
-        <!-- La capsule (docs/89) : la cloche, ton initiale (le menu du compte), ☰ sur téléphone. -->
-        <div
-          class="capsule"
-          data-test="capsule"
-        >
+        <!-- La capsule (docs/89, docs/91) : la cloche, ton initiale (le menu du compte), ☰ sur
+             téléphone ; elle se déroule pour montrer ce qu'on ouvre. -->
+        <HeaderCapsule>
           <NotificationBell />
           <span
             class="capsule-sep"
@@ -142,7 +144,7 @@ onUnmounted(() => {
             :menu="menu"
             :news-count="newsCount"
           />
-        </div>
+        </HeaderCapsule>
       </div>
       <div
         v-else-if="me"
