@@ -1,6 +1,6 @@
 # 96 — La page choisie, entourée à main levée (version 0.71.1)
 
-> Statut : **validé** le 2026-10-19.
+> Statut : **retiré** en 0.71.4 (2026-10-19), à ta demande : « enlève cette forme de sélection, je vais changer le logo ».
 > Origine : ta demande du 2026-10-19, « une sorte de halo sur Aujourd'hui ou Candidatures pour marquer que c'est sélectionné », puis « et entourer de façon stylo à main levée ? », puis la maquette du même jour. Choix : le **trait moyen**.
 
 ## Ce qui change
@@ -53,3 +53,9 @@
   - 325 tests de l'interface (la barre d'onglets : la boucle sur l'onglet choisi, décorative, qui change d'onglet), lint et typecheck ; `aria-current="page"` sur la page en cours, contrôlé sur la démo ;
   - audit des rangées vide ;
   - captures sur la démo : la boucle complète, une image au milieu du tracé (280 ms), en sombre, et sur téléphone autour de l'icône.
+
+## Retrait (0.71.4)
+
+- **La boucle est retirée** du menu et de la barre d'onglets, avec le composant `HandLoop`, ses styles et l'exception de durée dans `docs/interface.md`.
+- **Le menu revient à son état d'avant** : la page en cours en violet, en gras, soulignée ; `aria-current="page"` reste.
+- **Vérifié** : 325 tests de l'interface, lint et typecheck ; audit des rangées vide ; captures sur la démo (menu en clair et en sombre, barre d'onglets du téléphone).
