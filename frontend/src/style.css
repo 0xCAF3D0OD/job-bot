@@ -3056,7 +3056,19 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .settings-card .settings-subtitle:first-child { margin-top: 1.5rem; }
 .settings-card .ai-spend { padding-top: 1.5rem; }
 /* Pas de barre verticale : un contenu replié s'ouvre sous son titre, au même retrait. */
-.settings-card .disclosure-body, .settings-row .disclosure-body { margin-left: 0; padding-left: 0; border-left: 0; }
+.settings-card .disclosure-body, .settings-row .form-card .disclosure-body { margin-left: 0; padding-left: 0; border-left: 0; }
+/* Téléphone (docs/106, complément 0.76.1) : la ligne dépliable est la carte ; son contenu garde
+   une marge égale des deux côtés, sans barre, et les parties se resserrent. */
+@media (max-width: 820px) {
+  .settings-row > .disclosure-panel > .disclosure-clip > .disclosure-body { margin: 0 1rem 1rem; padding: 0; border-left: 0; }
+  .settings-row .form-card fieldset { padding: 1rem 0; gap: 0.5rem; }
+  .settings-row .form-card > fieldset:first-child, .settings-row .form-card > :first-child fieldset:first-child { padding-top: 0.25rem; }
+  .settings-row .settings-line { padding-top: 1rem; }
+  .settings-row .form-actions { padding-top: 0.75rem; }
+  /* Les cinq pastilles et « / 100 » sur une seule ligne. */
+  .settings-row .score-choices { gap: 0.4rem; flex-wrap: nowrap; }
+  .settings-row .score-choices .chip { min-width: 2.75rem; padding: 0 0.5rem; }
+}
 /* Les titres de partie ne sont pas soulignés ; la description au survol (docs/53) reste. */
 .settings-card legend .hover-note, .settings-row legend .hover-note { text-decoration: none; }
 /* Un « Enregistrer » plein, collé au formulaire. */

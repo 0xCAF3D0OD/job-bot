@@ -67,3 +67,15 @@ Le changement vaut **sur ordinateur et sur téléphone** : tes captures sont sur
 2. **Le seuil des notifications** : cinq pastilles, 50 · 60 · 70 · 80 · 90.
 3. **Les flèches** : retirées des 12 champs nombre de l'interface, pas seulement dans les Réglages.
 4. **Les versions** : l'adresse à jobA1 et les premières offres (docs/104) passent en 0.77.0 et 0.78.0.
+
+## Complément 0.76.1 : le téléphone
+
+Ton retour du 2026-10-20, capture des Actualités à 414 px : « il faut adapter pour le téléphone, simplifier pour que ça passe dessus ».
+
+- **Le contenu collait au bord gauche** de la ligne dépliable : la règle « pas de barre verticale » de la 0.76.0 retirait aussi la marge du contenu de la ligne elle-même. Elle ne vise plus que les repliables **dans** une carte ; le contenu de la ligne a 1 rem de chaque côté, sans barre.
+- **Plus serré** sous 820 px : les parties à 1 rem au lieu de 1,5 rem, le bouton « Enregistrer » à 0,75 rem.
+- **Les cinq pastilles** du seuil et « / 100 » tiennent sur une ligne (2,75 rem par pastille, la taille au doigt).
+- **Les exemples des champs de mots-clés** : « Autre mot-clé » dans Réglages › Actualités, « Ton métier, un outil, un diplôme… » dans Actualités et Formations, au lieu de « DevOps, Kubernetes, CKA… » (même règle que docs/104 §5).
+- L'ordinateur ne change pas.
+- **Vérifié** : capture à 414 px des Actualités et des Notifications ouvertes, avec des données fictives (la liste des sources n'y figure pas), tests, lint et typecheck.
+

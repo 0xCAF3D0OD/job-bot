@@ -47,7 +47,7 @@ async function save(): Promise<void> {
       <input
         id="domain-field-input"
         v-model="value"
-        placeholder="DevOps, Kubernetes, CKA…"
+        placeholder="Ton métier, un outil, un diplôme…"
         enterkeyhint="done"
         data-test="domain-field-input"
       >

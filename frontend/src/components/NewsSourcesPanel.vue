@@ -45,7 +45,7 @@ function addKeywords(): void {
   // « DevOps, Kubernetes » : plusieurs mots-clés d'un coup, séparés par des virgules.
   const added = keyword.value.split(",").map((k) => k.trim()).filter(Boolean);
   if (!added.length) {
-    keywordHint.value = "Écris un mot-clé, par exemple DevOps.";
+    keywordHint.value = "Écris un mot-clé, par exemple ton métier.";
     document.querySelector<HTMLInputElement>("[data-test=domain-input]")?.focus();
     return;
   }
@@ -204,7 +204,7 @@ const addItems: MoreMenuItem[] = [
           v-model="keyword"
           type="text"
           maxlength="200"
-          placeholder="DevOps, Kubernetes, CKA…"
+          placeholder="Autre mot-clé"
           aria-label="Mots-clés à ajouter"
           data-test="domain-input"
         >
