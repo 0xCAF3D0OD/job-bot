@@ -139,6 +139,20 @@ describe("Plateforme (docs/65 §5)", () => {
       body: { ai_budget_chf: 2 },
     });
   });
+
+  it("le plafond total s'enregistre au changement, sans bouton (0.78.4)", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    PUT.mockResolvedValue({ data: PLATFORM });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    expect(wrapper.find("[data-test=platform-ai] button[type=submit]").exists()).toBe(false);
+    const input = wrapper.find("#platform-total");
+    await input.setValue("60");
+    await input.trigger("change");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/platform/settings", { body: { ai_total_budget_chf: 60 } });
+    expect(wrapper.find("[data-test=platform-ai] .saved-flash").text()).toBe("Enregistré");
+  });
 });
 
 describe("Plateforme, demandes de compte (docs/102)", () => {

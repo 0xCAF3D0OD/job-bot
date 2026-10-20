@@ -150,3 +150,21 @@ Tes captures du 2026-10-20 (téléphone, ton compte et la démo).
 - **Les dates « Du » et « Jusqu'au »** : l'étiquette reste dans le champ quand on le touche, comme chez les CFF. Le champ ne montre que « jj.mm.aaaa » : sans l'étiquette, on ne saurait plus si l'on saisit le début ou la fin de la pause.
 - **Vérifié** : tests, lint, typecheck ; captures Playwright à 414 px des fins de Recherche et de Rythme, du seuil avec « Enregistré », de l'export terminé et des étapes d'installation.
 
+## Complément 0.78.4 : la cohérence sur ordinateur
+
+Tes captures du 2026-10-20 (Profil et Réglages sur ordinateur, ton compte d'exploitant) : « ne faudrait-il pas une cohérence ? Il y a un problème de structure d'éléments. Le bouton Diagnostic est toujours un peu en dehors de la cohérence globale. »
+
+- **Les titres en gras partout** : le titre de page (Profil, Réglages) et les titres de section (Prérequis, Documents, Coordonnées, Rythme…) étaient en gras sur téléphone seulement ; ils le sont aussi sur ordinateur.
+- **« Effet des critères »** : une information, donc un titre au-dessus et **une carte grise**, à côté de « Prérequis », aligné sur lui (avant : une carte blanche bordée, le titre dedans, plus haute que sa voisine).
+- **Une seule page de fond** : les Réglages passent en blanc, comme le Profil et les CFF.
+- **Plateforme** :
+  - le plafond total de l'IA, un seul champ, **s'enregistre au changement** (« Enregistré » à côté) ;
+  - la dépense du mois est une information grise ;
+  - « Mentions » garde un « Enregistrer », maintenant plein, comme les autres formulaires ;
+  - les deux aides passent en descriptions sous leur titre.
+- **Le Diagnostic** :
+  - sur ordinateur, **une entrée du sommaire**, sous un filet, avec son icône ;
+  - sur téléphone, **une ligne grise cliquable** en fin de page (titre, description, flèche) ;
+  - plus de lien qui flotte sous les cartes. Toujours à l'exploitant seul.
+- **Vérifié** : tests, lint, typecheck ; captures Playwright à 1280 px (Profil › Critères avec l'effet des critères, Réglages › Rythme avec le sommaire) et à 414 px.
+
