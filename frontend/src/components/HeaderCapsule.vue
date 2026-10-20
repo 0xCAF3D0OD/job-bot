@@ -5,12 +5,13 @@ import { useRoute } from "vue-router";
 import { CAPSULE, type CapsuleZone } from "../composables/useCapsule";
 import { usePhone } from "../composables/usePhone";
 
-// La capsule qui se déroule (docs/91, d'après le menu de Sphere) : la cloche, l'initiale et ☰
-// sont des zones séparées par des filets ; ouvrir l'une agrandit le cadre vers le bas, et son
-// contenu apparaît dedans (rendu dans #capsule-body). La rangée du haut ne bouge pas. Sur
-// téléphone, la cloche garde sa carte qui pousse la page (retour du 2026-10-15).
-const WIDTHS: Record<CapsuleZone, number> = { account: 240, bell: 384, progress: 416, menu: 240 };
-const GUTTER = 32;
+// La capsule qui se déroule (docs/91, d'après le menu de Sphere) : la cloche, le livre et
+// l'initiale sont des zones séparées par des filets ; leur contenu est rendu dans #capsule-body.
+// Comme Sphere (docs/109) : sur ordinateur, la capsule a la même largeur fermée et ouverte
+// (20 rem) et ne fait que descendre ; sur téléphone, elle ne bouge pas, et ce qu'on ouvre prend
+// tout l'écran sous l'en-tête, la page derrière immobile et la barre d'onglets cachée.
+const DESKTOP_REM = 20;
+const SHEET_CLASS = "capsule-sheet";
 
 const route = useRoute();
 const { phone } = usePhone();
@@ -22,12 +23,19 @@ const row = ref<HTMLElement | null>(null);
 const body = ref<HTMLElement | null>(null);
 const closed = ref({ width: 0, height: 0 });
 const size = ref<{ width: number; height: number } | null>(null);
-// La cloche sur téléphone s'ouvre sous la barre : la capsule reste fermée.
-const unrolled = computed(() => active.value !== null && !(phone.value && active.value === "bell"));
+const unrolled = computed(() => active.value !== null);
+// Téléphone : le haut de l'écran plein, juste sous la capsule.
+const sheetTop = ref(0);
+
+function rem(): number {
+  return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+}
 
 function measureClosed(): void {
   if (!row.value) return;
-  closed.value = { width: row.value.scrollWidth + 2, height: row.value.offsetHeight + 2 };
+  const natural = row.value.scrollWidth + 2;
+  const width = phone.value ? natural : Math.max(natural, DESKTOP_REM * rem());
+  closed.value = { width, height: row.value.offsetHeight + 2 };
 }
 
 function measureOpen(): void {
@@ -35,10 +43,18 @@ function measureOpen(): void {
     size.value = null;
     return;
   }
-  const room = window.innerWidth - GUTTER;
-  const width = phone.value ? room : Math.min(WIDTHS[active.value], room);
-  size.value = { width: Math.max(width, closed.value.width), height: row.value.offsetHeight + body.value.scrollHeight + 2 };
+  if (phone.value) {
+    size.value = null;
+    sheetTop.value = Math.round((root.value?.getBoundingClientRect().bottom ?? 0) + 0.75 * rem());
+    return;
+  }
+  size.value = { width: closed.value.width, height: row.value.offsetHeight + body.value.scrollHeight + 2 };
 }
+
+// La page derrière l'écran plein ne défile pas, la barre d'onglets se cache (docs/109).
+watch([unrolled, phone], ([isOpen, isPhone]) => {
+  document.documentElement.classList.toggle(SHEET_CLASS, isOpen && isPhone);
+});
 
 const style = computed(() => {
   const current = size.value ?? closed.value;
@@ -58,7 +74,6 @@ function close(focus: boolean): void {
 function onDocumentClick(event: MouseEvent): void {
   const target = event.target as Node;
   if (!active.value || root.value?.contains(target)) return;
-  if (document.getElementById("bell-drop")?.contains(target)) return;
   close(false);
 }
 
@@ -95,6 +110,7 @@ onMounted(() => {
   }
 });
 onUnmounted(() => {
+  document.documentElement.classList.remove(SHEET_CLASS);
   document.removeEventListener("click", onDocumentClick);
   document.removeEventListener("keydown", onKeydown);
   window.removeEventListener("resize", onResize);
@@ -109,7 +125,7 @@ onUnmounted(() => {
   >
     <div
       ref="root"
-      :class="['capsule', { open: unrolled }]"
+      :class="['capsule', { open: unrolled, sheet: unrolled && phone }]"
       :style="style"
       data-test="capsule"
     >
@@ -123,6 +139,7 @@ onUnmounted(() => {
         id="capsule-body"
         ref="body"
         class="capsule-body"
+        :style="unrolled && phone ? { top: `${sheetTop}px` } : undefined"
         data-test="capsule-body"
       />
     </div>

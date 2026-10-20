@@ -1,6 +1,7 @@
 # 91 — La capsule qui se déroule (version 0.70.4)
 
 > Statut : **validé** le 2026-10-19.
+> **En partie remplacé par docs/109** (0.77.5) : largeur fixe sur ordinateur, plein écran sur téléphone, la cloche comprise.
 > Origine : ta demande du 2026-10-19, « que le menu ait la logique de déroulement du menu de Sphere, et le même style pour les menus déroulants principaux », puis la maquette animée du même jour, corrigée : « juste une ligne discrète qui sépare chaque composant ».
 
 ## Le principe, pris à Sphere

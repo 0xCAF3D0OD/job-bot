@@ -78,13 +78,33 @@ describe("La capsule qui se déroule (docs/91)", () => {
     expect(wrapper.find("[data-test=bell-content]").exists()).toBe(false);
   });
 
-  it("sur téléphone, la cloche ne déroule pas la capsule (sa carte pousse la page)", async () => {
+  it("ordinateur (docs/109) : la même largeur, fermée et ouverte", async () => {
+    const { wrapper } = await mountCapsule();
+    const capsule = wrapper.find("[data-test=capsule]");
+    const closedWidth = (capsule.element as HTMLElement).style.width;
+    expect(closedWidth).toBe("320px");
+    await wrapper.find("[data-test=account]").trigger("click");
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+    await flushPromises();
+    expect((capsule.element as HTMLElement).style.width).toBe(closedWidth);
+    expect(capsule.classes()).not.toContain("sheet");
+  });
+
+  it("téléphone (docs/109) : ce qu'on ouvre prend tout l'écran, la page derrière immobile", async () => {
     phone.value = true;
     const { wrapper } = await mountCapsule();
     await wrapper.find("[data-test=bell]").trigger("click");
+    await flushPromises();
+    const capsule = wrapper.find("[data-test=capsule]");
     expect(wrapper.find("[data-test=bell-content]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=capsule]").classes()).not.toContain("open");
+    expect(capsule.classes()).toContain("sheet");
+    expect(document.documentElement.classList.contains("capsule-sheet")).toBe(true);
     await wrapper.find("[data-test=account]").trigger("click");
-    expect(wrapper.find("[data-test=capsule]").classes()).toContain("open");
+    await flushPromises();
+    expect(capsule.classes()).toContain("sheet");
+    await wrapper.find("[data-test=account]").trigger("click");
+    await flushPromises();
+    expect(capsule.classes()).not.toContain("sheet");
+    expect(document.documentElement.classList.contains("capsule-sheet")).toBe(false);
   });
 });
