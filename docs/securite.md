@@ -8,7 +8,7 @@
 | Qui | Ce qu'il voit et fait | Ce qu'il ne voit jamais |
 |---|---|---|
 | **Un invité** | ses offres, candidatures, contacts, entretiens, documents, profils, réglages ; les tables communes (entreprises, sites, actualités, catalogue des formations) | les données d'un autre compte, même leur existence ; la liste des comptes |
-| **L'exploitant** (le premier compte) | ses propres données ; la liste des comptes, leur dernière connexion, leur dépense d'IA et leur nombre d'offres du mois ; l'état et le journal de la plateforme ; les invitations | dans l'interface, **jamais** les données d'un invité |
+| **L'exploitant** (le premier compte) | ses propres données ; la liste des comptes, leur dernière connexion, leur dépense d'IA et leur nombre d'offres du mois ; l'état et le journal de la plateforme ; les invitations ; les demandes de compte (identifiant, date, mot laissé) | dans l'interface, **jamais** les données d'un invité |
 | **Le worker** (tâches de fond) | chaque compte à son tour, au nom de ce compte ; il écrit seul (avec l'exploitant) les tables communes | — |
 | **Une page d'un autre site** | rien : les requêtes qui modifient sont refusées si elles ne viennent pas de la plateforme | — |
 
@@ -37,7 +37,9 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 
 ## 4. Les accès
 
-- Pas d'inscription ouverte : l'exploitant **invite** par un lien à usage unique (7 jours).
+- **Inscription sur demande** (depuis 0.73.0, docs/102) : n'importe qui demande un compte depuis la page de connexion ; le compte **attend la validation de l'exploitant**. Tant qu'il attend : ni connexion, ni session, ni tâche, ni profil, ni adresse de réception. Une connexion avant l'acceptation le dit seulement si le mot de passe est juste. Refuser efface le compte ; une demande sans réponse est effacée après 30 jours.
+- Garde-fous des demandes : 3 par heure depuis une même adresse IP, 20 en attente au plus, un champ piège invisible (rempli : ignorée en silence), pas de CAPTCHA. L'exploitant peut les fermer. La démo n'en a pas. Les journaux gardent l'identifiant et l'adresse IP, jamais le mot de passe ni le mot laissé.
+- L'exploitant **invite** aussi par un lien à usage unique (7 jours) : le compte invité est accepté d'office.
 - Mot de passe de **12 caractères au moins**. Après 5 essais ratés, une attente croissante.
 - Une session dure 30 jours et se prolonge à l'usage, au plus 90 jours après la connexion. « Se déconnecter partout » ferme toutes les sessions du compte.
 - **Suspendre** un compte ferme ses sessions, révoque ses jetons d'extension et d'agenda et arrête ses tâches ; ses données sont gardées.

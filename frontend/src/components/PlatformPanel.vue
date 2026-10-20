@@ -21,6 +21,9 @@ const copied = ref(false);
 const total = ref("");
 const message = ref("");
 const caps = ref<Record<number, string>>({});
+// Les demandes de compte (docs/102) : l'interrupteur et ce qu'il dit après l'enregistrement.
+const signupOpen = ref(true);
+const signupMessage = ref("");
 
 function money(value: string): string {
   return Number(value).toLocaleString("fr-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -30,6 +33,7 @@ function show(data: Platform | undefined): void {
   if (!data) return;
   platform.value = data;
   total.value = String(Number(data.ai_total_budget_chf));
+  signupOpen.value = data.signup_open;
   caps.value = Object.fromEntries(data.accounts.map((a) => [a.id, String(Number(a.ai_budget_chf))]));
 }
 
@@ -122,6 +126,31 @@ async function saveTotal(): Promise<void> {
   message.value = data ? "Plafond enregistré." : "Valeur refusée.";
 }
 
+// Une demande de compte (docs/102) : accepter l'active, refuser l'efface avec le compte.
+async function approve(id: number): Promise<void> {
+  const { data } = await api.POST("/api/platform/accounts/{account_id}/approve", {
+    params: { path: { account_id: id } },
+  });
+  show(data);
+}
+
+async function refuse(id: number, name: string): Promise<void> {
+  if (!window.confirm(`Refuser la demande de ${name} ? Elle sera effacée, avec le compte.`)) return;
+  const { data } = await api.DELETE("/api/platform/accounts/{account_id}", {
+    params: { path: { account_id: id } },
+  });
+  show(data);
+}
+
+async function saveSignup(): Promise<void> {
+  const wanted = !signupOpen.value;
+  const { data } = await api.PUT("/api/platform/settings", { body: { signup_open: wanted } });
+  show(data);
+  signupMessage.value = data
+    ? wanted ? "Demandes de compte ouvertes." : "Demandes de compte fermées."
+    : "Enregistrement impossible.";
+}
+
 // Les mentions de la page « Tes données » (docs/65 §6) : responsable, contact, hébergeur.
 const mentions = ref("");
 const mentionsMessage = ref("");
@@ -175,7 +204,55 @@ function size(bytes: number | null | undefined): string {
       La connexion est désactivée sur cette installation : les comptes invités ne pourront pas se connecter.
     </p>
     <div
+      v-if="platform.signup_requests.length"
       class="form-card"
+      data-test="platform-requests"
+    >
+      <fieldset>
+        <legend>Demandes de compte</legend>
+        <ul class="platform-accounts">
+          <li
+            v-for="request in platform.signup_requests"
+            :key="request.id"
+            :data-test="`request-${request.username}`"
+          >
+            <div class="platform-account-head">
+              <strong>{{ request.username }}</strong>
+            </div>
+            <p class="meta-line muted">
+              <span><AppIcon name="clock" /><span class="visually-hidden">Demandé le </span>{{ formatDate(request.created_at) }}</span>
+            </p>
+            <p
+              v-if="request.note"
+              class="muted platform-request-note"
+            >
+              {{ request.note }}
+            </p>
+            <div class="platform-actions">
+              <button
+                type="button"
+                class="secondary"
+                :data-test="`approve-${request.username}`"
+                @click="approve(request.id)"
+              >
+                <span class="with-icon"><AppIcon name="done" />Accepter</span>
+              </button>
+              <button
+                type="button"
+                class="secondary danger"
+                :data-test="`refuse-${request.username}`"
+                @click="refuse(request.id, request.username)"
+              >
+                Refuser
+              </button>
+            </div>
+          </li>
+        </ul>
+      </fieldset>
+    </div>
+    <div
+      class="form-card"
+      :class="{ 'settings-next-card': platform.signup_requests.length }"
       data-test="platform-accounts"
     >
       <fieldset>
@@ -235,6 +312,23 @@ function size(bytes: number | null | undefined): string {
             </div>
           </li>
         </ul>
+        <div class="platform-signup">
+          <label class="filter-switch">
+            <input
+              type="checkbox"
+              role="switch"
+              :checked="signupOpen"
+              data-test="signup-open"
+              @change="saveSignup"
+            >
+            <span>Accepter des demandes de compte</span>
+          </label>
+          <span
+            v-if="signupMessage"
+            role="status"
+            class="muted"
+          >{{ signupMessage }}</span>
+        </div>
         <div class="form-actions">
           <button
             type="button"

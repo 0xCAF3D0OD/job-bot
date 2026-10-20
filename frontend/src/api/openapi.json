@@ -50,6 +50,9 @@
           "401": {
             "description": "Identifiant ou mot de passe incorrect"
           },
+          "403": {
+            "description": "Compte suspendu, ou en attente de validation"
+          },
           "409": {
             "description": "Aucun compte : lancer jobbot set-password"
           },
@@ -188,6 +191,59 @@
           },
           "422": {
             "description": "Identifiant ou mot de passe refusé"
+          }
+        }
+      }
+    },
+    "/api/auth/signup": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get Signup",
+        "operationId": "getSignup",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignupStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Request Signup",
+        "description": "Crée le compte en attente ; l'exploitant reçoit une alerte. Rien n'est envoyé à la\npersonne : elle revient se connecter une fois acceptée.",
+        "operationId": "requestSignup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Demandes fermées"
+          },
+          "422": {
+            "description": "Identifiant, mot de passe ou case refusés"
+          },
+          "429": {
+            "description": "Trop de demandes depuis cette adresse"
           }
         }
       }
@@ -409,7 +465,7 @@
           "platform"
         ],
         "summary": "Delete Account",
-        "description": "Le compte et toutes ses données, fichiers compris : rien n'est gardé.",
+        "description": "Le compte et toutes ses données, fichiers compris : rien n'est gardé. Sur une demande\nen attente : la refuser (docs/102).",
         "operationId": "deleteAccount",
         "parameters": [
           {
@@ -482,6 +538,55 @@
           },
           "403": {
             "description": "Exploitant seul"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/accounts/{account_id}/approve": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Approve Account",
+        "description": "Accepte une demande de compte (docs/102) : la personne peut se connecter.",
+        "operationId": "approveAccount",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "404": {
+            "description": "Demande"
           },
           "422": {
             "description": "Validation Error",
@@ -10933,8 +11038,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "en",
-                  "de"
+                  "de",
+                  "en"
                 ]
               },
               {
@@ -13417,8 +13522,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "en",
-                  "de"
+                  "de",
+                  "en"
                 ]
               },
               {
@@ -13562,8 +13667,8 @@
                 "type": "string",
                 "enum": [
                   "fr",
-                  "en",
-                  "de"
+                  "de",
+                  "en"
                 ]
               },
               {
@@ -16264,6 +16369,19 @@
             "type": "array",
             "title": "Invitations"
           },
+          "signup_requests": {
+            "items": {
+              "$ref": "#/components/schemas/SignupRequestOut"
+            },
+            "type": "array",
+            "title": "Signup Requests",
+            "default": []
+          },
+          "signup_open": {
+            "type": "boolean",
+            "title": "Signup Open",
+            "default": true
+          },
           "ai_total_budget_chf": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
@@ -16316,16 +16434,28 @@
               {
                 "type": "string",
                 "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Ai Total Budget Chf"
+          },
+          "signup_open": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signup Open"
           }
         },
         "type": "object",
-        "required": [
-          "ai_total_budget_chf"
-        ],
-        "title": "PlatformSettingsIn"
+        "title": "PlatformSettingsIn",
+        "description": "Ce qui est envoyé change ; ce qui manque reste tel quel."
       },
       "PracticeAnswerIn": {
         "properties": {
@@ -18357,6 +18487,107 @@
         },
         "type": "object",
         "title": "SettingsModel"
+      },
+      "SignupIn": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Password"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "consent": {
+            "type": "boolean",
+            "title": "Consent",
+            "default": false
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "SignupIn"
+      },
+      "SignupRequestOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "created_at",
+          "note"
+        ],
+        "title": "SignupRequestOut",
+        "description": "Une demande de compte en attente (docs/102)."
+      },
+      "SignupStatus": {
+        "properties": {
+          "open": {
+            "type": "boolean",
+            "title": "Open"
+          }
+        },
+        "type": "object",
+        "required": [
+          "open"
+        ],
+        "title": "SignupStatus"
       },
       "SiteActive": {
         "properties": {

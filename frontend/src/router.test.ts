@@ -81,3 +81,16 @@ describe("accueil d'un nouveau compte (docs/66 §4)", () => {
     expect(router.currentRoute.value.name).toBe("trainings");
   });
 });
+
+describe("demander un compte (docs/102)", () => {
+  it("ouvert sans connexion ; connecté, renvoie vers l'application", async () => {
+    GET.mockResolvedValue({ data: { authenticated: false, username: null, setup_needed: false, auth_enabled: true } });
+    const { router } = await import("./router");
+    await router.push("/inscription");
+    expect(router.currentRoute.value.name).toBe("signup");
+    await router.push("/la-plateforme");
+    useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: false, welcome: "done", demo: false };
+    await router.push("/inscription");
+    expect(router.currentRoute.value.fullPath).toBe("/aujourdhui");
+  });
+});

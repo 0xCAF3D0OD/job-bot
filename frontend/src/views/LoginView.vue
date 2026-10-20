@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+import { api } from "../api/client";
 import AuthSplit from "../components/AuthSplit.vue";
 import HoverNote from "../components/HoverNote.vue";
 import SocialSignIn from "../components/SocialSignIn.vue";
@@ -17,6 +18,8 @@ const username = ref("");
 const password = ref("");
 const error = ref("");
 const busy = ref(false);
+// Les demandes de compte ouvertes (docs/102) : le lien « Créer un compte » ; sinon, l'invitation.
+const signupOpen = ref(false);
 
 function next(): string {
   const wanted = typeof route.query.suite === "string" ? route.query.suite : "";
@@ -42,7 +45,11 @@ async function submit(): Promise<void> {
   }
 }
 
-onMounted(() => void load());
+onMounted(async () => {
+  void load();
+  const { data } = await api.GET("/api/auth/signup");
+  signupOpen.value = data?.open === true;
+});
 </script>
 
 <template>
@@ -107,8 +114,21 @@ onMounted(() => void load());
           {{ busy ? "Connexion…" : "Se connecter" }}
         </button>
       </form>
+      <!-- Deux lignes : l'inscription, puis les données personnelles (docs/102). -->
       <p class="hint auth-foot">
-        Pas encore de compte ? L'accès se fait sur invitation.
+        <template v-if="signupOpen">
+          Pas encore de compte ? <RouterLink
+            to="/inscription"
+            data-test="signup-link"
+          >
+            Créer un compte
+          </RouterLink>
+        </template>
+        <template v-else>
+          Pas encore de compte ? L'accès se fait sur invitation.
+        </template>
+      </p>
+      <p class="hint auth-foot">
         <RouterLink to="/tes-donnees">
           Données personnelles
         </RouterLink>

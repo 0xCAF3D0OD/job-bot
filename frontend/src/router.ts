@@ -25,6 +25,7 @@ import PreparationView from "./views/PreparationView.vue";
 import ProgressView from "./views/ProgressView.vue";
 import ProfileView from "./views/ProfileView.vue";
 import SettingsView from "./views/SettingsView.vue";
+import SignupView from "./views/SignupView.vue";
 import TodayView from "./views/TodayView.vue";
 import TrainingsView from "./views/TrainingsView.vue";
 import type { IconName } from "./icons";
@@ -151,6 +152,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/connexion", name: "login", component: LoginView },
   // Lien d'invitation ou de réinitialisation, transmis par l'exploitant (docs/65 §2).
   { path: "/acces/:token", name: "access", component: AccessView },
+  // Demander un compte, validé ensuite par l'exploitant (docs/102).
+  { path: "/inscription", name: "signup", component: SignupView },
   // La plateforme présentée à qui n'est pas connecté (docs/67, complément).
   { path: "/la-plateforme", name: "discover", component: DiscoverView },
   // Ce que la plateforme garde, lisible sans connexion (docs/65 §6).
@@ -172,13 +175,15 @@ export const router = createRouter({
 });
 
 // Ouvert sans connexion : la présentation de la plateforme, la connexion (docs/18 §1), les liens
-// d'accès et ce qui est gardé. Les Actualités demandent la connexion depuis la 0.55.0 (docs/67).
-export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "privacy"]);
+// d'accès, la demande de compte (docs/102) et ce qui est gardé. Les Actualités demandent la
+// connexion depuis la 0.55.0 (docs/67).
+export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "signup", "privacy"]);
 
 router.beforeEach(async (to) => {
   const { loggedIn, load } = useAuth();
   await load();
-  if (to.name === "login") {
+  // Connecté, la connexion et la demande de compte renvoient vers l'application.
+  if (to.name === "login" || to.name === "signup") {
     if (!loggedIn.value) return true;
     const wanted = typeof to.query.suite === "string" ? to.query.suite : "";
     return wanted.startsWith("/") && !wanted.startsWith("//") ? wanted : "/aujourdhui";

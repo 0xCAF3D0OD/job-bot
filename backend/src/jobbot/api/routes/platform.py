@@ -1,7 +1,8 @@
 """Plateforme (docs/65 §2, §4, §5) : les comptes et les réglages de l'installation.
 
 Réservé à l'exploitant. Il voit de chaque compte son usage (connexion, dépense de l'IA,
-offres reçues ce mois), jamais ses données ; il invite, réinitialise, suspend, supprime.
+offres reçues ce mois), jamais ses données ; il invite, réinitialise, suspend, supprime. Il
+accepte ou refuse les demandes de compte (docs/102).
 """
 
 from datetime import UTC, datetime
@@ -14,7 +15,7 @@ from sqlalchemy import delete, func, select, text, update
 
 from jobbot import accounts, backup, platform
 from jobbot.api.owner import require_owner
-from jobbot.auth import links
+from jobbot.auth import links, signup
 from jobbot.auth.service import end_all_sessions
 from jobbot.db.base import connected_as_admin
 from jobbot.db.models import AccountLink, CalendarToken, ExtensionToken, User
@@ -50,6 +51,16 @@ class InvitationOut(BaseModel):
     expires_at: datetime
 
 
+class SignupRequestOut(BaseModel):
+    """Une demande de compte en attente (docs/102)."""
+
+    id: int
+    username: str
+    created_at: datetime
+    # « Un mot pour l'exploitant », facultatif.
+    note: str | None
+
+
 class BackupOut(BaseModel):
     """Les sauvegardes (docs/82) : réglées ou non, la dernière, le dernier essai."""
 
@@ -67,8 +78,12 @@ class BackupOut(BaseModel):
 
 
 class PlatformOut(BaseModel):
+    # Les comptes acceptés ; les demandes en attente sont à part.
     accounts: list[AccountOut]
     invitations: list[InvitationOut]
+    signup_requests: list[SignupRequestOut] = []
+    # L'interrupteur « Accepter des demandes de compte » (activé d'office).
+    signup_open: bool = True
     ai_total_budget_chf: Decimal
     ai_month_spend_chf: Decimal
     auth_enabled: bool
@@ -91,7 +106,10 @@ class AccountChange(BaseModel):
 
 
 class PlatformSettingsIn(BaseModel):
-    ai_total_budget_chf: Annotated[Decimal, Field(ge=0, le=10000)]
+    """Ce qui est envoyé change ; ce qui manque reste tel quel."""
+
+    ai_total_budget_chf: Annotated[Decimal | None, Field(ge=0, le=10000)] = None
+    signup_open: bool | None = None
 
 
 def _month_start() -> datetime:
@@ -105,7 +123,10 @@ async def get_platform(request: Request) -> PlatformOut:
     start = _month_start()
     async with runtime.sessionmaker() as session:
         owner = await accounts.owner_id(session)
-        users = list(await session.scalars(select(User).order_by(User.id)))
+        everyone = list(await session.scalars(select(User).order_by(User.id)))
+        users = [u for u in everyone if u.approved_at is not None]
+        pending = [u for u in everyone if u.approved_at is None]
+        signup_open = await signup.switched_on(session)
         usage = {
             int(row.user_id): row
             for row in await session.execute(
@@ -160,6 +181,13 @@ async def get_platform(request: Request) -> PlatformOut:
             InvitationOut(id=i.id, created_at=i.created_at, expires_at=i.expires_at)
             for i in invitations
         ],
+        signup_requests=[
+            SignupRequestOut(
+                id=u.id, username=u.username, created_at=u.created_at, note=u.signup_note
+            )
+            for u in sorted(pending, key=lambda u: u.created_at)
+        ],
+        signup_open=signup_open,
         ai_total_budget_chf=total,
         ai_month_spend_chf=Decimal(str(spend)).quantize(Decimal("0.01")),
         auth_enabled=runtime.settings.auth_enabled,
@@ -222,11 +250,17 @@ async def delete_invitation(request: Request, link_id: int) -> None:
         )
 
 
-async def _other_account(runtime: Runtime, account_id: int) -> None:
-    """Un compte qui existe, et pas celui de l'exploitant (il ne se suspend ni ne se supprime)."""
+async def _other_account(runtime: Runtime, account_id: int, *, pending_ok: bool = False) -> None:
+    """Un compte qui existe, et pas celui de l'exploitant (il ne se suspend ni ne se supprime).
+    Une demande en attente s'accepte ou se refuse (supprimée), rien d'autre."""
     async with runtime.sessionmaker() as session:
-        if await session.get(User, account_id) is None:
+        user = await session.get(User, account_id)
+        if user is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "compte introuvable")
+        if user.approved_at is None and not pending_ok:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "demande de compte en attente : accepte-la ou refuse-la"
+            )
         if account_id == await accounts.owner_id(session):
             raise HTTPException(
                 status.HTTP_409_CONFLICT, "le compte de l'exploitant : jobbot set-password"
@@ -287,10 +321,11 @@ async def update_account(request: Request, account_id: int, body: AccountChange)
     responses={403: {"description": "Exploitant seul"}, 404: {"description": "Compte"}},
 )
 async def delete_account(request: Request, account_id: int) -> PlatformOut:
-    """Le compte et toutes ses données, fichiers compris : rien n'est gardé."""
+    """Le compte et toutes ses données, fichiers compris : rien n'est gardé. Sur une demande
+    en attente : la refuser (docs/102)."""
     runtime = _runtime(request)
     await require_owner(runtime)
-    await _other_account(runtime, account_id)
+    await _other_account(runtime, account_id, pending_ok=True)
     async with runtime.sessionmaker.begin() as session:
         await session.execute(delete(User).where(User.id == account_id))
     runtime.storage.delete_folder(f"accounts/{account_id}")
@@ -307,5 +342,24 @@ async def save_platform_settings(request: Request, body: PlatformSettingsIn) -> 
     runtime = _runtime(request)
     await require_owner(runtime)
     async with runtime.sessionmaker.begin() as session:
-        await platform.put(session, "ai_total_budget_chf", str(body.ai_total_budget_chf))
+        if body.ai_total_budget_chf is not None:
+            await platform.put(session, "ai_total_budget_chf", str(body.ai_total_budget_chf))
+        if body.signup_open is not None:
+            await platform.put(session, signup.OPEN_KEY, body.signup_open)
+    return await get_platform(request)
+
+
+@router.post(
+    "/accounts/{account_id}/approve",
+    operation_id="approveAccount",
+    responses={403: {"description": "Exploitant seul"}, 404: {"description": "Demande"}},
+)
+async def approve_account(request: Request, account_id: int) -> PlatformOut:
+    """Accepte une demande de compte (docs/102) : la personne peut se connecter."""
+    runtime = _runtime(request)
+    await require_owner(runtime)
+    async with runtime.sessionmaker.begin() as session:
+        if not await signup.approve(session, account_id):
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "demande de compte introuvable")
+    log.info("signup_approved", account=account_id)
     return await get_platform(request)

@@ -96,6 +96,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Signup */
+        get: operations["getSignup"];
+        put?: never;
+        /**
+         * Request Signup
+         * @description Crée le compte en attente ; l'exploitant reçoit une alerte. Rien n'est envoyé à la
+         *     personne : elle revient se connecter une fois acceptée.
+         */
+        post: operations["requestSignup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/maintenance": {
         parameters: {
             query?: never;
@@ -193,7 +215,8 @@ export interface paths {
         post?: never;
         /**
          * Delete Account
-         * @description Le compte et toutes ses données, fichiers compris : rien n'est gardé.
+         * @description Le compte et toutes ses données, fichiers compris : rien n'est gardé. Sur une demande
+         *     en attente : la refuser (docs/102).
          */
         delete: operations["deleteAccount"];
         options?: never;
@@ -213,6 +236,26 @@ export interface paths {
         /** Save Platform Settings */
         put: operations["savePlatformSettings"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/platform/accounts/{account_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Account
+         * @description Accepte une demande de compte (docs/102) : la personne peut se connecter.
+         */
+        post: operations["approveAccount"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3853,7 +3896,7 @@ export interface components {
         /** CvRequest */
         CvRequest: {
             /** Language */
-            language?: ("fr" | "en" | "de") | null;
+            language?: ("fr" | "de" | "en") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */
@@ -4592,7 +4635,7 @@ export interface components {
             /** Paragraphs */
             paragraphs: components["schemas"]["LetterParagraph"][];
             /** Language */
-            language?: ("fr" | "en" | "de") | null;
+            language?: ("fr" | "de" | "en") | null;
         };
         /** LetterOut */
         LetterOut: {
@@ -4635,7 +4678,7 @@ export interface components {
         /** LetterRequest */
         LetterRequest: {
             /** Language */
-            language?: ("fr" | "en" | "de") | null;
+            language?: ("fr" | "de" | "en") | null;
             /** Instruction */
             instruction?: string | null;
             /** Base Draft Id */
@@ -5492,6 +5535,16 @@ export interface components {
             accounts: components["schemas"]["AccountOut"][];
             /** Invitations */
             invitations: components["schemas"]["InvitationOut"][];
+            /**
+             * Signup Requests
+             * @default []
+             */
+            signup_requests: components["schemas"]["SignupRequestOut"][];
+            /**
+             * Signup Open
+             * @default true
+             */
+            signup_open: boolean;
             /** Ai Total Budget Chf */
             ai_total_budget_chf: string;
             /** Ai Month Spend Chf */
@@ -5505,10 +5558,15 @@ export interface components {
             database_admin: boolean;
             backup?: components["schemas"]["BackupOut"] | null;
         };
-        /** PlatformSettingsIn */
+        /**
+         * PlatformSettingsIn
+         * @description Ce qui est envoyé change ; ce qui manque reste tel quel.
+         */
         PlatformSettingsIn: {
             /** Ai Total Budget Chf */
-            ai_total_budget_chf: number | string;
+            ai_total_budget_chf?: number | string | null;
+            /** Signup Open */
+            signup_open?: boolean | null;
         };
         /** PracticeAnswerIn */
         PracticeAnswerIn: {
@@ -6219,6 +6277,44 @@ export interface components {
             /** Rhythm Pause Until */
             rhythm_pause_until?: string | null;
         };
+        /** SignupIn */
+        SignupIn: {
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+            /** Note */
+            note?: string | null;
+            /**
+             * Consent
+             * @default false
+             */
+            consent: boolean;
+            /** Website */
+            website?: string | null;
+        };
+        /**
+         * SignupRequestOut
+         * @description Une demande de compte en attente (docs/102).
+         */
+        SignupRequestOut: {
+            /** Id */
+            id: number;
+            /** Username */
+            username: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Note */
+            note: string | null;
+        };
+        /** SignupStatus */
+        SignupStatus: {
+            /** Open */
+            open: boolean;
+        };
         /** SiteActive */
         SiteActive: {
             /** Active */
@@ -6706,6 +6802,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Compte suspendu, ou en attente de validation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Aucun compte : lancer jobbot set-password */
             409: {
                 headers: {
@@ -6857,6 +6960,69 @@ export interface operations {
             };
             /** @description Identifiant ou mot de passe refusé */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getSignup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignupStatus"];
+                };
+            };
+        };
+    };
+    requestSignup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Demandes fermées */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Identifiant, mot de passe ou case refusés */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Trop de demandes depuis cette adresse */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7137,6 +7303,51 @@ export interface operations {
             };
             /** @description Exploitant seul */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approveAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformOut"];
+                };
+            };
+            /** @description Exploitant seul */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Demande */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
