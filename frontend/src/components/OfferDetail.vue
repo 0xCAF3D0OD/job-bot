@@ -96,6 +96,7 @@ const postLink = computed(() => {
     return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" };
   }
   const link = o.links[0];
+  if (link?.source === "manual") return { url: link.url, label: "Ouvrir l'annonce" };
   return link ? { url: link.url, label: `Postuler sur ${sourceLabel[link.source]}` } : null;
 });
 

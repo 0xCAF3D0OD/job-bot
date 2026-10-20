@@ -140,6 +140,8 @@ async def expire_stale(runtime: Runtime, now: datetime) -> int:
     """Sans page à vérifier, une offre absente des alertes depuis 30 jours est expirée."""
     async with runtime.sessionmaker.begin() as session:
         jobup_offers = select(OfferLink.offer_id).where(OfferLink.source == Source.JOBUP)
+        # Offre ajoutée par toi (docs/111) : elle ne revient dans aucune alerte.
+        added = select(OfferLink.offer_id).where(OfferLink.source == "manual")
         result = await session.execute(
             update(Offer)
             .where(
@@ -148,6 +150,7 @@ async def expire_stale(runtime: Runtime, now: datetime) -> int:
                 Offer.status != OfferStatus.APPLIED,
                 Offer.last_seen_at < now - STALE_AFTER,
                 Offer.id.not_in(jobup_offers),
+                Offer.id.not_in(added),
                 # Candidature spontanée : pas d'annonce qui pourrait disparaître (docs/39 §4).
                 Offer.spontaneous.is_(False),
             )

@@ -11,6 +11,7 @@ import OfferDetail from "../components/OfferDetail.vue";
 import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
+import ManualOfferForm from "../components/ManualOfferForm.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
@@ -49,6 +50,10 @@ const filtersOpen = ref(false);
 const { phone } = usePhone();
 // Candidature spontanée (docs/39) : sans annonce, préparée comme une offre.
 const spontaneousOpen = ref(false);
+// Ajouter une offre trouvée ailleurs (docs/111), aussi par « Partager vers jobA1 » sur Android :
+// /candidatures/offres?ajouter=1&url=…&text=… ouvre le formulaire, lien ou texte déjà là.
+const manualOpen = ref(false);
+const shared = ref<{ url: string | null; text: string | null }>({ url: null, text: null });
 
 const selected = computed(() => items.value.find((o) => o.id === selectedId.value) ?? null);
 
@@ -108,6 +113,38 @@ async function openFromQuery(): Promise<void> {
   selectedId.value = id;
 }
 watch(() => route.query.offre, () => void openFromQuery());
+
+// Android partage souvent le lien dans le texte (« Titre https://… ») : on l'en sort.
+function openShared(): void {
+  if (!route.query.ajouter) return;
+  const pick = (key: string) => (typeof route.query[key] === "string" ? String(route.query[key]).trim() : "");
+  const sharedText = [pick("title"), pick("text")].filter(Boolean).join("\n");
+  const found = pick("url") || sharedText.match(/https:\/\/\S+/)?.[0] || "";
+  const rest = sharedText.replace(found, "").trim();
+  shared.value = { url: found || null, text: found ? null : rest || null };
+  manualOpen.value = true;
+  void router.replace({ query: { ...route.query, ajouter: undefined, url: undefined, text: undefined, title: undefined } });
+}
+watch(() => route.query.ajouter, () => openShared());
+
+function openManual(): void {
+  shared.value = { url: null, text: null };
+  manualOpen.value = true;
+}
+
+// L'offre ajoutée (ou déjà là) s'ouvre ; écartée par les critères, elle est gardée avec la raison.
+async function manualAdded(result: { id: number; existing: boolean; status: string; reasons: string[] }): Promise<void> {
+  manualOpen.value = false;
+  undo.value = null;
+  notice.value = result.existing
+    ? "Cette offre était déjà là : la voici."
+    : result.status === "filtered_out"
+      ? `Offre ajoutée. Tes critères l'écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
+      : "Offre ajoutée : sa note arrive dans un instant.";
+  await load();
+  await router.replace({ query: { ...route.query, offre: String(result.id) } });
+  await openFromQuery();
+}
 let requestId = 0;
 
 async function load(append = false): Promise<void> {
@@ -290,6 +327,7 @@ async function loadChunkTitles(): Promise<void> {
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
   void load().then(openFromQuery);
+  openShared();
   void loadChunkTitles();
   void loadVisibility();
 });
@@ -376,19 +414,30 @@ onUnmounted(() => {
             Annuler
           </button>
         </p>
-        <!-- « Candidature spontanée » sur la ligne du nombre d'offres (docs/43 n° 11). -->
+        <!-- « Ajouter une offre » et « Candidature spontanée » sur la ligne du nombre d'offres
+             (docs/43 n° 11, docs/111). -->
         <div class="list-count-row">
           <p class="count list-count">
             {{ plural(total, "offre", "offres") }}{{ loading ? "…" : "" }}
           </p>
-          <button
-            type="button"
-            class="secondary small spontaneous-open"
-            data-test="spontaneous-open"
-            @click="spontaneousOpen = true"
-          >
-            Candidature spontanée
-          </button>
+          <span class="list-count-actions">
+            <button
+              type="button"
+              class="secondary small"
+              data-test="manual-open"
+              @click="openManual"
+            >
+              Ajouter une offre
+            </button>
+            <button
+              type="button"
+              class="secondary small"
+              data-test="spontaneous-open"
+              @click="spontaneousOpen = true"
+            >
+              Candidature spontanée
+            </button>
+          </span>
         </div>
         <p
           v-if="failed"
@@ -489,5 +538,17 @@ onUnmounted(() => {
     @close="spontaneousOpen = false"
   >
     <SpontaneousForm @created="load()" />
+  </SidePanel>
+  <SidePanel
+    v-if="manualOpen"
+    open
+    title="Ajouter une offre"
+    @close="manualOpen = false"
+  >
+    <ManualOfferForm
+      :initial-url="shared.url"
+      :initial-text="shared.text"
+      @added="manualAdded"
+    />
   </SidePanel>
 </template>

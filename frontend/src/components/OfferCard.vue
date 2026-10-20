@@ -47,6 +47,11 @@ const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" "
           class="badge spontaneous-badge"
           data-test="spontaneous-badge"
         >Spontanée</span>
+        <span
+          v-else-if="offer.added_by_you"
+          class="badge spontaneous-badge"
+          data-test="added-badge"
+        >Ajoutée par toi</span>
       </span>
       <span class="offer-row-sub meta-line">
         <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company ?? "Entreprise non indiquée" }}</span>

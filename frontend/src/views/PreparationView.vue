@@ -36,6 +36,7 @@ const applyLink = computed(() => {
     return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" };
   }
   const link = o.links[0];
+  if (link?.source === "manual") return { url: link.url, label: "Ouvrir l'annonce" };
   return link ? { url: link.url, label: `Postuler sur ${SITE_NAMES[link.source] ?? link.source}` } : null;
 });
 const currentCvId = ref<number | null>(null);

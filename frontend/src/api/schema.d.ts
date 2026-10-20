@@ -781,6 +781,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Context */
+        get: operations["getManualOfferContext"];
+        put?: never;
+        /** Add */
+        post: operations["addManualOffer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/manual/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read */
+        post: operations["readManualOffer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/interview.ics": {
         parameters: {
             query?: never;
@@ -4744,6 +4779,87 @@ export interface components {
             /** Bypass */
             bypass: boolean;
         };
+        /** ManualAddIn */
+        ManualAddIn: {
+            /** Title */
+            title: string;
+            /** Company */
+            company?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Url */
+            url?: string | null;
+            /**
+             * Read By
+             * @default main
+             * @enum {string}
+             */
+            read_by: "page" | "ia" | "main";
+        };
+        /** ManualAddOut */
+        ManualAddOut: {
+            /** Id */
+            id: number;
+            /** Existing */
+            existing: boolean;
+            /** Status */
+            status: string;
+            /** Reasons */
+            reasons: string[];
+        };
+        /** ManualContext */
+        ManualContext: {
+            /** Trade */
+            trade: string | null;
+            /** Added Today */
+            added_today: number;
+            /** Daily Limit */
+            daily_limit: number;
+        };
+        /** ManualDraft */
+        ManualDraft: {
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /** Location */
+            location: string | null;
+            /** Description */
+            description: string | null;
+            /** Url */
+            url: string | null;
+            /**
+             * Read By
+             * @enum {string}
+             */
+            read_by: "page" | "ia";
+            /** Trade */
+            trade: string | null;
+            /** Matches Trade */
+            matches_trade: boolean;
+            /** Existing Offer Id */
+            existing_offer_id: number | null;
+        };
+        /** ManualReadIn */
+        ManualReadIn: {
+            /** Url */
+            url?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /** ManualReadOut */
+        ManualReadOut: {
+            draft?: components["schemas"]["ManualDraft"] | null;
+            /** Problem */
+            problem?: string | null;
+            /**
+             * Paste
+             * @default false
+             */
+            paste: boolean;
+        };
         /** MatchOut */
         MatchOut: {
             offer: components["schemas"]["OfferBrief"] | null;
@@ -5362,6 +5478,11 @@ export interface components {
              * @default false
              */
             spontaneous: boolean;
+            /**
+             * Added By You
+             * @default false
+             */
+            added_by_you: boolean;
         };
         /** OfferPage */
         OfferPage: {
@@ -6142,6 +6263,11 @@ export interface components {
              * @default false
              */
             spontaneous: boolean;
+            /**
+             * Added By You
+             * @default false
+             */
+            added_by_you: boolean;
             /** Is First */
             is_first: boolean;
         };
@@ -8404,6 +8530,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SpontaneousOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getManualOfferContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualContext"];
+                };
+            };
+        };
+    };
+    addManualOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualAddIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualAddOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    readManualOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualReadIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualReadOut"];
                 };
             };
             /** @description Validation Error */
