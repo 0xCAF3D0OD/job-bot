@@ -89,3 +89,6 @@ Sous 820 px, un écran où l'on travaille un moment (l'entraînement à l'entret
 4. Un réglage d'un seul champ s'enregistre au changement (« Enregistré » une seconde à côté) ; un formulaire de plusieurs champs a un seul « Enregistrer » plein, à la fin.
 5. Les nombres sans flèches haut / bas, partout ; quelques valeurs sensées : des pastilles.
 
+## La couleur d'accent (docs/107)
+
+Une seule couleur d'accent, le bleu du logo (`--accent`). Le texte posé dessus passe par `--on-accent` (blanc en clair, foncé en sombre), jamais `#fff` écrit en dur. La pêche reste la seule touche du logo et des actions IA.

@@ -2,9 +2,10 @@
   --text: #11111f;
   --muted: #6e6e82;
   --border: #ebebf1;
-  --accent: #635bff;
-  --accent-strong: #5148f0;
-  --accent-soft: #efeeff;
+  --accent: #2340c8;
+  --accent-strong: #1a3099;
+  --accent-soft: #eaeefc;
+  --on-accent: #fff;
   --warn: #e08a2e;
   --down: #e5484d;
   --bg: #ffffff;
@@ -17,9 +18,10 @@
     --text: #f1f1f8;
     --muted: #a2a2b8;
     --border: #2a2a42;
-    --accent: #8780ff;
-    --accent-strong: #9d97ff;
-    --accent-soft: #25234f;
+    --accent: #9db0ff;
+    --accent-strong: #b8c6ff;
+    --accent-soft: #1e2550;
+    --on-accent: #0f0f1a;
     --bg: #18182a;
     color-scheme: dark;
   }
@@ -35,7 +37,7 @@ label { display: grid; gap: 0.25rem; font-weight: 500; }
 input, select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; text-overflow: ellipsis; font: inherit; padding: 0.45rem 0.55rem; border: 1px solid var(--border); border-radius: 8px; background: transparent; color: inherit; }
 button { font: inherit; cursor: pointer; border-radius: 8px; padding: 0.5rem 0.8rem; border: 1px solid var(--border); background: transparent; color: inherit; }
 button:disabled { opacity: 0.55; cursor: default; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 500; }
 button.primary:hover:not(:disabled) { background: var(--accent-strong); }
 button.secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 button.link { border: 0; padding: 0; color: var(--accent); font-weight: 500; }
