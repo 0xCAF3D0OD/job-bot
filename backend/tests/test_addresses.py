@@ -13,7 +13,7 @@ from jobbot.api.app import create_app
 from jobbot.auth import passwords
 from jobbot.collect import service
 from jobbot.db.models import Search, User
-from jobbot.mail.addresses import plus_address, route
+from jobbot.mail.addresses import domain_address, name_slug, plus_address, route
 from jobbot.mail.confirm import confirmation_link
 from jobbot.mail.message import parse_email
 from jobbot.runtime import Runtime
@@ -42,6 +42,20 @@ def test_route_by_recipient() -> None:
     # Une autre adresse (transfert, copie cachée) : l'exploitant, comme avant.
     assert route(("kevin+x@autre.ch",), BASE, codes, owner=1) == 1
     assert plus_address("alertes@example.com", "abc") == "alertes+abc@example.com"
+
+
+def test_route_by_alert_domain() -> None:
+    """docs/104 (0.79.0) : « nom-code@domaine » désigne le compte ; « +code » marche encore."""
+    codes = {"k7f3q9ab": 2}
+    domain = "alertes.joba1.ch"
+    expected = "eliot-muller-k7f3q9ab@alertes.joba1.ch"
+    assert domain_address(domain, "Éliot Müller", "k7f3q9ab") == expected
+    assert name_slug("!!!") == "compte"
+    upper = ("Eliot-Muller-K7F3Q9AB@Alertes.Joba1.ch",)
+    assert route(upper, BASE, codes, owner=1, domain=domain) == 2
+    assert route(("eliot-inconnu1@alertes.joba1.ch",), BASE, codes, owner=1, domain=domain) is None
+    assert route(("alertes+k7f3q9ab@example.com",), BASE, codes, owner=1, domain=domain) == 2
+    assert route(("alertes@example.com",), BASE, codes, owner=1, domain=domain) == 1
 
 
 def test_recipients_read_from_headers() -> None:
@@ -188,6 +202,21 @@ async def test_alerts_page_address_and_confirmations(
         done = await api.post(f"/api/alert-searches/confirmations/{pending['search_id']}")
         assert done.json()["to_confirm"] == []
     await secured.dispose()
+
+    # Avec le domaine des alertes (docs/104, 0.79.0) : son adresse ne montre plus la boîte.
+    update = {"auth_enabled": True, "alert_domain": "alertes.joba1.ch"}
+    domained = Runtime.create(collect_runtime.settings.model_copy(update=update))
+    app = create_app(domained.settings, domained)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as api:
+        login = await api.post(
+            "/api/auth/login",
+            json={"username": "camille-adresse", "password": "un-mot-de-passe-solide"},
+        )
+        assert login.status_code == 204
+        page = (await api.get("/api/alert-searches")).json()
+        assert page["mailbox"] == "camille-adresse-k7f3q9ab@alertes.joba1.ch"
+        assert page["personal_address"] is True
+    await domained.dispose()
 
 
 async def test_site_pause_is_per_account(runtime: Runtime, camille: int, account: int) -> None:

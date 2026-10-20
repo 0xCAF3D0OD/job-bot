@@ -4,6 +4,7 @@ import { computed } from "vue";
 import type { AlertsPage } from "../api/client";
 import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
+import MailboxAddress from "./MailboxAddress.vue";
 
 // Résumé des alertes (docs/21 §4) : un point par recherche, l'aide seulement si besoin.
 const props = defineProps<{ page: AlertsPage }>();
@@ -92,7 +93,10 @@ const siteNames = (cells: Cell[]): string =>
       Rien reçu de {{ lateSites.map((s) => s.name).join(", ") }} ? Vérifie que l'alerte est bien créée sur le site et
       que ses e-mails arrivent dans
       <template v-if="page.mailbox">
-        <strong>{{ page.mailbox }}</strong><template v-if="page.folder">
+        <MailboxAddress
+          :address="page.mailbox"
+          :personal="page.personal_address"
+        /><template v-if="page.folder">
           , dossier <strong>{{ page.folder }}</strong>
         </template>
       </template>

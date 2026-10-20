@@ -84,6 +84,10 @@ class Settings(BaseSettings):
     # Adresse où arrivent les alertes (docs/65 §3) ; vide : celle de la boîte (JOBBOT_IMAP_USER).
     # Un compte invité reçoit à « boite+code@domaine », livré dans la même boîte.
     mail_address: str = ""
+    # Domaine des adresses d'alerte des comptes invités (docs/104, 0.79.0) : rempli, un invité
+    # reçoit à « nom-code@domaine » (une redirection « catch-all » du domaine vers la boîte) au
+    # lieu de « boite+code@… », qui montrait l'adresse de l'exploitant. Vide : comme avant.
+    alert_domain: str = ""
 
     # Lecture des pages d'offres jobup après la collecte (docs/05). false : désactivée.
     enrich_enabled: bool = True

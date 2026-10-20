@@ -3310,3 +3310,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .diagnostic-row > .icon { color: var(--muted); }
 /* Les Réglages en blanc, comme le Profil et les CFF : une seule page de fond partout. */
 .band:has(> .settings-layout) { background: var(--bg); }
+
+/* L'adresse des alertes (docs/104) : l'adresse, puis « Copier l'adresse » à côté. */
+.mailbox-address { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.5rem; }
+.mailbox-address > .link { font-size: 0.9rem; }
