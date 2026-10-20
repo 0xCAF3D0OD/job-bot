@@ -9,7 +9,6 @@ import TagInput from "./TagInput.vue";
 import { placeLabel } from "../cantons";
 
 import AppIcon from "./AppIcon.vue";
-import HoverNote from "./HoverNote.vue";
 import FilterOutcome from "./FilterOutcome.vue";
 const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "stage", label: "Stages" },
@@ -143,38 +142,44 @@ onMounted(() => void load());
       v-else-if="loaded && !editing"
       class="criteria-layout"
     >
-      <div
-        class="form-card criteria-summary"
-        data-test="criteria-summary"
-      >
-        <h2 class="criteria-summary-title">
+      <!-- Ce qu'on consulte, comme les CFF (docs/110) : le titre au-dessus, le résumé sur fond
+           gris, un crayon rond pour le modifier. -->
+      <section class="criteria-summary-section">
+        <h2 class="section-title">
           Prérequis
         </h2>
-        <dl class="summary-rows">
-          <div
-            v-for="row in summary"
-            :key="row.label"
-          >
-            <dt>{{ row.label }}</dt>
-            <dd>{{ row.value }}</dd>
-          </div>
-        </dl>
-        <div class="form-actions">
+        <div
+          class="info-card criteria-summary"
+          data-test="criteria-summary"
+        >
+          <dl class="summary-rows">
+            <div
+              v-for="row in summary"
+              :key="row.label"
+            >
+              <dt>{{ row.label }}</dt>
+              <dd>{{ row.value }}</dd>
+            </div>
+          </dl>
           <button
             type="button"
-            class="secondary"
+            class="edit-round"
+            aria-label="Modifier les prérequis"
+            title="Modifier les prérequis"
             data-test="edit-criteria"
             @click="editing = true"
           >
-            <span class="with-icon"><AppIcon name="pencil" />Modifier les prérequis</span>
+            <AppIcon name="pencil" />
           </button>
-          <span
-            v-if="message"
-            role="status"
-            class="muted"
-          >{{ message }}</span>
         </div>
-      </div>
+        <p
+          v-if="message"
+          role="status"
+          class="muted"
+        >
+          {{ message }}
+        </p>
+      </section>
       <FilterOutcome />
     </div>
     <form
@@ -184,11 +189,10 @@ onMounted(() => void load());
       @submit.prevent="save"
     >
       <fieldset>
-        <legend>
-          <HoverNote text="Communes (Lausanne, Genève) ou cantons en deux lettres (VD, GE). Vide : pas de règle de lieu.">
-            Lieux acceptés
-          </HoverNote>
-        </legend>
+        <legend>Lieux acceptés</legend>
+        <p class="setting-desc">
+          Communes (Lausanne, Genève) ou cantons en deux lettres (VD, GE). Vide : pas de règle de lieu.
+        </p>
         <TagInput
           id="locations"
           v-model="form.locations"
@@ -197,11 +201,10 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>
-          <HoverNote text="« Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »).">
-            Télétravail complet
-          </HoverNote>
-        </legend>
+        <legend>Télétravail complet</legend>
+        <p class="setting-desc">
+          « Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »).
+        </p>
         <div
           class="segmented"
           role="radiogroup"
@@ -222,11 +225,10 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>
-          <HoverNote text="Une offre « 60-80 % » passe avec un minimum de 80. Sans taux indiqué, elle passe toujours.">
-            Taux d'activité minimum
-          </HoverNote>
-        </legend>
+        <legend>Taux d'activité minimum</legend>
+        <p class="setting-desc">
+          Une offre « 60-80 % » passe avec un minimum de 80. Sans taux indiqué, elle passe toujours.
+        </p>
         <div class="inline-field">
           <input
             id="min_rate"
@@ -241,11 +243,10 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>
-          <HoverNote :text="contractsHelp">
-            Types d'offres exclus
-          </HoverNote>
-        </legend>
+        <legend>Types d'offres exclus</legend>
+        <p class="setting-desc">
+          {{ contractsHelp }}
+        </p>
         <label
           v-for="contract in CONTRACTS"
           :key="contract.value"
@@ -261,9 +262,10 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>
-          Mots interdits dans le titre
-        </legend>
+        <legend>Mots interdits dans le titre</legend>
+        <p class="setting-desc">
+          Une offre dont le titre contient l'un de ces mots est écartée.
+        </p>
         <TagInput
           id="banned_words"
           v-model="form.banned_words"
@@ -272,11 +274,13 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>
-          <HoverNote :text="keywords ? languagesHelp : ''">
-            Langues que tu ne parles pas
-          </HoverNote>
-        </legend>
+        <legend>Langues que tu ne parles pas</legend>
+        <p
+          v-if="keywords"
+          class="setting-desc"
+        >
+          {{ languagesHelp }}
+        </p>
         <label
           v-for="language in LANGUAGES"
           :key="language.value"

@@ -49,7 +49,7 @@ const tab = computed<Tab>(() => {
       </RouterLink>
     </nav>
   </PageHero>
-  <section class="band">
+  <section class="band profile-page">
     <div class="container">
       <div
         v-if="tab === 'recherche'"

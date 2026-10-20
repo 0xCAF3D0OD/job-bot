@@ -34,9 +34,10 @@ describe("CriteriaView", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("VD");
-    // Description au survol du libellé (docs/53), plus de « ? ».
-    const typesNote = wrapper.findAllComponents(HoverNote).find((h) => h.text().includes("Types d'offres exclus"));
-    expect(typesNote?.props("text")).toContain("Stages : stage, internship…");
+    // La description toujours visible sous son titre, comme les CFF (docs/110).
+    const descriptions = wrapper.findAll(".setting-desc").map((p) => p.text());
+    expect(descriptions.some((d) => d.includes("Stages : stage, internship…"))).toBe(true);
+    expect(wrapper.findComponent(HoverNote).exists()).toBe(false);
 
     const locationInput = wrapper.find("#locations");
     await locationInput.setValue("Genève");
@@ -53,7 +54,7 @@ describe("CriteriaView", () => {
         excluded_types: ["stage"],
       }),
     });
-    expect(wrapper.find(".form-actions [role=status]").text()).toContain("refiltrées");
+    expect(wrapper.find("[role=status]").text()).toContain("refiltrées");
   });
 });
 
