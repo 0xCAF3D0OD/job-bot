@@ -2887,15 +2887,16 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
   .today-lead { margin-bottom: 1.5rem; }
 }
 
-/* Le logo et la mascotte (docs/97), aux couleurs de la planche : bleu stylo et étoile pêche ;
-   en sombre, le bleu clair et la pêche adoucie. */
-:root { --logo-ink: #2340c8; --logo-star: #f4a261; --mascot-face: #2340c8; --mascot-line: #fff; --mascot-star: #f4a261; }
+/* Le logo (docs/102) et la mascotte (docs/97) : bleu stylo et bille pêche ; en sombre, le bleu
+   clair et la pêche adoucie. */
+:root { --logo-line: #2340c8; --logo-spark: #f4a261; --mascot-face: #2340c8; --mascot-line: #fff; --mascot-star: #f4a261; }
 @media (prefers-color-scheme: dark) {
-  :root { --logo-ink: #9db0ff; --logo-star: #e8b48a; --mascot-face: #9db0ff; --mascot-line: #12121f; }
+  :root { --logo-line: #9db0ff; --logo-spark: #e8b48a; --mascot-face: #9db0ff; --mascot-line: #12121f; }
 }
 .brand-logo { flex: none; display: block; overflow: visible; }
-.brand-logo-loop { fill: none; stroke: var(--logo-ink); stroke-linecap: round; stroke-linejoin: round; }
-.brand-logo-diamond { fill: none; stroke: var(--logo-star); stroke-linecap: round; stroke-linejoin: round; }
+.brand-logo-line { fill: none; stroke: var(--logo-line); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.brand-logo-eye { fill: var(--logo-line); }
+.brand-logo-spark { fill: var(--logo-spark); }
 .assistant-mascot { flex: none; display: block; overflow: visible; }
 .mascot-face { fill: var(--mascot-face); }
 .mascot-line { fill: none; stroke: var(--mascot-line); stroke-linecap: round; stroke-linejoin: round; }

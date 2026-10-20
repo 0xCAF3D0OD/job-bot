@@ -1,12 +1,18 @@
-// Le logo jobA1 (docs/100), copié de la planche « Le logo final » : un trait au stylo qui
-// entoure, une seule fois, et qui dépasse ; au centre, un diamant pêche tracé au même trait.
-// viewBox « 4 6 92 92 ». Ne pas redessiner : la planche fait foi.
-export const LOGO_VIEWBOX = "4 6 92 92";
-export const LOGO_LOOP =
-  "M70 20 C 88 30, 92 58, 78 75 C 63 92, 30 91, 16 72 C 4 54, 14 26, 38 17 C 54 11, 70 14, 84 25 C 88 29, 90 32, 91 35";
-export const LOGO_DIAMOND = "M50.8 32.0 C 52.2 45.0, 55.0 48.4, 68.5 51.4 C 55.5 53.8, 52.4 57.0, 49.6 68.5 C 47.4 57.2, 44.2 53.4, 32.5 50.4 C 44.8 48.2, 47.8 44.5, 50.2 35.0 L 51.6 30.0";
-// À 32 px et moins, la planche agrandit un peu le diamant pour qu'il reste lisible.
-export const LOGO_DIAMOND_SMALL_SIZE = "M50.9 28.8 C 52.6 44.0, 55.8 48.0, 71.6 51.5 C 56.4 54.3, 52.8 58.0, 49.5 71.4 C 47.0 58.2, 43.2 53.8, 29.6 50.3 C 43.9 47.7, 47.4 43.4, 50.2 32.3 L 51.9 26.5";
+// Le logo jobA1 (docs/102) : le visage du 1. Le 1 du nom trace le sourcil et le nez, un œil
+// bleu, un œil pêche (la bille), un sourire discret. viewBox « 8 8 86 86 », trait de 14.
+export const LOGO_VIEWBOX = "8 8 86 86";
+// S4, l'en-tête : le visage penché de −6° autour du centre.
+export const LOGO_TILT = "rotate(-6 50 50)";
+export const LOGO_ONE = "M43 31 L54 22 V56";
+export const LOGO_EYE = { x: 24, y: 45, r: 10 };
+export const LOGO_SPARK = { x: 76, y: 41, r: 10 };
+export const LOGO_SMILE = "M28 72 C 40 82, 60 82, 72 70";
+// S5, les icônes : le visage droit, le sourire plus court, dans un carré bleu
+// (frontend/scripts/icones.py).
+export const ICON_ONE = "M43 33 L54 24 V58";
+export const ICON_EYE = { x: 24, y: 46 };
+export const ICON_SPARK = { x: 76, y: 44 };
+export const ICON_SMILE = "M32 74 C 42 80, 58 80, 68 74";
 
 // La mascotte de l'assistant (docs/99), planche « La mascotte de l'Assistant » : un visage rond
 // avec la pointe d'une bulle à droite, et trois expressions. viewBox « 0 0 100 100 ».
