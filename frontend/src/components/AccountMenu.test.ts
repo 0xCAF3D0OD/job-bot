@@ -71,6 +71,24 @@ describe("Menu du compte (docs/89)", () => {
     expect(document.activeElement).toBe(trigger.element);
   });
 
+  it("« Fermer mon compte » (docs/105) : pour un compte invité, pas pour l'exploitant", async () => {
+    me.value = { username: "eliot", auth_enabled: true, demo: false, is_owner: false };
+    const { wrapper } = await mountAt("/aujourdhui");
+    await wrapper.find("[data-test=account-menu]").trigger("click");
+    await flushPromises();
+    const close = wrapper.find("[data-test=account-close]");
+    expect(close.text()).toBe("Fermer mon compte");
+    expect(close.attributes("href")).toBe("/reglages?rubrique=compte&fermer=1");
+    wrapper.unmount();
+    document.body.innerHTML = "";
+
+    me.value = { username: "kevin", auth_enabled: true, demo: false, is_owner: true };
+    const owner = await mountAt("/aujourdhui");
+    await owner.wrapper.find("[data-test=account-menu]").trigger("click");
+    await flushPromises();
+    expect(owner.wrapper.find("[data-test=account-close]").exists()).toBe(false);
+  });
+
   it("démo : pas de collecte ni de déconnexion, Réglages reste", async () => {
     me.value = { username: "demo", auth_enabled: false, demo: true };
     const { wrapper } = await mountAt("/aujourdhui");
@@ -78,6 +96,7 @@ describe("Menu du compte (docs/89)", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=account-collect]").exists()).toBe(false);
     expect(wrapper.find("[data-test=logout]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=account-close]").exists()).toBe(false);
     expect(wrapper.find("[data-test=account-settings]").exists()).toBe(true);
   });
 });

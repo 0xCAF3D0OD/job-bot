@@ -203,6 +203,16 @@ onUnmounted(() => {
         >
           <span class="with-icon"><AppIcon name="refresh" />Collecter maintenant</span>
         </button>
+        <!-- Fermer son compte (docs/105) : mène à la confirmation, dans Réglages › Compte. Ni
+             l'exploitant, ni la démo, ni sans connexion : ils ne peuvent pas le fermer. -->
+        <RouterLink
+          v-if="me?.auth_enabled && !me.is_owner && !me.demo"
+          :to="{ path: '/reglages', query: { rubrique: 'compte', fermer: '1' } }"
+          role="menuitem"
+          data-test="account-close"
+        >
+          <span class="with-icon"><AppIcon name="close" />Fermer mon compte</span>
+        </RouterLink>
         <button
           v-if="me?.auth_enabled"
           type="button"

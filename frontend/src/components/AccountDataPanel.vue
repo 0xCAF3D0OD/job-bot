@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { nextTick, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
 
-// Tes données (docs/65 §6) : ce qui est gardé, l'export complet, la suppression du compte.
+// Tes données (docs/65 §6) : ce qui est gardé, l'export complet, la fermeture du compte.
 type Summary = {
   offers: number;
   applications: number;
@@ -24,11 +24,20 @@ const password = ref("");
 const error = ref("");
 const busy = ref(false);
 const router = useRouter();
+const route = useRoute();
 const { expired } = useAuth();
+const passwordInput = ref<HTMLInputElement | null>(null);
 
 onMounted(async () => {
   const { data } = await api.GET("/api/account/data");
   summary.value = data ?? null;
+  // Venu de « Fermer mon compte » dans le menu (docs/105) : la confirmation est ouverte.
+  if (route.query.fermer && summary.value?.can_delete) {
+    confirming.value = true;
+    await nextTick();
+    passwordInput.value?.scrollIntoView?.({ block: "center" });
+    passwordInput.value?.focus({ preventScroll: true });
+  }
 });
 
 async function remove(): Promise<void> {
@@ -45,7 +54,7 @@ async function remove(): Promise<void> {
       return;
     }
     const detail = (failed as { detail?: unknown } | undefined)?.detail;
-    error.value = typeof detail === "string" ? detail.charAt(0).toUpperCase() + detail.slice(1) + "." : "Suppression impossible.";
+    error.value = typeof detail === "string" ? detail.charAt(0).toUpperCase() + detail.slice(1) + "." : "Fermeture impossible.";
   } finally {
     busy.value = false;
   }
@@ -86,7 +95,7 @@ async function remove(): Promise<void> {
           data-test="delete-account"
           @click="confirming = true"
         >
-          <span class="with-icon"><AppIcon name="trash" />Supprimer mon compte</span>
+          <span class="with-icon"><AppIcon name="trash" />Fermer mon compte</span>
         </button>
         <form
           v-else
@@ -95,11 +104,12 @@ async function remove(): Promise<void> {
           @submit.prevent="remove"
         >
           <p>
-            Tout sera effacé : offres, candidatures, documents, preuves ORP, discussions. Exporte d'abord ce que tu veux
-            garder. Ton mot de passe pour confirmer :
+            Fermer ton compte efface tout : offres, candidatures, documents, preuves ORP, discussions. Exporte d'abord ce
+            que tu veux garder. Ton mot de passe pour confirmer :
           </p>
           <div class="inline-field">
             <input
+              ref="passwordInput"
               v-model="password"
               type="password"
               autocomplete="current-password"
@@ -112,7 +122,7 @@ async function remove(): Promise<void> {
               :disabled="busy"
               data-test="delete-confirm"
             >
-              Supprimer définitivement
+              Fermer définitivement
             </button>
             <button
               type="button"

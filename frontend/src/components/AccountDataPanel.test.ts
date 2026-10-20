@@ -22,11 +22,11 @@ const SUMMARY = {
   can_delete: true,
 };
 
-async function mountPanel(summary = SUMMARY) {
+async function mountPanel(summary = SUMMARY, path = "/reglages") {
   GET.mockResolvedValue({ data: summary });
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
-  await router.push("/reglages");
-  const wrapper = mount(AccountDataPanel, { global: { plugins: [router] } });
+  await router.push(path);
+  const wrapper = mount(AccountDataPanel, { attachTo: document.body, global: { plugins: [router] } });
   await flushPromises();
   return { wrapper, router };
 }
@@ -40,11 +40,13 @@ describe("Tes données (docs/65 §6)", () => {
     expect(link.attributes("download")).toBeDefined();
   });
 
-  it("supprimer demande le mot de passe, puis renvoie à la connexion", async () => {
+  it("fermer demande le mot de passe, puis renvoie à la connexion", async () => {
     POST.mockResolvedValueOnce({ error: { detail: "mot de passe incorrect" }, response: { ok: false } });
     POST.mockResolvedValueOnce({ response: { ok: true } });
     const { wrapper, router } = await mountPanel();
+    expect(wrapper.find("[data-test=delete-account]").text()).toBe("Fermer mon compte");
     await wrapper.find("[data-test=delete-account]").trigger("click");
+    expect(wrapper.find("[data-test=delete-confirm]").text()).toBe("Fermer définitivement");
     await wrapper.find("[data-test=delete-password]").setValue("faux");
     await wrapper.find("[data-test=delete-form]").trigger("submit");
     await flushPromises();
@@ -56,8 +58,16 @@ describe("Tes données (docs/65 §6)", () => {
     expect(router.currentRoute.value.path).toBe("/connexion");
   });
 
-  it("l'exploitant ne supprime pas son compte ici", async () => {
-    const { wrapper } = await mountPanel({ ...SUMMARY, can_delete: false });
+  it("l'exploitant ne ferme pas son compte ici, même venu du menu", async () => {
+    const { wrapper } = await mountPanel({ ...SUMMARY, can_delete: false }, "/reglages?rubrique=compte&fermer=1");
     expect(wrapper.find("[data-test=delete-account]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=delete-form]").exists()).toBe(false);
+  });
+
+  it("venu de « Fermer mon compte » (docs/105) : la confirmation est ouverte, le mot de passe a le focus", async () => {
+    const { wrapper } = await mountPanel(SUMMARY, "/reglages?rubrique=compte&fermer=1");
+    expect(wrapper.find("[data-test=delete-form]").exists()).toBe(true);
+    expect(document.activeElement).toBe(wrapper.find("[data-test=delete-password]").element);
+    wrapper.unmount();
   });
 });
