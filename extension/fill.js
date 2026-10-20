@@ -4,7 +4,7 @@
 (() => {
   if (globalThis.jobbotFill) return;
 
-  const FILLED = "2px solid #635bff";
+  const FILLED = "2px solid #2340c8";
   const TODO = "2px solid #e08a2e";
 
   const norm = (value) =>
