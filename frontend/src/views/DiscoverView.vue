@@ -12,7 +12,9 @@ import { useAuth } from "../composables/useAuth";
 // L'accès se fait sur invitation (docs/65).
 const { loggedIn, me } = useAuth();
 
-const SCENES: { art: IllustrationName; mock: MockKind; title: string; text: string }[] = [
+// `below` : sur téléphone, le personnage passe sous la maquette, là où il cachait du texte ou une
+// icône (retour du 2026-10-20 : la note « 61 », « Remettre », « soins »).
+const SCENES: { art: IllustrationName; mock: MockKind; title: string; text: string; below?: boolean }[] = [
   {
     art: "alertes-carte",
     mock: "alerts",
@@ -22,6 +24,7 @@ const SCENES: { art: IllustrationName; mock: MockKind; title: string; text: stri
   {
     art: "offres-profils",
     mock: "offers",
+    below: true,
     title: "Les bonnes offres d'abord",
     text: "Chaque offre reçoit une note selon ce que tu cherches et ton profil : les meilleures en tête.",
   },
@@ -40,12 +43,14 @@ const SCENES: { art: IllustrationName; mock: MockKind; title: string; text: stri
   {
     art: "preuves-orp",
     mock: "orp",
+    below: true,
     title: "Tes preuves ORP prêtes",
     text: "Chaque mois, la liste de tes recherches est prête à remettre à l'ORP, avant la date limite.",
   },
   {
     art: "formations",
     mock: "news",
+    below: true,
     title: "Ton métier, et ce qui bouge",
     text: "Les actualités et les formations de ton domaine, triées pour toi.",
   },
@@ -204,7 +209,7 @@ onBeforeUnmount(() => {
           :class="['discover-scene', { shown: shown[i], flip: i % 2 === 1 }]"
           :data-index="i"
         >
-          <div class="discover-stage">
+          <div :class="['discover-stage', { below: scene.below }]">
             <DiscoverMock :kind="scene.mock" />
             <Illustration
               :name="scene.art"
