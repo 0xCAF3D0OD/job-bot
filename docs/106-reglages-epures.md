@@ -79,3 +79,12 @@ Ton retour du 2026-10-20, capture des Actualités à 414 px : « il faut adapter
 - L'ordinateur ne change pas.
 - **Vérifié** : capture à 414 px des Actualités et des Notifications ouvertes, avec des données fictives (la liste des sources n'y figure pas), tests, lint et typecheck.
 
+## Complément 0.77.3 : un filet entre les parties
+
+Ton retour du 2026-10-20 : « j'aimais bien comment tu as fait sur la capture, je trouve le résultat déstructuré actuellement ». La capture en question montrait des parties séparées par un filet fin ; les Réglages n'en avaient plus depuis la 0.76.0, et les parties flottaient.
+
+- **La règle 1 change** : les parties d'une rubrique sont séparées par **un filet fin** (`--divider`), en plus de leur titre. La règle 3 tient toujours : jamais de filet en dernier, ni juste au-dessus d'un bouton « Enregistrer ».
+- **Où** : entre deux panneaux d'une même rubrique (Connexion · Données personnelles, Agenda · Extension…), et entre deux parties d'un formulaire (Jours de recherche · Une pause · Les offres bien notées).
+- **Sur téléphone** aussi, sans coins arrondis aux bouts du filet.
+- **Vérifié** : capture de Compte et Rythme, sur téléphone (414 px) et sur ordinateur, avec des données fictives ; tests, lint, typecheck.
+

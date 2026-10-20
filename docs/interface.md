@@ -83,7 +83,7 @@ Sous 820 px, un écran où l'on travaille un moment (l'entraînement à l'entret
 
 ## Les Réglages (docs/106)
 
-1. Une rubrique, une carte ; ses parties séparées par leur titre, ni filet ni carte dans la carte.
+1. Une rubrique, une carte ; ses parties séparées par leur titre et un filet fin (0.77.3), jamais une carte dans la carte.
 2. Pas de barre verticale dans une carte : un contenu replié s'ouvre sous son titre, au même retrait.
 3. Pas de filet orphelin : un filet sépare deux choses, jamais la dernière du bord.
 4. Un réglage d'un seul champ s'enregistre au changement (« Enregistré » une seconde à côté) ; un formulaire de plusieurs champs a un seul « Enregistrer » plein, à la fin.
