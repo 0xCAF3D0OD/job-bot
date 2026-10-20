@@ -1507,7 +1507,7 @@ html.side-open { overflow: hidden; }
   .settings-toc { display: none; }
   .settings-row { margin: 0; }
   .settings-row + .settings-row { margin-top: 0.6rem; }
-  .settings-row .form-card { border: 0; padding: 0; }
+  .settings-row .form-card { border: 0; border-radius: 0; padding: 0; }
 }
 
 /* Téléphone : Aujourd'hui, l'essentiel d'abord (docs/34 §4) */
@@ -3113,3 +3113,13 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .inline-edit.stacked { display: grid; gap: 0.5rem; min-width: 12rem; }
 .inline-edit-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 @media (max-width: 820px) { .inline-edit > input { flex-basis: 100%; } }
+
+/* La structure des Réglages (docs/106, complément 0.77.3) : un filet fin entre deux parties,
+   jamais en dernier ni au-dessus d'un bouton ; les parties serrées autour de leur titre. */
+/* Classe doublée : plus forte que `.settings-card .form-card`, qui retire le cadre des panneaux. */
+.settings-card.settings-card > * + *, .settings-row .disclosure-body > * + *, .settings-row .ai-layout > * + * { margin-top: 0; padding-top: 0; border-top: 1px solid var(--divider); }
+.settings-card fieldset + fieldset, .settings-row fieldset + fieldset { border-top: 1px solid var(--divider); }
+.settings-row .settings-next-card { margin-top: 0; }
+@media (max-width: 820px) {
+  .settings-row .disclosure-body > :first-child fieldset:first-child, .settings-row .disclosure-body > fieldset:first-child { padding-top: 0.25rem; }
+}
