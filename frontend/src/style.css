@@ -3040,3 +3040,32 @@ button:focus-visible > .copy-label::after, .copy-label.copy-done::after { transi
 /* docs/102 — la demande envoyée ou les demandes fermées : le lien respire sous la phrase. */
 .auth-setup { display: grid; gap: 0.9rem; }
 .auth-setup > p { margin: 0; line-height: 1.55; }
+
+/* --- Des Réglages épurés (docs/106) --- */
+/* Les nombres sans flèches haut / bas, partout (docs/106 §6). */
+input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+/* Une rubrique, une carte : les cartes du contenu perdent leur cadre, les parties sont séparées
+   par leur titre, pas par un filet ni par une autre carte. */
+.settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 0.5rem 2rem 2rem; }
+.settings-card .form-card, .settings-card .ai-spend { background: none; border: 0; border-radius: 0; padding: 0; }
+.settings-card > * + *, .settings-card .ai-layout > * + * { margin-top: 0; }
+.settings-card > * + * { padding-top: 0.5rem; }
+.settings-card .settings-next-card, .settings-card .settings-status { margin-top: 0; }
+.settings-card fieldset, .settings-row fieldset { border-bottom: 0; }
+.settings-card .settings-subtitle:first-child { margin-top: 1.5rem; }
+.settings-card .ai-spend { padding-top: 1.5rem; }
+/* Pas de barre verticale : un contenu replié s'ouvre sous son titre, au même retrait. */
+.settings-card .disclosure-body, .settings-row .disclosure-body { margin-left: 0; padding-left: 0; border-left: 0; }
+/* Les titres de partie ne sont pas soulignés ; la description au survol (docs/53) reste. */
+.settings-card legend .hover-note, .settings-row legend .hover-note { text-decoration: none; }
+/* Un « Enregistrer » plein, collé au formulaire. */
+.settings-card .form-actions, .settings-row .form-actions { padding-top: 1rem; }
+/* « Enregistré », une seconde à côté du réglage qui vient de changer. */
+.saved-flash { font-size: 0.85rem; color: var(--ok-text); }
+/* Le seuil des notifications : cinq pastilles (docs/106, décision 2). */
+.score-choices { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.score-choices .chip { min-height: var(--control-h); min-width: 3.25rem; justify-content: center; font-size: 0.95rem; padding: 0 0.9rem; }
+/* Une partie d'une seule action : son nom à gauche, l'action à droite. */
+.settings-line { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 0 0; }
+.settings-line > strong { font-weight: 500; font-size: 1.05rem; }

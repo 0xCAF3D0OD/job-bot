@@ -61,6 +61,12 @@ const targeted = computed(() => route.query.rubrique === props.id || route.hash 
       />
       {{ title }}
     </h2>
-    <slot />
+    <!-- Une rubrique, une carte (docs/106 §1) : les cartes du contenu y perdent leur cadre. -->
+    <div
+      class="settings-card"
+      data-test="settings-card"
+    >
+      <slot />
+    </div>
   </template>
 </template>

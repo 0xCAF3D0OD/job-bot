@@ -1,6 +1,6 @@
-# 104 — Les premiers pas d'un nouveau compte (versions 0.75.0 à 0.77.0)
+# 104 — Les premiers pas d'un nouveau compte (versions 0.75.0, 0.77.0 et 0.78.0)
 
-> Statut : **0.75.0 validée** le 2026-10-20 ; **0.76.0 et 0.77.0 à valider** (points en fin de page).
+> Statut : **0.75.0 validée** le 2026-10-20 ; **0.77.0 et 0.78.0 à valider** (décalées par docs/106) (points en fin de page).
 > Origine : ta session avec le nouveau compte « eliot » du 2026-10-20, cinq captures sur téléphone, puis tes choix : un domaine à jobA1 pour l'adresse, une lecture des recherches publiques pour les premières offres, deux boutons égaux.
 
 ## Ce que montre la session
@@ -21,7 +21,7 @@
 
 Le changement vaut pour l'ordinateur aussi : ce sont des mots et des boutons, pas une mise en page propre au téléphone.
 
-## 0.76.0 — Une adresse à jobA1 (point 3) — à valider
+## 0.77.0 — Une adresse à jobA1 (point 3) — à valider
 
 Aujourd'hui, jobA1 lit une seule boîte, la tienne, et donne à chaque compte `ta-boîte+code@gmail.com` (docs/65 §3). Avec l'adresse d'Eliot, il faudrait lire sa boîte, ce que jobA1 s'interdit.
 
@@ -31,7 +31,7 @@ Aujourd'hui, jobA1 lit une seule boîte, la tienne, et donne à chaque compte `t
 - **Un réglage** `JOBBOT_ALERT_DOMAIN` : vide, rien ne change ; rempli, les nouveaux comptes reçoivent l'adresse du domaine. L'exploitant garde sa propre adresse.
 - **Le nom** dans l'adresse vient du nom du compte, en minuscules et sans accents. Le code empêche de deviner l'adresse d'un autre compte.
 
-## 0.77.0 — Des offres dès le premier jour (point 2) — à valider
+## 0.78.0 — Des offres dès le premier jour (point 2) — à valider
 
 **Le choix** : juste après l'accueil, jobA1 lit **une fois** les pages publiques de recherche pour le métier et les lieux du compte, sans se connecter à aucun compte (docs/01 §1 reste vrai).
 - **Les sources** : jobup (sa page de recherche publique, déjà lue offre par offre depuis docs/05) et Job-Room (la recherche publique de job-room.ch). À vérifier d'abord : leurs conditions d'utilisation et leur `robots.txt`. Une source qui l'interdit est laissée de côté.
@@ -39,7 +39,7 @@ Aujourd'hui, jobA1 lit une seule boîte, la tienne, et donne à chaque compte `t
 - **Ensuite** : les offres passent par le filtre et la note habituels, et la page Offres dit « Premières offres trouvées sur jobup et Job-Room ; tes alertes prennent le relais dès demain ». Les alertes restent la source de tous les jours.
 - **Pas en démo**, pas sans métier, et une seule fois par compte (on peut la relancer depuis Alertes).
 
-## Points à valider (0.76.0 et 0.77.0)
+## Points à valider (0.77.0 et 0.78.0)
 
 1. **Le domaine** : lequel ? Il faut un domaine (ou un sous-domaine) dont tu règles les e-mails, avec une redirection « catch-all » vers ta boîte de collecte (Cloudflare Email Routing, ImprovMX…).
 2. **Le format de l'adresse** : `eliot-pw99qlm7@alertes.<domaine>` te va-t-il, ou préfères-tu le code seul (`pw99qlm7@…`) ?

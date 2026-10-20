@@ -81,3 +81,11 @@ Dans une carte ou un volet, un tableau, une liste ou un repliable perd son propr
 
 Sous 820 px, un écran où l'on travaille un moment (l'entraînement à l'entretien) prend tout l'écran ; sa barre du haut garde le titre sur une ligne et ses actions.
 
+## Les Réglages (docs/106)
+
+1. Une rubrique, une carte ; ses parties séparées par leur titre, ni filet ni carte dans la carte.
+2. Pas de barre verticale dans une carte : un contenu replié s'ouvre sous son titre, au même retrait.
+3. Pas de filet orphelin : un filet sépare deux choses, jamais la dernière du bord.
+4. Un réglage d'un seul champ s'enregistre au changement (« Enregistré » une seconde à côté) ; un formulaire de plusieurs champs a un seul « Enregistrer » plein, à la fin.
+5. Les nombres sans flèches haut / bas, partout ; quelques valeurs sensées : des pastilles.
+
