@@ -19,7 +19,7 @@ async function refresh(): Promise<void> {
   } catch {
     status.value = null;
   }
-  if (status.value?.database.up_to_date) {
+  if (status.value?.database?.up_to_date) {
     try {
       const { data } = await api.GET("/api/job-runs", { params: { query: { limit: 10 } } });
       runs.value = data ?? [];

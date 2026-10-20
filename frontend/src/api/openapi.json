@@ -18814,19 +18814,51 @@
       },
       "StatusResponse": {
         "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
           "version": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Version"
           },
           "env": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Env"
           },
           "database": {
-            "$ref": "#/components/schemas/DatabaseStatus"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DatabaseStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "worker": {
-            "$ref": "#/components/schemas/WorkerStatus"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkerStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "collect": {
             "$ref": "#/components/schemas/CollectStatus"
@@ -18834,10 +18866,7 @@
         },
         "type": "object",
         "required": [
-          "version",
-          "env",
-          "database",
-          "worker",
+          "ok",
           "collect"
         ],
         "title": "StatusResponse"

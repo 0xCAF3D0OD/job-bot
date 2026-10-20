@@ -54,7 +54,11 @@ describe("routes réservées (docs/18 §1)", () => {
     expect(router.currentRoute.value.name).toBe("alerts");
     await router.push("/candidatures/journal");
     expect(router.currentRoute.value.name).toBe("alerts");
-    // État technique devenu la page Diagnostic (docs/21 §6).
+    // État technique devenu la page Diagnostic (docs/21 §6), à l'exploitant seulement
+    // (docs/108 §3) : un invité revient aux Réglages.
+    await router.push("/etat");
+    expect(router.currentRoute.value.path).toBe("/reglages");
+    useAuth().me.value = { ...useAuth().me.value!, is_owner: true };
     await router.push("/etat");
     expect(router.currentRoute.value.name).toBe("diagnostic");
   });

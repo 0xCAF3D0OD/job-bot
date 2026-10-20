@@ -43,10 +43,14 @@ class CollectStatus(BaseModel):
 
 
 class StatusResponse(BaseModel):
-    version: str
-    env: str
-    database: DatabaseStatus
-    worker: WorkerStatus
+    # La plateforme répond : base joignable et à jour, worker en vie.
+    ok: bool
+    # Le détail technique, pour l'exploitant seulement (docs/108 §3) ; vide pour un compte
+    # invité, qui ne voit que `ok` et la collecte.
+    version: str | None = None
+    env: str | None = None
+    database: DatabaseStatus | None = None
+    worker: WorkerStatus | None = None
     collect: CollectStatus
 
 
@@ -83,6 +87,9 @@ async def get_status(request: Request) -> StatusResponse:
     runtime = _runtime(request)
     check = await check_database(runtime.engine)
     last_heartbeat: datetime | None = None
+    # Base injoignable : on ne sait pas qui demande ; le détail reste visible (un compte
+    # connecté seulement), sinon l'exploitant ne pourrait plus rien diagnostiquer.
+    owner = True
     collect = CollectStatus(
         configured=runtime.settings.imap_configured,
         last_success_at=None,
@@ -106,12 +113,16 @@ async def get_status(request: Request) -> StatusResponse:
             )
             # Le message d'erreur peut citer la boîte de l'exploitant ou un autre compte : à lui
             # seul (docs/69 §1) ; les autres voient l'échec, sans le détail.
+            owner = await accounts.is_owner(session)
             if latest is not None and latest.status == JobRunStatus.FAILURE:
-                owner = await accounts.is_owner(session)
                 collect.last_error = latest.error if owner else "voir avec l'exploitant"
     stale_after = timedelta(seconds=HEARTBEAT_STALE_AFTER_SECONDS)
     healthy = last_heartbeat is not None and datetime.now(UTC) - last_heartbeat < stale_after
+    ok = check.ok and check.up_to_date and healthy
+    if not owner:
+        return StatusResponse(ok=ok, collect=collect)
     return StatusResponse(
+        ok=ok,
         version=runtime.settings.version,
         env=runtime.settings.env.value,
         database=DatabaseStatus(

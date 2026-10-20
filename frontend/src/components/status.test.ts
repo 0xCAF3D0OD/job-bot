@@ -7,6 +7,7 @@ const NOW = new Date("2026-10-02T12:00:00Z");
 
 function status(overrides: Partial<StatusResponse> = {}): StatusResponse {
   return {
+    ok: true,
     version: "0.1.0",
     env: "dev",
     database: { ok: true, revision: "0002", head: "0002", up_to_date: true, error: null },
@@ -81,5 +82,12 @@ describe("indicators", () => {
     );
     expect(lights[3]?.level).toBe("down");
     expect(lights[3]?.detail).toContain("authentification IMAP refusée");
+  });
+});
+
+describe("compte invité (docs/108 §3)", () => {
+  it("sans détail technique : un seul voyant, la plateforme", () => {
+    const guest = { ok: true, collect: status().collect } as StatusResponse;
+    expect(indicators(guest, NOW)).toEqual([{ label: "Plateforme", level: "ok", detail: "fonctionne" }]);
   });
 });

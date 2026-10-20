@@ -101,9 +101,14 @@ async def test_job_journal_reserved_to_owner(
         return False
 
     monkeypatch.setattr(accounts, "is_owner", not_owner)
-    guest = (await client.get("/api/status")).json()["collect"]["last_error"]
+    guest_body = (await client.get("/api/status")).json()
+    guest = guest_body["collect"]["last_error"]
     assert guest is not None and "boite-exploitant" not in guest
     assert (await client.get("/api/job-runs")).status_code == 403
+    # Le détail technique est à l'exploitant (docs/108 §3) : ni version, ni base, ni worker.
+    assert guest_body["version"] is None and guest_body["env"] is None
+    assert guest_body["database"] is None and guest_body["worker"] is None
+    assert isinstance(guest_body["ok"], bool)
 
 
 async def test_status_reports_unreachable_database(offline_client: AsyncClient) -> None:

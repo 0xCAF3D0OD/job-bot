@@ -2,7 +2,7 @@
 
 > Statut : **validé** le 2026-10-20 : enregistrement au changement pour un seul champ, le seuil en cinq pastilles, les flèches retirées partout, docs/104 décalé en 0.77.0 et 0.78.0.
 > Origine : ta remarque du 2026-10-20, en te baladant dans les Réglages (captures Plateforme, Notifications, Outils, Rythme) : « il y a des cartes dans les cartes, une barre grisée verticale dans la carte […] se concentrer sur l'action, j'aime pas le curseur pour monter ou descendre un nombre », avec Sphere comme référence.
-> Les versions prévues par docs/104 (l'adresse à jobA1, les premières offres) passent en 0.77.0 et 0.78.0.
+> Les versions prévues par docs/104 (l'adresse à jobA1, les premières offres) passent en 0.77.0 et 0.78.0 (puis 0.78.0 et 0.79.0, docs/108).
 
 ## Ce que montrent les captures
 
