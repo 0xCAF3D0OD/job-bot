@@ -120,6 +120,12 @@ onUnmounted(() => {
         v-else
         name="user"
       />
+      <!-- Le nom à côté de l'initiale, sur ordinateur (docs/109) : la capsule a sa largeur fixe. -->
+      <span
+        v-if="me?.username"
+        class="account-username"
+        aria-hidden="true"
+      >{{ me.username }}</span>
       <AppIcon
         name="chevron"
         class="account-chevron"
@@ -210,6 +216,8 @@ onUnmounted(() => {
         <RouterLink
           v-if="me?.auth_enabled && !me.is_owner && !me.demo"
           :to="{ path: '/reglages', query: { rubrique: 'compte', fermer: '1' } }"
+          active-class=""
+          exact-active-class=""
           role="menuitem"
           data-test="account-close"
         >

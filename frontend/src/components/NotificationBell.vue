@@ -6,8 +6,6 @@ import { api, type Inbox, type InboxItem } from "../api/client";
 import { plural, since } from "../format";
 import AppIcon from "./AppIcon.vue";
 import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
-import { usePhone } from "../composables/usePhone";
-import PushTransition from "./PushTransition.vue";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
 const REFRESH_MS = 60_000;
@@ -17,11 +15,9 @@ const inbox = ref<Inbox>({ unread: 0, items: [] });
 // Dans la capsule (docs/91), une seule chose ouverte à la fois : la cloche ou le compte.
 const { open, inCapsule } = useCapsuleZone("bell");
 const root = ref<HTMLElement | null>(null);
-// Sur téléphone, la carte s'ouvre sous la barre du haut, sur toute la largeur de l'écran, et
-// pousse la page vers le bas (retour du 2026-10-15) : elle est rendue dans #bell-drop. Sur
-// ordinateur, elle se déroule dans la capsule (docs/91).
+// Elle se déroule dans la capsule (docs/91) ; sur téléphone, la capsule l'ouvre en plein écran
+// sous l'en-tête, comme Sphere (docs/109).
 const panel = ref<HTMLElement | null>(null);
-const { phone } = usePhone();
 let timer: ReturnType<typeof setInterval> | undefined;
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
@@ -101,59 +97,57 @@ onUnmounted(() => {
       >{{ badge }}</span>
     </button>
     <Teleport
-      :to="phone ? '#bell-drop' : CAPSULE_BODY"
+      :to="CAPSULE_BODY"
       defer
-      :disabled="!phone && !inCapsule"
+      :disabled="!inCapsule"
     >
-      <PushTransition :enabled="phone">
-        <div
-          v-if="open"
-          ref="panel"
-          class="bell-panel"
-          role="dialog"
-          aria-label="Alertes"
-          data-test="bell-panel"
-        >
-          <div class="bell-head">
-            <strong>Alertes</strong>
-            <button
-              v-if="inbox.unread"
-              type="button"
-              class="link"
-              data-test="read-all"
-              @click="readAll"
-            >
-              <span class="with-icon"><AppIcon name="done" />Tout marquer comme lu</span>
-            </button>
-          </div>
-          <p
-            v-if="!inbox.items.length"
-            class="hint bell-empty"
+      <div
+        v-if="open"
+        ref="panel"
+        class="bell-panel"
+        role="dialog"
+        aria-label="Alertes"
+        data-test="bell-panel"
+      >
+        <div class="bell-head">
+          <strong>Alertes</strong>
+          <button
+            v-if="inbox.unread"
+            type="button"
+            class="link"
+            data-test="read-all"
+            @click="readAll"
           >
-            Aucune alerte pour l'instant.
-          </p>
-          <ul v-else>
-            <li
-              v-for="item in inbox.items"
-              :key="item.id"
-            >
-              <button
-                type="button"
-                :class="['bell-item', { unread: !item.read_at }]"
-                data-test="bell-item"
-                @click="select(item)"
-              >
-                <span class="bell-title">{{ item.title }}</span>
-                <span
-                  v-if="item.message"
-                  class="bell-text"
-                >{{ item.message.split("\n")[0] }}</span>
-                <span class="bell-time">{{ since(item.created_at) }}</span>
-              </button>
-            </li>
-          </ul>
+            <span class="with-icon"><AppIcon name="done" />Tout marquer comme lu</span>
+          </button>
         </div>
-      </PushTransition>
+        <p
+          v-if="!inbox.items.length"
+          class="hint bell-empty"
+        >
+          Aucune alerte pour l'instant.
+        </p>
+        <ul v-else>
+          <li
+            v-for="item in inbox.items"
+            :key="item.id"
+          >
+            <button
+              type="button"
+              :class="['bell-item', { unread: !item.read_at }]"
+              data-test="bell-item"
+              @click="select(item)"
+            >
+              <span class="bell-title">{{ item.title }}</span>
+              <span
+                v-if="item.message"
+                class="bell-text"
+              >{{ item.message.split("\n")[0] }}</span>
+              <span class="bell-time">{{ since(item.created_at) }}</span>
+            </button>
+          </li>
+        </ul>
+      </div>
     </Teleport>
   </div>
 </template>
