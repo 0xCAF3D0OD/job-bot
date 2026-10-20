@@ -1,18 +1,11 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { LOGO_EYE, LOGO_ONE, LOGO_SMILE, LOGO_SPARK, LOGO_TILT, LOGO_VIEWBOX } from "../brandPaths";
 
-import { LOGO_DIAMOND, LOGO_DIAMOND_SMALL_SIZE, LOGO_LOOP, LOGO_VIEWBOX } from "../brandPaths";
-
-// Le logo jobA1 (docs/100) : un trait bleu qui entoure une fois et dépasse, le diamant pêche
-// au même trait. Le trait s'épaissit quand le logo rapetisse, aux paliers de la planche ; à
-// 32 px et moins, trait épais et diamant un peu plus grand. Décoratif : le nom à côté le dit.
-const props = withDefaults(defineProps<{ size?: number }>(), { size: 28 });
-const tier = computed(() => {
-  if (props.size >= 100) return { loop: 3.6, diamond: 3.6, path: LOGO_DIAMOND };
-  if (props.size >= 60) return { loop: 5, diamond: 5, path: LOGO_DIAMOND };
-  if (props.size > 32) return { loop: 5.5, diamond: 5.5, path: LOGO_DIAMOND };
-  return { loop: 8.5, diamond: 8, path: LOGO_DIAMOND_SMALL_SIZE };
-});
+// Le logo jobA1 (docs/102) : un visage complice fait avec le 1 du nom. Le 1 trace le sourcil
+// et le nez, un œil bleu, un œil pêche (la bille), un sourire discret ; le tout penché de −6°.
+// Couleurs du thème : `--logo-line` pour le visage, `--logo-spark` pour la bille. Décoratif :
+// le nom à côté le dit.
+withDefaults(defineProps<{ size?: number }>(), { size: 28 });
 </script>
 
 <template>
@@ -22,17 +15,30 @@ const tier = computed(() => {
     :height="size"
     :viewBox="LOGO_VIEWBOX"
     aria-hidden="true"
+    focusable="false"
     data-test="brand-logo"
   >
-    <path
-      :d="LOGO_LOOP"
-      class="brand-logo-loop"
-      :stroke-width="tier.loop"
-    />
-    <path
-      :d="tier.path"
-      class="brand-logo-diamond"
-      :stroke-width="tier.diamond"
-    />
+    <g :transform="LOGO_TILT">
+      <path
+        class="brand-logo-line"
+        :d="LOGO_ONE"
+      />
+      <circle
+        class="brand-logo-eye"
+        :cx="LOGO_EYE.x"
+        :cy="LOGO_EYE.y"
+        :r="LOGO_EYE.r"
+      />
+      <circle
+        class="brand-logo-spark"
+        :cx="LOGO_SPARK.x"
+        :cy="LOGO_SPARK.y"
+        :r="LOGO_SPARK.r"
+      />
+      <path
+        class="brand-logo-line"
+        :d="LOGO_SMILE"
+      />
+    </g>
   </svg>
 </template>

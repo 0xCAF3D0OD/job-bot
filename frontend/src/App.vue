@@ -90,8 +90,8 @@ onUnmounted(() => {
         class="brand"
         aria-label="jobA1, accueil"
       >
-        <!-- Le logo et « jobA1 » en entier, connecté ou non (docs/98). -->
-        <BrandMark :size="28" />
+        <!-- Le logo, le visage du 1, et « jobA1 » en entier, connecté ou non (docs/102). -->
+        <BrandMark :size="32" />
         jobA1
       </RouterLink>
       <nav

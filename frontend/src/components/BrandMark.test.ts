@@ -5,20 +5,15 @@ import AssistantMascot from "./AssistantMascot.vue";
 import BrandMark from "./BrandMark.vue";
 
 describe("Le logo et la mascotte (docs/97)", () => {
-  it("le logo (docs/100) : une boucle et le diamant au même trait ; plus épais à 32 px et moins", () => {
-    const big = mount(BrandMark, { props: { size: 104 } });
-    expect(big.findAll(".brand-logo-loop")).toHaveLength(1);
-    expect(big.find(".brand-logo-loop").attributes("stroke-width")).toBe("3.6");
-    expect(big.find(".brand-logo-diamond").attributes("stroke-width")).toBe("3.6");
-    expect(mount(BrandMark, { props: { size: 48 } }).find(".brand-logo-loop").attributes("stroke-width")).toBe("5.5");
+  it("le logo (docs/102) : le visage du 1, penché ; deux traits, un œil, la bille", () => {
     const bar = mount(BrandMark, { props: { size: 28 } });
-    expect(bar.findAll(".brand-logo-loop")).toHaveLength(1);
-    expect(bar.find(".brand-logo-loop").attributes("stroke-width")).toBe("8.5");
-    const tab = mount(BrandMark, { props: { size: 16 } });
-    expect(tab.findAll(".brand-logo-loop")).toHaveLength(1);
-    expect(tab.find(".brand-logo-diamond").attributes("stroke-width")).toBe("8");
-    expect(tab.find(".brand-logo-diamond").attributes("d")).not.toBe(big.find(".brand-logo-diamond").attributes("d"));
-    expect(big.attributes("aria-hidden")).toBe("true");
+    expect(bar.attributes("aria-hidden")).toBe("true");
+    expect(bar.attributes("viewBox")).toBe("8 8 86 86");
+    expect(bar.attributes("width")).toBe("28");
+    expect(bar.find("g").attributes("transform")).toBe("rotate(-6 50 50)");
+    expect(bar.findAll(".brand-logo-line")).toHaveLength(2);
+    expect(bar.findAll(".brand-logo-eye")).toHaveLength(1);
+    expect(bar.findAll(".brand-logo-spark")).toHaveLength(1);
   });
 
   it("la mascotte (docs/99) : un visage rond, trois expressions ; les traits s'épaississent", () => {
