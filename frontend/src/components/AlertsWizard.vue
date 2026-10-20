@@ -20,6 +20,10 @@ const form = ref({ terms: "", location: "" });
 const busy = ref(false);
 
 const searches = computed(() => props.page.searches.filter((s) => s.active));
+// Les exemples des champs suivent ta recherche (le métier choisi à l'accueil), pas un métier
+// au hasard (docs/104 §5).
+const termsExample = computed(() => props.page.searches[0]?.terms ?? "ton métier");
+const placeExample = computed(() => props.page.searches.find((s) => s.location)?.location ?? "Lausanne");
 // Sites avec une recherche à ouvrir (les sites ajoutés sans adresse sont laissés de côté).
 const sites = computed(() =>
   props.page.sites.filter((site) => searches.value.some((s) => s.cells.find((c) => c.site === site.slug)?.url)),
@@ -111,7 +115,10 @@ function nextSite(): void {
         />
       </ol>
       <p class="wizard-step">
-        Étape {{ step }} sur 3
+        Étape {{ step }} sur 3<span
+          v-if="step === 2 && site"
+          data-test="wizard-site-count"
+        > · site {{ siteIndex + 1 }} sur {{ sites.length }}</span>
       </p>
 
       <template v-if="step === 1">
@@ -141,7 +148,7 @@ function nextSite(): void {
             v-model="form.terms"
             type="text"
             maxlength="120"
-            placeholder="Mots (DevOps)"
+            :placeholder="`Mots (${termsExample})`"
             aria-label="Mots"
             data-test="wizard-terms"
           >
@@ -149,7 +156,7 @@ function nextSite(): void {
             v-model="form.location"
             type="text"
             maxlength="80"
-            placeholder="Lieu (Lausanne)"
+            :placeholder="`Lieu (${placeExample})`"
             aria-label="Lieu"
           >
           <IconButton
@@ -186,7 +193,6 @@ function nextSite(): void {
           <template v-else>
             ton adresse e-mail
           </template>.
-          Site {{ siteIndex + 1 }} sur {{ sites.length }}.
         </p>
         <div class="wizard-links">
           <template
@@ -212,7 +218,8 @@ function nextSite(): void {
             data-test="wizard-open-remote"
           ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} en télétravail : {{ link.terms }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
         </div>
-        <div class="form-actions">
+        <!-- Deux boutons égaux, côte à côte (docs/104 §4). -->
+        <div class="form-actions wizard-site-actions">
           <button
             type="button"
             class="primary"
@@ -220,15 +227,15 @@ function nextSite(): void {
             data-test="wizard-site-done"
             @click="siteDone"
           >
-            C'est fait, site suivant
+            J'ai créé l'alerte
           </button>
           <button
             type="button"
-            class="link"
+            class="secondary"
             data-test="wizard-skip"
             @click="nextSite"
           >
-            <span class="with-icon">Passer ce site<AppIcon name="arrow-right" /></span>
+            Plus tard
           </button>
         </div>
       </template>

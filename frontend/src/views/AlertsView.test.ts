@@ -68,10 +68,16 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     await wrapper.findAll("[data-test=wizard-search] button")[1]!.trigger("click");
     await flushPromises();
     expect(wrapper.findAll("[data-test=wizard-search]")).toHaveLength(1);
+    // L'exemple suit la recherche, pas un métier au hasard (docs/104 §5).
+    expect(wrapper.find("[data-test=wizard-terms]").attributes("placeholder")).toBe("Mots (DevOps)");
     await wrapper.find("[data-test=wizard-next]").trigger("click");
 
-    // Étape 2 : jobup, puis LinkedIn.
+    // Étape 2 : jobup, puis LinkedIn ; l'avancée sur la ligne de l'étape, deux boutons (docs/104 §4).
     expect(wrapper.text()).toContain("Crée l'alerte sur jobup");
+    expect(wrapper.find("[data-test=wizard-site-count]").text()).toBe("· site 1 sur 2");
+    expect(wrapper.find("[data-test=wizard-site-done]").text()).toBe("J'ai créé l'alerte");
+    expect(wrapper.find("[data-test=wizard-skip]").text()).toBe("Plus tard");
+    expect(wrapper.find("[data-test=wizard-skip]").classes()).toContain("secondary");
     expect(wrapper.find("[data-test=wizard-open]").attributes("href")).toBe("https://jobup.example/?term=DevOps");
     await wrapper.find("[data-test=wizard-site-done]").trigger("click");
     await flushPromises();

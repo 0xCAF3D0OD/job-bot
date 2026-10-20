@@ -611,7 +611,10 @@ function edit(key: StepKey): void {
               >
                 <AppIcon name="check" />
                 <span>{{ line.text }}</span>
-                <small>Modifier</small>
+                <AppIcon
+                  name="pencil"
+                  class="welcome-recap-edit"
+                />
               </button>
             </li>
           </ul>

@@ -128,6 +128,9 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(recap).toContain("Vaud, Genève");
     expect(recap).toContain("10 recherches par mois");
     expect(recap).toContain("avant le 10 du mois");
+    // Un crayon par ligne, plus de « Modifier » écrit (docs/104 §1).
+    expect(recap).not.toContain("Modifier");
+    expect(wrapper.find("[data-test=recap-trade] .welcome-recap-edit").exists()).toBe(true);
     expect(wrapper.find("[data-test=welcome-alerts]").exists()).toBe(false);
 
     // La suite : le personnage l'annonce, puis on crée les alertes.
