@@ -1428,8 +1428,8 @@ button, .button-link { max-width: 100%; }
 @media (max-width: 640px) { .side-panel { width: 100vw; border-left: 0; } }
 
 /* Bulle temporaire (docs/32 §4) */
-.toast { display: flex; align-items: flex-start; gap: 0.75rem; }
-.toast-close { flex: none; margin: -0.15rem -0.3rem 0 auto; }
+.toast { display: flex; align-items: center; gap: 0.75rem; }
+.toast-close { flex: none; margin: -0.4rem -0.3rem -0.4rem auto; }
 .side-panel-body .form-sheet { margin: 0; padding: 0; border: 0; }
 .columns-list legend { font-size: 0.85rem; color: var(--muted); }
 
@@ -3280,3 +3280,17 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 }
 /* La page du Profil en blanc, comme les CFF : les informations grises s'en détachent. */
 .band.profile-page { background: var(--bg); }
+
+/* --- Retours d'affichage du 2026-10-20 (0.78.3) --- */
+/* « Enregistrer » en fin de partie garde sa marge du bas : il ne touche ni le filet ni le bord. */
+.settings-card form > .form-actions:last-child { padding-bottom: 1.5rem; }
+/* « / 100 » ne se coupe pas ; « Enregistré » ou l'erreur passent sous les pastilles. */
+.score-max { white-space: nowrap; }
+.score-choices ~ .saved-flash, .score-choices ~ .field-error { margin: 0.5rem 0 0; }
+/* Une pilule sur une ligne, même avec l'état du téléchargement (✓ · 24 Ko). */
+.pill { white-space: nowrap; }
+/* Comment installer l'extension : des étapes par navigateur, les adresses en petites étiquettes. */
+.install-browser { margin: 0.75rem 0 0.35rem; font-weight: 600; }
+.install-browser:first-child { margin-top: 0; }
+.install-steps { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.45rem; line-height: 1.6; }
+.install-steps code { overflow-wrap: anywhere; font-size: 0.85em; padding: 0.1em 0.35em; border-radius: 4px; background: var(--band); }

@@ -133,7 +133,8 @@ let savedTimer: ReturnType<typeof setTimeout> | null = null;
 async function autosave(field: string): Promise<void> {
   await save();
   const ok = message.value === "Réglages enregistrés.";
-  fieldError.value = ok ? null : { field, text: message.value };
+  // Dans la démo, la bulle « rien n'est enregistré » le dit déjà : pas d'erreur sous le champ.
+  fieldError.value = ok || me.value?.demo ? null : { field, text: message.value };
   message.value = "";
   if (savedTimer) clearTimeout(savedTimer);
   savedField.value = ok ? field : null;
@@ -573,19 +574,24 @@ onUnmounted(() => spy?.disconnect());
                 >
                   {{ value }}
                 </button>
-                <span class="muted">/ 100</span>
-                <span
-                  v-if="savedField === 'threshold'"
-                  class="saved-flash"
-                  role="status"
-                  data-test="threshold-saved"
-                >Enregistré</span>
-                <span
-                  v-if="fieldError?.field === 'threshold'"
-                  class="field-error"
-                  role="alert"
-                >{{ fieldError.text }}</span>
+                <span class="muted score-max">/ 100</span>
               </div>
+              <!-- Le retour sous les pastilles, pas à côté : rien ne se tasse (retour du 2026-10-20). -->
+              <p
+                v-if="savedField === 'threshold'"
+                class="saved-flash"
+                role="status"
+                data-test="threshold-saved"
+              >
+                Enregistré
+              </p>
+              <p
+                v-if="fieldError?.field === 'threshold'"
+                class="field-error"
+                role="alert"
+              >
+                {{ fieldError.text }}
+              </p>
             </fieldset>
           </div>
           <div
