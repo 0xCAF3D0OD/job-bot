@@ -78,7 +78,7 @@ Chaque niveau a une seule taille et une seule graisse. Rien d'autre ne sert de t
 1. **Téléphone** : une seule longue page, « avec des marqueurs pour vite parcourir les éléments ».
 2. **Les descriptions** toujours visibles, plus de « i » dans les Réglages.
 3. **Consulter en gris, modifier en blanc bordé**, avec le crayon rond.
-4. **La portée** : les Réglages en 0.78.0, le Profil avec les mêmes règles en 0.78.1.
+4. **La portée** : les Réglages en 0.78.0, le Profil avec les mêmes règles en 0.78.2 (0.78.1 corrige les marqueurs).
 
 ## Écarts
 
@@ -89,7 +89,7 @@ Chaque niveau a une seule taille et une seule graisse. Rien d'autre ne sert de t
 - **« Recevoir sur mon téléphone »** devient un interrupteur ; « Arrêter » disparaît (l'interrupteur l'éteint). Le compte de l'exploitant n'a que la ligne « Notification de test ».
 - **Les informations en gris** : « Connecté en tant que … », le résumé des données personnelles, le sujet ntfy, le plafond fixé par l'exploitant, la dépense de l'IA du mois.
 - **Les pilules** : Refaire l'accueil, Se déconnecter partout, Exporter mes données, Créer une adresse d'abonnement, Parcourir les suggestions ; pleine largeur sur téléphone.
-- **Les « i » qui restent** sont ceux des formulaires d'ajout d'une source d'actualités (dans le panneau latéral) : ils seront repris avec le Profil (0.78.1).
+- **Les « i » qui restent** sont ceux des formulaires d'ajout d'une source d'actualités (dans le panneau latéral) : ils seront repris avec le Profil (0.78.2).
 - **Le crayon rond** n'a pas encore d'usage dans les Réglages (aucun objet n'y est modifiable autrement que par un interrupteur) : il servira dans le Profil.
 
 ## Vérifié
@@ -105,3 +105,15 @@ Chaque niveau a une seule taille et une seule graisse. Rien d'autre ne sert de t
 2. **Les descriptions toujours visibles** dans les Réglages, et plus de « i » : d'accord ?
 3. **Consulter en gris, modifier en blanc bordé**, avec le crayon rond : d'accord ?
 4. **La portée** : les Réglages d'abord (0.78.0), puis le Profil (Critères, Parcours, Coordonnées) avec les mêmes règles (0.78.1) ?
+
+## Complément 0.78.1 : les marqueurs
+
+Ta capture du 2026-10-20 : en lisant Actualités, le marqueur « Actualités » collait au bord gauche de l'écran, coupé.
+
+- **La cause** : pour garder le marqueur en cours visible, la rangée défile jusqu'à lui, sans tenir compte de sa propre marge.
+- **Après** :
+  - la rangée garde 1 rem à gauche et 1,75 rem à droite quand elle défile (`scroll-padding-inline`) ;
+  - un espace termine la rangée ;
+  - **un fondu discret** sur les bords montre qu'elle continue.
+- **Vérifié** : capture Playwright de la rangée à 414 px, avec le premier, un marqueur du milieu et le dernier en cours : aucun ne touche un bord, et le dernier n'est pas sous le fondu.
+

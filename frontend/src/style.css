@@ -3243,3 +3243,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
   .day-pill { min-width: 0; flex: 1; padding: 0; }
   .settings-card .form-actions > .pill { flex: 1; min-height: 3rem; }
 }
+/* Les marqueurs (docs/110, complément 0.78.1) : quand la rangée défile pour montrer le marqueur
+   en cours, il garde sa marge ; un espace au bout, et un fondu sur les bords dit qu'elle défile. */
+.settings-markers { scroll-padding-inline: 1rem 1.75rem; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1.5rem), transparent); }
+.settings-markers::after { content: ""; flex: 0 0 1rem; }
