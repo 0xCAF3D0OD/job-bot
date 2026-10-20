@@ -164,8 +164,9 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.78.2 | Le Profil comme les CFF : les prérequis en carte grise avec un crayon rond, les descriptions visibles, les blocs en objets gris, la page en blanc | livrée |
 | 0.78.3 | Retours d'affichage : « Enregistrer » avec sa marge, « Enregistré » sous le seuil, la bulle centrée, l'export sur une ligne, l'installation de l'extension en étapes | livrée |
 | 0.78.4 | Cohérence sur ordinateur : titres en gras, l'effet des critères en carte grise, les Réglages en blanc, le plafond total au changement, le Diagnostic dans le sommaire | livrée |
-| 0.79.0 | Une adresse d'alerte à jobA1 pour les invités (`nom-code@alertes.joba1.ch`) ; en attendant, l'adresse abrégée et « Copier l'adresse » | en cours |
-| 0.79.1 | La plateforme présentée : le chemin bleu jusqu'à la fin, une marge sur les côtés, les notes en cercle | en cours |
+| 0.79.0 | Une adresse d'alerte à jobA1 pour les invités (`nom-code@alertes.joba1.ch`) ; en attendant, l'adresse abrégée et « Copier l'adresse » | livrée |
+| 0.79.1 | La plateforme présentée : le chemin bleu jusqu'à la fin, une marge sur les côtés, les notes en cercle | livrée |
+| 0.79.2 | La plateforme sur téléphone : les personnages qui cachaient du texte passent sous la maquette | en cours |
 
 ## Lancer en local
 

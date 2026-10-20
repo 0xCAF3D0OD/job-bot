@@ -125,3 +125,11 @@ Tes captures du 2026-10-20 (demo.joba1.ch/la-plateforme, 414 px) : « le parcour
 - **Les notes** de la maquette « Candidatures › Offres » étaient des pastilles ; elles sont maintenant **le cercle de l'application** (`ScoreRing`, docs/73).
 - **Vérifié** : un test (en bas de page, les sept pastilles atteintes ; trois cercles de note, plus de pastille) ; tests, lint, typecheck ; capture Playwright à 414 px.
 
+## Complément 0.79.2 : les personnages sous la maquette
+
+Ton choix du 2026-10-20 : « décale-les sous la maquette sur téléphone pour ceux qui entrent en conflit avec du texte ou une icône, mais certains sont bien ».
+
+- **Mesuré à 414 px**, scène par scène : le personnage cachait du texte ou une icône aux **étapes 2** (la note « 61 » et « Vevey »), **5** (le bouton « Remettre ») et **6** (« soins »). Aux étapes 1, 3 et 4, il ne couvre qu'un vide de la maquette ou se tient déjà dessous.
+- **Sur téléphone**, ces trois scènes posent leur personnage **sous la maquette**, aligné du côté où il était. Les trois autres et l'ordinateur ne changent pas.
+- **Vérifié** : un test (les trois scènes marquées), tests, lint, typecheck ; capture Playwright des six scènes à 414 px.
+

@@ -3318,3 +3318,10 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
    pastilles du chemin et les bulles ne touchent plus les bords. */
 .discover { padding-left: 1.5rem; padding-right: 1.5rem; box-sizing: border-box; }
 @media (max-width: 820px) { .discover { padding-left: 1rem; padding-right: 1rem; } }
+@media (max-width: 820px) {
+  /* Les scènes où le personnage cachait du texte ou une icône : il passe sous la maquette (0.79.2). */
+  .discover-stage.below { display: grid; min-height: 0; }
+  .discover-stage.below .dmock, .discover-scene.flip .discover-stage.below .dmock { position: static; }
+  .discover-stage.below .discover-character { position: static; justify-self: end; margin-top: -0.5rem; }
+  .discover-scene.flip .discover-stage.below .discover-character { justify-self: start; }
+}

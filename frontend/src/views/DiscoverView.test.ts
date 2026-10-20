@@ -47,6 +47,9 @@ describe("La plateforme, en parcours (docs/67)", () => {
     // La maquette des offres montre la note comme l'application : un cercle, plus de pastille.
     expect(wrapper.find(".dmock-score").exists()).toBe(false);
     expect(wrapper.findAll(".dmock .score-ring").length).toBe(3);
+    // Sur téléphone, le personnage passe sous la maquette là où il cachait du texte (0.79.2).
+    const below = wrapper.findAll(".discover-stage").map((stage) => stage.classes().includes("below"));
+    expect(below).toEqual([false, true, false, false, true, true]);
     wrapper.unmount();
   });
 });
