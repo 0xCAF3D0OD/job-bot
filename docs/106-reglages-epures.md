@@ -88,3 +88,18 @@ Ton retour du 2026-10-20 : « j'aimais bien comment tu as fait sur la capture, j
 - **Sur téléphone** aussi, sans coins arrondis aux bouts du filet.
 - **Vérifié** : capture de Compte et Rythme, sur téléphone (414 px) et sur ordinateur, avec des données fictives ; tests, lint, typecheck.
 
+## Complément 0.77.6 : l'aération, comme les CFF
+
+Ton retour du 2026-10-20, captures des paramètres du profil CFF à l'appui : « sur certains éléments il manque d'aération ». Mesuré sur tes captures : 1,5 rem de marge dans une carte, environ 1,75 rem de chaque côté d'un filet, un interligne d'environ 1,55.
+
+- **Ce qui manquait** : la 0.76.1 avait resserré les Réglages sur téléphone (1 rem de marge, des parties à 1 rem), en dessous de notre règle d'espacement (une marge intérieure d'au moins 1,25 rem).
+- **Téléphone** :
+  - marge intérieure de 1,5 rem, y compris pour le titre de la ligne dépliable, qui s'aligne sur son contenu ;
+  - 1,5 rem de chaque côté d'un filet ;
+  - 0,75 rem entre un titre et son contenu ;
+  - 0,75 rem entre deux lignes dépliables.
+- **Ordinateur** : 1,75 rem de chaque côté d'un filet, comme les CFF.
+- **Les textes d'aide** passent à l'interligne de 1,6.
+- **Une ligne sous un titre** (« Notification de test » sous « Téléphone ») est à 0,75 rem de lui, plus à 1,5 rem.
+- **Vérifié** : captures Playwright à 414 px, avant et après (Compte, Rythme, Notifications), largeur de la page mesurée à 414 px ; tests, lint, typecheck.
+
