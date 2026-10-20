@@ -142,6 +142,16 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(owner.wrapper.find("[data-test=diagnostic-link]").exists()).toBe(true);
   });
 
+  it("Compte : un seul titre par partie, « Se déconnecter partout » en lien (0.77.2)", async () => {
+    await as(false);
+    mockGet(false);
+    const { wrapper } = await mountSettings("compte");
+    const titles = wrapper.findAll("[data-test=settings-card] legend, [data-test=settings-card] h3").map((t) => t.text());
+    expect(titles.filter((t) => t === "Connexion")).toHaveLength(1);
+    expect(titles).not.toContain("Compte");
+    expect(wrapper.find("[data-test=logout-all]").classes()).toContain("link");
+  });
+
   it("compte invité : plafond de l'IA fixé, ni Plateforme ni profils d'essai", async () => {
     await as(false);
     mockGet(false);

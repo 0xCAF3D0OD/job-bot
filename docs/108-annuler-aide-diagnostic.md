@@ -105,3 +105,12 @@ Ta demande du 2026-10-20 : « fais les deux prompts de renommage ».
 - **Plus aucune fenêtre du navigateur** dans l'interface : le test vérifie maintenant `window.confirm` et `window.prompt`.
 - **Vérifié** : tests des deux modifications (champ prérempli, Échap, enregistrement), lint, typecheck ; capture sur téléphone et ordinateur.
 
+## Complément 0.77.2 : Compte, un titre par partie
+
+Ta capture du 2026-10-20 (Réglages › Compte sur téléphone, compte « eliot ») : « Connexion » puis « Compte », deux titres pour une seule partie.
+
+- **Les Réglages ne remettent plus de titre au-dessus d'un panneau** qui a déjà le sien : « Connexion » et « Profils d'essai » (pour l'exploitant) ne s'écrivent plus qu'une fois.
+- **La partie de la session s'appelle « Connexion »** (au lieu de « Compte », qui répétait le nom de la rubrique).
+- **« Se déconnecter partout » devient un lien discret**, à côté de « Refaire l'accueil » : ni l'un ni l'autre n'est l'action principale. Sa confirmation dans la page ne change pas.
+- **Vérifié** : un test (un seul « Connexion », pas de « Compte », le lien), tests complets, lint, typecheck. Pas de capture.
+
