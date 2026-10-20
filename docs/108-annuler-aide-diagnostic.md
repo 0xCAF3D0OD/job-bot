@@ -69,10 +69,19 @@
 - **La page `/reglages/diagnostic`** : un compte invité qui l'ouvre par son adresse revient aux Réglages.
 - **Le serveur** : `/api/status` reste ouvert (il répond aussi pendant une maintenance), mais pour un compte invité il ne donne plus que l'essentiel (« la plateforme fonctionne »), sans version, base ni worker. Ce qui compte pour lui (ses alertes reçues) est déjà dans Alertes.
 
-## Vérifié avant la PR (prévu)
+## Écarts
 
-- Tests : plus aucun `window.confirm` dans l'interface ; le bandeau (supprimer, annuler, 6 s, envoi à la fermeture) ; une confirmation dans la page ; le « i » sur téléphone ; le Diagnostic absent pour un invité, présent pour l'exploitant, la page qui renvoie aux Réglages ; `/api/status` réduit pour un invité.
-- Captures sur téléphone et ordinateur, en clair et en sombre : le bandeau, une confirmation dans la page, une aide ouverte au doigt.
+- **Une fenêtre `window.prompt` en plus** : supprimer un compte (Plateforme) demandait d'écrire son identifiant dans une fenêtre du navigateur. Elle passe aussi dans la page : le champ est dans la confirmation, et « Supprimer » reste grisé tant que l'identifiant n'est pas le bon.
+- **Restent deux `window.prompt` pour renommer** (un profil d'essai, une recherche d'alerte). Ce ne sont pas des confirmations ; ils passeront en modification dans la page dans une version suivante.
+- **Le choix « modifications non enregistrées »** (lettre et CV) a trois issues : « Enregistrer, puis rédiger » (plein), « Rédiger sans enregistrer », « Garder ».
+- **Le « i »** n'apparaît pas dans un bouton ni dans un lien (le prix d'une action IA dans « Préparer le CV ») : le bouton garde son geste. Ces prix restent dans l'info-bulle sur ordinateur.
+- **`/api/status` pour un invité** : `ok` (la plateforme répond) et la collecte, sans version, environnement, base ni worker. Si la base ne répond pas, on ne sait pas qui demande : le détail reste visible, à un compte connecté seulement.
+- **Le bandeau « Annuler »** reprend la place et le style des bulles existantes (`.toast`), au-dessus de la barre d'onglets sur téléphone.
+
+## Vérifié
+
+- Tests : le bandeau (l'action part au bout de 6 s, « Annuler » la remet sans rien envoyer, le suivant valide le précédent, un échec remet ce qui était caché, le compte s'arrête sous la souris) ; la confirmation dans la page (focus sur « Garder », Échap) ; plus aucun `window.confirm` dans l'interface ; les contacts, les demandes de compte, la suppression d'un compte avec son identifiant, l'annulation de la remise ORP ; le « i » sur téléphone (une description à la fois, pas dans un bouton) ; le Diagnostic absent pour un invité (menu, Réglages, adresse directe), présent pour l'exploitant ; `/api/status` réduit pour un invité. Lint et typecheck, serveur et interface.
+- Captures à 414 px, en clair et en sombre : l'aide ouverte au doigt, une confirmation dans la page, le bandeau « Annuler ».
 
 ## Décisions (2026-10-20)
 

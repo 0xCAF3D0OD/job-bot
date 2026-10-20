@@ -92,3 +92,14 @@ Sous 820 px, un écran où l'on travaille un moment (l'entraînement à l'entret
 ## La couleur d'accent (docs/107)
 
 Une seule couleur d'accent, le bleu du logo (`--accent`). Le texte posé dessus passe par `--on-accent` (blanc en clair, foncé en sombre), jamais `#fff` écrit en dur. La pêche reste la seule touche du logo et des actions IA.
+
+## Annuler plutôt que confirmer (docs/108)
+
+1. Ce qui se rattrape se fait tout de suite, avec le bandeau « … · Annuler » pendant 6 secondes (`offerUndo`).
+2. Ce qui ne se rattrape pas, ou touche quelqu'un d'autre, se confirme dans la page, à l'endroit du bouton (`InlineConfirm`), le focus sur « Garder ».
+3. Jamais de `window.confirm` (un test le vérifie).
+
+## L'aide au doigt (docs/108)
+
+Une description au survol (`HoverNote`) a, sur téléphone, un « i » à droite du titre qui l'ouvre en une ligne grise sous lui. Pas de « i » dans un bouton ni un lien.
+

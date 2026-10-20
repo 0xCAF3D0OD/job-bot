@@ -3097,3 +3097,11 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .inline-confirm-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 button.secondary.danger { color: var(--down-text); }
 button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); color: var(--down-text); }
+
+/* L'aide au doigt (docs/108 §2) : le « i » à droite du titre, une ligne grise sous lui. */
+.hover-note-info { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; margin: -0.9rem -0.9rem -0.9rem -0.35rem; padding: 0; border: 0; background: none; color: var(--faint); vertical-align: middle; cursor: pointer; }
+.hover-note-info > span { display: grid; place-items: center; width: 1rem; height: 1rem; border: 1.5px solid currentColor; border-radius: 50%; font-size: 0.68rem; font-weight: 700; line-height: 1; font-style: normal; }
+.hover-note-info[aria-expanded="true"] { color: var(--accent); }
+.hover-note-line { display: block; margin-top: 0.3rem; font-size: 0.86rem; font-weight: 400; line-height: 1.5; color: var(--muted); text-transform: none; letter-spacing: 0; white-space: normal; }
+/* Sur téléphone, le « i » remplace les pointillés sous le titre. */
+@media (max-width: 820px) { .hover-note { text-decoration: none; } }
