@@ -84,185 +84,194 @@ onMounted(async () => {
 </script>
 
 <template>
-  <form
+  <!-- Comme les CFF (docs/110) : le titre au-dessus de la carte, ce qu'elle sert à faire dessous. -->
+  <section
     v-if="loaded"
-    class="form-card"
-    data-test="identity-form"
-    @submit.prevent="saveIdentity"
+    class="identity-section"
   >
-    <fieldset>
-      <legend>
-        Coordonnées
-      </legend>
-      <p
-        v-if="missing.length"
-        class="notice"
-        data-test="identity-missing"
-      >
-        Il manque : {{ missing.join(", ") }}.
-      </p>
-      <div class="form-grid">
-        <label class="wide">Nom et prénom
-          <input
-            v-model="identity.name"
-            type="text"
-            autocomplete="name"
-            data-test="identity-name"
-          >
-        </label>
-        <label class="wide">Rue et numéro
-          <input
-            v-model="identity.street"
-            type="text"
-            autocomplete="address-line1"
-            data-test="identity-street"
-          >
-        </label>
-        <label>NPA
-          <input
-            id="identity-postcode"
-            v-model="identity.postcode"
-            type="text"
-            inputmode="numeric"
-            maxlength="4"
-            autocomplete="postal-code"
-            data-test="identity-postcode"
-            :aria-invalid="Boolean(errors.postcode)"
-            :aria-describedby="errors.postcode ? 'identity-postcode-error' : undefined"
-            @blur="check('postcode')"
-            @input="clearIfFixed('postcode')"
-          >
-          <span
-            v-if="errors.postcode"
-            id="identity-postcode-error"
-            class="field-error"
-            data-test="error-postcode"
-          >{{ errors.postcode }}</span>
-        </label>
-        <label>Localité
-          <input
-            v-model="identity.city"
-            type="text"
-            autocomplete="address-level2"
-            data-test="identity-city"
-          >
-        </label>
-        <label>Téléphone
-          <input
-            v-model="identity.phone"
-            type="tel"
-            autocomplete="tel"
-          >
-        </label>
-        <label>E-mail
-          <input
-            id="identity-email"
-            v-model="identity.email"
-            type="email"
-            autocomplete="email"
-            :aria-invalid="Boolean(errors.email)"
-            :aria-describedby="errors.email ? 'identity-email-error' : undefined"
-            @blur="check('email')"
-            @input="clearIfFixed('email')"
-          >
-          <span
-            v-if="errors.email"
-            id="identity-email-error"
-            class="field-error"
-            data-test="error-email"
-          >{{ errors.email }}</span>
-        </label>
-      </div>
-      <DisclosureRow
-        class="identity-more"
-        title="Pour les formulaires de candidature"
-        :value="formFilled ? `facultatif · ${formFilled} / 5` : 'facultatif'"
-        data-test="identity-more"
-      >
+    <h2 class="section-title">
+      Coordonnées
+    </h2>
+    <form
+      class="form-card"
+      data-test="identity-form"
+      @submit.prevent="saveIdentity"
+    >
+      <fieldset>
+        <p class="setting-desc">
+          Pour tes lettres, ton CV et les formulaires de candidature. Elles ne partent jamais à l'IA : la plateforme les
+          ajoute elle-même.
+        </p>
+        <p
+          v-if="missing.length"
+          class="notice"
+          data-test="identity-missing"
+        >
+          Il manque : {{ missing.join(", ") }}.
+        </p>
         <div class="form-grid">
-          <label>LinkedIn
+          <label class="wide">Nom et prénom
             <input
-              id="identity-linkedin"
-              v-model="identity.linkedin"
+              v-model="identity.name"
               type="text"
-              inputmode="url"
-              placeholder="linkedin.com/in/…"
-              data-test="identity-linkedin"
-              :aria-invalid="Boolean(errors.linkedin)"
-              :aria-describedby="errors.linkedin ? 'identity-linkedin-error' : undefined"
-              @blur="check('linkedin')"
-              @input="clearIfFixed('linkedin')"
+              autocomplete="name"
+              data-test="identity-name"
+            >
+          </label>
+          <label class="wide">Rue et numéro
+            <input
+              v-model="identity.street"
+              type="text"
+              autocomplete="address-line1"
+              data-test="identity-street"
+            >
+          </label>
+          <label>NPA
+            <input
+              id="identity-postcode"
+              v-model="identity.postcode"
+              type="text"
+              inputmode="numeric"
+              maxlength="4"
+              autocomplete="postal-code"
+              data-test="identity-postcode"
+              :aria-invalid="Boolean(errors.postcode)"
+              :aria-describedby="errors.postcode ? 'identity-postcode-error' : undefined"
+              @blur="check('postcode')"
+              @input="clearIfFixed('postcode')"
             >
             <span
-              v-if="errors.linkedin"
-              id="identity-linkedin-error"
+              v-if="errors.postcode"
+              id="identity-postcode-error"
               class="field-error"
-              data-test="error-linkedin"
-            >{{ errors.linkedin }}</span>
+              data-test="error-postcode"
+            >{{ errors.postcode }}</span>
           </label>
-          <label>Site personnel
+          <label>Localité
             <input
-              id="identity-website"
-              v-model="identity.website"
+              v-model="identity.city"
               type="text"
-              inputmode="url"
-              placeholder="facultatif"
-              :aria-invalid="Boolean(errors.website)"
-              :aria-describedby="errors.website ? 'identity-website-error' : undefined"
-              @blur="check('website')"
-              @input="clearIfFixed('website')"
+              autocomplete="address-level2"
+              data-test="identity-city"
+            >
+          </label>
+          <label>Téléphone
+            <input
+              v-model="identity.phone"
+              type="tel"
+              autocomplete="tel"
+            >
+          </label>
+          <label>E-mail
+            <input
+              id="identity-email"
+              v-model="identity.email"
+              type="email"
+              autocomplete="email"
+              :aria-invalid="Boolean(errors.email)"
+              :aria-describedby="errors.email ? 'identity-email-error' : undefined"
+              @blur="check('email')"
+              @input="clearIfFixed('email')"
             >
             <span
-              v-if="errors.website"
-              id="identity-website-error"
+              v-if="errors.email"
+              id="identity-email-error"
               class="field-error"
-              data-test="error-website"
-            >{{ errors.website }}</span>
+              data-test="error-email"
+            >{{ errors.email }}</span>
           </label>
-          <label>Disponibilité
-            <input
-              v-model="identity.availability"
-              type="text"
-              placeholder="dès le 1er novembre, 1 mois de préavis…"
-            >
-          </label>
-          <label>Prétentions salariales
-            <input
-              v-model="identity.salary"
-              type="text"
-              placeholder="CHF 90'000 par an"
-            >
-          </label>
-          <label>Permis de travail
-            <input
-              v-model="identity.permit"
-              type="text"
-              list="identity-permits"
-              placeholder="Suisse, permis C, B…"
-            >
-          </label>
-          <datalist id="identity-permits">
-            <option value="Nationalité suisse" />
-            <option value="Permis C" />
-            <option value="Permis B" />
-            <option value="Permis G (frontalier)" />
-          </datalist>
         </div>
-      </DisclosureRow>
-    </fieldset>
-    <div class="form-actions">
-      <button
-        type="submit"
-        class="primary"
-        data-test="save-identity"
-      >
-        Enregistrer mes coordonnées
-      </button>
-      <span
-        v-if="identityMessage"
-        role="status"
-        class="muted"
-      >{{ identityMessage }}</span>
-    </div>
-  </form>
+        <DisclosureRow
+          class="identity-more"
+          title="Pour les formulaires de candidature"
+          :value="formFilled ? `facultatif · ${formFilled} / 5` : 'facultatif'"
+          data-test="identity-more"
+        >
+          <div class="form-grid">
+            <label>LinkedIn
+              <input
+                id="identity-linkedin"
+                v-model="identity.linkedin"
+                type="text"
+                inputmode="url"
+                placeholder="linkedin.com/in/…"
+                data-test="identity-linkedin"
+                :aria-invalid="Boolean(errors.linkedin)"
+                :aria-describedby="errors.linkedin ? 'identity-linkedin-error' : undefined"
+                @blur="check('linkedin')"
+                @input="clearIfFixed('linkedin')"
+              >
+              <span
+                v-if="errors.linkedin"
+                id="identity-linkedin-error"
+                class="field-error"
+                data-test="error-linkedin"
+              >{{ errors.linkedin }}</span>
+            </label>
+            <label>Site personnel
+              <input
+                id="identity-website"
+                v-model="identity.website"
+                type="text"
+                inputmode="url"
+                placeholder="facultatif"
+                :aria-invalid="Boolean(errors.website)"
+                :aria-describedby="errors.website ? 'identity-website-error' : undefined"
+                @blur="check('website')"
+                @input="clearIfFixed('website')"
+              >
+              <span
+                v-if="errors.website"
+                id="identity-website-error"
+                class="field-error"
+                data-test="error-website"
+              >{{ errors.website }}</span>
+            </label>
+            <label>Disponibilité
+              <input
+                v-model="identity.availability"
+                type="text"
+                placeholder="dès le 1er novembre, 1 mois de préavis…"
+              >
+            </label>
+            <label>Prétentions salariales
+              <input
+                v-model="identity.salary"
+                type="text"
+                placeholder="CHF 90'000 par an"
+              >
+            </label>
+            <label>Permis de travail
+              <input
+                v-model="identity.permit"
+                type="text"
+                list="identity-permits"
+                placeholder="Suisse, permis C, B…"
+              >
+            </label>
+            <datalist id="identity-permits">
+              <option value="Nationalité suisse" />
+              <option value="Permis C" />
+              <option value="Permis B" />
+              <option value="Permis G (frontalier)" />
+            </datalist>
+          </div>
+        </DisclosureRow>
+      </fieldset>
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="primary"
+          data-test="save-identity"
+        >
+          Enregistrer mes coordonnées
+        </button>
+        <span
+          v-if="identityMessage"
+          role="status"
+          class="muted"
+        >{{ identityMessage }}</span>
+      </div>
+    </form>
+  </section>
 </template>

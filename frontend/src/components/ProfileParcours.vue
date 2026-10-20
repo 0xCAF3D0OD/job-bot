@@ -16,7 +16,6 @@ import TagInput from "./TagInput.vue";
 import { formatDate, plural } from "../format";
 
 import AppIcon from "./AppIcon.vue";
-import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import CertificatesSection from "./CertificatesSection.vue";
@@ -406,7 +405,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       </h2>
       <button
         type="button"
-        class="secondary"
+        class="pill"
         data-test="new-chunk"
         @click="newChunk()"
       >
@@ -454,6 +453,11 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           @click="editChunk(chunk)"
         >
           <span class="job-title">{{ chunk.title }}</span>
+          <!-- Le crayon rond dit qu'on peut le modifier (docs/110) ; toute la carte l'ouvre. -->
+          <span
+            class="edit-round chunk-edit"
+            aria-hidden="true"
+          ><AppIcon name="pencil" /></span>
           <span class="chunk-content">{{ chunk.content }}</span>
           <span class="chunk-foot">
             <span>{{ chunkFoot(chunk) }}<template v-if="!chunk.active"> · inactif</template></span>
@@ -491,10 +495,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       data-test="chunk-form"
       @submit.prevent="saveChunk"
     >
-      <label>
-        <HoverNote :text="KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? ''">
-          Type
-        </HoverNote>
+      <label>Type
         <select
           id="chunk-kind"
           v-model="editing.form.kind"
@@ -507,6 +508,8 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             {{ kind.label }}
           </option>
         </select>
+        <!-- La description toujours visible, comme les CFF (docs/110). -->
+        <span class="setting-desc">{{ KINDS.find((k) => k.value === editing?.form.kind)?.hint ?? "" }}</span>
       </label>
       <label>Titre
         <input

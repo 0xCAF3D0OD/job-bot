@@ -117,3 +117,23 @@ Ta capture du 2026-10-20 : en lisant Actualités, le marqueur « Actualités » 
   - **un fondu discret** sur les bords montre qu'elle continue.
 - **Vérifié** : capture Playwright de la rangée à 414 px, avec le premier, un marqueur du milieu et le dernier en cours : aucun ne touche un bord, et le dernier n'est pas sous le fondu.
 
+## Complément 0.78.2 : le Profil
+
+Ta demande du 2026-10-20 : « fais le profil avec les règles des CFF » (décision 4).
+
+- **La page** : fond blanc, comme les CFF, pour que ce qu'on consulte (en gris) s'en détache ; le titre « Profil » en grand et en gras sur téléphone, les titres de section à 1,5 rem.
+- **Critères** :
+  - « Prérequis » est un titre de section au-dessus du résumé ;
+  - le résumé (lieux, taux, types exclus, mots interdits) est **une carte grise, sans bordure**, avec **un crayon rond** en haut à droite pour le modifier (il remplace le bouton « Modifier les prérequis ») ;
+  - dans le formulaire, chaque prérequis a **sa description visible** sous son titre (lieux, télétravail, taux, types exclus, mots interdits, langues). Les « i » disparaissent.
+- **Parcours** :
+  - les documents et les blocs de profil sont **des objets gris** ;
+  - chaque bloc porte **un crayon rond** (toute la carte l'ouvre toujours, comme avant) ;
+  - « Nouveau bloc » est une pilule ;
+  - le type d'un bloc a sa description visible dans le formulaire.
+- **Coordonnées** :
+  - « Coordonnées » est un titre de section au-dessus de la carte ;
+  - une phrase dit à quoi elles servent : « pour tes lettres, ton CV et les formulaires ; elles ne partent jamais à l'IA » (docs/65 §6) ;
+  - « Enregistrer mes coordonnées » prend toute la largeur sur téléphone.
+- **Vérifié** : tests (les descriptions visibles et l'absence de « i » dans les Critères), tests complets, lint, typecheck ; capture Playwright des trois onglets à 414 px, avec des données fictives.
+

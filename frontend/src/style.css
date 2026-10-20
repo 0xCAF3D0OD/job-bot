@@ -3247,3 +3247,36 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
    en cours, il garde sa marge ; un espace au bout, et un fondu sur les bords dit qu'elle défile. */
 .settings-markers { scroll-padding-inline: 1rem 1.75rem; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1.5rem), transparent); }
 .settings-markers::after { content: ""; flex: 0 0 1rem; }
+
+/* --- Le Profil comme les CFF (docs/110, 0.78.2) --- */
+/* Ce qu'on consulte : sur fond gris, sans bordure ; un crayon rond, blanc, pour le modifier. */
+.info-card { position: relative; padding: 1.25rem 1.5rem; border-radius: 12px; background: var(--band); line-height: 1.6; }
+.edit-round { display: inline-grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; padding: 0; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--text); cursor: pointer; transition: border-color 150ms, color 150ms; }
+.edit-round .icon { width: 1.1rem; height: 1.1rem; }
+.edit-round:hover { border-color: var(--accent); color: var(--accent); }
+.info-card > .edit-round { position: absolute; top: 1rem; right: 1rem; }
+.info-card .summary-rows { margin: 0; padding-right: 3.25rem; }
+.info-card .summary-rows > div + div { border-top-color: var(--divider); }
+.criteria-summary-section > .section-title, .identity-section > .section-title { margin: 0 0 1rem; }
+.criteria-summary-section > [role="status"] { margin-top: 0.75rem; }
+.criteria-summary.info-card { padding-top: 1rem; }
+/* Les blocs de profil et les documents : des objets à consulter, sur fond gris. */
+.profile-page .chunk-card { position: relative; background: var(--band); border-color: transparent; padding-right: 4rem; }
+.profile-page .chunk-card:hover { border-color: var(--accent); }
+.profile-page .chunk-card .chunk-edit { position: absolute; top: 0.75rem; right: 0.75rem; }
+.profile-page .chunk-card:hover .chunk-edit { border-color: var(--accent); color: var(--accent); }
+.profile-page .chunk-card .chunk-foot { border-top-color: var(--divider); }
+.profile-page .doc-list.calm-list { background: var(--band); border-color: transparent; border-radius: 12px; }
+/* Les titres et les réglages, comme dans les Réglages. */
+.profile-page .form-card legend { font-weight: 600; font-size: 1.05rem; }
+.profile-page .form-card legend + .setting-desc { margin-top: -0.4rem; }
+.profile-page .form-card > fieldset:first-child > .setting-desc:first-child { margin-top: 0.25rem; }
+@media (max-width: 820px) {
+  :root:has(.profile-page) .page-head h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.03em; }
+  .profile-page .section-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  .profile-page .form-card { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .profile-page .form-actions > .primary, .profile-page .chunks-head .pill { min-height: 3rem; }
+  .profile-page .form-actions > .primary { flex: 1; }
+}
+/* La page du Profil en blanc, comme les CFF : les informations grises s'en détachent. */
+.band.profile-page { background: var(--bg); }
