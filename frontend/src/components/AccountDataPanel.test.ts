@@ -46,7 +46,7 @@ describe("Tes données (docs/65 §6)", () => {
     const { wrapper, router } = await mountPanel();
     expect(wrapper.find("[data-test=delete-account]").text()).toBe("Fermer mon compte");
     await wrapper.find("[data-test=delete-account]").trigger("click");
-    expect(wrapper.find("[data-test=delete-confirm]").text()).toBe("Fermer définitivement");
+    expect(wrapper.find("[data-test=inline-confirm-yes]").text()).toBe("Fermer définitivement");
     await wrapper.find("[data-test=delete-password]").setValue("faux");
     await wrapper.find("[data-test=delete-form]").trigger("submit");
     await flushPromises();
@@ -70,4 +70,17 @@ describe("Tes données (docs/65 §6)", () => {
     expect(document.activeElement).toBe(wrapper.find("[data-test=delete-password]").element);
     wrapper.unmount();
   });
+
+  it("téléphone (0.77.4) : « Fermer définitivement » grisé sans mot de passe, puis il ferme", async () => {
+    POST.mockResolvedValueOnce({ response: { ok: true } });
+    const { wrapper, router } = await mountPanel(SUMMARY, "/reglages?rubrique=compte&fermer=1");
+    expect(wrapper.find("[data-test=inline-confirm-yes]").attributes("disabled")).toBeDefined();
+    await wrapper.find("[data-test=delete-password]").setValue("le-bon-mot-de-passe");
+    await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/account/delete", { body: { password: "le-bon-mot-de-passe" } });
+    expect(router.currentRoute.value.path).toBe("/connexion");
+    wrapper.unmount();
+  });
 });
+

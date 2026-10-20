@@ -6,6 +6,7 @@ import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
+import InlineConfirm from "./InlineConfirm.vue";
 
 // Tes données (docs/65 §6) : ce qui est gardé, l'export complet, la fermeture du compte.
 type Summary = {
@@ -35,7 +36,7 @@ onMounted(async () => {
   if (route.query.fermer && summary.value?.can_delete) {
     confirming.value = true;
     await nextTick();
-    passwordInput.value?.scrollIntoView?.({ block: "center" });
+    passwordInput.value?.scrollIntoView?.({ block: "center", inline: "nearest" });
     passwordInput.value?.focus({ preventScroll: true });
   }
 });
@@ -97,49 +98,41 @@ async function remove(): Promise<void> {
         >
           <span class="with-icon"><AppIcon name="trash" />Fermer mon compte</span>
         </button>
+        <!-- La même confirmation que partout (docs/108 §1), le mot de passe dedans : rien ne
+             dépasse de l'écran sur téléphone (docs/105, complément 0.77.4). -->
         <form
           v-else
           class="account-delete"
           data-test="delete-form"
           @submit.prevent="remove"
         >
-          <p>
-            Fermer ton compte efface tout : offres, candidatures, documents, preuves ORP, discussions. Exporte d'abord ce
-            que tu veux garder. Ton mot de passe pour confirmer :
-          </p>
-          <div class="inline-field">
-            <input
-              ref="passwordInput"
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              data-test="delete-password"
-            >
-            <button
-              type="submit"
-              class="secondary small danger"
-              :disabled="busy"
-              data-test="delete-confirm"
-            >
-              Fermer définitivement
-            </button>
-            <button
-              type="button"
-              class="link"
-              @click="confirming = false"
-            >
-              Annuler
-            </button>
-          </div>
-          <p
-            v-if="error"
-            class="notice"
-            role="alert"
-            data-test="delete-error"
+          <InlineConfirm
+            message="Fermer ton compte efface tout : offres, candidatures, documents, preuves ORP, discussions. Exporte d'abord ce que tu veux garder."
+            confirm-label="Fermer définitivement"
+            :busy="busy || !password"
+            @confirm="remove"
+            @cancel="confirming = false"
           >
-            {{ error }}
-          </p>
+            <label class="account-delete-password">
+              Ton mot de passe pour confirmer
+              <input
+                ref="passwordInput"
+                v-model="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                data-test="delete-password"
+              >
+            </label>
+            <p
+              v-if="error"
+              class="notice"
+              role="alert"
+              data-test="delete-error"
+            >
+              {{ error }}
+            </p>
+          </InlineConfirm>
         </form>
       </template>
     </fieldset>
