@@ -3087,3 +3087,13 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* Une partie d'une seule action : son nom à gauche, l'action à droite. */
 .settings-line { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: 1.5rem 0 0; }
 .settings-line > strong { font-weight: 500; font-size: 1.05rem; }
+
+/* --- Annuler plutôt que confirmer (docs/108 §1) --- */
+.undo-toast { align-items: center; }
+.undo-toast > button.link { margin-left: auto; font-size: 0.95rem; font-weight: 600; min-height: 2.75rem; padding: 0 0.5rem; }
+/* La confirmation dans la page, à l'endroit du bouton. */
+.inline-confirm { display: grid; gap: 0.75rem; padding: 1rem 1.25rem; margin: 0.75rem 0; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); line-height: 1.5; }
+.inline-confirm p { margin: 0; }
+.inline-confirm-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+button.secondary.danger { color: var(--down-text); }
+button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); color: var(--down-text); }

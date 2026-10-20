@@ -20,6 +20,7 @@ import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import CertificatesSection from "./CertificatesSection.vue";
+import { offerUndo } from "../composables/useUndo";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
   { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau." },
@@ -158,11 +159,22 @@ async function onProposalsSaved(count: number): Promise<void> {
   await Promise.all([loadChunks(), loadDocuments()]);
 }
 
+// Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1) ; les blocs créés à partir de lui restent.
 async function removeDocument(doc: DocumentOut): Promise<void> {
-  if (!window.confirm(`Supprimer « ${doc.filename} » ? Les blocs créés à partir de lui sont gardés.`)) return;
-  await api.DELETE("/api/documents/{document_id}", { params: { path: { document_id: doc.id } } });
+  const before = documents.value;
+  documents.value = before.filter((d) => d.id !== doc.id);
   if (openText.value?.id === doc.id) openText.value = null;
-  await Promise.all([loadDocuments(), loadChunks()]);
+  await offerUndo({
+    message: `« ${doc.filename} » supprimé`,
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/documents/{document_id}", { params: { path: { document_id: doc.id } }, keepalive });
+      if (error !== undefined) return false;
+      await Promise.all([loadDocuments(), loadChunks()]);
+    },
+    restore: () => {
+      documents.value = before;
+    },
+  });
 }
 
 function newChunk(content = "", documentId: number | null = null): void {
@@ -209,11 +221,22 @@ async function saveChunk(): Promise<void> {
   }
 }
 
+// Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1).
 async function removeChunk(chunk: Chunk): Promise<void> {
-  if (!window.confirm(`Supprimer le bloc « ${chunk.title} » ?`)) return;
   editing.value = null;
-  await api.DELETE("/api/profile-chunks/{chunk_id}", { params: { path: { chunk_id: chunk.id } } });
-  await Promise.all([loadChunks(), loadDocuments()]);
+  const before = chunks.value;
+  chunks.value = before.filter((c) => c.id !== chunk.id);
+  await offerUndo({
+    message: `Bloc « ${chunk.title} » supprimé`,
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/profile-chunks/{chunk_id}", { params: { path: { chunk_id: chunk.id } }, keepalive });
+      if (error !== undefined) return false;
+      await Promise.all([loadChunks(), loadDocuments()]);
+    },
+    restore: () => {
+      chunks.value = before;
+    },
+  });
 }
 
 // Échap ferme les propositions ; les panneaux latéraux se ferment d'eux-mêmes.

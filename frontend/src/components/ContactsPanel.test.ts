@@ -126,23 +126,30 @@ describe("ContactsPanel", () => {
     expect(error.text()).toBe("Impossible de charger les contacts.");
   });
 
-  it("demande confirmation avant de retirer un contact et dit l'échec", async () => {
+  it("retire tout de suite, « Annuler » le remet ; l'échec le remet et le dit (docs/108 §1)", async () => {
     GET.mockResolvedValue(page([contact(1, {})]));
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const { useUndo } = await import("../composables/useUndo");
+    const { undo, flush, pending } = useUndo();
     const wrapper = mount(ContactsPanel, { props: { offerId: 7, company: "Acme SA", bare: true } });
     await flushPromises();
     await wrapper.find("[data-test=contact-more]").trigger("click");
     await wrapper.find("[data-test=contact-remove]").trigger("click");
     await flushPromises();
-    expect(confirm).toHaveBeenCalledWith("Retirer ce contact ?");
+    expect(wrapper.find("[data-test=contact-more]").exists()).toBe(false);
+    expect(pending.value?.message).toContain("retiré des contacts");
+    expect(DELETE).not.toHaveBeenCalled();
+    await undo();
+    await flushPromises();
+    expect(wrapper.find("[data-test=contact-more]").exists()).toBe(true);
     expect(DELETE).not.toHaveBeenCalled();
 
-    confirm.mockReturnValue(true);
     DELETE.mockResolvedValue({ error: { detail: "introuvable" } });
     await wrapper.find("[data-test=contact-more]").trigger("click");
     await wrapper.find("[data-test=contact-remove]").trigger("click");
+    await flush();
     await flushPromises();
     expect(DELETE).toHaveBeenCalledTimes(1);
+    expect(wrapper.find("[data-test=contact-more]").exists()).toBe(true);
     expect(wrapper.find("[data-test=contact-error]").text()).toBe("Retrait impossible : réessaie dans un instant.");
     expect(wrapper.emitted("changed")).toBeUndefined();
   });

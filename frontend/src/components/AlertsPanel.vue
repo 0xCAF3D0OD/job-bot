@@ -5,6 +5,7 @@ import { api, type AlertSearch, type AlertsPage } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import { offerUndo } from "../composables/useUndo";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
 // ouvre la recherche déjà remplie ; l'alerte se crée sur le site, avec l'adresse de son choix.
@@ -72,11 +73,21 @@ async function setActive(search: AlertSearch, value: boolean): Promise<void> {
   );
 }
 
+// Retirée tout de suite, « Annuler » pendant 6 s (docs/108 §1).
 async function remove(search: AlertSearch): Promise<void> {
-  if (!window.confirm(`Supprimer la recherche « ${search.terms} » ?`)) return;
-  apply(
-    (await api.DELETE("/api/alert-searches/{search_id}", { params: { path: { search_id: search.id } } })).data,
-  );
+  const before = page.value;
+  if (before) page.value = { ...before, searches: before.searches.filter((s) => s.id !== search.id) };
+  await offerUndo({
+    message: `Recherche « ${search.terms} » supprimée`,
+    commit: async (keepalive) => {
+      const { data } = await api.DELETE("/api/alert-searches/{search_id}", { params: { path: { search_id: search.id } }, keepalive });
+      if (!data) return false;
+      apply(data);
+    },
+    restore: () => {
+      page.value = before;
+    },
+  });
 }
 
 async function toggleCreated(search: AlertSearch, cell: Cell): Promise<void> {

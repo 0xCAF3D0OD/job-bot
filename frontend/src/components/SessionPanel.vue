@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
+import InlineConfirm from "./InlineConfirm.vue";
 
 // Connexion (docs/18 §1) : compte connecté, « Se déconnecter partout ».
 const router = useRouter();
@@ -15,8 +17,10 @@ async function welcomeAgain(): Promise<void> {
   await router.push("/bienvenue");
 }
 
+// Confirmé dans la page (docs/108 §1) : on est déconnecté, celle-ci comprise.
+const confirming = ref(false);
 async function everywhere(): Promise<void> {
-  if (!window.confirm("Fermer toutes les sessions ouvertes, celle-ci comprise ?")) return;
+  confirming.value = false;
   await logout(true);
   await router.push({ name: "login" });
 }
@@ -40,7 +44,7 @@ async function everywhere(): Promise<void> {
           type="button"
           class="secondary small"
           data-test="logout-all"
-          @click="everywhere"
+          @click="confirming = true"
         >
           Se déconnecter partout
         </button>
@@ -54,6 +58,13 @@ async function everywhere(): Promise<void> {
           Refaire l'accueil
         </button>
       </div>
+      <InlineConfirm
+        v-if="confirming"
+        message="Fermer toutes les sessions ouvertes, celle-ci comprise ? Tu devras te reconnecter."
+        confirm-label="Se déconnecter partout"
+        @confirm="everywhere"
+        @cancel="confirming = false"
+      />
     </fieldset>
   </div>
   <p

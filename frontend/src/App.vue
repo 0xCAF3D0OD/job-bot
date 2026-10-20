@@ -13,6 +13,7 @@ import ProgressPreview from "./components/ProgressPreview.vue";
 import TabBar from "./components/TabBar.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
+import UndoToast from "./components/UndoToast.vue";
 import PageTransition from "./components/PageTransition.vue";
 import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
 import { useAuth } from "./composables/useAuth";
@@ -194,6 +195,8 @@ onUnmounted(() => {
       class="with-icon"
     >Le code<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
   </div>
+  <!-- Le bandeau « Annuler » (docs/108 §1). -->
+  <UndoToast />
   <AppToast
     v-if="demoRefused"
     :message="demoRefused"

@@ -9,6 +9,7 @@ import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
 import HoverNote from "./HoverNote.vue";
+import { offerUndo } from "../composables/useUndo";
 
 // Extension du navigateur (docs/25 §4, docs/71) : installée depuis la boutique de Mozilla, reliée
 // en un clic (« Relier ce navigateur ») ; le jeton à copier reste, replié.
@@ -34,10 +35,21 @@ async function create(): Promise<void> {
   await load();
 }
 
+// Révoqué au bout de 6 s, « Annuler » d'ici là (docs/108 §1).
 async function revoke(token: Token): Promise<void> {
-  if (!window.confirm(`Révoquer le jeton « ${token.name} » ? L'extension reliée ne pourra plus remplir.`)) return;
-  await api.DELETE("/api/extension-tokens/{token_id}", { params: { path: { token_id: token.id } } });
-  await load();
+  const before = tokens.value;
+  tokens.value = before.filter((t) => t.id !== token.id);
+  await offerUndo({
+    message: `« ${token.name} » révoqué : l'extension ne remplira plus`,
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/extension-tokens/{token_id}", { params: { path: { token_id: token.id } }, keepalive });
+      if (error !== undefined) return false;
+      await load();
+    },
+    restore: () => {
+      tokens.value = before;
+    },
+  });
 }
 
 async function copy(): Promise<void> {

@@ -18,6 +18,7 @@ import HoverNote from "../components/HoverNote.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { expiredText, ofMonth } from "../format";
+import InlineConfirm from "../components/InlineConfirm.vue";
 
 const route = useRoute();
 const offerId = Number(route.params.id);
@@ -148,10 +149,19 @@ async function load(): Promise<void> {
 
 // Le texte qui vient d'arriver de l'IA apparaît ligne à ligne (docs/59 §4).
 const fresh = ref(false);
-async function write(): Promise<void> {
-  if (dirty.value && !window.confirm("Tu as des modifications non enregistrées dans cette version. Rédiger quand même une nouvelle version ?")) {
+// Des modifications non enregistrées : le choix se fait dans la page (docs/108 §1).
+const choosingWrite = ref(false);
+async function saveThenWrite(): Promise<void> {
+  choosingWrite.value = false;
+  await save();
+  await write(true);
+}
+async function write(force = false): Promise<void> {
+  if (dirty.value && !force) {
+    choosingWrite.value = true;
     return;
   }
+  choosingWrite.value = false;
   writing.value = true;
   error.value = "";
   try {
@@ -563,13 +573,25 @@ onMounted(() => void load());
                 :class="nextStep === 'letter' ? 'primary' : 'secondary'"
                 :disabled="writing"
                 data-test="write"
-                @click="write"
+                @click="write()"
               >
                 <HoverNote :text="writing ? '' : 'Environ 0,10 $.'">
                   <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}</span>
                 </HoverNote>
               </button>
             </div>
+            <InlineConfirm
+              v-if="choosingWrite"
+              message="Tu as des modifications non enregistrées dans cette version."
+              confirm-label="Enregistrer, puis rédiger"
+              alt-label="Rédiger sans enregistrer"
+              cancel-label="Garder"
+              :danger="false"
+              :busy="writing"
+              @confirm="saveThenWrite"
+              @alt="write(true)"
+              @cancel="choosingWrite = false"
+            />
           </div>
 
           <div

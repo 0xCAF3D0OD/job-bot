@@ -7,6 +7,7 @@ import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
+import { offerUndo } from "../composables/useUndo";
 
 // Tes dates dans ton agenda (docs/40 §2) : une adresse d'abonnement à jeton secret,
 // révocable ; ton agenda la relit tout seul.
@@ -46,10 +47,21 @@ async function create(): Promise<void> {
   }
 }
 
+// Révoqué au bout de 6 s, « Annuler » d'ici là (docs/108 §1).
 async function revoke(token: Token): Promise<void> {
-  if (!window.confirm(`Révoquer « ${token.name} » ? L'agenda abonné ne recevra plus tes dates.`)) return;
-  await api.DELETE("/api/agenda/tokens/{token_id}", { params: { path: { token_id: token.id } } });
-  await load();
+  const before = tokens.value;
+  tokens.value = before.filter((t) => t.id !== token.id);
+  await offerUndo({
+    message: `« ${token.name} » révoqué : l'agenda ne recevra plus tes dates`,
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/agenda/tokens/{token_id}", { params: { path: { token_id: token.id } }, keepalive });
+      if (error !== undefined) return false;
+      await load();
+    },
+    restore: () => {
+      tokens.value = before;
+    },
+  });
 }
 
 async function copy(): Promise<void> {

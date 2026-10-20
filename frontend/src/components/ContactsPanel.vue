@@ -7,6 +7,7 @@ import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HoverNote from "./HoverNote.vue";
+import { offerUndo } from "../composables/useUndo";
 
 // Contacts dans l'entreprise (docs/31) : recherches LinkedIn déjà remplies, ouvertes dans
 // un nouvel onglet, et suivi des prises de contact. Rien n'est lu sur LinkedIn. Affiché dans
@@ -161,21 +162,26 @@ async function saveAnswer(contact: Contact): Promise<void> {
   }
 }
 
+// Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1).
 async function remove(contact: Contact): Promise<void> {
-  if (!window.confirm("Retirer ce contact ?")) return;
   actionError.value = "";
-  try {
-    const { error } = await api.DELETE("/api/contacts/{contact_id}", { params: { path: { contact_id: contact.id } } });
-    if (error !== undefined) {
-      actionError.value = "Retrait impossible : réessaie dans un instant.";
-      return;
-    }
-  } catch {
-    actionError.value = "Retrait impossible : réessaie dans un instant.";
-    return;
-  }
-  await load();
-  emit("changed");
+  const before = page.value;
+  if (before) page.value = { ...before, contacts: before.contacts.filter((c) => c.id !== contact.id) };
+  await offerUndo({
+    message: `${contact.name} retiré des contacts`,
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/contacts/{contact_id}", { params: { path: { contact_id: contact.id } }, keepalive });
+      if (error !== undefined) {
+        actionError.value = "Retrait impossible : réessaie dans un instant.";
+        return false;
+      }
+      await load();
+      emit("changed");
+    },
+    restore: () => {
+      page.value = before;
+    },
+  });
 }
 
 onMounted(() => void load());
