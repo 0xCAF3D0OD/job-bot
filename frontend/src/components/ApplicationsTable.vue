@@ -24,7 +24,7 @@ function rowItems(application: Application): MoreMenuItem[] {
   if (application.application_url?.startsWith("http")) {
     items.push({ label: "Ouvrir l'annonce", test: "application-link", href: application.application_url });
   }
-  items.push({ label: "Modifier", test: "edit-application", run: () => emit("edit", application) });
+  items.push({ label: "Modifier", test: "edit-application", icon: "pencil", run: () => emit("edit", application) });
   items.push({ label: "Supprimer", test: "remove-application", danger: true, run: () => emit("remove", application) });
   return items;
 }

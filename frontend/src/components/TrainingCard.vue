@@ -5,9 +5,10 @@ import type { Training } from "../api/client";
 import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 
 // Une formation en carte (docs/93), à la manière des offres de Sphere : les étiquettes, le
-// titre, trois faits sur leur ligne, et le cœur. La carte entière ouvre le panneau ; elle ne
+// titre, trois faits sur leur ligne, et le signet (docs/101). La carte entière ouvre le panneau ; elle ne
 // garde que ce qui sert à choisir, la description est dans le panneau. Aérée : docs/93 §1.
 const props = defineProps<{ training: Training }>();
 const emit = defineEmits<{ open: []; interest: []; review: [keep: boolean] }>();
@@ -38,8 +39,11 @@ const price = computed(() => {
   const value = PRICES[t.price] ?? t.price;
   return `${value.charAt(0).toUpperCase()}${value.slice(1)}${t.duration ? ` · ${t.duration}` : ""}`;
 });
-// Le cœur : vide, il marque « Intéressé » ; plein, la formation est suivie.
-const heartLabel = computed(() => (status.value ? "Formation suivie" : "Marquer comme intéressé"));
+// Le signet (docs/101, à la place du cœur) : vide, il garde la formation (« Intéressé ») ;
+// plein, elle est gardée ou suivie.
+const heartLabel = computed(() =>
+  !status.value ? "Garder" : status.value === "interested" ? "Gardée" : "Formation suivie",
+);
 
 function onHeart(): void {
   // En cours ou terminée : on ouvre le panneau plutôt que d'effacer le suivi par erreur.
@@ -101,45 +105,29 @@ function onHeart(): void {
     </ul>
     <div class="tile-foot">
       <template v-if="!training.verified">
-        <button
-          type="button"
-          class="secondary small"
+        <IconButton
+          icon="bookmark"
+          label="Garder"
           data-test="keep"
           @click="emit('review', true)"
-        >
-          Garder
-        </button>
-        <button
-          type="button"
-          class="link danger"
+        />
+        <IconButton
+          icon="trash"
+          label="Écarter"
+          danger
           data-test="dismiss"
           @click="emit('review', false)"
-        >
-          Écarter
-        </button>
+        />
       </template>
-      <button
+      <IconButton
         v-else
-        type="button"
+        icon="bookmark"
+        :label="heartLabel"
         :class="['tile-heart', { on: status }]"
         :aria-pressed="Boolean(status)"
-        :aria-label="heartLabel"
         data-test="interest"
         @click="onHeart"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width="18"
-          height="18"
-          aria-hidden="true"
-        ><path
-          d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"
-          :fill="status ? 'currentColor' : 'none'"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linejoin="round"
-        /></svg>
-      </button>
+      />
     </div>
   </article>
 </template>

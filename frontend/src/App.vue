@@ -6,6 +6,7 @@ import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
+import AppIcon from "./components/AppIcon.vue";
 import BrandMark from "./components/BrandMark.vue";
 import HeaderCapsule from "./components/HeaderCapsule.vue";
 import ProgressPreview from "./components/ProgressPreview.vue";
@@ -42,7 +43,7 @@ const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 const { last: lastJobsPage } = useJobsMemory();
 // Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
-const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme" }];
+const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme", icon: "globe" }];
 const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
 // La page en cours dans le menu : Candidatures couvre tous ses onglets et ses fiches.
 function isCurrent(entry: NavEntry): boolean {
@@ -107,7 +108,13 @@ onUnmounted(() => {
               :class="{ 'router-link-active': isCurrent(entry) }"
               :aria-current="isCurrent(entry) ? 'page' : undefined"
             >
-              {{ entry.label }}
+              <!-- L'icône devant le nom (docs/101, règle 1). -->
+              <span class="with-icon">
+                <AppIcon
+                  v-if="entry.icon"
+                  :name="entry.icon"
+                />{{ entry.label }}
+              </span>
             </RouterLink>
           </li>
         </ul>
@@ -116,7 +123,7 @@ onUnmounted(() => {
         v-if="loggedIn"
         class="topbar-actions"
       >
-        <!-- La capsule (docs/89, docs/91, docs/92) : la cloche, l'étincelle de Progresser et ton
+        <!-- La capsule (docs/89, docs/91, docs/92) : la cloche, le livre de Progresser (docs/101) et ton
              initiale ; elle se déroule pour montrer ce qu'on ouvre. -->
         <HeaderCapsule>
           <NotificationBell />
@@ -166,7 +173,7 @@ onUnmounted(() => {
       data-test="profile-back"
       @click="choose(mainProfile.id)"
     >
-      Revenir à {{ mainProfile.name }}
+      <span class="with-icon"><AppIcon name="arrow-left" />Revenir à {{ mainProfile.name }}</span>
     </button>
   </div>
   <div
@@ -184,7 +191,8 @@ onUnmounted(() => {
       href="https://github.com/0xCAF3D0OD/job-bot"
       target="_blank"
       rel="noopener noreferrer"
-    >Le code</a>
+      class="with-icon"
+    >Le code<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
   </div>
   <AppToast
     v-if="demoRefused"

@@ -2,8 +2,10 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
+import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
 import { useNewsCount } from "../composables/useNewsCount";
+import type { IconName } from "../icons";
 import type { ProgressTab } from "../router";
 
 // Progresser (docs/90) : Actualités et Formations, deux onglets sous un même titre, comme
@@ -13,9 +15,9 @@ const route = useRoute();
 const tab = computed<ProgressTab>(() => (route.meta.tab as ProgressTab | undefined) ?? "actualites");
 const { count: newsCount } = useNewsCount();
 
-const TABS: { key: ProgressTab; label: string; path: string }[] = [
-  { key: "actualites", label: "Actualités", path: "/progresser/actualites" },
-  { key: "formations", label: "Formations", path: "/progresser/formations" },
+const TABS: { key: ProgressTab; label: string; icon: IconName; path: string }[] = [
+  { key: "actualites", label: "Actualités", icon: "news", path: "/progresser/actualites" },
+  { key: "formations", label: "Formations", icon: "book", path: "/progresser/formations" },
 ];
 </script>
 
@@ -33,8 +35,7 @@ const TABS: { key: ProgressTab; label: string; path: string }[] = [
         :aria-current="tab === item.key ? 'page' : undefined"
         :data-test="`progress-tab-${item.key}`"
       >
-        {{ item.label }}
-        <span
+        <span class="with-icon"><AppIcon :name="item.icon" />{{ item.label }}</span>{{ " " }}<span
           v-if="item.key === 'actualites' && newsCount"
           class="tab-count"
           :title="`${newsCount} nouveaux`"

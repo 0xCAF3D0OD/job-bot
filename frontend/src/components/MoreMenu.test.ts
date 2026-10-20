@@ -55,7 +55,10 @@ describe("MoreMenu (docs/50 §1)", () => {
     const page = wrapper.find("[data-test=page]");
     expect(page.attributes("target")).toBe("_blank");
     expect(page.attributes("rel")).toBe("noopener noreferrer");
-    expect(page.text()).toContain("↗");
+    // L'iconographie (docs/101) : un lien externe prend « ouvrir ailleurs », un fichier « télécharger ».
+    expect(page.find("[data-icon=external]").exists()).toBe(true);
+    expect(page.text()).toContain("(nouvel onglet)");
+    expect(letter.find("[data-icon=download]").exists()).toBe(true);
     expect(wrapper.find("[data-test=contacts]").text()).toBe("Contacts (2)");
     const roles = wrapper.findAll("[role=menu] > li").map((li) => li.attributes("role"));
     expect(roles).toEqual(["none", "none", "none", "separator", "none"]);

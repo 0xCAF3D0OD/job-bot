@@ -8,6 +8,7 @@ type RemotePolicy = components["schemas"]["RemotePolicy"];
 import TagInput from "./TagInput.vue";
 import { placeLabel } from "../cantons";
 
+import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
 import FilterOutcome from "./FilterOutcome.vue";
 const CONTRACTS: { value: ContractType; label: string }[] = [
@@ -165,7 +166,7 @@ onMounted(() => void load());
             data-test="edit-criteria"
             @click="editing = true"
           >
-            Modifier les prérequis
+            <span class="with-icon"><AppIcon name="pencil" />Modifier les prérequis</span>
           </button>
           <span
             v-if="message"

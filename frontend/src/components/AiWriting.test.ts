@@ -13,7 +13,8 @@ describe("AiWriting (docs/59 §4)", () => {
     expect(current()).toBe("Lire l'offre");
     await vi.advanceTimersByTimeAsync(7000);
     expect(current()).toBe("Choisir tes expériences");
-    expect(wrapper.find("li.done").text()).toBe("✓ Lire l'offre");
+    expect(wrapper.find("li.done").text()).toBe("Lire l'offre");
+    expect(wrapper.find("li.done [data-icon=done]").exists()).toBe(true);
     await vi.advanceTimersByTimeAsync(60000);
     expect(current()).toBe("Relire");
     expect(wrapper.attributes("role")).toBe("status");

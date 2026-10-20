@@ -3,6 +3,8 @@ import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
 
@@ -79,7 +81,7 @@ onMounted(load);
       <MoreInfo label="Comment l'ajouter">
         <ul class="extension-steps">
           <li><strong>iPhone</strong> : Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un calendrier avec abonnement, puis colle l'adresse.</li>
-          <li><strong>Google Agenda</strong> (ordinateur) : « Autres agendas » › ＋ › « À partir de l'URL ».</li>
+          <li><strong>Google Agenda</strong> (ordinateur) : « Autres agendas » › + › « À partir de l'URL ».</li>
           <li><strong>Outlook</strong> : Ajouter un calendrier › « S'abonner à partir du web ».</li>
           <li>Google et Outlook lisent l'adresse depuis leurs serveurs : ta plateforme doit être joignable depuis Internet (ton tunnel, par exemple).</li>
         </ul>
@@ -112,15 +114,17 @@ onMounted(load);
           v-for="token in tokens"
           :key="token.id"
         >
-          <span>{{ token.name }} <span class="muted">· relu {{ day(token.last_used_at) }}</span></span>
-          <button
-            type="button"
-            class="link danger"
+          <span class="meta-line">
+            <span>{{ token.name }}</span>
+            <span class="muted"><AppIcon name="clock" />relu {{ day(token.last_used_at) }}</span>
+          </span>
+          <IconButton
+            icon="trash"
+            :label="`Révoquer ${token.name}`"
+            danger
             data-test="agenda-revoke"
             @click="revoke(token)"
-          >
-            Révoquer
-          </button>
+          />
         </li>
       </ul>
       <p

@@ -536,9 +536,13 @@ function edit(key: StepKey): void {
             :class="['welcome-card', 'upload', { chosen: !!cvName }]"
             data-test="cv-upload"
           >
-            <AppIcon name="file" />
+            <AppIcon :name="cvName ? 'file' : 'upload'" />
             <span>
-              <strong>{{ cvName ? `✓ ${cvName}` : uploading ? "Dépôt…" : "Déposer mon CV" }}</strong>
+              <strong
+                v-if="cvName"
+                class="with-icon"
+              ><AppIcon name="done" />{{ cvName }}</strong>
+              <strong v-else>{{ uploading ? "Dépôt…" : "Déposer mon CV" }}</strong>
               <small>PDF ou Word</small>
             </span>
             <input
@@ -659,7 +663,7 @@ function edit(key: StepKey): void {
           data-test="welcome-back"
           @click="fromRecap ? go(STEPS.indexOf('ready')) : go(index - 1)"
         >
-          ← {{ fromRecap ? "Revenir au récapitulatif" : "Retour" }}
+          <span class="with-icon"><AppIcon name="arrow-left" />{{ fromRecap ? "Revenir au récapitulatif" : "Retour" }}</span>
         </button>
         <button
           v-if="step !== 'ready' && step !== 'next'"
@@ -668,7 +672,7 @@ function edit(key: StepKey): void {
           data-test="welcome-skip"
           @click="go(index + 1)"
         >
-          Passer →
+          <span class="with-icon">Passer<AppIcon name="arrow-right" /></span>
         </button>
       </div>
     </footer>

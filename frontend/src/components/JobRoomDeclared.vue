@@ -2,6 +2,7 @@
 import { ref } from "vue";
 
 import { api } from "../api/client";
+import AppIcon from "./AppIcon.vue";
 
 // Saisie dans Job-Room (docs/70 §6) : « Marquer comme déclarée », ou la date et « Annuler ».
 // La même marque que « C'est déclaré » dans l'extension.
@@ -31,7 +32,7 @@ async function set(declared: boolean): Promise<void> {
     data-test="job-room-declared"
   >
     <template v-if="declaredAt">
-      <span class="done">Déclarée dans Job-Room le {{ dayMonth(declaredAt) }}</span>
+      <span class="done with-icon"><AppIcon name="done" />Déclarée dans Job-Room le {{ dayMonth(declaredAt) }}</span>
       <button
         type="button"
         class="link"

@@ -187,8 +187,8 @@ describe("barre de candidature", () => {
     POST.mockResolvedValue({ data: { id: 5, company: "Acme SA", orp_month: "2026-10" } });
     const letterTab = await mountView();
     // Trois onglets numérotés (docs/47) : lettre et CV faits, cochés ; plus de barre du haut.
-    expect(letterTab.find("[data-test=tab-letter]").text()).toContain("✓");
-    expect(letterTab.find("[data-test=tab-cv]").text()).toContain("✓");
+    expect(letterTab.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(true);
+    expect(letterTab.find("[data-test=tab-cv] [data-test=step-done]").exists()).toBe(true);
     expect(letterTab.find("[data-test=apply-bar]").exists()).toBe(false);
     expect(letterTab.find("[data-test=pdf]").text()).toBe("PDF");
     expect(letterTab.find("[data-test=save-letter]").exists()).toBe(false);

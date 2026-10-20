@@ -6,6 +6,7 @@ import InterviewCoaching from "./InterviewCoaching.vue";
 import InterviewPractice from "./InterviewPractice.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import AiWriting from "./AiWriting.vue";
+import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
 import { plural } from "../format";
 
@@ -78,7 +79,7 @@ onMounted(() => void load());
             <span
               v-if="question.difficult"
               class="badge warn"
-            >difficile {{ question.difficult }}×</span>
+            >difficile pour {{ question.difficult }}</span>
           </li>
         </ul>
       </section>
@@ -166,7 +167,7 @@ onMounted(() => void load());
         @click="coach"
       >
         <HoverNote :text="busy ? '' : 'Environ 0,03 $.'">
-          {{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}
+          <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}</span>
         </HoverNote>
       </button>
       <p
@@ -188,7 +189,7 @@ onMounted(() => void load());
         @click="practicing = true"
       >
         <HoverNote text="Cinq questions de l'IA, une à la fois, puis un retour. Environ 0,20 CHF ; tu peux répondre en dictant.">
-          M'entraîner sur un entretien type
+          <span class="with-icon"><AppIcon name="ai" />M'entraîner sur un entretien type</span>
         </HoverNote>
       </button>
     </p>

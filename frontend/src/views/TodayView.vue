@@ -3,7 +3,9 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Offer, type Today } from "../api/client";
+import AppIcon from "../components/AppIcon.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
+import IconButton from "../components/IconButton.vue";
 import RhythmCard from "../components/RhythmCard.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import { useAuth } from "../composables/useAuth";
@@ -134,8 +136,8 @@ const sentence = computed<Part[]>(() => {
 const cta = computed(() => {
   const t = today.value;
   if (!t || restDay.value || t.rhythm?.pause_until) return null;
-  if (t.to_review) return { label: "Examiner les offres", to: "/candidatures/offres" };
-  if (t.to_follow_up) return { label: "Relancer", to: "/candidatures/suivi" };
+  if (t.to_review) return { label: "Examiner les offres", to: "/candidatures/offres", icon: "briefcase" as const };
+  if (t.to_follow_up) return { label: "Relancer", to: "/candidatures/suivi", icon: "reply" as const };
   return null;
 });
 
@@ -273,7 +275,7 @@ const { me } = useAuth();
           class="button-link primary-link today-cta"
           data-test="today-cta"
         >
-          {{ cta.label }}
+          <span class="with-icon"><AppIcon :name="cta.icon" />{{ cta.label }}</span>
         </RouterLink>
       </div>
 
@@ -364,7 +366,10 @@ const { me } = useAuth();
                   <CompanyLogo :offer="offer" />
                   <span class="today-row-main">
                     <strong>{{ offer.title }}</strong>
-                    <span class="muted">{{ [offer.company || "Entreprise non indiquée", offer.location].filter(Boolean).join(" · ") }}</span>
+                    <span class="muted meta-line">
+                      <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
+                      <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
+                    </span>
                   </span>
                   <ScoreRing :score="offer.score!" />
                 </RouterLink>
@@ -396,7 +401,9 @@ const { me } = useAuth();
                   <CompanyLogo :offer="offer" />
                   <span class="today-row-main">
                     <strong>{{ offer.title }}</strong>
-                    <span class="muted">{{ offer.company || "Entreprise non indiquée" }}</span>
+                    <span class="muted meta-line">
+                      <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
+                    </span>
                   </span>
                 </RouterLink>
               </li>
@@ -425,7 +432,11 @@ const { me } = useAuth();
                   >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
                   <span class="today-row-main">
                     <strong>{{ item.company }}</strong>
-                    <span class="muted">{{ item.job_title }} · {{ item.status === "relancee" ? "sans réponse depuis la relance" : `envoyée le ${longDate.format(localDate(item.sent_at))}` }}</span>
+                    <span class="muted meta-line">
+                      <span>{{ item.job_title }}</span>
+                      <span v-if="item.status === 'relancee'"><AppIcon name="clock" />sans réponse depuis la relance</span>
+                      <span v-else><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ longDate.format(localDate(item.sent_at)) }}</span>
+                    </span>
                   </span>
                   <span class="today-row-action">Relancer</span>
                 </RouterLink>
@@ -498,14 +509,12 @@ const { me } = useAuth();
           >
             <div class="checklist-head">
               <h2>Comment ça marche</h2>
-              <button
-                type="button"
-                class="link"
+              <IconButton
+                icon="close"
+                label="Masquer"
                 data-test="dismiss-journey"
                 @click="dismissJourney"
-              >
-                Masquer
-              </button>
+              />
             </div>
             <ol>
               <li
@@ -517,11 +526,11 @@ const { me } = useAuth();
                 <span
                   class="tick"
                   aria-hidden="true"
-                ><svg
+                ><AppIcon
                   v-if="step.done"
+                  name="done"
                   class="tick-svg"
-                  viewBox="0 0 12 12"
-                ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
+                /></span>
                 <span
                   v-if="step.done"
                   class="visually-hidden"
@@ -544,14 +553,12 @@ const { me } = useAuth();
           >
             <div class="checklist-head">
               <h2>Pour bien démarrer · {{ doneCount }} / {{ steps.length }}</h2>
-              <button
-                type="button"
-                class="link"
+              <IconButton
+                icon="close"
+                label="Masquer"
                 data-test="dismiss"
                 @click="dismiss"
-              >
-                Masquer
-              </button>
+              />
             </div>
             <ul>
               <li
@@ -563,11 +570,11 @@ const { me } = useAuth();
                 <span
                   class="tick"
                   aria-hidden="true"
-                ><svg
+                ><AppIcon
                   v-if="step.done"
+                  name="done"
                   class="tick-svg"
-                  viewBox="0 0 12 12"
-                ><path d="M2.5 6.2l2.4 2.4 4.6-5" /></svg></span>
+                /></span>
                 <RouterLink
                   v-if="!step.done && STEPS[step.key].to"
                   :to="STEPS[step.key].to!"

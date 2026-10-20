@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
 import AlertsPanel from "../components/AlertsPanel.vue";
+import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
@@ -70,7 +71,7 @@ onMounted(() => void load());
             class="button-link small"
             data-test="confirm-link"
             @click="confirmed(item.search_id)"
-          >Confirmer ↗</a>
+          ><span class="with-icon">Confirmer<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
         </li>
       </ul>
     </div>
@@ -88,7 +89,7 @@ onMounted(() => void load());
           data-test="close-manage"
           @click="closeManage"
         >
-          ← Retour au résumé
+          <span class="with-icon"><AppIcon name="arrow-left" />Retour au résumé</span>
         </button>
         <AlertsPanel />
       </template>

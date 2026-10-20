@@ -6,7 +6,9 @@ import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import NewsCatalog from "./NewsCatalog.vue";
 import SidePanel from "./SidePanel.vue";
 
+import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
+import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
@@ -180,13 +182,12 @@ const addItems: MoreMenuItem[] = [
           class="chip"
         >
           {{ item }}
-          <button
-            type="button"
-            :aria-label="`Retirer ${item}`"
+          <IconButton
+            icon="close"
+            class="chip-remove"
+            :label="`Retirer ${item}`"
             @click="removeKeyword(item)"
-          >
-            ×
-          </button>
+          />
         </li>
         <li
           v-if="!preferences.domain_keywords.length"
@@ -207,12 +208,12 @@ const addItems: MoreMenuItem[] = [
           aria-label="Mots-clés à ajouter"
           data-test="domain-input"
         >
-        <button
+        <IconButton
+          icon="plus"
           type="submit"
-          class="secondary small"
-        >
-          Ajouter
-        </button>
+          label="Ajouter"
+          data-test="domain-add"
+        />
       </form>
       <span
         v-if="keywordHint"
@@ -318,14 +319,13 @@ const addItems: MoreMenuItem[] = [
             </HoverNote>
           </label>
           <p class="calm-panel-foot">
-            <button
-              type="button"
-              class="link danger"
+            <IconButton
+              icon="trash"
+              label="Retirer cette source"
+              danger
               data-test="remove-source"
               @click="remove(opened)"
-            >
-              Retirer cette source
-            </button>
+            />
           </p>
         </div>
       </SidePanel>
@@ -453,7 +453,7 @@ const addItems: MoreMenuItem[] = [
             :disabled="busy"
             data-test="save-news-source"
           >
-            {{ busy ? "Vérification…" : "Ajouter" }}
+            <span class="with-icon"><AppIcon name="plus" />{{ busy ? "Vérification…" : "Ajouter" }}</span>
           </button>
           <button
             type="button"

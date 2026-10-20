@@ -103,7 +103,8 @@ describe("NewsView", () => {
     expect(wrapper.findAll(".news-group-title").map((h) => h.text())).toEqual(["Cette semaine", "Plus ancien"]);
     expect(wrapper.find(".news-story.row .news-time").text()).toMatch(/^il y a|hier/);
     const toggle = wrapper.find("[data-test=news-filter-toggle]");
-    expect(toggle.text()).toBe("Filtrer · 1");
+    expect(toggle.attributes("aria-label")).toBe("Filtrer, 1 actif");
+    expect(toggle.find("[data-test=news-filter-count]").text()).toBe("1");
     expect((wrapper.find("[data-test=news-filter-popover]").element as HTMLElement).style.display).toBe("none");
     await toggle.trigger("click");
     expect((wrapper.find("[data-test=news-filter-popover]").element as HTMLElement).style.display).toBe("");

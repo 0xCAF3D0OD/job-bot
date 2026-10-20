@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import AppIcon from "./AppIcon.vue";
 import CertificateLetter from "./CertificateLetter.vue";
 import HoverNote from "./HoverNote.vue";
 
@@ -135,7 +136,7 @@ onMounted(() => void load());
           @click="open = open === item.document_id ? null : item.document_id"
         >
           <HoverNote text="Une lecture reste une interprétation : la phrase d'origine fait foi.">
-            {{ open === item.document_id ? "Masquer le détail" : "Voir phrase par phrase" }}
+            <span class="with-icon">{{ open === item.document_id ? "Masquer le détail" : "Voir phrase par phrase" }}<AppIcon name="chevron-down" /></span>
           </HoverNote>
         </button>
         <div
@@ -190,7 +191,7 @@ onMounted(() => void load());
             @click="readInDetail(item)"
           >
             <HoverNote text="Environ 0,03 CHF.">
-              {{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}
+              <span class="with-icon"><AppIcon name="ai" />{{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}</span>
             </HoverNote>
           </button>
           <button
@@ -200,7 +201,7 @@ onMounted(() => void load());
             :data-test="`certificate-correction-${item.document_id}`"
             @click="letter = { documentId: item.document_id }"
           >
-            Demander une correction
+            <span class="with-icon"><AppIcon name="mail" />Demander une correction</span>
           </button>
         </div>
       </template>

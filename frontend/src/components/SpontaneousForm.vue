@@ -3,6 +3,7 @@ import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
+import AppIcon from "./AppIcon.vue";
 
 // Candidature spontanée (docs/39 §1) : entreprise, poste visé, « Pourquoi elle » ; puis, au
 // choix, l'adresse au registre du commerce ; enfin la préparation habituelle (lettre, CV).
@@ -146,9 +147,10 @@ function prepare(): void {
     </p>
     <p
       v-if="chosen"
+      class="with-icon"
       data-test="spontaneous-chosen"
     >
-      <strong>Adresse :</strong> {{ chosen.split("\n").join(", ") }}
+      <AppIcon name="pin" /><span><span class="visually-hidden">Adresse : </span>{{ chosen.split("\n").join(", ") }}</span>
     </p>
     <template v-else>
       <span class="spontaneous-search">
@@ -159,7 +161,7 @@ function prepare(): void {
           data-test="spontaneous-search"
           @click="searchAddress"
         >
-          {{ searching ? "Recherche…" : "Chercher l'adresse au registre" }}
+          <span class="with-icon"><AppIcon name="ai" />{{ searching ? "Recherche…" : "Chercher l'adresse au registre" }}</span>
         </button>
       </span>
       <ul

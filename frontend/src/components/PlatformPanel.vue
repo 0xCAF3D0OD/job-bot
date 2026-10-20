@@ -3,7 +3,9 @@ import { onMounted, ref } from "vue";
 
 import { api, type AccountOut, type PlatformOut } from "../api/client";
 import { formatDate, plural, since } from "../format";
+import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
+import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Plateforme (docs/65 §2, §4, §5) : les comptes, réservé à l'exploitant. De chaque compte,
@@ -53,8 +55,8 @@ async function invite(): Promise<void> {
 function accountItems(account: Account): MoreMenuItem[] {
   const u = account.username;
   return [
-    { label: "Lien de nouveau mot de passe", test: `reset-${u}`, run: () => void reset(account) },
-    { label: account.suspended ? "Réactiver" : "Suspendre", test: `suspend-${u}`, run: () => void suspend(account) },
+    { label: "Lien de nouveau mot de passe", test: `reset-${u}`, icon: "lock", run: () => void reset(account) },
+    { label: account.suspended ? "Réactiver" : "Suspendre", test: `suspend-${u}`, icon: account.suspended ? "refresh" : "lock", run: () => void suspend(account) },
     { label: "Supprimer", test: `delete-${u}`, danger: true, run: () => void remove(account) },
   ];
 }
@@ -240,7 +242,7 @@ function size(bytes: number | null | undefined): string {
             data-test="invite"
             @click="invite"
           >
-            Inviter quelqu'un
+            <span class="with-icon"><AppIcon name="users" />Inviter quelqu'un</span>
           </button>
         </div>
         <div
@@ -278,13 +280,13 @@ function size(bytes: number | null | undefined): string {
           >
             <span>Invitation du {{ formatDate(invitation.created_at) }}
               <span class="muted">· valable jusqu'au {{ formatDate(invitation.expires_at) }}</span></span>
-            <button
-              type="button"
-              class="link danger"
+            <IconButton
+              icon="trash"
+              label="Retirer l'invitation"
+              danger
+              data-test="invitation-withdraw"
               @click="withdraw(invitation.id)"
-            >
-              Retirer
-            </button>
+            />
           </li>
         </ul>
       </fieldset>

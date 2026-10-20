@@ -3,9 +3,11 @@ import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import AppIcon from "../components/AppIcon.vue";
 import CopyLabel from "../components/CopyLabel.vue";
+import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import MoreMenu from "../components/MoreMenu.vue";
+import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { plural } from "../format";
@@ -151,8 +153,8 @@ function addQuestion(): void {
   custom.value = "";
 }
 
-const meetingItems = computed(() => [
-  { label: "Modifier", test: "meeting-edit", run: startEditing },
+const meetingItems = computed<MoreMenuItem[]>(() => [
+  { label: "Modifier", test: "meeting-edit", run: startEditing, icon: "pencil" },
   { label: "Supprimer", test: "meeting-delete", run: () => void removeMeeting(), danger: true },
 ]);
 
@@ -391,12 +393,12 @@ onMounted(() => void load());
               aria-label="Une autre question"
               data-test="question-new"
             >
-            <button
+            <IconButton
               type="submit"
-              class="secondary"
-            >
-              Ajouter
-            </button>
+              icon="plus"
+              label="Ajouter la question"
+              data-test="question-add"
+            />
           </form>
           <p
             v-if="message"
@@ -446,7 +448,7 @@ onMounted(() => void load());
               :href="sheetLink"
               download
               data-test="sheet-pdf"
-            >Télécharger la feuille (PDF)</a>
+            ><span class="with-icon"><AppIcon name="download" />Télécharger la feuille (PDF)</span></a>
           </div>
         </section>
 
@@ -478,7 +480,7 @@ onMounted(() => void load());
               @click="writeSheet"
             >
               <HoverNote text="Environ 0,02 CHF.">
-                {{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}
+                <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
               </HoverNote>
             </button>
             <button
@@ -540,13 +542,21 @@ onMounted(() => void load());
                   <dd>{{ line.text }}</dd>
                 </template>
               </dl>
+              <IconButton
+                v-if="item.outcome_at"
+                icon="pencil"
+                label="Modifier ce qui a été convenu"
+                :data-test="`log-outcome-${item.id}`"
+                @click="noting = item.id"
+              />
               <button
+                v-else
                 type="button"
-                :class="item.outcome_at ? 'link' : 'secondary small'"
+                class="secondary small"
                 :data-test="`log-outcome-${item.id}`"
                 @click="noting = item.id"
               >
-                {{ item.outcome_at ? "Modifier" : "Noter ce qui a été convenu" }}
+                Noter ce qui a été convenu
               </button>
             </template>
           </li>

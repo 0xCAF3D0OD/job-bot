@@ -4,6 +4,7 @@ import { ref } from "vue";
 
 import type { Offer } from "../api/client";
 import { plural } from "../format";
+import AppIcon from "./AppIcon.vue";
 import ScoreRing from "./ScoreRing.vue";
 
 // « Pour cette offre » (docs/47 §2) : la note, les points forts et les manques, à côté de la
@@ -59,7 +60,7 @@ const gaps = () => props.offer.gaps ?? [];
       data-test="offer-brief-more"
       @click="open = true"
     >
-      Tout voir ⌄
+      <span class="with-icon">Tout voir<AppIcon name="chevron-down" /></span>
     </button>
   </div>
 </template>

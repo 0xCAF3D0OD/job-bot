@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from "vue";
 
 import { api, type Contact, type ContactIn, type ContactsPage } from "../api/client";
 import { CHANNELS, contactName, isoDay, ROLES, toFollowUp } from "../contactLabels";
+import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HoverNote from "./HoverNote.vue";
@@ -134,7 +135,7 @@ async function add(): Promise<void> {
 function contactItems(contact: Contact): MoreMenuItem[] {
   return [
     ...(contact.answered_on
-      ? [{ label: "Modifier la note", test: "contact-answered", run: () => startAnswer(contact) }]
+      ? [{ label: "Modifier la note", test: "contact-answered", icon: "pencil" as const, run: () => startAnswer(contact) }]
       : []),
     { label: "Retirer", test: "contact-remove", danger: true, run: () => void remove(contact) },
   ];
@@ -207,7 +208,7 @@ onMounted(() => void load());
               target="_blank"
               rel="noopener noreferrer"
               data-test="contact-search"
-            >{{ search.label }} <span aria-hidden="true">↗</span></a>
+            ><span class="with-icon">{{ search.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </li>
           <li v-if="page.website">
             <a
@@ -216,7 +217,7 @@ onMounted(() => void load());
               target="_blank"
               rel="noopener noreferrer"
               data-test="contact-website"
-            >Site de l'employeur <span aria-hidden="true">↗</span></a>
+            ><span class="with-icon">Site de l'employeur<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </li>
         </ul>
       </section>
@@ -258,7 +259,7 @@ onMounted(() => void load());
               data-test="contact-write"
             >
               <HoverNote :text="writing ? '' : 'Environ 0,002 $.'">
-                {{ writing ? "Rédaction…" : written ? "Rédiger à nouveau" : "Rédiger un message" }}
+                <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : written ? "Rédiger à nouveau" : "Rédiger un message" }}</span>
               </HoverNote>
             </button>
           </div>

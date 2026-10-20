@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
+import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
@@ -39,8 +40,8 @@ async function add(): Promise<void> {
 // Les actions d'une recherche dans son « ⋯ » (docs/74).
 function searchItems(search: AlertSearch): MoreMenuItem[] {
   return [
-    { label: "Modifier", test: "edit-alert", run: () => void edit(search) },
-    { label: "Mettre de côté", test: "pause", run: () => void setActive(search, false) },
+    { label: "Modifier", test: "edit-alert", icon: "pencil", run: () => void edit(search) },
+    { label: "Mettre de côté", test: "pause", icon: "clock", run: () => void setActive(search, false) },
     { label: "Supprimer", test: "remove-alert", danger: true, run: () => void remove(search) },
   ];
 }
@@ -133,7 +134,7 @@ onMounted(() => void load());
           v-for="site in page.sites"
           :key="site.slug"
         >
-          <strong>{{ site.name }}</strong> : {{ site.senders.length ? site.senders.join(", ") : "à compléter dans Réglages → Sites suivis" }}
+          <strong>{{ site.name }}</strong> : {{ site.senders.length ? site.senders.join(", ") : "à compléter dans Réglages › Sites suivis" }}
         </li>
       </ul>
     </DisclosureRow>
@@ -184,7 +185,7 @@ onMounted(() => void load());
                 target="_blank"
                 rel="noopener noreferrer"
                 class="link"
-              >Ouvrir</a>
+              ><span class="with-icon"><AppIcon name="external" />Ouvrir</span></a>
               <a
                 v-if="cell.remote_url && cell.status !== 'received'"
                 :href="cell.remote_url"
@@ -248,7 +249,7 @@ onMounted(() => void load());
           type="submit"
           class="primary small"
         >
-          Ajouter
+          <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
         </button>
         <button
           type="button"
@@ -269,7 +270,7 @@ onMounted(() => void load());
         data-test="add-alert"
         @click="adding = true"
       >
-        Ajouter une recherche
+        <span class="with-icon"><AppIcon name="plus" />Ajouter une recherche</span>
       </button>
     </div>
 
@@ -290,7 +291,7 @@ onMounted(() => void load());
             class="link"
             @click="setActive(search, true)"
           >
-            Reprendre
+            <span class="with-icon"><AppIcon name="play" />Reprendre</span>
           </button>
         </li>
       </ul>

@@ -1,3 +1,20 @@
+<script lang="ts">
+import type { IconName } from "../icons";
+
+// Une petite icône au trait devant le titre, de la famille de la navigation (docs/62 §1) ;
+// plus d'illustration dans un formulaire. Le sommaire des Réglages reprend les mêmes (docs/101).
+export const SETTINGS_ICONS: Record<string, IconName> = {
+  recherche: "search",
+  rythme: "clock",
+  actualites: "news",
+  notifications: "bell",
+  ia: "spark",
+  compte: "shield",
+  outils: "plug",
+  plateforme: "user",
+};
+</script>
+
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRoute } from "vue-router";
@@ -18,18 +35,6 @@ const { phone } = usePhone();
 const route = useRoute();
 // « /reglages?rubrique=actualites » (docs/48) ou l'ancien « #actualites » : la ligne s'ouvre.
 const targeted = computed(() => route.query.rubrique === props.id || route.hash === `#${props.id}`);
-// Une petite icône au trait devant le titre, de la famille de la navigation (docs/62 §1) ;
-// plus d'illustration dans un formulaire.
-type Icon = InstanceType<typeof AppIcon>["$props"]["name"];
-const ICONS: Record<string, Icon> = {
-  recherche: "search",
-  actualites: "news",
-  notifications: "bell",
-  ia: "spark",
-  compte: "shield",
-  outils: "plug",
-  plateforme: "user",
-};
 </script>
 
 <template>
@@ -51,8 +56,8 @@ const ICONS: Record<string, Icon> = {
       class="section-title"
     >
       <AppIcon
-        v-if="ICONS[id]"
-        :name="ICONS[id]!"
+        v-if="SETTINGS_ICONS[id]"
+        :name="SETTINGS_ICONS[id]!"
       />
       {{ title }}
     </h2>

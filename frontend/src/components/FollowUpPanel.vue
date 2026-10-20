@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 
 import { api, type Application } from "../api/client";
+import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import HoverNote from "./HoverNote.vue";
 
@@ -77,8 +78,9 @@ async function markDone(): Promise<void> {
     class="follow-up-panel"
     data-test="follow-up"
   >
-    <p class="muted">
-      {{ application.job_title }} · envoyée le {{ new Date(`${application.sent_at}T12:00:00`).toLocaleDateString("fr-CH") }}
+    <p class="muted meta-line">
+      <span>{{ application.job_title }}</span>
+      <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ new Date(`${application.sent_at}T12:00:00`).toLocaleDateString("fr-CH") }}</span>
     </p>
     <button
       v-if="!text"
@@ -89,7 +91,7 @@ async function markDone(): Promise<void> {
       @click="write"
     >
       <HoverNote :text="writing ? '' : 'Environ 0,002 $.'">
-        {{ writing ? "Rédaction…" : "Rédiger la relance" }}
+        <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : "Rédiger la relance" }}</span>
       </HoverNote>
     </button>
     <template v-else>
@@ -119,7 +121,7 @@ async function markDone(): Promise<void> {
           class="button-link"
           :href="mailto"
           data-test="follow-up-mail"
-        >Ouvrir dans ma messagerie</a>
+        ><span class="with-icon"><AppIcon name="mail" />Ouvrir dans ma messagerie</span></a>
         <button
           type="button"
           class="link"

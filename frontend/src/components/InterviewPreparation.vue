@@ -5,6 +5,8 @@ import { api, type Application, type InterviewInsights, type Offer, type Practic
 import InterviewCoaching from "./InterviewCoaching.vue";
 import InterviewPractice from "./InterviewPractice.vue";
 import AiWriting from "./AiWriting.vue";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
@@ -85,7 +87,15 @@ onMounted(async () => {
       class="form-card editor application-form preparation-sheet"
       data-test="interview-preparation"
     >
-      <h3>Préparer l'entretien · {{ application.company }}</h3>
+      <header class="preparation-sheet-head">
+        <h3>Préparer l'entretien · {{ application.company }}</h3>
+        <IconButton
+          icon="close"
+          label="Fermer"
+          data-test="prep-close"
+          @click="emit('close')"
+        />
+      </header>
       <p class="hint">
         {{ application.job_title }}<template v-if="application.interview_at">
           · {{ longDate.format(new Date(application.interview_at)) }}
@@ -102,7 +112,7 @@ onMounted(async () => {
           @click="practicing = true"
         >
           <HoverNote text="Cinq questions de l'IA, une à la fois, puis un retour. Environ 0,20 CHF ; tu peux répondre en dictant.">
-            M'entraîner pour cet entretien
+            <span class="with-icon"><AppIcon name="ai" />M'entraîner pour cet entretien</span>
           </HoverNote>
         </button>
       </div>
@@ -226,15 +236,8 @@ onMounted(async () => {
           @click="coach"
         >
           <HoverNote :text="busy ? '' : 'Environ 0,03 $.'">
-            {{ busy ? "Analyse en cours…" : "Pistes de l'IA" }}
+            <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Analyse en cours…" : "Pistes de l'IA" }}</span>
           </HoverNote>
-        </button>
-        <button
-          type="button"
-          class="primary small"
-          @click="emit('close')"
-        >
-          Fermer
         </button>
       </div>
     </article>

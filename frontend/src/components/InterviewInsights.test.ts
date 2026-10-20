@@ -46,7 +46,7 @@ describe("Mes enseignements (docs/23 §3)", () => {
     const wrapper = mount(InterviewInsights);
     await flushPromises();
     expect(wrapper.find(".disclosure-row").text()).toContain("2 entretiens · ressenti 3/5");
-    expect(wrapper.find("[data-test=insight-questions]").text()).toContain("difficile 1×");
+    expect(wrapper.find("[data-test=insight-questions]").text()).toContain("difficile pour 1");
     await wrapper.find("[data-test=prepare-item]").setValue(true);
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/interviews/insights/prepared", { body: { text: "Exemple chiffré", done: true } });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
 
+import IconButton from "./IconButton.vue";
 import Illustration, { type IllustrationName } from "./Illustration.vue";
 
 // Une réussite (docs/61 §1) : une carte qui vient devant, de manière souple, la page grisée
@@ -27,9 +28,9 @@ function onKey(event: KeyboardEvent): void {
     close();
   }
 }
-const closeButton = ref<HTMLButtonElement | null>(null);
+const closeButton = ref<InstanceType<typeof IconButton> | null>(null);
 onMounted(() => {
-  closeButton.value?.focus({ preventScroll: true });
+  (closeButton.value?.$el as HTMLButtonElement | undefined)?.focus({ preventScroll: true });
   document.addEventListener("keydown", onKey, true);
   if (props.closeAfterMs > 0) timer = setTimeout(close, props.closeAfterMs);
 });
@@ -56,15 +57,14 @@ onUnmounted(() => {
         />
         <h3>{{ title }}</h3>
         <slot />
-        <button
+        <IconButton
           ref="closeButton"
-          type="button"
-          class="secondary small"
+          icon="close"
+          label="Fermer"
+          class="success-close"
           data-test="success-close"
           @click="close"
-        >
-          Fermer
-        </button>
+        />
       </div>
     </div>
   </Teleport>

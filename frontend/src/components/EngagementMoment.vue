@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
 
+import IconButton from "./IconButton.vue";
 import Illustration from "./Illustration.vue";
 
 // La seule fête de la plateforme (docs/60 §2.1) : une candidature passe en Engagement. En grand,
@@ -22,7 +23,7 @@ const PIECES = Array.from({ length: 24 }, (_, i) => {
   };
 });
 
-const closeButton = ref<HTMLButtonElement | null>(null);
+const closeButton = ref<InstanceType<typeof IconButton> | null>(null);
 function onKey(event: KeyboardEvent): void {
   if (event.key === "Escape") {
     event.stopPropagation();
@@ -30,7 +31,7 @@ function onKey(event: KeyboardEvent): void {
   }
 }
 onMounted(() => {
-  closeButton.value?.focus();
+  (closeButton.value?.$el as HTMLButtonElement | undefined)?.focus();
   document.addEventListener("keydown", onKey, true);
 });
 onUnmounted(() => document.removeEventListener("keydown", onKey, true));
@@ -69,15 +70,13 @@ onUnmounted(() => document.removeEventListener("keydown", onKey, true));
           {{ company ? `Engagement chez ${company}.` : "Un engagement." }}
           Pense à le signaler à ton conseiller ORP.
         </p>
-        <button
+        <IconButton
           ref="closeButton"
-          type="button"
-          class="secondary"
+          icon="close"
+          label="Fermer"
           data-test="engagement-close"
           @click="emit('close')"
-        >
-          Fermer
-        </button>
+        />
       </div>
     </div>
   </Teleport>

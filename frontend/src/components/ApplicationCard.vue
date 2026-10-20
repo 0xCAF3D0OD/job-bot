@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { nextStep } from "../applicationState";
 import { applicationStatusLabel } from "../format";
+import AppIcon from "./AppIcon.vue";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import SidePanel from "./SidePanel.vue";
 
@@ -76,7 +77,10 @@ function run(): void {
           data-test="card-spontaneous"
         >Spontanée</span>
       </strong>
-      <span class="muted">{{ application.job_title }} · {{ shortDate.format(new Date(application.sent_at)) }}</span>
+      <span class="muted meta-line">
+        <span>{{ application.job_title }}</span>
+        <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ shortDate.format(new Date(application.sent_at)) }}</span>
+      </span>
       <span
         class="app-status"
         data-test="card-status"

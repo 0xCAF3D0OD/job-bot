@@ -3,6 +3,7 @@ import { computed } from "vue";
 
 import type { AlertsPage } from "../api/client";
 import { plural } from "../format";
+import AppIcon from "./AppIcon.vue";
 
 // Résumé des alertes (docs/21 §4) : un point par recherche, l'aide seulement si besoin.
 const props = defineProps<{ page: AlertsPage }>();
@@ -61,7 +62,7 @@ const siteNames = (cells: Cell[]): string =>
         data-test="manage-alerts"
         @click="emit('manage')"
       >
-        Gérer mes alertes
+        <span class="with-icon"><AppIcon name="settings" />Gérer mes alertes</span>
       </button>
     </div>
     <ul class="summary-list">
@@ -106,7 +107,7 @@ const siteNames = (cells: Cell[]): string =>
       data-test="restart-wizard"
       @click="emit('restart')"
     >
-      Ajouter des alertes avec l'assistant
+      <span class="with-icon"><AppIcon name="plus" />Ajouter des alertes avec l'assistant</span>
     </button>
   </section>
 </template>

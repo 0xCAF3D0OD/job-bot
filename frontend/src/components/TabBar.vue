@@ -18,7 +18,7 @@ const toReview = ref(0);
 const visible = computed(() => !HIDDEN.has(String(route.name)) && !route.meta.bare);
 const tabs = computed(() => [
   { name: "today", label: "Aujourd'hui", icon: "calendar" as const, to: "/aujourdhui", active: route.path.startsWith("/aujourdhui") },
-  { name: "jobs", label: "Candidatures", icon: "inbox" as const, to: lastJobsPage.value, active: route.path.startsWith("/candidatures") },
+  { name: "jobs", label: "Candidatures", icon: "check-circle" as const, to: lastJobsPage.value, active: route.path.startsWith("/candidatures") },
 ]);
 
 async function refresh(): Promise<void> {

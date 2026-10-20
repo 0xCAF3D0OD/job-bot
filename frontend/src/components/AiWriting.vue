@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
 
+import AppIcon from "./AppIcon.vue";
+
 // L'IA rédige (docs/59 §4) : la seule vraie attente de la plateforme (10 à 30 s). Une barre
 // d'étapes, l'étape en cours en violet, les faites cochées ; elle avance avec le temps
 // habituel de chaque étape et s'arrête sur la dernière jusqu'à l'arrivée du texte.
@@ -54,7 +56,13 @@ onUnmounted(() => clearInterval(timer));
         :class="{ done: index < current, current: index === current }"
         :aria-current="index === current ? 'step' : undefined"
       >
-        {{ index < current ? `✓ ${label}` : label }}
+        <span
+          v-if="index < current"
+          class="with-icon"
+        ><AppIcon name="done" />{{ label }}</span>
+        <template v-else>
+          {{ label }}
+        </template>
       </li>
     </ol>
     <p class="hint">

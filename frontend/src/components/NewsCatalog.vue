@@ -3,6 +3,8 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type NewsCatalog, type NewsSource } from "../api/client";
 import { countryLabel, languageLabel } from "../newsLabels";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 
 // Sources suggérées (docs/16 §4.1) : vérifiées, ajoutées en un clic.
 const emit = defineEmits<{ added: [sources: NewsSource[]]; close: [] }>();
@@ -101,13 +103,12 @@ onMounted(async () => {
           {{ languageLabel(code) }}
         </option>
       </select>
-      <button
-        type="button"
-        class="link"
+      <IconButton
+        icon="close"
+        label="Fermer"
+        data-test="catalog-close"
         @click="emit('close')"
-      >
-        Fermer
-      </button>
+      />
     </div>
     <ul class="sites-list">
       <li
@@ -126,8 +127,8 @@ onMounted(async () => {
         </span>
         <span
           v-if="source.added"
-          class="hint"
-        >suivie ✓</span>
+          class="hint with-icon"
+        ><AppIcon name="done" />suivie</span>
         <button
           v-else
           type="button"
@@ -136,7 +137,7 @@ onMounted(async () => {
           data-test="catalog-add"
           @click="add(source.id)"
         >
-          Ajouter
+          <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
         </button>
       </li>
     </ul>

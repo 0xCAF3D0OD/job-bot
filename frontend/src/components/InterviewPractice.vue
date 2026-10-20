@@ -3,6 +3,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { api, type Application, type Practice, type PracticeDefaults } from "../api/client";
 import AiWriting from "./AiWriting.vue";
+import AppIcon from "./AppIcon.vue";
+import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // S'entraîner à l'entretien (docs/75) : trois choix, cinq questions du recruteur simulé, une
@@ -281,15 +283,12 @@ onMounted(async () => {
             label="Actions sur l'entraînement"
             test-id="practice-more"
           />
-          <button
-            type="button"
-            class="close"
-            aria-label="Fermer l'entraînement"
+          <IconButton
+            icon="close"
+            label="Fermer l'entraînement"
             data-test="practice-close"
             @click="emit('close')"
-          >
-            ×
-          </button>
+          />
         </div>
       </header>
 
@@ -383,7 +382,7 @@ onMounted(async () => {
               data-test="practice-start"
               @click="start"
             >
-              {{ busy === "start" ? "Le recruteur arrive…" : "Commencer" }}
+              <span class="with-icon"><AppIcon name="ai" />{{ busy === "start" ? "Le recruteur arrive…" : "Commencer" }}</span>
             </button>
           </div>
         </template>
@@ -433,7 +432,7 @@ onMounted(async () => {
             data-test="practice-retry"
             @click="retry"
           >
-            Réessayer
+            <span class="with-icon"><AppIcon name="refresh" />Réessayer</span>
           </button>
         </div>
         <form
@@ -467,7 +466,7 @@ onMounted(async () => {
               :disabled="!!busy || !draft.trim()"
               data-test="practice-send"
             >
-              Envoyer
+              <span class="with-icon"><AppIcon name="send" />Envoyer</span>
             </button>
           </div>
         </form>
@@ -501,8 +500,9 @@ onMounted(async () => {
                 <span>{{ item }}</span>
                 <span
                   v-if="added.includes(item)"
-                  class="hint"
-                >Ajouté à « À préparer » ✓</span>
+                  class="hint with-icon"
+                  data-test="practice-added"
+                >Ajouté à « À préparer »<AppIcon name="done" /></span>
                 <button
                   v-else
                   type="button"

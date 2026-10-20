@@ -109,9 +109,12 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     const titles = wrapper.findAll(".panel-section h3").map((h) => h.text());
     expect(titles).toEqual(["Pour toi", "À savoir", "Entreprise", "Annonce"]);
     expect(wrapper.find("[data-test=score-note]").text()).toBe("Ton profil a changé depuis : note à refaire.");
-    const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark").text());
-    expect(marks).toEqual(["✓", "✓", "!", "✗"]);
-    expect(wrapper.find("[data-test=facts]").text()).toContain("80–100 %");
+    // docs/101 : taux, télétravail, contrat en pastilles ; les faits prennent leur icône.
+    const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark [data-icon]").attributes("data-icon"));
+    expect(marks).toEqual(["eye", "alert", "x-circle"]);
+    expect(wrapper.find("[data-test=term-rate]").text()).toBe("Taux : 80–100 %");
+    expect(wrapper.find("[data-test=term-rate] [data-icon=rate]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=facts] .seen").text()).toMatch(/^Vue \d+ fois/);
     // L'annonce chez l'employeur est le bouton ; celle d'Indeed, seule autre, s'affiche
     // directement, sans « ⋯ » pour une seule action (docs/76 §3).
     expect(wrapper.find("[data-test=ad-more]").exists()).toBe(false);

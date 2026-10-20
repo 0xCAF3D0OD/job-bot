@@ -3,7 +3,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client";
+import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
+import IconButton from "../components/IconButton.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import PushTransition from "../components/PushTransition.vue";
@@ -302,14 +304,23 @@ onUnmounted(() => {
   <section class="offers-page">
     <!-- Titre et onglets : en-tête de la rubrique Candidatures (docs/19 §2). -->
     <div class="offers-heading">
+      <!-- Filtrer (docs/101) : l'entonnoir seul, le nombre de filtres actifs en pastille. -->
       <button
         type="button"
-        class="secondary filters-toggle"
+        class="icon-button icon-only filters-toggle"
+        :aria-label="activeCount(filters) ? `Filtrer, ${plural(activeCount(filters), 'filtre actif', 'filtres actifs')}` : 'Filtrer'"
+        data-label="Filtrer"
         :aria-expanded="filtersOpen"
         data-test="filters-toggle"
         @click="filtersOpen = !filtersOpen"
       >
-        Filtrer{{ activeCount(filters) ? ` · ${activeCount(filters)}` : "" }}
+        <AppIcon name="filter" />
+        <span
+          v-if="activeCount(filters)"
+          class="icon-badge"
+          aria-hidden="true"
+          data-test="filters-count"
+        >{{ activeCount(filters) }}</span>
       </button>
     </div>
 
@@ -326,14 +337,13 @@ onUnmounted(() => {
               aria-hidden="true"
             />
             <strong>Filtres</strong>
-            <button
-              type="button"
+            <IconButton
+              icon="close"
+              label="Fermer les filtres"
               class="close"
-              aria-label="Fermer les filtres"
+              data-test="close-filters"
               @click="filtersOpen = false"
-            >
-              ×
-            </button>
+            />
           </div>
           <OfferFiltersPanel
             :filters="filters"
@@ -401,7 +411,7 @@ onUnmounted(() => {
               class="link"
               @click="reset"
             >
-              Effacer les filtres
+              <span class="with-icon"><AppIcon name="close" />Effacer les filtres</span>
             </button>
           </p>
         </IllustratedSide>
@@ -439,7 +449,7 @@ onUnmounted(() => {
           :disabled="loading"
           @click="load(true)"
         >
-          Afficher plus
+          <span class="with-icon"><AppIcon name="chevron-down" />Afficher plus</span>
         </button>
       </div>
 

@@ -159,7 +159,7 @@ onUnmounted(() => {
               :key="profile.id"
               :value="profile.id"
             >
-              {{ profile.is_main ? "👤 " : "🧪 " }}{{ profile.name }}
+              {{ profile.name }} {{ profile.is_main ? "(principal)" : "(essai)" }}
             </option>
           </select>
         </label>
@@ -168,28 +168,28 @@ onUnmounted(() => {
           role="menuitem"
           data-test="account-profile"
         >
-          Profil
+          <span class="with-icon"><AppIcon name="user" />Profil</span>
         </RouterLink>
         <RouterLink
           to="/reglages"
           role="menuitem"
           data-test="account-settings"
         >
-          Réglages
+          <span class="with-icon"><AppIcon name="settings" />Réglages</span>
         </RouterLink>
         <RouterLink
           to="/tes-donnees"
           role="menuitem"
           data-test="account-privacy"
         >
-          Données personnelles
+          <span class="with-icon"><AppIcon name="shield" />Données personnelles</span>
         </RouterLink>
         <RouterLink
           to="/reglages/diagnostic"
           role="menuitem"
           data-test="account-diagnostic"
         >
-          Diagnostic
+          <span class="with-icon"><AppIcon name="activity" />Diagnostic</span>
         </RouterLink>
         <!-- La démo ne collecte rien (docs/72). -->
         <button
@@ -201,7 +201,7 @@ onUnmounted(() => {
           data-test="account-collect"
           @click="collect"
         >
-          Collecter maintenant
+          <span class="with-icon"><AppIcon name="refresh" />Collecter maintenant</span>
         </button>
         <button
           v-if="me?.auth_enabled"
@@ -211,7 +211,7 @@ onUnmounted(() => {
           data-test="logout"
           @click="signOut"
         >
-          Se déconnecter
+          <span class="with-icon"><AppIcon name="logout" />Se déconnecter</span>
         </button>
       </div>
     </Teleport>
