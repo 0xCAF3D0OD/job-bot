@@ -1,4 +1,5 @@
-"""Connexion (docs/18 §1) ; comptes invités par l'exploitant (docs/65 §2), pas d'inscription."""
+"""Connexion (docs/18 §1) ; comptes invités par l'exploitant (docs/65 §2) ou demandés et
+acceptés par lui (docs/102)."""
 
 from datetime import datetime
 from typing import Annotated, Literal
@@ -8,16 +9,19 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func
 
 from jobbot import accounts, welcome
-from jobbot.auth import links, passwords, service
+from jobbot.auth import links, passwords, service, signup
 from jobbot.auth.middleware import cookie_token, session_cookie
 from jobbot.db.models import User
 from jobbot.log import get_logger
+from jobbot.notify import service as notify
 from jobbot.profiles.service import main_profile
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 log = get_logger(__name__)
 throttle = service.Throttle()
+# Les demandes de compte : 3 par heure depuis une même adresse (docs/102).
+signup_limit = service.Window(limit=3, period_s=3600)
 # Empreinte de référence : un identifiant inconnu coûte le même temps qu'un mot de passe faux.
 _DUMMY_HASH = passwords.hash_password("identifiant-inconnu")
 
@@ -113,6 +117,7 @@ async def me(request: Request) -> Me:
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         401: {"description": "Identifiant ou mot de passe incorrect"},
+        403: {"description": "Compte suspendu, ou en attente de validation"},
         409: {"description": "Aucun compte : lancer jobbot set-password"},
         429: {"description": "Trop d'essais : attendre"},
     },
@@ -146,6 +151,12 @@ async def login(request: Request, body: LoginIn, response: Response) -> None:
                 raise HTTPException(
                     status.HTTP_403_FORBIDDEN,
                     "compte suspendu : vois avec l'exploitant de la plateforme",
+                )
+            if user is not None and valid and user.approved_at is None:
+                # Seulement avec le bon mot de passe : sinon, rien ne dit que l'identifiant existe.
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN,
+                    "ton compte attend encore la validation de l'exploitant",
                 )
             if user is None or not valid:
                 throttle.fail(*keys)
@@ -267,3 +278,82 @@ async def use_link(request: Request, token: str, body: LinkUse, response: Respon
     await _ensure_profile(runtime, user_id)
     log.info("account_link_used", username=username)
     response.headers["set-cookie"] = session_cookie(cookie, _headers(request))
+
+
+# --- Demandes de compte (docs/102) ---------------------------------------------------------
+
+
+class SignupStatus(BaseModel):
+    # Fermées : démo, interrupteur éteint par l'exploitant ou 20 demandes en attente.
+    open: bool
+
+
+class SignupIn(BaseModel):
+    username: Annotated[str, Field(min_length=1, max_length=links.USERNAME_MAX)]
+    password: Annotated[str, Field(min_length=1, max_length=200)]
+    # « Un mot pour l'exploitant », facultatif.
+    note: Annotated[str | None, Field(max_length=signup.NOTE_MAX)] = None
+    # « J'ai lu ce que deviennent mes données ».
+    consent: bool = False
+    # Champ piège, invisible pour une personne : rempli, la demande est ignorée en silence.
+    website: Annotated[str | None, Field(max_length=200)] = None
+
+
+@router.get("/signup", operation_id="getSignup")
+async def get_signup(request: Request) -> SignupStatus:
+    return SignupStatus(open=await signup.is_open(_runtime(request)))
+
+
+@router.post(
+    "/signup",
+    operation_id="requestSignup",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        403: {"description": "Demandes fermées"},
+        422: {"description": "Identifiant, mot de passe ou case refusés"},
+        429: {"description": "Trop de demandes depuis cette adresse"},
+    },
+)
+async def request_signup(request: Request, body: SignupIn) -> None:
+    """Crée le compte en attente ; l'exploitant reçoit une alerte. Rien n'est envoyé à la
+    personne : elle revient se connecter une fois acceptée."""
+    runtime = _runtime(request)
+    ip = request.client.host if request.client else "inconnue"
+    wait = signup_limit.take(f"ip:{ip}")
+    if wait:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            f"trop de demandes depuis cette adresse : réessaie dans {wait // 60 + 1} min",
+            headers={"Retry-After": str(wait)},
+        )
+    if not await signup.is_open(runtime):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, signup.CLOSED)
+    if body.website and body.website.strip():
+        log.info("signup_ignored", ip=ip)
+        return
+    if not body.consent:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "coche la case : tu as lu ce que deviennent tes données",
+        )
+    owner = await _owner(runtime)
+    with accounts.use(owner):
+        async with runtime.sessionmaker.begin() as session:
+            try:
+                user = await signup.request(session, body.username, body.password, body.note)
+            except links.LinkError as exc:
+                raise _link_error(exc) from None
+            username = user.username
+        # Jamais le mot de passe ni le mot laissé dans les journaux.
+        log.info("signup_requested", username=username, ip=ip)
+        await notify.deliver(
+            runtime,
+            notify.Message(
+                title=f"Nouvelle demande de compte : {username}",
+                message="À accepter ou refuser dans les Réglages, rubrique Plateforme.",
+                tags=["bust_in_silhouette"],
+                click=f"{runtime.settings.public_url.rstrip('/')}/reglages?rubrique=plateforme",
+            ),
+            kind="signup_request",
+            link="/reglages?rubrique=plateforme",
+        )

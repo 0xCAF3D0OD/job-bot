@@ -22,6 +22,8 @@
 
 ## 2. Qui peut créer un compte : sur invitation
 
+> **Changé en 0.73.0** (docs/102) : n'importe qui peut aussi **demander un compte** depuis la page de connexion. Le compte attend ta validation, dans Réglages › Plateforme. Les invitations restent ; un compte invité est accepté d'office.
+
 - Pas d'inscription ouverte. **Toi seul** crées une invitation (Réglages › Comptes) : un lien à usage unique, valable 7 jours, que tu transmets toi-même (e-mail, message).
 - La personne choisit son identifiant et son mot de passe sur la page d'invitation. Mots de passe comme aujourd'hui (scrypt, essais limités).
 - **Mot de passe oublié** : sans envoi d'e-mail par la plateforme, c'est toi qui génères un lien de réinitialisation (valable 24 h) et le transmets. L'envoi automatique d'e-mails pourra venir avec le déploiement public.

@@ -820,7 +820,7 @@ class ProfileSource(Base):
 
 class User(Base):
     """Compte de connexion (docs/18 §1, docs/65) : le premier est l'exploitant, les autres
-    sont invités par lui."""
+    sont invités par lui ou demandés depuis la page de connexion (docs/102)."""
 
     __tablename__ = "users"
 
@@ -839,6 +839,13 @@ class User(Base):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Adresse de réception d'un compte invité : boite+code@domaine (docs/65 §3).
     mail_code: Mapped[str | None] = mapped_column(Text, unique=True)
+    # Accepté par l'exploitant (docs/102) ; vide : une demande de compte en attente, sans
+    # connexion ni tâches. Un compte invité ou créé autrement est accepté d'office.
+    approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    # Le mot laissé avec la demande, effacé à l'acceptation.
+    signup_note: Mapped[str | None] = mapped_column(Text)
 
 
 class AccountLink(Base):

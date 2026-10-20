@@ -2,6 +2,7 @@
 (objectif, remise, veille de la date limite ; docs/09 §5)."""
 
 from jobbot.assistant import service as assistant
+from jobbot.auth import signup
 from jobbot.contacts.service import notify_contacts
 from jobbot.notify.inbox import purge
 from jobbot.notify.interviews import notify_interviews
@@ -28,3 +29,4 @@ async def reminders_job(runtime: Runtime, ctx: RunContext) -> None:
     )
     await purge(runtime)  # alertes de la cloche de plus de 90 jours
     await assistant.purge(runtime)  # discussions de l'assistant de plus de 30 jours
+    await signup.purge(runtime)  # demandes de compte sans réponse depuis 30 jours (docs/102)

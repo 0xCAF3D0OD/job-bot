@@ -61,8 +61,12 @@ async def authenticate(session: AsyncSession, token: str | None) -> Authenticate
         await session.execute(
             select(UserSession, User.username)
             .join(User, User.id == UserSession.user_id)
-            # Un compte suspendu (docs/65 §2) n'a plus de session valable.
-            .where(UserSession.token_hash == token_hash(token), User.suspended_at.is_(None))
+            # Un compte suspendu (docs/65 §2) ou en attente (docs/102) n'a pas de session.
+            .where(
+                UserSession.token_hash == token_hash(token),
+                User.suspended_at.is_(None),
+                User.approved_at.is_not(None),
+            )
         )
     ).first()
     if row is None:
@@ -124,3 +128,25 @@ class Throttle:
     def reset(self, *keys: str) -> None:
         for key in keys:
             self.failures.pop(key, None)
+
+
+@dataclass
+class Window:
+    """Au plus `limit` demandes par clé sur `period_s` secondes (les demandes de compte,
+    docs/102 : 3 par heure et par adresse). En mémoire, comme `Throttle`."""
+
+    limit: int
+    period_s: float
+    hits: dict[str, list[float]] = field(default_factory=dict)
+
+    def take(self, key: str) -> int:
+        """Compte une demande ; 0 si elle passe, sinon les secondes à attendre."""
+        now = time.monotonic()
+        for old in [k for k, times in self.hits.items() if now - times[-1] > self.period_s]:
+            del self.hits[old]
+        recent = [t for t in self.hits.get(key, []) if now - t < self.period_s]
+        if len(recent) >= self.limit:
+            self.hits[key] = recent
+            return int(recent[0] + self.period_s - now) + 1
+        self.hits[key] = [*recent, now]
+        return 0

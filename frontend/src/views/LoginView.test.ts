@@ -86,3 +86,35 @@ describe("LoginView, deux moitiés (docs/65, complément 0.53.1)", () => {
     expect(wrapper.find("[data-test=login-form]").exists()).toBe(true);
   });
 });
+
+describe("LoginView, demander un compte (docs/102)", () => {
+  function answer(open: boolean) {
+    GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/auth/signup" ? { open } : anonymous }));
+  }
+
+  it("demandes ouvertes : « Créer un compte » mène à /inscription", async () => {
+    answer(true);
+    const { wrapper } = await mountLogin();
+    expect(wrapper.find("[data-test=signup-link]").attributes("href")).toBe("/inscription");
+    expect(wrapper.find(".auth-foot").text().replace(/\s+/g, " ")).toContain("Pas encore de compte ? Créer un compte");
+    expect(wrapper.text()).not.toContain("sur invitation");
+  });
+
+  it("demandes fermées : l'invitation, sans lien", async () => {
+    answer(false);
+    const { wrapper } = await mountLogin();
+    expect(wrapper.find("[data-test=signup-link]").exists()).toBe(false);
+    expect(wrapper.text()).toContain("L'accès se fait sur invitation.");
+  });
+
+  it("un compte qui attend la validation : le message du serveur, tel quel", async () => {
+    answer(true);
+    POST.mockResolvedValue({ response: { ok: false, status: 403 }, error: { detail: "ton compte attend encore la validation de l'exploitant" } });
+    const { wrapper } = await mountLogin();
+    await wrapper.find("[data-test=username]").setValue("camille");
+    await wrapper.find("[data-test=password]").setValue("un-mot-de-passe-solide");
+    await wrapper.find("[data-test=login-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[data-test=login-error]").text()).toBe("Ton compte attend encore la validation de l'exploitant.");
+  });
+});

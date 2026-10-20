@@ -7,13 +7,14 @@ const GET = vi.fn();
 const POST = vi.fn();
 const PATCH = vi.fn();
 const DELETE = vi.fn();
+const PUT = vi.fn();
 vi.mock("../api/client", () => ({
   api: {
     GET: (...a: unknown[]) => GET(...a),
     POST: (...a: unknown[]) => POST(...a),
     PATCH: (...a: unknown[]) => PATCH(...a),
     DELETE: (...a: unknown[]) => DELETE(...a),
-    PUT: vi.fn(),
+    PUT: (...a: unknown[]) => PUT(...a),
   },
 }));
 afterEach(() => vi.resetAllMocks());
@@ -32,6 +33,8 @@ const PLATFORM = {
     { ...ACCOUNT, id: 2, username: "camille", is_owner: false, ai_budget_chf: "5" },
   ],
   invitations: [],
+  signup_requests: [] as { id: number; username: string; created_at: string; note: string | null }[],
+  signup_open: true,
   ai_total_budget_chf: "50",
   ai_month_spend_chf: "0.80",
   auth_enabled: true,
@@ -134,5 +137,66 @@ describe("Plateforme (docs/65 §5)", () => {
       params: { path: { account_id: 2 } },
       body: { ai_budget_chf: 2 },
     });
+  });
+});
+
+describe("Plateforme, demandes de compte (docs/102)", () => {
+  const REQUESTS = [
+    { id: 8, username: "lea", created_at: "2026-10-19T09:00:00Z", note: "Amie de Camille." },
+    { id: 9, username: "noah", created_at: "2026-10-20T09:00:00Z", note: null },
+  ];
+
+  it("sans demande, pas de rubrique", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    expect(wrapper.find("[data-test=platform-requests]").exists()).toBe(false);
+  });
+
+  it("les demandes en tête : identifiant, date, mot laissé", async () => {
+    GET.mockResolvedValue({ data: { ...PLATFORM, signup_requests: REQUESTS } });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    const cards = wrapper.findAll(".form-card");
+    expect(cards[0]?.attributes("data-test")).toBe("platform-requests");
+    const lea = wrapper.find("[data-test=request-lea]");
+    expect(lea.text()).toContain("lea");
+    expect(lea.text()).toContain("Amie de Camille.");
+    expect(lea.find(".meta-line .icon").exists()).toBe(true);
+    expect(wrapper.find("[data-test=request-noah] .platform-request-note").exists()).toBe(false);
+  });
+
+  it("accepter, puis refuser après confirmation", async () => {
+    GET.mockResolvedValue({ data: { ...PLATFORM, signup_requests: REQUESTS } });
+    POST.mockResolvedValue({ data: { ...PLATFORM, signup_requests: [REQUESTS[1]] } });
+    DELETE.mockResolvedValue({ data: PLATFORM });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    await wrapper.find("[data-test=approve-lea]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/platform/accounts/{account_id}/approve", { params: { path: { account_id: 8 } } });
+    expect(wrapper.find("[data-test=request-lea]").exists()).toBe(false);
+    await wrapper.find("[data-test=refuse-noah]").trigger("click");
+    expect(DELETE).not.toHaveBeenCalled();
+    await wrapper.find("[data-test=refuse-noah]").trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/platform/accounts/{account_id}", { params: { path: { account_id: 9 } } });
+    expect(wrapper.find("[data-test=platform-requests]").exists()).toBe(false);
+    confirm.mockRestore();
+  });
+
+  it("l'interrupteur enregistre les demandes ouvertes ou fermées", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    PUT.mockResolvedValue({ data: { ...PLATFORM, signup_open: false } });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    const input = wrapper.find("[data-test=signup-open]");
+    expect((input.element as HTMLInputElement).checked).toBe(true);
+    await input.trigger("change");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/platform/settings", { body: { signup_open: false } });
+    expect((wrapper.find("[data-test=signup-open]").element as HTMLInputElement).checked).toBe(false);
+    expect(wrapper.text()).toContain("Demandes de compte fermées.");
   });
 });

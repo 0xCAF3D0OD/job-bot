@@ -2306,6 +2306,12 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .platform-usage { font-size: 0.92rem; }
 .platform-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-top: 0.3rem; }
 .platform-actions .inline-field input { width: 5.5rem; }
+/* Demandes de compte (docs/102) : le mot laissé, « Refuser » en rouge, l'interrupteur sous les comptes. */
+.platform-request-note { line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: var(--down-text); }
+button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
+.platform-signup { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; padding: 0.9rem 0; border-top: 1px solid var(--divider); }
+.platform-signup label { display: inline-flex; align-items: center; gap: 0.6rem; }
 .platform-link > p { flex-basis: 100%; margin: 0; }
 
 /* Alertes à confirmer (docs/65 §3) : le lien de chaque site, ouvert par la personne. */
@@ -2359,6 +2365,11 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .auth-submit, .auth-box .login-form .form-actions button { width: 100%; justify-content: center; }
 .auth-foot { margin: 0; }
 .auth-setup p { margin: 0; }
+/* Demander un compte (docs/102) : la case de consentement en ligne, le champ piège hors de l'écran
+   (pas display: none, que certains robots repèrent), sans place dans la mise en page. */
+.login-form label.check { display: flex; font-size: 0.9rem; line-height: 1.5; }
+.login-form label.check input { padding: 0; }
+.signup-trap { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 .social-signin { display: grid; gap: 0.6rem; }
 .social-button { display: flex; align-items: center; justify-content: center; gap: 0.6rem; width: 100%; padding: 0.6rem 0.9rem; font: inherit; font-weight: 500; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast); }
 .social-button svg { width: 18px; height: 18px; flex: none; }
@@ -3021,3 +3032,6 @@ button:focus-visible > .copy-label::after, .copy-label.copy-done::after { transi
 @media (hover: none) { button:hover > .copy-label:not(.copy-done)::after { opacity: 0; visibility: hidden; } }
 /* Le CV déposé : la coche à la taille du texte, pas à celle de l'icône de la carte. */
 .welcome-card strong.with-icon > .icon { width: 1.1em; height: 1.1em; color: var(--ok-text); }
+/* docs/102 — la demande envoyée ou les demandes fermées : le lien respire sous la phrase. */
+.auth-setup { display: grid; gap: 0.9rem; }
+.auth-setup > p { margin: 0; line-height: 1.55; }

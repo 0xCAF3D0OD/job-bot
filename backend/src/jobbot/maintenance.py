@@ -34,6 +34,8 @@ MESSAGE = "jobA1 se met à jour, ça revient dans un instant."
 # Toujours joignables : l'état de la maintenance (l'interface le sonde), et la connexion (pour
 # que l'exploitant entre pendant une maintenance annoncée).
 OPEN_PATHS = ("/api/maintenance", "/api/auth/")
+# Sauf les demandes de compte (docs/102) : elles attendent la fin de la maintenance.
+SIGNUP_PATH = "/api/auth/signup"
 
 Reason = Literal["announced", "update"]
 Mode = Literal["complete", "lecture"]
@@ -138,7 +140,8 @@ class MaintenanceMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         path: str = scope.get("path", "")
-        if scope["type"] != "http" or not path.startswith("/api/") or path.startswith(OPEN_PATHS):
+        open_path = path.startswith(OPEN_PATHS) and not path.startswith(SIGNUP_PATH)
+        if scope["type"] != "http" or not path.startswith("/api/") or open_path:
             await self.app(scope, receive, send)
             return
         app_state = scope["app"].state

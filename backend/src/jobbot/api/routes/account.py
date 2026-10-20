@@ -133,6 +133,7 @@ ACCOUNT_FIELDS = (
     "password_changed_at",
     "last_login_at",
     "suspended_at",
+    "approved_at",
     "ai_budget_chf",
     "mail_code",
 )

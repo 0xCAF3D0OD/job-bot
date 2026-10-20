@@ -79,6 +79,20 @@ async def find(
     return link, user
 
 
+async def free_username(session: AsyncSession, username: str | None) -> str:
+    """L'identifiant choisi, s'il est valable et libre (sans tenir compte des majuscules) ;
+    sinon LinkError. La session doit voir tous les comptes : celle de l'exploitant."""
+    name = (username or "").strip()
+    if not name or len(name) > USERNAME_MAX:
+        raise LinkError(f"identifiant requis, {USERNAME_MAX} caractères au plus", "invalid")
+    taken = await session.scalar(
+        select(func.count()).select_from(User).where(func.lower(User.username) == name.lower())
+    )
+    if taken:
+        raise LinkError("cet identifiant est déjà pris : choisis-en un autre", "invalid")
+    return name
+
+
 async def use(session: AsyncSession, token: str, username: str | None, password: str) -> User:
     """Crée le compte (invitation) ou change le mot de passe (réinitialisation) ; le lien ne
     sert plus. Les sessions ouvertes du compte sont fermées après une réinitialisation."""
@@ -87,15 +101,9 @@ async def use(session: AsyncSession, token: str, username: str | None, password:
         raise LinkError(f"mot de passe refusé : {problem}", "invalid")
     now = datetime.now(UTC)
     if link.kind == "invite":
-        name = (username or "").strip()
-        if not name or len(name) > USERNAME_MAX:
-            raise LinkError(f"identifiant requis, {USERNAME_MAX} caractères au plus", "invalid")
-        taken = await session.scalar(
-            select(func.count()).select_from(User).where(func.lower(User.username) == name.lower())
-        )
-        if taken:
-            raise LinkError("cet identifiant est déjà pris : choisis-en un autre", "invalid")
-        user = User(username=name, password_hash=passwords.hash_password(password))
+        name = await free_username(session, username)
+        # Un compte invité est accepté d'office (docs/102).
+        user = User(username=name, password_hash=passwords.hash_password(password), approved_at=now)
         session.add(user)
         await session.flush()
     else:
