@@ -34,6 +34,8 @@ import { useAssistant } from "../composables/useAssistant";
 import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
+import { offerUndo } from "../composables/useUndo";
+import InlineConfirm from "../components/InlineConfirm.vue";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois, en calendrier ou en liste.
 const REMIND_AFTER_DAYS = 10;
@@ -261,14 +263,25 @@ async function setStatus(application: Application, status: ApplicationStatus): P
   await load();
 }
 
+// Retirée tout de suite, « Annuler » pendant 6 s (docs/108 §1) ; l'offre revient « en préparation ».
 async function remove(application: Application): Promise<void> {
-  if (!window.confirm(`Supprimer la candidature chez ${application.company} ? L'offre revient « en préparation ».`)) {
-    return;
-  }
-  await api.DELETE("/api/applications/{application_id}", {
-    params: { path: { application_id: application.id } },
+  const before = all.value;
+  all.value = before.filter((a) => a.id !== application.id);
+  if (openId.value === application.id) openId.value = null;
+  await offerUndo({
+    message: `Candidature chez ${application.company} supprimée`,
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/applications/{application_id}", {
+        params: { path: { application_id: application.id } },
+        keepalive,
+      });
+      if (error !== undefined) return false;
+      await load();
+    },
+    restore: () => {
+      all.value = before;
+    },
   });
-  await load();
 }
 
 // Panneau d'une candidature (docs/46 §3), depuis une carte ou la liste. Les formulaires
@@ -334,18 +347,30 @@ async function saveInterview(value: InterviewIn): Promise<void> {
   await insightsPanel.value?.load();
 }
 
+// Fermé tout de suite, supprimé au bout de 6 s, « Annuler » d'ici là (docs/108 §1).
 async function removeInterview(): Promise<void> {
-  const current = interviewing.value;
-  if (!current?.interview || !window.confirm("Supprimer ce retour d'entretien ?")) return;
-  await api.DELETE("/api/interviews/{interview_id}", { params: { path: { interview_id: current.interview.id } } });
+  const id = interviewing.value?.interview?.id;
+  if (!id) return;
   interviewing.value = null;
-  await load();
+  await offerUndo({
+    message: "Retour d'entretien supprimé",
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/interviews/{interview_id}", { params: { path: { interview_id: id } }, keepalive });
+      if (error !== undefined) return false;
+      await load();
+    },
+    // Rien n'est parti : le retour est toujours là, dans la candidature.
+    restore: () => undefined,
+  });
 }
 
 // Le moment « preuves remises » : la carte qui vient devant (docs/61 §1).
 const submitted = ref<{ month: string; nextDue: string | null } | null>(null);
+// Annuler la remise se confirme dans la page (docs/108 §1).
+const confirmingCancel = ref(false);
 async function submit(done: boolean): Promise<void> {
-  if (!orp.value || (!done && !window.confirm("Annuler la remise de ce mois ?"))) return;
+  confirmingCancel.value = false;
+  if (!orp.value) return;
   busy.value = true;
   try {
     const month = orp.value.month;
@@ -488,7 +513,7 @@ onUnmounted(() => assistant.setFocus(null));
           class="link"
           :disabled="busy"
           data-test="cancel-submit"
-          @click="submit(false)"
+          @click="confirmingCancel = true"
         >
           Annuler la remise
         </button>
@@ -518,6 +543,14 @@ onUnmounted(() => assistant.setFocus(null));
           </button>
         </div>
       </div>
+      <InlineConfirm
+        v-if="confirmingCancel && orp.state === 'remis'"
+        message="Annuler la remise de ce mois ? Les preuves repassent « à remettre »."
+        confirm-label="Annuler la remise"
+        cancel-label="Garder la remise"
+        @confirm="submit(false)"
+        @cancel="confirmingCancel = false"
+      />
 
       <OrpSheet
         ref="sheet"

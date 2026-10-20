@@ -8,6 +8,7 @@ import { plural } from "../format";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
+import { offerUndo } from "../composables/useUndo";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
 // Actualités et les Formations leur conviennent.
@@ -100,10 +101,22 @@ async function rename(profile: Profile): Promise<void> {
   );
 }
 
+// Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1).
 async function remove(profile: Profile): Promise<void> {
-  if (!window.confirm(`Supprimer le profil « ${profile.name} » ?`)) return;
-  apply((await api.DELETE("/api/profiles/{profile_id}", { params: { path: { profile_id: profile.id } } })).data);
-  if (current.value?.id === profile.id) choose(list.value?.items.find((p) => p.is_main)?.id ?? 0);
+  const before = list.value;
+  if (before) list.value = { ...before, items: before.items.filter((p) => p.id !== profile.id) };
+  if (current.value?.id === profile.id) choose(before?.items.find((p) => p.is_main)?.id ?? 0);
+  await offerUndo({
+    message: `Profil « ${profile.name} » supprimé`,
+    commit: async (keepalive) => {
+      const { data } = await api.DELETE("/api/profiles/{profile_id}", { params: { path: { profile_id: profile.id } }, keepalive });
+      if (!data) return false;
+      apply(data);
+    },
+    restore: () => {
+      list.value = before;
+    },
+  });
 }
 
 function toggle(field: "languages" | "countries", value: string): void {

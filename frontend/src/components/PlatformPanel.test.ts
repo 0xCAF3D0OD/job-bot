@@ -108,21 +108,22 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(wrapper.find("[data-test=platform-link]").text()).toContain("/acces/jba_secret");
   });
 
-  it("supprimer demande d'écrire l'identifiant", async () => {
+  it("supprimer demande d'écrire l'identifiant, dans la page (docs/108 §1)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     DELETE.mockResolvedValue({ data: { ...PLATFORM, accounts: [PLATFORM.accounts[0]] } });
-    const prompt = vi.spyOn(window, "prompt").mockReturnValueOnce("autre").mockReturnValueOnce("camille");
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     await wrapper.find("[data-test=account-more-camille]").trigger("click");
     await wrapper.find("[data-test=delete-camille]").trigger("click");
-    expect(DELETE).not.toHaveBeenCalled();
-    await wrapper.find("[data-test=account-more-camille]").trigger("click");
-    await wrapper.find("[data-test=delete-camille]").trigger("click");
+    const confirm = wrapper.find("[data-test=account-camille] [data-test=inline-confirm]");
+    expect(confirm.text()).toContain("Écris son identifiant");
+    await wrapper.find("[data-test=delete-account-name]").setValue("autre");
+    expect(wrapper.find("[data-test=inline-confirm-yes]").attributes("disabled")).toBeDefined();
+    await wrapper.find("[data-test=delete-account-name]").setValue("camille");
+    await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalledWith("/api/platform/accounts/{account_id}", { params: { path: { account_id: 2 } } });
     expect(wrapper.find("[data-test=account-camille]").exists()).toBe(false);
-    prompt.mockRestore();
   });
 
   it("le plafond d'un compte se change sur place", async () => {
@@ -170,20 +171,21 @@ describe("Plateforme, demandes de compte (docs/102)", () => {
     GET.mockResolvedValue({ data: { ...PLATFORM, signup_requests: REQUESTS } });
     POST.mockResolvedValue({ data: { ...PLATFORM, signup_requests: [REQUESTS[1]] } });
     DELETE.mockResolvedValue({ data: PLATFORM });
-    const confirm = vi.spyOn(window, "confirm").mockReturnValueOnce(false).mockReturnValueOnce(true);
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     await wrapper.find("[data-test=approve-lea]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/platform/accounts/{account_id}/approve", { params: { path: { account_id: 8 } } });
     expect(wrapper.find("[data-test=request-lea]").exists()).toBe(false);
+    // Refuser se confirme dans la page (docs/108 §1) ; « Garder » ne fait rien.
     await wrapper.find("[data-test=refuse-noah]").trigger("click");
+    await wrapper.find("[data-test=inline-confirm-no]").trigger("click");
     expect(DELETE).not.toHaveBeenCalled();
     await wrapper.find("[data-test=refuse-noah]").trigger("click");
+    await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalledWith("/api/platform/accounts/{account_id}", { params: { path: { account_id: 9 } } });
     expect(wrapper.find("[data-test=platform-requests]").exists()).toBe(false);
-    confirm.mockRestore();
   });
 
   it("l'interrupteur enregistre les demandes ouvertes ou fermées", async () => {

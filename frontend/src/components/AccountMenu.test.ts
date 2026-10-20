@@ -6,7 +6,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import AccountMenu from "./AccountMenu.vue";
 
 const collectNow = vi.fn();
-const me = ref<Record<string, unknown>>({ username: "kevin", auth_enabled: true, demo: false });
+const me = ref<Record<string, unknown>>({ username: "kevin", auth_enabled: true, demo: false, is_owner: true });
 vi.mock("../composables/useCollect", () => ({ useCollect: () => ({ running: ref(false), collectNow }) }));
 vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ me, logout: vi.fn() }) }));
 vi.mock("../composables/useProfiles", () => ({
@@ -25,7 +25,7 @@ async function mountAt(path: string) {
 
 afterEach(() => {
   document.body.innerHTML = "";
-  me.value = { username: "kevin", auth_enabled: true, demo: false };
+  me.value = { username: "kevin", auth_enabled: true, demo: false, is_owner: true };
 });
 
 describe("Menu du compte (docs/89)", () => {
@@ -79,6 +79,8 @@ describe("Menu du compte (docs/89)", () => {
     const close = wrapper.find("[data-test=account-close]");
     expect(close.text()).toBe("Fermer mon compte");
     expect(close.attributes("href")).toBe("/reglages?rubrique=compte&fermer=1");
+    // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3).
+    expect(wrapper.find("[data-test=account-diagnostic]").exists()).toBe(false);
     wrapper.unmount();
     document.body.innerHTML = "";
 

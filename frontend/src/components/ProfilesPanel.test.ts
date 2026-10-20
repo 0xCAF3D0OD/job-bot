@@ -71,8 +71,9 @@ describe("ProfilesPanel", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=account-panel]").exists()).toBe(false);
     await wrapper.find("[data-test=account-menu]").trigger("click");
-    // Profil, Réglages, Données personnelles et Diagnostic (docs/89, docs/90).
-    expect(wrapper.find("[data-test=account-panel]").findAll("a")).toHaveLength(4);
+    // Profil, Réglages, Données personnelles (docs/89, docs/90) ; le Diagnostic est à
+    // l'exploitant (docs/108 §3), et personne n'est connecté ici.
+    expect(wrapper.find("[data-test=account-panel]").findAll("a")).toHaveLength(3);
     await wrapper.find("[data-test=profile-switcher]").setValue("2");
     expect(localStorage.getItem("jobbot-profile")).toBe("2");
     expect(reload).toHaveBeenCalled();

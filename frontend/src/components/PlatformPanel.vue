@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { api, type AccountOut, type PlatformOut } from "../api/client";
 import { formatDate, plural, since } from "../format";
@@ -7,6 +7,7 @@ import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import InlineConfirm from "./InlineConfirm.vue";
 
 // Plateforme (docs/65 §2, §4, §5) : les comptes, réservé à l'exploitant. De chaque compte,
 // l'usage seulement (connexion, dépense de l'IA, offres reçues), jamais ses données.
@@ -86,9 +87,34 @@ async function withdraw(id: number): Promise<void> {
   await load();
 }
 
-async function suspend(account: Account): Promise<void> {
-  const verb = account.suspended ? "Réactiver" : "Suspendre";
-  if (!account.suspended && !window.confirm(`${verb} ${account.username} ? Il ne pourra plus se connecter ; ses données restent.`)) return;
+// Suspendre, supprimer ou refuser se confirme dans la page, sous le compte (docs/108 §1).
+type Pending = { kind: "suspend" | "delete" | "refuse"; id: number; name: string };
+const confirming = ref<Pending | null>(null);
+const typedName = ref("");
+function ask(kind: Pending["kind"], id: number, name: string): void {
+  confirming.value = { kind, id, name };
+  typedName.value = "";
+}
+async function confirmPending(): Promise<void> {
+  const pending = confirming.value;
+  if (!pending) return;
+  if (pending.kind === "delete" && typedName.value.trim() !== pending.name) return;
+  confirming.value = null;
+  const account = platform.value?.accounts.find((a) => a.id === pending.id);
+  if (pending.kind === "suspend" && account) await suspend(account, true);
+  else if (pending.kind === "delete" && account) await remove(account, true);
+  else if (pending.kind === "refuse") await refuse(pending.id, pending.name, true);
+}
+const confirmMessage = computed(() => {
+  const pending = confirming.value;
+  if (!pending) return "";
+  if (pending.kind === "suspend") return `Suspendre ${pending.name} ? Il ne pourra plus se connecter ; ses données restent.`;
+  if (pending.kind === "refuse") return `Refuser la demande de ${pending.name} ? Elle sera effacée, avec le compte.`;
+  return `Supprimer ${pending.name} et toutes ses données (offres, candidatures, documents) ? Rien ne sera gardé. Écris son identifiant pour confirmer.`;
+});
+
+async function suspend(account: Account, confirmed = false): Promise<void> {
+  if (!account.suspended && !confirmed) return ask("suspend", account.id, account.username);
   const { data } = await api.PATCH("/api/platform/accounts/{account_id}", {
     params: { path: { account_id: account.id } },
     body: { suspended: !account.suspended },
@@ -96,12 +122,8 @@ async function suspend(account: Account): Promise<void> {
   show(data);
 }
 
-async function remove(account: Account): Promise<void> {
-  const typed = window.prompt(
-    `Supprimer ${account.username} et toutes ses données (offres, candidatures, documents) ? ` +
-      "Rien ne sera gardé. Écris son identifiant pour confirmer.",
-  );
-  if (typed?.trim() !== account.username) return;
+async function remove(account: Account, confirmed = false): Promise<void> {
+  if (!confirmed) return ask("delete", account.id, account.username);
   const { data } = await api.DELETE("/api/platform/accounts/{account_id}", {
     params: { path: { account_id: account.id } },
   });
@@ -134,8 +156,8 @@ async function approve(id: number): Promise<void> {
   show(data);
 }
 
-async function refuse(id: number, name: string): Promise<void> {
-  if (!window.confirm(`Refuser la demande de ${name} ? Elle sera effacée, avec le compte.`)) return;
+async function refuse(id: number, name: string, confirmed = false): Promise<void> {
+  if (!confirmed) return ask("refuse", id, name);
   const { data } = await api.DELETE("/api/platform/accounts/{account_id}", {
     params: { path: { account_id: id } },
   });
@@ -246,6 +268,13 @@ function size(bytes: number | null | undefined): string {
                 Refuser
               </button>
             </div>
+            <InlineConfirm
+              v-if="confirming?.kind === 'refuse' && confirming.id === request.id"
+              :message="confirmMessage"
+              confirm-label="Refuser"
+              @confirm="confirmPending"
+              @cancel="confirming = null"
+            />
           </li>
         </ul>
       </fieldset>
@@ -310,6 +339,24 @@ function size(bytes: number | null | undefined): string {
                 :test-id="`account-more-${account.username}`"
               />
             </div>
+            <InlineConfirm
+              v-if="confirming && confirming.kind !== 'refuse' && confirming.id === account.id"
+              :message="confirmMessage"
+              :confirm-label="confirming.kind === 'suspend' ? 'Suspendre' : 'Supprimer'"
+              :busy="confirming.kind === 'delete' && typedName.trim() !== account.username"
+              @confirm="confirmPending"
+              @cancel="confirming = null"
+            >
+              <input
+                v-if="confirming.kind === 'delete'"
+                v-model="typedName"
+                type="text"
+                autocomplete="off"
+                :aria-label="`Identifiant de ${account.username}`"
+                :placeholder="account.username"
+                data-test="delete-account-name"
+              >
+            </InlineConfirm>
           </li>
         </ul>
         <div class="platform-signup">

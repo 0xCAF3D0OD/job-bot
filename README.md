@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/107-accent-bleu.md](docs/107-accent-bleu.md) (0.76.2)
+- Version en cours : [docs/108-annuler-aide-diagnostic.md](docs/108-annuler-aide-diagnostic.md) (0.77.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -151,7 +151,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.75.1 | « Fermer mon compte », aussi depuis le menu du compte, la confirmation déjà ouverte | livrée |
 | 0.76.0 | Des Réglages épurés : une carte par rubrique, sans barre ni filet orphelin ; le seuil des notifications en pastilles ; les nombres sans flèches | livrée |
 | 0.76.1 | Réglages sur téléphone : le contenu ne colle plus au bord, les parties resserrées, les pastilles sur une ligne ; des exemples de mots-clés pour tous les métiers | livrée |
-| 0.76.2 | L'accent au bleu du logo, en clair et en sombre ; le texte sur l'accent lisible en sombre | en cours |
+| 0.76.2 | L'accent au bleu du logo, en clair et en sombre ; le texte sur l'accent lisible en sombre | livrée |
+| 0.77.0 | Annuler plutôt que confirmer (plus de fenêtres du navigateur) ; l'aide au doigt sur téléphone ; le Diagnostic à l'exploitant | en cours |
 
 ## Lancer en local
 

@@ -30,6 +30,10 @@ export function indicators(status: StatusResponse | null, now: Date = new Date()
   }
 
   const { database, worker, collect } = status;
+  // Compte invité (docs/108 §3) : le serveur ne donne pas le détail technique.
+  if (!database || !worker) {
+    return [{ label: "Plateforme", level: status.ok ? "ok" : "warn", detail: status.ok ? "fonctionne" : "un souci, voir avec l'exploitant" }];
+  }
   let db: Indicator;
   if (!database.ok) {
     db = { label: "Base de données", level: "down", detail: `injoignable (${database.error ?? "erreur"})` };

@@ -193,6 +193,10 @@ router.beforeEach(async (to) => {
   if (loggedIn.value && me.value?.welcome === "pending" && to.name !== "welcome" && !PUBLIC_ROUTES.has(String(to.name))) {
     return { name: "welcome" };
   }
+  // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) : un invité revient aux Réglages.
+  if (to.name === "diagnostic" && loggedIn.value && me.value?.auth_enabled && !me.value.is_owner) {
+    return { path: "/reglages" };
+  }
   if (loggedIn.value || PUBLIC_ROUTES.has(String(to.name))) return true;
   return { name: "login", query: { suite: to.fullPath } };
 });

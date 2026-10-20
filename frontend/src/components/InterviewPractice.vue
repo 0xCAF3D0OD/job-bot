@@ -6,6 +6,7 @@ import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import { offerUndo } from "../composables/useUndo";
 
 // S'entraîner à l'entretien (docs/75) : trois choix, cinq questions du recruteur simulé, une
 // relance au plus, puis le retour. Un entraînement n'est jamais compté comme un vrai entretien.
@@ -146,11 +147,21 @@ function finish(): Promise<void> {
   );
 }
 
+// Fermé tout de suite, supprimé au bout de 6 s, « Annuler » d'ici là (docs/108 §1).
 async function remove(): Promise<void> {
-  if (!practice.value || !window.confirm("Supprimer cet entraînement et son retour ?")) return;
-  await api.DELETE("/api/interview-practices/{practice_id}", { params: { path: { practice_id: practice.value.id } } });
-  emit("changed");
+  const id = practice.value?.id;
+  if (!id) return;
   emit("close");
+  await offerUndo({
+    message: "Entraînement supprimé",
+    commit: async (keepalive) => {
+      const { error } = await api.DELETE("/api/interview-practices/{practice_id}", { params: { path: { practice_id: id } }, keepalive });
+      if (error !== undefined) return false;
+      emit("changed");
+    },
+    // Rien n'est parti : l'entraînement est toujours là, dans la liste.
+    restore: () => emit("changed"),
+  });
 }
 
 async function addToPrepare(text: string): Promise<void> {

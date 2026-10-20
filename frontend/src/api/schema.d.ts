@@ -6389,12 +6389,14 @@ export interface components {
         };
         /** StatusResponse */
         StatusResponse: {
+            /** Ok */
+            ok: boolean;
             /** Version */
-            version: string;
+            version?: string | null;
             /** Env */
-            env: string;
-            database: components["schemas"]["DatabaseStatus"];
-            worker: components["schemas"]["WorkerStatus"];
+            env?: string | null;
+            database?: components["schemas"]["DatabaseStatus"] | null;
+            worker?: components["schemas"]["WorkerStatus"] | null;
             collect: components["schemas"]["CollectStatus"];
         };
         /** SuggestResult */

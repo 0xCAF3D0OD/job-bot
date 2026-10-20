@@ -184,7 +184,9 @@ onUnmounted(() => {
         >
           <span class="with-icon"><AppIcon name="shield" />Données personnelles</span>
         </RouterLink>
+        <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
         <RouterLink
+          v-if="me?.is_owner || me?.auth_enabled === false"
           to="/reglages/diagnostic"
           role="menuitem"
           data-test="account-diagnostic"

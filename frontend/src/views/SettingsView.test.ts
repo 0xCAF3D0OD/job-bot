@@ -132,6 +132,16 @@ describe("SettingsView, comptes (docs/65)", () => {
     useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: isOwner, welcome: "done", demo: false };
   }
 
+  it("compte invité : pas de lien vers le Diagnostic (docs/108 §3)", async () => {
+    await as(false);
+    mockGet(false);
+    const { wrapper } = await mountSettings();
+    expect(wrapper.find("[data-test=diagnostic-link]").exists()).toBe(false);
+    await as(true);
+    const owner = await mountSettings();
+    expect(owner.wrapper.find("[data-test=diagnostic-link]").exists()).toBe(true);
+  });
+
   it("compte invité : plafond de l'IA fixé, ni Plateforme ni profils d'essai", async () => {
     await as(false);
     mockGet(false);

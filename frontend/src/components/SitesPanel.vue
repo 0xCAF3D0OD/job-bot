@@ -10,6 +10,7 @@ import { plural } from "../format";
 
 import HoverNote from "./HoverNote.vue";
 import { useAuth } from "../composables/useAuth";
+import { offerUndo } from "../composables/useUndo";
 // Mettre un site en pause vaut pour son compte ; ajouter ou retirer un site change la liste
 // commune à tous les comptes : réservé à l'exploitant (docs/65).
 const { me } = useAuth();
@@ -59,13 +60,22 @@ async function toggle(site: SiteOut): Promise<void> {
   if (data) sites.value = data;
 }
 
+// Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1) ; les offres déjà collectées restent.
 async function remove(site: SiteOut): Promise<void> {
-  if (!window.confirm(`Ne plus suivre ${site.name} ? Les offres déjà collectées restent.`)) return;
-  const { data } = await api.DELETE("/api/sites/{site_id}", { params: { path: { site_id: site.id } } });
-  if (data) {
-    sites.value = data;
-    openId.value = null;
-  }
+  const before = sites.value;
+  sites.value = before.filter((s) => s.id !== site.id);
+  openId.value = null;
+  await offerUndo({
+    message: `${site.name} n'est plus suivi`,
+    commit: async (keepalive) => {
+      const { data } = await api.DELETE("/api/sites/{site_id}", { params: { path: { site_id: site.id } }, keepalive });
+      if (!data) return false;
+      sites.value = data;
+    },
+    restore: () => {
+      sites.value = before;
+    },
+  });
 }
 
 // Lignes calmes (docs/48 §3) : le détail et « Retirer » dans le panneau.

@@ -268,7 +268,6 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi(() => months.shift() ?? month(complete));
     PUT.mockResolvedValue({ response: { status: 204 } });
     DELETE.mockResolvedValue({ response: { status: 204 } });
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     const { wrapper } = await mountView("/candidatures/preuves");
     await wrapper.find("[data-test=submit]").trigger("click");
     await flushPromises();
@@ -276,7 +275,10 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves remises le 3 novembre 2026");
     // La carte qui vient devant (docs/61 §1).
     expect(wrapper.find("[data-test=submitted-moment]").text()).toContain("Preuves d'octobre remises");
+    // Annuler la remise se confirme dans la page (docs/108 §1).
     await wrapper.find("[data-test=cancel-submit]").trigger("click");
+    expect(DELETE).not.toHaveBeenCalled();
+    await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalled();
   });

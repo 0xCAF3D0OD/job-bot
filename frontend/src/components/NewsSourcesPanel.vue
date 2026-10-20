@@ -10,6 +10,7 @@ import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import { offerUndo } from "../composables/useUndo";
 // Réglages des Actualités (docs/15 §2, docs/16) : « Mon domaine » et sources.
 const sources = ref<NewsSource[]>([]);
 const preferences = ref<NewsPreferences | null>(null);
@@ -69,15 +70,25 @@ async function update(
   if (data) sources.value = data;
 }
 
+// Retirée tout de suite, « Annuler » pendant 6 s (docs/108 §1).
 async function remove(source: NewsSource): Promise<void> {
-  if (!window.confirm(`Ne plus suivre ${source.name} ?`)) return;
-  const { data } = await api.DELETE("/api/news/sources/{source_id}", {
-    params: { path: { source_id: source.id } },
+  const before = sources.value;
+  sources.value = before.filter((s) => s.id !== source.id);
+  openId.value = null;
+  await offerUndo({
+    message: `${source.name} n'est plus suivie`,
+    commit: async (keepalive) => {
+      const { data } = await api.DELETE("/api/news/sources/{source_id}", {
+        params: { path: { source_id: source.id } },
+        keepalive,
+      });
+      if (!data) return false;
+      sources.value = data;
+    },
+    restore: () => {
+      sources.value = before;
+    },
   });
-  if (data) {
-    sources.value = data;
-    openId.value = null;
-  }
 }
 
 // Lignes calmes (docs/48 §3) : le nom, une ligne courte, l'interrupteur ; le reste dans le panneau.

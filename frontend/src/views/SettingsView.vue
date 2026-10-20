@@ -708,7 +708,11 @@ const active = computed<SectionId>(() => {
           <PlatformPanel />
         </SettingsSection>
 
-        <p class="diagnostic-link">
+        <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
+        <p
+          v-if="owner || me?.auth_enabled === false"
+          class="diagnostic-link"
+        >
           <RouterLink
             to="/reglages/diagnostic"
             data-test="diagnostic-link"
