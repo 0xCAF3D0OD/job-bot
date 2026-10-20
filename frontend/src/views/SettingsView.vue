@@ -124,6 +124,33 @@ async function save(): Promise<void> {
     saving.value = false;
   }
 }
+// Un réglage d'un seul champ s'enregistre au changement (docs/106 §5) : « Enregistré » une
+// seconde à côté, ou l'erreur à sa place.
+const savedField = ref<string | null>(null);
+const fieldError = ref<{ field: string; text: string } | null>(null);
+let savedTimer: ReturnType<typeof setTimeout> | null = null;
+async function autosave(field: string): Promise<void> {
+  await save();
+  const ok = message.value === "Réglages enregistrés.";
+  fieldError.value = ok ? null : { field, text: message.value };
+  message.value = "";
+  if (savedTimer) clearTimeout(savedTimer);
+  savedField.value = ok ? field : null;
+  if (ok) savedTimer = setTimeout(() => (savedField.value = null), 1500);
+}
+// Le seuil des notifications en cinq pastilles (docs/106, décision 2) ; une valeur d'avant,
+// hors des cinq, reste proposée.
+const THRESHOLDS = [50, 60, 70, 80, 90];
+const thresholdChoices = computed(() => {
+  const current = form.value.notify_score_threshold;
+  return typeof current === "number" && !THRESHOLDS.includes(current)
+    ? [...THRESHOLDS, current].sort((a, b) => a - b)
+    : THRESHOLDS;
+});
+async function setThreshold(value: number): Promise<void> {
+  form.value.notify_score_threshold = value;
+  await autosave("threshold");
+}
 const router = useRouter();
 const { me } = useAuth();
 // L'exploitant (docs/65) : la rubrique Plateforme, son plafond de l'IA, les profils d'essai.
@@ -234,6 +261,7 @@ const active = computed<SectionId>(() => {
                   id="orp"
                   v-model.number="form.orp_monthly_target"
                   type="number"
+                  inputmode="numeric"
                   min="1"
                   max="100"
                 >
@@ -250,6 +278,7 @@ const active = computed<SectionId>(() => {
                   id="due-day"
                   v-model.number="form.orp_due_day"
                   type="number"
+                  inputmode="numeric"
                   min="2"
                   max="28"
                   required
@@ -271,6 +300,7 @@ const active = computed<SectionId>(() => {
                   id="employer-threshold"
                   v-model.number="form.employer_search_threshold"
                   type="number"
+                  inputmode="numeric"
                   min="0"
                   max="100"
                   required
@@ -281,7 +311,7 @@ const active = computed<SectionId>(() => {
             <div class="form-actions">
               <button
                 type="submit"
-                class="secondary"
+                class="primary"
                 :disabled="saving"
                 data-test="save-settings"
               >
@@ -408,7 +438,7 @@ const active = computed<SectionId>(() => {
             <div class="form-actions">
               <button
                 type="submit"
-                class="secondary"
+                class="primary"
                 :disabled="saving"
                 data-test="save-rhythm"
               >
@@ -438,51 +468,54 @@ const active = computed<SectionId>(() => {
           :value="summary.notifications"
           :active="active === 'notifications'"
         >
-          <form
+          <div
             v-if="loaded"
             class="form-card"
             data-test="notify-form"
-            @submit.prevent="save"
           >
             <fieldset>
-              <legend>
-                <label for="threshold">M'avertir d'une offre à partir de</label>
+              <legend id="threshold-label">
+                M'avertir d'une offre à partir de
               </legend>
-              <div class="inline-field">
-                <input
-                  id="threshold"
-                  v-model.number="form.notify_score_threshold"
-                  type="number"
-                  min="0"
-                  max="100"
-                  required
+              <div
+                class="score-choices"
+                role="radiogroup"
+                aria-labelledby="threshold-label"
+              >
+                <button
+                  v-for="value in thresholdChoices"
+                  :key="value"
+                  type="button"
+                  role="radio"
+                  :aria-checked="form.notify_score_threshold === value"
+                  :class="['chip', { on: form.notify_score_threshold === value }]"
+                  :data-test="`threshold-${value}`"
+                  @click="setThreshold(value)"
                 >
-                <span>/ 100</span>
+                  {{ value }}
+                </button>
+                <span class="muted">/ 100</span>
+                <span
+                  v-if="savedField === 'threshold'"
+                  class="saved-flash"
+                  role="status"
+                  data-test="threshold-saved"
+                >Enregistré</span>
+                <span
+                  v-if="fieldError?.field === 'threshold'"
+                  class="field-error"
+                  role="alert"
+                >{{ fieldError.text }}</span>
               </div>
             </fieldset>
-            <div class="form-actions">
-              <button
-                type="submit"
-                class="secondary"
-                :disabled="saving"
-                data-test="save-notify"
-              >
-                Enregistrer
-              </button>
-              <span
-                v-if="message"
-                role="status"
-                class="muted"
-              >{{ message }}</span>
-            </div>
-          </form>
+          </div>
           <div
             v-if="loaded"
             class="form-card"
           >
             <fieldset data-test="notifications">
               <legend>
-                Notifications
+                Téléphone
               </legend>
               <template v-if="notifications?.personal">
                 <template v-if="notifications.configured">
@@ -490,28 +523,31 @@ const active = computed<SectionId>(() => {
                     Tes alertes arrivent sur ton téléphone. Dans l'application ntfy, abonne-toi au sujet
                     <code>{{ notifications.topic }}</code> sur le serveur {{ notifications.server }}.
                   </p>
-                  <div class="inline-field">
-                    <button
-                      type="button"
-                      class="secondary small"
-                      :disabled="testing"
-                      data-test="test-notification"
-                      @click="sendTest"
-                    >
-                      Envoyer une notification de test
-                    </button>
-                    <button
-                      type="button"
-                      class="link"
-                      data-test="phone-off"
-                      @click="setPhone(false)"
-                    >
-                      Arrêter
-                    </button>
-                    <span
-                      v-if="testMessage"
-                      role="status"
-                    >{{ testMessage }}</span>
+                  <div class="settings-line">
+                    <strong>Notification de test</strong>
+                    <span class="inline-field">
+                      <span
+                        v-if="testMessage"
+                        role="status"
+                      >{{ testMessage }}</span>
+                      <button
+                        type="button"
+                        class="link"
+                        data-test="phone-off"
+                        @click="setPhone(false)"
+                      >
+                        Arrêter
+                      </button>
+                      <button
+                        type="button"
+                        class="secondary small"
+                        :disabled="testing"
+                        data-test="test-notification"
+                        @click="sendTest"
+                      >
+                        Envoyer
+                      </button>
+                    </span>
                   </div>
                 </template>
                 <template v-else>
@@ -529,20 +565,23 @@ const active = computed<SectionId>(() => {
                 </template>
               </template>
               <template v-else-if="notifications?.configured">
-                <div class="inline-field">
-                  <button
-                    type="button"
-                    class="secondary small"
-                    :disabled="testing"
-                    data-test="test-notification"
-                    @click="sendTest"
-                  >
-                    Envoyer une notification de test
-                  </button>
-                  <span
-                    v-if="testMessage"
-                    role="status"
-                  >{{ testMessage }}</span>
+                <div class="settings-line">
+                  <strong>Notification de test</strong>
+                  <span class="inline-field">
+                    <span
+                      v-if="testMessage"
+                      role="status"
+                    >{{ testMessage }}</span>
+                    <button
+                      type="button"
+                      class="secondary small"
+                      :disabled="testing"
+                      data-test="test-notification"
+                      @click="sendTest"
+                    >
+                      Envoyer
+                    </button>
+                  </span>
                 </div>
               </template>
               <p
@@ -588,7 +627,7 @@ const active = computed<SectionId>(() => {
               v-else-if="loaded"
               class="form-card"
               data-test="budget-form"
-              @submit.prevent="save"
+              @submit.prevent="autosave('budget')"
             >
               <fieldset>
                 <legend>
@@ -606,26 +645,24 @@ const active = computed<SectionId>(() => {
                     min="0"
                     max="1000"
                     step="0.5"
+                    inputmode="decimal"
                     required
+                    @change="autosave('budget')"
                   >
                   <span>CHF</span>
+                  <span
+                    v-if="savedField === 'budget'"
+                    class="saved-flash"
+                    role="status"
+                    data-test="budget-saved"
+                  >Enregistré</span>
+                  <span
+                    v-if="fieldError?.field === 'budget'"
+                    class="field-error"
+                    role="alert"
+                  >{{ fieldError.text }}</span>
                 </div>
               </fieldset>
-              <div class="form-actions">
-                <button
-                  type="submit"
-                  class="secondary"
-                  :disabled="saving"
-                  data-test="save-budget"
-                >
-                  Enregistrer
-                </button>
-                <span
-                  v-if="message"
-                  role="status"
-                  class="muted"
-                >{{ message }}</span>
-              </div>
             </form>
             <AiSpend />
           </div>

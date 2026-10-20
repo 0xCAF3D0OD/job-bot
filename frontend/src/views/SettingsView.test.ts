@@ -162,6 +162,21 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(wrapper.find("[data-test=phone-on]").text()).toContain("jobbot-abc");
   });
 
+  it("exploitant : le plafond de l'IA s'enregistre au changement (docs/106)", async () => {
+    await as(true);
+    mockGet(false);
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT).mockResolvedValue({ data: { llm_monthly_budget_chf: 12 } } as never);
+    const { wrapper } = await mountSettings("ia");
+    expect(wrapper.find("[data-test=save-budget]").exists()).toBe(false);
+    const input = wrapper.find("#budget");
+    await input.setValue(12);
+    await input.trigger("change");
+    await flushPromises();
+    expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ llm_monthly_budget_chf: 12 }) });
+    expect(wrapper.find("[data-test=budget-saved]").exists()).toBe(true);
+  });
+
   it("exploitant : la rubrique Plateforme", async () => {
     await as(true);
     mockGet(false);
@@ -204,3 +219,41 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
   });
 });
 
+
+describe("Des Réglages épurés (docs/106)", () => {
+  it("une rubrique, une carte ; le seuil en pastilles, enregistré au clic", async () => {
+    mockGet(true);
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_score_threshold: 80 } } as never);
+    const { wrapper } = await mountSettings("notifications");
+    expect(wrapper.findAll("[data-test=settings-card]")).toHaveLength(1);
+    const choices = wrapper.findAll("[data-test=notify-form] [role=radio]").map((b) => b.text());
+    expect(choices).toEqual(["50", "60", "70", "80", "90"]);
+    expect(wrapper.find("[data-test=threshold-70]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.find("[data-test=save-notify]").exists()).toBe(false);
+    await wrapper.find("[data-test=threshold-80]").trigger("click");
+    await flushPromises();
+    expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ notify_score_threshold: 80 }) });
+    expect(wrapper.find("[data-test=threshold-saved]").text()).toBe("Enregistré");
+    // La notification de test : une ligne, son nom à gauche, « Envoyer » à droite.
+    expect(wrapper.find("[data-test=test-notification]").text()).toBe("Envoyer");
+    expect(wrapper.find("[data-test=notifications] legend").text()).toBe("Téléphone");
+  });
+
+  it("un seuil d'avant, hors des cinq, reste proposé", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data: path === "/api/notifications" ? { configured: false } : { notify_score_threshold: 75, llm_monthly_budget_chf: 10 },
+      }),
+    );
+    const { wrapper } = await mountSettings("notifications");
+    const choices = wrapper.findAll("[data-test=notify-form] [role=radio]").map((b) => b.text());
+    expect(choices).toEqual(["50", "60", "70", "75", "80", "90"]);
+  });
+
+  it("« Enregistrer » plein pour un formulaire de plusieurs champs", async () => {
+    mockGet(false);
+    const { wrapper } = await mountSettings();
+    expect(wrapper.find("[data-test=save-settings]").classes()).toContain("primary");
+  });
+});
