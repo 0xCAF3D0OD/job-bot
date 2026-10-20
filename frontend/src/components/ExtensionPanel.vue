@@ -104,13 +104,24 @@ onMounted(load);
         v-if="!STORE_URL"
         label="Comment l'installer"
       >
-        <p>
-          Firefox : <code>make extension</code> dans le dépôt, puis <code>about:debugging#/runtime/this-firefox</code> ›
-          « Charger un module complémentaire temporaire » › le fichier
-          <code>extension/web-ext-artifacts/joba1-…zip</code> (à refaire après un redémarrage).
-          Chrome, Edge ou Brave : <code>chrome://extensions</code>, mode développeur, « Charger l'extension non
-          empaquetée » › le dossier <code>extension/</code>.
+        <!-- En étapes, par navigateur (retour du 2026-10-20 : le texte d'un bloc était illisible). -->
+        <p class="install-browser">
+          Firefox
         </p>
+        <ol class="install-steps">
+          <li>Dans le dépôt : <code>make extension</code>.</li>
+          <li>Ouvre <code>about:debugging#/runtime/this-firefox</code>.</li>
+          <li>« Charger un module complémentaire temporaire », puis choisis <code>extension/web-ext-artifacts/joba1-….zip</code>.</li>
+          <li>À refaire après chaque redémarrage de Firefox.</li>
+        </ol>
+        <p class="install-browser">
+          Chrome, Edge ou Brave
+        </p>
+        <ol class="install-steps">
+          <li>Ouvre <code>chrome://extensions</code>.</li>
+          <li>Active le mode développeur.</li>
+          <li>« Charger l'extension non empaquetée », puis choisis le dossier <code>extension/</code>.</li>
+        </ol>
       </MoreInfo>
       <template v-if="tokens.length">
         <p class="extension-tokens-title">

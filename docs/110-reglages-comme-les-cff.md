@@ -137,3 +137,16 @@ Ta demande du 2026-10-20 : « fais le profil avec les règles des CFF » (décis
   - « Enregistrer mes coordonnées » prend toute la largeur sur téléphone.
 - **Vérifié** : tests (les descriptions visibles et l'absence de « i » dans les Critères), tests complets, lint, typecheck ; capture Playwright des trois onglets à 414 px, avec des données fictives.
 
+## Complément 0.78.3 : retours d'affichage
+
+Tes captures du 2026-10-20 (téléphone, ton compte et la démo).
+
+- **« Enregistrer » collé au bord** : en fin de Recherche d'emploi (contre le filet de Sites suivis) et en fin de Rythme (contre le bord de la carte). Un « Enregistrer » en fin de formulaire garde maintenant 1,5 rem dessous.
+- **Le seuil des notifications** : « Enregistré » (ou l'erreur) se mettait à côté des pastilles et coupait « / 100 » sur deux lignes. Il passe **sous** les pastilles, et « / 100 » ne se coupe plus.
+- **Dans la démo**, l'erreur « L'enregistrement a échoué » s'ajoutait sous le seuil alors que la bulle « Dans la démo, rien n'est enregistré » le disait déjà : elle ne s'affiche plus en démo.
+- **La bulle** : son texte et sa croix sont centrés en hauteur.
+- **« Exporter mes données (ZIP) »** passait sur deux lignes avec son état (✓ · 24 Ko) : une pilule reste sur une ligne.
+- **« Comment l'installer »** (l'extension) était un bloc de texte illisible : il devient des **étapes numérotées par navigateur** (Firefox ; Chrome, Edge ou Brave), les adresses en petites étiquettes qui passent à la ligne.
+- **Les dates « Du » et « Jusqu'au »** : l'étiquette reste dans le champ quand on le touche, comme chez les CFF. Le champ ne montre que « jj.mm.aaaa » : sans l'étiquette, on ne saurait plus si l'on saisit le début ou la fin de la pause.
+- **Vérifié** : tests, lint, typecheck ; captures Playwright à 414 px des fins de Recherche et de Rythme, du seuil avec « Enregistré », de l'export terminé et des étapes d'installation.
+
