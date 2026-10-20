@@ -6,6 +6,7 @@ import AppIcon from "./AppIcon.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { offerUndo } from "../composables/useUndo";
+import MailboxAddress from "./MailboxAddress.vue";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
 // ouvre la recherche déjà remplie ; l'alerte se crée sur le site, avec l'adresse de son choix.
@@ -129,7 +130,10 @@ onMounted(() => void load());
       data-test="mailbox"
     >
       <template v-if="page.mailbox && page.personal_address">
-        Ton adresse pour les alertes : <strong>{{ page.mailbox }}</strong>. Donne-la aux sites d'emploi : la plateforme
+        Ton adresse pour les alertes : <MailboxAddress
+          :address="page.mailbox"
+          personal
+        />. Donne-la aux sites d'emploi : la plateforme
         reçoit pour toi.
       </template>
       <template v-else-if="page.mailbox">

@@ -6,6 +6,7 @@ import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import IllustratedSide from "./IllustratedSide.vue";
 import type { IllustrationName } from "./Illustration.vue";
+import MailboxAddress from "./MailboxAddress.vue";
 
 // Assistant des alertes (docs/21 §4) : un écran à la fois, tant qu'aucune alerte n'est en place.
 const props = defineProps<{ page: AlertsPage }>();
@@ -188,7 +189,11 @@ function nextSite(): void {
         <p class="hint">
           Ouvre la recherche, clique sur « Créer une alerte » (ou « Activer l'alerte ») et donne
           <template v-if="page.mailbox">
-            l'adresse <strong data-test="wizard-address">{{ page.mailbox }}</strong>
+            l'adresse <MailboxAddress
+              :address="page.mailbox"
+              :personal="page.personal_address"
+              data-test="wizard-address"
+            />
           </template>
           <template v-else>
             ton adresse e-mail
@@ -244,7 +249,10 @@ function nextSite(): void {
         <h2>C'est prêt</h2>
         <p>
           Tes alertes arriveront<template v-if="page.mailbox">
-            à <strong>{{ page.mailbox }}</strong>
+            à <MailboxAddress
+              :address="page.mailbox"
+              :personal="page.personal_address"
+            />
           </template><template v-else>
             dans ta boîte
           </template>, souvent dès le lendemain. Tu les verras ici, avec le lien de confirmation si un site en demande un.

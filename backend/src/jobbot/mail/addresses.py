@@ -6,8 +6,10 @@ de la plupart des fournisseurs). À la collecte, l'adresse de destination dit à
 l'e-mail appartient. Aucun mot de passe de boîte d'une autre personne n'est gardé.
 """
 
+import re
 import secrets
 import string
+import unicodedata
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,6 +32,24 @@ def plus_address(base: str, code: str) -> str:
     return f"{local.split('+')[0]}+{code}@{domain}"
 
 
+def alert_domain(settings: Settings) -> str | None:
+    """Le domaine des adresses d'alerte des invités (docs/104), s'il est réglé."""
+    domain = settings.alert_domain.strip().lower().lstrip("@")
+    return domain if "." in domain else None
+
+
+def name_slug(username: str) -> str:
+    """Le nom du compte pour une adresse : minuscules, sans accents, lettres et chiffres."""
+    plain = unicodedata.normalize("NFKD", username).encode("ascii", "ignore").decode().lower()
+    slug = re.sub(r"[^a-z0-9]+", "-", plain).strip("-")[:20].strip("-")
+    return slug or "compte"
+
+
+def domain_address(domain: str, username: str, code: str) -> str:
+    # Le code reste à la fin, après le dernier tiret : c'est lui qui désigne le compte.
+    return f"{name_slug(username)}-{code}@{domain}"
+
+
 async def account_address(session: AsyncSession, settings: Settings) -> str | None:
     """L'adresse à donner aux sites pour le compte en cours ; créée à la première demande."""
     base = base_address(settings)
@@ -41,6 +61,9 @@ async def account_address(session: AsyncSession, settings: Settings) -> str | No
     if user.mail_code is None:
         user.mail_code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
         await session.flush()
+    domain = alert_domain(settings)
+    if domain is not None:
+        return domain_address(domain, user.username, user.mail_code)
     return plus_address(base, user.mail_code)
 
 
@@ -51,22 +74,36 @@ async def recipients_map(session: AsyncSession) -> dict[str, int]:
 
 
 def route(
-    recipients: tuple[str, ...], base: str | None, codes: dict[str, int], owner: int
+    recipients: tuple[str, ...],
+    base: str | None,
+    codes: dict[str, int],
+    owner: int,
+    domain: str | None = None,
 ) -> int | None:
     """Le compte d'un e-mail selon ses destinataires : un code connu désigne son compte ; un
-    code inconnu, personne (l'e-mail n'est pas rangé) ; sinon l'exploitant, comme avant."""
-    if base is not None:
-        local, _, domain = base.partition("@")
-        local = local.split("+")[0]
-        unknown = False
+    code inconnu, personne (l'e-mail n'est pas rangé) ; sinon l'exploitant, comme avant. Le
+    code se lit dans « boite+code@… » ou, avec le domaine des alertes, dans « nom-code@domaine »."""
+    unknown = False
+    if domain is not None:
         for address in recipients:
             name, _, host = address.lower().partition("@")
-            if host != domain or "+" not in name or name.split("+")[0] != local:
+            if host != domain:
+                continue
+            code = name.rpartition("-")[2]
+            if code in codes:
+                return codes[code]
+            unknown = True
+    if base is not None:
+        local, _, base_domain = base.partition("@")
+        local = local.split("+")[0]
+        for address in recipients:
+            name, _, host = address.lower().partition("@")
+            if host != base_domain or "+" not in name or name.split("+")[0] != local:
                 continue
             code = name.partition("+")[2]
             if code in codes:
                 return codes[code]
             unknown = True
-        if unknown:
-            return None
+    if unknown:
+        return None
     return owner

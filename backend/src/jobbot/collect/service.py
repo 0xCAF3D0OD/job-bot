@@ -288,6 +288,7 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
 
     # Chaque e-mail va au compte de son adresse de destination (docs/65 §3).
     base = addresses.base_address(settings)
+    domain = addresses.alert_domain(settings)
     async with runtime.sessionmaker.begin() as session:
         owner = await accounts.owner_id(session)
         codes = await addresses.recipients_map(session)
@@ -295,7 +296,7 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
     result = CollectResult(fetched=len(emails))
     for fetched in emails:
         email = parse_email(fetched.raw, fallback_received=datetime.now(UTC))
-        account = addresses.route(email.recipients, base, codes, owner)
+        account = addresses.route(email.recipients, base, codes, owner, domain)
         if account is None or account not in active:
             # Code inconnu (compte supprimé) ou compte suspendu : l'e-mail n'est pas rangé.
             result.unrouted += 1

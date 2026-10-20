@@ -1,6 +1,6 @@
 # 104 — Les premiers pas d'un nouveau compte (versions 0.75.0, 0.79.0 et 0.80.0)
 
-> Statut : **0.75.0 validée** le 2026-10-20 ; **0.79.0 et 0.80.0 à valider** (décalées par docs/106, docs/108 et docs/110) (points en fin de page).
+> Statut : **0.75.0 validée** le 2026-10-20 ; **0.79.0 validée** le 2026-10-20 (le domaine `alertes.joba1.ch`, le nom dans l'adresse, un bouton « Copier » en attendant) ; **0.80.0 à valider** (décalée par docs/106, docs/108 et docs/110) (points en fin de page).
 > Origine : ta session avec le nouveau compte « eliot » du 2026-10-20, cinq captures sur téléphone, puis tes choix : un domaine à jobA1 pour l'adresse, une lecture des recherches publiques pour les premières offres, deux boutons égaux.
 
 ## Ce que montre la session
@@ -21,7 +21,7 @@
 
 Le changement vaut pour l'ordinateur aussi : ce sont des mots et des boutons, pas une mise en page propre au téléphone.
 
-## 0.79.0 — Une adresse à jobA1 (point 3) — à valider
+## 0.79.0 — Une adresse à jobA1 (point 3)
 
 Aujourd'hui, jobA1 lit une seule boîte, la tienne, et donne à chaque compte `ta-boîte+code@gmail.com` (docs/65 §3). Avec l'adresse d'Eliot, il faudrait lire sa boîte, ce que jobA1 s'interdit.
 
@@ -50,3 +50,13 @@ Aujourd'hui, jobA1 lit une seule boîte, la tienne, et donne à chaque compte `t
 
 - Tests : le crayon sur chaque ligne du récapitulatif, sans « Modifier » écrit ; l'exemple « Mots (DevOps) » qui suit la recherche ; « site 1 sur 2 » sur la ligne de l'étape ; « J'ai créé l'alerte » et « Plus tard » (contour).
 - Capture à 414 px : le récapitulatif, l'étape 1 et l'étape 2 de l'assistant.
+
+## Complément 0.79.0 : l'adresse à jobA1, faite
+
+Ton retour du 2026-10-20 : « l'utilisateur eliot reçoit toujours cette information qui correspond à mes informations » (l'étape 3 de l'assistant des alertes montrait `kevin.dinocera+code@gmail.com`). Tes choix : **le domaine `alertes.joba1.ch`**, et **un bouton « Copier » en attendant** que le domaine soit en place.
+
+- **Le domaine** (`JOBBOT_ALERT_DOMAIN=alertes.joba1.ch`) : un invité reçoit à `nom-code@alertes.joba1.ch` (le nom du compte en minuscules, sans accents ; le code de 8 caractères après le dernier tiret). Le domaine redirige tout vers ta boîte Gmail ; la collecte reconnaît le code dans l'adresse de destination et range l'e-mail dans le bon compte. Les adresses `+code` déjà données aux sites continuent de marcher.
+- **Ce qu'il te reste à faire** (une fois) : sur le domaine `joba1.ch`, une redirection « catch-all » de `*@alertes.joba1.ch` vers ta boîte (Cloudflare Email Routing, par exemple), puis `JOBBOT_ALERT_DOMAIN=alertes.joba1.ch` dans le `.env`. Tant que ce n'est pas fait, rien ne change.
+- **En attendant** : l'adresse d'un invité qui passe par ta boîte s'affiche abrégée (`k…+k9dyqou7@gmail.com`), avec **« Copier l'adresse »**, qui copie l'adresse entière à donner aux sites. Pour toi (l'exploitant), ton adresse reste entière.
+- **Vérifié** : tests du routage (`nom-code@domaine`, majuscules, code inconnu, `+code` toujours valable), de la page Alertes d'un invité avec le domaine, du composant d'adresse (abrégée, entière, copie) ; pytest, ruff, mypy, vitest, eslint, vue-tsc.
+
