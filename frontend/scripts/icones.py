@@ -1,4 +1,4 @@
-"""Les icônes de jobA1 (docs/102), tirées du logo « le visage du 1 », réglage S5 (droit) :
+"""Les icônes de jobA1 (docs/103), tirées du logo « le visage du 1 », réglage S5 (droit) :
 - « badge » : le visage blanc et la bille pêche dans un carré bleu aux coins arrondis, fond
   transparent autour — l'onglet du navigateur (favicon.svg, favicon-32.png) et l'extension
   (extension/icons/16, 32, 48, 128) ;

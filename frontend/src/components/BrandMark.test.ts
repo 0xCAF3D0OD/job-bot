@@ -5,7 +5,7 @@ import AssistantMascot from "./AssistantMascot.vue";
 import BrandMark from "./BrandMark.vue";
 
 describe("Le logo et la mascotte (docs/97)", () => {
-  it("le logo (docs/102) : le visage du 1, penché ; deux traits, un œil, la bille", () => {
+  it("le logo (docs/103) : le visage du 1, penché ; deux traits, un œil, la bille", () => {
     const bar = mount(BrandMark, { props: { size: 28 } });
     expect(bar.attributes("aria-hidden")).toBe("true");
     expect(bar.attributes("viewBox")).toBe("8 8 86 86");

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { LOGO_EYE, LOGO_ONE, LOGO_SMILE, LOGO_SPARK, LOGO_TILT, LOGO_VIEWBOX } from "../brandPaths";
 
-// Le logo jobA1 (docs/102) : un visage complice fait avec le 1 du nom. Le 1 trace le sourcil
+// Le logo jobA1 (docs/103) : un visage complice fait avec le 1 du nom. Le 1 trace le sourcil
 // et le nez, un œil bleu, un œil pêche (la bille), un sourire discret ; le tout penché de −6°.
 // Couleurs du thème : `--logo-line` pour le visage, `--logo-spark` pour la bille. Décoratif :
 // le nom à côté le dit.

@@ -1,7 +1,7 @@
 # 100 — Le logo choisi : un trait qui entoure le diamant (version 0.71.6)
 
 > Statut : **validé** le 2026-10-19.
-> **Remplacé par docs/102** (0.74.0) : le logo devient le visage du 1.
+> **Remplacé par docs/103** (0.74.0) : le logo devient le visage du 1.
 > Origine : ta planche du 2026-10-19, « voici le logo qu'on a choisi ». Elle contient le logo, les tests (couleur, sombre, noir seul, icône d'app, 48 / 32 / 16 px) et la mascotte.
 > Remplace le logo de docs/98. Se construit sur la 0.71.5 (PR #218, fusionnée).
 
