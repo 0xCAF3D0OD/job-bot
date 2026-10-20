@@ -8,9 +8,10 @@ import ProfilesPanel from "./ProfilesPanel.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();
+const PATCH = vi.fn();
 vi.mock("../api/client", () => ({
   PROFILE_KEY: "jobbot-profile",
-  api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), use: vi.fn() },
+  api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), PATCH: (...a: unknown[]) => PATCH(...a), use: vi.fn() },
 }));
 afterEach(() => {
   vi.resetAllMocks();
@@ -80,5 +81,29 @@ describe("ProfilesPanel", () => {
     await wrapper.find("[data-test=profile-switcher]").setValue("1");
     expect(localStorage.getItem("jobbot-profile")).toBeNull();
     vi.unstubAllGlobals();
+  });
+
+  it("renommer sur place, sans fenêtre du navigateur (docs/108, 0.77.1)", async () => {
+    GET.mockResolvedValue({ data: { current_id: 1, items: [main, nurse] } });
+    PATCH.mockResolvedValue({ data: { current_id: 1, items: [main, { ...nurse, name: "Soins" }] } });
+    const wrapper = mount(ProfilesPanel, { attachTo: document.body });
+    await flushPromises();
+    await wrapper.findAll("[data-test=profile-more]")[1]!.trigger("click");
+    await wrapper.find("[data-test=profile-rename]").trigger("click");
+    await flushPromises();
+    const input = wrapper.find("[data-test=profile-rename-input]");
+    expect((input.element as HTMLInputElement).value).toBe("Infirmière");
+    // Échap sort sans rien changer.
+    await wrapper.find("[data-test=profile-rename-form]").trigger("keydown", { key: "Escape" });
+    expect(wrapper.find("[data-test=profile-rename-form]").exists()).toBe(false);
+    await wrapper.findAll("[data-test=profile-more]")[1]!.trigger("click");
+    await wrapper.find("[data-test=profile-rename]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=profile-rename-input]").setValue(" Soins ");
+    await wrapper.find("[data-test=profile-rename-form]").trigger("submit");
+    await flushPromises();
+    expect(PATCH).toHaveBeenCalledWith("/api/profiles/{profile_id}", { params: { path: { profile_id: 2 } }, body: { name: "Soins" } });
+    expect(wrapper.text()).toContain("Soins");
+    wrapper.unmount();
   });
 });

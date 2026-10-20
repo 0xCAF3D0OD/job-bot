@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 
 import { api, type Profile, type ProfileList } from "../api/client";
 import { useProfiles } from "../composables/useProfiles";
@@ -92,8 +92,16 @@ async function duplicate(profile: Profile): Promise<void> {
   apply((await api.POST("/api/profiles/{profile_id}/duplicate", { params: { path: { profile_id: profile.id } } })).data);
 }
 
+// Renommer sur place (docs/108, complément 0.77.1) : le nom devient un champ, à sa place.
+const renaming = ref<{ id: number; name: string } | null>(null);
 async function rename(profile: Profile): Promise<void> {
-  const name = window.prompt("Nouveau nom du profil", profile.name)?.trim();
+  renaming.value = { id: profile.id, name: profile.name };
+  await nextTick();
+  document.querySelector<HTMLInputElement>("[data-test=profile-rename-input]")?.select();
+}
+async function saveRename(profile: Profile): Promise<void> {
+  const name = renaming.value?.name.trim();
+  renaming.value = null;
   if (!name || name === profile.name) return;
   apply(
     (await api.PATCH("/api/profiles/{profile_id}", { params: { path: { profile_id: profile.id } }, body: { name } }))
@@ -146,7 +154,40 @@ onMounted(async () => {
           :key="profile.id"
           data-test="profile"
         >
-          <span class="site-main">
+          <form
+            v-if="renaming?.id === profile.id"
+            class="inline-edit"
+            data-test="profile-rename-form"
+            @submit.prevent="saveRename(profile)"
+            @keydown.esc="renaming = null"
+          >
+            <input
+              v-model="renaming.name"
+              type="text"
+              maxlength="60"
+              required
+              aria-label="Nom du profil"
+              data-test="profile-rename-input"
+            >
+            <button
+              type="submit"
+              class="primary small"
+              data-test="profile-rename-save"
+            >
+              Enregistrer
+            </button>
+            <button
+              type="button"
+              class="secondary small"
+              @click="renaming = null"
+            >
+              Annuler
+            </button>
+          </form>
+          <span
+            v-else
+            class="site-main"
+          >
             <strong>{{ profile.name }}<template v-if="profile.is_main"> (principal)</template></strong>
             <span class="hint">
               <template v-if="profile.occupation">{{ profile.occupation }} · </template>
@@ -154,8 +195,9 @@ onMounted(async () => {
               · {{ plural(profile.sources, "source", "sources") }}
             </span>
           </span>
+          <template v-if="renaming?.id === profile.id" />
           <span
-            v-if="current?.id === profile.id"
+            v-else-if="current?.id === profile.id"
             class="hint with-icon"
           ><AppIcon name="done" />utilisé</span>
           <button
@@ -168,6 +210,7 @@ onMounted(async () => {
             Utiliser
           </button>
           <MoreMenu
+            v-if="renaming?.id !== profile.id"
             :items="profileItems(profile)"
             :label="`Actions sur le profil ${profile.name}`"
             test-id="profile-more"

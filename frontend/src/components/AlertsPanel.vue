@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type AlertSearch, type AlertsPage } from "../api/client";
 import AppIcon from "./AppIcon.vue";
@@ -47,16 +47,23 @@ function searchItems(search: AlertSearch): MoreMenuItem[] {
   ];
 }
 
+// Modifier sur place (docs/108, complément 0.77.1) : les mots et le lieu deviennent des champs,
+// dans la ligne de la recherche.
+const editing = ref<{ id: number; terms: string; location: string } | null>(null);
 async function edit(search: AlertSearch): Promise<void> {
-  const terms = window.prompt("Mots de la recherche", search.terms)?.trim();
-  if (terms === undefined || !terms) return;
-  const location = window.prompt("Lieu (vide : toute la Suisse)", search.location ?? "");
-  if (location === null) return;
+  editing.value = { id: search.id, terms: search.terms, location: search.location ?? "" };
+  await nextTick();
+  document.querySelector<HTMLInputElement>("[data-test=alert-edit-terms]")?.focus();
+}
+async function saveEdit(search: AlertSearch): Promise<void> {
+  const value = editing.value;
+  if (!value?.terms.trim()) return;
+  editing.value = null;
   apply(
     (
       await api.PATCH("/api/alert-searches/{search_id}", {
         params: { path: { search_id: search.id } },
-        body: { terms, location: location.trim() },
+        body: { terms: value.terms.trim(), location: value.location.trim() },
       })
     ).data,
   );
@@ -180,8 +187,50 @@ onMounted(() => void load());
             data-test="alert-search"
           >
             <td>
-              <strong>{{ search.terms }}</strong><br>
-              <span class="muted">{{ search.location || "toute la Suisse" }}</span>
+              <form
+                v-if="editing?.id === search.id"
+                class="inline-edit stacked"
+                data-test="alert-edit-form"
+                @submit.prevent="saveEdit(search)"
+                @keydown.esc="editing = null"
+              >
+                <input
+                  v-model="editing.terms"
+                  type="text"
+                  maxlength="120"
+                  required
+                  aria-label="Mots de la recherche"
+                  data-test="alert-edit-terms"
+                >
+                <input
+                  v-model="editing.location"
+                  type="text"
+                  maxlength="80"
+                  aria-label="Lieu"
+                  placeholder="Toute la Suisse"
+                  data-test="alert-edit-location"
+                >
+                <span class="inline-edit-actions">
+                  <button
+                    type="submit"
+                    class="primary small"
+                    data-test="alert-edit-save"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary small"
+                    @click="editing = null"
+                  >
+                    Annuler
+                  </button>
+                </span>
+              </form>
+              <template v-else>
+                <strong>{{ search.terms }}</strong><br>
+                <span class="muted">{{ search.location || "toute la Suisse" }}</span>
+              </template>
             </td>
             <td
               v-for="cell in search.cells"

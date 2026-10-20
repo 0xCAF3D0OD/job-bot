@@ -72,7 +72,7 @@
 ## Écarts
 
 - **Une fenêtre `window.prompt` en plus** : supprimer un compte (Plateforme) demandait d'écrire son identifiant dans une fenêtre du navigateur. Elle passe aussi dans la page : le champ est dans la confirmation, et « Supprimer » reste grisé tant que l'identifiant n'est pas le bon.
-- **Restent deux `window.prompt` pour renommer** (un profil d'essai, une recherche d'alerte). Ce ne sont pas des confirmations ; ils passeront en modification dans la page dans une version suivante.
+- **Restaient deux `window.prompt` pour renommer** (un profil d'essai, une recherche d'alerte) : faits en 0.77.1 (complément ci-dessous).
 - **Le choix « modifications non enregistrées »** (lettre et CV) a trois issues : « Enregistrer, puis rédiger » (plein), « Rédiger sans enregistrer », « Garder ».
 - **Le « i »** n'apparaît pas dans un bouton ni dans un lien (le prix d'une action IA dans « Préparer le CV ») : le bouton garde son geste. Ces prix restent dans l'info-bulle sur ordinateur.
 - **`/api/status` pour un invité** : `ok` (la plateforme répond) et la collecte, sans version, environnement, base ni worker. Si la base ne répond pas, on ne sait pas qui demande : le détail reste visible, à un compte connecté seulement.
@@ -94,3 +94,14 @@ Tout est validé tel quel (« oui pour tout, 6 secondes »).
 3. **L'aide au doigt** : le petit « i » à droite du titre, qui ouvre une ligne sous le titre ? (docs/53 avait retiré les « ? » ; le « i » ne s'affiche que sur téléphone.)
 4. **Le Diagnostic** : réservé à l'exploitant, et `/api/status` réduit pour les invités ?
 5. **La renumérotation** : docs/104 passe en 0.78.0 et 0.79.0 ?
+
+## Complément 0.77.1 : renommer sur place
+
+Ta demande du 2026-10-20 : « fais les deux prompts de renommage ».
+
+- **Profil d'essai** : « Renommer » (dans « ⋯ ») change le nom en un champ, à sa place dans la liste, le texte sélectionné, avec « Enregistrer » (plein) et « Annuler ». « Utiliser » et « ⋯ » se cachent le temps de la modification.
+- **Recherche d'alerte** : « Modifier » (dans « ⋯ ») change les mots et le lieu en deux champs, dans la cellule de la recherche, le focus sur les mots. Lieu vide : toute la Suisse.
+- **Échap** sort sans rien changer ; Entrée enregistre. Sur téléphone, le champ prend toute la largeur.
+- **Plus aucune fenêtre du navigateur** dans l'interface : le test vérifie maintenant `window.confirm` et `window.prompt`.
+- **Vérifié** : tests des deux modifications (champ prérempli, Échap, enregistrement), lint, typecheck ; capture sur téléphone et ordinateur.
+

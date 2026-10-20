@@ -88,3 +88,36 @@ describe("AlertsPanel (docs/20 §1)", () => {
     expect(wrapper.text()).toContain("Recherches mises de côté1");
   });
 });
+
+const editable = (terms: string, location: string | null) => ({ id: 1, terms, location, active: true, cells: [] });
+const onePage = (s: unknown) => ({ data: { mailbox: null, folder: null, sites: [], searches: [s], to_confirm: [] } });
+
+describe("AlertsPanel, modifier sur place (docs/108, 0.77.1)", () => {
+  it("les mots et le lieu deviennent des champs dans la ligne ; Échap annule", async () => {
+    GET.mockResolvedValue(onePage(editable("patissier", null)));
+    PATCH.mockResolvedValue(onePage(editable("boulanger", "Lausanne")));
+    const wrapper = mount(AlertsPanel, { attachTo: document.body });
+    await flushPromises();
+    await wrapper.find("[data-test=alert-more]").trigger("click");
+    await wrapper.find("[data-test=edit-alert]").trigger("click");
+    await flushPromises();
+    expect(document.activeElement).toBe(wrapper.find("[data-test=alert-edit-terms]").element);
+    await wrapper.find("[data-test=alert-edit-form]").trigger("keydown", { key: "Escape" });
+    expect(wrapper.find("[data-test=alert-edit-form]").exists()).toBe(false);
+    expect(PATCH).not.toHaveBeenCalled();
+
+    await wrapper.find("[data-test=alert-more]").trigger("click");
+    await wrapper.find("[data-test=edit-alert]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=alert-edit-terms]").setValue("boulanger ");
+    await wrapper.find("[data-test=alert-edit-location]").setValue(" Lausanne");
+    await wrapper.find("[data-test=alert-edit-form]").trigger("submit");
+    await flushPromises();
+    expect(PATCH).toHaveBeenCalledWith("/api/alert-searches/{search_id}", {
+      params: { path: { search_id: 1 } },
+      body: { terms: "boulanger", location: "Lausanne" },
+    });
+    expect(wrapper.text()).toContain("boulanger");
+    wrapper.unmount();
+  });
+});

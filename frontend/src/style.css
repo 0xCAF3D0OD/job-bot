@@ -3105,3 +3105,11 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .hover-note-line { display: block; margin-top: 0.3rem; font-size: 0.86rem; font-weight: 400; line-height: 1.5; color: var(--muted); text-transform: none; letter-spacing: 0; white-space: normal; }
 /* Sur téléphone, le « i » remplace les pointillés sous le titre. */
 @media (max-width: 820px) { .hover-note { text-decoration: none; } }
+
+/* Modifier sur place (docs/108, complément 0.77.1) : le champ à la place du texte, les boutons
+   à côté ; empilés dans une cellule de tableau. */
+.inline-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
+.inline-edit > input { flex: 1 1 12rem; min-width: 0; }
+.inline-edit.stacked { display: grid; gap: 0.5rem; min-width: 12rem; }
+.inline-edit-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+@media (max-width: 820px) { .inline-edit > input { flex-basis: 100%; } }

@@ -74,13 +74,13 @@ describe("Annuler plutôt que confirmer (docs/108 §1)", () => {
     wrapper.unmount();
   });
 
-  it("plus aucune fenêtre window.confirm dans l'interface", () => {
+  it("plus aucune fenêtre window.confirm ni window.prompt dans l'interface (0.77.1)", () => {
     const found: string[] = [];
     const walk = (dir: string): void => {
       for (const name of readdirSync(dir)) {
         const path = join(dir, name);
         if (statSync(path).isDirectory()) walk(path);
-        else if (/\.(vue|ts)$/.test(name) && !name.endsWith(".test.ts") && readFileSync(path, "utf-8").includes("window.confirm(")) found.push(path);
+        else if (/\.(vue|ts)$/.test(name) && !name.endsWith(".test.ts") && /window\.(confirm|prompt)\(/.test(readFileSync(path, "utf-8"))) found.push(path);
       }
     };
     walk(join(__dirname, ".."));
