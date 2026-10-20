@@ -97,7 +97,7 @@ Une seule couleur d'accent, le bleu du logo (`--accent`). Le texte posé dessus 
 
 1. Ce qui se rattrape se fait tout de suite, avec le bandeau « … · Annuler » pendant 6 secondes (`offerUndo`).
 2. Ce qui ne se rattrape pas, ou touche quelqu'un d'autre, se confirme dans la page, à l'endroit du bouton (`InlineConfirm`), le focus sur « Garder ».
-3. Jamais de `window.confirm` (un test le vérifie).
+3. Jamais de `window.confirm` ni de `window.prompt` (un test le vérifie) : on modifie sur place, le champ à la place du texte.
 
 ## L'aide au doigt (docs/108)
 
