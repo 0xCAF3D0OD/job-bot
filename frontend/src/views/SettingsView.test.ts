@@ -176,7 +176,7 @@ describe("SettingsView, comptes (docs/65)", () => {
       data: { configured: true, server: "https://ntfy.sh", personal: true, topic: "jobbot-abc" },
     });
     const { wrapper } = await mountSettings("notifications");
-    await wrapper.find("[data-test=phone-on-button]").trigger("click");
+    await wrapper.find("[data-test=phone-switch]").trigger("change");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/notifications/phone", { body: { enabled: true } });
     expect(wrapper.find("[data-test=phone-on]").text()).toContain("jobbot-abc");
@@ -257,7 +257,8 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(wrapper.find("[data-test=threshold-saved]").text()).toBe("Enregistré");
     // La notification de test : une ligne, son nom à gauche, « Envoyer » à droite.
     expect(wrapper.find("[data-test=test-notification]").text()).toBe("Envoyer");
-    expect(wrapper.find("[data-test=notifications] legend").text()).toBe("Téléphone");
+    // L'interrupteur du téléphone n'est que pour un compte invité ; ici, la ligne de test seule.
+    expect(wrapper.find("[data-test=notifications] .settings-line strong").text()).toBe("Notification de test");
   });
 
   it("un seuil d'avant, hors des cinq, reste proposé", async () => {

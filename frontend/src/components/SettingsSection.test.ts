@@ -31,21 +31,22 @@ async function mountAt(path: string) {
   return wrapper;
 }
 
-describe("Section des Réglages (docs/34 §3)", () => {
-  it("ordinateur : le titre et le contenu, comme avant", async () => {
+describe("Section des Réglages (docs/110)", () => {
+  it("ordinateur : le titre de la section au-dessus de sa carte", async () => {
     phone(false);
     const wrapper = await mountAt("/reglages");
-    expect(wrapper.findAll("h2.section-title").map((h) => h.attributes("id"))).toEqual(["recherche", "actualites"]);
+    expect(wrapper.findAll("section.settings-section").map((s) => s.attributes("id"))).toEqual(["recherche", "actualites"]);
+    expect(wrapper.findAll(".settings-section > h2.section-title").map((h) => h.text())).toEqual(["Recherche d'emploi", "Actualités"]);
+    expect(wrapper.find(".settings-section > .settings-card").text()).toBe("critères");
     expect(wrapper.find(".disclosure").exists()).toBe(false);
   });
 
-  it("téléphone : une ligne dépliable avec résumé, le lien #actualites l'ouvre", async () => {
+  it("téléphone : plus de lignes dépliables, toutes les sections l'une sous l'autre", async () => {
     phone(true);
     const wrapper = await mountAt("/reglages#actualites");
-    const rows = wrapper.findAll(".settings-row");
-    expect(rows).toHaveLength(2);
-    expect(rows[0]!.find(".disclosure-value").text()).toBe("objectif 10 / mois");
-    expect(rows[0]!.classes()).not.toContain("open");
-    expect(rows[1]!.classes()).toContain("open");
+    expect(wrapper.find(".settings-row").exists()).toBe(false);
+    expect(wrapper.findAll("section.settings-section")).toHaveLength(2);
+    expect(wrapper.text()).toContain("critères");
+    expect(wrapper.text()).toContain("sources");
   });
 });
