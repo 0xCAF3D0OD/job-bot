@@ -58,6 +58,10 @@ Tirées de S5 par `frontend/scripts/icones.py`, fond transparent hors du carré.
 - **L'étincelle à 4 branches** (icône « spark » des Réglages, rubrique IA) : elle reste réservée à l'IA (docs/101).
 - **L'animation des lettres** : hors de cette version.
 
+## Le cache des icônes (0.74.1)
+
+Le navigateur garde un favicon tant que son adresse ne change pas, même après un rechargement. Les liens d'icônes de `frontend/index.html` et de `manifest.webmanifest` portent donc la version du dessin : `?v=0.74.0`. **À changer quand les icônes changent.**
+
 ## Vérifié
 
 - 344 tests de l'interface (le logo : `aria-hidden`, viewBox `8 8 86 86`, penché de −6°, deux traits, un œil, une bille), lint et typecheck.
