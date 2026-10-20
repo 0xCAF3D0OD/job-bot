@@ -1,6 +1,6 @@
 # 110 — Les Réglages comme les CFF (version 0.78.0)
 
-> Statut : **à valider** (points en fin de page).
+> Statut : **validé** le 2026-10-20 : (a) une longue page sur téléphone, avec des marqueurs pour la parcourir ; les descriptions visibles ; consulter en gris, modifier en blanc bordé ; les Réglages d'abord, le Profil ensuite.
 > Origine : ta demande du 2026-10-20, six captures du profil CFF à l'appui (Paramètres, Commandes, Moyens de paiement) : « regarde bien comment ils font : la relation entre les titres et les informations, le décalage des informations, l'encadrement des informations, la rigueur des informations proposées et de celles qui sont modifiables ».
 > Les versions prévues par docs/104 (l'adresse à jobA1, les premières offres) passent en 0.79.0 et 0.80.0.
 
@@ -73,7 +73,31 @@ Chaque niveau a une seule taille et une seule graisse. Rien d'autre ne sert de t
 
 **Pas de point final** dans les titres : c'est la marque des CFF, pas une règle de lisibilité.
 
-## Points à valider
+## Décisions (2026-10-20)
+
+1. **Téléphone** : une seule longue page, « avec des marqueurs pour vite parcourir les éléments ».
+2. **Les descriptions** toujours visibles, plus de « i » dans les Réglages.
+3. **Consulter en gris, modifier en blanc bordé**, avec le crayon rond.
+4. **La portée** : les Réglages en 0.78.0, le Profil avec les mêmes règles en 0.78.1.
+
+## Écarts
+
+- **Les marqueurs** : une rangée de pastilles (Recherche d'emploi, Rythme, Actualités…) collée sous la barre du haut. Un appui mène à la section ; la pastille de la section en cours se colore pendant la lecture et reste visible dans la rangée. Un lien `?rubrique=…` mène directement à sa section.
+- **Sur ordinateur**, le sommaire de gauche et une rubrique à la fois restent (docs/48 §2) ; les titres, les descriptions, les contrôles et l'encadrement changent comme sur téléphone.
+- **Les lignes dépliables** des Réglages disparaissent (`SettingsSection` n'utilise plus `DisclosureRow`).
+- **Les jours de recherche** restent de vraies cases à cocher (clavier, lecteurs d'écran), présentées en pastilles Lu à Di, toutes sur une ligne sur téléphone.
+- **« Recevoir sur mon téléphone »** devient un interrupteur ; « Arrêter » disparaît (l'interrupteur l'éteint). Le compte de l'exploitant n'a que la ligne « Notification de test ».
+- **Les informations en gris** : « Connecté en tant que … », le résumé des données personnelles, le sujet ntfy, le plafond fixé par l'exploitant, la dépense de l'IA du mois.
+- **Les pilules** : Refaire l'accueil, Se déconnecter partout, Exporter mes données, Créer une adresse d'abonnement, Parcourir les suggestions ; pleine largeur sur téléphone.
+- **Les « i » qui restent** sont ceux des formulaires d'ajout d'une source d'actualités (dans le panneau latéral) : ils seront repris avec le Profil (0.78.1).
+- **Le crayon rond** n'a pas encore d'usage dans les Réglages (aucun objet n'y est modifiable autrement que par un interrupteur) : il servira dans le Profil.
+
+## Vérifié
+
+- Tests : la longue page et ses marqueurs (toutes les rubriques, un marqueur qui mène à sa section) ; la section sous son titre, sans ligne dépliable sur téléphone ; l'interrupteur du téléphone ; « Se déconnecter partout » en pilule ; tests complets, lint, typecheck.
+- Capture Playwright de la page entière à 414 px, avec tous les panneaux et des données fictives (5 900 px de haut) : marqueurs, titres, descriptions, pastilles, choix, dates, informations en gris, pilules ; largeur de la page mesurée à 414 px.
+
+### Les questions posées
 
 1. **Sur téléphone**, à la place des lignes dépliables :
    - **(a)** une **seule longue page**, toutes les sections l'une sous l'autre, comme la maquette et la page Paramètres des CFF ;

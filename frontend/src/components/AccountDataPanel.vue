@@ -71,7 +71,7 @@ async function remove(): Promise<void> {
       <legend>Données personnelles</legend>
       <p
         v-if="summary"
-        class="hint"
+        class="setting-info"
       >
         {{ plural(summary.offers, "offre", "offres") }}, {{ plural(summary.applications, "candidature", "candidatures") }},
         {{ plural(summary.documents, "document", "documents") }}, {{ plural(summary.profile_blocks, "bloc de profil", "blocs de profil") }},
@@ -80,11 +80,11 @@ async function remove(): Promise<void> {
           Ce qui est gardé, et ce qui part à l'IA
         </RouterLink>
       </p>
-      <div class="form-actions">
+      <div class="form-actions setting-pills">
         <a
           href="/api/account/export"
           download
-          class="button-link"
+          class="pill"
           data-test="export"
         ><span class="with-icon"><AppIcon name="download" />Exporter mes données (ZIP)</span></a>
       </div>

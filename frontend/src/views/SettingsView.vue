@@ -687,11 +687,12 @@ onUnmounted(() => spy?.disconnect());
             >
               <fieldset>
                 <legend>Plafond mensuel du coût de l'IA</legend>
-                <p>
-                  <strong>{{ form.llm_monthly_budget_chf }} CHF</strong> par mois, fixé par l'exploitant de la plateforme.
-                </p>
-                <p class="hint">
+                <p class="setting-desc">
                   Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
+                </p>
+                <!-- Fixé par l'exploitant : une information, sur fond gris (docs/110). -->
+                <p class="setting-info">
+                  <strong>{{ form.llm_monthly_budget_chf }} CHF</strong> par mois, fixé par l'exploitant de la plateforme.
                 </p>
               </fieldset>
             </div>

@@ -8,7 +8,6 @@ import SidePanel from "./SidePanel.vue";
 import { secureAddress, senders, useChecks } from "../validators";
 import { plural } from "../format";
 
-import HoverNote from "./HoverNote.vue";
 import { useAuth } from "../composables/useAuth";
 import { offerUndo } from "../composables/useUndo";
 // Mettre un site en pause vaut pour son compte ; ajouter ou retirer un site change la liste
@@ -142,10 +141,13 @@ onMounted(() => void load());
   >
     <fieldset>
       <legend>
-        <HoverNote text="La plateforme lit leurs e-mails d'alerte. jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA (environ 0,01 $ par e-mail, tes coordonnées retirées).">
-          Sites suivis
-        </HoverNote>
+        Sites suivis
       </legend>
+      <!-- La description toujours visible, comme les CFF (docs/110). -->
+      <p class="setting-desc">
+        La plateforme lit leurs e-mails d'alerte. jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA
+        (environ 0,01 $ par e-mail, tes coordonnées retirées).
+      </p>
       <ul class="calm-list">
         <li
           v-for="site in sites"

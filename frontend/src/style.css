@@ -3221,3 +3221,25 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
   .rhythm-pause { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .day-pill { transition: none; } }
+/* Les actions d'une section : des pilules bordées ; pleine largeur sur téléphone (docs/110). */
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: var(--control-h); padding: 0 1.25rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-weight: 600; font-size: 0.95rem; text-decoration: none; cursor: pointer; transition: border-color 150ms, color 150ms; }
+.pill:hover { border-color: var(--accent); color: var(--accent); }
+.setting-pills { gap: 0.75rem; }
+.setting-info + .setting-pills, .setting-info + .form-actions { padding-top: 0; }
+@media (max-width: 820px) {
+  .setting-pills { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .setting-pills > .pill { width: 100%; min-height: 3rem; }
+  .settings-card .link.danger[data-test="delete-account"] { justify-self: center; margin: 0.25rem auto 0; display: flex; }
+}
+.choice-label { font-size: 1rem; color: var(--text); }
+.settings-card .ai-spend { background: var(--band); border-radius: 12px; padding: 1rem 1.25rem; margin: 0 0 1.5rem; }
+@media (max-width: 820px) {
+  .settings-card .score-choices { gap: 0.4rem; flex-wrap: nowrap; }
+  .settings-card .score-choices .chip { min-width: 2.75rem; padding: 0 0.5rem; }
+}
+@media (max-width: 820px) {
+  /* Les sept jours sur une ligne ; les actions en pilules sur toute la largeur. */
+  .rhythm-week { gap: 0.35rem; flex-wrap: nowrap; }
+  .day-pill { min-width: 0; flex: 1; padding: 0; }
+  .settings-card .form-actions > .pill { flex: 1; min-height: 3rem; }
+}

@@ -8,7 +8,6 @@ import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
-import HoverNote from "./HoverNote.vue";
 import { offerUndo } from "../composables/useUndo";
 
 // Extension du navigateur (docs/25 §4, docs/71) : installée depuis la boutique de Mozilla, reliée
@@ -76,10 +75,12 @@ onMounted(load);
   >
     <fieldset>
       <legend>
-        <HoverNote text="Elle remplit tes candidatures et Job-Room. Rien n'est envoyé à ta place.">
-          Extension du navigateur
-        </HoverNote>
+        Extension du navigateur
       </legend>
+      <!-- La description toujours visible, comme les CFF (docs/110). -->
+      <p class="setting-desc">
+        Elle remplit tes candidatures et Job-Room. Rien n'est envoyé à ta place.
+      </p>
       <ol class="extension-steps">
         <li>
           <a
