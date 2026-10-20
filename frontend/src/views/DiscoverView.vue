@@ -89,10 +89,17 @@ const still = typeof window.matchMedia === "function" && window.matchMedia("(pre
 function follow(): void {
   const box = journey.value?.getBoundingClientRect();
   if (!box) return;
-  const middle = window.innerHeight * 0.6 - box.top;
-  progress.value = still ? 1 : Math.max(0, Math.min(1, middle / box.height));
   const nodes = [...journey.value!.querySelectorAll<HTMLElement>(".discover-node")];
-  reached.value = nodes.filter((n) => n.getBoundingClientRect().top + n.offsetHeight / 2 < window.innerHeight * 0.6).length;
+  const centre = (n: HTMLElement): number => n.getBoundingClientRect().top + n.offsetHeight / 2;
+  // Le chemin va du centre de la première pastille à celui de la dernière (retour du
+  // 2026-10-20 : il s'arrêtait à mi-chemin). En bas de la page, il est entier.
+  const atEnd = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4;
+  const first = nodes[0] ? centre(nodes[0]) : box.top;
+  const last = nodes.length ? centre(nodes[nodes.length - 1]!) : box.bottom;
+  const line = window.innerHeight * 0.6;
+  const share = last > first ? (line - first) / (last - first) : 1;
+  progress.value = still || atEnd ? 1 : Math.max(0, Math.min(1, share));
+  reached.value = atEnd ? nodes.length : nodes.filter((n) => centre(n) < line).length;
 }
 
 let resize: ResizeObserver | null = null;

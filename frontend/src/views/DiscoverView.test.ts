@@ -31,4 +31,23 @@ describe("La plateforme, en parcours (docs/67)", () => {
     expect(wrapper.find("[data-test=discover-demo]").exists()).toBe(false);
     useAuth().me.value = null;
   });
+
+  it("en bas de la page, le chemin va jusqu'à la dernière pastille ; les notes en cercle (0.79.1)", async () => {
+    useAuth().me.value = null;
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    await router.push("/la-plateforme");
+    const wrapper = mount(DiscoverView, { global: { plugins: [router] } });
+    Object.defineProperty(document.documentElement, "scrollHeight", { configurable: true, value: 3000 });
+    Object.defineProperty(window, "scrollY", { configurable: true, value: 3000 - window.innerHeight });
+    window.dispatchEvent(new Event("scroll"));
+    await wrapper.vm.$nextTick();
+    const nodes = wrapper.findAll(".discover-node");
+    expect(nodes.length).toBe(7);
+    expect(nodes.every((n) => n.classes().includes("reached"))).toBe(true);
+    // La maquette des offres montre la note comme l'application : un cercle, plus de pastille.
+    expect(wrapper.find(".dmock-score").exists()).toBe(false);
+    expect(wrapper.findAll(".dmock .score-ring").length).toBe(3);
+    wrapper.unmount();
+  });
 });
+
