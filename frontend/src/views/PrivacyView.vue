@@ -72,7 +72,7 @@ onMounted(async () => {
       <p>Dans Réglages, rubrique Compte :</p>
       <ul>
         <li><strong>Exporter</strong> tout : une archive avec tes données, tes documents et tes e-mails d'alerte.</li>
-        <li><strong>Supprimer</strong> ton compte : tout est effacé, fichiers compris.</li>
+        <li><strong>Fermer</strong> ton compte : tout est effacé, fichiers compris. Aussi depuis le menu de ton compte.</li>
       </ul>
       <p v-if="loggedIn">
         <RouterLink

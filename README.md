@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/104-premiers-pas.md](docs/104-premiers-pas.md) (0.75.0)
+- Version en cours : [docs/105-fermer-son-compte.md](docs/105-fermer-son-compte.md) (0.75.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -147,7 +147,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.74.0 | Le logo : un visage complice fait avec le 1 du nom, la bille pêche en œil ; les icônes de l'onglet, de l'app et de l'extension | livrée |
 | 0.74.1 | Les icônes portent leur version (`?v=0.74.0`) : le navigateur prend le nouveau favicon sans vider son cache | livrée |
 | 0.74.2 | La doc du logo passe en docs/103 (le numéro 102 est celui de l'inscription sur demande) | livrée |
-| 0.75.0 | Premiers pas d'un nouveau compte : le crayon pour modifier l'accueil, deux boutons égaux par site, des exemples qui suivent le métier | en cours |
+| 0.75.0 | Premiers pas d'un nouveau compte : le crayon pour modifier l'accueil, deux boutons égaux par site, des exemples qui suivent le métier | livrée |
+| 0.75.1 | « Fermer mon compte », aussi depuis le menu du compte, la confirmation déjà ouverte | en cours |
 
 ## Lancer en local
 
