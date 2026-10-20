@@ -974,6 +974,9 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .wizard h2 { margin: 0; font-size: 1.3rem; }
 .wizard-step { margin: 0; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .wizard-links { display: grid; gap: 0.5rem; justify-items: start; }
+/* « J'ai créé l'alerte » et « Plus tard » : deux boutons de même taille, côte à côte (docs/104 §4). */
+.wizard-site-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 26rem; }
+.wizard-site-actions button { width: 100%; justify-content: center; }
 .wizard .inline-form input { min-width: 0; }
 .alerts-summary { display: grid; gap: 0.8rem; padding: 1.2rem 1.4rem; }
 .summary-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
@@ -2521,12 +2524,13 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .welcome-day:disabled { color: var(--muted); opacity: 0.45; cursor: default; }
 .welcome-day.chosen { color: #fff; background: var(--accent); border-color: var(--accent); animation: welcome-pick var(--t-fast) var(--ease-out); }
 @media (hover: hover) { .welcome-day:hover:not(:disabled, .chosen) { border-color: var(--accent); } }
-.welcome-recap { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 0.5rem; }
-.welcome-recap button { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.8rem; font: inherit; font-size: 1.05rem; text-align: left; color: var(--text); background: none; border: 2px solid transparent; border-radius: 12px; cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast); }
+.welcome-recap { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 0.75rem; width: min(100%, 24rem); }
+.welcome-recap button { display: flex; align-items: center; gap: 0.75rem; width: 100%; min-height: var(--control-h); padding: 0.75rem 1rem; font: inherit; font-size: 1.05rem; line-height: 1.5; text-align: left; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast); }
 .welcome-recap button span { flex: 1; }
-.welcome-recap small { color: var(--accent); font-size: 0.85rem; }
-@media (hover: hover) { .welcome-recap button:hover { border-color: var(--border); background: var(--surface); } }
-.welcome-recap .icon { width: 20px; height: 20px; color: var(--ok); }
+/* Le crayon dit qu'on peut modifier (docs/104 §1), aligné à droite sur chaque ligne. */
+.welcome-recap .icon.welcome-recap-edit { width: 18px; height: 18px; color: var(--muted); transition: color var(--t-fast); }
+@media (hover: hover) { .welcome-recap button:hover { border-color: var(--accent); } .welcome-recap button:hover .welcome-recap-edit { color: var(--accent); } }
+.welcome-recap .icon:not(.welcome-recap-edit) { width: 20px; height: 20px; color: var(--ok); }
 /* La suite : le personnage et sa bulle au-dessus, façon Duolingo ; la pointe de la bulle vise
    sa tête, un peu à gauche du milieu de l'image. */
 .welcome-speaker { display: grid; justify-items: center; gap: 1rem; }
