@@ -1879,6 +1879,107 @@
         }
       }
     },
+    "/api/offers/manual": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Context",
+        "operationId": "getManualOfferContext",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualContext"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Add",
+        "operationId": "addManualOffer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualAddIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualAddOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/manual/read": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read",
+        "operationId": "readManualOffer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualReadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualReadOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/applications/{application_id}/interview.ics": {
       "get": {
         "tags": [
@@ -13868,6 +13969,301 @@
         ],
         "title": "MaintenanceOut"
       },
+      "ManualAddIn": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "read_by": {
+            "type": "string",
+            "enum": [
+              "page",
+              "ia",
+              "main"
+            ],
+            "title": "Read By",
+            "default": "main"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "ManualAddIn"
+      },
+      "ManualAddOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "existing": {
+            "type": "boolean",
+            "title": "Existing"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "existing",
+          "status",
+          "reasons"
+        ],
+        "title": "ManualAddOut"
+      },
+      "ManualContext": {
+        "properties": {
+          "trade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade"
+          },
+          "added_today": {
+            "type": "integer",
+            "title": "Added Today"
+          },
+          "daily_limit": {
+            "type": "integer",
+            "title": "Daily Limit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trade",
+          "added_today",
+          "daily_limit"
+        ],
+        "title": "ManualContext"
+      },
+      "ManualDraft": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "read_by": {
+            "type": "string",
+            "enum": [
+              "page",
+              "ia"
+            ],
+            "title": "Read By"
+          },
+          "trade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trade"
+          },
+          "matches_trade": {
+            "type": "boolean",
+            "title": "Matches Trade"
+          },
+          "existing_offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existing Offer Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "company",
+          "location",
+          "description",
+          "url",
+          "read_by",
+          "trade",
+          "matches_trade",
+          "existing_offer_id"
+        ],
+        "title": "ManualDraft"
+      },
+      "ManualReadIn": {
+        "properties": {
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "title": "ManualReadIn"
+      },
+      "ManualReadOut": {
+        "properties": {
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ManualDraft"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "paste": {
+            "type": "boolean",
+            "title": "Paste",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "ManualReadOut"
+      },
       "MatchOut": {
         "properties": {
           "offer": {
@@ -15838,6 +16234,11 @@
           "spontaneous": {
             "type": "boolean",
             "title": "Spontaneous",
+            "default": false
+          },
+          "added_by_you": {
+            "type": "boolean",
+            "title": "Added By You",
             "default": false
           }
         },
@@ -18105,6 +18506,11 @@
           "spontaneous": {
             "type": "boolean",
             "title": "Spontaneous",
+            "default": false
+          },
+          "added_by_you": {
+            "type": "boolean",
+            "title": "Added By You",
             "default": false
           },
           "is_first": {

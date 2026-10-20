@@ -133,6 +133,8 @@ class OfferOut(BaseModel):
     doubts: list["DoubtOut"] = []
     # Candidature spontanée, créée par toi sans annonce (docs/39).
     spontaneous: bool = False
+    # Offre ajoutée par toi, par son lien ou son texte (docs/111).
+    added_by_you: bool = False
 
 
 class DoubtOut(BaseModel):
@@ -302,7 +304,9 @@ def _offer_out(
     return OfferOut.model_validate(
         {
             **_columns(offer),
-            "links": links,
+            # Une offre ajoutée par son texte n'a pas de lien : rien à ouvrir.
+            "links": [link for link in links if link.url],
+            "added_by_you": any(link.source == "manual" for link in links),
             **_evaluation_fields(evaluation, current_hash),
             **remote,
             "doubts": _doubts(offer, evaluation),

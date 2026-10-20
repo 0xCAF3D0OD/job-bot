@@ -533,3 +533,29 @@ describe("Offres, offre ouverte par un lien (docs/43, complément)", () => {
     ]);
   });
 });
+
+describe("Offres, ajouter une offre (docs/111)", () => {
+  it("« Partager vers jobA1 » ouvre le formulaire, le lien sorti du texte partagé", async () => {
+    mockOffers(page([offer(1, "Une")]));
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/offers/manual"
+          ? { data: { trade: "Menuisier", added_today: 0, daily_limit: 20 } }
+          : path === "/api/profile-chunks"
+            ? { data: [] }
+            : page([offer(1, "Une")]),
+      ),
+    );
+    const wrapper = await mountAt("/offres?ajouter=1&text=" + encodeURIComponent("Menuisier CFC https://bois.ch/emplois/1"));
+    expect(wrapper.find(".list-count-row [data-test=manual-open]").exists()).toBe(true);
+    const input = wrapper.find("[data-test=manual-url]").element as HTMLInputElement;
+    expect(input.value).toBe("https://bois.ch/emplois/1");
+    expect(router.currentRoute.value.query.ajouter).toBeUndefined();
+  });
+
+  it("l'étiquette « Ajoutée par toi » sur la carte", async () => {
+    mockOffers(page([offer(1, "Une", { added_by_you: true, links: [] })]));
+    const wrapper = await mountAt("/offres");
+    expect(wrapper.find("[data-test=added-badge]").text()).toBe("Ajoutée par toi");
+  });
+});

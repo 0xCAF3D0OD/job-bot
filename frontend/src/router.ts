@@ -76,6 +76,11 @@ export const routes: RouteRecordRaw[] = [
   // Anciennes adresses : liens des alertes, des rappels ntfy, marque-pages.
   { path: "/prerequis", redirect: "/profil" },
   { path: "/offres", redirect: (to) => ({ path: "/candidatures/offres", query: to.query }) },
+  // « Partager vers jobA1 » sur Android (manifeste, share_target) : le formulaire d'ajout.
+  {
+    path: "/ajouter-une-offre",
+    redirect: (to) => ({ path: "/candidatures/offres", query: { ...to.query, ajouter: "1" } }),
+  },
   {
     path: "/offres/:id(\\d+)/preparer",
     redirect: (to) => ({ path: `/candidatures/offres/${String(to.params.id)}/preparer` }),
