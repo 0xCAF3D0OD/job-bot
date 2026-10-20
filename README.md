@@ -141,8 +141,10 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.71.3 | Le logo au diamant en contour ; « jobA1 » en entier, sans le personnage de l'heure | livrée |
 | 0.71.4 | La boucle à main levée de la page en cours retirée (le logo va changer) | livrée |
 | 0.74.0 | Le logo : un visage complice fait avec le 1 du nom, la bille pêche en œil ; les icônes de l'onglet, de l'app et de l'extension | livrée |
+
 | 0.74.1 | Les icônes portent leur version (`?v=0.74.0`) : le navigateur prend le nouveau favicon sans vider son cache | en cours |
 | 0.75.0 | Premiers pas d'un nouveau compte : le crayon pour modifier l'accueil, deux boutons égaux par site, des exemples qui suivent le métier | en cours |
+
 
 ## Lancer en local
 

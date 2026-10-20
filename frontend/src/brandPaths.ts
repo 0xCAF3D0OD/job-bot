@@ -1,4 +1,4 @@
-// Le logo jobA1 (docs/102) : le visage du 1. Le 1 du nom trace le sourcil et le nez, un œil
+// Le logo jobA1 (docs/103) : le visage du 1. Le 1 du nom trace le sourcil et le nez, un œil
 // bleu, un œil pêche (la bille), un sourire discret. viewBox « 8 8 86 86 », trait de 14.
 export const LOGO_VIEWBOX = "8 8 86 86";
 // S4, l'en-tête : le visage penché de −6° autour du centre.

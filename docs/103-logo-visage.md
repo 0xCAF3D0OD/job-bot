@@ -1,4 +1,4 @@
-# 102 — Le logo, le visage du 1 (version 0.74.0)
+# 103 — Le logo, le visage du 1 (version 0.74.0)
 
 > Statut : **validé** le 2026-10-20.
 > Origine : ton plan « le visage du 1 » (prévu en 0.70.8), repris sur main le 2026-10-20 : « Option 2. Nouvelle version 0.74.0 sur main actuel ».

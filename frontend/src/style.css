@@ -2891,7 +2891,7 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
   .today-lead { margin-bottom: 1.5rem; }
 }
 
-/* Le logo (docs/102) et la mascotte (docs/97) : bleu stylo et bille pêche ; en sombre, le bleu
+/* Le logo (docs/103) et la mascotte (docs/97) : bleu stylo et bille pêche ; en sombre, le bleu
    clair et la pêche adoucie. */
 :root { --logo-line: #2340c8; --logo-spark: #f4a261; --mascot-face: #2340c8; --mascot-line: #fff; --mascot-star: #f4a261; }
 @media (prefers-color-scheme: dark) {

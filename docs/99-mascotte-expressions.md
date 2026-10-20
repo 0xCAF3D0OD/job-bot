@@ -1,7 +1,7 @@
 # 99 — Les trois visages de l'assistant (version 0.71.5)
 
 > Statut : **validé** le 2026-10-19.
-> **Remplacé par docs/102** (0.74.0) pour le logo : le visage du 1 ; la mascotte reste.
+> **Remplacé par docs/103** (0.74.0) pour le logo : le visage du 1 ; la mascotte reste.
 > Origine : ta demande du 2026-10-19, planche « La mascotte de l'Assistant » à l'appui : « modifie l'assistant, je veux que tu suives ce que dit l'image ».
 > Se construit sur la 0.71.2 (docs/97). Indépendante de la 0.71.4 (PR #217).
 
