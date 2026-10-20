@@ -34,20 +34,13 @@ async function everywhere(): Promise<void> {
   >
     <fieldset>
       <legend>
-        Compte
+        Connexion
       </legend>
       <p class="hint">
         Connecté en tant que <strong>{{ me.username }}</strong>.
       </p>
       <div class="form-actions">
-        <button
-          type="button"
-          class="secondary small"
-          data-test="logout-all"
-          @click="confirming = true"
-        >
-          Se déconnecter partout
-        </button>
+        <!-- Deux liens discrets (docs/108, 0.77.2) : aucune n'est l'action principale de l'écran. -->
         <button
           v-if="!me.is_owner"
           type="button"
@@ -56,6 +49,14 @@ async function everywhere(): Promise<void> {
           @click="welcomeAgain"
         >
           Refaire l'accueil
+        </button>
+        <button
+          type="button"
+          class="link"
+          data-test="logout-all"
+          @click="confirming = true"
+        >
+          Se déconnecter partout
         </button>
       </div>
       <InlineConfirm

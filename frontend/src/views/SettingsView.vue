@@ -674,15 +674,9 @@ const active = computed<SectionId>(() => {
           :value="summary.compte"
           :active="active === 'compte'"
         >
-          <template v-if="owner">
-            <h3 class="settings-subtitle">
-              Profils d'essai
-            </h3>
-            <ProfilesPanel />
-          </template>
-          <h3 class="settings-subtitle">
-            Connexion
-          </h3>
+          <!-- Chaque panneau porte son titre (Profils d'essai, Connexion, Données personnelles) :
+               pas de second titre au-dessus (docs/108, 0.77.2). -->
+          <ProfilesPanel v-if="owner" />
           <SessionPanel />
           <AccountDataPanel class="settings-next-card" />
         </SettingsSection>
