@@ -140,6 +140,10 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.71.2 | Le nouveau logo (deux boucles bleues autour de l'étoile) et la mascotte de l'assistant ; icônes régénérées | livrée |
 | 0.71.3 | Le logo au diamant en contour ; « jobA1 » en entier, sans le personnage de l'heure | livrée |
 | 0.71.4 | La boucle à main levée de la page en cours retirée (le logo va changer) | livrée |
+| 0.71.5 | Les trois visages de l'assistant (à l'écoute, réfléchit, a trouvé) ; le bouton « Assistant » au bleu de la mascotte | livrée |
+| 0.71.6 | Le logo choisi : un trait qui entoure le diamant pêche ; icônes régénérées, version noire | livrée |
+| 0.72.0 | L'iconographie : une seule famille d'icônes au trait, à côté du texte ou à sa place ; le point pêche pour les actions IA | livrée |
+| 0.73.0 | S'inscrire, sur demande : « Créer un compte » depuis la connexion, validé par l'exploitant dans Réglages › Plateforme | livrée |
 | 0.74.0 | Le logo : un visage complice fait avec le 1 du nom, la bille pêche en œil ; les icônes de l'onglet, de l'app et de l'extension | livrée |
 | 0.74.1 | Les icônes portent leur version (`?v=0.74.0`) : le navigateur prend le nouveau favicon sans vider son cache | livrée |
 | 0.74.2 | La doc du logo passe en docs/103 (le numéro 102 est celui de l'inscription sur demande) | livrée |
