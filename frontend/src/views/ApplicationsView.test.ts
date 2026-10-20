@@ -293,7 +293,13 @@ describe("Candidatures, onglet Preuves ORP", () => {
 
 
 describe("Suivi en calendrier (docs/22)", () => {
+  // Seule la date est figée, au 10 octobre 2026 : l'entretien du 20 reste à venir,
+  // quel que soit le jour où le test tourne. Les minuteries restent réelles.
+  afterEach(() => vi.useRealTimers());
+
   it("pastilles par jour, cartes au clic, à relancer par défaut, copie Job-Room", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-10T08:00:00Z"));
     localStorage.setItem("jobbot-suivi-vue", "calendar");
     const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08", interview_at: null };
     const sent = { ...application, id: 2, sent_at: "2026-10-02", interview_at: "2026-10-20T09:00:00Z" };
