@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/106-reglages-epures.md](docs/106-reglages-epures.md) (0.77.3)
+- Version en cours : [docs/105-fermer-son-compte.md](docs/105-fermer-son-compte.md) (0.77.4)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -155,7 +155,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.77.0 | Annuler plutôt que confirmer (plus de fenêtres du navigateur) ; l'aide au doigt sur téléphone ; le Diagnostic à l'exploitant | livrée |
 | 0.77.1 | Renommer un profil d'essai et modifier une recherche d'alerte sur place ; plus aucune fenêtre du navigateur | livrée |
 | 0.77.2 | Réglages › Compte : un titre par partie, « Se déconnecter partout » en lien | livrée |
-| 0.77.3 | Réglages structurés : un filet fin entre les parties, sur ordinateur et téléphone | en cours |
+| 0.77.3 | Réglages structurés : un filet fin entre les parties, sur ordinateur et téléphone | livrée |
+| 0.77.4 | Fermer son compte sur téléphone : la confirmation tient dans l'écran, le champ du mot de passe stylé | en cours |
 
 ## Lancer en local
 
