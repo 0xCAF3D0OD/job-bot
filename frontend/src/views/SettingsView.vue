@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
+import { usePhone } from "../composables/usePhone";
 import PageHero from "../components/PageHero.vue";
 import AccountDataPanel from "../components/AccountDataPanel.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
@@ -17,7 +18,6 @@ import AppIcon from "../components/AppIcon.vue";
 import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
-import HoverNote from "../components/HoverNote.vue";
 import AiSpend from "../components/AiSpend.vue";
 const form = ref<SettingsModel>({
   orp_monthly_target: null,
@@ -74,6 +74,7 @@ onMounted(async () => {
   const { data } = await api.GET("/api/settings");
   if (data) form.value = data;
   loaded.value = true;
+  void setupMarkers();
   // Ancien lien vers l'état technique : il a maintenant sa page (docs/21 §6).
   if (window.location.hash === "#etat") {
     await router.replace("/reglages/diagnostic");
@@ -211,6 +212,55 @@ const active = computed<SectionId>(() => {
   const wanted = route.query.rubrique;
   return sections.value.find((s) => s.id === wanted)?.id ?? OLD_ANCHORS[route.hash.slice(1)] ?? "recherche";
 });
+
+// Sur téléphone, une longue page (docs/110) : les marqueurs du haut mènent à chaque rubrique et
+// suivent la lecture. Ils se collent sous la barre du haut.
+const { phone } = usePhone();
+const current = ref<SectionId>("recherche");
+const markers = ref<HTMLElement | null>(null);
+const markersTop = ref(0);
+let spy: IntersectionObserver | undefined;
+
+function goTo(id: SectionId, smooth = true): void {
+  current.value = id;
+  document.getElementById(id)?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+}
+
+function watchSections(): void {
+  spy?.disconnect();
+  if (!phone.value || typeof IntersectionObserver === "undefined") return;
+  const top = markersTop.value + (markers.value?.offsetHeight ?? 0);
+  // La rubrique en cours : celle qui passe juste sous les marqueurs.
+  spy = new IntersectionObserver(
+    (entries) => {
+      const seen = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      const first = seen[0]?.target.id as SectionId | undefined;
+      if (first) current.value = first;
+    },
+    { rootMargin: `-${top + 8}px 0px -55% 0px` },
+  );
+  for (const section of sections.value) {
+    const el = document.getElementById(section.id);
+    if (el) spy.observe(el);
+  }
+}
+
+// Le marqueur en cours reste visible dans la rangée qui défile.
+watch(current, async (id) => {
+  await nextTick();
+  markers.value?.querySelector<HTMLElement>(`[data-test="marker-${id}"]`)?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+});
+
+async function setupMarkers(): Promise<void> {
+  if (!phone.value) return;
+  await nextTick();
+  markersTop.value = Math.round(document.querySelector<HTMLElement>(".topbar")?.getBoundingClientRect().height ?? 0);
+  watchSections();
+  const wanted = sections.value.find((s) => s.id === route.query.rubrique)?.id;
+  if (wanted) goTo(wanted, false);
+}
+watch(phone, () => void setupMarkers());
+onUnmounted(() => spy?.disconnect());
 </script>
 
 <template>
@@ -239,6 +289,25 @@ const active = computed<SectionId>(() => {
           </span>
         </RouterLink>
       </nav>
+      <!-- Sur téléphone, les marqueurs pour parcourir la longue page (docs/110). -->
+      <nav
+        v-if="phone"
+        ref="markers"
+        class="settings-markers"
+        aria-label="Aller à une rubrique"
+        :style="{ top: `${markersTop}px` }"
+        data-test="settings-markers"
+      >
+        <a
+          v-for="section in sections"
+          :key="section.id"
+          :href="`#${section.id}`"
+          :class="{ active: current === section.id }"
+          :aria-current="current === section.id ? 'location' : undefined"
+          :data-test="`marker-${section.id}`"
+          @click.prevent="goTo(section.id)"
+        >{{ section.label }}</a>
+      </nav>
       <div class="settings-sections">
         <SettingsSection
           id="recherche"
@@ -256,6 +325,9 @@ const active = computed<SectionId>(() => {
               <legend>
                 <label for="orp">Objectif mensuel de l'ORP</label>
               </legend>
+              <p class="setting-desc">
+                Le nombre de recherches que ton conseiller te demande chaque mois. Le Suivi compte avec toi.
+              </p>
               <div class="inline-field">
                 <input
                   id="orp"
@@ -272,6 +344,9 @@ const active = computed<SectionId>(() => {
               <legend>
                 <label for="due-day">Date limite de remise des preuves</label>
               </legend>
+              <p class="setting-desc">
+                Le jour du mois suivant où tes preuves doivent être remises à l'ORP.
+              </p>
               <div class="inline-field">
                 <span>le</span>
                 <input
@@ -289,12 +364,12 @@ const active = computed<SectionId>(() => {
             </fieldset>
             <fieldset class="wide">
               <legend>
-                <label for="employer-threshold">
-                  <HoverNote text="Dès cette note, l'annonce est cherchée automatiquement chez l'employeur, pour postuler sans passer par un site d'emploi (environ 0,02 $ si l'IA est nécessaire).">
-                    Chercher l'annonce chez l'employeur à partir de
-                  </HoverNote>
-                </label>
+                <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
               </legend>
+              <p class="setting-desc">
+                Dès cette note, l'annonce est cherchée chez l'employeur, pour postuler sans passer par un site d'emploi
+                (environ 0,02 $ si l'IA est nécessaire).
+              </p>
               <div class="inline-field">
                 <input
                   id="employer-threshold"
@@ -340,16 +415,16 @@ const active = computed<SectionId>(() => {
             @submit.prevent="save"
           >
             <fieldset>
-              <legend>
-                <HoverNote text="Les autres jours, rien n'arrive sur ton téléphone, sauf les rappels avec une date limite.">
-                  Jours de recherche
-                </HoverNote>
-              </legend>
+              <legend>Jours de recherche</legend>
+              <p class="setting-desc">
+                Les autres jours, rien n'arrive sur ton téléphone, sauf les rappels avec une date limite.
+              </p>
               <div class="rhythm-week">
+                <!-- Des pastilles Lu à Di (docs/110) : de vraies cases à cocher, présentées en pastilles. -->
                 <label
                   v-for="day in WEEK"
                   :key="day.value"
-                  class="check"
+                  class="day-pill"
                 >
                   <input
                     v-model="form.rhythm_days"
@@ -358,16 +433,17 @@ const active = computed<SectionId>(() => {
                     :disabled="form.rhythm_days?.length === 1 && form.rhythm_days.includes(day.value)"
                     :data-test="`rhythm-day-${day.value}`"
                   >
-                  {{ day.label }}
+                  <span aria-hidden="true">{{ day.label.slice(0, 2) }}</span>
+                  <span class="visually-hidden">{{ day.label }}</span>
                 </label>
               </div>
             </fieldset>
             <fieldset data-test="rhythm-pause">
-              <legend>
-                <HoverNote text="Vacances, maladie : ni meilleures offres ni message d'offres, et pas de retard au retour.">
-                  Une pause
-                </HoverNote>
-              </legend>
+              <legend>Une pause</legend>
+              <p class="setting-desc">
+                Vacances, maladie : ni meilleures offres ni message d'offres, et pas de retard au retour. Annonce-la à ton
+                conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.
+              </p>
               <div class="rhythm-pause">
                 <label>
                   Du
@@ -378,7 +454,7 @@ const active = computed<SectionId>(() => {
                   >
                 </label>
                 <label>
-                  Au
+                  Jusqu'au
                   <input
                     v-model="form.rhythm_pause_until"
                     type="date"
@@ -396,43 +472,43 @@ const active = computed<SectionId>(() => {
                   Terminer la pause
                 </button>
               </div>
-              <p class="hint">
-                Annonce-la à ton conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.
-              </p>
             </fieldset>
             <fieldset>
               <legend>Les offres bien notées</legend>
-              <label class="check">
+              <!-- Le libellé à côté du bouton, sa description dessous, alignée sur lui (docs/110). -->
+              <label class="choice">
                 <input
                   v-model="form.offers_notify_mode"
                   type="radio"
                   value="daily"
                   data-test="rhythm-daily"
                 >
-                Un message par jour, à
-                <select
-                  v-model.number="form.offers_notify_hour"
-                  aria-label="Heure du message"
-                  :disabled="form.offers_notify_mode !== 'daily'"
-                  data-test="rhythm-hour"
-                >
-                  <option
-                    v-for="hour in HOURS"
-                    :key="hour"
-                    :value="hour"
+                <span class="choice-label">Un message par jour, à
+                  <select
+                    v-model.number="form.offers_notify_hour"
+                    aria-label="Heure du message"
+                    :disabled="form.offers_notify_mode !== 'daily'"
+                    data-test="rhythm-hour"
                   >
-                    {{ hour }} h
-                  </option>
-                </select>
+                    <option
+                      v-for="hour in HOURS"
+                      :key="hour"
+                      :value="hour"
+                    >
+                      {{ hour }} h
+                    </option>
+                  </select></span>
+                <span class="choice-desc">Toutes les offres bien notées du jour, en un seul message.</span>
               </label>
-              <label class="check">
+              <label class="choice">
                 <input
                   v-model="form.offers_notify_mode"
                   type="radio"
                   value="instant"
                   data-test="rhythm-instant"
                 >
-                Dès qu'elles arrivent
+                <span class="choice-label">Dès qu'elles arrivent</span>
+                <span class="choice-desc">Un message par offre, dès qu'elle est notée.</span>
               </label>
             </fieldset>
             <div class="form-actions">
@@ -477,6 +553,9 @@ const active = computed<SectionId>(() => {
               <legend id="threshold-label">
                 M'avertir d'une offre à partir de
               </legend>
+              <p class="setting-desc">
+                Une offre notée sous ce seuil reste dans la liste, sans notification.
+              </p>
               <div
                 class="score-choices"
                 role="radiogroup"
@@ -514,14 +593,28 @@ const active = computed<SectionId>(() => {
             class="form-card"
           >
             <fieldset data-test="notifications">
-              <legend>
-                Téléphone
-              </legend>
               <template v-if="notifications?.personal">
+                <!-- Un interrupteur, comme les CFF (docs/110) : le titre et sa description à gauche. -->
+                <label class="filter-switch setting-switch">
+                  <span>
+                    <span class="setting-title">Recevoir sur mon téléphone</span>
+                    <span class="setting-desc">Les offres bien notées, les relances et le rappel ORP, avec l'application gratuite ntfy.</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    :checked="notifications.configured"
+                    data-test="phone-switch"
+                    @change="setPhone(!notifications.configured)"
+                  >
+                </label>
                 <template v-if="notifications.configured">
-                  <p data-test="phone-on">
-                    Tes alertes arrivent sur ton téléphone. Dans l'application ntfy, abonne-toi au sujet
-                    <code>{{ notifications.topic }}</code> sur le serveur {{ notifications.server }}.
+                  <p
+                    class="setting-info"
+                    data-test="phone-on"
+                  >
+                    Dans l'application ntfy, abonne-toi au sujet <code>{{ notifications.topic }}</code> sur le serveur
+                    {{ notifications.server }}.
                   </p>
                   <div class="settings-line">
                     <strong>Notification de test</strong>
@@ -530,14 +623,6 @@ const active = computed<SectionId>(() => {
                         v-if="testMessage"
                         role="status"
                       >{{ testMessage }}</span>
-                      <button
-                        type="button"
-                        class="link"
-                        data-test="phone-off"
-                        @click="setPhone(false)"
-                      >
-                        Arrêter
-                      </button>
                       <button
                         type="button"
                         class="secondary small"
@@ -549,19 +634,6 @@ const active = computed<SectionId>(() => {
                       </button>
                     </span>
                   </div>
-                </template>
-                <template v-else>
-                  <p class="hint">
-                    Les offres bien notées, les relances et le rappel ORP, avec l'application gratuite ntfy.
-                  </p>
-                  <button
-                    type="button"
-                    class="secondary small"
-                    data-test="phone-on-button"
-                    @click="setPhone(true)"
-                  >
-                    Recevoir sur mon téléphone
-                  </button>
                 </template>
               </template>
               <template v-else-if="notifications?.configured">
@@ -615,11 +687,12 @@ const active = computed<SectionId>(() => {
             >
               <fieldset>
                 <legend>Plafond mensuel du coût de l'IA</legend>
-                <p>
-                  <strong>{{ form.llm_monthly_budget_chf }} CHF</strong> par mois, fixé par l'exploitant de la plateforme.
-                </p>
-                <p class="hint">
+                <p class="setting-desc">
                   Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
+                </p>
+                <!-- Fixé par l'exploitant : une information, sur fond gris (docs/110). -->
+                <p class="setting-info">
+                  <strong>{{ form.llm_monthly_budget_chf }} CHF</strong> par mois, fixé par l'exploitant de la plateforme.
                 </p>
               </fieldset>
             </div>
@@ -631,12 +704,11 @@ const active = computed<SectionId>(() => {
             >
               <fieldset>
                 <legend>
-                  <label for="budget">
-                    <HoverNote text="Au-delà, les offres ne sont plus notées jusqu'au mois suivant.">
-                      Plafond mensuel du coût de l'IA
-                    </HoverNote>
-                  </label>
+                  <label for="budget">Plafond mensuel du coût de l'IA</label>
                 </legend>
+                <p class="setting-desc">
+                  Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
+                </p>
                 <div class="inline-field">
                   <input
                     id="budget"

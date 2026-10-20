@@ -481,7 +481,7 @@ const addItems: MoreMenuItem[] = [
       >
         <button
           type="button"
-          class="secondary small"
+          class="pill"
           data-test="browse-catalog"
           @click="adding = 'catalog'"
         >

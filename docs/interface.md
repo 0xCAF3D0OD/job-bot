@@ -103,3 +103,10 @@ Une seule couleur d'accent, le bleu du logo (`--accent`). Le texte posé dessus 
 
 Une description au survol (`HoverNote`) a, sur téléphone, un « i » à droite du titre qui l'ouvre en une ligne grise sous lui. Pas de « i » dans un bouton ni un lien.
 
+## Comme les CFF (docs/110)
+
+1. Un titre de section au-dessus de sa carte ; dans la carte, le titre d'un réglage en gras et sa description grise, toujours visible.
+2. L'interrupteur à droite, centré sur le titre et sa description ; sous un choix, la description alignée sur le libellé ; l'étiquette d'une date dans le champ.
+3. Ce qu'on modifie dans une carte blanche bordée ; ce qu'on consulte sur fond gris (`setting-info`) ; les actions en pilules (`pill`), pleine largeur sur téléphone ; un état vide en cadre pointillé.
+4. Une longue page sur téléphone a des marqueurs collés en haut, qui suivent la lecture.
+

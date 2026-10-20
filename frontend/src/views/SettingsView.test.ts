@@ -142,14 +142,14 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(owner.wrapper.find("[data-test=diagnostic-link]").exists()).toBe(true);
   });
 
-  it("Compte : un seul titre par partie, « Se déconnecter partout » en lien (0.77.2)", async () => {
+  it("Compte : un seul titre par partie, « Se déconnecter partout » en pilule (0.77.2, docs/110)", async () => {
     await as(false);
     mockGet(false);
     const { wrapper } = await mountSettings("compte");
     const titles = wrapper.findAll("[data-test=settings-card] legend, [data-test=settings-card] h3").map((t) => t.text());
     expect(titles.filter((t) => t === "Connexion")).toHaveLength(1);
     expect(titles).not.toContain("Compte");
-    expect(wrapper.find("[data-test=logout-all]").classes()).toContain("link");
+    expect(wrapper.find("[data-test=logout-all]").classes()).toContain("pill");
   });
 
   it("compte invité : plafond de l'IA fixé, ni Plateforme ni profils d'essai", async () => {
@@ -176,7 +176,7 @@ describe("SettingsView, comptes (docs/65)", () => {
       data: { configured: true, server: "https://ntfy.sh", personal: true, topic: "jobbot-abc" },
     });
     const { wrapper } = await mountSettings("notifications");
-    await wrapper.find("[data-test=phone-on-button]").trigger("click");
+    await wrapper.find("[data-test=phone-switch]").trigger("change");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/notifications/phone", { body: { enabled: true } });
     expect(wrapper.find("[data-test=phone-on]").text()).toContain("jobbot-abc");
@@ -257,7 +257,8 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(wrapper.find("[data-test=threshold-saved]").text()).toBe("Enregistré");
     // La notification de test : une ligne, son nom à gauche, « Envoyer » à droite.
     expect(wrapper.find("[data-test=test-notification]").text()).toBe("Envoyer");
-    expect(wrapper.find("[data-test=notifications] legend").text()).toBe("Téléphone");
+    // L'interrupteur du téléphone n'est que pour un compte invité ; ici, la ligne de test seule.
+    expect(wrapper.find("[data-test=notifications] .settings-line strong").text()).toBe("Notification de test");
   });
 
   it("un seuil d'avant, hors des cinq, reste proposé", async () => {

@@ -36,15 +36,15 @@ async function everywhere(): Promise<void> {
       <legend>
         Connexion
       </legend>
-      <p class="hint">
+      <!-- Ce qu'on consulte, sur fond gris (docs/110) ; les actions en pilules dessous. -->
+      <p class="setting-info">
         Connecté en tant que <strong>{{ me.username }}</strong>.
       </p>
-      <div class="form-actions">
-        <!-- Deux liens discrets (docs/108, 0.77.2) : aucune n'est l'action principale de l'écran. -->
+      <div class="form-actions setting-pills">
         <button
           v-if="!me.is_owner"
           type="button"
-          class="link"
+          class="pill"
           data-test="welcome-again"
           @click="welcomeAgain"
         >
@@ -52,7 +52,7 @@ async function everywhere(): Promise<void> {
         </button>
         <button
           type="button"
-          class="link"
+          class="pill"
           data-test="logout-all"
           @click="confirming = true"
         >

@@ -150,7 +150,7 @@ onMounted(load);
       <div class="form-actions">
         <button
           type="button"
-          class="secondary small"
+          class="pill"
           :disabled="creating"
           data-test="agenda-create"
           @click="create"
