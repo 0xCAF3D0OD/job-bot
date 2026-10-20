@@ -2282,7 +2282,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
    les critères à côté. */
 .criteria-layout { display: grid; gap: 1rem; }
-.filter-outcome { display: grid; gap: 0.5rem; align-content: start; padding: 1.4rem 1.5rem; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.filter-outcome { display: grid; gap: 0.5rem; align-content: start; }
 .filter-outcome h2 { margin: 0; font-size: 1rem; font-weight: 600; }
 .filter-outcome h3 { margin: 0.6rem 0 0; font-size: 0.85rem; font-weight: 500; color: var(--muted); }
 .filter-outcome p { margin: 0; }
@@ -3294,3 +3294,19 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .install-browser:first-child { margin-top: 0; }
 .install-steps { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.45rem; line-height: 1.6; }
 .install-steps code { overflow-wrap: anywhere; font-size: 0.85em; padding: 0.1em 0.35em; border-radius: 4px; background: var(--band); }
+
+/* --- Cohérence sur ordinateur (0.78.4) --- */
+/* Les titres en gras partout, comme sur téléphone et chez les CFF. */
+:root:has(.settings-layout, .profile-page) .page-head h1 { font-weight: 700; letter-spacing: -0.03em; }
+.settings-section > .section-title, .profile-page .section-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+/* Les deux colonnes des Critères alignées sur leur titre. */
+.criteria-layout { align-items: start; }
+.filter-outcome-section > .section-title { margin: 0 0 1rem; }
+/* Le Diagnostic : une entrée du sommaire sous un filet (ordinateur), une ligne grise en fin de page (téléphone). */
+.toc-diagnostic { margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--divider); }
+.diagnostic-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; color: var(--text); text-decoration: none; }
+.diagnostic-row > span { display: grid; gap: 0.35rem; }
+.diagnostic-row:hover { box-shadow: 0 0 0 1px var(--accent) inset; }
+.diagnostic-row > .icon { color: var(--muted); }
+/* Les Réglages en blanc, comme le Profil et les CFF : une seule page de fond partout. */
+.band:has(> .settings-layout) { background: var(--bg); }

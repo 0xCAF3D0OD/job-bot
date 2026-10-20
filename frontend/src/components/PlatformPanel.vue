@@ -145,7 +145,8 @@ async function saveTotal(): Promise<void> {
     body: { ai_total_budget_chf: Number(total.value) },
   });
   show(data);
-  message.value = data ? "Plafond enregistré." : "Valeur refusée.";
+  message.value = data ? "Enregistré" : "Valeur refusée.";
+  if (data) setTimeout(() => message.value === "Enregistré" && (message.value = ""), 1500);
 }
 
 // Une demande de compte (docs/102) : accepter l'active, refuser l'efface avec le compte.
@@ -487,7 +488,7 @@ function size(bytes: number | null | undefined): string {
         <legend>
           <label for="platform-mentions">Mentions de la page « Données personnelles »</label>
         </legend>
-        <p class="hint">
+        <p class="setting-desc">
           Responsable, contact, hébergement. Public, sur <RouterLink to="/tes-donnees">
             la page Données personnelles
           </RouterLink>.
@@ -502,7 +503,7 @@ function size(bytes: number | null | undefined): string {
       <div class="form-actions">
         <button
           type="submit"
-          class="secondary"
+          class="primary"
         >
           Enregistrer
         </button>
@@ -522,35 +523,34 @@ function size(bytes: number | null | undefined): string {
         <legend>
           <label for="platform-total">Plafond total de l'IA, tous comptes</label>
         </legend>
+        <p class="setting-desc">
+          Au-delà, l'IA s'arrête pour tous jusqu'au mois suivant.
+        </p>
+        <!-- Un seul champ : il s'enregistre au changement (docs/106 §5), « Enregistré » à côté. -->
         <div class="inline-field">
           <input
             id="platform-total"
             v-model="total"
             type="number"
+            inputmode="numeric"
             min="0"
             max="10000"
             step="1"
             required
+            @change="saveTotal"
           >
           <span>CHF / mois</span>
+          <span
+            v-if="message"
+            role="status"
+            :class="message === 'Enregistré' ? 'saved-flash' : 'field-error'"
+          >{{ message }}</span>
         </div>
-        <p class="hint">
-          Ce mois, tous comptes : {{ money(platform.ai_month_spend_chf) }} CHF. Au-delà, l'IA s'arrête pour tous jusqu'au mois suivant.
+        <!-- Ce qu'on consulte, sur fond gris (docs/110). -->
+        <p class="setting-info">
+          Ce mois, tous comptes : <strong>{{ money(platform.ai_month_spend_chf) }} CHF</strong>.
         </p>
       </fieldset>
-      <div class="form-actions">
-        <button
-          type="submit"
-          class="secondary"
-        >
-          Enregistrer
-        </button>
-        <span
-          v-if="message"
-          role="status"
-          class="muted"
-        >{{ message }}</span>
-      </div>
     </form>
   </template>
 </template>

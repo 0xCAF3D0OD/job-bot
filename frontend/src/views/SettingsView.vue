@@ -157,6 +157,8 @@ const router = useRouter();
 const { me } = useAuth();
 // L'exploitant (docs/65) : la rubrique Plateforme, son plafond de l'IA, les profils d'essai.
 const owner = computed(() => Boolean(me.value?.is_owner));
+// Le Diagnostic technique, à l'exploitant seulement (docs/108 §3).
+const showDiagnostic = computed(() => owner.value || me.value?.auth_enabled === false);
 // Résumés des rubriques, affichés sur téléphone (docs/34 §3).
 const summary = computed(() => ({
   recherche: [
@@ -288,6 +290,15 @@ onUnmounted(() => spy?.disconnect());
               :name="SETTINGS_ICONS[section.id]!"
             />{{ section.label }}
           </span>
+        </RouterLink>
+        <!-- Sur ordinateur, le Diagnostic est une entrée du sommaire, sous un filet (0.78.4). -->
+        <RouterLink
+          v-if="showDiagnostic"
+          to="/reglages/diagnostic"
+          class="toc-diagnostic"
+          data-test="diagnostic-link"
+        >
+          <span class="with-icon"><AppIcon name="activity" />Diagnostic</span>
         </RouterLink>
       </nav>
       <!-- Sur téléphone, les marqueurs pour parcourir la longue page (docs/110). -->
@@ -780,18 +791,20 @@ onUnmounted(() => spy?.disconnect());
           <PlatformPanel />
         </SettingsSection>
 
-        <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
-        <p
-          v-if="owner || me?.auth_enabled === false"
-          class="diagnostic-link"
+        <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) ; sur téléphone, une
+             ligne grise en fin de page, comme les autres destinations (0.78.4). -->
+        <RouterLink
+          v-if="phone && showDiagnostic"
+          to="/reglages/diagnostic"
+          class="info-card diagnostic-row"
+          data-test="diagnostic-row"
         >
-          <RouterLink
-            to="/reglages/diagnostic"
-            data-test="diagnostic-link"
-          >
-            <span class="with-icon">Diagnostic technique (collecte, IA, tâches)<AppIcon name="arrow-right" /></span>
-          </RouterLink>
-        </p>
+          <span>
+            <span class="setting-title">Diagnostic technique</span>
+            <span class="setting-desc">La collecte, l'IA et les tâches de la plateforme.</span>
+          </span>
+          <AppIcon name="chevron" />
+        </RouterLink>
       </div>
     </div>
   </section>
