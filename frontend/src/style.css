@@ -3314,3 +3314,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 /* L'adresse des alertes (docs/104) : l'adresse, puis « Copier l'adresse » à côté. */
 .mailbox-address { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.5rem; }
 .mailbox-address > .link { font-size: 0.9rem; }
+/* La plateforme présentée (retour du 2026-10-20, 0.79.1) : une marge sur les côtés, pour que les
+   pastilles du chemin et les bulles ne touchent plus les bords. */
+.discover { padding-left: 1.5rem; padding-right: 1.5rem; box-sizing: border-box; }
+@media (max-width: 820px) { .discover { padding-left: 1rem; padding-right: 1rem; } }

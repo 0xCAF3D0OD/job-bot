@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppIcon from "./AppIcon.vue";
+import ScoreRing from "./ScoreRing.vue";
 
 // Un bout de la plateforme, en arrière-plan d'une scène de la présentation (docs/67, complément) :
 // dessiné ici, aux couleurs du thème, avec des exemples inventés ; jamais une capture.
@@ -52,7 +53,8 @@ const TITLES: Record<MockKind, string> = {
         :key="offer[1]"
         class="dmock-row"
       >
-        <span :class="['dmock-score', { mid: Number(offer[0]) < 70 }]">{{ offer[0] }}</span>
+        <!-- La note comme dans l'application : un cercle qui se remplit (docs/73), plus une pastille. -->
+        <ScoreRing :score="Number(offer[0])" />
         <span class="dmock-grow"><strong>{{ offer[1] }}</strong><small>{{ offer[2] }}</small></span>
       </div>
     </div>
