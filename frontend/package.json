@@ -10,6 +10,7 @@
     "typecheck": "vue-tsc -b",
     "test": "vitest run",
     "lint": "eslint . --max-warnings 0",
+    "poids": "vite build --logLevel error && node scripts/poids.mjs",
     "openapi": "openapi-typescript src/api/openapi.json -o src/api/schema.d.ts"
   },
   "dependencies": {

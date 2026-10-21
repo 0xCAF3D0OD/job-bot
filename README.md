@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/116-offres-des-le-depart.md](docs/116-offres-des-le-depart.md) (0.86.2)
+- Version en cours : [docs/117-accessibilite-voix-poids.md](docs/117-accessibilite-voix-poids.md) (0.87.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -185,7 +185,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.84.4 | Les titres des cartes décollés du bord : 1,75 rem en haut (1,5 rem sur téléphone), comme les côtés | livrée |
 | 0.85.0 | Seulement le métier : les recommandations jobup hors métier écartées (comptées dans le journal) ; les actualités par familles de métiers, « Rien de neuf sur ton métier » plutôt que l'économie | en cours |
 | 0.86.0 | Lier ses alertes existantes : le pas-à-pas pour que sa messagerie (Gmail, Outlook) transfère les seules alertes jobup et Indeed à l'adresse jobA1 ; le code de Gmail affiché ; jamais un mot de passe | livrée |
-| 0.86.2 | La démo : les actualités ne répondaient plus (une écriture dans une base en lecture seule) | en cours |
+| 0.87.0 | Le poids des pages : chaque page se charge à l'ouverture (premier écran 82 Ko au lieu de 205) ; un budget vérifié par `make poids` | en cours |
 
 ## Lancer en local
 

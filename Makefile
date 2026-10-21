@@ -74,7 +74,10 @@ demo-image-stop: ## arrête la démo Docker locale et efface ses données
 
 test: ## tests backend (base jobbot_test) et frontend
 	cd backend && uv run pytest
-	cd frontend && npm run -s test && npm run -s typecheck
+	cd frontend && npm run -s test && npm run -s typecheck && npm run -s poids
+
+poids: ## le budget de poids des pages (docs/117 §3)
+	cd frontend && npm run -s poids
 
 lint: ## ruff, mypy, eslint
 	cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy src tests
