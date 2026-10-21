@@ -986,15 +986,28 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .wizard-site-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 26rem; }
 .wizard-site-actions button { width: 100%; justify-content: center; }
 .wizard .inline-form input { min-width: 0; }
-.alerts-summary { display: grid; gap: 0.8rem; padding: 1.2rem 1.4rem; }
+/* Le résumé des alertes (0.84.3) : en tête le nombre et « Gérer » ; une recherche par ligne,
+   séparée par un filet ; l'état en pastille douce, à droite. */
+.alerts-summary { display: grid; gap: 1.25rem; padding: 1.5rem 2rem; align-content: start; line-height: 1.5; }
 .summary-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.summary-head p { margin: 0; }
-.summary-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
-.summary-list li { display: flex; gap: 0.6rem; align-items: baseline; }
-.summary-list .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--border); flex: none; align-self: center; }
+.summary-title { display: grid; gap: 0.25rem; }
+.summary-title strong { font-size: 1.1rem; }
+.summary-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.summary-list li { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem 1.5rem; flex-wrap: wrap; padding: 1rem 0; border-top: 1px solid var(--border); }
+.summary-list li:last-child { border-bottom: 1px solid var(--border); }
+.summary-search { display: grid; gap: 0.15rem; min-width: 0; }
+.summary-state { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.8rem; border-radius: 999px; background: var(--band); color: var(--muted); font-size: 0.88rem; }
+.summary-list .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--border); flex: none; }
 .summary-list .ok .dot { background: var(--ok); }
 .summary-list .late .dot { background: #e08a2e; }
-.summary-list .pending .dot { background: color-mix(in srgb, var(--accent) 55%, var(--surface)); }
+.summary-list .pending .dot { background: var(--accent); }
+.summary-list .ok .summary-state { color: var(--text); }
+.alerts-summary .summary-add { justify-self: start; }
+/* Téléphone : la marge des autres cartes ; l'état toujours sous la recherche, aligné. */
+@media (max-width: 820px) {
+  .alerts-summary { padding: 1.5rem; }
+  .summary-list li { flex-direction: column; align-items: flex-start; }
+}
 .journal-toggle { margin-top: 1.5rem; }
 
 /* Détail d'une offre : l'essentiel en haut, l'entreprise repliée (docs/21 §5) */
@@ -1650,8 +1663,8 @@ html.side-open { overflow: hidden; }
    seulement ; sur téléphone, la règle des illustrations s'applique). La carte s'étire avec
    la colonne. */
 @media (min-width: 1101px) {
-  .alerts-main .wizard-side { grid-template-columns: 200px minmax(0, 1fr); gap: 2rem; align-items: stretch; }
-  .alerts-main .wizard-side > .illu { width: 200px; margin-top: 1.5rem; align-self: start; }
+  .alerts-main .wizard-side { grid-template-columns: 240px minmax(0, 1fr); gap: 2rem; align-items: stretch; }
+  .alerts-main .wizard-side > .illu { width: 240px; margin-top: 1.5rem; align-self: start; }
   .alerts-aside .first-offers { margin-top: 0; }
 }
 /* Entre 1100 et 1280 px, la colonne est trop étroite pour l'image et le formulaire : l'image
@@ -2761,13 +2774,15 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 /* La page d'attente (0.82.1) : l'en-tête de jobA1, puis une carte au centre. */
 .maintenance-top { position: static; }
 .maintenance-body { flex: 1; display: grid; place-items: center; padding: 2.5rem 1rem; }
-.maintenance-card { width: 100%; max-width: 36rem; display: grid; gap: 1rem; padding: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; line-height: 1.5; }
+/* Une page d'état, pas un élément parmi d'autres (0.84.3) : le contenu directement sur le fond,
+   centré, sans carte autour ; seule la ligne d'attente garde son fond. */
+.maintenance-card { width: 100%; max-width: 34rem; display: grid; gap: 1.25rem; justify-items: center; text-align: center; line-height: 1.5; }
 .maintenance-drawing { display: grid; place-items: center; }
 /* Le dessin (800 × 661) à 13 rem de large : environ 11 rem de haut. */
 .maintenance-drawing .drawing { width: 13rem; }
 .maintenance-card h1 { margin: 0; font-size: 1.6rem; line-height: 1.25; }
 .maintenance-message { margin: 0; font-size: 1.05rem; }
-.maintenance-status { display: flex; flex-wrap: nowrap; align-items: center; gap: 0.75rem 1rem; padding: 1rem 1.25rem; background: var(--band); border-radius: 12px; color: var(--muted); font-size: 0.95rem; }
+.maintenance-status { width: 100%; display: flex; flex-wrap: nowrap; align-items: center; gap: 0.75rem 1rem; padding: 1rem 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--muted); font-size: 0.95rem; text-align: left; }
 .maintenance-next { flex: 1; white-space: nowrap; }
 .maintenance-status .pill { margin-left: auto; flex: none; }
 .maintenance-pulse { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--accent); animation: maintenance-pulse 1.6s ease-in-out infinite; }
@@ -2776,7 +2791,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .maintenance-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
 @media (max-width: 820px) {
   .maintenance-body { place-items: start center; padding: 1.5rem 1rem; }
-  .maintenance-card { padding: 1.5rem; }
   .maintenance-drawing .drawing { width: 11rem; }
   .maintenance-card h1 { font-size: 1.4rem; }
   .maintenance-status { flex-wrap: wrap; }

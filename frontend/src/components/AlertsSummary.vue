@@ -6,7 +6,9 @@ import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
 import MailboxAddress from "./MailboxAddress.vue";
 
-// Résumé des alertes (docs/21 §4) : un point par recherche, l'aide seulement si besoin.
+// Résumé des alertes (docs/21 §4) : une ligne par recherche, l'aide seulement si besoin.
+// Mise en page 0.84.3 : en tête le nombre et « Gérer mes alertes » ; chaque recherche sur sa
+// ligne, séparée par un filet, les mots et le lieu à gauche, l'état en pastille à droite.
 const props = defineProps<{ page: AlertsPage }>();
 const emit = defineEmits<{ manage: []; restart: [] }>();
 
@@ -36,10 +38,10 @@ const lateSites = computed(() => {
   return props.page.sites.filter((s) => slugs.has(s.slug));
 });
 const STATES: Record<string, string> = {
-  ok: "reçue",
-  late: "rien reçu depuis 3 jours",
-  pending: "créée, en attente du premier envoi",
-  todo: "à créer",
+  ok: "Reçue",
+  late: "Rien reçu depuis 3 jours",
+  pending: "En attente du premier envoi",
+  todo: "À créer",
 };
 const siteNames = (cells: Cell[]): string =>
   cells.map((c) => props.page.sites.find((s) => s.slug === c.site)?.name ?? c.site).join(", ");
@@ -51,15 +53,16 @@ const siteNames = (cells: Cell[]): string =>
     data-test="alerts-summary"
   >
     <div class="summary-head">
-      <p>
+      <div class="summary-title">
         <strong>{{ plural(activeCount, "recherche suivie", "recherches suivies") }}</strong>
-        <template v-if="lastReceived">
-          · dernière alerte reçue le {{ dateFormat.format(new Date(lastReceived)) }}
-        </template>
-      </p>
+        <span
+          v-if="lastReceived"
+          class="hint"
+        >Dernière alerte reçue le {{ dateFormat.format(new Date(lastReceived)) }}</span>
+      </div>
       <button
         type="button"
-        class="secondary small"
+        class="pill"
         data-test="manage-alerts"
         @click="emit('manage')"
       >
@@ -73,15 +76,16 @@ const siteNames = (cells: Cell[]): string =>
         :class="row.state"
         data-test="summary-row"
       >
-        <span
-          class="dot"
-          aria-hidden="true"
-        />
-        <span>
-          <strong>{{ row.search.terms }}</strong> · {{ row.search.location || "toute la Suisse" }}
-          <span class="hint">
-            — {{ STATES[row.state] }}<template v-if="row.received.length"> ({{ siteNames(row.received) }})</template>
-          </span>
+        <span class="summary-search">
+          <strong>{{ row.search.terms }}</strong>
+          <span class="hint">{{ row.search.location || "Toute la Suisse" }}</span>
+        </span>
+        <span class="summary-state">
+          <span
+            class="dot"
+            aria-hidden="true"
+          />
+          {{ STATES[row.state] }}<template v-if="row.received.length"> · {{ siteNames(row.received) }}</template>
         </span>
       </li>
     </ul>
@@ -107,7 +111,7 @@ const siteNames = (cells: Cell[]): string =>
     </div>
     <button
       type="button"
-      class="link"
+      class="link summary-add"
       data-test="restart-wizard"
       @click="emit('restart')"
     >

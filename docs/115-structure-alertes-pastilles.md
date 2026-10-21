@@ -26,3 +26,13 @@
 
 - Tests de l'interface : le code à la place de « J'attends un code », la ligne d'Infomaniak, masquer puis enregistrer au bout de 6 secondes, « Comment ça marche » dans le menu du compte. 405 tests, lint, vue-tsc.
 - Captures Playwright à 1440 et 414 px : les deux cartes de même hauteur (98 → 487 px sans code, 98 → 547 avec), le code en premier sur téléphone, les pastilles sur l'icône ; pas de défilement horizontal.
+
+## Complément 0.84.3
+
+Tes retours du 2026-10-21 après la fusion de la 0.84.2 :
+
+- **Le résumé des alertes** a une structure : en tête « 2 recherches suivies », la date de la dernière alerte dessous, « Gérer mes alertes » à droite ; puis une recherche par ligne, séparée par un filet, les mots en gras et le lieu dessous, l'état dans une pastille douce à droite (« Reçue · jobup », « En attente du premier envoi », « Rien reçu depuis 3 jours », « À créer ») ; « Ajouter des alertes avec l'assistant » en bas. Sur téléphone, l'état passe sous la recherche.
+- **L'image de l'assistant** : à l'étape 2, « emails-tries » (une image en longueur, 800 × 245) devenait une bande de 60 px dans la colonne ; elle est remplacée par « messager » (la boîte aux lettres, une image haute). La colonne de l'image passe de 200 à 240 px.
+- **La page de maintenance sans carte** : une page d'état n'est pas un élément parmi d'autres ; le dessin, le titre et le message sont posés sur le fond, centrés. Seule la ligne d'attente (« Nouvel essai… », « Réessayer maintenant ») garde un cadre, parce qu'elle se lit et se touche.
+
+Vérifié : 405 tests, lint, vue-tsc ; captures Playwright à 1440 et 414 px (résumé, étape 2, maintenance), pas de défilement horizontal.

@@ -15,7 +15,9 @@ const emit = defineEmits<{ updated: [page: AlertsPage]; done: [] }>();
 const step = ref<1 | 2 | 3>(1);
 // À gauche sur ordinateur, à côté du formulaire et pas dedans (docs/60 §2.2 et complément) :
 // tes recherches, le site, c'est prêt.
-const WIZARD_ILLUSTRATIONS: IllustrationName[] = ["alertes-carte", "emails-tries", "suivi-envoi"];
+// Des images hautes (0.84.3) : dans la colonne étroite de l'ordinateur, une image en longueur
+// (« emails-tries ») devenait trop petite pour être lue.
+const WIZARD_ILLUSTRATIONS: IllustrationName[] = ["alertes-carte", "messager", "suivi-envoi"];
 const siteIndex = ref(0);
 const form = ref({ terms: "", location: "" });
 const busy = ref(false);
