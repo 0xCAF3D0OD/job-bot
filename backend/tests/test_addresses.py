@@ -66,6 +66,23 @@ def test_route_by_alert_domain() -> None:
     assert route(("alertes@example.com",), BASE, codes, owner=1, domain=domain) == 1
 
 
+def test_forwarded_by_gmail_reaches_its_account() -> None:
+    """docs/116 §1 : une alerte jobup transférée par la boîte Gmail de la personne garde son
+    destinataire d'origine ; l'adresse jobA1 est dans X-Forwarded-To."""
+    raw = (
+        b"From: jobup <candidat@jobup.ch>\r\n"
+        b"To: amy.exemple@gmail.com\r\n"
+        b"X-Forwarded-To: alertes+amy-32e6krri@joba1.ch\r\n"
+        b"X-Forwarded-For: amy.exemple@gmail.com alertes+amy-32e6krri@joba1.ch\r\n"
+        b"Subject: Nouvelles offres\r\n"
+        b"Message-ID: <fwd@x>\r\n"
+        b"Date: Wed, 21 Oct 2026 08:00:00 +0000\r\n\r\nTexte\r\n"
+    )
+    email = parse_email(raw, fallback_received=NOW)
+    assert email.sender_domain == "jobup.ch"
+    assert route(email.recipients, BASE, {"32e6krri": 5}, owner=1, domain="joba1.ch") == 5
+
+
 def test_alert_address_without_catch_all() -> None:
     """0.82.3 : le réglage est une adresse entière ; « alertes+nom-code@domaine » désigne le
     compte, et passe par la seule redirection de « alertes@ »."""

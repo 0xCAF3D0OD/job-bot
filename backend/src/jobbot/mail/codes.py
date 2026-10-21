@@ -4,7 +4,8 @@ Quand un invité crée son alerte, le site lui envoie un code à son adresse job
 votre code de vérification »). Le code arrive dans la boîte de la plateforme : jobA1 le
 reconnaît et le montre au compte, le temps de le recopier.
 
-Un code : 4 à 8 chiffres (parfois en deux groupes, « 482 913 »), près d'un mot qui dit
+Un code : 4 à 9 chiffres (parfois en deux groupes, « 482 913 » ; 9 pour la confirmation
+d'un transfert Gmail, docs/116 §1), près d'un mot qui dit
 « code » ou « vérification ». Un numéro de téléphone, une date, une année ou un prix n'en
 sont pas.
 """
@@ -22,9 +23,9 @@ WORDS = re.compile(
     r"sicherheitscode|einmal|codice|verifica|one[- ]time|otp|pin\b",
     re.I,
 )
-# Un groupe de 4 à 8 chiffres, ou deux groupes de 3 (« 482 913 », « 482-913 »).
+# Un groupe de 4 à 9 chiffres, ou deux groupes de 3 (« 482 913 », « 482-913 »).
 CANDIDATE = re.compile(
-    r"(?<![\d.,:/+])(\d{3}[ \u00a0-]\d{3}|\d{4,8})"
+    r"(?<![\d.,:/+])(\d{3}[ \u00a0-]\d{3}|\d{4,9})"
     # Pas la suite d'un nombre (« 12.50 », « 3/4 »), ni un pourcentage ou un prix.
     r"(?![\d:/]|[.,]\d|\s?(?:%|chf|fr\.|€|\$))",
     re.I,

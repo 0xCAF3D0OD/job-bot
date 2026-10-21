@@ -77,6 +77,45 @@ Trois voies, de la plus sûre à la plus incertaine :
 - Tests backend : les titres gardés ou écartés (communication, menuisier) ; un vrai e-mail jobup de recommandations, une offre sur cinq gardée pour une alerte « ingénieur système » ; la famille de dix métiers ; chaque famille a des sources ; un compte « Communicante » suit Cominmag et CB News, et un article de Cominmag sans le mot « communicante » sort dans « Mon domaine » ; « Pâtissier » suit la veille de la restauration. 598 tests, ruff, mypy.
 - Tests de l'interface : l'aperçu ne demande que le domaine et dit « Rien de neuf sur ton métier » ; le journal compte les recommandations écartées. 407 tests, lint, vue-tsc.
 
+## Écarts (0.86.0 : §1)
+
+- **Où** : sous les deux colonnes de la page Alertes, une ligne repliée **« J'ai déjà des alertes »** (« les transférer »), au-dessus d'« Alertes reçues ». Seulement pour un compte qui a sa propre adresse jobA1.
+- **Le pas-à-pas** selon la messagerie : **Gmail** (ajouter l'adresse de transfert, recopier le code, laisser « Désactiver le transfert » coché, puis un filtre « De » → « Transférer à ») ; **Outlook** (une règle « De » → « Transférer à », sans code) ; **Autre** (chercher « règle » ou « filtre »). L'adresse jobA1 avec « Copier l'adresse ».
+- **Les expéditeurs à copier** : `candidat@jobup.ch`, `candidat@my.jobup.ch`, `alert@indeed.com`, `donotreply@jobalert.indeed.com`, en filtre Gmail (`from:(… OR …)`) ou en liste. **jobs.ch n'y est pas** : son expéditeur d'alertes n'est pas connu ; à ajouter après un premier e-mail réel.
+- **Le code de Gmail** (9 chiffres) est reconnu comme un code de vérification et s'affiche dans « Les e-mails des sites », sous le nom « Gmail ». jobA1 n'ouvre pas le lien de Google : la personne recopie le code elle-même.
+- **Le rangement** : un e-mail transféré garde son destinataire d'origine (`To`) ; Gmail ajoute `X-Forwarded-To`, que jobA1 lit désormais pour trouver le compte.
+- **Reste à faire, par toi** : un essai réel avec ta boîte Gmail vers une adresse d'invité, pour confirmer que Gmail garde l'expéditeur (jobup reconnu) et que la boîte Infomaniak range bien l'e-mail.
+
+## Vérifié (0.86.0)
+
+- Tests backend : une alerte jobup transférée (`To` : la boîte Gmail, `X-Forwarded-To` : l'adresse jobA1) rangée au bon compte ; le code de confirmation de Gmail (9 chiffres) montré sous « Gmail », avec la notification. 600 tests, ruff, mypy.
+- Tests de l'interface : le pas-à-pas Gmail (adresse, code, filtre), Outlook, la copie des expéditeurs ; aucun mot de passe demandé. 408 tests, lint, vue-tsc.
+- Captures Playwright à 1440 et 414 px : la ligne sous les colonnes, le filtre qui passe à la ligne sur téléphone.
+
+## §2 b : pas pour les annonces de jobup (vérifié le 2026-10-21)
+
+Les conditions de JobCloud pour les personnes en recherche d'emploi (décembre 2025) interdisent, au §7, d'« extraire, reproduire, copier, vendre, exploiter ou revendre des données du site », et au §8 toute « transmission ou reproduction » au-delà de l'usage personnel, sans l'accord exprès de JobCloud. Montrer à Amy une annonce jobup reçue par Eliot, c'est transmettre une donnée du site à un tiers : **non, sans accord de JobCloud**. Indeed a des règles du même ordre.
+
+Ce qui reste permis : chaque personne reçoit ses propres alertes, sur son adresse ou par son propre transfert (§1). Les annonces partagées entre comptes ne viendront que d'une source qui l'autorise (Job-Room, si le SECO donne un accès, §2 c ; ou des employeurs qui publient eux-mêmes).
+
+## §2 c : la demande d'accès à Job-Room (à envoyer par toi)
+
+À : l'adresse de contact de travail.swiss / Job-Room (SECO, Arbeitsmarkt/Arbeitslosenversicherung).
+
+> Objet : Accès aux offres de Job-Room pour un outil d'aide aux demandeurs d'emploi
+>
+> Bonjour,
+>
+> Je développe jobA1, un outil gratuit qui aide les demandeurs d'emploi inscrits à l'ORP à suivre leurs alertes, préparer leurs candidatures et tenir le formulaire « Preuves des recherches personnelles ». Les données restent en Suisse.
+>
+> Pour que les personnes trouvent des offres dès leur inscription, j'aimerais afficher les offres publiques de Job-Room qui correspondent à leur métier et à leur région, avec un lien vers l'annonce sur Job-Room. Je ne souhaite pas lire le site par un robot sans votre accord.
+>
+> Existe-t-il un accès officiel (interface de données ou export) pour ce type d'usage, et à quelles conditions ?
+>
+> Je vous remercie de votre réponse.
+>
+> Kevin Di Nocera, jobA1 (joba1.ch)
+
 ## Les questions
 
 1. **§1, lier ses alertes par une règle de transfert** (avec le pas-à-pas et le code de Gmail affiché par jobA1) : d'accord ?
