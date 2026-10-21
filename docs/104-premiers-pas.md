@@ -96,3 +96,12 @@ Indeed et Job-Room restent possibles par les alertes e-mail, comme aujourd'hui.
 - Essai réel sur jobup (« développeur », Lausanne) : 10 offres lues, avec titre, entreprise et identifiant ; le lieu manque parfois dans la liste et arrive avec la lecture de la page de l'offre.
 - Tests de l'interface : la recherche en cours puis le résultat (et la liste rechargée), la ligne qui s'efface après trois jours, la relance trop tôt, sans métier.
 - Captures Playwright à 414 et 1280 px : la page Offres avec la ligne des premières offres, la carte des Alertes. Rien ne dépasse.
+
+## 0.80.1 — Le rattrapage des comptes plus anciens
+
+Ton retour du 2026-10-21 : « je ne vois pas d'offre de pâtissier chez eliot ». eliot avait fini son accueil **avant** la 0.80.0 : la recherche ne part qu'à la fin de l'accueil, elle n'était jamais partie.
+
+- **À la première visite de la page Offres ou Alertes**, un compte qui a fini son accueil sans avoir eu de recherche la reçoit : elle part toute seule, une seule fois, et la page Offres affiche « Je cherche tes premières offres sur jobup… ».
+- **Pas pour l'exploitant** (il a ses alertes), **pas dans la démo**.
+- **Vérifié** : test d'un accueil fini sans recherche (la recherche part une fois, pas deux) ; l'exploitant n'est pas concerné.
+- **Pour que la recherche tourne**, le worker doit connaître la tâche `first_offers` : redémarrer `make dev` (ou le worker) après la mise à jour.
