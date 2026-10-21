@@ -2701,11 +2701,33 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .panel-section-head .more-direct, .doc-actions .more-direct { margin-left: auto; }
 
 /* Maintenance (docs/79) : la page d'attente par-dessus tout, et le rappel à l'exploitant. */
-.maintenance { position: fixed; inset: 0; z-index: 1000; overflow-y: auto; display: grid; align-items: center; padding: 2rem 0; background: var(--bg); color: var(--text); }
+.maintenance { position: fixed; inset: 0; z-index: 1000; overflow-y: auto; display: flex; flex-direction: column; background: var(--bg); color: var(--text); }
 .maintenance:focus { outline: none; }
-.maintenance h1 { margin: 0 0 0.75rem; }
-.maintenance-message { margin: 0 0 0.75rem; font-size: 1.05rem; }
-.maintenance p { max-width: 34rem; }
+/* La page d'attente (0.82.1) : l'en-tête de jobA1, puis une carte au centre. */
+.maintenance-top { position: static; }
+.maintenance-body { flex: 1; display: grid; place-items: center; padding: 2.5rem 1rem; }
+.maintenance-card { width: 100%; max-width: 36rem; display: grid; gap: 1rem; padding: 2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; line-height: 1.5; }
+.maintenance-drawing { display: grid; place-items: center; }
+/* Le dessin (800 × 661) à 13 rem de large : environ 11 rem de haut. */
+.maintenance-drawing .drawing { width: 13rem; }
+.maintenance-card h1 { margin: 0; font-size: 1.6rem; line-height: 1.25; }
+.maintenance-message { margin: 0; font-size: 1.05rem; }
+.maintenance-status { display: flex; flex-wrap: nowrap; align-items: center; gap: 0.75rem 1rem; padding: 1rem 1.25rem; background: var(--band); border-radius: 12px; color: var(--muted); font-size: 0.95rem; }
+.maintenance-next { flex: 1; white-space: nowrap; }
+.maintenance-status .pill { margin-left: auto; flex: none; }
+.maintenance-pulse { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--accent); animation: maintenance-pulse 1.6s ease-in-out infinite; }
+@keyframes maintenance-pulse { 50% { opacity: 0.25; transform: scale(0.7); } }
+@media (prefers-reduced-motion: reduce) { .maintenance-pulse { animation: none; } }
+.maintenance-note { margin: 0; color: var(--muted); font-size: 0.92rem; }
+@media (max-width: 820px) {
+  .maintenance-body { place-items: start center; padding: 1.5rem 1rem; }
+  .maintenance-card { padding: 1.5rem; }
+  .maintenance-drawing .drawing { width: 11rem; }
+  .maintenance-card h1 { font-size: 1.4rem; }
+  .maintenance-status { flex-wrap: wrap; }
+  .maintenance-next { white-space: normal; }
+  .maintenance-status .pill { margin-left: 0; width: 100%; min-height: 3rem; }
+}
 .maintenance-bypass { margin: 0; padding: 0.6rem 1rem; text-align: center; background: var(--surface); border-bottom: 1px solid var(--down); color: var(--down-text); font-size: 0.92rem; }
 /* Lecture seule (docs/80) : une information, pas une alerte. */
 .maintenance-bypass.reading { border-bottom-color: var(--border); color: var(--text); }

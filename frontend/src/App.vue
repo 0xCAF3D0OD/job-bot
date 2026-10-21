@@ -33,6 +33,8 @@ const {
   bypass: maintenanceBypass,
   reading: maintenanceReading,
   refused: maintenanceRefused,
+  nextAt: maintenanceNextAt,
+  retry: maintenanceRetry,
 } = useMaintenance();
 
 const { start: startNewsCount } = useNewsCount();
@@ -235,6 +237,8 @@ onUnmounted(() => {
   <MaintenanceOverlay
     :waiting="maintenanceWaiting"
     :message="maintenanceMessage"
+    :next-at="maintenanceNextAt"
+    @retry="maintenanceRetry"
   />
   <PageTransition />
   <AssistantPanel v-if="loggedIn && !route.meta.bare" />

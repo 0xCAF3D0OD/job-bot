@@ -15,6 +15,8 @@ const bypass = ref(false);
 // Maintenance en lecture seule, pour un invité : il consulte, il n'enregistre pas.
 const reading = ref(false);
 const refused = ref("");
+// Le prochain essai (docs/79), pour le compte à rebours de la page d'attente.
+const nextAt = ref<number | null>(null);
 let timer: ReturnType<typeof setTimeout> | null = null;
 let readTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -47,7 +49,20 @@ async function poll(): Promise<void> {
     return;
   }
   if (state?.message) message.value = state.message;
+  schedule();
+}
+
+function schedule(): void {
+  nextAt.value = Date.now() + POLL_MS;
   timer = setTimeout(() => void poll(), POLL_MS);
+}
+
+// « Réessayer maintenant » : on sonde tout de suite, sans attendre les 10 s.
+async function retry(): Promise<void> {
+  if (!waiting.value) return;
+  if (timer) clearTimeout(timer);
+  nextAt.value = null;
+  await poll();
 }
 
 // Le bandeau de la lecture seule s'en va tout seul quand la maintenance est levée.
@@ -63,7 +78,7 @@ function onMaintenance(event: Event): void {
   if (detail) message.value = detail;
   if (waiting.value) return;
   waiting.value = true;
-  timer ??= setTimeout(() => void poll(), POLL_MS);
+  if (!timer) schedule();
 }
 
 function onReadOnly(event: Event): void {
@@ -87,5 +102,5 @@ export function useMaintenance() {
     if (readTimer) clearTimeout(readTimer);
     timer = readTimer = null;
   });
-  return { waiting, message, bypass, reading, refused };
+  return { waiting, message, bypass, reading, refused, nextAt, retry };
 }
