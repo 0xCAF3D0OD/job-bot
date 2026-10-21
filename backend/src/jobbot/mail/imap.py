@@ -1,8 +1,12 @@
-"""Lecture IMAP strictement en lecture seule (docs/03-collecte-gmail.md §3).
+"""Lecture IMAP (docs/03-collecte-gmail.md §3, docs/113).
 
-Le dossier est ouvert avec EXAMINE (select readonly) et les messages sont lus avec
-BODY.PEEK, qui ne pose pas le drapeau « lu ». Aucune commande d'écriture (STORE, COPY,
-MOVE, EXPUNGE, APPEND…) n'est jamais envoyée : un test le vérifie.
+La lecture est strictement en lecture seule : le dossier est ouvert avec EXAMINE (select
+readonly) et les messages sont lus avec BODY.PEEK, qui ne pose pas le drapeau « lu ». Dans la
+boîte de l'exploitant, aucune commande d'écriture (STORE, COPY, MOVE, EXPUNGE, APPEND…) n'est
+jamais envoyée : un test le vérifie.
+
+Seule exception (docs/113) : la boîte des invités, qui appartient à la plateforme, est vidée
+de ce qui est déjà copié dans jobA1 (`clean`) ; elle seule est créée « writable ».
 """
 
 import imaplib
@@ -66,6 +70,7 @@ class ImapMailbox:
         folder: str,
         factory: IMAPFactory = imaplib.IMAP4_SSL,
         timeout: float = 30,
+        writable: bool = False,
     ) -> None:
         self._host = host
         self._port = port
@@ -74,6 +79,8 @@ class ImapMailbox:
         self._folder = folder
         self._factory = factory
         self._timeout = timeout
+        # Seule la boîte des invités peut être vidée (docs/113) ; jamais celle de l'exploitant.
+        self._writable = writable
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "ImapMailbox":
@@ -86,8 +93,23 @@ class ImapMailbox:
             folder=settings.imap_folder,
         )
 
+    @classmethod
+    def guest_from_settings(cls, settings: Settings) -> "ImapMailbox":
+        """La boîte des invités (docs/113), hébergée à part, vidée après chaque copie."""
+        password = (
+            settings.guest_imap_password.get_secret_value() if settings.guest_imap_password else ""
+        )
+        return cls(
+            host=settings.guest_imap_host,
+            port=settings.guest_imap_port,
+            user=settings.guest_imap_user,
+            password=password,
+            folder=settings.guest_imap_folder,
+            writable=True,
+        )
+
     @contextmanager
-    def _session(self) -> Iterator[Any]:
+    def _session(self, *, write: bool = False) -> Iterator[Any]:
         try:
             conn = self._factory(self._host, self._port, timeout=self._timeout)
         except (TimeoutError, OSError, ssl.SSLError) as exc:
@@ -103,7 +125,7 @@ class ImapMailbox:
                     "authentification IMAP refusée : vérifier JOBBOT_IMAP_USER et le mot de passe "
                     "d'application",
                 ) from None
-            status, _ = conn.select(_quote(self._folder), readonly=True)
+            status, _ = conn.select(_quote(self._folder), readonly=not write)
             if status != "OK":
                 raise MailboxError("other", f"dossier IMAP introuvable : {self._folder}")
             yield conn
@@ -163,3 +185,32 @@ class ImapMailbox:
                 if raw is not None:
                     emails.append(FetchedEmail(uid=uid, raw=raw))
             return emails
+
+    def clean(self, *, known: Callable[[set[str]], set[str]], before: date) -> int:
+        """Boîte des invités (docs/113) : supprime les e-mails déjà copiés dans jobA1 (leur
+        Message-ID est connu) et ceux reçus avant `before` (sans compte). Renvoie le nombre."""
+        if not self._writable:
+            raise MailboxError("other", "cette boîte est en lecture seule")
+        with self._session(write=True) as conn:
+            status, data = conn.uid("SEARCH", None, "ALL")
+            if status != "OK":
+                raise MailboxError("other", "recherche IMAP refusée")
+            uids = [int(u) for u in (data[0] or b"").split()]
+            headers: dict[int, str] = {}
+            for uid in uids:
+                status, part = conn.uid(
+                    "FETCH", str(uid), "(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])"
+                )
+                raw = _fetched_bytes(part) if status == "OK" else None
+                match = _MESSAGE_ID.search(raw or b"")
+                if match:
+                    headers[uid] = match.group(1).decode("ascii", "replace")
+            copied = known(set(headers.values()))
+            status, data = conn.uid("SEARCH", None, "BEFORE", imap_date(before))
+            old = {int(u) for u in (data[0] or b"").split()} if status == "OK" else set()
+            doomed = sorted({uid for uid in uids if headers.get(uid) in copied} | old)
+            for uid in doomed:
+                conn.uid("STORE", str(uid), "+FLAGS.SILENT", "(\\Deleted)")
+            if doomed:
+                conn.expunge()
+            return len(doomed)

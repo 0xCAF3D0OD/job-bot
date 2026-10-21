@@ -27,7 +27,7 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 
 ## 3. Les secrets
 
-- Les secrets (mot de passe de la base, clé de l'IA, boîte e-mail, sujet ntfy) ne vivent que dans le fichier `.env` du serveur ou dans des fichiers `_FILE`. **Jamais** dans git, ni dans un journal, ni dans une capture d'écran partagée.
+- Les secrets (mot de passe de la base, clé de l'IA, boîte e-mail, boîte des invités, sujet ntfy) ne vivent que dans le fichier `.env` du serveur ou dans des fichiers `_FILE`. **Jamais** dans git, ni dans un journal, ni dans une capture d'écran partagée.
 - **La phrase des sauvegardes** (`JOBBOT_BACKUP_PASSPHRASE`) : aussi gardée hors de l'ordinateur (gestionnaire de mots de passe, papier) ; sans elle, les sauvegardes sont illisibles. La changer ne rechiffre pas les anciennes sauvegardes : elles restent lisibles avec l'ancienne.
 - La base ne garde des mots de passe et des jetons (sessions, invitations, extension, agenda) que leur **empreinte** : scrypt pour les mots de passe, SHA-256 pour les jetons.
 - **Quand changer un secret** :

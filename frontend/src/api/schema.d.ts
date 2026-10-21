@@ -3272,6 +3272,11 @@ export interface components {
              * @default []
              */
             codes: components["schemas"]["SiteCodeOut"][];
+            /**
+             * Guest Mailbox
+             * @default false
+             */
+            guest_mailbox: boolean;
         };
         /** AnswerOut */
         AnswerOut: {
@@ -6069,6 +6074,11 @@ export interface components {
         Privacy: {
             /** Contact */
             contact: string | null;
+            /**
+             * Guest Mailbox
+             * @default false
+             */
+            guest_mailbox: boolean;
         };
         /** PrivacyIn */
         PrivacyIn: {

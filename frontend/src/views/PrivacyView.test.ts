@@ -8,12 +8,12 @@ const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
 afterEach(() => vi.resetAllMocks());
 
-async function mountPage(contact: string | null) {
+async function mountPage(contact: string | null, guestMailbox = false) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({
       data:
         path === "/api/privacy"
-          ? { contact }
+          ? { contact, guest_mailbox: guestMailbox }
           : { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false },
     }),
   );
@@ -30,6 +30,16 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(wrapper.text()).toContain("Jamais tes coordonnées");
     expect(wrapper.text()).toContain("30 jours");
     expect(wrapper.find("[data-test=privacy-contact]").text()).toBe("Kevin, Lausanne");
+  });
+
+  it("les e-mails des sites : la boîte de jobA1 en Suisse, vidée ; sinon, celle de la plateforme (docs/113)", async () => {
+    const guest = await mountPage("Kevin", true);
+    const text = guest.find("[data-test=privacy-mailbox]").text();
+    expect(text).toContain("hébergée en Suisse chez Infomaniak");
+    expect(text).toContain("les efface de cette boîte");
+    expect(text).toContain("30 minutes");
+    const shared = await mountPage("Kevin", false);
+    expect(shared.find("[data-test=privacy-mailbox]").text()).toContain("que l'exploitant administre");
   });
 
   it("sans mentions : le dit", async () => {

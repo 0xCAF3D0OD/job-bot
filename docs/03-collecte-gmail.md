@@ -198,3 +198,7 @@ La PR **a** peut avancer pendant que les premières alertes arrivent.
 - **Expéditeurs confirmés** : `donotreply@jobalert.indeed.com`, `candidat@jobup.ch` et `candidat@my.jobup.ch`.
 - **jobup** : les e-mails reçus sont des « Suggestions d'offres d'emploi » (recommandations d'après les offres consultées), pas des alertes de recherche. Ils sont analysés (libellé « Recommandations jobup »). Une vraie alerte jobup aura sans doute un autre format : elle apparaîtra « sans offre » ou « non reconnue » dans le Journal, et il faudra une deuxième variante de l'analyseur.
 - **Taux décimal** (« 26,25 % ») : ignoré, ce n'est pas un taux d'activité standard.
+
+## Complément 0.83.0 — la boîte des invités
+
+La règle « ne rien modifier dans la boîte » reste vraie pour **la boîte de l'exploitant**. La boîte des invités (docs/113), qui appartient à la plateforme, est vidée de ce qui est déjà copié dans jobA1 : seule la suppression y est permise (`STORE \Deleted`, `EXPUNGE`), et la lecture reste en lecture seule.

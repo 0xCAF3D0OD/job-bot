@@ -63,17 +63,22 @@ def domain_address(domain: str, username: str, code: str, box: str | None = None
 async def account_address(session: AsyncSession, settings: Settings) -> str | None:
     """L'adresse à donner aux sites pour le compte en cours ; créée à la première demande."""
     base = base_address(settings)
-    if base is None or not settings.imap_configured:
-        return None
     if await accounts.is_owner(session):
-        return base
+        return base if base is not None and settings.imap_configured else None
+    domain = alert_domain(settings)
+    # Un invité reçoit sur le domaine des alertes, lu par la boîte des invités (docs/113) ou
+    # par celle de l'exploitant ; sans domaine, à « boite+code@… » de l'exploitant.
+    if not (settings.imap_configured or (domain and settings.guest_imap_configured)):
+        return None
+    if domain is None and base is None:
+        return None
     user = await session.get_one(User, accounts.current())
     if user.mail_code is None:
         user.mail_code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
         await session.flush()
-    domain = alert_domain(settings)
     if domain is not None:
         return domain_address(domain, user.username, user.mail_code, alert_box(settings))
+    assert base is not None
     return plus_address(base, user.mail_code)
 
 

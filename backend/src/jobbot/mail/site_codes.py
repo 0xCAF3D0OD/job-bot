@@ -2,7 +2,7 @@
 
 - Un code reconnu (`mail/codes.py`) est annoncé dans la cloche et sur le téléphone, montré
   en haut de la page Alertes, et lu par l'extension pour le remplir ; il s'efface au bout de
-  30 minutes.
+  30 minutes, avec la copie de son e-mail (docs/113).
 - « J'attends un code » : la boîte est relevée toutes les 15 secondes pendant 5 minutes.
 - Les autres e-mails des sites (bienvenue, alerte modifiée…) se lisent dans « Messages des
   sites », 30 jours.
@@ -148,15 +148,19 @@ async def purge(runtime: Runtime, now: datetime | None = None) -> int:
     messages supprimés au bout de 30 jours, avec leur e-mail."""
     now = now or datetime.now(UTC)
     async with runtime.sessionmaker.begin() as session:
-        await session.execute(
-            update(Search)
-            .where(
-                Search.kind == CODE_KIND,
-                Search.code.is_not(None),
-                Search.received_at < now - CODE_SHOWN_FOR,
+        # Le code expiré : effacé du journal, et sa copie de l'e-mail avec lui (docs/113).
+        expired = list(
+            await session.scalars(
+                select(Search).where(
+                    Search.kind == CODE_KIND,
+                    Search.code.is_not(None),
+                    Search.received_at < now - CODE_SHOWN_FOR,
+                )
             )
-            .values(code=None)
         )
+        for search in expired:
+            runtime.storage.delete(search.raw_key)
+            search.code = None
         await session.execute(
             update(Notification)
             .where(

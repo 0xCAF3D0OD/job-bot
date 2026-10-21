@@ -57,9 +57,16 @@ class Mailbox(Protocol):
     ) -> list[FetchedEmail]: ...
 
 
+class GuestMailbox(Mailbox, Protocol):
+    """La boîte des invités (docs/113) : lue comme l'autre, puis vidée de ce qui est copié."""
+
+    def clean(self, *, known: Callable[[set[str]], set[str]], before: date) -> int: ...
+
+
 MailboxFactory = Callable[[Settings], Mailbox]
-# Remplacée dans les tests par une fausse boîte en mémoire.
+# Remplacées dans les tests par des fausses boîtes en mémoire.
 mailbox_factory: MailboxFactory = ImapMailbox.from_settings
+guest_mailbox_factory: Callable[[Settings], GuestMailbox] = ImapMailbox.guest_from_settings
 
 
 @dataclass
@@ -286,12 +293,37 @@ async def ingest_email(
     return search
 
 
+# Les e-mails sans compte (adresse inconnue, compte supprimé) quittent la boîte des invités
+# au bout de 7 jours (docs/113).
+GUEST_UNROUTED_KEPT = timedelta(days=7)
+
+
 async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectResult:
+    """Les deux boîtes : celle de l'exploitant (ses alertes, en lecture seule) et, si elle est
+    réglée, celle des invités (docs/113), vidée de ce qui est copié dans jobA1."""
     settings = runtime.settings
-    if not settings.imap_configured:
+    if not settings.imap_configured and not settings.guest_imap_configured:
         log.info("collect_not_configured")
         return CollectResult(configured=False)
+    result = CollectResult()
+    if settings.imap_configured:
+        await _collect_box(runtime, mailbox_factory(settings), run_id, result, guest=False)
+    if settings.guest_imap_configured:
+        guest = guest_mailbox_factory(settings)
+        await _collect_box(runtime, guest, run_id, result, guest=True)
+        await _clean_guest_box(runtime, guest)
+    return result
 
+
+async def _collect_box(
+    runtime: Runtime,
+    mailbox: Mailbox,
+    run_id: uuid.UUID | None,
+    result: CollectResult,
+    *,
+    guest: bool,
+) -> None:
+    settings = runtime.settings
     since = _since(settings)
 
     loop = asyncio.get_running_loop()
@@ -300,7 +332,6 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
         # Appelé depuis le thread IMAP : la requête est renvoyée sur la boucle asyncio.
         return asyncio.run_coroutine_threadsafe(_known_message_ids(runtime, ids), loop).result()
 
-    mailbox = mailbox_factory(settings)
     try:
         emails = await asyncio.to_thread(
             mailbox.fetch_since, since, limit=MAX_EMAILS_PER_RUN, skip_message_ids=known
@@ -316,14 +347,18 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
         owner = await accounts.owner_id(session)
         codes = await addresses.recipients_map(session)
         active = set(await accounts.account_ids(session))
-    result = CollectResult(fetched=len(emails))
+    result.fetched += len(emails)
     for fetched in emails:
         email = parse_email(fetched.raw, fallback_received=datetime.now(UTC))
         account = addresses.route(email.recipients, base, codes, owner, domain)
+        # La boîte des invités n'est jamais à l'exploitant : un e-mail sans code d'invité n'y
+        # est à personne (docs/113).
+        if guest and account == owner:
+            account = None
         if account is None or account not in active:
             # Code inconnu (compte supprimé) ou compte suspendu : l'e-mail n'est pas rangé.
             result.unrouted += 1
-            log.info("email_not_routed", suspended=account is not None)
+            log.info("email_not_routed", suspended=account is not None, guest_box=guest)
             continue
         with accounts.use(account):
             search = await ingest_email(runtime, fetched, run_id, email)
@@ -336,11 +371,28 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
     log.info(
         "collect_finished",
         since=since.isoformat(),
-        fetched=result.fetched,
+        guest_box=guest,
+        fetched=len(emails),
         new_searches=result.new_searches,
         new_offers=result.new_offers,
     )
-    return result
+
+
+async def _clean_guest_box(runtime: Runtime, mailbox: GuestMailbox) -> None:
+    """Vide la boîte des invités de ce qui est déjà copié dans un compte, et des e-mails sans
+    compte de plus de 7 jours : personne n'a de raison de les y lire (docs/113)."""
+    loop = asyncio.get_running_loop()
+
+    def known(ids: set[str]) -> set[str]:
+        return asyncio.run_coroutine_threadsafe(_known_message_ids(runtime, ids), loop).result()
+
+    before = (datetime.now(UTC) - GUEST_UNROUTED_KEPT).date()
+    try:
+        removed = await asyncio.to_thread(mailbox.clean, known=known, before=before)
+    except MailboxError as exc:
+        IMAP_ERRORS.labels(kind=exc.kind).inc()
+        raise
+    log.info("guest_box_cleaned", removed=removed)
 
 
 @dataclass

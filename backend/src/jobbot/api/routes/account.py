@@ -64,6 +64,9 @@ class Privacy(BaseModel):
     """Les mentions de l'exploitant (responsable, contact, hébergeur), écrites par lui."""
 
     contact: str | None
+    # La boîte des invités est en place (docs/113) : les e-mails des sites n'arrivent plus
+    # dans la boîte de l'exploitant.
+    guest_mailbox: bool = False
 
 
 class DeleteIn(BaseModel):
@@ -265,7 +268,10 @@ async def get_privacy(request: Request) -> Privacy:
     """Public : la page « Tes données » se lit avant même d'accepter une invitation."""
     async with _runtime(request).sessionmaker() as session:
         contact = await platform.get(session, PRIVACY_KEY)
-    return Privacy(contact=str(contact) if contact else None)
+    return Privacy(
+        contact=str(contact) if contact else None,
+        guest_mailbox=_runtime(request).settings.guest_imap_configured,
+    )
 
 
 @router.put(

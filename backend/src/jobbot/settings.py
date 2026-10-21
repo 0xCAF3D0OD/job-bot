@@ -21,6 +21,7 @@ SECRET_FIELDS = (
     "worker_database_url",
     "migrate_database_url",
     "imap_password",
+    "guest_imap_password",
     "anthropic_api_key",
     "ntfy_topic",
     "backup_passphrase",
@@ -81,6 +82,14 @@ class Settings(BaseSettings):
     imap_password: SecretStr | None = None
     imap_folder: str = "INBOX"
     imap_backfill_days: int = Field(default=30, ge=1, le=365)
+    # La boîte des invités (docs/113, 0.83.0) : une vraie boîte du domaine des alertes
+    # (« alertes@joba1.ch », chez Infomaniak), lue par jobA1 et vidée après chaque copie.
+    # L'exploitant n'y reçoit plus les e-mails des invités.
+    guest_imap_host: str = "mail.infomaniak.com"
+    guest_imap_port: int = Field(default=993, ge=1, le=65535)
+    guest_imap_user: str = ""
+    guest_imap_password: SecretStr | None = None
+    guest_imap_folder: str = "INBOX"
     # Adresse où arrivent les alertes (docs/65 §3) ; vide : celle de la boîte (JOBBOT_IMAP_USER).
     # Un compte invité reçoit à « boite+code@domaine », livré dans la même boîte.
     mail_address: str = ""
@@ -172,6 +181,11 @@ class Settings(BaseSettings):
     def imap_configured(self) -> bool:
         password = self.imap_password.get_secret_value() if self.imap_password else ""
         return bool(self.imap_user.strip() and password)
+
+    @property
+    def guest_imap_configured(self) -> bool:
+        password = self.guest_imap_password.get_secret_value() if self.guest_imap_password else ""
+        return bool(self.guest_imap_user.strip() and password)
 
     @property
     def backup_configured(self) -> bool:
