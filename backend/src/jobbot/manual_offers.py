@@ -6,8 +6,6 @@ lecteur des alertes (docs/20), le nom de la personne retiré. Une page protégé
 robots n'est jamais contournée : on propose de coller le texte.
 """
 
-import html
-import json
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -35,6 +33,7 @@ from jobbot.news import domain
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring_service
 from jobbot.scoring.service import account_problem, budget_state, record_call
+from jobbot.sources import jobposting
 
 log = get_logger(__name__)
 
@@ -46,7 +45,6 @@ MAX_TEXT = 20_000
 READ_ESTIMATE_USD = Decimal("0.02")
 # Le lecteur d'alertes rattache chaque offre à un lien : un texte collé sans lien en reçoit un.
 NO_LINK = "https://annonce-collee.invalid/"
-_LD_JSON = re.compile(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', re.S | re.I)
 
 
 class ReadProblem(Exception):
@@ -76,65 +74,20 @@ class Draft:
 # --- Le balisage JobPosting -------------------------------------------------------------
 
 
-def _types(item: dict[str, Any]) -> list[str]:
-    value = item.get("@type")
-    return [str(v) for v in value] if isinstance(value, list) else [str(value)]
-
-
-def job_posting(page: str) -> dict[str, Any] | None:
-    """Le premier `JobPosting` des blocs JSON-LD, y compris dans un `@graph` ou une liste."""
-    for match in _LD_JSON.finditer(page):
-        try:
-            data = json.loads(html.unescape(match.group(1)).strip())
-        except json.JSONDecodeError:
-            continue
-        stack: list[Any] = [data]
-        while stack:
-            item = stack.pop(0)
-            if isinstance(item, list):
-                stack.extend(item)
-            elif isinstance(item, dict):
-                if "JobPosting" in _types(item):
-                    return item
-                if isinstance(item.get("@graph"), list):
-                    stack.extend(item["@graph"])
-    return None
-
-
-def _text(value: object) -> str | None:
-    if not isinstance(value, str) or not value.strip():
-        return None
-    soup = BeautifulSoup(html.unescape(value), "html.parser")
-    for br in soup.find_all("br"):
-        br.replace_with("\n")
-    lines = [" ".join(line.split()) for line in soup.get_text("\n").splitlines()]
-    return "\n".join(line for line in lines if line) or None
-
-
-def _location(posting: dict[str, Any]) -> str | None:
-    places = posting.get("jobLocation")
-    place = places[0] if isinstance(places, list) and places else places
-    address = place.get("address") if isinstance(place, dict) else None
-    if isinstance(address, dict):
-        town = address.get("addressLocality") or address.get("addressRegion")
-        if town:
-            return " ".join(str(town).split())
-    if str(posting.get("jobLocationType", "")).upper() == "TELECOMMUTE":
-        return "Télétravail"
-    return None
+job_posting = jobposting.job_posting
 
 
 def draft_from_posting(posting: dict[str, Any], url: str) -> Draft | None:
-    title = _text(posting.get("title") or posting.get("name"))
+    title = jobposting.text(posting.get("title") or posting.get("name"))
     if not title:
         return None
     org = posting.get("hiringOrganization")
     company = org.get("name") if isinstance(org, dict) else org if isinstance(org, str) else None
-    description = _text(posting.get("description"))
+    description = jobposting.text(posting.get("description"))
     return Draft(
         title=title.splitlines()[0][:300],
         company=" ".join(str(company).split())[:300] if company else None,
-        location=_location(posting),
+        location=jobposting.location(posting),
         description=description[:MAX_TEXT] if description else None,
         url=url,
         read_by="page",

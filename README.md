@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/111-ajouter-une-offre.md](docs/111-ajouter-une-offre.md) (0.81.0)
+- Version en cours : [docs/104-premiers-pas.md](docs/104-premiers-pas.md) (0.80.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -167,7 +167,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.79.0 | Une adresse d'alerte à jobA1 pour les invités (`nom-code@alertes.joba1.ch`) ; en attendant, l'adresse abrégée et « Copier l'adresse » | livrée |
 | 0.79.1 | La plateforme présentée : le chemin bleu jusqu'à la fin, une marge sur les côtés, les notes en cercle | livrée |
 | 0.79.2 | La plateforme sur téléphone : les personnages qui cachaient du texte passent sous la maquette | livrée |
-| 0.81.0 | Ajouter une offre trouvée ailleurs (site d'entreprise, LinkedIn, journal, Google Jobs) par son lien ou son texte, aussi par « Partager vers jobA1 » sur Android ; les exemples suivent ton métier | en cours |
+| 0.80.0 | Des offres dès le premier jour : à la fin de l'accueil, jobA1 lit la recherche publique de jobup (20 offres au plus) pour ton métier et tes lieux ; relance depuis Alertes | en cours |
+| 0.81.0 | Ajouter une offre trouvée ailleurs (site d'entreprise, LinkedIn, journal, Google Jobs) par son lien ou son texte, aussi par « Partager vers jobA1 » sur Android ; les exemples suivent ton métier | livrée |
 
 ## Lancer en local
 

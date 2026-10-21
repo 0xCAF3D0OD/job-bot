@@ -10,6 +10,7 @@ from sqlalchemy import text
 from jobbot import accounts
 from jobbot.api.app import create_app
 from jobbot.auth import passwords
+from jobbot.collect import public_search
 from jobbot.db.models import User
 from jobbot.news import domain
 from jobbot.runtime import Runtime
@@ -28,7 +29,16 @@ async def secured() -> AsyncIterator[Runtime]:
     await runtime.dispose()
 
 
-async def test_new_account_goes_through_welcome(secured: Runtime, runtime: Runtime) -> None:
+async def test_new_account_goes_through_welcome(
+    secured: Runtime, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    queued: list[str] = []
+
+    async def enqueue(_settings: object, name: str) -> bool:
+        queued.append(name)
+        return True
+
+    monkeypatch.setattr(public_search, "enqueue", enqueue)
     async with secured.sessionmaker.begin() as session:
         user = User(username="camille-accueil", password_hash=passwords.hash_password(PASSWORD))
         session.add(user)
@@ -61,6 +71,12 @@ async def test_new_account_goes_through_welcome(secured: Runtime, runtime: Runti
         assert (await api.get("/api/auth/me")).json()["welcome"] == "postponed"
         done = (await api.put("/api/welcome", json={"done": True})).json()
         assert done["status"] == "done"
+        # Les premières offres (docs/104, 0.80.0) : la recherche publique, une seule fois.
+        assert queued == ["first_offers"]
+        first = (await api.get("/api/alert-searches/first-offers")).json()
+        assert first["status"] == "queued"
+        await api.put("/api/welcome", json={"done": True})
+        assert queued == ["first_offers"]
     # Le métier est le premier mot de « Mon domaine » (Actualités, alertes proposées).
     with accounts.use(camille):
         async with secured.sessionmaker() as session:

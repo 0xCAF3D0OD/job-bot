@@ -12,6 +12,7 @@ import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
 import ManualOfferForm from "../components/ManualOfferForm.vue";
+import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import IllustratedSide from "../components/IllustratedSide.vue";
@@ -414,6 +415,11 @@ onUnmounted(() => {
             Annuler
           </button>
         </p>
+        <!-- Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup. -->
+        <FirstOffers
+          where="offers"
+          @arrived="load()"
+        />
         <!-- « Ajouter une offre » et « Candidature spontanée » sur la ligne du nombre d'offres
              (docs/43 n° 11, docs/111). -->
         <div class="list-count-row">

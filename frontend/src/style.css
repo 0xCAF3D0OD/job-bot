@@ -1617,6 +1617,15 @@ html.side-open { overflow: hidden; }
 .follow-up-actions { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }
 
 /* Candidatures spontanées (docs/39) */
+/* Les premières offres (docs/104, 0.80.0). */
+.first-offers-line { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; line-height: 1.5; }
+.first-offers { margin-top: 2rem; }
+.first-offers-body { display: grid; gap: 0.75rem; justify-items: start; padding: 1rem 0 0; line-height: 1.5; }
+@media (max-width: 820px) {
+  .first-offers-body { padding: 1.25rem 0; justify-items: stretch; }
+  .first-offers-body .pill { min-height: 3rem; }
+}
+.first-offers-body p { margin: 0; }
 .list-count-actions { margin-left: auto; display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; }
 /* Ajouter une offre (docs/111) : aéré comme les Réglages (docs/interface.md). */
 .manual-form { display: grid; gap: 1rem; line-height: 1.5; }

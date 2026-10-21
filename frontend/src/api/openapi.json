@@ -7426,6 +7426,48 @@
         }
       }
     },
+    "/api/alert-searches/first-offers": {
+      "get": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Get First Offers",
+        "description": "Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup.",
+        "operationId": "getFirstOffers",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirstOffersOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Start First Offers",
+        "description": "« Chercher sur jobup maintenant » : relance la recherche publique (une fois par heure).",
+        "operationId": "startFirstOffers",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirstOffersStart"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/applications/{application_id}/interviews": {
       "get": {
         "tags": [
@@ -11835,6 +11877,117 @@
           "reasons"
         ],
         "title": "FilterSummaryOut"
+      },
+      "FirstOffersOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "none",
+              "queued",
+              "done",
+              "failed",
+              "no_trade"
+            ],
+            "title": "Status"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "found": {
+            "type": "integer",
+            "title": "Found",
+            "default": 0
+          },
+          "new": {
+            "type": "integer",
+            "title": "New",
+            "default": 0
+          },
+          "queries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Queries",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "FirstOffersOut"
+      },
+      "FirstOffersStart": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "none",
+              "queued",
+              "done",
+              "failed",
+              "no_trade"
+            ],
+            "title": "Status"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "found": {
+            "type": "integer",
+            "title": "Found",
+            "default": 0
+          },
+          "new": {
+            "type": "integer",
+            "title": "New",
+            "default": 0
+          },
+          "queries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Queries",
+            "default": []
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "already_queued",
+              "no_trade",
+              "too_soon"
+            ],
+            "title": "Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "result"
+        ],
+        "title": "FirstOffersStart"
       },
       "FocusIn": {
         "properties": {

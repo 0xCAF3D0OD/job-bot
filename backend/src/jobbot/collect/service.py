@@ -27,6 +27,7 @@ from jobbot.db.models import (
     ParseStatus,
     Search,
     SiteReader,
+    received_alert,
 )
 from jobbot.llm import alert as alert_llm
 from jobbot.log import get_logger
@@ -340,7 +341,8 @@ async def reparse(
     rattachées ne sont pas dupliquées.
     """
     result = ReparseResult()
-    query = select(Search.id).order_by(Search.received_at, Search.id)
+    # Les recherches publiques de jobA1 (docs/104) n'ont pas d'e-mail à relire.
+    query = select(Search.id).where(received_alert()).order_by(Search.received_at, Search.id)
     if source is not None:
         query = query.where(Search.source == source)
     if parse_status is not None:

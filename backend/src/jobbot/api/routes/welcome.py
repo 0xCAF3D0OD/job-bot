@@ -6,6 +6,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
 from jobbot import welcome
+from jobbot.collect import public_search
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/welcome", tags=["welcome"])
@@ -55,6 +56,10 @@ async def get_welcome(request: Request) -> WelcomeOut:
 
 @router.put("", operation_id="saveWelcome")
 async def save_welcome(request: Request, body: WelcomeIn) -> WelcomeOut:
-    async with _runtime(request).sessionmaker.begin() as session:
+    runtime = _runtime(request)
+    async with runtime.sessionmaker.begin() as session:
         value = await welcome.save(session, body.model_dump(exclude_none=True))
+    if body.done and not runtime.settings.demo:
+        # Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup, une fois.
+        await public_search.request(runtime, first_only=True)
     return _out(value)
