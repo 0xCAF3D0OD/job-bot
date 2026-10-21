@@ -4,7 +4,7 @@ import { computed } from "vue";
 import type { AlertsPage } from "../api/client";
 import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
-import MailboxAddress from "./MailboxAddress.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Résumé des alertes (docs/21 §4) : une ligne par recherche, l'aide seulement si besoin.
 // Mise en page 0.84.3 : en tête le nombre et « Gérer mes alertes » ; chaque recherche sur sa
@@ -36,6 +36,11 @@ const lastReceived = computed(() => rows.value.map((r) => r.lastReceived).filter
 const lateSites = computed(() => {
   const slugs = new Set(rows.value.flatMap((r) => r.waiting.map((c) => c.site)));
   return props.page.sites.filter((s) => slugs.has(s.slug));
+});
+const lateDetail = computed(() => {
+  const box = props.page.mailbox ? `${props.page.mailbox}${props.page.folder ? `, dossier ${props.page.folder}` : ""}` : "la boîte lue par la plateforme";
+  const senders = lateSites.value.flatMap((s) => s.senders).join(", ");
+  return `Ses e-mails doivent arriver dans ${box}${senders ? ` (expéditeurs : ${senders})` : ""}.`;
 });
 const STATES: Record<string, string> = {
   ok: "Reçue",
@@ -89,26 +94,17 @@ const siteNames = (cells: Cell[]): string =>
         </span>
       </li>
     </ul>
-    <div
+    <!-- Une ligne, avec quoi faire (docs/interface.md, titres et textes 5) ; le détail (boîte,
+         expéditeurs) au survol. -->
+    <p
       v-if="lateSites.length"
       class="notice"
       data-test="late-help"
     >
-      Rien reçu de {{ lateSites.map((s) => s.name).join(", ") }} ? Vérifie que l'alerte est bien créée sur le site et
-      que ses e-mails arrivent dans
-      <template v-if="page.mailbox">
-        <MailboxAddress
-          :address="page.mailbox"
-          :personal="page.personal_address"
-        /><template v-if="page.folder">
-          , dossier <strong>{{ page.folder }}</strong>
-        </template>
-      </template>
-      <template v-else>
-        la boîte lue par la plateforme
-      </template>
-      (expéditeurs : {{ lateSites.flatMap((s) => s.senders).join(", ") || "voir Réglages › Sites suivis" }}).
-    </div>
+      <HoverNote :text="lateDetail">
+        Rien reçu de {{ lateSites.map((s) => s.name).join(", ") }} depuis 3 jours : vérifie l'alerte sur le site.
+      </HoverNote>
+    </p>
     <button
       type="button"
       class="link summary-add"
