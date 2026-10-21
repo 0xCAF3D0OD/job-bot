@@ -328,7 +328,7 @@ onMounted(() => void load());
           class="form-card"
           data-test="sheet-missing"
         >
-          <h2>Ce qui revient dans les offres et te manque</h2>
+          <h2>Compétences demandées qui manquent</h2>
           <ul v-if="prep.missing.length">
             <li
               v-for="item in prep.missing"

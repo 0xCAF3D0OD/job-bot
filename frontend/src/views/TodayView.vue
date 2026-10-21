@@ -523,15 +523,14 @@ const { me } = useAuth();
             group="today-help"
             data-test="journey"
           >
-            <div class="checklist-head">
-              <h2>Comment ça marche</h2>
+            <template #actions>
               <IconButton
                 icon="close"
                 label="Masquer"
                 data-test="dismiss-journey"
                 @click="dismissJourney"
               />
-            </div>
+            </template>
             <ol>
               <li
                 v-for="step in today.journey"
@@ -567,15 +566,14 @@ const { me } = useAuth();
             group="today-help"
             data-test="checklist"
           >
-            <div class="checklist-head">
-              <h2>Pour bien démarrer · {{ doneCount }} / {{ steps.length }}</h2>
+            <template #actions>
               <IconButton
                 icon="close"
                 label="Masquer"
                 data-test="dismiss"
                 @click="dismiss"
               />
-            </div>
+            </template>
             <ul>
               <li
                 v-for="step in steps"

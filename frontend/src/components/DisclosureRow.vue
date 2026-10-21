@@ -51,6 +51,15 @@ const openInGroup = reactive<Record<string, string | null>>({});
         aria-hidden="true"
       ><AppIcon name="chevron" /></span>
     </button>
+    <!-- Une action sur le repliable ouvert (« Masquer ») : sur la ligne du titre, pas sur une
+         ligne à elle (docs/119). -->
+    <div
+      v-if="$slots.actions"
+      v-show="open"
+      class="disclosure-actions"
+    >
+      <slot name="actions" />
+    </div>
     <div
       :id="id"
       class="disclosure-panel"

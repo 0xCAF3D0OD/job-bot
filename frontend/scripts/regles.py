@@ -6,7 +6,9 @@ Il n'écrit rien : il liste les défauts, et le résultat doit être vide avant 
 - un titre (de page, de carte, de section, de repliable, légende) avec « je, tu, ton, ta,
   tes, mon, ma, mes » ou qui finit par « ? » ;
 - une barre verticale dans une carte ;
-- deux cadres l'un dans l'autre.
+- deux cadres l'un dans l'autre ;
+- un texte à moins de 1,25 rem du bord de sa carte (docs/93) ;
+- deux cartes d'une même rangée de hauteurs différentes (docs/93).
 
     make demo                      # la démo locale, données fictives (http://localhost:5200)
     cd backend && uv run --with playwright python ../frontend/scripts/regles.py
@@ -60,7 +62,7 @@ AUDIT = r"""(maxWords) => {
     if (!vis(e) || e.parentElement.closest(help)) continue;
     if (words(e.innerText) > maxWords) faults.push(`aide de ${words(e.innerText)} mots : « ${text(e).slice(0, 70)}… »`);
   }
-  const pronoun = /(^|[\s'’])(je|j'|j’|tu|ton|ta|tes|mon|ma|mes)(?=[\s,.:;!?]|$)/i;
+  const pronoun = /(^|[\s'’])(je|j'|j’|tu|te|t'|t’|ton|ta|tes|me|m'|m’|mon|ma|mes)(?=[\s,.:;!?]|$)/i;
   const titles = 'h1, h2, h3, legend, .disclosure-title, .section-title, .summary-title strong';
   for (const e of main.querySelectorAll(titles)) {
     if (!vis(e)) continue;
@@ -85,6 +87,37 @@ AUDIT = r"""(maxWords) => {
   for (const e of boxes) {
     const outer = boxes.find((o) => o !== e && o.contains(e));
     if (outer) faults.push(`cadre dans un cadre : ${e.className || e.tagName} dans ${outer.className || outer.tagName}`);
+  }
+  // Le texte à au moins 1,25 rem (20 px) du bord de sa carte ; la carte la plus extérieure.
+  const cards = [...main.querySelectorAll('.dash-card, .form-card, .settings-card, .disclosure, .training-tile, .alerts-summary')]
+    .filter((c) => vis(c) && !c.parentElement.closest('.dash-card, .form-card, .settings-card, .disclosure, .training-tile'));
+  for (const c of cards) {
+    const box = c.getBoundingClientRect();
+    const walker = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+    let worst = Infinity;
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.textContent.trim() || !vis(node.parentElement) || node.parentElement.closest('button.pill, .pill, .chip, .badge, input, select, textarea, .segmented, .icon-button, .logo, .score-ring')) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const r of range.getClientRects()) {
+        // Ce qui n'est pas dans la carte (caché, replié, défilé) ne compte pas.
+        if (r.width === 0 || r.left < box.left || r.right > box.right || r.top < box.top || r.bottom > box.bottom) continue;
+        worst = Math.min(worst, r.left - box.left, box.right - r.right);
+      }
+    }
+    if (worst < 19) faults.push(`texte à ${Math.round(worst)} px du bord : ${c.className.split(' ')[0]} « ${text(c).slice(0, 40)} »`);
+  }
+  // Les cartes côte à côte (même parent, même haut) ont la même hauteur.
+  for (const c of cards) {
+    const a = c.getBoundingClientRect();
+    for (const d of cards) {
+      if (d === c || d.parentElement !== c.parentElement) continue;
+      const b = d.getBoundingClientRect();
+      if (Math.abs(a.top - b.top) < 2 && a.left < b.left && Math.abs(a.height - b.height) > 2) {
+        faults.push(`rangée de hauteurs différentes : ${c.className.split(' ')[0]} (${Math.round(a.height)} px) et ${d.className.split(' ')[0]} (${Math.round(b.height)} px)`);
+      }
+    }
   }
   return faults;
 }"""
