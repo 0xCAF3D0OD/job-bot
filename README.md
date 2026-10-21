@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/101-iconographie.md](docs/101-iconographie.md) (0.82.2)
+- Version en cours : [docs/104-premiers-pas.md](docs/104-premiers-pas.md) (0.82.3)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -170,9 +170,10 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.80.0 | Des offres dès le premier jour : à la fin de l'accueil, jobA1 lit la recherche publique de jobup (20 offres au plus) pour ton métier et tes lieux ; relance depuis Alertes | livrée |
 | 0.80.1 | Les premières offres aussi pour les comptes qui avaient fini leur accueil avant : la recherche jobup part à leur première visite | livrée |
 | 0.81.0 | Ajouter une offre trouvée ailleurs (site d'entreprise, LinkedIn, journal, Google Jobs) par son lien ou son texte, aussi par « Partager vers jobA1 » sur Android ; les exemples suivent ton métier | livrée |
-| 0.82.0 | Les codes et les messages des sites : le code de vérification affiché (et dans la notification), rempli par l'extension, la boîte relevée toutes les 15 s à la demande ; les liens de confirmation ouverts par jobA1 ; les messages des sites lisibles 30 jours ; extension 0.59.0 | en cours |
-| 0.82.1 | La page d'attente refaite : l'en-tête de jobA1, une carte avec le dessin (qui ne dépend plus du réseau), le compte à rebours et « Réessayer maintenant » | en cours |
-| 0.82.2 | L'assistant ne sort plus du cadre sur téléphone : une infobulle invisible au bord droit élargissait l'écran ; rien ne déborde plus sur le côté | en cours |
+| 0.82.0 | Les codes et les messages des sites : le code de vérification affiché (et dans la notification), rempli par l'extension, la boîte relevée toutes les 15 s à la demande ; les liens de confirmation ouverts par jobA1 ; les messages des sites lisibles 30 jours ; extension 0.59.0 | livrée |
+| 0.82.1 | La page d'attente refaite : l'en-tête de jobA1, une carte avec le dessin (qui ne dépend plus du réseau), le compte à rebours et « Réessayer maintenant » | livrée |
+| 0.82.2 | L'assistant ne sort plus du cadre sur téléphone : une infobulle invisible au bord droit élargissait l'écran ; rien ne déborde plus sur le côté | livrée |
+| 0.82.3 | L'adresse d'alerte sans « catch-all » : `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch` donne `alertes+nom-code@joba1.ch`, qui passe par une seule redirection | en cours |
 
 ## Lancer en local
 

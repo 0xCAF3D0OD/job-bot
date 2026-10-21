@@ -18,6 +18,9 @@ describe("L'adresse des alertes (docs/104)", () => {
   it("l'adresse du domaine des alertes, ou celle de l'exploitant : entière", () => {
     const domain = mount(MailboxAddress, { props: { address: "eliot-k9dyqou7@alertes.joba1.ch", personal: true } });
     expect(domain.find("[data-test=mailbox-address]").text()).toBe("eliot-k9dyqou7@alertes.joba1.ch");
+    // Sans « catch-all » (0.82.3) : la boîte du domaine, entière elle aussi.
+    const box = mount(MailboxAddress, { props: { address: "alertes+amy-32e6krri@joba1.ch", personal: true } });
+    expect(box.find("[data-test=mailbox-address]").text()).toBe("alertes+amy-32e6krri@joba1.ch");
     const owner = mount(MailboxAddress, { props: { address: "kevin.dinocera@gmail.com" } });
     expect(owner.find("[data-test=mailbox-address]").text()).toBe("kevin.dinocera@gmail.com");
   });
