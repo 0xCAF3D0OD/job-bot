@@ -130,6 +130,8 @@ class Search(Base):
     error: Mapped[str | None] = mapped_column(Text)
     results_count: Mapped[int] = mapped_column(default=0)
     new_offers_count: Mapped[int] = mapped_column(default=0)
+    # La copie brute de l'e-mail effacée (alertes des invités, 90 jours, docs/120 §2).
+    raw_purged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Recommandations écartées, hors métier (docs/116 §3).
     off_topic_count: Mapped[int] = mapped_column(default=0, server_default="0")
     # Un site demande de confirmer l'alerte (docs/65 §3) : son lien, et quand c'est fait.

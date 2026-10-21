@@ -102,8 +102,11 @@ async def test_code_shown_then_erased(
         assert (search.kind, search.code) == ("code", "482913")
         bell = (await session.scalars(select(Notification))).one()
         assert (bell.kind, bell.message) == ("site_code", "jobup : 482 913")
-    # Dans la notification du téléphone, le code lui-même.
-    assert [m.message for m in phone] == ["jobup : 482 913"]
+    # Sur le téléphone, jamais le code (docs/120) : ntfy.sh est un service tiers.
+    assert [(m.title, m.message) for m in phone] == [
+        ("Code jobup reçu", "Ouvre jobA1 pour le voir.")
+    ]
+    assert phone[0].click and phone[0].click.endswith("/candidatures/alertes")
 
     app = create_app(clean.settings, clean)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
@@ -150,7 +153,8 @@ async def test_gmail_forwarding_code(
     async with clean.sessionmaker() as session:
         search = (await session.scalars(select(Search))).one()
     assert (search.source, search.kind, search.code) == ("gmail", "code", "123456789")
-    assert [m.message for m in phone] == ["Gmail : 123456789"]
+    assert [m.title for m in phone] == ["Code Gmail reçu"]
+    assert "123456789" not in phone[0].message
 
 
 async def test_extension_reads_a_fresh_code(
@@ -266,3 +270,65 @@ async def test_fast_collect_stops_at_the_first_code(
     monkeypatch.setattr(asyncio, "sleep", no_sleep)
     await fast_task.collect_fast_job(clean, RunContext(job="collect_fast"))
     assert len(rounds) == 3
+
+
+async def test_guest_alert_copies_erased_after_90_days(clean: Runtime) -> None:
+    """docs/120 §2 : la copie d'une alerte lue d'un invité s'efface au bout de 90 jours ; la
+    ligne du journal reste ; une alerte non reconnue, à relire, et celles de l'exploitant
+    restent."""
+    old = datetime.now(UTC) - timedelta(days=91)
+    async with admin_engine().begin() as conn:
+        guest = await conn.scalar(
+            text(
+                "INSERT INTO users (username, password_hash)"
+                " VALUES ('invite-copies', 'x') RETURNING id"
+            )
+        )
+    keys = {}
+    try:
+        with accounts.use(guest):
+            async with clean.sessionmaker.begin() as session:
+                for name, status in (
+                    ("lue", "parsed"),
+                    ("a-relire", "unrecognized"),
+                    ("recente", "parsed"),
+                ):
+                    key = f"accounts/{guest}/raw/{name}.eml"
+                    clean.storage.put(key, b"Subject: alerte")
+                    keys[name] = key
+                    session.add(
+                        Search(
+                            source="jobup",
+                            message_id=f"<{name}@x>",
+                            received_at=old if name != "recente" else datetime.now(UTC),
+                            raw_key=key,
+                            parse_status=status,
+                        )
+                    )
+            await site_codes.purge(clean)
+            async with clean.sessionmaker() as session:
+                rows = {s.message_id: s for s in await session.scalars(select(Search))}
+        assert not clean.storage.exists(keys["lue"]) and rows["<lue@x>"].raw_purged_at is not None
+        assert clean.storage.exists(keys["a-relire"]) and rows["<a-relire@x>"].raw_purged_at is None
+        assert clean.storage.exists(keys["recente"])
+        # L'exploitant : rien n'est effacé.
+        with accounts.use(None):
+            async with clean.sessionmaker() as session:
+                owner = await accounts.owner_id(session)
+        with accounts.use(owner):
+            async with clean.sessionmaker.begin() as session:
+                clean.storage.put("owner/raw/vieille.eml", b"Subject: alerte")
+                session.add(
+                    Search(
+                        source="jobup",
+                        message_id="<vieille@x>",
+                        received_at=old,
+                        raw_key="owner/raw/vieille.eml",
+                        parse_status="parsed",
+                    )
+                )
+            await site_codes.purge(clean)
+        assert clean.storage.exists("owner/raw/vieille.eml")
+    finally:
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM users WHERE username = 'invite-copies'"))

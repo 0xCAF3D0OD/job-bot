@@ -1,6 +1,6 @@
 # 120 — Le code hors de la notification, les copies d'alertes limitées (version 0.90.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-21 (« oui pour tout, vas-y ») : la notification sans le code, pour tous les comptes ; 90 jours pour les copies des invités ; tes alertes sans limite, comme aujourd'hui ; une seule version.
 > Origine : les deux points restés ouverts du cadrage 113 (§3 et §4, « Écarts ») : ta réponse portait sur ta boîte e-mail, ces deux points n'y touchaient pas. Ta demande du 2026-10-21 : « fais le cadrage pour le point 2 ».
 
 ## Le constat
@@ -45,6 +45,17 @@ jobA1 garde une copie de chaque e-mail d'alerte d'un invité, telle quelle. Les 
 - L'effacement ne touche que la copie brute d'une alerte **déjà analysée** : une alerte en attente de l'IA (plafond, clé absente) est gardée jusqu'à sa lecture.
 - La relecture (`jobbot reparse`) compte déjà les copies manquantes sans s'arrêter : rien à changer de son côté.
 - Pas dans la démo (rien n'y est effacé).
+
+## Écarts
+
+- **La notification du téléphone** : titre « Code jobup reçu », texte « Ouvre jobA1 pour le voir. », un toucher ouvre la page Alertes. La cloche garde « jobup : 482 913 » 30 minutes, puis « Code expiré ». Le code de Gmail (docs/116 §1) suit la même règle.
+- **Ce qui est effacé à 90 jours** : seulement les copies des alertes **lues** (avec ou sans offre). Une alerte non reconnue ou en échec garde sa copie : c'est elle qu'un analyseur corrigé relira. La ligne du journal reste, avec la date de l'effacement (`searches.raw_purged_at`, migration 0065).
+- **Ta question 3** : j'ai compris « oui » comme la première option, tes alertes sans limite. Dis-le si tu voulais la même règle pour toi.
+- **Données personnelles** : les copies d'alertes ajoutées aux durées (90 jours), « il ne part jamais dans la notification du téléphone » pour les codes, et l'export « des 90 derniers jours ».
+
+## Vérifié
+
+- Tests : la notification du téléphone sans le code (jobup et Gmail), la cloche avec ; une copie d'alerte lue d'un invité effacée à 91 jours, sa ligne gardée, une alerte non reconnue et une alerte récente gardées, les alertes de l'exploitant jamais effacées. 601 tests backend, ruff, mypy ; 409 tests de l'interface, lint, vue-tsc.
 
 ## Les questions
 
