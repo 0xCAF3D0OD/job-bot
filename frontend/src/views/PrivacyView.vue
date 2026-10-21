@@ -89,7 +89,7 @@ onMounted(async () => {
         Les notifications sur ton téléphone passent par le service ntfy, seulement si tu les as activées.
       </p>
 
-      <h2>Ce que tu peux faire</h2>
+      <h2>Ce qui est possible</h2>
       <p>Dans Réglages, rubrique Compte :</p>
       <ul>
         <li><strong>Exporter</strong> tout : une archive avec tes données, tes documents et tes e-mails d'alerte.</li>

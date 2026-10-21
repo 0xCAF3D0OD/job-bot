@@ -10,6 +10,7 @@ import { plural } from "../format";
 
 import { useAuth } from "../composables/useAuth";
 import { offerUndo } from "../composables/useUndo";
+import HoverNote from "./HoverNote.vue";
 // Mettre un site en pause vaut pour son compte ; ajouter ou retirer un site change la liste
 // commune à tous les comptes : réservé à l'exploitant (docs/65).
 const { me } = useAuth();
@@ -145,8 +146,9 @@ onMounted(() => void load());
       </legend>
       <!-- La description toujours visible, comme les CFF (docs/110). -->
       <p class="setting-desc">
-        La plateforme lit leurs e-mails d'alerte. jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA
-        (environ 0,01 $ par e-mail, tes coordonnées retirées).
+        <HoverNote text="jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA, environ 0,01 $ par e-mail, tes coordonnées retirées.">
+          La plateforme lit leurs e-mails d'alerte.
+        </HoverNote>
       </p>
       <ul class="calm-list">
         <li

@@ -457,7 +457,7 @@ onMounted(() => void load());
           class="form-card"
           data-test="sheet-ai"
         >
-          <h2>Le message pour ton conseiller</h2>
+          <h2>Message au conseiller</h2>
           <p
             v-if="meeting.sheet_text"
             class="orp-sheet-text"

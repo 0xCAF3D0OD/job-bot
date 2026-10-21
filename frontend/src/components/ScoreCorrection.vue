@@ -173,7 +173,7 @@ function applyChange(change: Change): void {
       class="score-correction-card"
     >
       <p class="score-correction-question">
-        <strong>Elle est…</strong>
+        <strong>Écart</strong>
       </p>
       <div class="pill-row">
         <button
@@ -191,7 +191,7 @@ function applyChange(change: Change): void {
 
       <template v-if="direction && !block && !changes">
         <p class="score-correction-question">
-          <strong>Pourquoi ?</strong>
+          <strong>Raison</strong>
         </p>
         <div class="pill-row">
           <button

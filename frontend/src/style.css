@@ -1427,7 +1427,8 @@ button, .button-link { max-width: 100%; }
 @keyframes disclosure-reveal { to { overflow: visible; } }
 .disclosure-list > .disclosure:first-child { border-top-left-radius: 13px; border-top-right-radius: 13px; }
 .disclosure-list > .disclosure:last-child { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
-.disclosure-body { margin: 0 0.9rem 0.9rem 1.1rem; padding: 0.2rem 0 0.2rem 0.9rem; border-left: 2px solid var(--border); display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
+/* Le contenu ouvert, sous son titre et au même retrait, sans barre à gauche (docs/118 §2). */
+.disclosure-body { margin: 0 0.9rem 0.9rem; padding: 0.2rem 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
 @media (prefers-reduced-motion: reduce) {
   .disclosure-panel, .disclosure-chevron { transition: none; }
   .disclosure.open, .disclosure.open .disclosure-clip, .disclosure-list:has(> .disclosure.open) { animation-delay: 0s; }

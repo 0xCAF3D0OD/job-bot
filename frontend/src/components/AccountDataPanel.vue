@@ -77,7 +77,7 @@ async function remove(): Promise<void> {
         {{ plural(summary.documents, "document", "documents") }}, {{ plural(summary.profile_blocks, "bloc de profil", "blocs de profil") }},
         {{ plural(summary.alert_emails, "e-mail d'alerte", "e-mails d'alerte") }}.
         <RouterLink to="/tes-donnees">
-          Ce qui est gardé, et ce qui part à l'IA
+          Ce qui est gardé
         </RouterLink>
       </p>
       <div class="form-actions setting-pills">

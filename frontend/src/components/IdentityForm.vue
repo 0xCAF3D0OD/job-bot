@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { api } from "../api/client";
 import { email, postcode, webAddress, type Check } from "../validators";
 import DisclosureRow from "./DisclosureRow.vue";
+import HoverNote from "./HoverNote.vue";
 
 // Coordonnées pour l'en-tête des lettres, du CV et du formulaire ORP : base locale seulement,
 // jamais envoyées à l'IA.
@@ -99,8 +100,9 @@ onMounted(async () => {
     >
       <fieldset>
         <p class="setting-desc">
-          Pour tes lettres, ton CV et les formulaires de candidature. Elles ne partent jamais à l'IA : la plateforme les
-          ajoute elle-même.
+          <HoverNote text="Pour tes lettres, ton CV et les formulaires de candidature : la plateforme les ajoute elle-même.">
+            Elles ne partent jamais à l'IA.
+          </HoverNote>
         </p>
         <p
           v-if="missing.length"
