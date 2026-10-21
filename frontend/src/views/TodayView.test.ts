@@ -2,6 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { UNDO_MS } from "../composables/useUndo";
 import TodayView from "./TodayView.vue";
 
 const GET = vi.fn();
@@ -95,13 +96,18 @@ describe("TodayView", () => {
     expect(wrapper.find("[data-test=checklist]").exists()).toBe(false);
   });
 
-  it("masquer la liste l'enregistre", async () => {
+  it("masquer la liste : partie tout de suite, enregistrée au bout de 6 secondes (0.84.2)", async () => {
+    vi.useFakeTimers();
     mockGet(today());
-    PUT.mockResolvedValue({ response: { status: 204 } });
+    PUT.mockResolvedValue({ response: { ok: true, status: 204 } });
     const wrapper = await mountView();
     await wrapper.find("[data-test=dismiss]").trigger("click");
     await flushPromises();
-    expect(PUT).toHaveBeenCalledWith("/api/onboarding", { body: { dismissed: true } });
+    expect(wrapper.find("[data-test=checklist]").exists()).toBe(false);
+    expect(PUT).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(UNDO_MS);
+    expect(PUT).toHaveBeenCalledWith("/api/onboarding", { body: { dismissed: true }, keepalive: false });
+    vi.useRealTimers();
   });
 
   it("prise en main : l'étape à faire mise en avant, coches dessinées (docs/59)", async () => {
@@ -125,8 +131,13 @@ describe("Comment ça marche (docs/21 §3)", () => {
     expect(wrapper.find("[data-test=journey-apply]").classes()).not.toContain("done");
     expect(wrapper.find("[data-test=journey-orp] a").attributes("href")).toBe("/candidatures/suivi");
     expect(wrapper.find("[data-test=journey-alerts]").text()).toContain("Candidatures › Alertes");
+    vi.useFakeTimers();
+    PUT.mockResolvedValue({ response: { ok: true } });
     await wrapper.find("[data-test=dismiss-journey]").trigger("click");
-    expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: true } });
+    expect(wrapper.find("[data-test=journey]").exists()).toBe(false);
+    await vi.advanceTimersByTimeAsync(UNDO_MS);
+    expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: true }, keepalive: false });
+    vi.useRealTimers();
   });
 
   it("terminé, le guide disparaît (docs/95 §5)", async () => {

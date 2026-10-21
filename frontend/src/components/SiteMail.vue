@@ -4,12 +4,13 @@ import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { api } from "../api/client";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import SiteCodes from "./SiteCodes.vue";
 
-// Les e-mails des sites (docs/112, docs/113, mise en page 0.83.1) : une rubrique, une carte.
-// En tête, où vont ces e-mails ; puis « J'attends un code » (la boîte relevée toutes les
-// 15 secondes pendant 5 minutes, le code s'affiche en haut de la page) ; puis, sous un filet,
-// les messages des sites gardés 30 jours, le texte à l'ouverture.
-type SiteCode = { search_id: number };
+// Les e-mails des sites (docs/112, docs/113, mise en page 0.84.2) : une rubrique, une carte.
+// En tête, le code de vérification : le code lui-même quand il est là, sinon « J'attends un
+// code » (la boîte relevée toutes les 15 secondes pendant 5 minutes) ; puis, sous un filet,
+// les messages des sites gardés 30 jours ; en pied, où passent ces e-mails, en une ligne.
+type SiteCode = { search_id: number; site: string; code: string; received_at: string };
 type SiteMessage = { id: number; site: string; subject?: string | null; received_at: string };
 const props = defineProps<{ codes: SiteCode[]; guestMailbox: boolean }>();
 const emit = defineEmits<{ refresh: [] }>();
@@ -79,45 +80,36 @@ onUnmounted(stop);
       Les e-mails des sites
     </h2>
     <div class="settings-card site-mail-card">
-      <!-- Dans la carte (0.83.2) : le titre et la carte s'alignent sur ceux de l'autre colonne. -->
-      <p
-        v-if="guestMailbox"
-        class="setting-desc site-mail-note"
-        data-test="guest-mailbox-note"
-      >
-        Ils arrivent dans la boîte de jobA1, hébergée en Suisse chez Infomaniak. jobA1 les range dans ton compte,
-        puis les efface de la boîte.
-      </p>
+      <!-- Le code arrivé prend la place de « J'attends un code » (0.84.2). -->
       <div class="site-mail-row">
-        <div class="site-mail-text">
-          <strong>Code de vérification</strong>
-          <p class="setting-desc">
-            <template v-if="waiting">
-              J'attends le code : je regarde ta boîte toutes les 15 secondes, pendant 5 minutes. Il s'affichera en haut
-              de cette page.
-            </template>
-            <template v-else>
-              Un site t'envoie un code ? Il s'affiche en haut de cette page dès qu'il arrive, et s'efface après
-              30 minutes.
-            </template>
-          </p>
-          <p
-            v-if="message"
-            class="hint"
-            role="status"
+        <SiteCodes
+          v-if="codes.length"
+          :codes="codes"
+        />
+        <template v-else>
+          <div class="site-mail-text">
+            <strong>Code de vérification</strong>
+            <p class="setting-desc">
+              {{ waiting ? "J'attends le code, pendant 5 minutes." : "Il s'affiche ici dès qu'il arrive." }}
+            </p>
+            <p
+              v-if="message"
+              class="hint"
+              role="status"
+            >
+              {{ message }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="pill"
+            :disabled="waiting"
+            data-test="site-code-expect"
+            @click="expect"
           >
-            {{ message }}
-          </p>
-        </div>
-        <button
-          type="button"
-          class="pill"
-          :disabled="waiting"
-          data-test="site-code-expect"
-          @click="expect"
-        >
-          {{ waiting ? "J'attends…" : "J'attends un code" }}
-        </button>
+            {{ waiting ? "J'attends…" : "J'attends un code" }}
+          </button>
+        </template>
       </div>
       <div
         v-if="items.length"
@@ -126,7 +118,7 @@ onUnmounted(stop);
       >
         <strong>Messages des sites</strong>
         <p class="setting-desc">
-          Ce que les sites t'écrivent et qui n'est pas une alerte, gardé 30 jours.
+          Hors alertes, gardés 30 jours.
         </p>
         <ul class="site-message-list">
           <li
@@ -158,6 +150,13 @@ onUnmounted(stop);
           </li>
         </ul>
       </div>
+      <p
+        v-if="guestMailbox"
+        class="hint site-mail-foot"
+        data-test="guest-mailbox-note"
+      >
+        Reçus en Suisse chez Infomaniak, effacés de la boîte une fois rangés.
+      </p>
     </div>
   </section>
 </template>

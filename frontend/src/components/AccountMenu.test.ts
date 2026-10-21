@@ -9,6 +9,8 @@ const collectNow = vi.fn();
 const me = ref<Record<string, unknown>>({ username: "kevin", auth_enabled: true, demo: false, is_owner: true });
 vi.mock("../composables/useCollect", () => ({ useCollect: () => ({ running: ref(false), collectNow }) }));
 vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ me, logout: vi.fn() }) }));
+const PUT = vi.fn();
+vi.mock("../api/client", () => ({ api: { PUT: (...a: unknown[]) => PUT(...a) } }));
 vi.mock("../composables/useProfiles", () => ({
   useProfiles: () => ({ list: ref(null), current: ref(null), load: vi.fn(), choose: vi.fn() }),
 }));
@@ -29,6 +31,18 @@ afterEach(() => {
 });
 
 describe("Menu du compte (docs/89)", () => {
+  it("« Comment ça marche » réaffiche les guides masqués et mène à Aujourd'hui (0.84.2)", async () => {
+    PUT.mockResolvedValue({ response: { ok: true } });
+    const { router, wrapper } = await mountAt("/candidatures/offres");
+    await wrapper.find("[data-test=account-menu]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=account-guides]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: false } });
+    expect(PUT).toHaveBeenCalledWith("/api/onboarding", { body: { dismissed: false } });
+    expect(router.currentRoute.value.path).toBe("/aujourdhui");
+  });
+
   it("l'initiale ouvre Profil, Réglages, Données personnelles, Diagnostic, la collecte et la déconnexion", async () => {
     const { router, wrapper } = await mountAt("/aujourdhui");
     const trigger = wrapper.find("[data-test=account-menu]");

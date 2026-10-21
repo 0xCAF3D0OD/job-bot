@@ -88,6 +88,7 @@ Sous 820 px, un écran où l'on travaille un moment (l'entraînement à l'entret
 3. Pas de filet orphelin : un filet sépare deux choses, jamais la dernière du bord.
 4. Un réglage d'un seul champ s'enregistre au changement (« Enregistré » une seconde à côté) ; un formulaire de plusieurs champs a un seul « Enregistrer » plein, à la fin.
 5. Les nombres sans flèches haut / bas, partout ; quelques valeurs sensées : des pastilles.
+6. La pastille de nombre (0.84.2, docs/115) : pleine, couleur principale, la même partout ; sur le coin haut droit de l'icône quand l'icône est au-dessus du nom, bordée de la couleur du fond ; après le nom quand l'icône est à côté. Elle ne remplace jamais l'icône.
 
 ## La couleur d'accent (docs/107)
 

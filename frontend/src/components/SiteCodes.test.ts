@@ -38,13 +38,15 @@ describe("Les codes des sites (docs/112)", () => {
     await wrapper.find("[data-test=site-code-expect]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches/expect-code");
-    expect(wrapper.text()).toContain("toutes les 15 secondes");
+    expect(wrapper.text()).toContain("J'attends le code, pendant 5 minutes.");
     await vi.advanceTimersByTimeAsync(10_000);
     expect(wrapper.emitted("refresh")).toHaveLength(1);
     await wrapper.setProps({ codes: [code] });
     await vi.advanceTimersByTimeAsync(20_000);
     expect(wrapper.emitted("refresh")).toHaveLength(1);
-    expect(wrapper.find("[data-test=site-code-expect]").exists()).toBe(true);
+    // Le code prend la place de « J'attends un code », dans la carte (0.84.2).
+    expect(wrapper.find("[data-test=site-code-value]").text()).toBe("482 913");
+    expect(wrapper.find("[data-test=site-code-expect]").exists()).toBe(false);
   });
 
   it("trop de relevés rapides : il le dit", async () => {
@@ -62,7 +64,7 @@ describe("Les codes des sites (docs/112)", () => {
     GET.mockResolvedValueOnce({ data: { text: "Ton compte est prêt." } });
     const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: true } });
     await flushPromises();
-    expect(wrapper.find("[data-test=guest-mailbox-note]").text()).toContain("puis les efface de la boîte");
+    expect(wrapper.find("[data-test=guest-mailbox-note]").text()).toContain("effacés de la boîte une fois rangés");
     expect(wrapper.find("[data-test=site-message]").text()).toContain("Bienvenue sur jobup");
     await wrapper.find("[data-test=site-message] button").trigger("click");
     await flushPromises();

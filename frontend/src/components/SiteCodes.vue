@@ -4,8 +4,8 @@ import { computed, ref } from "vue";
 import { sourceLabel } from "../format";
 
 // Les codes des sites (docs/112) : le code de vérification qu'un site envoie à l'adresse
-// jobA1 de la personne, en haut de la page Alertes, 30 minutes. « J'attends un code » est dans
-// la rubrique « Les e-mails des sites » (SiteMail, 0.83.1).
+// jobA1 de la personne, 30 minutes, dans la carte « Les e-mails des sites » (SiteMail), à la
+// place de « J'attends un code » (0.84.2).
 type SiteCode = { search_id: number; site: string; code: string; received_at: string };
 const props = defineProps<{ codes: SiteCode[] }>();
 
