@@ -81,4 +81,17 @@ describe("Progresser dans la capsule (docs/92)", () => {
     expect(reset).toHaveBeenCalled();
     expect(POST).not.toHaveBeenCalled();
   });
+
+  it("rien sur le métier : il le dit, sans remplir avec l'économie (docs/116 §4)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/news" ? { items: [] } : { items: [] } }),
+    );
+    const wrapper = await mountAt("/aujourdhui");
+    await wrapper.find("[data-test=progress-zone]").trigger("click");
+    await flushPromises();
+    const news = GET.mock.calls.filter(([path]) => path === "/api/news");
+    expect(news).toHaveLength(1);
+    expect(news[0]![1]).toEqual({ params: { query: { kind: "articles", limit: 3, domain_only: true } } });
+    expect(wrapper.text()).toContain("Rien de neuf sur ton métier pour l'instant.");
+  });
 });

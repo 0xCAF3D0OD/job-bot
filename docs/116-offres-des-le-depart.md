@@ -1,6 +1,6 @@
 # 116 — Des offres dès le départ, et seulement celles du métier (version 0.85.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-21 (« oui pour tout, vas-y »). Ordre retenu : §3 et §4 en 0.85.0 ; §1 en 0.86.0 ; §2 b et c ensuite.
 > Origine : tes questions du 2026-10-21 : « comment faire pour que l'utilisateur ait déjà des offres en créant son compte ; s'il a déjà un compte, il serait bien de pouvoir le lier à son compte jobA1 », et, plus tôt le même jour : « pourquoi Amy a-t-elle une offre de menuisier ? elle est communicante », « les actualités d'Amy ne sont pas en lien avec son travail ».
 > Se construit sur docs/03 (la collecte), docs/104 (les premières offres, coupées en 0.82.4), docs/112 (les codes des sites), docs/113 (la boîte des invités) et docs/15, docs/16 (les actualités).
 > Je ne suis pas juriste : les points marqués « à vérifier » touchent aux conditions d'utilisation de sites tiers.
@@ -60,6 +60,22 @@ Trois voies, de la plus sûre à la plus incertaine :
 - **Un filtre de transfert limité aux expéditeurs d'alertes** ; la page le dit : « Ne transfère pas tout : seulement les alertes. »
 - **L'annonce commune ne contient que des données publiques** ; supprimer son compte n'enlève pas une annonce que d'autres ont reçue, mais enlève tout ce qui la lie à soi.
 - **Pas dans la démo.**
+
+## Écarts (0.85.0 : §3 et §4)
+
+- **§3, seulement jobup** : seuls les e-mails « Suggestions d'offres » de jobup sont des recommandations reconnues (le libellé « Recommandations jobup » du journal). Les sites lus par l'IA ne signalent pas leurs blocs de recommandations, contrairement à ce que disait le cadrage : leurs offres passent toutes, comme avant.
+- **§3, la comparaison** : le début des mots (six lettres), sans accents ni casse, pour que « communicante » trouve « Chargé·e de communication » ; les mots trop généraux (« responsable », « assistante », « poste », les villes) ne comptent pas. Les mots du métier : les alertes actives et « Mon domaine ». Sans aucun mot connu, tout passe.
+- **§3, le journal** : la colonne « Offres » dit « (+ 4 hors métier, écartées) ».
+- **§4, les sources vérifiées** (le flux répond, articles du jour ou de la semaine) : communication, Cominmag et CB News ; commerce, Le Temps — Entreprises et Ecommerce Mag ; bâtiment, espazium (TRACÉS) ; santé et social, Le Temps — Santé et Infirmiers.com ; finance et administration, Investir.ch et Le Temps — Finance ; logistique, Supply Chain Magazine ; informatique, les sources existantes. **Restauration** : aucun flux romand trouvé (GastroJournal, HGZ, htr refusent ou n'en ont pas) ; à la place, une veille Google Actualités du catalogue (« restaurant OR boulangerie OR pâtisserie OR hôtellerie Suisse romande »).
+- **§4, les sources créées une fois** par la migration 0064 : un invité ne peut pas créer de source (table de la plateforme), il s'y abonne.
+- **§4, les comptes déjà créés** (Amy, Eliot) reçoivent les sources de leur métier à leur prochaine visite des actualités ; une fois par métier.
+- **§4, changer de famille** : dans Progresser › Actualités, suivre ou retirer des sources, comme avant ; changer de métier à l'accueil suit la nouvelle famille.
+- **§4, l'aperçu** garde les articles qui contiennent un mot du domaine, ceux des sources de la famille et des veilles, et les articles sur l'emploi des sources « marché du travail » (SECO) ; sinon « Rien de neuf sur ton métier pour l'instant. ».
+
+## Vérifié (0.85.0)
+
+- Tests backend : les titres gardés ou écartés (communication, menuisier) ; un vrai e-mail jobup de recommandations, une offre sur cinq gardée pour une alerte « ingénieur système » ; la famille de dix métiers ; chaque famille a des sources ; un compte « Communicante » suit Cominmag et CB News, et un article de Cominmag sans le mot « communicante » sort dans « Mon domaine » ; « Pâtissier » suit la veille de la restauration. 598 tests, ruff, mypy.
+- Tests de l'interface : l'aperçu ne demande que le domaine et dit « Rien de neuf sur ton métier » ; le journal compte les recommandations écartées. 407 tests, lint, vue-tsc.
 
 ## Les questions
 

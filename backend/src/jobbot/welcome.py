@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
 from jobbot.db.models import Setting
+from jobbot.news import trades
 from jobbot.profiles.service import main_profile
 
 KEY = "welcome"
@@ -61,4 +62,6 @@ async def save(session: AsyncSession, changes: dict[str, Any]) -> dict[str, Any]
             gone.add(previous.strip().lower())
         preferences["domain_keywords"] = [name] + [w for w in words if w.lower() not in gone]
         profile.preferences = preferences
+        # Les actualités du métier (docs/116 §4) : les sources de sa famille, ou une veille.
+        await trades.follow_trade(session, profile, name)
     return value if isinstance(value, dict) else {}

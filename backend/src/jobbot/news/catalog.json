@@ -1,11 +1,18 @@
 {
-  "_comment": "Sources suggérées des Actualités (docs/16 §4.1), vérifiées le 2026-10-06 : le flux répond et contient des contenus récents. Données publiques, sans donnée personnelle.",
+  "_comment": "Sources suggérées des Actualités (docs/16 §4.1), vérifiées le 2026-10-06 : le flux répond et contient des contenus récents. Données publiques, sans donnée personnelle. Familles de métiers (docs/116 §4) vérifiées le 2026-10-21.",
   "domains": {
     "emploi": "Marché et recherche d'emploi",
     "informatique": "Actualité informatique",
     "devops": "DevOps et Kubernetes",
     "cloud": "Cloud",
-    "developpement": "Développement"
+    "developpement": "Développement",
+    "communication": "Communication et marketing",
+    "commerce": "Vente et commerce",
+    "batiment": "Bâtiment et architecture",
+    "sante-social": "Santé et social",
+    "finance-admin": "Finance et administration",
+    "logistique": "Logistique et transport",
+    "restauration": "Restauration et métiers de bouche"
   },
   "sources": [
     {
@@ -52,6 +59,171 @@
       "labour_market": false,
       "match": null,
       "description": "Économie, entreprises et emploi en Suisse."
+    },
+    {
+      "id": "cominmag",
+      "name": "Cominmag",
+      "kind": "articles",
+      "url": "https://www.cominmag.ch",
+      "feed_url": "https://www.cominmag.ch/feed/",
+      "domains": [
+        "communication"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Communication, marketing et médias en Suisse romande."
+    },
+    {
+      "id": "cbnews",
+      "name": "CB News",
+      "kind": "articles",
+      "url": "https://www.cbnews.fr",
+      "feed_url": "https://www.cbnews.fr/rss.xml",
+      "domains": [
+        "communication"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Publicité, marques et médias."
+    },
+    {
+      "id": "letemps-entreprises",
+      "name": "Le Temps — Entreprises",
+      "kind": "articles",
+      "url": "https://www.letemps.ch/economie/entreprises",
+      "feed_url": "https://www.letemps.ch/economie/entreprises.rss",
+      "domains": [
+        "commerce"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Les entreprises suisses : commerce, industrie, distribution."
+    },
+    {
+      "id": "ecommercemag",
+      "name": "Ecommerce Mag",
+      "kind": "articles",
+      "url": "https://www.ecommercemag.fr",
+      "feed_url": "https://www.ecommercemag.fr/rss",
+      "domains": [
+        "commerce"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Commerce en ligne et en magasin."
+    },
+    {
+      "id": "espazium",
+      "name": "espazium — TRACÉS",
+      "kind": "articles",
+      "url": "https://www.espazium.ch/fr",
+      "feed_url": "https://www.espazium.ch/fr/rss.xml",
+      "domains": [
+        "batiment"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Architecture, ingénierie et construction en Suisse romande."
+    },
+    {
+      "id": "letemps-sante",
+      "name": "Le Temps — Santé",
+      "kind": "articles",
+      "url": "https://www.letemps.ch/sciences/sante",
+      "feed_url": "https://www.letemps.ch/sciences/sante.rss",
+      "domains": [
+        "sante-social"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Santé et système de soins en Suisse."
+    },
+    {
+      "id": "infirmiers",
+      "name": "Infirmiers.com",
+      "kind": "articles",
+      "url": "https://www.infirmiers.com",
+      "feed_url": "https://www.infirmiers.com/rss.xml",
+      "domains": [
+        "sante-social"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Soins, métiers et formation des soignants."
+    },
+    {
+      "id": "investir",
+      "name": "Investir.ch",
+      "kind": "articles",
+      "url": "https://www.investir.ch",
+      "feed_url": "https://www.investir.ch/feed/",
+      "domains": [
+        "finance-admin"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Finance et banque en Suisse."
+    },
+    {
+      "id": "letemps-finance",
+      "name": "Le Temps — Finance",
+      "kind": "articles",
+      "url": "https://www.letemps.ch/economie/finance",
+      "feed_url": "https://www.letemps.ch/economie/finance.rss",
+      "domains": [
+        "finance-admin"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Banques, assurances et marchés en Suisse."
+    },
+    {
+      "id": "supplychainmagazine",
+      "name": "Supply Chain Magazine",
+      "kind": "articles",
+      "url": "https://www.supplychainmagazine.fr",
+      "feed_url": "https://www.supplychainmagazine.fr/feed",
+      "domains": [
+        "logistique"
+      ],
+      "country": "FR",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Logistique, transport et entrepôts."
+    },
+    {
+      "id": "veille-restauration",
+      "name": "Veille : restauration en Suisse romande",
+      "kind": "articles",
+      "url": "https://news.google.com/",
+      "feed_url": "https://news.google.com/rss/search?q=restaurant+OR+boulangerie+OR+p%C3%A2tisserie+OR+h%C3%B4tellerie+Suisse+romande&hl=fr&gl=CH&ceid=CH%3Afr",
+      "domains": [
+        "restauration"
+      ],
+      "country": "CH",
+      "language": "fr",
+      "labour_market": false,
+      "match": null,
+      "description": "Restaurants, boulangeries, pâtisseries et hôtels romands, dans Google Actualités."
     },
     {
       "id": "france-travail",

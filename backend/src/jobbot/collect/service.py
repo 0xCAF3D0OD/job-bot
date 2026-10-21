@@ -17,6 +17,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
+from jobbot.collect import topic
 from jobbot.core.filter import canton_of
 from jobbot.core.normalize import normalize_offer
 from jobbot.db.models import (
@@ -248,6 +249,12 @@ async def ingest_email(
     kind = "code" if found else "message" if message else None
     key = raw_key(email)
     runtime.storage.put(key, fetched.raw)
+    # Les recommandations du site : seulement celles du métier (docs/116 §3).
+    offers = alert.offers
+    if alert.recommended and offers:
+        async with runtime.sessionmaker() as session:
+            stems = await topic.trade_stems(session)
+        offers = [raw for raw in offers if topic.on_topic(raw.title, stems)]
 
     async with runtime.sessionmaker.begin() as session:
         search_id = await session.scalar(
@@ -263,7 +270,8 @@ async def ingest_email(
                 parse_status=status,
                 parser_version=version,
                 error=error,
-                results_count=len(alert.offers),
+                results_count=len(offers),
+                off_topic_count=len(alert.offers) - len(offers),
                 job_run_id=run_id,
                 confirm_url=confirm,
                 confirmed_at=confirmed_at,
@@ -276,7 +284,7 @@ async def ingest_email(
         if search_id is None:
             return None
         search = await session.get_one(Search, search_id)
-        search.new_offers_count = await ingest_offers(session, search, source, alert.offers)
+        search.new_offers_count = await ingest_offers(session, search, source, offers)
 
     COLLECT_EMAILS.labels(source=source, parse_status=status).inc()
     if found is not None:

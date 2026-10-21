@@ -74,5 +74,6 @@ class JobupParser:
             )
 
         text = " ".join(lines[:3])
-        label = "Recommandations jobup" if _RECOMMENDATIONS.search(text) else email.subject
-        return ParsedAlert(alert_label=label, offers=offers)
+        recommended = bool(_RECOMMENDATIONS.search(text))
+        label = "Recommandations jobup" if recommended else email.subject
+        return ParsedAlert(alert_label=label, offers=offers, recommended=recommended)

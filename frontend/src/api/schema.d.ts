@@ -6465,6 +6465,11 @@ export interface components {
             /** New Offers Count */
             new_offers_count: number;
             /**
+             * Off Topic Count
+             * @default 0
+             */
+            off_topic_count: number;
+            /**
              * Collected At
              * Format: date-time
              */
@@ -6656,6 +6661,11 @@ export interface components {
             results_count: number;
             /** New Offers Count */
             new_offers_count: number;
+            /**
+             * Off Topic Count
+             * @default 0
+             */
+            off_topic_count: number;
             /**
              * Collected At
              * Format: date-time

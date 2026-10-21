@@ -148,7 +148,13 @@ onMounted(() => void load());
             <td>{{ formatDateTime(search.received_at) }}</td>
             <td>{{ sourceLabel[search.source] }}</td>
             <td>{{ search.alert_label ?? search.subject ?? "–" }}</td>
-            <td>{{ search.results_count }}</td>
+            <td>
+              {{ search.results_count }}<span
+                v-if="search.off_topic_count"
+                class="hint"
+                data-test="off-topic"
+              > (+ {{ search.off_topic_count }} hors métier, écartées)</span>
+            </td>
             <td>{{ search.new_offers_count }}</td>
             <td :class="['parse', search.parse_status]">
               {{ parseStatusLabel[search.parse_status] }}
