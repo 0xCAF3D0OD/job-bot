@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/115-structure-alertes-pastilles.md](docs/115-structure-alertes-pastilles.md) (0.84.2)
+- Version en cours : [docs/115-structure-alertes-pastilles.md](docs/115-structure-alertes-pastilles.md) (0.84.3)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -180,7 +180,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.83.2 | La page Alertes en deux colonnes sur ordinateur : les alertes à gauche, les e-mails des sites à droite, titres et cartes alignés | livrée |
 | 0.84.0 | « Cette note ne me correspond pas » : trop haute ou trop basse, pourquoi ; un bloc de profil proposé (l'offre renotée), ou un critère en un clic pour le lieu, le taux, le contrat | livrée |
 | 0.84.1 | L'extension dans la boutique de Mozilla : le lien dans les Réglages ; la description et la fiche de la 0.59.0 disent les codes de vérification et leur accord | livrée |
-| 0.84.2 | La page Alertes resserrée : le code dans la carte des e-mails des sites, moins de texte, les deux cartes de même hauteur ; une seule règle pour les pastilles ; « Comment ça marche » masqué s'annule et revient par le menu du compte | en cours |
+| 0.84.2 | La page Alertes resserrée : le code dans la carte des e-mails des sites, moins de texte, les deux cartes de même hauteur ; une seule règle pour les pastilles ; « Comment ça marche » masqué s'annule et revient par le menu du compte | livrée |
+| 0.84.3 | Le résumé des alertes structuré (une recherche par ligne, l'état en pastille) ; une image haute à l'étape 2 de l'assistant ; la page de maintenance sans carte | en cours |
 
 ## Lancer en local
 

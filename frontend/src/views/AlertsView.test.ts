@@ -104,7 +104,7 @@ describe("Alertes, résumé (docs/21 §4)", () => {
     expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(false);
     const summary = wrapper.find("[data-test=alerts-summary]");
     expect(summary.text()).toContain("2 recherches suivies");
-    expect(summary.text()).toContain("dernière alerte reçue le 6 octobre");
+    expect(summary.text()).toContain("Dernière alerte reçue le 6 octobre");
     const rows = wrapper.findAll("[data-test=summary-row]");
     expect(rows[0]!.classes()).toContain("ok");
     expect(rows[1]!.classes()).toContain("late");
