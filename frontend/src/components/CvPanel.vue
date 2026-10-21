@@ -284,7 +284,7 @@ onMounted(() => void load());
       </article>
     </div>
 
-    <aside class="prep-side">
+    <section class="prep-side">
       <OfferBrief :offer="offer" />
       <div class="side-card">
         <h2>
@@ -449,6 +449,6 @@ onMounted(() => void load());
           </li>
         </ul>
       </div>
-    </aside>
+    </section>
   </div>
 </template>

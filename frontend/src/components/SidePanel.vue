@@ -108,7 +108,7 @@ const openStack: symbol[] = [];
       name="side-slide"
       appear
     >
-      <aside
+      <div
         v-show="open"
         ref="aside"
         class="side-panel"
@@ -135,7 +135,7 @@ const openStack: symbol[] = [];
         <div class="side-panel-body">
           <slot />
         </div>
-      </aside>
+      </div>
     </Transition>
   </Teleport>
 </template>

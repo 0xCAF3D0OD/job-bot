@@ -14,6 +14,7 @@ const InsightsView = () => import("./views/InsightsView.vue");
 const OrpMeetingView = () => import("./views/OrpMeetingView.vue");
 const DiagnosticView = () => import("./views/DiagnosticView.vue");
 const AccessView = () => import("./views/AccessView.vue");
+const AccessibilityView = () => import("./views/AccessibilityView.vue");
 const DiscoverView = () => import("./views/DiscoverView.vue");
 const ExtensionLinkView = () => import("./views/ExtensionLinkView.vue");
 const PrivacyView = () => import("./views/PrivacyView.vue");
@@ -165,6 +166,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/la-plateforme", name: "discover", component: DiscoverView },
   // Ce que la plateforme garde, lisible sans connexion (docs/65 §6).
   { path: "/tes-donnees", name: "privacy", component: PrivacyView },
+  // Accessibilité (docs/117 §1) : publique, liée depuis Données personnelles.
+  { path: "/accessibilite", name: "accessibility", component: AccessibilityView },
   // L'accueil après la première connexion (docs/66), plein écran, sans menu.
   { path: "/bienvenue", name: "welcome", component: WelcomeView, meta: { bare: true } },
   // Relier l'extension du navigateur en un clic, ouverte par l'extension (docs/71 §4).
@@ -184,7 +187,7 @@ export const router = createRouter({
 // Ouvert sans connexion : la présentation de la plateforme, la connexion (docs/18 §1), les liens
 // d'accès, la demande de compte (docs/102) et ce qui est gardé. Les Actualités demandent la
 // connexion depuis la 0.55.0 (docs/67).
-export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "signup", "privacy"]);
+export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "signup", "privacy", "accessibility"]);
 
 router.beforeEach(async (to) => {
   const { loggedIn, load } = useAuth();

@@ -447,6 +447,7 @@ onUnmounted(() => assistant.setFocus(null));
             v-if="progress !== null"
             class="budget-bar"
             role="progressbar"
+            aria-label="Objectif ORP du mois"
             :aria-valuenow="Math.round(progress * 100)"
             aria-valuemin="0"
             aria-valuemax="100"
@@ -590,7 +591,7 @@ onUnmounted(() => assistant.setFocus(null));
         </div>
         <!-- Panneau à la hauteur du calendrier, liste défilante estompée en haut et en bas
              tant qu'il reste des cartes de ce côté (retour d'usage du 2026-10-07). -->
-        <aside
+        <section
           class="suivi-panel"
           :style="panelHeight ? { height: `${panelHeight}px` } : undefined"
           data-test="day-panel"
@@ -676,7 +677,7 @@ onUnmounted(() => assistant.setFocus(null));
               </li>
             </ul>
           </section>
-        </aside>
+        </section>
       </div>
 
       <template v-else>

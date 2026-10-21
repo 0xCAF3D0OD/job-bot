@@ -366,7 +366,7 @@ onUnmounted(() => {
     <div :class="['offers-grid', { 'has-selection': selected }]">
       <!-- Téléphone (docs/36 §3) : une carte pleine largeur qui pousse la liste. -->
       <PushTransition :enabled="phone">
-        <aside
+        <section
           v-show="!phone || filtersOpen"
           :class="['filters-column', { open: filtersOpen }]"
         >
@@ -395,7 +395,7 @@ onUnmounted(() => {
             @visibility="setVisibility"
             @done="filtersOpen = false"
           />
-        </aside>
+        </section>
       </PushTransition>
 
       <div class="offers-list">

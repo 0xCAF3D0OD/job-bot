@@ -50,6 +50,26 @@ Correction de ma comparaison précédente : j'avais écrit « pas de vidéo » ;
 - Toutes les pages parcourues dans la démo construite (Aujourd'hui, les cinq onglets de Candidatures, Progresser, Profil, Réglages, Diagnostic, La plateforme, Données personnelles, page introuvable) : chacune s'ouvre. Ce parcours a trouvé l'erreur des actualités de la démo, corrigée à part (0.86.2).
 - 408 tests de l'interface, lint, vue-tsc.
 
+## Écarts (0.88.0 : §1 et §2)
+
+- **Le contrôle automatique** est un audit sur la démo, comme celui des rangées : `frontend/scripts/accessibilite.py` passe axe-core (règles WCAG 2.1 AA) sur 15 pages, à 1440 et 390 px, puis le parcours au clavier. Dans les tests de l'interface (jsdom), axe ne peut pas juger les contrastes ni la mise en page : la démo, oui. axe-core n'est qu'une dépendance de développement.
+- **Ce que l'audit a trouvé, et la correction** :
+  - Suivi, le calendrier : déclaré en grille sans lignes (rôles `grid`, `gridcell`, `columnheader` mal imbriqués, 31 jours en défaut « critique ») → un groupe de boutons ; le nom de chaque jour dit le jour de la semaine (« mardi 21 ») ; les en-têtes « L M M… » sont visuels.
+  - Les deux barres de progression (objectif ORP du mois, dépense de l'IA) sans nom → nommées.
+  - Bilan : le gris des mois réussis, sur fond menthe, à 4,4:1 → un gris plus sombre (4,5:1 exigé). La plateforme : le gris des maquettes à 4,2:1 → idem.
+  - Réglages : un lien dans une phrase, reconnaissable seulement à sa couleur → souligné.
+  - Le bandeau de la démo hors des repères de la page → un repère nommé « Démo » ; six `aside` dans le contenu de la page → des sections.
+  - Le parcours au clavier (Aujourd'hui, Candidatures, une offre, « Cette note ne me correspond pas », « Trop haute ») : rien ne bloquait.
+- **Résultat** : 0 défaut grave, 0 défaut mineur, parcours au clavier sans blocage.
+- **La page « Accessibilité »** (`/accessibilite`, publique) : il n'y a pas de pied de page ; elle est liée depuis Données personnelles.
+- **§2, la dictée** : « Écris ou dicte ta question… » dans l'assistant, « Ta réponse, écrite ou dictée… » dans l'entraînement à l'entretien, sur téléphone seulement. Pas de phrase d'aide en plus (docs/interface.md, titres et textes 5).
+
+## Vérifié (0.88.0)
+
+- `accessibilite.py` sur la démo : `{"défauts graves": 0, "défauts mineurs": 0, "parcours au clavier": []}`.
+- 409 tests de l'interface (la page Accessibilité), lint, vue-tsc ; `make poids` : 82,0 / 258,0 / 38,7 Ko.
+- L'audit des rangées remonte les 8 rangées des Réglages corrigées par la 0.86.1 (#267), pas encore sur cette branche.
+
 ## Les questions
 
 1. **§1** : le contrôle automatique sur les pages principales, le parcours au clavier, la page « Accessibilité » : d'accord ? Je corrige directement ce qui est trouvé, ou je te montre la liste d'abord ?

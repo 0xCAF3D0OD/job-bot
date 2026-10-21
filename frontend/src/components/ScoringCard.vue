@@ -112,6 +112,7 @@ defineExpose({ load });
       <div
         class="budget-bar"
         role="progressbar"
+        aria-label="Dépense du mois"
         :aria-valuenow="Math.round(spendRatio * 100)"
         aria-valuemin="0"
         aria-valuemax="100"

@@ -177,7 +177,8 @@ onUnmounted(() => {
   <div
     v-if="me?.demo && !route.meta.bare"
     class="demo-banner"
-    role="note"
+    role="region"
+    aria-label="Démo"
     data-test="demo-banner"
   >
     <strong>Démo</strong>

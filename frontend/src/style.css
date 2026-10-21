@@ -3506,3 +3506,10 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
   .score-correction-block .pill-row { width: 100%; display: grid; grid-template-columns: 1fr; }
   .score-correction-block .pill-row > * { min-height: 3rem; justify-content: center; }
 }
+
+/* Accessibilité vérifiée (docs/117 §1, 0.88.0) : les défauts relevés par axe-core. */
+/* Le gris sur un fond teinté (le Bilan, les maquettes de La plateforme) passe sous 4,5:1 :
+   un gris un peu plus sombre, dans les deux thèmes. */
+.gauge-history li.ok .muted, .dmock-bar strong, .dmock-grow small { color: color-mix(in srgb, var(--muted) 75%, var(--text)); }
+/* Un lien dans une phrase se voit sans la couleur : souligné. */
+.setting-info a, .setting-desc a { text-decoration: underline; text-underline-offset: 0.15em; }

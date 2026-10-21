@@ -7,11 +7,14 @@ import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { offerUndo } from "../composables/useUndo";
+import { usePhone } from "../composables/usePhone";
 
 // S'entraîner à l'entretien (docs/75) : trois choix, cinq questions du recruteur simulé, une
 // relance au plus, puis le retour. Un entraînement n'est jamais compté comme un vrai entretien.
 const props = defineProps<{ application?: Application | null; practiceId?: number | null }>();
 const emit = defineEmits<{ close: []; changed: [] }>();
+// Sur téléphone, le micro du clavier dicte la réponse (docs/117 §2).
+const { phone } = usePhone();
 
 type Kind = Practice["kind"];
 type Tone = Practice["tone"];
@@ -456,7 +459,7 @@ onMounted(async () => {
             v-model="draft"
             rows="3"
             maxlength="4000"
-            placeholder="Ta réponse… (Entrée pour envoyer, Maj+Entrée pour aller à la ligne)"
+            :placeholder="phone ? 'Ta réponse, écrite ou dictée…' : 'Ta réponse… (Entrée pour envoyer, Maj+Entrée pour aller à la ligne)'"
             aria-label="Ta réponse"
             data-test="practice-input"
             @keydown="onKey"
