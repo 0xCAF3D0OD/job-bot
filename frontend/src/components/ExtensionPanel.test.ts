@@ -15,6 +15,6 @@ describe("Extension (docs/71)", () => {
     expect(wrapper.find("[data-test=extension-install]").attributes("href")).toBe(
       "https://addons.mozilla.org/addon/joba1-remplir-mes-candidatures/",
     );
-    expect(wrapper.text()).toContain("Aucune candidature n'est envoyée à ta place.");
+    expect(wrapper.text()).toContain("sans envoyer de candidature.");
   });
 });

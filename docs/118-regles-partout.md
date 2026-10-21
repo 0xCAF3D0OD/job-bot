@@ -1,6 +1,6 @@
 # 118 — Les règles de l'interface, partout (version 0.89.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-21 (« oui pour tout, vas-y ») ; les pages hors démo corrigées directement.
 > Origine : ta question du 2026-10-21, après la 0.86.1 : « est-ce qu'on peut regarder pour les règles UI/UX qu'on a commencées un peu plus tôt ? ». La 0.86.1 a appliqué `docs/interface.md` à la page Alertes ; ce cadrage l'étend aux autres pages.
 
 ## Le constat
@@ -46,6 +46,19 @@ La fiche d'une offre, Préparer, l'accueil, l'assistant des alertes : captures �
 ### 4. Un troisième audit, pour que ça tienne
 
 `frontend/scripts/regles.py`, sur la démo, comme les deux autres : il échoue si une description dépasse 20 mots, si un titre contient « je, tu, ton, ta, tes, mon, ma, mes » ou finit par « ? », s'il y a une barre verticale ou deux cadres l'un dans l'autre dans une carte. Ajouté à la règle « avant une PR d'interface » (contrôles 4 et 5).
+
+## Écarts
+
+- **§1** : la règle « Comme les CFF 1 » réécrite dans `docs/interface.md`. Descriptions raccourcies, le reste au survol : la recherche chez l'employeur (le coût passe au survol), la pause, les sites suivis (le coût de l'IA au survol), les coordonnées (« Elles ne partent jamais à l'IA. » reste visible : c'est ce qui part à l'IA), les certificats (« Avant l'IA, ton nom est retiré. »), les rappels des jours sans recherche, ntfy, l'extension, le résumé des données (lien « Ce qui est gardé »), la démo.
+- **§2** : la barre verticale retirée de `DisclosureRow` pour toute la plateforme (Aujourd'hui, Suivi, Coordonnées, Formations, et partout ailleurs).
+- **Les titres** : « Message au conseiller », « Ce qui est possible » ; dans « Cette note ne me correspond pas », « Elle est… » et « Pourquoi ? » deviennent « Écart » et « Raison ».
+- **§3, hors démo** : l'audit couvre maintenant la fiche d'une offre et Préparer (la première offre de la démo). Relu sur captures : Préparer est conforme ; la fiche avait les deux questions ci-dessus. L'accueil et l'assistant des alertes (déjà revus en 0.83 et 0.86.1) ne sont pas dans la démo : à relire quand tu les rouvres.
+- **§4** : `frontend/scripts/regles.py`, ajouté à la règle « avant une PR d'interface » (contrôles 6).
+
+## Vérifié
+
+- Les trois audits sur la démo, à 1440 et 390 px : règles `{"défauts": 0}` (49 avant), rangées 0, accessibilité 0 grave, 0 mineur, clavier sans blocage.
+- 409 tests de l'interface, lint, vue-tsc.
 
 ## Les questions
 

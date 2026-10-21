@@ -19,6 +19,7 @@ import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.v
 import SitesPanel from "../components/SitesPanel.vue";
 
 import AiSpend from "../components/AiSpend.vue";
+import HoverNote from "../components/HoverNote.vue";
 const form = ref<SettingsModel>({
   orp_monthly_target: null,
   notify_score_threshold: 70,
@@ -379,8 +380,9 @@ onUnmounted(() => spy?.disconnect());
                 <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
               </legend>
               <p class="setting-desc">
-                Dès cette note, l'annonce est cherchée chez l'employeur, pour postuler sans passer par un site d'emploi
-                (environ 0,02 $ si l'IA est nécessaire).
+                <HoverNote text="Pour postuler sans passer par un site d'emploi. Environ 0,02 $ si l'IA est nécessaire.">
+                  Dès cette note, l'annonce est cherchée chez l'employeur.
+                </HoverNote>
               </p>
               <div class="inline-field">
                 <input
@@ -429,7 +431,7 @@ onUnmounted(() => spy?.disconnect());
             <fieldset>
               <legend>Jours de recherche</legend>
               <p class="setting-desc">
-                Les autres jours, rien n'arrive sur ton téléphone, sauf les rappels avec une date limite.
+                Les autres jours, seulement les rappels avec une date limite.
               </p>
               <div class="rhythm-week">
                 <!-- Des pastilles Lu à Di (docs/110) : de vraies cases à cocher, présentées en pastilles. -->
@@ -453,8 +455,9 @@ onUnmounted(() => spy?.disconnect());
             <fieldset data-test="rhythm-pause">
               <legend>Une pause</legend>
               <p class="setting-desc">
-                Vacances, maladie : ni meilleures offres ni message d'offres, et pas de retard au retour. Annonce-la à ton
-                conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.
+                <HoverNote text="Pas de retard au retour. Annonce-la à ton conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.">
+                  Vacances, maladie : ni offres ni message pendant la pause.
+                </HoverNote>
               </p>
               <div class="rhythm-pause">
                 <label>
@@ -615,7 +618,7 @@ onUnmounted(() => spy?.disconnect());
                 <label class="filter-switch setting-switch">
                   <span>
                     <span class="setting-title">Recevoir sur mon téléphone</span>
-                    <span class="setting-desc">Les offres bien notées, les relances et le rappel ORP, avec l'application gratuite ntfy.</span>
+                    <span class="setting-desc">Offres bien notées, relances et rappel ORP, par l'application ntfy.</span>
                   </span>
                   <input
                     type="checkbox"

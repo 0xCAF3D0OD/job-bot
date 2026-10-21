@@ -79,7 +79,7 @@ onMounted(load);
       </legend>
       <!-- La description toujours visible, comme les CFF (docs/110). -->
       <p class="setting-desc">
-        Elle remplit tes candidatures, Job-Room et tes codes de vérification. Aucune candidature n'est envoyée à ta place.
+        Elle remplit tes candidatures et tes codes, sans envoyer de candidature.
       </p>
       <ol class="extension-steps">
         <li>

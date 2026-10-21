@@ -73,7 +73,7 @@ async function everywhere(): Promise<void> {
     class="hint"
     data-test="auth-demo"
   >
-    Démo : pas de connexion, et rien de ce que tu fais n'est enregistré.
+    Démo : rien de ce que tu fais n'est enregistré.
   </p>
   <p
     v-else-if="me && !me.auth_enabled"

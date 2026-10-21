@@ -30,6 +30,7 @@ Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur 
 3. Gardent leur forme : zones de texte, cases, curseurs, étiquettes, la capsule.
 4. Avant une PR d'interface, l'audit des rangées (`frontend/scripts/alignement.py`) est vide.
 5. Et l'audit d'accessibilité (`frontend/scripts/accessibilite.py`, docs/117) : aucun défaut, parcours au clavier sans blocage.
+6. Et l'audit des règles (`frontend/scripts/regles.py`, docs/118) : pas d'aide de plus de 20 mots, pas de titre avec « je, tu, ton, ta, tes, mon, ma, mes » ou en question, pas de barre verticale ni de cadre dans un cadre.
 
 ## Iconographie (docs/101)
 
@@ -85,7 +86,7 @@ Sous 820 px, un écran où l'on travaille un moment (l'entraînement à l'entret
 ## Les Réglages (docs/106)
 
 1. Une rubrique, une carte ; ses parties séparées par leur titre et un filet fin (0.77.3), jamais une carte dans la carte.
-2. Pas de barre verticale dans une carte : un contenu replié s'ouvre sous son titre, au même retrait.
+2. Pas de barre verticale : un contenu replié s'ouvre sous son titre, au même retrait, dans une carte ou ailleurs (`DisclosureRow`, docs/118 §2).
 3. Pas de filet orphelin : un filet sépare deux choses, jamais la dernière du bord.
 4. Un réglage d'un seul champ s'enregistre au changement (« Enregistré » une seconde à côté) ; un formulaire de plusieurs champs a un seul « Enregistrer » plein, à la fin.
 5. Les nombres sans flèches haut / bas, partout ; quelques valeurs sensées : des pastilles.
@@ -107,7 +108,7 @@ Une description au survol (`HoverNote`) a, sur téléphone, un « i » à droite
 
 ## Comme les CFF (docs/110)
 
-1. Un titre de section au-dessus de sa carte ; dans la carte, le titre d'un réglage en gras et sa description grise, toujours visible.
+1. Un titre de section au-dessus de sa carte ; dans la carte, le titre d'un réglage en gras et sa description grise, toujours visible, **en une ligne** (12 mots environ) : ce que fait le réglage. Le pourquoi, le coût, les exceptions passent au survol (`HoverNote`) (docs/118 §1).
 2. L'interrupteur à droite, centré sur le titre et sa description ; sous un choix, la description alignée sur le libellé ; l'étiquette d'une date dans le champ.
 3. Ce qu'on modifie dans une carte blanche bordée ; ce qu'on consulte sur fond gris (`setting-info`) ; les actions en pilules (`pill`), pleine largeur sur téléphone ; un état vide en cadre pointillé.
 4. Une longue page sur téléphone a des marqueurs collés en haut, qui suivent la lecture.
