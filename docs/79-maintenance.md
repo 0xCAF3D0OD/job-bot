@@ -76,3 +76,18 @@ Ce qui sera vérifié :
     - la page d'attente s'affiche, sur ordinateur et sur téléphone ;
     - elle disparaît 6 à 7 secondes après le retour de l'API.
   - Sur une instance de brouillon avec `jobbot maintenance on` : l'exploitant passe et voit le rappel.
+
+## 0.82.1 — La page d'attente refaite
+
+Ton retour du 2026-10-21, capture sur téléphone à l'appui : « j'aime pas trop la page de maintenance, il faut la refaire, il n'y a pas de structure, sur téléphone et ordinateur ».
+
+- **Ce qui n'allait pas** : un titre et deux phrases posés au milieu d'une page blanche, sans en-tête ; un grand vide au-dessus, où **le dessin manquait** : il se téléchargeait à la demande, justement quand le serveur ne répondait plus.
+- **L'en-tête de jobA1** (le logo et le nom), comme sur les autres pages : on sait où l'on est.
+- **Une carte**, au centre sur ordinateur (36 rem), en haut sur téléphone :
+  - le dessin de la maintenance, **dans l'application dès le départ** (il ne dépend plus du réseau) ;
+  - le titre « jobA1 revient dans un instant » et la raison (annoncée par l'exploitant, ou « la plateforme se met à jour, ou la connexion est coupée ») ;
+  - **une bande grise** : un point qui pulse, **« Nouvel essai dans 7 secondes »** (compte à rebours), et **« Réessayer maintenant »**, qui sonde tout de suite ;
+  - la note qui rassure, en gris : « Ce que tu écrivais n'est pas perdu : tout reprend là où tu en étais. »
+- **Sur téléphone**, le bouton prend toute la largeur (3 rem de haut), sous le compte à rebours.
+- **Rien d'autre ne change** : la page se pose par-dessus sans recharger, le reste est inerte, le curseur revient où il était ; avec « réduire les animations », le point ne pulse pas.
+- **Vérifié** : tests (le compte à rebours, « Réessayer maintenant » qui sonde aussitôt et ferme la page si l'API répond, le dessin présent sans téléchargement, l'en-tête, la note) ; captures Playwright à 414 et 1280 px, et la bande d'état mesurée dans la carte à 414, 900 et 1280 px.

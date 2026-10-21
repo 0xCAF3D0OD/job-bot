@@ -15,8 +15,10 @@ vi.mock("../api/client", async (original) => ({
 // Une page avec une saisie en cours, et la page d'attente par-dessus.
 const Host = defineComponent({
   setup() {
-    const { waiting, message, bypass, reading, refused } = useMaintenance();
+    const { waiting, message, bypass, reading, refused, nextAt, retry } = useMaintenance();
     return () => [
+      h("button", { "data-test": "probe-retry", onClick: () => void retry() }),
+      nextAt.value ? h("p", { "data-test": "probe-next" }) : null,
       h("textarea", { "data-test": "draft" }),
       bypass.value ? h("p", { "data-test": "bypass" }, "rappel") : null,
       reading.value ? h("p", { "data-test": "reading" }, message.value ?? "") : null,
@@ -100,4 +102,45 @@ describe("maintenance en lecture seule (docs/80)", () => {
     expect((wrapper.find("[data-test=draft]").element as HTMLTextAreaElement).value).toBe("Brouillon");
     wrapper.unmount();
   });
+});
+
+describe("page de maintenance, mise en page (0.82.1)", () => {
+  it("le compte à rebours du prochain essai, et « Réessayer maintenant »", async () => {
+    const wrapper = mount(MaintenanceOverlay, {
+      props: { waiting: true, message: null, nextAt: Date.now() + POLL_MS },
+      attachTo: "#app",
+    });
+    await flushPromises();
+    const next = () => document.querySelector("[data-test=maintenance-next]")?.textContent;
+    expect(next()).toBe("Nouvel essai dans 10 secondes");
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(next()).toBe("Nouvel essai dans 7 secondes");
+    (document.querySelector("[data-test=maintenance-retry]") as HTMLButtonElement).click();
+    await flushPromises();
+    expect(wrapper.emitted("retry")).toHaveLength(1);
+    expect(next()).toBe("Nouvel essai en cours…");
+    // Le dessin est déjà là, sans rien télécharger : le serveur ne répond peut-être plus.
+    expect(document.querySelector("[data-drawing=maintenance]")?.innerHTML).toContain("<svg");
+    // L'en-tête de jobA1 et la note qui rassure.
+    expect(document.querySelector(".maintenance .brand")?.textContent).toContain("jobA1");
+    expect(document.querySelector(".maintenance-note")?.textContent).toContain("n'est pas perdu");
+    wrapper.unmount();
+  });
+
+  it("« Réessayer maintenant » sonde tout de suite, sans attendre les 10 s", async () => {
+    GET.mockResolvedValue({ data: { active: false, reason: null, message: null, bypass: false } });
+    const fetch = vi.fn().mockResolvedValue(state({ active: false, message: null, bypass: false }));
+    vi.stubGlobal("fetch", fetch);
+    const wrapper = mount(Host, { attachTo: "#app" });
+    await flushPromises();
+    window.dispatchEvent(new CustomEvent(MAINTENANCE_EVENT, { detail: null }));
+    await flushPromises();
+    expect(document.querySelector("[data-test=maintenance]")).not.toBeNull();
+    expect(wrapper.find("[data-test=probe-next]").exists()).toBe(true);
+    await wrapper.find("[data-test=probe-retry]").trigger("click");
+    await flushPromises();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("[data-test=maintenance]")).toBeNull();
+    wrapper.unmount();
+});
 });

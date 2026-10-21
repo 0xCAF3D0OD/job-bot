@@ -9,6 +9,13 @@ import { ref, watch } from "vue";
 const props = defineProps<{ name: DrawingName }>();
 
 const files = import.meta.glob<string>("../assets/dessins/*.svg", { query: "?raw", import: "default" });
+// Celui de la maintenance est dans l'application dès le départ : la page d'attente s'affiche
+// justement quand le serveur ne répond plus, et ne pourrait pas le télécharger (0.82.1).
+const ready = import.meta.glob<string>("../assets/dessins/maintenance.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
 const host = ref<HTMLElement | null>(null);
 
 // Le texte du dessin et son emplacement arrivent dans n'importe quel ordre : on le pose dès que
@@ -17,6 +24,11 @@ const svg = ref("");
 watch(
   () => props.name,
   async (name) => {
+    const inline = ready[`../assets/dessins/${name}.svg`];
+    if (inline) {
+      svg.value = inline;
+      return;
+    }
     const load = files[`../assets/dessins/${name}.svg`];
     const text = load ? await load() : "";
     if (name === props.name) svg.value = text;
