@@ -8,6 +8,8 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import FirstOffers from "../components/FirstOffers.vue";
+import SiteCodes from "../components/SiteCodes.vue";
+import SiteMessages from "../components/SiteMessages.vue";
 import JournalPanel from "../components/JournalPanel.vue";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -50,6 +52,12 @@ onMounted(() => void load());
 
 <template>
   <section class="jobs-body">
+    <!-- Les codes des sites (docs/112) : en tête, le temps de les recopier. -->
+    <SiteCodes
+      v-if="page"
+      :codes="page.codes ?? []"
+      @refresh="load()"
+    />
     <div
       v-if="page?.to_confirm?.length"
       class="notice to-confirm"
@@ -103,6 +111,7 @@ onMounted(() => void load());
     </template>
 
     <FirstOffers where="alerts" />
+    <SiteMessages />
 
     <DisclosureRow
       class="journal-toggle"

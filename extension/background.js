@@ -12,6 +12,13 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, reply) => {
+  // Depuis le panneau : l'accès aux pages du code vient d'être donné, on commence (docs/112).
+  if (message?.type === "watch-code" && typeof message.tabId === "number") {
+    const page = codePage(message.url);
+    if (!page) return false;
+    watchCode(message.tabId, page).then(reply, () => reply(false));
+    return true;
+  }
   if (message?.type !== "link" || typeof message.base !== "string") return false;
   startLink(message.base).then(
     () => reply({ ok: true }),
@@ -27,6 +34,7 @@ async function startLink(base) {
 }
 
 chrome.tabs.onUpdated.addListener(async (tabId, change) => {
+  await codeOnUpdate(tabId, change).catch(() => undefined);
   if (!change.url && change.status !== "complete") return;
   const { linking } = await chrome.storage.session.get("linking");
   // Une page pas encore autorisée ou fermée entre-temps : on attend la suivante, sans erreur.
@@ -57,3 +65,88 @@ async function collect({ tabId, base }) {
   await chrome.storage.local.set({ base, token });
   await chrome.storage.session.remove("linking");
 }
+
+// --- Les codes des sites (docs/112) -----------------------------------------------------------
+// La page d'un site demande le code de vérification envoyé à l'adresse jobA1 : le fond prévient
+// la plateforme (relevé rapide de la boîte), attend le code quelques minutes, le remplit et
+// clique « Continuer ». Seulement sur les pages de connexion connues, et seulement si la
+// personne a donné l'accès à ces pages (une fois, depuis le panneau).
+
+const CODE_PAGES = [
+  { site: "jobup", host: "auth.jobup.ch" },
+  { site: "jobsch", host: "auth.jobs.ch" },
+];
+const CODE_ORIGINS = CODE_PAGES.map((page) => `https://${page.host}/*`);
+const CODE_POLL_MS = 5000;
+const CODE_WAIT_MS = 5 * 60_000;
+const watching = new Set();
+
+function codePage(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:" || !/challenge|verif|code/i.test(parsed.pathname)) return null;
+    return CODE_PAGES.find((page) => page.host === parsed.hostname) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function platformCall(path, options = {}) {
+  const { base, token } = await chrome.storage.local.get(["base", "token"]);
+  if (!base || !token) return null;
+  const response = await fetch(base + path, { ...options, headers: { Authorization: `Bearer ${token}` } });
+  return response.ok ? response.json() : null;
+}
+
+// Dans la page : le champ du code, rempli comme au clavier, puis « Continuer ».
+function fillCode(code) {
+  const inputs = [...document.querySelectorAll("input")].filter(
+    (input) => !input.disabled && !input.hidden && /^(text|tel|number|)$/.test(input.type),
+  );
+  const input =
+    inputs.find((i) => /code|otp/i.test(`${i.name} ${i.id} ${i.autocomplete}`)) ?? (inputs.length === 1 ? inputs[0] : null);
+  if (!input) return false;
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, code);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+  const scope = input.form ?? document;
+  const button =
+    scope.querySelector("button[type=submit]") ??
+    [...document.querySelectorAll("button")].find((b) => /continuer|continue|weiter|valider|bestätigen/i.test(b.textContent));
+  button?.click();
+  return true;
+}
+
+async function watchCode(tabId, page, sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
+  if (watching.has(tabId)) return false;
+  watching.add(tabId);
+  try {
+    await platformCall("/api/extension/codes/expect", { method: "POST" });
+    const until = Date.now() + CODE_WAIT_MS;
+    while (Date.now() < until) {
+      const found = await platformCall(`/api/extension/codes?site=${page.site}`);
+      if (found?.code?.code) {
+        const tab = await chrome.tabs.get(tabId).catch(() => null);
+        // La personne a quitté la page entre-temps : rien n'est rempli ailleurs.
+        if (!tab || codePage(tab.url)?.site !== page.site) return false;
+        await chrome.scripting.executeScript({ target: { tabId }, func: fillCode, args: [found.code.code] });
+        return true;
+      }
+      await sleep(CODE_POLL_MS);
+    }
+    return false;
+  } finally {
+    watching.delete(tabId);
+  }
+}
+
+async function codeOnUpdate(tabId, change) {
+  if (change.status !== "complete") return;
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  const page = codePage(tab?.url);
+  if (!page) return;
+  if (!(await chrome.permissions.contains({ origins: [`https://${page.host}/*`] }))) return;
+  await watchCode(tabId, page).catch(() => undefined);
+}
+
+globalThis.jobA1Codes = { codePage, fillCode, watchCode, CODE_ORIGINS };

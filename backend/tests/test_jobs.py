@@ -64,6 +64,7 @@ def test_scheduler_can_be_disabled(settings: Settings) -> None:
         "reminders",
         "rhythm",
         "score",
+        "site_codes_purge",
     ]
     disabled = build_procrastinate_app(Runtime.create(make_settings(scheduler_enabled=False)))
     assert {"collect", "heartbeat"} <= set(disabled.tasks)

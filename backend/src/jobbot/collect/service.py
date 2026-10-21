@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from typing import Protocol
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +20,7 @@ from jobbot import accounts
 from jobbot.core.filter import canton_of
 from jobbot.core.normalize import normalize_offer
 from jobbot.db.models import (
+    PUBLIC_SEARCH_PREFIX,
     EnrichStatus,
     Offer,
     OfferLink,
@@ -27,12 +28,12 @@ from jobbot.db.models import (
     ParseStatus,
     Search,
     SiteReader,
-    received_alert,
 )
 from jobbot.llm import alert as alert_llm
 from jobbot.log import get_logger
-from jobbot.mail import addresses
-from jobbot.mail.confirm import confirmation_link
+from jobbot.mail import addresses, site_codes
+from jobbot.mail.codes import find_code
+from jobbot.mail.confirm import confirmation_link, open_confirmation
 from jobbot.mail.imap import FetchedEmail, ImapMailbox, MailboxError
 from jobbot.mail.message import ParsedEmail, parse_email
 from jobbot.metrics import COLLECT_EMAILS, COLLECT_OFFERS, IMAP_ERRORS
@@ -71,6 +72,8 @@ class CollectResult:
     accounts: set[int] = field(default_factory=set)
     # E-mails adressés à un code inconnu (compte supprimé) : pas rangés.
     unrouted: int = 0
+    # Codes de vérification reçus (docs/112) : le relevé rapide s'arrête au premier.
+    codes: int = 0
 
 
 def raw_key(email: ParsedEmail) -> str:
@@ -221,8 +224,21 @@ async def ingest_email(
     async with runtime.sessionmaker() as session:
         sites = await load_sites(session)
     source, status, version, alert, error = await _analyse(runtime, email, sites)
-    # « Confirmez votre alerte » : le lien, pour la page Alertes (docs/65 §3).
-    confirm = confirmation_link(email) if status == ParseStatus.UNRECOGNIZED else None
+    # Un code de vérification (docs/112) : montré au compte le temps de le recopier.
+    found = find_code(email) if status != ParseStatus.PARSED else None
+    no_offer = status == ParseStatus.EMPTY or (status == ParseStatus.UNRECOGNIZED and not error)
+    # « Confirmez votre alerte » : le lien, pour la page Alertes (docs/65 §3) ; ouvert par
+    # jobA1 pour un site connu (docs/112 §4).
+    confirm = confirmation_link(email) if no_offer and found is None else None
+    confirmed_at = datetime.now(UTC) if confirm and await open_confirmation(confirm) else None
+    # Ni alerte, ni code, ni confirmation : un message du site (bienvenue, mot de passe…) :
+    # aucun analyseur ne le reconnaît, ou l'IA n'y a trouvé aucune offre. Une alerte reconnue
+    # sans offre ce jour-là reste une alerte ; une alerte qui attend l'IA (plafond, pas de
+    # clé) aussi : elle sera relue.
+    unknown = status == ParseStatus.UNRECOGNIZED and not error
+    read_empty = status == ParseStatus.EMPTY and version == alert_llm.PROMPT_VERSION
+    message = confirm is None and (unknown or read_empty)
+    kind = "code" if found else "message" if message else None
     key = raw_key(email)
     runtime.storage.put(key, fetched.raw)
 
@@ -243,6 +259,9 @@ async def ingest_email(
                 results_count=len(alert.offers),
                 job_run_id=run_id,
                 confirm_url=confirm,
+                confirmed_at=confirmed_at,
+                kind=kind,
+                code=found.code if found else None,
             )
             .on_conflict_do_nothing(index_elements=["user_id", "message_id"])
             .returning(Search.id)
@@ -253,6 +272,9 @@ async def ingest_email(
         search.new_offers_count = await ingest_offers(session, search, source, alert.offers)
 
     COLLECT_EMAILS.labels(source=source, parse_status=status).inc()
+    if found is not None:
+        name = next((site.name for site in sites if site.slug == source), source)
+        await site_codes.announce(runtime, name, found.code)
     log.info(
         "email_ingested",
         search_id=search.id,
@@ -307,6 +329,7 @@ async def collect(runtime: Runtime, run_id: uuid.UUID | None = None) -> CollectR
             search = await ingest_email(runtime, fetched, run_id, email)
         if search is not None:
             result.new_searches += 1
+            result.codes += search.kind == "code"
             result.new_offers += search.new_offers_count
             if search.new_offers_count:
                 result.accounts.add(account)
@@ -341,8 +364,16 @@ async def reparse(
     rattachées ne sont pas dupliquées.
     """
     result = ReparseResult()
-    # Les recherches publiques de jobA1 (docs/104) n'ont pas d'e-mail à relire.
-    query = select(Search.id).where(received_alert()).order_by(Search.received_at, Search.id)
+    # Ni les recherches publiques de jobA1 (docs/104), sans e-mail, ni les codes (docs/112) ;
+    # un message du site peut être une alerte mal lue : il est relu.
+    query = (
+        select(Search.id)
+        .where(
+            Search.message_id.not_like(f"{PUBLIC_SEARCH_PREFIX}%"),
+            or_(Search.kind.is_(None), Search.kind == "message"),
+        )
+        .order_by(Search.received_at, Search.id)
+    )
     if source is not None:
         query = query.where(Search.source == source)
     if parse_status is not None:
@@ -371,6 +402,9 @@ async def reparse(
             search.alert_label = alert.alert_label
             search.error = error
             search.results_count = len(alert.offers)
+            # Relue avec des offres : c'était une alerte, pas un message du site (docs/112).
+            if alert.offers and search.kind == "message":
+                search.kind = None
             created = await ingest_offers(session, search, new_source, alert.offers)
             search.new_offers_count += created
             result.updated += 1
