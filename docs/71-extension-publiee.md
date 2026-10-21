@@ -113,3 +113,9 @@ Tant que la fiche n'est pas en ligne, « Installer l'extension » renvoie au mod
 - **Panneau trop large** : une longue candidature dans la liste élargissait le panneau hors de l'écran. Le panneau garde sa largeur (une colonne, champs à 100 %) ; l'intitulé se coupe avec « … » et s'affiche en entier au survol.
 - **Champs facultatifs signalés à tort** : Job-Room écrit `required="false"` sur ses champs facultatifs, et la seule présence de l'attribut rend `required` vrai. Seul `aria-required="true"` compte désormais : case postale, personne contactée, courriel, téléphone et lien vides ne sont plus « à faire ».
 - Extension 0.58.1.
+
+## Complément — en ligne dans la boutique (2026-10-21)
+
+- **La 0.58.1 est approuvée par Mozilla** (examen automatique, publique) : https://addons.mozilla.org/addon/joba1-remplir-mes-candidatures/ . Un examen humain peut venir plus tard.
+- **Réglages › Extension** : « Installer l'extension (Firefox) » mène à la fiche (`STORE_URL` rempli) ; le mode d'emploi pour une version non publiée disparaît des Réglages (il reste dans `extension/README.md`).
+- **La prochaine version à envoyer est la 0.59.0** : elle contient la 0.58.2 (docs/76) et les codes de vérification (docs/112 §3). Avant l'envoi, la description et la fiche ont été corrigées : elles disaient « n'envoie jamais rien à ta place » et « n'agit que sur l'onglet où tu cliques », ce qui n'est plus exact quand la personne autorise le remplissage des codes (l'extension clique « Continuer » sur `auth.jobup.ch` et `auth.jobs.ch`). Elles disent maintenant « n'envoie jamais de candidature à ta place », décrivent les codes, leur accord préalable et les deux hôtes, et la note pour la relecture de Mozilla explique le fonctionnement. `web-ext lint` sur le paquet : 0 erreur, le même avertissement attendu (`service_worker`).

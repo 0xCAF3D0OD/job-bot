@@ -12,8 +12,8 @@ import { offerUndo } from "../composables/useUndo";
 
 // Extension du navigateur (docs/25 §4, docs/71) : installée depuis la boutique de Mozilla, reliée
 // en un clic (« Relier ce navigateur ») ; le jeton à copier reste, replié.
-// La fiche de la boutique, une fois en ligne (docs/71 §8) ; vide : le mode d'emploi.
-const STORE_URL = "";
+// La fiche de la boutique, en ligne depuis le 2026-10-21 (docs/71 §8) ; vide : le mode d'emploi.
+const STORE_URL = "https://addons.mozilla.org/addon/joba1-remplir-mes-candidatures/";
 type Token = components["schemas"]["TokenOut"];
 
 const tokens = ref<Token[]>([]);
@@ -79,7 +79,7 @@ onMounted(load);
       </legend>
       <!-- La description toujours visible, comme les CFF (docs/110). -->
       <p class="setting-desc">
-        Elle remplit tes candidatures et Job-Room. Rien n'est envoyé à ta place.
+        Elle remplit tes candidatures, Job-Room et tes codes de vérification. Aucune candidature n'est envoyée à ta place.
       </p>
       <ol class="extension-steps">
         <li>
