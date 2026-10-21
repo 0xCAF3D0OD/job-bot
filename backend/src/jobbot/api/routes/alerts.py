@@ -87,6 +87,8 @@ class AlertsPage(BaseModel):
     searches: list[AlertSearchOut]
     to_confirm: list[ToConfirm] = []
     codes: list[SiteCodeOut] = []
+    # Les e-mails des sites arrivent dans la boîte des invités, à part (docs/113).
+    guest_mailbox: bool = False
 
 
 class AlertSearchIn(BaseModel):
@@ -138,6 +140,7 @@ async def _page(runtime: Runtime) -> AlertsPage:
     codes = await site_codes.current(runtime)
     return AlertsPage(
         codes=[SiteCodeOut(**c.__dict__) for c in codes],
+        guest_mailbox=settings.guest_imap_configured and not owner,
         mailbox=address,
         folder=settings.imap_folder if address and owner else None,
         personal_address=bool(address) and not owner,

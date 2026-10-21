@@ -114,7 +114,11 @@ async def test_code_shown_then_erased(
         assert orp["searches"] == []
 
     later = datetime.now(UTC) + timedelta(minutes=31)
+    raw_key = search.raw_key
+    assert clean.storage.exists(raw_key)
     await site_codes.purge(clean, later)
+    # La copie de l'e-mail du code s'en va avec lui (docs/113).
+    assert not clean.storage.exists(raw_key)
     async with clean.sessionmaker() as session:
         assert (await session.scalars(select(Search.code))).one() is None
         assert (await session.scalars(select(Notification.message))).one() == "Code expiré"

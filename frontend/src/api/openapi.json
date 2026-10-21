@@ -8867,6 +8867,11 @@
             "type": "array",
             "title": "Codes",
             "default": []
+          },
+          "guest_mailbox": {
+            "type": "boolean",
+            "title": "Guest Mailbox",
+            "default": false
           }
         },
         "type": "object",
@@ -17682,6 +17687,11 @@
               }
             ],
             "title": "Contact"
+          },
+          "guest_mailbox": {
+            "type": "boolean",
+            "title": "Guest Mailbox",
+            "default": false
           }
         },
         "type": "object",

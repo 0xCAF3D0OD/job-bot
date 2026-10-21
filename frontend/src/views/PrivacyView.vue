@@ -10,11 +10,15 @@ import { useAuth } from "../composables/useAuth";
 // (responsable, contact, hébergeur) sont écrites par l'exploitant, dans la Plateforme.
 const { loggedIn, load } = useAuth();
 const contact = ref<string | null>(null);
+// La boîte des invités en place (docs/113) : les e-mails des sites ne passent plus par
+// l'exploitant.
+const guestMailbox = ref(false);
 
 onMounted(async () => {
   await load();
   const { data } = await api.GET("/api/privacy");
   contact.value = data?.contact ?? null;
+  guestMailbox.value = data?.guest_mailbox ?? false;
 });
 </script>
 
@@ -52,6 +56,23 @@ onMounted(async () => {
           Il administre le serveur, mais la plateforme ne lui montre jamais tes offres, candidatures, documents ou
           discussions. Il s'engage à ne pas les lire, sauf à ta demande ou par obligation légale.
         </li>
+      </ul>
+
+      <h2>Les e-mails des sites d'emploi</h2>
+      <ul data-test="privacy-mailbox">
+        <template v-if="guestMailbox">
+          <li>
+            Les sites t'écrivent à ton adresse jobA1. Ces e-mails arrivent dans <strong>la boîte de jobA1</strong>,
+            hébergée en Suisse chez Infomaniak, séparée de celle de l'exploitant.
+          </li>
+          <li>jobA1 les range dans ton compte, puis <strong>les efface de cette boîte</strong> ; personne ne la lit à la main.</li>
+        </template>
+        <li v-else>
+          Les sites t'écrivent à ton adresse jobA1. Ces e-mails passent par la boîte e-mail de la plateforme, que
+          l'exploitant administre.
+        </li>
+        <li>Un code de vérification d'un site est effacé de jobA1 <strong>30 minutes</strong> après son arrivée, avec la copie de son e-mail.</li>
+        <li>Les autres messages des sites (bienvenue, alerte modifiée…) sont gardés 30 jours.</li>
       </ul>
 
       <h2>Ce qui part à l'IA (Anthropic)</h2>

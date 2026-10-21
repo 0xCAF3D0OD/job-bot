@@ -52,6 +52,15 @@ onMounted(() => void load());
 
 <template>
   <section class="jobs-body">
+    <!-- Où vont les e-mails des sites (docs/113), dit à l'invité. -->
+    <p
+      v-if="page?.personal_address && page.guest_mailbox"
+      class="setting-desc alerts-mailbox-note"
+      data-test="guest-mailbox-note"
+    >
+      Les e-mails des sites arrivent dans la boîte de jobA1, hébergée en Suisse chez Infomaniak. jobA1 les range
+      dans ton compte, puis les efface de la boîte. Les codes de vérification s'effacent après 30 minutes.
+    </p>
     <!-- Les codes des sites (docs/112) : en tête, le temps de les recopier. -->
     <SiteCodes
       v-if="page"

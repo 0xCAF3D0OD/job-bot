@@ -121,3 +121,62 @@ def test_connection_failure() -> None:
     with pytest.raises(MailboxError) as excinfo:
         mailbox.fetch_since(date(2026, 10, 1), limit=1, skip_message_ids=lambda _: set())
     assert excinfo.value.kind == "connection"
+
+
+class GuestIMAP(ReadOnlyIMAP):
+    """La boîte des invités (docs/113) : seuls STORE \\Deleted et EXPUNGE s'ajoutent."""
+
+    def __init__(self, messages: dict[int, bytes], old: set[int]) -> None:
+        super().__init__(messages)
+        self.old = old
+        self.deleted: list[int] = []
+        self.expunged = False
+
+    def select(self, mailbox: str, readonly: bool = False) -> tuple[str, list[bytes]]:
+        self.commands.append(("select", mailbox, readonly))
+        return "OK", [str(len(self.messages)).encode()]
+
+    def uid(self, command: str, *args: Any) -> tuple[str, list[Any]]:
+        if command == "SEARCH" and args[1:2] == ("BEFORE",):
+            self.commands.append(("uid", command, *args))
+            return "OK", [b" ".join(str(u).encode() for u in sorted(self.old))]
+        if command == "STORE":
+            self.commands.append(("uid", command, *args))
+            assert args[1:] == ("+FLAGS.SILENT", "(\\Deleted)"), "seule la suppression est permise"
+            self.deleted.append(int(args[0]))
+            return "OK", []
+        return super().uid(command, *args)
+
+    def expunge(self) -> tuple[str, list[bytes]]:
+        self.commands.append(("expunge",))
+        self.expunged = True
+        return "OK", []
+
+
+def test_guest_box_keeps_what_is_not_copied() -> None:
+    """Supprimés : les e-mails déjà copiés dans jobA1, et ceux sans compte de plus de 7 jours.
+    Gardé : un e-mail récent pas encore copié (la collecte le prendra)."""
+    server = GuestIMAP({1: _raw("<copie@x>"), 2: _raw("<nouveau@x>"), 3: _raw("<vieux@x>")}, {3})
+    box = ImapMailbox(
+        host="mail.example.ch",
+        port=993,
+        user="alertes@example.ch",
+        password="bon",
+        folder="INBOX",
+        factory=server,
+        writable=True,
+    )
+    removed = box.clean(known=lambda ids: {"<copie@x>"} & ids, before=date(2026, 10, 14))
+    assert removed == 2 and server.deleted == [1, 3] and server.expunged
+    assert ("select", '"INBOX"', False) in server.commands
+    # La lecture, elle, reste en lecture seule même dans la boîte des invités.
+    server.commands.clear()
+    box.fetch_since(date(2026, 10, 1), limit=10, skip_message_ids=lambda _: set())
+    assert ("select", '"INBOX"', True) in server.commands
+
+
+def test_owner_box_can_never_be_cleaned() -> None:
+    server = ReadOnlyIMAP({1: _raw("<a@x>")})
+    with pytest.raises(MailboxError):
+        _mailbox(server).clean(known=lambda ids: ids, before=date(2026, 10, 14))
+    assert server.commands == []

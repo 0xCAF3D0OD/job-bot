@@ -148,3 +148,12 @@ describe("Alertes, adresse par compte (docs/65 §3)", () => {
     expect(wrapper.find("[data-test=to-confirm]").exists()).toBe(false);
   });
 });
+
+describe("Alertes, où vont les e-mails des sites (docs/113)", () => {
+  it("dit à l'invité que la boîte de jobA1 range puis efface ; rien pour l'exploitant", async () => {
+    const guest = await mountView({ ...page([]), personal_address: true, guest_mailbox: true });
+    expect(guest.find("[data-test=guest-mailbox-note]").text()).toContain("puis les efface de la boîte");
+    const owner = await mountView({ ...page([]), personal_address: false, guest_mailbox: false });
+    expect(owner.find("[data-test=guest-mailbox-note]").exists()).toBe(false);
+  });
+});
