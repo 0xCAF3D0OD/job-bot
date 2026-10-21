@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 from jobbot.api.owner import require_owner
 from jobbot.collect.service import reparse
 from jobbot.core.normalize import normalize_text
-from jobbot.db.models import AccountSite, ParseStatus, Search, Site, SiteReader
+from jobbot.db.models import AccountSite, ParseStatus, Search, Site, SiteReader, received_alert
 from jobbot.runtime import Runtime
 from jobbot.sources.sites import paused_site_ids
 
@@ -120,9 +120,9 @@ async def _list(runtime: Runtime) -> list[SiteOut]:
             source: (count, last)
             for source, count, last in (
                 await session.execute(
-                    select(Search.source, func.count(), func.max(Search.received_at)).group_by(
-                        Search.source
-                    )
+                    select(Search.source, func.count(), func.max(Search.received_at))
+                    .where(received_alert())
+                    .group_by(Search.source)
                 )
             ).all()
         }

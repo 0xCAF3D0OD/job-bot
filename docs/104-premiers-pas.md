@@ -1,6 +1,6 @@
 # 104 — Les premiers pas d'un nouveau compte (versions 0.75.0, 0.79.0 et 0.80.0)
 
-> Statut : **0.75.0 validée** le 2026-10-20 ; **0.79.0 validée** le 2026-10-20 (le domaine `alertes.joba1.ch`, le nom dans l'adresse, un bouton « Copier » en attendant) ; **0.80.0 à valider** (décalée par docs/106, docs/108 et docs/110) (points en fin de page).
+> Statut : **0.75.0 validée** le 2026-10-20 ; **0.79.0 validée** le 2026-10-20 (le domaine `alertes.joba1.ch`, le nom dans l'adresse, un bouton « Copier » en attendant) ; **0.80.0 validée** le 2026-10-21 (Indeed aussi, 20 offres par site) ; seul jobup se laisse lire, voir « 0.80.0 faite ».
 > Origine : ta session avec le nouveau compte « eliot » du 2026-10-20, cinq captures sur téléphone, puis tes choix : un domaine à jobA1 pour l'adresse, une lecture des recherches publiques pour les premières offres, deux boutons égaux.
 
 ## Ce que montre la session
@@ -31,7 +31,7 @@ Aujourd'hui, jobA1 lit une seule boîte, la tienne, et donne à chaque compte `t
 - **Un réglage** `JOBBOT_ALERT_DOMAIN` : vide, rien ne change ; rempli, les nouveaux comptes reçoivent l'adresse du domaine. L'exploitant garde sa propre adresse.
 - **Le nom** dans l'adresse vient du nom du compte, en minuscules et sans accents. Le code empêche de deviner l'adresse d'un autre compte.
 
-## 0.80.0 — Des offres dès le premier jour (point 2) — à valider
+## 0.80.0 — Des offres dès le premier jour (point 2)
 
 **Le choix** : juste après l'accueil, jobA1 lit **une fois** les pages publiques de recherche pour le métier et les lieux du compte, sans se connecter à aucun compte (docs/01 §1 reste vrai).
 - **Les sources** : jobup (sa page de recherche publique, déjà lue offre par offre depuis docs/05) et Job-Room (la recherche publique de job-room.ch). À vérifier d'abord : leurs conditions d'utilisation et leur `robots.txt`. Une source qui l'interdit est laissée de côté.
@@ -60,3 +60,39 @@ Ton retour du 2026-10-20 : « l'utilisateur eliot reçoit toujours cette informa
 - **En attendant** : l'adresse d'un invité qui passe par ta boîte s'affiche abrégée (`k…+k9dyqou7@gmail.com`), avec **« Copier l'adresse »**, qui copie l'adresse entière à donner aux sites. Pour toi (l'exploitant), ton adresse reste entière.
 - **Vérifié** : tests du routage (`nom-code@domaine`, majuscules, code inconnu, `+code` toujours valable), de la page Alertes d'un invité avec le domaine, du composant d'adresse (abrégée, entière, copie) ; pytest, ruff, mypy, vitest, eslint, vue-tsc.
 
+
+## 0.80.0 faite : des offres dès le premier jour
+
+Tes réponses du 2026-10-21 : « oui pour Indeed et 20 offres par site ». Avant, ta question : « n'y a-t-il pas moyen de le faire automatiquement, sans que l'utilisateur ait besoin de faire quelque chose ? »
+
+### Ce que disent les sites (vérifié le 2026-10-21)
+
+| Site | Ce qu'il permet | Décision |
+|---|---|---|
+| **jobup** | `robots.txt` autorise la recherche `/fr/emplois/?term=…` ; la page porte la liste des offres en `JobPosting` (10 par page) | **lu** |
+| **Indeed** | la recherche répond **403** à un robot (protection anti-robots) | **écarté** : jobA1 ne contourne pas une protection (docs/05) |
+| **Job-Room** | `robots.txt` : `Disallow: /job-search/` pour tous les robots | **écarté** |
+
+Indeed et Job-Room restent possibles par les alertes e-mail, comme aujourd'hui.
+
+### Ce qui se passe
+
+- **À la fin de l'accueil** (« C'est prêt ! »), la recherche se met en file pour le compte, une seule fois. Le worker lit jobup, puis les offres passent par le filtre, la lecture de leur page et la note, comme après une alerte.
+- **Ce qui est cherché** : les recherches d'alerte du compte ; sans elles, les deux premiers mots de « Mon domaine » (le métier d'abord) dans les deux premiers lieux de « Ce que je cherche » (les cantons seuls ne sont pas des lieux de recherche).
+- **Page Offres** : « Je cherche tes premières offres sur jobup… », puis « 18 premières offres trouvées sur jobup (Menuisier · Sion, Menuisier · Sierre). Tes alertes prennent le relais dès qu'elles arrivent. », avec « OK » pour la fermer ; la liste se recharge seule à l'arrivée. La ligne s'efface d'elle-même après trois jours.
+- **Page Alertes** : une carte « Sans attendre tes alertes », le résultat de la dernière recherche et **« Chercher sur jobup maintenant »**.
+
+### Écarts
+
+- **20 offres en quatre recherches au plus, pas en deux pages** : jobup ne montre aux robots que la première page (`page=2` renvoie à la page 1). jobA1 ne le contourne pas et fait plutôt jusqu'à quatre recherches de 10 (métier et lieux), une toutes les 2 secondes, jusqu'à 20 offres distinctes.
+- **Relançable une fois par heure** depuis Alertes (le cadrage disait « une fois ») : c'est ce qui rend l'ajout utile tant que les alertes n'arrivent pas.
+- **La recherche est rangée dans le journal** (« Premières offres », « Recherche publique jobup : … »), mais ce n'est pas une alerte reçue : elle ne compte **ni dans les preuves de recherche ORP** (ce n'est pas toi qui l'as faite), **ni pour dire qu'une alerte jobup marche** (page Alertes, Réglages › Sites suivis). Elle n'est jamais relue comme un e-mail ; dans l'export du compte, elle est un fichier `.json`.
+- **Sans métier**, rien n'est cherché ; la carte des Alertes le dit.
+- **Le code partagé** : la lecture du `JobPosting` sert maintenant à « Ajouter une offre » (docs/111) et à cette recherche (`sources/jobposting.py`).
+
+### Vérifié
+
+- Tests backend : la liste `JobPosting` d'une page de résultats (les liens hors jobup écartés) ; ce qui est cherché (alertes, sinon métier et lieux, sans les cantons) ; trois recherches pour 20 offres distinctes, la troisième limitée aux 2 qui manquent ; la recherche dans le journal, les liens jobup avec leur identifiant ; jobup qui refuse (rien d'enregistré, « échec ») ; sans métier ; ni preuve ORP, ni alerte jobup « reçue », ni compte d'alertes du site ; la mise en file à la fin de l'accueil, une seule fois ; la relance limitée à une fois par heure.
+- Essai réel sur jobup (« développeur », Lausanne) : 10 offres lues, avec titre, entreprise et identifiant ; le lieu manque parfois dans la liste et arrive avec la lecture de la page de l'offre.
+- Tests de l'interface : la recherche en cours puis le résultat (et la liste rechargée), la ligne qui s'efface après trois jours, la relance trop tôt, sans métier.
+- Captures Playwright à 414 et 1280 px : la page Offres avec la ligne des premières offres, la carte des Alertes. Rien ne dépasse.

@@ -2754,6 +2754,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alert-searches/first-offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get First Offers
+         * @description Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup.
+         */
+        get: operations["getFirstOffers"];
+        put?: never;
+        /**
+         * Start First Offers
+         * @description « Chercher sur jobup maintenant » : relance la recherche publique (une fois par heure).
+         */
+        post: operations["startFirstOffers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/interviews": {
         parameters: {
             query?: never;
@@ -4156,6 +4180,61 @@ export interface components {
             retained: number;
             /** Reasons */
             reasons: components["schemas"]["FilterReasonOut"][];
+        };
+        /** FirstOffersOut */
+        FirstOffersOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "none" | "queued" | "done" | "failed" | "no_trade";
+            /** At */
+            at?: string | null;
+            /**
+             * Found
+             * @default 0
+             */
+            found: number;
+            /**
+             * New
+             * @default 0
+             */
+            new: number;
+            /**
+             * Queries
+             * @default []
+             */
+            queries: string[];
+        };
+        /** FirstOffersStart */
+        FirstOffersStart: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "none" | "queued" | "done" | "failed" | "no_trade";
+            /** At */
+            at?: string | null;
+            /**
+             * Found
+             * @default 0
+             */
+            found: number;
+            /**
+             * New
+             * @default 0
+             */
+            new: number;
+            /**
+             * Queries
+             * @default []
+             */
+            queries: string[];
+            /**
+             * Result
+             * @enum {string}
+             */
+            result: "queued" | "already_queued" | "no_trade" | "too_soon";
         };
         /**
          * FocusIn
@@ -12699,6 +12778,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getFirstOffers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirstOffersOut"];
+                };
+            };
+        };
+    };
+    startFirstOffers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirstOffersStart"];
                 };
             };
         };

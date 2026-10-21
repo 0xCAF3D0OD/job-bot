@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.normalize import normalize_text
-from jobbot.db.models import AlertSearch, AlertSetup, Search, Setting, Site
+from jobbot.db.models import AlertSearch, AlertSetup, Search, Setting, Site, received_alert
 from jobbot.filtering.service import load_criteria
 from jobbot.news import domain
 from jobbot.sources.sites import followed
@@ -111,7 +111,9 @@ async def cells(session: AsyncSession, search: AlertSearch, sites: list[Site]) -
     journal = list(
         await session.scalars(
             select(Search).where(
-                Search.received_at >= since, Search.source.in_([s.slug for s in sites])
+                Search.received_at >= since,
+                Search.source.in_([s.slug for s in sites]),
+                received_alert(),
             )
         )
     )

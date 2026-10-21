@@ -204,7 +204,11 @@ async def export_account(request: Request) -> Response:
                     )
             for search in await session.scalars(select(Search).order_by(Search.id)):
                 if runtime.storage.exists(search.raw_key):
-                    archive.writestr(f"emails/{search.id}.eml", runtime.storage.get(search.raw_key))
+                    # Une recherche publique (docs/104) garde sa liste en JSON, pas un e-mail.
+                    suffix = "json" if search.raw_key.endswith(".json") else "eml"
+                    archive.writestr(
+                        f"emails/{search.id}.{suffix}", runtime.storage.get(search.raw_key)
+                    )
     day = datetime.now(UTC).strftime("%Y-%m-%d")
     name = f"jobA1-{_safe(username or 'compte')}-{day}.zip"
     log.info("account_exported", tables=len(tables))

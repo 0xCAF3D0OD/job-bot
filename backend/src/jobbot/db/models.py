@@ -8,6 +8,7 @@ from typing import Any
 
 from sqlalchemy import (
     BigInteger,
+    ColumnElement,
     Date,
     DateTime,
     ForeignKey,
@@ -137,6 +138,15 @@ class Search(Base):
     job_run_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("job_runs.run_id", ondelete="SET NULL")
     )
+
+
+# Une recherche publique faite par jobA1 (docs/104, 0.80.0) se range dans le journal, mais
+# n'est pas une alerte reçue : ni preuve de recherche ORP, ni signe qu'une alerte marche.
+PUBLIC_SEARCH_PREFIX = "public:"
+
+
+def received_alert() -> ColumnElement[bool]:
+    return Search.message_id.not_like(f"{PUBLIC_SEARCH_PREFIX}%")
 
 
 class Offer(Base):

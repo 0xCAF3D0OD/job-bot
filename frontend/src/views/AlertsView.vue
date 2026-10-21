@@ -7,6 +7,7 @@ import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
+import FirstOffers from "../components/FirstOffers.vue";
 import JournalPanel from "../components/JournalPanel.vue";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -100,6 +101,8 @@ onMounted(() => void load());
         @restart="mode = 'wizard'"
       />
     </template>
+
+    <FirstOffers where="alerts" />
 
     <DisclosureRow
       class="journal-toggle"

@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from jobbot import accounts
 from jobbot.alerts import service
+from jobbot.collect import public_search
 from jobbot.core.filter import RemotePolicy
 from jobbot.db.models import AlertSearch, AlertSetup, Search, Site
 from jobbot.filtering.service import load_criteria
@@ -240,3 +241,45 @@ async def unmark_alert_created(request: Request, search_id: int, site: str) -> A
         if setup is not None:
             await session.delete(setup)
     return await _page(_runtime(request))
+
+
+class FirstOffersOut(BaseModel):
+    # Rien encore, en file, faite, sans résultat, ou impossible faute de métier.
+    status: Literal["none", "queued", "done", "failed", "no_trade"]
+    at: datetime | None = None
+    found: int = 0
+    new: int = 0
+    queries: list[str] = []
+
+
+class FirstOffersStart(FirstOffersOut):
+    result: Literal["queued", "already_queued", "no_trade", "too_soon"]
+
+
+def _first_out(value: dict[str, object]) -> FirstOffersOut:
+    found, new, queries, at = (value.get(k) for k in ("found", "new", "queries", "at"))
+    raw = value.get("status")
+    return FirstOffersOut(
+        status=raw if raw in ("queued", "done", "failed", "no_trade") else "none",
+        at=datetime.fromisoformat(at) if isinstance(at, str) else None,
+        found=found if isinstance(found, int) else 0,
+        new=new if isinstance(new, int) else 0,
+        queries=[q for q in queries if isinstance(q, str)] if isinstance(queries, list) else [],
+    )
+
+
+@router.get("/first-offers", operation_id="getFirstOffers")
+async def get_first_offers(request: Request) -> FirstOffersOut:
+    """Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup."""
+    async with _runtime(request).sessionmaker() as session:
+        return _first_out(await public_search.state(session))
+
+
+@router.post("/first-offers", operation_id="startFirstOffers", status_code=status.HTTP_202_ACCEPTED)
+async def start_first_offers(request: Request) -> FirstOffersStart:
+    """« Chercher sur jobup maintenant » : relance la recherche publique (une fois par heure)."""
+    runtime = _runtime(request)
+    result = await public_search.request(runtime)
+    async with runtime.sessionmaker() as session:
+        current = _first_out(await public_search.state(session))
+    return FirstOffersStart(**current.model_dump(), result=result)

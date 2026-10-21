@@ -23,7 +23,7 @@ from jobbot.core.orp import (
     to_csv,
     to_row,
 )
-from jobbot.db.models import Application, OrpMonth, Search, Setting
+from jobbot.db.models import Application, OrpMonth, Search, Setting, received_alert
 from jobbot.letters.service import load_identity
 from jobbot.orp.service import load_due_day
 from jobbot.runtime import Runtime
@@ -180,7 +180,13 @@ async def get_orp_month(
         start, end = _bounds(month)
         searches = await session.scalars(
             select(Search)
-            .where(Search.received_at >= start, Search.received_at < end)
+            .where(
+                Search.received_at >= start,
+                Search.received_at < end,
+                # La recherche publique faite par jobA1 (docs/104) n'est pas une alerte de la
+                # personne : elle ne figure pas dans ses preuves de recherche.
+                received_alert(),
+            )
             .order_by(Search.received_at)
         )
         search_rows = [
