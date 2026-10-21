@@ -2,7 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import SiteCodes from "./SiteCodes.vue";
-import SiteMessages from "./SiteMessages.vue";
+import SiteMail from "./SiteMail.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();
@@ -32,7 +32,9 @@ describe("Les codes des sites (docs/112)", () => {
   it("« J'attends un code » : la page se met à jour jusqu'à son arrivée", async () => {
     vi.useFakeTimers();
     POST.mockResolvedValueOnce({ data: { queued: true } });
-    const wrapper = mount(SiteCodes, { props: { codes: [] } });
+    GET.mockResolvedValue({ data: [] });
+    const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: true } });
+    await flushPromises();
     await wrapper.find("[data-test=site-code-expect]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/alert-searches/expect-code");
@@ -47,7 +49,9 @@ describe("Les codes des sites (docs/112)", () => {
 
   it("trop de relevés rapides : il le dit", async () => {
     POST.mockResolvedValueOnce({ data: { queued: false } });
-    const wrapper = mount(SiteCodes, { props: { codes: [] } });
+    GET.mockResolvedValue({ data: [] });
+    const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });
+    await flushPromises();
     await wrapper.find("[data-test=site-code-expect]").trigger("click");
     await flushPromises();
     expect(wrapper.text()).toContain("Déjà six relevés rapides");
@@ -56,8 +60,9 @@ describe("Les codes des sites (docs/112)", () => {
   it("les messages des sites, le texte à l'ouverture", async () => {
     GET.mockResolvedValueOnce({ data: [{ id: 7, site: "jobup", subject: "Bienvenue sur jobup", received_at: "2026-10-21T08:00:00Z" }] });
     GET.mockResolvedValueOnce({ data: { text: "Ton compte est prêt." } });
-    const wrapper = mount(SiteMessages);
+    const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: true } });
     await flushPromises();
+    expect(wrapper.find("[data-test=guest-mailbox-note]").text()).toContain("puis les efface de la boîte");
     expect(wrapper.find("[data-test=site-message]").text()).toContain("Bienvenue sur jobup");
     await wrapper.find("[data-test=site-message] button").trigger("click");
     await flushPromises();
@@ -67,8 +72,11 @@ describe("Les codes des sites (docs/112)", () => {
 
   it("sans message, rien", async () => {
     GET.mockResolvedValueOnce({ data: [] });
-    const wrapper = mount(SiteMessages);
+    const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });
     await flushPromises();
     expect(wrapper.find("[data-test=site-messages]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=guest-mailbox-note]").exists()).toBe(false);
+    // La rubrique reste : « J'attends un code » sert même sans message.
+    expect(wrapper.find("[data-test=site-code-expect]").exists()).toBe(true);
   });
 });

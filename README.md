@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/113-boite-des-invites.md](docs/113-boite-des-invites.md) (0.83.0)
+- Version en cours : [docs/113-boite-des-invites.md](docs/113-boite-des-invites.md) (0.83.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -175,7 +175,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.82.2 | L'assistant ne sort plus du cadre sur téléphone : une infobulle invisible au bord droit élargissait l'écran ; rien ne déborde plus sur le côté | livrée |
 | 0.82.3 | L'adresse d'alerte sans « catch-all » : `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch` donne `alertes+nom-code@joba1.ch`, qui passe par une seule redirection | livrée |
 | 0.82.4 | La recherche publique de jobup coupée : ses conditions d'utilisation (déc. 2025, §7) interdisent les robots ; réglage `JOBBOT_PUBLIC_SEARCH_ENABLED`, faux par défaut | en cours |
-| 0.83.0 | La boîte des invités à part : une vraie boîte Infomaniak (`alertes@joba1.ch`), lue puis vidée par jobA1, plus rien dans la boîte de l'exploitant ; la copie d'un code effacée à 30 minutes ; les invités prévenus | en cours |
+| 0.83.0 | La boîte des invités à part : une vraie boîte Infomaniak (`alertes@joba1.ch`), lue puis vidée par jobA1, plus rien dans la boîte de l'exploitant ; la copie d'un code effacée à 30 minutes ; les invités prévenus | livrée |
+| 0.83.1 | La page Alertes remise en ordre : le code en tête, « Les alertes », puis « Les e-mails des sites » en une carte (« J'attends un code », les messages) | en cours |
 
 ## Lancer en local
 
