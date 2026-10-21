@@ -104,3 +104,16 @@ Ton retour du 2026-10-21 (le code d'amy bien arrivé, la boîte vidée) : « la 
 - **« Les e-mails des sites »** : un titre, la phrase sur la boîte de jobA1 (invités seulement), puis **une carte** : « Code de vérification » avec sa description et la pilule **« J'attends un code »** ; sous un filet, **« Messages des sites »** et leur liste. Sur téléphone, la pilule passe sous le texte, en pleine largeur.
 - Puis « Alertes reçues », comme avant.
 - **Vérifié** : tests de la rubrique (attente, limite, phrase, messages), captures Playwright à 1440 et 414 px de l'écran d'amy (code en tête, assistant, rubrique des e-mails) ; rien ne dépasse.
+
+## 0.83.2 — La page Alertes en deux colonnes sur ordinateur
+
+Ta question du 2026-10-21 : « est-ce que ça vaut la peine d'avoir une telle largeur pour les composants sur ordinateur ? » Deux esquisses (une colonne étroite, ou deux colonnes) ; ton choix : **deux colonnes**, « mais je veux que les éléments soient cohérents entre eux ».
+
+- **En tête, sur toute la largeur** : le code d'un site (et « À confirmer »).
+- **À gauche** : « Les alertes » (l'assistant ou le résumé), puis « Alertes reçues » juste dessous.
+- **À droite (22 rem)** : « Les e-mails des sites ». La phrase sur la boîte de jobA1 passe **dans** la carte : chaque colonne est un titre puis une carte, et **les deux titres et les deux cartes commencent à la même hauteur** (mesuré : 275 et 325 px à 1120, 1280 et 1440 px).
+- **Les bords** : la colonne de droite finit exactement au bord de la carte du code ; « Alertes reçues » a la largeur de la carte de gauche.
+- **Dans la colonne de droite**, la pilule « J'attends un code » passe sous le texte, en pleine largeur, comme sur téléphone ; les sujets des messages longs passent à la ligne avant le chevron.
+- **L'image de l'assistant** : 200 px dans la colonne à partir de 1280 px ; entre 1100 et 1280 px, elle laisse la place au formulaire.
+- **Une seule colonne** sous 1100 px, sur téléphone (inchangé) et pour « Gérer mes alertes » (le tableau a besoin de la largeur).
+- **Vérifié** : tests (deux colonnes, titres, journal), captures Playwright à 1440, 1280, 1120, 1000 et 414 px ; rien ne dépasse, rien ne chevauche.

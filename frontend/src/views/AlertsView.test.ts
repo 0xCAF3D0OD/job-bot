@@ -157,3 +157,14 @@ describe("Alertes, où vont les e-mails des sites (docs/113)", () => {
     expect(owner.find("[data-test=guest-mailbox-note]").exists()).toBe(false);
   });
 });
+
+describe("Alertes, deux colonnes sur ordinateur (0.83.2)", () => {
+  it("la tâche à gauche, les e-mails des sites à droite, le journal sous la tâche", async () => {
+    const wrapper = await mountView({ ...page([]), personal_address: true, guest_mailbox: true });
+    const columns = wrapper.find(".alerts-columns");
+    expect(columns.classes()).not.toContain("wide");
+    expect(columns.find(".alerts-main h2").text()).toBe("Les alertes");
+    expect(columns.find(".alerts-aside [data-test=site-mail]").exists()).toBe(true);
+    expect(columns.find(".alerts-journal").exists()).toBe(true);
+  });
+});
