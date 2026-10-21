@@ -94,3 +94,13 @@ Ta réponse : « focus sur la boîte mail Infomaniak, je ne veux pas avoir accè
 3. **La notification sans le code** (« Code jobup reçu »), contrairement à ta réponse du docs/112 ?
 4. **Les copies d'alertes des invités gardées 90 jours** : d'accord, ou une autre durée ?
 5. **La phrase aux invités** (inscription, Alertes, Confidentialité) : le texte proposé te va ?
+
+## 0.83.1 — La page Alertes remise en ordre
+
+Ton retour du 2026-10-21 (le code d'amy bien arrivé, la boîte vidée) : « la structure de la page est vraiment pas bonne sur ordinateur ». La phrase sur la boîte, le code, « J'attends un code », l'assistant et les messages se suivaient sans rubrique, à des largeurs différentes.
+
+- **En tête** : le code d'un site, seul (quand il y en a un), le temps de le recopier.
+- **« Les alertes »** : un titre (pas de possessif en tête, docs/88) au-dessus de l'assistant ou du résumé, comme les autres rubriques (« Gérer » garde le sien).
+- **« Les e-mails des sites »** : un titre, la phrase sur la boîte de jobA1 (invités seulement), puis **une carte** : « Code de vérification » avec sa description et la pilule **« J'attends un code »** ; sous un filet, **« Messages des sites »** et leur liste. Sur téléphone, la pilule passe sous le texte, en pleine largeur.
+- Puis « Alertes reçues », comme avant.
+- **Vérifié** : tests de la rubrique (attente, limite, phrase, messages), captures Playwright à 1440 et 414 px de l'écran d'amy (code en tête, assistant, rubrique des e-mails) ; rien ne dépasse.

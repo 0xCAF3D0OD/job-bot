@@ -1621,31 +1621,37 @@ html.side-open { overflow: hidden; }
 .follow-up-actions { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center; }
 
 /* Candidatures spontanées (docs/39) */
-/* Où vont les e-mails des sites (docs/113). */
-.alerts-mailbox-note { margin: 0 0 1rem; line-height: 1.5; }
-/* Les codes et les messages des sites (docs/112). */
-.site-codes { display: grid; gap: 0.75rem; margin: 0 0 1.5rem; }
-.site-code-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
-.site-code { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; border: 1px solid var(--accent); border-radius: 16px; background: var(--accent-soft); }
+/* Le code d'un site, en tête de la page Alertes (docs/112). */
+.site-code-list { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.75rem; }
+.site-code { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem; border: 1px solid var(--accent); border-radius: 16px; background: var(--accent-soft); }
 .site-code-text { display: grid; gap: 0.35rem; }
 .site-code-label { color: var(--muted); font-size: 0.9rem; }
 .site-code-value { font-size: 1.9rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
-.site-code-wait { margin: 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
-.site-code-wait .link { margin-left: 0.35rem; }
-.site-messages { margin-top: 2rem; }
-.settings-card.site-message-list { list-style: none; margin: 0; padding: 0.25rem 2rem; }
-.site-message-list > li + li { border-top: 1px solid var(--border); }
-.site-message-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; padding: 1.25rem 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.site-message-row:hover strong { color: var(--accent); }
+/* Les e-mails des sites (0.83.1) : une rubrique, une carte, des filets entre les parties. */
+.site-mail { margin-top: 2.5rem; }
+.site-mail > .setting-desc { margin: 0 0 0.75rem; }
+.settings-card.site-mail-card { padding: 0 2rem; }
+.site-mail-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.5rem 0; }
+.site-mail-text { display: grid; gap: 0.35rem; min-width: 0; line-height: 1.5; }
+.site-mail-text p { margin: 0; }
+.site-mail-row > .pill { flex: none; }
+.site-mail-messages { display: grid; gap: 0.35rem; padding: 1.5rem 0 0.25rem; border-top: 1px solid var(--border); line-height: 1.5; }
+.site-mail-messages > p { margin: 0 0 0.25rem; }
+.site-message-list { list-style: none; margin: 0; padding: 0; }
+.site-message-list > li { border-top: 1px solid var(--border); }
+.site-message-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; padding: 1.1rem 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.site-message-row:hover .site-message-subject { color: var(--accent); }
 .site-message-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; flex: 1; min-width: 0; }
 .site-message-meta { color: var(--muted); font-size: 0.88rem; }
 .site-message-chevron { flex: none; color: var(--muted); transition: transform 200ms; }
 .site-message-row[aria-expanded="true"] .site-message-chevron { transform: rotate(90deg); }
 .site-message-text { margin: 0; padding: 0 0 1.25rem; white-space: pre-line; line-height: 1.5; }
 @media (max-width: 820px) {
-  .site-code { flex-direction: column; align-items: stretch; }
+  .site-code { flex-direction: column; align-items: stretch; padding: 1.25rem; }
   .site-code .pill { min-height: 3rem; }
-  .settings-card.site-message-list { padding: 0 1.5rem; }
+  .settings-card.site-mail-card { padding: 0 1.5rem; }
+  .site-mail-row { flex-direction: column; align-items: stretch; gap: 1rem; padding: 1.25rem 0; }
+  .site-mail-row > .pill { min-height: 3rem; }
   .site-message-head { flex-direction: column; align-items: flex-start; }
 }
 /* Les premières offres (docs/104, 0.80.0). */

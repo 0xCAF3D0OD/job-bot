@@ -9,7 +9,7 @@ import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import SiteCodes from "../components/SiteCodes.vue";
-import SiteMessages from "../components/SiteMessages.vue";
+import SiteMail from "../components/SiteMail.vue";
 import JournalPanel from "../components/JournalPanel.vue";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -52,20 +52,10 @@ onMounted(() => void load());
 
 <template>
   <section class="jobs-body">
-    <!-- Où vont les e-mails des sites (docs/113), dit à l'invité. -->
-    <p
-      v-if="page?.personal_address && page.guest_mailbox"
-      class="setting-desc alerts-mailbox-note"
-      data-test="guest-mailbox-note"
-    >
-      Les e-mails des sites arrivent dans la boîte de jobA1, hébergée en Suisse chez Infomaniak. jobA1 les range
-      dans ton compte, puis les efface de la boîte. Les codes de vérification s'effacent après 30 minutes.
-    </p>
     <!-- Les codes des sites (docs/112) : en tête, le temps de les recopier. -->
     <SiteCodes
       v-if="page"
       :codes="page.codes ?? []"
-      @refresh="load()"
     />
     <div
       v-if="page?.to_confirm?.length"
@@ -94,6 +84,13 @@ onMounted(() => void load());
       </ul>
     </div>
     <template v-if="page">
+      <!-- Une rubrique, un titre au-dessus (0.83.1) ; « Gérer » a le sien. -->
+      <h2
+        v-if="view !== 'manage'"
+        class="section-title first alerts-title"
+      >
+        Les alertes
+      </h2>
       <AlertsWizard
         v-if="view === 'wizard'"
         :page="page"
@@ -119,8 +116,14 @@ onMounted(() => void load());
       />
     </template>
 
+    <!-- Les e-mails des sites (0.83.1) : où ils vont, « J'attends un code », les messages. -->
+    <SiteMail
+      v-if="page"
+      :codes="page.codes ?? []"
+      :guest-mailbox="!!(page.personal_address && page.guest_mailbox)"
+      @refresh="load()"
+    />
     <FirstOffers where="alerts" />
-    <SiteMessages />
 
     <DisclosureRow
       class="journal-toggle"
