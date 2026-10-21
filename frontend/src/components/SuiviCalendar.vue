@@ -69,9 +69,12 @@ const reminders = computed(() => {
   return set;
 });
 
+const WEEKDAY_NAME = new Intl.DateTimeFormat("fr-CH", { weekday: "long" });
+
 function label(day: string): string {
   const sent = sentOn.value.get(day) ?? [];
-  const parts = [`${Number(day.slice(8))}`];
+  // Le jour de la semaine dans le nom (docs/117 §1) : les en-têtes « L M M… » sont visuels.
+  const parts = [WEEKDAY_NAME.format(new Date(`${day}T12:00:00`)) + ` ${Number(day.slice(8))}`];
   if (sent.length) {
     const statuses = sent.map((a) => applicationStatusLabel[a.status ?? "en_attente"].toLowerCase());
     parts.push(`${plural(sent.length, "candidature", "candidatures")} : ${statuses.join(", ")}`);
@@ -87,7 +90,7 @@ function label(day: string): string {
   <div class="suivi-calendar-wrap">
     <div
       class="suivi-calendar"
-      role="grid"
+      role="group"
       aria-label="Candidatures du mois"
       data-test="calendar"
     >
@@ -95,7 +98,7 @@ function label(day: string): string {
         v-for="name in WEEKDAYS"
         :key="name"
         class="weekday"
-        role="columnheader"
+        aria-hidden="true"
       >
         {{ name }}
       </div>
@@ -114,7 +117,6 @@ function label(day: string): string {
           <button
             v-else
             type="button"
-            role="gridcell"
             :class="['day', { today: day === today, selected: day === selected, busy: sentOn.get(day)?.length }]"
             :aria-label="label(day)"
             :aria-pressed="day === selected"

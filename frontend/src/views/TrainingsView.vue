@@ -212,7 +212,7 @@ onMounted(() => void load());
         </RouterLink>
       </nav>
       <component
-        :is="phone ? DisclosureRow : 'aside'"
+        :is="phone ? DisclosureRow : 'section'"
         :class="phone ? 'orp-note-row' : 'orp-note'"
         :title="phone ? 'Formation et chômage' : undefined"
         :value="phone ? 'accord de l\'ORP' : undefined"

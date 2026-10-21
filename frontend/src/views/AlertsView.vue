@@ -119,7 +119,7 @@ onMounted(() => void load());
         />
       </div>
 
-      <aside
+      <section
         class="alerts-aside"
         aria-label="Les e-mails des sites"
       >
@@ -129,7 +129,7 @@ onMounted(() => void load());
           @refresh="load()"
         />
         <FirstOffers where="alerts" />
-      </aside>
+      </section>
 
       <!-- Sous les deux colonnes : lier ses alertes existantes (docs/116 §1), puis le journal. -->
       <div class="alerts-journal alerts-rows">

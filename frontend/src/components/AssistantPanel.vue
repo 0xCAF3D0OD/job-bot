@@ -301,7 +301,7 @@ const headItems: MoreMenuItem[] = [
       <AssistantMascot :size="28" />
       <span class="assistant-fab-label">Assistant</span>
     </button>
-    <aside
+    <div
       v-else
       class="assistant-panel"
       role="dialog"
@@ -591,7 +591,7 @@ const headItems: MoreMenuItem[] = [
           v-model="draft"
           rows="2"
           maxlength="4000"
-          placeholder="Écris ta question…"
+          :placeholder="phone ? 'Écris ou dicte ta question…' : 'Écris ta question…'"
           aria-label="Ta question"
           enterkeyhint="send"
           data-test="assistant-input"
@@ -607,6 +607,6 @@ const headItems: MoreMenuItem[] = [
           Envoyer
         </button>
       </form>
-    </aside>
+    </div>
   </template>
 </template>

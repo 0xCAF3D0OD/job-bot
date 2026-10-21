@@ -409,7 +409,7 @@ onMounted(() => void load());
             Candidature envoyée : elle est dans ton suivi.
           </p>
         </div>
-        <aside
+        <section
           v-if="offer.company"
           class="prep-side"
         >
@@ -420,7 +420,7 @@ onMounted(() => void load());
             <h2>Contacts chez {{ offer.company }}</h2>
             <ContactsPanel :offer-id="offer.id" />
           </div>
-        </aside>
+        </section>
       </div>
 
       <CvPanel
@@ -540,7 +540,7 @@ onMounted(() => void load());
           </article>
         </div>
 
-        <aside class="prep-side">
+        <section class="prep-side">
           <OfferBrief :offer="offer" />
           <div class="side-card">
             <h2>
@@ -655,7 +655,7 @@ onMounted(() => void load());
               </li>
             </ul>
           </div>
-        </aside>
+        </section>
       </div>
     </div>
   </section>

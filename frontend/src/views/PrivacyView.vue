@@ -119,6 +119,16 @@ onMounted(async () => {
       >
         L'exploitant de la plateforme n'a pas encore indiqué ses coordonnées.
       </p>
+
+      <h2>Accessibilité</h2>
+      <p>
+        <RouterLink
+          to="/accessibilite"
+          data-test="privacy-accessibility"
+        >
+          Voir ce qui est vérifié
+        </RouterLink>
+      </p>
     </div>
   </section>
 </template>

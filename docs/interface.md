@@ -29,6 +29,7 @@ Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur 
 2. Dans une rangée, tout est centré ; l'écart vient de la rangée, jamais d'une marge propre à un élément.
 3. Gardent leur forme : zones de texte, cases, curseurs, étiquettes, la capsule.
 4. Avant une PR d'interface, l'audit des rangées (`frontend/scripts/alignement.py`) est vide.
+5. Et l'audit d'accessibilité (`frontend/scripts/accessibilite.py`, docs/117) : aucun défaut, parcours au clavier sans blocage.
 
 ## Iconographie (docs/101)
 
