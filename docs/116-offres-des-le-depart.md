@@ -77,6 +77,21 @@ Trois voies, de la plus sûre à la plus incertaine :
 - Tests backend : les titres gardés ou écartés (communication, menuisier) ; un vrai e-mail jobup de recommandations, une offre sur cinq gardée pour une alerte « ingénieur système » ; la famille de dix métiers ; chaque famille a des sources ; un compte « Communicante » suit Cominmag et CB News, et un article de Cominmag sans le mot « communicante » sort dans « Mon domaine » ; « Pâtissier » suit la veille de la restauration. 598 tests, ruff, mypy.
 - Tests de l'interface : l'aperçu ne demande que le domaine et dit « Rien de neuf sur ton métier » ; le journal compte les recommandations écartées. 407 tests, lint, vue-tsc.
 
+## Écarts (0.86.0 : §1)
+
+- **Où** : sous les deux colonnes de la page Alertes, une ligne repliée **« J'ai déjà des alertes »** (« les transférer »), au-dessus d'« Alertes reçues ». Seulement pour un compte qui a sa propre adresse jobA1.
+- **Le pas-à-pas** selon la messagerie : **Gmail** (ajouter l'adresse de transfert, recopier le code, laisser « Désactiver le transfert » coché, puis un filtre « De » → « Transférer à ») ; **Outlook** (une règle « De » → « Transférer à », sans code) ; **Autre** (chercher « règle » ou « filtre »). L'adresse jobA1 avec « Copier l'adresse ».
+- **Les expéditeurs à copier** : `candidat@jobup.ch`, `candidat@my.jobup.ch`, `alert@indeed.com`, `donotreply@jobalert.indeed.com`, en filtre Gmail (`from:(… OR …)`) ou en liste. **jobs.ch n'y est pas** : son expéditeur d'alertes n'est pas connu ; à ajouter après un premier e-mail réel.
+- **Le code de Gmail** (9 chiffres) est reconnu comme un code de vérification et s'affiche dans « Les e-mails des sites », sous le nom « Gmail ». jobA1 n'ouvre pas le lien de Google : la personne recopie le code elle-même.
+- **Le rangement** : un e-mail transféré garde son destinataire d'origine (`To`) ; Gmail ajoute `X-Forwarded-To`, que jobA1 lit désormais pour trouver le compte.
+- **Reste à faire, par toi** : un essai réel avec ta boîte Gmail vers une adresse d'invité, pour confirmer que Gmail garde l'expéditeur (jobup reconnu) et que la boîte Infomaniak range bien l'e-mail.
+
+## Vérifié (0.86.0)
+
+- Tests backend : une alerte jobup transférée (`To` : la boîte Gmail, `X-Forwarded-To` : l'adresse jobA1) rangée au bon compte ; le code de confirmation de Gmail (9 chiffres) montré sous « Gmail », avec la notification. 600 tests, ruff, mypy.
+- Tests de l'interface : le pas-à-pas Gmail (adresse, code, filtre), Outlook, la copie des expéditeurs ; aucun mot de passe demandé. 408 tests, lint, vue-tsc.
+- Captures Playwright à 1440 et 414 px : la ligne sous les colonnes, le filtre qui passe à la ligne sur téléphone.
+
 ## Les questions
 
 1. **§1, lier ses alertes par une règle de transfert** (avec le pas-à-pas et le code de Gmail affiché par jobA1) : d'accord ?

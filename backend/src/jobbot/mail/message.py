@@ -41,7 +41,9 @@ def _header(msg: EmailMessage, name: str) -> str | None:
     return str(value).strip() if value is not None else None
 
 
-RECIPIENT_HEADERS = ("Delivered-To", "X-Original-To", "To", "Cc")
+# X-Forwarded-To : un e-mail transféré par la boîte de la personne (Gmail, docs/116 §1) garde
+# son destinataire d'origine dans To ; l'adresse jobA1 est là.
+RECIPIENT_HEADERS = ("Delivered-To", "X-Original-To", "X-Forwarded-To", "To", "Cc")
 
 
 def _recipients(msg: EmailMessage) -> tuple[str, ...]:

@@ -1655,6 +1655,15 @@ html.side-open { overflow: hidden; }
 .alerts-main { grid-area: main; min-width: 0; display: flex; flex-direction: column; }
 .alerts-aside { grid-area: aside; min-width: 0; display: flex; flex-direction: column; gap: 2rem; }
 .alerts-journal { grid-area: journal; }
+/* Les lignes sous les colonnes (0.86.0) : « J'ai déjà des alertes » puis le journal. */
+.alerts-rows { display: grid; gap: 0.75rem; }
+.alerts-rows > .journal-toggle { margin-top: 0; }
+.forward-body { display: grid; gap: 1rem; padding: 0.5rem 0 1.25rem; line-height: 1.5; }
+.forward-body p { margin: 0; }
+.forward-steps { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.75rem; }
+.forward-filter { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 1rem 1.25rem; border-radius: 12px; background: var(--band); }
+.forward-filter code { flex: 1 1 18rem; min-width: 0; overflow-wrap: anywhere; font-size: 0.88rem; line-height: 1.6; }
+@media (max-width: 820px) { .forward-filter .pill { width: 100%; min-height: 3rem; } }
 .alerts-main > :last-child, .alerts-aside > :last-child { flex: 1; }
 .alerts-main .wizard-side .illustrated-body { display: flex; flex-direction: column; height: 100%; }
 .alerts-main .wizard-side .illustrated-body > .form-card { flex: 1; }

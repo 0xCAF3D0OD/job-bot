@@ -6,6 +6,8 @@ export const SITE_NAMES: Record<string, string> = {
   jobroom: "Job-Room",
   jobsch: "jobs.ch",
   linkedin: "LinkedIn",
+  // Le code de Gmail qui confirme un transfert vers l'adresse jobA1 (docs/116 §1).
+  gmail: "Gmail",
   // Offre ajoutée par toi (docs/111) : son lien mène à l'annonce elle-même.
   manual: "l'annonce",
   unknown: "inconnu",

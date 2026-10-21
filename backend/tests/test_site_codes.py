@@ -129,6 +129,30 @@ async def test_code_shown_then_erased(
         assert (await session.scalars(select(Search))).first() is None
 
 
+async def test_gmail_forwarding_code(
+    clean: Runtime, mailbox: FakeMailbox, phone: list[notify.Message]
+) -> None:
+    """docs/116 §1 : Gmail confirme le transfert vers l'adresse jobA1 par un code à 9 chiffres."""
+    mailbox.add(
+        make_email(
+            message_id="<gmail@x>",
+            sender="forwarding-noreply@google.com",
+            received_at=datetime.now(UTC),
+            subject="(#123456789) Confirmation de transfert Gmail - Recevoir des messages de "
+            "amy.exemple@gmail.com",
+            html="<p>Code de confirmation : 123456789</p><p>Pour autoriser le transfert…</p>",
+        ),
+        "<gmail@x>",
+    )
+    with accounts.use(None):
+        result = await service.collect(clean)
+    assert result.codes == 1
+    async with clean.sessionmaker() as session:
+        search = (await session.scalars(select(Search))).one()
+    assert (search.source, search.kind, search.code) == ("gmail", "code", "123456789")
+    assert [m.message for m in phone] == ["Gmail : 123456789"]
+
+
 async def test_extension_reads_a_fresh_code(
     clean: Runtime, mailbox: FakeMailbox, phone: Any
 ) -> None:

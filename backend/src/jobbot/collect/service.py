@@ -98,6 +98,10 @@ def _since(settings: Settings) -> date:
     return (datetime.now(UTC) - timedelta(days=settings.imap_backfill_days)).date()
 
 
+# Gmail, qui confirme un transfert vers l'adresse jobA1 par un code (docs/116 §1).
+GMAIL_DOMAINS = ("google.com", "gmail.com")
+
+
 async def _known_message_ids(runtime: Runtime, ids: set[str]) -> set[str]:
     """Déjà rangés, dans n'importe quel compte (docs/65 §3) : la base ne rend que les ids."""
     if not ids:
@@ -234,6 +238,9 @@ async def ingest_email(
     source, status, version, alert, error = await _analyse(runtime, email, sites)
     # Un code de vérification (docs/112) : montré au compte le temps de le recopier.
     found = find_code(email) if status != ParseStatus.PARSED else None
+    # Le code de Gmail qui confirme un transfert vers l'adresse jobA1 (docs/116 §1).
+    if found is not None and email.sender_domain in GMAIL_DOMAINS:
+        source = "gmail"
     no_offer = status == ParseStatus.EMPTY or (status == ParseStatus.UNRECOGNIZED and not error)
     # « Confirmez votre alerte » : le lien, pour la page Alertes (docs/65 §3) ; ouvert par
     # jobA1 pour un site connu (docs/112 §4).
@@ -288,7 +295,8 @@ async def ingest_email(
 
     COLLECT_EMAILS.labels(source=source, parse_status=status).inc()
     if found is not None:
-        name = next((site.name for site in sites if site.slug == source), source)
+        fallback = "Gmail" if source == "gmail" else source
+        name = next((site.name for site in sites if site.slug == source), fallback)
         await site_codes.announce(runtime, name, found.code)
     log.info(
         "email_ingested",

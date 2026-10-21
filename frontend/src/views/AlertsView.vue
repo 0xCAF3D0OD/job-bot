@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
+import AlertsForward from "../components/AlertsForward.vue";
 import AlertsPanel from "../components/AlertsPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
@@ -130,15 +131,22 @@ onMounted(() => void load());
         <FirstOffers where="alerts" />
       </aside>
 
-      <DisclosureRow
-        class="journal-toggle alerts-journal"
-        title="Alertes reçues"
-        value="le journal des e-mails lus"
-        data-test="journal-toggle"
-        @toggle="journalOpen = $event"
-      >
-        <JournalPanel v-if="journalOpen" />
-      </DisclosureRow>
+      <!-- Sous les deux colonnes : lier ses alertes existantes (docs/116 §1), puis le journal. -->
+      <div class="alerts-journal alerts-rows">
+        <AlertsForward
+          v-if="page.personal_address && page.mailbox"
+          :address="page.mailbox"
+        />
+        <DisclosureRow
+          class="journal-toggle"
+          title="Alertes reçues"
+          value="le journal des e-mails lus"
+          data-test="journal-toggle"
+          @toggle="journalOpen = $event"
+        >
+          <JournalPanel v-if="journalOpen" />
+        </DisclosureRow>
+      </div>
     </div>
   </section>
 </template>
