@@ -7,7 +7,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
-from jobbot import accounts
+from jobbot import accounts, welcome
 from jobbot.api.app import create_app
 from jobbot.auth import passwords
 from jobbot.collect import public_search
@@ -101,3 +101,46 @@ async def test_new_account_goes_through_welcome(
         transport=ASGITransport(app=create_app(runtime.settings, runtime)), base_url="http://test"
     ) as owner:
         assert (await owner.get("/api/welcome")).json()["status"] == "done"
+
+
+async def test_first_offers_caught_up_for_older_accounts(
+    secured: Runtime, runtime: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """0.80.1 : un accueil fini avant la 0.80.0 ; la recherche part à la première visite."""
+    queued: list[str] = []
+
+    async def enqueue(_settings: object, name: str) -> bool:
+        queued.append(name)
+        return True
+
+    monkeypatch.setattr(public_search, "enqueue", enqueue)
+    async with secured.sessionmaker.begin() as session:
+        user = User(username="camille-accueil", password_hash=passwords.hash_password(PASSWORD))
+        session.add(user)
+        await session.flush()
+        camille = user.id
+    app = create_app(secured.settings, secured)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost") as api:
+        await api.post(
+            "/api/auth/login", json={"username": "camille-accueil", "password": PASSWORD}
+        )
+        await api.put("/api/welcome", json={"trade": "Pâtissier"})
+        # Fini avant la 0.80.0 : l'accueil est « done », sans recherche faite.
+        with accounts.use(camille):
+            async with secured.sessionmaker.begin() as session:
+                await welcome.save(session, {"done": True})
+        first = (await api.get("/api/alert-searches/first-offers")).json()
+        assert first["status"] == "queued" and queued == ["first_offers"]
+        await api.get("/api/alert-searches/first-offers")
+        assert queued == ["first_offers"]
+    # L'exploitant n'est pas concerné.
+    async with AsyncClient(
+        transport=ASGITransport(app=create_app(runtime.settings, runtime)), base_url="http://test"
+    ) as owner:
+        assert (await owner.get("/api/alert-searches/first-offers")).json()["status"] in (
+            "none",
+            "done",
+            "failed",
+            "no_trade",
+        )
+    assert queued == ["first_offers"]

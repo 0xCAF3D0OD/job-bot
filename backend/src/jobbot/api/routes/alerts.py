@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from jobbot import accounts
+from jobbot import accounts, welcome
 from jobbot.alerts import service
 from jobbot.collect import public_search
 from jobbot.core.filter import RemotePolicy
@@ -270,9 +270,25 @@ def _first_out(value: dict[str, object]) -> FirstOffersOut:
 
 @router.get("/first-offers", operation_id="getFirstOffers")
 async def get_first_offers(request: Request) -> FirstOffersOut:
-    """Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup."""
-    async with _runtime(request).sessionmaker() as session:
-        return _first_out(await public_search.state(session))
+    """Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup.
+
+    Rattrapage (0.80.1) : un invité qui a fini son accueil avant la 0.80.0 ne l'a jamais eue ;
+    elle part à sa première visite de la page Offres ou Alertes, une seule fois.
+    """
+    runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        current = await public_search.state(session)
+        missed = (
+            not current
+            and not runtime.settings.demo
+            and not await accounts.is_owner(session)
+            and welcome.status(await welcome.state(session)) == "done"
+        )
+    if missed:
+        await public_search.request(runtime, first_only=True)
+        async with runtime.sessionmaker() as session:
+            current = await public_search.state(session)
+    return _first_out(current)
 
 
 @router.post("/first-offers", operation_id="startFirstOffers", status_code=status.HTTP_202_ACCEPTED)
