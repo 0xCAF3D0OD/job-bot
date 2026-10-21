@@ -36,3 +36,7 @@ Tes retours du 2026-10-21 après la fusion de la 0.84.2 :
 - **La page de maintenance sans carte** : une page d'état n'est pas un élément parmi d'autres ; le dessin, le titre et le message sont posés sur le fond, centrés. Seule la ligne d'attente (« Nouvel essai… », « Réessayer maintenant ») garde un cadre, parce qu'elle se lit et se touche.
 
 Vérifié : 405 tests, lint, vue-tsc ; captures Playwright à 1440 et 414 px (résumé, étape 2, maintenance), pas de défilement horizontal.
+
+## Complément 0.84.4
+
+- **Les titres collés au bord des cartes** (Rendez-vous ORP et toutes les cartes `form-card` qui commencent par un titre) : la carte avait 0,5 rem en haut, prévu pour les cartes qui commencent par un groupe de champs (déjà 1,5 rem au-dessus de leur légende). Désormais 1,75 rem en haut (1,5 rem sur téléphone, avec 1,25 rem sur les côtés au lieu de 1,1) ; 0,5 rem seulement devant un groupe de champs. Mesuré : le titre à 29 px du bord sur ordinateur (8 px avant), 25 px sur téléphone, 33 px pour une légende.

@@ -335,7 +335,10 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 /* --- Formulaires (Prérequis, Réglages) --- */
 
 .container.narrow { max-width: 44rem; }
-.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 0.5rem 2rem 2rem; }
+/* La marge du haut (0.84.4) : 1,75 rem, comme les côtés ; 0,5 rem seulement quand la carte
+   commence par un groupe de champs, qui a déjà 1,5 rem au-dessus de sa légende. */
+.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem 2rem 2rem; }
+.form-card:has(> fieldset:first-child) { padding-top: 0.5rem; }
 .form-card fieldset { border: none; border-bottom: 1px solid var(--divider); margin: 0; padding: 1.5rem 0; display: grid; gap: 0.6rem; }
 .form-card legend { font-weight: 500; font-size: 1.05rem; padding: 0; float: left; width: 100%; margin-bottom: 0.2rem; }
 .form-card legend label { cursor: default; }
@@ -360,7 +363,8 @@ input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
 }
 
 @media (max-width: 720px) {
-  .form-card { padding: 0.25rem 1.1rem 1.5rem; }
+  .form-card { padding: 1.5rem 1.25rem; }
+  .form-card:has(> fieldset:first-child) { padding-top: 0.25rem; }
 }
 
 /* --- Profil : documents et blocs (0.3) --- */
