@@ -13,7 +13,7 @@ from jobbot.collect import public_search
 from jobbot.core.filter import RemotePolicy
 from jobbot.db.models import AlertSearch, AlertSetup, Search, Site
 from jobbot.filtering.service import load_criteria
-from jobbot.mail import addresses
+from jobbot.mail import addresses, site_codes
 from jobbot.runtime import Runtime
 from jobbot.sources.sites import followed
 
@@ -67,6 +67,15 @@ class ToConfirm(BaseModel):
     url: str
 
 
+class SiteCodeOut(BaseModel):
+    """Un code de vérification d'un site (docs/112), montré 30 minutes."""
+
+    search_id: int
+    site: str
+    code: str
+    received_at: datetime
+
+
 class AlertsPage(BaseModel):
     # L'adresse à donner aux sites pour ce compte (docs/65 §3), si la collecte est configurée ;
     # le dossier lu, pour l'exploitant seulement (c'est sa boîte).
@@ -77,6 +86,7 @@ class AlertsPage(BaseModel):
     sites: list[AlertSite]
     searches: list[AlertSearchOut]
     to_confirm: list[ToConfirm] = []
+    codes: list[SiteCodeOut] = []
 
 
 class AlertSearchIn(BaseModel):
@@ -125,7 +135,9 @@ async def _page(runtime: Runtime) -> AlertsPage:
         )
         return AlertCell(**found.__dict__, remote_url=remote)
 
+    codes = await site_codes.current(runtime)
     return AlertsPage(
+        codes=[SiteCodeOut(**c.__dict__) for c in codes],
         mailbox=address,
         folder=settings.imap_folder if address and owner else None,
         personal_address=bool(address) and not owner,
@@ -299,3 +311,42 @@ async def start_first_offers(request: Request) -> FirstOffersStart:
     async with runtime.sessionmaker() as session:
         current = _first_out(await public_search.state(session))
     return FirstOffersStart(**current.model_dump(), result=result)
+
+
+# --- Les codes et les messages des sites (docs/112) -----------------------------------------
+
+
+class ExpectCodeOut(BaseModel):
+    # False : six relevés rapides dans l'heure, c'est le maximum.
+    queued: bool
+
+
+@router.post("/expect-code", operation_id="expectSiteCode", status_code=status.HTTP_202_ACCEPTED)
+async def expect_code(request: Request) -> ExpectCodeOut:
+    """« J'attends un code » : la boîte relevée toutes les 15 secondes pendant 5 minutes."""
+    return ExpectCodeOut(queued=await site_codes.expect(_runtime(request)))
+
+
+class SiteMessageOut(BaseModel):
+    id: int
+    site: str
+    subject: str | None
+    received_at: datetime
+
+
+class SiteMessageText(BaseModel):
+    text: str
+
+
+@router.get("/messages", operation_id="listSiteMessages")
+async def list_messages(request: Request) -> list[SiteMessageOut]:
+    """Les messages des sites des 30 derniers jours (bienvenue, alerte modifiée…)."""
+    return [SiteMessageOut(**m.__dict__) for m in await site_codes.messages(_runtime(request))]
+
+
+@router.get("/messages/{search_id}", operation_id="getSiteMessage")
+async def get_message(request: Request, search_id: int) -> SiteMessageText:
+    text = await site_codes.message_text(_runtime(request), search_id)
+    if text is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "message introuvable")
+    return SiteMessageText(text=text)
