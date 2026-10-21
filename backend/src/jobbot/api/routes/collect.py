@@ -52,6 +52,8 @@ class SearchOut(BaseModel):
     error: str | None
     results_count: int
     new_offers_count: int
+    # Recommandations du site écartées, hors métier (docs/116 §3).
+    off_topic_count: int = 0
     collected_at: datetime
 
 

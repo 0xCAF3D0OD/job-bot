@@ -8,10 +8,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import welcome
 from jobbot.api.owner import require_owner
 from jobbot.db.models import NewsItem, NewsSource, Profile, ProfileSource
 from jobbot.log import get_logger
-from jobbot.news import catalog, domain
+from jobbot.news import catalog, domain, trades
 from jobbot.news.language import LANGUAGES
 from jobbot.news.service import SourceError, resolve
 from jobbot.profiles import service as profiles
@@ -189,6 +190,21 @@ async def _preferences(runtime: Runtime, profile: Profile) -> NewsPreferences:
     return preferences
 
 
+async def _trade_feeds(runtime: Runtime, profile: Profile) -> set[str]:
+    """Le métier de l'accueil (docs/116 §4) : ses sources suivies une fois (aussi pour un
+    compte créé avant la 0.85.0), et leurs flux, dont tout article parle du métier."""
+    if not profile.is_main:
+        return set()
+    async with runtime.sessionmaker.begin() as session:
+        trade = (await welcome.state(session)).get("trade")
+        if not isinstance(trade, str) or not trade.strip():
+            return set()
+        stored = await session.get(Profile, profile.id)
+        if stored is not None:
+            await trades.follow_trade(session, stored, trade)
+    return trades.family_feeds(trades.family_of(trade))
+
+
 async def _refreshing(session: AsyncSession) -> bool:
     """Un relevé attend son tour ou tourne (file procrastinate, verrou du nom de la tâche)."""
     found = await session.scalar(
@@ -225,6 +241,7 @@ async def list_news(
     profile = await _profile(request)
     preferences = await _preferences(runtime, profile)
     keywords = preferences.domain_keywords
+    trade_feeds = await _trade_feeds(runtime, profile)
     followed = _followed(profile.id)
     async with runtime.sessionmaker() as session:
         query = (
@@ -251,6 +268,9 @@ async def list_news(
                 row
                 for row in found
                 if row[2]
+                # Les sources du métier et les veilles parlent du métier par elles-mêmes.
+                or row[1].feed_url in trade_feeds
+                or row[1].query is not None
                 or (row[1].labour_market and domain.about_jobs(row[0].title, row[0].summary))
             ]
         if topic is not None:

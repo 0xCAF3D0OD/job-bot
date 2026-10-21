@@ -18821,6 +18821,11 @@
             "type": "integer",
             "title": "New Offers Count"
           },
+          "off_topic_count": {
+            "type": "integer",
+            "title": "Off Topic Count",
+            "default": 0
+          },
           "collected_at": {
             "type": "string",
             "format": "date-time",
@@ -19457,6 +19462,11 @@
           "new_offers_count": {
             "type": "integer",
             "title": "New Offers Count"
+          },
+          "off_topic_count": {
+            "type": "integer",
+            "title": "Off Topic Count",
+            "default": 0
           },
           "collected_at": {
             "type": "string",

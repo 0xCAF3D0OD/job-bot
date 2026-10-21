@@ -23,16 +23,11 @@ const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "shor
 const active = computed(() => route.path.startsWith("/progresser"));
 const label = computed(() => (count.value ? "Progresser, du nouveau à lire" : "Progresser"));
 
-// Comme la carte d'Aujourd'hui : les dernières du domaine ; à défaut, celles sur l'emploi.
+// Les dernières du métier (docs/116 §4) : les mots du domaine, les sources de la famille du
+// métier, les veilles. Rien ne parle du métier : on le dit, sans remplir avec l'économie.
 async function loadNews(): Promise<void> {
   const mine = await api.GET("/api/news", { params: { query: { kind: "articles", limit: 3, domain_only: true } } });
-  const items = (mine.data?.items ?? []).filter((item) => item.matched.length);
-  if (items.length) {
-    news.value = items;
-    return;
-  }
-  const jobs = await api.GET("/api/news", { params: { query: { kind: "articles", limit: 3, topic: "jobs" } } });
-  news.value = jobs.data?.items ?? [];
+  news.value = mine.data?.items ?? [];
 }
 
 async function loadTrainings(): Promise<void> {
@@ -124,7 +119,7 @@ function close(): void {
           v-else-if="loaded"
           class="muted preview-empty"
         >
-          Rien de nouveau pour l'instant.
+          Rien de neuf sur ton métier pour l'instant.
         </p>
         <template v-if="trainings.length">
           <p class="preview-title">

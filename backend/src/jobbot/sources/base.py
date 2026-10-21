@@ -25,6 +25,9 @@ class RawOffer:
 class ParsedAlert:
     alert_label: str | None
     offers: list[RawOffer]
+    # Des offres que le site recommande, pas celles de la recherche de la personne : gardées
+    # seulement si elles parlent de son métier (docs/116 §3).
+    recommended: bool = False
 
 
 class Parser(Protocol):

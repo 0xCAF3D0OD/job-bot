@@ -62,6 +62,13 @@ function mockApi(): void {
 }
 
 describe("JournalView", () => {
+  it("les recommandations hors métier, comptées à part (docs/116 §3)", async () => {
+    GET.mockResolvedValue({ data: { items: [{ ...search, alert_label: "Recommandations jobup", off_topic_count: 4 }], total: 1 } });
+    const wrapper = mount(JournalView);
+    await flushPromises();
+    expect(wrapper.find("[data-test=off-topic]").text()).toBe("(+ 4 hors métier, écartées)");
+  });
+
   it("liste les alertes et affiche les offres d'une alerte au clic", async () => {
     mockApi();
     const wrapper = mount(JournalView);
