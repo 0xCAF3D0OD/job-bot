@@ -34,8 +34,17 @@ def plus_address(base: str, code: str) -> str:
 
 def alert_domain(settings: Settings) -> str | None:
     """Le domaine des adresses d'alerte des invités (docs/104), s'il est réglé."""
-    domain = settings.alert_domain.strip().lower().lstrip("@")
+    domain = settings.alert_domain.strip().lower().lstrip("@").rpartition("@")[2]
     return domain if "." in domain else None
+
+
+def alert_box(settings: Settings) -> str | None:
+    """La boîte du domaine, si le réglage est une adresse entière (« alertes@joba1.ch »,
+    0.82.3) : chez un hébergeur sans redirection « catch-all », l'invité reçoit à
+    « alertes+nom-code@joba1.ch », que la seule redirection de « alertes@ » fait suivre."""
+    value = settings.alert_domain.strip().lower().lstrip("@")
+    box = value.partition("@")[0] if "@" in value else ""
+    return box.split("+")[0] or None
 
 
 def name_slug(username: str) -> str:
@@ -45,9 +54,10 @@ def name_slug(username: str) -> str:
     return slug or "compte"
 
 
-def domain_address(domain: str, username: str, code: str) -> str:
+def domain_address(domain: str, username: str, code: str, box: str | None = None) -> str:
     # Le code reste à la fin, après le dernier tiret : c'est lui qui désigne le compte.
-    return f"{name_slug(username)}-{code}@{domain}"
+    local = f"{name_slug(username)}-{code}"
+    return f"{box}+{local}@{domain}" if box else f"{local}@{domain}"
 
 
 async def account_address(session: AsyncSession, settings: Settings) -> str | None:
@@ -63,7 +73,7 @@ async def account_address(session: AsyncSession, settings: Settings) -> str | No
         await session.flush()
     domain = alert_domain(settings)
     if domain is not None:
-        return domain_address(domain, user.username, user.mail_code)
+        return domain_address(domain, user.username, user.mail_code, alert_box(settings))
     return plus_address(base, user.mail_code)
 
 

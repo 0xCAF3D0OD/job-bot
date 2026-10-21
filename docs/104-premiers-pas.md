@@ -105,3 +105,14 @@ Ton retour du 2026-10-21 : « je ne vois pas d'offre de pâtissier chez eliot »
 - **Pas pour l'exploitant** (il a ses alertes), **pas dans la démo**.
 - **Vérifié** : test d'un accueil fini sans recherche (la recherche part une fois, pas deux) ; l'exploitant n'est pas concerné.
 - **Pour que la recherche tourne**, le worker doit connaître la tâche `first_offers` : redémarrer `make dev` (ou le worker) après la mise à jour.
+
+## 0.82.3 — L'adresse d'alerte sans « catch-all »
+
+Ton essai du 2026-10-21 avec le compte « amy » : le code de jobup, envoyé à `amy-32e6krri@joba1.ch`, n'est jamais arrivé. Chez Infomaniak, `joba1.ch` n'a qu'**une** redirection, `alertes@joba1.ch` → ta boîte Gmail ; une adresse qui n'existe pas (`amy-…@joba1.ch`) n'est pas reçue, et l'écran de la redirection ne permet pas d'en faire une « catch-all » (le nom n'est pas modifiable).
+
+- **Le réglage accepte une adresse entière** : `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch`. L'invité reçoit alors à **`alertes+amy-32e6krri@joba1.ch`** : la partie après le « + » est ignorée par la plupart des hébergeurs, et la redirection de `alertes@` la fait suivre ; la collecte lit le code après le dernier tiret, comme avant.
+- `JOBBOT_ALERT_DOMAIN=joba1.ch` (le domaine seul) garde le format `amy-32e6krri@joba1.ch`, pour un domaine avec « catch-all ».
+- **L'adresse affichée** à l'invité est entière (ce n'est pas la boîte de l'exploitant), avec « Copier l'adresse ».
+- **Avant de changer le `.env`** : envoyer un e-mail à `alertes+test@joba1.ch` et vérifier qu'il arrive dans Gmail (Infomaniak accepte-t-il le « + » sur une redirection ?).
+- **Une adresse déjà donnée à un site** (`amy-32e6krri@joba1.ch`) ne reçoit rien tant qu'il n'y a pas de « catch-all » : la changer sur le site (l'adresse affichée dans jobA1 suit le réglage).
+- **Vérifié** : tests du réglage (adresse entière ou domaine), de l'adresse fabriquée, du routage de `alertes+nom-code@`, de l'affichage entier.

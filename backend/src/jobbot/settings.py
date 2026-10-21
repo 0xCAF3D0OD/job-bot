@@ -87,6 +87,8 @@ class Settings(BaseSettings):
     # Domaine des adresses d'alerte des comptes invités (docs/104, 0.79.0) : rempli, un invité
     # reçoit à « nom-code@domaine » (une redirection « catch-all » du domaine vers la boîte) au
     # lieu de « boite+code@… », qui montrait l'adresse de l'exploitant. Vide : comme avant.
+    # Une adresse entière (« alertes@joba1.ch », 0.82.3) : sans « catch-all », une seule
+    # redirection suffit ; l'invité reçoit à « alertes+nom-code@joba1.ch ».
     alert_domain: str = ""
 
     # Lecture des pages d'offres jobup après la collecte (docs/05). false : désactivée.

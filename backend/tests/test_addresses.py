@@ -13,13 +13,21 @@ from jobbot.api.app import create_app
 from jobbot.auth import passwords
 from jobbot.collect import service
 from jobbot.db.models import Search, User
-from jobbot.mail.addresses import domain_address, name_slug, plus_address, route
+from jobbot.mail.addresses import (
+    alert_box,
+    alert_domain,
+    domain_address,
+    name_slug,
+    plus_address,
+    route,
+)
 from jobbot.mail.confirm import confirmation_link
 from jobbot.mail.message import parse_email
 from jobbot.runtime import Runtime
 from jobbot.sources.sites import load_sites
 
 from . import test_collect
+from .conftest import make_settings
 from .emails import make_email
 from .test_collect import FakeMailbox
 
@@ -56,6 +64,20 @@ def test_route_by_alert_domain() -> None:
     assert route(("eliot-inconnu1@alertes.joba1.ch",), BASE, codes, owner=1, domain=domain) is None
     assert route(("alertes+k7f3q9ab@example.com",), BASE, codes, owner=1, domain=domain) == 2
     assert route(("alertes@example.com",), BASE, codes, owner=1, domain=domain) == 1
+
+
+def test_alert_address_without_catch_all() -> None:
+    """0.82.3 : le réglage est une adresse entière ; « alertes+nom-code@domaine » désigne le
+    compte, et passe par la seule redirection de « alertes@ »."""
+    settings = make_settings(alert_domain="Alertes@Joba1.ch")
+    assert (alert_domain(settings), alert_box(settings)) == ("joba1.ch", "alertes")
+    assert alert_box(make_settings(alert_domain="alertes.joba1.ch")) is None
+    address = domain_address("joba1.ch", "Amy", "32e6krri", "alertes")
+    assert address == "alertes+amy-32e6krri@joba1.ch"
+    codes = {"32e6krri": 5}
+    assert route((address,), BASE, codes, owner=1, domain="joba1.ch") == 5
+    # La boîte seule, sans code : à personne (l'exploitant a sa propre adresse).
+    assert route(("alertes@joba1.ch",), BASE, codes, owner=1, domain="joba1.ch") is None
 
 
 def test_recipients_read_from_headers() -> None:
