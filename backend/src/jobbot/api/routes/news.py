@@ -199,7 +199,8 @@ async def _trade_feeds(runtime: Runtime, profile: Profile) -> set[str]:
         trade = (await welcome.state(session)).get("trade")
         if not isinstance(trade, str) or not trade.strip():
             return set()
-        stored = await session.get(Profile, profile.id)
+        # La démo est en lecture seule (docs/72) : ses sources sont celles du jeu de données.
+        stored = None if runtime.settings.demo else await session.get(Profile, profile.id)
         if stored is not None:
             await trades.follow_trade(session, stored, trade)
     return trades.family_feeds(trades.family_of(trade))

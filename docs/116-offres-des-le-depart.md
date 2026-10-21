@@ -135,3 +135,7 @@ Ce qui reste permis : chaque personne reçoit ses propres alertes, sur son adres
 4. **§3, les recommandations hors métier écartées** (comptées dans le journal) : d'accord ? Ou les garder, repliées sous « Recommandations » ?
 5. **§4, les actualités par familles de métiers**, et « rien de neuf » plutôt que l'économie : d'accord ? Des sources que tu veux voir ?
 6. **L'ordre** : je propose §3 et §4 d'abord (0.85.0, sans dépendance), puis §1 après l'essai de transfert (0.86.0), puis §2 b et c selon tes réponses.
+
+## Complément 0.86.2
+
+- **La démo** : `/api/news` répondait par une erreur 500. À la lecture des actualités, jobA1 abonne le profil aux sources de son métier (§4), une écriture, que la base de la démo refuse (lecture seule, docs/72). La démo n'abonne plus rien ; elle garde les sources de son jeu de données. Trouvé en parcourant toutes les pages de la démo (0.87.0) ; un test de la démo le vérifie désormais.
