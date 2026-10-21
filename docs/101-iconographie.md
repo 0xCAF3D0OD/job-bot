@@ -149,3 +149,13 @@ Tous les caractères utilisés comme icônes sont remplacés : × ← → ↗ �
   - 329 tests de l'interface (nouveaux : aucun caractère-icône dans les gabarits, le point pêche sur la seule icône IA ; tests mis à jour pour les noms des boutons à icône), lint et typecheck ;
   - audit des rangées vide ;
   - captures sur la démo, en clair, en sombre et sur téléphone : Aujourd'hui, Offres et une offre ouverte, le Suivi, Formations, Réglages, Profil, le menu du compte.
+
+## 0.82.2 — L'assistant hors du cadre sur téléphone
+
+Ton retour du 2026-10-21, capture du Suivi à 414 px : « pourquoi l'assistant sort du cadre ? ».
+
+- **La cause** : le bouton « + » (ajouter une candidature), tout à droite de l'en-tête du Suivi, porte son nom en infobulle (§ icônes seules). Même invisible, l'infobulle occupe sa place : centrée sous le bouton, elle dépassait le bord droit d'environ 45 px. Sur téléphone, le navigateur élargit alors tout l'écran à 457 px, et ce qui est fixé à droite, le bouton de l'assistant, part au-delà du bord.
+- **La correction**, à deux niveaux :
+  - sur écran tactile, l'infobulle d'un bouton icône, qui ne s'affiche jamais au toucher, **ne prend plus de place** (sauf au focus clavier) ;
+  - partout, **`html, body { overflow-x: clip; }`** : un débordement sur le côté, quel qu'il soit, est rogné au lieu d'élargir l'écran. « clip » ne crée pas de zone de défilement : les en-têtes collants restent collants (vérifié après défilement).
+- **Vérifié** : la vraie page Suivi (calendrier, téléphone) mesurée avec Playwright en mode mobile : 457 px avant, 414 px après ; le bouton de l'assistant à 14 px du bord ; l'en-tête toujours collé en haut après défilement. Un test garde les deux règles.
