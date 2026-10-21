@@ -16,6 +16,7 @@ import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { colorIndex, formatMonth, localDate, plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
+import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
 
 // Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
@@ -219,14 +220,29 @@ async function load(): Promise<void> {
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 5);
 }
 
-async function dismissJourney(): Promise<void> {
-  await api.PUT("/api/journey", { body: { dismissed: true } });
-  await load();
+// Masquer un guide (0.84.2) : il s'en va tout de suite, « Annuler » pendant 6 secondes
+// (docs/108) ; ensuite, « Comment ça marche » dans le menu du compte le réaffiche.
+function hideGuide(key: "journey_dismissed" | "checklist_dismissed", path: "/api/journey" | "/api/onboarding"): void {
+  if (!today.value) return;
+  today.value = { ...today.value, [key]: true };
+  void offerUndo({
+    message: "Guide masqué. Le menu du compte le réaffiche (« Comment ça marche »).",
+    commit: async (keepalive) => {
+      const { response } = await api.PUT(path, { body: { dismissed: true }, keepalive });
+      return response.ok;
+    },
+    restore: () => {
+      if (today.value) today.value = { ...today.value, [key]: false };
+    },
+  });
 }
 
-async function dismiss(): Promise<void> {
-  await api.PUT("/api/onboarding", { body: { dismissed: true } });
-  await load();
+function dismissJourney(): void {
+  hideGuide("journey_dismissed", "/api/journey");
+}
+
+function dismiss(): void {
+  hideGuide("checklist_dismissed", "/api/onboarding");
 }
 
 onMounted(() => void load());

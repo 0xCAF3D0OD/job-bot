@@ -8,7 +8,6 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import FirstOffers from "../components/FirstOffers.vue";
-import SiteCodes from "../components/SiteCodes.vue";
 import SiteMail from "../components/SiteMail.vue";
 import JournalPanel from "../components/JournalPanel.vue";
 import { usePageReady } from "../composables/usePageTransition";
@@ -52,11 +51,6 @@ onMounted(() => void load());
 
 <template>
   <section class="jobs-body">
-    <!-- Les codes des sites (docs/112) : en tête, le temps de les recopier. -->
-    <SiteCodes
-      v-if="page"
-      :codes="page.codes ?? []"
-    />
     <div
       v-if="page?.to_confirm?.length"
       class="notice to-confirm"
@@ -84,11 +78,13 @@ onMounted(() => void load());
       </ul>
     </div>
     <!-- Deux colonnes sur ordinateur (0.83.2) : la tâche à gauche, les e-mails des sites à
-         droite ; chacune un titre puis une carte, alignés. Sur téléphone, l'une sous l'autre.
-         « Gérer mes alertes » (le tableau) prend toute la largeur. -->
+         droite ; chacune un titre puis une carte, de même hauteur (0.84.2), le journal dessous
+         sur toute la largeur. Sur téléphone, l'une sous l'autre ; un code arrivé fait passer
+         les e-mails des sites en premier, le temps de le recopier. « Gérer mes alertes » (le
+         tableau) prend toute la largeur. -->
     <div
       v-if="page"
-      :class="['alerts-columns', { wide: view === 'manage' }]"
+      :class="['alerts-columns', { wide: view === 'manage', 'has-code': !!page.codes?.length }]"
     >
       <div class="alerts-main">
         <h2

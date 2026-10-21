@@ -329,7 +329,6 @@ button.small { padding: 0.5rem 0.9rem; font-size: 0.9rem; }
 
 /* --- Statuts des offres (0.3) --- */
 
-.tab-count { opacity: 0.75; font-size: 0.8em; margin-left: 0.2rem; }
 .badge.reason { justify-self: start; background: #fff1e4; color: var(--warn-text); white-space: normal; }
 .empty { text-align: center; padding: 2rem 0; }
 
@@ -1622,47 +1621,63 @@ html.side-open { overflow: hidden; }
 
 /* Candidatures spontanées (docs/39) */
 /* Le code d'un site, en tête de la page Alertes (docs/112). */
-.site-code-list { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; gap: 0.75rem; }
-.site-code { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem; border: 1px solid var(--accent); border-radius: 16px; background: var(--accent-soft); }
+/* Le code d'un site (docs/112), dans la carte « Les e-mails des sites » (0.84.2) : un bloc
+   bleu pâle, le site et l'heure, le code en grand, « Copier le code » dessous. */
+.site-code-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; width: 100%; }
+.site-code { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem; border-radius: 12px; background: var(--accent-soft); }
 .site-code-text { display: grid; gap: 0.35rem; }
 .site-code-label { color: var(--muted); font-size: 0.9rem; }
 .site-code-value { font-size: 1.9rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
-/* Les e-mails des sites (0.83.1) : une rubrique, une carte, des filets entre les parties. */
+.site-mail-card .site-code .pill { background: var(--surface); }
 /* La page Alertes en deux colonnes (0.83.2) : la tâche à gauche, les e-mails des sites à
-   droite (22 rem) ; chaque colonne un titre puis une carte, alignés en haut ; le journal sous
-   la tâche. Sous 1100 px, et pour « Gérer mes alertes », une seule colonne. */
-.alerts-columns { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; grid-template-rows: auto 1fr; grid-template-areas: "main aside" "journal aside"; column-gap: 2rem; row-gap: 1.5rem; align-items: start; }
-.alerts-main { grid-area: main; min-width: 0; }
-.alerts-aside { grid-area: aside; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+   droite (22 rem) ; chaque colonne un titre puis une carte. Depuis 0.84.2, les deux cartes
+   ont la même hauteur (la dernière carte de chaque colonne s'étire) et le journal passe
+   dessous, sur toute la largeur. Sous 1100 px, et pour « Gérer mes alertes », une seule
+   colonne. */
+.alerts-columns { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; grid-template-areas: "main aside" "journal journal"; column-gap: 2rem; row-gap: 1.5rem; align-items: stretch; }
+.alerts-main { grid-area: main; min-width: 0; display: flex; flex-direction: column; }
+.alerts-aside { grid-area: aside; min-width: 0; display: flex; flex-direction: column; gap: 2rem; }
 .alerts-journal { grid-area: journal; }
-.alerts-columns.wide { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "main" "aside" "journal"; }
+.alerts-main > :last-child, .alerts-aside > :last-child { flex: 1; }
+.alerts-main .wizard-side .illustrated-body { display: flex; flex-direction: column; height: 100%; }
+.alerts-main .wizard-side .illustrated-body > .form-card { flex: 1; }
+/* La carte étirée garde son contenu en haut : l'espace en plus va sous le dernier bouton. */
+.alerts-main .form-card { align-content: start; }
+.alerts-aside .site-mail { display: flex; flex-direction: column; }
+.alerts-aside .site-mail-card { flex: 1; display: flex; flex-direction: column; }
+.alerts-columns.wide { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "aside" "journal"; align-items: start; }
 /* L'assistant dans la colonne : l'image plus petite, en haut de la carte (deux colonnes
-   seulement ; sur téléphone, la règle des illustrations s'applique). */
+   seulement ; sur téléphone, la règle des illustrations s'applique). La carte s'étire avec
+   la colonne. */
 @media (min-width: 1101px) {
-  .alerts-main .wizard-side { grid-template-columns: 200px minmax(0, 1fr); gap: 2rem; align-items: start; }
-  .alerts-main .wizard-side > .illu { width: 200px; margin-top: 1.5rem; }
+  .alerts-main .wizard-side { grid-template-columns: 200px minmax(0, 1fr); gap: 2rem; align-items: stretch; }
+  .alerts-main .wizard-side > .illu { width: 200px; margin-top: 1.5rem; align-self: start; }
   .alerts-aside .first-offers { margin-top: 0; }
 }
 /* Entre 1100 et 1280 px, la colonne est trop étroite pour l'image et le formulaire : l'image
    laisse la place, comme sur téléphone. */
 @media (min-width: 1101px) and (max-width: 1279px) {
-  .alerts-main .wizard-side { display: block; }
+  .alerts-main .wizard-side { grid-template-columns: minmax(0, 1fr); }
   .alerts-main .wizard-side > .illu { display: none; }
 }
 @media (max-width: 1100px) {
-  .alerts-columns { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "main" "aside" "journal"; row-gap: 2.5rem; }
+  .alerts-columns { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "aside" "journal"; row-gap: 2.5rem; align-items: start; }
+  .alerts-columns.has-code:not(.wide) { grid-template-areas: "aside" "main" "journal"; }
 }
-.site-mail-note { margin: 0; padding: 1.5rem 0; border-bottom: 1px solid var(--border); }
+/* La carte : le code (ou « J'attends un code »), les messages, puis le pied. Chaque partie
+   aérée de 1,5 rem au-dessus et au-dessous du filet qui la sépare. */
 .settings-card.site-mail-card { padding: 0 2rem; }
 .site-mail-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.5rem 0; }
+.site-mail-foot { margin: auto 0 0; padding: 1.25rem 0 1.5rem; border-top: 1px solid var(--border); line-height: 1.5; }
 /* Dans la colonne étroite : la pilule sous le texte, pleine largeur, comme sur téléphone. */
 .alerts-aside .settings-card.site-mail-card { padding: 0 1.5rem; }
 .alerts-aside .site-mail-row { flex-direction: column; align-items: stretch; gap: 1rem; }
+.alerts-aside .site-code { flex-direction: column; align-items: stretch; padding: 1.25rem; }
 .alerts-aside .site-message-head { flex-direction: column; align-items: flex-start; }
-.site-mail-text { display: grid; gap: 0.35rem; min-width: 0; line-height: 1.5; }
+.site-mail-text { display: grid; gap: 0.5rem; min-width: 0; line-height: 1.5; }
 .site-mail-text p { margin: 0; }
 .site-mail-row > .pill { flex: none; }
-.site-mail-messages { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.35rem; padding: 1.5rem 0 0.25rem; border-top: 1px solid var(--border); line-height: 1.5; }
+.site-mail-messages { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; padding: 1.5rem 0 0.25rem; border-top: 1px solid var(--border); line-height: 1.5; }
 .site-mail-messages > p { margin: 0 0 0.25rem; }
 .site-message-list { list-style: none; margin: 0; padding: 0; }
 .site-message-list > li { border-top: 1px solid var(--border); }
@@ -2900,7 +2915,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .tab-bar a.active { color: var(--accent-text); font-weight: 500; }
   .tab-bar-icon { position: relative; display: grid; place-items: center; }
   .tab-bar-icon .icon { width: 1.35rem; height: 1.35rem; }
-  .tab-bar-count { position: absolute; top: -0.35rem; left: 0.9rem; min-width: 1.05rem; height: 1.05rem; padding: 0 0.25rem; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 0.62rem; font-weight: 700; display: grid; place-items: center; }
+  .tab-bar-count { position: absolute; top: -0.4rem; left: calc(50% + 0.3rem); min-width: 1.05rem; height: 1.05rem; padding: 0 0.25rem; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 0.62rem; font-weight: 700; display: grid; place-items: center; }
   :root:has(.tab-bar) main { padding-bottom: calc(var(--tabbar-h) + 1.5rem + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) .assistant-fab { bottom: calc(var(--tabbar-h) + 0.9rem + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) main .mobile-dock { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: 0.7rem; }
@@ -3126,7 +3141,13 @@ button.icon-only .icon-badge {
   .jobs-tabs a { display: inline-flex; align-items: center; }
   .jobs-tabs .with-icon { flex-direction: column; gap: 0.2rem; font-size: 0.85rem; }
   .jobs-tabs .with-icon > .icon { width: 1.25rem; height: 1.25rem; }
+  /* La pastille sur le coin haut droit de l'icône, comme dans la barre du bas (0.84.2). */
+  .jobs-tabs a { position: relative; }
+  .jobs-tabs .tab-count { position: absolute; top: 0.25rem; left: calc(50% + 0.3rem); margin: 0; }
 }
+/* Les pastilles de nombre, partout la même (0.84.2) : pleine, couleur principale, bordée de
+   la couleur du fond pour se détacher de l'icône qu'elle chevauche. */
+.tab-count, .tab-bar-count, button.icon-only .icon-badge { box-shadow: 0 0 0 2px var(--surface); }
 
 /* docs/101 — Progresser, profil, réglages et petits composants partagés */
 /* Le signet gardé est plein. */
