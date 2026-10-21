@@ -83,56 +83,66 @@ onMounted(() => void load());
         </li>
       </ul>
     </div>
-    <template v-if="page">
-      <!-- Une rubrique, un titre au-dessus (0.83.1) ; « Gérer » a le sien. -->
-      <h2
-        v-if="view !== 'manage'"
-        class="section-title first alerts-title"
-      >
-        Les alertes
-      </h2>
-      <AlertsWizard
-        v-if="view === 'wizard'"
-        :page="page"
-        @updated="page = $event"
-        @done="mode = 'auto'"
-      />
-      <template v-else-if="view === 'manage'">
-        <button
-          type="button"
-          class="link"
-          data-test="close-manage"
-          @click="closeManage"
-        >
-          <span class="with-icon"><AppIcon name="arrow-left" />Retour au résumé</span>
-        </button>
-        <AlertsPanel />
-      </template>
-      <AlertsSummary
-        v-else
-        :page="page"
-        @manage="mode = 'manage'"
-        @restart="mode = 'wizard'"
-      />
-    </template>
-
-    <!-- Les e-mails des sites (0.83.1) : où ils vont, « J'attends un code », les messages. -->
-    <SiteMail
+    <!-- Deux colonnes sur ordinateur (0.83.2) : la tâche à gauche, les e-mails des sites à
+         droite ; chacune un titre puis une carte, alignés. Sur téléphone, l'une sous l'autre.
+         « Gérer mes alertes » (le tableau) prend toute la largeur. -->
+    <div
       v-if="page"
-      :codes="page.codes ?? []"
-      :guest-mailbox="!!(page.personal_address && page.guest_mailbox)"
-      @refresh="load()"
-    />
-    <FirstOffers where="alerts" />
-
-    <DisclosureRow
-      class="journal-toggle"
-      title="Alertes reçues"
-      value="le journal des e-mails lus"
-      data-test="journal-toggle"
-      @toggle="journalOpen = $event"
+      :class="['alerts-columns', { wide: view === 'manage' }]"
     >
-      <JournalPanel v-if="journalOpen" />
-    </DisclosureRow>
+      <div class="alerts-main">
+        <h2
+          v-if="view !== 'manage'"
+          class="section-title first"
+        >
+          Les alertes
+        </h2>
+        <AlertsWizard
+          v-if="view === 'wizard'"
+          :page="page"
+          @updated="page = $event"
+          @done="mode = 'auto'"
+        />
+        <template v-else-if="view === 'manage'">
+          <button
+            type="button"
+            class="link"
+            data-test="close-manage"
+            @click="closeManage"
+          >
+            <span class="with-icon"><AppIcon name="arrow-left" />Retour au résumé</span>
+          </button>
+          <AlertsPanel />
+        </template>
+        <AlertsSummary
+          v-else
+          :page="page"
+          @manage="mode = 'manage'"
+          @restart="mode = 'wizard'"
+        />
+      </div>
+
+      <aside
+        class="alerts-aside"
+        aria-label="Les e-mails des sites"
+      >
+        <SiteMail
+          :codes="page.codes ?? []"
+          :guest-mailbox="!!(page.personal_address && page.guest_mailbox)"
+          @refresh="load()"
+        />
+        <FirstOffers where="alerts" />
+      </aside>
+
+      <DisclosureRow
+        class="journal-toggle alerts-journal"
+        title="Alertes reçues"
+        value="le journal des e-mails lus"
+        data-test="journal-toggle"
+        @toggle="journalOpen = $event"
+      >
+        <JournalPanel v-if="journalOpen" />
+      </DisclosureRow>
+    </div>
   </section>
 </template>

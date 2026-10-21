@@ -78,15 +78,16 @@ onUnmounted(stop);
     <h2 class="section-title first">
       Les e-mails des sites
     </h2>
-    <p
-      v-if="guestMailbox"
-      class="setting-desc"
-      data-test="guest-mailbox-note"
-    >
-      Ils arrivent dans la boîte de jobA1, hébergée en Suisse chez Infomaniak. jobA1 les range dans ton compte, puis
-      les efface de la boîte.
-    </p>
     <div class="settings-card site-mail-card">
+      <!-- Dans la carte (0.83.2) : le titre et la carte s'alignent sur ceux de l'autre colonne. -->
+      <p
+        v-if="guestMailbox"
+        class="setting-desc site-mail-note"
+        data-test="guest-mailbox-note"
+      >
+        Ils arrivent dans la boîte de jobA1, hébergée en Suisse chez Infomaniak. jobA1 les range dans ton compte,
+        puis les efface de la boîte.
+      </p>
       <div class="site-mail-row">
         <div class="site-mail-text">
           <strong>Code de vérification</strong>

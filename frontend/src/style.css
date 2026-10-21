@@ -1628,14 +1628,41 @@ html.side-open { overflow: hidden; }
 .site-code-label { color: var(--muted); font-size: 0.9rem; }
 .site-code-value { font-size: 1.9rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
 /* Les e-mails des sites (0.83.1) : une rubrique, une carte, des filets entre les parties. */
-.site-mail { margin-top: 2.5rem; }
-.site-mail > .setting-desc { margin: 0 0 0.75rem; }
+/* La page Alertes en deux colonnes (0.83.2) : la tâche à gauche, les e-mails des sites à
+   droite (22 rem) ; chaque colonne un titre puis une carte, alignés en haut ; le journal sous
+   la tâche. Sous 1100 px, et pour « Gérer mes alertes », une seule colonne. */
+.alerts-columns { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; grid-template-rows: auto 1fr; grid-template-areas: "main aside" "journal aside"; column-gap: 2rem; row-gap: 1.5rem; align-items: start; }
+.alerts-main { grid-area: main; min-width: 0; }
+.alerts-aside { grid-area: aside; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+.alerts-journal { grid-area: journal; }
+.alerts-columns.wide { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "main" "aside" "journal"; }
+/* L'assistant dans la colonne : l'image plus petite, en haut de la carte (deux colonnes
+   seulement ; sur téléphone, la règle des illustrations s'applique). */
+@media (min-width: 1101px) {
+  .alerts-main .wizard-side { grid-template-columns: 200px minmax(0, 1fr); gap: 2rem; align-items: start; }
+  .alerts-main .wizard-side > .illu { width: 200px; margin-top: 1.5rem; }
+  .alerts-aside .first-offers { margin-top: 0; }
+}
+/* Entre 1100 et 1280 px, la colonne est trop étroite pour l'image et le formulaire : l'image
+   laisse la place, comme sur téléphone. */
+@media (min-width: 1101px) and (max-width: 1279px) {
+  .alerts-main .wizard-side { display: block; }
+  .alerts-main .wizard-side > .illu { display: none; }
+}
+@media (max-width: 1100px) {
+  .alerts-columns { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "main" "aside" "journal"; row-gap: 2.5rem; }
+}
+.site-mail-note { margin: 0; padding: 1.5rem 0; border-bottom: 1px solid var(--border); }
 .settings-card.site-mail-card { padding: 0 2rem; }
 .site-mail-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.5rem 0; }
+/* Dans la colonne étroite : la pilule sous le texte, pleine largeur, comme sur téléphone. */
+.alerts-aside .settings-card.site-mail-card { padding: 0 1.5rem; }
+.alerts-aside .site-mail-row { flex-direction: column; align-items: stretch; gap: 1rem; }
+.alerts-aside .site-message-head { flex-direction: column; align-items: flex-start; }
 .site-mail-text { display: grid; gap: 0.35rem; min-width: 0; line-height: 1.5; }
 .site-mail-text p { margin: 0; }
 .site-mail-row > .pill { flex: none; }
-.site-mail-messages { display: grid; gap: 0.35rem; padding: 1.5rem 0 0.25rem; border-top: 1px solid var(--border); line-height: 1.5; }
+.site-mail-messages { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.35rem; padding: 1.5rem 0 0.25rem; border-top: 1px solid var(--border); line-height: 1.5; }
 .site-mail-messages > p { margin: 0 0 0.25rem; }
 .site-message-list { list-style: none; margin: 0; padding: 0; }
 .site-message-list > li { border-top: 1px solid var(--border); }
@@ -1643,6 +1670,7 @@ html.side-open { overflow: hidden; }
 .site-message-row:hover .site-message-subject { color: var(--accent); }
 .site-message-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; flex: 1; min-width: 0; }
 .site-message-meta { color: var(--muted); font-size: 0.88rem; }
+.site-message-subject { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .site-message-chevron { flex: none; color: var(--muted); transition: transform 200ms; }
 .site-message-row[aria-expanded="true"] .site-message-chevron { transform: rotate(90deg); }
 .site-message-text { margin: 0; padding: 0 0 1.25rem; white-space: pre-line; line-height: 1.5; }
