@@ -1,34 +1,36 @@
-import type { Component } from "vue";
 import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw } from "vue-router";
 
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useProgressMemory } from "./composables/useProgressMemory";
 import { startPage } from "./composables/usePageTransition";
-import AlertsView from "./views/AlertsView.vue";
-import InsightsView from "./views/InsightsView.vue";
-import OrpMeetingView from "./views/OrpMeetingView.vue";
-import DiagnosticView from "./views/DiagnosticView.vue";
-import AccessView from "./views/AccessView.vue";
-import DiscoverView from "./views/DiscoverView.vue";
-import ExtensionLinkView from "./views/ExtensionLinkView.vue";
-import PrivacyView from "./views/PrivacyView.vue";
-import WelcomeView from "./views/WelcomeView.vue";
-import ApplicationsView from "./views/ApplicationsView.vue";
-import JobsView from "./views/JobsView.vue";
-import LoginView from "./views/LoginView.vue";
-import NewsView from "./views/NewsView.vue";
-import OffersView from "./views/OffersView.vue";
-import NotFoundView from "./views/NotFoundView.vue";
-import PlaceholderView from "./views/PlaceholderView.vue";
-import PreparationView from "./views/PreparationView.vue";
-import ProgressView from "./views/ProgressView.vue";
-import ProfileView from "./views/ProfileView.vue";
-import SettingsView from "./views/SettingsView.vue";
-import SignupView from "./views/SignupView.vue";
-import TodayView from "./views/TodayView.vue";
-import TrainingsView from "./views/TrainingsView.vue";
 import type { IconName } from "./icons";
+import PlaceholderView from "./views/PlaceholderView.vue";
+
+// Chaque page se charge quand on l'ouvre (docs/117 §3) : la connexion et Aujourd'hui ne
+// téléchargent plus Préparer, le Bilan ou les Réglages.
+const AlertsView = () => import("./views/AlertsView.vue");
+const InsightsView = () => import("./views/InsightsView.vue");
+const OrpMeetingView = () => import("./views/OrpMeetingView.vue");
+const DiagnosticView = () => import("./views/DiagnosticView.vue");
+const AccessView = () => import("./views/AccessView.vue");
+const DiscoverView = () => import("./views/DiscoverView.vue");
+const ExtensionLinkView = () => import("./views/ExtensionLinkView.vue");
+const PrivacyView = () => import("./views/PrivacyView.vue");
+const WelcomeView = () => import("./views/WelcomeView.vue");
+const ApplicationsView = () => import("./views/ApplicationsView.vue");
+const JobsView = () => import("./views/JobsView.vue");
+const LoginView = () => import("./views/LoginView.vue");
+const NewsView = () => import("./views/NewsView.vue");
+const OffersView = () => import("./views/OffersView.vue");
+const NotFoundView = () => import("./views/NotFoundView.vue");
+const PreparationView = () => import("./views/PreparationView.vue");
+const ProgressView = () => import("./views/ProgressView.vue");
+const ProfileView = () => import("./views/ProfileView.vue");
+const SettingsView = () => import("./views/SettingsView.vue");
+const SignupView = () => import("./views/SignupView.vue");
+const TodayView = () => import("./views/TodayView.vue");
+const TrainingsView = () => import("./views/TrainingsView.vue");
 
 export interface NavEntry {
   path: string;
@@ -61,7 +63,7 @@ export type JobsTab = "offres" | "suivi" | "alertes" | "bilan" | "rendez-vous";
 export type ProgressTab = "actualites" | "formations";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
-const views: Record<string, Component> = {
+const views: Record<string, () => Promise<unknown>> = {
   profile: ProfileView,
   settings: SettingsView,
   today: TodayView,

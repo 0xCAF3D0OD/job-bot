@@ -8,6 +8,8 @@ const apiTarget = process.env.JOBBOT_DEV_API_URL ?? "http://127.0.0.1:8000";
 
 export default defineConfig({
   plugins: [vue()],
+  // Le manifeste dit quels fichiers chaque page charge : le budget de poids le lit (docs/117 §3).
+  build: { manifest: true },
   server: {
     port: 5173,
     proxy: {
