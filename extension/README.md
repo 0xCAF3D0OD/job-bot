@@ -61,6 +61,15 @@ Les champs sont reconnus d'après le relevé du formulaire (`fixtures/job-room-f
 Si Job-Room change son formulaire, refais le relevé : colle `releve-formulaire.js` dans la console
 du navigateur sur la saisie **vide** (structure seulement, aucune valeur), puis remplace le fichier.
 
+## Les codes de vérification (docs/112)
+
+Quand jobup ou jobs.ch demande le code envoyé à ton adresse jobA1 (« Entrez votre code de
+vérification »), clique sur l'icône : **Remplir mes codes tout seul** donne, une fois, l'accès à
+leurs pages de connexion (`auth.jobup.ch`, `auth.jobs.ch`). Ensuite, sur ces pages, l'extension
+prévient jobA1 (qui relève la boîte toutes les 15 secondes), attend le code jusqu'à 5 minutes,
+le remplit et clique **Continuer**, sans ouvrir le panneau. Sans cet accès, recopie le code
+depuis la page Alertes de jobA1.
+
 ## Paquet pour la boutique
 
 `make extension` produit `web-ext-artifacts/joba1-<version>.zip`, avec seulement ce que
@@ -76,6 +85,8 @@ l'extension utilise. Les textes de la fiche et la politique de confidentialité 
 - Page de fond (`background.js`) : ouvrir l'onglet d'accueil à l'installation, et lire le jeton
   dans l'onglet de liaison qu'elle a ouvert, sur l'adresse autorisée.
 - Accès à ta plateforme : demandé au moment de relier, pour cette seule adresse.
+- Accès aux pages de connexion de jobup et jobs.ch (facultatif) : demandé par « Remplir mes codes
+  tout seul », pour y remplir le code de vérification ; rien d'autre n'y est lu.
 
 Un formulaire intégré depuis un autre site (cadre) se remplit en l'ouvrant dans son propre
 onglet : le panneau propose le lien.

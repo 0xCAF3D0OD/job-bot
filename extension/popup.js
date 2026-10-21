@@ -170,6 +170,10 @@ async function start() {
   }
   show("setup", false);
   tab = await targetTab();
+  if (isCodePage(tab?.url)) {
+    await startCodes();
+    return;
+  }
   if (isJobRoom(tab?.url)) {
     show("job-room");
     await startJobRoom();
@@ -353,6 +357,44 @@ async function sent() {
 
 let declaring = null;
 
+// --- Les codes des sites (docs/112) --------------------------------------------------------
+
+// Les pages de connexion où un site demande le code envoyé à l'adresse jobA1.
+const CODE_HOSTS = ["auth.jobup.ch", "auth.jobs.ch"];
+const codeOrigins = () => CODE_HOSTS.map((host) => `https://${host}/*`);
+
+function isCodePage(url) {
+  try {
+    const parsed = new URL(url);
+    return CODE_HOSTS.includes(parsed.hostname) && /challenge|verif|code/i.test(parsed.pathname);
+  } catch {
+    return false;
+  }
+}
+
+async function watchCode() {
+  say("codes-message", "J'attends le code : il sera rempli ici dès qu'il arrive, puis « Continuer ».");
+  show("codes-allow", false);
+  const filled = await chrome.runtime.sendMessage({ type: "watch-code", tabId: tab.id, url: tab.url });
+  say("codes-message", filled ? "Code rempli." : "Pas de code arrivé : recopie-le depuis la page Alertes de jobA1.");
+}
+
+async function startCodes() {
+  show("codes");
+  if (await chrome.permissions.contains({ origins: codeOrigins() })) await watchCode();
+}
+
+// L'accès aux pages du code, une fois : ensuite le code est rempli sans ouvrir le panneau.
+async function allowCodes() {
+  say("codes-error", "");
+  const granted = await chrome.permissions.request({ origins: codeOrigins() });
+  if (!granted) {
+    say("codes-error", "Accès refusé : recopie le code depuis la page Alertes de jobA1.");
+    return;
+  }
+  await watchCode();
+}
+
 function isJobRoom(url) {
   try {
     const { protocol, hostname } = new URL(url);
@@ -487,6 +529,7 @@ $("jr-choices").addEventListener("change", (event) => {
   show("jr-report", false);
 });
 
+$("codes-allow").addEventListener("click", allowCodes);
 $("link").addEventListener("click", link);
 $("authorize").addEventListener("click", authorize);
 $("unlink").addEventListener("click", unlink);

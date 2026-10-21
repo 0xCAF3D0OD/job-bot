@@ -643,6 +643,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/extension/codes/expect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extension Expect Code
+         * @description La page d'un site demande un code : le relevé rapide de la boîte commence.
+         */
+        post: operations["extensionExpectCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/extension/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Extension Code
+         * @description Le code de ce site reçu il y a moins de 10 minutes, pour ce compte.
+         */
+        get: operations["extensionCode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/extension-tokens": {
         parameters: {
             query?: never;
@@ -2764,6 +2804,9 @@ export interface paths {
         /**
          * Get First Offers
          * @description Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup.
+         *
+         *     Rattrapage (0.80.1) : un invité qui a fini son accueil avant la 0.80.0 ne l'a jamais eue ;
+         *     elle part à sa première visite de la page Offres ou Alertes, une seule fois.
          */
         get: operations["getFirstOffers"];
         put?: never;
@@ -2772,6 +2815,63 @@ export interface paths {
          * @description « Chercher sur jobup maintenant » : relance la recherche publique (une fois par heure).
          */
         post: operations["startFirstOffers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alert-searches/expect-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Expect Code
+         * @description « J'attends un code » : la boîte relevée toutes les 15 secondes pendant 5 minutes.
+         */
+        post: operations["expectSiteCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alert-searches/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Messages
+         * @description Les messages des sites des 30 derniers jours (bienvenue, alerte modifiée…).
+         */
+        get: operations["listSiteMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alert-searches/messages/{search_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Message */
+        get: operations["getSiteMessage"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3167,6 +3267,11 @@ export interface components {
              * @default []
              */
             to_confirm: components["schemas"]["ToConfirm"][];
+            /**
+             * Codes
+             * @default []
+             */
+            codes: components["schemas"]["SiteCodeOut"][];
         };
         /** AnswerOut */
         AnswerOut: {
@@ -4090,6 +4195,27 @@ export interface components {
             contact_name?: string | null;
             /** Contact Phone */
             contact_phone?: string | null;
+        };
+        /** ExpectCodeOut */
+        ExpectCodeOut: {
+            /** Queued */
+            queued: boolean;
+        };
+        /** ExtensionCode */
+        ExtensionCode: {
+            /** Site */
+            site: string;
+            /** Code */
+            code: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+        };
+        /** ExtensionCodeOut */
+        ExtensionCodeOut: {
+            code: components["schemas"]["ExtensionCode"] | null;
         };
         /** ExtensionMe */
         ExtensionMe: {
@@ -6525,6 +6651,23 @@ export interface components {
             /** Active */
             active: boolean;
         };
+        /**
+         * SiteCodeOut
+         * @description Un code de vérification d'un site (docs/112), montré 30 minutes.
+         */
+        SiteCodeOut: {
+            /** Search Id */
+            search_id: number;
+            /** Site */
+            site: string;
+            /** Code */
+            code: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+        };
         /** SiteIn */
         SiteIn: {
             /** Name */
@@ -6533,6 +6676,25 @@ export interface components {
             senders: string[];
             /** Url */
             url?: string | null;
+        };
+        /** SiteMessageOut */
+        SiteMessageOut: {
+            /** Id */
+            id: number;
+            /** Site */
+            site: string;
+            /** Subject */
+            subject: string | null;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+        };
+        /** SiteMessageText */
+        SiteMessageText: {
+            /** Text */
+            text: string;
         };
         /** SiteOut */
         SiteOut: {
@@ -8302,6 +8464,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobRoomList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extensionExpectCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionCodeOut"];
+                };
+            };
+        };
+    };
+    extensionCode: {
+        parameters: {
+            query: {
+                site: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExtensionCodeOut"];
                 };
             };
             /** @description Validation Error */
@@ -12818,6 +13031,77 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FirstOffersStart"];
+                };
+            };
+        };
+    };
+    expectSiteCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpectCodeOut"];
+                };
+            };
+        };
+    };
+    listSiteMessages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteMessageOut"][];
+                };
+            };
+        };
+    };
+    getSiteMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                search_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteMessageText"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

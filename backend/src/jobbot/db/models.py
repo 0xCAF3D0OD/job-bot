@@ -18,6 +18,7 @@ from sqlalchemy import (
     SmallInteger,
     Text,
     UniqueConstraint,
+    and_,
     false,
     func,
     text,
@@ -132,6 +133,10 @@ class Search(Base):
     # Un site demande de confirmer l'alerte (docs/65 §3) : son lien, et quand c'est fait.
     confirm_url: Mapped[str | None] = mapped_column(Text)
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Autre chose qu'une alerte (docs/112) : « code » de vérification ou « message » du site ;
+    # le code lu est effacé au bout de 30 minutes.
+    kind: Mapped[str | None] = mapped_column(Text, index=True)
+    code: Mapped[str | None] = mapped_column(Text)
     collected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -141,12 +146,13 @@ class Search(Base):
 
 
 # Une recherche publique faite par jobA1 (docs/104, 0.80.0) se range dans le journal, mais
-# n'est pas une alerte reçue : ni preuve de recherche ORP, ni signe qu'une alerte marche.
+# n'est pas une alerte reçue : ni preuve de recherche ORP, ni signe qu'une alerte marche. De
+# même pour un code ou un message d'un site (docs/112).
 PUBLIC_SEARCH_PREFIX = "public:"
 
 
 def received_alert() -> ColumnElement[bool]:
-    return Search.message_id.not_like(f"{PUBLIC_SEARCH_PREFIX}%")
+    return and_(Search.message_id.not_like(f"{PUBLIC_SEARCH_PREFIX}%"), Search.kind.is_(None))
 
 
 class Offer(Base):

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "jobA1 — remplir mes candidatures",
   "short_name": "jobA1",
-  "version": "0.58.2",
+  "version": "0.59.0",
   "description": "Remplit les formulaires de candidature et la saisie Job-Room avec tes données jobA1. N'envoie jamais rien à ta place.",
   "action": {
     "default_popup": "popup.html",

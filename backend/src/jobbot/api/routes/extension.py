@@ -21,6 +21,7 @@ from jobbot.db.models import Application, DraftKind, ExtensionToken, Offer
 from jobbot.extension import service
 from jobbot.followups.service import local_today
 from jobbot.letters.service import current_draft, load_identity
+from jobbot.mail import site_codes
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api/extension", tags=["extension"])
@@ -44,7 +45,8 @@ class ExtensionMe(BaseModel):
 
 
 # Formulaires des employeurs (docs/25), Job-Room (docs/70).
-FEATURES = ["forms", "job-room"]
+# Les codes des sites (docs/112) : l'extension remplit le code de vérification.
+FEATURES = ["forms", "job-room", "codes"]
 
 
 class OfferBrief(BaseModel):
@@ -359,3 +361,37 @@ async def revoke_token(request: Request, token_id: int) -> None:
         row = await session.get(ExtensionToken, token_id)
         if row is not None and row.revoked_at is None:
             row.revoked_at = datetime.now(UTC)
+
+
+# --- Les codes des sites (docs/112) -----------------------------------------------------------
+
+
+class ExtensionCode(BaseModel):
+    site: str
+    code: str
+    received_at: datetime
+
+
+class ExtensionCodeOut(BaseModel):
+    # Vide : pas encore arrivé (l'extension redemande quelques secondes plus tard).
+    code: ExtensionCode | None
+
+
+@router.post("/codes/expect", operation_id="extensionExpectCode")
+async def extension_expect_code(request: Request) -> ExtensionCodeOut:
+    """La page d'un site demande un code : le relevé rapide de la boîte commence."""
+    await site_codes.expect(_runtime(request))
+    return ExtensionCodeOut(code=None)
+
+
+@router.get("/codes", operation_id="extensionCode")
+async def extension_code(
+    request: Request, site: Annotated[str, Query(pattern=r"^[a-z0-9]{2,30}$")]
+) -> ExtensionCodeOut:
+    """Le code de ce site reçu il y a moins de 10 minutes, pour ce compte."""
+    found = await site_codes.latest(_runtime(request), site)
+    if found is None:
+        return ExtensionCodeOut(code=None)
+    return ExtensionCodeOut(
+        code=ExtensionCode(site=found.site, code=found.code, received_at=found.received_at)
+    )

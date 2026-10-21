@@ -1488,6 +1488,72 @@
         }
       }
     },
+    "/api/extension/codes/expect": {
+      "post": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Extension Expect Code",
+        "description": "La page d'un site demande un code : le relevé rapide de la boîte commence.",
+        "operationId": "extensionExpectCode",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionCodeOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/codes": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Extension Code",
+        "description": "Le code de ce site reçu il y a moins de 10 minutes, pour ce compte.",
+        "operationId": "extensionCode",
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{2,30}$",
+              "title": "Site"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionCodeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/extension-tokens": {
       "get": {
         "tags": [
@@ -7432,7 +7498,7 @@
           "alerts"
         ],
         "summary": "Get First Offers",
-        "description": "Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup.",
+        "description": "Les premières offres (docs/104, 0.80.0) : la recherche publique de jobup.\n\nRattrapage (0.80.1) : un invité qui a fini son accueil avant la 0.80.0 ne l'a jamais eue ;\nelle part à sa première visite de la page Offres ou Alertes, une seule fois.",
         "operationId": "getFirstOffers",
         "responses": {
           "200": {
@@ -7461,6 +7527,96 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FirstOffersStart"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alert-searches/expect-code": {
+      "post": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Expect Code",
+        "description": "« J'attends un code » : la boîte relevée toutes les 15 secondes pendant 5 minutes.",
+        "operationId": "expectSiteCode",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpectCodeOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alert-searches/messages": {
+      "get": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "List Messages",
+        "description": "Les messages des sites des 30 derniers jours (bienvenue, alerte modifiée…).",
+        "operationId": "listSiteMessages",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SiteMessageOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listsitemessages"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alert-searches/messages/{search_id}": {
+      "get": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Get Message",
+        "operationId": "getSiteMessage",
+        "parameters": [
+          {
+            "name": "search_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Search Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteMessageText"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -8702,6 +8858,14 @@
             },
             "type": "array",
             "title": "To Confirm",
+            "default": []
+          },
+          "codes": {
+            "items": {
+              "$ref": "#/components/schemas/SiteCodeOut"
+            },
+            "type": "array",
+            "title": "Codes",
             "default": []
           }
         },
@@ -11572,6 +11736,62 @@
         },
         "type": "object",
         "title": "EmployerOut"
+      },
+      "ExpectCodeOut": {
+        "properties": {
+          "queued": {
+            "type": "boolean",
+            "title": "Queued"
+          }
+        },
+        "type": "object",
+        "required": [
+          "queued"
+        ],
+        "title": "ExpectCodeOut"
+      },
+      "ExtensionCode": {
+        "properties": {
+          "site": {
+            "type": "string",
+            "title": "Site"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "site",
+          "code",
+          "received_at"
+        ],
+        "title": "ExtensionCode"
+      },
+      "ExtensionCodeOut": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtensionCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "ExtensionCodeOut"
       },
       "ExtensionMe": {
         "properties": {
@@ -19161,6 +19381,36 @@
         ],
         "title": "SiteActive"
       },
+      "SiteCodeOut": {
+        "properties": {
+          "search_id": {
+            "type": "integer",
+            "title": "Search Id"
+          },
+          "site": {
+            "type": "string",
+            "title": "Site"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "search_id",
+          "site",
+          "code",
+          "received_at"
+        ],
+        "title": "SiteCodeOut",
+        "description": "Un code de vérification d'un site (docs/112), montré 30 minutes."
+      },
       "SiteIn": {
         "properties": {
           "name": {
@@ -19198,6 +19448,55 @@
           "senders"
         ],
         "title": "SiteIn"
+      },
+      "SiteMessageOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "site": {
+            "type": "string",
+            "title": "Site"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Received At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "site",
+          "subject",
+          "received_at"
+        ],
+        "title": "SiteMessageOut"
+      },
+      "SiteMessageText": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "SiteMessageText"
       },
       "SiteOut": {
         "properties": {
