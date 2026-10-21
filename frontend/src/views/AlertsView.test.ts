@@ -109,7 +109,7 @@ describe("Alertes, résumé (docs/21 §4)", () => {
     expect(rows[0]!.classes()).toContain("ok");
     expect(rows[1]!.classes()).toContain("late");
     expect(wrapper.find("[data-test=late-help]").text()).toContain("Rien reçu de LinkedIn");
-    expect(wrapper.find("[data-test=late-help]").text()).toContain("jobs-noreply@linkedin.com");
+    expect(wrapper.find("[data-test=late-help] [data-test=hover-note]").attributes("aria-description")).toContain("jobs-noreply@linkedin.com");
 
     await wrapper.find("[data-test=manage-alerts]").trigger("click");
     await flushPromises();
@@ -152,7 +152,7 @@ describe("Alertes, adresse par compte (docs/65 §3)", () => {
 describe("Alertes, où vont les e-mails des sites (docs/113)", () => {
   it("dit à l'invité que la boîte de jobA1 range puis efface ; rien pour l'exploitant", async () => {
     const guest = await mountView({ ...page([]), personal_address: true, guest_mailbox: true });
-    expect(guest.find("[data-test=guest-mailbox-note]").text()).toContain("effacés de la boîte une fois rangés");
+    expect(guest.find("[data-test=guest-mailbox-note]").attributes("aria-description")).toContain("effacés de la boîte une fois rangés");
     const owner = await mountView({ ...page([]), personal_address: false, guest_mailbox: false });
     expect(owner.find("[data-test=guest-mailbox-note]").exists()).toBe(false);
   });
