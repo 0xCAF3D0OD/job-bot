@@ -140,8 +140,12 @@ def canton_of(location: str | None) -> str | None:
     return None
 
 
-def _contains(text: str, phrase: str) -> bool:
+def contains(text: str, phrase: str) -> bool:
+    """L'expression entière dans le texte (pas un morceau de mot)."""
     return re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", text) is not None
+
+
+_contains = contains
 
 
 def remote_location(location: str | None) -> bool:

@@ -46,6 +46,7 @@ PERSONAL = (
     "profile_chunks",
     "profile_sources",
     "profiles",
+    "score_corrections",
     "searches",
     "settings",
     "training_marks",

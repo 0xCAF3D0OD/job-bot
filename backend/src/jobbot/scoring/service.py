@@ -472,6 +472,23 @@ async def _score_direct(
             result.scored += 1
 
 
+async def score_offer(runtime: Runtime, offer_id: int) -> int | None:
+    """Note une seule offre, tout de suite, avec le profil actuel (correction d'une note,
+    docs/114). Au plafond ou sans IA, la note reste ; elle sera refaite sur « Renoter »."""
+    async with runtime.sessionmaker() as session:
+        profile = await active_profile(session)
+        offer = await session.get(Offer, offer_id)
+    if offer is None:
+        return None
+    result = ScoringResult()
+    try:
+        await _score_direct(runtime, make_client(runtime.settings), [offer], profile, result)
+    except ScoringUnavailable as exc:
+        log.warning("score_offer_unavailable", problem=str(exc))
+    async with runtime.sessionmaker() as session:
+        return await session.scalar(select(Evaluation.score).where(Evaluation.offer_id == offer_id))
+
+
 # --- Point d'entrée ---------------------------------------------------------------------
 
 

@@ -856,6 +856,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/score-correction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Correction */
+        get: operations["getScoreCorrection"];
+        /**
+         * Apply
+         * @description La correction enregistrée : le bloc ajouté au profil (l'offre renotée), ou le critère
+         *     réglé (le filtre repasse).
+         */
+        put: operations["applyScoreCorrection"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{offer_id}/score-correction/proposal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Propose
+         * @description Ce que la correction donnerait : un bloc de profil à relire, ou des critères.
+         */
+        post: operations["proposeScoreCorrection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/interview.ics": {
         parameters: {
             query?: never;
@@ -3527,6 +3569,32 @@ export interface components {
             /** Late */
             late: boolean;
         };
+        /** BlockIn */
+        BlockIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "preference" | "redhibitoire";
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+        };
+        /** BlockOut */
+        BlockOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "preference" | "redhibitoire";
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+            /** By Ai */
+            by_ai: boolean;
+        };
         /** Body_uploadDocument */
         Body_uploadDocument: {
             /** File */
@@ -3774,6 +3842,8 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** Origin */
+            origin?: string | null;
         };
         /** ChunkProposal */
         ChunkProposal: {
@@ -3944,6 +4014,73 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** CorrectionAsk */
+        CorrectionAsk: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "high" | "low";
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "not_my_trade" | "not_my_level" | "sector" | "place_rate_contract" | "my_trade" | "have_experience" | "sector_ok" | "other";
+            /** Note */
+            note?: string | null;
+        };
+        /** CorrectionIn */
+        CorrectionIn: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "high" | "low";
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "not_my_trade" | "not_my_level" | "sector" | "place_rate_contract" | "my_trade" | "have_experience" | "sector_ok" | "other";
+            /** Note */
+            note?: string | null;
+            block?: components["schemas"]["BlockIn"] | null;
+            /** Criteria */
+            criteria?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** CorrectionOut */
+        CorrectionOut: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "high" | "low";
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "not_my_trade" | "not_my_level" | "sector" | "place_rate_contract" | "my_trade" | "have_experience" | "sector_ok" | "other";
+            /** Note */
+            note: string | null;
+            /** Chunk Id */
+            chunk_id: number | null;
+            /** Score Before */
+            score_before: number | null;
+            /** Score */
+            score: number | null;
+        };
+        /** CriteriaChangeOut */
+        CriteriaChangeOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Changes */
+            changes: {
+                [key: string]: unknown;
+            };
         };
         /** CriteriaIn */
         CriteriaIn: {
@@ -6150,6 +6287,15 @@ export interface components {
             name?: string | null;
             /** Occupation */
             occupation?: string | null;
+        };
+        /** ProposalOut */
+        ProposalOut: {
+            block?: components["schemas"]["BlockOut"] | null;
+            /**
+             * Criteria
+             * @default []
+             */
+            criteria: components["schemas"]["CriteriaChangeOut"][];
         };
         /** QuestionIO */
         QuestionIO: {
@@ -8918,6 +9064,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ManualReadOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getScoreCorrection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionOut"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    applyScoreCorrection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorrectionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    proposeScoreCorrection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CorrectionAsk"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalOut"];
                 };
             };
             /** @description Validation Error */

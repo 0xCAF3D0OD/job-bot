@@ -245,7 +245,9 @@ function onKeydown(event: KeyboardEvent): void {
 const editedChunk = computed(() => chunks.value.find((c) => c.id === editing.value?.id) ?? null);
 function chunkFoot(chunk: Chunk): string {
   const tags = chunk.tags?.length ? plural(chunk.tags.length, "mot-clé", "mots-clés") : "";
-  return [kindLabel[chunk.kind], tags].filter(Boolean).join(" · ");
+  // Ajouté en corrigeant une note (docs/114) : la personne voit d'où il vient.
+  const origin = chunk.origin === "correction" ? "ajouté en corrigeant une note" : "";
+  return [kindLabel[chunk.kind], tags, origin].filter(Boolean).join(" · ");
 }
 
 // Ce qui manque à l'IA pour noter et rédiger (docs/21 §6), affiché en premier.

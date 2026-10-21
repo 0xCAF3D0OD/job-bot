@@ -75,7 +75,8 @@ async def test_every_link_between_accounts_includes_the_account() -> None:
     )
     personal = set(policies.PERSONAL)
     links = [(t, p, d) for t, p, d in rows if t in personal and p in personal]
-    assert len(links) == 22  # dont la lecture d'un certificat (docs/87)
+    # dont la lecture d'un certificat (docs/87), et la correction d'une note et son bloc (docs/114)
+    assert len(links) == 24
     for table, parent, definition in links:
         assert definition.startswith("FOREIGN KEY (user_id, "), (table, definition)
         assert f"REFERENCES {parent}(user_id, id)" in definition, (table, definition)

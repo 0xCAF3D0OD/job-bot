@@ -23,6 +23,7 @@ from jobbot.api.routes import (
     certificates,
     collect,
     contacts,
+    corrections,
     cvs,
     extension,
     inbox,
@@ -138,6 +139,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(contacts.router)
     app.include_router(spontaneous.router)
     app.include_router(manual_offers.router)
+    app.include_router(corrections.router)
     app.include_router(agenda.router)
     app.include_router(status.router)
     app.include_router(collect.router)
