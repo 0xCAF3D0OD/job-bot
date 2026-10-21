@@ -91,6 +91,11 @@ class Settings(BaseSettings):
     # redirection suffit ; l'invité reçoit à « alertes+nom-code@joba1.ch ».
     alert_domain: str = ""
 
+    # La recherche publique de jobup pour les premières offres (docs/104, 0.80.0). Coupée par
+    # défaut depuis la 0.82.4 : les conditions d'utilisation de jobup (déc. 2025, §7)
+    # interdisent les robots et l'accès automatisé hors de leurs outils officiels.
+    public_search_enabled: bool = False
+
     # Lecture des pages d'offres jobup après la collecte (docs/05). false : désactivée.
     enrich_enabled: bool = True
 

@@ -116,3 +116,35 @@ Ton essai du 2026-10-21 avec le compte « amy » : le code de jobup, envoyé à 
 - **Avant de changer le `.env`** : envoyer un e-mail à `alertes+test@joba1.ch` et vérifier qu'il arrive dans Gmail (Infomaniak accepte-t-il le « + » sur une redirection ?).
 - **Une adresse déjà donnée à un site** (`amy-32e6krri@joba1.ch`) ne reçoit rien tant qu'il n'y a pas de « catch-all » : la changer sur le site (l'adresse affichée dans jobA1 suit le réglage).
 - **Vérifié** : tests du réglage (adresse entière ou domaine), de l'adresse fabriquée, du routage de `alertes+nom-code@`, de l'affichage entier.
+
+## 0.82.4 — La recherche publique de jobup coupée
+
+Ta question du 2026-10-21 : « est-ce qu'on est illégal ? », puis « lis les conditions d'utilisation de jobup ».
+
+### Ce que disent les conditions de jobup
+
+Conditions d'utilisation pour les personnes en recherche d'emploi, JobCloud SA (Zurich), **décembre 2025**, droit suisse, tribunaux de Zurich. Le **§7 (obligations des utilisateurs)** interdit notamment :
+
+- d'« utiliser des crawlers, scrapers ou outils de data mining » ;
+- d'« extraire, reproduire, copier, vendre, exploiter ou revendre des données du site » ;
+- d'« utiliser des outils d'automatisation, des scripts, des bots […] sauf via les outils officiels fournis par JobCloud » ;
+- d'« accéder au site autrement que par l'interface web ou application mise à disposition publiquement ».
+
+Aucune interface (API) n'est ouverte aux tiers. Le `robots.txt`, qui autorisait la recherche (vérifié pour la 0.80.0), n'y change rien : ce sont les conditions qui comptent. Je ne suis pas juriste ; la lecture des conditions, elle, est claire.
+
+### Ce qui change
+
+- **La recherche publique de jobup est coupée** : réglage `JOBBOT_PUBLIC_SEARCH_ENABLED`, **faux par défaut**. Ni à la fin de l'accueil, ni au rattrapage (0.80.1), ni par « Chercher sur jobup maintenant » : la carte « Sans attendre tes alertes » disparaît de la page Alertes, la ligne « premières offres » de la page Offres aussi. Les offres déjà trouvées restent.
+- Le code reste en place : si JobCloud donne un accord (ou ouvre une interface), il suffit de rallumer le réglage.
+
+### Ce qui reste à décider (même §7)
+
+D'autres lectures automatiques de jobup, plus anciennes, tombent sous la même clause :
+
+| Lecture | Cadrage | Ce qu'elle fait |
+|---|---|---|
+| **La page de chaque offre jobup** (`enrich`) | docs/05 | le texte complet, le lien « Postuler », l'adresse ; sert à la note, à la lettre et au CV |
+| **La revérification des offres** (offre retirée) | docs/10 | la page relue pour savoir si l'offre existe encore |
+| **« Ajouter une offre » par un lien jobup ou jobs.ch** | docs/111 | la page lue une fois, à la demande de la personne |
+
+jobs.ch appartient au même groupe (JobCloud) : mêmes règles. Les alertes e-mail de jobup, elles, restent permises : c'est jobup qui les envoie.

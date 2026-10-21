@@ -167,6 +167,8 @@ async def run_first_offers(runtime: Runtime) -> FirstOffersResult:
     """La recherche publique pour le compte en cours ; une recherche par (mots, lieu), 20
     offres au plus pour jobup. Les offres entrent comme celles d'une alerte."""
     result = FirstOffersResult()
+    if not runtime.settings.public_search_enabled:
+        return result
     async with runtime.sessionmaker() as session:
         wanted = await queries(session)
     if not wanted:
@@ -236,12 +238,15 @@ async def run_first_offers(runtime: Runtime) -> FirstOffersResult:
 
 # On peut relancer la recherche depuis Alertes, mais pas plus d'une fois par heure.
 RELAUNCH_AFTER = timedelta(hours=1)
-Requested = Literal["queued", "already_queued", "no_trade", "too_soon"]
+Requested = Literal["queued", "already_queued", "no_trade", "too_soon", "disabled"]
 
 
 async def request(runtime: Runtime, *, first_only: bool = False) -> Requested:
     """Met la recherche en file pour le compte en cours. `first_only` : seulement si elle n'a
     jamais été faite (fin de l'accueil)."""
+    # Coupée (0.82.4) : les conditions de jobup interdisent la lecture automatique.
+    if not runtime.settings.public_search_enabled:
+        return "disabled"
     async with runtime.sessionmaker.begin() as session:
         current = await state(session)
         if first_only and current:

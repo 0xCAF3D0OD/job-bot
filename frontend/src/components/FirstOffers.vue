@@ -10,7 +10,7 @@ import { plural } from "../format";
 const props = defineProps<{ where: "offers" | "alerts" }>();
 const emit = defineEmits<{ arrived: [] }>();
 
-type State = { status: "none" | "queued" | "done" | "failed" | "no_trade"; at?: string | null; found: number; new: number; queries: string[] };
+type State = { status: "none" | "queued" | "done" | "failed" | "no_trade" | "disabled"; at?: string | null; found: number; new: number; queries: string[] };
 const state = ref<State | null>(null);
 const message = ref("");
 const busy = ref(false);
@@ -117,7 +117,7 @@ onUnmounted(() => clearTimeout(timer));
     </button>
   </p>
   <section
-    v-else-if="props.where === 'alerts' && state"
+    v-else-if="props.where === 'alerts' && state && state.status !== 'disabled'"
     class="first-offers"
     data-test="first-offers"
   >

@@ -22,7 +22,7 @@ PASSWORD = "un-mot-de-passe-solide"
 
 @pytest.fixture
 async def secured() -> AsyncIterator[Runtime]:
-    runtime = Runtime.create(make_settings(auth_enabled=True))
+    runtime = Runtime.create(make_settings(auth_enabled=True, public_search_enabled=True))
     yield runtime
     async with runtime.engine.begin() as conn:
         await conn.execute(text("DELETE FROM users WHERE username = 'camille-accueil'"))
@@ -142,5 +142,6 @@ async def test_first_offers_caught_up_for_older_accounts(
             "done",
             "failed",
             "no_trade",
+            "disabled",
         )
     assert queued == ["first_offers"]

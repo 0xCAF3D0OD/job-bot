@@ -4313,7 +4313,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "none" | "queued" | "done" | "failed" | "no_trade";
+            status: "none" | "queued" | "done" | "failed" | "no_trade" | "disabled";
             /** At */
             at?: string | null;
             /**
@@ -4338,7 +4338,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "none" | "queued" | "done" | "failed" | "no_trade";
+            status: "none" | "queued" | "done" | "failed" | "no_trade" | "disabled";
             /** At */
             at?: string | null;
             /**
@@ -4360,7 +4360,7 @@ export interface components {
              * Result
              * @enum {string}
              */
-            result: "queued" | "already_queued" | "no_trade" | "too_soon";
+            result: "queued" | "already_queued" | "no_trade" | "too_soon" | "disabled";
         };
         /**
          * FocusIn

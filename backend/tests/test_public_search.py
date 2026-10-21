@@ -18,7 +18,7 @@ from jobbot.filtering.service import save_criteria
 from jobbot.news import domain
 from jobbot.runtime import Runtime
 
-from .conftest import admin_engine
+from .conftest import admin_engine, make_settings
 
 TRUNCATE = "TRUNCATE offers, searches, alert_searches, criteria CASCADE"
 
@@ -51,7 +51,9 @@ def page(items: list[dict[str, Any]]) -> str:
 
 
 @pytest.fixture
-async def clean(runtime: Runtime) -> AsyncIterator[Runtime]:
+async def clean() -> AsyncIterator[Runtime]:
+    # La recherche est coupée par défaut (0.82.4) : ces tests l'allument.
+    runtime = Runtime.create(make_settings(public_search_enabled=True))
     async with admin_engine().begin() as conn:
         await conn.execute(text(TRUNCATE))
         await conn.execute(text("DELETE FROM settings WHERE key = 'first_offers'"))
@@ -209,3 +211,27 @@ async def test_request_and_api(clean: Runtime, monkeypatch: pytest.MonkeyPatch) 
         again = (await api.post("/api/alert-searches/first-offers")).json()
         assert again["result"] == "too_soon" and again["status"] == "done"
     assert queued == ["first_offers"]
+
+
+async def test_disabled_by_default(runtime: Runtime, monkeypatch: pytest.MonkeyPatch) -> None:
+    """0.82.4 : les conditions de jobup (déc. 2025, §7) interdisent l'accès automatisé ; la
+    recherche est coupée par défaut, sans carte ni relance."""
+    queued: list[str] = []
+
+    async def enqueue(_settings: object, name: str) -> bool:
+        queued.append(name)
+        return True
+
+    async def fetch(_client: httpx.AsyncClient, url: str) -> str:
+        raise AssertionError("jobup ne doit pas être lu")
+
+    monkeypatch.setattr(public_search, "enqueue", enqueue)
+    monkeypatch.setattr(public_search, "fetch", fetch)
+    assert not runtime.settings.public_search_enabled
+    assert (await public_search.run_first_offers(runtime)).searches == 0
+    app = create_app(runtime.settings, runtime)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        assert (await api.get("/api/alert-searches/first-offers")).json()["status"] == "disabled"
+        started = (await api.post("/api/alert-searches/first-offers")).json()
+        assert started["result"] == "disabled"
+    assert queued == []

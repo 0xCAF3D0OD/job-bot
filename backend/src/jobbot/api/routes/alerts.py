@@ -257,7 +257,7 @@ async def unmark_alert_created(request: Request, search_id: int, site: str) -> A
 
 class FirstOffersOut(BaseModel):
     # Rien encore, en file, faite, sans résultat, ou impossible faute de métier.
-    status: Literal["none", "queued", "done", "failed", "no_trade"]
+    status: Literal["none", "queued", "done", "failed", "no_trade", "disabled"]
     at: datetime | None = None
     found: int = 0
     new: int = 0
@@ -265,7 +265,7 @@ class FirstOffersOut(BaseModel):
 
 
 class FirstOffersStart(FirstOffersOut):
-    result: Literal["queued", "already_queued", "no_trade", "too_soon"]
+    result: Literal["queued", "already_queued", "no_trade", "too_soon", "disabled"]
 
 
 def _first_out(value: dict[str, object]) -> FirstOffersOut:
@@ -288,6 +288,9 @@ async def get_first_offers(request: Request) -> FirstOffersOut:
     elle part à sa première visite de la page Offres ou Alertes, une seule fois.
     """
     runtime = _runtime(request)
+    # Coupée (0.82.4) : ni recherche ni carte ; les offres déjà trouvées restent.
+    if not runtime.settings.public_search_enabled:
+        return FirstOffersOut(status="disabled")
     async with runtime.sessionmaker() as session:
         current = await public_search.state(session)
         missed = (

@@ -12107,7 +12107,8 @@
               "queued",
               "done",
               "failed",
-              "no_trade"
+              "no_trade",
+              "disabled"
             ],
             "title": "Status"
           },
@@ -12157,7 +12158,8 @@
               "queued",
               "done",
               "failed",
-              "no_trade"
+              "no_trade",
+              "disabled"
             ],
             "title": "Status"
           },
@@ -12197,7 +12199,8 @@
               "queued",
               "already_queued",
               "no_trade",
-              "too_soon"
+              "too_soon",
+              "disabled"
             ],
             "title": "Result"
           }

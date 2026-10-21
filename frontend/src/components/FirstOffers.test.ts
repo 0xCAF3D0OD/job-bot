@@ -60,3 +60,14 @@ describe("Les premières offres (docs/104, 0.80.0)", () => {
     expect(wrapper.text()).toContain("Indique d'abord ton métier");
   });
 });
+
+describe("Les premières offres coupées (0.82.4)", () => {
+  it("ni ligne sur la page Offres, ni carte sur la page Alertes", async () => {
+    GET.mockResolvedValue({ data: state({ status: "disabled" }) });
+    const offers = mount(FirstOffers, { props: { where: "offers" } });
+    const alerts = mount(FirstOffers, { props: { where: "alerts" } });
+    await flushPromises();
+    expect(offers.find("[data-test=first-offers-line]").exists()).toBe(false);
+    expect(alerts.find("[data-test=first-offers]").exists()).toBe(false);
+  });
+});
