@@ -2,7 +2,7 @@
 
 Remplit le formulaire de candidature de l'employeur avec tes données jobA1 : coordonnées,
 CV et lettre en PDF, texte de la lettre, et, sur demande, une proposition de réponse aux
-questions libres. **Elle n'envoie jamais rien à ta place** et ne coche aucune case de
+questions libres. **Elle n'envoie jamais de candidature à ta place** et ne coche aucune case de
 consentement ; sur Job-Room, elle choisit les réponses de la déclaration (mode, assignation,
 taux, résultat), que tu vérifies avant de sauvegarder.
 
@@ -12,8 +12,8 @@ n'enregistre rien : « Sauvegarder » reste le tien.
 
 ## Installer
 
-- **Firefox** : bientôt dans la boutique de Mozilla (« Ajouter à Firefox », mises à jour
-  automatiques). En attendant, pour essayer : `make extension`, puis
+- **Firefox** : dans la boutique de Mozilla, https://addons.mozilla.org/addon/joba1-remplir-mes-candidatures/
+  (« Ajouter à Firefox », mises à jour automatiques). Pour essayer une version pas encore publiée : `make extension`, puis
   `about:debugging#/runtime/this-firefox` → **Charger un module complémentaire temporaire…** →
   le fichier `extension/web-ext-artifacts/joba1-<version>.zip`. Firefox l'enlève à chaque
   redémarrage. Firefox 140 ou plus.

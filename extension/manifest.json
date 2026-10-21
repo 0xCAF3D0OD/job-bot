@@ -3,7 +3,7 @@
   "name": "jobA1 — remplir mes candidatures",
   "short_name": "jobA1",
   "version": "0.59.0",
-  "description": "Remplit les formulaires de candidature et la saisie Job-Room avec tes données jobA1. N'envoie jamais rien à ta place.",
+  "description": "Remplit tes candidatures, Job-Room et les codes de jobup avec tes données jobA1. N'envoie jamais de candidature à ta place.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Remplir avec jobA1",
