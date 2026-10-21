@@ -2046,6 +2046,160 @@
         }
       }
     },
+    "/api/offers/{offer_id}/score-correction": {
+      "get": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Get Correction",
+        "operationId": "getScoreCorrection",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CorrectionOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Getscorecorrection"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Apply",
+        "description": "La correction enregistrée : le bloc ajouté au profil (l'offre renotée), ou le critère\nréglé (le filtre repasse).",
+        "operationId": "applyScoreCorrection",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrectionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/offers/{offer_id}/score-correction/proposal": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Propose",
+        "description": "Ce que la correction donnerait : un bloc de profil à relire, ou des critères.",
+        "operationId": "proposeScoreCorrection",
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectionAsk"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/applications/{application_id}/interview.ics": {
       "get": {
         "tags": [
@@ -9758,6 +9912,69 @@
         "title": "BackupOut",
         "description": "Les sauvegardes (docs/82) : réglées ou non, la dernière, le dernier essai."
       },
+      "BlockIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "preference",
+              "redhibitoire"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "content"
+        ],
+        "title": "BlockIn"
+      },
+      "BlockOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "preference",
+              "redhibitoire"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "by_ai": {
+            "type": "boolean",
+            "title": "By Ai"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "title",
+          "content",
+          "by_ai"
+        ],
+        "title": "BlockOut"
+      },
       "Body_uploadDocument": {
         "properties": {
           "file": {
@@ -10427,6 +10644,17 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Origin"
           }
         },
         "type": "object",
@@ -10966,6 +11194,220 @@
           "updated_at"
         ],
         "title": "ConversationOut"
+      },
+      "CorrectionAsk": {
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "high",
+              "low"
+            ],
+            "title": "Direction"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_my_trade",
+              "not_my_level",
+              "sector",
+              "place_rate_contract",
+              "my_trade",
+              "have_experience",
+              "sector_ok",
+              "other"
+            ],
+            "title": "Reason"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "direction",
+          "reason"
+        ],
+        "title": "CorrectionAsk"
+      },
+      "CorrectionIn": {
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "high",
+              "low"
+            ],
+            "title": "Direction"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_my_trade",
+              "not_my_level",
+              "sector",
+              "place_rate_contract",
+              "my_trade",
+              "have_experience",
+              "sector_ok",
+              "other"
+            ],
+            "title": "Reason"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "block": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlockIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "criteria": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Criteria"
+          }
+        },
+        "type": "object",
+        "required": [
+          "direction",
+          "reason"
+        ],
+        "title": "CorrectionIn"
+      },
+      "CorrectionOut": {
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "high",
+              "low"
+            ],
+            "title": "Direction"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_my_trade",
+              "not_my_level",
+              "sector",
+              "place_rate_contract",
+              "my_trade",
+              "have_experience",
+              "sector_ok",
+              "other"
+            ],
+            "title": "Reason"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "chunk_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Id"
+          },
+          "score_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Before"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "direction",
+          "reason",
+          "note",
+          "chunk_id",
+          "score_before",
+          "score"
+        ],
+        "title": "CorrectionOut"
+      },
+      "CriteriaChangeOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "changes": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "changes"
+        ],
+        "title": "CriteriaChangeOut"
       },
       "CriteriaIn": {
         "properties": {
@@ -17938,6 +18380,30 @@
         },
         "type": "object",
         "title": "ProfileUpdate"
+      },
+      "ProposalOut": {
+        "properties": {
+          "block": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BlockOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriteriaChangeOut"
+            },
+            "type": "array",
+            "title": "Criteria",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ProposalOut"
       },
       "QuestionIO": {
         "properties": {

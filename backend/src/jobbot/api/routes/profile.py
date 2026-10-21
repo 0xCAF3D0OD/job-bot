@@ -93,6 +93,8 @@ class ChunkOut(ChunkIn):
     id: int
     created_at: datetime
     updated_at: datetime
+    # « correction » : ajouté en corrigeant une note (docs/114).
+    origin: str | None = None
 
 
 def _runtime(request: Request) -> Runtime:

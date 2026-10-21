@@ -348,6 +348,40 @@ class Document(Base):
     kind: Mapped[str | None] = mapped_column(Text)
 
 
+class ScoreCorrection(Base):
+    """« Cette note ne me correspond pas » (docs/114) : une correction par offre, et le bloc de
+    profil qu'elle a ajouté, le cas échéant."""
+
+    __tablename__ = "score_corrections"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id", "offer_id"],
+            ["offers.user_id", "offers.id"],
+            name="score_corrections_offer_id_fkey",
+            ondelete="CASCADE",
+        ),
+        ForeignKeyConstraint(
+            ["user_id", "chunk_id"],
+            ["profile_chunks.user_id", "profile_chunks.id"],
+            name="score_corrections_chunk_id_fkey",
+            ondelete="SET NULL",
+        ),
+        UniqueConstraint("user_id", "offer_id", name="score_corrections_offer_key"),
+    )
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    offer_id: Mapped[int] = mapped_column(BigInteger)
+    # « high » (trop haute) ou « low » (trop basse).
+    direction: Mapped[str] = mapped_column(Text)
+    reason: Mapped[str] = mapped_column(Text)
+    note: Mapped[str | None] = mapped_column(Text)
+    score_before: Mapped[int | None] = mapped_column(SmallInteger)
+    chunk_id: Mapped[int | None] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class CertificateReading(Base):
     """La lecture d'un certificat de travail (docs/87) : les formules repérées, la note, le
     conseil ; la lecture de l'IA si elle a été demandée."""
@@ -400,6 +434,8 @@ class ProfileChunk(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    # D'où vient le bloc : « correction » s'il a été ajouté en corrigeant une note (docs/114).
+    origin: Mapped[str | None] = mapped_column(Text)
 
 
 class EnrichStatus(StrEnum):

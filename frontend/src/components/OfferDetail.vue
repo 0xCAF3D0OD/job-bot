@@ -10,6 +10,7 @@ import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import ScoreRing from "./ScoreRing.vue";
+import ScoreCorrection from "./ScoreCorrection.vue";
 import SidePanel from "./SidePanel.vue";
 import { useAssistant } from "../composables/useAssistant";
 
@@ -426,6 +427,12 @@ watch(
         >
           {{ scoreNote }}
         </p>
+        <!-- « Cette note ne me correspond pas » (docs/114). -->
+        <ScoreCorrection
+          v-if="offer.score !== null && offer.score !== undefined"
+          :offer-id="offer.id"
+          @changed="emit('changed')"
+        />
         <div
           v-if="offer.strengths?.length || offer.gaps?.length"
           class="points"
