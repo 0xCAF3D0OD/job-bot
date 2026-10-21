@@ -236,6 +236,8 @@ async def test_demo_reads_write_nothing(demo_runtime: Runtime, demo_admin: Runti
         # d'alertes) répondent sans rien écrire.
         assert (await client.get("/api/trainings")).status_code == 200
         assert (await client.get("/api/alert-searches")).status_code == 200
+        # Les actualités du métier (docs/116 §4) : la démo n'abonne pas son profil.
+        assert (await client.get("/api/news", params={"domain_only": True})).status_code == 200
     assert await months() == before
     from jobbot.db.base import read_only
 

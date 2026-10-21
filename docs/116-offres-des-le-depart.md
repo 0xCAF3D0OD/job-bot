@@ -92,6 +92,17 @@ Trois voies, de la plus sûre à la plus incertaine :
 - Tests de l'interface : le pas-à-pas Gmail (adresse, code, filtre), Outlook, la copie des expéditeurs ; aucun mot de passe demandé. 408 tests, lint, vue-tsc.
 - Captures Playwright à 1440 et 414 px : la ligne sous les colonnes, le filtre qui passe à la ligne sur téléphone.
 
+## Complément 0.86.1 : les règles de l'interface appliquées
+
+Ton retour du 2026-10-21 : le panneau était un mur de texte. Relu contre `docs/interface.md` :
+
+- **Le titre** « J'ai déjà des alertes » était une phrase : **« Alertes existantes »** (titres et textes 2), valeur « à transférer ».
+- **Trois étapes, une ligne chacune** séparée par un filet (les listes) : un nom d'action en gras, une ligne grise, **au plus une action** à droite, **copier en icône** (iconographie 4, les actions 1). Plus de bloc gris avec la liste des expéditeurs : ils se copient.
+- **Les explications** (jamais de mot de passe, seulement les alertes) passent **au survol** de la phrase d'introduction (titres et textes 5).
+- **Pas de barre verticale** dans la carte (les Réglages 2) ; 1,25 rem de marge (aéré 1).
+- **Dans la même page** : « Reçus en Suisse chez Infomaniak… » quitte le pied de carte pour le survol du titre « Les e-mails des sites » ; l'aide « Rien reçu de … » tient en une ligne avec quoi faire, la boîte et les expéditeurs au survol.
+- **L'audit des rangées** (`alignement.py`, les contrôles 4), que je ne lançais pas : 8 rangées en défaut, toutes dans Réglages (pilules de 3 rem au lieu de la hauteur commune ; les deux champs « Objectif mensuel » et « Date limite » décalés de 4 px). Corrigées : **0 rangée en défaut**. Les pilules à 3 rem ajoutées ces derniers jours (code, « J'attends un code », premières offres, maintenance, note à corriger) reprennent `--control-h`.
+
 ## §2 b : pas pour les annonces de jobup (vérifié le 2026-10-21)
 
 Les conditions de JobCloud pour les personnes en recherche d'emploi (décembre 2025) interdisent, au §7, d'« extraire, reproduire, copier, vendre, exploiter ou revendre des données du site », et au §8 toute « transmission ou reproduction » au-delà de l'usage personnel, sans l'accord exprès de JobCloud. Montrer à Amy une annonce jobup reçue par Eliot, c'est transmettre une donnée du site à un tiers : **non, sans accord de JobCloud**. Indeed a des règles du même ordre.
@@ -124,3 +135,7 @@ Ce qui reste permis : chaque personne reçoit ses propres alertes, sur son adres
 4. **§3, les recommandations hors métier écartées** (comptées dans le journal) : d'accord ? Ou les garder, repliées sous « Recommandations » ?
 5. **§4, les actualités par familles de métiers**, et « rien de neuf » plutôt que l'économie : d'accord ? Des sources que tu veux voir ?
 6. **L'ordre** : je propose §3 et §4 d'abord (0.85.0, sans dépendance), puis §1 après l'essai de transfert (0.86.0), puis §2 b et c selon tes réponses.
+
+## Complément 0.86.2
+
+- **La démo** : `/api/news` répondait par une erreur 500. À la lecture des actualités, jobA1 abonne le profil aux sources de son métier (§4), une écriture, que la base de la démo refuse (lecture seule, docs/72). La démo n'abonne plus rien ; elle garde les sources de son jeu de données. Trouvé en parcourant toutes les pages de la démo (0.87.0) ; un test de la démo le vérifie désormais.
