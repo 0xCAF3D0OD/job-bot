@@ -5,13 +5,13 @@ les modifie et choisit lesquelles ajouter.
 """
 
 import json
-import re
 from html import escape
 from importlib import resources
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
+from jobbot.llm.redact import redact
 from jobbot.llm.scoring import InvalidScore, ProfileChunkData
 
 PROMPT_VERSION = "propose-chunks-v1"
@@ -21,19 +21,10 @@ INSTRUCTIONS = (
 MAX_DOCUMENT_CHARS = 30_000
 MAX_TOKENS = 8_000
 
-# Coordonnées retirées du texte avant envoi : l'IA n'en a pas besoin.
-_EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
-# Numéro international (+41…, 0041…) ou suisse (0xx xxx xx xx) ; pas les années « 2021-2023 ».
-_PHONE = re.compile(
-    r"(?:\+|\b00)\d{2}[\d ().-]{7,}\d(?!\d)|\b0\d{1,2}[ .-]?\d{3}[ .-]?\d{2}[ .-]?\d{2}\b"
-)
-_URL = re.compile(r"\b(?:https?://|www\.)\S+|\b(?:linkedin\.com|github\.com)/\S+", re.IGNORECASE)
 
-
-def scrub(text: str) -> str:
-    text = _EMAIL.sub("[e-mail retiré]", text)
-    text = _URL.sub("[lien retiré]", text)
-    return _PHONE.sub("[téléphone retiré]", text)
+def scrub(text: str, identity: object | None = None) -> str:
+    """Les coordonnées retirées avant l'envoi à l'IA (docs/121 §A.3, `llm/redact.py`)."""
+    return redact(text, identity)
 
 
 class Proposal(BaseModel):
@@ -76,7 +67,11 @@ OUTPUT_SCHEMA: dict[str, Any] = {
 
 
 def request_params(
-    model: str, effort: str, existing: list[ProfileChunkData], document_text: str
+    model: str,
+    effort: str,
+    existing: list[ProfileChunkData],
+    document_text: str,
+    identity: object | None = None,
 ) -> dict[str, Any]:
     blocks = (
         "\n".join(
@@ -85,7 +80,9 @@ def request_params(
         )
         or "(aucun bloc existant)"
     )
-    text = scrub(document_text)[:MAX_DOCUMENT_CHARS].replace("</document>", "</ document>")
+    text = scrub(document_text, identity)[:MAX_DOCUMENT_CHARS].replace(
+        "</document>", "</ document>"
+    )
     return {
         "model": model,
         "max_tokens": MAX_TOKENS,

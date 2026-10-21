@@ -78,7 +78,7 @@ onMounted(async () => {
       <h2>Ce qui part à l'IA (Anthropic)</h2>
       <ul>
         <li>Le texte des offres, tes blocs de profil et ce que tu demandes : pour noter, rédiger et répondre.</li>
-        <li>Le texte de ton CV, quand tu demandes des propositions de blocs.</li>
+        <li>Le texte de ton CV, sans tes coordonnées ni ta date de naissance, pour proposer tes blocs de profil.</li>
         <li>Le contenu des alertes des sites que l'IA lit.</li>
         <li>
           <strong>Jamais tes coordonnées</strong> (nom, adresse, téléphone, e-mail) ni les noms de tes contacts : la

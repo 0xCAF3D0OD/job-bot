@@ -167,7 +167,7 @@ async def correction(runtime: Runtime, document_id: int, *, use_ai: bool) -> Let
     content = (
         f"<langue>{'allemand' if language == 'de' else 'français'}</langue>\n"
         f"<points>\n{clean(chr(10).join(points))}\n</points>\n"
-        f"<certificat>\n{clean(service.without_names(text, names)[: service.MAX_TEXT])}\n"
+        f"<certificat>\n{clean(service.without_names(text, names, identity)[: service.MAX_TEXT])}\n"
         "</certificat>"
     )
     params = {
