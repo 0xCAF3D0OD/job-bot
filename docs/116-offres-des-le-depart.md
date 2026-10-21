@@ -92,6 +92,17 @@ Trois voies, de la plus sûre à la plus incertaine :
 - Tests de l'interface : le pas-à-pas Gmail (adresse, code, filtre), Outlook, la copie des expéditeurs ; aucun mot de passe demandé. 408 tests, lint, vue-tsc.
 - Captures Playwright à 1440 et 414 px : la ligne sous les colonnes, le filtre qui passe à la ligne sur téléphone.
 
+## Complément 0.86.1 : les règles de l'interface appliquées
+
+Ton retour du 2026-10-21 : le panneau était un mur de texte. Relu contre `docs/interface.md` :
+
+- **Le titre** « J'ai déjà des alertes » était une phrase : **« Alertes existantes »** (titres et textes 2), valeur « à transférer ».
+- **Trois étapes, une ligne chacune** séparée par un filet (les listes) : un nom d'action en gras, une ligne grise, **au plus une action** à droite, **copier en icône** (iconographie 4, les actions 1). Plus de bloc gris avec la liste des expéditeurs : ils se copient.
+- **Les explications** (jamais de mot de passe, seulement les alertes) passent **au survol** de la phrase d'introduction (titres et textes 5).
+- **Pas de barre verticale** dans la carte (les Réglages 2) ; 1,25 rem de marge (aéré 1).
+- **Dans la même page** : « Reçus en Suisse chez Infomaniak… » quitte le pied de carte pour le survol du titre « Les e-mails des sites » ; l'aide « Rien reçu de … » tient en une ligne avec quoi faire, la boîte et les expéditeurs au survol.
+- **L'audit des rangées** (`alignement.py`, les contrôles 4), que je ne lançais pas : 8 rangées en défaut, toutes dans Réglages (pilules de 3 rem au lieu de la hauteur commune ; les deux champs « Objectif mensuel » et « Date limite » décalés de 4 px). Corrigées : **0 rangée en défaut**. Les pilules à 3 rem ajoutées ces derniers jours (code, « J'attends un code », premières offres, maintenance, note à corriger) reprennent `--control-h`.
+
 ## §2 b : pas pour les annonces de jobup (vérifié le 2026-10-21)
 
 Les conditions de JobCloud pour les personnes en recherche d'emploi (décembre 2025) interdisent, au §7, d'« extraire, reproduire, copier, vendre, exploiter ou revendre des données du site », et au §8 toute « transmission ou reproduction » au-delà de l'usage personnel, sans l'accord exprès de JobCloud. Montrer à Amy une annonce jobup reçue par Eliot, c'est transmettre une donnée du site à un tiers : **non, sans accord de JobCloud**. Indeed a des règles du même ordre.

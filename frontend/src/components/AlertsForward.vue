@@ -2,16 +2,17 @@
 import { computed, ref } from "vue";
 
 import DisclosureRow from "./DisclosureRow.vue";
-import MailboxAddress from "./MailboxAddress.vue";
+import HoverNote from "./HoverNote.vue";
+import IconButton from "./IconButton.vue";
 
-// Lier ses alertes existantes (docs/116 §1) : la personne garde ses alertes sur jobup ou
-// Indeed, et sa messagerie les transfère à son adresse jobA1. Jamais un mot de passe d'un
-// site. Seulement les expéditeurs des alertes : pas les mots de passe oubliés, pas les
-// messages des recruteurs. Gmail confirme l'adresse par un code, que jobA1 affiche dans
-// « Les e-mails des sites ».
+// Les alertes existantes (docs/116 §1, mise en page 0.86.1 selon docs/interface.md) : la
+// personne garde ses alertes sur jobup ou Indeed, sa messagerie les transfère à son adresse
+// jobA1. Trois étapes, une ligne chacune séparée par un filet : un nom d'action, une ligne
+// grise, au plus une action (copier). Le reste en description au survol.
 const props = defineProps<{ address: string }>();
 
-// Les expéditeurs des alertes (vus dans de vrais e-mails, sauf mention).
+// Les expéditeurs des alertes (vus dans de vrais e-mails) : seulement eux, pas les messages
+// des recruteurs ni les mots de passe oubliés.
 const SENDERS = ["candidat@jobup.ch", "candidat@my.jobup.ch", "alert@indeed.com", "donotreply@jobalert.indeed.com"];
 const MAILERS = [
   { key: "gmail", label: "Gmail" },
@@ -19,20 +20,37 @@ const MAILERS = [
   { key: "other", label: "Autre" },
 ] as const;
 type Mailer = (typeof MAILERS)[number]["key"];
+type Step = { title: string; hint: string; copy?: "address" | "senders" };
 
 const mailer = ref<Mailer>("gmail");
-const copied = ref(false);
-const filter = computed(() =>
-  mailer.value === "gmail" ? `from:(${SENDERS.join(" OR ")})` : SENDERS.join("; "),
-);
+const copied = ref<string | null>(null);
+const senders = computed(() => (mailer.value === "gmail" ? `from:(${SENDERS.join(" OR ")})` : SENDERS.join("; ")));
 
-async function copyFilter(): Promise<void> {
+const STEPS: Record<Mailer, Step[]> = {
+  gmail: [
+    { title: "Ajouter l'adresse de transfert", hint: "Paramètres, Transfert et POP/IMAP", copy: "address" },
+    { title: "Recopier le code de Gmail", hint: "Il s'affiche dans « Les e-mails des sites »." },
+    { title: "Créer le filtre", hint: "Les expéditeurs dans « De », puis « Transférer à ».", copy: "senders" },
+  ],
+  outlook: [
+    { title: "Créer une règle", hint: "Paramètres, Courrier, Règles" },
+    { title: "Coller les expéditeurs", hint: "Dans la condition « De ».", copy: "senders" },
+    { title: "Transférer à l'adresse jobA1", hint: "Dans l'action « Transférer à ».", copy: "address" },
+  ],
+  other: [
+    { title: "Créer une règle ou un filtre", hint: "Dans les réglages de ta messagerie." },
+    { title: "Coller les expéditeurs", hint: "Les e-mails venant d'eux seulement.", copy: "senders" },
+    { title: "Transférer à l'adresse jobA1", hint: "L'action « Transférer à ».", copy: "address" },
+  ],
+};
+
+async function copy(what: "address" | "senders"): Promise<void> {
   try {
-    await navigator.clipboard.writeText(filter.value);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 2000);
+    await navigator.clipboard.writeText(what === "address" ? props.address : senders.value);
+    copied.value = what;
+    setTimeout(() => (copied.value = null), 2000);
   } catch {
-    copied.value = false;
+    copied.value = null;
   }
 }
 </script>
@@ -40,95 +58,62 @@ async function copyFilter(): Promise<void> {
 <template>
   <DisclosureRow
     class="journal-toggle alerts-forward"
-    title="J'ai déjà des alertes"
-    value="les transférer"
+    title="Alertes existantes"
+    value="à transférer"
     data-test="alerts-forward"
   >
     <div class="forward-body">
-      <p class="setting-desc">
-        Garde tes alertes jobup ou Indeed : ta messagerie les transfère à ton adresse jobA1. jobA1 ne te demande
-        jamais le mot de passe d'un site.
-      </p>
-      <div
-        class="pill-row"
-        role="radiogroup"
-        aria-label="Ta messagerie"
-      >
-        <button
-          v-for="item in MAILERS"
-          :key="item.key"
-          type="button"
-          role="radio"
-          :aria-checked="mailer === item.key"
-          :class="['pill', { selected: mailer === item.key }]"
-          :data-test="`forward-${item.key}`"
-          @click="mailer = item.key"
+      <div class="forward-head">
+        <p class="setting-desc">
+          <HoverNote text="jobA1 ne demande jamais le mot de passe d'un site. Seulement les alertes : pas les messages des recruteurs.">
+            Ta messagerie transfère tes alertes à jobA1.
+          </HoverNote>
+        </p>
+        <div
+          class="pill-row"
+          role="radiogroup"
+          aria-label="Messagerie"
         >
-          {{ item.label }}
-        </button>
+          <button
+            v-for="item in MAILERS"
+            :key="item.key"
+            type="button"
+            role="radio"
+            :aria-checked="mailer === item.key"
+            :class="['pill', { selected: mailer === item.key }]"
+            :data-test="`forward-${item.key}`"
+            @click="mailer = item.key"
+          >
+            {{ item.label }}
+          </button>
+        </div>
       </div>
 
       <ol
         class="forward-steps"
         data-test="forward-steps"
       >
-        <template v-if="mailer === 'gmail'">
-          <li>
-            Dans Gmail : Paramètres, « Voir tous les paramètres », « Transfert et POP/IMAP », « Ajouter une adresse de
-            transfert » :
-            <MailboxAddress
-              :address="props.address"
-              personal
-            />
-          </li>
-          <li>
-            Gmail envoie un code à cette adresse : il s'affiche sur cette page, dans « Les e-mails des sites ». Recopie-le
-            dans Gmail.
-          </li>
-          <li>
-            Laisse « Désactiver le transfert » coché, pour ne pas tout envoyer. Puis « Filtres et adresses bloquées »,
-            « Créer un filtre » ; dans « De », colle les expéditeurs ci-dessous ; « Créer un filtre », « Transférer à »
-            ton adresse jobA1.
-          </li>
-        </template>
-        <template v-else-if="mailer === 'outlook'">
-          <li>Dans Outlook : Paramètres, « Courrier », « Règles », « Ajouter une nouvelle règle ».</li>
-          <li>Condition « De » : colle les expéditeurs ci-dessous.</li>
-          <li>
-            Action « Transférer à » :
-            <MailboxAddress
-              :address="props.address"
-              personal
-            />
-          </li>
-        </template>
-        <template v-else>
-          <li>Cherche « règle » ou « filtre » dans les réglages de ta messagerie.</li>
-          <li>Pour les e-mails venant des expéditeurs ci-dessous : « Transférer à » ton adresse jobA1.</li>
-          <li>
-            Ton adresse jobA1 :
-            <MailboxAddress
-              :address="props.address"
-              personal
-            />
-          </li>
-        </template>
-      </ol>
-
-      <div class="forward-filter">
-        <code data-test="forward-filter">{{ filter }}</code>
-        <button
-          type="button"
-          class="pill"
-          data-test="forward-copy"
-          @click="copyFilter"
+        <li
+          v-for="(step, index) in STEPS[mailer]"
+          :key="step.title"
         >
-          {{ copied ? "Copié" : "Copier les expéditeurs" }}
-        </button>
-      </div>
-      <p class="hint">
-        Seulement les alertes : ne transfère pas tout, ni les messages des recruteurs.
-      </p>
+          <span
+            class="step-number"
+            aria-hidden="true"
+          >{{ index + 1 }}</span>
+          <span class="forward-step-text">
+            <strong>{{ step.title }}</strong>
+            <span class="hint">{{ step.hint }}</span>
+          </span>
+          <IconButton
+            v-if="step.copy"
+            icon="copy"
+            :label="copied === step.copy ? 'Copié' : step.copy === 'address' ? `Copier l'adresse ${props.address}` : 'Copier les expéditeurs'"
+            :data-test="`forward-copy-${step.copy}`"
+            @click="copy(step.copy)"
+          />
+        </li>
+      </ol>
     </div>
   </DisclosureRow>
 </template>

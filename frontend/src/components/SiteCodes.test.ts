@@ -64,7 +64,7 @@ describe("Les codes des sites (docs/112)", () => {
     GET.mockResolvedValueOnce({ data: { text: "Ton compte est prêt." } });
     const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: true } });
     await flushPromises();
-    expect(wrapper.find("[data-test=guest-mailbox-note]").text()).toContain("effacés de la boîte une fois rangés");
+    expect(wrapper.find("[data-test=guest-mailbox-note]").attributes("aria-description")).toContain("effacés de la boîte une fois rangés");
     expect(wrapper.find("[data-test=site-message]").text()).toContain("Bienvenue sur jobup");
     await wrapper.find("[data-test=site-message] button").trigger("click");
     await flushPromises();

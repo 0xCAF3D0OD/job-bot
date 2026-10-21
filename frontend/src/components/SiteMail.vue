@@ -4,12 +4,13 @@ import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { api } from "../api/client";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import HoverNote from "./HoverNote.vue";
 import SiteCodes from "./SiteCodes.vue";
 
 // Les e-mails des sites (docs/112, docs/113, mise en page 0.84.2) : une rubrique, une carte.
 // En tête, le code de vérification : le code lui-même quand il est là, sinon « J'attends un
 // code » (la boîte relevée toutes les 15 secondes pendant 5 minutes) ; puis, sous un filet,
-// les messages des sites gardés 30 jours ; en pied, où passent ces e-mails, en une ligne.
+// les messages des sites gardés 30 jours. Où passent ces e-mails : au survol du titre.
 type SiteCode = { search_id: number; site: string; code: string; received_at: string };
 type SiteMessage = { id: number; site: string; subject?: string | null; received_at: string };
 const props = defineProps<{ codes: SiteCode[]; guestMailbox: boolean }>();
@@ -76,8 +77,15 @@ onUnmounted(stop);
     class="site-mail"
     data-test="site-mail"
   >
+    <!-- Où passent ces e-mails : en description au survol du titre (docs/interface.md,
+         titres et textes 5), plus en pied de carte (0.86.1). -->
     <h2 class="section-title first">
-      Les e-mails des sites
+      <HoverNote
+        :text="guestMailbox ? 'Reçus en Suisse chez Infomaniak, effacés de la boîte une fois rangés.' : ''"
+        data-test="guest-mailbox-note"
+      >
+        Les e-mails des sites
+      </HoverNote>
     </h2>
     <div class="settings-card site-mail-card">
       <!-- Le code arrivé prend la place de « J'attends un code » (0.84.2). -->
@@ -150,13 +158,6 @@ onUnmounted(stop);
           </li>
         </ul>
       </div>
-      <p
-        v-if="guestMailbox"
-        class="hint site-mail-foot"
-        data-test="guest-mailbox-note"
-      >
-        Reçus en Suisse chez Infomaniak, effacés de la boîte une fois rangés.
-      </p>
     </div>
   </section>
 </template>
