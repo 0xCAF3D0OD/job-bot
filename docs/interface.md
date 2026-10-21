@@ -23,6 +23,29 @@ Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur 
 3. Si une carte se serre, on retire un élément plutôt que de réduire les marges.
 4. Les logos d'entreprise sont des carrés aux coins arrondis (0,6 rem) ; restent ronds la note, l'initiale du compte et les pastilles.
 
+## La structure (docs/32, 43, 63, 84, 88, 93, 95, 106, 110 ; reprises en docs/119)
+
+Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'étaient écrites que dans leur document d'origine.
+
+1. **Une largeur, un en-tête** : le contenu des pages sur une seule largeur (80 rem) sous un seul en-tête ; une carte seule prend toute cette largeur (docs/43). Un formulaire ou une liste courte peut se limiter à la largeur de lecture (44 à 46 rem, docs/63).
+2. **Les écarts** : 1,25 rem entre deux cartes ; 2 rem entre les grands blocs d'une page (la phrase du jour, les bandeaux, les cartes, les guides) ; 0,75 rem entre un titre et son contenu, et entre deux repliables (docs/93, 95, 106).
+3. **Dans une carte** : 1,5 rem de marge intérieure, sur ordinateur comme sur téléphone (docs/106 complément 0.77.6), jamais moins de 1,25 rem ; 1 rem entre étiquettes, titre et faits, 0,5 rem entre deux faits, 1,25 rem avant le bas (docs/93). Les repliables suivent la même marge que les cartes.
+4. **Une rangée, une hauteur** : les cartes côte à côte ont la même hauteur ; la plus courte s'étire, son contenu reste en haut (docs/32, 43, 93). Un vide qui reste se remplit d'une information utile, jamais d'une image (docs/63).
+5. **Les grilles** : 3 colonnes au plus (18 rem au moins par carte), 2 sur tablette, 1 sur téléphone ; deux cartes côte à côte en 3 / 2 (docs/93, 95). Une liste courte dans une carte de toute la largeur passe en deux colonnes plutôt que de laisser la moitié vide (docs/119).
+6. **Les filets** : 1,75 rem de chaque côté sur ordinateur, 1,5 rem sur téléphone (docs/106).
+7. **Les interlignes** : 1,5 pour le texte, 1,6 pour les aides, 1,3 pour un titre (docs/93, 106).
+8. **Les titres** (docs/110) : page en 2,4 rem, section en 1,5 rem au-dessus de sa carte, réglage en gras ; pas de point final ; un titre de partie n'est pas souligné.
+9. **Les repliables** : le résumé en gris à droite de la ligne ; une seule ligne ouverte par groupe ; le contenu long et secondaire dans un panneau latéral (docs/32). Une action sur un repliable ouvert (« Masquer ») se met sur sa ligne de titre, jamais sur une ligne à elle (docs/119).
+10. **Une partie à une seule action** devient une ligne : le nom à gauche, l'action à droite (docs/106).
+11. **Consulter ou modifier** : une carte ne mélange pas les deux (docs/110).
+12. **Enregistrer** : 1,5 rem dessous, jamais de filet juste au-dessus ; un bouton ou une pilule ne passe jamais à la ligne (docs/32, 106, 110).
+13. **Le texte** : un état vide en une phrase, plus l'action qui le remplit (docs/88) ; pas de texte de plus de deux lignes, une liste pour le contenu long (docs/84).
+14. **L'essentiel sans défiler** (docs/32) ; sur téléphone, 10 éléments puis « Voir plus » (docs/43).
+15. **Les listes** : colonnes d'action de largeur fixe ; pendant le chargement, des blocs gris à la forme du contenu (docs/43).
+16. **Une seule chose en orange** sur une page : ce qui demande d'agir (docs/43, 54).
+17. **Aujourd'hui** (docs/95) : une seule action sous la phrase du jour, trois bandeaux au plus, des cartes neutres (la couleur pour les nombres à traiter), les guides disparaissent une fois finis.
+18. **L'audit des règles** (`frontend/scripts/regles.py`) vérifie les points 3 et 4 : un texte à moins de 1,25 rem du bord de sa carte, deux cartes d'une rangée de hauteurs différentes.
+
 ## Les contrôles (docs/94)
 
 1. Une seule hauteur, `--control-h` : 2,5 rem sur ordinateur, 2,75 rem sur téléphone, pour les boutons, liens en bouton, listes de choix, champs d'une ligne, sélecteurs, ⋯ et boutons ronds (cercles de la même hauteur).
@@ -30,7 +53,7 @@ Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur 
 3. Gardent leur forme : zones de texte, cases, curseurs, étiquettes, la capsule.
 4. Avant une PR d'interface, l'audit des rangées (`frontend/scripts/alignement.py`) est vide.
 5. Et l'audit d'accessibilité (`frontend/scripts/accessibilite.py`, docs/117) : aucun défaut, parcours au clavier sans blocage.
-6. Et l'audit des règles (`frontend/scripts/regles.py`, docs/118) : pas d'aide de plus de 20 mots, pas de titre avec « je, tu, ton, ta, tes, mon, ma, mes » ou en question, pas de barre verticale ni de cadre dans un cadre.
+6. Et l'audit des règles (`frontend/scripts/regles.py`, docs/118, docs/119) : pas d'aide de plus de 20 mots, pas de titre avec un pronom (« je, tu, te, ton, ta, tes, me, mon, ma, mes ») ou en question, pas de barre verticale ni de cadre dans un cadre, pas de texte à moins de 1,25 rem du bord d'une carte, pas de rangée de hauteurs différentes.
 
 ## Iconographie (docs/101)
 
