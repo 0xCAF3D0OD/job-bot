@@ -137,7 +137,7 @@ function copyOnOpen(): void {
       </p>
 
       <template v-if="step === 1">
-        <h2>Que veux-tu recevoir ?</h2>
+        <h2>Offres à recevoir</h2>
         <ul class="keyword-chips">
           <li
             v-for="search in searches"

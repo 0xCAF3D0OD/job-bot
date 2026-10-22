@@ -247,7 +247,7 @@ onMounted(() => void load());
             type="button"
             role="radio"
             :aria-checked="domainOnly && hasDomain"
-            :aria-expanded="hasDomain ? undefined : domainFieldOpen"
+            :aria-controls="hasDomain || !domainFieldOpen ? undefined : 'domaine-champ'"
             data-test="filter-domain"
             @click="setDomain(true)"
           >
@@ -364,6 +364,7 @@ onMounted(() => void load());
       <PushTransition>
         <DomainField
           v-if="domainFieldOpen && !hasDomain"
+          id="domaine-champ"
           @saved="onDomainSaved"
         />
       </PushTransition>

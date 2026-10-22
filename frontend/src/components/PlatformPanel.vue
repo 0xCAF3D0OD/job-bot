@@ -16,7 +16,7 @@ type Account = AccountOut;
 
 const platform = ref<Platform | null>(null);
 // Où s'arrêtent les comptes qui n'ont pas fini (docs/128 §4) : l'étape à faire, et combien.
-const STEP_TITLES = ["Dis ce que tu cherches", "Crée tes alertes", "Garde ta première offre", "Prépare ta candidature", "Marque-la comme envoyée"];
+const STEP_TITLES = ["Critères et CV", "Alertes sur les sites d'emploi", "Première offre gardée", "Lettre et CV pour l'offre", "Candidature envoyée"];
 const stoppedAt = computed(() =>
   (platform.value?.first_steps?.stopped_at ?? [])
     .map((count, index) => ({ label: `Étape ${index + 1} · ${STEP_TITLES[index]}`, count }))
@@ -513,8 +513,7 @@ function size(bytes: number | null | undefined): string {
           class="notice error"
           data-test="backup-not-configured"
         >
-          Les sauvegardes ne sont pas réglées : écris une phrase secrète dans le fichier <code>.env</code>
-          (<code>JOBBOT_BACKUP_PASSPHRASE</code>), puis redémarre la plateforme. Voir <code>docs/82-sauvegardes.md</code>.
+          Sauvegardes non réglées : ajoute <code>JOBBOT_BACKUP_PASSPHRASE</code> dans <code>.env</code>, puis redémarre (docs/82).
         </p>
         <template v-else>
           <p

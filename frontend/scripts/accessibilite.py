@@ -104,7 +104,11 @@ async def keyboard_journey(page: Page) -> list[str]:
         "(() => { const b = document.querySelector('.offer-row');"
         " return b ? (b.getAttribute('aria-label') || b.textContent || '').trim().slice(0, 20) : ''; })()"
     )
-    if not first or not await tab_to(page, first):
+    # Un compte sans offre (docs/128) : rien à atteindre, l'écran vide est vérifié plus haut.
+    if not first:
+        if not await page.query_selector("[data-test=offers-none-yet]"):
+            problems.append("aucune offre affichée, et pas d'écran vide qui le dise")
+    elif not await tab_to(page, first):
         problems.append("la première offre n'est pas atteignable au clavier")
     else:
         await page.keyboard.press("Enter")

@@ -404,6 +404,9 @@ def test_guide_follows_the_pages() -> None:
     assert "Pour bien démarrer" not in service.INSTRUCTIONS
     assert "« Comment ça marche »" not in service.INSTRUCTIONS
     assert "assistant-v15" not in service.INSTRUCTIONS
+    # 1.1.1 : les titres des premiers pas sont des noms (docs/interface.md, Titres 2).
+    assert "« Première offre gardée »" in service.INSTRUCTIONS
+    assert "assistant-v16" not in service.INSTRUCTIONS
     assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS
     assert "S'entraîner à l'entretien" in service.INSTRUCTIONS
     assert "M'entraîner pour cet entretien" in service.INSTRUCTIONS

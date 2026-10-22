@@ -21,12 +21,13 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ dismiss: [] }>();
 
+// Les titres sont des noms (docs/interface.md, Titres 2) ; l'action est sur le bouton.
 const STEPS: Record<Key, { title: string; why: string; action: string; icon: IconName }> = {
-  profile: { title: "Dis ce que tu cherches", why: "jobA1 trie les offres avec tes critères.", action: "Compléter mon profil", icon: "user" },
-  alerts: { title: "Crée tes alertes", why: "Les offres arrivent ici, notées pour toi.", action: "Créer mes alertes", icon: "bell" },
-  keep: { title: "Garde ta première offre", why: "Celles qui te vont passent en « À préparer ».", action: "Voir les offres du jour", icon: "briefcase" },
-  prepare: { title: "Prépare ta candidature", why: "Lettre et CV adaptés à l'offre, en quelques minutes.", action: "Préparer", icon: "mail" },
-  sent: { title: "Marque-la comme envoyée", why: "Elle compte pour ton mois ORP.", action: "Ouvrir la préparation", icon: "send" },
+  profile: { title: "Critères et CV", why: "jobA1 trie les offres avec tes critères.", action: "Compléter mon profil", icon: "user" },
+  alerts: { title: "Alertes sur les sites d'emploi", why: "Les offres arrivent ici, notées pour toi.", action: "Créer mes alertes", icon: "bell" },
+  keep: { title: "Première offre gardée", why: "Celles qui te vont passent en « À préparer ».", action: "Voir les offres du jour", icon: "briefcase" },
+  prepare: { title: "Lettre et CV pour l'offre", why: "Adaptés à l'offre gardée, en quelques minutes.", action: "Préparer", icon: "mail" },
+  sent: { title: "Candidature envoyée", why: "Marque-la comme envoyée : elle compte pour ton mois ORP.", action: "Ouvrir la préparation", icon: "send" },
 };
 
 const doneCount = computed(() => props.steps.filter((s) => s.done).length);
@@ -106,19 +107,19 @@ const target = computed<RouteLocationRaw>(() => {
           <span class="with-icon"><AppIcon :name="STEPS[next.key].icon" />{{ STEPS[next.key].action }}</span>
         </RouterLink>
       </template>
-      <ol
+      <!-- Les cinq points, lus en une phrase. -->
+      <div
         class="first-steps-dots"
+        role="img"
         :aria-label="`${doneCount} étapes faites sur ${steps.length}`"
       >
-        <li
+        <span
           v-for="step in steps"
           :key="step.key"
           :class="{ done: step.done, current: step === next }"
           :data-test="`first-step-${step.key}`"
-        >
-          <span class="visually-hidden">{{ STEPS[step.key].title }}{{ step.done ? " : fait" : "" }}</span>
-        </li>
-      </ol>
+        />
+      </div>
     </div>
   </section>
 </template>

@@ -79,7 +79,7 @@ describe("Les premiers pas (docs/128)", () => {
     const wrapper = await mountView();
     const card = wrapper.find("[data-test=first-steps]");
     expect(card.text()).toContain("2 sur 5");
-    expect(card.find("h2").text()).toBe("Crée tes alertes");
+    expect(card.find("h2").text()).toBe("Alertes sur les sites d'emploi");
     expect(card.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/alertes");
     expect(wrapper.find("[data-test=first-step-profile]").classes()).toContain("done");
     expect(wrapper.find("[data-test=first-step-alerts]").classes()).toContain("current");
@@ -118,7 +118,7 @@ describe("Les premiers pas (docs/128)", () => {
     expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer");
     mockGet(starting(4, { first_steps_offer_id: 7 }));
     wrapper = await mountView();
-    expect(wrapper.find("[data-test=first-steps]").find("h2").text()).toBe("Marque-la comme envoyée");
+    expect(wrapper.find("[data-test=first-steps]").find("h2").text()).toBe("Candidature envoyée");
     expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer?doc=postuler");
   });
 
