@@ -3237,6 +3237,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/billing/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Checkout */
+        post: operations["startCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync Billing
+         * @description Au retour de la page de paiement.
+         */
+        post: operations["syncBilling"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Billing */
+        post: operations["cancelBilling"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3652,6 +3706,16 @@ export interface components {
             /** Late */
             late: boolean;
         };
+        /** BillingState */
+        BillingState: {
+            /**
+             * Confirmed
+             * @default false
+             */
+            confirmed: boolean;
+            /** Plan Until */
+            plan_until?: string | null;
+        };
         /** BlockIn */
         BlockIn: {
             /**
@@ -3862,6 +3926,16 @@ export interface components {
             key: "criteria" | "profile" | "identity" | "orp_target" | "notifications" | "imap";
             /** Done */
             done: boolean;
+        };
+        /** CheckoutIn */
+        CheckoutIn: {
+            /** Accept Terms */
+            accept_terms: boolean;
+        };
+        /** CheckoutOut */
+        CheckoutOut: {
+            /** Link */
+            link: string;
         };
         /** ChooseIn */
         ChooseIn: {
@@ -6104,6 +6178,18 @@ export interface components {
             /** Level */
             level?: number | null;
         };
+        /** PaymentOut */
+        PaymentOut: {
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /** Amount Cents */
+            amount_cents: number;
+            /** Currency */
+            currency: string;
+        };
         /** PhoneIn */
         PhoneIn: {
             /** Enabled */
@@ -6133,6 +6219,14 @@ export interface components {
                     [key: string]: number;
                 };
             };
+            /** Billing Available */
+            billing_available: boolean;
+            /** Plan Until */
+            plan_until: string | null;
+            /** Cancelled */
+            cancelled: boolean;
+            /** Payments */
+            payments: components["schemas"]["PaymentOut"][];
         };
         /** PlatformOut */
         PlatformOut: {
@@ -6346,6 +6440,11 @@ export interface components {
          * @description Les mentions de l'exploitant (responsable, contact, hébergeur), écrites par lui.
          */
         Privacy: {
+            /**
+             * Billing
+             * @default false
+             */
+            billing: boolean;
             /** Contact */
             contact: string | null;
             /**
@@ -14264,6 +14363,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    startCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    syncBilling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingState"];
+                };
+            };
+        };
+    };
+    cancelBilling: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingState"];
                 };
             };
         };

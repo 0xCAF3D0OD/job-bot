@@ -6,8 +6,10 @@ from typing import Literal
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
+from sqlalchemy import select
 
 from jobbot import accounts, plans
+from jobbot.db.models import Payment, User
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["plan"])
@@ -24,6 +26,12 @@ class UsageOut(BaseModel):
     limit_text: str | None
 
 
+class PaymentOut(BaseModel):
+    paid_on: date
+    amount_cents: int
+    currency: str
+
+
 class PlanOut(BaseModel):
     plan: Literal["essentiel", "plus"]
     # L'exploitant : rien n'est limité, la formule ne s'affiche pas.
@@ -33,6 +41,12 @@ class PlanOut(BaseModel):
     usage: list[UsageOut]
     # Les limites de chaque formule, pour les comparer.
     limits: dict[str, dict[str, int]]
+    # Le paiement est ouvert (docs/125 §6) : « Passer à Plus » s'affiche.
+    billing_available: bool
+    # Plus payé : jusqu'à cette date ; résilié : sans renouvellement. Vide : offert ou Essentiel.
+    plan_until: date | None
+    cancelled: bool
+    payments: list[PaymentOut]
 
 
 @router.get("/plan", operation_id="getPlan")
@@ -40,6 +54,7 @@ async def get_plan(request: Request) -> PlanOut:
     runtime: Runtime = request.app.state.runtime
     async with runtime.sessionmaker() as session:
         usage = await plans.usage(session)
+        user = await session.get(User, accounts.current()) if accounts.current() else None
         return PlanOut(
             plan=await plans.plan_of(session),
             unlimited=await accounts.is_owner(session),
@@ -56,4 +71,11 @@ async def get_plan(request: Request) -> PlanOut:
                 for u in usage
             ],
             limits=plans.LIMITS,
+            billing_available=runtime.settings.billing_ready,
+            plan_until=user.plan_until if user else None,
+            cancelled=bool(user and user.plan_cancelled_at),
+            payments=[
+                PaymentOut(paid_on=p.paid_on, amount_cents=p.amount_cents, currency=p.currency)
+                for p in await session.scalars(select(Payment).order_by(Payment.paid_on.desc()))
+            ],
         )

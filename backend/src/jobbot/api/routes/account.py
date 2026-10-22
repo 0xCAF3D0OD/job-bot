@@ -63,6 +63,9 @@ class DataSummary(BaseModel):
 class Privacy(BaseModel):
     """Les mentions de l'exploitant (responsable, contact, hébergeur), écrites par lui."""
 
+    # Le paiement de Plus est ouvert (docs/125 §6) : la page parle de Payrexx.
+    billing: bool = False
+
     contact: str | None
     # La boîte des invités est en place (docs/113) : les e-mails des sites n'arrivent plus
     # dans la boîte de l'exploitant.
@@ -271,6 +274,7 @@ async def get_privacy(request: Request) -> Privacy:
     return Privacy(
         contact=str(contact) if contact else None,
         guest_mailbox=_runtime(request).settings.guest_imap_configured,
+        billing=_runtime(request).settings.billing_ready,
     )
 
 

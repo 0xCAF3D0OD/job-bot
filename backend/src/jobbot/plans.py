@@ -59,9 +59,19 @@ def resets_on(now: datetime | None = None) -> date:
     return date(start.year + start.month // 12, start.month % 12 + 1, 1)
 
 
-async def plan_of(session: AsyncSession) -> str:
-    plan = await session.scalar(select(User.plan).where(User.id == accounts.current()))
-    return plan if plan in PLANS else ESSENTIEL
+async def plan_of(session: AsyncSession, today: date | None = None) -> str:
+    """Plus offert (sans date) ou payé jusqu'à `plan_until` ; passé cette date, Essentiel."""
+    row = (
+        await session.execute(
+            select(User.plan, User.plan_until).where(User.id == accounts.current())
+        )
+    ).first()
+    if row is None or row.plan not in PLANS:
+        return ESSENTIEL
+    today = today or datetime.now(UTC).date()
+    if row.plan == PLUS and row.plan_until is not None and row.plan_until < today:
+        return ESSENTIEL
+    return str(row.plan)
 
 
 async def used(session: AsyncSession, key: str, now: datetime | None = None) -> int:

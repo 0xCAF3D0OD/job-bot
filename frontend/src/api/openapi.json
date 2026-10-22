@@ -8707,6 +8707,90 @@
           }
         }
       }
+    },
+    "/api/billing/checkout": {
+      "post": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Start Checkout",
+        "operationId": "startCheckout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/sync": {
+      "post": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Sync Billing",
+        "description": "Au retour de la page de paiement.",
+        "operationId": "syncBilling",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingState"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/billing/cancel": {
+      "post": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Cancel Billing",
+        "operationId": "cancelBilling",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingState"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -10135,6 +10219,29 @@
         "title": "BackupOut",
         "description": "Les sauvegardes (docs/82) : réglées ou non, la dernière, le dernier essai."
       },
+      "BillingState": {
+        "properties": {
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed",
+            "default": false
+          },
+          "plan_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Until"
+          }
+        },
+        "type": "object",
+        "title": "BillingState"
+      },
       "BlockIn": {
         "properties": {
           "kind": {
@@ -10715,6 +10822,32 @@
           "done"
         ],
         "title": "ChecklistItem"
+      },
+      "CheckoutIn": {
+        "properties": {
+          "accept_terms": {
+            "type": "boolean",
+            "title": "Accept Terms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accept_terms"
+        ],
+        "title": "CheckoutIn"
+      },
+      "CheckoutOut": {
+        "properties": {
+          "link": {
+            "type": "string",
+            "title": "Link"
+          }
+        },
+        "type": "object",
+        "required": [
+          "link"
+        ],
+        "title": "CheckoutOut"
       },
       "ChooseIn": {
         "properties": {
@@ -17890,6 +18023,30 @@
         ],
         "title": "PassageOut"
       },
+      "PaymentOut": {
+        "properties": {
+          "paid_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Paid On"
+          },
+          "amount_cents": {
+            "type": "integer",
+            "title": "Amount Cents"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "paid_on",
+          "amount_cents",
+          "currency"
+        ],
+        "title": "PaymentOut"
+      },
       "PhoneIn": {
         "properties": {
           "enabled": {
@@ -17942,6 +18099,33 @@
             },
             "type": "object",
             "title": "Limits"
+          },
+          "billing_available": {
+            "type": "boolean",
+            "title": "Billing Available"
+          },
+          "plan_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan Until"
+          },
+          "cancelled": {
+            "type": "boolean",
+            "title": "Cancelled"
+          },
+          "payments": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentOut"
+            },
+            "type": "array",
+            "title": "Payments"
           }
         },
         "type": "object",
@@ -17951,7 +18135,11 @@
           "resets_on",
           "plus_price_chf",
           "usage",
-          "limits"
+          "limits",
+          "billing_available",
+          "plan_until",
+          "cancelled",
+          "payments"
         ],
         "title": "PlanOut"
       },
@@ -18497,6 +18685,11 @@
       },
       "Privacy": {
         "properties": {
+          "billing": {
+            "type": "boolean",
+            "title": "Billing",
+            "default": false
+          },
           "contact": {
             "anyOf": [
               {
