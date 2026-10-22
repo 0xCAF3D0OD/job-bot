@@ -10,7 +10,11 @@ import RhythmCard from "../components/RhythmCard.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import FaceMark from "../components/FaceMark.vue";
+import FaceState from "../components/FaceState.vue";
 import OrpMonth from "../components/OrpMonth.vue";
+import SuccessCard from "../components/SuccessCard.vue";
+import { usePhone } from "../composables/usePhone";
 import PageHero from "../components/PageHero.vue";
 import ScoreWord from "../components/ScoreWord.vue";
 import { sinceText } from "../components/status";
@@ -197,6 +201,29 @@ const eyebrow = computed(() => {
   return collect ? `${dateTitle} · ${collect}` : dateTitle;
 });
 
+// S, « Rien d'urgent aujourd'hui » (docs/123 §2) : un jour de recherche sans offre à examiner,
+// sans relance ni rien de daté. Le visage ravi, la devise, le mois ORP en une ligne.
+const calm = computed(() => {
+  const t = today.value;
+  return !!t && !restDay.value && !rhythmPaused.value && !t.to_review && !t.to_follow_up && !banners.value.length;
+});
+// U, Aujourd'hui en compact (docs/123 §2) : sur téléphone, le mois ORP en une ligne.
+const { phone } = usePhone();
+
+// R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil.
+const goalWon = ref(false);
+function firstGoal(t: Today | null): boolean {
+  if (!t?.month_target || t.month_count < t.month_target) return false;
+  const key = `jobA1.orp-goal.${t.month}`;
+  try {
+    if (localStorage.getItem(key)) return false;
+    localStorage.setItem(key, "1");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function load(): Promise<void> {
   const [day, offers, current] = await Promise.all([
     api.GET("/api/today"),
@@ -205,6 +232,7 @@ async function load(): Promise<void> {
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 20 } } }),
   ]);
   today.value = day.data ?? null;
+  goalWon.value = firstGoal(today.value);
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 5);
 }
@@ -259,228 +287,264 @@ const { me } = useAuth();
         <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
       </RouterLink>
 
-      <!-- La phrase du jour, en grand, et une seule action (docs/95 §1, d'après Sphere). -->
-      <div class="today-lead">
-        <p
-          class="today-sentence"
-          data-test="today-sentence"
-        >
-          <template
-            v-for="(part, index) in sentence"
-            :key="index"
-          >
-            <strong v-if="part.strong">{{ part.text }}</strong><template v-else>
-              {{ part.text }}
-            </template>
-          </template>
-        </p>
-        <RouterLink
-          v-if="cta"
-          :to="cta.to"
-          class="button-link primary-link today-cta"
-          data-test="today-cta"
-        >
-          <span class="with-icon"><AppIcon :name="cta.icon" />{{ cta.label }}</span>
-        </RouterLink>
-      </div>
-
-      <!-- Ce qui a une date, trois au plus (docs/95 §2). -->
-      <ul
-        v-if="banners.length"
-        class="today-banners"
+      <!-- S, rien d'urgent (docs/123 §2) : le visage ravi, pourquoi, la devise, le mois en une
+           ligne, et les offres quand même. -->
+      <section
+        v-if="calm"
+        class="today-calm"
+        data-test="today-calm"
       >
-        <li
-          v-for="banner in banners"
-          :key="banner.key"
-          class="today-banner"
-          :data-test="banner.test"
+        <FaceState
+          mood="ravi"
+          title="Rien d'urgent aujourd'hui"
         >
-          <span>{{ banner.text }}</span>
-          <RouterLink :to="banner.to">
-            {{ banner.action }}
-          </RouterLink>
-        </li>
-      </ul>
-
-      <div class="today-grid">
-        <!-- À faire (docs/95 §3) : les meilleures offres, puis les relances. -->
-        <section
-          class="dash-card today-todo"
-          data-test="best"
-        >
-          <h2>À faire</h2>
-          <div class="today-sub">
-            <p class="today-sub-title">
-              {{ restDay ? "Jour sans recherche" : rhythmPaused ? "En pause" : "Meilleures offres" }}
-            </p>
-            <div
-              class="segmented small"
-              role="radiogroup"
-              aria-label="Offres affichées"
-            >
-              <button
-                type="button"
-                role="radio"
-                :aria-checked="tableTab === 'best'"
-                data-test="tab-best"
-                @click="tableTab = 'best'"
-              >
-                Mieux notées
-              </button>
-              <button
-                type="button"
-                role="radio"
-                :aria-checked="tableTab === 'preparing'"
-                data-test="tab-preparing"
-                @click="tableTab = 'preparing'"
-              >
-                Commencées<span
-                  v-if="preparing.length"
-                  class="tab-count"
-                >{{ preparing.length }}</span>
-              </button>
-            </div>
-          </div>
-          <div v-show="tableTab === 'best'">
-            <p
-              v-if="restDay"
-              class="hint"
-              data-test="rest-day"
-            >
-              Rien à traiter aujourd'hui : les offres t'attendent pour ton prochain jour de recherche.
-            </p>
-            <p
-              v-else-if="!best.length"
-              class="hint"
-            >
-              Aucune offre notée en attente.
-            </p>
-            <ul
-              v-else
-              class="today-rows"
-            >
-              <li
-                v-for="offer in best"
-                :key="offer.id"
-              >
-                <RouterLink
-                  :to="offerLink(offer.id)"
-                  class="today-row"
-                  data-test="best-offer"
-                >
-                  <CompanyLogo :offer="offer" />
-                  <span class="today-row-main">
-                    <strong>{{ offer.title }}</strong>
-                    <span class="muted meta-line">
-                      <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
-                      <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
-                    </span>
-                  </span>
-                  <ScoreWord :score="offer.score!" />
-                </RouterLink>
-              </li>
-            </ul>
-          </div>
-          <div
-            v-show="tableTab === 'preparing'"
-            data-test="preparing"
-          >
-            <p
-              v-if="!preparing.length"
-              class="hint"
-            >
-              Aucune candidature en préparation.
-            </p>
-            <ul
-              v-else
-              class="today-rows"
-            >
-              <li
-                v-for="offer in preparing"
-                :key="offer.id"
-              >
-                <RouterLink
-                  :to="`/candidatures/offres/${offer.id}/preparer`"
-                  class="today-row"
-                >
-                  <CompanyLogo :offer="offer" />
-                  <span class="today-row-main">
-                    <strong>{{ offer.title }}</strong>
-                    <span class="muted meta-line">
-                      <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
-                    </span>
-                  </span>
-                </RouterLink>
-              </li>
-            </ul>
-          </div>
-
-          <template v-if="today.follow_ups?.length">
-            <p class="today-sub-title today-sub-gap">
-              À relancer
-            </p>
-            <ul
-              class="today-rows"
-              data-test="follow-ups"
-            >
-              <li
-                v-for="item in today.follow_ups"
-                :key="item.application_id"
-              >
-                <RouterLink
-                  :to="{ path: '/candidatures/suivi', query: { mois: item.orp_month, candidature: String(item.application_id) } }"
-                  class="today-row"
-                >
-                  <span
-                    class="logo"
-                    :class="`c${colorIndex(item.company)}`"
-                  >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
-                  <span class="today-row-main">
-                    <strong>{{ item.company }}</strong>
-                    <span class="muted meta-line">
-                      <span>{{ item.job_title }}</span>
-                      <span v-if="item.status === 'relancee'"><AppIcon name="clock" />sans réponse depuis la relance</span>
-                      <span v-else><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ longDate.format(localDate(item.sent_at)) }}</span>
-                    </span>
-                  </span>
-                  <span class="today-row-action">Relancer</span>
-                </RouterLink>
-              </li>
-            </ul>
-            <RouterLink
-              v-if="today.to_follow_up > today.follow_ups.length"
-              to="/candidatures/suivi"
-              class="today-more"
-            >
-              Toutes les relances ({{ today.to_follow_up }})
-            </RouterLink>
-          </template>
-        </section>
-
-        <!-- Mois ORP (docs/95 §4, docs/123 Q) : le compte du mois et son humeur, puis la semaine. -->
-        <section
-          class="dash-card today-month"
-          data-test="orp-month"
-        >
+          <p>Aucune offre à examiner, aucune relance, rien de daté.</p>
+          <p class="today-motto">
+            Less searching. More living.
+          </p>
+        </FaceState>
+        <div class="dash-card today-calm-month">
           <OrpMonth
             title="Mois ORP"
             :count="today.month_count"
             :target="today.month_target ?? null"
             :month="today.month"
+            compact
           />
-          <RhythmCard
-            v-if="today.rhythm"
-            :week="today.rhythm"
-            nested
-          />
-          <RouterLink
-            to="/candidatures/bilan"
-            class="today-more"
+        </div>
+        <RouterLink
+          to="/candidatures/offres"
+          class="today-more"
+          data-test="today-calm-offers"
+        >
+          Voir les offres quand même
+        </RouterLink>
+      </section>
+      <template v-else>
+        <!-- La phrase du jour, en grand, et une seule action (docs/95 §1, d'après Sphere). -->
+        <div class="today-lead">
+          <p
+            class="today-sentence"
+            data-test="today-sentence"
           >
-            Voir le bilan
+            <template
+              v-for="(part, index) in sentence"
+              :key="index"
+            >
+              <strong v-if="part.strong">{{ part.text }}</strong><template v-else>
+                {{ part.text }}
+              </template>
+            </template>
+          </p>
+          <RouterLink
+            v-if="cta"
+            :to="cta.to"
+            class="button-link primary-link today-cta"
+            data-test="today-cta"
+          >
+            <span class="with-icon"><AppIcon :name="cta.icon" />{{ cta.label }}</span>
           </RouterLink>
-        </section>
-      </div>
+        </div>
+
+        <!-- Ce qui a une date, trois au plus (docs/95 §2). -->
+        <ul
+          v-if="banners.length"
+          class="today-banners"
+        >
+          <li
+            v-for="banner in banners"
+            :key="banner.key"
+            class="today-banner"
+            :data-test="banner.test"
+          >
+            <span>{{ banner.text }}</span>
+            <RouterLink :to="banner.to">
+              {{ banner.action }}
+            </RouterLink>
+          </li>
+        </ul>
+
+        <div class="today-grid">
+          <!-- À faire (docs/95 §3) : les meilleures offres, puis les relances. -->
+          <section
+            class="dash-card today-todo"
+            data-test="best"
+          >
+            <h2>À faire</h2>
+            <div class="today-sub">
+              <p class="today-sub-title">
+                {{ restDay ? "Jour sans recherche" : rhythmPaused ? "En pause" : "Meilleures offres" }}
+              </p>
+              <div
+                class="segmented small"
+                role="radiogroup"
+                aria-label="Offres affichées"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  :aria-checked="tableTab === 'best'"
+                  data-test="tab-best"
+                  @click="tableTab = 'best'"
+                >
+                  Mieux notées
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  :aria-checked="tableTab === 'preparing'"
+                  data-test="tab-preparing"
+                  @click="tableTab = 'preparing'"
+                >
+                  Commencées<span
+                    v-if="preparing.length"
+                    class="tab-count"
+                  >{{ preparing.length }}</span>
+                </button>
+              </div>
+            </div>
+            <div v-show="tableTab === 'best'">
+              <p
+                v-if="restDay"
+                class="hint"
+                data-test="rest-day"
+              >
+                Rien à traiter aujourd'hui : les offres t'attendent pour ton prochain jour de recherche.
+              </p>
+              <p
+                v-else-if="!best.length"
+                class="hint today-empty-line"
+              >
+                <FaceMark mood="neutre" />Aucune offre notée en attente.
+              </p>
+              <ul
+                v-else
+                class="today-rows"
+              >
+                <li
+                  v-for="offer in best"
+                  :key="offer.id"
+                >
+                  <RouterLink
+                    :to="offerLink(offer.id)"
+                    class="today-row"
+                    data-test="best-offer"
+                  >
+                    <CompanyLogo :offer="offer" />
+                    <span class="today-row-main">
+                      <strong>{{ offer.title }}</strong>
+                      <span class="muted meta-line">
+                        <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
+                        <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
+                      </span>
+                    </span>
+                    <ScoreWord :score="offer.score!" />
+                  </RouterLink>
+                </li>
+              </ul>
+            </div>
+            <div
+              v-show="tableTab === 'preparing'"
+              data-test="preparing"
+            >
+              <p
+                v-if="!preparing.length"
+                class="hint today-empty-line"
+              >
+                <FaceMark mood="neutre" />Aucune candidature en préparation.
+              </p>
+              <ul
+                v-else
+                class="today-rows"
+              >
+                <li
+                  v-for="offer in preparing"
+                  :key="offer.id"
+                >
+                  <RouterLink
+                    :to="`/candidatures/offres/${offer.id}/preparer`"
+                    class="today-row"
+                  >
+                    <CompanyLogo :offer="offer" />
+                    <span class="today-row-main">
+                      <strong>{{ offer.title }}</strong>
+                      <span class="muted meta-line">
+                        <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
+                      </span>
+                    </span>
+                  </RouterLink>
+                </li>
+              </ul>
+            </div>
+
+            <template v-if="today.follow_ups?.length">
+              <p class="today-sub-title today-sub-gap">
+                À relancer
+              </p>
+              <ul
+                class="today-rows"
+                data-test="follow-ups"
+              >
+                <li
+                  v-for="item in today.follow_ups"
+                  :key="item.application_id"
+                >
+                  <RouterLink
+                    :to="{ path: '/candidatures/suivi', query: { mois: item.orp_month, candidature: String(item.application_id) } }"
+                    class="today-row"
+                  >
+                    <span
+                      class="logo"
+                      :class="`c${colorIndex(item.company)}`"
+                    >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
+                    <span class="today-row-main">
+                      <strong>{{ item.company }}</strong>
+                      <span class="muted meta-line">
+                        <span>{{ item.job_title }}</span>
+                        <span v-if="item.status === 'relancee'"><AppIcon name="clock" />sans réponse depuis la relance</span>
+                        <span v-else><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ longDate.format(localDate(item.sent_at)) }}</span>
+                      </span>
+                    </span>
+                    <span class="today-row-action">Relancer</span>
+                  </RouterLink>
+                </li>
+              </ul>
+              <RouterLink
+                v-if="today.to_follow_up > today.follow_ups.length"
+                to="/candidatures/suivi"
+                class="today-more"
+              >
+                Toutes les relances ({{ today.to_follow_up }})
+              </RouterLink>
+            </template>
+          </section>
+
+          <!-- Mois ORP (docs/95 §4, docs/123 Q) : le compte du mois et son humeur, puis la semaine. -->
+          <section
+            class="dash-card today-month"
+            data-test="orp-month"
+          >
+            <OrpMonth
+              title="Mois ORP"
+              :count="today.month_count"
+              :target="today.month_target ?? null"
+              :month="today.month"
+              :compact="phone"
+            />
+            <RhythmCard
+              v-if="today.rhythm"
+              :week="today.rhythm"
+              nested
+            />
+            <RouterLink
+              to="/candidatures/bilan"
+              class="today-more"
+            >
+              Voir le bilan
+            </RouterLink>
+          </section>
+        </div>
+      </template>
 
       <div class="today-guides">
         <div class="today-guides-rows">
@@ -583,4 +647,15 @@ const { me } = useAuth();
       <LoadingBlocks :heights="['7rem', '7rem', '12rem']" />
     </div>
   </section>
+  <SuccessCard
+    v-if="goalWon && today"
+    face
+    wink
+    keep-focus
+    title="Objectif du mois atteint"
+    test-id="goal-moment"
+    @close="goalWon = false"
+  >
+    <p>{{ today.month_count }} candidatures sur {{ today.month_target }}.</p>
+  </SuccessCard>
 </template>

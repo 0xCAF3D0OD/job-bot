@@ -2,12 +2,18 @@
 import { onMounted, onUnmounted, ref } from "vue";
 
 import IconButton from "./IconButton.vue";
+import FaceMark from "./FaceMark.vue";
 import Illustration, { type IllustrationName } from "./Illustration.vue";
 
 // Une réussite (docs/61 §1) : une carte qui vient devant, de manière souple, la page grisée
 // derrière ; l'illustration est posée au-dessus de la carte, à cheval sur son bord, pas dedans.
 // Elle se ferme seule après 4 secondes, ou avec « Fermer », Échap, un clic à côté.
-const props = withDefaults(defineProps<{ name: IllustrationName; title: string; closeAfterMs?: number; testId?: string }>(), {
+// `face` : une victoire (docs/123 §2, R : un entretien proposé, l'objectif du mois atteint) ; le
+// visage ravi à la place de l'illustration, de petites bulles autour, une fois ; `wink` pour
+// l'objectif atteint. `keepFocus` : ouverte sans geste de la personne (au chargement d'une page),
+// la carte ne prend pas le focus ; elle reste annoncée (`role="status"`).
+const props = withDefaults(defineProps<{ name?: IllustrationName; face?: boolean; wink?: boolean; title: string; closeAfterMs?: number; testId?: string; keepFocus?: boolean }>(), {
+  name: undefined,
   closeAfterMs: 4000,
   testId: "success-card",
 });
@@ -30,7 +36,7 @@ function onKey(event: KeyboardEvent): void {
 }
 const closeButton = ref<InstanceType<typeof IconButton> | null>(null);
 onMounted(() => {
-  (closeButton.value?.$el as HTMLButtonElement | undefined)?.focus({ preventScroll: true });
+  if (!props.keepFocus) (closeButton.value?.$el as HTMLButtonElement | undefined)?.focus({ preventScroll: true });
   document.addEventListener("keydown", onKey, true);
   if (props.closeAfterMs > 0) timer = setTimeout(close, props.closeAfterMs);
 });
@@ -51,7 +57,24 @@ onUnmounted(() => {
         role="status"
         :data-test="testId"
       >
+        <span
+          v-if="face"
+          class="success-art success-face"
+          aria-hidden="true"
+        >
+          <span
+            v-for="bubble in 6"
+            :key="bubble"
+            :class="['victory-bubble', `b${bubble}`]"
+          />
+          <FaceMark
+            mood="ravi"
+            :size="120"
+            :wink="wink"
+          />
+        </span>
         <Illustration
+          v-else-if="name"
           :name="name"
           class="success-art"
         />

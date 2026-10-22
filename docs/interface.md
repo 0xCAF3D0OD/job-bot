@@ -86,7 +86,7 @@ L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Con
 
 1. **Quatre humeurs**, les mêmes partout : ravi (grand sourire, vert menthe), content (sourire, bleu lavande), attentif (bouche droite ; orange seulement quand il faut agir, « On rattrape », gris chaud sinon), neutre (bouche plus courte, gris). Jamais déçu.
 2. **Trois tailles** : 20 px dans une ligne (la note), 56 px en tuile à droite du titre d'une carte (le mois ORP ; sur la tuile, le visage en noir), 120 px au centre d'un état (liste vide, page qui charge : le visage, le titre, une ligne). Au plus un grand visage par écran ; décoratif, le texte dit tout.
-3. **Les illustrations** : le visage pour les états de jobA1 ; les scènes de personnes pour l'accueil, la connexion, La plateforme, les pages d'erreur et les réussites. Jamais les deux côte à côte. La mascotte ronde reste à l'assistant (quand l'IA parle).
+3. **Les illustrations** : le visage pour les états de jobA1 et les deux victoires (un entretien proposé, l'objectif du mois atteint : le visage ravi au-dessus de la carte d'une réussite, six bulles, une fois) ; les scènes de personnes pour l'accueil, la connexion, La plateforme, les pages d'erreur et les autres réussites (candidature envoyée, preuves remises). Jamais les deux côte à côte. La mascotte ronde reste à l'assistant (quand l'IA parle).
 4. **Le mouvement** : changer d'humeur, la bouche en fondu (150 ms) ; un clin d'œil quand l'objectif du mois est atteint (une fois par visite) ; l'œil et la bille qui pulsent pendant une vraie attente. Rien avec « réduire les animations ».
 
 ## La note (docs/73, docs/76, docs/121 §C.5)

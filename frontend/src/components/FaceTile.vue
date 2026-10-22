@@ -4,17 +4,17 @@ import FaceMark from "./FaceMark.vue";
 
 // La tuile du visage (docs/123 §1, 56 px) : à droite du titre d'une carte, la couleur de
 // l'humeur en fond, le visage en noir. `act` : l'orange, seulement quand il faut agir.
-defineProps<{ mood: Mood; act?: boolean; wink?: boolean }>();
+defineProps<{ mood: Mood; act?: boolean; wink?: boolean; small?: boolean }>();
 </script>
 
 <template>
   <span
-    :class="['face-tile', mood, { act }]"
+    :class="['face-tile', mood, { act, small }]"
     aria-hidden="true"
   >
     <FaceMark
       :mood="mood"
-      :size="40"
+      :size="small ? 28 : 40"
       :wink="wink"
     />
   </span>

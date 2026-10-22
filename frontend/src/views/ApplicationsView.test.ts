@@ -333,6 +333,10 @@ describe("Suivi en calendrier (docs/22)", () => {
     await panel.find("[data-test=panel-status]").setValue("entretien");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 2 } } }));
+    // Un entretien proposé : une victoire, le visage ravi (docs/123 §2, R).
+    const moment = wrapper.find("[data-test=interview-moment]");
+    expect(moment.text()).toContain("Un entretien chez");
+    expect(moment.find(".face-mark").attributes("data-mood")).toBe("ravi");
     // Calendrier / Liste, retenu.
     await wrapper.find("[data-test=layout-list]").trigger("click");
     expect(localStorage.getItem("jobbot-suivi-vue")).toBe("list");
