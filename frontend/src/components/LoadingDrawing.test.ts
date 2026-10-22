@@ -7,8 +7,8 @@ describe("LoadingDrawing (docs/67, complément 0.55.1)", () => {
   it("insère le dessin animé unDraw, décoratif, aux couleurs du thème", async () => {
     // Chargé d'abord, attente large : sous charge, sa première préparation peut être lente
     // (docs/69 §5).
-    await import("../assets/dessins/morning-plans.svg?raw");
-    const drawing = mount(LoadingDrawing, { props: { name: "morning-plans" } });
+    await import("../assets/dessins/maintenance.svg?raw");
+    const drawing = mount(LoadingDrawing, { props: { name: "maintenance" } });
     await vi.waitFor(
       async () => {
         await flushPromises();
@@ -18,7 +18,7 @@ describe("LoadingDrawing (docs/67, complément 0.55.1)", () => {
     );
     expect(drawing.classes()).toContain("drawing");
     expect(drawing.attributes("aria-hidden")).toBe("true");
-    // Les animations sont propres au dessin (préfixe), jouées une fois.
-    expect(drawing.html()).toContain("a-morning-plans-");
+    // Les animations sont propres au dessin (préfixe).
+    expect(drawing.html()).toContain("a-maintenance-");
   });
 });

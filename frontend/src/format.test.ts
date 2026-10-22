@@ -1,7 +1,7 @@
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
 import { describe, expect, it } from "vitest";
 
-import { dayKey, dayName, dayShort, gapSkill } from "./format";
+import { dayKey, dayName, dayShort, gapSkill, orpPace } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -33,5 +33,20 @@ describe("gapSkill (docs/121 §C.3)", () => {
     expect(gapSkill("Pas d'Ansible.")).toBe("Ansible");
     expect(gapSkill("Allemand courant demandé")).toBe("Allemand courant");
     expect(gapSkill("Le poste demande plus de développement que ton profil.")).toBeNull();
+  });
+});
+
+describe("orpPace (docs/123 §2, Q)", () => {
+  // Jeudi 16 octobre 2026 : 11 jours ouvrables passés sur 22.
+  const now = new Date(2026, 9, 16);
+  it("dans les temps, à rattraper, atteint", () => {
+    expect(orpPace(6, 10, "2026-10", now)).toMatchObject({ state: "on-track", mood: "content", line: "Encore 4 d'ici le 31 octobre." });
+    // 11 jours ouvrables restent, du jeudi 16 au vendredi 30.
+    expect(orpPace(3, 10, "2026-10", now)).toMatchObject({ state: "behind", line: "Il reste 7 candidatures en 11 jours ouvrables." });
+    expect(orpPace(10, 10, "2026-10", now)).toMatchObject({ state: "reached", mood: "ravi" });
+    expect(orpPace(4, null, "2026-10", now)).toBeNull();
+  });
+  it("le premier jour du mois, personne n'est en retard", () => {
+    expect(orpPace(0, 10, "2026-10", new Date(2026, 9, 1))?.state).toBe("on-track");
   });
 });

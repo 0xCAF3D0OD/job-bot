@@ -201,3 +201,47 @@ export function gapSkill(text: string): string | null {
     .trim();
   return skill && skill.split(/\s+/).length <= 4 ? skill : null;
 }
+
+// Le mois ORP en une humeur (docs/123 §2, Q) : atteint, dans les temps, ou à rattraper. Le
+// rythme attendu suit les jours ouvrables (lundi à vendredi) passés avant aujourd'hui ; « On
+// rattrape » seulement quand le compte est sous ce rythme. Sans objectif : rien à dire.
+export type OrpPace = {
+  state: "reached" | "on-track" | "behind";
+  mood: "ravi" | "content" | "attentif";
+  word: string;
+  line: string;
+};
+
+function workdays(from: Date, to: Date): number {
+  let count = 0;
+  for (const day = new Date(from); day <= to; day.setDate(day.getDate() + 1)) {
+    if (day.getDay() !== 0 && day.getDay() !== 6) count += 1;
+  }
+  return count;
+}
+
+export function orpPace(count: number, target: number | null | undefined, month: string, now = new Date()): OrpPace | null {
+  if (!target) return null;
+  if (count >= target) return { state: "reached", mood: "ravi", word: "Objectif atteint.", line: "Le reste du mois est à toi." };
+  const [year, monthNumber] = month.split("-").map(Number);
+  const first = new Date(year!, monthNumber! - 1, 1);
+  const last = new Date(year!, monthNumber!, 0);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const total = workdays(first, last);
+  const passed = today > last ? total : workdays(first, yesterday);
+  const left = target - count;
+  const daysLeft = today > last ? 0 : workdays(today < first ? first : today, last);
+  if (count >= Math.floor((target * passed) / Math.max(1, total))) {
+    const end = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" }).format(last);
+    return { state: "on-track", mood: "content", word: "Dans les temps.", line: `Encore ${left} d'ici le ${end}.` };
+  }
+  const days = daysLeft === 1 ? "1 jour ouvrable" : `${daysLeft} jours ouvrables`;
+  return {
+    state: "behind",
+    mood: "attentif",
+    word: "On rattrape.",
+    line: `Il reste ${left} ${left === 1 ? "candidature" : "candidatures"} en ${days}.`,
+  };
+}

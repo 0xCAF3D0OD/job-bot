@@ -49,3 +49,22 @@ Après C (docs/121), qui pose le visage de la note :
 
 - **0.94.0** : les dessins des quatre humeurs, Q (le mois ORP), T (chargement, écrans vides).
 - **0.95.0** : S (rien d'urgent), R (les victoires), U (Aujourd'hui en compact).
+
+## Écarts (0.94.0 : les humeurs, Q, T)
+
+- **Règles relues avant de construire** (`docs/interface.md`), vérifiées sur captures à 1440 et 390 px : la carte Mois ORP d'Aujourd'hui, l'Objectif ORP du Bilan, la liste vide des Offres, le chargement d'une page.
+- **Les dessins** : le visage existant (`FaceMark`, docs/121 §C.5) gagne les gestes ; une tuile de 56 px (`FaceTile`, fond pastel de l'humeur, visage noir, la bille aussi en noir pour rester visible sur l'orange) ; un état de 120 px (`FaceState` : le visage, le titre, une ligne). Le clin d'œil n'est pas un dessin à part : l'œil se ferme et se rouvre (450 ms).
+- **Q, le rythme** : « Dans les temps » tant que le compte atteint la part de l'objectif due aux jours ouvrables (lundi à vendredi) **passés** avant aujourd'hui ; le 1er du mois, personne n'est en retard. Sinon « On rattrape. Il reste 7 candidatures en 6 jours ouvrables. » (aujourd'hui compris). Les jours fériés ne sont pas comptés à part.
+- **« Objectif atteint. »** sans la date (« Le 24 octobre ») : jobA1 ne garde pas le jour où l'objectif a été atteint ; la phrase dit « Le reste du mois est à toi. ». À ajouter si tu y tiens (une requête de plus).
+- **Sans objectif** : le compte seul, sans tuile ni barre (le guide d'Aujourd'hui demande déjà l'objectif).
+- **Le Bilan** : la jauge en demi-cercle (du rouge au vert) est remplacée par le même bloc qu'Aujourd'hui, avec le mois sous le titre. Les trois mois précédents restent, **sans cadre** (ils formaient des cartes dans la carte) : trois colonnes sous un filet, « atteint » en vert ; « manqué » n'est plus en orange (une seule chose en orange, et jamais l'air déçu).
+- **T, le chargement** : le voile d'une page qui charge montre le visage, l'œil et la bille qui pulsent, et le nom de la page. Les sept dessins unDraw des transitions passent en réserve (`frontend/reserve/illustrations-undraw/`) ; **la maintenance garde son dessin** (docs/80, le cadrage n'en parlait pas).
+- **T, les listes vides** : Offres (« Aucune offre »), Suivi en liste (« Aucune candidature en décembre »), Bilan (« Pas encore de candidature »), Actualités (« Rien à lire » ; « Premier relevé » avec le visage qui pulse pendant le premier relevé). La page introuvable garde sa scène (page d'erreur), l'assistant des alertes aussi (un parcours, pas un état).
+- **Deux scènes sans emploi** : « aucune-offre » et « actualites-video » ne servent plus ; gardées dans les illustrations, à retirer si on ne les reprend pas ailleurs.
+- **Pas d'écran de collecte** : lancer une collecte affiche une phrase (« Collecte lancée… ») au-dessus du titre d'Aujourd'hui, sans dessin ; rien à remplacer. Le premier relevé des Actualités, lui, est une vraie attente : le visage y pulse.
+- **Le mouvement** : la bouche en fondu (150 ms) quand l'humeur change ; le clin d'œil une fois par visite quand l'objectif est atteint ; « réduire les animations » : aucun geste.
+
+## Vérifié (0.94.0)
+
+- Tests de l'interface : le rythme (dans les temps, à rattraper avec les jours ouvrables qui restent, atteint, le 1er du mois, sans objectif) ; les segments (un par candidature, une barre continue au-delà de 15) ; la tuile orange seulement pour « On rattrape » ; l'état vide (visage décoratif, titre, ligne, attente). 422 tests, lint, vue-tsc.
+- Les trois audits sur la démo à zéro (règles, alignement, accessibilité).

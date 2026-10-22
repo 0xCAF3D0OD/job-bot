@@ -10,7 +10,7 @@ import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
-import IllustratedSide from "../components/IllustratedSide.vue";
+import FaceState from "../components/FaceState.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
 import HoverNote from "../components/HoverNote.vue";
@@ -290,15 +290,13 @@ const intro = firstTime("bilan-funnel");
         />
       </div>
 
-      <IllustratedSide
+      <FaceState
         v-if="insights.funnel.applications === 0"
-        class="empty-state"
+        title="Pas encore de candidature"
         data-test="insights-empty"
-        name="bilan"
-        phone="small"
       >
-        <p>Pas encore de candidature sur cette période : le bilan se remplit au fil de tes envois.</p>
-      </IllustratedSide>
+        <p>Le bilan se remplit au fil de tes envois.</p>
+      </FaceState>
       <template v-else>
         <p
           v-if="insights.headline"

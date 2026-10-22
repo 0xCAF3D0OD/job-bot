@@ -9,7 +9,7 @@ import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NewsStory from "../components/NewsStory.vue";
 import PushTransition from "../components/PushTransition.vue";
-import IllustratedSide from "../components/IllustratedSide.vue";
+import FaceState from "../components/FaceState.vue";
 import { useAuth } from "../composables/useAuth";
 import { useNewsCount } from "../composables/useNewsCount";
 import { usePhone } from "../composables/usePhone";
@@ -363,27 +363,25 @@ onUnmounted(() => {
         :heights="phone ? ['14rem', '5rem', '5rem'] : ['22rem', '6rem', '6rem']"
       />
 
-      <IllustratedSide
+      <FaceState
         v-else-if="!items.length"
-        class="empty-state empty"
-        name="actualites-video"
-        phone="small"
+        :title="page?.refreshing ? 'Premier relevé' : 'Rien à lire'"
+        :waiting="!!page?.refreshing"
+        data-test="news-empty"
       >
-        <p>
-          <template v-if="page?.refreshing">
-            Premier relevé en cours : les contenus arrivent dans quelques secondes.
-          </template>
-          <template v-else-if="preferences?.domain_only || preferences?.countries.length || preferences?.languages.length">
-            Rien avec ces filtres pour l'instant.
-          </template>
-          <template v-else>
-            Rien pour l'instant.
-            <RouterLink to="/reglages?rubrique=actualites">
-              Gérer les sources
-            </RouterLink>
-          </template>
+        <p v-if="page?.refreshing">
+          Les contenus arrivent dans quelques secondes.
         </p>
-      </IllustratedSide>
+        <p v-else-if="preferences?.domain_only || preferences?.countries.length || preferences?.languages.length">
+          Rien avec ces filtres pour l'instant.
+        </p>
+        <RouterLink
+          v-else
+          to="/reglages?rubrique=actualites"
+        >
+          Gérer les sources
+        </RouterLink>
+      </FaceState>
       <div
         v-else
         :class="['news-modules', tab === 'videos' ? 'videos' : 'articles']"

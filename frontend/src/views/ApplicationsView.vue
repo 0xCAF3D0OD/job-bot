@@ -24,7 +24,7 @@ import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
-import IllustratedSide from "../components/IllustratedSide.vue";
+import FaceState from "../components/FaceState.vue";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import EngagementMoment from "../components/EngagementMoment.vue";
 import SuccessCard from "../components/SuccessCard.vue";
@@ -688,14 +688,11 @@ onUnmounted(() => assistant.setFocus(null));
             data-test="all-months"
           > Tous les mois
         </label>
-        <IllustratedSide
+        <FaceState
           v-if="loaded && !items.length"
-          class="empty-state empty"
-          name="suivi-envoi"
-          phone="small"
-        >
-          <p>Aucune candidature en {{ formatMonth(orp.month) }}.</p>
-        </IllustratedSide>
+          :title="`Aucune candidature en ${formatMonth(orp.month)}`"
+          data-test="applications-empty"
+        />
         <ApplicationsTable
           v-else
           :items="items"

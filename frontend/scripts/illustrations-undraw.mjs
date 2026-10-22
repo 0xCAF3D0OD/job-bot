@@ -1,12 +1,13 @@
-// Les illustrations unDraw d'avant (docs/67). Celles des pages qui chargent sont dans
-// l'application (src/assets/dessins/, composant LoadingDrawing, complément 0.55.1) ; les autres en
-// réserve (reserve/illustrations-undraw/), gardées pour revenir en arrière si besoin.
+// Les illustrations unDraw d'avant (docs/67). Seule celle de la maintenance est dans
+// l'application (src/assets/dessins/, composant LoadingDrawing) : les pages qui chargent montrent
+// le visage du 1 depuis la 0.94.0 (docs/123 §2) ; les autres en réserve
+// (reserve/illustrations-undraw/), gardées pour revenir en arrière si besoin.
 // Prépare les illustrations unDraw pour la plateforme (docs/58).
 //
 //   node scripts/illustrations-undraw.mjs <dossier des versions animées> [<dossier des originaux>…]
 //
 // Pour chaque nom de ILLUSTRATIONS, prend la version animée (sinon l'original), et écrit
-// src/assets/dessins/<nom>.svg (les sept des pages qui chargent) ou reserve/illustrations-undraw/ :
+// src/assets/dessins/<nom>.svg (la maintenance) ou reserve/illustrations-undraw/ :
 // - sans largeur ni hauteur fixes (la taille vient de la feuille de style) ;
 // - couleurs en minuscules, pour que la feuille de style les reprenne au thème
 //   (`.drawing [fill="#6c63ff"]`) ; le « réduire les animations » des dessins vise `.illu *` :
@@ -40,7 +41,7 @@ export const ILLUSTRATIONS = [
 
 const OUT = new URL("../reserve/illustrations-undraw/", import.meta.url);
 const LOADING = new URL("../src/assets/dessins/", import.meta.url);
-const LOADING_NAMES = ["absorbed", "certification", "done", "mailbox", "maintenance", "message-sent", "morning-plans", "stepping-up"];
+const LOADING_NAMES = ["maintenance"];
 // Le dessin de la page de maintenance bouge tant que l'attente dure (docs/80 §2) : sa boucle
 // est gardée.
 const LOOPING = ["maintenance"];

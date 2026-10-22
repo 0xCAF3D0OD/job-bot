@@ -138,7 +138,8 @@ describe("Bilan (docs/42, docs/55)", () => {
     const { wrapper } = await mountView();
     const gauge = wrapper.find("[data-test=orp-gauge]");
     expect(gauge.exists()).toBe(true);
-    expect(gauge.find("[data-test=gauge-count]").text()).toBe("3");
-    expect(gauge.text()).toContain("sur 20");
+    expect(gauge.find("[data-test=month-count]").text().replace(/\s+/g, " ")).toBe("3 / 20 candidatures");
+    expect(gauge.find("[role=progressbar]").attributes("aria-valuemax")).toBe("20");
+    expect(gauge.find("[data-test=month-left]").exists()).toBe(true);
   });
 });
