@@ -3,6 +3,9 @@ import { computed, onMounted, reactive, ref } from "vue";
 
 import { api } from "../api/client";
 import { plural } from "../format";
+import { usePlan } from "../composables/usePlan";
+
+const { plan } = usePlan();
 
 // Ajouter une offre trouvée ailleurs (docs/111) : un lien ou un texte, lu par la page
 // (balisage JobPosting) ou par l'IA ; une fiche à relire ; puis l'offre, filtrée et notée
@@ -197,7 +200,7 @@ function openExisting(): void {
         :placeholder="textExample"
         data-test="manual-text"
       />
-      <span class="hint">Lu par l'IA, environ 0,01 $, compté dans ton plafond. Tes coordonnées ne partent pas.</span>
+      <span class="hint">{{ plan?.unlimited ? "Lu par l'IA, environ 0,01 $, compté dans ton plafond." : "Lu par l'IA." }} Tes coordonnées ne partent pas.</span>
     </label>
     <p
       v-if="problem"

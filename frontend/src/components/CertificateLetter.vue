@@ -7,6 +7,9 @@ import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import HoverNote from "./HoverNote.vue";
 import SidePanel from "./SidePanel.vue";
+import { usePlan } from "../composables/usePlan";
+
+const { aiNote } = usePlan();
 
 // Les lettres autour des certificats (docs/87 §4, 0.69.1) : demander une correction, ou un
 // certificat intermédiaire. Tu les relis, puis tu les envoies toi-même.
@@ -105,7 +108,7 @@ onMounted(() => void load());
             data-test="certificate-letter-ai"
             @click="load(true)"
           >
-            <HoverNote text="Environ 0,02 CHF. Le certificat part sans ton nom ni les personnes citées.">
+            <HoverNote :text="aiNote('Environ 0,02 CHF.', undefined, 'Le certificat part sans ton nom ni les personnes citées.')">
               <span class="with-icon"><AppIcon name="ai" />{{ busy ? "L'IA rédige…" : "Rédiger avec l'IA" }}</span>
             </HoverNote>
           </button>

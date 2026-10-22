@@ -9,6 +9,10 @@ import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
 import { plural } from "../format";
+import { usePlan } from "../composables/usePlan";
+import PlanLimit from "./PlanLimit.vue";
+
+const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
 // « Mes enseignements » (docs/23 §3) : tous les retours d'entretien, regroupés, sans IA ;
 // les pistes de l'IA seulement à la demande.
@@ -166,7 +170,7 @@ onMounted(() => void load());
         data-test="coach"
         @click="coach"
       >
-        <HoverNote :text="busy ? '' : 'Environ 0,03 $.'">
+        <HoverNote :text="busy ? '' : aiNote('Environ 0,03 $.')">
           <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}</span>
         </HoverNote>
       </button>
@@ -186,18 +190,20 @@ onMounted(() => void load());
         type="button"
         class="secondary small"
         data-test="insights-practice"
+        :disabled="reached('practice')"
         @click="practicing = true"
       >
-        <HoverNote text="Cinq questions de l'IA, une à la fois, puis un retour. Environ 0,20 CHF ; tu peux répondre en dictant.">
+        <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l\'IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
           <span class="with-icon"><AppIcon name="ai" />M'entraîner sur un entretien type</span>
         </HoverNote>
       </button>
     </p>
+    <PlanLimit usage="practice" />
     <Teleport to="body">
       <InterviewPractice
         v-if="practicing"
         @changed="load"
-        @close="practicing = false"
+        @close="practicing = false; refreshPlan()"
       />
     </Teleport>
   </DisclosureRow>

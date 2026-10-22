@@ -15,6 +15,7 @@ from typing import Any, Literal, get_args
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import plans
 from jobbot.db.models import Application, Evaluation, InterviewPractice, Profile
 from jobbot.interviews import service as interviews
 from jobbot.llm.common import SONNET, call, check_budget, clean, parse_reponse
@@ -274,6 +275,11 @@ async def start(
 ) -> int:
     rate = await _check(runtime, SESSION_ESTIMATE_USD)
     async with runtime.sessionmaker.begin() as session:
+        # La formule (docs/125) : les séances du mois ; les questions d'une séance ne comptent pas.
+        try:
+            await plans.check(session, plans.PRACTICE)
+        except plans.LimitReached as exc:
+            raise PracticeUnavailable(str(exc)) from exc
         if application_id is not None and await session.get(Application, application_id) is None:
             raise LookupError("candidature introuvable")
         practice = InterviewPractice(

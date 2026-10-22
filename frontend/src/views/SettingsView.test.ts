@@ -152,11 +152,15 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(wrapper.find("[data-test=logout-all]").classes()).toContain("pill");
   });
 
-  it("compte invité : plafond de l'IA fixé, ni Plateforme ni profils d'essai", async () => {
+  it("compte invité : la formule plutôt qu'un plafond en francs, ni Plateforme ni profils d'essai", async () => {
     await as(false);
     mockGet(false);
     const { wrapper } = await mountSettings("ia");
-    expect(wrapper.find("[data-test=budget-fixed]").text()).toContain("10 CHF");
+    // Des nombres, pas des francs (docs/125 §2) : la rubrique renvoie à la formule.
+    const fixed = wrapper.find("[data-test=budget-fixed]");
+    expect(fixed.text()).toContain("Formule Essentiel");
+    expect(fixed.text()).not.toContain("CHF");
+    expect(fixed.find("[data-test=see-plan]").attributes("href")).toContain("rubrique=compte");
     expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
     expect(wrapper.find("[data-test=toc-plateforme]").exists()).toBe(false);
   });

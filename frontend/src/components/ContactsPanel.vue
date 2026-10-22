@@ -8,6 +8,9 @@ import CopyLabel from "./CopyLabel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HoverNote from "./HoverNote.vue";
 import { offerUndo } from "../composables/useUndo";
+import { usePlan } from "../composables/usePlan";
+
+const { aiNote } = usePlan();
 
 // Contacts dans l'entreprise (docs/31) : recherches LinkedIn déjà remplies, ouvertes dans
 // un nouvel onglet, et suivi des prises de contact. Rien n'est lu sur LinkedIn. Affiché dans
@@ -264,7 +267,7 @@ onMounted(() => void load());
               :disabled="writing"
               data-test="contact-write"
             >
-              <HoverNote :text="writing ? '' : 'Environ 0,002 $.'">
+              <HoverNote :text="writing ? '' : aiNote('Environ 0,002 $.')">
                 <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : written ? "Rédiger à nouveau" : "Rédiger un message" }}</span>
               </HoverNote>
             </button>

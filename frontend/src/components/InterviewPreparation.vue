@@ -8,6 +8,10 @@ import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
+import { usePlan } from "../composables/usePlan";
+import PlanLimit from "./PlanLimit.vue";
+
+const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
 // Fiche « Préparer l'entretien » (docs/23 §3) : le poste, les questions difficiles déjà
 // rencontrées, ce qui reste à préparer, les questions à poser ; pistes de l'IA à la demande.
@@ -40,6 +44,7 @@ async function loadPractices(): Promise<void> {
     (await api.GET("/api/interview-practices", { params: { query: { application_id: props.application.id } } })).data ?? [];
 }
 function closePractice(): void {
+  void refreshPlan();
   practicing.value = false;
   openPractice.value = null;
 }
@@ -109,12 +114,14 @@ onMounted(async () => {
           type="button"
           class="primary small"
           data-test="prep-practice"
+          :disabled="reached('practice')"
           @click="practicing = true"
         >
-          <HoverNote text="Cinq questions de l'IA, une à la fois, puis un retour. Environ 0,20 CHF ; tu peux répondre en dictant.">
+          <HoverNote :text="aiNote('Environ 0,20 CHF.', 'practice', 'Cinq questions de l\'IA, une à la fois, puis un retour ; tu peux répondre en dictant.')">
             <span class="with-icon"><AppIcon name="ai" />M'entraîner pour cet entretien</span>
           </HoverNote>
         </button>
+        <PlanLimit usage="practice" />
       </div>
       <section v-if="offer?.summary_role">
         <h4>Le poste</h4>
@@ -235,7 +242,7 @@ onMounted(async () => {
           data-test="prep-coach"
           @click="coach"
         >
-          <HoverNote :text="busy ? '' : 'Environ 0,03 $.'">
+          <HoverNote :text="busy ? '' : aiNote('Environ 0,03 $.')">
             <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Analyse en cours…" : "Pistes de l'IA" }}</span>
           </HoverNote>
         </button>

@@ -14,6 +14,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import plans
 from jobbot.db.models import Draft, Evaluation, Offer, OfferStatus
 from jobbot.llm.client import RawResult, Refused
 from jobbot.llm.letter import Assessment
@@ -86,6 +87,11 @@ async def prepare(
                 .limit(1)
             )
             previous = latest.content if latest else None
+        # La formule (docs/125) : les lettres et les CV du mois.
+        try:
+            await plans.check(session, kind)
+        except plans.LimitReached as exc:
+            raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, str(exc)) from exc
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
         data = offer_data(offer)
     if spend + estimate_usd * rate > budget:

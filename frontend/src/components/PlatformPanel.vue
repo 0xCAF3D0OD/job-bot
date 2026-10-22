@@ -140,6 +140,15 @@ async function saveCap(account: Account): Promise<void> {
   show(data);
 }
 
+// La formule du compte (docs/125 §5) : Plus sans paiement, tant que le paiement n'existe pas.
+async function savePlan(account: Account, plan: "essentiel" | "plus"): Promise<void> {
+  const { data } = await api.PATCH("/api/platform/accounts/{account_id}", {
+    params: { path: { account_id: account.id } },
+    body: { plan },
+  });
+  show(data);
+}
+
 async function saveTotal(): Promise<void> {
   const { data } = await api.PUT("/api/platform/settings", {
     body: { ai_total_budget_chf: Number(total.value) },
@@ -320,6 +329,17 @@ function size(bytes: number | null | undefined): string {
               v-if="!account.is_owner"
               class="platform-actions"
             >
+              <label class="inline-field">
+                <span>Formule</span>
+                <select
+                  :value="account.plan"
+                  :data-test="`plan-${account.username}`"
+                  @change="savePlan(account, ($event.target as HTMLSelectElement).value as 'essentiel' | 'plus')"
+                >
+                  <option value="essentiel">Essentiel</option>
+                  <option value="plus">Plus</option>
+                </select>
+              </label>
               <label class="inline-field">
                 <span>Plafond IA</span>
                 <input

@@ -7,7 +7,7 @@ accepte ou refuse les demandes de compte (docs/102).
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -43,6 +43,8 @@ class AccountOut(BaseModel):
     ai_budget_chf: Decimal
     month_spend_chf: Decimal
     month_offers: int
+    # La formule (docs/125) : réglée ici tant que le paiement n'existe pas.
+    plan: Literal["essentiel", "plus"]
 
 
 class InvitationOut(BaseModel):
@@ -102,6 +104,7 @@ class LinkCreated(BaseModel):
 
 class AccountChange(BaseModel):
     suspended: bool | None = None
+    plan: Literal["essentiel", "plus"] | None = None
     ai_budget_chf: Annotated[Decimal | None, Field(ge=0, le=1000)] = None
 
 
@@ -174,6 +177,7 @@ async def get_platform(request: Request) -> PlatformOut:
                 if u.id in usage
                 else Decimal("0.00"),
                 month_offers=int(usage[u.id].offers) if u.id in usage else 0,
+                plan="plus" if u.plan == "plus" else "essentiel",
             )
             for u in users
         ],
@@ -300,6 +304,8 @@ async def update_account(request: Request, account_id: int, body: AccountChange)
                 await end_all_sessions(session, account_id)
         if "ai_budget_chf" in body.model_fields_set:
             user.ai_budget_chf = body.ai_budget_chf
+        if body.plan is not None:
+            user.plan = body.plan
     if body.suspended:
         # Ses jetons d'extension et d'agenda aussi (docs/78 §2), révoqués en son nom : ses
         # lignes ne sont visibles que de lui.

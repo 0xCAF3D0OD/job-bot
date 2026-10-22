@@ -15,6 +15,7 @@ import anthropic
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import plans
 from jobbot.assistant import actions, tools
 from jobbot.db.models import Application, ChatConversation, ChatMessage, Offer
 from jobbot.llm.client import ChatTurn, chat_client_factory
@@ -167,6 +168,10 @@ async def answer(
         raise AssistantUnavailable("IA non configurée (réglage d'installation, voir le README)")
     now = datetime.now(UTC)
     async with runtime.sessionmaker.begin() as session:
+        try:
+            await plans.check(session, plans.CHAT)
+        except plans.LimitReached as exc:
+            raise AssistantUnavailable(str(exc)) from exc
         spend, budget, rate = await budget_state(session, now)
         if spend + ESTIMATE_USD * rate > budget:
             raise AssistantUnavailable("plafond mensuel de l'IA atteint")

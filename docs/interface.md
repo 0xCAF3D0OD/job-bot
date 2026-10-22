@@ -96,6 +96,13 @@ L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Con
 - Une offre pas encore notée : « Pas encore notée », qui dit pourquoi au survol ; dans la fiche, un cercle vide en pointillés avec « – ».
 - Jamais une pastille ni un visage déçu.
 
+## La formule (docs/125)
+
+1. **Des nombres, pas des francs** : une personne invitée voit « Lettres : 2 sur 10 ce mois-ci. » au survol d'une action limitée, et aucun prix sur les autres actions IA ; l'exploitant voit les coûts.
+2. **À la limite**, l'action reste à sa place, désactivée, avec une ligne grise dessous : ce qui est épuisé, quand ça revient, et « Voir la formule ». Une fois par écran ; jamais un bandeau, une fenêtre qui bloque ni de l'orange.
+3. **La carte Formule** (Réglages › Compte) : une ligne par usage, le compte et une jauge courte, séparées par un filet ; ce que Plus ajoute sur fond gris.
+4. **Le cycle ORP ne parle jamais de formule** : Aujourd'hui, le Suivi, les preuves, le rendez-vous.
+
 ## Les actions (docs/74, docs/76)
 
 1. Dans chaque partie (ou ligne d'un tableau), le contenu reste visible, avec au plus une action importante ; le reste va dans « ⋯ », en haut à droite de la partie ou au bout de la ligne.

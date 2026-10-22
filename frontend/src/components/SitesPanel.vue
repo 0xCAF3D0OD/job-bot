@@ -11,6 +11,9 @@ import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
 import { offerUndo } from "../composables/useUndo";
 import HoverNote from "./HoverNote.vue";
+import { usePlan } from "../composables/usePlan";
+
+const { aiNote, plan } = usePlan();
 // Mettre un site en pause vaut pour son compte ; ajouter ou retirer un site change la liste
 // commune à tous les comptes : réservé à l'exploitant (docs/65).
 const { me } = useAuth();
@@ -146,7 +149,7 @@ onMounted(() => void load());
       </legend>
       <!-- La description toujours visible, comme les CFF (docs/110). -->
       <p class="setting-desc">
-        <HoverNote text="jobup et Indeed ont un lecteur intégré ; les autres sont lus par l'IA, environ 0,01 $ par e-mail, tes coordonnées retirées.">
+        <HoverNote :text="aiNote('Environ 0,01 $ par e-mail.', undefined, 'jobup et Indeed ont un lecteur intégré ; les autres sont lus par l\'IA, tes coordonnées retirées.')">
           La plateforme lit leurs e-mails d'alerte.
         </HoverNote>
       </p>
@@ -193,7 +196,7 @@ onMounted(() => void load());
           <dl class="summary-rows">
             <div>
               <dt>Lecture</dt>
-              <dd>{{ opened.reader === "ai" ? "par l'IA (environ 0,01 $ par e-mail)" : "lecteur intégré" }}</dd>
+              <dd>{{ opened.reader === "ai" ? plan?.unlimited ? "par l'IA (environ 0,01 $ par e-mail)" : "par l'IA" : "lecteur intégré" }}</dd>
             </div>
             <div>
               <dt>E-mails de</dt>
