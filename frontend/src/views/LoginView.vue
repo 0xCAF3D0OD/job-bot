@@ -64,7 +64,7 @@ onMounted(async () => {
     >
       <p>
         Aucun compte n'existe encore.
-        <HoverNote text="L'identifiant et le mot de passe (12 caractères au moins) sont demandés au clavier, sans s'afficher. Le mot de passe est enregistré haché, jamais en clair ; ne le transmets à personne.">
+        <HoverNote text="12 caractères au moins. Le mot de passe n'est jamais enregistré en clair.">
           Crée-le une fois
         </HoverNote>, dans un terminal, depuis le dossier du projet :
       </p>

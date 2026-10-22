@@ -443,7 +443,7 @@ onUnmounted(() => spy?.disconnect());
             <fieldset data-test="rhythm-pause">
               <legend>Une pause</legend>
               <p class="setting-desc">
-                <HoverNote text="Pas de retard au retour. Annonce-la à ton conseiller : c'est lui qui décide de ce qu'elle change pour ton objectif.">
+                <HoverNote text="Pas de retard au retour. Annonce-la à ton conseiller : c'est lui qui décide.">
                   Vacances, maladie : ni offres ni message pendant la pause.
                 </HoverNote>
               </p>

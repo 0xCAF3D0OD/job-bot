@@ -95,7 +95,7 @@ onMounted(load);
           <li><strong>iPhone</strong> : Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un calendrier avec abonnement, puis colle l'adresse.</li>
           <li><strong>Google Agenda</strong> (ordinateur) : « Autres agendas » › + › « À partir de l'URL ».</li>
           <li><strong>Outlook</strong> : Ajouter un calendrier › « S'abonner à partir du web ».</li>
-          <li>Google et Outlook lisent l'adresse depuis leurs serveurs : ta plateforme doit être joignable depuis Internet (ton tunnel, par exemple).</li>
+          <li>Google et Outlook lisent l'adresse depuis Internet : la plateforme doit y être joignable.</li>
         </ul>
       </MoreInfo>
       <div

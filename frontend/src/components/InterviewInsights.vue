@@ -65,7 +65,7 @@ onMounted(() => void load());
       class="hint reading-width"
       data-test="insights-empty"
     >
-      Rien pour l'instant. Après un entretien, clique sur « Faire le point sur l'entretien » dans sa candidature.
+      Rien pour l'instant : fais le point après chaque entretien.
     </p>
     <div
       v-if="data.count"

@@ -190,7 +190,13 @@ onMounted(async () => {
           data-test="plan-plus"
         >
           <strong>Plus · {{ plan.plus_price_chf }} CHF par mois</strong> :
-          {{ plusLimits.letter }} lettres, {{ plusLimits.cv }} CV, {{ plusLimits.practice }} entraînements, {{ plusLimits.score }} offres notées. {{ canBuy ? "Sans engagement." : "Le paiement arrive bientôt." }}
+          {{ plusLimits.letter }} lettres et CV, {{ plusLimits.practice }} entraînements, {{ plusLimits.score }} offres notées.
+        </p>
+        <p
+          class="hint"
+          data-test="plan-buy-note"
+        >
+          {{ canBuy ? "Sans engagement." : "Le paiement arrive bientôt." }}
         </p>
         <template v-if="canBuy">
           <label class="checkbox plan-terms">

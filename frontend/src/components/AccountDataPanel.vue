@@ -4,7 +4,6 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
-import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
 import InlineConfirm from "./InlineConfirm.vue";
 
@@ -69,16 +68,23 @@ async function remove(): Promise<void> {
   >
     <fieldset>
       <legend>Données personnelles</legend>
+      <!-- Une ligne par compteur (docs/132) : une liste plutôt qu'une longue phrase. -->
+      <ul
+        v-if="summary"
+        class="plan-usage"
+        data-test="account-counts"
+      >
+        <li><span class="plan-usage-name">Offres</span><span class="plan-usage-count">{{ summary.offers }}</span></li>
+        <li><span class="plan-usage-name">Candidatures</span><span class="plan-usage-count">{{ summary.applications }}</span></li>
+        <li><span class="plan-usage-name">Documents</span><span class="plan-usage-count">{{ summary.documents }}</span></li>
+        <li><span class="plan-usage-name">Blocs de profil</span><span class="plan-usage-count">{{ summary.profile_blocks }}</span></li>
+        <li><span class="plan-usage-name">E-mails d'alerte</span><span class="plan-usage-count">{{ summary.alert_emails }}</span></li>
+      </ul>
       <p
         v-if="summary"
-        class="setting-info"
+        class="setting-desc"
       >
-        {{ plural(summary.offers, "offre", "offres") }}, {{ plural(summary.applications, "candidature", "candidatures") }},
-        {{ plural(summary.documents, "document", "documents") }}, {{ plural(summary.profile_blocks, "bloc de profil", "blocs de profil") }},
-        {{ plural(summary.alert_emails, "e-mail d'alerte", "e-mails d'alerte") }}.
-        <RouterLink to="/tes-donnees">
-          Ce qui est gardé
-        </RouterLink>
+        <RouterLink to="/tes-donnees">Ce qui est gardé, et combien de temps</RouterLink>
       </p>
       <div class="form-actions setting-pills">
         <a
@@ -107,7 +113,7 @@ async function remove(): Promise<void> {
           @submit.prevent="remove"
         >
           <InlineConfirm
-            message="Fermer ton compte efface tout : offres, candidatures, documents, preuves ORP, discussions. Exporte d'abord ce que tu veux garder."
+            message="Tout est effacé : offres, candidatures, documents, preuves ORP. Exporte d'abord ce que tu veux garder."
             confirm-label="Fermer définitivement"
             :busy="busy || !password"
             @confirm="remove"

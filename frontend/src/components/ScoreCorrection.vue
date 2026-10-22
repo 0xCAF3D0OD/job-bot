@@ -245,8 +245,7 @@ function applyChange(change: Change): void {
         data-test="score-correction-block"
       >
         <p class="setting-desc">
-          Ce bloc rejoindra ton profil ; la prochaine note en tiendra compte. Tu peux le modifier, ou le retirer plus tard
-          dans Profil.
+          Ce bloc rejoindra ton profil et comptera dès la prochaine note.
         </p>
         <span class="badge">{{ KIND_LABEL[block.kind] }}</span>
         <label>Titre

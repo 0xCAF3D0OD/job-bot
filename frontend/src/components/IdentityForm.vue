@@ -100,7 +100,7 @@ onMounted(async () => {
     >
       <fieldset>
         <p class="setting-desc">
-          <HoverNote text="Pour tes lettres, ton CV et les formulaires de candidature : la plateforme les ajoute elle-même.">
+          <HoverNote text="Ajoutées par la plateforme à tes lettres et à ton CV.">
             Elles ne partent jamais à l'IA.
           </HoverNote>
         </p>

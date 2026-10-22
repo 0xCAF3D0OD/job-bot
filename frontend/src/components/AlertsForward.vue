@@ -65,7 +65,7 @@ async function copy(what: "address" | "senders"): Promise<void> {
     <div class="forward-body">
       <div class="forward-head">
         <p class="setting-desc">
-          <HoverNote text="jobA1 ne demande jamais le mot de passe d'un site. Seulement les alertes : pas les messages des recruteurs.">
+          <HoverNote text="jobA1 ne demande jamais de mot de passe, et ne lit que les alertes.">
             Ta messagerie transfère tes alertes à jobA1.
           </HoverNote>
         </p>

@@ -11,6 +11,7 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 5. Un texte d'aide reste affiché pour une erreur (avec quoi faire), un avertissement avant une action irréversible, ou ce qui part à l'IA, en une ligne. Ce qui explique passe en description au survol (`HoverNote`, docs/53) ou disparaît : l'assistant répond au reste.
 6. Pas de prix dans le libellé d'un bouton : le coût d'une action IA est dans sa description au survol (« Environ 0,10 $. »).
 7. Un test (`frontend/src/titles.test.ts`) vérifie les règles 1, 2 et 6.
+8. **Des phrases courtes** (docs/132) : 16 mots au plus pour un texte affiché, une idée par phrase ; une suite de chiffres devient une liste. Les pages légales (Données personnelles, Conditions) gardent ce que la loi demande, en phrases coupées.
 
 ## La barre du haut (docs/89, docs/126)
 
@@ -66,10 +67,11 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 
 1. Une seule hauteur, `--control-h` : 2,5 rem sur ordinateur, 2,75 rem sur téléphone, pour les boutons, liens en bouton, listes de choix, champs d'une ligne, sélecteurs, ⋯ et boutons ronds (cercles de la même hauteur).
 2. Dans une rangée, tout est centré ; l'écart vient de la rangée, jamais d'une marge propre à un élément.
-3. Gardent leur forme : zones de texte, cases, curseurs, étiquettes, la capsule.
+3. Gardent leur forme : zones de texte, curseurs, étiquettes, la capsule.
+3 bis. **Une case à cocher est un interrupteur** (docs/132) : la même forme glissante partout, bleue quand elle est activée ; seuls les jours de recherche gardent leurs pastilles.
 4. Avant une PR d'interface, l'audit des rangées (`frontend/scripts/alignement.py`) est vide.
 5. Et l'audit d'accessibilité (`frontend/scripts/accessibilite.py`, docs/117) : aucun défaut, parcours au clavier sans blocage.
-6. Et l'audit des règles (`frontend/scripts/regles.py`, docs/118, docs/119) : pas d'aide de plus de 20 mots, pas de titre avec un pronom (« je, tu, te, ton, ta, tes, me, mon, ma, mes ») ou en question, pas de barre verticale ni de cadre dans un cadre, pas de texte à moins de 1,25 rem du bord d'une carte, pas de rangée de hauteurs différentes.
+6. Et l'audit des règles (`frontend/scripts/regles.py`, docs/118, docs/119, docs/132) : pas d'aide de plus de 16 mots, pas de texte collé à ce qui est au-dessus (moins de 3,5 px entre deux textes, 6 px sous un champ), pas de titre avec un pronom (« je, tu, te, ton, ta, tes, me, mon, ma, mes ») ou en question, pas de barre verticale ni de cadre dans un cadre, pas de texte à moins de 1,25 rem du bord d'une carte, pas de rangée de hauteurs différentes.
 
 ## Iconographie (docs/101)
 

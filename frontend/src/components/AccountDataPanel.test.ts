@@ -34,7 +34,9 @@ async function mountPanel(summary = SUMMARY, path = "/reglages") {
 describe("Tes données (docs/65 §6)", () => {
   it("le résumé et l'export en un clic", async () => {
     const { wrapper } = await mountPanel();
-    expect(wrapper.text()).toContain("12 offres, 3 candidatures");
+    // Une ligne par compteur (docs/132).
+    const counts = wrapper.findAll("[data-test=account-counts] li").map((li) => li.text());
+    expect(counts.slice(0, 2)).toEqual(["Offres12", "Candidatures3"]);
     const link = wrapper.find("[data-test=export]");
     expect(link.attributes("href")).toBe("/api/account/export");
     expect(link.attributes("download")).toBeDefined();

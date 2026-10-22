@@ -81,7 +81,7 @@ onBeforeUnmount(stop);
           <li>proposer, à ta demande, une réponse aux questions libres d'un formulaire.</li>
         </ul>
         <p class="muted">
-          Elle n'agit que sur ton clic et n'envoie jamais rien à ta place. Tu peux la délier dans Réglages › Outils.
+          Elle n'agit que quand tu cliques. Tu peux la délier dans Réglages › Outils.
         </p>
         <p
           v-if="state === 'waiting'"
@@ -95,7 +95,7 @@ onBeforeUnmount(stop);
           class="notice"
           data-test="link-timeout"
         >
-          L'extension n'a pas répondu : ouvre-la depuis son icône et clique sur « Relier », depuis ce navigateur.
+          L'extension n'a pas répondu : ouvre-la et clique sur « Relier ».
         </p>
         <p
           v-else-if="state === 'error'"

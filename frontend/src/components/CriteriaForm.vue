@@ -191,7 +191,7 @@ onMounted(() => void load());
       <fieldset>
         <legend>Lieux acceptés</legend>
         <p class="setting-desc">
-          Communes (Lausanne, Genève) ou cantons en deux lettres (VD, GE). Vide : pas de règle de lieu.
+          Communes (Lausanne) ou cantons (VD). Vide : partout.
         </p>
         <TagInput
           id="locations"
@@ -203,7 +203,7 @@ onMounted(() => void load());
       <fieldset>
         <legend>Télétravail complet</legend>
         <p class="setting-desc">
-          « Si ouvert depuis la Suisse » écarte les postes réservés à d'autres pays (« US only »).
+          « Si ouvert depuis la Suisse » écarte les postes « US only ».
         </p>
         <div
           class="segmented"
@@ -227,7 +227,7 @@ onMounted(() => void load());
       <fieldset>
         <legend>Taux d'activité minimum</legend>
         <p class="setting-desc">
-          Une offre « 60-80 % » passe avec un minimum de 80. Sans taux indiqué, elle passe toujours.
+          « 60-80 % » passe avec un minimum de 80 ; sans taux, l'offre passe.
         </p>
         <div class="inline-field">
           <input

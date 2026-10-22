@@ -274,7 +274,7 @@ function copyOnOpen(): void {
             />
           </template><template v-else>
             dans ta boîte
-          </template>, souvent dès le lendemain. Tu les verras ici, avec le lien de confirmation si un site en demande un.
+          </template>, souvent dès le lendemain, avec le lien de confirmation si besoin.
         </p>
         <div class="form-actions">
           <button

@@ -98,7 +98,7 @@ defineExpose({ load });
       v-if="status.configured && !status.active_chunks"
       class="notice"
     >
-      Aucun bloc de profil actif : l'IA résume les offres mais ne les note pas. Ajoute tes blocs dans la page Profil.
+      Aucun bloc de profil actif : les offres ne sont pas notées. Ajoute tes blocs dans Profil.
     </p>
 
     <div

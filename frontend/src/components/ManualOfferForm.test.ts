@@ -75,7 +75,7 @@ describe("Ajouter une offre (docs/111)", () => {
     await wrapper.find("[data-test=manual-url]").setValue("https://x.ch/a");
     await wrapper.find("[data-test=manual-form]").trigger("submit");
     await flushPromises();
-    expect(wrapper.find("[data-test=manual-off-trade]").text()).toContain("ne parle pas de « Menuisier », ton métier");
+    expect(wrapper.find("[data-test=manual-off-trade]").text()).toContain("ne parle pas de « Menuisier »");
     expect(wrapper.find("[data-test=manual-draft]").text()).toContain("Lue par l'IA.");
     expect(wrapper.find<HTMLButtonElement>("[data-test=manual-add]").element.disabled).toBe(false);
   });

@@ -325,7 +325,7 @@ const addItems: MoreMenuItem[] = [
               data-test="source-labour"
               @change="update(opened, { labour_market: !opened.labour_market })"
             >
-            <HoverNote text="Avec « Domaine », une source « marché de l'emploi » garde ses articles sur l'emploi (chômage, salaires, embauches).">
+            <HoverNote text="Avec « Domaine », une source « marché de l'emploi » garde ses articles sur l'emploi.">
               Marché de l'emploi
             </HoverNote>
           </label>
@@ -407,7 +407,7 @@ const addItems: MoreMenuItem[] = [
         @submit.prevent="add"
       >
         <label class="wide">
-          <HoverNote text="Pour YouTube, l'ID se trouve sur la chaîne : « … plus », puis « Partager la chaîne », puis « Copier l'ID de la chaîne ».">
+          <HoverNote text="YouTube : sur la chaîne, « … plus » › « Partager » › « Copier l'ID ».">
             Adresse du site, du flux RSS, ou ID de chaîne YouTube
           </HoverNote>
           <input

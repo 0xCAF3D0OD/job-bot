@@ -152,8 +152,7 @@ function openExisting(): void {
     @submit.prevent="read"
   >
     <p class="setting-desc">
-      Une annonce vue sur le site d'une entreprise, sur LinkedIn, dans un journal ou trouvée sur Google : jobA1 la lit,
-      tu relis la fiche, puis elle rejoint tes offres, notée et prête à préparer.
+      Une annonce vue ailleurs : jobA1 la lit, tu la relis, elle rejoint tes offres.
     </p>
     <div
       class="segmented"
@@ -265,7 +264,7 @@ function openExisting(): void {
       class="notice"
       data-test="manual-off-trade"
     >
-      Cette annonce ne parle pas de « {{ tradeName }} », ton métier. Tu peux l'ajouter quand même : la note dira si elle te correspond.
+      Cette annonce ne parle pas de « {{ tradeName }} » : la note dira si elle te correspond.
     </p>
     <label>Poste
       <input

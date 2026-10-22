@@ -210,7 +210,7 @@ onMounted(() => void load());
       </template>
     </article>
     <p class="hint">
-      <HoverNote text="Les personnes citées avec un titre ou en signature sont retirées aussi ; un nom seul dans une phrase pourrait partir.">
+      <HoverNote text="Les personnes citées en signature sont retirées aussi ; un nom seul dans une phrase peut rester.">
         Avant l'IA, ton nom est retiré.
       </HoverNote>
     </p>

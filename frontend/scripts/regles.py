@@ -2,13 +2,15 @@
 démo, sur ordinateur et sur téléphone, ce que les règles interdisent et qu'un script peut voir.
 Il n'écrit rien : il liste les défauts, et le résultat doit être vide avant une PR d'interface.
 
-- un texte d'aide de plus de 20 mots (description, indication, encadré) ;
+- un texte d'aide de plus de 16 mots (description, indication, encadré ; docs/132) ;
 - un titre (de page, de carte, de section, de repliable, légende) avec « je, tu, ton, ta,
   tes, mon, ma, mes » ou qui finit par « ? » ;
 - une barre verticale dans une carte ;
 - deux cadres l'un dans l'autre ;
 - un texte à moins de 1,25 rem du bord de sa carte (docs/93) ;
-- deux cartes d'une même rangée de hauteurs différentes (docs/93).
+- deux cartes d'une même rangée de hauteurs différentes (docs/93) ;
+- un texte collé à ce qui est au-dessus : moins de 3,5 px entre les lettres de deux textes, ou
+  moins de 6 px sous un champ (docs/132).
 
     make demo                      # la démo locale, données fictives (http://localhost:5200)
     cd backend && uv run --with playwright python ../frontend/scripts/regles.py
@@ -45,7 +47,7 @@ PAGES = [
     "accessibilite",
 ]
 SIZES = [{"width": 1440, "height": 900}, {"width": 390, "height": 844}]
-MAX_WORDS = 20
+MAX_WORDS = 16
 
 AUDIT = r"""(maxWords) => {
   const main = document.querySelector('main') || document.body;
@@ -116,6 +118,59 @@ AUDIT = r"""(maxWords) => {
       const b = d.getBoundingClientRect();
       if (Math.abs(a.top - b.top) < 2 && a.left < b.left && Math.abs(a.height - b.height) > 2) {
         faults.push(`rangée de hauteurs différentes : ${c.className.split(' ')[0]} (${Math.round(a.height)} px) et ${d.className.split(' ')[0]} (${Math.round(b.height)} px)`);
+      }
+    }
+  }
+  // Un texte collé à ce qui est au-dessus (docs/132) : on mesure les lettres (pas les boîtes,
+  // qui comptent l'interligne), seulement leur partie visible, contre un autre texte ou un champ.
+  {
+    const hidden = '.visually-hidden, .suivi-calendar, svg, [inert]';
+    const blockOf = (e) => { let b = e; while (b && b !== main && getComputedStyle(b).display.startsWith('inline')) b = b.parentElement; return b; };
+    const items = new Map();
+    const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const n = walker.currentNode;
+      if (!n.textContent.trim()) continue;
+      const el = n.parentElement;
+      if (!el || !vis(el) || el.closest(hidden) || getComputedStyle(el).opacity === '0') continue;
+      const b = blockOf(el);
+      if (!b) continue;
+      const clip = b.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(n);
+      for (const q of range.getClientRects()) {
+        if (q.width < 1 || q.bottom > clip.bottom + 1 || q.top < clip.top - 1) continue;
+        const it = items.get(b) || { top: 1e9, bottom: -1e9, left: 1e9, right: -1e9, ctl: false };
+        it.top = Math.min(it.top, q.top); it.bottom = Math.max(it.bottom, q.bottom);
+        it.left = Math.min(it.left, q.left); it.right = Math.max(it.right, q.right);
+        items.set(b, it);
+      }
+    }
+    for (const e of main.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=hidden]), textarea, select')) {
+      if (!vis(e) || e.closest(hidden)) continue;
+      const r = e.getBoundingClientRect();
+      items.set(e, { top: r.top, bottom: r.bottom, left: r.left, right: r.right, ctl: true });
+    }
+    // Seulement ce qui est au premier plan : une fiche ouverte par-dessus la liste la cache.
+    const onTop = (e, r) => {
+      const x = (Math.max(r.left, 0) + Math.min(r.right, innerWidth)) / 2;
+      const y = (r.top + r.bottom) / 2;
+      if (y < 0 || y > innerHeight) return true;
+      const hit = document.elementFromPoint(x, y);
+      return !!hit && (e.contains(hit) || hit.contains(e));
+    };
+    const list = [...items.entries()].filter(([e, r]) => onTop(e, r));
+    for (const [b, rb] of list) {
+      if (rb.ctl) continue;
+      let best = null;
+      for (const [a, ra] of list) {
+        if (a === b || a.contains(b) || b.contains(a) || ra.top >= rb.top) continue;
+        if (Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left) < 24) continue;
+        const gap = rb.top - ra.bottom;
+        if (best === null || gap < best[1]) best = [a, gap, ra.ctl];
+      }
+      if (best && best[1] > -2 && best[1] < (best[2] ? 6 : 3.5)) {
+        faults.push(`texte collé (${Math.round(best[1])} px) : « ${text(b).slice(0, 40)} »`);
       }
     }
   }

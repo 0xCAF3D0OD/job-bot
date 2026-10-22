@@ -346,7 +346,7 @@ const intro = firstTime("bilan-funnel");
             <header class="dash-card-head">
               <h2>
                 <span class="dash-bubble small"><AppIcon :name="ICONS[comparison.key] ?? 'search'" /></span>
-                <HoverNote text="Réponses sur candidatures envoyées. Un refus est une réponse ; « Sans réponse » n'en est pas une.">
+                <HoverNote text="Un refus compte comme une réponse ; « Sans réponse », non.">
                   {{ comparison.title }}
                 </HoverNote>
               </h2>
