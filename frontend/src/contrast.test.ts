@@ -65,3 +65,14 @@ describe("pastilles teintées (mode clair)", () => {
     for (const [text, background] of pairs) expect(ratio(text, background), `${text} sur ${background}`).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+describe("initiales des entreprises et pastille de la cloche (audit du 22.10.2026)", () => {
+  it("l'initiale foncée sur les fonds clairs, le chiffre blanc sur un rouge assez sombre", () => {
+    for (const tone of ["orange", "mint", "sky"]) {
+      expect(css).toMatch(new RegExp(`\\.logo\\.c\\d \\{ background: var\\(--${tone}\\); color: #11111f; \\}`));
+      expect(ratio("#11111f", light[tone]!)).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(css).toContain("background: #c62a2f; color: #fff;");
+    expect(ratio("#ffffff", "#c62a2f")).toBeGreaterThanOrEqual(4.5);
+  });
+});

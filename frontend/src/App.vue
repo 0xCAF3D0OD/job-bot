@@ -44,7 +44,9 @@ const route = useRoute();
 useFileDownloads();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
-const { last: lastJobsPage } = useJobsMemory();
+const { last: lastJobsPage, check: checkJobsPage } = useJobsMemory();
+// Le menu ne mène jamais à une offre disparue (audit du 22.10.2026).
+watch(loggedIn, (now) => now && void checkJobsPage().catch(() => undefined), { immediate: true });
 // Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
 const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme", icon: "globe" }];
 const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
@@ -52,6 +54,10 @@ const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
 function isCurrent(entry: NavEntry): boolean {
   if (entry.name === "jobs") return route.path.startsWith("/candidatures");
   return route.path === entry.path || route.path.startsWith(`${entry.path}/`);
+}
+
+function skipToContent(): void {
+  document.getElementById("contenu")?.focus();
 }
 
 function onUnauthorized(): void {
@@ -83,6 +89,14 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <!-- Le premier arrêt au clavier saute l'en-tête, le bandeau et le menu (WCAG 2.4.1, audit du
+       22.10.2026) ; visible seulement quand il a le focus. -->
+  <a
+    class="skip-link"
+    href="#contenu"
+    data-test="skip-link"
+    @click.prevent="skipToContent"
+  >Aller au contenu</a>
   <header
     v-if="!route.meta.bare"
     :class="['topbar', { 'has-burger': loggedIn }]"
@@ -230,7 +244,10 @@ onUnmounted(() => {
     data-test="maintenance-refused"
     @close="maintenanceRefused = ''"
   />
-  <main>
+  <main
+    id="contenu"
+    tabindex="-1"
+  >
     <RouterView />
   </main>
   <!-- Sur téléphone, les deux pages de travail en bas de l'écran (docs/92). -->

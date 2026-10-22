@@ -149,7 +149,7 @@ onMounted(() => void load());
       </legend>
       <!-- La description toujours visible, comme les CFF (docs/110). -->
       <p class="setting-desc">
-        <HoverNote :text="aiNote('Environ 0,01 $ par e-mail.', undefined, 'jobup et Indeed ont un lecteur intégré ; les autres sont lus par l\'IA, tes coordonnées retirées.')">
+        <HoverNote :text="aiNote('Environ 0,01 $ par e-mail.', undefined, 'jobup et Indeed sont lus directement ; les autres par l\'IA, tes coordonnées retirées.')">
           La plateforme lit leurs e-mails d'alerte.
         </HoverNote>
       </p>
@@ -168,7 +168,7 @@ onMounted(() => void load());
           >
             <strong>{{ site.name }}</strong>
             <span class="hint">
-              {{ site.reader === "ai" ? "lu par l'IA" : "lecteur intégré" }} · {{ stats(site) }}
+              {{ site.reader === "ai" ? "lu par l'IA" : "lu directement" }} · {{ stats(site) }}
             </span>
           </button>
           <label class="filter-switch calm-switch">
@@ -196,7 +196,7 @@ onMounted(() => void load());
           <dl class="summary-rows">
             <div>
               <dt>Lecture</dt>
-              <dd>{{ opened.reader === "ai" ? plan?.unlimited ? "par l'IA (environ 0,01 $ par e-mail)" : "par l'IA" : "lecteur intégré" }}</dd>
+              <dd>{{ opened.reader === "ai" ? plan?.unlimited ? "par l'IA (environ 0,01 $ par e-mail)" : "par l'IA" : "directement" }}</dd>
             </div>
             <div>
               <dt>E-mails de</dt>

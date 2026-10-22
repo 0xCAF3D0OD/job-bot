@@ -78,6 +78,16 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 2. Trois durées : 150 ms (survol, appui), 250 ms (un état qui change), 500 ms (une entrée). Exceptions écrites : la carte d'une réussite monte en 420 ms avec un léger rebond (docs/61 §1) ; la transition d'une page qui charge entre et sort en 400 ms et reste au moins 1,2 s, rien si la page arrive en moins de 0,15 s (docs/63 §3) ; en sombre, la connexion joue une fois la vidéo du soir qui tombe (9 s), puis reste sur l'image du soir (docs/67, complément 0.55.3) ; sur la connexion, le ciel suit la vidéo (9 s) et la phrase change de couleur en 1,2 s à 5,5 s de la vidéo (docs/67, compléments 0.55.3 à 0.55.5) ; le chemin de La plateforme suit le défilement (120 ms), entier d'emblée si « réduire les animations » (docs/67) ; la capsule se déroule en 350 ms et un menu « ⋯ » en 250 ms, sur la courbe `cubic-bezier(0.72, 0.01, 0, 1)` prise à Sphere, leur contenu en fondu (docs/91).
 3. « Réduire les animations » : les retours restent (couleurs, coches, textes), sans mouvement.
 
+## Accessibilité (audit du 22.10.2026, 0.99.1)
+
+1. **« Aller au contenu »** est le premier arrêt au clavier, visible seulement quand il a le focus (WCAG 2.4.1).
+2. **Le titre de l'onglet** du navigateur dit la page : « Offres · jobA1 » (WCAG 2.4.2) ; une nouvelle page s'ajoute à `PAGE_TITLES` (`router.ts`).
+3. **Des onglets qui ne changent que l'adresse `?…`** (étapes de Préparer, Profil, Réglages) disent eux-mêmes lequel est ouvert (`aria-current`) ; sinon RouterLink les annonce tous comme la page actuelle (WCAG 4.1.2).
+4. **Une cible au doigt fait au moins 24 px de haut**, liens seuls sur leur ligne compris (WCAG 2.5.8).
+5. **Un texte sur une couleur claire** (initiales d'entreprise sur orange, menthe, bleu ciel) est foncé ; le blanc ne passe que sur le bleu d'accent ou un rouge sombre (WCAG 1.4.3).
+6. **Ouvrir un élément d'une liste** change l'adresse (« Retour » le referme) et met le focus sur son titre.
+7. **Pas de jargon technique** pour une personne invitée : ni « README », ni « réglage d'installation », ni « lecteur intégré » ; le Diagnostic est à l'exploitant seulement.
+
 ## Accès à un contenu (docs/57)
 
 L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Continuer › ». Les vraies actions gardent leur verbe.

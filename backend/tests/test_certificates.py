@@ -204,7 +204,7 @@ async def test_the_letters(
     )
     # Avec l'IA, sans clé : le modèle simple, et pourquoi.
     fallback = (await client.post(f"/api/certificates/{weak}/correction")).json()
-    assert fallback["ai"] is False and "IA non configurée" in fallback["reason"]
+    assert fallback["ai"] is False and "pas encore activée" in fallback["reason"]
     calls: list[dict[str, Any]] = []
 
     class Fake:

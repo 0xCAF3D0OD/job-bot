@@ -86,7 +86,7 @@ describe("TodayView", () => {
     const checklist = wrapper.find("[data-test=checklist]");
     expect(checklist.text()).toContain("4 / 6");
     expect(wrapper.find("[data-test=step-identity] a").attributes("href")).toBe("/profil?onglet=coordonnees");
-    expect(wrapper.find("[data-test=step-imap]").text()).toContain("réglage d'installation");
+    expect(wrapper.find("[data-test=step-imap]").text()).toContain("pas encore disponible sur cette plateforme");
     expect(wrapper.find("[data-test=step-criteria] a").exists()).toBe(false);
   });
 

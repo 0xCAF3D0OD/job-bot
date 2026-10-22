@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client";
@@ -99,7 +99,11 @@ const assistant = useAssistant();
 // L'offre ouverte est l'élément dont parle l'assistant (docs/24 §2.2).
 watch(selected, (offer) => {
   assistant.setFocus(offer ? { offerId: offer.id, label: `offre ${offer.title}${offer.company ? ` chez ${offer.company}` : ""}` } : null);
-  if (!offer && route.query.offre) void router.replace({ query: { ...route.query, offre: undefined } });
+  // Après la navigation d'ouverture encore en cours, sinon l'offre se rouvrirait.
+  if (!offer)
+    void opening.then(() => {
+      if (route.query.offre) void router.replace({ query: { ...route.query, offre: undefined } });
+    });
 });
 
 // Lien de l'assistant : /candidatures/offres?offre=12 ouvre l'offre, même hors de la liste.
@@ -114,7 +118,24 @@ async function openFromQuery(): Promise<void> {
   }
   selectedId.value = id;
 }
-watch(() => route.query.offre, () => void openFromQuery());
+// L'adresse suit l'offre ouverte : « Retour » du navigateur la referme (Nielsen 3, audit du
+// 22.10.2026).
+watch(
+  () => route.query.offre,
+  (offre) => {
+    if (offre) void openFromQuery();
+    else selectedId.value = null;
+  },
+);
+
+// Ouvrir une offre de la liste : l'adresse change, et le focus passe à son titre (le lecteur
+// d'écran et le clavier suivent, audit du 22.10.2026).
+let opening: Promise<unknown> = Promise.resolve();
+function selectOffer(id: number): void {
+  selectedId.value = id;
+  if (route.query.offre !== String(id)) opening = router.push({ query: { ...route.query, offre: String(id) } });
+  void nextTick(() => document.querySelector<HTMLElement>("[data-test=offer-detail-title]")?.focus({ preventScroll: true }));
+}
 
 // Android partage souvent le lien dans le texte (« Titre https://… ») : on l'en sort.
 function openShared(): void {
@@ -493,7 +514,7 @@ onUnmounted(() => {
               :offer="row.offer"
               :selected="row.offer.id === selectedId"
               :show-date="!byDay || row.offer.id === pinnedId"
-              @select="selectedId = row.offer.id"
+              @select="selectOffer(row.offer.id)"
             />
           </li>
         </TransitionGroup>

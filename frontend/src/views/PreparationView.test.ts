@@ -189,6 +189,9 @@ describe("barre de candidature", () => {
     // Trois onglets numérotés (docs/47) : lettre et CV faits, cochés ; plus de barre du haut.
     expect(letterTab.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(true);
     expect(letterTab.find("[data-test=tab-cv] [data-test=step-done]").exists()).toBe(true);
+    // Une seule étape « courante » pour les lecteurs d'écran (WCAG 4.1.2, audit du 22.10.2026).
+    expect(letterTab.findAll("[aria-current]").map((a) => a.attributes("data-test"))).toEqual(["tab-letter"]);
+    expect(letterTab.find("[data-test=tab-letter]").attributes("aria-current")).toBe("step");
     expect(letterTab.find("[data-test=apply-bar]").exists()).toBe(false);
     expect(letterTab.find("[data-test=pdf]").text()).toBe("PDF");
     expect(letterTab.find("[data-test=save-letter]").exists()).toBe(false);

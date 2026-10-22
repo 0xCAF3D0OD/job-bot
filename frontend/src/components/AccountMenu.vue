@@ -216,7 +216,7 @@ onUnmounted(() => {
         </button>
         <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
         <RouterLink
-          v-if="me?.is_owner || me?.auth_enabled === false"
+          v-if="me?.is_owner || (me?.auth_enabled === false && !me?.demo)"
           to="/reglages/diagnostic"
           role="menuitem"
           data-test="account-diagnostic"

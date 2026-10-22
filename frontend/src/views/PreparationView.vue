@@ -103,7 +103,7 @@ watch(
   [tab, () => !!offer.value],
   () =>
     void nextTick(() =>
-      document.querySelector<HTMLElement>(".prep-tabs a.active")?.scrollIntoView?.({ inline: "nearest", block: "nearest" }),
+      document.querySelector<HTMLElement>(".prep-steps a.active")?.scrollIntoView?.({ inline: "nearest", block: "nearest" }),
     ),
   { immediate: true },
 );
@@ -164,6 +164,7 @@ async function load(): Promise<void> {
   ]);
   if (!o.data) {
     notFound.value = true;
+    useJobsMemory().forget(route.fullPath);
     return;
   }
   offer.value = o.data;
@@ -283,25 +284,34 @@ onMounted(() => void load());
 
 <template>
   <PageHero :title="offer?.title ?? (notFound ? 'Offre introuvable' : 'Chargement…')">
-    <p class="page-head-sub prep-sub">
-      <span v-if="offer">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
-      <!-- Toujours visible : revenir aux offres à tout moment (retour d'usage du 2026-10-07). -->
+    <!-- Toujours visible : revenir aux offres à tout moment (retour d'usage du 2026-10-07), en
+         haut à gauche (0.99.1). -->
+    <template #back>
       <RouterLink
         to="/candidatures/offres"
-        class="back-link"
+        class="back-link prep-back"
         data-test="back-to-offers"
       >
         <AppIcon name="arrow-left" />Offres
       </RouterLink>
+    </template>
+    <p
+      v-if="offer"
+      class="page-head-sub prep-sub"
+    >
+      {{ [offer.company, offer.location].filter(Boolean).join(" · ") }}
     </p>
+    <!-- Les étapes ont la même adresse (seul `?doc=` change) : RouterLink les dirait toutes
+         « page actuelle » ; seule l'étape ouverte est annoncée (WCAG 4.1.2, audit du 22.10.2026). -->
     <nav
       v-if="offer"
-      class="prep-tabs"
+      class="prep-tabs prep-steps"
       aria-label="Étapes de la candidature"
     >
       <RouterLink
         :to="{ query: {} }"
         :class="{ active: tab === 'letter' }"
+        :aria-current="tab === 'letter' ? 'step' : undefined"
         data-test="tab-letter"
       >
         <span class="step-number">1</span><span class="with-icon"><AppIcon name="mail" />Lettre</span><span
@@ -313,6 +323,7 @@ onMounted(() => void load());
       <RouterLink
         :to="{ query: { doc: 'cv' } }"
         :class="{ active: tab === 'cv' }"
+        :aria-current="tab === 'cv' ? 'step' : undefined"
         data-test="tab-cv"
       >
         <span class="step-number">2</span><span class="with-icon"><AppIcon name="file" />CV</span><span
@@ -324,6 +335,7 @@ onMounted(() => void load());
       <RouterLink
         :to="{ query: { doc: 'postuler' } }"
         :class="{ active: tab === 'apply' }"
+        :aria-current="tab === 'apply' ? 'step' : undefined"
         data-test="tab-apply"
       >
         <span class="step-number">3</span><span class="with-icon"><AppIcon name="send" />Postuler</span><span
@@ -336,6 +348,7 @@ onMounted(() => void load());
         v-if="offer.status === 'applied'"
         :to="{ query: { doc: 'suivre' } }"
         :class="{ active: tab === 'follow' }"
+        :aria-current="tab === 'follow' ? 'step' : undefined"
         data-test="tab-follow"
       >
         <span class="step-number">4</span><span class="with-icon"><AppIcon name="clock" />Suivre</span>

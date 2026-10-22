@@ -43,7 +43,7 @@ async def check_budget(runtime: Runtime, estimate: Decimal, error: type[Exceptio
     """Refuse (avec `error`) sans IA ou si le plafond du mois ne couvre pas `estimate` ;
     renvoie le taux dollar → franc."""
     if not runtime.settings.llm_configured:
-        raise error("IA non configurée (réglage d'installation, voir le README)")
+        raise error("l'IA n'est pas encore activée sur cette plateforme")
     async with runtime.sessionmaker() as session:
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
     if spend + estimate * rate > budget:
