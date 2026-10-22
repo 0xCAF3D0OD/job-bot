@@ -2,7 +2,7 @@
 import { computed } from "vue";
 
 import type { Offer } from "../api/client";
-import { dayShort, scoreWord } from "../format";
+import { dayShort } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ScoreWord from "./ScoreWord.vue";
@@ -76,12 +76,6 @@ const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" "
       :score="offer.score ?? null"
       :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : 'Pas encore notée, à noter'"
       :stale="offer.score_stale"
-    />
-    <!-- Le filet en bas de la ligne, à la longueur de la note (docs/121 §C.5). -->
-    <span
-      :class="['score-line', offer.score == null ? 'pending' : scoreWord(offer.score).tone]"
-      :style="offer.score == null ? undefined : { '--p': Math.max(0, Math.min(100, offer.score)) }"
-      aria-hidden="true"
     />
   </button>
 </template>
