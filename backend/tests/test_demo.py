@@ -116,6 +116,27 @@ async def test_seed_fills_a_believable_search(demo_runtime: Runtime, demo_admin:
                 for r in e.filter_reasons
             }
             upcoming = await session.scalar(select(func.max(Application.interview_at)))
+            notes = {
+                title: (why, level)
+                for title, why, level in (
+                    await session.execute(
+                        select(Offer.title, Evaluation.why, Evaluation.level)
+                        .join(Evaluation, Evaluation.offer_id == Offer.id)
+                        .where(Evaluation.score.is_not(None))
+                    )
+                ).all()
+            }
+    # La phrase « pourquoi » suit l'offre (docs/121 §C.1) ; le niveau, seulement là où
+    # l'annonce le dit (§C.2).
+    assert notes["Data Engineer"] == (
+        "Le poste vise la donnée (Spark, SQL) ; ton parcours est la plateforme et le cloud.",
+        None,
+    )
+    assert notes["Cloud Engineer (Azure)"][0] == (
+        "Azure et PowerShell : dans ton profil ; il manque Bicep."
+    )
+    assert {t for t, (_, level) in notes.items() if level} == {"SRE junior"}
+    assert all(why and len(why) <= 140 for why, _ in notes.values())
     assert count == sum(months.values())
     assert months["2026-10"] == 6 and months["2026-09"] == 10 and months["2026-08"] == 10
     assert months["2026-07"] == 10

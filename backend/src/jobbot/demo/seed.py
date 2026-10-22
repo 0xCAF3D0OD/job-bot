@@ -230,20 +230,34 @@ async def _offers(session: AsyncSession, today: date) -> dict[str, Offer]:
     return offers
 
 
+def _and(items: list[str]) -> str:
+    """« Azure, Terraform et réseau »."""
+    return items[0] if len(items) == 1 else f"{', '.join(items[:-1])} et {items[-1]}"
+
+
 def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) -> dict[str, Any]:
     remote = {"hybrid": "2 jours de télétravail", "onsite": "sur place", "full": "télétravail"}
     covered = [a for a in spec.asks if a not in spec.missing]
-    strengths = [
-        {
-            "text": "Plateforme Kubernetes mise en place pour 40 services, avec déploiements "
-            "continus.",
-            "chunk_ids": [chunks["exp_platform"], chunks["comp_k8s"]],
-        },
-        {
-            "text": "Infrastructure décrite en Terraform, sur Azure et AWS.",
-            "chunk_ids": [chunks["comp_iac"], chunks["exp_cloud"]],
-        },
-    ]
+    strengths: list[dict[str, Any]]
+    if spec.role:
+        strengths = [
+            {
+                "text": "Scripts d'automatisation en Bash et Python.",
+                "chunk_ids": [chunks["exp_support"]],
+            }
+        ]
+    else:
+        strengths = [
+            {
+                "text": "Plateforme Kubernetes mise en place pour 40 services, avec déploiements "
+                "continus.",
+                "chunk_ids": [chunks["exp_platform"], chunks["comp_k8s"]],
+            },
+            {
+                "text": "Infrastructure décrite en Terraform, sur Azure et AWS.",
+                "chunk_ids": [chunks["comp_iac"], chunks["exp_cloud"]],
+            },
+        ]
     if spec.score is not None and spec.score >= 80:
         strengths.append(
             {
@@ -254,26 +268,33 @@ def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) ->
     gaps: list[dict[str, Any]] = [
         {"text": f"{m} : pas d'expérience dans ton profil.", "chunk_ids": []} for m in spec.missing
     ]
-    if spec.score is not None and spec.score < 70:
+    # Une note basse sans compétence manquante : le poste penche vers le développement.
+    far_from_dev = spec.score is not None and spec.score < 70 and not spec.role and not spec.missing
+    if spec.role:
+        gaps.append(
+            {"text": "Le poste vise la donnée, ton parcours la plateforme.", "chunk_ids": []}
+        )
+    elif far_from_dev:
         gaps.append(
             {"text": "Le poste demande plus de développement que ton profil.", "chunk_ids": []}
         )
-    # La phrase « pourquoi » et le niveau (score-v5, docs/121 §C.1 et §C.2).
-    why = (
-        f"Ta plateforme Kubernetes colle ; il manque {spec.missing[0]}."
-        if spec.missing
-        else "Ta plateforme Kubernetes et ton Terraform collent à ce que le poste demande."
-    )
-    level = "above" if spec.score is not None and spec.score < 60 else None
+    # La phrase « pourquoi » (score-v5, docs/121 §C.1) dit la même chose que les points forts
+    # et les manques de l'offre : ce qu'elle demande et que le profil a, ce qui manque.
+    parts = []
+    if covered:
+        parts.append(f"{_and(covered)} : dans ton profil")
+    if spec.missing:
+        parts.append(f"il manque {_and(list(spec.missing))}")
+    if far_from_dev:
+        parts.append("le poste demande plus de développement")
+    why = spec.why or " ; ".join(parts) + "."
     return {
         "score": spec.score,
-        "why": why,
-        "level": level,
-        "level_detail": "Le poste demande huit ans d'expérience et d'encadrer une équipe."
-        if level
-        else None,
-        "summary_role": f"{spec.title} chez {spec.company}, à {spec.city} : faire tourner et "
-        "améliorer la plateforme de l'entreprise.",
+        "why": why[0].upper() + why[1:],
+        "level": spec.level,
+        "level_detail": spec.level_detail or None,
+        "summary_role": f"{spec.title} chez {spec.company}, à {spec.city} : "
+        + (spec.role or "faire tourner et améliorer la plateforme de l'entreprise."),
         "summary_asks": f"Expérience de {', '.join(spec.asks)} ; français courant, anglais "
         "technique.",
         "summary_offers": f"{spec.rate[0]}-{spec.rate[1]} %, {remote[spec.remote]}, "
@@ -281,7 +302,7 @@ def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) ->
         "summary_partial": False,
         "strengths": strengths,
         "gaps": gaps,
-        "keywords_role": ["Plateforme", "Cloud"],
+        "keywords_role": ["Données"] if spec.role else ["Plateforme", "Cloud"],
         "keywords_asks": [{"text": a, "covered": a in covered} for a in spec.asks],
         "keywords_offers": [
             f"{spec.rate[1]} %",

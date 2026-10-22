@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/121-demarrage-rapide.md](docs/121-demarrage-rapide.md) (0.93.0)
+- Version en cours : [docs/121-demarrage-rapide.md](docs/121-demarrage-rapide.md) (0.93.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -197,6 +197,7 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.91.0 | Le profil depuis le CV, à l'accueil : le CV lu par l'IA (sans coordonnées), « Voici ce que j'ai compris » (blocs et postes à valider) ; les langues et le télétravail demandés, préremplis | livrée |
 | 0.92.0 | Les alertes préparées : 63 métiers et leurs recherches (l'IA pour les autres, avec le seul nom du métier), les postes du CV ; l'adresse copiée en ouvrant un site ; la première alerte d'un site annoncée ; « rien reçu » après 24 heures | livrée |
 | 0.93.0 | La note expliquée : en mots dans les listes (Très proche, Proche, À creuser, Loin) avec le visage du 1 et un filet ; dans la fiche, pourquoi en une phrase et le niveau visé ; « Je l'ai » ajoute un manque au profil et renote ; la jauge du profil | en cours |
+| 0.93.1 | La démo, une note qui a du sens : la phrase « pourquoi » tirée de ce que chaque offre demande, le poste de données décrit comme tel, le niveau seulement sur « SRE junior » | en cours |
 
 ## Lancer en local
 

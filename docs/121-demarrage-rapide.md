@@ -138,6 +138,18 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 - Tests de l'interface : le mot, le visage et le chiffre au survol dans la liste, « Pas encore notée » ; la phrase et le niveau dans la fiche ; « Je l'ai » seulement sous une compétence, préremplie ; la jauge (le compte, les segments, le premier manque, cachée quand tout est là). 416 tests, lint, vue-tsc.
 - Les trois audits sur la démo à zéro (règles, alignement, accessibilité).
 
+## Écarts (0.93.1 : la note de la démo)
+
+- **Le constat** (ta question du 2026-10-22, « est-ce que la note a du sens pour l'offre ? ») : la démo donnait à toutes ses offres la même phrase (« Ta plateforme Kubernetes colle ») et le même niveau inventé (« huit ans d'expérience ») sous 60. Sur le Data Engineer, rien ne collait : l'offre ne demande pas Kubernetes.
+- **La phrase** est tirée de chaque offre : ce qu'elle demande et que le profil a, ce qui manque (« Azure et PowerShell : dans ton profil ; il manque Bicep. »), et « le poste demande plus de développement » seulement quand aucune compétence manquante n'explique une note sous 70.
+- **Le Data Engineer** est décrit comme un poste de données : son rôle, sa phrase (« Le poste vise la donnée (Spark, SQL) ; ton parcours est la plateforme et le cloud. »), un seul point fort (les scripts Python), Spark et SQL en manques.
+- **Le niveau** seulement sur « SRE junior », dont l'annonce dit « deux ans d'expérience au plus » : « Niveau en dessous ». Plus de niveau ailleurs.
+- **Hors démo, rien ne change** : la phrase et le niveau viennent de l'IA, qui lit l'offre.
+
+## Vérifié (0.93.1)
+
+- Test de la démo : la phrase du Data Engineer et du Cloud Engineer (Azure), le niveau seulement sur « SRE junior », toutes les phrases de 140 caractères au plus. 620 tests backend, ruff, mypy. Capture de la fiche du Data Engineer.
+
 ## Les questions
 
 1. **A** : l'IA lit le CV pendant l'accueil (environ 0,05 à 0,10 $), un seul écran « Voici ce que j'ai compris » : d'accord ?
