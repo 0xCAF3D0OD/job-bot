@@ -7,6 +7,7 @@ import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
 import { usePhone } from "../composables/usePhone";
 import PageHero from "../components/PageHero.vue";
+import { usePageReady } from "../composables/usePageTransition";
 import AccountDataPanel from "../components/AccountDataPanel.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
 import ExtensionPanel from "../components/ExtensionPanel.vue";
@@ -44,6 +45,7 @@ const WEEK = [
 ];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 const loaded = ref(false);
+usePageReady("settings", () => loaded.value);
 const saving = ref(false);
 const message = ref("");
 const notifications = ref<{ configured: boolean; server: string; personal?: boolean; topic?: string | null } | null>(

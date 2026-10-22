@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
+import { usePageReady } from "../composables/usePageTransition";
 
 // La jauge du profil, dans Profil seulement (docs/121 §C.4) : cinq parties qui rendent la note
 // et les lettres justes ; une ligne, des segments, et ce qui manque en premier. Elle part
@@ -9,6 +10,8 @@ import { api } from "../api/client";
 type Part = { key: string; done: boolean; action: string; tab: string | null };
 
 const parts = ref<Part[] | null>(null);
+// La jauge charge le profil, les critères et les coordonnées : la page Profil est prête avec elle.
+usePageReady("profile", () => parts.value !== null);
 
 onMounted(async () => {
   const [chunks, criteria, identity] = await Promise.all([

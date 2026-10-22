@@ -27,7 +27,7 @@ describe("transition des pages qui chargent (docs/61 §2)", () => {
   });
 
   it("une page sans données : pas de transition", () => {
-    startPage("profile");
+    startPage("diagnostic");
     vi.advanceTimersByTime(1000);
     expect(pageTransition.shown).toBe(false);
   });

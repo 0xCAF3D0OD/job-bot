@@ -1,15 +1,21 @@
 import { reactive, watch } from "vue";
 
+import type { Transform } from "../components/FaceTransform.vue";
+
 // Les pages qui chargent des données (docs/61 §2) : à l'arrivée sur la page, si les données ne
 // sont pas là après 0,15 s, l'écran se grise avec le visage du 1 au centre, l'œil et la bille
 // qui pulsent (docs/123 §2, T) ; dès qu'elles arrivent, le voile s'efface, après 1,2 s au moins
-// (docs/63 §3).
-export const PAGE_TRANSITIONS: Record<string, { label: string }> = {
-  today: { label: "Aujourd'hui" },
-  offers: { label: "Offres" },
-  applications: { label: "Suivi" },
-  insights: { label: "Bilan" },
-  alerts: { label: "Alertes" },
+// (docs/63 §3). Depuis la 0.96.0, le visage prend l'objet de la page (`face`, docs/123,
+// complément) ; les Actualités et les Formations gardent le visage qui pulse.
+export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform }> = {
+  today: { label: "Aujourd'hui", face: "today" },
+  offers: { label: "Offres", face: "offers" },
+  applications: { label: "Suivi", face: "applications" },
+  insights: { label: "Bilan", face: "insights" },
+  alerts: { label: "Alertes", face: "alerts" },
+  "orp-meeting": { label: "Rendez-vous", face: "orp-meeting" },
+  profile: { label: "Profil", face: "profile" },
+  settings: { label: "Réglages", face: "settings" },
   news: { label: "Actualités" },
   trainings: { label: "Formations" },
 };

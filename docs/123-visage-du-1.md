@@ -83,3 +83,20 @@ Après C (docs/121), qui pose le visage de la note :
 
 - Tests de l'interface : le jour calme (visage ravi, mois en une ligne, offres quand même ; pas de jour calme avec des offres à examiner) ; la victoire de l'objectif une seule fois par mois, avec le clin d'œil ; la victoire d'un entretien dans le Suivi. 425 tests, lint, vue-tsc.
 - Les trois audits sur la démo à zéro.
+
+## Complément (0.96.0) : le personnage se transforme
+
+> Ta demande du 2026-10-22 : « modifie les animations avec celles-ci », avec la maquette « X · Le personnage se transforme » (huit pages, huit transformations).
+
+- **Où** : le voile d'une page qui charge (docs/61 §2). Le visage du logo (incliné de 6°, comme la maquette) prend l'objet de la page, puis redevient lui-même ; en boucle tant que l'attente dure (2,8 s ; 3 s pour la loupe), ce qui reste dans la règle du mouvement (une vraie attente).
+- **Les huit**, repris de la maquette (tracés, durées, courbes) : Aujourd'hui, la bille s'ouvre en soleil et ses rayons tournent ; Offres, une loupe se pose sur chaque œil, qui grossit ; Suivi, le sourire devient une flèche qui avance ; Alertes, la bille devient une cloche qui sonne ; Bilan, l'œil gauche devient un anneau qui se remplit ; Rendez-vous, une cravate rayée se déroule sous le sourire ; Profil, l'œil gauche devient une icône de profil ; Réglages, la bille devient une roue dentée qui tourne.
+- **Les couleurs** suivent le thème au lieu des valeurs sombres de la maquette : le trait du logo, la bille pêche, la loupe à la couleur du texte, l'anneau sur le gris clair des jauges, les rayures de la cravate à la couleur du fond.
+- **Trois transitions en plus** : le Rendez-vous, le Profil (prêt quand sa jauge a chargé le profil, les critères et les coordonnées) et les Réglages n'en avaient pas ; sans elles, trois des huit animations ne se seraient jamais vues.
+- **Les Actualités et les Formations** (pas dans la maquette) gardent l'œil et la bille qui pulsent, comme le premier relevé des Actualités.
+- **« Réduire les animations »** : le visage seul, sans objet ni mouvement.
+- Les états vides, la note, le mois ORP et les victoires ne changent pas.
+
+## Vérifié (0.96.0)
+
+- Tests : chaque page a son objet (loupe, cloche, cravate, anneau, roue, rayons, flèche, profil), le visage seul avec « réduire les animations » ; une page sans données (Diagnostic) n'a toujours pas de transition. 427 tests de l'interface, lint, vue-tsc.
+- Captures du voile pour les huit pages, à 1440 et 390 px (API ralentie) ; les trois audits sur la démo à zéro.
