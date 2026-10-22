@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot.alerts import trades
 from jobbot.core.normalize import normalize_text
 from jobbot.db.models import AlertSearch, AlertSetup, Search, Setting, Site, received_alert
 from jobbot.filtering.service import load_criteria
@@ -19,8 +20,8 @@ from jobbot.sources.sites import followed
 
 PROPOSED_KEY = "alert_searches_proposed"
 MAX_PROPOSED = 8
-# « Créée » depuis 3 jours sans alerte reçue : rappel sur Aujourd'hui.
-WAIT_BEFORE_REMINDER = timedelta(days=3)
+# « Créée » depuis 24 heures sans alerte reçue : rappel sur Aujourd'hui (docs/121 §B.3).
+WAIT_BEFORE_REMINDER = timedelta(hours=24)
 
 # Page de résultats déjà remplie, d'où l'on crée l'alerte (adresses vérifiées le 2026-10-07,
 # sauf Indeed, qui refuse les lectures automatiques).
@@ -64,11 +65,13 @@ def is_canton(value: str) -> bool:
 
 
 async def propose(session: AsyncSession) -> None:
-    """Une seule fois : chaque mot-clé de « Mon domaine » avec chaque lieu de « Ce que je
-    cherche » (au plus 8)."""
+    """Une seule fois : chaque recherche du métier (ou mot-clé de « Mon domaine ») avec chaque
+    lieu de « Ce que je cherche » (au plus 8)."""
     if await session.scalar(select(Setting.value).where(Setting.key == PROPOSED_KEY)):
         return
-    keywords = (await domain.keywords(session))[:4]
+    # Les recherches du métier (docs/121 §B, docs/122) et les postes du CV ; à défaut,
+    # « Mon domaine », comme avant.
+    keywords = await trades.searches_for(session) or (await domain.keywords(session))[:4]
     criteria = await load_criteria(session)
     places = [loc for loc in criteria.locations if not is_canton(loc)][:4]
     locations: list[str | None] = list(places) if places else [None]
@@ -139,7 +142,7 @@ async def cells(session: AsyncSession, search: AlertSearch, sites: list[Site]) -
 
 
 async def waiting(session: AsyncSession) -> int:
-    """Alertes créées depuis 3 jours ou plus qui n'ont encore rien envoyé (rappel)."""
+    """Alertes créées depuis 24 heures ou plus qui n'ont encore rien envoyé (rappel)."""
     sites = list(await session.scalars(select(Site).where(followed())))
     limit = datetime.now(UTC) - WAIT_BEFORE_REMINDER
     count = 0

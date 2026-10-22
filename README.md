@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/121-demarrage-rapide.md](docs/121-demarrage-rapide.md) (0.91.0)
+- Version en cours : [docs/121-demarrage-rapide.md](docs/121-demarrage-rapide.md) (0.92.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -193,7 +193,9 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.89.1 | Une structure cohérente : 18 règles validées reportées dans docs/interface.md ; repliables à 1,5 rem du bord, « Masquer » sur la ligne du titre, cartes d'une rangée de même hauteur, 2 rem entre grands blocs ; l'audit vérifie marges et hauteurs | livrée |
 | 0.90.0 | Le code d'un site ne part plus dans la notification du téléphone (« Code jobup reçu ») ; les copies des alertes lues des invités effacées au bout de 90 jours | livrée |
 | 0.90.1 | Les coordonnées ne partent jamais à l'IA : nom, adresse et date de naissance retirés du CV et des certificats avant l'envoi, même sans coordonnées saisies | livrée |
-| 0.91.0 | Le profil depuis le CV, à l'accueil : le CV lu par l'IA (sans coordonnées), « Voici ce que j'ai compris » (blocs et postes à valider) ; les langues et le télétravail demandés, préremplis | en cours |
+| 0.90.2 | Les pastilles du calendrier : un anneau orange pour « à compléter » au lieu d'un « ! » rouge qui débordait, « En attente » lisible en sombre, des pastilles espacées | livrée |
+| 0.91.0 | Le profil depuis le CV, à l'accueil : le CV lu par l'IA (sans coordonnées), « Voici ce que j'ai compris » (blocs et postes à valider) ; les langues et le télétravail demandés, préremplis | livrée |
+| 0.92.0 | Les alertes préparées : 63 métiers et leurs recherches (l'IA pour les autres, avec le seul nom du métier), les postes du CV ; l'adresse copiée en ouvrant un site ; la première alerte d'un site annoncée ; « rien reçu » après 24 heures | en cours |
 
 ## Lancer en local
 

@@ -100,6 +100,24 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 - Tests de l'interface : le CV déposé est lu, l'écran propose les blocs et les postes, un doublon décoché, « C'est bon » crée les blocs gardés et note les postes, les langues préremplies ; sans IA, l'écran est sauté ; les langues et le télétravail remplissent les critères. 411 tests, lint, vue-tsc.
 - Captures à 1440 et 390 px des trois nouveaux écrans ; axe-core sur ces écrans : aucun défaut de l'interface.
 
+## Écarts (0.92.0 : B)
+
+- **Règles relues avant de construire** ; l'écran d'un site vérifié sur capture : une ligne d'aide, le détail au survol (titres 5).
+- **La liste** : les 63 métiers du docs/122 (validé), dans `alerts/trades.py`. Ce que la personne tape mène au métier par le début de chaque mot, sans accents ni majuscules (« Employée de commerce » mène à « Employé·e de commerce », « communicante » à « Chargé·e de communication »), le plus précis l'emportant.
+- **Un métier hors liste** : l'IA (consigne `trade-searches-v1`, modèle léger, environ 0,001 $) reçoit **seulement le nom du métier** et propose 2 ou 3 recherches, une fois par métier ; sans IA ou au plafond, le métier lui-même sert de recherche. Compté sous « alerts ».
+- **Les recherches proposées** (une fois, comme avant) : celles du métier, puis les postes gardés depuis le CV (docs/121 §A), 4 au plus, chacune avec chaque lieu (8 alertes au plus). Sans métier d'accueil (l'exploitant, un compte d'avant l'accueil), « Mon domaine » comme avant.
+- **Pas d'écran de métier en plus à l'accueil** : les recherches arrivent toutes prêtes dans l'assistant des alertes, que l'accueil ouvre déjà (« Créer mes alertes »).
+- **Un site, un geste** : ouvrir le site copie l'adresse jobA1 (« Adresse copiée : … ») ; il reste à la coller dans « Créer une alerte » (au survol). **Pas de capture du bouton des sites** : une image de l'interface de jobup ou d'Indeed dans jobA1 poserait une question de droits ; à reprendre si tu fournis des captures que tu as le droit d'utiliser.
+- **La première alerte d'un site** avec des offres : une notification « jobup t'a envoyé ses premières offres : 12. », une seule fois par site ; comme les offres, elle attend un jour de pause pour le téléphone (la cloche la montre tout de suite).
+- **Rien reçu après 24 heures** au lieu de 3 jours : le rappel d'Aujourd'hui (« 1 alerte créée hier n'a encore rien envoyé. »), l'aide de la page Alertes et l'assistant (consigne `assistant-v14`).
+- **Job-Room** : rien de public ne dit s'il envoie des alertes par e-mail ; il reste en pause. À vérifier dans ton compte Job-Room.
+
+## Vérifié (0.92.0)
+
+- Tests backend : les métiers reconnus (sept cas), la liste validée (63 métiers, 1 à 3 recherches) ; un compte « Communicante » avec un poste du CV reçoit les recherches du métier puis le poste ; un métier inconnu demande à l'IA une fois, avec seulement son nom ; la première alerte de jobup annoncée une fois. 618 tests, ruff, mypy.
+- Tests de l'interface : ouvrir un site copie l'adresse ; « Rien reçu depuis 24 heures ». 412 tests, lint, vue-tsc.
+- Les trois audits sur la démo à zéro ; capture de l'écran d'un site à 1440 et 390 px.
+
 ## Les questions
 
 1. **A** : l'IA lit le CV pendant l'accueil (environ 0,05 à 0,10 $), un seul écran « Voici ce que j'ai compris » : d'accord ?

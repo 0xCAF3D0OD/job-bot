@@ -252,7 +252,7 @@ async def _situation(session: AsyncSession, _profile: int, _params: dict[str, An
             }
             for p in pending
         ],
-        "alertes_sans_envoi_depuis_3_jours": await alert_service.waiting(session),
+        "alertes_sans_envoi_depuis_24_heures": await alert_service.waiting(session),
         # Le bon rythme (docs/86).
         "rythme": {
             "jours_de_recherche": [rhythm.DAY_NAMES[d] for d in settings.days],

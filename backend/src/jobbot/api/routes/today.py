@@ -135,7 +135,7 @@ class TodayOut(BaseModel):
     orp_due_month: str | None
     orp_due_date: date | None
     last_collect_at: datetime | None
-    # Alertes créées sur un site depuis 3 jours sans rien avoir envoyé (docs/20 §1.4).
+    # Alertes créées sur un site depuis 24 heures sans rien envoyé (docs/20, docs/121 §B.3).
     alerts_waiting: int = 0
     # Prises de contact sans réponse depuis 7 jours (docs/31 §4).
     contacts_to_follow_up: int = 0
