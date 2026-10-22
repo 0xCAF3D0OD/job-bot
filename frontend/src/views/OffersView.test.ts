@@ -261,8 +261,12 @@ describe("note et résumé", () => {
     expect(unscored?.find("[data-test=score]").classes()).toContain("pending");
 
     await scored?.trigger("click");
-    expect(wrapper.find("[data-test=ai]").text()).toContain("82/100");
-    expect(wrapper.find("[data-test=strengths]").text()).toContain("Bloc : Linux");
+    expect(wrapper.find("[data-test=ai]").text()).toContain("Proche");
+    expect(wrapper.find("[data-test=ai]").text()).not.toContain("82/100");
+    // Le bloc d'où vient le point fort, au survol (docs/131 §B.7).
+    const strengths = wrapper.find("[data-test=strengths]");
+    expect(strengths.text()).not.toContain("Bloc : Linux");
+    expect(strengths.findComponent({ name: "HoverNote" }).props("text")).toBe("Bloc : Linux");
     expect(wrapper.find("[data-test=gaps]").text()).toContain("Pas d'Ansible");
   });
 });

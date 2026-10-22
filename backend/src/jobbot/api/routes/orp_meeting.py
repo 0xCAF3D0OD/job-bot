@@ -89,6 +89,14 @@ class ObligationOut(BaseModel):
     done: bool
 
 
+class MonthFactsOut(BaseModel):
+    month: str
+    count: int
+    target: int | None
+    answered: int
+    interviews: int
+
+
 class PreparationOut(BaseModel):
     summaries: list[str]
     works: str | None
@@ -98,6 +106,8 @@ class PreparationOut(BaseModel):
     questions: list[QuestionIO]
     obligations: list[ObligationOut]
     has_applications: bool = True
+    # Les chiffres des deux mois, en une ligne chacun sur la page (docs/131).
+    months: list[MonthFactsOut] = []
 
 
 class MeetingPage(BaseModel):
@@ -157,6 +167,7 @@ async def _page(runtime: Runtime) -> MeetingPage:
             questions=[QuestionIO(**q.__dict__) for q in prep.questions],
             obligations=[ObligationOut(**o.__dict__) for o in prep.obligations],
             has_applications=prep.has_applications,
+            months=[MonthFactsOut(**m.__dict__) for m in prep.months],
         ),
     )
 

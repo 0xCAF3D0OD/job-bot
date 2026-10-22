@@ -6,7 +6,6 @@ import type { OfferFilters, Remote, Sort, View } from "../composables/useOfferFi
 import { activeCount, DEFAULT_FILTERS } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
-import ScoreCurve from "./ScoreCurve.vue";
 
 const props = defineProps<{
   filters: OfferFilters;
@@ -96,6 +95,15 @@ function onRate(event: Event): void {
   const value = Number((event.target as HTMLInputElement).value);
   emit("update", { minRate: value > 0 ? value : null });
 }
+
+// Les seuils des mots de la note (format.ts, scoreWord) : 70 « Proche », 85 « Très proche ».
+const SCORE_CHOICES = [
+  { label: "Toutes", min: null },
+  { label: "Proche et plus", min: 70 },
+  { label: "Très proche", min: 85 },
+] as const;
+// Une adresse d'avant (?note=60-90) reste lue ; elle ne coche aucun des trois choix.
+const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
 
 function onScore(min: number | null, max: number | null): void {
   emit("update", { minScore: min, maxScore: max });
@@ -228,13 +236,25 @@ const more = ref(secondaryActive.value > 0);
       class="filter-card filter-card-body"
     >
       <span class="filter-card-title with-icon"><AppIcon name="star" />Note</span>
-      <ScoreCurve
-        :bins="facets.scores ?? []"
-        :min="filters.minScore"
-        :max="filters.maxScore"
-        :unscored="facets.unscored ?? 0"
-        @change="onScore"
-      />
+      <!-- Trois choix, en mots (docs/131 §C.12) : plus de courbe ni de champs de 0 à 100. -->
+      <div
+        class="score-choice"
+        role="radiogroup"
+        aria-label="Note"
+      >
+        <button
+          v-for="choice in SCORE_CHOICES"
+          :key="choice.label"
+          type="button"
+          role="radio"
+          class="pill small"
+          :aria-checked="scoreChoice === choice.min"
+          :data-test="`score-choice-${choice.min ?? 'all'}`"
+          @click="onScore(choice.min, null)"
+        >
+          {{ choice.label }}
+        </button>
+      </div>
     </div>
 
     <button

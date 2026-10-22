@@ -601,7 +601,9 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: 0.55r
 .letter-paragraph textarea { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.15rem 0.25rem; resize: none; overflow: hidden; text-align: justify; }
 .letter-sheet input:hover, .letter-sheet textarea:hover { border-color: #d5d5e0; }
 .letter-sheet input:focus, .letter-sheet textarea:focus { outline: none; border-color: var(--accent); background: #fafaff; }
-.chunk-refs { display: block; font-size: 0.75rem; color: #7a7a90; padding-left: 0.25rem; }
+/* Les blocs d'un paragraphe (docs/131 §B.7) : au survol du paragraphe ou quand on l'écrit, pas à la lecture. */
+.chunk-refs { display: block; max-height: 0; overflow: hidden; opacity: 0; font-size: 0.75rem; color: #6e6e82; padding-left: 0.25rem; transition: opacity 150ms ease, max-height 150ms ease; }
+.letter-paragraph:is(:hover, :focus-within) .chunk-refs { max-height: 3rem; opacity: 1; }
 .letter-signature { margin-top: 2.2rem !important; }
 .letter-enclosure { margin-top: 2rem !important; font-size: 0.85rem; }
 .print-only { display: none; }
@@ -1220,22 +1222,6 @@ button.filter-row[aria-expanded]:not(.filter-option)::after { content: ""; flex:
 .filters-clear { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
 .filters-clear:disabled { color: var(--faint); cursor: default; }
 .filters-done { display: none; background: var(--text); color: var(--bg); border: 1px solid var(--text); }
-/* Courbe des notes : la partie choisie est la même courbe, découpée entre les poignées. */
-/* Les ronds du curseur sont centrés sur la ligne : la ligne s'arrête au centre des ronds, 0,5 rem au-dessus du bas du dessin. */
-.score-curve { --thumb: 1.1rem; display: grid; gap: 0.5rem; }
-.score-curve svg { width: calc(100% - var(--thumb)); margin-inline: calc(var(--thumb) / 2); height: 4.5rem; display: block; }
-.curve-all { fill: var(--border); }
-.curve-chosen { fill: var(--mint); }
-.curve-axis { stroke: var(--border); stroke-width: 2; }
-.curve-axis.chosen { stroke: var(--ok); }
-.dual-range { position: relative; height: var(--thumb); margin-top: calc(-1rem - var(--thumb) / 2); }
-.dual-range input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; appearance: none; height: var(--thumb); }
-.dual-range input::-webkit-slider-runnable-track { background: none; height: var(--thumb); }
-.dual-range input::-moz-range-track { background: none; }
-.dual-range input::-webkit-slider-thumb { appearance: none; pointer-events: auto; box-sizing: border-box; width: var(--thumb); height: var(--thumb); border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; margin-top: 0; }
-.dual-range input::-moz-range-thumb { pointer-events: auto; box-sizing: border-box; width: var(--thumb); height: var(--thumb); border-radius: 50%; background: var(--surface); border: 2px solid var(--text); cursor: grab; }
-.score-fields { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 0.5rem; align-items: center; }
-.score-fields input { font: inherit; width: 100%; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .sheet-grabber { display: none; }
 @media (max-width: 860px) {
   .filters-column.open {
@@ -1325,7 +1311,6 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
   .chip, .suggestions .chip, .assistant-suggestions .chip { min-height: 2.75rem; }
   .assistant-head-actions { gap: 1.25rem; }
   input[type="checkbox"]:not([role="switch"]), input[type="radio"] { width: 1.25rem; height: 1.25rem; }
-  .score-curve { --thumb: 1.75rem; }
   .more-button { min-width: 2.75rem; min-height: 2.75rem; }
   .filter-switch input { width: 2.75rem; height: 1.6rem; }
   .filter-switch input::after { width: 1.3rem; height: 1.3rem; }
@@ -1358,7 +1343,6 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .doubts q { display: block; color: var(--muted); font-style: italic; }
 
 /* Suivi : enseignements et formulaire ORP, une ligne ouverte à la fois */
-.suivi-more { margin-top: 1.5rem; }
 
 /* Alléger (docs/32) : boutons et liens sur une ligne, « ? » toujours rond */
 button, .button-link, .link, .apply-bar a, .apply-bar button { white-space: nowrap; }
@@ -2764,6 +2748,8 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-fact h3 { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 500; }
 .orp-fact p { margin: 0 0 0.5rem; }
 .orp-fact ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+.orp-fact ul.orp-month-lines { padding-left: 0; list-style: none; }
+.orp-month-lines strong { font-weight: 500; }
 .orp-sheet-message { display: grid; gap: 0.5rem; align-content: start; }
 .orp-sheet-message h3 { margin: 0; font-size: 1rem; font-weight: 500; }
 .orp-log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
@@ -3659,8 +3645,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .pick-gaps { margin: 0; font-size: 0.9rem; }
 .pick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 .pick-actions button { width: 100%; justify-content: center; }
-.pick-next { display: grid; gap: 0.25rem; margin-top: 0.5rem; padding-top: 1rem; border-top: 1px solid var(--divider); }
-.pick-next-word { justify-self: end; }
 .pick-done { display: grid; gap: 0.75rem; justify-items: start; padding: 0.5rem 0; line-height: 1.5; }
 .pick-done-line { display: flex; align-items: center; gap: 0.5rem; margin: 0; }
 .pick-done-line .face-mark { flex: none; }
@@ -3736,3 +3720,8 @@ main:focus { outline: none; }
   :root:has(.tab-bar) .app-footer { padding-bottom: calc(var(--tabbar-h) + 2rem + env(safe-area-inset-bottom)); }
   :root:has(.mobile-dock) .app-footer { padding-bottom: calc(5.5rem + 2rem + env(safe-area-inset-bottom)); }
 }
+
+/* La note en trois choix (docs/131 §C.12) : des pastilles qui passent à la ligne dans la colonne. */
+.score-choice { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.score-choice .pill { min-height: 2.25rem; padding: 0 0.9rem; font-size: 0.88rem; font-weight: 500; }
+.score-choice .pill[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); }

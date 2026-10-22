@@ -12,7 +12,8 @@ describe("OfferBrief, l'offre à côté de la lettre (docs/47 §2)", () => {
       gaps: [{ text: "Allemand" }],
     };
     const wrapper = mount(OfferBrief, { props: { offer: offer as never } });
-    expect(wrapper.find("[data-test=score]").attributes("aria-label")).toBe("Note de l'IA : 88 sur 100");
+    // La note en mot, le chiffre pour les lecteurs d'écran et au survol (docs/131 §A.4).
+    expect(wrapper.find("[data-test=score]").attributes("aria-label")).toBe("Très proche : 88 sur 100");
     expect(wrapper.text()).toContain("3 points forts · 1 manque");
     expect(wrapper.find("[data-test=offer-brief-points]").classes()).toContain("folded");
     await wrapper.find("[data-test=offer-brief-more]").trigger("click");

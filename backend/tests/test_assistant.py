@@ -412,6 +412,10 @@ def test_guide_follows_the_pages() -> None:
     assert "Le carnet » replié" in service.INSTRUCTIONS
     assert "Carte d'une candidature" not in service.INSTRUCTIONS
     assert "assistant-v17" not in service.INSTRUCTIONS
+    # 1.4.0 (docs/131) : le nécessaire ; la semaine quitte la phrase, les enseignements le Suivi.
+    assert "pour tenir ta semaine" not in service.INSTRUCTIONS
+    assert "Proche et plus" in service.INSTRUCTIONS
+    assert "assistant-v18" not in service.INSTRUCTIONS
     assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS
     assert "S'entraîner à l'entretien" in service.INSTRUCTIONS
     assert "M'entraîner pour cet entretien" in service.INSTRUCTIONS

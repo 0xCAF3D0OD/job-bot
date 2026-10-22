@@ -158,8 +158,8 @@ describe("Alertes, où vont les e-mails des sites (docs/113)", () => {
   });
 });
 
-describe("Alertes, deux colonnes sur ordinateur (0.83.2)", () => {
-  it("la tâche à gauche, les e-mails des sites à droite, le journal sous la tâche", async () => {
+describe("Alertes, une colonne (docs/130 §F)", () => {
+  it("les alertes, puis les e-mails des sites, puis le journal", async () => {
     const wrapper = await mountView({ ...page([]), personal_address: true, guest_mailbox: true });
     const columns = wrapper.find(".alerts-columns");
     expect(columns.classes()).not.toContain("wide");

@@ -166,23 +166,31 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  it("la phrase du jour : offres, relances, la semaine ; une seule action", async () => {
+  it("la phrase du jour : offres et relances ; pas d'action quand sa carte est dessous (docs/131 §A)", async () => {
     mockGet(today({ rhythm: rhythm() }));
     const wrapper = await mountView();
     const sentence = wrapper.find("[data-test=today-sentence]");
-    expect(sentence.text().replace(/\s+/g, " ")).toBe("12 offres à examiner, 2 relances et encore 2 candidatures pour tenir ta semaine.");
+    // La semaine est dans le mois ORP, plus dans la phrase.
+    expect(sentence.text().replace(/\s+/g, " ")).toBe("12 offres à examiner et 2 relances.");
     expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["12 offres", "2 relances"]);
+    // Les offres du jour sont juste dessous : pas de bouton qui y mène.
+    expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
+  });
+
+  it("des offres à examiner pas encore notées : l'action mène aux Offres", async () => {
+    GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/today" ? today({ rhythm: rhythm() }) : { items: [] } }));
+    const wrapper = await mountView();
     const cta = wrapper.find("[data-test=today-cta]");
     expect(cta.text()).toBe("Examiner les offres");
-    // Les offres du jour sont dans la carte « À faire » (docs/124 §D).
-    expect(cta.attributes("href")).toBe("/aujourdhui#offres-du-jour");
+    expect(cta.attributes("href")).toBe("/candidatures/offres");
   });
 
   it("la phrase suit la situation : relances seules, tout à jour, jour sans recherche, pause", async () => {
     mockGet(today({ to_review: 0, rhythm: rhythm({ count: 3 }) }));
     let wrapper = await mountView();
     expect(wrapper.find("[data-test=today-sentence]").text()).toBe("2 relances.");
-    expect(wrapper.find("[data-test=today-cta]").text()).toBe("Relancer");
+    // Les relances sont dans leur carte, dessous.
+    expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
 
     mockGet(today({ to_review: 0, to_follow_up: 0, rhythm: rhythm({ count: 3 }) }));
     wrapper = await mountView();

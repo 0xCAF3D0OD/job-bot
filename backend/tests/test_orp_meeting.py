@@ -8,7 +8,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import text
 
-from jobbot.core.orp import LOCAL_TZ
+from jobbot.core.orp import LOCAL_TZ, shift_month
 from jobbot.db.models import (
     Application,
     Evaluation,
@@ -110,6 +110,11 @@ async def test_the_sheet_comes_from_your_data(rt: Runtime) -> None:
     async with rt.sessionmaker() as session:
         prep = await meeting.prepare(session)
     assert len(prep.summaries) == 2
+    # Les chiffres des deux mois, en une ligne chacun sur la page (docs/131 §A.5).
+    current = TODAY.strftime("%Y-%m")
+    assert [m.month for m in prep.months] == [shift_month(current, -1), current]
+    assert sum(m.count for m in prep.months) <= 12
+    assert all(m.answered == 0 for m in prep.months)
     assert "Aucune réponse en 3 mois, sur 12 candidatures." in prep.blockers
     # « Ce qui te manque » : 8 offres bien notées sur 12, et la formation qui le couvre.
     assert prep.offers == 12

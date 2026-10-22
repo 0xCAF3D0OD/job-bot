@@ -19,7 +19,6 @@ import SidePanel from "../components/SidePanel.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import ApplicationsTable from "../components/ApplicationsTable.vue";
 import InterviewForm from "../components/InterviewForm.vue";
-import InterviewInsights from "../components/InterviewInsights.vue";
 import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
@@ -292,7 +291,6 @@ const practiceFromPanel = fromPanel((application: Application) => {
 // Retour d'entretien (docs/23) : formulaire ouvert depuis une carte.
 const interviewing = ref<{ application: Application; interview: Interview | null } | null>(null);
 const preparing = ref<Application | null>(null);
-const insightsPanel = ref<InstanceType<typeof InterviewInsights> | null>(null);
 const interviewError = ref("");
 
 function openInterview(application: Application, interview: Interview | null): void {
@@ -319,7 +317,6 @@ async function saveInterview(value: InterviewIn): Promise<void> {
   }
   interviewing.value = null;
   await load();
-  await insightsPanel.value?.load();
 }
 
 // Fermé tout de suite, supprimé au bout de 6 s, « Annuler » d'ici là (docs/108 §1).
@@ -720,13 +717,6 @@ onUnmounted(() => assistant.setFocus(null));
           @remove="remove"
         />
       </template>
-
-      <div class="disclosure-list suivi-more">
-        <InterviewInsights
-          ref="insightsPanel"
-          group="suivi"
-        />
-      </div>
     </template>
     <LoadingBlocks
       v-else

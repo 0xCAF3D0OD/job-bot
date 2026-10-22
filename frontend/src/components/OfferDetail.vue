@@ -9,7 +9,7 @@ import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
-import ScoreRing from "./ScoreRing.vue";
+import ScoreWord from "./ScoreWord.vue";
 import GapFill from "./GapFill.vue";
 import ScoreCorrection from "./ScoreCorrection.vue";
 import SidePanel from "./SidePanel.vue";
@@ -415,15 +415,18 @@ watch(
           class="ai-head"
           data-test="ai"
         >
-          <ScoreRing
+          <!-- La note en mot, le chiffre au survol (docs/131 §A.4). -->
+          <ScoreWord
             v-if="offer.score !== null && offer.score !== undefined"
             :score="offer.score"
-            large
           />
           <dl class="summary">
             <div><dt>Poste</dt><dd>{{ offer.summary_role }}</dd></div>
             <div><dt>Demande</dt><dd>{{ offer.summary_asks }}</dd></div>
-            <div><dt>Offre</dt><dd>{{ offer.summary_offers }}</dd></div>
+            <!-- « À savoir » le dit déjà en pastilles (docs/131 §A.3). -->
+            <div v-if="!terms.length">
+              <dt>Offre</dt><dd>{{ offer.summary_offers }}</dd>
+            </div>
           </dl>
         </div>
         <!-- Pourquoi cette note, en une phrase, et le niveau visé (docs/121 §C.1-2). -->
@@ -469,11 +472,16 @@ watch(
                 v-for="point in offer.strengths"
                 :key="point.text"
               >
-                {{ point.text }}
-                <span
+                <!-- Le bloc d'où vient le point, au survol (docs/131 §B.7). -->
+                <HoverNote
                   v-if="sources(point.chunk_ids)"
-                  class="detail"
-                >Bloc : {{ sources(point.chunk_ids) }}</span>
+                  :text="`Bloc : ${sources(point.chunk_ids)}`"
+                >
+                  {{ point.text }}
+                </HoverNote>
+                <template v-else>
+                  {{ point.text }}
+                </template>
               </li>
             </ul>
           </div>
