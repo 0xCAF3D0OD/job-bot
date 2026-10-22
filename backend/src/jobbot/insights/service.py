@@ -25,12 +25,11 @@ from jobbot.db.models import (
     Training,
     TrainingMark,
 )
+from jobbot.followups.remind import remind_on
 from jobbot.letters.document import MONTHS
 from jobbot.orp.service import load_target
 
 ENOUGH = 5
-# Une relance se propose après 10 jours (docs/38) : plus tôt, « jamais relancée » ne dit rien.
-FOLLOW_UP_AGE = timedelta(days=10)
 ANSWERED = (ApplicationStatus.ENTRETIEN, ApplicationStatus.REFUS, ApplicationStatus.ENGAGEMENT)
 MET = (ApplicationStatus.ENTRETIEN, ApplicationStatus.ENGAGEMENT)
 SPONTANEOUS = "spontaneous"
@@ -237,7 +236,7 @@ def compare(facts: list[Facts], names: dict[str, str], today: date) -> list[Comp
             )
         if fact.application.followed_up_at is not None:
             _add(by_follow_up, "yes", "relancées", "Tes candidatures relancées", fact.answered)
-        elif fact.application.sent_at <= today - FOLLOW_UP_AGE:
+        elif remind_on(fact.application) <= today:
             _add(
                 by_follow_up,
                 "no",

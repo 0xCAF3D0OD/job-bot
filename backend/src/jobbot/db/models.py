@@ -552,6 +552,8 @@ class Application(Base):
     status_at: Mapped[date | None] = mapped_column(Date)
     # Date de la relance (docs/38) : « Sans réponse » proposé 14 jours après.
     followed_up_at: Mapped[date | None] = mapped_column(Date)
+    # Le jour où relancer, choisi dans l'étape « Suivre » (docs/124 §G) ; vide : 10 jours après.
+    follow_up_on: Mapped[date | None] = mapped_column(Date)
     interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     orp_month: Mapped[str] = mapped_column(Text, index=True)

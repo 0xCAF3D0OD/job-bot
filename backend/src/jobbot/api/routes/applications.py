@@ -30,6 +30,7 @@ from jobbot.db.models import (
     OfferStatus,
     Setting,
 )
+from jobbot.followups import remind
 from jobbot.followups import service as followups
 from jobbot.letters.service import IDENTITY_KEYS, current_draft, load_identity
 from jobbot.log import get_logger
@@ -218,6 +219,8 @@ class ApplicationOut(ApplicationUpdate):
     reminded_at: datetime | None
     # Date de la relance (docs/38).
     followed_up_at: date | None = None
+    # Le jour où relancer, choisi dans l'étape « Suivre » (docs/124 §G) ; vide : 10 jours après.
+    follow_up_on: date | None = None
     created_at: datetime
     # Retours d'entretien (docs/23), dans l'ordre des entretiens ; remplis par la liste.
     interviews: list["InterviewOut"] = []
@@ -292,10 +295,14 @@ async def get_application_prefill(request: Request, offer_id: int) -> Applicatio
 async def list_applications(
     request: Request,
     month: Annotated[str | None, Query(pattern=r"^\d{4}-\d{2}$")] = None,
+    # La candidature d'une offre (l'étape « Suivre » de Préparer, docs/124 §G).
+    offer: int | None = None,
 ) -> list[ApplicationOut]:
     query = select(Application).order_by(Application.sent_at.desc(), Application.id.desc())
     if month:
         query = query.where(Application.orp_month == month)
+    if offer is not None:
+        query = query.where(Application.offer_id == offer)
     async with _runtime(request).sessionmaker() as session:
         applications = list(await session.scalars(query))
         interviews: dict[int, list[InterviewOut]] = {}
@@ -587,6 +594,35 @@ async def draft_follow_up(request: Request, application_id: int) -> FollowUpDraf
         ai=result.ai,
         reason=result.reason,
     )
+
+
+class FollowUpDateIn(BaseModel):
+    # Vide : la relance revient à 10 jours après l'envoi.
+    follow_up_on: date | None = None
+
+
+@router.patch("/applications/{application_id}/follow-up-date", operation_id="setFollowUpDate")
+async def set_follow_up_date(
+    request: Request, application_id: int, body: FollowUpDateIn
+) -> ApplicationOut:
+    """Le jour où relancer (docs/124 §G) : entre 5 et 30 jours après l'envoi."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        application = await session.get(Application, application_id)
+        if application is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+        if body.follow_up_on is not None:
+            days = (body.follow_up_on - application.sent_at).days
+            if not remind.MIN_DAYS <= days <= remind.MAX_DAYS:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    f"entre {remind.MIN_DAYS} et {remind.MAX_DAYS} jours après l'envoi",
+                )
+        application.follow_up_on = body.follow_up_on
+        # Une nouvelle date : le rappel pourra repartir à ce jour-là.
+        application.reminded_at = None
+        await session.flush()
+        await session.refresh(application)
+        return ApplicationOut.model_validate(application)
 
 
 @router.post("/applications/{application_id}/follow-up", operation_id="markFollowedUp")

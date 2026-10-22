@@ -1,6 +1,6 @@
 # 124 — Les offres du jour une par une, et l'étape « Suivre » (version 0.97.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-22 (« oui pour tout, vas-y ») : la dose de 3, 5 quand le mois est à rattraper ; « Garder » passe l'offre en « À préparer » ; le balayage en plus des boutons ; la date de relance par candidature ; D et G en 0.97.0.
 > Origine : l'audit des concurrents du 2026-10-21 (points 3 et 5 ; plan D et G). Ta demande du 2026-10-22 : « écris le cadrage 124 ».
 > Se construit sur docs/86 (le bon rythme, la dose du jour), docs/95 (Aujourd'hui), docs/47 et docs/51 (Préparer), docs/108 (Annuler plutôt que confirmer), docs/123 (le visage du 1).
 
@@ -68,3 +68,23 @@
 3. **D, le balayage** sur téléphone, en plus des boutons : oui ou non ?
 4. **G, la date de relance** modifiable par candidature (une migration) : d'accord, ou on garde 10 jours pour toutes ?
 5. **Une version** : D et G ensemble en 0.97.0 ?
+
+## Écarts (0.97.0)
+
+- **Règles relues avant de construire** (`docs/interface.md`), vérifiées sur captures à 1440 et 390 px : la carte « À faire » avec une offre du jour, la fin du tri, l'étape ④ Suivre.
+- **D, sans cadre** : l'offre du jour est posée dans la carte « À faire », sans carte à elle (pas de cadre dans un cadre). Le sous-titre devient « Offres du jour », l'onglet « Du jour » (au lieu de « Mieux notées »).
+- **D, ce qui manque** : la phrase « pourquoi » dit déjà ce qui manque (« il manque Bicep ») ; « Il te manque : … » ne s'affiche que pour une offre notée avant score-v5, sans phrase.
+- **D, l'enregistrement** : le statut part au serveur au bout de 6 secondes ou à la décision suivante, comme les autres « Annuler » (docs/108) ; s'il échoue, l'offre revient. Une offre gardée apparaît dans « Commencées » dès qu'elle est enregistrée. La fin du tri : « Tri du jour terminé. 2 gardées, 1 écartée. » avec le petit visage ravi et « Voir les commencées ».
+- **D, le bouton de la phrase du jour** « Examiner les offres » mène à la carte « À faire » d'Aujourd'hui (`/aujourdhui#offres-du-jour`).
+- **G, l'onglet ④ Suivre** n'apparaît qu'une fois la candidature envoyée ; « Marquer comme envoyée » y mène directement (la carte « Candidature envoyée » s'affiche par-dessus, comme avant).
+- **G, la relance** : « Le 29 octobre, si l'employeur n'a pas répondu. » et « Changer la date » (un jour entre 5 et 30 jours après l'envoi, vérifié par le serveur). Le jour choisi vaut partout : Aujourd'hui, le Suivi, le rappel du téléphone, l'assistant et le bilan (une seule règle, `followups/remind.py`). Une nouvelle date remet le rappel à zéro. Une candidature déjà relancée ou avec une réponse : « Plus de relance prévue. ». Migration 0067 (`applications.follow_up_on`).
+- **G, la preuve ORP** : la seule donnée qui peut manquer est l'adresse de l'entreprise (`core/orp.py`) ; « Compléter » ouvre le champ sur place.
+- **G, le contact** : le nom de la personne de contact de la candidature, sinon celui d'une prise de contact ; « Ajouter un contact » mène aux contacts à côté (la carte « Contacts chez … »).
+- **G, pas de « Voir dans le Suivi »** : le haut de la page a déjà « Voir le suivi » ; un deuxième lien aurait fait doublon.
+- **Préparer sur téléphone** : avec quatre étapes, les onglets gardent leur numéro et leur nom sans l'icône ; une étape faite a son numéro en vert (sans la coche à côté, le « fait » reste pour les lecteurs d'écran) ; la barre tient à 390 px et défile sur un écran plus étroit, l'étape ouverte restant en vue.
+
+## Vérifié (0.97.0)
+
+- Tests backend : le jour de relance choisi (5 à 30 jours, sinon 422), la relance due ce jour-là et pas avant, de nouveau à 10 jours une fois la date effacée ; la candidature d'une offre. 621 tests, ruff, mypy.
+- Tests de l'interface : une offre à la fois (« 1 sur 2 », pourquoi), Garder et Écarter envoyés après coup, « Annuler » qui remet l'offre, la fin du tri ; le balayage au doigt et pas à la souris ; la dose de 5 demandée ; l'étape Suivre (la date à 10 jours, la changer, compléter l'adresse, le contact connu, plus de relance une fois relancée). 433 tests, lint, vue-tsc.
+- Les trois audits sur la démo à zéro.

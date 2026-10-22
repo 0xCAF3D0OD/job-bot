@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer } from "../api/client";
 import { applicationBody } from "../applicationBody";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
+import FollowStep from "../components/FollowStep.vue";
 import ContactsPanel from "../components/ContactsPanel.vue";
 import CvPanel from "../components/CvPanel.vue";
 import OfferBrief from "../components/OfferBrief.vue";
@@ -21,9 +22,13 @@ import { expiredText, ofMonth } from "../format";
 import InlineConfirm from "../components/InlineConfirm.vue";
 
 const route = useRoute();
+const router = useRouter();
 const offerId = Number(route.params.id);
-// Trois onglets numérotés (docs/47 §2) : ① Lettre, ② CV, ③ Postuler.
-const tab = computed(() => (route.query.doc === "cv" ? "cv" : route.query.doc === "postuler" ? "apply" : "letter"));
+// Trois onglets numérotés (docs/47 §2) : ① Lettre, ② CV, ③ Postuler ; ④ Suivre une fois la
+// candidature envoyée (docs/124 §G).
+const tab = computed(() =>
+  route.query.doc === "cv" ? "cv" : route.query.doc === "postuler" ? "apply" : route.query.doc === "suivre" ? "follow" : "letter",
+);
 
 // « Postuler sur … » (docs/13 §1), dans l'onglet Postuler.
 const SITE_NAMES: Record<string, string> = { jobup: "jobup", indeed: "Indeed", jobroom: "Job-Room" };
@@ -77,9 +82,28 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
   if (orp?.data && sent.value) sent.value = { ...sent.value, count: orp.data.count, target: orp.data.target ?? null };
   const refreshed = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: offerId } } });
   if (refreshed.data) offer.value = refreshed.data;
+  // L'étape ④ Suivre s'ouvre (docs/124 §G).
+  void router.replace({ query: { ...route.query, doc: "suivre" } });
+}
+
+// « Ajouter un contact » de l'étape Suivre : les contacts sont à côté.
+function focusContacts(): void {
+  const side = document.querySelector<HTMLElement>("[data-test=apply-contacts]");
+  side?.scrollIntoView({ behavior: "smooth", block: "center" });
+  side?.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
 }
 
 const offer = ref<Offer | null>(null);
+// Sur téléphone, la barre des étapes défile : l'étape ouverte reste en vue.
+watch(
+  [tab, () => !!offer.value],
+  () =>
+    void nextTick(() =>
+      document.querySelector<HTMLElement>(".prep-tabs a.active")?.scrollIntoView?.({ inline: "nearest", block: "nearest" }),
+    ),
+  { immediate: true },
+);
+
 const assistant = useAssistant();
 watch(offer, (o) => {
   if (o) assistant.setFocus({ offerId: o.id, label: `préparation : ${o.title}${o.company ? ` chez ${o.company}` : ""}` });
@@ -302,6 +326,14 @@ onMounted(() => void load());
           data-test="step-done"
         ><AppIcon name="done" /><span class="visually-hidden">fait</span></span>
       </RouterLink>
+      <RouterLink
+        v-if="offer.status === 'applied'"
+        :to="{ query: { doc: 'suivre' } }"
+        :class="{ active: tab === 'follow' }"
+        data-test="tab-follow"
+      >
+        <span class="step-number">4</span><span class="with-icon"><AppIcon name="clock" />Suivre</span>
+      </RouterLink>
     </nav>
   </PageHero>
 
@@ -350,11 +382,20 @@ onMounted(() => void load());
 
       <!-- ③ Postuler (docs/47 §2) : dans l'ordre où on le fait ; les contacts à côté. -->
       <div
-        v-if="offer && tab === 'apply'"
+        v-if="offer && (tab === 'apply' || tab === 'follow')"
         class="prep-layout"
         data-test="apply-steps"
       >
-        <div class="apply-steps">
+        <FollowStep
+          v-if="tab === 'follow' && offer.status === 'applied'"
+          class="prep-main"
+          :offer-id="offer.id"
+          @add-contact="focusContacts"
+        />
+        <div
+          v-else
+          class="apply-steps"
+        >
           <template v-if="offer.status !== 'applied'">
             <!-- Numéros par compteur CSS : sur téléphone, « Postuler » est fixé en bas et sa
                  section disparaît, les étapes se renumérotent (docs/51 n° 4). -->
@@ -406,7 +447,9 @@ onMounted(() => void load());
             v-else
             class="hint"
           >
-            Candidature envoyée : elle est dans ton suivi.
+            Candidature envoyée. <RouterLink :to="{ query: { doc: 'suivre' } }">
+              Suivre
+            </RouterLink>
           </p>
         </div>
         <section

@@ -15,7 +15,7 @@ enregistrée pour la cloche de la plateforme (docs/15 §1).
 import secrets
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -30,13 +30,13 @@ from jobbot.core.orp import LOCAL_TZ
 from jobbot.core.plural import plural
 from jobbot.db.models import (
     Application,
-    ApplicationStatus,
     Evaluation,
     Notification,
     Offer,
     OfferStatus,
     Setting,
 )
+from jobbot.followups.remind import REMIND_AFTER_DAYS, remind_due
 from jobbot.log import get_logger
 from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
@@ -286,24 +286,17 @@ async def send_test(settings: Settings) -> None:
 
 # --- Relances (0.5) -------------------------------------------------------------------
 
-REMIND_AFTER_DAYS = 10
-
 
 async def notify_reminders(runtime: Runtime, today: date | None = None) -> int:
     """Candidatures en attente depuis 10 jours : une alerte groupée, une seule fois par
     candidature (cloche, et téléphone si ntfy est configuré)."""
     settings = runtime.settings
     today = today or datetime.now(UTC).date()
-    limit = today - timedelta(days=REMIND_AFTER_DAYS)
     async with runtime.sessionmaker() as session:
         due = list(
             await session.scalars(
                 select(Application)
-                .where(
-                    Application.status == ApplicationStatus.EN_ATTENTE,
-                    Application.reminded_at.is_(None),
-                    Application.sent_at <= limit,
-                )
+                .where(Application.reminded_at.is_(None), remind_due(today))
                 .order_by(Application.sent_at)
             )
         )
