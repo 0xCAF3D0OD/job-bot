@@ -168,6 +168,13 @@ class OfferSpec:
     asks: tuple[str, ...] = ("Kubernetes", "Terraform", "CI/CD")
     missing: tuple[str, ...] = ()
     extra: str = ""
+    # Un poste hors du domaine du profil (la donnée pour un profil plateforme) : ce qu'il fait,
+    # la phrase « pourquoi » et ses points forts suivent l'offre (docs/121 §C.1).
+    role: str = ""
+    why: str = ""
+    # Le niveau, seulement quand l'annonce le dit (docs/121 §C.2).
+    level: str | None = None
+    level_detail: str = ""
 
 
 def _a(month: int, fraction: float, **kwargs: object) -> Applied:
@@ -293,6 +300,9 @@ OFFERS = [
         "Fribourg",
         "jobup",
         70,
+        extra="Premier poste, ou deux ans d'expérience au plus.",
+        level="below",
+        level_detail="Le poste vise deux ans d'expérience au plus ; tu en as plus de dix.",
         applied=_a(1, 0.44, status="en_attente", method="ecrit"),
     ),
     OfferSpec(
@@ -461,7 +471,9 @@ OFFERS = [
         41,
         days_ago=3,
         asks=("Spark", "Python", "SQL"),
-        missing=("Spark",),
+        missing=("Spark", "SQL"),
+        role="construire et faire tourner les flux de données de l'entreprise.",
+        why="Le poste vise la donnée (Spark, SQL) ; ton parcours est la plateforme et le cloud.",
     ),
     OfferSpec(
         "o32",
