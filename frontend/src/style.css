@@ -1063,14 +1063,7 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .suivi-calendar .day.selected { outline: 2px solid var(--accent); outline-offset: -1px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 .suivi-calendar .day-number { font-size: 0.8rem; color: var(--muted); }
 .suivi-calendar .day.busy .day-number { color: var(--text); font-weight: 600; }
-.day-dots { display: flex; flex-wrap: wrap; gap: 0.2rem; align-items: center; }
-.day-dots .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: #8b93a7; position: relative; }
-.day-dots .dot.relancee { background: var(--warn); }
-.day-dots .dot.entretien { background: var(--accent); }
-.day-dots .dot.refus { background: var(--down); }
-.day-dots .dot.engagement { background: var(--ok); }
-.day-dots .dot.sans_reponse { background: #c4c8d2; }
-.day-dots .dot.incomplete::after { content: ""; position: absolute; top: -2px; right: -2px; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: var(--down); border: 1px solid var(--surface); }
+.day-dots { display: flex; flex-wrap: wrap; gap: 0.5rem 0.65rem; align-items: center; padding: 0.25rem; }
 .day-dots .more { font-size: 0.7rem; color: var(--muted); }
 .day-marks { display: grid; gap: 0.1rem; margin-top: auto; }
 .day-marks .mark { font-size: 0.65rem; border-radius: 4px; padding: 0 0.25rem; width: fit-content; }
@@ -1321,23 +1314,22 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .more-menu .menu .danger:hover { color: var(--down-text); }
 
 /* --- Accessibilité (docs/28) --- */
-/* Calendrier : une couleur par statut (sans symbole, choix du 2026-10-14) ; « ! » pour une ligne
-   ORP à compléter ; légende repliable sous le calendrier. */
+/* Calendrier : une couleur par statut (sans symbole, choix du 2026-10-14). Une ligne ORP à
+   compléter : un anneau orange autour de la pastille, la couleur de ce qui demande d'agir
+   (docs/interface.md, structure 16), sans caractère ni badge qui déborde sur la voisine
+   (iconographie 1, 0.90.2). « En attente » : le fond de la page, pas un blanc qui éblouit
+   en sombre. */
 .day-dots .dot, .suivi-legend .dot, .app-status .dot {
-  width: 0.85rem; height: 0.85rem; border-radius: 50%; background: #c4c8d2; position: relative; flex: none;
+  width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #c4c8d2; position: relative; flex: none;
   display: inline-block; border: 1px solid transparent;
 }
-.day-dots .dot.en_attente, .suivi-legend .dot.en_attente, .app-status .dot.en_attente { background: #fff; border-color: #8b93a7; }
+.day-dots .dot.en_attente, .suivi-legend .dot.en_attente, .app-status .dot.en_attente { background: var(--surface); border: 1.5px solid var(--muted); }
 .day-dots .dot.relancee, .suivi-legend .dot.relancee, .app-status .dot.relancee { background: var(--orange); }
 .day-dots .dot.entretien, .suivi-legend .dot.entretien, .app-status .dot.entretien { background: var(--accent); }
 .day-dots .dot.refus, .suivi-legend .dot.refus, .app-status .dot.refus { background: var(--down); }
 .day-dots .dot.engagement, .suivi-legend .dot.engagement, .app-status .dot.engagement { background: var(--mint); }
 .day-dots .dot.sans_reponse, .suivi-legend .dot.sans_reponse, .app-status .dot.sans_reponse { background: #c4c8d2; }
-.day-dots .dot.incomplete::after, .suivi-legend .dot.incomplete::after {
-  content: "!"; position: absolute; top: -0.4rem; right: -0.45rem; width: 0.75rem; height: 0.75rem;
-  border-radius: 50%; background: var(--down-text); color: #fff; border: 1px solid var(--surface);
-  font-size: 0.55rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
-}
+.day-dots .dot.incomplete, .suivi-legend .dot.incomplete { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--warn); }
 .suivi-legend { margin-top: 0.75rem; }
 .suivi-legend ul { font-size: 0.82rem; color: var(--muted); }
 .suivi-legend ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
@@ -1360,9 +1352,8 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
   .filter-switch input::after { width: 1.3rem; height: 1.3rem; }
   .filter-switch input:checked::after { transform: translateX(1.15rem); }
 }
-.day-dots { gap: 0.45rem; row-gap: 0.4rem; padding-top: 0.2rem; }
 .suivi-legend li { gap: 0.55rem; }
-.suivi-legend .dot.incomplete { margin-right: 0.35rem; }
+.suivi-legend .dot.incomplete { margin: 0 0.15rem; }
 
 /* Finitions du 2026-10-14 : onglets soulignés bien droits (le soulignement suivait l'arrondi des
    liens), page ouverte dans le menu en gras de la couleur principale, « Comment ça marche »
