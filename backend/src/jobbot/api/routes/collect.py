@@ -118,6 +118,10 @@ class OfferOut(BaseModel):
     summary_partial: bool = False
     strengths: list["ScorePoint"] = []
     gaps: list["ScorePoint"] = []
+    # Pourquoi cette note, et le niveau visé (score-v5, docs/121 §C) ; vides avant.
+    why: str | None = None
+    level: Literal["above", "below"] | None = None
+    level_detail: str | None = None
     scored_at: datetime | None = None
     # Note faite avec un autre profil que l'actuel : à renoter.
     score_stale: bool = False
@@ -281,6 +285,9 @@ def _evaluation_fields(
             "keywords_offers": evaluation.keywords_offers or [],
             "strengths": evaluation.strengths,
             "gaps": evaluation.gaps,
+            "why": evaluation.why,
+            "level": evaluation.level if evaluation.level in ("above", "below") else None,
+            "level_detail": evaluation.level_detail,
             "scored_at": evaluation.scored_at,
             "score_stale": current_hash is not None and evaluation.profile_hash != current_hash,
         }

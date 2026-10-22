@@ -98,10 +98,13 @@ export function colorIndex(name: string): number {
 }
 
 /** Niveau d'une note, pour sa couleur : bonne (≥ 70), moyenne (≥ 50) ou faible. */
-export function scoreLevel(score: number): "high" | "mid" | "low" {
-  if (score >= 70) return "high";
-  if (score >= 50) return "mid";
-  return "low";
+// La note en mots (docs/121 §C.5), sur les seuils des couleurs : 85, 70, 50.
+export type ScoreTone = "very-close" | "close" | "dig" | "far";
+export function scoreWord(score: number): { word: string; mood: "ravi" | "content" | "attentif" | "neutre"; tone: ScoreTone } {
+  if (score >= 85) return { word: "Très proche", mood: "ravi", tone: "very-close" };
+  if (score >= 70) return { word: "Proche", mood: "content", tone: "close" };
+  if (score >= 50) return { word: "À creuser", mood: "attentif", tone: "dig" };
+  return { word: "Loin", mood: "neutre", tone: "far" };
 }
 
 export const methodLabel: Record<"electronique" | "ecrit" | "telephone" | "personnel", string> = {
@@ -185,4 +188,16 @@ export function remoteText(offer: {
 export function plural(count: number, one: string, many: string, none?: string): string {
   if (count === 0 && none) return none;
   return `${count} ${count === 1 ? one : many}`;
+}
+
+// La compétence d'un manque de la note (docs/121 §C.3) : « Spark : pas d'expérience… »,
+// « Pas d'Ansible », « Allemand courant demandé ». Une phrase longue (« Le poste demande plus
+// de développement… ») n'est pas une compétence à ajouter : null, et pas de « Je l'ai ».
+export function gapSkill(text: string): string | null {
+  const skill = text
+    .split(/ : | \(|[.;]/)[0]!
+    .replace(/^(pas de |pas d'|pas d\u2019|aucune |aucun |il manque |manque de |manque d')/i, "")
+    .replace(/ demandée?s?$/i, "")
+    .trim();
+  return skill && skill.split(/\s+/).length <= 4 ? skill : null;
 }

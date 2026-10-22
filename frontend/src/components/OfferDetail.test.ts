@@ -148,3 +148,44 @@ describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
     expect(missing.find("[data-test=add-address]").text()).toBe("Ajouter l'adresse");
   });
 });
+
+describe("la note expliquée (docs/121 §C.1-3)", () => {
+  it("la phrase « pourquoi », le niveau en étiquette, « Je l'ai » seulement sur un manque sans bloc", async () => {
+    POST.mockResolvedValue({ data: { chunk_id: 9, score: 84 } });
+    const wrapper = await mountDetail(
+      offer({
+        score: 72,
+        summary_role: "Exploiter le cloud",
+        summary_asks: "Terraform, 8 ans",
+        summary_offers: "100 %",
+        why: "Ton expérience AWS colle ; il manque Terraform.",
+        level: "above",
+        level_detail: "8 ans demandés, ton profil en montre 3.",
+        strengths: [{ text: "AWS en production", chunk_ids: [1] }],
+        gaps: [
+          { text: "Pas de Terraform", chunk_ids: [] },
+          { text: "Préférence : pas d'astreintes", chunk_ids: [2] },
+        ],
+      }),
+    );
+    expect(wrapper.find("[data-test=score-why]").text()).toContain("Ton expérience AWS colle ; il manque Terraform.");
+    expect(wrapper.find("[data-test=score-level]").text()).toBe("Niveau au-dessus");
+    expect(wrapper.find("[data-test=score-level] [data-test=hover-note]").attributes("aria-description")).toBe(
+      "8 ans demandés, ton profil en montre 3.",
+    );
+    const gaps = wrapper.findAll("[data-test=gaps] li");
+    expect(gaps[0]!.find("[data-test=gap-fill]").exists()).toBe(true);
+    expect(gaps[1]!.find("[data-test=gap-fill]").exists()).toBe(false);
+
+    await gaps[0]!.find("[data-test=gap-fill]").trigger("click");
+    expect((wrapper.find("[data-test=gap-fill-title]").element as HTMLInputElement).value).toBe("Terraform");
+    await wrapper.find("[data-test=gap-fill-content]").setValue("Trois ans d'infrastructure en Terraform.");
+    await wrapper.find("[data-test=gap-fill-form]").trigger("submit");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/gap-block", {
+      params: { path: { offer_id: 4 } },
+      body: { title: "Terraform", content: "Trois ans d'infrastructure en Terraform." },
+    });
+    expect(wrapper.emitted("changed")).toHaveLength(1);
+  });
+});

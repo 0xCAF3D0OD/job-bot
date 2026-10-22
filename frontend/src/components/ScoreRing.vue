@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { scoreLevel } from "../format";
+import { scoreWord } from "../format";
 
 // La note dans un cercle : le contour se remplit selon la note, plein à 100 (docs/73). Sans
 // note, un cercle vide en pointillés, qui dit pourquoi (docs/76 §3).
@@ -28,7 +28,7 @@ const label = computed(() =>
   >–</span>
   <span
     v-else
-    :class="['score-ring', scoreLevel(value), { stale, large }]"
+    :class="['score-ring', scoreWord(value).tone, { stale, large }]"
     :style="{ '--p': value }"
     role="img"
     :aria-label="label"

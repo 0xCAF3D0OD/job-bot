@@ -6,9 +6,10 @@ from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
-from jobbot.db.models import ChunkKind, Evaluation, ScoreCorrection
+from jobbot.db.models import ChunkKind, Evaluation, ProfileChunk, ScoreCorrection
 from jobbot.runtime import Runtime
 from jobbot.scoring import corrections
+from jobbot.scoring import service as scoring_service
 
 router = APIRouter(prefix="/api", tags=["offers"])
 
@@ -172,3 +173,46 @@ async def apply(request: Request, offer_id: int, body: CorrectionIn) -> Correcti
         score_before=before,
         score=done.score,
     )
+
+
+# --- « Je l'ai : l'ajouter au profil » (docs/121 §C.3) --------------------------------------
+
+
+class GapBlockIn(BaseModel):
+    """Un manque de la note que la personne comble : une compétence qu'elle a sans l'avoir
+    écrite. Le bloc est relu avant l'envoi ; l'offre est renotée aussitôt."""
+
+    title: Annotated[str, Field(min_length=1, max_length=200)]
+    content: Annotated[str, Field(min_length=1, max_length=2000)]
+
+    @field_validator("title", "content")
+    @classmethod
+    def _strip(cls, value: str) -> str:
+        return " ".join(value.split())
+
+
+class GapBlockOut(BaseModel):
+    chunk_id: int
+    score: int | None
+
+
+@router.post(
+    "/offers/{offer_id}/gap-block",
+    operation_id="addGapBlock",
+    status_code=status.HTTP_201_CREATED,
+    responses={404: {"description": "Offre inconnue"}},
+)
+async def add_gap_block(request: Request, offer_id: int, body: GapBlockIn) -> GapBlockOut:
+    runtime = _runtime(request)
+    async with runtime.sessionmaker.begin() as session:
+        evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == offer_id))
+        if evaluation is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "offre inconnue")
+        chunk = ProfileChunk(
+            kind=ChunkKind.COMPETENCE, title=body.title, content=body.content, origin="gap"
+        )
+        session.add(chunk)
+        await session.flush()
+        chunk_id = chunk.id
+    score = await scoring_service.score_offer(runtime, offer_id)
+    return GapBlockOut(chunk_id=chunk_id, score=score)

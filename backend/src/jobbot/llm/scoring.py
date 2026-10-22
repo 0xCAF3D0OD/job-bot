@@ -13,11 +13,12 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v4"
-# score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30) : une
-# note plus ancienne reste valable, elle n'est pas refaite.
-COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4")
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v4.md").read_text("utf-8")
+PROMPT_VERSION = "score-v5"
+# score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30),
+# score-v5 la phrase « pourquoi » et le niveau (docs/121 §C) : une note plus ancienne reste
+# valable, elle n'est pas refaite (« Renoter » la refait, sur demande).
+COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4", "score-v5")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v5.md").read_text("utf-8")
 KEYWORD_LENGTH = 25
 MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
@@ -57,6 +58,10 @@ class ScoreOutput(BaseModel):
     remote_from_switzerland: bool | None = None
     # Signes d'arnaque (score-v4, docs/30 §2) ; absents d'une réponse plus ancienne.
     scam_signals: list[ScamSignal] = Field(default_factory=list)
+    # Pourquoi cette note, et le niveau (score-v5, docs/121 §C.1-2).
+    why: str | None = Field(default=None, max_length=300)
+    level: Literal["above", "below"] | None = None
+    level_detail: str | None = Field(default=None, max_length=200)
 
 
 # Schéma envoyé à l'API (sorties structurées) : seulement des types simples, les bornes
@@ -106,6 +111,9 @@ OUTPUT_SCHEMA: dict[str, Any] = {
                 "additionalProperties": False,
             },
         },
+        "why": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "level": {"anyOf": [{"type": "string", "enum": ["above", "below"]}, {"type": "null"}]},
+        "level_detail": {"anyOf": [{"type": "string"}, {"type": "null"}]},
     },
     "required": [
         "summary_role",
@@ -122,6 +130,9 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "remote_region",
         "remote_from_switzerland",
         "scam_signals",
+        "why",
+        "level",
+        "level_detail",
     ],
     "additionalProperties": False,
 }
@@ -269,13 +280,26 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
             "keywords_role": _keywords(output.keywords_role, 3),
             "keywords_asks": _asks(output.keywords_asks),
             "keywords_offers": _keywords(output.keywords_offers, 4),
+            # Une phrase, nettoyée ; le détail du niveau seulement avec un niveau.
+            "why": " ".join(output.why.split())[:140] or None if output.why else None,
+            "level_detail": (" ".join(output.level_detail.split())[:100] or None)
+            if output.level and output.level_detail
+            else None,
         }
     )
     valid = {c.id for c in chunks}
     if not valid:
         asks = [k.model_copy(update={"covered": None}) for k in output.keywords_asks]
         return output.model_copy(
-            update={"score": None, "strengths": [], "gaps": [], "keywords_asks": asks}
+            update={
+                "score": None,
+                "strengths": [],
+                "gaps": [],
+                "keywords_asks": asks,
+                "why": None,
+                "level": None,
+                "level_detail": None,
+            }
         )
 
     strengths = []

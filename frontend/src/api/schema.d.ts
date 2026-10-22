@@ -898,6 +898,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/{offer_id}/gap-block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Gap Block */
+        post: operations["addGapBlock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/interview.ics": {
         parameters: {
             query?: never;
@@ -4625,6 +4642,24 @@ export interface components {
             /** Engagements */
             engagements: number;
         };
+        /**
+         * GapBlockIn
+         * @description Un manque de la note que la personne comble : une compétence qu'elle a sans l'avoir
+         *     écrite. Le bloc est relu avant l'envoi ; l'offre est renotée aussitôt.
+         */
+        GapBlockIn: {
+            /** Title */
+            title: string;
+            /** Content */
+            content: string;
+        };
+        /** GapBlockOut */
+        GapBlockOut: {
+            /** Chunk Id */
+            chunk_id: number;
+            /** Score */
+            score: number | null;
+        };
         /** GroupOut */
         GroupOut: {
             /** Key */
@@ -5803,6 +5838,12 @@ export interface components {
              * @default []
              */
             gaps: components["schemas"]["ScorePoint"][];
+            /** Why */
+            why?: string | null;
+            /** Level */
+            level?: ("above" | "below") | null;
+            /** Level Detail */
+            level_detail?: string | null;
             /** Scored At */
             scored_at?: string | null;
             /**
@@ -6607,6 +6648,12 @@ export interface components {
              * @default []
              */
             gaps: components["schemas"]["ScorePoint"][];
+            /** Why */
+            why?: string | null;
+            /** Level */
+            level?: ("above" | "below") | null;
+            /** Level Detail */
+            level_detail?: string | null;
             /** Scored At */
             scored_at?: string | null;
             /**
@@ -9217,6 +9264,48 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProposalOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    addGapBlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                offer_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GapBlockIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GapBlockOut"];
+                };
+            };
+            /** @description Offre inconnue */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

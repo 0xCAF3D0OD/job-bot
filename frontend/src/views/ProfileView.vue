@@ -6,6 +6,7 @@ import AppIcon from "../components/AppIcon.vue";
 import CriteriaForm from "../components/CriteriaForm.vue";
 import IdentityForm from "../components/IdentityForm.vue";
 import PageHero from "../components/PageHero.vue";
+import ProfileGauge from "../components/ProfileGauge.vue";
 import ProfileParcours from "../components/ProfileParcours.vue";
 
 // Tout ce qui te concerne au même endroit (docs/10 §2 a) ; l'onglet est dans l'URL.
@@ -51,6 +52,8 @@ const tab = computed<Tab>(() => {
   </PageHero>
   <section class="band profile-page">
     <div class="container">
+      <!-- La jauge du profil (docs/121 §C.4), seulement ici. -->
+      <ProfileGauge />
       <div
         v-if="tab === 'recherche'"
         class="narrow-block"

@@ -300,6 +300,11 @@ class Evaluation(Base):
     # Télétravail relevé par l'IA (docs/26 §2) : onsite | hybrid | full | unknown ; jours par
     # semaine (partiel) ; d'où on peut travailler (« Europe », « US only ») et si c'est ouvert
     # depuis la Suisse (None : non précisé).
+    # Pourquoi cette note, en une phrase, et le niveau visé (score-v5, docs/121 §C) :
+    # above | below | None.
+    why: Mapped[str | None] = mapped_column(Text)
+    level: Mapped[str | None] = mapped_column(Text)
+    level_detail: Mapped[str | None] = mapped_column(Text)
     remote: Mapped[str | None] = mapped_column(Text)
     remote_days: Mapped[int | None] = mapped_column(SmallInteger)
     remote_region: Mapped[str | None] = mapped_column(Text)

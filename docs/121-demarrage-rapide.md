@@ -118,6 +118,26 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 - Tests de l'interface : ouvrir un site copie l'adresse ; « Rien reçu depuis 24 heures ». 412 tests, lint, vue-tsc.
 - Les trois audits sur la démo à zéro ; capture de l'écran d'un site à 1440 et 390 px.
 
+## Écarts (0.93.0 : C)
+
+- **Règles relues avant de construire** (`docs/interface.md`), vérifiées sur captures à 1440 et 390 px : la liste des Offres, la fiche (pourquoi, niveau, « Je l'ai » ouvert), la jauge du Profil.
+- **Le prompt `score-v5`** ajoute `why` (une phrase, 140 caractères au plus), `level` (« above », « below » ou rien, seulement si c'est net) et `level_detail` (le détail au survol). Migration 0066 (trois colonnes de `evaluations`). Les offres déjà notées n'ont ni phrase ni niveau : rien ne s'affiche, « Renoter » les donne.
+- **Le niveau** : une ligne grise sous la phrase, « Niveau au-dessus » ou « Niveau en dessous », le détail au survol ; pas une pastille (une première version en étiquette était trop petite et coupait la phrase).
+- **« Je l'ai »** : seulement sous un manque qui nomme une compétence (« Spark : pas d'expérience… », « Pas d'Ansible ») et qu'aucun bloc ne cite ; pas sous une phrase (« Le poste demande plus de développement… »). Le formulaire est prérempli avec la compétence seule (« Spark ») et demande où et comment, en une phrase. « Ajouter au profil » crée un bloc de compétence (`POST /api/offers/{id}/gap-block`, origine « gap ») et renote l'offre (environ 0,003 $, au survol). Le formulaire s'ouvre sous le manque, sans cadre (pas de cadre dans la fiche).
+- **La jauge** : cinq parties au lieu des quatre du cadrage, « Profil · 4 sur 5 » : une expérience, deux compétences, une formation, les critères enregistrés, les coordonnées (nom et localité). **Les langues** n'ont pas de partie à elles : elles sont dans les critères (langues non parlées, docs/121 §A.2). La formation et les coordonnées sont ajoutées parce que la note et les lettres s'en servent. Un lien mène à ce qui manque en premier ; la jauge part quand tout est là. Même carte grise que les autres cartes du Profil.
+- **La note en mots** (§C.5) : le mot et le visage à droite de la ligne, le chiffre au survol (« Proche : 82 sur 100 ») ; le filet en bas de la ligne, la part manquante en gris clair ; « Il te manque » en gris (plus en orange). Dans la liste des Offres et les meilleures offres d'Aujourd'hui.
+- **Le cercle de la fiche** prend les couleurs des mots : vert menthe à 85 et plus, bleu lavande à 70, gris chaud à 50 (**plus d'orange**), gris en dessous. Le même gris clair pour la part manquante du cercle, du filet et de la jauge.
+- **Le visage** : un SVG (`FaceMark`), quatre bouches (grand sourire, sourire, bouche droite, bouche droite plus courte), les traits à la couleur du mot, la bille pêche du logo ; décoratif pour les lecteurs d'écran.
+- **Pas encore fait** : le Suivi et la recherche de l'assistant gardent leur affichage (ils ne montrent pas la note en ligne aujourd'hui) ; les humeurs dessinées en grand viennent avec docs/123 (0.94.0).
+- **La démo** : ses offres notées ont une phrase et, sous 60, le niveau au-dessus.
+- **Après la fusion** : `make migrate` (0066).
+
+## Vérifié (0.93.0)
+
+- Tests backend : la phrase et le niveau lus et nettoyés (`score-v5`), effacés sans profil ; un manque ajouté devient un bloc et l'offre est renotée, 404 pour une offre inconnue. 620 tests, ruff, mypy.
+- Tests de l'interface : le mot, le visage et le chiffre au survol dans la liste, « Pas encore notée » ; la phrase et le niveau dans la fiche ; « Je l'ai » seulement sous une compétence, préremplie ; la jauge (le compte, les segments, le premier manque, cachée quand tout est là). 416 tests, lint, vue-tsc.
+- Les trois audits sur la démo à zéro (règles, alignement, accessibilité).
+
 ## Les questions
 
 1. **A** : l'IA lit le CV pendant l'accueil (environ 0,05 à 0,10 $), un seul écran « Voici ce que j'ai compris » : d'accord ?

@@ -82,9 +82,12 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 
 L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Continuer › ». Les vraies actions gardent leur verbe.
 
-## La note (docs/73, docs/76)
+## La note (docs/73, docs/76, docs/121 §C.5)
 
-Un cercle dont le contour se remplit comme la note (plein à 100), à la couleur de la note ; la part manquante reste visible en gris clair. Une offre pas encore notée : un cercle vide en pointillés, avec « – », qui dit pourquoi au survol. Jamais une pastille.
+- **Dans les listes** (Offres, Aujourd'hui) : un mot et le visage du 1, à la couleur de la note : « Très proche » (85 et plus, ravi), « Proche » (70, content), « À creuser » (50, attentif, gris chaud), « Loin » (neutre, gris). Le chiffre au survol (« Proche : 82 sur 100 »). Un filet en bas de la ligne, rempli comme la note.
+- **Dans la fiche** : un cercle dont le contour se remplit comme la note (plein à 100), à la couleur de la note ; la part manquante reste visible en gris clair. Sous lui, une phrase : pourquoi.
+- Une offre pas encore notée : « Pas encore notée », qui dit pourquoi au survol ; dans la fiche, un cercle vide en pointillés avec « – ».
+- Jamais une pastille ni un visage déçu.
 
 ## Les actions (docs/74, docs/76)
 

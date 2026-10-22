@@ -38,3 +38,13 @@ export const MASCOT_SMILE = "M29 60 C 37 71, 55 71, 63 60";
 export const MASCOT_MOUTH_DOT = { x: 46, y: 63 };
 // A trouvé : le grand sourire ouvert, plein.
 export const MASCOT_OPEN_SMILE = "M31 58 C 31 57, 32 56.5, 33 56.5 L 59 56.5 C 60 56.5, 61 57, 61 58 C 60.5 68.5, 54 74.5, 46 74.5 C 38 74.5, 31.5 68.5, 31 58 Z";
+
+// Le visage du 1 et ses quatre humeurs (docs/123 §1) : le visage droit des icônes (S5), seule
+// la bouche change. Jamais déçu : pas de bouche qui tombe.
+export type Mood = "ravi" | "content" | "attentif" | "neutre";
+export const FACE_MOUTH: Record<Mood, string> = {
+  ravi: "M28 70 C 38 84, 62 84, 72 70",
+  content: ICON_SMILE,
+  attentif: "M34 75 L 66 75",
+  neutre: "M40 76 L 60 76",
+};
