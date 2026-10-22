@@ -46,9 +46,9 @@ onMounted(async () => {
 
       <h2>Données personnelles</h2>
       <p>
-        Ce que jobA1 garde, pourquoi et combien de temps : <RouterLink to="/tes-donnees">
+        <RouterLink to="/tes-donnees">
           Données personnelles
-        </RouterLink>. Tu peux tout exporter et supprimer ton compte à tout moment.
+        </RouterLink> : ce que jobA1 garde, pourquoi et combien de temps. Tu peux tout exporter et supprimer ton compte à tout moment.
       </p>
 
       <h2>Responsabilité</h2>

@@ -410,10 +410,20 @@ async def _applications(
 ) -> int:
     count = 0
     current = f"{today:%Y-%m}"
+    # Une lettre et un CV déjà rédigés pour les deux meilleures offres à examiner : la démo ne
+    # rédige rien (pas d'IA), le visiteur voit quand même la fonction phare (docs/126 §5).
+    showcase = {
+        s.key
+        for s in sorted(
+            (s for s in data.OFFERS if s.applied is None and s.state == "to_review" and s.score),
+            key=lambda s: s.score or 0,
+            reverse=True,
+        )[:2]
+    }
     for spec in data.OFFERS:
         offer = offers[spec.key]
         if spec.applied is None:
-            if spec.state == "preparing":
+            if spec.state == "preparing" or spec.key in showcase:
                 await _drafts(session, offer, spec, chunks)
             continue
         applied = spec.applied

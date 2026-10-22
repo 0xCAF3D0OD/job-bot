@@ -113,3 +113,17 @@ Les quatre audits le disent : leurs notes sont provisoires tant que personne ne 
 - Tests de l'interface : le menu à trois entrées, le titre de chaque page, les anciennes adresses redirigées (dont `/candidatures/bilan?mois=2026-10` vers `/bilan?mois=2026-10`), les mots. 444 tests, lint, vue-tsc.
 - Tests backend : les consignes de l'assistant (trois entrées, plus de Progresser, les nouvelles adresses), le libellé du statut. 629 tests, ruff, mypy.
 - Les trois audits sur la démo à zéro.
+
+## Écarts (1.0.1)
+
+- **Le pied de page** : Données personnelles · Conditions d'utilisation · Accessibilité · À propos, sur chaque page sauf les écrans de travail sans en-tête (l'accueil) ; sur téléphone, au-dessus de la barre d'onglets (l'espace qu'elle cache passe du contenu au pied de page). Le contact est sur ces pages (« Responsable », « L'exploitant », « Qui est derrière »), pas dans la ligne de liens.
+- **« À propos »** (`/a-propos`, publique) : pourquoi jobA1, ce qu'il promet, qui est derrière, le code public. **Un premier jet** : « Pourquoi jobA1 » est écrit à partir de ce que fait la plateforme, sans rien sur ton parcours ; « Qui est derrière » dit seulement « conçu et développé par Kevin Di Nocera » et tes coordonnées de Données personnelles. À corriger ou compléter.
+- **« Le code »** quitte le bandeau de la démo ; il est dans « À propos » (« Voir le code »).
+- **La démo** : une lettre et un CV déjà rédigés pour les deux meilleures offres à examiner (la démo n'appelle pas l'IA) ; le visiteur voit la lettre, ses paragraphes reliés aux blocs du profil, le PDF et le Word.
+- **La fiche du test** : docs/127 (qui, le matériel, ce qu'on dit, le test des 5 secondes, le premier clic, trois tâches, les questions de la fin, la grille, la synthèse).
+- **Vu en passant, non corrigé** : un lien suivi d'un point (« … Conditions d'utilisation . ») garde une espace avant le point dans quelques pages (Données personnelles, l'accès, Préparer) ; la règle de lint impose un retour à la ligne dans le lien. Dans les nouvelles pages, le lien est placé avant « : », où l'espace est juste.
+
+## Vérifié (1.0.1)
+
+- Tests : « À propos » (publique, titre de l'onglet, le contact, le lien du code), le pied de page (les quatre liens), la démo (une lettre pour deux offres à examiner). 446 tests de l'interface, lint, vue-tsc ; 629 tests backend, ruff, mypy.
+- Captures à 1440 et 390 px : « À propos », le pied de page d'Aujourd'hui, la lettre d'exemple ; les trois audits sur la démo à zéro.

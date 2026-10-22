@@ -15,6 +15,7 @@ const DiagnosticView = () => import("./views/DiagnosticView.vue");
 const AccessView = () => import("./views/AccessView.vue");
 const AccessibilityView = () => import("./views/AccessibilityView.vue");
 const TermsView = () => import("./views/TermsView.vue");
+const AboutView = () => import("./views/AboutView.vue");
 const DiscoverView = () => import("./views/DiscoverView.vue");
 const ExtensionLinkView = () => import("./views/ExtensionLinkView.vue");
 const PrivacyView = () => import("./views/PrivacyView.vue");
@@ -174,6 +175,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/accessibilite", name: "accessibility", component: AccessibilityView },
   // Conditions d'utilisation (docs/125 §7) : publiques.
   { path: "/conditions", name: "terms", component: TermsView },
+  // À propos (docs/126 §4) : publique.
+  { path: "/a-propos", name: "about", component: AboutView },
   // L'accueil après la première connexion (docs/66), plein écran, sans menu.
   { path: "/bienvenue", name: "welcome", component: WelcomeView, meta: { bare: true } },
   // Relier l'extension du navigateur en un clic, ouverte par l'extension (docs/71 §4).
@@ -193,7 +196,7 @@ export const router = createRouter({
 // Ouvert sans connexion : la présentation de la plateforme, la connexion (docs/18 §1), les liens
 // d'accès, la demande de compte (docs/102) et ce qui est gardé. Les Actualités demandent la
 // connexion depuis la 0.55.0 (docs/67).
-export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "signup", "privacy", "accessibility", "terms"]);
+export const PUBLIC_ROUTES = new Set(["discover", "login", "access", "signup", "privacy", "accessibility", "terms", "about"]);
 
 router.beforeEach(async (to) => {
   const { loggedIn, load } = useAuth();
@@ -241,6 +244,7 @@ export const PAGE_TITLES: Record<string, string> = {
   privacy: "Données personnelles",
   accessibility: "Accessibilité",
   terms: "Conditions d'utilisation",
+  about: "À propos",
   welcome: "Bienvenue",
   "extension-link": "Extension",
   "not-found": "Page introuvable",

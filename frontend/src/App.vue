@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+import AppFooter from "./components/AppFooter.vue";
 import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 
 import NotificationBell from "./components/NotificationBell.vue";
@@ -196,12 +197,6 @@ onUnmounted(() => {
     <RouterLink to="/la-plateforme">
       Découvrir jobA1
     </RouterLink>
-    <a
-      href="https://github.com/0xCAF3D0OD/job-bot"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="with-icon"
-    >Le code<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
   </div>
   <!-- Le bandeau « Annuler » (docs/108 §1). -->
   <UndoToast />
@@ -246,6 +241,7 @@ onUnmounted(() => {
   >
     <RouterView />
   </main>
+  <AppFooter v-if="!route.meta.bare" />
   <!-- Sur téléphone, les deux pages de travail en bas de l'écran (docs/92). -->
   <TabBar v-if="loggedIn" />
   <MaintenanceOverlay
