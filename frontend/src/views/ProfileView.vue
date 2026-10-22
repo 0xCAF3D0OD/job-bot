@@ -40,6 +40,7 @@ const tab = computed<Tab>(() => {
         :key="entry.key"
         :to="{ query: entry.key === 'recherche' ? {} : { onglet: entry.key } }"
         :class="{ active: tab === entry.key }"
+        :aria-current="tab === entry.key ? 'page' : undefined"
         :data-test="`tab-${entry.key}`"
       >
         <span class="with-icon">

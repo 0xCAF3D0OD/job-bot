@@ -8,6 +8,8 @@ defineProps<{ title: string; subtitle?: string; short?: string; eyebrow?: string
 
 <template>
   <header class="jobs-head page-head">
+    <!-- Le retour, en haut à gauche, avant le titre (convention, audit du 22.10.2026). -->
+    <slot name="back" />
     <p
       v-if="eyebrow"
       class="page-head-eyebrow"

@@ -141,7 +141,7 @@ onMounted(() => void load());
         Les alertes doivent y arriver.
       </template>
       <template v-else>
-        La lecture de ta boîte mail n'est pas encore branchée (réglage d'installation, voir le README).
+        La lecture de ta boîte mail n'est pas encore disponible sur cette plateforme.
       </template>
     </p>
     <DisclosureRow

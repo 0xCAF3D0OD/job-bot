@@ -55,7 +55,7 @@ const error = ref("");
 const savedText = computed(() => {
   const s = saved.value;
   if (!s) return "";
-  const label = REASONS[s.direction].find((r) => r.value === s.reason)?.label.toLowerCase() ?? "";
+  const label = REASONS[s.direction]?.find((r) => r.value === s.reason)?.label.toLowerCase() ?? "";
   return `Tu as corrigé cette note : trop ${s.direction === "high" ? "haute" : "basse"}, ${label}.`;
 });
 

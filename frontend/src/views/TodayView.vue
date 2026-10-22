@@ -33,11 +33,11 @@ const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: str
   notifications: {
     label: "Recevoir les notifications sur ton téléphone",
     to: "/reglages",
-    hint: "réglage d'installation, voir le README",
+    hint: "pas encore disponible sur cette plateforme",
   },
   imap: {
     label: "Brancher la collecte sur ta boîte Gmail",
-    hint: "réglage d'installation, voir le README",
+    hint: "pas encore disponible sur cette plateforme",
   },
 };
 

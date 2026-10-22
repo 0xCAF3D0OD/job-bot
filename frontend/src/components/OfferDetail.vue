@@ -341,7 +341,12 @@ watch(
       </div>
     </div>
     <div>
-      <h2>{{ offer.title }}</h2>
+      <h2
+        tabindex="-1"
+        data-test="offer-detail-title"
+      >
+        {{ offer.title }}
+      </h2>
       <span
         class="detail meta-line"
         data-test="detail-meta"

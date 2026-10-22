@@ -251,6 +251,22 @@ describe("note et résumé", () => {
 });
 
 describe("tri et candidature", () => {
+  it("ouvrir une offre : l'adresse la suit, le focus passe à son titre, « Retour » la referme", async () => {
+    const wrapper = await mountAt("/offres");
+    document.body.appendChild(wrapper.element);
+    await wrapper.find("[data-test=offer]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.offre).toBe("1");
+    expect(document.activeElement?.getAttribute("data-test")).toBe("offer-detail-title");
+    router.back();
+    await flushPromises();
+    await new Promise((r) => setTimeout(r, 0));
+    await flushPromises();
+    expect(router.currentRoute.value.query.offre).toBeUndefined();
+    expect(wrapper.find("[data-test=offer-detail]").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it("« Plus tard » change le statut et ferme le détail", async () => {
     PATCH.mockResolvedValue({ data: { id: 1, status: "later" } });
     const wrapper = await mountAt("/offres");

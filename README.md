@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/125-freemium.md](docs/125-freemium.md) (0.99.0)
+- Version en cours : [docs/interface.md](docs/interface.md) (0.99.1, corrections des audits)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -203,7 +203,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.96.0 | Le personnage se transforme : pendant le chargement d'une page, le visage prend l'objet de la page (soleil, loupe, flèche, cloche, anneau, cravate, profil, roue dentée) ; le Rendez-vous, le Profil et les Réglages ont aussi leur transition | livrée |
 | 0.97.0 | Les offres du jour une par une dans Aujourd'hui (Garder ou Écarter, Annuler, le balayage au doigt ; 5 quand le mois est à rattraper) ; l'étape ④ Suivre dans Préparer (la relance à la date choisie, la preuve ORP à compléter, le contact) | livrée |
 | 0.98.0 | Les formules, sans paiement : Essentiel gratuite (150 offres notées, 10 lettres, 10 CV, 30 messages, 1 entraînement par mois) et Plus ; les compteurs au survol et dans Réglages › Compte, la ligne à la limite ; la formule réglée par l'exploitant ; la note avec un modèle moins cher, à comparer avant (`jobbot score-compare`) | livrée |
-| 0.99.0 | Le paiement de Plus par Payrexx, fermé par défaut : « Passer à Plus » après les conditions acceptées, la confirmation vérifiée auprès de Payrexx, le webhook signé, la résiliation, les paiements reçus ; la page Conditions d'utilisation ; le paiement dans Données personnelles | en cours |
+| 0.99.0 | Le paiement de Plus par Payrexx, fermé par défaut : « Passer à Plus » après les conditions acceptées, la confirmation vérifiée auprès de Payrexx, le webhook signé, la résiliation, les paiements reçus ; la page Conditions d'utilisation ; le paiement dans Données personnelles | livrée |
+| 0.99.1 | Les corrections des audits d'ergonomie du 22 octobre : plus de page blanche après une mise à jour, le menu ne mène plus à une offre disparue, une seule étape courante dans Préparer, un titre d'onglet par page, « Aller au contenu », les contrastes des initiales et de la cloche, les cibles de 24 px, le retour en haut à gauche, l'adresse et le focus à l'ouverture d'une offre, sans jargon technique | en cours |
 
 ## Lancer en local
 

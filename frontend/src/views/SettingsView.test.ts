@@ -56,7 +56,7 @@ describe("SettingsView, notifications", () => {
   it("non configurées : explique quoi faire", async () => {
     mockGet(false);
     const { wrapper } = await mountSettings("notifications");
-    expect(wrapper.find("[data-test=notifications]").text()).toContain("réglage d'installation");
+    expect(wrapper.find("[data-test=notifications]").text()).toContain("Pas encore disponibles sur cette plateforme");
     expect(wrapper.find("[data-test=test-notification]").exists()).toBe(false);
   });
 

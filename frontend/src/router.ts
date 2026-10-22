@@ -217,7 +217,39 @@ router.beforeEach(async (to) => {
 // Retour à la dernière page de la rubrique Candidatures depuis le menu (docs/19). À l'arrivée
 // sur une autre page, sa transition si elle charge des données (docs/61 §2) ; pas en changeant
 // seulement un filtre, un mois ou un onglet dans la page.
+// Le titre de l'onglet du navigateur, « Page · jobA1 » (WCAG 2.4.2, audit du 22.10.2026).
+export const PAGE_TITLES: Record<string, string> = {
+  today: "Aujourd'hui",
+  offers: "Offres",
+  applications: "Suivi",
+  alerts: "Alertes",
+  insights: "Bilan",
+  "orp-meeting": "Rendez-vous ORP",
+  preparation: "Préparer",
+  news: "Actualités",
+  trainings: "Formations",
+  profile: "Profil",
+  settings: "Réglages",
+  diagnostic: "Diagnostic",
+  login: "Connexion",
+  access: "Accès",
+  signup: "Demander un compte",
+  discover: "La plateforme",
+  privacy: "Données personnelles",
+  accessibility: "Accessibilité",
+  terms: "Conditions d'utilisation",
+  welcome: "Bienvenue",
+  "extension-link": "Extension",
+  "not-found": "Page introuvable",
+};
+
+export function pageTitle(name: unknown): string {
+  const page = typeof name === "string" ? PAGE_TITLES[name] : undefined;
+  return page ? `${page} · jobA1` : "jobA1";
+}
+
 router.afterEach((to, from) => {
+  document.title = pageTitle(to.name);
   useJobsMemory().remember(to.fullPath);
   useProgressMemory().remember(to.fullPath);
   if (to.name !== from.name) startPage(typeof to.name === "string" ? to.name : null);

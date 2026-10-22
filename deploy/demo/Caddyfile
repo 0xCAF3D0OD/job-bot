@@ -42,6 +42,14 @@ Disallow: /
 		reverse_proxy api:8000
 	}
 
+	# Les fichiers de l'application (`/assets/…`, nommés d'après leur contenu) : un fichier qui
+	# n'existe plus (version précédente, après une mise à jour) répond 404, jamais `index.html` ;
+	# l'interface se recharge alors d'elle-même (audit du 22.10.2026 : page blanche).
+	handle /assets/* {
+		root * /srv
+		file_server
+	}
+
 	# L'interface : une application d'une page, `index.html` pour toute autre adresse.
 	handle {
 		root * /srv

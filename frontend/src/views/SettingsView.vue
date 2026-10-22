@@ -166,7 +166,8 @@ const owner = computed(() => Boolean(me.value?.is_owner));
 const { plan, aiNote } = usePlan();
 const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3).
-const showDiagnostic = computed(() => owner.value || me.value?.auth_enabled === false);
+// Pas dans la démo : un écran technique, du jargon pour qui découvre jobA1 (audit du 22.10.2026).
+const showDiagnostic = computed(() => owner.value || (me.value?.auth_enabled === false && !me.value?.demo));
 // Résumés des rubriques, affichés sur téléphone (docs/34 §3).
 const summary = computed(() => ({
   recherche: [
@@ -694,7 +695,7 @@ onUnmounted(() => spy?.disconnect());
                 v-else
                 class="hint"
               >
-                Non configurées : réglage d'installation, voir le README.
+                Pas encore disponibles sur cette plateforme.
               </p>
             </fieldset>
           </div>

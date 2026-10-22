@@ -165,7 +165,7 @@ async def answer(
     """Enregistre la question, fait répondre l'IA au fil de l'eau, enregistre la réponse."""
     settings = runtime.settings
     if not settings.llm_configured:
-        raise AssistantUnavailable("IA non configurée (réglage d'installation, voir le README)")
+        raise AssistantUnavailable("l'IA n'est pas encore activée sur cette plateforme")
     now = datetime.now(UTC)
     async with runtime.sessionmaker.begin() as session:
         try:
