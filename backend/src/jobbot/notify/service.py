@@ -51,7 +51,9 @@ BUDGET_ALERT_KEY = "budget_alert_month"
 DIGEST_KEY = "offers_digest_day"
 # Ce qui peut attendre un jour de recherche (docs/86 §2) ; les rappels datés (remise ORP,
 # rendez-vous de demain) et les alertes techniques passent toujours.
-QUIET_KINDS = frozenset({"offers", "follow_up", "interview", "contact", "funding", "orp_target"})
+QUIET_KINDS = frozenset(
+    {"offers", "follow_up", "interview", "contact", "funding", "orp_target", "first_alert"}
+)
 
 
 @dataclass(frozen=True)

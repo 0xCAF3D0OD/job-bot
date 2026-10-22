@@ -38,6 +38,7 @@ from jobbot.mail.confirm import confirmation_link, open_confirmation
 from jobbot.mail.imap import FetchedEmail, ImapMailbox, MailboxError
 from jobbot.mail.message import ParsedEmail, parse_email
 from jobbot.metrics import COLLECT_EMAILS, COLLECT_OFFERS, IMAP_ERRORS
+from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 from jobbot.sources.base import ParsedAlert, RawOffer
@@ -292,8 +293,39 @@ async def ingest_email(
             return None
         search = await session.get_one(Search, search_id)
         search.new_offers_count = await ingest_offers(session, search, source, offers)
+        # La première alerte d'un site avec des offres (docs/121 §B.3) : la personne sait que
+        # son alerte marche.
+        first = (
+            kind is None
+            and status == ParseStatus.PARSED
+            and offers
+            and not await session.scalar(
+                select(Search.id)
+                .where(
+                    Search.source == source,
+                    Search.kind.is_(None),
+                    Search.parse_status == ParseStatus.PARSED,
+                    Search.results_count > 0,
+                    Search.id != search.id,
+                )
+                .limit(1)
+            )
+        )
 
     COLLECT_EMAILS.labels(source=source, parse_status=status).inc()
+    if first:
+        name = next((site.name for site in sites if site.slug == source), source)
+        count = len(offers)
+        await notify.deliver(
+            runtime,
+            notify.Message(
+                title=f"Première alerte de {name}",
+                message=f"{name} t'a envoyé ses premières offres : {count}.",
+                tags=["bell"],
+            ),
+            kind="first_alert",
+            link="/candidatures/offres",
+        )
     if found is not None:
         fallback = "Gmail" if source == "gmail" else source
         name = next((site.name for site in sites if site.slug == source), fallback)

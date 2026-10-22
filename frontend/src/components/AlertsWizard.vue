@@ -6,6 +6,7 @@ import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import IllustratedSide from "./IllustratedSide.vue";
 import type { IllustrationName } from "./Illustration.vue";
+import HoverNote from "./HoverNote.vue";
 import MailboxAddress from "./MailboxAddress.vue";
 
 // Assistant des alertes (docs/21 §4) : un écran à la fois, tant qu'aucune alerte n'est en place.
@@ -95,6 +96,17 @@ function continueToSites(): void {
 function nextSite(): void {
   if (siteIndex.value + 1 < sites.value.length) siteIndex.value += 1;
   else step.value = 3;
+}
+
+// Ouvrir un site copie l'adresse d'avance (docs/121 §B.2) : il ne reste qu'à la coller.
+const copiedOnOpen = ref(false);
+function copyOnOpen(): void {
+  const address = props.page.mailbox;
+  if (!address) return;
+  void navigator.clipboard
+    ?.writeText(address)
+    .then(() => (copiedOnOpen.value = true))
+    .catch(() => undefined);
 }
 </script>
 
@@ -188,18 +200,21 @@ function nextSite(): void {
 
       <template v-else-if="step === 2 && site">
         <h2>Crée l'alerte sur {{ site.name }}</h2>
+        <!-- Une ligne (docs/121 §B.2) : l'adresse est copiée en ouvrant le site, il reste à la
+             coller dans « Créer une alerte » ; le détail au survol. -->
         <p class="hint">
-          Ouvre la recherche, clique sur « Créer une alerte » (ou « Activer l'alerte ») et donne
           <template v-if="page.mailbox">
-            l'adresse <MailboxAddress
+            <HoverNote text="Sur le site, « Créer une alerte » ou « Activer l'alerte », puis colle l'adresse.">
+              {{ copiedOnOpen ? "Adresse copiée :" : "En ouvrant le site, l'adresse est copiée :" }}
+            </HoverNote>{{ " " }}<MailboxAddress
               :address="page.mailbox"
               :personal="page.personal_address"
               data-test="wizard-address"
             />
           </template>
           <template v-else>
-            ton adresse e-mail
-          </template>.
+            Ouvre la recherche, clique sur « Créer une alerte » et donne ton adresse e-mail.
+          </template>
         </p>
         <div class="wizard-links">
           <template
@@ -213,6 +228,7 @@ function nextSite(): void {
               rel="noopener noreferrer"
               class="button-link"
               data-test="wizard-open"
+              @click="copyOnOpen"
             ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </template>
           <a
@@ -223,6 +239,7 @@ function nextSite(): void {
             rel="noopener noreferrer"
             class="button-link"
             data-test="wizard-open-remote"
+            @click="copyOnOpen"
           ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} en télétravail : {{ link.terms }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
         </div>
         <!-- Deux boutons égaux, côte à côte (docs/104 §4). -->

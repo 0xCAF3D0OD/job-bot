@@ -168,3 +168,19 @@ describe("Alertes, deux colonnes sur ordinateur (0.83.2)", () => {
     expect(columns.find(".alerts-journal").exists()).toBe(true);
   });
 });
+
+describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
+  it("ouvrir le site copie l'adresse d'avance", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    const todo = { ...page([search(1, [cell("jobup"), cell("linkedin")])]), mailbox: "alertes+lea-abc12345@joba1.ch", personal_address: true };
+    PUT.mockResolvedValue({ data: todo });
+    const wrapper = await mountView(todo);
+    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=wizard-open]").trigger("click");
+    await flushPromises();
+    expect(writeText).toHaveBeenCalledWith("alertes+lea-abc12345@joba1.ch");
+    expect(wrapper.find("[data-test=alerts-wizard]").text()).toContain("Adresse copiée");
+  });
+});

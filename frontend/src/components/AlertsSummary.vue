@@ -12,12 +12,13 @@ import HoverNote from "./HoverNote.vue";
 const props = defineProps<{ page: AlertsPage }>();
 const emit = defineEmits<{ manage: []; restart: [] }>();
 
-const WAIT_DAYS = 3;
+// Rien reçu 24 heures après la création : l'aide (docs/121 §B.3).
+const WAIT_HOURS = 24;
 const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
 type Cell = AlertsPage["searches"][number]["cells"][number];
 const late = (cell: Cell): boolean =>
-  cell.status === "created" && !!cell.created_at && Date.now() - Date.parse(cell.created_at) > WAIT_DAYS * 86_400_000;
+  cell.status === "created" && !!cell.created_at && Date.now() - Date.parse(cell.created_at) > WAIT_HOURS * 3_600_000;
 
 const rows = computed(() =>
   props.page.searches
@@ -32,7 +33,7 @@ const rows = computed(() =>
 );
 const activeCount = computed(() => rows.value.filter((r) => r.received.length || r.search.cells.some((c) => c.created_at)).length);
 const lastReceived = computed(() => rows.value.map((r) => r.lastReceived).filter(Boolean).sort().at(-1) ?? null);
-// Sites dont une alerte créée n'a rien envoyé depuis 3 jours : l'aide au transfert.
+// Sites dont une alerte créée n'a rien envoyé depuis 24 heures : l'aide.
 const lateSites = computed(() => {
   const slugs = new Set(rows.value.flatMap((r) => r.waiting.map((c) => c.site)));
   return props.page.sites.filter((s) => slugs.has(s.slug));
@@ -44,7 +45,7 @@ const lateDetail = computed(() => {
 });
 const STATES: Record<string, string> = {
   ok: "Reçue",
-  late: "Rien reçu depuis 3 jours",
+  late: "Rien reçu depuis 24 heures",
   pending: "En attente du premier envoi",
   todo: "À créer",
 };
@@ -102,7 +103,7 @@ const siteNames = (cells: Cell[]): string =>
       data-test="late-help"
     >
       <HoverNote :text="lateDetail">
-        Rien reçu de {{ lateSites.map((s) => s.name).join(", ") }} depuis 3 jours : vérifie l'alerte sur le site.
+        Rien reçu de {{ lateSites.map((s) => s.name).join(", ") }} depuis 24 heures : vérifie l'alerte sur le site.
       </HoverNote>
     </p>
     <button

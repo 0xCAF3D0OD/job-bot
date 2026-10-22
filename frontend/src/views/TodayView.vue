@@ -169,7 +169,7 @@ const banners = computed(() => {
     list.push({
       key: "alerts",
       test: "alerts-waiting",
-      text: t.alerts_waiting === 1 ? "1 alerte créée depuis 3 jours n'a encore rien envoyé." : `${t.alerts_waiting} alertes créées depuis 3 jours n'ont encore rien envoyé.`,
+      text: t.alerts_waiting === 1 ? "1 alerte créée hier n'a encore rien envoyé." : `${t.alerts_waiting} alertes créées depuis hier n'ont encore rien envoyé.`,
       action: "Vérifier mes alertes",
       to: "/candidatures/alertes",
     });

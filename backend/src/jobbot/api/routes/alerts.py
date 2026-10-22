@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from jobbot import accounts, welcome
-from jobbot.alerts import service
+from jobbot.alerts import service, trades
 from jobbot.collect import public_search
 from jobbot.core.filter import RemotePolicy
 from jobbot.db.models import AlertSearch, AlertSetup, Search, Site
@@ -104,6 +104,9 @@ class AlertSearchUpdate(BaseModel):
 
 async def _page(runtime: Runtime) -> AlertsPage:
     settings = runtime.settings
+    # Un métier hors de la liste : les recherches demandées à l'IA, une fois (docs/121 §B).
+    if not settings.demo:
+        await trades.prepare(runtime)
     async with runtime.sessionmaker.begin() as session:
         address = await addresses.account_address(session, settings)
         owner = await accounts.is_owner(session)
