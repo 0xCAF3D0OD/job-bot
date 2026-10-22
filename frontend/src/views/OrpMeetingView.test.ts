@@ -47,6 +47,15 @@ beforeEach(() => {
 });
 
 describe("Rendez-vous ORP (docs/83)", () => {
+  it("aucune candidature encore : la feuille le dit, et mène aux offres (docs/128 §3)", async () => {
+    GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=sheet-none-yet]").text()).toContain("Ta feuille ORP se remplit avec tes candidatures.");
+    expect(wrapper.find("[data-test=sheet-summary]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=meeting-form]").exists()).toBe(true);
+  });
+
   it("sans date : le formulaire, et les questions attendent la date", async () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: PREP, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });

@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
+import FaceState from "../components/FaceState.vue";
 import CopyLabel from "../components/CopyLabel.vue";
 import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
@@ -285,8 +286,24 @@ onMounted(() => void load());
         </form>
       </div>
 
+      <!-- Aucune candidature encore (docs/128 §3) : la feuille se remplira avec elles. -->
+      <FaceState
+        v-if="prep && prep.has_applications === false"
+        title="Pas encore de candidature"
+        data-test="sheet-none-yet"
+      >
+        <p>Ta feuille ORP se remplit avec tes candidatures.</p>
+        <div class="face-state-actions">
+          <RouterLink
+            to="/candidatures/offres"
+            class="pill"
+          >
+            <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+          </RouterLink>
+        </div>
+      </FaceState>
       <div
-        v-if="prep"
+        v-else-if="prep"
         class="orp-meeting-sheet"
       >
         <section

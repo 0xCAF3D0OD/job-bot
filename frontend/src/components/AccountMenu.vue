@@ -2,11 +2,9 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
 import { useCollect } from "../composables/useCollect";
-import { announceDataChanged } from "../composables/useDataChanged";
 import { useProfiles } from "../composables/useProfiles";
 import AppIcon from "./AppIcon.vue";
 
@@ -35,18 +33,6 @@ function onChange(event: Event): void {
 async function collect(): Promise<void> {
   open.value = false;
   await collectNow();
-}
-
-// Réafficher les guides d'Aujourd'hui (0.84.2) : « Comment ça marche » et « Pour bien
-// démarrer », masqués d'un clic, reviennent d'ici.
-async function showGuides(): Promise<void> {
-  close();
-  await Promise.all([
-    api.PUT("/api/journey", { body: { dismissed: false } }),
-    api.PUT("/api/onboarding", { body: { dismissed: false } }),
-  ]);
-  if (route.path.startsWith("/aujourdhui")) announceDataChanged();
-  else await router.push("/aujourdhui");
 }
 
 async function signOut(): Promise<void> {
@@ -204,16 +190,6 @@ onUnmounted(() => {
         >
           <span class="with-icon"><AppIcon name="shield" />Données personnelles</span>
         </RouterLink>
-        <button
-          v-if="!me?.demo"
-          type="button"
-          class="link"
-          role="menuitem"
-          data-test="account-guides"
-          @click="showGuides"
-        >
-          <span class="with-icon"><AppIcon name="list-check" />Comment ça marche</span>
-        </button>
         <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
         <RouterLink
           v-if="me?.is_owner || (me?.auth_enabled === false && !me?.demo)"

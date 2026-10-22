@@ -5786,54 +5786,19 @@
         }
       }
     },
-    "/api/onboarding": {
+    "/api/first-steps": {
       "put": {
         "tags": [
           "today"
         ],
-        "summary": "Set Onboarding",
-        "description": "Masque (ou réaffiche) la liste de démarrage.",
-        "operationId": "setOnboarding",
+        "summary": "Set First Steps",
+        "description": "Masque la carte des premiers pas (« Masquer » : elle ne revient plus), ou retient que\nla carte de réussite a été montrée.",
+        "operationId": "setFirstSteps",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OnboardingIn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/journey": {
-      "put": {
-        "tags": [
-          "today"
-        ],
-        "summary": "Set Journey",
-        "description": "Masque (ou réaffiche) « Comment ça marche ».",
-        "operationId": "setJourney",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OnboardingIn"
+                "$ref": "#/components/schemas/FirstStepsIn"
               }
             }
           },
@@ -10797,32 +10762,6 @@
         ],
         "title": "ChatMessageOut"
       },
-      "ChecklistItem": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "enum": [
-              "criteria",
-              "profile",
-              "identity",
-              "orp_target",
-              "notifications",
-              "imap"
-            ],
-            "title": "Key"
-          },
-          "done": {
-            "type": "boolean",
-            "title": "Done"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key",
-          "done"
-        ],
-        "title": "ChecklistItem"
-      },
       "CheckoutIn": {
         "properties": {
           "accept_terms": {
@@ -13015,6 +12954,88 @@
         ],
         "title": "FirstOffersStart"
       },
+      "FirstStepsIn": {
+        "properties": {
+          "dismissed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismissed"
+          },
+          "celebrated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Celebrated"
+          }
+        },
+        "type": "object",
+        "title": "FirstStepsIn",
+        "description": "Ce qui est envoyé change : masquer la carte, ou dire que la réussite a été montrée."
+      },
+      "FirstStepsOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "profile",
+              "alerts",
+              "keep",
+              "prepare",
+              "sent"
+            ],
+            "title": "Key"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "done"
+        ],
+        "title": "FirstStepsOut",
+        "description": "Les premiers pas (docs/128 §1) : la carte en haut d'Aujourd'hui tant qu'il en manque."
+      },
+      "FirstStepsStats": {
+        "properties": {
+          "accounts": {
+            "type": "integer",
+            "title": "Accounts"
+          },
+          "sent_within_week": {
+            "type": "integer",
+            "title": "Sent Within Week"
+          },
+          "stopped_at": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Stopped At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "accounts",
+          "sent_within_week",
+          "stopped_at"
+        ],
+        "title": "FirstStepsStats",
+        "description": "Les premiers pas des comptes créés depuis 30 jours (docs/128 §4) : des nombres seulement."
+      },
       "FocusIn": {
         "properties": {
           "offer_id": {
@@ -14662,32 +14683,6 @@
           "failure"
         ],
         "title": "JobRunStatus"
-      },
-      "JourneyStep": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "enum": [
-              "alerts",
-              "triage",
-              "apply",
-              "follow",
-              "orp"
-            ],
-            "title": "Key"
-          },
-          "done": {
-            "type": "boolean",
-            "title": "Done"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key",
-          "done"
-        ],
-        "title": "JourneyStep",
-        "description": "Une étape de « Comment ça marche » (docs/21 §3), cochée d'après les données."
       },
       "KeywordsOut": {
         "properties": {
@@ -17619,19 +17614,6 @@
         ],
         "title": "OfferStatusOut"
       },
-      "OnboardingIn": {
-        "properties": {
-          "dismissed": {
-            "type": "boolean",
-            "title": "Dismissed"
-          }
-        },
-        "type": "object",
-        "required": [
-          "dismissed"
-        ],
-        "title": "OnboardingIn"
-      },
       "OrpHolder": {
         "properties": {
           "name": {
@@ -18200,6 +18182,16 @@
                 "type": "null"
               }
             ]
+          },
+          "first_steps": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FirstStepsStats"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -18631,6 +18623,11 @@
             },
             "type": "array",
             "title": "Obligations"
+          },
+          "has_applications": {
+            "type": "boolean",
+            "title": "Has Applications",
+            "default": true
           }
         },
         "type": "object",
@@ -20907,28 +20904,38 @@
       },
       "TodayOut": {
         "properties": {
-          "checklist": {
+          "first_steps": {
             "items": {
-              "$ref": "#/components/schemas/ChecklistItem"
+              "$ref": "#/components/schemas/FirstStepsOut"
             },
             "type": "array",
-            "title": "Checklist"
-          },
-          "checklist_dismissed": {
-            "type": "boolean",
-            "title": "Checklist Dismissed"
-          },
-          "journey": {
-            "items": {
-              "$ref": "#/components/schemas/JourneyStep"
-            },
-            "type": "array",
-            "title": "Journey",
+            "title": "First Steps",
             "default": []
           },
-          "journey_dismissed": {
+          "first_steps_dismissed": {
             "type": "boolean",
-            "title": "Journey Dismissed",
+            "title": "First Steps Dismissed",
+            "default": false
+          },
+          "has_offers": {
+            "type": "boolean",
+            "title": "Has Offers",
+            "default": true
+          },
+          "first_steps_offer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Steps Offer Id"
+          },
+          "first_steps_finished": {
+            "type": "boolean",
+            "title": "First Steps Finished",
             "default": false
           },
           "to_review": {
@@ -21068,8 +21075,6 @@
         },
         "type": "object",
         "required": [
-          "checklist",
-          "checklist_dismissed",
           "to_review",
           "month",
           "month_count",

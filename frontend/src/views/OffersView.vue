@@ -38,6 +38,8 @@ const counts = ref<Record<View, number>>({
   expired: 0,
   all: 0,
 });
+// Aucune offre du tout, ni filtre : un compte neuf (docs/128 §3).
+const noOffersYet = computed(() => counts.value.all === 0 && counts.value.expired === 0 && !activeCount(filters.value));
 const applying = ref<ApplicationFormValue | null>(null);
 const applyError = ref("");
 const notice = ref("");
@@ -474,6 +476,30 @@ onUnmounted(() => {
         >
           Impossible de charger les offres.
         </p>
+        <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
+        <FaceState
+          v-else-if="!loading && items.length === 0 && noOffersYet"
+          title="Pas encore d'offre"
+          data-test="offers-none-yet"
+        >
+          <p>Elles arrivent par tes alertes.</p>
+          <div class="face-state-actions">
+            <RouterLink
+              to="/candidatures/alertes"
+              class="pill"
+            >
+              <span class="with-icon"><AppIcon name="bell" />Créer mes alertes</span>
+            </RouterLink>
+            <button
+              type="button"
+              class="pill"
+              data-test="offers-none-add"
+              @click="manualOpen = true"
+            >
+              <span class="with-icon"><AppIcon name="plus" />Ajouter une offre</span>
+            </button>
+          </div>
+        </FaceState>
         <FaceState
           v-else-if="!loading && items.length === 0"
           title="Aucune offre"

@@ -54,6 +54,15 @@ const PLATFORM = {
 };
 
 describe("Plateforme (docs/65 §5)", () => {
+  it("les premiers pas : des nombres seulement, où s'arrêtent les autres (docs/128 §4)", async () => {
+    GET.mockResolvedValue({ data: { ...PLATFORM, first_steps: { accounts: 5, sent_within_week: 2, stopped_at: [0, 2, 1, 0, 0] } } });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    expect(wrapper.find("[data-test=first-steps-rate]").text()).toContain("2 sur 5");
+    const rows = wrapper.findAll("[data-test=first-steps-stopped] li").map((li) => li.text());
+    expect(rows).toEqual(["Étape 2 · Crée tes alertes2 comptes", "Étape 3 · Garde ta première offre1 compte"]);
+  });
+
   it("l'usage de chaque compte, les actions seulement pour les autres", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);

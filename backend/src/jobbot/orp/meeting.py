@@ -75,6 +75,8 @@ class Preparation:
     offers: int
     questions: list[Question]
     obligations: list[Obligation] = field(default_factory=list)
+    # Aucune candidature encore : la feuille le dit (docs/128 §3).
+    has_applications: bool = True
 
 
 def _month_name(month: str) -> str:
@@ -314,4 +316,5 @@ async def prepare(session: AsyncSession, now: datetime | None = None) -> Prepara
         offers=offers,
         questions=merge(suggested, list(meeting.questions) if meeting else []),
         obligations=await _obligations(session, today, meeting),
+        has_applications=bool(await session.scalar(select(select(Application.id).exists()))),
     )

@@ -2161,7 +2161,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/onboarding": {
+    "/api/first-steps": {
         parameters: {
             query?: never;
             header?: never;
@@ -2170,30 +2170,11 @@ export interface paths {
         };
         get?: never;
         /**
-         * Set Onboarding
-         * @description Masque (ou réaffiche) la liste de démarrage.
+         * Set First Steps
+         * @description Masque la carte des premiers pas (« Masquer » : elle ne revient plus), ou retient que
+         *     la carte de réussite a été montrée.
          */
-        put: operations["setOnboarding"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/journey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Set Journey
-         * @description Masque (ou réaffiche) « Comment ça marche ».
-         */
-        put: operations["setJourney"];
+        put: operations["setFirstSteps"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3917,16 +3898,6 @@ export interface components {
              */
             created_at: string;
         };
-        /** ChecklistItem */
-        ChecklistItem: {
-            /**
-             * Key
-             * @enum {string}
-             */
-            key: "criteria" | "profile" | "identity" | "orp_target" | "notifications" | "imap";
-            /** Done */
-            done: boolean;
-        };
         /** CheckoutIn */
         CheckoutIn: {
             /** Accept Terms */
@@ -4662,6 +4633,41 @@ export interface components {
             result: "queued" | "already_queued" | "no_trade" | "too_soon" | "disabled";
         };
         /**
+         * FirstStepsIn
+         * @description Ce qui est envoyé change : masquer la carte, ou dire que la réussite a été montrée.
+         */
+        FirstStepsIn: {
+            /** Dismissed */
+            dismissed?: boolean | null;
+            /** Celebrated */
+            celebrated?: boolean | null;
+        };
+        /**
+         * FirstStepsOut
+         * @description Les premiers pas (docs/128 §1) : la carte en haut d'Aujourd'hui tant qu'il en manque.
+         */
+        FirstStepsOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "profile" | "alerts" | "keep" | "prepare" | "sent";
+            /** Done */
+            done: boolean;
+        };
+        /**
+         * FirstStepsStats
+         * @description Les premiers pas des comptes créés depuis 30 jours (docs/128 §4) : des nombres seulement.
+         */
+        FirstStepsStats: {
+            /** Accounts */
+            accounts: number;
+            /** Sent Within Week */
+            sent_within_week: number;
+            /** Stopped At */
+            stopped_at: number[];
+        };
+        /**
          * FocusIn
          * @description Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché.
          */
@@ -5120,19 +5126,6 @@ export interface components {
          * @enum {string}
          */
         JobRunStatus: "running" | "success" | "failure";
-        /**
-         * JourneyStep
-         * @description Une étape de « Comment ça marche » (docs/21 §3), cochée d'après les données.
-         */
-        JourneyStep: {
-            /**
-             * Key
-             * @enum {string}
-             */
-            key: "alerts" | "triage" | "apply" | "follow" | "orp";
-            /** Done */
-            done: boolean;
-        };
         /**
          * KeywordsOut
          * @description Mots-clés cherchés par le filtre, affichés sous chaque case du formulaire.
@@ -6045,11 +6038,6 @@ export interface components {
             id: number;
             status: components["schemas"]["OfferStatus"];
         };
-        /** OnboardingIn */
-        OnboardingIn: {
-            /** Dismissed */
-            dismissed: boolean;
-        };
         /**
          * OrpHolder
          * @description En-tête du formulaire : nom et adresse saisis dans les Réglages.
@@ -6256,6 +6244,7 @@ export interface components {
              */
             database_admin: boolean;
             backup?: components["schemas"]["BackupOut"] | null;
+            first_steps?: components["schemas"]["FirstStepsStats"] | null;
         };
         /**
          * PlatformSettingsIn
@@ -6420,6 +6409,11 @@ export interface components {
             questions: components["schemas"]["QuestionIO"][];
             /** Obligations */
             obligations: components["schemas"]["ObligationOut"][];
+            /**
+             * Has Applications
+             * @default true
+             */
+            has_applications: boolean;
         };
         /** PrepareItem */
         PrepareItem: {
@@ -7210,20 +7204,28 @@ export interface components {
         };
         /** TodayOut */
         TodayOut: {
-            /** Checklist */
-            checklist: components["schemas"]["ChecklistItem"][];
-            /** Checklist Dismissed */
-            checklist_dismissed: boolean;
             /**
-             * Journey
+             * First Steps
              * @default []
              */
-            journey: components["schemas"]["JourneyStep"][];
+            first_steps: components["schemas"]["FirstStepsOut"][];
             /**
-             * Journey Dismissed
+             * First Steps Dismissed
              * @default false
              */
-            journey_dismissed: boolean;
+            first_steps_dismissed: boolean;
+            /**
+             * Has Offers
+             * @default true
+             */
+            has_offers: boolean;
+            /** First Steps Offer Id */
+            first_steps_offer_id?: number | null;
+            /**
+             * First Steps Finished
+             * @default false
+             */
+            first_steps_finished: boolean;
             /** To Review */
             to_review: number;
             /** Month */
@@ -12157,7 +12159,7 @@ export interface operations {
             };
         };
     };
-    setOnboarding: {
+    setFirstSteps: {
         parameters: {
             query?: never;
             header?: never;
@@ -12166,38 +12168,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OnboardingIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    setJourney: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OnboardingIn"];
+                "application/json": components["schemas"]["FirstStepsIn"];
             };
         };
         responses: {

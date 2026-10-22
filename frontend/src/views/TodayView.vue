@@ -6,9 +6,8 @@ import { api, type Offer, type Today } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import DailyPick from "../components/DailyPick.vue";
-import IconButton from "../components/IconButton.vue";
 import RhythmCard from "../components/RhythmCard.vue";
-import DisclosureRow from "../components/DisclosureRow.vue";
+import FirstSteps from "../components/FirstSteps.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import FaceMark from "../components/FaceMark.vue";
@@ -23,36 +22,6 @@ import { colorIndex, formatMonth, localDate, orpPace, plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
-
-// Une étape de démarrage : où aller pour la faire (docs/10 §2 b).
-const STEPS: Record<Today["checklist"][number]["key"], { label: string; to?: string; hint?: string }> = {
-  criteria: { label: "Dire ce que tu cherches (lieux, taux, types d'offres)", to: "/profil" },
-  profile: { label: "Déposer ton CV et créer tes blocs de profil", to: "/profil?onglet=parcours" },
-  identity: { label: "Saisir tes coordonnées (nom, adresse)", to: "/profil?onglet=coordonnees" },
-  orp_target: { label: "Indiquer l'objectif mensuel de ton conseiller ORP", to: "/reglages" },
-  notifications: {
-    label: "Recevoir les notifications sur ton téléphone",
-    to: "/reglages",
-    hint: "pas encore disponible sur cette plateforme",
-  },
-  imap: {
-    label: "Brancher la collecte sur ta boîte Gmail",
-    hint: "pas encore disponible sur cette plateforme",
-  },
-};
-
-// « Comment ça marche » (docs/21 §3) : le chemin en cinq étapes, avec où les faire.
-const JOURNEY: Record<Today["journey"][number]["key"], { label: string; to: string; where: string }> = {
-  alerts: { label: "Créer mes alertes sur les sites d'emploi", to: "/candidatures/alertes", where: "Candidatures › Alertes" },
-  triage: { label: "Trier les offres reçues", to: "/candidatures/offres", where: "Candidatures › Offres" },
-  apply: {
-    label: "Préparer lettre et CV, puis postuler",
-    to: "/candidatures/offres",
-    where: "« Préparer ma candidature » sur une offre",
-  },
-  follow: { label: "Suivre les réponses et relancer", to: "/candidatures/suivi", where: "Candidatures › Suivi" },
-  orp: { label: "Remettre les preuves à l'ORP chaque mois", to: "/candidatures/suivi", where: "Candidatures › Suivi" },
-};
 
 const today = ref<Today | null>(null);
 usePageReady("today", () => !!today.value);
@@ -183,15 +152,12 @@ const banners = computed(() => {
   return list.slice(0, 3);
 });
 
-const steps = computed(() => today.value?.checklist ?? []);
-// L'étape à faire, mise en avant dans la liste (docs/59 §5).
-const nextStep = computed(() => steps.value.find((s) => !s.done) ?? null);
-const nextJourney = computed(() => today.value?.journey.find((s) => !s.done) ?? null);
-const journeyDone = computed(() => today.value?.journey.filter((s) => s.done).length ?? 0);
-const doneCount = computed(() => steps.value.filter((s) => s.done).length);
-const showChecklist = computed(
-  () => !!today.value && !today.value.checklist_dismissed && doneCount.value < steps.value.length,
-);
+// Les premiers pas (docs/128) : tant qu'il en manque, la carte remplace la phrase du jour et
+// son action, et Aujourd'hui s'allège (pas de rythme, pas d'onglet vide, pas de jour calme).
+const starting = computed(() => {
+  const t = today.value;
+  return !!t && !t.first_steps_dismissed && t.first_steps.some((s) => !s.done);
+});
 const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" }).format(
   new Date(),
 );
@@ -206,13 +172,18 @@ const eyebrow = computed(() => {
 // sans relance ni rien de daté. Le visage ravi, la devise, le mois ORP en une ligne.
 const calm = computed(() => {
   const t = today.value;
-  return !!t && !restDay.value && !rhythmPaused.value && !t.to_review && !t.to_follow_up && !banners.value.length;
+  return !!t && !starting.value && !restDay.value && !rhythmPaused.value && !t.to_review && !t.to_follow_up && !banners.value.length;
 });
 // U, Aujourd'hui en compact (docs/123 §2) : sur téléphone, le mois ORP en une ligne.
 const { phone } = usePhone();
+const showTodo = computed(
+  () => !starting.value || best.value.length > 0 || preparing.value.length > 0 || !!today.value?.follow_ups?.length,
+);
 
 // R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil.
 const goalWon = ref(false);
+// Les cinq premiers pas faits (docs/128 §1) : le serveur le dit une seule fois.
+const stepsWon = ref(false);
 function firstGoal(t: Today | null): boolean {
   if (!t?.month_target || t.month_count < t.month_target) return false;
   const key = `jobA1.orp-goal.${t.month}`;
@@ -246,33 +217,30 @@ async function load(): Promise<void> {
   ]);
   today.value = day.data ?? null;
   goalWon.value = firstGoal(today.value);
+  // Montrée une fois : on le dit au serveur, elle ne revient plus (docs/128 §1).
+  if (today.value?.first_steps_finished && !stepsWon.value) {
+    stepsWon.value = true;
+    void api.PUT("/api/first-steps", { body: { celebrated: true } });
+  }
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 5);
 }
 
-// Masquer un guide (0.84.2) : il s'en va tout de suite, « Annuler » pendant 6 secondes
-// (docs/108) ; ensuite, « Comment ça marche » dans le menu du compte le réaffiche.
-function hideGuide(key: "journey_dismissed" | "checklist_dismissed", path: "/api/journey" | "/api/onboarding"): void {
+// Masquer les premiers pas : la carte s'en va tout de suite, « Annuler » pendant 6 secondes
+// (docs/108) ; ensuite, elle ne revient plus (docs/128 §1).
+function dismissSteps(): void {
   if (!today.value) return;
-  today.value = { ...today.value, [key]: true };
+  today.value = { ...today.value, first_steps_dismissed: true };
   void offerUndo({
-    message: "Guide masqué. Le menu du compte le réaffiche (« Comment ça marche »).",
+    message: "Premiers pas masqués.",
     commit: async (keepalive) => {
-      const { response } = await api.PUT(path, { body: { dismissed: true }, keepalive });
+      const { response } = await api.PUT("/api/first-steps", { body: { dismissed: true }, keepalive });
       return response.ok;
     },
     restore: () => {
-      if (today.value) today.value = { ...today.value, [key]: false };
+      if (today.value) today.value = { ...today.value, first_steps_dismissed: false };
     },
   });
-}
-
-function dismissJourney(): void {
-  hideGuide("journey_dismissed", "/api/journey");
-}
-
-function dismiss(): void {
-  hideGuide("checklist_dismissed", "/api/onboarding");
 }
 
 onMounted(() => void load());
@@ -334,8 +302,20 @@ const { me } = useAuth();
         </RouterLink>
       </section>
       <template v-else>
+        <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
+        <FirstSteps
+          v-if="starting"
+          :steps="today.first_steps"
+          :has-offers="today.has_offers ?? true"
+          :offer-id="today.first_steps_offer_id ?? null"
+          :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+          @dismiss="dismissSteps"
+        />
         <!-- La phrase du jour, en grand, et une seule action (docs/95 §1, d'après Sphere). -->
-        <div class="today-lead">
+        <div
+          v-else
+          class="today-lead"
+        >
           <p
             class="today-sentence"
             data-test="today-sentence"
@@ -377,9 +357,14 @@ const { me } = useAuth();
           </li>
         </ul>
 
-        <div class="today-grid">
-          <!-- À faire (docs/95 §3) : les meilleures offres, puis les relances. -->
+        <div
+          class="today-grid"
+          :class="{ single: !showTodo }"
+        >
+          <!-- À faire (docs/95 §3) : les meilleures offres, puis les relances. Pendant les
+               premiers pas, seulement quand il y a quelque chose dedans (docs/128 §2). -->
           <section
+            v-if="showTodo"
             class="dash-card today-todo"
             data-test="best"
           >
@@ -389,6 +374,7 @@ const { me } = useAuth();
                 {{ restDay ? "Jour sans recherche" : rhythmPaused ? "En pause" : "Offres du jour" }}
               </p>
               <div
+                v-if="!starting || preparing.length"
                 class="segmented small"
                 role="radiogroup"
                 aria-label="Offres affichées"
@@ -527,11 +513,12 @@ const { me } = useAuth();
               :compact="phone"
             />
             <RhythmCard
-              v-if="today.rhythm"
+              v-if="today.rhythm && !starting"
               :week="today.rhythm"
               nested
             />
             <RouterLink
+              v-if="!starting"
               to="/bilan"
               class="today-more"
             >
@@ -540,100 +527,6 @@ const { me } = useAuth();
           </section>
         </div>
       </template>
-
-      <div class="today-guides">
-        <div class="today-guides-rows">
-          <component
-            :is="DisclosureRow"
-            v-if="!today.journey_dismissed && today.journey.length && journeyDone < today.journey.length"
-            class="journey today-help-row"
-            title="Comment ça marche"
-            :value="`${journeyDone} / ${today.journey.length}`"
-            group="today-help"
-            data-test="journey"
-          >
-            <template #actions>
-              <IconButton
-                icon="close"
-                label="Masquer"
-                data-test="dismiss-journey"
-                @click="dismissJourney"
-              />
-            </template>
-            <ol>
-              <li
-                v-for="step in today.journey"
-                :key="step.key"
-                :class="{ done: step.done, next: step === nextJourney }"
-                :data-test="`journey-${step.key}`"
-              >
-                <span
-                  class="tick"
-                  aria-hidden="true"
-                ><AppIcon
-                  v-if="step.done"
-                  name="done"
-                  class="tick-svg"
-                /></span>
-                <span
-                  v-if="step.done"
-                  class="visually-hidden"
-                >Fait : </span>
-                <RouterLink :to="JOURNEY[step.key].to">
-                  {{ JOURNEY[step.key].label }}
-                </RouterLink>
-                <span class="hint journey-where">{{ JOURNEY[step.key].where }}</span>
-              </li>
-            </ol>
-          </component>
-          <component
-            :is="DisclosureRow"
-            v-if="showChecklist"
-            class="checklist today-help-row"
-            title="Pour bien démarrer"
-            :value="`${doneCount} / ${steps.length}`"
-            group="today-help"
-            data-test="checklist"
-          >
-            <template #actions>
-              <IconButton
-                icon="close"
-                label="Masquer"
-                data-test="dismiss"
-                @click="dismiss"
-              />
-            </template>
-            <ul>
-              <li
-                v-for="step in steps"
-                :key="step.key"
-                :class="{ done: step.done, next: step === nextStep }"
-                :data-test="`step-${step.key}`"
-              >
-                <span
-                  class="tick"
-                  aria-hidden="true"
-                ><AppIcon
-                  v-if="step.done"
-                  name="done"
-                  class="tick-svg"
-                /></span>
-                <RouterLink
-                  v-if="!step.done && STEPS[step.key].to"
-                  :to="STEPS[step.key].to!"
-                >
-                  {{ STEPS[step.key].label }}
-                </RouterLink>
-                <span v-else>{{ STEPS[step.key].label }}</span>
-                <span
-                  v-if="!step.done && STEPS[step.key].hint"
-                  class="hint"
-                >{{ STEPS[step.key].hint }}</span>
-              </li>
-            </ul>
-          </component>
-        </div>
-      </div>
     </div>
     <div
       v-else
@@ -652,5 +545,16 @@ const { me } = useAuth();
     @close="goalWon = false"
   >
     <p>{{ today.month_count }} candidatures sur {{ today.month_target }}.</p>
+  </SuccessCard>
+  <SuccessCard
+    v-else-if="stepsWon"
+    face
+    wink
+    keep-focus
+    title="Première candidature notée"
+    test-id="first-steps-done"
+    @close="stepsWon = false"
+  >
+    <p>Elle compte pour ton mois ORP.</p>
   </SuccessCard>
 </template>

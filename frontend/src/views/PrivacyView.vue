@@ -99,9 +99,7 @@ onMounted(async () => {
           <li>jobA1 garde ta formule, la date de fin de Plus et tes paiements (date, montant), tant que ton compte existe.</li>
           <li>Les justificatifs de paiement sont gardés 10 ans par Payrexx et l'exploitant : c'est une obligation comptable.</li>
           <li>
-            Les règles du paiement et de la résiliation : <RouterLink to="/conditions">
-              Conditions d'utilisation
-            </RouterLink>.
+            Les règles du paiement et de la résiliation : <RouterLink to="/conditions">Conditions d'utilisation</RouterLink>.
           </li>
         </ul>
       </template>
