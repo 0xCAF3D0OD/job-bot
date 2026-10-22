@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -31,7 +31,7 @@ import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
-import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
+import { colorIndex, formatMonth, ofMonth, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
@@ -80,7 +80,7 @@ const rowsById = computed(() => new Map((orp.value?.rows ?? []).map((r) => [r.ap
 const incomplete = computed(() => new Set((orp.value?.rows ?? []).filter((r) => r.missing.length).map((r) => r.application_id)));
 // À déclarer dans Job-Room (docs/85) : les candidatures du mois pas encore marquées déclarées,
 // date · entreprise · poste ; un clic ouvre le panneau, avec l'offre et les champs à copier.
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 const toDeclare = computed(() =>
   (orp.value?.rows ?? [])
     .filter((r) => !r.declared_at)
@@ -147,41 +147,13 @@ const dayCards = computed(() => {
 // Cartes du panneau : celles du jour choisi, sinon celles à relancer.
 const panelCards = computed(() => (selectedDay.value ? dayCards.value : toFollowUp.value));
 
-// Hauteur du panneau = hauteur du calendrier (écran large) ; estompage selon le défilement.
-const calendarBox = ref<HTMLElement | null>(null);
-const panelScroll = ref<HTMLElement | null>(null);
-const panelHeight = ref<number | null>(null);
-const atTop = ref(true);
-const atBottom = ref(true);
-let observer: ResizeObserver | null = null;
-
-function measure(): void {
-  const wide = globalThis.matchMedia?.("(min-width: 901px)").matches ?? true;
-  panelHeight.value = wide && calendarBox.value ? calendarBox.value.offsetHeight || null : null;
-}
-
-function onPanelScroll(): void {
-  const el = panelScroll.value;
-  if (!el) return;
-  atTop.value = el.scrollTop <= 2;
-  atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
-}
-
-watch(calendarBox, (el) => {
-  observer?.disconnect();
-  if (el && typeof ResizeObserver !== "undefined") {
-    observer = new ResizeObserver(measure);
-    observer.observe(el);
-  }
-  measure();
+// Cinq lignes, puis « Voir les N autres » (docs/130 §A) : plus de liste défilante estompée.
+const PANEL_ROWS = 5;
+const showAllCards = ref(false);
+const visibleCards = computed(() => (showAllCards.value ? panelCards.value : panelCards.value.slice(0, PANEL_ROWS)));
+watch(panelCards, () => {
+  showAllCards.value = false;
 });
-// Nouvelles cartes (jour choisi, mois) : retour en haut, estompage recalculé.
-watch(panelCards, async () => {
-  await nextTick();
-  if (panelScroll.value) panelScroll.value.scrollTop = 0;
-  onPanelScroll();
-});
-onUnmounted(() => observer?.disconnect());
 
 async function load(): Promise<void> {
   const wanted = typeof route.query.mois === "string" ? route.query.mois : undefined;
@@ -425,6 +397,7 @@ onUnmounted(() => assistant.setFocus(null));
 <template>
   <section class="jobs-body">
     <template v-if="orp">
+      <!-- Deux lignes (docs/130 §A) : le mois et les outils, puis le compte et l'état ORP. -->
       <div class="applications-head">
         <div class="month-nav">
           <IconButton
@@ -441,6 +414,48 @@ onUnmounted(() => assistant.setFocus(null));
             @click="go(1)"
           />
         </div>
+        <div class="applications-tools">
+          <div
+            class="segmented layout-switch"
+            role="radiogroup"
+            aria-label="Affichage"
+          >
+            <button
+              type="button"
+              role="radio"
+              :aria-checked="layout === 'calendar'"
+              data-test="layout-calendar"
+              @click="setLayout('calendar')"
+            >
+              <span class="with-icon"><AppIcon name="calendar" />Calendrier</span>
+            </button>
+            <button
+              type="button"
+              role="radio"
+              :aria-checked="layout === 'list'"
+              data-test="layout-list"
+              @click="setLayout('list')"
+            >
+              <span class="with-icon"><AppIcon name="list-check" />Liste</span>
+            </button>
+          </div>
+          <button
+            type="button"
+            class="pill add-application"
+            data-test="add-application"
+            @click="addManual"
+          >
+            <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
+          </button>
+          <MoreMenu
+            v-if="orp.count"
+            :items="monthMenu"
+            label="Actions sur le mois"
+            test-id="orp-more"
+          />
+        </div>
+      </div>
+      <div class="applications-summary">
         <div
           class="month-goal"
           data-test="goal"
@@ -462,89 +477,51 @@ onUnmounted(() => assistant.setFocus(null));
             class="hint"
           >Objectif ORP à saisir dans les Réglages.</span>
         </div>
+        <!-- Ligne 2, seulement s'il y a à faire : l'état ORP et son action (docs/43 n° 14). -->
         <div
-          class="segmented layout-switch"
-          role="radiogroup"
-          aria-label="Affichage"
+          v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
+          class="applications-todo"
         >
+          <span
+            :class="['applications-state', { done: orp.state === 'remis' }]"
+            data-test="state"
+          >{{ stateLabel }}</span>
+          <!-- Une action ORP à la fois (docs/22 §2). -->
           <button
+            v-if="orp.state === 'remis'"
             type="button"
-            role="radio"
-            :aria-checked="layout === 'calendar'"
-            data-test="layout-calendar"
-            @click="setLayout('calendar')"
-          >
-            <span class="with-icon"><AppIcon name="calendar" />Calendrier</span>
-          </button>
-          <button
-            type="button"
-            role="radio"
-            :aria-checked="layout === 'list'"
-            data-test="layout-list"
-            @click="setLayout('list')"
-          >
-            <span class="with-icon"><AppIcon name="list-check" />Liste</span>
-          </button>
-        </div>
-        <IconButton
-          icon="plus"
-          label="Ajouter une candidature"
-          class="add-application"
-          data-test="add-application"
-          @click="addManual"
-        />
-        <MoreMenu
-          v-if="orp.count"
-          :items="monthMenu"
-          label="Actions sur le mois"
-          test-id="orp-more"
-        />
-      </div>
-
-      <!-- Ligne 2, seulement s'il y a à faire : l'état ORP et son action (docs/43 n° 14). -->
-      <div
-        v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
-        class="applications-todo"
-      >
-        <span
-          :class="['applications-state', { done: orp.state === 'remis' }]"
-          data-test="state"
-        >{{ stateLabel }}</span>
-        <!-- Une action ORP à la fois (docs/22 §2). -->
-        <button
-          v-if="orp.state === 'remis'"
-          type="button"
-          class="link"
-          :disabled="busy"
-          data-test="cancel-submit"
-          @click="confirmingCancel = true"
-        >
-          Annuler la remise
-        </button>
-        <!-- Sur téléphone, l'action du moment est fixée en bas de l'écran (docs/33 §3.2). -->
-        <div
-          v-else
-          class="mobile-dock"
-        >
-          <button
-            v-if="firstIncomplete"
-            type="button"
-            class="primary small"
-            data-test="complete-next"
-            @click="edit(firstIncomplete)"
-          >
-            Compléter {{ plural(orp.incomplete, "ligne", "lignes") }}
-          </button>
-          <button
-            v-else
-            type="button"
-            class="primary small"
+            class="link"
             :disabled="busy"
-            data-test="submit"
-            @click="submit(true)"
+            data-test="cancel-submit"
+            @click="confirmingCancel = true"
           >
-            Marquer comme remis
+            Annuler la remise
           </button>
+          <!-- Sur téléphone, l'action du moment est fixée en bas de l'écran (docs/33 §3.2). -->
+          <div
+            v-else
+            class="mobile-dock"
+          >
+            <button
+              v-if="firstIncomplete"
+              type="button"
+              class="primary small"
+              data-test="complete-next"
+              @click="edit(firstIncomplete)"
+            >
+              Compléter {{ plural(orp.incomplete, "ligne", "lignes") }}
+            </button>
+            <button
+              v-else
+              type="button"
+              class="primary small"
+              :disabled="busy"
+              data-test="submit"
+              @click="submit(true)"
+            >
+              Marquer comme remis
+            </button>
+          </div>
         </div>
       </div>
       <InlineConfirm
@@ -617,15 +594,14 @@ onUnmounted(() => assistant.setFocus(null));
             @select="selectedDay = selectedDay === $event ? null : $event"
           />
         </div>
-        <!-- Panneau à la hauteur du calendrier, liste défilante estompée en haut et en bas
-             tant qu'il reste des cartes de ce côté (retour d'usage du 2026-10-07). -->
+        <!-- À côté du calendrier (docs/130 §A) : à relancer, ou le jour choisi ; des lignes,
+             5 puis « Voir les N autres » ; à déclarer dessous, la même forme. -->
         <section
           class="suivi-panel"
-          :style="panelHeight ? { height: `${panelHeight}px` } : undefined"
           data-test="day-panel"
         >
           <h2 class="suivi-panel-title">
-            {{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : "À relancer" }}
+            {{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : `À relancer${panelCards.length ? ` · ${panelCards.length}` : ""}` }}
           </h2>
           <p
             v-if="!panelCards.length"
@@ -645,37 +621,41 @@ onUnmounted(() => assistant.setFocus(null));
               Rien à relancer.
             </template>
           </p>
-          <div
-            v-else
-            ref="panelScroll"
-            :class="['panel-scroll', { 'fade-top': !atTop, 'fade-bottom': !atBottom }]"
-            data-test="panel-scroll"
-            @scroll="onPanelScroll"
-          >
-            <ApplicationCard
-              v-for="application in panelCards"
-              :key="application.id"
-              :application="application"
-              :orp-row="rowsById.get(application.id) ?? null"
-              @open="openId = $event.id"
-              @status="setStatus"
-              @edit="edit"
-              @interview="openInterview"
-              @prepare="preparing = $event"
-              @changed="load"
-            />
-          </div>
+          <template v-else>
+            <ul class="today-rows">
+              <li
+                v-for="application in visibleCards"
+                :key="application.id"
+              >
+                <ApplicationCard
+                  :application="application"
+                  :orp-row="rowsById.get(application.id) ?? null"
+                  @open="openId = $event.id"
+                  @status="setStatus"
+                  @edit="edit"
+                  @interview="openInterview"
+                  @prepare="preparing = $event"
+                  @changed="load"
+                />
+              </li>
+            </ul>
+            <button
+              v-if="panelCards.length > visibleCards.length"
+              type="button"
+              class="link suivi-more-rows"
+              data-test="panel-show-all"
+              @click="showAllCards = true"
+            >
+              Voir {{ panelCards.length - visibleCards.length === 1 ? "l'autre" : `les ${panelCards.length - visibleCards.length} autres` }}
+            </button>
+          </template>
           <section
             v-if="!selectedDay && orp.count"
             class="suivi-declare"
             data-test="declare"
           >
             <h2 class="suivi-panel-title">
-              À déclarer dans Job-Room
-              <span
-                v-if="toDeclare.length"
-                class="suivi-declare-count"
-              >{{ toDeclare.length }}</span>
+              À déclarer dans Job-Room{{ toDeclare.length ? ` · ${toDeclare.length}` : "" }}
             </h2>
             <p
               v-if="!toDeclare.length"
@@ -684,23 +664,32 @@ onUnmounted(() => assistant.setFocus(null));
             >
               Tout est déclaré.
             </p>
-            <ul v-else>
+            <ul
+              v-else
+              class="today-rows"
+            >
               <li
                 v-for="item in toDeclare"
                 :key="item.id"
               >
                 <button
                   type="button"
-                  class="suivi-declare-row"
+                  class="today-row"
                   :data-test="`declare-${item.id}`"
+                  :title="`${item.company} · ${item.title}`"
                   @click="openId = item.id"
                 >
-                  <span class="suivi-declare-day">{{ item.day }}</span>
-                  <span class="suivi-declare-what"><strong>{{ item.company }}</strong> · {{ item.title }}</span>
                   <span
-                    v-if="item.incomplete"
-                    class="badge warn"
-                  >à compléter</span>
+                    class="logo"
+                    :class="`c${colorIndex(item.company)}`"
+                    aria-hidden="true"
+                  >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
+                  <span class="today-row-main">
+                    <strong>{{ item.company }}</strong>
+                    <span class="today-row-line">{{ item.title }}</span>
+                    <span class="today-row-line">envoyée le {{ item.day }}<template v-if="item.incomplete"> · à compléter</template></span>
+                  </span>
+                  <span class="today-row-action">Déclarer</span>
                 </button>
               </li>
             </ul>

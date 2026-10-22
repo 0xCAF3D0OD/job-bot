@@ -53,7 +53,7 @@ export function nextStep(a: Application, row?: OrpRow | null): NextStep {
   }
   if (needsFeedback(a)) return { key: "feedback", text: "Entretien passé", action: "Faire le point" };
   if (followUpDue(a)) return { key: "follow-up", text: "Sans réponse depuis 10 jours", action: "Relancer" };
-  if (noAnswerDue(a)) return { key: "no-answer", text: "Pas de réponse depuis la relance", action: "Sans réponse" };
+  if (noAnswerDue(a)) return { key: "no-answer", text: "Relancée, sans réponse", action: "Classer sans réponse" };
   if (row?.missing.length) {
     return { key: "complete", text: `Pour l'ORP, il manque : ${row.missing.join(", ")}`, action: "Compléter" };
   }
