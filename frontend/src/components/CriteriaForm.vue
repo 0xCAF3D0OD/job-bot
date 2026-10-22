@@ -112,7 +112,7 @@ async function save(): Promise<void> {
     form.value = { ...EMPTY, ...data.criteria };
     savedAt.value = data.saved_at ?? new Date().toISOString();
     editing.value = false;
-    message.value = "Prérequis enregistrés. Les offres sont refiltrées d'ici une minute.";
+    message.value = "Critères enregistrés. Les offres sont refiltrées d'ici une minute.";
   } catch {
     message.value = "L'enregistrement a échoué : vérifie les valeurs saisies.";
   } finally {
@@ -146,7 +146,7 @@ onMounted(() => void load());
            gris, un crayon rond pour le modifier. -->
       <section class="criteria-summary-section">
         <h2 class="section-title">
-          Prérequis
+          Critères
         </h2>
         <div
           class="info-card criteria-summary"

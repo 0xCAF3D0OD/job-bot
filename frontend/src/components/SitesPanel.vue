@@ -334,8 +334,9 @@ onMounted(() => void load());
           </button>
         </div>
       </form>
+      <!-- Rien à proposer (un invité sans alerte à relire) : pas de rangée vide (docs/130 §D). -->
       <div
-        v-else
+        v-else-if="owner || unrecognized"
         class="form-actions"
       >
         <button

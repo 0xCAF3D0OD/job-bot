@@ -189,36 +189,159 @@ onMounted(() => void load());
 <template>
   <section class="band">
     <div class="container">
-      <!-- Catalogue ou Suivies, dans l'onglet Formations de Progresser (docs/90). -->
-      <nav
-        class="sub-tabs"
-        aria-label="Formations affichées"
-      >
-        <RouterLink
-          :to="{ query: {} }"
-          :class="{ active: tab === 'catalog' }"
-          :aria-current="tab === 'catalog' ? 'true' : undefined"
-          data-test="tab-catalog"
+      <!-- Une seule ligne d'outils (docs/130 §E) : Catalogue ou Suivies, puis les filtres. -->
+      <div class="trainings-toolbar">
+        <nav
+          class="sub-tabs"
+          aria-label="Formations affichées"
         >
-          <span class="with-icon"><AppIcon name="book" />Catalogue</span>
-        </RouterLink>
-        <RouterLink
-          :to="{ query: { onglet: 'miennes' } }"
-          :class="{ active: tab === 'mine' }"
-          :aria-current="tab === 'mine' ? 'true' : undefined"
-          data-test="tab-mine"
+          <RouterLink
+            :to="{ query: {} }"
+            :class="{ active: tab === 'catalog' }"
+            :aria-current="tab === 'catalog' ? 'true' : undefined"
+            data-test="tab-catalog"
+          >
+            <span class="with-icon"><AppIcon name="book" />Catalogue</span>
+          </RouterLink>
+          <RouterLink
+            :to="{ query: { onglet: 'miennes' } }"
+            :class="{ active: tab === 'mine' }"
+            :aria-current="tab === 'mine' ? 'true' : undefined"
+            data-test="tab-mine"
+          >
+            <span class="with-icon"><AppIcon name="bookmark" />Suivies</span>{{ " " }}<span
+              v-if="mineCount"
+              class="tab-count"
+            >{{ mineCount }}</span>
+          </RouterLink>
+        </nav>
+
+        <div
+          v-if="loaded"
+          class="news-filters"
         >
-          <span class="with-icon"><AppIcon name="bookmark" />Suivies</span>{{ " " }}<span
-            v-if="mineCount"
-            class="tab-count"
-          >{{ mineCount }}</span>
-        </RouterLink>
-      </nav>
-      <component
-        :is="phone ? DisclosureRow : 'section'"
-        :class="phone ? 'orp-note-row' : 'orp-note'"
-        :title="phone ? 'Formation et chômage' : undefined"
-        :value="phone ? 'accord de l\'ORP' : undefined"
+          <div
+            class="segmented"
+            role="radiogroup"
+            aria-label="Formations affichées"
+          >
+            <button
+              type="button"
+              role="radio"
+              :aria-checked="domainOnly && hasDomain"
+              :aria-controls="hasDomain || !domainFieldOpen ? undefined : 'domaine-champ'"
+              data-test="filter-domain"
+              @click="setDomain(true)"
+            >
+              Domaine
+            </button>
+            <button
+              type="button"
+              role="radio"
+              :aria-checked="!domainOnly || !hasDomain"
+              data-test="filter-all"
+              @click="setDomain(false)"
+            >
+              Tout
+            </button>
+          </div>
+          <!-- Filtrer : l'entonnoir seul, le nombre de filtres actifs en pastille (docs/101). -->
+          <button
+            v-if="phone"
+            type="button"
+            class="icon-button icon-only filter-toggle training-filter-toggle"
+            :aria-label="filterLabel"
+            :data-label="filterLabel"
+            :aria-expanded="filtersOpen"
+            data-test="training-filter-toggle"
+            @click="filtersOpen = !filtersOpen"
+          >
+            <AppIcon name="filter" />
+            <span
+              v-if="activeFilters"
+              class="icon-badge"
+              aria-hidden="true"
+              data-test="training-filter-count"
+            >{{ activeFilters }}</span>
+          </button>
+          <PushTransition :enabled="phone">
+            <div
+              v-show="!phone || filtersOpen"
+              :class="phone ? 'training-filter-sheet' : 'training-filter-group'"
+            >
+              <select
+                v-model="kind"
+                aria-label="Type"
+                data-test="filter-kind"
+              >
+                <option value="">
+                  Tous les types
+                </option>
+                <option
+                  v-for="(label, key) in KINDS"
+                  :key="key"
+                  :value="key"
+                >
+                  {{ label }}
+                </option>
+              </select>
+              <select
+                v-model="price"
+                aria-label="Prix"
+                data-test="filter-price"
+              >
+                <option value="">
+                  Gratuit ou payant
+                </option>
+                <option
+                  v-for="(label, key) in PRICES"
+                  :key="key"
+                  :value="key"
+                >
+                  {{ label }}
+                </option>
+              </select>
+              <select
+                v-if="languages.length > 1"
+                v-model="language"
+                aria-label="Langue"
+              >
+                <option value="">
+                  Toutes les langues
+                </option>
+                <option
+                  v-for="code in languages"
+                  :key="code"
+                  :value="code"
+                >
+                  {{ languageLabel(code) }}
+                </option>
+              </select>
+            </div>
+          </PushTransition>
+          <span
+            v-if="canSuggest && tab === 'catalog'"
+            class="news-status"
+          >
+            <button
+              type="button"
+              class="secondary small"
+              :disabled="suggesting"
+              data-test="suggest"
+              @click="suggest"
+            >
+              <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
+                <span class="with-icon"><AppIcon name="ai" />{{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}</span>
+              </HoverNote>
+            </button>
+          </span>
+        </div>
+      </div>
+      <!-- Formation et chômage, une ligne repliable sous les outils (docs/130 §E). -->
+      <DisclosureRow
+        class="orp-note-row"
+        title="Formation et chômage"
+        value="accord de l'ORP"
         data-test="orp-note"
       >
         <strong><HoverNote text="L'assurance chômage peut financer certaines formations (« mesures relatives au marché du travail »). La plateforme ne dit pas si une formation sera acceptée : c'est la décision de l'ORP.">Formation et chômage</HoverNote> :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
@@ -232,128 +355,7 @@ onMounted(() => void load());
             rel="noopener noreferrer"
           >{{ link.label }}</a>
         </span>
-      </component>
-
-      <div
-        v-if="loaded"
-        class="news-filters"
-      >
-        <div
-          class="segmented"
-          role="radiogroup"
-          aria-label="Formations affichées"
-        >
-          <button
-            type="button"
-            role="radio"
-            :aria-checked="domainOnly && hasDomain"
-            :aria-controls="hasDomain || !domainFieldOpen ? undefined : 'domaine-champ'"
-            data-test="filter-domain"
-            @click="setDomain(true)"
-          >
-            Domaine
-          </button>
-          <button
-            type="button"
-            role="radio"
-            :aria-checked="!domainOnly || !hasDomain"
-            data-test="filter-all"
-            @click="setDomain(false)"
-          >
-            Tout
-          </button>
-        </div>
-        <!-- Filtrer : l'entonnoir seul, le nombre de filtres actifs en pastille (docs/101). -->
-        <button
-          v-if="phone"
-          type="button"
-          class="icon-button icon-only filter-toggle training-filter-toggle"
-          :aria-label="filterLabel"
-          :data-label="filterLabel"
-          :aria-expanded="filtersOpen"
-          data-test="training-filter-toggle"
-          @click="filtersOpen = !filtersOpen"
-        >
-          <AppIcon name="filter" />
-          <span
-            v-if="activeFilters"
-            class="icon-badge"
-            aria-hidden="true"
-            data-test="training-filter-count"
-          >{{ activeFilters }}</span>
-        </button>
-        <PushTransition :enabled="phone">
-          <div
-            v-show="!phone || filtersOpen"
-            :class="phone ? 'training-filter-sheet' : 'training-filter-group'"
-          >
-            <select
-              v-model="kind"
-              aria-label="Type"
-              data-test="filter-kind"
-            >
-              <option value="">
-                Tous les types
-              </option>
-              <option
-                v-for="(label, key) in KINDS"
-                :key="key"
-                :value="key"
-              >
-                {{ label }}
-              </option>
-            </select>
-            <select
-              v-model="price"
-              aria-label="Prix"
-              data-test="filter-price"
-            >
-              <option value="">
-                Gratuit ou payant
-              </option>
-              <option
-                v-for="(label, key) in PRICES"
-                :key="key"
-                :value="key"
-              >
-                {{ label }}
-              </option>
-            </select>
-            <select
-              v-if="languages.length > 1"
-              v-model="language"
-              aria-label="Langue"
-            >
-              <option value="">
-                Toutes les langues
-              </option>
-              <option
-                v-for="code in languages"
-                :key="code"
-                :value="code"
-              >
-                {{ languageLabel(code) }}
-              </option>
-            </select>
-          </div>
-        </PushTransition>
-        <span
-          v-if="canSuggest && tab === 'catalog'"
-          class="news-status"
-        >
-          <button
-            type="button"
-            class="secondary small"
-            :disabled="suggesting"
-            data-test="suggest"
-            @click="suggest"
-          >
-            <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
-              <span class="with-icon"><AppIcon name="ai" />{{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}</span>
-            </HoverNote>
-          </button>
-        </span>
-      </div>
+      </DisclosureRow>
       <p
         v-if="message"
         class="hint"

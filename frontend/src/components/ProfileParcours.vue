@@ -440,7 +440,8 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       </button>
     </div>
 
-    <!-- Cartes calmes (docs/49 §3) : 3 lignes, le type en bas, toute la carte ouvre le bloc. -->
+    <!-- Cartes calmes (docs/49 §3) : 3 lignes, le type en bas, toute la carte ouvre le bloc, avec
+         survol ; 3 colonnes au plus, sans crayon (docs/130 §C). -->
     <ul class="chunk-grid">
       <li
         v-for="chunk in visibleChunks"
@@ -455,11 +456,6 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           @click="editChunk(chunk)"
         >
           <span class="job-title">{{ chunk.title }}</span>
-          <!-- Le crayon rond dit qu'on peut le modifier (docs/110) ; toute la carte l'ouvre. -->
-          <span
-            class="edit-round chunk-edit"
-            aria-hidden="true"
-          ><AppIcon name="pencil" /></span>
           <span class="chunk-content">{{ chunk.content }}</span>
           <span class="chunk-foot">
             <span>{{ chunkFoot(chunk) }}<template v-if="!chunk.active"> · inactif</template></span>

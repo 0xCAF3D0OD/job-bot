@@ -49,7 +49,7 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 5. **Les grilles** : 3 colonnes au plus (18 rem au moins par carte), 2 sur tablette, 1 sur téléphone ; deux cartes côte à côte en 3 / 2 (docs/93, 95). Une liste courte dans une carte de toute la largeur passe en deux colonnes plutôt que de laisser la moitié vide (docs/119).
 6. **Les filets** : 1,75 rem de chaque côté sur ordinateur, 1,5 rem sur téléphone (docs/106).
 7. **Les interlignes** : 1,5 pour le texte, 1,6 pour les aides, 1,3 pour un titre (docs/93, 106).
-8. **Les titres** (docs/110) : page en 2,4 rem, section en 1,5 rem au-dessus de sa carte, réglage en gras ; pas de point final ; un titre de partie n'est pas souligné.
+8. **Les titres** (docs/110, docs/130) : une seule taille et une seule graisse par niveau, sur toutes les pages : page en 2 rem, section en 1,35 rem au-dessus de sa carte (graisse 500), réglage en gras (600) dans sa carte ; pas de point final ; un titre de partie n'est pas souligné.
 9. **Les repliables** : le résumé en gris à droite de la ligne ; une seule ligne ouverte par groupe ; le contenu long et secondaire dans un panneau latéral (docs/32). Une action sur un repliable ouvert (« Masquer ») se met sur sa ligne de titre, jamais sur une ligne à elle (docs/119).
 10. **Une partie à une seule action** devient une ligne : le nom à gauche, l'action à droite (docs/106).
 11. **Consulter ou modifier** : une carte ne mélange pas les deux (docs/110).

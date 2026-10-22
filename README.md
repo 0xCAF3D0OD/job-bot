@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/130-pages-rangees.md](docs/130-pages-rangees.md) (1.3.0)
+- Version en cours : [docs/130-pages-rangees.md](docs/130-pages-rangees.md) (1.3.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -211,7 +211,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 1.1.0 | Les premiers pas : en haut d'Aujourd'hui, une seule prochaine action en cinq étapes (« 2 sur 5 »), l'attente des premières offres dite, Aujourd'hui allégé tant qu'elles manquent, les deux anciens guides retirés ; des écrans vides qui disent quoi faire (Offres, Suivi, Rendez-vous, Bilan) ; le chiffre des premiers pas pour l'équipe (Réglages › Plateforme) | livrée |
 | 1.1.1 | Les audits sur un vrai compte (hors démo) : titres en noms (premiers pas, alertes, langues), aides du Profil en une ligne, liste des profils d'essai sans cadre par ligne, contraste d'un site en pause, lien souligné, attribut d'accessibilité des filtres « Domaine », message des sauvegardes raccourci | livrée |
 | 1.2.0 | « À faire » rangé : deux rangées de deux cartes (Offres du jour · Mois ORP, puis À préparer · À relancer), le compte et « Tout voir » dans le titre, une seule forme de ligne (logo, texte coupé par « … », action alignée), 3 lignes au plus, une carte vide absente | livrée |
-| 1.3.0 | Les pages rangées (1) : le Suivi (l'en-tête sur deux lignes, « À relancer » et « À déclarer » dans la forme de ligne d'Aujourd'hui, 5 puis la suite) et le Rendez-vous (Préparer, Le mois en une carte, le carnet replié) | en cours |
+| 1.3.0 | Les pages rangées (1) : le Suivi (l'en-tête sur deux lignes, « À relancer » et « À déclarer » dans la forme de ligne d'Aujourd'hui, 5 puis la suite) et le Rendez-vous (Préparer, Le mois en une carte, le carnet replié) | livrée |
+| 1.3.1 | Les pages rangées (2) : les titres d'une seule taille et d'une seule graisse partout, Profil (« Critères », blocs sur 3 colonnes sans crayon, plus de barre orange), Réglages (filet en trop, descriptions en une ligne, vide du bas), Formations (une ligne d'outils, le marque-page en haut), Alertes en une colonne ; l'assistant à jour | en cours |
 
 ## Lancer en local
 
