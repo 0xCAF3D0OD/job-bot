@@ -68,3 +68,18 @@ Après C (docs/121), qui pose le visage de la note :
 
 - Tests de l'interface : le rythme (dans les temps, à rattraper avec les jours ouvrables qui restent, atteint, le 1er du mois, sans objectif) ; les segments (un par candidature, une barre continue au-delà de 15) ; la tuile orange seulement pour « On rattrape » ; l'état vide (visage décoratif, titre, ligne, attente). 422 tests, lint, vue-tsc.
 - Les trois audits sur la démo à zéro (règles, alignement, accessibilité).
+
+## Écarts (0.95.0 : S, R, U)
+
+- **Règles relues avant de construire** ; vérifiées sur captures à 1440 et 390 px : le jour calme, la victoire de l'objectif, la carte Mois ORP compacte sur téléphone.
+- **S, « Rien d'urgent aujourd'hui »** : un jour de recherche (pas un jour de repos ni une pause, qui ont déjà leur phrase) sans offre à examiner, sans relance et sans rien de daté (aucun bandeau). À la place de la phrase du jour et de la carte « À faire » : le visage ravi, « Aucune offre à examiner, aucune relance, rien de daté. », la devise (« Less searching. More living. »), le mois ORP en une ligne (tuile, « Mois ORP · 6 / 10 », segments, le mot ; la phrase au survol et pour les lecteurs d'écran) et « Voir les offres quand même ». Les guides restent dessous. Une candidature commencée n'empêche pas le jour calme.
+- **R, les victoires** : la carte d'une réussite (docs/61) garde son entrée et sa fermeture ; le visage ravi de 120 px remplace l'illustration, six bulles vertes s'écartent une fois (rien avec « réduire les animations »).
+  - **Un entretien proposé** : quand une candidature passe à « Entretien » dans le Suivi (pas depuis Engagement, qui a sa propre fête) ; « Un entretien chez Acme SA. Ta candidature a retenu l'attention. »
+  - **L'objectif du mois atteint** : à l'ouverture d'Aujourd'hui, une fois par mois et par appareil (retenu dans le navigateur) ; « Objectif du mois atteint. 10 candidatures sur 10. », avec le clin d'œil. Ouverte sans geste de la personne, la carte ne prend pas le focus (sinon l'infobulle « Fermer » couvrait le texte) ; elle reste annoncée aux lecteurs d'écran.
+  - **Pas de boutons en plus** : « Fermer » seulement, comme les autres réussites, qui gardent leur scène (candidature envoyée, preuves remises).
+- **U, Aujourd'hui en compact** : **sur téléphone seulement** (sous 820 px), la carte Mois ORP montre le mois en une ligne, puis la semaine ; sur ordinateur, la carte de Q (0.94.0) reste. Les meilleures offres ont déjà la note en mots. L'état vide d'une partie (« Aucune offre notée en attente. », « Aucune candidature en préparation. ») a le petit visage neutre devant. Les bandeaux restent. *Dis-le si tu voulais la ligne compacte aussi sur ordinateur.*
+
+## Vérifié (0.95.0)
+
+- Tests de l'interface : le jour calme (visage ravi, mois en une ligne, offres quand même ; pas de jour calme avec des offres à examiner) ; la victoire de l'objectif une seule fois par mois, avec le clin d'œil ; la victoire d'un entretien dans le Suivi. 425 tests, lint, vue-tsc.
+- Les trois audits sur la démo à zéro.
