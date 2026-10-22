@@ -28,7 +28,8 @@ describe("DailyPick", () => {
     expect(card.text()).toContain("Ta plateforme colle.");
     // La phrase dit déjà ce qui manque : pas de « Il te manque » en plus.
     expect(card.text()).not.toContain("Il te manque");
-    expect(card.find("[data-test=pick-count]").text()).toBe("1 sur 2");
+    // « 1 sur 2 » va sur la ligne du titre de la carte (docs/129 §2) : exposé au parent.
+    expect((wrapper.vm as unknown as { position: string }).position).toBe("1 sur 2");
   });
 
   it("Garder puis Écarter : le statut part après coup, « Annuler » remet l'offre", async () => {
@@ -68,7 +69,7 @@ describe("DailyPick", () => {
     await fire("pointerdown", "mouse", 200);
     await fire("pointermove", "mouse", 50);
     await fire("pointerup", "mouse");
-    expect(wrapper.find("[data-test=pick-count]").text()).toBe("1 sur 2");
+    expect((wrapper.vm as unknown as { position: string }).position).toBe("1 sur 2");
     await fire("pointerdown", "touch", 200);
     await fire("pointermove", "touch", 50);
     await fire("pointerup", "touch");

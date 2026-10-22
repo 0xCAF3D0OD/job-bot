@@ -198,6 +198,10 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     mockGet(today({ rhythm: rhythm({ pause_until: "2026-11-03" }) }));
     wrapper = await mountView();
     expect(wrapper.find("[data-test=today-sentence]").text()).toBe("En pause jusqu'au 3 novembre.");
+    // La carte garde son titre ; sa phrase dit la pause à la place de l'offre (docs/129 §2).
+    expect(wrapper.find("[data-test=best] h2").text()).toBe("Offres du jour");
+    expect(wrapper.find("[data-test=paused-day]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=pick-card]").exists()).toBe(false);
   });
 
   it("les bandeaux : ce qui a une date, trois au plus, le rendez-vous ORP d'abord", async () => {
@@ -225,7 +229,7 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     expect(wrapper.findAll(".today-banner")).toHaveLength(0);
   });
 
-  it("À faire : les meilleures offres, les commencées, puis les relances", async () => {
+  it("une carte, un rôle : offres du jour, à préparer, à relancer (docs/129)", async () => {
     const followUps = [
       { application_id: 9, company: "Maquette Médias", job_title: "DevOps", orp_month: "2026-09", sent_at: "2026-09-07", status: "relancee" },
       { application_id: 10, company: "Témoin SA", job_title: "SRE", orp_month: "2026-09", sent_at: "2026-09-14", status: "en_attente" },
@@ -248,18 +252,52 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     expect(offer.text()).toContain("Acme SA");
     expect(offer.text()).toContain("Lausanne");
     expect(offer.find("[data-test=pick-open]").attributes("href")).toBe("/candidatures/offres?offre=1");
-    expect(offer.find("[data-test=pick-count]").text()).toBe("1 sur 1");
+    // « 1 sur 1 » sur la ligne du titre de la carte, plus dans la fiche (docs/129 §2).
+    expect(offer.find("[data-test=pick-count]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=best] h2").text()).toBe("Offres du jour");
+    expect(wrapper.find("[data-test=best] [data-test=pick-count]").text()).toBe("1 sur 1");
+    // Plus de sélecteur « Du jour / À préparer » : chaque liste a sa carte.
+    expect(wrapper.find("[data-test=tab-preparing]").exists()).toBe(false);
     const preparing = wrapper.find("[data-test=preparing]");
+    expect(preparing.find("h2").text()).toBe("À préparer · 1");
+    expect(preparing.find("[data-test=preparing-all]").attributes("href")).toBe("/candidatures/offres?statut=in_progress");
     expect(preparing.text()).toContain("SRE");
     expect(preparing.text()).not.toContain("Envoyée");
-    expect(preparing.find("a").attributes("href")).toBe("/candidatures/offres/7/preparer");
-    const rows = wrapper.findAll("[data-test=follow-ups] a");
+    expect(preparing.find(".today-row").attributes("href")).toBe("/candidatures/offres/7/preparer");
+    expect(preparing.find(".today-row-action").text()).toBe("Préparer");
+    const follow = wrapper.find("[data-test=follow-ups]");
+    expect(follow.find("h2").text()).toBe("À relancer · 3");
+    expect(follow.find("[data-test=follow-ups-all]").attributes("href")).toBe("/candidatures/suivi");
+    const rows = follow.findAll(".today-row");
     expect(rows).toHaveLength(2);
-    expect(rows[0]!.text()).toContain("sans réponse depuis la relance");
+    expect(rows[0]!.text()).toContain("relancée, sans réponse");
     expect(rows[0]!.attributes("href")).toBe("/candidatures/suivi?mois=2026-09&candidature=9");
-    expect(wrapper.text()).toContain("Toutes les relances (3)");
+    expect(rows[1]!.text()).toContain("envoyée le 14 septembre");
+    expect(wrapper.text()).not.toContain("Toutes les relances");
+    // Les deux cartes côte à côte, moitié-moitié.
+    expect(follow.element.parentElement!.className).toBe("today-grid halves");
     // Clic direct (docs/57) : pas de « › ».
     expect(wrapper.find("[data-test=best]").text()).not.toContain("›");
+  });
+
+  it("une carte vide ne s'affiche pas : sa voisine prend toute la largeur (docs/129 §1)", async () => {
+    GET.mockImplementation((path: string, opts?: { params?: { query?: Record<string, unknown> } }) => {
+      const query = opts?.params?.query ?? {};
+      if (path === "/api/today") return Promise.resolve({ data: today({ to_follow_up: 0, follow_ups: [] }) });
+      if (query.view === "in_progress") {
+        const items = [1, 2, 3, 4].map((id) => ({ id: 10 + id, title: `Poste ${id}`, company: "Beta SA", status: "preparing", score: 80 }));
+        return Promise.resolve({ data: { items } });
+      }
+      return Promise.resolve({ data: { items: [] } });
+    });
+    const wrapper = await mountView();
+    const preparing = wrapper.find("[data-test=preparing]");
+    expect(wrapper.find("[data-test=follow-ups]").exists()).toBe(false);
+    expect(preparing.element.parentElement!.className).toBe("today-grid halves single");
+    // Le compte dit tout, 3 lignes au plus ; la note en mot.
+    expect(preparing.find("h2").text()).toBe("À préparer · 4");
+    expect(preparing.findAll(".today-row")).toHaveLength(3);
+    expect(preparing.find(".today-row").text()).toContain("Proche");
   });
 
   it("Mois ORP : le compte, la barre, ce qu'il reste, la semaine", async () => {

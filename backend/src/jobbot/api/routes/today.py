@@ -120,7 +120,7 @@ class TodayOut(BaseModel):
     month_target: int | None
     # Candidatures en attente depuis 10 jours ou plus : à relancer.
     to_follow_up: int
-    # Les 2 plus anciennes à relancer, pour « À faire » (docs/95).
+    # Les 3 plus anciennes à relancer, pour la carte « À relancer » (docs/95, docs/129).
     follow_ups: list[FollowUp] = []
     # Prochain mois ORP à remettre, s'il y en a un.
     orp_due_month: str | None
@@ -233,7 +233,7 @@ async def get_today(request: Request) -> TodayOut:
                 status=a.status,
             )
             for a in await session.scalars(
-                select(Application).where(to_remind).order_by(Application.sent_at).limit(2)
+                select(Application).where(to_remind).order_by(Application.sent_at).limit(3)
             )
         ]
         previous_count = await count(
