@@ -48,6 +48,16 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 2. **Le niveau** : l'IA dit si le poste vise un niveau **au-dessus** ou **en dessous** du profil (années demandées, responsabilités), et seulement quand c'est net. Affiché comme une étiquette neutre (« Niveau au-dessus »), avec le détail au survol ; jamais une baisse de note cachée.
 3. **Le manque qui se corrige en un clic** : quand un manque est une compétence que la personne a peut-être sans l'avoir écrite, un lien « Je l'ai : l'ajouter au profil » ouvre un bloc prérempli (comme « Cette note ne me correspond pas », docs/114), puis l'offre est renotée.
 4. **La jauge du profil**, dans Profil seulement : par section (expériences, compétences, langues, critères), « 3 sur 4 », et ce qui manque. Pas de jauge ailleurs.
+5. **La note dans les listes, en mots** (ajouté le 2026-10-22 : tu as choisi la maquette O, « en gardant tous les visages ») :
+   - **Quatre mots** à la place du chiffre, d'après les seuils de couleur actuels : **Très proche** (85 et plus), **Proche** (70 à 84), **À creuser** (50 à 69), **Loin** (moins de 50).
+   - **Le visage du 1**, petit, devant le mot, avec **une expression par mot**, comme sur la maquette : grand sourire, sourire, bouche droite, bouche qui tombe. Ce sont des dessins de l'iconographie (24 px, trait de 1,8 px), pas le logo agrandi.
+   - **Un filet en bas de la carte**, à la longueur de la note (plein à 100), à la couleur du mot ; la part manquante en gris clair. C'est le cercle de la règle actuelle, déplié.
+   - **La carte garde** le logo de l'entreprise à gauche, le titre, l'entreprise et le lieu ; le mot et son visage à droite ; « Il te manque : … » sous le titre quand un manque compte (repris de la maquette L).
+   - **Les couleurs** : Très proche en vert menthe, Proche dans le bleu lavande de l'accent, À creuser en gris chaud, Loin en gris. **Pas d'orange** : il reste à ce qui demande d'agir (relancer, à compléter).
+   - **Pas encore notée** : « Pas encore notée » en gris, sans visage, le filet en pointillés ; le pourquoi au survol (comme le cercle en pointillés aujourd'hui).
+   - **Le chiffre reste** dans la fiche de l'offre : le cercle, avec la phrase « pourquoi cette note » (1), là où la précision sert ; et au survol du mot dans la liste (« 76 sur 100 »).
+   - **Où** : la liste des Offres, les meilleures offres d'Aujourd'hui, et partout où une offre s'affiche en ligne (Suivi, recherche de l'assistant).
+   - **La règle « La note »** de `docs/interface.md` est réécrite : le cercle dans la fiche, le mot, le visage et le filet dans les listes ; jamais une pilule (une pilule pleine est une action).
 
 ## Garde-fous
 
@@ -98,4 +108,5 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 4. **B.1** : une table de métiers relue par nous, l'IA en secours pour les autres : d'accord ? Veux-tu relire la liste des métiers ?
 5. **B.3** : la relance « rien reçu » à 24 heures au lieu de 3 jours : d'accord ?
 6. **C.2** : l'étiquette « Niveau au-dessus / en dessous » : d'accord, ou trop risqué de décourager ?
+8. **C.5** (ajoutée) : les quatre seuils (85, 70, 50) et les couleurs (gris chaud pour « À creuser », au lieu de l'orange de la maquette) : d'accord ?
 7. **L'ordre** : A, puis B, puis C, en trois versions ?
