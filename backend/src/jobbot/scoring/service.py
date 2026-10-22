@@ -244,6 +244,9 @@ async def _store(
             "remote_region": output.remote_region,
             "remote_from_switzerland": output.remote_from_switzerland,
             "scam_signals": [signal.model_dump() for signal in output.scam_signals],
+            "why": output.why,
+            "level": output.level,
+            "level_detail": output.level_detail,
             "scored_at": now,
         }
     # Une offre pas encore passée par le filtre n'a pas de ligne : on la crée, le filtre

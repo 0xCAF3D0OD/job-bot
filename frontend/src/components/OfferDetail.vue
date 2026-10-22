@@ -3,13 +3,14 @@
 import { computed, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
-import { expiredText, formatDate, rateText, remoteText, sourceLabel } from "../format";
+import { expiredText, formatDate, gapSkill, rateText, remoteText, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import ScoreRing from "./ScoreRing.vue";
+import GapFill from "./GapFill.vue";
 import ScoreCorrection from "./ScoreCorrection.vue";
 import SidePanel from "./SidePanel.vue";
 import { useAssistant } from "../composables/useAssistant";
@@ -420,6 +421,25 @@ watch(
             <div><dt>Offre</dt><dd>{{ offer.summary_offers }}</dd></div>
           </dl>
         </div>
+        <!-- Pourquoi cette note, en une phrase, et le niveau visé (docs/121 §C.1-2). -->
+        <div
+          v-if="offer.why || offer.level"
+          class="score-why"
+          data-test="score-why"
+        >
+          <p v-if="offer.why">
+            {{ offer.why }}
+          </p>
+          <p
+            v-if="offer.level"
+            class="level-line"
+            data-test="score-level"
+          >
+            <HoverNote :text="offer.level_detail ?? ''">
+              {{ offer.level === "above" ? "Niveau au-dessus" : "Niveau en dessous" }}
+            </HoverNote>
+          </p>
+        </div>
         <p
           v-if="scoreNote"
           class="hint score-note"
@@ -463,6 +483,13 @@ watch(
                 :key="point.text"
               >
                 {{ point.text }}
+                <!-- Une exigence absente du profil (aucun bloc cité) : « Je l'ai » (docs/121 §C.3). -->
+                <GapFill
+                  v-if="!point.chunk_ids.length && gapSkill(point.text)"
+                  :offer-id="offer.id"
+                  :gap="point.text"
+                  @added="emit('changed')"
+                />
               </li>
             </ul>
           </div>

@@ -187,3 +187,30 @@ async def test_ai_drafts_the_block_then_the_offer_is_rescored(
         async with admin_engine().begin() as conn:
             await conn.execute(text(TRUNCATE))
         await runtime.dispose()
+
+
+async def test_gap_filled_becomes_a_block(
+    api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """docs/121 §C.3 : « Je l'ai » ajoute la compétence au profil (origine « gap ») et renote
+    l'offre ; une offre inconnue est refusée."""
+    offer = await _offer(rt, "Ingénieur·e cloud")
+    rescored: list[int] = []
+
+    async def score_offer(_runtime: Runtime, offer_id: int) -> int:
+        rescored.append(offer_id)
+        return 84
+
+    monkeypatch.setattr(scoring, "score_offer", score_offer)
+    response = await api.post(
+        f"/api/offers/{offer}/gap-block",
+        json={"title": "  Terraform ", "content": "J'utilise Terraform   pour l'infrastructure."},
+    )
+    assert response.status_code == 201
+    assert response.json()["score"] == 84 and rescored == [offer]
+    async with rt.sessionmaker() as session:
+        chunk = (await session.scalars(select(ProfileChunk))).one()
+    assert (chunk.kind, chunk.title, chunk.origin) == ("competence", "Terraform", "gap")
+    assert chunk.content == "J'utilise Terraform pour l'infrastructure."
+    missing = await api.post("/api/offers/999999/gap-block", json={"title": "x", "content": "y"})
+    assert missing.status_code == 404

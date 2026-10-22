@@ -192,7 +192,7 @@ describe("OffersView", () => {
     // Une ligne (docs/73 §4) : le site et « chez l'employeur » sont dans le panneau.
     expect(cards[0]?.text()).not.toContain("chez l'employeur");
     // Pas encore notée : un cercle vide, qui le dit (docs/76 §3).
-    expect(cards[0]?.find("[data-test=score]").attributes("aria-label")).toContain("à noter");
+    expect(cards[0]?.find("[data-test=score]").attributes("title")).toContain("à noter");
     expect(cards[0]?.find("[data-test=offer-alert]").exists()).toBe(false);
     expect(cards[1]?.find("[data-test=offer-alert]").text()).toBe("Type : stage (« stage »)");
 
@@ -230,8 +230,10 @@ describe("note et résumé", () => {
     const wrapper = await mountAt("/offres?tri=score&note=70");
     expect(lastQuery()).toMatchObject({ sort: "score", min_score: 70 });
     const [scored, unscored] = wrapper.findAll("[data-test=offer]");
-    expect(scored?.find("[data-test=score]").text()).toBe("82");
-    expect(scored?.find("[data-test=score]").classes()).toContain("high");
+    // La note en mots dans la liste, le chiffre au survol (docs/121 §C.5).
+    expect(scored?.find("[data-test=score]").text()).toBe("Proche");
+    expect(scored?.find("[data-test=score]").classes()).toContain("close");
+    expect(scored?.find("[data-test=score]").attributes("aria-label")).toBe("Proche : 82 sur 100");
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
     expect(scored?.find("[data-test=offer-date]").exists()).toBe(true);

@@ -1,7 +1,7 @@
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
 import { describe, expect, it } from "vitest";
 
-import { dayKey, dayName, dayShort } from "./format";
+import { dayKey, dayName, dayShort, gapSkill } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -24,5 +24,14 @@ describe("jours des offres", () => {
   it("range une offre dans le jour de Zurich, pas celui du navigateur", () => {
     expect(dayKey("2026-10-17T22:30:00Z")).toBe("2026-10-18");
     expect(dayKey("2026-10-17T21:30:00Z")).toBe("2026-10-17");
+  });
+});
+
+describe("gapSkill (docs/121 §C.3)", () => {
+  it("garde la compétence d'un manque, pas une phrase", () => {
+    expect(gapSkill("Spark : pas d'expérience dans ton profil.")).toBe("Spark");
+    expect(gapSkill("Pas d'Ansible.")).toBe("Ansible");
+    expect(gapSkill("Allemand courant demandé")).toBe("Allemand courant");
+    expect(gapSkill("Le poste demande plus de développement que ton profil.")).toBeNull();
   });
 });

@@ -2,10 +2,10 @@
 import { computed } from "vue";
 
 import type { Offer } from "../api/client";
-import { dayShort } from "../format";
+import { dayShort, scoreWord } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
-import ScoreRing from "./ScoreRing.vue";
+import ScoreWord from "./ScoreWord.vue";
 
 // Une offre sur une ligne (docs/73 §4) : de quoi choisir ; le détail est dans le panneau de
 // droite. La date n'y est que hors du tri « Par jour », où la ligne du jour la donne.
@@ -14,7 +14,7 @@ defineEmits<{ select: [] }>();
 
 const expired = computed(() => Boolean(props.offer.expired_at) && props.offer.status !== "applied");
 // Une seule alerte, la plus utile pour décider : écartée, douteuse, retirée, puis ce qui manque.
-const alert = computed<{ text: string; kind: "warn" | "danger" } | null>(() => {
+const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>(() => {
   const o = props.offer;
   if (o.filter_reasons?.length) return { text: o.filter_reasons[0]!, kind: "warn" };
   if (o.doubts?.length) {
@@ -23,7 +23,8 @@ const alert = computed<{ text: string; kind: "warn" | "danger" } | null>(() => {
   }
   if (expired.value) return { text: "Retirée", kind: "warn" };
   const missing = (o.keywords_asks ?? []).filter((a) => a.covered === false).map((a) => a.text);
-  if (missing.length) return { text: `Il te manque : ${missing.slice(0, 3).join(", ")}`, kind: "warn" };
+  // Ce qui manque explique la note : en gris, pas en orange (l'orange dit d'agir, docs/121 §C.5).
+  if (missing.length) return { text: `Il te manque : ${missing.slice(0, 3).join(", ")}`, kind: "gap" };
   if (o.remote_from_switzerland === false) return { text: "Télétravail fermé depuis la Suisse", kind: "warn" };
   return null;
 });
@@ -71,10 +72,16 @@ const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" "
         class="visually-hidden"
       > : {{ doubtText }}</span></span>
     </span>
-    <ScoreRing
+    <ScoreWord
       :score="offer.score ?? null"
       :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : 'Pas encore notée, à noter'"
       :stale="offer.score_stale"
+    />
+    <!-- Le filet en bas de la ligne, à la longueur de la note (docs/121 §C.5). -->
+    <span
+      :class="['score-line', offer.score == null ? 'pending' : scoreWord(offer.score).tone]"
+      :style="offer.score == null ? undefined : { '--p': Math.max(0, Math.min(100, offer.score)) }"
+      aria-hidden="true"
     />
   </button>
 </template>

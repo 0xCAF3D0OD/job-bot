@@ -10,7 +10,7 @@ describe("ScoreRing", () => {
     expect(ring.text()).toBe("75");
     expect(ring.attributes("style")).toContain("--p: 75");
     expect(ring.attributes("aria-label")).toBe("Note de l'IA : 75 sur 100");
-    expect(ring.classes()).toContain("high");
+    expect(ring.classes()).toContain("close");
   });
 
   it("garde le contour entre vide et plein, et signale une note ancienne", () => {

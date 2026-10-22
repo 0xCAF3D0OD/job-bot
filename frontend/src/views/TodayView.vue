@@ -11,7 +11,7 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
-import ScoreRing from "../components/ScoreRing.vue";
+import ScoreWord from "../components/ScoreWord.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { colorIndex, formatMonth, localDate, plural } from "../format";
@@ -387,7 +387,7 @@ const { me } = useAuth();
                       <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
                     </span>
                   </span>
-                  <ScoreRing :score="offer.score!" />
+                  <ScoreWord :score="offer.score!" />
                 </RouterLink>
               </li>
             </ul>

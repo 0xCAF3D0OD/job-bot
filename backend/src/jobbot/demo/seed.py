@@ -258,8 +258,20 @@ def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) ->
         gaps.append(
             {"text": "Le poste demande plus de développement que ton profil.", "chunk_ids": []}
         )
+    # La phrase « pourquoi » et le niveau (score-v5, docs/121 §C.1 et §C.2).
+    why = (
+        f"Ta plateforme Kubernetes colle ; il manque {spec.missing[0]}."
+        if spec.missing
+        else "Ta plateforme Kubernetes et ton Terraform collent à ce que le poste demande."
+    )
+    level = "above" if spec.score is not None and spec.score < 60 else None
     return {
         "score": spec.score,
+        "why": why,
+        "level": level,
+        "level_detail": "Le poste demande huit ans d'expérience et d'encadrer une équipe."
+        if level
+        else None,
         "summary_role": f"{spec.title} chez {spec.company}, à {spec.city} : faire tourner et "
         "améliorer la plateforme de l'entreprise.",
         "summary_asks": f"Expérience de {', '.join(spec.asks)} ; français courant, anglais "
