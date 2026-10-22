@@ -3759,3 +3759,17 @@ main:focus { outline: none; }
 .prep-back { margin-bottom: 0.5rem; min-height: 24px; }
 [data-test=offer-detail-title]:focus { outline: none; }
 [data-test=offer-detail-title]:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+
+/* Le pied de page (docs/126 §4) : une ligne de liens gris, au-dessus de la barre d'onglets du
+   téléphone. */
+.app-footer { padding: 2rem 1rem; border-top: 1px solid var(--border); text-align: center; }
+.app-footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.5rem; }
+.app-footer a { display: inline-flex; align-items: center; min-height: 24px; color: var(--muted); font-size: 0.9rem; text-decoration: none; }
+.app-footer a:hover { color: var(--accent-text); text-decoration: underline; }
+/* Sur téléphone, la barre d'onglets (ou le bouton fixé de Préparer) est au-dessus de la page :
+   l'espace qu'elle cache passe du contenu au pied de page, qui reste lisible en entier. */
+@media (max-width: 820px) {
+  :root:has(.tab-bar):has(.app-footer) main, :root:has(.mobile-dock):has(.app-footer) main { padding-bottom: 1.5rem; }
+  :root:has(.tab-bar) .app-footer { padding-bottom: calc(var(--tabbar-h) + 2rem + env(safe-area-inset-bottom)); }
+  :root:has(.mobile-dock) .app-footer { padding-bottom: calc(5.5rem + 2rem + env(safe-area-inset-bottom)); }
+}

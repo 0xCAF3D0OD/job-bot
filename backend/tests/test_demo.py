@@ -14,7 +14,7 @@ from sqlalchemy.engine import make_url
 
 from jobbot import accounts, demo
 from jobbot.api.app import create_app
-from jobbot.db.models import Application, Evaluation, Offer, User
+from jobbot.db.models import Application, Draft, Evaluation, Offer, User
 from jobbot.db.schema import upgrade
 from jobbot.demo import data
 from jobbot.demo.seed import next_thursday, seed, sent_day
@@ -116,6 +116,15 @@ async def test_seed_fills_a_believable_search(demo_runtime: Runtime, demo_admin:
                 for r in e.filter_reasons
             }
             upcoming = await session.scalar(select(func.max(Application.interview_at)))
+            # Une lettre déjà rédigée pour les deux meilleures offres à examiner (docs/126 §5).
+            showcased = list(
+                await session.scalars(
+                    select(Offer.title)
+                    .join(Draft, Draft.offer_id == Offer.id)
+                    .where(Draft.kind == "letter", Offer.status == "to_review")
+                    .order_by(Offer.title)
+                )
+            )
             notes = {
                 title: (why, level)
                 for title, why, level in (
@@ -137,6 +146,7 @@ async def test_seed_fills_a_believable_search(demo_runtime: Runtime, demo_admin:
     )
     assert {t for t, (_, level) in notes.items() if level} == {"SRE junior"}
     assert all(why and len(why) <= 140 for why, _ in notes.values())
+    assert len(showcased) == 2
     assert count == sum(months.values())
     assert months["2026-10"] == 6 and months["2026-09"] == 10 and months["2026-08"] == 10
     assert months["2026-07"] == 10
