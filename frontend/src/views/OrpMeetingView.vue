@@ -186,8 +186,8 @@ onMounted(() => void load());
     </p>
     <LoadingBlocks v-else-if="!page" />
     <template v-else>
-      <!-- Préparer (docs/130 §B) : ce qu'on modifie. Le rendez-vous à côté des questions, puis
-           la feuille sur toute la largeur, en PDF ou en message. -->
+      <!-- Préparer (docs/130 §B, docs/133 §4) : ce qu'on modifie, chaque carte sur toute la
+           largeur pour que le texte respire : le rendez-vous, les questions, la feuille. -->
       <h2 class="section-title orp-section">
         Préparer
       </h2>

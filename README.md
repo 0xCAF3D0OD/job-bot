@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/132-lecture.md](docs/132-lecture.md) (1.4.1)
+- Version en cours : [docs/133-vues-choisies.md](docs/133-vues-choisies.md) (1.5.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -214,7 +214,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 1.3.0 | Les pages rangées (1) : le Suivi (l'en-tête sur deux lignes, « À relancer » et « À déclarer » dans la forme de ligne d'Aujourd'hui, 5 puis la suite) et le Rendez-vous (Préparer, Le mois en une carte, le carnet replié) | livrée |
 | 1.3.1 | Les pages rangées (2) : les titres d'une seule taille et d'une seule graisse partout, Profil (« Critères », blocs sur 3 colonnes sans crayon, plus de barre orange), Réglages (filet en trop, descriptions en une ligne, vide du bas), Formations (une ligne d'outils, le marque-page en haut), Alertes en une colonne ; l'assistant à jour | livrée |
 | 1.4.0 | Le nécessaire : chaque information aide à décider ; ce qui se répète part (l'action en double, la semaine dite deux fois, la ligne « Offre », la note en chiffre), ce qui n'aide pas passe au survol ou n'apparaît qu'au besoin (la collecte, les blocs, les parties vides, les obligations faites, le code de vérification), « Enseignements » dans le Bilan, le filtre de note en trois choix, le seuil de l'employeur dans Outils | livrée |
-| 1.4.1 | La lecture : les phrases longues raccourcies (16 mots au plus), toutes les cases à cocher en interrupteurs, le texte collé détecté par l'audit et écarté (docs/132) | en cours |
+| 1.4.1 | La lecture : les phrases longues raccourcies (16 mots au plus), toutes les cases à cocher en interrupteurs, le texte collé détecté par l'audit et écarté (docs/132) | livrée |
+| 1.5.0 | Les vues choisies : le Suivi en deux onglets (à relancer, à déclarer), la légende au-dessus du calendrier ; le Bilan avec les tuiles en carrés et les mois précédents à côté, « Le détail » en une vue choisie à la fois (plus de cartes dans une carte) ; le Rendez-vous sur toute la largeur ; les audits ouvrent les repliables et chaque vue, en clair et en sombre (docs/133) | en cours |
 
 ## Lancer en local
 

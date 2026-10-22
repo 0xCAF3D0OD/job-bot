@@ -355,7 +355,7 @@ async def test_criteria_tool(runtime: Runtime) -> None:
 def test_guide_follows_the_pages() -> None:
     # Les « ? » ont laissé la place à l'assistant (docs/53) : son guide décrit les pages
     # actuelles, Aujourd'hui en tableau de bord et le Bilan (docs/56).
-    assert "Objectif ORP" in service.INSTRUCTIONS and "Mois ORP" in service.INSTRUCTIONS
+    assert "Mois précédents" in service.INSTRUCTIONS and "Mois ORP" in service.INSTRUCTIONS
     assert "Ce qui donne des réponses dans sa recherche" in service.INSTRUCTIONS
     # Le Bilan, une entrée du menu (docs/126 §1).
     assert "`/bilan?mois=AAAA-MM`" in service.INSTRUCTIONS
@@ -416,6 +416,9 @@ def test_guide_follows_the_pages() -> None:
     assert "pour tenir ta semaine" not in service.INSTRUCTIONS
     assert "Proche et plus" in service.INSTRUCTIONS
     assert "assistant-v18" not in service.INSTRUCTIONS
+    # 1.5.0 (docs/133) : des vues choisies, une à la fois.
+    assert "Mois précédents" in service.INSTRUCTIONS and "deux onglets" in service.INSTRUCTIONS
+    assert "assistant-v19" not in service.INSTRUCTIONS
     assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS
     assert "S'entraîner à l'entretien" in service.INSTRUCTIONS
     assert "M'entraîner pour cet entretien" in service.INSTRUCTIONS

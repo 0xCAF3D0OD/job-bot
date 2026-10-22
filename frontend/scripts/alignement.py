@@ -18,6 +18,8 @@ import sys
 
 from playwright.async_api import Route, async_playwright
 
+from explore import states
+
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 PAGES = [
     "aujourdhui",
@@ -109,9 +111,10 @@ async def main() -> int:
             for path in PAGES:
                 await page.goto(f"{BASE}/{path}")
                 await page.wait_for_timeout(1800)
-                for row in await page.evaluate(AUDIT, TOLERANCE):
-                    faults += 1
-                    print(f"{size['width']} px  /{path}\n  " + "\n  ".join(row))
+                async for state in states(page):
+                    for row in await page.evaluate(AUDIT, TOLERANCE):
+                        faults += 1
+                        print(f"{size['width']} px  /{path}{state}\n  " + "\n  ".join(row))
             await context.close()
         await browser.close()
     print(json.dumps({"rangées en défaut": faults}, ensure_ascii=False))

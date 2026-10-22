@@ -51,7 +51,7 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 6. **Les filets** : 1,75 rem de chaque côté sur ordinateur, 1,5 rem sur téléphone (docs/106).
 7. **Les interlignes** : 1,5 pour le texte, 1,6 pour les aides, 1,3 pour un titre (docs/93, 106).
 8. **Les titres** (docs/110, docs/130) : une seule taille et une seule graisse par niveau, sur toutes les pages : page en 2 rem, section en 1,35 rem au-dessus de sa carte (graisse 500), réglage en gras (600) dans sa carte ; pas de point final ; un titre de partie n'est pas souligné.
-9. **Les repliables** : le résumé en gris à droite de la ligne ; une seule ligne ouverte par groupe ; le contenu long et secondaire dans un panneau latéral (docs/32). Une action sur un repliable ouvert (« Masquer ») se met sur sa ligne de titre, jamais sur une ligne à elle (docs/119).
+9. **Les repliables** (docs/133 : jamais de cartes dedans ; plusieurs contenus du même rang → un sélecteur et une vue à la fois) : le résumé en gris à droite de la ligne ; une seule ligne ouverte par groupe ; le contenu long et secondaire dans un panneau latéral (docs/32). Une action sur un repliable ouvert (« Masquer ») se met sur sa ligne de titre, jamais sur une ligne à elle (docs/119).
 10. **Une partie à une seule action** devient une ligne : le nom à gauche, l'action à droite (docs/106).
 11. **Consulter ou modifier** : une carte ne mélange pas les deux (docs/110).
 12. **Enregistrer** : 1,5 rem dessous, jamais de filet juste au-dessus ; un bouton ou une pilule ne passe jamais à la ligne (docs/32, 106, 110).
@@ -70,7 +70,7 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 3. Gardent leur forme : zones de texte, curseurs, étiquettes, la capsule.
 3 bis. **Une case à cocher est un interrupteur** (docs/132) : la même forme glissante partout, bleue quand elle est activée ; seuls les jours de recherche gardent leurs pastilles.
 4. Avant une PR d'interface, l'audit des rangées (`frontend/scripts/alignement.py`) est vide.
-5. Et l'audit d'accessibilité (`frontend/scripts/accessibilite.py`, docs/117) : aucun défaut, parcours au clavier sans blocage.
+5. Et l'audit d'accessibilité (`frontend/scripts/accessibilite.py`, docs/117) : aucun défaut, parcours au clavier sans blocage. Les trois audits ouvrent chaque ligne repliable et choisissent chaque vue (`scripts/explore.py`, docs/133) ; l'accessibilité passe aussi en sombre (`SCHEME=dark`).
 6. Et l'audit des règles (`frontend/scripts/regles.py`, docs/118, docs/119, docs/132) : pas d'aide de plus de 16 mots, pas de texte collé à ce qui est au-dessus (moins de 3,5 px entre deux textes, 6 px sous un champ), pas de titre avec un pronom (« je, tu, te, ton, ta, tes, me, mon, ma, mes ») ou en question, pas de barre verticale ni de cadre dans un cadre, pas de texte à moins de 1,25 rem du bord d'une carte, pas de rangée de hauteurs différentes.
 
 ## Iconographie (docs/101)

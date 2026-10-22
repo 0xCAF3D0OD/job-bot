@@ -23,6 +23,8 @@ import sys
 
 from playwright.async_api import async_playwright
 
+from explore import states
+
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 PAGES = [
     "aujourdhui",
@@ -196,10 +198,11 @@ async def main() -> int:
             for path in PAGES + extra:
                 await page.goto(f"{BASE}/{path}")
                 await page.wait_for_timeout(1700)
-                faults = list(dict.fromkeys(await page.evaluate(AUDIT, MAX_WORDS)))
-                for fault in faults:
-                    print(f"{size['width']} px  /{path}  {fault}")
-                total += len(faults)
+                async for state in states(page):
+                    faults = list(dict.fromkeys(await page.evaluate(AUDIT, MAX_WORDS)))
+                    for fault in faults:
+                        print(f"{size['width']} px  /{path}{state}  {fault}")
+                    total += len(faults)
             await page.close()
         await browser.close()
     print(json.dumps({"défauts": total}, ensure_ascii=False))

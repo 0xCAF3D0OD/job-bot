@@ -149,6 +149,8 @@ const panelCards = computed(() => (selectedDay.value ? dayCards.value : toFollow
 // Cinq lignes, puis « Voir les N autres » (docs/130 §A) : plus de liste défilante estompée.
 const PANEL_ROWS = 5;
 const showAllCards = ref(false);
+// La liste de droite (docs/133 §1) : à relancer ou à déclarer dans Job-Room.
+const panelTab = ref<"follow" | "declare">("follow");
 const visibleCards = computed(() => (showAllCards.value ? panelCards.value : panelCards.value.slice(0, PANEL_ROWS)));
 watch(panelCards, () => {
   showAllCards.value = false;
@@ -597,62 +599,94 @@ onUnmounted(() => assistant.setFocus(null));
           class="suivi-panel"
           data-test="day-panel"
         >
-          <h2 class="suivi-panel-title">
-            {{ selectedDay ? dayTitle.format(new Date(`${selectedDay}T12:00:00`)) : `À relancer${panelCards.length ? ` · ${panelCards.length}` : ""}` }}
-          </h2>
-          <p
-            v-if="!panelCards.length"
-            class="hint"
+          <h2
+            v-if="selectedDay"
+            class="suivi-panel-title"
           >
-            <template v-if="selectedDay">
-              Aucune candidature ce jour-là.
+            {{ dayTitle.format(new Date(`${selectedDay}T12:00:00`)) }}
+          </h2>
+          <!-- Deux onglets (docs/133 §1) : une liste à la fois, plus de page à parcourir. -->
+          <div
+            v-else
+            class="segmented small suivi-panel-tabs"
+            role="radiogroup"
+            aria-label="Liste affichée"
+          >
+            <button
+              type="button"
+              role="radio"
+              :aria-checked="panelTab === 'follow'"
+              data-test="panel-tab-follow"
+              @click="panelTab = 'follow'"
+            >
+              À relancer{{ toFollowUp.length ? ` · ${toFollowUp.length}` : "" }}
+            </button>
+            <button
+              v-if="orp.count"
+              type="button"
+              role="radio"
+              :aria-checked="panelTab === 'declare'"
+              data-test="panel-tab-declare"
+              @click="panelTab = 'declare'"
+            >
+              À déclarer{{ toDeclare.length ? ` · ${toDeclare.length}` : "" }}
+            </button>
+          </div>
+          <template v-if="selectedDay || panelTab === 'follow' || !orp.count">
+            <p
+              v-if="!panelCards.length"
+              class="hint"
+            >
+              <template v-if="selectedDay">
+                Aucune candidature ce jour-là.
+                <button
+                  type="button"
+                  class="link"
+                  @click="addManual"
+                >
+                  En ajouter une
+                </button>
+              </template>
+              <template v-else>
+                Rien à relancer.
+              </template>
+            </p>
+            <template v-else>
+              <ul class="today-rows">
+                <li
+                  v-for="application in visibleCards"
+                  :key="application.id"
+                >
+                  <ApplicationCard
+                    :application="application"
+                    :orp-row="rowsById.get(application.id) ?? null"
+                    @open="openId = $event.id"
+                    @status="setStatus"
+                    @edit="edit"
+                    @interview="openInterview"
+                    @prepare="preparing = $event"
+                    @changed="load"
+                  />
+                </li>
+              </ul>
               <button
+                v-if="panelCards.length > visibleCards.length"
                 type="button"
-                class="link"
-                @click="addManual"
+                class="link suivi-more-rows"
+                data-test="panel-show-all"
+                @click="showAllCards = true"
               >
-                En ajouter une
+                Voir {{ panelCards.length - visibleCards.length === 1 ? "l'autre" : `les ${panelCards.length - visibleCards.length} autres` }}
               </button>
             </template>
-            <template v-else>
-              Rien à relancer.
-            </template>
-          </p>
-          <template v-else>
-            <ul class="today-rows">
-              <li
-                v-for="application in visibleCards"
-                :key="application.id"
-              >
-                <ApplicationCard
-                  :application="application"
-                  :orp-row="rowsById.get(application.id) ?? null"
-                  @open="openId = $event.id"
-                  @status="setStatus"
-                  @edit="edit"
-                  @interview="openInterview"
-                  @prepare="preparing = $event"
-                  @changed="load"
-                />
-              </li>
-            </ul>
-            <button
-              v-if="panelCards.length > visibleCards.length"
-              type="button"
-              class="link suivi-more-rows"
-              data-test="panel-show-all"
-              @click="showAllCards = true"
-            >
-              Voir {{ panelCards.length - visibleCards.length === 1 ? "l'autre" : `les ${panelCards.length - visibleCards.length} autres` }}
-            </button>
           </template>
           <section
-            v-if="!selectedDay && orp.count"
+            v-else
             class="suivi-declare"
             data-test="declare"
           >
-            <h2 class="suivi-panel-title">
-              À déclarer dans Job-Room{{ toDeclare.length ? ` · ${toDeclare.length}` : "" }}
+            <h2 class="visually-hidden">
+              À déclarer dans Job-Room
             </h2>
             <p
               v-if="!toDeclare.length"
