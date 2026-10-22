@@ -5,6 +5,7 @@ import { api, type ContractType, type CriteriaIn, type Keywords, type Language }
 import type { components } from "../api/schema";
 
 type RemotePolicy = components["schemas"]["RemotePolicy"];
+import HoverNote from "./HoverNote.vue";
 import TagInput from "./TagInput.vue";
 import { placeLabel } from "../cantons";
 
@@ -57,16 +58,15 @@ const savedAt = ref<string | null>(null);
 const editing = ref(false);
 
 // Aides « ? » (docs/32 §1) : les mots-clés réels du filtre, en abrégé.
+// La description en une ligne ; les mots-clés au survol (docs/88 règle 5, audit de la 1.1.1).
 const contractsHelp = computed(() => {
-  const intro = "Écartée si le titre ou l'extrait contient un mot du type.";
-  if (!keywords.value) return intro;
+  if (!keywords.value) return "";
   const k = keywords.value;
-  const lines = CONTRACTS.map((c) => `${c.label} : ${(k.contract_types[c.value] ?? []).slice(0, 3).join(", ")}…`);
-  return `${intro} ${lines.join(" ; ")}.`;
+  return `${CONTRACTS.map((c) => `${c.label} : ${(k.contract_types[c.value] ?? []).slice(0, 3).join(", ")}…`).join(" ; ")}.`;
 });
 const languagesHelp = computed(() => {
   const words = keywords.value?.requirement_words.slice(0, 8).join(", ") ?? "";
-  return `Écartée si le titre ou l'extrait exige la langue : son nom à moins de trois mots de ${words}…`;
+  return `Son nom à moins de trois mots de ${words}…`;
 });
 
 // Résumé en lignes alignées, libellé à gauche, valeur à droite (docs/43 n° 23) ; les cantons
@@ -84,7 +84,7 @@ const summary = computed(() => {
   rows.push({ label: "Types d'offres exclus", value: types.length ? types.join(", ") : "aucun" });
   if (f.banned_words.length) rows.push({ label: "Mots interdits dans le titre", value: f.banned_words.join(", ") });
   const langs = LANGUAGES.filter((l) => f.unspoken_languages.includes(l.value)).map((l) => l.label.toLowerCase());
-  if (langs.length) rows.push({ label: "Langues que tu ne parles pas", value: langs.join(", ") });
+  if (langs.length) rows.push({ label: "Langues non parlées", value: langs.join(", ") });
   return rows;
 });
 
@@ -245,7 +245,15 @@ onMounted(() => void load());
       <fieldset>
         <legend>Types d'offres exclus</legend>
         <p class="setting-desc">
-          {{ contractsHelp }}
+          <HoverNote
+            v-if="contractsHelp"
+            :text="contractsHelp"
+          >
+            Écartée si le titre ou l'extrait contient un mot du type.
+          </HoverNote>
+          <template v-else>
+            Écartée si le titre ou l'extrait contient un mot du type.
+          </template>
         </p>
         <label
           v-for="contract in CONTRACTS"
@@ -274,12 +282,17 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>Langues que tu ne parles pas</legend>
-        <p
-          v-if="keywords"
-          class="setting-desc"
-        >
-          {{ languagesHelp }}
+        <legend>Langues non parlées</legend>
+        <p class="setting-desc">
+          <HoverNote
+            v-if="keywords"
+            :text="languagesHelp"
+          >
+            Écartée si le titre ou l'extrait exige l'une de ces langues.
+          </HoverNote>
+          <template v-else>
+            Écartée si le titre ou l'extrait exige l'une de ces langues.
+          </template>
         </p>
         <label
           v-for="language in LANGUAGES"

@@ -34,10 +34,11 @@ describe("CriteriaView", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("VD");
-    // La description toujours visible sous son titre, comme les CFF (docs/110).
+    // La description en une ligne sous son titre, les mots-clés au survol (docs/110, docs/118 §1).
     const descriptions = wrapper.findAll(".setting-desc").map((p) => p.text());
-    expect(descriptions.some((d) => d.includes("Stages : stage, internship…"))).toBe(true);
-    expect(wrapper.findComponent(HoverNote).exists()).toBe(false);
+    expect(descriptions).toContain("Écartée si le titre ou l'extrait contient un mot du type.");
+    const notes = wrapper.findAllComponents(HoverNote).map((n) => n.props("text"));
+    expect(notes.some((t) => t.includes("Stages : stage, internship…"))).toBe(true);
 
     const locationInput = wrapper.find("#locations");
     await locationInput.setValue("Genève");

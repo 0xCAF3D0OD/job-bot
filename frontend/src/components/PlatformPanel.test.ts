@@ -60,7 +60,7 @@ describe("Plateforme (docs/65 §5)", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=first-steps-rate]").text()).toContain("2 sur 5");
     const rows = wrapper.findAll("[data-test=first-steps-stopped] li").map((li) => li.text());
-    expect(rows).toEqual(["Étape 2 · Crée tes alertes2 comptes", "Étape 3 · Garde ta première offre1 compte"]);
+    expect(rows).toEqual(["Étape 2 · Alertes sur les sites d'emploi2 comptes", "Étape 3 · Première offre gardée1 compte"]);
   });
 
   it("l'usage de chaque compte, les actions seulement pour les autres", async () => {

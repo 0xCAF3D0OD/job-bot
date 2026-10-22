@@ -251,7 +251,7 @@ onUnmounted(() => {
             type="button"
             role="radio"
             :aria-checked="preferences.domain_only && hasDomain"
-            :aria-expanded="hasDomain ? undefined : domainFieldOpen"
+            :aria-controls="hasDomain || !domainFieldOpen ? undefined : 'domaine-champ'"
             data-test="filter-domain"
             @click="chooseDomain"
           >
@@ -354,6 +354,7 @@ onUnmounted(() => {
       <PushTransition>
         <DomainField
           v-if="domainFieldOpen && !hasDomain"
+          id="domaine-champ"
           @saved="onDomainSaved"
         />
       </PushTransition>

@@ -106,3 +106,21 @@ Je les vérifie aussi sur la démo (docs/126 §5) et sur un compte neuf.
 - Tests backend : les cinq étapes cochées d'après les données, jamais en arrière, l'offre à préparer, la réussite jusqu'à ce que l'interface la confirme, un compte d'avant la 1.1.0 sans carte ni réussite, la démo en lecture seule, le chiffre de l'équipe (et rien pour un compte invité, même en appelant la fonction). 632 tests, ruff, mypy.
 - Tests de l'interface : la carte à chaque étape (titre, bouton, adresse), l'attente des offres, Aujourd'hui allégé, « Masquer » et « Annuler », la réussite confirmée ; les écrans vides des Offres, du Suivi, du Rendez-vous et du Bilan ; la carte de la Plateforme. 449 tests, lint, vue-tsc.
 - Les trois audits sur la démo à zéro.
+
+## Écarts (1.1.1)
+
+Les audits passés sur un vrai compte (l'exploitant, sans connexion, une base jetable), et plus seulement sur la démo : ils voient les Réglages de l'exploitant et les écrans d'un compte neuf.
+
+- **Les titres de la carte « Premiers pas » deviennent des noms** (docs/interface.md, Titres 2), le verbe reste sur le bouton : « Critères et CV », « Alertes sur les sites d'emploi », « Première offre gardée », « Lettre et CV pour l'offre », « Candidature envoyée » (sa ligne : « Marque-la comme envoyée : elle compte pour ton mois ORP. »). Les mots validés au §1 étaient des verbes ; la règle des titres l'emporte, comme en docs/126. L'assistant passe à `assistant-v17`.
+- **Les cinq points** se lisent en une phrase (« 2 étapes faites sur 5 ») au lieu d'un libellé caché par point, que l'audit voyait déborder.
+- **Autres titres** : « Que veux-tu recevoir ? » (l'assistant des alertes) devient « Offres à recevoir » ; « Langues que tu ne parles pas » (Profil) devient « Langues non parlées ».
+- **Les aides du Profil** (types d'offres exclus, langues) : une ligne visible, les mots-clés au survol (docs/118 §1).
+- **Réglages de l'exploitant** : la liste des profils d'essai a des filets entre les lignes au lieu d'un cadre par ligne (un seul cadre par bloc) ; un site ou un profil en pause a son nom grisé au lieu d'une ligne à 60 % d'opacité, qui rendait l'indication illisible ; les liens des sites suggérés sont soulignés ; « Sauvegardes non réglées » tient en une ligne.
+- **Formations et Actualités** : le bouton « Domaine » (un choix radio) perd `aria-expanded`, refusé sur ce rôle ; il désigne le champ qu'il ouvre par `aria-controls`.
+- **L'audit au clavier** ne demande plus d'atteindre la première offre quand il n'y en a pas : il vérifie alors que l'écran vide le dit.
+
+## Vérifié (1.1.1)
+
+- Les trois audits à zéro sur la démo **et** sur un compte neuf de l'exploitant.
+- Captures à 1440 et 390 px : la carte « Premiers pas », les profils d'essai, les sites suivis, les langues du Profil.
+- Tests : 449 de l'interface, lint, vue-tsc ; 632 backend (dont la consigne de l'assistant), ruff, mypy.
