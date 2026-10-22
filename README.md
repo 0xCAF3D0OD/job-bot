@@ -192,7 +192,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.89.0 | Les règles de l'interface partout : descriptions en une ligne (le reste au survol), plus de barre verticale dans les repliables, titres sans « ton » ni question ; un troisième audit (`regles.py`), 49 défauts → 0 | livrée |
 | 0.89.1 | Une structure cohérente : 18 règles validées reportées dans docs/interface.md ; repliables à 1,5 rem du bord, « Masquer » sur la ligne du titre, cartes d'une rangée de même hauteur, 2 rem entre grands blocs ; l'audit vérifie marges et hauteurs | livrée |
 | 0.90.0 | Le code d'un site ne part plus dans la notification du téléphone (« Code jobup reçu ») ; les copies des alertes lues des invités effacées au bout de 90 jours | livrée |
-| 0.90.1 | Les coordonnées ne partent jamais à l'IA : nom, adresse et date de naissance retirés du CV et des certificats avant l'envoi, même sans coordonnées saisies | en cours |
+| 0.90.1 | Les coordonnées ne partent jamais à l'IA : nom, adresse et date de naissance retirés du CV et des certificats avant l'envoi, même sans coordonnées saisies | livrée |
+| 0.90.2 | Les pastilles du calendrier : un anneau orange pour « à compléter » au lieu d'un « ! » rouge qui débordait, « En attente » lisible en sombre, des pastilles espacées | en cours |
 
 ## Lancer en local
 

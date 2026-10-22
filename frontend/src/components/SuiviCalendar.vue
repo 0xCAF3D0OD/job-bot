@@ -79,6 +79,8 @@ function label(day: string): string {
     const statuses = sent.map((a) => applicationStatusLabel[a.status ?? "en_attente"].toLowerCase());
     parts.push(`${plural(sent.length, "candidature", "candidatures")} : ${statuses.join(", ")}`);
   }
+  // L'anneau orange se dit aussi au lecteur d'écran (0.90.2).
+  if (sent.some((a) => props.incomplete.has(a.id))) parts.push("à compléter pour l'ORP");
   if (interviews.value.has(day)) parts.push("entretien");
   if (reminders.value.has(day)) parts.push("à relancer");
   if (nextSteps.value.has(day)) parts.push("suite attendue");

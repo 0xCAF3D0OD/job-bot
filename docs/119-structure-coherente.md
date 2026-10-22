@@ -27,3 +27,14 @@ docs/59 et docs/63 citent *The UI & UX Cheatsheet* (Marc Andrew, 21 conseils), q
 - Les trois audits sur la démo, 1440 et 390 px : règles 0, rangées 0, accessibilité 0 grave, 0 mineur, clavier sans blocage.
 - Captures d'Aujourd'hui (ordinateur et téléphone, « Pour bien démarrer » ouvert) et du Rendez-vous ORP.
 - 409 tests de l'interface, lint, vue-tsc.
+
+## Complément 0.90.2 : les pastilles du calendrier
+
+Ton retour du 2026-10-22, capture du Suivi à l'appui : les pastilles ne respectaient pas les règles.
+
+- **Le « ! »** sur une pastille (ligne ORP à compléter) était un caractère utilisé comme icône (iconographie 1), dans un badge rouge qui débordait sur la pastille voisine. Il devient **un anneau orange** autour de la pastille : l'orange est la couleur de ce qui demande d'agir (structure 16), comme « relancer ». Le rouge reste au seul « Refus ».
+- **« En attente »** : un blanc écrit en dur, éblouissant en sombre ; désormais le fond de la carte avec un contour gris.
+- **L'espacement** : 0,65 rem entre deux pastilles (0,2 rem avant, puis deux règles qui se contredisaient, fusionnées en une) ; les anneaux ne se touchent plus.
+- **Pour les lecteurs d'écran**, le jour dit aussi « à compléter pour l'ORP ».
+
+Vérifié : captures en sombre et en clair, à 1440 et 390 px, un jour à trois pastilles dont deux à compléter ; les trois audits à zéro ; 409 tests, lint, vue-tsc.
