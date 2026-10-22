@@ -122,7 +122,7 @@ export const applicationStatusLabel: Record<
   relancee: "Relancée",
   entretien: "Entretien",
   refus: "Refus",
-  engagement: "Engagement",
+  engagement: "Poste obtenu",
   sans_reponse: "Sans réponse",
 };
 

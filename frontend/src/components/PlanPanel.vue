@@ -113,7 +113,7 @@ onMounted(async () => {
         data-test="plan-name"
       >
         <template v-if="plan.plan === 'plus'">
-          <strong>Plus</strong>{{ offered ? ", offerte par l'exploitant" : "" }} : l'IA va plus loin chaque mois ; le reste n'a pas de limite.
+          <strong>Plus</strong>{{ offered ? ", offerte par l'équipe jobA1" : "" }} : l'IA va plus loin chaque mois ; le reste n'a pas de limite.
         </template>
         <template v-else>
           <strong>Essentiel</strong>, gratuite : l'IA a des limites chaque mois ; le reste n'en a pas.

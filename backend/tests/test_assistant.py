@@ -357,7 +357,9 @@ def test_guide_follows_the_pages() -> None:
     # actuelles, Aujourd'hui en tableau de bord et le Bilan (docs/56).
     assert "Objectif ORP" in service.INSTRUCTIONS and "Mois ORP" in service.INSTRUCTIONS
     assert "Ce qui donne des réponses dans sa recherche" in service.INSTRUCTIONS
-    assert "`/candidatures/bilan?mois=AAAA-MM`" in service.INSTRUCTIONS
+    # Le Bilan, une entrée du menu (docs/126 §1).
+    assert "`/bilan?mois=AAAA-MM`" in service.INSTRUCTIONS
+    assert "Progresser" not in service.INSTRUCTIONS
     # Ce qui est venu de 0.48.2 (docs/64) : ce que donnent les critères, la dépense du mois.
     assert "Effet des critères" in service.INSTRUCTIONS
     assert "dépense du mois" in service.INSTRUCTIONS and "« criteres »" in service.INSTRUCTIONS
@@ -382,13 +384,15 @@ def test_guide_follows_the_pages() -> None:
     assert "assistant-v10" not in service.INSTRUCTIONS
     # 0.70.3 (docs/90) : trois pages, Progresser, Profil dans le menu du compte.
     assert "assistant-v11" not in service.INSTRUCTIONS
-    assert "/progresser/formations" in service.INSTRUCTIONS
+    assert "/bilan/formations" in service.INSTRUCTIONS
     # 0.70.5 (docs/92) : deux pages, Progresser dans la capsule, la barre d'onglets.
     assert "assistant-v12" not in service.INSTRUCTIONS
     # 0.71.0 (docs/95) : Aujourd'hui épuré, la jauge dans le Bilan.
     assert "assistant-v13" not in service.INSTRUCTIONS
     assert "phrase du jour" in service.INSTRUCTIONS and "Mois ORP" in service.INSTRUCTIONS
-    assert "deux pages" in service.INSTRUCTIONS and "étincelle" in service.INSTRUCTIONS
+    # 1.0.0 (docs/126) : trois entrées, le Bilan au menu, plus d'étincelle de Progresser.
+    assert "trois entrées" in service.INSTRUCTIONS and "étincelle" not in service.INSTRUCTIONS
+    assert "assistant-v14" not in service.INSTRUCTIONS
     assert "menu du compte" in service.INSTRUCTIONS
     assert "Collecter maintenant" in service.INSTRUCTIONS
     assert "« Effet des critères »" in service.INSTRUCTIONS

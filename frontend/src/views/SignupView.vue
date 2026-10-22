@@ -6,7 +6,7 @@ import AppIcon from "../components/AppIcon.vue";
 import AuthSplit from "../components/AuthSplit.vue";
 
 // Demander un compte (docs/102), sur le modèle du lien d'invitation (docs/65 §2) : le compte
-// attend la validation de l'exploitant. Chaque envoi compte dans la limite par adresse (3 par
+// attend la validation de l'équipe jobA1. Chaque envoi compte dans la limite par adresse (3 par
 // heure) : tout ce qui peut se vérifier ici l'est avant d'envoyer.
 const MIN_PASSWORD = 12;
 const MAX_USERNAME = 40;
@@ -43,7 +43,7 @@ function problem(): string {
   if (name.length > MAX_USERNAME) return `L'identifiant fait ${MAX_USERNAME} caractères au plus.`;
   if (password.value.length < MIN_PASSWORD) return `Le mot de passe fait ${MIN_PASSWORD} caractères au moins.`;
   if (password.value !== again.value) return "Les deux mots de passe diffèrent.";
-  if (note.value.length > MAX_NOTE) return `Le mot pour l'exploitant fait ${MAX_NOTE} caractères au plus.`;
+  if (note.value.length > MAX_NOTE) return `Le mot pour l'équipe jobA1 fait ${MAX_NOTE} caractères au plus.`;
   if (!consent.value) return "Coche la case : lis d'abord ce que deviennent tes données.";
   return "";
 }
@@ -99,7 +99,7 @@ async function submit(): Promise<void> {
       role="status"
       data-test="signup-sent"
     >
-      <p>Ta demande est envoyée. Tu pourras te connecter dès que l'exploitant l'aura acceptée.</p>
+      <p>Ta demande est envoyée. Tu pourras te connecter dès que l'équipe jobA1 l'aura acceptée.</p>
       <p class="hint">
         <RouterLink to="/connexion">
           Se connecter
@@ -114,7 +114,7 @@ async function submit(): Promise<void> {
       @submit.prevent="submit"
     >
       <p class="hint">
-        Choisis ton identifiant et ton mot de passe. Ton compte attend ensuite la validation de l'exploitant.
+        Choisis ton identifiant et ton mot de passe. Ton compte attend ensuite la validation de l'équipe jobA1.
       </p>
       <label>Identifiant
         <input
@@ -147,7 +147,7 @@ async function submit(): Promise<void> {
           data-test="signup-again"
         >
       </label>
-      <label>Un mot pour l'exploitant (facultatif)
+      <label>Un mot pour l'équipe jobA1 (facultatif)
         <textarea
           v-model="note"
           rows="3"

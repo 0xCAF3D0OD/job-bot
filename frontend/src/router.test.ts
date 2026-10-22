@@ -31,13 +31,19 @@ describe("routes réservées (docs/18 §1)", () => {
     const { router } = await import("./router");
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("trainings");
-    // Progresser (docs/90) : les anciennes adresses mènent au bon onglet, avec leurs paramètres.
+    // Le Bilan (docs/126 §1) : les anciennes adresses, Progresser compris, mènent au bon onglet,
+    // avec leurs paramètres.
     await router.push("/formations?onglet=miennes");
-    expect(router.currentRoute.value.fullPath).toBe("/progresser/formations?onglet=miennes");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/formations?onglet=miennes");
     await router.push("/actualites?rubrique=videos");
-    expect(router.currentRoute.value.fullPath).toBe("/progresser/actualites?rubrique=videos");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/actualites?rubrique=videos");
+    await router.push("/progresser/formations?onglet=miennes");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/formations?onglet=miennes");
     await router.push("/progresser");
-    expect(router.currentRoute.value.path).toBe("/progresser/actualites");
+    expect(router.currentRoute.value.path).toBe("/bilan/actualites");
+    await router.push("/candidatures/bilan?mois=2026-10");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan?mois=2026-10");
+    expect(router.currentRoute.value.name).toBe("insights");
     await router.push("/connexion?suite=/offres");
     expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres");
     // Rubrique Candidatures (docs/19 §2) : /candidatures ouvre les Offres, anciens liens redirigés.

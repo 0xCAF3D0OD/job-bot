@@ -13,7 +13,7 @@ const sources = import.meta.glob<string>(["./views/*.vue", "./components/**/*.vu
 const VIEWS: Record<string, string> = {
   today: "TodayView",
   jobs: "JobsView",
-  progress: "ProgressView",
+  bilan: "BilanView",
   profile: "ProfileView",
   settings: "SettingsView",
 };
@@ -26,8 +26,8 @@ function template(source: string): string {
 }
 
 describe("titres (docs/88)", () => {
-  it("le menu principal : les deux pages de travail (docs/92)", () => {
-    expect(mainMenu.map((entry) => entry.label)).toEqual(["Aujourd'hui", "Candidatures"]);
+  it("le menu principal : trois entrées, une question chacune (docs/126 §1)", () => {
+    expect(mainMenu.map((entry) => entry.label)).toEqual(["Aujourd'hui", "Candidatures", "Bilan"]);
   });
 
   it("chaque page affiche comme titre son nom de page, Réglages compris", () => {

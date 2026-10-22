@@ -7,10 +7,11 @@ import AppIcon from "../components/AppIcon.vue";
 import type { IconName } from "../icons";
 import type { JobsTab } from "../router";
 
-// Rubrique Candidatures (docs/19 §2, docs/42, docs/83) : cinq onglets toujours visibles sous le titre.
+// Rubrique Candidatures (docs/19 §2, docs/83, docs/126 §1) : quatre onglets toujours visibles sous le
+// titre ; le Bilan est une entrée du menu.
 const route = useRoute();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
-const counts = ref({ offres: 0, suivi: 0, alertes: 0, bilan: 0, "rendez-vous": 0 });
+const counts = ref({ offres: 0, suivi: 0, alertes: 0, "rendez-vous": 0 });
 
 // Le titre reste « Candidatures » (docs/88) : l'onglet souligné dit où l'on est.
 // `tabShort` : l'onglet sur téléphone, quand son nom ne tient pas avec les autres.
@@ -38,17 +39,9 @@ const TABS: {
     hint: "alertes créées sans rien envoyé",
   },
   {
-    key: "bilan",
-    label: "Bilan",
-    icon: "stats",
-    path: "/candidatures/bilan",
-    hint: "",
-  },
-  {
     key: "rendez-vous",
     label: "Rendez-vous",
     icon: "calendar",
-    tabShort: "RDV",
     path: "/candidatures/rendez-vous-orp",
     hint: "",
   },
@@ -70,7 +63,6 @@ async function refresh(): Promise<void> {
     // Suivi : à relancer, plus les lignes ORP à compléter (docs/22 §1).
     suivi: (today.data?.to_follow_up ?? 0) + (orp.data?.incomplete ?? 0),
     alertes: today.data?.alerts_waiting ?? 0,
-    bilan: 0,
     "rendez-vous": 0,
   };
 }

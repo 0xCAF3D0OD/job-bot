@@ -72,7 +72,7 @@ describe("demander un compte (docs/102)", () => {
       },
     });
     const sent = wrapper.find("[data-test=signup-sent]");
-    expect(sent.text()).toContain("Ta demande est envoyée. Tu pourras te connecter dès que l'exploitant l'aura acceptée.");
+    expect(sent.text()).toContain("Ta demande est envoyée. Tu pourras te connecter dès que l'équipe jobA1 l'aura acceptée.");
     expect(sent.find("a").attributes("href")).toBe("/connexion");
     expect(wrapper.find("[data-test=signup-form]").exists()).toBe(false);
   });

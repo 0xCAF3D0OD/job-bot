@@ -37,7 +37,7 @@ APPLICATION_STATUSES = {
     ApplicationStatus.RELANCEE: "Relancée",
     ApplicationStatus.SANS_REPONSE: "Sans réponse",
     ApplicationStatus.REFUS: "Refus",
-    ApplicationStatus.ENGAGEMENT: "Engagement",
+    ApplicationStatus.ENGAGEMENT: "Poste obtenu",
 }
 EXPIRY = {"expired": "expirée", "alive": "pas expirée"}
 # Le bon rythme (docs/86, 0.68.1) : réglages du compte, sans cible (id 0).
@@ -204,7 +204,7 @@ async def _check(session: AsyncSession, kind: str, target_id: int, value: str) -
             raise ActionRefused("la candidature est déjà dans cet état")
         label = APPLICATION_STATUSES[ApplicationStatus(value)]
         name = f"« {application.job_title} » chez {application.company}"
-        return f"Passer la candidature {name} en {label}"
+        return f"Passer la candidature {name} en « {label} »"
     raise ActionRefused("type d'action inconnu")
 
 

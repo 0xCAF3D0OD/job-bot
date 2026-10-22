@@ -409,7 +409,7 @@ const { me } = useAuth();
                   data-test="tab-preparing"
                   @click="tableTab = 'preparing'"
                 >
-                  Commencées<span
+                  À préparer<span
                     v-if="preparing.length"
                     class="tab-count"
                   >{{ preparing.length }}</span>
@@ -532,7 +532,7 @@ const { me } = useAuth();
               nested
             />
             <RouterLink
-              to="/candidatures/bilan"
+              to="/bilan"
               class="today-more"
             >
               Voir le bilan
