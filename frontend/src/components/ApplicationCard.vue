@@ -3,8 +3,7 @@ import { computed, ref } from "vue";
 
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { nextStep } from "../applicationState";
-import { applicationStatusLabel } from "../format";
-import AppIcon from "./AppIcon.vue";
+import { applicationStatusLabel, colorIndex } from "../format";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import SidePanel from "./SidePanel.vue";
 
@@ -21,7 +20,7 @@ const emit = defineEmits<{
 }>();
 
 const step = computed(() => nextStep(props.application, props.orpRow));
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
 // Relance (docs/38) : son panneau s'ouvre depuis la carte.
 const followUpOpen = ref(false);
@@ -55,17 +54,25 @@ function run(): void {
 </script>
 
 <template>
+  <!-- Une ligne, la même forme qu'Aujourd'hui (docs/130 §A) : l'initiale, l'entreprise, le poste
+       et la date, ce qui se passe ; l'action à droite. Le statut est dans la phrase. -->
   <article
-    class="application-card"
+    class="application-row"
     data-test="application-card"
   >
+    <span
+      class="logo"
+      :class="`c${colorIndex(application.company)}`"
+      aria-hidden="true"
+    >{{ application.company.trim().charAt(0).toUpperCase() }}</span>
     <button
       type="button"
-      class="application-card-main"
+      class="application-row-main"
       data-test="card-open"
+      :title="`${application.company} · ${application.job_title}`"
       @click="emit('open', application)"
     >
-      <strong class="application-card-company">
+      <strong>
         {{ application.company }}
         <span
           v-if="application.assigned_by_orp"
@@ -77,31 +84,25 @@ function run(): void {
           data-test="card-spontaneous"
         >Spontanée</span>
       </strong>
-      <span class="muted meta-line">
-        <span>{{ application.job_title }}</span>
-        <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ shortDate.format(new Date(application.sent_at)) }}</span>
-      </span>
+      <span class="today-row-line">{{ application.job_title }} · envoyée le {{ shortDate.format(new Date(application.sent_at)) }}</span>
       <span
-        class="app-status"
-        data-test="card-status"
+        :class="['today-row-line', 'application-row-step', step.key]"
+        data-test="card-step"
       >
-        <span :class="['dot', application.status]" />{{ applicationStatusLabel[application.status] }}
+        <span
+          :class="{ 'visually-hidden': step.text }"
+          data-test="card-status"
+        >{{ applicationStatusLabel[application.status] }}</span>{{ step.text }}
       </span>
     </button>
-    <p
-      :class="['application-card-foot', step.key]"
-      data-test="card-step"
+    <button
+      type="button"
+      class="link application-row-action"
+      :data-test="`card-step-${step.key}`"
+      @click="run"
     >
-      <span>{{ step.text }}</span>
-      <button
-        type="button"
-        class="link"
-        :data-test="`card-step-${step.key}`"
-        @click="run"
-      >
-        {{ step.action }}
-      </button>
-    </p>
+      {{ step.action }}
+    </button>
     <SidePanel
       v-if="followUpOpen"
       open

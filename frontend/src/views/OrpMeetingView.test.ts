@@ -47,6 +47,30 @@ beforeEach(() => {
 });
 
 describe("Rendez-vous ORP (docs/83)", () => {
+  it("rangé en parties : Préparer, Le mois (une carte), le carnet replié (docs/130 §B)", async () => {
+    const past = [{ ...MEETING, id: 2, starts_at: "2026-09-15T08:00:00Z", outcome_at: "2026-09-15T10:00:00Z", agreed_target: 10 }];
+    GET.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE, past } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    expect(wrapper.text()).not.toContain("Une feuille pour ton conseiller");
+    expect(wrapper.findAll("h2.orp-section").map((h) => h.text())).toEqual(["Préparer", "Le mois"]);
+    // Le message rédigé par l'IA rejoint « La feuille » ; la phrase sur l'ORP en est la description.
+    const sheet = wrapper.find("[data-test=sheet-download]");
+    expect(sheet.find("[data-test=sheet-ai]").exists()).toBe(true);
+    expect(sheet.text()).toContain("Rien n'est envoyé à l'ORP");
+    // Le mois : une seule carte, ses quatre parties dedans.
+    const facts = wrapper.find("[data-test=sheet-facts]");
+    for (const part of ["sheet-summary", "sheet-blockers", "sheet-missing", "sheet-obligations"]) {
+      expect(facts.find(`[data-test=${part}]`).exists()).toBe(true);
+    }
+    expect(facts.findAll(".form-card")).toHaveLength(0);
+    // Le carnet, une ligne repliable ; « Modifier » sur la ligne du rendez-vous.
+    const log = wrapper.find("[data-test=meeting-log]");
+    expect(log.text()).toContain("Le carnet");
+    expect(log.text()).toContain("1 rendez-vous");
+    expect(log.find("[data-test=log-outcome-2]").text()).toBe("Modifier");
+  });
+
   it("aucune candidature encore : la feuille le dit, et mène aux offres (docs/128 §3)", async () => {
     GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });

@@ -93,3 +93,17 @@ Le mois
 
 - **1.3.0** : A et B.
 - **1.3.1** : C, D, E, F.
+
+## Écarts (1.3.0)
+
+- **Règles relues avant de construire** ; captures à 1440 et 390 px de la démo (Suivi en calendrier, Rendez-vous) ; les trois audits à zéro sur la démo et sur un compte neuf.
+- **Le Suivi** : « Ajouter » devient une pilule avec son mot (l'ancien « + » rond) ; sur téléphone, « Ajouter » et « ⋯ » montent sur la ligne du mois, Calendrier/Liste prend toute la largeur dessous (sans quoi « Calendrier » était coupé).
+- **L'action « Sans réponse »** devient **« Classer sans réponse »** (un bouton dit ce qu'il fait, à l'infinitif : Titres 3), sa phrase « Relancée, sans réponse ». Le statut de la candidature reste lu par les lecteurs d'écran quand la phrase dit déjà l'étape.
+- **Les titres des listes portent le compte** : « À relancer · 6 », « À déclarer dans Job-Room · 4 », comme sur Aujourd'hui.
+- **Le Rendez-vous** : la carte du rendez-vous rejoint « Préparer », à côté des questions (deux cartes de hauteur proche) ; « La feuille » prend toute la largeur, le PDF et le message côte à côte. « Le mois » est une carte blanche : une carte grise disparaissait sur le fond gris de la page.
+- **Le calendrier** ne change pas.
+
+## Vérifié (1.3.0)
+
+- Tests de l'interface : l'en-tête du Suivi sur deux lignes, les lignes « À relancer » (5 puis « Voir les 2 autres »), « À déclarer » dans la même forme, le Rendez-vous en parties (Préparer, Le mois en une carte, le carnet replié avec « Modifier »). 451 tests, lint, vue-tsc.
+- Les trois audits à zéro sur la démo et sur un compte neuf.

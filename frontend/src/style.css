@@ -560,7 +560,7 @@ p.badge.reason { margin: 0; }
 input[type="date"], input[type="datetime-local"] { font: inherit; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 @media (max-width: 640px) { .form-grid { grid-template-columns: minmax(0, 1fr); } }
 .form-grid textarea { width: 100%; }
-.applications-head { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.applications-head { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
 .month-nav { display: flex; align-items: center; gap: 0.6rem; }
 .month-nav strong { min-width: 9rem; text-align: center; font-weight: 600; text-transform: capitalize; }
 .month-goal { display: grid; gap: 0.35rem; min-width: 14rem; flex: 1; max-width: 22rem; }
@@ -1054,36 +1054,26 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .day-marks .mark { font-size: 0.65rem; border-radius: 4px; padding: 0 0.25rem; width: fit-content; }
 .day-marks .mark.interview { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent-text); }
 .day-marks .mark.remind { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn-text); }
-.suivi-panel { display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; min-width: 0; }
-.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: 0.7rem; padding: 0.2rem 0.2rem 0.4rem 0; scrollbar-width: thin; }
-/* Estompage : en haut seulement si des cartes sont au-dessus, en bas si d'autres suivent. */
-.panel-scroll.fade-top { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); }
-.panel-scroll.fade-bottom { -webkit-mask-image: linear-gradient(to top, transparent 0, #000 3rem); mask-image: linear-gradient(to top, transparent 0, #000 3rem); }
-.panel-scroll.fade-top.fade-bottom { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); }
+.suivi-panel { display: grid; gap: 0.75rem; align-content: start; min-width: 0; }
+/* Une candidature en ligne (docs/130 §A) : la forme d'Aujourd'hui, la partie centrale ouvre le
+   panneau, l'action à droite fait l'étape du moment. */
+.application-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; gap: 0.9rem; padding: 0.8rem 0; }
+.application-row-main { display: grid; gap: 0.15rem; min-width: 0; padding: 0; border: 0; background: none; color: var(--text); font: inherit; line-height: 1.4; text-align: left; cursor: pointer; white-space: normal; }
+.application-row-main strong { display: flex; align-items: center; gap: 0.4rem; min-width: 0; font-weight: 500; overflow: hidden; white-space: nowrap; }
+.application-row-main:hover strong { color: var(--accent-text); }
+.application-row-step:is(.follow-up, .no-answer, .complete) { color: var(--warn-text); }
+.application-row-action { justify-self: end; font-size: 0.9rem; font-weight: 500; white-space: nowrap; }
+button.today-row { width: 100%; border: 0; border-radius: 0; background: none; font: inherit; text-align: left; cursor: pointer; white-space: normal; }
+.suivi-more-rows { justify-self: start; font-size: 0.9rem; }
+/* L'en-tête du Suivi sur deux lignes : le mois et les outils, puis le compte et l'état ORP. */
+.applications-tools { display: flex; align-items: center; gap: 0.75rem; }
+.applications-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; margin: 0 0 1.25rem; }
+.applications-summary .applications-todo { margin: 0; padding: 0; border: 0; background: none; }
 .suivi-panel .suivi-panel-title { margin: 0; font-size: 1rem; }
 /* À déclarer dans Job-Room (docs/85) : sous « À relancer », une ligne par candidature, cliquable. */
-.suivi-declare { flex: 0 1 auto; max-height: 45%; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.9rem; border-top: 1px solid var(--border); }
-.suivi-declare-count { display: inline-flex; margin-left: 0.4rem; padding: 0 0.5rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-size: 0.78rem; font-weight: 600; vertical-align: middle; }
-.suivi-declare ul { min-width: 0; list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; scrollbar-width: thin; }
-.suivi-declare-row { width: 100%; display: flex; align-items: baseline; gap: 0.6rem; padding: 0.5rem 0.4rem; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
-.suivi-declare li + li .suivi-declare-row { border-top: 1px solid var(--divider); border-radius: 0; }
-.suivi-declare-row:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
-.suivi-declare-row:hover strong { color: var(--accent-text); }
-.suivi-declare-day { flex: none; width: 3.6rem; color: var(--muted); font-size: 0.82rem; }
-.suivi-declare-what { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.suivi-declare .badge { flex: none; }
-.application-card { display: grid; gap: 0; padding: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.suivi-declare { display: grid; gap: 0.75rem; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--divider); }
 /* Carte calme (docs/46 §2) : qui, quoi, le statut ; en bas, une seule prochaine étape. */
-.application-card-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.6rem; align-items: baseline; width: 100%; padding: 0.7rem 0.85rem 0.6rem; border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; white-space: normal; }
-.application-card-main:hover .application-card-company { color: var(--accent-text); }
-.application-card-company { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; font-weight: 600; }
-.application-card-main .muted { grid-column: 1 / -1; font-size: 0.86rem; }
 .app-status { grid-column: 2; grid-row: 1; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
-.application-card-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin: 0; padding: 0.5rem 0.85rem; border-top: 1px solid var(--divider); font-size: 0.84rem; min-height: 2.4rem; box-sizing: border-box; }
-.application-card-foot > span { color: var(--muted); min-width: 0; }
-.application-card-foot:is(.follow-up, .no-answer, .complete) > span { color: var(--warn-text); }
-.application-card-foot.prepare > span { color: var(--accent-text); }
-.application-card-foot .link { margin-left: auto; white-space: nowrap; }
 /* Panneau d'une candidature (docs/46 §3). */
 .application-panel { display: grid; gap: 1rem; }
 .application-panel > * { min-width: 0; }
@@ -1104,7 +1094,6 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .card-job-room dd > span { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 900px) {
   .suivi-grid { grid-template-columns: minmax(0, 1fr); }
-  .panel-scroll { max-height: 70vh; }
   .suivi-calendar .day { min-height: 3.6rem; }
   .day-marks .mark { display: none; }
 }
@@ -1585,16 +1574,14 @@ html.side-open { overflow: hidden; }
   .filters-column .filters-panel { background: none; border: 0; padding: 0; }
   .filters-column.open .filters-footer { position: static; background: none; }
 
-  /* Suivi : le mois, le nombre et ＋ sur une ligne ; l'échéance dessous. */
-  .applications-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.4rem 0.75rem; align-items: center; margin-bottom: 0.9rem; }
-  .applications-head .month-nav { grid-column: 1; }
-  .applications-head .month-nav strong { min-width: 0; }
-  .applications-head .month-goal { grid-column: 2; justify-self: end; min-width: 0; font-size: 0.85rem; white-space: nowrap; }
-  .applications-head .goal-unit { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .applications-head .month-goal .budget-bar, .applications-head .month-goal .hint { display: none; }
-  .applications-head .add-application { grid-column: 3; grid-row: 1; }
-  .applications-head .layout-switch { grid-column: 1 / -1; grid-row: 2; width: 100%; }
-  .applications-todo { padding: 0.6rem 0.8rem; }
+  /* Suivi : le mois, puis les outils sur une ligne (l'affichage s'étire), puis le compte. */
+  .applications-head .month-nav strong { min-width: 0; white-space: nowrap; }
+  .applications-head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.75rem; }
+  .applications-tools { display: contents; }
+  .applications-head .add-application { grid-column: 2; grid-row: 1; }
+  .applications-head .more-button, .applications-head .more-menu { grid-column: 3; grid-row: 1; }
+  .applications-tools .layout-switch { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  .applications-summary { margin-bottom: 0.9rem; }
 }
 
 /* Formation terminée vers Mon parcours (docs/37 §1) */
@@ -1792,7 +1779,6 @@ html.side-open { overflow: hidden; }
 
 /* Suivi (docs/43 n° 14) : ligne 1, le mois, le compteur, Calendrier / Liste et ＋ ; ligne 2,
    seulement s'il y a à faire, l'état ORP et son action. */
-.applications-head .add-application { width: 2.4rem; height: 2.4rem; padding: 0; border-radius: 50%; justify-content: center; font-size: 1.15rem; line-height: 1; }
 .applications-todo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; margin: 0 0 1.25rem; padding: 0.7rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .applications-state { font-weight: 500; }
 .applications-state.done { color: var(--muted); font-weight: 400; }
@@ -2146,11 +2132,11 @@ button:not(:disabled, .link, [role="radio"], [role="tab"], .filter-row):active, 
 .button-link:hover { border-color: var(--accent); color: var(--accent-text); }
 
 /* Survol d'une carte cliquable : elle se soulève de 2 px, ombre venue du haut. */
-.chunk-card, .dash-tile:not(.static), .dash-link, .application-card, a.calm-row, button.calm-row {
+.chunk-card, .dash-tile:not(.static), .dash-link, a.calm-row, button.calm-row {
   transition: border-color var(--t-fast), transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
 }
 @media (hover: hover) {
-  .chunk-card:hover, .dash-tile:not(.static):hover, .dash-link:hover, .application-card:hover { transform: translateY(-2px); box-shadow: var(--lift); }
+  .chunk-card:hover, .dash-tile:not(.static):hover, .dash-link:hover { transform: translateY(-2px); box-shadow: var(--lift); }
 }
 
 /* Sélecteur : la pastille violette glisse vers le choix (deux ou trois choix, sur une ligne). */
@@ -2242,9 +2228,9 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .empty-state p { margin: 0; max-width: 28rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  button, .button-link, .offer-row, .chunk-card, .dash-tile, .dash-link, .application-card, .segmented::before, .filter-switch input::after { transition: none !important; }
+  button, .button-link, .offer-row, .chunk-card, .dash-tile, .dash-link, .segmented::before, .filter-switch input::after { transition: none !important; }
   button:active, .button-link:active { transform: none !important; }
-  .chunk-card:hover, .dash-tile:hover, .dash-link:hover, .application-card:hover { transform: none !important; }
+  .chunk-card:hover, .dash-tile:hover, .dash-link:hover { transform: none !important; }
   input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before { animation: none !important; }
 }
 /* Le fond de la page jusqu'en bas de l'écran, sous l'en-tête (docs/64 §3). */
@@ -2765,7 +2751,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 
 /* Le rendez-vous ORP (docs/83) : la date en tête, puis la feuille, une section par carte. */
 .orp-meeting { display: grid; gap: 1rem; }
-.orp-meeting-intro { max-width: 46rem; }
 .orp-meeting h2 { margin: 0 0 0.6rem; font-size: 1.05rem; }
 .orp-meeting-when { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .orp-meeting-when h2 { margin: 0; }
@@ -2773,6 +2758,23 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-meeting-form label, .orp-meeting-sheet label { display: grid; gap: 0.3rem; }
 .orp-meeting-form .form-actions { grid-column: 1 / -1; }
 .orp-meeting-sheet { display: grid; gap: 1.25rem; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+/* Le Rendez-vous en parties (docs/130 §B) : « Préparer » (ce qu'on modifie), « Le mois » (ce
+   qu'on consulte, une carte grise en quatre parties), le carnet replié. */
+.orp-meeting h2.orp-section { margin: 1rem 0 0; font-size: 1.35rem; }
+.orp-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; padding: 1.5rem; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); line-height: 1.5; }
+.orp-meeting-sheet > .orp-sheet-wide, .orp-meeting-sheet > :only-child { grid-column: 1 / -1; }
+.orp-sheet-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; align-items: start; }
+.orp-sheet-columns > div { display: grid; gap: 0.75rem; align-content: start; }
+/* Le PDF et le message côte à côte : leurs boutons à la même hauteur (docs/94). */
+.orp-sheet-columns .form-actions > :is(a, button) { box-sizing: border-box; height: var(--control-h); min-height: var(--control-h); padding-block: 0; }
+.orp-meeting-sheet .orp-meeting-form { grid-template-columns: minmax(0, 1fr); }
+.orp-fact h3 { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 500; }
+.orp-fact p { margin: 0 0 0.5rem; }
+.orp-fact ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
+.orp-sheet-message { display: grid; gap: 0.5rem; align-content: start; }
+.orp-sheet-message h3 { margin: 0; font-size: 1rem; font-weight: 500; }
+.orp-log-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+.orp-log-head h3 { margin: 0; }
 .orp-meeting .inline-field input { flex: 1; min-width: 0; }
 .orp-meeting-sheet ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.35rem; }
 .orp-meeting-sheet p { margin: 0 0 0.5rem; }
@@ -2796,7 +2798,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-log h3 { margin: 0; font-size: 0.95rem; font-weight: 600; }
 .orp-log h3::first-letter { text-transform: uppercase; }
 @media (max-width: 820px) {
-  .orp-meeting-form, .orp-meeting-sheet, .orp-outcome { grid-template-columns: minmax(0, 1fr); }
+  .orp-meeting-form, .orp-meeting-sheet, .orp-outcome, .orp-facts, .orp-sheet-columns { grid-template-columns: minmax(0, 1fr); }
   .orp-agreed { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
   .orp-agreed dd + dt { margin-top: 0.45rem; }
 }
@@ -2950,7 +2952,7 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 }
 .segmented:not(:has(> button:nth-child(4))) { box-sizing: border-box; height: var(--control-h); align-items: stretch; }
 .segmented:not(:has(> button:nth-child(4))) > button { min-height: 0; padding-block: 0; }
-.more-button, .applications-head .add-application { box-sizing: border-box; width: var(--control-h); min-width: var(--control-h); height: var(--control-h); min-height: var(--control-h); padding: 0; border-radius: 50%; justify-content: center; }
+.more-button { box-sizing: border-box; width: var(--control-h); min-width: var(--control-h); height: var(--control-h); min-height: var(--control-h); padding: 0; border-radius: 50%; justify-content: center; }
 .tile-heart { width: var(--control-h); height: var(--control-h); }
 /* Dans une rangée de filtres, l'action se centre avec les autres contrôles. */
 .news-filters .news-status { margin: 0; }

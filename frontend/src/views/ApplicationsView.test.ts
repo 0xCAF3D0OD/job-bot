@@ -217,8 +217,12 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(list.text()).toContain("À déclarer dans Job-Room");
     expect(list.findAll("li")).toHaveLength(1);
     const item = list.find("[data-test=declare-2]");
-    expect(item.text()).toContain("2 oct.");
-    expect(item.text()).toContain("Reste SA · Ingénieur DevOps junior");
+    // La forme de ligne d'Aujourd'hui (docs/130 §A) : l'entreprise, le poste, la date ; « Déclarer ».
+    expect(item.text()).toContain("envoyée le 2 octobre");
+    expect(item.find("strong").text()).toBe("Reste SA");
+    expect(item.text()).toContain("Ingénieur DevOps junior");
+    expect(item.find(".today-row-action").text()).toBe("Déclarer");
+    expect(list.find("h2").text()).toBe("À déclarer dans Job-Room · 1");
     expect(item.text()).toContain("à compléter");
     // Un clic ouvre le panneau : l'offre, « Modifier », les champs et « Marquer comme déclarée ».
     await item.trigger("click");
@@ -401,38 +405,39 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
   });
 });
 
-describe("Panneau défilant (retour d'usage du 2026-10-07)", () => {
-  it("estompe en haut ou en bas selon ce qu'il reste à voir", async () => {
+describe("À relancer : des lignes, 5 puis la suite (docs/130 §A)", () => {
+  it("cinq lignes, « Voir les 2 autres » déplie le reste ; plus de liste défilante", async () => {
     localStorage.setItem("jobbot-suivi-vue", "calendar");
-    const many = [1, 2, 3, 4, 5].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
+    const many = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
-    const scroll = wrapper.find("[data-test=panel-scroll]");
-    const el = scroll.element as HTMLElement;
-    Object.defineProperty(el, "clientHeight", { configurable: true, value: 400 });
-    Object.defineProperty(el, "scrollHeight", { configurable: true, value: 900 });
-    el.scrollTop = 0;
-    await scroll.trigger("scroll");
-    expect(scroll.classes()).toContain("fade-bottom");
-    expect(scroll.classes()).not.toContain("fade-top");
-    el.scrollTop = 250;
-    await scroll.trigger("scroll");
-    expect(scroll.classes()).toEqual(expect.arrayContaining(["fade-top", "fade-bottom"]));
-    el.scrollTop = 500;
-    await scroll.trigger("scroll");
-    expect(scroll.classes()).toContain("fade-top");
-    expect(scroll.classes()).not.toContain("fade-bottom");
+    const panel = wrapper.find("[data-test=day-panel]");
+    expect(panel.find("h2").text()).toBe("À relancer · 7");
+    expect(panel.findAll("[data-test=application-card]")).toHaveLength(5);
+    expect(wrapper.find("[data-test=panel-scroll]").exists()).toBe(false);
+    const more = panel.find("[data-test=panel-show-all]");
+    expect(more.text()).toBe("Voir les 2 autres");
+    await more.trigger("click");
+    expect(panel.findAll("[data-test=application-card]")).toHaveLength(7);
+    expect(panel.find("[data-test=panel-show-all]").exists()).toBe(false);
+    // Une ligne : l'entreprise, le poste et la date, l'étape ; l'action à droite.
+    const first = panel.find("[data-test=application-card]");
+    expect(first.find("[data-test=card-step]").text()).toContain("Sans réponse depuis 10 jours");
+    expect(first.find("[data-test=card-step-follow-up]").text()).toBe("Relancer");
   });
 });
 
 describe("Suivi, revue des pages (docs/43 n° 14)", () => {
-  it("ligne 1 : mois, compteur, Calendrier / Liste, « + » ; ligne 2 seulement s'il y a à faire", async () => {
+  it("ligne 1 : le mois et les outils ; ligne 2 : le compte, et l'état ORP s'il y a à faire (docs/130 §A)", async () => {
     mockApi(() => month());
     const { wrapper } = await mountView();
     const head = wrapper.find(".applications-head");
-    expect(head.find("[data-test=layout-calendar]").exists()).toBe(true);
-    expect(head.find("[data-test=add-application]").attributes("aria-label")).toBe("Ajouter une candidature");
-    expect(wrapper.find(".applications-todo [data-test=state]").text()).toContain("Preuves à remettre");
+    expect(head.find("[data-test=month]").exists()).toBe(true);
+    expect(head.find(".applications-tools [data-test=layout-calendar]").exists()).toBe(true);
+    expect(head.find(".applications-tools [data-test=add-application]").text()).toBe("Ajouter");
+    const summary = wrapper.find(".applications-summary");
+    expect(summary.find("[data-test=goal]").exists()).toBe(true);
+    expect(summary.find(".applications-todo [data-test=state]").text()).toContain("Preuves à remettre");
 
     mockApi(() => month({ state: "en_cours", incomplete: 0, rows: [row(1)] }));
     const { wrapper: calm } = await mountView();

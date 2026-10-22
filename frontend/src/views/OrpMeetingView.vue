@@ -6,6 +6,7 @@ import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import FaceState from "../components/FaceState.vue";
 import CopyLabel from "../components/CopyLabel.vue";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { usePageReady } from "../composables/usePageTransition";
@@ -41,6 +42,8 @@ const copied = ref(false);
 
 const meeting = computed(() => page.value?.meeting ?? null);
 const prep = computed(() => page.value?.preparation ?? null);
+// Aucune candidature encore (docs/128 §3) : la feuille et le mois attendent.
+const noApplications = computed(() => prep.value?.has_applications === false);
 const dateFormat = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
 const timeFormat = new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit" });
 const meetingText = computed(() => {
@@ -177,118 +180,264 @@ onMounted(() => void load());
     </p>
     <LoadingBlocks v-else-if="!page" />
     <template v-else>
-      <p class="muted orp-meeting-intro">
-        Une feuille pour ton conseiller. Rien n'est envoyé à l'ORP.
-      </p>
-
-      <div
-        class="form-card"
-        data-test="meeting"
-      >
-        <div class="orp-meeting-when">
-          <h2>Le prochain rendez-vous</h2>
-          <MoreMenu
-            v-if="meeting && !editing"
-            :items="meetingItems"
-            label="Actions sur le rendez-vous"
-            test-id="meeting-more"
-          />
-        </div>
-        <p
-          v-if="meeting && !editing"
-          data-test="meeting-when"
+      <!-- Préparer (docs/130 §B) : ce qu'on modifie. Le rendez-vous à côté des questions, puis
+           la feuille sur toute la largeur, en PDF ou en message. -->
+      <h2 class="section-title orp-section">
+        Préparer
+      </h2>
+      <div class="orp-meeting-sheet">
+        <div
+          class="form-card"
+          data-test="meeting"
         >
-          {{ meetingText }}
-        </p>
-        <template v-if="meeting && started && !editing">
-          <OrpOutcomeForm
-            v-if="noting === meeting.id"
-            :meeting="meeting"
-            :target="page.target"
-            :trainings="page.trainings"
-            @saved="outcomeSaved"
-            @cancel="noting = null"
-          />
-          <template v-else>
-            <dl
-              v-if="meeting.outcome_at"
-              class="orp-agreed"
-              data-test="meeting-agreed"
-            >
-              <template
-                v-for="line in agreed(meeting)"
-                :key="line.label"
+          <div class="orp-meeting-when">
+            <h2>Le prochain rendez-vous</h2>
+            <MoreMenu
+              v-if="meeting && !editing"
+              :items="meetingItems"
+              label="Actions sur le rendez-vous"
+              test-id="meeting-more"
+            />
+          </div>
+          <p
+            v-if="meeting && !editing"
+            data-test="meeting-when"
+          >
+            {{ meetingText }}
+          </p>
+          <template v-if="meeting && started && !editing">
+            <OrpOutcomeForm
+              v-if="noting === meeting.id"
+              :meeting="meeting"
+              :target="page.target"
+              :trainings="page.trainings"
+              @saved="outcomeSaved"
+              @cancel="noting = null"
+            />
+            <template v-else>
+              <dl
+                v-if="meeting.outcome_at"
+                class="orp-agreed"
+                data-test="meeting-agreed"
               >
-                <dt>{{ line.label }}</dt>
-                <dd>{{ line.text }}</dd>
-              </template>
-            </dl>
+                <template
+                  v-for="line in agreed(meeting)"
+                  :key="line.label"
+                >
+                  <dt>{{ line.label }}</dt>
+                  <dd>{{ line.text }}</dd>
+                </template>
+              </dl>
+              <div class="form-actions">
+                <button
+                  type="button"
+                  :class="{ secondary: !!meeting.outcome_at }"
+                  data-test="meeting-outcome"
+                  @click="noting = meeting.id"
+                >
+                  {{ meeting.outcome_at ? "Modifier ce qui a été convenu" : "Noter ce qui a été convenu" }}
+                </button>
+              </div>
+            </template>
+          </template>
+          <form
+            v-else-if="editing || !meeting"
+            class="orp-meeting-form"
+            data-test="meeting-form"
+            @submit.prevent="saveMeeting"
+          >
+            <label>
+              Date et heure
+              <input
+                v-model="when"
+                type="datetime-local"
+                required
+                data-test="meeting-at"
+              >
+            </label>
+            <label>
+              Lieu (facultatif)
+              <input
+                v-model="place"
+                type="text"
+                maxlength="200"
+                placeholder="ORP de Lausanne, ou visio"
+              >
+            </label>
+            <label>
+              Conseiller (facultatif)
+              <input
+                v-model="advisor"
+                type="text"
+                maxlength="120"
+              >
+            </label>
             <div class="form-actions">
               <button
-                type="button"
-                :class="{ secondary: !!meeting.outcome_at }"
-                data-test="meeting-outcome"
-                @click="noting = meeting.id"
+                type="submit"
+                data-test="meeting-save"
               >
-                {{ meeting.outcome_at ? "Modifier ce qui a été convenu" : "Noter ce qui a été convenu" }}
+                Enregistrer
+              </button>
+              <button
+                v-if="editing"
+                type="button"
+                class="secondary"
+                @click="editing = false"
+              >
+                Annuler
               </button>
             </div>
-          </template>
-        </template>
-        <form
-          v-else-if="editing || !meeting"
-          class="orp-meeting-form"
-          data-test="meeting-form"
-          @submit.prevent="saveMeeting"
-        >
-          <label>
-            Date et heure
-            <input
-              v-model="when"
-              type="datetime-local"
-              required
-              data-test="meeting-at"
+          </form>
+        </div>
+        <template v-if="prep && !noApplications">
+          <section
+            class="form-card"
+            data-test="sheet-questions"
+          >
+            <h2>Questions au conseiller</h2>
+            <p
+              v-if="!meeting"
+              class="hint"
             >
-          </label>
-          <label>
-            Lieu (facultatif)
-            <input
-              v-model="place"
-              type="text"
-              maxlength="200"
-              placeholder="ORP de Lausanne, ou visio"
+              Indique d'abord la date du rendez-vous : tes questions lui seront rattachées.
+            </p>
+            <ul class="orp-meeting-questions">
+              <li
+                v-for="question in prep.questions"
+                :key="question.key"
+              >
+                <label>
+                  <input
+                    type="checkbox"
+                    :checked="question.checked"
+                    :disabled="!meeting"
+                    :data-test="`question-${question.key}`"
+                    @change="toggle(question, ($event.target as HTMLInputElement).checked)"
+                  >
+                  {{ question.text }}
+                </label>
+              </li>
+            </ul>
+            <form
+              v-if="meeting"
+              class="inline-field"
+              @submit.prevent="addQuestion"
             >
-          </label>
-          <label>
-            Conseiller (facultatif)
-            <input
-              v-model="advisor"
-              type="text"
-              maxlength="120"
+              <input
+                v-model="custom"
+                type="text"
+                maxlength="300"
+                placeholder="Une autre question"
+                aria-label="Une autre question"
+                data-test="question-new"
+              >
+              <IconButton
+                type="submit"
+                icon="plus"
+                label="Ajouter la question"
+                data-test="question-add"
+              />
+            </form>
+            <p
+              v-if="message"
+              role="status"
+              class="notice error"
             >
-          </label>
-          <div class="form-actions">
-            <button
-              type="submit"
-              data-test="meeting-save"
-            >
-              Enregistrer
-            </button>
-            <button
-              v-if="editing"
-              type="button"
-              class="secondary"
-              @click="editing = false"
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      </div>
+              {{ message }}
+            </p>
+            <p class="hint">
+              Sur tes droits, c'est ton conseiller qui répond.
+            </p>
+          </section>
 
+          <section
+            class="form-card orp-sheet-wide"
+            data-test="sheet-download"
+          >
+            <h2>La feuille</h2>
+            <p class="setting-desc">
+              Rien n'est envoyé à l'ORP : tu la télécharges, ou tu l'envoies toi-même.
+            </p>
+            <div class="orp-sheet-columns">
+              <div>
+                <label>
+                  Ton nom sur la feuille (facultatif)
+                  <input
+                    v-model="name"
+                    type="text"
+                    maxlength="120"
+                    autocomplete="name"
+                  >
+                </label>
+                <div class="form-actions">
+                  <a
+                    class="button-link"
+                    :href="sheetLink"
+                    download
+                    data-test="sheet-pdf"
+                  ><span class="with-icon"><AppIcon name="download" />Télécharger la feuille (PDF)</span></a>
+                </div>
+              </div>
+              <!-- Le même contenu en message, rédigé par l'IA (docs/130 §B). -->
+              <div
+                v-if="meeting"
+                class="orp-sheet-message"
+                data-test="sheet-ai"
+              >
+                <h3>En message</h3>
+                <p
+                  v-if="meeting.sheet_text"
+                  class="orp-sheet-text"
+                  data-test="sheet-text"
+                >
+                  {{ meeting.sheet_text }}
+                </p>
+                <p
+                  v-else
+                  class="muted"
+                >
+                  L'IA rédige la feuille en un message suivi, à envoyer avant le rendez-vous.
+                </p>
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    :class="{ secondary: !!meeting.sheet_text }"
+                    :disabled="writing"
+                    data-test="sheet-write"
+                    @click="writeSheet"
+                  >
+                    <HoverNote :text="aiNote('Environ 0,02 CHF.')">
+                      <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
+                    </HoverNote>
+                  </button>
+                  <button
+                    v-if="meeting.sheet_text"
+                    type="button"
+                    class="link"
+                    @click="copySheet"
+                  >
+                    <CopyLabel :done="copied" />
+                  </button>
+                </div>
+                <p
+                  v-if="writeMessage"
+                  role="status"
+                  class="notice error"
+                >
+                  {{ writeMessage }}
+                </p>
+                <p class="hint">
+                  Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
+                </p>
+              </div>
+            </div>
+          </section>
+        </template>
+      </div>
       <!-- Aucune candidature encore (docs/128 §3) : la feuille se remplira avec elles. -->
       <FaceState
-        v-if="prep && prep.has_applications === false"
+        v-if="noApplications"
         title="Pas encore de candidature"
         data-test="sheet-none-yet"
       >
@@ -302,243 +451,126 @@ onMounted(() => void load());
           </RouterLink>
         </div>
       </FaceState>
-      <div
-        v-else-if="prep"
-        class="orp-meeting-sheet"
-      >
+      <!-- Le mois : ce qu'on consulte, une seule carte en quatre parties. -->
+      <template v-if="prep && !noApplications">
+        <h2 class="section-title orp-section">
+          Le mois
+        </h2>
         <section
-          class="form-card"
-          data-test="sheet-summary"
+          class="orp-facts"
+          data-test="sheet-facts"
         >
-          <h2>Mois en bref</h2>
-          <p
-            v-for="line in prep.summaries"
-            :key="line"
+          <div
+            class="orp-fact"
+            data-test="sheet-summary"
           >
-            {{ line }}
-          </p>
-        </section>
-
-        <section
-          class="form-card"
-          data-test="sheet-blockers"
-        >
-          <h2>Ce qui bloque</h2>
-          <ul v-if="prep.blockers.length">
-            <li
-              v-for="line in prep.blockers"
+            <h3>Mois en bref</h3>
+            <p
+              v-for="line in prep.summaries"
               :key="line"
             >
               {{ line }}
-            </li>
-          </ul>
-          <p
-            v-else
-            class="muted"
-          >
-            Rien de net pour l'instant : pas assez de candidatures sans réponse pour conclure.
-          </p>
-          <p
-            v-if="prep.works"
-            class="orp-meeting-works"
-          >
-            Ce qui marche : {{ prep.works }}
-          </p>
-        </section>
+            </p>
+          </div>
 
-        <section
-          class="form-card"
-          data-test="sheet-missing"
-        >
-          <h2>Compétences demandées qui manquent</h2>
-          <ul v-if="prep.missing.length">
-            <li
-              v-for="item in prep.missing"
-              :key="item.skill"
-            >
-              <strong>{{ item.skill }}</strong> : demandé dans {{ item.count }} des
-              {{ plural(prep.offers, "offre bien notée", "offres bien notées") }} des 3 derniers mois.
-              <RouterLink
-                v-if="item.training_title"
-                to="/bilan/formations"
+          <div
+            class="orp-fact"
+            data-test="sheet-blockers"
+          >
+            <h3>Ce qui bloque</h3>
+            <ul v-if="prep.blockers.length">
+              <li
+                v-for="line in prep.blockers"
+                :key="line"
               >
-                {{ item.training_title }}
-              </RouterLink>
-            </li>
-          </ul>
-          <p
-            v-else
-            class="muted"
-          >
-            Rien qui revienne assez souvent (au moins 3 offres bien notées) pour en faire un argument.
-          </p>
-        </section>
-
-        <section
-          class="form-card"
-          data-test="sheet-questions"
-        >
-          <h2>Questions au conseiller</h2>
-          <p
-            v-if="!meeting"
-            class="hint"
-          >
-            Indique d'abord la date du rendez-vous : tes questions lui seront rattachées.
-          </p>
-          <ul class="orp-meeting-questions">
-            <li
-              v-for="question in prep.questions"
-              :key="question.key"
+                {{ line }}
+              </li>
+            </ul>
+            <p
+              v-else
+              class="muted"
             >
-              <label>
-                <input
-                  type="checkbox"
-                  :checked="question.checked"
-                  :disabled="!meeting"
-                  :data-test="`question-${question.key}`"
-                  @change="toggle(question, ($event.target as HTMLInputElement).checked)"
+              Rien de net pour l'instant : pas assez de candidatures sans réponse pour conclure.
+            </p>
+            <p
+              v-if="prep.works"
+              class="orp-meeting-works"
+            >
+              Ce qui marche : {{ prep.works }}
+            </p>
+          </div>
+
+          <div
+            class="orp-fact"
+            data-test="sheet-missing"
+          >
+            <h3>Compétences demandées qui manquent</h3>
+            <ul v-if="prep.missing.length">
+              <li
+                v-for="item in prep.missing"
+                :key="item.skill"
+              >
+                <strong>{{ item.skill }}</strong> : demandé dans {{ item.count }} des
+                {{ plural(prep.offers, "offre bien notée", "offres bien notées") }} des 3 derniers mois.
+                <RouterLink
+                  v-if="item.training_title"
+                  to="/bilan/formations"
                 >
-                {{ question.text }}
-              </label>
-            </li>
-          </ul>
-          <form
-            v-if="meeting"
-            class="inline-field"
-            @submit.prevent="addQuestion"
-          >
-            <input
-              v-model="custom"
-              type="text"
-              maxlength="300"
-              placeholder="Une autre question"
-              aria-label="Une autre question"
-              data-test="question-new"
+                  {{ item.training_title }}
+                </RouterLink>
+              </li>
+            </ul>
+            <p
+              v-else
+              class="muted"
             >
-            <IconButton
-              type="submit"
-              icon="plus"
-              label="Ajouter la question"
-              data-test="question-add"
-            />
-          </form>
-          <p
-            v-if="message"
-            role="status"
-            class="notice error"
-          >
-            {{ message }}
-          </p>
-          <p class="hint">
-            Sur tes droits, c'est ton conseiller qui répond.
-          </p>
-        </section>
+              Rien qui revienne assez souvent (au moins 3 offres bien notées) pour en faire un argument.
+            </p>
+          </div>
 
-        <section
-          class="form-card"
-          data-test="sheet-obligations"
-        >
-          <h2>Obligations et échéances</h2>
-          <ul class="orp-meeting-duties">
-            <li
-              v-for="item in prep.obligations"
-              :key="item.text"
-              :class="{ done: item.done }"
-            >
-              {{ item.done ? "Fait : " : "" }}{{ item.text }}
-            </li>
-          </ul>
-        </section>
-
-        <section
-          class="form-card"
-          data-test="sheet-download"
-        >
-          <h2>La feuille</h2>
-          <label>
-            Ton nom sur la feuille (facultatif)
-            <input
-              v-model="name"
-              type="text"
-              maxlength="120"
-              autocomplete="name"
-            >
-          </label>
-          <div class="form-actions">
-            <a
-              class="button-link"
-              :href="sheetLink"
-              download
-              data-test="sheet-pdf"
-            ><span class="with-icon"><AppIcon name="download" />Télécharger la feuille (PDF)</span></a>
+          <div
+            class="orp-fact"
+            data-test="sheet-obligations"
+          >
+            <h3>Obligations et échéances</h3>
+            <ul class="orp-meeting-duties">
+              <li
+                v-for="item in prep.obligations"
+                :key="item.text"
+                :class="{ done: item.done }"
+              >
+                {{ item.done ? "Fait : " : "" }}{{ item.text }}
+              </li>
+            </ul>
           </div>
         </section>
+      </template>
 
-        <section
-          v-if="meeting"
-          class="form-card"
-          data-test="sheet-ai"
-        >
-          <h2>Message au conseiller</h2>
-          <p
-            v-if="meeting.sheet_text"
-            class="orp-sheet-text"
-            data-test="sheet-text"
-          >
-            {{ meeting.sheet_text }}
-          </p>
-          <p
-            v-else
-            class="muted"
-          >
-            L'IA rédige la feuille en un message suivi, à envoyer avant le rendez-vous.
-          </p>
-          <div class="form-actions">
-            <button
-              type="button"
-              :class="{ secondary: !!meeting.sheet_text }"
-              :disabled="writing"
-              data-test="sheet-write"
-              @click="writeSheet"
-            >
-              <HoverNote :text="aiNote('Environ 0,02 CHF.')">
-                <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
-              </HoverNote>
-            </button>
-            <button
-              v-if="meeting.sheet_text"
-              type="button"
-              class="link"
-              @click="copySheet"
-            >
-              <CopyLabel :done="copied" />
-            </button>
-          </div>
-          <p
-            v-if="writeMessage"
-            role="status"
-            class="notice error"
-          >
-            {{ writeMessage }}
-          </p>
-          <p class="hint">
-            Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
-          </p>
-        </section>
-      </div>
-
-      <section
+      <!-- Le carnet, replié (docs/130 §B) : « Modifier » sur la ligne de chaque rendez-vous. -->
+      <DisclosureRow
         v-if="page.past.length"
-        class="form-card orp-log"
+        class="orp-log"
+        title="Le carnet"
+        :value="plural(page.past.length, 'rendez-vous', 'rendez-vous')"
         data-test="meeting-log"
       >
-        <h2>Le carnet</h2>
         <ul>
           <li
             v-for="item in page.past"
             :key="item.id"
           >
-            <h3>{{ dayText(item.starts_at) }}<span v-if="item.place"> · {{ item.place }}</span></h3>
+            <div class="orp-log-head">
+              <h3>{{ dayText(item.starts_at) }}<span v-if="item.place"> · {{ item.place }}</span></h3>
+              <button
+                v-if="item.outcome_at && noting !== item.id"
+                type="button"
+                class="link"
+                :data-test="`log-outcome-${item.id}`"
+                @click="noting = item.id"
+              >
+                Modifier
+              </button>
+            </div>
             <OrpOutcomeForm
               v-if="noting === item.id"
               :meeting="item"
@@ -564,15 +596,8 @@ onMounted(() => void load());
                   <dd>{{ line.text }}</dd>
                 </template>
               </dl>
-              <IconButton
-                v-if="item.outcome_at"
-                icon="pencil"
-                label="Modifier ce qui a été convenu"
-                :data-test="`log-outcome-${item.id}`"
-                @click="noting = item.id"
-              />
               <button
-                v-else
+                v-if="!item.outcome_at"
                 type="button"
                 class="secondary small"
                 :data-test="`log-outcome-${item.id}`"
@@ -583,7 +608,7 @@ onMounted(() => void load());
             </template>
           </li>
         </ul>
-      </section>
+      </DisclosureRow>
     </template>
   </section>
 </template>
