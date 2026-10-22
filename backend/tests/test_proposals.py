@@ -164,3 +164,45 @@ async def test_propose_errors(api: AsyncClient, fake: FakeClient) -> None:
 
 async def test_propose_requires_key(client: AsyncClient) -> None:
     assert (await client.post("/api/documents/1/propose-chunks")).status_code == 409
+
+
+async def test_understand_cv_at_welcome(api: AsyncClient, fake: FakeClient) -> None:
+    """docs/121 §A : le CV lu à l'accueil donne les blocs et ce qu'il dit de la recherche,
+    nettoyé (au plus 3 postes, un taux sensé, des langues connues) ; rien n'est enregistré."""
+    answer = json.loads(proposal_json())
+    answer["understood"] = {
+        "roles": ["Ingénieur DevOps", "Ingénieur DevOps", "SRE", "Admin cloud", "Architecte"],
+        "min_rate": 5,
+        "languages": ["anglais", "klingon"],
+        "remote": "remote",
+    }
+    fake.response = RawResult(
+        json.dumps(answer), "claude-opus-5", Usage(1500, 0, 0, 800), "end_turn"
+    )
+    doc = await upload(api, "cv.txt", CV.encode())
+    response = await api.post(f"/api/documents/{doc}/understand")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["roles"] == ["Ingénieur DevOps", "SRE", "Admin cloud"]
+    assert body["min_rate"] is None
+    assert body["languages"] == ["anglais"]
+    assert body["remote"] == "remote"
+    assert [c["title"] for c in body["chunks"]] == ["Stage DevOps — Acme (2024-2025)"]
+    # Les consignes de l'accueil, et toujours sans coordonnées.
+    sent = fake.params[0]
+    assert "understood" in json.dumps(sent["output_config"]["format"]["schema"])
+    assert "Jean" not in sent["messages"][0]["content"]
+    assert len((await api.get("/api/profile-chunks")).json()) == 1
+
+
+async def test_understand_without_understood_part(api: AsyncClient, fake: FakeClient) -> None:
+    """Une réponse sans la partie « understood » : les blocs restent, le reste est vide."""
+    doc = await upload(api, "cv.txt", CV.encode())
+    body = (await api.post(f"/api/documents/{doc}/understand")).json()
+    assert len(body["chunks"]) == 1
+    assert (body["roles"], body["min_rate"], body["languages"], body["remote"]) == (
+        [],
+        None,
+        [],
+        None,
+    )

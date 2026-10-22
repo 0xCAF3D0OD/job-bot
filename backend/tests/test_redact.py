@@ -5,6 +5,7 @@ from jobbot.llm import proposals
 from jobbot.llm.redact import redact
 
 CV = """Camille Exemple
+Ingénieure DevOps
 Rue du Test 1
 CH-1020 Renens
 +41 79 000 00 00
@@ -33,7 +34,8 @@ def test_head_of_cv_without_known_identity() -> None:
         "camille-exemple.ch",
     ):
         assert secret not in text, secret
-    # Le parcours reste : l'IA en a besoin.
+    # Le poste sous le nom et le parcours restent : l'IA en a besoin.
+    assert "Ingénieure DevOps\n" in text
     assert "Ingénieure DevOps, Exemple Logistique SA (2021 - 2026)" in text
     assert "Mars 2019 : stage, 6 mois" in text
     # Une rue plus bas, dans le texte d'une expérience, n'est pas une adresse de la personne.

@@ -119,6 +119,18 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     await wrapper.find("[data-test=welcome-skip]").trigger("click");
     await flushPromises();
 
+    // Sans CV lu, pas d'écran « Voici ce que j'ai compris » : les langues, puis le télétravail
+    // (docs/121 §A.2), qui remplissent les critères.
+    expect(wrapper.find("[data-test=welcome-understood]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=welcome-continue]").attributes("disabled")).toBeDefined();
+    await wrapper.find("[data-test=language-anglais]").trigger("click");
+    await wrapper.find("[data-test=welcome-continue]").trigger("click");
+    await flushPromises();
+    expect(calls("/api/criteria").at(-1)?.unspoken_languages).toEqual(["allemand", "italien"]);
+    await wrapper.find("[data-test=remote-yes]").trigger("click");
+    await flushPromises();
+    expect(calls("/api/criteria").at(-1)).toMatchObject({ remote_policy: "from_switzerland", locations: ["VD", "GE"] });
+
     await wrapper.find("[data-test=phone-no]").trigger("click");
     await flushPromises();
     expect(calls("/api/notifications/phone")).toEqual([{ enabled: false }]);
@@ -128,6 +140,8 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     expect(recap).toContain("Vaud, Genève");
     expect(recap).toContain("10 recherches par mois");
     expect(recap).toContain("avant le 10 du mois");
+    expect(recap).toContain("Français, Anglais");
+    expect(recap).toContain("Aussi à distance");
     // Un crayon par ligne, plus de « Modifier » écrit (docs/104 §1).
     expect(recap).not.toContain("Modifier");
     expect(wrapper.find("[data-test=recap-trade] .welcome-recap-edit").exists()).toBe(true);
@@ -158,7 +172,7 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
   });
 
   it("« Retour » revient d'un écran ; le récapitulatif ramène à la réponse à corriger", async () => {
-    const { wrapper } = await mountWelcome({ status: "pending", step: 7, goal: "job", trade: "DevOps" });
+    const { wrapper } = await mountWelcome({ status: "pending", step: 9, goal: "job", trade: "DevOps" });
     expect(wrapper.find("[data-test=welcome-ready]").exists()).toBe(true);
     expect(wrapper.find("[data-test=welcome-skip]").exists()).toBe(false);
 
@@ -178,10 +192,10 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=welcome-ready]").exists()).toBe(true);
     expect(wrapper.find("[data-test=welcome-recap]").text()).toContain("Comptable");
-    expect(calls("/api/welcome")).toContainEqual({ step: 7, trade: "Comptable" });
+    expect(calls("/api/welcome")).toContainEqual({ step: 9, trade: "Comptable" });
 
     // Les points : un par écran, on touche celui qu'on veut.
-    expect(wrapper.findAll(".welcome-dot")).toHaveLength(8);
+    expect(wrapper.findAll(".welcome-dot")).toHaveLength(10);
     expect(wrapper.find("[data-test=dot-trade]").classes()).toContain("answered");
     expect(wrapper.find("[data-test=dot-cv]").classes()).not.toContain("answered");
     await wrapper.find("[data-test=dot-places]").trigger("click");
@@ -201,5 +215,67 @@ describe("l'accueil, façon Duolingo (docs/66)", () => {
       expect(focused?.textContent).toContain("Quel métier");
     });
     wrapper.unmount();
+  });
+
+  it("le CV lu par l'IA : les blocs et les postes à valider, les langues et le télétravail préremplis (docs/121 §A)", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 5, goal: "job", trade: "DevOps" });
+    expect(wrapper.find("[data-test=welcome-cv]").exists()).toBe(true);
+    POST.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/documents"
+            ? { id: 42, filename: "cv.pdf" }
+            : path === "/api/documents/{document_id}/understand"
+              ? {
+                  chunks: [
+                    { kind: "experience", title: "Ingénieure DevOps, Acme (2021-2026)", content: "Kubernetes.", tags: [], duplicate_of: null },
+                    { kind: "competence", title: "Cloud", content: "AWS.", tags: [], duplicate_of: 3 },
+                  ],
+                  roles: ["Ingénieure DevOps", "SRE"],
+                  min_rate: 80,
+                  languages: ["anglais"],
+                  remote: "remote",
+                }
+              : { id: 1 },
+      }),
+    );
+    const input = wrapper.find("[data-test=cv-upload] input");
+    Object.defineProperty(input.element, "files", { value: [new File(["cv"], "cv.pdf")] });
+    await input.trigger("change");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/documents/{document_id}/understand", { params: { path: { document_id: 42 } } });
+    await wrapper.find("[data-test=welcome-continue]").trigger("click");
+    await flushPromises();
+
+    // Un écran : les postes en pastilles, les blocs en liste ; un doublon décoché.
+    expect(wrapper.find("[data-test=welcome-understood] h1").text()).toBe("Voici ce que j'ai compris");
+    expect(wrapper.find("[data-test=understood-roles]").text()).toContain("SRE");
+    expect((wrapper.find("[data-test=understood-chunk-0]").element as HTMLInputElement).checked).toBe(true);
+    expect((wrapper.find("[data-test=understood-chunk-1]").element as HTMLInputElement).checked).toBe(false);
+    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("C'est bon");
+    await wrapper.find("[data-test=welcome-continue]").trigger("click");
+    await flushPromises();
+    const created = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
+    expect(created).toHaveLength(1);
+    expect((created[0]![1] as { body: Record<string, unknown> }).body).toMatchObject({ title: "Ingénieure DevOps, Acme (2021-2026)", document_id: 42, active: true });
+    expect(calls("/api/welcome")).toContainEqual(expect.objectContaining({ roles: ["Ingénieure DevOps", "SRE"] }));
+
+    // Les langues, préremplies par le CV.
+    expect(wrapper.find("[data-test=language-anglais]").classes()).toContain("chosen");
+    expect(wrapper.find("[data-test=language-allemand]").classes()).not.toContain("chosen");
+  });
+
+  it("sans IA, l'accueil continue sans l'écran du CV", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 5, goal: "job", trade: "DevOps" });
+    POST.mockImplementation((path: string) =>
+      Promise.resolve(path === "/api/documents" ? { data: { id: 42, filename: "cv.pdf" } } : { data: undefined, error: { detail: "IA non configurée" } }),
+    );
+    const input = wrapper.find("[data-test=cv-upload] input");
+    Object.defineProperty(input.element, "files", { value: [new File(["cv"], "cv.pdf")] });
+    await input.trigger("change");
+    await flushPromises();
+    await wrapper.find("[data-test=welcome-continue]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=welcome-languages]").exists()).toBe(true);
   });
 });
