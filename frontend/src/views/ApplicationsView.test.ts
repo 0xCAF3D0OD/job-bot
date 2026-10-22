@@ -120,7 +120,7 @@ describe("Candidatures, page réunie", () => {
     const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08" };
     mockApi(() => month(), [application, old]);
     const { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=state]").text()).toContain("Preuves à remettre");
+    expect(wrapper.find("[data-test=state]").text()).toContain("Preuves d'octobre : 1 ligne à compléter");
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
     await wrapper.find("[data-test=all-months]").setValue(true);
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(2);
@@ -191,7 +191,8 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi();
     const { wrapper } = await mountView("/candidatures/preuves");
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: undefined } } });
-    expect(wrapper.find("[data-test=state]").text()).toContain("Preuves à remettre avant le 5 novembre 2026");
+    // Un bandeau daté (docs/134) : ce qui reste à faire, et pour quand.
+    expect(wrapper.find("[data-test=state]").text()).toBe("Preuves d'octobre : 1 ligne à compléter, remise avant le 5 novembre 2026.");
     // PDF et CSV dans le « ⋯ » de la barre du mois (docs/85 §3) ; plus de colonnes à choisir.
     await wrapper.find("[data-test=orp-more]").trigger("click");
     expect(wrapper.find("[data-test=csv]").attributes("href")).toBe("/api/orp/2026-10/csv");
@@ -246,7 +247,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     // La ligne 2 (sans adresse) correspond à la candidature 2.
     mockApi(() => month(), [{ ...application, id: 2 }]);
     const { wrapper } = await mountView("/candidatures/preuves");
-    expect(wrapper.find("[data-test=complete-next]").text()).toContain("Compléter 1 ligne");
+    expect(wrapper.find("[data-test=complete-next]").text()).toBe("Compléter");
     expect(wrapper.find("[data-test=submit]").exists()).toBe(false);
     expect(wrapper.find("[data-test=more-options]").exists()).toBe(false);
     await wrapper.find("[data-test=complete-next]").trigger("click");
@@ -281,7 +282,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     await wrapper.find("[data-test=submit]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
-    expect(wrapper.find("[data-test=state]").text()).toContain("Preuves remises le 3 novembre 2026");
+    expect(wrapper.find("[data-test=state]").text()).toContain("Preuves d'octobre remises le 3 novembre 2026");
     // La carte qui vient devant (docs/61 §1).
     expect(wrapper.find("[data-test=submitted-moment]").text()).toContain("Preuves d'octobre remises");
     // Annuler la remise se confirme dans la page (docs/108 §1).
@@ -408,25 +409,30 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
   });
 });
 
-describe("À relancer : des lignes, 5 puis la suite (docs/130 §A)", () => {
-  it("cinq lignes, « Voir les 2 autres » déplie le reste ; plus de liste défilante", async () => {
+describe("La colonne défilante, à la hauteur du calendrier (retour du 2026-10-07, docs/134)", () => {
+  it("toutes les lignes dans la colonne, estompée en haut ou en bas selon ce qu'il reste à voir", async () => {
     localStorage.setItem("jobbot-suivi-vue", "calendar");
     const many = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
     const panel = wrapper.find("[data-test=day-panel]");
     expect(panel.find("[data-test=panel-tab-follow]").text()).toBe("À relancer · 7");
-    expect(panel.findAll("[data-test=application-card]")).toHaveLength(5);
-    expect(wrapper.find("[data-test=panel-scroll]").exists()).toBe(false);
-    const more = panel.find("[data-test=panel-show-all]");
-    expect(more.text()).toBe("Voir les 2 autres");
-    await more.trigger("click");
     expect(panel.findAll("[data-test=application-card]")).toHaveLength(7);
     expect(panel.find("[data-test=panel-show-all]").exists()).toBe(false);
-    // Une ligne : l'entreprise, le poste et la date, l'étape ; l'action à droite.
-    const first = panel.find("[data-test=application-card]");
-    expect(first.find("[data-test=card-step]").text()).toContain("Sans réponse depuis 10 jours");
-    expect(first.find("[data-test=card-step-follow-up]").text()).toBe("Relancer");
+    const scroll = wrapper.find("[data-test=panel-scroll]");
+    const el = scroll.element as HTMLElement;
+    Object.defineProperty(el, "clientHeight", { configurable: true, value: 400 });
+    Object.defineProperty(el, "scrollHeight", { configurable: true, value: 900 });
+    el.scrollTop = 0;
+    await scroll.trigger("scroll");
+    expect(scroll.classes()).toContain("fade-bottom");
+    expect(scroll.classes()).not.toContain("fade-top");
+    el.scrollTop = 500;
+    await scroll.trigger("scroll");
+    expect(scroll.classes()).toContain("fade-top");
+    expect(scroll.classes()).not.toContain("fade-bottom");
+    // Les onglets restent hors de la partie qui défile.
+    expect(scroll.find("[data-test=panel-tab-follow]").exists()).toBe(false);
   });
 });
 
@@ -440,10 +446,12 @@ describe("Suivi, revue des pages (docs/43 n° 14)", () => {
     expect(head.find(".applications-tools [data-test=add-application]").text()).toBe("Ajouter");
     const summary = wrapper.find(".applications-summary");
     expect(summary.find("[data-test=goal]").exists()).toBe(true);
-    expect(summary.find(".applications-todo [data-test=state]").text()).toContain("Preuves à remettre");
+    // L'état des preuves n'est plus serré dans la rangée du compte : un bandeau à part (docs/134).
+    expect(summary.find("[data-test=state]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-banner]").classes()).toContain("today-banner");
 
     mockApi(() => month({ state: "en_cours", incomplete: 0, rows: [row(1)] }));
     const { wrapper: calm } = await mountView();
-    expect(calm.find(".applications-todo").exists()).toBe(false);
+    expect(calm.find("[data-test=orp-banner]").exists()).toBe(false);
   });
 });

@@ -1069,7 +1069,16 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .day-marks .mark { font-size: 0.65rem; border-radius: 4px; padding: 0 0.25rem; width: fit-content; }
 .day-marks .mark.interview { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent-text); }
 .day-marks .mark.remind { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn-text); }
-.suivi-panel { display: grid; gap: 0.75rem; align-content: start; min-width: 0; }
+.suivi-panel { display: flex; flex-direction: column; gap: 0.75rem; min-height: 0; min-width: 0; }
+.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+/* Estompage : en haut seulement si des lignes sont au-dessus, en bas si d'autres suivent. */
+.panel-scroll.fade-top { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem); }
+.panel-scroll.fade-bottom { -webkit-mask-image: linear-gradient(to top, transparent 0, #000 3rem); mask-image: linear-gradient(to top, transparent 0, #000 3rem); }
+.panel-scroll.fade-top.fade-bottom { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 3rem, #000 calc(100% - 3rem), transparent 100%); }
+/* Le bandeau des preuves (docs/134), sous le compte du mois. */
+.applications-banner { margin: 0 0 1.25rem; }
+.applications-banner.done { border-left-color: var(--ok); }
+.applications-banner .link { font-weight: 500; white-space: nowrap; }
 /* Une candidature en ligne (docs/130 §A) : la forme d'Aujourd'hui, la partie centrale ouvre le
    panneau, l'action à droite fait l'étape du moment. */
 .application-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; gap: 0.9rem; padding: 0.8rem 0; }
@@ -1079,11 +1088,9 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 .application-row-step:is(.follow-up, .no-answer, .complete) { color: var(--warn-text); }
 .application-row-action { justify-self: end; font-size: 0.9rem; font-weight: 500; white-space: nowrap; }
 button.today-row { width: 100%; border: 0; border-radius: 0; background: none; font: inherit; text-align: left; cursor: pointer; white-space: normal; }
-.suivi-more-rows { justify-self: start; font-size: 0.9rem; }
 /* L'en-tête du Suivi sur deux lignes : le mois et les outils, puis le compte et l'état ORP. */
 .applications-tools { display: flex; align-items: center; gap: 0.75rem; }
 .applications-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; margin: 0 0 1.25rem; }
-.applications-summary .applications-todo { margin: 0; padding: 0; border: 0; background: none; }
 .suivi-panel .suivi-panel-title { margin: 0; font-size: 1rem; }
 /* À déclarer dans Job-Room (docs/85) : sous « À relancer », une ligne par candidature, cliquable. */
 .suivi-declare { display: grid; gap: 0.75rem; }
@@ -1583,6 +1590,7 @@ html.side-open { overflow: hidden; }
   .applications-head .more-button, .applications-head .more-menu { grid-column: 3; grid-row: 1; }
   .applications-tools .layout-switch { grid-column: 1 / -1; grid-row: 2; width: 100%; }
   .applications-summary { margin-bottom: 0.9rem; }
+  .panel-scroll { max-height: 70vh; }
 }
 
 /* Formation terminée vers Mon parcours (docs/37 §1) */
@@ -1770,9 +1778,6 @@ html.side-open { overflow: hidden; }
 
 /* Suivi (docs/43 n° 14) : ligne 1, le mois, le compteur, Calendrier / Liste et ＋ ; ligne 2,
    seulement s'il y a à faire, l'état ORP et son action. */
-.applications-todo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; margin: 0 0 1.25rem; padding: 0.7rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-.applications-state { font-weight: 500; }
-.applications-state.done { color: var(--muted); font-weight: 400; }
 
 /* Formations : Certifications, puis Cours et parcours (docs/43 n° 21). */
 .training-section { display: grid; gap: 1rem; }

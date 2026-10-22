@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -106,12 +106,15 @@ const firstIncomplete = computed(() => monthItems.value.find((a) => incomplete.v
 const progress = computed(() => (orp.value?.target ? Math.min(1, orp.value.count / orp.value.target) : null));
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric" });
 const dayTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
-const stateLabel = computed(() => {
+// Le bandeau des preuves (docs/134) : ce qui reste à faire, et pour quand.
+const bannerText = computed(() => {
   const d = orp.value;
   if (!d) return "";
-  if (d.state === "remis" && d.submitted_at) return `Preuves remises le ${longDate.format(new Date(d.submitted_at))}`;
-  if (d.state === "a_remettre") return `Preuves à remettre avant le ${longDate.format(new Date(d.due_date))}`;
-  return `En cours · remise avant le ${longDate.format(new Date(d.due_date))}`;
+  const month = ofMonth(d.month);
+  if (d.state === "remis" && d.submitted_at) return `Preuves ${month} remises le ${longDate.format(new Date(d.submitted_at))}.`;
+  const due = longDate.format(new Date(d.due_date));
+  if (d.incomplete) return `Preuves ${month} : ${plural(d.incomplete, "ligne", "lignes")} à compléter, remise avant le ${due}.`;
+  return `Preuves ${month} prêtes : à remettre avant le ${due}.`;
 });
 // À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours ;
 // les plus anciennes d'abord.
@@ -146,14 +149,40 @@ const dayCards = computed(() => {
 // Cartes du panneau : celles du jour choisi, sinon celles à relancer.
 const panelCards = computed(() => (selectedDay.value ? dayCards.value : toFollowUp.value));
 
-// Cinq lignes, puis « Voir les N autres » (docs/130 §A) : plus de liste défilante estompée.
-const PANEL_ROWS = 5;
-const showAllCards = ref(false);
+// La colonne de droite à la hauteur du calendrier (retour du 2026-10-07, rétabli en docs/134) :
+// les onglets restent en haut, la liste défile dessous, estompée là où il reste des lignes.
+const calendarBox = ref<HTMLElement | null>(null);
+const panelScroll = ref<HTMLElement | null>(null);
+const panelHeight = ref<number | null>(null);
+const atTop = ref(true);
+const atBottom = ref(true);
+let observer: ResizeObserver | null = null;
+function measure(): void {
+  const wide = globalThis.matchMedia?.("(min-width: 901px)").matches ?? true;
+  panelHeight.value = wide && calendarBox.value ? calendarBox.value.offsetHeight || null : null;
+}
+function onPanelScroll(): void {
+  const el = panelScroll.value;
+  if (!el) return;
+  atTop.value = el.scrollTop <= 2;
+  atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+}
+watch(calendarBox, (el) => {
+  observer?.disconnect();
+  if (el && typeof ResizeObserver !== "undefined") {
+    observer = new ResizeObserver(measure);
+    observer.observe(el);
+  }
+  measure();
+});
+onUnmounted(() => observer?.disconnect());
 // La liste de droite (docs/133 §1) : à relancer ou à déclarer dans Job-Room.
 const panelTab = ref<"follow" | "declare">("follow");
-const visibleCards = computed(() => (showAllCards.value ? panelCards.value : panelCards.value.slice(0, PANEL_ROWS)));
-watch(panelCards, () => {
-  showAllCards.value = false;
+// Nouvelle liste (jour, onglet, mois) : retour en haut, estompage recalculé.
+watch([panelCards, panelTab], async () => {
+  await nextTick();
+  if (panelScroll.value) panelScroll.value.scrollTop = 0;
+  onPanelScroll();
 });
 
 async function load(): Promise<void> {
@@ -476,52 +505,45 @@ onUnmounted(() => assistant.setFocus(null));
             class="hint"
           >Objectif ORP à saisir dans les Réglages.</span>
         </div>
-        <!-- Ligne 2, seulement s'il y a à faire : l'état ORP et son action (docs/43 n° 14). -->
-        <div
-          v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
-          class="applications-todo"
+      </div>
+      <!-- L'état des preuves du mois, un bandeau daté comme sur Aujourd'hui (docs/134) : une
+           phrase, une action ; seulement s'il y a à faire ou si elles sont remises. -->
+      <div
+        v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
+        :class="['today-banner', 'applications-banner', { done: orp.state === 'remis' }]"
+        data-test="orp-banner"
+      >
+        <span data-test="state">{{ bannerText }}</span>
+        <!-- Une action ORP à la fois (docs/22 §2). -->
+        <button
+          v-if="orp.state === 'remis'"
+          type="button"
+          class="link"
+          :disabled="busy"
+          data-test="cancel-submit"
+          @click="confirmingCancel = true"
         >
-          <span
-            :class="['applications-state', { done: orp.state === 'remis' }]"
-            data-test="state"
-          >{{ stateLabel }}</span>
-          <!-- Une action ORP à la fois (docs/22 §2). -->
-          <button
-            v-if="orp.state === 'remis'"
-            type="button"
-            class="link"
-            :disabled="busy"
-            data-test="cancel-submit"
-            @click="confirmingCancel = true"
-          >
-            Annuler la remise
-          </button>
-          <!-- Sur téléphone, l'action du moment est fixée en bas de l'écran (docs/33 §3.2). -->
-          <div
-            v-else
-            class="mobile-dock"
-          >
-            <button
-              v-if="firstIncomplete"
-              type="button"
-              class="primary small"
-              data-test="complete-next"
-              @click="edit(firstIncomplete)"
-            >
-              Compléter {{ plural(orp.incomplete, "ligne", "lignes") }}
-            </button>
-            <button
-              v-else
-              type="button"
-              class="primary small"
-              :disabled="busy"
-              data-test="submit"
-              @click="submit(true)"
-            >
-              Marquer comme remis
-            </button>
-          </div>
-        </div>
+          Annuler la remise
+        </button>
+        <button
+          v-else-if="firstIncomplete"
+          type="button"
+          class="link"
+          data-test="complete-next"
+          @click="edit(firstIncomplete)"
+        >
+          Compléter
+        </button>
+        <button
+          v-else
+          type="button"
+          class="link"
+          :disabled="busy"
+          data-test="submit"
+          @click="submit(true)"
+        >
+          Marquer comme remis
+        </button>
       </div>
       <InlineConfirm
         v-if="confirmingCancel && orp.state === 'remis'"
@@ -593,10 +615,11 @@ onUnmounted(() => assistant.setFocus(null));
             @select="selectedDay = selectedDay === $event ? null : $event"
           />
         </div>
-        <!-- À côté du calendrier (docs/130 §A) : à relancer, ou le jour choisi ; des lignes,
-             5 puis « Voir les N autres » ; à déclarer dessous, la même forme. -->
+        <!-- À côté du calendrier, à sa hauteur (docs/134) : les onglets en haut, la liste défile
+             dessous, estompée là où il reste des lignes. -->
         <section
           class="suivi-panel"
+          :style="panelHeight ? { height: `${panelHeight}px` } : undefined"
           data-test="day-panel"
         >
           <h2
@@ -632,99 +655,97 @@ onUnmounted(() => assistant.setFocus(null));
               À déclarer{{ toDeclare.length ? ` · ${toDeclare.length}` : "" }}
             </button>
           </div>
-          <template v-if="selectedDay || panelTab === 'follow' || !orp.count">
-            <p
-              v-if="!panelCards.length"
-              class="hint"
-            >
-              <template v-if="selectedDay">
-                Aucune candidature ce jour-là.
-                <button
-                  type="button"
-                  class="link"
-                  @click="addManual"
-                >
-                  En ajouter une
-                </button>
-              </template>
+          <div
+            ref="panelScroll"
+            :class="['panel-scroll', { 'fade-top': !atTop, 'fade-bottom': !atBottom }]"
+            data-test="panel-scroll"
+            @scroll="onPanelScroll"
+          >
+            <template v-if="selectedDay || panelTab === 'follow' || !orp.count">
+              <p
+                v-if="!panelCards.length"
+                class="hint"
+              >
+                <template v-if="selectedDay">
+                  Aucune candidature ce jour-là.
+                  <button
+                    type="button"
+                    class="link"
+                    @click="addManual"
+                  >
+                    En ajouter une
+                  </button>
+                </template>
+                <template v-else>
+                  Rien à relancer.
+                </template>
+              </p>
               <template v-else>
-                Rien à relancer.
+                <ul class="today-rows">
+                  <li
+                    v-for="application in panelCards"
+                    :key="application.id"
+                  >
+                    <ApplicationCard
+                      :application="application"
+                      :orp-row="rowsById.get(application.id) ?? null"
+                      @open="openId = $event.id"
+                      @status="setStatus"
+                      @edit="edit"
+                      @interview="openInterview"
+                      @prepare="preparing = $event"
+                      @changed="load"
+                    />
+                  </li>
+                </ul>
               </template>
-            </p>
-            <template v-else>
-              <ul class="today-rows">
+            </template>
+            <section
+              v-else
+              class="suivi-declare"
+              data-test="declare"
+            >
+              <h2 class="visually-hidden">
+                À déclarer dans Job-Room
+              </h2>
+              <p
+                v-if="!toDeclare.length"
+                class="hint"
+                data-test="declare-done"
+              >
+                Tout est déclaré.
+              </p>
+              <ul
+                v-else
+                class="today-rows"
+              >
                 <li
-                  v-for="application in visibleCards"
-                  :key="application.id"
+                  v-for="item in toDeclare"
+                  :key="item.id"
                 >
-                  <ApplicationCard
-                    :application="application"
-                    :orp-row="rowsById.get(application.id) ?? null"
-                    @open="openId = $event.id"
-                    @status="setStatus"
-                    @edit="edit"
-                    @interview="openInterview"
-                    @prepare="preparing = $event"
-                    @changed="load"
-                  />
+                  <button
+                    type="button"
+                    class="today-row"
+                    :data-test="`declare-${item.id}`"
+                    :title="`${item.company} · ${item.title}`"
+                    @click="openId = item.id"
+                  >
+                    <span
+                      class="logo"
+                      :class="`c${colorIndex(item.company)}`"
+                      aria-hidden="true"
+                    >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
+                    <span class="today-row-main">
+                      <strong>{{ item.company }}</strong>
+                      <span class="today-row-line">{{ item.title }}</span>
+                      <span class="today-row-line">envoyée le {{ item.day }}<template v-if="item.incomplete"> · à compléter</template></span>
+                    </span>
+                    <span class="today-row-action">Déclarer</span>
+                  </button>
                 </li>
               </ul>
-              <button
-                v-if="panelCards.length > visibleCards.length"
-                type="button"
-                class="link suivi-more-rows"
-                data-test="panel-show-all"
-                @click="showAllCards = true"
-              >
-                Voir {{ panelCards.length - visibleCards.length === 1 ? "l'autre" : `les ${panelCards.length - visibleCards.length} autres` }}
-              </button>
-            </template>
-          </template>
-          <section
-            v-else
-            class="suivi-declare"
-            data-test="declare"
-          >
-            <h2 class="visually-hidden">
-              À déclarer dans Job-Room
-            </h2>
-            <p
-              v-if="!toDeclare.length"
-              class="hint"
-              data-test="declare-done"
-            >
-              Tout est déclaré.
-            </p>
-            <ul
-              v-else
-              class="today-rows"
-            >
-              <li
-                v-for="item in toDeclare"
-                :key="item.id"
-              >
-                <button
-                  type="button"
-                  class="today-row"
-                  :data-test="`declare-${item.id}`"
-                  :title="`${item.company} · ${item.title}`"
-                  @click="openId = item.id"
-                >
-                  <span
-                    class="logo"
-                    :class="`c${colorIndex(item.company)}`"
-                    aria-hidden="true"
-                  >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
-                  <span class="today-row-main">
-                    <strong>{{ item.company }}</strong>
-                    <span class="today-row-line">{{ item.title }}</span>
-                    <span class="today-row-line">envoyée le {{ item.day }}<template v-if="item.incomplete"> · à compléter</template></span>
-                  </span>
-                  <span class="today-row-action">Déclarer</span>
-                </button>
-              </li>
-            </ul>
-          </section>
+            </section>
+          </div>
         </section>
       </div>
 
