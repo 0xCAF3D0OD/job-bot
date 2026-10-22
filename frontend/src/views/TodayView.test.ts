@@ -251,13 +251,20 @@ describe("Aujourd'hui épuré (docs/95)", () => {
   });
 
   it("Mois ORP : le compte, la barre, ce qu'il reste, la semaine", async () => {
+    // Le 1er octobre, personne n'est en retard (docs/123 §2, Q).
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 1, 9));
     mockGet(today({ rhythm: rhythm() }));
     const wrapper = await mountView();
+    vi.useRealTimers();
     const card = wrapper.find("[data-test=orp-month]");
     expect(card.find("h2").text()).toBe("Mois ORP");
-    expect(card.find("[data-test=month-count]").text().replace(/\s+/g, " ")).toBe("3 / 20 candidatures en octobre");
+    expect(card.find("[data-test=month-count]").text().replace(/\s+/g, " ")).toBe("3 / 20 candidatures");
     expect(card.find("[role=progressbar]").attributes("aria-valuenow")).toBe("3");
-    expect(card.find("[data-test=month-left]").text()).toBe("Encore 17 d'ici le 31 octobre.");
+    // Un segment par candidature de l'objectif (20 : au-delà de 15, une barre continue).
+    expect(card.find(".orp-month-bar.continuous").exists()).toBe(true);
+    expect(card.find("[data-test=month-left]").text()).toBe("Dans les temps. Encore 17 d'ici le 31 octobre.");
+    expect(card.find("[data-test=orp-face]").classes()).toContain("content");
     expect(card.find("[data-test=rhythm-count]").text()).toBe("1 / 3 candidatures");
     expect(card.text()).toContain("Cette semaine");
     // Plus de tuiles, de graphique ni de jauge : ils sont dans le Bilan.

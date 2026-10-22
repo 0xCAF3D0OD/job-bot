@@ -15,7 +15,7 @@ import ManualOfferForm from "../components/ManualOfferForm.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
-import IllustratedSide from "../components/IllustratedSide.vue";
+import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
@@ -451,15 +451,13 @@ onUnmounted(() => {
         >
           Impossible de charger les offres.
         </p>
-        <IllustratedSide
+        <FaceState
           v-else-if="!loading && items.length === 0"
-          class="empty-state empty"
+          title="Aucune offre"
           data-test="offers-empty"
-          name="aucune-offre"
-          phone="small"
         >
           <p>
-            Aucune offre ne correspond.
+            Rien ne correspond pour l'instant.
             <button
               v-if="activeCount(filters)"
               type="button"
@@ -469,7 +467,7 @@ onUnmounted(() => {
               <span class="with-icon"><AppIcon name="close" />Effacer les filtres</span>
             </button>
           </p>
-        </IllustratedSide>
+        </FaceState>
         <TransitionGroup
           tag="ul"
           name="card"

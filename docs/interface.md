@@ -66,21 +66,28 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 
 ## Illustrations (docs/62, docs/67)
 
-1. Une illustration seulement si l'écran n'a rien d'autre à montrer (vide, erreur, première fois) ou pour marquer un moment (réussite, transition d'une page qui charge).
+1. Une illustration seulement si l'écran n'a rien d'autre à montrer (vide, erreur, première fois) ou pour marquer un moment (réussite). Les états de jobA1 (une liste vide, une page qui charge) montrent le visage du 1 (voir « Le visage du 1 », docs/123).
 2. Jamais dans un formulaire, une liste ou un tableau ; jamais dans une carte (posée à côté, ou au-dessus pour la carte d'une réussite).
 3. Une seule famille : les images générées pour jobA1 (des personnes dans des scènes calmes), en version transparente, sans cadre ni fond. 300 px au plus, 200 sur téléphone ; dans l'accueil, 260 px (200 sur téléphone), le personnage qui parle 320 px (240) ; la présentation de la plateforme, 440 px en tête (320 sur téléphone) et 250 par étape (190). Exceptions : la carte d'une réussite (220 px, 170 sur téléphone) et l'Engagement (440 px, 260 sur téléphone) ; la page de connexion, coupée en deux, où la scène remplit toute la moitié gauche (élargie à 57 %), et un bandeau sur téléphone.
 4. En sombre, la série sombre quand elle existe ; sinon l'image claire assombrie (luminosité 85 %). Décorative pour les lecteurs d'écran : le texte à côté dit tout.
-5. Une entrée une fois chargée (fondu et légère montée, 500 ms), rien si « réduire les animations » est demandé. Préparées par `frontend/scripts/illustrations.mjs` (480 et 800 px ; 480, 800 et 1264 pour la connexion). Exceptions : la transition d'une page qui charge garde les dessins unDraw animés d'avant, aux couleurs des tokens (`LoadingDrawing`, docs/67 complément 0.55.1) ; la page de maintenance montre le dessin unDraw de la maintenance, au même endroit qu'une illustration (300 px, 200 sur téléphone), et en boucle (docs/80) ; les autres dessins unDraw restent en réserve (`frontend/reserve/`), non chargés.
+5. Une entrée une fois chargée (fondu et légère montée, 500 ms), rien si « réduire les animations » est demandé. Préparées par `frontend/scripts/illustrations.mjs` (480 et 800 px ; 480, 800 et 1264 pour la connexion). Exception : la page de maintenance montre le dessin unDraw de la maintenance, au même endroit qu'une illustration (300 px, 200 sur téléphone), et en boucle (docs/80) ; les autres dessins unDraw restent en réserve (`frontend/reserve/`), non chargés.
 
 ## Mouvement (docs/59)
 
-1. Le mouvement répond à une action (appui, survol, choix, envoi) ; rien ne bouge tout seul en boucle, sauf une vraie attente (rédaction par l'IA, page de maintenance : son dessin unDraw bouge tant que l'attente dure, docs/80).
+1. Le mouvement répond à une action (appui, survol, choix, envoi) ; rien ne bouge tout seul en boucle, sauf une vraie attente (rédaction par l'IA, page qui charge et premier relevé : l'œil et la bille du visage pulsent, docs/123 ; page de maintenance : son dessin unDraw bouge tant que l'attente dure, docs/80).
 2. Trois durées : 150 ms (survol, appui), 250 ms (un état qui change), 500 ms (une entrée). Exceptions écrites : la carte d'une réussite monte en 420 ms avec un léger rebond (docs/61 §1) ; la transition d'une page qui charge entre et sort en 400 ms et reste au moins 1,2 s, rien si la page arrive en moins de 0,15 s (docs/63 §3) ; en sombre, la connexion joue une fois la vidéo du soir qui tombe (9 s), puis reste sur l'image du soir (docs/67, complément 0.55.3) ; sur la connexion, le ciel suit la vidéo (9 s) et la phrase change de couleur en 1,2 s à 5,5 s de la vidéo (docs/67, compléments 0.55.3 à 0.55.5) ; le chemin de La plateforme suit le défilement (120 ms), entier d'emblée si « réduire les animations » (docs/67) ; la capsule se déroule en 350 ms et un menu « ⋯ » en 250 ms, sur la courbe `cubic-bezier(0.72, 0.01, 0, 1)` prise à Sphere, leur contenu en fondu (docs/91).
 3. « Réduire les animations » : les retours restent (couleurs, coches, textes), sans mouvement.
 
 ## Accès à un contenu (docs/57)
 
 L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Continuer › ». Les vraies actions gardent leur verbe.
+
+## Le visage du 1 (docs/123)
+
+1. **Quatre humeurs**, les mêmes partout : ravi (grand sourire, vert menthe), content (sourire, bleu lavande), attentif (bouche droite ; orange seulement quand il faut agir, « On rattrape », gris chaud sinon), neutre (bouche plus courte, gris). Jamais déçu.
+2. **Trois tailles** : 20 px dans une ligne (la note), 56 px en tuile à droite du titre d'une carte (le mois ORP ; sur la tuile, le visage en noir), 120 px au centre d'un état (liste vide, page qui charge : le visage, le titre, une ligne). Au plus un grand visage par écran ; décoratif, le texte dit tout.
+3. **Les illustrations** : le visage pour les états de jobA1 ; les scènes de personnes pour l'accueil, la connexion, La plateforme, les pages d'erreur et les réussites. Jamais les deux côte à côte. La mascotte ronde reste à l'assistant (quand l'IA parle).
+4. **Le mouvement** : changer d'humeur, la bouche en fondu (150 ms) ; un clin d'œil quand l'objectif du mois est atteint (une fois par visite) ; l'œil et la bille qui pulsent pendant une vraie attente. Rien avec « réduire les animations ».
 
 ## La note (docs/73, docs/76, docs/121 §C.5)
 

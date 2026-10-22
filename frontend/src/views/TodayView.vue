@@ -10,6 +10,7 @@ import RhythmCard from "../components/RhythmCard.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import OrpMonth from "../components/OrpMonth.vue";
 import PageHero from "../components/PageHero.vue";
 import ScoreWord from "../components/ScoreWord.vue";
 import { sinceText } from "../components/status";
@@ -175,18 +176,6 @@ const banners = computed(() => {
     });
   }
   return list.slice(0, 3);
-});
-
-// Mois ORP (docs/95 §4).
-const monthName = computed(() => (today.value ? (formatMonth(today.value.month).split(" ")[0] ?? "") : ""));
-const monthLeft = computed(() => {
-  const t = today.value;
-  if (!t?.month_target) return "";
-  const left = t.month_target - t.month_count;
-  if (left <= 0) return "Objectif atteint.";
-  const [year, monthNumber] = t.month.split("-").map(Number);
-  const last = new Date(year!, monthNumber!, 0);
-  return `Encore ${left} d'ici le ${longDate.format(last)}.`;
 });
 
 const steps = computed(() => today.value?.checklist ?? []);
@@ -468,36 +457,17 @@ const { me } = useAuth();
           </template>
         </section>
 
-        <!-- Mois ORP (docs/95 §4) : le compte du mois, puis la semaine. -->
+        <!-- Mois ORP (docs/95 §4, docs/123 Q) : le compte du mois et son humeur, puis la semaine. -->
         <section
           class="dash-card today-month"
           data-test="orp-month"
         >
-          <h2>Mois ORP</h2>
-          <p
-            class="today-month-count"
-            data-test="month-count"
-          >
-            <strong>{{ today.month_count }}</strong>
-            <span>{{ today.month_target ? ` / ${today.month_target} candidatures en ${monthName}` : ` ${today.month_count === 1 ? "candidature" : "candidatures"} en ${monthName}` }}</span>
-          </p>
-          <template v-if="today.month_target">
-            <div
-              class="today-bar"
-              role="progressbar"
-              :aria-valuenow="today.month_count"
-              :aria-valuemax="today.month_target"
-              aria-label="Objectif ORP du mois"
-            >
-              <span :style="{ width: `${Math.min(100, Math.round((today.month_count / today.month_target) * 100))}%` }" />
-            </div>
-            <p
-              class="muted today-month-left"
-              data-test="month-left"
-            >
-              {{ monthLeft }}
-            </p>
-          </template>
+          <OrpMonth
+            title="Mois ORP"
+            :count="today.month_count"
+            :target="today.month_target ?? null"
+            :month="today.month"
+          />
           <RhythmCard
             v-if="today.rhythm"
             :week="today.rhythm"
