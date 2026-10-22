@@ -6,7 +6,7 @@ import { api } from "../api/client";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import AppIcon from "./AppIcon.vue";
 
-// La barre d'onglets du téléphone (docs/92) : les deux pages de travail, en bas de l'écran,
+// La barre d'onglets du téléphone (docs/92, docs/126 §1) : les trois entrées, en bas de l'écran,
 // avec une icône et un nom ; Candidatures porte le nombre d'offres à examiner. Les écrans de
 // travail (Préparer, l'accueil) la cachent, comme ils prennent déjà tout l'écran (docs/75).
 const HIDDEN = new Set(["preparation", "welcome"]);
@@ -19,6 +19,7 @@ const visible = computed(() => !HIDDEN.has(String(route.name)) && !route.meta.ba
 const tabs = computed(() => [
   { name: "today", label: "Aujourd'hui", icon: "calendar" as const, to: "/aujourdhui", active: route.path.startsWith("/aujourdhui") },
   { name: "jobs", label: "Candidatures", icon: "check-circle" as const, to: lastJobsPage.value, active: route.path.startsWith("/candidatures") },
+  { name: "bilan", label: "Bilan", icon: "stats" as const, to: "/bilan", active: route.path.startsWith("/bilan") },
 ]);
 
 async function refresh(): Promise<void> {

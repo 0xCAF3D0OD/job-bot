@@ -187,7 +187,7 @@ async def test_application_status_and_expiry(client: AsyncClient, runtime: Runti
         ids = (no_answer.id, expiry.id, application.id)
     assert (
         no_answer.label
-        == "Passer la candidature « Ingénieur DevOps » chez Exemple SA en Sans réponse"
+        == "Passer la candidature « Ingénieur DevOps » chez Exemple SA en « Sans réponse »"
     )
 
     for action_id in ids[:2]:

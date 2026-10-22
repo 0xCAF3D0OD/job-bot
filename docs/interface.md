@@ -12,9 +12,24 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 6. Pas de prix dans le libellé d'un bouton : le coût d'une action IA est dans sa description au survol (« Environ 0,10 $. »).
 7. Un test (`frontend/src/titles.test.ts`) vérifie les règles 1, 2 et 6.
 
-## La barre du haut (docs/89)
+## La barre du haut (docs/89, docs/126)
 
-Deux pages dans le menu principal (docs/92) : Aujourd'hui et Candidatures ; sur téléphone, une barre d'onglets en bas de l'écran, cachée sur les écrans de travail (Préparer, l'accueil). À droite, une capsule : la cloche (un chiffre rouge, ce qui attend une action), l'étincelle de Progresser (un point violet, du nouveau à lire ; elle déroule un aperçu des actualités et des formations en cours), puis l'initiale du compte, qui ouvre le menu du compte (Profil, Réglages, Données personnelles, Diagnostic, « Collecter maintenant », la déconnexion). Du nouveau à lire : un point, pas un chiffre ; un chiffre dit ce qui attend une action. Dans la capsule, des zones sans cadre ni fond, séparées par des filets ; ouvrir l'une déroule le cadre vers le bas, et son contenu apparaît dedans (docs/91). Les menus « ⋯ » ont le même style : bordure fine, coins de 10 px, presque pas d'ombre, un déroulé court.
+Trois entrées dans le menu principal, une question chacune (docs/126 §1) : **Aujourd'hui** (que faire aujourd'hui ?), **Candidatures** (où en sont mes candidatures ? Offres, Suivi, Alertes, Rendez-vous) et **Bilan** (qu'est-ce qui marche, quoi améliorer ? Résultats, Formations, Actualités) ; sur téléphone, une barre d'onglets en bas de l'écran, cachée sur les écrans de travail (Préparer, l'accueil). À droite, une capsule : la cloche (un chiffre rouge, ce qui attend une action), puis l'initiale du compte, qui ouvre le menu du compte (Profil, Réglages, Données personnelles, « Collecter maintenant », la déconnexion ; le Diagnostic pour l'exploitant). Un chiffre dit ce qui attend une action ; du nouveau à lire, un point. Dans la capsule, des zones sans cadre ni fond, séparées par des filets ; ouvrir l'une déroule le cadre vers le bas, et son contenu apparaît dedans (docs/91). Les menus « ⋯ » ont le même style : bordure fine, coins de 10 px, presque pas d'ombre, un déroulé court.
+
+## Les mots (docs/126 §3)
+
+Les mêmes mots pour les mêmes choses, sur chaque écran :
+
+| Le mot | Ce que c'est |
+|---|---|
+| **Offre** | ce que jobA1 reçoit (une annonce) |
+| **Candidature** | ce que tu as envoyé |
+| **Gardée** / **À préparer** | une offre que tu gardes : elle attend ta lettre et ton CV |
+| **Écartée** | une offre que tu ne veux pas (« Ignorée » dans les filtres) |
+| **Poste obtenu** | le statut d'une candidature acceptée (« Engagement » seulement dans Job-Room, son mot officiel) |
+| **Preuves ORP**, **objectif**, **conseiller** | le vocabulaire de l'ORP |
+| **l'équipe jobA1** | qui fait tourner la plateforme, pour une personne invitée ; « l'exploitant » reste dans les pages légales (Données personnelles, Conditions d'utilisation) |
+| **Bilan** | ce qui marche ; plus de « Progresser » |
 
 ## Aéré (docs/93)
 

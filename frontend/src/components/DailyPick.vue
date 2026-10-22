@@ -178,7 +178,7 @@ const summary = computed(() =>
           data-test="pick-preparing"
           @click="emit('showPreparing')"
         >
-          Voir les commencées
+          Voir les offres à préparer
         </button>
       </div>
     </Transition>

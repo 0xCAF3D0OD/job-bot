@@ -75,7 +75,7 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=funnel-received]").text()).toContain("75");
     expect(wrapper.find("[data-test=funnel-engagements]").text()).toContain("0");
     // Tuiles (docs/55) : candidatures, réponses, entretiens, délai.
-    expect(wrapper.find("[data-test=tile-applications]").text()).toContain("sur 19 offres retenues");
+    expect(wrapper.find("[data-test=tile-applications]").text()).toContain("sur 19 offres gardées");
     expect(wrapper.find("[data-test=tile-responses]").text()).toContain("41 % des envois");
     expect(wrapper.find("[data-test=tile-interviews]").text()).toContain("dont 1 à venir");
     expect(wrapper.find("[data-test=delay]").text()).toContain("9 j");

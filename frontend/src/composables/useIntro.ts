@@ -20,6 +20,7 @@ export function firstTime(key: string): boolean {
 export function useCountUp(key: string, target: () => number): ComputedRef<number> {
   const animated = ref<number | null>(null);
   let frame = 0;
+  let fallback: ReturnType<typeof setTimeout> | undefined;
   onMounted(() => {
     if (typeof requestAnimationFrame !== "function" || target() <= 0 || !firstTime(`count:${key}`)) return;
     const start = performance.now();
@@ -30,7 +31,13 @@ export function useCountUp(key: string, target: () => number): ComputedRef<numbe
       if (t < 1) frame = requestAnimationFrame(step);
     };
     frame = requestAnimationFrame(step);
+    // Sans images (onglet en arrière-plan, capture), l'animation s'arrêterait sur 0 : la vraie
+    // valeur s'affiche au plus tard après 0,7 s (audit du 22.10.2026, chiffres du Bilan à 0).
+    fallback = setTimeout(() => (animated.value = null), 700);
   });
-  onUnmounted(() => cancelAnimationFrame(frame));
+  onUnmounted(() => {
+    cancelAnimationFrame(frame);
+    clearTimeout(fallback);
+  });
   return computed(() => animated.value ?? target());
 }

@@ -2,7 +2,6 @@ import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw
 
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
-import { useProgressMemory } from "./composables/useProgressMemory";
 import { startPage } from "./composables/usePageTransition";
 import type { IconName } from "./icons";
 import PlaceholderView from "./views/PlaceholderView.vue";
@@ -27,7 +26,7 @@ const NewsView = () => import("./views/NewsView.vue");
 const OffersView = () => import("./views/OffersView.vue");
 const NotFoundView = () => import("./views/NotFoundView.vue");
 const PreparationView = () => import("./views/PreparationView.vue");
-const ProgressView = () => import("./views/ProgressView.vue");
+const BilanView = () => import("./views/BilanView.vue");
 const ProfileView = () => import("./views/ProfileView.vue");
 const SettingsView = () => import("./views/SettingsView.vue");
 const SignupView = () => import("./views/SignupView.vue");
@@ -50,19 +49,19 @@ export interface NavEntry {
 export const navigation: NavEntry[] = [
   { path: "/aujourdhui", name: "today", label: "Aujourd'hui", icon: "calendar" },
   { path: "/candidatures", name: "jobs", label: "Candidatures", icon: "check-circle" },
-  { path: "/progresser", name: "progress", label: "Progresser", icon: "book" },
+  { path: "/bilan", name: "bilan", label: "Bilan", icon: "stats" },
   { path: "/profil", name: "profile", label: "Profil", icon: "user" },
   { path: "/reglages", name: "settings", label: "Réglages", icon: "settings" },
 ];
-// Le menu principal : les deux pages de travail (docs/89, docs/90, docs/92). Progresser
-// s'ouvre depuis l'étincelle de la capsule, Profil et Réglages depuis le menu du compte ; ils
-// gardent leur adresse et leur titre.
-export const mainMenu: NavEntry[] = navigation.filter((entry) => ["today", "jobs"].includes(entry.name));
+// Le menu principal : trois entrées, une question chacune (docs/126 §1) : Aujourd'hui (que
+// faire ?), Candidatures (où en sont-elles ?), Bilan (qu'est-ce qui marche, quoi améliorer ?).
+// Profil et Réglages s'ouvrent depuis le menu du compte.
+export const mainMenu: NavEntry[] = navigation.filter((entry) => ["today", "jobs", "bilan"].includes(entry.name));
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
-export type JobsTab = "offres" | "suivi" | "alertes" | "bilan" | "rendez-vous";
-// Onglets de Progresser (docs/90).
-export type ProgressTab = "actualites" | "formations";
+export type JobsTab = "offres" | "suivi" | "alertes" | "rendez-vous";
+// Onglets du Bilan (docs/126 §1) : les résultats, puis ce qui aide à progresser.
+export type BilanTab = "resultats" | "formations" | "actualites";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, () => Promise<unknown>> = {
@@ -98,11 +97,15 @@ export const routes: RouteRecordRaw[] = [
     }),
   },
   { path: "/etat", redirect: "/reglages/diagnostic" },
-  // Actualités et Formations sont dans Progresser (docs/90) : les anciens liens y mènent.
-  { path: "/actualites", redirect: (to) => ({ path: "/progresser/actualites", query: to.query }) },
-  { path: "/formations", redirect: (to) => ({ path: "/progresser/formations", query: to.query }) },
+  // Actualités et Formations sont dans le Bilan (docs/126 §1) : les anciens liens y mènent,
+  // ceux de Progresser (docs/90) compris.
+  { path: "/actualites", redirect: (to) => ({ path: "/bilan/actualites", query: to.query }) },
+  { path: "/formations", redirect: (to) => ({ path: "/bilan/formations", query: to.query }) },
+  { path: "/progresser", redirect: "/bilan/actualites" },
+  { path: "/progresser/actualites", redirect: (to) => ({ path: "/bilan/actualites", query: to.query }) },
+  { path: "/progresser/formations", redirect: (to) => ({ path: "/bilan/formations", query: to.query }) },
   ...navigation
-    .filter((entry) => entry.name !== "jobs" && entry.name !== "progress")
+    .filter((entry) => entry.name !== "jobs" && entry.name !== "bilan")
     .map(
       (entry): RouteRecordRaw => ({
         path: entry.path,
@@ -134,8 +137,8 @@ export const routes: RouteRecordRaw[] = [
       // Mes alertes et alertes reçues (docs/20 §1) ; l'ancien « Journal des recherches ».
       { path: "alertes", name: "alerts", component: AlertsView, meta: { tab: "alertes" } },
       { path: "journal", redirect: "/candidatures/alertes" },
-      // Ce qui marche dans ta recherche (docs/42).
-      { path: "bilan", name: "insights", component: InsightsView, meta: { tab: "bilan" } },
+      // Le Bilan est une entrée du menu (docs/126 §1) : les anciens liens y mènent, avec le mois.
+      { path: "bilan", redirect: (to) => ({ path: "/bilan", query: to.query }) },
       // Le rendez-vous avec le conseiller ORP (docs/83).
       {
         path: "rendez-vous-orp",
@@ -146,13 +149,13 @@ export const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: "/progresser",
-    component: ProgressView,
+    // Le Bilan (docs/42, docs/126 §1) : ce qui marche, puis Formations et Actualités.
+    path: "/bilan",
+    component: BilanView,
     children: [
-      // /progresser seul : le dernier onglet choisi, sinon les Actualités.
-      { path: "", redirect: () => useProgressMemory().last.value },
-      { path: "actualites", name: "news", component: NewsView, meta: { tab: "actualites" } },
+      { path: "", name: "insights", component: InsightsView, meta: { tab: "resultats" } },
       { path: "formations", name: "trainings", component: TrainingsView, meta: { tab: "formations" } },
+      { path: "actualites", name: "news", component: NewsView, meta: { tab: "actualites" } },
     ],
   },
   // Diagnostic technique, sorti des Réglages (docs/21 §6).
@@ -251,6 +254,5 @@ export function pageTitle(name: unknown): string {
 router.afterEach((to, from) => {
   document.title = pageTitle(to.name);
   useJobsMemory().remember(to.fullPath);
-  useProgressMemory().remember(to.fullPath);
   if (to.name !== from.name) startPage(typeof to.name === "string" ? to.name : null);
 });

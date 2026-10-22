@@ -343,7 +343,7 @@ onMounted(() => void load());
               {{ plural(prep.offers, "offre bien notée", "offres bien notées") }} des 3 derniers mois.
               <RouterLink
                 v-if="item.training_title"
-                to="/progresser/formations"
+                to="/bilan/formations"
               >
                 {{ item.training_title }}
               </RouterLink>

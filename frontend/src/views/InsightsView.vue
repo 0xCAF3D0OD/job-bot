@@ -10,6 +10,7 @@ import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import FaceState from "../components/FaceState.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
@@ -79,11 +80,11 @@ async function load(): Promise<void> {
 
 const STEPS = [
   { key: "received", label: "Offres reçues", to: "/candidatures/offres" },
-  { key: "retained", label: "Retenues", to: "/candidatures/offres" },
+  { key: "retained", label: "Gardées", to: "/candidatures/offres" },
   { key: "applications", label: "Candidatures", to: "/candidatures/suivi" },
   { key: "responses", label: "Réponses", to: "/candidatures/suivi" },
   { key: "interviews", label: "Entretiens", to: "/candidatures/suivi" },
-  { key: "engagements", label: "Engagement", to: "/candidatures/suivi" },
+  { key: "engagements", label: "Poste obtenu", to: "/candidatures/suivi" },
 ] as const;
 
 const SUIVI = "/candidatures/suivi";
@@ -109,7 +110,7 @@ const tiles = computed(() => {
   const f = r.funnel;
   const share = f.applications ? `${Math.round((f.responses / f.applications) * 100)} % des envois` : "aucun envoi";
   return {
-    applications: `sur ${plural(f.retained, "offre retenue", "offres retenues")}`,
+    applications: `sur ${plural(f.retained, "offre gardée", "offres gardées")}`,
     responses: share,
     interviews: r.interviews_upcoming
       ? `dont ${r.interviews_upcoming} à venir`
@@ -212,6 +213,23 @@ const intro = firstTime("bilan-funnel");
       v-if="insights && tiles"
       class="bilan"
     >
+      <!-- La conclusion d'abord, puis les trois chiffres et l'objectif ORP ; le détail sur
+           demande (docs/126 §2 : « une page, une question »). -->
+      <FaceState
+        v-if="insights.funnel.applications === 0"
+        title="Pas encore de candidature"
+        data-test="insights-empty"
+      >
+        <p>Le bilan se remplit au fil de tes envois.</p>
+      </FaceState>
+      <p
+        v-if="insights.funnel.applications > 0 && insights.headline"
+        class="bilan-headline"
+        data-test="headline"
+      >
+        <span class="dash-bubble small"><AppIcon name="trend" /></span>
+        <span>{{ insights.headline }}</span>
+      </p>
       <div
         class="bilan-tiles"
         data-test="bilan-tiles"
@@ -250,62 +268,59 @@ const intro = firstTime("bilan-funnel");
         />
       </div>
 
-      <div class="dash-row bilan-mid">
-        <section
-          class="dash-card"
-          data-test="funnel"
-        >
-          <header class="dash-card-head">
-            <h2>Parcours</h2>
-          </header>
-          <ol
-            :class="['bilan-funnel', { intro }]"
-            aria-label="Parcours"
-          >
-            <li
-              v-for="step in STEPS"
-              :key="step.key"
-            >
-              <RouterLink
-                :to="step.to"
-                class="bilan-step"
-                :data-test="`funnel-${step.key}`"
-              >
-                <span class="bilan-step-label">{{ step.label }}</span>
-                <span class="bilan-track">
-                  <span
-                    class="bilan-bar"
-                    :style="{ width: funnelWidth(insights.funnel[step.key]) }"
-                  />
-                </span>
-                <strong>{{ insights.funnel[step.key] }}</strong>
-              </RouterLink>
-            </li>
-          </ol>
-        </section>
-        <PeriodChart
-          v-if="insights.buckets.length"
-          :buckets="insights.buckets"
-          :unit="insights.unit"
-        />
-      </div>
-
-      <FaceState
-        v-if="insights.funnel.applications === 0"
-        title="Pas encore de candidature"
-        data-test="insights-empty"
+      <OrpGauge
+        v-if="showGauge && orp"
+        :count="orp.count"
+        :target="orp.target"
+        :month="orp.month"
+        :history="orp.history"
+      />
+      <DisclosureRow
+        v-if="insights.funnel.applications > 0"
+        class="bilan-detail"
+        title="Le détail"
+        value="parcours, analyses, semaines"
+        data-test="bilan-detail"
       >
-        <p>Le bilan se remplit au fil de tes envois.</p>
-      </FaceState>
-      <template v-else>
-        <p
-          v-if="insights.headline"
-          class="bilan-headline"
-          data-test="headline"
-        >
-          <span class="dash-bubble small"><AppIcon name="trend" /></span>
-          <span>{{ insights.headline }}</span>
-        </p>
+        <div class="dash-row bilan-mid">
+          <section
+            class="dash-card"
+            data-test="funnel"
+          >
+            <header class="dash-card-head">
+              <h2>Parcours</h2>
+            </header>
+            <ol
+              :class="['bilan-funnel', { intro }]"
+              aria-label="Parcours"
+            >
+              <li
+                v-for="step in STEPS"
+                :key="step.key"
+              >
+                <RouterLink
+                  :to="step.to"
+                  class="bilan-step"
+                  :data-test="`funnel-${step.key}`"
+                >
+                  <span class="bilan-step-label">{{ step.label }}</span>
+                  <span class="bilan-track">
+                    <span
+                      class="bilan-bar"
+                      :style="{ width: funnelWidth(insights.funnel[step.key]) }"
+                    />
+                  </span>
+                  <strong>{{ insights.funnel[step.key] }}</strong>
+                </RouterLink>
+              </li>
+            </ol>
+          </section>
+          <PeriodChart
+            v-if="insights.buckets.length"
+            :buckets="insights.buckets"
+            :unit="insights.unit"
+          />
+        </div>
 
         <div class="bilan-compare">
           <section
@@ -357,41 +372,32 @@ const intro = firstTime("bilan-funnel");
             </p>
           </section>
         </div>
-      </template>
-
-      <OrpGauge
-        v-if="showGauge && orp"
-        :count="orp.count"
-        :target="orp.target"
-        :month="orp.month"
-        :history="orp.history"
-      />
-      <RhythmWeeks
-        v-if="period !== 'all'"
-        :month="month"
-      />
-
-      <section
-        v-if="period === 'month' && insights.orp_summary"
-        class="dash-card bilan-summary"
-        data-test="orp-summary"
-      >
-        <header class="dash-card-head">
-          <h2>
-            <span class="dash-bubble small"><AppIcon name="file" /></span>
-            Résumé pour l'ORP
-          </h2>
-          <button
-            type="button"
-            class="secondary small"
-            data-test="orp-summary-copy"
-            @click="copy"
-          >
-            <CopyLabel :done="copied" />
-          </button>
-        </header>
-        <p>{{ insights.orp_summary }}</p>
-      </section>
+        <RhythmWeeks
+          v-if="period !== 'all'"
+          :month="month"
+        />
+        <section
+          v-if="period === 'month' && insights.orp_summary"
+          class="dash-card bilan-summary"
+          data-test="orp-summary"
+        >
+          <header class="dash-card-head">
+            <h2>
+              <span class="dash-bubble small"><AppIcon name="file" /></span>
+              Résumé pour l'ORP
+            </h2>
+            <button
+              type="button"
+              class="secondary small"
+              data-test="orp-summary-copy"
+              @click="copy"
+            >
+              <CopyLabel :done="copied" />
+            </button>
+          </header>
+          <p>{{ insights.orp_summary }}</p>
+        </section>
+      </DisclosureRow>
     </div>
   </section>
 </template>

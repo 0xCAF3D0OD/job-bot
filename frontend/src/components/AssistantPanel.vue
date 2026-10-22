@@ -268,8 +268,8 @@ async function decide(action: ChatAction, decision: keyof typeof DECISIONS): Pro
     }
     Object.assign(action, data);
     if (!data.note && decision !== "decline") announceDataChanged();
-    // Une candidature confirmée en Engagement : le moment de fête (docs/60 §2.1).
-    if (decision === "confirm" && data.state === "done" && data.kind === "application_status" && data.label.endsWith("en Engagement")) {
+    // Une candidature confirmée en « Poste obtenu » (statut engagement) : le moment de fête (docs/60 §2.1).
+    if (decision === "confirm" && data.state === "done" && data.kind === "application_status" && data.label.endsWith("« Poste obtenu »")) {
       celebrated.value = action.id;
     }
   } finally {

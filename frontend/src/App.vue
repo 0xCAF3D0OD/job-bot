@@ -9,7 +9,6 @@ import AccountMenu from "./components/AccountMenu.vue";
 import AppIcon from "./components/AppIcon.vue";
 import BrandMark from "./components/BrandMark.vue";
 import HeaderCapsule from "./components/HeaderCapsule.vue";
-import ProgressPreview from "./components/ProgressPreview.vue";
 import TabBar from "./components/TabBar.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
@@ -53,6 +52,7 @@ const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
 // La page en cours dans le menu : Candidatures couvre tous ses onglets et ses fiches.
 function isCurrent(entry: NavEntry): boolean {
   if (entry.name === "jobs") return route.path.startsWith("/candidatures");
+  if (entry.name === "bilan") return route.path.startsWith("/bilan");
   return route.path === entry.path || route.path.startsWith(`${entry.path}/`);
 }
 
@@ -140,15 +140,11 @@ onUnmounted(() => {
         v-if="loggedIn"
         class="topbar-actions"
       >
-        <!-- La capsule (docs/89, docs/91, docs/92) : la cloche, le livre de Progresser (docs/101) et ton
-             initiale ; elle se déroule pour montrer ce qu'on ouvre. -->
+        <!-- La capsule (docs/89, docs/91, docs/92) : la cloche et ton initiale ; elle se déroule pour
+             montrer ce qu'on ouvre. Le livre de Progresser l'a quittée : Formations et Actualités
+             sont dans le Bilan (docs/126 §1). -->
         <HeaderCapsule>
           <NotificationBell />
-          <span
-            class="capsule-sep"
-            aria-hidden="true"
-          />
-          <ProgressPreview />
           <span
             class="capsule-sep"
             aria-hidden="true"

@@ -1,6 +1,6 @@
 # 126 — La structure : trois entrées, des pages allégées, des mots clairs, la crédibilité (version 1.0.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-22 (« oui pour tout le cadrage 126 »). Lu ainsi : les trois entrées (1), les mots (2), **Actualités gardées dans le Bilan en attendant le test avec 5 personnes** (3, le choix le plus prudent des trois), **les règles validées restent** pour les cinq contradictions (4 a à e), **un premier jet de « À propos » à corriger** (5), 1.0.0 puis 1.0.1 (6). Dis-le si une de ces lectures est fausse.
 > Origine : les quatre audits d'ergonomie du 22 octobre 2026 (notes de 6,5 à 7,6 sur 10) et ta demande « écris le cadrage 126 ». Les défauts confirmés dans le code sont corrigés en 0.99.1 ; ce cadrage reprend ce qui touche la conception.
 > Références citées par les audits : Nielsen Norman Group (10 heuristiques), WCAG 2.2 AA, GOV.UK Design System, Design System de la Confédération, Laws of UX. On reprend les principes, pas l'apparence : la DA de jobA1 reste.
 
@@ -94,3 +94,22 @@ Les quatre audits le disent : leurs notes sont provisoires tant que personne ne 
    - e. **Les initiales d'entreprise** : en couleur (texte foncé depuis la 0.99.1), ou **en ton neutre** pour réserver la couleur à la note (audit) ?
 5. **« À propos »** : tu écris le texte, ou je te propose un premier jet à corriger ?
 6. **La livraison** : 1.0.0 puis 1.0.1, dans cet ordre ?
+
+## Écarts (1.0.0)
+
+- **Règles relues avant de construire** ; vérifiées sur captures à 1440 et 390 px : le Bilan (Résultats replié et ouvert), le Suivi, Aujourd'hui, la barre d'onglets du téléphone.
+- **Le menu** : Aujourd'hui · Candidatures · Bilan, en haut et dans la barre du bas du téléphone. Le livre de Progresser a quitté la capsule (cloche et initiale seulement) ; son aperçu (dernières actualités, formations en cours) disparaît avec lui, la pastille du nouveau à lire passe sur l'onglet Actualités du Bilan.
+- **Le Bilan** : trois onglets, **Résultats** (`/bilan`), **Formations** (`/bilan/formations`), **Actualités** (`/bilan/actualites`), avec les onglets de Candidatures sur téléphone (l'icône au-dessus du nom). « Ce qui te répond » aurait mis un pronom dans un onglet (docs/interface.md, Titres 2) : l'onglet s'appelle « Résultats ».
+- **Les anciennes adresses** mènent aux nouvelles, avec leurs paramètres : `/candidatures/bilan?mois=…`, `/progresser`, `/progresser/actualites`, `/progresser/formations`, `/actualites`, `/formations`.
+- **Candidatures** : quatre onglets (Offres, Suivi, Alertes, Rendez-vous) ; « RDV » devient « Rendez-vous », il tient.
+- **Résultats allégés** : la phrase qui conclut, les quatre tuiles, l'objectif ORP ; le parcours, le graphique, les quatre analyses, les semaines et le résumé pour l'ORP sous « Le détail » (fermé). **Les chiffres à 0** vus par un audit : l'entrée animée attendait des images qui ne viennent pas dans un onglet en arrière-plan ; la vraie valeur s'affiche maintenant au plus tard après 0,7 s.
+- **Le Suivi** était déjà conforme : le calendrier (ou la liste) et « À relancer » en tête, la légende et les enseignements repliés ; rien à changer.
+- **Les mots** (`docs/interface.md`, Les mots) : « Gardées » (« offres gardées »), « À préparer » (l'onglet d'Aujourd'hui), « Poste obtenu » (le statut ; « Engagement » reste dans Job-Room, son mot officiel), « l'équipe jobA1 » dans l'application et la demande de compte ; « l'exploitant » reste dans les pages légales (un rôle juridique).
+- **L'assistant** : nouvelle consigne `assistant-v15` (la navigation à trois entrées, les nouvelles adresses, les offres du jour, la formule, les nouveaux mots) ; la proposition de statut dit « en « Poste obtenu » ».
+- **Les audits** visitent les nouvelles adresses.
+
+## Vérifié (1.0.0)
+
+- Tests de l'interface : le menu à trois entrées, le titre de chaque page, les anciennes adresses redirigées (dont `/candidatures/bilan?mois=2026-10` vers `/bilan?mois=2026-10`), les mots. 444 tests, lint, vue-tsc.
+- Tests backend : les consignes de l'assistant (trois entrées, plus de Progresser, les nouvelles adresses), le libellé du statut. 629 tests, ruff, mypy.
+- Les trois audits sur la démo à zéro.
