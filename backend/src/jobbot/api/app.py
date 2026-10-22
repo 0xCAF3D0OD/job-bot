@@ -35,6 +35,7 @@ from jobbot.api.routes import (
     news,
     orp,
     orp_meeting,
+    plan,
     platform,
     preferences,
     profile,
@@ -163,4 +164,5 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(profiles.router)
     app.include_router(alerts.router)
     app.include_router(interviews.router)
+    app.include_router(plan.router)
     return app

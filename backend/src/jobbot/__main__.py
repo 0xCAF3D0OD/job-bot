@@ -212,6 +212,46 @@ def cmd_reparse(args: argparse.Namespace) -> int:
     return asyncio.run(run())
 
 
+def cmd_score_compare(args: argparse.Namespace) -> int:
+    """Compare la note d'un autre modèle à la note actuelle (docs/125 §9)."""
+    from jobbot import accounts
+    from jobbot.runtime import Runtime
+    from jobbot.scoring.compare import compare, word
+
+    settings = _settings()
+    if not settings.llm_configured:
+        print("IA non configurée : JOBBOT_ANTHROPIC_API_KEY manque.")
+        return 1
+
+    async def run() -> int:
+        runtime = Runtime.create(settings)
+        try:
+            await accounts.act_as_owner(runtime.sessionmaker)
+            rows = await compare(runtime, args.model, args.limit)
+        finally:
+            await runtime.dispose()
+        done = [r for r in rows if r.other is not None]
+        for r in rows:
+            other = "refusé" if r.other is None else f"{r.other:>3} {word(r.other)}"
+            print(f"{r.current:>3} {word(r.current):<12} → {other:<18} {r.title[:50]}")
+        if not done:
+            print("Aucune offre notée à comparer.")
+            return 0
+        gap = sum(abs(r.current - (r.other or 0)) for r in done) / len(done)
+        same = sum(word(r.current) == word(r.other or 0) for r in done) / len(done)
+        now = [r.current_usd for r in done if r.current_usd is not None]
+        then = [r.other_usd for r in done if r.other_usd is not None]
+        print(f"\n{len(done)} offres · écart moyen {gap:.1f} points · même mot {same:.0%}")
+        if now and then:
+            print(
+                f"coût moyen par offre : {sum(now) / len(now):.4f} $ ({settings.score_model}) "
+                f"→ {sum(then) / len(then):.4f} $ ({args.model})"
+            )
+        return 0
+
+    return asyncio.run(run())
+
+
 def cmd_anonymize_sample(args: argparse.Namespace) -> int:
     from pathlib import Path
 
@@ -497,6 +537,12 @@ def main(argv: list[str] | None = None) -> int:
         "--unrecognized", action="store_true", help="seulement les alertes non reconnues"
     )
     reparse.set_defaults(func=cmd_reparse)
+    compare_cmd = sub.add_parser(
+        "score-compare", help="compare la note d'un autre modèle (docs/125), sans rien changer"
+    )
+    compare_cmd.add_argument("--model", default="claude-sonnet-5")
+    compare_cmd.add_argument("--limit", type=int, default=20)
+    compare_cmd.set_defaults(func=cmd_score_compare)
     anon = sub.add_parser("anonymize-sample", help="jeux de test anonymisés")
     anon.add_argument("ids", nargs="+", type=int, help="identifiants d'alertes (journal)")
     anon.add_argument("--out", required=True, help="dossier de sortie")

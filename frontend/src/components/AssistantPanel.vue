@@ -13,6 +13,8 @@ import IconButton from "./IconButton.vue";
 import AssistantMascot, { type MascotMood } from "./AssistantMascot.vue";
 import EngagementMoment from "./EngagementMoment.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import PlanLimit from "./PlanLimit.vue";
+import { usePlan } from "../composables/usePlan";
 
 type Conversation = components["schemas"]["ConversationOut"];
 // Propositions de l'assistant (docs/52) : affichées sous sa réponse, faites sur un clic.
@@ -131,6 +133,9 @@ async function erase(): Promise<void> {
 // « Envoyer » reste actif (docs/29 §3) : sans question, il rend la main au champ.
 const emptyHint = ref(false);
 
+// Les messages du mois (docs/125) : le compteur suit chaque réponse.
+const { reached, refresh: refreshPlan } = usePlan();
+
 async function send(text: string = draft.value): Promise<void> {
   const question = text.trim();
   if (busy.value) return;
@@ -206,6 +211,7 @@ async function send(text: string = draft.value): Promise<void> {
     if (!reply.content && !reply.actions?.length) lines.value.splice(lines.value.indexOf(reply), 1);
     else if (!reply.error && lines.value[lines.value.length - 1] === reply) showFound(reply);
     busy.value = false;
+    void refreshPlan();
     replying.value = null;
     reading.value = null;
     controller = null;
@@ -582,6 +588,7 @@ const headItems: MoreMenuItem[] = [
       >
         Écris ta question.
       </p>
+      <PlanLimit usage="chat" />
       <form
         class="assistant-form"
         @submit.prevent="send()"
@@ -601,7 +608,7 @@ const headItems: MoreMenuItem[] = [
         <button
           type="submit"
           class="primary small assistant-send"
-          :disabled="busy"
+          :disabled="busy || reached('chat')"
           data-test="assistant-send"
         >
           Envoyer

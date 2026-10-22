@@ -76,6 +76,7 @@ export type JobRun = Schemas["JobRunOut"];
 export type Search = Schemas["SearchOut"];
 export type SearchDetail = Schemas["SearchDetail"];
 export type Offer = Schemas["OfferOut"];
+export type Plan = Schemas["PlanOut"];
 export type ChatAction = Schemas["ChatActionOut"];
 // Identifiant d'un site suivi (jobup, indeed, jobsch, linkedin, ou ajouté dans les Réglages).
 export type Source = string;

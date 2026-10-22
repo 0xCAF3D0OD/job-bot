@@ -897,6 +897,9 @@ class User(Base):
     )
     # Fixé par l'exploitant (docs/65 §4) ; vide : le plafond par défaut d'un compte invité.
     ai_budget_chf: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
+    # La formule (docs/125) : essentiel (gratuite) ou plus ; plus réglée par l'exploitant tant
+    # que le paiement n'existe pas.
+    plan: Mapped[str] = mapped_column(Text, default="essentiel", server_default="essentiel")
     # Suspendu : plus de connexion ni de tâches, données gardées.
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

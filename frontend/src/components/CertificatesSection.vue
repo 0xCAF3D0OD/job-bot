@@ -6,6 +6,9 @@ import type { components } from "../api/schema";
 import AppIcon from "./AppIcon.vue";
 import CertificateLetter from "./CertificateLetter.vue";
 import HoverNote from "./HoverNote.vue";
+import { usePlan } from "../composables/usePlan";
+
+const { aiNote } = usePlan();
 
 // Les certificats de travail, décodés (docs/87) : la note, les formules codées, ce qui
 // dessert, le conseil ; la lecture de l'IA sur demande.
@@ -190,7 +193,7 @@ onMounted(() => void load());
             :data-test="`certificate-read-${item.document_id}`"
             @click="readInDetail(item)"
           >
-            <HoverNote text="Environ 0,03 CHF.">
+            <HoverNote :text="aiNote('Environ 0,03 CHF.')">
               <span class="with-icon"><AppIcon name="ai" />{{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}</span>
             </HoverNote>
           </button>

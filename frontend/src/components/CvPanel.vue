@@ -8,6 +8,10 @@ import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
 import InlineConfirm from "./InlineConfirm.vue";
+import { usePlan } from "../composables/usePlan";
+import PlanLimit from "./PlanLimit.vue";
+
+const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
 // `primary` : le CV est la prochaine étape de la préparation (docs/29 §1.3).
 const props = defineProps<{ offer: Offer; primary?: boolean }>();
@@ -95,8 +99,10 @@ async function write(force = false): Promise<void> {
         base_draft_id: text && selectedId.value ? selectedId.value : null,
       },
     });
+    // Le compteur de la formule suit ; à la limite, la ligne grise dit pourquoi (docs/125 §4).
+    await refreshPlan();
     if (!data) {
-      error.value = detail(err, "La préparation du CV a échoué, réessaie.");
+      if (!reached("cv")) error.value = detail(err, "La préparation du CV a échoué, réessaie.");
       return;
     }
     cvs.value = [data, ...cvs.value];
@@ -316,15 +322,16 @@ onMounted(() => void load());
           <button
             type="button"
             :class="primary ? 'primary' : 'secondary'"
-            :disabled="writing"
+            :disabled="writing || reached('cv')"
             data-test="write-cv"
             @click="write()"
           >
-            <HoverNote :text="writing ? '' : 'Environ 0,05 $.'">
+            <HoverNote :text="writing ? '' : aiNote('Environ 0,05 $.', 'cv')">
               <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}</span>
             </HoverNote>
           </button>
         </div>
+        <PlanLimit usage="cv" />
         <InlineConfirm
           v-if="choosingWrite"
           message="Tu as des modifications non enregistrées dans cette version."

@@ -111,6 +111,9 @@ class Settings(BaseSettings):
     # Note et résumé des offres par l'IA (docs/06). Sans clé, aucune note.
     anthropic_api_key: SecretStr | None = None
     llm_model: str = "claude-opus-5"
+    # La notation peut prendre un modèle moins cher (docs/125 : une note à ~0,005 $ au lieu de
+    # ~0,03 $) ; vide : le modèle principal. À choisir après `jobbot score-compare`.
+    llm_score_model: str | None = None
     llm_effort: Literal["low", "medium", "high"] = "low"
     # Rédaction des lettres (docs/08 §6) : plus de soin que la notation.
     llm_writing_effort: Literal["low", "medium", "high"] = "medium"
@@ -191,6 +194,10 @@ class Settings(BaseSettings):
     def backup_configured(self) -> bool:
         phrase = self.backup_passphrase.get_secret_value() if self.backup_passphrase else ""
         return bool(phrase.strip())
+
+    @property
+    def score_model(self) -> str:
+        return self.llm_score_model or self.llm_model
 
     @property
     def llm_configured(self) -> bool:

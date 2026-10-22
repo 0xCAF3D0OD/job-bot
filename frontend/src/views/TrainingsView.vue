@@ -18,6 +18,9 @@ import { KINDS, ORP_LINKS, PRICES } from "../trainingLabels";
 import { plural } from "../format";
 
 import HoverNote from "../components/HoverNote.vue";
+import { usePlan } from "../composables/usePlan";
+
+const { aiNote } = usePlan();
 // Formations (docs/16 §5) : catalogue vérifié, suggestions de l'IA sur demande, suivi.
 type Status = "interested" | "in_progress" | "done";
 
@@ -345,7 +348,7 @@ onMounted(() => void load());
             data-test="suggest"
             @click="suggest"
           >
-            <HoverNote :text="suggesting ? '' : 'Environ 0,02 à 0,05 $.'">
+            <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
               <span class="with-icon"><AppIcon name="ai" />{{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}</span>
             </HoverNote>
           </button>

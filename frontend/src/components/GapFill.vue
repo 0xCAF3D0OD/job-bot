@@ -5,6 +5,9 @@ import { api } from "../api/client";
 import { gapSkill } from "../format";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
+import { usePlan } from "../composables/usePlan";
+
+const { aiNote } = usePlan();
 
 // « Je l'ai » sur un manque de la note (docs/121 §C.3) : une compétence que la personne a
 // sans l'avoir écrite. Le bloc se relit sur place (le nom, une phrase qui le prouve), puis
@@ -95,7 +98,7 @@ async function add(): Promise<void> {
         :disabled="busy || !title.trim() || !content.trim()"
         data-test="gap-fill-add"
       >
-        <span class="with-icon"><AppIcon name="ai" /><HoverNote text="L'offre est renotée avec ce bloc. Environ 0,003 $.">Ajouter au profil</HoverNote></span>
+        <span class="with-icon"><AppIcon name="ai" /><HoverNote :text="aiNote('Environ 0,003 $.', undefined, 'L\'offre est renotée avec ce bloc.')">Ajouter au profil</HoverNote></span>
       </button>
       <button
         type="button"

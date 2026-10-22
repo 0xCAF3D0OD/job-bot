@@ -1,6 +1,6 @@
 # 125 — Le cadre du freemium : ce qui reste gratuit, ce qui est limité, comment payer
 
-> Statut : **à valider**. Rien n'est construit avant ton accord.
+> Statut : **validé** le 2026-10-22 (« oui pour tout »), puis les limites gratuites relevées au niveau des concurrents (« oui pour tout, vas-y ») : 150 offres notées, 10 lettres, 10 CV, 30 messages, 1 entraînement ; Plus à 7 CHF par mois ; la note avec un modèle moins cher, après comparaison.
 > Origine : ta demande du 2026-10-22 : « définir le cadre du freemium […] une limite sur des features de la plateforme afin de monétiser notre plateforme, car elle nous coûte ». Reprend le point 9 et le K de l'audit des concurrents (offre payante, quotas clairs, CGU).
 > Se construit sur docs/65 §4 (la clé de l'exploitant, 5 CHF par invité, 50 CHF au total), docs/102 (les comptes sur demande), docs/38, 83, 87 (chaque fonction IA a un repli sans IA).
 
@@ -111,3 +111,33 @@ Le plafond actuel de **5 CHF par invité** couvre donc un mois actif, et le plaf
 4. **Le paiement** : Payrexx (suisse) ou Stripe ?
 5. **Les comptes offerts par un organisme** : à garder pour plus tard, ou à creuser maintenant (c'est peut-être le meilleur modèle pour ce public) ?
 6. **L'ordre** : les formules sans paiement d'abord (0.98.0), puis le paiement (0.99.0) ?
+
+## Complément : face aux concurrents (2026-10-22)
+
+| | Gratuit | Payant |
+|---|---|---|
+| ApplyNow | ~150 offres notées (5 par jour), 25 CV et 25 lettres par mois | 18,90 CHF par mois |
+| SwissJobs.app | 10 CV par semaine, 10 lettres, 5 questions d'entretien par mois | 15 CHF par mois (après un essai avec carte) |
+| **jobA1** | **150 offres notées, 10 lettres, 10 CV, 30 messages, 1 entraînement**, et tout le cycle ORP | **7 CHF par mois** : 600 offres notées, 60 lettres, 60 CV, 300 messages, 8 entraînements |
+
+- **Pourquoi relever la formule gratuite** : avec 3 lettres et 40 offres notées, la première comparaison était perdue. À ce niveau, un compte Essentiel actif coûte environ 2 CHF par mois **si la note passe à un modèle moins cher** (~0,005 $ par offre au lieu de ~0,03 $) ; sinon ~5 CHF, couverts par le plafond en francs.
+- **La note moins chère** : un réglage (`JOBBOT_LLM_SCORE_MODEL`) et une commande pour comparer sur tes offres avant de changer (`uv run jobbot score-compare --model claude-sonnet-5 --limit 20`) : l'écart moyen en points, la part d'offres qui gardent le même mot, le coût moyen par offre avant et après.
+
+## Écarts (0.98.0)
+
+- **Règles relues avant de construire** (`docs/interface.md`), vérifiées sur captures à 1440 et 390 px : la carte Formule (Réglages › Compte), la rubrique IA d'une personne invitée, la ligne à la limite dans Préparer (lettre) et en haut des Offres (notes).
+- **Les limites** : 150 offres notées, 10 lettres, 10 CV, 30 messages à l'assistant, 1 entraînement par mois en Essentiel ; 600, 60, 60, 300, 8 en Plus. Dans le code (`jobbot/plans.py`), comptées sur les appels déjà enregistrés, par mois civil. **Une offre compte une fois par mois**, même renotée (profil changé, « Je l'ai ») ; **un entraînement compte une séance**, quel que soit le nombre de questions.
+- **La note dans la limite** : la notation ne prend que les nouvelles offres permises ; les autres arrivent sans note (« Pas encore notée : les offres notées du mois sont utilisées » au survol), avec une ligne en haut des Offres : « Les 150 offres notées du mois sont utilisées : elles reviennent le 1er novembre. Les nouvelles offres arrivent sans note jusque-là. Voir la formule ». Un lot déjà parti peut dépasser la limite de quelques offres.
+- **À la limite d'une action** (lettre, CV, entraînement, assistant) : le bouton reste, désactivé, avec la ligne grise dessous (le même texte que l'API qui refuse, une seule source) et « Voir la formule ». **Pas de repli « Partir du modèle » pour la lettre et le CV** : ils n'existent qu'avec l'IA aujourd'hui ; les versions déjà écrites restent modifiables et téléchargeables. Un modèle de lettre sans IA serait une version à part.
+- **Au survol** : pour une personne invitée, « Lettres : 2 sur 10 ce mois-ci. » sur les actions limitées, et **plus aucun prix** sur les autres actions IA (le reste de la description reste) ; l'exploitant garde les coûts.
+- **Réglages › Compte › Formule** : le nom de la formule et ce qu'elle limite en une ligne grise, une ligne par usage (« 37 sur 150 » et une jauge courte) séparées par un filet, « Les compteurs repartent le 1er novembre. », puis Plus sur fond gris (ce qu'on consulte) : « Plus · 7 CHF par mois : 60 lettres, 60 CV, 8 entraînements, 600 offres notées. Le paiement arrive bientôt. » Pas de bouton tant que le paiement n'existe pas.
+- **Réglages › IA** d'une personne invitée : « Formule Essentiel », ce que l'IA fait chaque mois, « Voir ce qui reste ce mois-ci » ; plus de plafond en francs ni de dépense en CHF (ils restent pour l'exploitant).
+- **Réglages › Plateforme** (l'exploitant) : une liste « Formule » (Essentiel, Plus) sur chaque compte, à côté du plafond en francs, qui reste le garde-fou.
+- **L'exploitant** n'a ni limite ni carte Formule.
+- Migration 0068 (`users.plan`).
+
+## Vérifié (0.98.0)
+
+- Tests backend : le comptage par usage (une offre une fois par mois, une séance d'entraînement), les messages à la limite (accords, singulier, élision), le premier du mois suivant, la note dans la limite (renote sans compter, nouvelles offres coupées), la formule vue par une personne invitée et réglée par l'exploitant, l'exploitant sans limite. 625 tests, ruff, mypy.
+- Tests de l'interface : la carte Formule, les descriptions au survol (compteur, rien, coût pour l'exploitant), la ligne à la limite, la formule choisie dans Plateforme, la rubrique IA d'une personne invitée sans francs. 438 tests, lint, vue-tsc.
+- Les trois audits sur la démo à zéro.

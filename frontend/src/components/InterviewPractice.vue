@@ -73,7 +73,9 @@ const headItems = computed<MoreMenuItem[]>(() =>
 
 function detail(error: unknown): string {
   const text = (error as { detail?: unknown } | undefined)?.detail;
-  return typeof text === "string" ? `Impossible : ${text}.` : "Impossible pour l'instant, réessaie.";
+  if (typeof text !== "string") return "Impossible pour l'instant, réessaie.";
+  // Une phrase entière (la limite de la formule, docs/125) se dit telle quelle.
+  return /[.!?]$/.test(text) ? text : `Impossible : ${text}.`;
 }
 
 async function scrollDown(): Promise<void> {

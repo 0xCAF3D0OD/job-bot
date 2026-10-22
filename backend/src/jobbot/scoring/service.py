@@ -16,7 +16,7 @@ from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from jobbot import accounts, platform
+from jobbot import accounts, plans, platform
 from jobbot.db.models import (
     Evaluation,
     LlmBatch,
@@ -78,6 +78,8 @@ class ScoringResult:
     batch_submitted: int = 0
     batch_collected: int = 0
     budget_reached: bool = False
+    # Les offres notées du mois sont épuisées (la formule, docs/125).
+    limit_reached: bool = False
 
 
 # --- Lecture ----------------------------------------------------------------------------
@@ -327,7 +329,7 @@ async def collect_batches(runtime: Runtime, client: ScoreClient, result: Scoring
                         session,
                         offer.id,
                         output=None,
-                        model=runtime.settings.llm_model,
+                        model=runtime.settings.score_model,
                         hash_=hash_,
                         partial=partial,
                         error=f"lot : {item.error}",
@@ -386,7 +388,7 @@ async def _submit_batch(
     requests = [
         (
             f"offre-{offer.id}",
-            request_params(settings.llm_model, settings.llm_effort, profile, offer_data(offer)),
+            request_params(settings.score_model, settings.llm_effort, profile, offer_data(offer)),
         )
         for offer in offers
     ]
@@ -428,7 +430,7 @@ async def _score_direct(
                 log.warning("score_budget_reached", spend_chf=str(spend), budget_chf=str(budget))
                 return
         data = offer_data(offer)
-        params = request_params(settings.llm_model, settings.llm_effort, profile, data)
+        params = request_params(settings.score_model, settings.llm_effort, profile, data)
         try:
             raw = await client.score(params)
         except Refused as exc:
@@ -447,7 +449,7 @@ async def _score_direct(
                     session,
                     offer.id,
                     output=None,
-                    model=settings.llm_model,
+                    model=settings.score_model,
                     hash_=hash_,
                     partial=data.partial,
                     error=error,
@@ -481,8 +483,15 @@ async def score_offer(runtime: Runtime, offer_id: int) -> int | None:
     async with runtime.sessionmaker() as session:
         profile = await active_profile(session)
         offer = await session.get(Offer, offer_id)
+        allowed, _ = await within_plan(session, [offer] if offer else [])
     if offer is None:
         return None
+    if not allowed:
+        log.info("score_offer_limit_reached", offer_id=offer_id)
+        async with runtime.sessionmaker() as session:
+            return await session.scalar(
+                select(Evaluation.score).where(Evaluation.offer_id == offer_id)
+            )
     result = ScoringResult()
     try:
         await _score_direct(runtime, make_client(runtime.settings), [offer], profile, result)
@@ -490,6 +499,18 @@ async def score_offer(runtime: Runtime, offer_id: int) -> int | None:
         log.warning("score_offer_unavailable", problem=str(exc))
     async with runtime.sessionmaker() as session:
         return await session.scalar(select(Evaluation.score).where(Evaluation.offer_id == offer_id))
+
+
+async def within_plan(session: AsyncSession, todo: list[Offer]) -> tuple[list[Offer], bool]:
+    """Les offres que la formule permet de noter ce mois-ci (docs/125) : une offre déjà notée ce
+    mois se renote sans compter ; les nouvelles, dans la limite qui reste. Vrai si on en laisse."""
+    remaining = await plans.left(session, plans.SCORE)
+    if remaining is None:
+        return todo, False
+    counted = await plans.scored_this_month(session)
+    fresh = [o.id for o in todo if o.id not in counted]
+    allowed = counted | set(fresh[:remaining])
+    return [o for o in todo if o.id in allowed], len(fresh) > remaining
 
 
 # --- Point d'entrée ---------------------------------------------------------------------
@@ -517,6 +538,7 @@ async def run_scoring(runtime: Runtime, *, rescore_profile: bool = False) -> Sco
         todo = await candidates(
             session, profile_hash(profile), include_stale_profile=rescore_profile
         )
+        todo, result.limit_reached = await within_plan(session, todo)
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
     if not todo:
         return result
@@ -537,5 +559,6 @@ async def run_scoring(runtime: Runtime, *, rescore_profile: bool = False) -> Sco
         batch_submitted=result.batch_submitted,
         batch_collected=result.batch_collected,
         budget_reached=result.budget_reached,
+        limit_reached=result.limit_reached,
     )
     return result

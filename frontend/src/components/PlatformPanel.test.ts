@@ -140,6 +140,18 @@ describe("Plateforme (docs/65 §5)", () => {
     });
   });
 
+  it("la formule d'un compte se choisit sur place (docs/125 §5)", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    PATCH.mockResolvedValue({ data: PLATFORM });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    await wrapper.find("[data-test=plan-camille]").setValue("plus");
+    expect(PATCH).toHaveBeenCalledWith("/api/platform/accounts/{account_id}", {
+      params: { path: { account_id: 2 } },
+      body: { plan: "plus" },
+    });
+  });
+
   it("le plafond total s'enregistre au changement, sans bouton (0.78.4)", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     PUT.mockResolvedValue({ data: PLATFORM });

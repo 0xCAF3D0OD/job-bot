@@ -7,6 +7,8 @@ import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
 import { usePhone } from "../composables/usePhone";
 import PageHero from "../components/PageHero.vue";
+import PlanPanel from "../components/PlanPanel.vue";
+import { usePlan } from "../composables/usePlan";
 import { usePageReady } from "../composables/usePageTransition";
 import AccountDataPanel from "../components/AccountDataPanel.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
@@ -160,6 +162,9 @@ const router = useRouter();
 const { me } = useAuth();
 // L'exploitant (docs/65) : la rubrique Plateforme, son plafond de l'IA, les profils d'essai.
 const owner = computed(() => Boolean(me.value?.is_owner));
+// La formule d'une personne invitée (docs/125).
+const { plan, aiNote } = usePlan();
+const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3).
 const showDiagnostic = computed(() => owner.value || me.value?.auth_enabled === false);
 // Résumés des rubriques, affichés sur téléphone (docs/34 §3).
@@ -182,8 +187,8 @@ const summary = computed(() => ({
   ]
     .filter(Boolean)
     .join(" · "),
-  ia: `plafond ${form.value.llm_monthly_budget_chf} CHF / mois`,
-  compte: [owner.value ? "profils d'essai" : "connexion", me.value?.auth_enabled ? (me.value.username ?? "") : ""]
+  ia: owner.value ? `plafond ${form.value.llm_monthly_budget_chf} CHF / mois` : `formule ${planName.value}`,
+  compte: [owner.value ? "profils d'essai" : `formule ${planName.value}`, me.value?.auth_enabled ? (me.value.username ?? "") : ""]
     .filter(Boolean)
     .join(" · "),
   outils: "agenda, extension",
@@ -382,7 +387,7 @@ onUnmounted(() => spy?.disconnect());
                 <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
               </legend>
               <p class="setting-desc">
-                <HoverNote text="Pour postuler sans passer par un site d'emploi. Environ 0,02 $ si l'IA est nécessaire.">
+                <HoverNote :text="aiNote('Environ 0,02 $ si l\'IA est nécessaire.', undefined, 'Pour postuler sans passer par un site d\'emploi.')">
                   Dès cette note, l'annonce est cherchée chez l'employeur.
                 </HoverNote>
               </p>
@@ -702,20 +707,24 @@ onUnmounted(() => spy?.disconnect());
           :active="active === 'ia'"
         >
           <div class="ai-layout">
+            <!-- Une personne invitée : ce que l'IA fait chaque mois dépend de sa formule, en
+                 nombres, pas en francs (docs/125 §2). -->
             <div
               v-if="loaded && !owner"
               class="form-card"
               data-test="budget-fixed"
             >
               <fieldset>
-                <legend>Plafond mensuel du coût de l'IA</legend>
+                <legend>Formule {{ planName }}</legend>
                 <p class="setting-desc">
-                  Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
+                  Ce que l'IA fait chaque mois : les offres notées, les lettres, les CV, l'assistant.
                 </p>
-                <!-- Fixé par l'exploitant : une information, sur fond gris (docs/110). -->
-                <p class="setting-info">
-                  <strong>{{ form.llm_monthly_budget_chf }} CHF</strong> par mois, fixé par l'exploitant de la plateforme.
-                </p>
+                <RouterLink
+                  :to="{ query: { rubrique: 'compte' } }"
+                  data-test="see-plan"
+                >
+                  Voir ce qui reste ce mois-ci
+                </RouterLink>
               </fieldset>
             </div>
             <form
@@ -758,7 +767,7 @@ onUnmounted(() => spy?.disconnect());
                 </div>
               </fieldset>
             </form>
-            <AiSpend />
+            <AiSpend v-if="owner" />
           </div>
         </SettingsSection>
 
@@ -770,8 +779,9 @@ onUnmounted(() => spy?.disconnect());
         >
           <!-- Chaque panneau porte son titre (Profils d'essai, Connexion, Données personnelles) :
                pas de second titre au-dessus (docs/108, 0.77.2). -->
+          <PlanPanel />
           <ProfilesPanel v-if="owner" />
-          <SessionPanel />
+          <SessionPanel class="settings-next-card" />
           <AccountDataPanel class="settings-next-card" />
         </SettingsSection>
 

@@ -8686,6 +8686,27 @@
           }
         }
       }
+    },
+    "/api/plan": {
+      "get": {
+        "tags": [
+          "plan"
+        ],
+        "summary": "Get Plan",
+        "operationId": "getPlan",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8702,6 +8723,21 @@
               }
             ],
             "title": "Suspended"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "essentiel",
+                  "plus"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan"
           },
           "ai_budget_chf": {
             "anyOf": [
@@ -8776,6 +8812,14 @@
           "month_offers": {
             "type": "integer",
             "title": "Month Offers"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "essentiel",
+              "plus"
+            ],
+            "title": "Plan"
           }
         },
         "type": "object",
@@ -8789,7 +8833,8 @@
           "has_password",
           "ai_budget_chf",
           "month_spend_chf",
-          "month_offers"
+          "month_offers",
+          "plan"
         ],
         "title": "AccountOut"
       },
@@ -17858,6 +17903,58 @@
         ],
         "title": "PhoneIn"
       },
+      "PlanOut": {
+        "properties": {
+          "plan": {
+            "type": "string",
+            "enum": [
+              "essentiel",
+              "plus"
+            ],
+            "title": "Plan"
+          },
+          "unlimited": {
+            "type": "boolean",
+            "title": "Unlimited"
+          },
+          "resets_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Resets On"
+          },
+          "plus_price_chf": {
+            "type": "integer",
+            "title": "Plus Price Chf"
+          },
+          "usage": {
+            "items": {
+              "$ref": "#/components/schemas/UsageOut"
+            },
+            "type": "array",
+            "title": "Usage"
+          },
+          "limits": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Limits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan",
+          "unlimited",
+          "resets_on",
+          "plus_price_chf",
+          "usage",
+          "limits"
+        ],
+        "title": "PlanOut"
+      },
       "PlatformOut": {
         "properties": {
           "accounts": {
@@ -21330,6 +21427,60 @@
         ],
         "title": "UpcomingInterview",
         "description": "Entretien aujourd'hui ou demain : en tête d'Aujourd'hui (docs/43 n° 30)."
+      },
+      "UsageOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "score",
+              "letter",
+              "cv",
+              "chat",
+              "practice"
+            ],
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "used": {
+            "type": "integer",
+            "title": "Used"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          },
+          "limit_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "used",
+          "limit",
+          "limit_text"
+        ],
+        "title": "UsageOut"
       },
       "ValidationError": {
         "properties": {

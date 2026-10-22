@@ -6,6 +6,7 @@ import { dayShort } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import ScoreWord from "./ScoreWord.vue";
+import { usePlan } from "../composables/usePlan";
 
 // Une offre sur une ligne (docs/73 §4) : de quoi choisir ; le détail est dans le panneau de
 // droite. La date n'y est que hors du tri « Par jour », où la ligne du jour la donne.
@@ -29,6 +30,9 @@ const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>
   return null;
 });
 const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" ") ?? "");
+
+// La limite de la formule (docs/125) explique une offre sans note.
+const { reached } = usePlan();
 </script>
 
 <template>
@@ -74,7 +78,7 @@ const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" "
     </span>
     <ScoreWord
       :score="offer.score ?? null"
-      :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : 'Pas encore notée, à noter'"
+      :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
       :stale="offer.score_stale"
     />
   </button>

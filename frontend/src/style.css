@@ -3731,3 +3731,13 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
   .prep-tabs:has(> a:nth-child(4)) .step-done > .icon { display: none; }
   .prep-tabs:has(> a:nth-child(4)) a:not(.active):has(.step-done) .step-number { border-color: var(--ok); color: var(--ok-text); }
 }
+/* La formule (docs/125 §4) : une ligne par usage, le compte et une jauge courte, séparées par un
+   filet ; ce que Plus ajoute sur fond gris (ce qu'on consulte, docs/110). */
+.plan-usage { margin: 0.75rem 0 0; padding: 0; list-style: none; }
+.plan-usage li { display: grid; grid-template-columns: 1fr auto 4.5rem; align-items: center; gap: 0.5rem 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+.plan-usage li:last-child { border-bottom: 0; }
+.plan-usage-count { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.plan-usage-gauge { display: block; height: 4px; border-radius: 999px; background: linear-gradient(to right, var(--accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); }
+.plan-resets { margin: 0.5rem 0 0; }
+.plan-plus { margin-top: 1rem; }
+.plan-limit { margin: 0.5rem 0 0.75rem; line-height: 1.5; }

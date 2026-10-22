@@ -20,6 +20,10 @@ import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { expiredText, ofMonth } from "../format";
 import InlineConfirm from "../components/InlineConfirm.vue";
+import { usePlan } from "../composables/usePlan";
+import PlanLimit from "../components/PlanLimit.vue";
+
+const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
 const route = useRoute();
 const router = useRouter();
@@ -198,8 +202,10 @@ async function write(force = false): Promise<void> {
         base_draft_id: instruction.value.trim() && selectedId.value ? selectedId.value : null,
       },
     });
+    // Le compteur de la formule suit ; à la limite, la ligne grise dit pourquoi (docs/125 §4).
+    await refreshPlan();
     if (!data) {
-      error.value = detail(err, "La rédaction a échoué, réessaie.");
+      if (!reached("letter")) error.value = detail(err, "La rédaction a échoué, réessaie.");
       return;
     }
     letters.value = [data, ...letters.value];
@@ -615,15 +621,16 @@ onMounted(() => void load());
               <button
                 type="button"
                 :class="nextStep === 'letter' ? 'primary' : 'secondary'"
-                :disabled="writing"
+                :disabled="writing || reached('letter')"
                 data-test="write"
                 @click="write()"
               >
-                <HoverNote :text="writing ? '' : 'Environ 0,10 $.'">
+                <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
                   <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}</span>
                 </HoverNote>
               </button>
             </div>
+            <PlanLimit usage="letter" />
             <InlineConfirm
               v-if="choosingWrite"
               message="Tu as des modifications non enregistrées dans cette version."

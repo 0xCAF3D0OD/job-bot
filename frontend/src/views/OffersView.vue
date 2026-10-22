@@ -23,6 +23,7 @@ import { activeCount, useOfferFilters, type View } from "../composables/useOffer
 import { dayKey, dayName, plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
+import PlanLimit from "../components/PlanLimit.vue";
 
 const PAGE_SIZE = 50;
 
@@ -445,6 +446,7 @@ onUnmounted(() => {
             </button>
           </span>
         </div>
+        <PlanLimit usage="score" />
         <p
           v-if="failed"
           class="notice error"

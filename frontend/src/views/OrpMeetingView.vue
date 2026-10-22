@@ -12,6 +12,9 @@ import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { plural } from "../format";
+import { usePlan } from "../composables/usePlan";
+
+const { aiNote } = usePlan();
 
 // Le rendez-vous ORP (docs/83) : la feuille pour le conseiller, tirée de tes données, sans IA.
 // Rien n'est envoyé à l'ORP : tu la télécharges, l'imprimes ou la lis toi-même.
@@ -481,7 +484,7 @@ onMounted(() => void load());
               data-test="sheet-write"
               @click="writeSheet"
             >
-              <HoverNote text="Environ 0,02 CHF.">
+              <HoverNote :text="aiNote('Environ 0,02 CHF.')">
                 <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
               </HoverNote>
             </button>
