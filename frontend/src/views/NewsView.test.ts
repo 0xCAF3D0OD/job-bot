@@ -1,4 +1,4 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
@@ -20,6 +20,9 @@ vi.mock("../api/client", () => ({
 const loggedIn = ref(true);
 const me = ref<{ demo: boolean } | null>({ demo: false });
 vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ loggedIn, me }) }));
+// Démonter chaque page à la fin de son test : remettre `me` à zéro ensuite ne doit pas
+// relancer le rendu d'une page déjà finie, dont les maquettes sont vidées.
+enableAutoUnmount(afterEach);
 afterEach(() => {
   vi.resetAllMocks();
   loggedIn.value = true;

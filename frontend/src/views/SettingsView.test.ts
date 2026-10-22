@@ -1,4 +1,4 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createMemoryHistory, createRouter } from "vue-router";
@@ -10,6 +10,9 @@ const POST = vi.fn();
 vi.mock("../api/client", () => ({
   api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), PUT: vi.fn() },
 }));
+// Démonter avant de remettre les maquettes à zéro : sinon, au test suivant, `as(true)` fait
+// apparaître ProfilesPanel dans la page restée montée, qui appelle un GET déjà vidé.
+enableAutoUnmount(afterEach);
 afterEach(() => vi.resetAllMocks());
 
 // Une rubrique à la fois (docs/48 §2) : ?rubrique=… choisit ce qui s'affiche.
