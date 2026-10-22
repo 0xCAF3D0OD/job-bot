@@ -5,7 +5,7 @@ import { ref } from "vue";
 import type { Offer } from "../api/client";
 import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
-import ScoreRing from "./ScoreRing.vue";
+import ScoreWord from "./ScoreWord.vue";
 
 // « Pour cette offre » (docs/47 §2) : la note, les points forts et les manques, à côté de la
 // lettre et du CV, pour écrire en ayant l'offre sous les yeux.
@@ -23,7 +23,7 @@ const gaps = () => props.offer.gaps ?? [];
   >
     <h2>Pour cette offre</h2>
     <p class="offer-brief-head">
-      <ScoreRing
+      <ScoreWord
         v-if="offer.score !== null && offer.score !== undefined"
         :score="offer.score"
       />

@@ -66,6 +66,17 @@ class Obligation:
 
 
 @dataclass
+class MonthFacts:
+    """Les chiffres d'un mois, en une ligne sur la page (docs/131) ; le texte va à la feuille."""
+
+    month: str
+    count: int
+    target: int | None
+    answered: int
+    interviews: int
+
+
+@dataclass
 class Preparation:
     summaries: list[str]
     works: str | None
@@ -77,6 +88,7 @@ class Preparation:
     obligations: list[Obligation] = field(default_factory=list)
     # Aucune candidature encore : la feuille le dit (docs/128 §3).
     has_applications: bool = True
+    months: list[MonthFacts] = field(default_factory=list)
 
 
 def _month_name(month: str) -> str:
@@ -304,6 +316,19 @@ async def prepare(session: AsyncSession, now: datetime | None = None) -> Prepara
         await orp_summary(session, shift_month(current, -1)),
         await orp_summary(session, current),
     ]
+    target = await load_target(session)
+    months = []
+    for month in (shift_month(current, -1), current):
+        facts = await _facts(session, None, date.max, month=month)
+        months.append(
+            MonthFacts(
+                month=month,
+                count=len(facts),
+                target=target,
+                answered=sum(f.answered for f in facts),
+                interviews=sum(f.met for f in facts),
+            )
+        )
     blockers, works = await _blockers(session, today)
     missing, offers = await _missing(session, moment)
     meeting = await next_meeting(session, moment)
@@ -317,4 +342,5 @@ async def prepare(session: AsyncSession, now: datetime | None = None) -> Prepara
         questions=merge(suggested, list(meeting.questions) if meeting else []),
         obligations=await _obligations(session, today, meeting),
         has_applications=bool(await session.scalar(select(select(Application.id).exists()))),
+        months=months,
     )

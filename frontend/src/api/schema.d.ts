@@ -5518,6 +5518,19 @@ export interface components {
             /** Training Title */
             training_title: string | null;
         };
+        /** MonthFactsOut */
+        MonthFactsOut: {
+            /** Month */
+            month: string;
+            /** Count */
+            count: number;
+            /** Target */
+            target: number | null;
+            /** Answered */
+            answered: number;
+            /** Interviews */
+            interviews: number;
+        };
         /**
          * MonthResult
          * @description Un mois passé, pour la jauge de l'objectif ORP (docs/54 §5).
@@ -6414,6 +6427,11 @@ export interface components {
              * @default true
              */
             has_applications: boolean;
+            /**
+             * Months
+             * @default []
+             */
+            months: components["schemas"]["MonthFactsOut"][];
         };
         /** PrepareItem */
         PrepareItem: {

@@ -13,7 +13,7 @@ import { usePageReady } from "../composables/usePageTransition";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import HoverNote from "../components/HoverNote.vue";
-import { plural } from "../format";
+import { formatMonth, plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 
 const { aiNote } = usePlan();
@@ -42,6 +42,12 @@ const copied = ref(false);
 
 const meeting = computed(() => page.value?.meeting ?? null);
 const prep = computed(() => page.value?.preparation ?? null);
+// Ce qui reste à faire seulement (docs/131 §B.9) : le fait n'aide plus à décider.
+function monthTitle(month: string): string {
+  const name = formatMonth(month);
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+const pendingObligations = computed(() => (prep.value?.obligations ?? []).filter((o) => !o.done));
 // Aucune candidature encore (docs/128 §3) : la feuille et le mois attendent.
 const noApplications = computed(() => prep.value?.has_applications === false);
 const dateFormat = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
@@ -465,15 +471,31 @@ onMounted(() => void load());
             data-test="sheet-summary"
           >
             <h3>Mois en bref</h3>
-            <p
-              v-for="line in prep.summaries"
-              :key="line"
+            <!-- Une ligne de chiffres par mois (docs/131 §A.5) ; le texte complet va à la feuille. -->
+            <ul
+              v-if="prep.months?.length"
+              class="orp-month-lines"
             >
-              {{ line }}
-            </p>
+              <li
+                v-for="month in prep.months"
+                :key="month.month"
+              >
+                <strong>{{ monthTitle(month.month) }}</strong> · {{ plural(month.count, "candidature", "candidatures") }}{{ month.target ? ` sur ${month.target}` : "" }} · {{ plural(month.answered, "réponse", "réponses") }} · {{ plural(month.interviews, "entretien", "entretiens") }}
+              </li>
+            </ul>
+            <template v-else>
+              <p
+                v-for="line in prep.summaries"
+                :key="line"
+              >
+                {{ line }}
+              </p>
+            </template>
           </div>
 
+          <!-- Vide, une partie ne s'affiche pas (docs/131 §B.8). -->
           <div
+            v-if="prep.blockers.length || prep.works"
             class="orp-fact"
             data-test="sheet-blockers"
           >
@@ -487,12 +509,6 @@ onMounted(() => void load());
               </li>
             </ul>
             <p
-              v-else
-              class="muted"
-            >
-              Rien de net pour l'instant : pas assez de candidatures sans réponse pour conclure.
-            </p>
-            <p
               v-if="prep.works"
               class="orp-meeting-works"
             >
@@ -501,6 +517,7 @@ onMounted(() => void load());
           </div>
 
           <div
+            v-if="prep.missing.length"
             class="orp-fact"
             data-test="sheet-missing"
           >
@@ -520,26 +537,20 @@ onMounted(() => void load());
                 </RouterLink>
               </li>
             </ul>
-            <p
-              v-else
-              class="muted"
-            >
-              Rien qui revienne assez souvent (au moins 3 offres bien notées) pour en faire un argument.
-            </p>
           </div>
 
           <div
+            v-if="pendingObligations.length"
             class="orp-fact"
             data-test="sheet-obligations"
           >
             <h3>Obligations et échéances</h3>
             <ul class="orp-meeting-duties">
               <li
-                v-for="item in prep.obligations"
+                v-for="item in pendingObligations"
                 :key="item.text"
-                :class="{ done: item.done }"
               >
-                {{ item.done ? "Fait : " : "" }}{{ item.text }}
+                {{ item.text }}
               </li>
             </ul>
           </div>

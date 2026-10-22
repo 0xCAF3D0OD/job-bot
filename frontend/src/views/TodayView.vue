@@ -80,11 +80,6 @@ const orpText = computed(() => {
 
 // La phrase du jour (docs/95 §1) : ce qu'il y a à faire, les nombres en avant.
 type Part = { text: string; strong?: boolean };
-const weekLeft = computed(() => {
-  const week = today.value?.rhythm;
-  if (!week || week.target === null || week.pause_until) return 0;
-  return Math.max(0, week.target - week.count);
-});
 const sentence = computed<Part[]>(() => {
   const t = today.value;
   if (!t) return [];
@@ -94,9 +89,7 @@ const sentence = computed<Part[]>(() => {
   const items: Part[][] = [];
   if (t.to_review) items.push([{ text: plural(t.to_review, "offre", "offres"), strong: true }, { text: " à examiner" }]);
   if (t.to_follow_up) items.push([{ text: plural(t.to_follow_up, "relance", "relances"), strong: true }]);
-  if (weekLeft.value) {
-    items.push([{ text: `encore ${plural(weekLeft.value, "candidature", "candidatures")} pour tenir ta semaine` }]);
-  }
+  // La semaine est dans le mois ORP, juste dessous (docs/131 §A.2) : la phrase n'en parle plus.
   if (!items.length) {
     const weekDone = t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target;
     return [{ text: weekDone ? "Tout est à jour. Ta semaine est faite." : "Tout est à jour." }];
@@ -115,8 +108,9 @@ const sentence = computed<Part[]>(() => {
 const cta = computed(() => {
   const t = today.value;
   if (!t || restDay.value || t.rhythm?.pause_until) return null;
-  if (t.to_review) return { label: "Examiner les offres", to: { path: "/aujourdhui", hash: "#offres-du-jour" }, icon: "briefcase" as const };
-  if (t.to_follow_up) return { label: "Relancer", to: "/candidatures/suivi", icon: "reply" as const };
+  // Seulement quand sa carte n'est pas sur la page (docs/131 §A.1) : des offres à examiner pas
+  // encore notées, des relances au-delà de celles affichées.
+  if (t.to_review && !best.value.length) return { label: "Examiner les offres", to: "/candidatures/offres", icon: "briefcase" as const };
   return null;
 });
 
@@ -167,7 +161,10 @@ const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "nume
 const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 // L'étiquette au-dessus du titre : la date et la dernière collecte.
 const eyebrow = computed(() => {
-  const collect = message.value || (today.value?.last_collect_at ? `collecte ${sinceText(today.value.last_collect_at)}` : "");
+  // La collecte seulement quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
+  const last = today.value?.last_collect_at;
+  const late = !!last && Date.now() - new Date(last).getTime() > DAY_MS;
+  const collect = message.value || (late ? `collecte ${sinceText(last!)}` : "");
   return collect ? `${dateTitle} · ${collect}` : dateTitle;
 });
 
@@ -413,7 +410,6 @@ const { me } = useAuth();
               id="offres-du-jour"
               ref="pick"
               :offers="dose"
-              :preview="!phone"
               @changed="reloadPreparing"
               @show-preparing="showPreparingCard"
             />
@@ -436,13 +432,6 @@ const { me } = useAuth();
               :week="today.rhythm"
               nested
             />
-            <RouterLink
-              v-if="!starting"
-              to="/bilan"
-              class="today-more"
-            >
-              Voir le bilan
-            </RouterLink>
           </section>
         </div>
 

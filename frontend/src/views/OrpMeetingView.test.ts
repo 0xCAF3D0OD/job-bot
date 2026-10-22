@@ -47,6 +47,31 @@ beforeEach(() => {
 });
 
 describe("Rendez-vous ORP (docs/83)", () => {
+  it("le nécessaire : une ligne par mois, pas de partie vide, ce qui reste à faire (docs/131)", async () => {
+    const months = [
+      { month: "2026-09", count: 10, target: 10, answered: 4, interviews: 1 },
+      { month: "2026-10", count: 6, target: 10, answered: 1, interviews: 1 },
+    ];
+    const obligations = [
+      { text: "Preuves de septembre 2026 : à remettre au plus tard le 5 octobre.", due: "2026-10-05", done: true },
+      { text: "Rendez-vous le 27 octobre à 09:30.", due: "2026-10-27", done: false },
+    ];
+    const prep = { ...PREP, months, obligations, blockers: [], works: null, missing: [] };
+    GET.mockResolvedValue({ data: { meeting: MEETING, preparation: prep, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    const lines = wrapper.findAll("[data-test=sheet-summary] li").map((li) => li.text().replace(/\s+/g, " "));
+    expect(lines).toEqual([
+      "Septembre 2026 · 10 candidatures sur 10 · 4 réponses · 1 entretien",
+      "Octobre 2026 · 6 candidatures sur 10 · 1 réponse · 1 entretien",
+    ]);
+    expect(wrapper.find("[data-test=sheet-blockers]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=sheet-missing]").exists()).toBe(false);
+    const duties = wrapper.find("[data-test=sheet-obligations]");
+    expect(duties.findAll("li")).toHaveLength(1);
+    expect(duties.text()).not.toContain("Fait");
+  });
+
   it("rangé en parties : Préparer, Le mois (une carte), le carnet replié (docs/130 §B)", async () => {
     const past = [{ ...MEETING, id: 2, starts_at: "2026-09-15T08:00:00Z", outcome_at: "2026-09-15T10:00:00Z", agreed_target: 10 }];
     GET.mockResolvedValue({ data: { meeting: MEETING, preparation: PREP, ...MORE, past } });
@@ -58,11 +83,12 @@ describe("Rendez-vous ORP (docs/83)", () => {
     const sheet = wrapper.find("[data-test=sheet-download]");
     expect(sheet.find("[data-test=sheet-ai]").exists()).toBe(true);
     expect(sheet.text()).toContain("Rien n'est envoyé à l'ORP");
-    // Le mois : une seule carte, ses quatre parties dedans.
+    // Le mois : une seule carte ; les obligations toutes faites ne s'affichent pas (docs/131 §B.9).
     const facts = wrapper.find("[data-test=sheet-facts]");
-    for (const part of ["sheet-summary", "sheet-blockers", "sheet-missing", "sheet-obligations"]) {
+    for (const part of ["sheet-summary", "sheet-blockers", "sheet-missing"]) {
       expect(facts.find(`[data-test=${part}]`).exists()).toBe(true);
     }
+    expect(facts.find("[data-test=sheet-obligations]").exists()).toBe(false);
     expect(facts.findAll(".form-card")).toHaveLength(0);
     // Le carnet, une ligne repliable ; « Modifier » sur la ligne du rendez-vous.
     const log = wrapper.find("[data-test=meeting-log]");

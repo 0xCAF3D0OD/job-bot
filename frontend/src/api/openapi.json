@@ -15955,6 +15955,46 @@
         ],
         "title": "MissingOut"
       },
+      "MonthFactsOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "answered": {
+            "type": "integer",
+            "title": "Answered"
+          },
+          "interviews": {
+            "type": "integer",
+            "title": "Interviews"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "count",
+          "target",
+          "answered",
+          "interviews"
+        ],
+        "title": "MonthFactsOut"
+      },
       "MonthResult": {
         "properties": {
           "month": {
@@ -18628,6 +18668,14 @@
             "type": "boolean",
             "title": "Has Applications",
             "default": true
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/MonthFactsOut"
+            },
+            "type": "array",
+            "title": "Months",
+            "default": []
           }
         },
         "type": "object",

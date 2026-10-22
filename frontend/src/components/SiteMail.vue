@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 
 import { api } from "../api/client";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 import HoverNote from "./HoverNote.vue";
 import SiteCodes from "./SiteCodes.vue";
 
@@ -17,6 +18,8 @@ const props = defineProps<{ codes: SiteCode[]; guestMailbox: boolean }>();
 const emit = defineEmits<{ refresh: [] }>();
 
 const waiting = ref(false);
+// Rien à montrer : ni code, ni attente, ni message des sites.
+const quiet = computed(() => !props.codes.length && !waiting.value && !items.value.length);
 const message = ref("");
 let timer: ReturnType<typeof setInterval> | undefined;
 let stopAt = 0;
@@ -77,87 +80,133 @@ onUnmounted(stop);
     class="site-mail"
     data-test="site-mail"
   >
-    <!-- Où passent ces e-mails : en description au survol du titre (docs/interface.md,
-         titres et textes 5), plus en pied de carte (0.86.1). -->
-    <h2 class="section-title first">
-      <HoverNote
-        :text="guestMailbox ? 'Reçus en Suisse chez Infomaniak, effacés de la boîte une fois rangés.' : ''"
-        data-test="guest-mailbox-note"
+    <!-- Ni code ni message (docs/131 §B.11) : une ligne repliable, « J'attends un code » dedans ;
+         la carte revient dès qu'un code ou un message arrive. -->
+    <DisclosureRow
+      v-if="quiet"
+      title="Les e-mails des sites"
+      value="aucun code en attente"
+      data-test="site-mail-quiet"
+    >
+      <p
+        v-if="guestMailbox"
+        class="setting-desc"
       >
-        Les e-mails des sites
-      </HoverNote>
-    </h2>
-    <div class="settings-card site-mail-card">
-      <!-- Le code arrivé prend la place de « J'attends un code » (0.84.2). -->
+        <HoverNote
+          text="Reçus en Suisse chez Infomaniak, effacés de la boîte une fois rangés."
+          data-test="guest-mailbox-note"
+        >
+          Les e-mails des sites passent par la boîte de jobA1.
+        </HoverNote>
+      </p>
       <div class="site-mail-row">
-        <SiteCodes
-          v-if="codes.length"
-          :codes="codes"
-        />
-        <template v-else>
-          <div class="site-mail-text">
-            <strong>Code de vérification</strong>
-            <p class="setting-desc">
-              {{ waiting ? "J'attends le code, pendant 5 minutes." : "Il s'affiche ici dès qu'il arrive." }}
-            </p>
-            <p
-              v-if="message"
-              class="hint"
-              role="status"
-            >
-              {{ message }}
-            </p>
-          </div>
-          <button
-            type="button"
-            class="pill"
-            :disabled="waiting"
-            data-test="site-code-expect"
-            @click="expect"
+        <div class="site-mail-text">
+          <strong>Code de vérification</strong>
+          <p class="setting-desc">
+            {{ waiting ? "J'attends le code, pendant 5 minutes." : "Il s'affiche ici dès qu'il arrive." }}
+          </p>
+          <p
+            v-if="message"
+            class="hint"
+            role="status"
           >
-            {{ waiting ? "J'attends…" : "J'attends un code" }}
-          </button>
-        </template>
+            {{ message }}
+          </p>
+        </div>
+        <button
+          type="button"
+          class="pill"
+          :disabled="waiting"
+          data-test="site-code-expect"
+          @click="expect"
+        >
+          {{ waiting ? "J'attends…" : "J'attends un code" }}
+        </button>
       </div>
-      <div
-        v-if="items.length"
-        class="site-mail-messages"
-        data-test="site-messages"
-      >
-        <strong>Messages des sites</strong>
-        <p class="setting-desc">
-          Hors alertes, gardés 30 jours.
-        </p>
-        <ul class="site-message-list">
-          <li
-            v-for="item in items"
-            :key="item.id"
-            data-test="site-message"
-          >
+    </DisclosureRow>
+    <template v-else>
+      <!-- Où passent ces e-mails : en description au survol du titre (docs/interface.md,
+         titres et textes 5), plus en pied de carte (0.86.1). -->
+      <h2 class="section-title first">
+        <HoverNote
+          :text="guestMailbox ? 'Reçus en Suisse chez Infomaniak, effacés de la boîte une fois rangés.' : ''"
+          data-test="guest-mailbox-note"
+        >
+          Les e-mails des sites
+        </HoverNote>
+      </h2>
+      <div class="settings-card site-mail-card">
+        <!-- Le code arrivé prend la place de « J'attends un code » (0.84.2). -->
+        <div class="site-mail-row">
+          <SiteCodes
+            v-if="codes.length"
+            :codes="codes"
+          />
+          <template v-else>
+            <div class="site-mail-text">
+              <strong>Code de vérification</strong>
+              <p class="setting-desc">
+                {{ waiting ? "J'attends le code, pendant 5 minutes." : "Il s'affiche ici dès qu'il arrive." }}
+              </p>
+              <p
+                v-if="message"
+                class="hint"
+                role="status"
+              >
+                {{ message }}
+              </p>
+            </div>
             <button
               type="button"
-              class="site-message-row"
-              :aria-expanded="openId === item.id"
-              @click="toggle(item)"
+              class="pill"
+              :disabled="waiting"
+              data-test="site-code-expect"
+              @click="expect"
             >
-              <span class="site-message-head">
-                <span class="site-message-subject">{{ item.subject || "Sans sujet" }}</span>
-                <span class="site-message-meta">{{ item.site === "unknown" ? "un site" : sourceLabel[item.site] }} · {{ day.format(new Date(item.received_at)) }}</span>
-              </span>
-              <AppIcon
-                name="chevron"
-                class="site-message-chevron"
-              />
+              {{ waiting ? "J'attends…" : "J'attends un code" }}
             </button>
-            <p
-              v-if="openId === item.id"
-              class="site-message-text"
+          </template>
+        </div>
+        <div
+          v-if="items.length"
+          class="site-mail-messages"
+          data-test="site-messages"
+        >
+          <strong>Messages des sites</strong>
+          <p class="setting-desc">
+            Hors alertes, gardés 30 jours.
+          </p>
+          <ul class="site-message-list">
+            <li
+              v-for="item in items"
+              :key="item.id"
+              data-test="site-message"
             >
-              {{ texts[item.id] ?? "…" }}
-            </p>
-          </li>
-        </ul>
+              <button
+                type="button"
+                class="site-message-row"
+                :aria-expanded="openId === item.id"
+                @click="toggle(item)"
+              >
+                <span class="site-message-head">
+                  <span class="site-message-subject">{{ item.subject || "Sans sujet" }}</span>
+                  <span class="site-message-meta">{{ item.site === "unknown" ? "un site" : sourceLabel[item.site] }} · {{ day.format(new Date(item.received_at)) }}</span>
+                </span>
+                <AppIcon
+                  name="chevron"
+                  class="site-message-chevron"
+                />
+              </button>
+              <p
+                v-if="openId === item.id"
+                class="site-message-text"
+              >
+                {{ texts[item.id] ?? "…" }}
+              </p>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </template>
   </section>
 </template>

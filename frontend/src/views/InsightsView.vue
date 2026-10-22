@@ -11,6 +11,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
+import InterviewInsights from "../components/InterviewInsights.vue";
 import FaceState from "../components/FaceState.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
@@ -411,6 +412,11 @@ const intro = firstTime("bilan-funnel");
           <p>{{ insights.orp_summary }}</p>
         </section>
       </DisclosureRow>
+      <!-- Les retours d'entretien regroupés, une analyse (docs/131 §B.10) : venus du Suivi. -->
+      <InterviewInsights
+        v-if="insights.funnel.applications > 0"
+        group="bilan"
+      />
     </div>
   </section>
 </template>
