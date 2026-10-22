@@ -50,7 +50,7 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 4. **La jauge du profil**, dans Profil seulement : par section (expériences, compétences, langues, critères), « 3 sur 4 », et ce qui manque. Pas de jauge ailleurs.
 5. **La note dans les listes, en mots** (ajouté le 2026-10-22 : tu as choisi la maquette O, « en gardant tous les visages ») :
    - **Quatre mots** à la place du chiffre, d'après les seuils de couleur actuels : **Très proche** (85 et plus), **Proche** (70 à 84), **À creuser** (50 à 69), **Loin** (moins de 50).
-   - **Le visage du 1**, petit, devant le mot, avec **une expression par mot**, comme sur la maquette : grand sourire, sourire, bouche droite, bouche qui tombe. Ce sont des dessins de l'iconographie (24 px, trait de 1,8 px), pas le logo agrandi.
+   - **Le visage du 1**, petit, devant le mot, avec **une expression par mot** : grand sourire, sourire, bouche droite, bouche droite plus courte (jamais déçu : docs/123 §1). Ce sont des dessins de l'iconographie (24 px, trait de 1,8 px), pas le logo agrandi. *(Validé le 2026-10-22 : les seuils 85 / 70 / 50 et le gris chaud pour « À creuser ».)*
    - **Un filet en bas de la carte**, à la longueur de la note (plein à 100), à la couleur du mot ; la part manquante en gris clair. C'est le cercle de la règle actuelle, déplié.
    - **La carte garde** le logo de l'entreprise à gauche, le titre, l'entreprise et le lieu ; le mot et son visage à droite ; « Il te manque : … » sous le titre quand un manque compte (repris de la maquette L).
    - **Les couleurs** : Très proche en vert menthe, Proche dans le bleu lavande de l'accent, À creuser en gris chaud, Loin en gris. **Pas d'orange** : il reste à ce qui demande d'agir (relancer, à compléter).

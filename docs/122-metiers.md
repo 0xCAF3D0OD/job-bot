@@ -1,6 +1,6 @@
 # 122 — La liste des métiers, pour préparer les alertes (version 0.92.0)
 
-> Statut : **à relire** (ta réponse au docs/121, question 4 : tu veux relire la liste).
+> Statut : **validé** le 2026-10-22 (« oui pour les métiers »), tel quel : 63 métiers, les intitulés avec « · ».
 > Sert au docs/121 §B : à l'accueil et dans l'assistant des alertes, le métier choisi propose 2 ou 3 recherches toutes faites, à créer sur jobup, Indeed et jobs.ch. Un métier absent de la liste : l'IA propose des recherches à partir du seul nom du métier.
 
 ## Comment lire la liste
