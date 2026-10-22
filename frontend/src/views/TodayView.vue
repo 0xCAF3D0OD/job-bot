@@ -18,7 +18,7 @@ import { usePhone } from "../composables/usePhone";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
-import { colorIndex, formatMonth, localDate, orpPace, plural } from "../format";
+import { colorIndex, formatMonth, localDate, orpPace, plural, scoreWord } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
@@ -35,8 +35,11 @@ const rhythmPaused = computed(() => !!today.value?.rhythm?.pause_until);
 const preparing = ref<Offer[]>([]);
 const { message } = useCollect();
 
-// Tableau « À examiner en priorité » (docs/54 §2) : deux onglets, le choix n'est pas retenu.
-const tableTab = ref<"best" | "preparing">("best");
+// Au plus 3 lignes par carte (docs/129 §3) ; « Tout voir » pour le reste.
+const ROWS = 3;
+// « 1 sur 5 » de l'offre du jour, sur la ligne du titre de sa carte (docs/129 §2).
+const pick = ref<{ position: string } | null>(null);
+const pickPosition = computed(() => pick.value?.position ?? "");
 
 // Le plus urgent en tête (docs/43 n° 30) : entretien aujourd'hui ou demain, remise ORP dans
 // moins de 5 jours.
@@ -176,9 +179,15 @@ const calm = computed(() => {
 });
 // U, Aujourd'hui en compact (docs/123 §2) : sur téléphone, le mois ORP en une ligne.
 const { phone } = usePhone();
-const showTodo = computed(
-  () => !starting.value || best.value.length > 0 || preparing.value.length > 0 || !!today.value?.follow_ups?.length,
-);
+// Pendant les premiers pas, la carte des offres seulement quand il y en a (docs/128 §2).
+const showPick = computed(() => !starting.value || best.value.length > 0);
+
+// « Voir les offres à préparer », une fois le tri fini : la carte voisine prend le focus.
+function showPreparingCard(): void {
+  const card = document.getElementById("a-preparer");
+  card?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  card?.focus({ preventScroll: true });
+}
 
 // R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil.
 const goalWon = ref(false);
@@ -202,10 +211,11 @@ const dose = computed(() => {
   return best.value.slice(0, behind ? DOSE_CATCH_UP : DOSE);
 });
 
-// Une offre gardée passe dans « Commencées » : la liste se recharge.
+// Une offre gardée passe dans « À préparer » : la liste se recharge. Toutes sont gardées pour
+// le compte du titre ; 3 lignes s'affichent.
 async function reloadPreparing(): Promise<void> {
-  const { data } = await api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 20 } } });
-  preparing.value = (data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 5);
+  const { data } = await api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } });
+  preparing.value = (data?.items ?? []).filter((o) => o.status === "preparing");
 }
 
 async function load(): Promise<void> {
@@ -213,7 +223,7 @@ async function load(): Promise<void> {
     api.GET("/api/today"),
     // La dose du jour (docs/86) : les 3 meilleures, pas toute la pile.
     api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE_CATCH_UP } } }),
-    api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 20 } } }),
+    api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } }),
   ]);
   today.value = day.data ?? null;
   goalWon.value = firstGoal(today.value);
@@ -223,7 +233,7 @@ async function load(): Promise<void> {
     void api.PUT("/api/first-steps", { body: { celebrated: true } });
   }
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
-  preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 5);
+  preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing");
 }
 
 // Masquer les premiers pas : la carte s'en va tout de suite, « Annuler » pendant 6 secondes
@@ -357,147 +367,56 @@ const { me } = useAuth();
           </li>
         </ul>
 
+        <!-- Rangée 1 (docs/129 §1) : les offres du jour et le mois ORP. -->
         <div
           class="today-grid"
-          :class="{ single: !showTodo }"
+          :class="{ single: !showPick }"
         >
-          <!-- À faire (docs/95 §3) : les meilleures offres, puis les relances. Pendant les
-               premiers pas, seulement quand il y a quelque chose dedans (docs/128 §2). -->
           <section
-            v-if="showTodo"
-            class="dash-card today-todo"
+            v-if="showPick"
+            class="dash-card today-pick"
+            aria-labelledby="today-pick-title"
             data-test="best"
           >
-            <h2>À faire</h2>
-            <div class="today-sub">
-              <p class="today-sub-title">
-                {{ restDay ? "Jour sans recherche" : rhythmPaused ? "En pause" : "Offres du jour" }}
-              </p>
-              <div
-                v-if="!starting || preparing.length"
-                class="segmented small"
-                role="radiogroup"
-                aria-label="Offres affichées"
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  :aria-checked="tableTab === 'best'"
-                  data-test="tab-best"
-                  @click="tableTab = 'best'"
-                >
-                  Du jour
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  :aria-checked="tableTab === 'preparing'"
-                  data-test="tab-preparing"
-                  @click="tableTab = 'preparing'"
-                >
-                  À préparer<span
-                    v-if="preparing.length"
-                    class="tab-count"
-                  >{{ preparing.length }}</span>
-                </button>
-              </div>
-            </div>
-            <div v-show="tableTab === 'best'">
-              <p
-                v-if="restDay"
-                class="hint"
-                data-test="rest-day"
-              >
-                Rien à traiter aujourd'hui : les offres t'attendent pour ton prochain jour de recherche.
-              </p>
-              <p
-                v-else-if="!best.length"
-                class="hint today-empty-line"
-              >
-                <FaceMark mood="neutre" />Aucune offre notée en attente.
-              </p>
-              <DailyPick
-                v-else
-                id="offres-du-jour"
-                :offers="dose"
-                @changed="reloadPreparing"
-                @show-preparing="tableTab = 'preparing'"
-              />
-            </div>
-            <div
-              v-show="tableTab === 'preparing'"
-              data-test="preparing"
+            <header class="today-card-head">
+              <h2 id="today-pick-title">
+                Offres du jour
+              </h2>
+              <span
+                v-if="pickPosition"
+                class="today-card-side"
+                data-test="pick-count"
+              >{{ pickPosition }}</span>
+            </header>
+            <p
+              v-if="restDay"
+              class="hint"
+              data-test="rest-day"
             >
-              <p
-                v-if="!preparing.length"
-                class="hint today-empty-line"
-              >
-                <FaceMark mood="neutre" />Aucune candidature en préparation.
-              </p>
-              <ul
-                v-else
-                class="today-rows"
-              >
-                <li
-                  v-for="offer in preparing"
-                  :key="offer.id"
-                >
-                  <RouterLink
-                    :to="`/candidatures/offres/${offer.id}/preparer`"
-                    class="today-row"
-                  >
-                    <CompanyLogo :offer="offer" />
-                    <span class="today-row-main">
-                      <strong>{{ offer.title }}</strong>
-                      <span class="muted meta-line">
-                        <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
-                      </span>
-                    </span>
-                  </RouterLink>
-                </li>
-              </ul>
-            </div>
-
-            <template v-if="today.follow_ups?.length">
-              <p class="today-sub-title today-sub-gap">
-                À relancer
-              </p>
-              <ul
-                class="today-rows"
-                data-test="follow-ups"
-              >
-                <li
-                  v-for="item in today.follow_ups"
-                  :key="item.application_id"
-                >
-                  <RouterLink
-                    :to="{ path: '/candidatures/suivi', query: { mois: item.orp_month, candidature: String(item.application_id) } }"
-                    class="today-row"
-                  >
-                    <span
-                      class="logo"
-                      :class="`c${colorIndex(item.company)}`"
-                    >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
-                    <span class="today-row-main">
-                      <strong>{{ item.company }}</strong>
-                      <span class="muted meta-line">
-                        <span>{{ item.job_title }}</span>
-                        <span v-if="item.status === 'relancee'"><AppIcon name="clock" />sans réponse depuis la relance</span>
-                        <span v-else><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ longDate.format(localDate(item.sent_at)) }}</span>
-                      </span>
-                    </span>
-                    <span class="today-row-action">Relancer</span>
-                  </RouterLink>
-                </li>
-              </ul>
-              <RouterLink
-                v-if="today.to_follow_up > today.follow_ups.length"
-                to="/candidatures/suivi"
-                class="today-more"
-              >
-                Toutes les relances ({{ today.to_follow_up }})
-              </RouterLink>
-            </template>
+              Jour sans recherche : les offres t'attendent pour ton prochain jour de recherche.
+            </p>
+            <p
+              v-else-if="rhythmPaused"
+              class="hint"
+              data-test="paused-day"
+            >
+              En pause : pas d'offre du jour.
+            </p>
+            <p
+              v-else-if="!best.length"
+              class="hint today-empty-line"
+            >
+              <FaceMark mood="neutre" />Aucune offre notée en attente.
+            </p>
+            <DailyPick
+              v-else
+              id="offres-du-jour"
+              ref="pick"
+              :offers="dose"
+              :preview="!phone"
+              @changed="reloadPreparing"
+              @show-preparing="showPreparingCard"
+            />
           </section>
 
           <!-- Mois ORP (docs/95 §4, docs/123 Q) : le compte du mois et son humeur, puis la semaine. -->
@@ -524,6 +443,102 @@ const { me } = useAuth();
             >
               Voir le bilan
             </RouterLink>
+          </section>
+        </div>
+
+        <!-- Rangée 2 (docs/129 §1, §3) : à préparer et à relancer, la même forme de ligne ; une
+             carte vide ne s'affiche pas, sa voisine prend toute la largeur. -->
+        <div
+          v-if="preparing.length || today.follow_ups?.length"
+          class="today-grid halves"
+          :class="{ single: !preparing.length || !today.follow_ups?.length }"
+        >
+          <section
+            v-if="preparing.length"
+            id="a-preparer"
+            class="dash-card today-list"
+            aria-labelledby="today-preparing-title"
+            data-test="preparing"
+            tabindex="-1"
+          >
+            <header class="today-card-head">
+              <h2 id="today-preparing-title">
+                À préparer · {{ preparing.length }}
+              </h2>
+              <RouterLink
+                :to="{ path: '/candidatures/offres', query: { statut: 'in_progress' } }"
+                class="today-card-link"
+                data-test="preparing-all"
+              >
+                Tout voir
+              </RouterLink>
+            </header>
+            <ul class="today-rows">
+              <li
+                v-for="offer in preparing.slice(0, ROWS)"
+                :key="offer.id"
+              >
+                <RouterLink
+                  :to="`/candidatures/offres/${offer.id}/preparer`"
+                  class="today-row"
+                  :title="`${offer.company || 'Entreprise non indiquée'} · ${offer.title}`"
+                >
+                  <CompanyLogo :offer="offer" />
+                  <span class="today-row-main">
+                    <strong>{{ offer.company || "Entreprise non indiquée" }}</strong>
+                    <span class="today-row-line">{{ offer.title }}</span>
+                    <span
+                      v-if="offer.score !== null && offer.score !== undefined"
+                      class="today-row-line"
+                    >{{ scoreWord(offer.score).word }}</span>
+                  </span>
+                  <span class="today-row-action">Préparer</span>
+                </RouterLink>
+              </li>
+            </ul>
+          </section>
+
+          <section
+            v-if="today.follow_ups?.length"
+            class="dash-card today-list"
+            aria-labelledby="today-follow-title"
+            data-test="follow-ups"
+          >
+            <header class="today-card-head">
+              <h2 id="today-follow-title">
+                À relancer · {{ today.to_follow_up }}
+              </h2>
+              <RouterLink
+                to="/candidatures/suivi"
+                class="today-card-link"
+                data-test="follow-ups-all"
+              >
+                Tout voir
+              </RouterLink>
+            </header>
+            <ul class="today-rows">
+              <li
+                v-for="item in today.follow_ups.slice(0, ROWS)"
+                :key="item.application_id"
+              >
+                <RouterLink
+                  :to="{ path: '/candidatures/suivi', query: { mois: item.orp_month, candidature: String(item.application_id) } }"
+                  class="today-row"
+                  :title="`${item.company} · ${item.job_title}`"
+                >
+                  <span
+                    class="logo"
+                    :class="`c${colorIndex(item.company)}`"
+                  >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
+                  <span class="today-row-main">
+                    <strong>{{ item.company }}</strong>
+                    <span class="today-row-line">{{ item.job_title }}</span>
+                    <span class="today-row-line">{{ item.status === "relancee" ? "relancée, sans réponse" : `envoyée le ${longDate.format(localDate(item.sent_at))}` }}</span>
+                  </span>
+                  <span class="today-row-action">Relancer</span>
+                </RouterLink>
+              </li>
+            </ul>
           </section>
         </div>
       </template>

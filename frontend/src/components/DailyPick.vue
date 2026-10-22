@@ -7,13 +7,16 @@ import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import FaceMark from "./FaceMark.vue";
 import ScoreWord from "./ScoreWord.vue";
+import { scoreWord } from "../format";
 
 // Les offres du jour, une à la fois (docs/124 §D) : « Garder » (l'offre passe en « À préparer »)
 // ou « Écarter » (« Ignorée »), puis la suivante ; « Annuler » pendant 6 secondes (docs/108).
 // La phrase « pourquoi » dit déjà ce qui manque : « Il te manque » seulement sans elle.
 // Sur téléphone, balayer à droite ou à gauche fait la même chose, en plus des boutons. Toucher
 // le titre ouvre la fiche.
-const props = defineProps<{ offers: Offer[] }>();
+// `preview` : sous l'offre, la suivante de la file (docs/129 : le vide de la carte, à
+// côté du mois ORP, se remplit d'une information utile).
+const props = defineProps<{ offers: Offer[]; preview?: boolean }>();
 const emit = defineEmits<{ changed: []; showPreparing: [] }>();
 
 type Choice = "keep" | "dismiss";
@@ -29,6 +32,7 @@ watch(
   },
 );
 const current = computed(() => queue.value[index.value] ?? null);
+const upcoming = computed(() => (props.preview ? queue.value.slice(index.value + 1, index.value + 2) : []));
 const gaps = computed(() =>
   (current.value?.keywords_asks ?? []).filter((a) => a.covered === false).map((a) => a.text).slice(0, 2),
 );
@@ -79,6 +83,10 @@ function up(): void {
   else if (dx < -80) decide("dismiss");
 }
 
+// « 1 sur 5 », sur la ligne du titre de la carte (docs/129 §2) ; rien une fois le tri fini.
+const position = computed(() => (current.value ? `${index.value + 1} sur ${queue.value.length}` : ""));
+defineExpose({ position });
+
 const summary = computed(() =>
   [
     kept.value ? `${kept.value} ${kept.value === 1 ? "gardée" : "gardées"}` : "",
@@ -123,10 +131,6 @@ const summary = computed(() =>
               <span v-if="current.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ current.location }}</span>
             </span>
           </div>
-          <span
-            class="pick-count muted"
-            data-test="pick-count"
-          >{{ index + 1 }} sur {{ queue.length }}</span>
         </header>
         <div class="pick-score">
           <ScoreWord :score="current.score ?? null" />
@@ -160,6 +164,37 @@ const summary = computed(() =>
           >
             <span class="with-icon"><AppIcon name="done" />Garder</span>
           </button>
+        </div>
+        <div
+          v-if="upcoming.length"
+          class="pick-next"
+          data-test="pick-next"
+        >
+          <p class="today-sub-title">
+            Ensuite
+          </p>
+          <ul class="today-rows">
+            <li
+              v-for="offer in upcoming"
+              :key="offer.id"
+            >
+              <RouterLink
+                :to="{ path: '/candidatures/offres', query: { offre: offer.id } }"
+                class="today-row"
+                :title="`${offer.title} · ${offer.company || 'Entreprise non indiquée'}`"
+              >
+                <CompanyLogo :offer="offer" />
+                <span class="today-row-main">
+                  <strong>{{ offer.title }}</strong>
+                  <span class="today-row-line">{{ offer.company || "Entreprise non indiquée" }}</span>
+                </span>
+                <span
+                  v-if="offer.score !== null && offer.score !== undefined"
+                  class="today-row-line pick-next-word"
+                >{{ scoreWord(offer.score).word }}</span>
+              </RouterLink>
+            </li>
+          </ul>
         </div>
       </article>
       <div

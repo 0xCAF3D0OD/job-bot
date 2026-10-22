@@ -1,6 +1,6 @@
 # 129 — « À faire » rangé : une carte, un rôle (version 1.2.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-22 (« oui pour tout »). Lu ainsi : les deux rangées (1), 3 lignes au plus (2), **la note** dans la ligne d'une offre à préparer (3 : la date à laquelle elle a été gardée n'est pas enregistrée, il faudrait une migration). Dis-le si une de ces lectures est fausse.
 > Origine : ta remarque du 22 octobre 2026 sur Aujourd'hui, « ce n'est pas très structuré, surtout la partie à faire, c'est pas bien rangé », avec une capture à 1440 px.
 
 ## Le constat
@@ -86,3 +86,21 @@ Et :
 1. **Les deux rangées** (§1) : d'accord, ou « À préparer » ailleurs (par exemple seulement dans Candidatures › Offres) ?
 2. **3 lignes au plus** par carte (§3) : d'accord ?
 3. **Dans la ligne d'une offre à préparer** : la date à laquelle elle a été gardée, ou la note (« Proche », « À creuser ») ?
+
+## Écarts (1.2.0)
+
+- **Règles relues avant de construire** ; captures à 1440 et 390 px de la démo (offres du jour, 2 à préparer, 6 relances).
+- **La ligne d'une offre à préparer** : l'entreprise, le poste, la note en mot (« Proche », « Très proche »). La date à laquelle l'offre a été gardée n'existe pas dans la base.
+- **« Ensuite »** : sous l'offre du jour, la suivante de la file (une ligne, sur ordinateur). Sans elle, la carte des offres gardait un vide sous les boutons, à côté du mois ORP plus haut ; la règle demande de le remplir d'une information utile (Structure 4).
+- **Le mois ORP** ne répète plus « Encore N cette semaine » sous les points de la semaine : le compte au-dessus (« 1 / 3 candidatures ») le dit déjà. Les phrases de pause, de semaine faite et de jour sans recherche restent.
+- **Une relance relancée sans réponse** s'écrit « relancée, sans réponse » : « sans réponse depuis la relance » était coupé sur téléphone.
+- **La colonne de l'action** prend la largeur du mot : chaque carte n'a qu'une action, elle reste alignée d'une ligne à l'autre, et le texte garde la place.
+- **« Voir les offres à préparer »**, à la fin du tri, amène sur la carte « À préparer » au lieu de changer d'onglet.
+- **Jour en pause** : « En pause : pas d'offre du jour. » dans la carte, qui garde son titre.
+- **Le style ancien de « À faire »** (le sélecteur, les libellés en capitales, une classe `.today-list` restée d'une version passée qui écrasait les nouvelles lignes) est retiré.
+
+## Vérifié (1.2.0)
+
+- Tests de l'interface : les quatre cartes, leurs titres avec le compte et « Tout voir », la forme de ligne, 3 lignes au plus, une carte vide absente et sa voisine sur toute la largeur, la pause ; « 1 sur N » exposé à la carte. 450 tests, lint, vue-tsc.
+- Backend : 3 relances envoyées. 632 tests, ruff, mypy.
+- Les trois audits à zéro, sur la démo et sur un compte neuf.

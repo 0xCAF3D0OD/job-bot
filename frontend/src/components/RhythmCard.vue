@@ -28,6 +28,8 @@ const sentence = computed(() => {
   if (props.week.target === null) return "";
   if (done.value) return "Semaine faite. Le reste du temps est à toi.";
   if (!props.week.research_today) return "Jour sans recherche : rien à faire aujourd'hui.";
+  // Dans la carte du mois (docs/129) : le compte au-dessus le dit déjà.
+  if (props.nested) return "";
   return left.value === 1 ? "Encore 1 cette semaine." : `Encore ${left.value} cette semaine.`;
 });
 
@@ -89,7 +91,7 @@ function dayLabel(day: Week["days"][number], index: number): string {
       {{ sentence }}
     </p>
     <p
-      v-else
+      v-else-if="week.target === null"
       class="hint"
     >
       <RouterLink :to="{ path: '/reglages', query: { rubrique: 'recherche' } }">
