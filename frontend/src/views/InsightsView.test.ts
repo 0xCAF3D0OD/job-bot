@@ -127,9 +127,10 @@ describe("Bilan (docs/42, docs/55)", () => {
     const empty = { received: 3, retained: 1, applications: 0, responses: 0, interviews: 0, engagements: 0 };
     serve(report({ funnel: empty, delay: null, headline: null }));
     const { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=insights-empty]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=insights-empty]").text()).toContain("Le bilan commence après tes premières candidatures.");
     expect(wrapper.find("[data-test=comparison-source]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=delay]").text()).toContain("pas encore de réponse");
+    // Des tuiles à zéro n'apprennent rien (docs/128 §3) : seulement l'invitation.
+    expect(wrapper.find("[data-test=bilan-tiles]").exists()).toBe(false);
   });
 
   it("panne : un message", async () => {

@@ -97,6 +97,7 @@ class PreparationOut(BaseModel):
     offers: int
     questions: list[QuestionIO]
     obligations: list[ObligationOut]
+    has_applications: bool = True
 
 
 class MeetingPage(BaseModel):
@@ -155,6 +156,7 @@ async def _page(runtime: Runtime) -> MeetingPage:
             offers=prep.offers,
             questions=[QuestionIO(**q.__dict__) for q in prep.questions],
             obligations=[ObligationOut(**o.__dict__) for o in prep.obligations],
+            has_applications=prep.has_applications,
         ),
     )
 

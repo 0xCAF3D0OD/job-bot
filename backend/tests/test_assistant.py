@@ -398,6 +398,12 @@ def test_guide_follows_the_pages() -> None:
     assert "« Effet des critères »" in service.INSTRUCTIONS
     assert "Ce que je cherche" not in service.INSTRUCTIONS
     assert "Ta semaine" not in service.INSTRUCTIONS
+    # 1.1.0 (docs/128) : la carte « Premiers pas » remplace les deux guides d'Aujourd'hui.
+    assert "Premiers pas" in service.INSTRUCTIONS
+    assert "Marquer comme envoyée" in service.INSTRUCTIONS
+    assert "Pour bien démarrer" not in service.INSTRUCTIONS
+    assert "« Comment ça marche »" not in service.INSTRUCTIONS
+    assert "assistant-v15" not in service.INSTRUCTIONS
     assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS
     assert "S'entraîner à l'entretien" in service.INSTRUCTIONS
     assert "M'entraîner pour cet entretien" in service.INSTRUCTIONS

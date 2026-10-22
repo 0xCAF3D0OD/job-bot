@@ -16,25 +16,19 @@ vi.mock("../api/client", () => ({
 }));
 afterEach(() => vi.resetAllMocks());
 
+const STEP_KEYS = ["profile", "alerts", "keep", "prepare", "sent"] as const;
+// Un compte neuf : les `done` premières étapes faites.
+function starting(done: number, extra: Record<string, unknown> = {}) {
+  return today({ first_steps: STEP_KEYS.map((key, i) => ({ key, done: i < done })), ...extra });
+}
+
 function today(extra: Record<string, unknown> = {}) {
   return {
-    checklist: [
-      { key: "criteria", done: true },
-      { key: "profile", done: true },
-      { key: "identity", done: false },
-      { key: "orp_target", done: true },
-      { key: "notifications", done: true },
-      { key: "imap", done: false },
-    ],
-    checklist_dismissed: false,
-    journey: [
-      { key: "alerts", done: true },
-      { key: "triage", done: true },
-      { key: "apply", done: false },
-      { key: "follow", done: false },
-      { key: "orp", done: false },
-    ],
-    journey_dismissed: false,
+    first_steps: STEP_KEYS.map((key) => ({ key, done: true })),
+    first_steps_dismissed: false,
+    has_offers: true,
+    first_steps_offer_id: null,
+    first_steps_finished: false,
     to_review: 12,
     month: "2026-10",
     month_count: 3,
@@ -79,72 +73,87 @@ async function mountView() {
   return wrapper;
 }
 
-describe("TodayView", () => {
-  it("liste de démarrage : étapes faites et liens vers ce qui manque", async () => {
-    mockGet(today());
+describe("Les premiers pas (docs/128)", () => {
+  it("une seule prochaine action, à la place de la phrase du jour", async () => {
+    mockGet(starting(1));
     const wrapper = await mountView();
-    const checklist = wrapper.find("[data-test=checklist]");
-    expect(checklist.text()).toContain("4 / 6");
-    expect(wrapper.find("[data-test=step-identity] a").attributes("href")).toBe("/profil?onglet=coordonnees");
-    expect(wrapper.find("[data-test=step-imap]").text()).toContain("pas encore disponible sur cette plateforme");
-    expect(wrapper.find("[data-test=step-criteria] a").exists()).toBe(false);
-  });
-
-  it("tout fait ou masqué : la liste disparaît", async () => {
-    mockGet(today({ checklist_dismissed: true }));
-    const wrapper = await mountView();
+    const card = wrapper.find("[data-test=first-steps]");
+    expect(card.text()).toContain("2 sur 5");
+    expect(card.find("h2").text()).toBe("Crée tes alertes");
+    expect(card.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/alertes");
+    expect(wrapper.find("[data-test=first-step-profile]").classes()).toContain("done");
+    expect(wrapper.find("[data-test=first-step-alerts]").classes()).toContain("current");
+    expect(wrapper.find("[data-test=today-sentence]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
+    // Les anciens guides ont disparu.
     expect(wrapper.find("[data-test=checklist]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=journey]").exists()).toBe(false);
   });
 
-  it("masquer la liste : partie tout de suite, enregistrée au bout de 6 secondes (0.84.2)", async () => {
+  it("alertes créées, aucune offre encore : on attend, ou on en ajoute une", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/today" ? starting(2, { has_offers: false, to_review: 0, to_follow_up: 0, follow_ups: [] }) : { items: [] } }),
+    );
+    const wrapper = await mountView();
+    const card = wrapper.find("[data-test=first-steps]");
+    expect(card.find("h2").text()).toBe("Alertes prêtes");
+    expect(card.text()).toContain("d'ici un ou deux jours");
+    expect(card.find("[data-test=first-steps-add]").attributes("href")).toBe("/candidatures/offres?ajouter=1");
+    // Rien dans « À faire » : la carte ne s'affiche pas ; le mois ORP reste.
+    expect(wrapper.find("[data-test=best]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=orp-month]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=today-calm]").exists()).toBe(false);
+  });
+
+  it("garder une offre : le bouton descend sur les offres du jour", async () => {
+    mockGet(starting(2));
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/aujourdhui#offres-du-jour");
+    expect(wrapper.find("#offres-du-jour").exists()).toBe(true);
+  });
+
+  it("préparer puis marquer envoyée : la dernière offre gardée", async () => {
+    mockGet(starting(3, { first_steps_offer_id: 7 }));
+    let wrapper = await mountView();
+    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer");
+    mockGet(starting(4, { first_steps_offer_id: 7 }));
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=first-steps]").find("h2").text()).toBe("Marque-la comme envoyée");
+    expect(wrapper.find("[data-test=first-steps-action]").attributes("href")).toBe("/candidatures/offres/7/preparer?doc=postuler");
+  });
+
+  it("pendant les premiers pas, pas de rythme ni de lien vers le bilan", async () => {
+    mockGet(starting(2, { rhythm: { target: 5, count: 0, days: [], research_today: true } }));
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=orp-month]").text()).not.toContain("Voir le bilan");
+    expect(wrapper.find(".rhythm-days").exists()).toBe(false);
+  });
+
+  it("masquer : partie tout de suite, enregistrée au bout de 6 secondes", async () => {
     vi.useFakeTimers();
-    mockGet(today());
+    mockGet(starting(1));
     PUT.mockResolvedValue({ response: { ok: true, status: 204 } });
     const wrapper = await mountView();
-    await wrapper.find("[data-test=dismiss]").trigger("click");
+    await wrapper.find("[data-test=first-steps-dismiss]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=checklist]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=first-steps]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=today-sentence]").exists()).toBe(true);
     expect(PUT).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(UNDO_MS);
-    expect(PUT).toHaveBeenCalledWith("/api/onboarding", { body: { dismissed: true }, keepalive: false });
+    expect(PUT).toHaveBeenCalledWith("/api/first-steps", { body: { dismissed: true }, keepalive: false });
     vi.useRealTimers();
   });
 
-  it("prise en main : l'étape à faire mise en avant, coches dessinées (docs/59)", async () => {
+  it("tout fait : pas de carte ; la réussite quand le serveur le dit", async () => {
     mockGet(today());
-    const wrapper = await mountView();
-    expect(wrapper.find("[data-test=step-identity]").classes()).toContain("next");
-    expect(wrapper.find("[data-test=step-imap]").classes()).not.toContain("next");
-    expect(wrapper.find("[data-test=step-criteria] .tick-svg").exists()).toBe(true);
-    expect(wrapper.find("[data-test=journey-apply]").classes()).toContain("next");
-  });
-});
-
-describe("Comment ça marche (docs/21 §3)", () => {
-  it("cinq étapes cochées, avec où les faire, masquables", async () => {
-    mockGet(today());
-    PUT.mockResolvedValue({});
-    const wrapper = await mountView();
-    const card = wrapper.find("[data-test=journey]");
-    expect(card.findAll("li")).toHaveLength(5);
-    expect(wrapper.find("[data-test=journey-alerts]").classes()).toContain("done");
-    expect(wrapper.find("[data-test=journey-apply]").classes()).not.toContain("done");
-    expect(wrapper.find("[data-test=journey-orp] a").attributes("href")).toBe("/candidatures/suivi");
-    expect(wrapper.find("[data-test=journey-alerts]").text()).toContain("Candidatures › Alertes");
-    vi.useFakeTimers();
+    let wrapper = await mountView();
+    expect(wrapper.find("[data-test=first-steps]").exists()).toBe(false);
     PUT.mockResolvedValue({ response: { ok: true } });
-    await wrapper.find("[data-test=dismiss-journey]").trigger("click");
-    expect(wrapper.find("[data-test=journey]").exists()).toBe(false);
-    await vi.advanceTimersByTimeAsync(UNDO_MS);
-    expect(PUT).toHaveBeenCalledWith("/api/journey", { body: { dismissed: true }, keepalive: false });
-    vi.useRealTimers();
-  });
-
-  it("terminé, le guide disparaît (docs/95 §5)", async () => {
-    const done = today().journey.map((step) => ({ ...step, done: true }));
-    mockGet(today({ journey: done }));
-    const wrapper = await mountView();
-    expect(wrapper.find("[data-test=journey]").exists()).toBe(false);
+    mockGet(today({ first_steps_finished: true }));
+    wrapper = await mountView();
+    expect(document.body.textContent).toContain("Première candidature notée");
+    expect(PUT).toHaveBeenCalledWith("/api/first-steps", { body: { celebrated: true } });
+    wrapper.unmount();
   });
 });
 

@@ -5,7 +5,7 @@ offres reçues ce mois), jamais ses données ; il invite, réinitialise, suspend
 accepte ou refuse les demandes de compte (docs/102).
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -79,6 +79,16 @@ class BackupOut(BaseModel):
     late: bool
 
 
+class FirstStepsStats(BaseModel):
+    """Les premiers pas des comptes créés depuis 30 jours (docs/128 §4) : des nombres seulement."""
+
+    accounts: int
+    # Une première candidature dans les 7 jours après la création du compte.
+    sent_within_week: int
+    # Par étape (1 à 5), les comptes dont c'est la prochaine étape à faire.
+    stopped_at: list[int]
+
+
 class PlatformOut(BaseModel):
     # Les comptes acceptés ; les demandes en attente sont à part.
     accounts: list[AccountOut]
@@ -92,6 +102,7 @@ class PlatformOut(BaseModel):
     # L'API se connecte à la base en administrateur (docs/78 §3.1) : à corriger dans les réglages.
     database_admin: bool = False
     backup: BackupOut | None = None
+    first_steps: FirstStepsStats | None = None
 
 
 class LinkCreated(BaseModel):
@@ -113,6 +124,9 @@ class PlatformSettingsIn(BaseModel):
 
     ai_total_budget_chf: Annotated[Decimal | None, Field(ge=0, le=10000)] = None
     signup_open: bool | None = None
+
+
+FIRST_STEPS_WINDOW = timedelta(days=30)
 
 
 def _month_start() -> datetime:
@@ -156,6 +170,12 @@ async def get_platform(request: Request) -> PlatformOut:
         spend = await session.scalar(select(func.platform_month_spend(start))) or 0
         database_admin = await connected_as_admin(session)
         saved_status = await platform.get(session, backup.STATUS_KEY, {})
+        progress = list(
+            await session.execute(
+                text("select created_at, reached, first_sent_at from first_steps_progress(:since)"),
+                {"since": datetime.now(UTC) - FIRST_STEPS_WINDOW},
+            )
+        )
     return PlatformOut(
         accounts=[
             AccountOut(
@@ -197,6 +217,16 @@ async def get_platform(request: Request) -> PlatformOut:
         auth_enabled=runtime.settings.auth_enabled,
         database_admin=database_admin,
         backup=_backup(runtime, saved_status if isinstance(saved_status, dict) else {}),
+        first_steps=FirstStepsStats(
+            accounts=len(progress),
+            sent_within_week=sum(
+                1
+                for row in progress
+                if row.first_sent_at is not None
+                and row.first_sent_at - row.created_at <= timedelta(days=7)
+            ),
+            stopped_at=[sum(1 for row in progress if row.reached == step) for step in range(5)],
+        ),
     )
 
 

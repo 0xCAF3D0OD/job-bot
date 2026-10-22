@@ -510,9 +510,7 @@ onMounted(() => void load());
             data-test="missing-identity"
           >
             En-tête incomplet ({{ doc.missing_identity.join(", ") }}) :
-            <RouterLink to="/reglages">
-              complète tes coordonnées
-            </RouterLink>.
+            <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
           </p>
 
           <div

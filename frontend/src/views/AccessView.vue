@@ -94,9 +94,7 @@ async function submit(): Promise<void> {
         Avant : <RouterLink
           to="/tes-donnees"
           target="_blank"
-        >
-          ce que la plateforme garde sur toi
-        </RouterLink>.
+        >ce que la plateforme garde sur toi</RouterLink>.
       </p>
       <label v-if="link.kind === 'invite'">Identifiant
         <input

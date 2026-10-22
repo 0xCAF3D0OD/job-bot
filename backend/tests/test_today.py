@@ -1,4 +1,4 @@
-"""Page « Aujourd'hui » : liste de démarrage et point du jour (docs/10 §2 b)."""
+"""Page « Aujourd'hui » : le point du jour (docs/10 §2 b)."""
 
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
@@ -42,13 +42,9 @@ async def client(rt: Runtime, **settings: object) -> AsyncClient:
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
 
-async def test_checklist_and_day(rt: Runtime) -> None:
+async def test_day(rt: Runtime) -> None:
     today = datetime.now(UTC).astimezone(LOCAL_TZ).date()
     async with await client(rt) as api:
-        fresh = (await api.get("/api/today")).json()
-        assert [i["done"] for i in fresh["checklist"]] == [False] * 6
-        assert fresh["checklist_dismissed"] is False
-
         await api.put("/api/criteria", json={"locations": ["VD"]})
         await api.put(
             "/api/identity",
@@ -88,16 +84,6 @@ async def test_checklist_and_day(rt: Runtime) -> None:
             )
 
         day = (await api.get("/api/today")).json()
-        done = {i["key"]: i["done"] for i in day["checklist"]}
-        # Pas encore de document déposé : le profil n'est pas complet.
-        assert done == {
-            "criteria": True,
-            "profile": False,
-            "identity": True,
-            "orp_target": True,
-            "notifications": False,
-            "imap": False,
-        }
         assert day["to_review"] == 1
         assert day["month_target"] == 20
         assert day["month_count"] == (2 if old.month == today.month else 1)
@@ -110,9 +96,6 @@ async def test_checklist_and_day(rt: Runtime) -> None:
         assert follow_ups[0]["company"] == "Acme SA" and follow_ups[0]["status"] == "en_attente"
         assert all(f["orp_month"] == f["sent_at"][:7] for f in follow_ups)
         assert day["orp_due_month"] == f"{last_month:%Y-%m}"
-
-        assert (await api.put("/api/onboarding", json={"dismissed": True})).status_code == 204
-        assert (await api.get("/api/today")).json()["checklist_dismissed"] is True
 
 
 async def test_week_and_orp_history(rt: Runtime) -> None:

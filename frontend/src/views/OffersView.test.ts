@@ -123,6 +123,20 @@ describe("filtres dans l'adresse", () => {
 });
 
 describe("OffersView", () => {
+  it("un compte neuf, sans filtre : pourquoi c'est vide, et quoi faire (docs/128 §3)", async () => {
+    const none = { to_review: 0, filtered_out: 0, later: 0, in_progress: 0, expired: 0, all: 0 };
+    mockOffers({ data: { ...page([]).data, counts: none } });
+    const wrapper = await mountAt("/offres");
+    const empty = wrapper.find("[data-test=offers-none-yet]");
+    expect(empty.text()).toContain("Elles arrivent par tes alertes.");
+    expect(empty.find("a").attributes("href")).toBe("/candidatures/alertes");
+    expect(wrapper.find("[data-test=offers-empty]").exists()).toBe(false);
+    // Des filtres : c'est « rien ne correspond », pas un compte neuf.
+    const filtered = await mountAt("/offres?canton=VD");
+    expect(filtered.find("[data-test=offers-none-yet]").exists()).toBe(false);
+    expect(filtered.find("[data-test=offers-empty]").exists()).toBe(true);
+  });
+
   it("transmet les filtres de l'adresse à l'API", async () => {
     await mountAt("/offres?canton=VD&taux=80&site=jobup&externe=1&q=linux");
     expect(lastQuery()).toMatchObject({

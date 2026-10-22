@@ -1,6 +1,6 @@
 # 128 — Les premiers pas : une seule prochaine action (version 1.1.0)
 
-> Statut : **à valider**.
+> Statut : **validé** le 2026-10-22 (« oui pour tout »). Lu ainsi : les cinq étapes et leurs mots (1), les anciens guides retirés pour tout le monde (2), **la démo laissée « en cours de route »**, les premiers pas se testent sur un compte neuf (3, le premier choix), le chiffre dans Réglages › Plateforme (4). Dis-le si une de ces lectures est fausse.
 > Origine : un retour remonté le 22 octobre 2026, « quelqu'un qui arrive sur la plateforme est un peu perdu, il y a beaucoup d'information », et ta demande « écris le cadrage 128 ».
 
 ## Le constat
@@ -85,3 +85,24 @@ Je les vérifie aussi sur la démo (docs/126 §5) et sur un compte neuf.
 2. **Les anciens guides** : les retirer pour tout le monde, d'accord ?
 3. **La démo** : son compte a déjà tout fait, la carte n'y apparaît donc pas. La laisser ainsi (une démo « en cours de route ») et tester les premiers pas sur un compte neuf, ou montrer la démo à l'étape 3 ?
 4. **Le chiffre** (§4) dans Réglages › Plateforme : d'accord ?
+
+## Écarts (1.1.0)
+
+- **Règles relues avant de construire** ; vérifiées sur captures à 1440 et 390 px d'un compte neuf (une base jetable, `jobbot_premiers`), à chaque étape : rien de fait, alertes créées sans offre, offres du jour, préparer, marquer envoyée, la réussite ; puis Offres, Suivi, Rendez-vous et Bilan vides, et la carte de Réglages › Plateforme.
+- **« Tes alertes sont prêtes »** devient **« Alertes prêtes »** : un titre ne commence pas par un possessif (docs/interface.md, Titres). La ligne dessous reste « Les premières offres arrivent d'ici un ou deux jours. ».
+- **L'étape 5** ouvre la préparation sur ③ Postuler, où se trouve « Marquer comme envoyée » (le cadrage disait ④).
+- **La carte de réussite** : le serveur ne peut pas l'annoncer « une seule fois » à la lecture, car d'autres parties de la page lisent aussi Aujourd'hui (la pastille de la barre d'onglets) et la consommaient. L'interface dit au serveur qu'elle l'a montrée (`PUT /api/first-steps`, `celebrated`) ; un compte qui avait déjà tout fait avant la 1.1.0 ne la voit jamais.
+- **La démo est en lecture seule** : elle lit les étapes sans rien garder ; son compte a tout fait, la carte n'y apparaît pas (vérifié : sans cela, Aujourd'hui de la démo tombait en erreur).
+- **Le menu du compte** perd « Comment ça marche » (il réaffichait les anciens guides). « Masquer » sur la carte est définitif, avec « Annuler » pendant 6 secondes.
+- **Le Bilan vide** ne montre plus les tuiles à zéro ni la jauge ORP vide (quand rien n'a jamais été envoyé) ; **le Suivi vide** montre son message en vue calendrier comme en liste.
+- **Les réglages de l'ancienne liste** (coordonnées, objectif ORP) étaient déjà rappelés au moment où ils servent : « En-tête incomplet » dans le CV et la lettre, « Objectif ORP à saisir » dans le Suivi. Le lien « complète tes coordonnées » menait aux Réglages ; il mène maintenant au Profil › Coordonnées, où elles sont.
+- **L'espace avant le point** après un lien : le lint laisse maintenant `<RouterLink>` sur une ligne, comme `<a>` ; les six liens concernés sont corrigés.
+- **L'assistant** : consigne `assistant-v16` (la carte « Premiers pas », plus les anciens guides ; le menu principal à jour).
+- **Le chiffre** : une fonction de la base (`first_steps_progress`, migration 0070) qui ne répond qu'à l'exploitant, des nombres et des dates seulement.
+- **Vu en passant, non corrigé** (hors des pages touchées, visible seulement hors démo) : dans les Réglages de l'exploitant, une aide de plus de 20 mots (sauvegardes non réglées), des « cadres dans un cadre », un contraste et un lien sans soulignement ; dans Formations et Actualités, un attribut ARIA refusé sur le filtre « domaine ». Les audits ne les voient pas sur la démo.
+
+## Vérifié (1.1.0)
+
+- Tests backend : les cinq étapes cochées d'après les données, jamais en arrière, l'offre à préparer, la réussite jusqu'à ce que l'interface la confirme, un compte d'avant la 1.1.0 sans carte ni réussite, la démo en lecture seule, le chiffre de l'équipe (et rien pour un compte invité, même en appelant la fonction). 632 tests, ruff, mypy.
+- Tests de l'interface : la carte à chaque étape (titre, bouton, adresse), l'attente des offres, Aujourd'hui allégé, « Masquer » et « Annuler », la réussite confirmée ; les écrans vides des Offres, du Suivi, du Rendez-vous et du Bilan ; la carte de la Plateforme. 449 tests, lint, vue-tsc.
+- Les trois audits sur la démo à zéro.

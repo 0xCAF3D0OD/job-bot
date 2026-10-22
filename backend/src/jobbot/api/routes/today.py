@@ -1,4 +1,4 @@
-"""Page « Aujourd'hui » : liste de démarrage et point du jour (docs/10-ergonomie.md §2 b)."""
+"""Page « Aujourd'hui » : les premiers pas (docs/128) et le point du jour (docs/10 §2 b)."""
 
 from datetime import UTC, date, datetime, timedelta
 from typing import Literal
@@ -6,9 +6,9 @@ from typing import Literal
 from fastapi import APIRouter, Request, status
 from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot import first_steps as first_steps_service
 from jobbot.alerts import service as alert_service
 from jobbot.contacts import service as contact_service
 from jobbot.core.orp import LOCAL_TZ, due_date, shift_month
@@ -16,19 +16,14 @@ from jobbot.db.models import (
     Application,
     ApplicationStatus,
     Contact,
-    Criterion,
-    Document,
     JobRun,
     JobRunStatus,
     Offer,
     OfferStatus,
     OrpMonth,
-    ProfileChunk,
-    Search,
     Setting,
 )
 from jobbot.followups.remind import remind_due
-from jobbot.letters.service import load_identity
 from jobbot.notify import interviews as interview_reminders
 from jobbot.orp import meeting as orp_meeting
 from jobbot.orp.service import load_due_day
@@ -39,18 +34,11 @@ from jobbot.worker.tasks.collect import COLLECT_JOB
 router = APIRouter(prefix="/api", tags=["today"])
 NO_ANSWER_AFTER = timedelta(days=14)
 
-Step = Literal["criteria", "profile", "identity", "orp_target", "notifications", "imap"]
 
+class FirstStepsOut(BaseModel):
+    """Les premiers pas (docs/128 §1) : la carte en haut d'Aujourd'hui tant qu'il en manque."""
 
-class ChecklistItem(BaseModel):
-    key: Step
-    done: bool
-
-
-class JourneyStep(BaseModel):
-    """Une étape de « Comment ça marche » (docs/21 §3), cochée d'après les données."""
-
-    key: Literal["alerts", "triage", "apply", "follow", "orp"]
+    key: Literal["profile", "alerts", "keep", "prepare", "sent"]
     done: bool
 
 
@@ -117,12 +105,15 @@ class RhythmWeek(BaseModel):
 
 
 class TodayOut(BaseModel):
-    # Démarrage : affiché tant qu'une étape manque, sauf si Kevin l'a masqué.
-    checklist: list[ChecklistItem]
-    checklist_dismissed: bool
-    # « Comment ça marche » : le chemin en cinq étapes (docs/21 §3).
-    journey: list[JourneyStep] = []
-    journey_dismissed: bool = False
+    # Les premiers pas (docs/128) : les cinq étapes, faites ou non, dans l'ordre.
+    first_steps: list[FirstStepsOut] = []
+    first_steps_dismissed: bool = False
+    # Une offre visible existe ; sinon, alertes créées : « les premières arrivent ».
+    has_offers: bool = True
+    # L'offre à préparer pour les étapes 4 et 5.
+    first_steps_offer_id: int | None = None
+    # Les cinq étapes faites, la réussite pas encore montrée : la carte de réussite.
+    first_steps_finished: bool = False
     to_review: int
     month: str
     month_count: int
@@ -150,8 +141,11 @@ class TodayOut(BaseModel):
     rhythm: RhythmWeek | None = None
 
 
-class OnboardingIn(BaseModel):
-    dismissed: bool
+class FirstStepsIn(BaseModel):
+    """Ce qui est envoyé change : masquer la carte, ou dire que la réussite a été montrée."""
+
+    dismissed: bool | None = None
+    celebrated: bool | None = None
 
 
 def _runtime(request: Request) -> Runtime:
@@ -193,7 +187,6 @@ async def _week(session: AsyncSession, today: date) -> list[DayActivity]:
 @router.get("/today", operation_id="getToday")
 async def get_today(request: Request) -> TodayOut:
     runtime = _runtime(request)
-    settings = runtime.settings
     today = datetime.now(UTC).astimezone(LOCAL_TZ).date()
     month = f"{today:%Y-%m}"
     previous = shift_month(month, -1)
@@ -202,20 +195,10 @@ async def get_today(request: Request) -> TodayOut:
         async def count(query: object) -> int:
             return int(await session.scalar(query) or 0)  # type: ignore[call-overload]
 
-        criteria = await count(select(func.count()).select_from(Criterion))
-        documents = await count(select(func.count()).select_from(Document))
-        chunks = await count(
-            select(func.count()).select_from(ProfileChunk).where(ProfileChunk.active.is_(True))
-        )
-        identity = await load_identity(session)
         values = {
             s.key: s.value
             for s in await session.scalars(
-                select(Setting).where(
-                    Setting.key.in_(
-                        ("orp_monthly_target", "onboarding_dismissed", "journey_dismissed")
-                    )
-                )
+                select(Setting).where(Setting.key.in_(("orp_monthly_target",)))
             )
         }
         to_review = await count(
@@ -258,54 +241,6 @@ async def get_today(request: Request) -> TodayOut:
         )
         previous_record = await session.get(OrpMonth, previous)
         due_day = await load_due_day(session)
-        journey = [
-            JourneyStep(
-                key="alerts",
-                done=await count(
-                    select(func.count()).select_from(Search).where(Search.parse_status == "parsed")
-                )
-                > 0,
-            ),
-            JourneyStep(
-                key="triage",
-                done=await count(
-                    select(func.count())
-                    .select_from(Offer)
-                    .where(
-                        Offer.status.in_(
-                            (
-                                OfferStatus.LATER,
-                                OfferStatus.IGNORED,
-                                OfferStatus.PREPARING,
-                                OfferStatus.APPLIED,
-                            )
-                        )
-                    )
-                )
-                > 0,
-            ),
-            JourneyStep(
-                key="apply", done=await count(select(func.count()).select_from(Application)) > 0
-            ),
-            JourneyStep(
-                key="follow",
-                done=await count(
-                    select(func.count())
-                    .select_from(Application)
-                    .where(Application.status != ApplicationStatus.EN_ATTENTE)
-                )
-                > 0,
-            ),
-            JourneyStep(
-                key="orp",
-                done=await count(
-                    select(func.count())
-                    .select_from(OrpMonth)
-                    .where(OrpMonth.submitted_at.is_not(None))
-                )
-                > 0,
-            ),
-        ]
         interviews_to_review = [
             InterviewToReview(
                 application_id=p.application_id,
@@ -364,19 +299,14 @@ async def get_today(request: Request) -> TodayOut:
         ]
 
     target = values.get("orp_monthly_target")
-    checklist = [
-        ChecklistItem(key="criteria", done=criteria > 0),
-        ChecklistItem(key="profile", done=documents > 0 and chunks > 0),
-        ChecklistItem(key="identity", done=not identity.missing),
-        ChecklistItem(key="orp_target", done=bool(target)),
-        ChecklistItem(key="notifications", done=settings.ntfy_configured),
-        ChecklistItem(key="imap", done=settings.imap_configured),
-    ]
     due_month = (
         previous
         if previous_count and (previous_record is None or not previous_record.submitted_at)
         else None
     )
+    # Les premiers pas gardent l'étape la plus haute atteinte : une session qui écrit.
+    async with runtime.sessionmaker.begin() as session:
+        steps = await first_steps_service.load(session)
     async with runtime.sessionmaker() as session:
         meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
         this_week = await rhythm.week(session, rhythm.local_today())
@@ -385,10 +315,14 @@ async def get_today(request: Request) -> TodayOut:
         - datetime.now(UTC).astimezone(LOCAL_TZ).date()
     ) <= timedelta(days=1)
     return TodayOut(
-        checklist=checklist,
-        checklist_dismissed=bool(values.get("onboarding_dismissed")),
-        journey=journey,
-        journey_dismissed=bool(values.get("journey_dismissed")),
+        first_steps=[
+            FirstStepsOut(key=key, done=i < steps.reached)
+            for i, key in enumerate(first_steps_service.STEPS)
+        ],
+        first_steps_dismissed=steps.dismissed,
+        has_offers=steps.has_offers,
+        first_steps_offer_id=steps.offer_id,
+        first_steps_finished=steps.just_finished,
         to_review=to_review,
         month=month,
         month_count=month_count,
@@ -418,27 +352,12 @@ async def get_today(request: Request) -> TodayOut:
     )
 
 
-@router.put("/onboarding", operation_id="setOnboarding", status_code=status.HTTP_204_NO_CONTENT)
-async def set_onboarding(request: Request, body: OnboardingIn) -> None:
-    """Masque (ou réaffiche) la liste de démarrage."""
+@router.put("/first-steps", operation_id="setFirstSteps", status_code=status.HTTP_204_NO_CONTENT)
+async def set_first_steps(request: Request, body: FirstStepsIn) -> None:
+    """Masque la carte des premiers pas (« Masquer » : elle ne revient plus), ou retient que
+    la carte de réussite a été montrée."""
     async with _runtime(request).sessionmaker.begin() as session:
-        await session.execute(
-            insert(Setting)
-            .values(key="onboarding_dismissed", value=body.dismissed)
-            .on_conflict_do_update(
-                index_elements=["user_id", "key"], set_={"value": body.dismissed}
-            )
-        )
-
-
-@router.put("/journey", operation_id="setJourney", status_code=status.HTTP_204_NO_CONTENT)
-async def set_journey(request: Request, body: OnboardingIn) -> None:
-    """Masque (ou réaffiche) « Comment ça marche »."""
-    async with _runtime(request).sessionmaker.begin() as session:
-        await session.execute(
-            insert(Setting)
-            .values(key="journey_dismissed", value=body.dismissed)
-            .on_conflict_do_update(
-                index_elements=["user_id", "key"], set_={"value": body.dismissed}
-            )
-        )
+        if body.dismissed is not None:
+            await first_steps_service.dismiss(session, body.dismissed)
+        if body.celebrated:
+            await first_steps_service.celebrate(session)

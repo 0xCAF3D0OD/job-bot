@@ -15,6 +15,13 @@ type Platform = PlatformOut;
 type Account = AccountOut;
 
 const platform = ref<Platform | null>(null);
+// Où s'arrêtent les comptes qui n'ont pas fini (docs/128 §4) : l'étape à faire, et combien.
+const STEP_TITLES = ["Dis ce que tu cherches", "Crée tes alertes", "Garde ta première offre", "Prépare ta candidature", "Marque-la comme envoyée"];
+const stoppedAt = computed(() =>
+  (platform.value?.first_steps?.stopped_at ?? [])
+    .map((count, index) => ({ label: `Étape ${index + 1} · ${STEP_TITLES[index]}`, count }))
+    .filter((row) => row.count > 0),
+);
 const failed = ref(false);
 // Le dernier lien créé, montré une seule fois, à transmettre soi-même.
 const link = ref<{ kind: "invite" | "reset"; username: string | null; url: string; expires: string } | null>(null);
@@ -453,6 +460,47 @@ function size(bytes: number | null | undefined): string {
         </ul>
       </fieldset>
     </div>
+    <!-- Les premiers pas (docs/128 §4) : des nombres seulement, jamais un nom ni un contenu. -->
+    <div
+      v-if="platform.first_steps"
+      class="form-card settings-next-card"
+      data-test="platform-first-steps"
+    >
+      <fieldset>
+        <legend>Premiers pas</legend>
+        <p class="setting-desc">
+          Les comptes créés depuis 30 jours, en nombres seulement.
+        </p>
+        <p
+          v-if="!platform.first_steps.accounts"
+          class="setting-info"
+        >
+          Aucun compte créé depuis 30 jours.
+        </p>
+        <template v-else>
+          <p
+            class="setting-info"
+            data-test="first-steps-rate"
+          >
+            <strong>{{ platform.first_steps.sent_within_week }} sur {{ platform.first_steps.accounts }}</strong>
+            ont envoyé une première candidature dans les 7 jours.
+          </p>
+          <ul
+            v-if="stoppedAt.length"
+            class="plan-usage"
+            data-test="first-steps-stopped"
+          >
+            <li
+              v-for="row in stoppedAt"
+              :key="row.label"
+            >
+              <span class="plan-usage-name">{{ row.label }}</span>
+              <span class="plan-usage-count">{{ plural(row.count, "compte", "comptes") }}</span>
+            </li>
+          </ul>
+        </template>
+      </fieldset>
+    </div>
     <div
       v-if="platform.backup"
       class="form-card settings-next-card"
@@ -509,9 +557,7 @@ function size(bytes: number | null | undefined): string {
           <label for="platform-mentions">Mentions de la page « Données personnelles »</label>
         </legend>
         <p class="setting-desc">
-          Responsable, contact, hébergement. Public, sur <RouterLink to="/tes-donnees">
-            la page Données personnelles
-          </RouterLink>.
+          Responsable, contact, hébergement. Public, sur <RouterLink to="/tes-donnees">la page Données personnelles</RouterLink>.
         </p>
         <textarea
           id="platform-mentions"

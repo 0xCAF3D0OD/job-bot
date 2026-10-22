@@ -588,8 +588,24 @@ onUnmounted(() => assistant.setFocus(null));
         </p>
       </SuccessCard>
 
+      <!-- Aucune candidature du tout (docs/128 §3) : ce qui remplit le Suivi. -->
+      <FaceState
+        v-if="loaded && !all.length"
+        title="Pas encore de candidature"
+        data-test="applications-none-yet"
+      >
+        <p>Une candidature envoyée s'ajoute ici.</p>
+        <div class="face-state-actions">
+          <RouterLink
+            to="/candidatures/offres"
+            class="pill"
+          >
+            <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+          </RouterLink>
+        </div>
+      </FaceState>
       <div
-        v-if="layout === 'calendar'"
+        v-else-if="layout === 'calendar'"
         class="suivi-grid"
       >
         <div ref="calendarBox">

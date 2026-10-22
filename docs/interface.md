@@ -58,8 +58,9 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 14. **L'essentiel sans défiler** (docs/32) ; sur téléphone, 10 éléments puis « Voir plus » (docs/43).
 15. **Les listes** : colonnes d'action de largeur fixe ; pendant le chargement, des blocs gris à la forme du contenu (docs/43).
 16. **Une seule chose en orange** sur une page : ce qui demande d'agir (docs/43, 54).
-17. **Aujourd'hui** (docs/95) : une seule action sous la phrase du jour, trois bandeaux au plus, des cartes neutres (la couleur pour les nombres à traiter), les guides disparaissent une fois finis.
+17. **Aujourd'hui** (docs/95, docs/128) : une seule action sous la phrase du jour, trois bandeaux au plus, des cartes neutres (la couleur pour les nombres à traiter). Pour un compte neuf, la carte « Premiers pas » remplace la phrase et son action : une étape à la fois, « 2 sur 5 » et cinq points ; le rythme, « Voir le bilan » et les onglets vides attendent, le mois ORP reste. Pas de visite guidée en bulles par-dessus l'écran.
 18. **L'audit des règles** (`frontend/scripts/regles.py`) vérifie les points 3 et 4 : un texte à moins de 1,25 rem du bord de sa carte, deux cartes d'une rangée de hauteurs différentes.
+19. **Un écran vide dit pourquoi** (docs/128 §3) : le visage, une phrase qui dit ce qui le remplira, et l'action en pilule (`face-state-actions`) ; pas de tuiles ni de jauge à zéro à côté.
 
 ## Les contrôles (docs/94)
 

@@ -57,6 +57,10 @@ function go(delta: number): void {
 // L'objectif ORP du mois en cours et les trois mois précédents (docs/95) : la jauge quittée
 // d'Aujourd'hui, montrée quand on regarde le mois en cours ou les dernières semaines.
 const orp = ref<{ count: number; target: number | null; month: string; history: Today["orp_history"] } | null>(null);
+// Un compte sans aucune candidature (docs/128 §3) : la jauge à zéro n'apprend rien.
+const gaugeUseful = computed(
+  () => !!orp.value && ((insights.value?.funnel.applications ?? 0) > 0 || orp.value.count > 0 || orp.value.history.some((m) => m.count > 0)),
+);
 const showGauge = computed(() => period.value === "recent" || (period.value === "month" && month.value === currentMonth()));
 
 async function loadOrp(): Promise<void> {
@@ -220,7 +224,15 @@ const intro = firstTime("bilan-funnel");
         title="Pas encore de candidature"
         data-test="insights-empty"
       >
-        <p>Le bilan se remplit au fil de tes envois.</p>
+        <p>Le bilan commence après tes premières candidatures.</p>
+        <div class="face-state-actions">
+          <RouterLink
+            to="/candidatures/offres"
+            class="pill"
+          >
+            <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+          </RouterLink>
+        </div>
       </FaceState>
       <p
         v-if="insights.funnel.applications > 0 && insights.headline"
@@ -231,6 +243,7 @@ const intro = firstTime("bilan-funnel");
         <span>{{ insights.headline }}</span>
       </p>
       <div
+        v-if="insights.funnel.applications > 0"
         class="bilan-tiles"
         data-test="bilan-tiles"
       >
@@ -269,7 +282,7 @@ const intro = firstTime("bilan-funnel");
       </div>
 
       <OrpGauge
-        v-if="showGauge && orp"
+        v-if="showGauge && orp && gaugeUseful"
         :count="orp.count"
         :target="orp.target"
         :month="orp.month"

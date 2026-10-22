@@ -34,7 +34,7 @@ KEEP = timedelta(days=30)
 # Estimation prudente d'un tour (question + données lues), pour respecter le plafond.
 ESTIMATE_USD = Decimal("0.02")
 TITLE_LENGTH = 60
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v15.md").read_text("utf-8")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v16.md").read_text("utf-8")
 
 # Remplaçable en test par un faux client.
 make_chat_client = chat_client_factory

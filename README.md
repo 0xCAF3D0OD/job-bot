@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/126-structure-et-credibilite.md](docs/126-structure-et-credibilite.md) (1.0.1)
+- Version en cours : [docs/128-premiers-pas.md](docs/128-premiers-pas.md) (1.1.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -207,7 +207,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.99.1 | Les corrections des audits d'ergonomie du 22 octobre : plus de page blanche après une mise à jour, le menu ne mène plus à une offre disparue, une seule étape courante dans Préparer, un titre d'onglet par page, « Aller au contenu », les contrastes des initiales et de la cloche, les cibles de 24 px, le retour en haut à gauche, l'adresse et le focus à l'ouverture d'une offre, sans jargon technique | livrée |
 | 0.99.2 | Les tests du frontend sans erreur non gérée : chaque maquette répond à sa propre adresse (Bilan, fiche d'offre, aperçu Progresser), les pages démontées à la fin de chaque test (Actualités, Réglages) | livrée |
 | 1.0.0 | La structure : trois entrées (Aujourd'hui, Candidatures, Bilan), le Bilan au menu avec Résultats, Formations et Actualités, Progresser retiré ; les Résultats allégés (la conclusion d'abord, le détail replié) ; les mêmes mots partout (Gardées, À préparer, Poste obtenu) ; l'assistant à jour | livrée |
-| 1.0.1 | La crédibilité : un pied de page (Données personnelles, Conditions, Accessibilité, À propos) sur chaque page, la page « À propos », « Le code » hors du bandeau de la démo ; une lettre et un CV d'exemple dans la démo ; la fiche du test avec 5 personnes (docs/127) | en cours |
+| 1.0.1 | La crédibilité : un pied de page (Données personnelles, Conditions, Accessibilité, À propos) sur chaque page, la page « À propos », « Le code » hors du bandeau de la démo ; une lettre et un CV d'exemple dans la démo ; la fiche du test avec 5 personnes (docs/127) | livrée |
+| 1.1.0 | Les premiers pas : en haut d'Aujourd'hui, une seule prochaine action en cinq étapes (« 2 sur 5 »), l'attente des premières offres dite, Aujourd'hui allégé tant qu'elles manquent, les deux anciens guides retirés ; des écrans vides qui disent quoi faire (Offres, Suivi, Rendez-vous, Bilan) ; le chiffre des premiers pas pour l'équipe (Réglages › Plateforme) | en cours |
 
 ## Lancer en local
 

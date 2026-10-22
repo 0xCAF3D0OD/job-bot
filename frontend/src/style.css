@@ -687,14 +687,6 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: 0.55r
 
 /* Aujourd'hui (docs/10 §2 b) */
 .today { display: grid; gap: 2rem; }
-.checklist-head { display: flex; justify-content: space-between; align-items: center; }
-.checklist ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
-.checklist li { display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); column-gap: 0.6rem; row-gap: 0.1rem; align-items: center; }
-.checklist li > :not(.tick) { grid-column: 2; }
-.checklist li > .hint { font-size: 0.8rem; }
-.checklist li.done { color: var(--muted); }
-.checklist .tick { width: 1.2rem; height: 1.2rem; flex: none; border: 1.5px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.75rem; color: #fff; align-self: center; }
-.checklist li.done .tick { background: var(--ok); border-color: var(--ok); }
 .filter-customize { display: grid; gap: 0.5rem; justify-items: start; padding: 0 0.2rem; margin-top: 0.4rem; }
 .customize-list { border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.8rem; margin: 0; display: grid; gap: 0.35rem; width: 100%; }
 .customize-list legend { padding: 0 0.25rem; font-size: 0.8rem; }
@@ -977,15 +969,6 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 8px; back
 /* « En savoir plus » (docs/21 §2) */
 .more-info .disclosure-body { font-size: 0.88rem; }
 .more-info .disclosure-body p { margin: 0; }
-
-/* « Comment ça marche » (docs/21 §3), même allure que « Pour bien démarrer » */
-.journey ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
-.journey li { display: grid; grid-template-columns: 1.2rem minmax(0, 1fr); column-gap: 0.6rem; row-gap: 0.1rem; align-items: center; }
-.journey li > a { grid-column: 2; }
-.journey .journey-where { grid-column: 2; font-size: 0.8rem; }
-.journey li.done a { color: var(--muted); }
-.journey .tick { width: 1.2rem; height: 1.2rem; flex: none; border: 1.5px solid var(--border); border-radius: 50%; display: inline-grid; place-items: center; font-size: 0.75rem; color: #fff; align-self: center; }
-.journey li.done .tick { background: var(--ok); border-color: var(--ok); }
 
 /* Alertes : assistant et résumé (docs/21 §4) */
 .wizard { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8rem; padding: 1.4rem; }
@@ -1362,11 +1345,9 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .suivi-legend .dot.incomplete { margin: 0 0.15rem; }
 
 /* Finitions du 2026-10-14 : onglets soulignés bien droits (le soulignement suivait l'arrondi des
-   liens), page ouverte dans le menu en gras de la couleur principale, « Comment ça marche »
-   sans coches (une étape faite est seulement grisée). */
+   liens), page ouverte dans le menu en gras de la couleur principale. */
 .nav a, .prep-tabs a { border-radius: 0; }
 .nav a.router-link-active { color: var(--accent-text); font-weight: 600; }
-.journey li.done a, .journey li.done .hint { color: var(--muted); }
 
 /* --- Aides visibles (docs/29 §2-§5) --- */
 .field-error { display: block; margin-top: 0.25rem; font-size: 0.82rem; font-weight: 500; color: var(--down-text); }
@@ -1376,10 +1357,6 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 .filters-panel .filters-search-wrap input[type="search"] { padding-left: 2.1rem; }
 .assistant-empty { margin: 0; padding: 0.3rem 0.9rem 0; }
 .form-grid > label { align-self: start; }
-/* « Comment ça marche » : pastille verte pleine pour une étape faite, cercle vide sinon, sans coche
-   (retour du 2026-10-14). */
-.journey li.done .tick { background: var(--ok); border-color: var(--ok); }
-
 /* Aujourd'hui (retour du 2026-10-14) : deux menus déroulants côte à côte, même hauteur, ouverts
    ou fermés ensemble ; la collecte tient en une ligne près du titre « Candidatures ». */
 .today-collect { margin-left: auto; margin-right: 1rem; color: var(--muted); font-size: 0.85rem; }
@@ -1793,7 +1770,6 @@ html.side-open { overflow: hidden; }
 
 /* Aujourd'hui (docs/43 n° 6, 7, 30) : urgences en tête, guides repliés en bas. */
 .today-urgent { border-left: 3px solid var(--warn-text); border-radius: 0 10px 10px 0; font-weight: 500; }
-.today-help-row { margin: 0; }
 
 /* Téléphone (docs/43 n° 10) : les onglets et leurs pastilles tiennent sur la ligne. */
 @media (max-width: 820px) {
@@ -2199,18 +2175,6 @@ button:not(:disabled, .link, [role="radio"], [role="tab"], .filter-row):active, 
 .filter-switch input { transition: background-color var(--t-state); }
 .filter-switch input::after { transition: transform var(--t-state) var(--ease-out); }
 
-/* Coche qui se dessine (prise en main) : le rond passe au vert, le trait se trace. */
-.tick-svg { width: 0.8rem; height: 0.8rem; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 0; animation: tick-draw var(--t-state) var(--ease-out); }
-@keyframes tick-draw { from { stroke-dashoffset: 20; } }
-.checklist .tick, .journey .tick { transition: background-color var(--t-state), border-color var(--t-state); }
-
-/* L'étape à faire, mise en avant dans la liste (docs/59 §5) : fond violet pâle, en gras,
-   toute la ligne cliquable. */
-.checklist li.next, .journey li.next { position: relative; margin: 0 -0.6rem; padding: 0.55rem 0.6rem; border-radius: 12px; background: var(--accent-soft); }
-.checklist li.next > a, .journey li.next > a { font-weight: 600; }
-.checklist li.next > a::after, .journey li.next > a::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
-.checklist li.next .tick, .journey li.next .tick { border-color: var(--accent); }
-
 /* Erreur dans un formulaire : le champ tremble une fois, le message juste dessous. */
 input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"] { animation: field-shake var(--t-state) ease-in-out; }
 @keyframes field-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
@@ -2284,7 +2248,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   button, .button-link, .offer-row, .chunk-card, .dash-tile, .dash-link, .application-card, .segmented::before, .filter-switch input::after { transition: none !important; }
   button:active, .button-link:active { transform: none !important; }
   .chunk-card:hover, .dash-tile:hover, .dash-link:hover, .application-card:hover { transform: none !important; }
-  .tick-svg, input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before { animation: none !important; }
+  input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before { animation: none !important; }
 }
 /* Le fond de la page jusqu'en bas de l'écran, sous l'en-tête (docs/64 §3). */
 .band.not-found { min-height: calc(100dvh - 4rem); }
@@ -2347,8 +2311,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .bilan-funnel.intro .bilan-bar { transform-origin: left; animation: bar-grow var(--t-enter) var(--ease-out) both; }
 @keyframes bar-grow { from { transform: scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .bar-chart.intro .bar-fill, .bilan-funnel.intro .bilan-bar { animation: none; } }
-.today-guides-rows { display: grid; gap: 1.25rem; align-content: start; }
-.today-guides-rows > .disclosure + .disclosure { margin-top: 0; }
 
 /* Réussite (docs/61 §1) : une carte qui vient devant, souple ; l'image posée sur son bord. */
 .success-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 1rem; background: color-mix(in srgb, var(--bg) 55%, transparent); animation: overlay-in var(--t-state) ease-out; }
@@ -2386,16 +2348,6 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
   /* Réglages : les rubriques à la largeur de lecture. */
   .settings-sections { max-width: 46rem; }
   .settings-sections:has(.ai-spend) { max-width: 64rem; }
-  /* « Comment ça marche » en frise : un rond par étape, relié au précédent. */
-  .journey ol { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; }
-  .journey li { position: relative; grid-template-columns: 1fr; justify-items: center; align-content: start; row-gap: 0.45rem; margin: 0; padding: 0.7rem 0.6rem; border-radius: 14px; text-align: center; }
-  .journey li > a, .journey .journey-where { grid-column: 1; }
-  .journey li::before { content: ""; position: absolute; top: calc(0.7rem + 0.6rem - 1px); right: calc(50% + 0.85rem); width: calc(100% - 1.2rem); height: 2px; background: var(--border); }
-  .journey li:first-child::before { display: none; }
-  .journey li.done + li::before { background: var(--ok); }
-  .journey li > a::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }
-  .journey li:hover:not(.next) { background: var(--band); }
-  .journey li.next { margin: 0; padding: 0.7rem 0.6rem; }
 }
 /* Profil › Ce que je cherche (docs/63 §2) : le résumé à la largeur de lecture, ce que donnent
    les critères à côté. */
@@ -3018,6 +2970,20 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .today-banner a { color: var(--accent-text); font-weight: 500; white-space: nowrap; text-decoration: none; }
 .today-banner a:hover { text-decoration: underline; }
 .today-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.25rem; align-items: stretch; }
+.today-grid.single { grid-template-columns: minmax(0, 1fr); }
+/* Les premiers pas (docs/128 §1) : le visage en tuile, l'étape, pourquoi, le bouton ; « 2 sur 5 »
+   et « Masquer » sur la ligne du haut ; les cinq points comme ceux de l'accueil. */
+.first-steps { flex-direction: row; align-items: flex-start; gap: 1.25rem; margin: 0.5rem 0 0; }
+.first-steps-body { display: grid; justify-items: start; gap: 0.75rem; flex: 1; min-width: 0; }
+.first-steps-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; width: 100%; min-height: 2.25rem; }
+.first-steps-count { margin: 0; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.first-steps h2 { margin: 0; font-size: 1.5rem; font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; }
+.first-steps-why { margin: 0; color: var(--muted); line-height: 1.5; }
+.first-steps-action { margin-top: 0.25rem; border-radius: 999px; padding-inline: 1.3rem; }
+.first-steps-dots { display: flex; gap: 0.5rem; margin: 0.5rem 0 0; padding: 0; list-style: none; }
+.first-steps-dots li { width: 0.7rem; height: 0.7rem; border-radius: 999px; background: var(--band); border: 2px solid var(--border); box-sizing: border-box; }
+.first-steps-dots li.done { background: var(--accent); border-color: var(--accent); }
+.first-steps-dots li.current { width: 1.6rem; background: var(--accent); border-color: var(--accent); }
 .today-grid .dash-card { padding: 1.5rem; }
 .today-grid h2 { margin: 0 0 1rem; font-size: 1.15rem; font-weight: 500; }
 .today-sub { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
@@ -3045,6 +3011,9 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
   .today-grid { grid-template-columns: minmax(0, 1fr); }
   .today-grid .dash-card { padding: 1.5rem; }
   .today-lead { margin-bottom: 1.5rem; }
+  .first-steps { gap: 1rem; }
+  .first-steps h2 { font-size: 1.3rem; }
+  .first-steps-action { width: 100%; justify-content: center; }
 }
 
 /* Le logo (docs/103) et la mascotte (docs/97) : bleu stylo et bille pêche ; en sombre, le bleu
@@ -3513,12 +3482,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .dmock-bar strong, .dmock-grow small { color: color-mix(in srgb, var(--muted) 75%, var(--text)); }
 /* Un lien dans une phrase se voit sans la couleur : souligné. */
 .setting-info a, .setting-desc a { text-decoration: underline; text-underline-offset: 0.15em; }
-/* « Pour bien démarrer » ouvert, sur ordinateur : six étapes en deux colonnes, plutôt qu'une
-   colonne étroite dans une carte de toute la largeur (docs/63 §1, docs/119). */
-@media (min-width: 821px) {
-  .today-help-row.checklist ul { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2rem; }
-}
-
 /* La note en mots (docs/121 §C.5, docs/123) : le visage du 1 et un mot, à la couleur de la
    note ; le chiffre au survol. Le filet en bas de la ligne d'offre, à la longueur de la note,
    sur le filet gris de la liste. Pas encore notée : en gris, filet en pointillés. */
@@ -3572,6 +3535,8 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .face-state-title { margin: 0; font-size: 1.15rem; font-weight: 600; line-height: 1.3; color: var(--text); }
 .face-state-line { color: var(--muted); line-height: 1.5; }
 .face-state-line p { margin: 0; }
+/* L'action qui remplit un écran vide (docs/128 §3) : en pilules, sous la phrase. */
+.face-state-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-top: 1.25rem; }
 .face-mouth-enter-active, .face-mouth-leave-active { transition: opacity 75ms ease; }
 .face-mouth-enter-from, .face-mouth-leave-to { opacity: 0; }
 .face-mark .face-eye, .face-mark .face-spark { transform-box: fill-box; transform-origin: center; }

@@ -142,7 +142,9 @@ describe("Candidatures, onglet Suivi", () => {
     mockApi(() => month({ count: 0, target: null }), []);
     const { wrapper } = await mountView();
     expect(wrapper.find("[data-test=goal]").text()).toContain("Réglages");
-    expect(wrapper.text()).toContain("Aucune candidature");
+    // Un compte sans aucune candidature : ce qui remplit le Suivi (docs/128 §3).
+    expect(wrapper.text()).toContain("Pas encore de candidature");
+    expect(wrapper.find("[data-test=applications-none-yet]").exists()).toBe(true);
   });
 
   it("changer de mois recharge la liste", async () => {
