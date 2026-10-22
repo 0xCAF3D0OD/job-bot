@@ -1652,6 +1652,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/follow-up-date": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Follow Up Date
+         * @description Le jour où relancer (docs/124 §G) : entre 5 et 30 jours après l'envoi.
+         */
+        patch: operations["setFollowUpDate"];
+        trace?: never;
+    };
     "/api/applications/{application_id}/follow-up": {
         parameters: {
             query?: never;
@@ -3457,6 +3477,8 @@ export interface components {
             reminded_at: string | null;
             /** Followed Up At */
             followed_up_at?: string | null;
+            /** Follow Up On */
+            follow_up_on?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -4575,6 +4597,11 @@ export interface components {
             sent_at: string;
             /** Status */
             status: string;
+        };
+        /** FollowUpDateIn */
+        FollowUpDateIn: {
+            /** Follow Up On */
+            follow_up_on?: string | null;
         };
         /** FollowUpDraftOut */
         FollowUpDraftOut: {
@@ -10600,6 +10627,7 @@ export interface operations {
         parameters: {
             query?: {
                 month?: string | null;
+                offer?: number | null;
             };
             header?: never;
             path?: never;
@@ -10891,6 +10919,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FollowUpDraftOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setFollowUpDate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FollowUpDateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
                 };
             };
             /** @description Validation Error */

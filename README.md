@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/123-visage-du-1.md](docs/123-visage-du-1.md) (0.96.0)
+- Version en cours : [docs/124-offres-du-jour-et-suivre.md](docs/124-offres-du-jour-et-suivre.md) (0.97.0)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -200,7 +200,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.93.1 | La démo, une note qui a du sens : la phrase « pourquoi » tirée de ce que chaque offre demande, le poste de données décrit comme tel, le niveau seulement sur « SRE junior » | livrée |
 | 0.94.0 | Le visage du 1 : le mois ORP avec son humeur (une tuile, des segments, « Dans les temps », « On rattrape », « Objectif atteint ») dans Aujourd'hui et le Bilan ; le visage au chargement des pages et dans les listes vides, à la place des dessins | livrée |
 | 0.95.0 | Les moments du visage : « Rien d'urgent aujourd'hui » un jour calme ; deux victoires (un entretien proposé, l'objectif du mois atteint) ; Aujourd'hui en compact sur téléphone (le mois ORP en une ligne) | livrée |
-| 0.96.0 | Le personnage se transforme : pendant le chargement d'une page, le visage prend l'objet de la page (soleil, loupe, flèche, cloche, anneau, cravate, profil, roue dentée) ; le Rendez-vous, le Profil et les Réglages ont aussi leur transition | en cours |
+| 0.96.0 | Le personnage se transforme : pendant le chargement d'une page, le visage prend l'objet de la page (soleil, loupe, flèche, cloche, anneau, cravate, profil, roue dentée) ; le Rendez-vous, le Profil et les Réglages ont aussi leur transition | livrée |
+| 0.97.0 | Les offres du jour une par une dans Aujourd'hui (Garder ou Écarter, Annuler, le balayage au doigt ; 5 quand le mois est à rattraper) ; l'étape ④ Suivre dans Préparer (la relance à la date choisie, la preuve ORP à compléter, le contact) | en cours |
 
 ## Lancer en local
 

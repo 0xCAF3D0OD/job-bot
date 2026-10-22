@@ -4039,6 +4039,22 @@
               ],
               "title": "Month"
             }
+          },
+          {
+            "name": "offer",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Offer"
+            }
           }
         ],
         "responses": {
@@ -4400,6 +4416,59 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FollowUpDraftOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/applications/{application_id}/follow-up-date": {
+      "patch": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Set Follow Up Date",
+        "description": "Le jour où relancer (docs/124 §G) : entre 5 et 30 jours après l'envoi.",
+        "operationId": "setFollowUpDate",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowUpDateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
                 }
               }
             }
@@ -9507,6 +9576,18 @@
             ],
             "title": "Followed Up At"
           },
+          "follow_up_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follow Up On"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -12848,6 +12929,24 @@
         ],
         "title": "FollowUp",
         "description": "Une candidature à relancer, en tête d'« À faire » sur Aujourd'hui (docs/95)."
+      },
+      "FollowUpDateIn": {
+        "properties": {
+          "follow_up_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Follow Up On"
+          }
+        },
+        "type": "object",
+        "title": "FollowUpDateIn"
       },
       "FollowUpDraftOut": {
         "properties": {

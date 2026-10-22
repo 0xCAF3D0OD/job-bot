@@ -11,8 +11,10 @@ function daysAgo(days: number): string {
   return isoDay(d);
 }
 
+// Le jour choisi dans l'étape « Suivre » (docs/124 §G), sinon 10 jours après l'envoi.
 export function followUpDue(a: Application): boolean {
-  return a.status === "en_attente" && a.sent_at <= daysAgo(REMIND_AFTER_DAYS);
+  if (a.status !== "en_attente") return false;
+  return a.follow_up_on ? a.follow_up_on <= daysAgo(0) : a.sent_at <= daysAgo(REMIND_AFTER_DAYS);
 }
 
 export function noAnswerDue(a: Application): boolean {

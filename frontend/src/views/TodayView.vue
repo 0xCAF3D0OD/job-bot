@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from "vue";
 import { api, type Offer, type Today } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
+import DailyPick from "../components/DailyPick.vue";
 import IconButton from "../components/IconButton.vue";
 import RhythmCard from "../components/RhythmCard.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
@@ -16,10 +17,9 @@ import OrpMonth from "../components/OrpMonth.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { usePhone } from "../composables/usePhone";
 import PageHero from "../components/PageHero.vue";
-import ScoreWord from "../components/ScoreWord.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
-import { colorIndex, formatMonth, localDate, plural } from "../format";
+import { colorIndex, formatMonth, localDate, orpPace, plural } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
@@ -56,7 +56,9 @@ const JOURNEY: Record<Today["journey"][number]["key"], { label: string; to: stri
 
 const today = ref<Today | null>(null);
 usePageReady("today", () => !!today.value);
+// La dose du jour (docs/86) : 3 offres ; 5 quand le mois ORP est à rattraper (docs/124 §D).
 const DOSE = 3;
+const DOSE_CATCH_UP = 5;
 const best = ref<Offer[]>([]);
 // Un jour sans recherche (docs/86) : aucune liste à traiter.
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
@@ -66,7 +68,6 @@ const { message } = useCollect();
 
 // Tableau « À examiner en priorité » (docs/54 §2) : deux onglets, le choix n'est pas retenu.
 const tableTab = ref<"best" | "preparing">("best");
-const offerLink = (id: number) => ({ path: "/candidatures/offres", query: { offre: id } });
 
 // Le plus urgent en tête (docs/43 n° 30) : entretien aujourd'hui ou demain, remise ORP dans
 // moins de 5 jours.
@@ -142,7 +143,7 @@ const sentence = computed<Part[]>(() => {
 const cta = computed(() => {
   const t = today.value;
   if (!t || restDay.value || t.rhythm?.pause_until) return null;
-  if (t.to_review) return { label: "Examiner les offres", to: "/candidatures/offres", icon: "briefcase" as const };
+  if (t.to_review) return { label: "Examiner les offres", to: { path: "/aujourdhui", hash: "#offres-du-jour" }, icon: "briefcase" as const };
   if (t.to_follow_up) return { label: "Relancer", to: "/candidatures/suivi", icon: "reply" as const };
   return null;
 });
@@ -224,11 +225,23 @@ function firstGoal(t: Today | null): boolean {
   }
 }
 
+const dose = computed(() => {
+  const t = today.value;
+  const behind = !!t && orpPace(t.month_count, t.month_target, t.month)?.state === "behind";
+  return best.value.slice(0, behind ? DOSE_CATCH_UP : DOSE);
+});
+
+// Une offre gardée passe dans « Commencées » : la liste se recharge.
+async function reloadPreparing(): Promise<void> {
+  const { data } = await api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 20 } } });
+  preparing.value = (data?.items ?? []).filter((o) => o.status === "preparing").slice(0, 5);
+}
+
 async function load(): Promise<void> {
   const [day, offers, current] = await Promise.all([
     api.GET("/api/today"),
     // La dose du jour (docs/86) : les 3 meilleures, pas toute la pile.
-    api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE } } }),
+    api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE_CATCH_UP } } }),
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 20 } } }),
   ]);
   today.value = day.data ?? null;
@@ -373,7 +386,7 @@ const { me } = useAuth();
             <h2>À faire</h2>
             <div class="today-sub">
               <p class="today-sub-title">
-                {{ restDay ? "Jour sans recherche" : rhythmPaused ? "En pause" : "Meilleures offres" }}
+                {{ restDay ? "Jour sans recherche" : rhythmPaused ? "En pause" : "Offres du jour" }}
               </p>
               <div
                 class="segmented small"
@@ -387,7 +400,7 @@ const { me } = useAuth();
                   data-test="tab-best"
                   @click="tableTab = 'best'"
                 >
-                  Mieux notées
+                  Du jour
                 </button>
                 <button
                   type="button"
@@ -417,31 +430,13 @@ const { me } = useAuth();
               >
                 <FaceMark mood="neutre" />Aucune offre notée en attente.
               </p>
-              <ul
+              <DailyPick
                 v-else
-                class="today-rows"
-              >
-                <li
-                  v-for="offer in best"
-                  :key="offer.id"
-                >
-                  <RouterLink
-                    :to="offerLink(offer.id)"
-                    class="today-row"
-                    data-test="best-offer"
-                  >
-                    <CompanyLogo :offer="offer" />
-                    <span class="today-row-main">
-                      <strong>{{ offer.title }}</strong>
-                      <span class="muted meta-line">
-                        <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company || "Entreprise non indiquée" }}</span>
-                        <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
-                      </span>
-                    </span>
-                    <ScoreWord :score="offer.score!" />
-                  </RouterLink>
-                </li>
-              </ul>
+                id="offres-du-jour"
+                :offers="dose"
+                @changed="reloadPreparing"
+                @show-preparing="tableTab = 'preparing'"
+              />
             </div>
             <div
               v-show="tableTab === 'preparing'"

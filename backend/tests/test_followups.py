@@ -10,7 +10,7 @@ from sqlalchemy import select, text
 
 from jobbot.api.app import create_app
 from jobbot.db.models import Application, Evaluation, LlmCall, Offer
-from jobbot.followups import service
+from jobbot.followups import remind, service
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
@@ -130,3 +130,34 @@ async def test_status_set_by_hand_keeps_the_follow_up_date(
     )
     assert updated.json()["followed_up_at"] == "2026-09-25"
     assert timedelta(days=14) == service.NO_ANSWER_AFTER
+
+
+async def test_follow_up_date_chosen_between_5_and_30_days(
+    api: AsyncClient, runtime: Runtime
+) -> None:
+    """L'étape « Suivre » (docs/124 §G) : le jour choisi remplace les 10 jours."""
+    application_id = await add(runtime, "Poste DevOps.")
+    url = f"/api/applications/{application_id}/follow-up-date"
+    # Envoyée le 12 septembre : le 14 est trop tôt, le 20 octobre trop tard.
+    assert (await api.patch(url, json={"follow_up_on": "2026-09-14"})).status_code == 422
+    assert (await api.patch(url, json={"follow_up_on": "2026-10-20"})).status_code == 422
+    chosen = await api.patch(url, json={"follow_up_on": "2026-09-30"})
+    assert chosen.json()["follow_up_on"] == "2026-09-30"
+    # La candidature d'une offre, pour l'étape « Suivre ».
+    offer_id = chosen.json()["offer_id"]
+    found = (await api.get("/api/applications", params={"offer": offer_id})).json()
+    assert [a["id"] for a in found] == [application_id]
+    assert (await api.get("/api/applications", params={"offer": offer_id + 999})).json() == []
+    assert (await api.patch("/api/applications/999999/follow-up-date", json={})).status_code == 404
+    # Au jour choisi, pas avant : la règle d'Aujourd'hui, des notifications et de l'assistant.
+    async with runtime.sessionmaker() as session:
+        due = select(Application.id).where(remind.remind_due(date(2026, 9, 29)))
+        assert list(await session.scalars(due)) == []
+        due = select(Application.id).where(remind.remind_due(date(2026, 9, 30)))
+        assert list(await session.scalars(due)) == [application_id]
+    # Vide : de nouveau 10 jours après l'envoi (le 22 septembre).
+    cleared = await api.patch(url, json={"follow_up_on": None})
+    assert cleared.json()["follow_up_on"] is None
+    async with runtime.sessionmaker() as session:
+        due = select(Application.id).where(remind.remind_due(date(2026, 9, 22)))
+        assert list(await session.scalars(due)) == [application_id]

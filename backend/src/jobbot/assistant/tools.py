@@ -8,7 +8,7 @@ contenu brut des e-mails.
 import json
 import re
 from collections.abc import Awaitable, Callable
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import func, select
@@ -33,10 +33,10 @@ from jobbot.db.models import (
     TrainingMark,
 )
 from jobbot.filtering.service import load_criteria
+from jobbot.followups.remind import REMIND_AFTER_DAYS, remind_due, remind_on
 from jobbot.insights import service as insight_service
 from jobbot.interviews import service as interview_service
 from jobbot.notify import interviews as interview_reminders
-from jobbot.notify.service import REMIND_AFTER_DAYS
 from jobbot.orp.service import load_due_day, load_target, month_counts
 from jobbot.rhythm import service as rhythm
 from jobbot.scoring.service import active_profile
@@ -222,12 +222,7 @@ async def _situation(session: AsyncSession, _profile: int, _params: dict[str, An
         )
     )
     to_follow_up = await session.scalar(
-        select(func.count())
-        .select_from(Application)
-        .where(
-            Application.status == ApplicationStatus.EN_ATTENTE,
-            Application.sent_at <= today - timedelta(days=REMIND_AFTER_DAYS),
-        )
+        select(func.count()).select_from(Application).where(remind_due(today))
     )
     counts = await month_counts(session, month)
     pending = await interview_reminders.to_review(session, today)
@@ -341,7 +336,7 @@ async def _offer(session: AsyncSession, _profile: int, params: dict[str, Any]) -
 
 async def _applications(session: AsyncSession, _profile: int, params: dict[str, Any]) -> Any:
     month = _month(params)
-    limit = _today() - timedelta(days=REMIND_AFTER_DAYS)
+    today = _today()
     rows = await session.scalars(
         select(Application)
         .where(Application.orp_month == month)
@@ -361,7 +356,7 @@ async def _applications(session: AsyncSession, _profile: int, params: dict[str, 
                 "statut": a.status,
                 "entretien": _day(a.interview_at),
                 "relancee_le": _day(a.reminded_at),
-                "a_relancer": a.status == ApplicationStatus.EN_ATTENTE and a.sent_at <= limit,
+                "a_relancer": a.status == ApplicationStatus.EN_ATTENTE and remind_on(a) <= today,
                 "ligne_orp_incomplete": not (a.company_address or "").strip(),
             }
             for a in rows
@@ -381,7 +376,7 @@ async def _application(session: AsyncSession, _profile: int, params: dict[str, A
         .where(Interview.application_id == a.id)
         .order_by(Interview.held_at.nulls_last(), Interview.id)
     )
-    limit = _today() - timedelta(days=REMIND_AFTER_DAYS)
+    today = _today()
     return {
         "id": a.id,
         "entreprise": a.company,
@@ -395,7 +390,7 @@ async def _application(session: AsyncSession, _profile: int, params: dict[str, A
         "motif_du_statut": a.status_reason,
         "entretien": _day(a.interview_at),
         "relancee_le": _day(a.reminded_at),
-        "a_relancer": a.status == ApplicationStatus.EN_ATTENTE and a.sent_at <= limit,
+        "a_relancer": a.status == ApplicationStatus.EN_ATTENTE and remind_on(a) <= today,
         "ligne_orp_incomplete": not (a.company_address or "").strip(),
         "offre_id": a.offer_id,
         "lettre_envoyee": a.letter_draft_id is not None,

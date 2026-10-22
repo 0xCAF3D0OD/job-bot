@@ -165,7 +165,8 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["12 offres", "2 relances"]);
     const cta = wrapper.find("[data-test=today-cta]");
     expect(cta.text()).toBe("Examiner les offres");
-    expect(cta.attributes("href")).toBe("/candidatures/offres");
+    // Les offres du jour sont dans la carte « À faire » (docs/124 §D).
+    expect(cta.attributes("href")).toBe("/aujourdhui#offres-du-jour");
   });
 
   it("la phrase suit la situation : relances seules, tout à jour, jour sans recherche, pause", async () => {
@@ -228,15 +229,17 @@ describe("Aujourd'hui épuré (docs/95)", () => {
       return Promise.resolve({ data: { items: [{ id: 1, title: "Ingénieur DevOps", company: "Acme SA", location: "Lausanne", score: 82, links: [] }] } });
     });
     const wrapper = await mountView();
-    expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 3 } } });
-    const offer = wrapper.find("[data-test=best-offer]");
+    expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 5 } } });
+    // Les offres du jour, une à la fois (docs/124 §D).
+    const offer = wrapper.find("[data-test=pick-card]");
     expect(offer.text()).toContain("Ingénieur DevOps");
     // Métadonnées en icônes (docs/101) : l'entreprise (immeuble), le lieu (repère).
     expect(offer.find("[data-icon=building]").exists()).toBe(true);
     expect(offer.find("[data-icon=pin]").exists()).toBe(true);
     expect(offer.text()).toContain("Acme SA");
     expect(offer.text()).toContain("Lausanne");
-    expect(offer.attributes("href")).toBe("/candidatures/offres?offre=1");
+    expect(offer.find("[data-test=pick-open]").attributes("href")).toBe("/candidatures/offres?offre=1");
+    expect(offer.find("[data-test=pick-count]").text()).toBe("1 sur 1");
     const preparing = wrapper.find("[data-test=preparing]");
     expect(preparing.text()).toContain("SRE");
     expect(preparing.text()).not.toContain("Envoyée");
