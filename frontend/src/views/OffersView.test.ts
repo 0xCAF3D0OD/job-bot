@@ -234,6 +234,9 @@ describe("note et résumé", () => {
     expect(scored?.find("[data-test=score]").text()).toBe("Proche");
     expect(scored?.find("[data-test=score]").classes()).toContain("close");
     expect(scored?.find("[data-test=score]").attributes("aria-label")).toBe("Proche : 82 sur 100");
+    // La jauge sous le mot, pas un filet au bord de la carte (0.94.1).
+    expect(scored?.find(".score-gauge").attributes("style")).toContain("--p: 82");
+    expect(scored?.find(".score-line").exists()).toBe(false);
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
     expect(scored?.find("[data-test=offer-date]").exists()).toBe(true);

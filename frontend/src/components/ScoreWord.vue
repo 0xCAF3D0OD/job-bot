@@ -5,7 +5,9 @@ import { scoreWord } from "../format";
 import FaceMark from "./FaceMark.vue";
 
 // La note en mots, dans les listes (docs/121 §C.5) : le visage du 1 et un mot (Très proche,
-// Proche, À creuser, Loin) ; le chiffre au survol et pour les lecteurs d'écran. Sans note :
+// Proche, À creuser, Loin) ; dessous, une petite jauge remplie comme la note (0.94.1 : le filet
+// en bas de la carte se confondait avec la limite entre deux cartes) ; le chiffre au survol et
+// pour les lecteurs d'écran. Sans note :
 // « Pas encore notée », sans visage, avec la raison au survol. Le cercle chiffré reste dans
 // la fiche de l'offre.
 const props = defineProps<{ score: number | null; pending?: string; stale?: boolean }>();
@@ -27,8 +29,15 @@ const label = computed(() =>
     role="img"
     data-test="score"
   >
-    <FaceMark :mood="word.mood" />
-    <span aria-hidden="true">{{ word.word }}</span>
+    <span class="score-word-label">
+      <FaceMark :mood="word.mood" />
+      <span aria-hidden="true">{{ word.word }}</span>
+    </span>
+    <span
+      class="score-gauge"
+      :style="{ '--p': Math.max(0, Math.min(100, score!)) }"
+      aria-hidden="true"
+    />
   </span>
   <span
     v-else
