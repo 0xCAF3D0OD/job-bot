@@ -91,7 +91,7 @@ L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Con
 
 ## La note (docs/73, docs/76, docs/121 §C.5)
 
-- **Dans les listes** (Offres, Aujourd'hui) : un mot et le visage du 1, à la couleur de la note : « Très proche » (85 et plus, ravi), « Proche » (70, content), « À creuser » (50, attentif, gris chaud), « Loin » (neutre, gris). Le chiffre au survol (« Proche : 82 sur 100 »). Un filet en bas de la ligne, rempli comme la note.
+- **Dans les listes** (Offres, Aujourd'hui) : un mot et le visage du 1, à la couleur de la note : « Très proche » (85 et plus, ravi), « Proche » (70, content), « À creuser » (50, attentif, gris chaud), « Loin » (neutre, gris). Le chiffre au survol (« Proche : 82 sur 100 »). Sous le mot, une petite jauge (4,5 rem, à la couleur du mot) remplie comme la note ; jamais un filet au bord de la carte, qui se confondrait avec la limite entre deux cartes.
 - **Dans la fiche** : un cercle dont le contour se remplit comme la note (plein à 100), à la couleur de la note ; la part manquante reste visible en gris clair. Sous lui, une phrase : pourquoi.
 - Une offre pas encore notée : « Pas encore notée », qui dit pourquoi au survol ; dans la fiche, un cercle vide en pointillés avec « – ».
 - Jamais une pastille ni un visage déçu.

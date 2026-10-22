@@ -150,6 +150,11 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 
 - Test de la démo : la phrase du Data Engineer et du Cloud Engineer (Azure), le niveau seulement sur « SRE junior », toutes les phrases de 140 caractères au plus. 620 tests backend, ruff, mypy. Capture de la fiche du Data Engineer.
 
+## Écarts (0.94.1 : la jauge sous le mot)
+
+- **Le constat** (ta question du 2026-10-22) : le filet en bas de la carte, sur toute la largeur, se confondait avec la limite entre deux cartes ; rien ne le reliait au mot.
+- **La jauge** : sous le mot et son visage, à droite de la ligne, 4,5 rem de large, 4 px, bouts arrondis, à la couleur du mot ; la part manquante en gris clair. Elle ne touche aucun bord. Dans la liste des Offres et les meilleures offres d'Aujourd'hui (le même composant). « Pas encore notée » n'a pas de jauge.
+
 ## Les questions
 
 1. **A** : l'IA lit le CV pendant l'accueil (environ 0,05 à 0,10 $), un seul écran « Voici ce que j'ai compris » : d'accord ?
