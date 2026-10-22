@@ -143,7 +143,7 @@ L'élément entier est cliquable, avec un survol ; pas de « › » ni de « Con
 
 Une ligne par élément, séparées par un filet ; une ligne par jour quand la liste suit les jours. Au moins 0,75 rem au-dessus et au-dessous d'une ligne, et entre un texte et la carte qui suit.
 
-**La même forme partout** (docs/129, docs/130) : le logo ou l'initiale, le texte (en gras, puis une ou deux lignes grises coupées par « … »), l'action à droite, à la même place d'une ligne à l'autre ; le compte dans le titre de la liste ; quelques lignes, puis « Voir les N autres » ou « Tout voir », jamais une liste défilante dans la page.
+**La même forme partout** (docs/129, docs/130) : le logo ou l'initiale, le texte (en gras, puis une ou deux lignes grises coupées par « … »), l'action à droite, à la même place d'une ligne à l'autre ; le compte dans le titre de la liste ; quelques lignes, puis « Voir les N autres » ou « Tout voir ». Exception : une liste à côté du calendrier du Suivi prend sa hauteur et défile dedans, estompée en haut et en bas (retour du 2026-10-07, docs/134).
 
 ## Un seul cadre par bloc (docs/74, docs/76)
 
