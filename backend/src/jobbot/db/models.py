@@ -900,6 +900,12 @@ class User(Base):
     # La formule (docs/125) : essentiel (gratuite) ou plus ; plus réglée par l'exploitant tant
     # que le paiement n'existe pas.
     plan: Mapped[str] = mapped_column(Text, default="essentiel", server_default="essentiel")
+    # Plus payé (docs/125 §6) : jusqu'à cette date ; vide : Plus offert par l'exploitant.
+    plan_until: Mapped[date | None] = mapped_column(Date)
+    # Résilié : Plus dure jusqu'à `plan_until`, puis Essentiel.
+    plan_cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    billing_gateway_id: Mapped[str | None] = mapped_column(Text)
+    billing_subscription_id: Mapped[str | None] = mapped_column(Text)
     # Suspendu : plus de connexion ni de tâches, données gardées.
     suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -1165,4 +1171,22 @@ class Contact(Base):
     answered_on: Mapped[date | None] = mapped_column(Date)
     note: Mapped[str | None] = mapped_column(Text)
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Payment(Base):
+    """Un paiement de Plus reçu (docs/125 §6) : une transaction Payrexx confirmée."""
+
+    __tablename__ = "payments"
+    __table_args__ = (
+        UniqueConstraint("user_id", "provider_ref", name="payments_provider_ref_key"),
+    )
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    provider_ref: Mapped[str] = mapped_column(Text)
+    amount_cents: Mapped[int] = mapped_column()
+    currency: Mapped[str] = mapped_column(Text, default="CHF")
+    paid_on: Mapped[date] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

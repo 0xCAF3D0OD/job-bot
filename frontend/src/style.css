@@ -3741,3 +3741,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .plan-resets { margin: 0.5rem 0 0; }
 .plan-plus { margin-top: 1rem; }
 .plan-limit { margin: 0.5rem 0 0.75rem; line-height: 1.5; }
+.plan-terms { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; line-height: 1.5; }
+.plan-payments-title { margin: 1.25rem 0 0; font-weight: 600; }
+.plan-payments li { grid-template-columns: 1fr auto; }
+.plan-message { margin: 0.75rem 0 0; }

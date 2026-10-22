@@ -25,6 +25,8 @@ SECRET_FIELDS = (
     "anthropic_api_key",
     "ntfy_topic",
     "backup_passphrase",
+    "payrexx_api_secret",
+    "payrexx_webhook_key",
 )
 
 
@@ -124,6 +126,14 @@ class Settings(BaseSettings):
     # Adresse de l'interface, pour le lien des notifications.
     public_url: str = "http://localhost:5173"
 
+    # Le paiement de Plus par Payrexx (docs/125 §6). Rien n'est proposé tant que
+    # `billing_enabled` n'est pas vrai : à n'activer qu'après la relecture des conditions.
+    billing_enabled: bool = False
+    payrexx_instance: str | None = None
+    payrexx_api_secret: SecretStr | None = None
+    # La clé de signature des webhooks (Payrexx, rubrique Webhooks), différente du secret de l'API.
+    payrexx_webhook_key: SecretStr | None = None
+
     # Connexion (docs/18 §1) : sans session, l'API ne sert que les Actualités.
     # false seulement pour un essai local : toutes les pages redeviennent ouvertes.
     auth_enabled: bool = True
@@ -194,6 +204,15 @@ class Settings(BaseSettings):
     def backup_configured(self) -> bool:
         phrase = self.backup_passphrase.get_secret_value() if self.backup_passphrase else ""
         return bool(phrase.strip())
+
+    @property
+    def billing_ready(self) -> bool:
+        return bool(
+            self.billing_enabled
+            and self.payrexx_instance
+            and self.payrexx_api_secret
+            and self.payrexx_webhook_key
+        )
 
     @property
     def score_model(self) -> str:

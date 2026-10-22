@@ -13,12 +13,15 @@ const contact = ref<string | null>(null);
 // La boîte des invités en place (docs/113) : les e-mails des sites ne passent plus par
 // l'exploitant.
 const guestMailbox = ref(false);
+// Le paiement de Plus est ouvert (docs/125 §6).
+const billing = ref(false);
 
 onMounted(async () => {
   await load();
   const { data } = await api.GET("/api/privacy");
   contact.value = data?.contact ?? null;
   guestMailbox.value = data?.guest_mailbox ?? false;
+  billing.value = data?.billing ?? false;
 });
 </script>
 
@@ -88,6 +91,20 @@ onMounted(async () => {
       <p>
         Les notifications sur ton téléphone passent par le service ntfy, seulement si tu les as activées.
       </p>
+
+      <template v-if="billing">
+        <h2>Le paiement de Plus (Payrexx)</h2>
+        <ul data-test="privacy-billing">
+          <li>Payrexx, un prestataire suisse, reçoit ton nom, ton e-mail et ton moyen de paiement ; jobA1 ne voit jamais ta carte.</li>
+          <li>jobA1 garde ta formule, la date de fin de Plus et tes paiements (date, montant), tant que ton compte existe.</li>
+          <li>Les justificatifs de paiement sont gardés 10 ans par Payrexx et l'exploitant : c'est une obligation comptable.</li>
+          <li>
+            Les règles du paiement et de la résiliation : <RouterLink to="/conditions">
+              Conditions d'utilisation
+            </RouterLink>.
+          </li>
+        </ul>
+      </template>
 
       <h2>Ce qui est possible</h2>
       <p>Dans Réglages, rubrique Compte :</p>
