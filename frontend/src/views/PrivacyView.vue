@@ -56,8 +56,7 @@ onMounted(async () => {
           L'exploitant voit seulement ton usage : dernière connexion, dépense de l'IA du mois, nombre d'offres reçues.
         </li>
         <li>
-          Il administre le serveur, mais la plateforme ne lui montre jamais tes offres, candidatures, documents ou
-          discussions. Il s'engage à ne pas les lire, sauf à ta demande ou par obligation légale.
+          Il administre le serveur, mais ne voit jamais tes offres, candidatures, documents ou discussions. Il ne les lit qu'à ta demande ou par obligation légale.
         </li>
       </ul>
 

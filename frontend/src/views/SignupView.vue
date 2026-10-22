@@ -114,7 +114,7 @@ async function submit(): Promise<void> {
       @submit.prevent="submit"
     >
       <p class="hint">
-        Choisis ton identifiant et ton mot de passe. Ton compte attend ensuite la validation de l'équipe jobA1.
+        Choisis un identifiant et un mot de passe ; l'équipe jobA1 valide ensuite ton compte.
       </p>
       <label>Identifiant
         <input

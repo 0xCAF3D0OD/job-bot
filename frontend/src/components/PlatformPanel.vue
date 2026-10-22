@@ -240,7 +240,7 @@ function size(bytes: number | null | undefined): string {
       class="notice"
       data-test="platform-auth-disabled"
     >
-      La connexion est désactivée sur cette installation : les comptes invités ne pourront pas se connecter.
+      Connexion désactivée : les comptes invités ne peuvent pas se connecter.
     </p>
     <div
       v-if="platform.signup_requests.length"

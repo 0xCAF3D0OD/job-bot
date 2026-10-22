@@ -34,7 +34,7 @@ defineExpose({ printPdf });
       class="notice"
       data-test="changed"
     >
-      Des candidatures de ce mois ont changé après la remise : renvoie une version corrigée si besoin.
+      Des candidatures ont changé après la remise : renvoie une version corrigée.
     </p>
     <p
       v-if="data.count && !data.holder.name"

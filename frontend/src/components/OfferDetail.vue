@@ -406,7 +406,7 @@ watch(
       data-test="section-for-you"
     >
       <h3>
-        <HoverNote text="Résumé et note par l'IA : elle compare l'annonce à tes blocs de profil actifs. Les points forts citent le bloc d'où ils viennent.">
+        <HoverNote text="L'IA compare l'annonce à tes blocs de profil actifs.">
           Pour toi
         </HoverNote>
       </h3>

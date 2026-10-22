@@ -54,7 +54,7 @@ describe("la formule", () => {
     expect(wrapper.find("[data-test=plan-plus]").text()).toContain("Plus · 7 CHF par mois");
     expect(wrapper.find("[data-test=plan-plus]").text()).toContain("60 lettres");
     // Le paiement pas encore ouvert : pas de bouton.
-    expect(wrapper.find("[data-test=plan-plus]").text()).toContain("Le paiement arrive bientôt.");
+    expect(wrapper.find("[data-test=plan-buy-note]").text()).toBe("Le paiement arrive bientôt.");
     expect(wrapper.find("[data-test=plan-buy]").exists()).toBe(false);
   });
 

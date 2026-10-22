@@ -344,7 +344,7 @@ onMounted(() => void load());
         value="accord de l'ORP"
         data-test="orp-note"
       >
-        <strong><HoverNote text="L'assurance chômage peut financer certaines formations (« mesures relatives au marché du travail »). La plateforme ne dit pas si une formation sera acceptée : c'est la décision de l'ORP.">Formation et chômage</HoverNote> :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
+        <strong><HoverNote text="L'assurance chômage peut financer certaines formations : c'est l'ORP qui décide.">Formation et chômage</HoverNote> :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
           son accord préalable</strong>.
         <span class="orp-links">
           <a

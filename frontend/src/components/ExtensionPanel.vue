@@ -144,7 +144,7 @@ onMounted(load);
         </ul>
       </template>
       <MoreInfo label="Relier avec un jeton">
-        <p>Si « Relier » ne fonctionne pas : crée un jeton, puis colle-le dans l'extension (« Relier avec un jeton »).</p>
+        <p>Si « Relier » ne marche pas : crée un jeton et colle-le dans l'extension.</p>
         <div
           v-if="created"
           class="extension-token"

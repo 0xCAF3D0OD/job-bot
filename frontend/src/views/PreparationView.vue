@@ -447,7 +447,7 @@ onMounted(() => void load());
             </section>
             <section class="panel-section apply-step">
               <h3>
-                <HoverNote text="La candidature passe dans ton suivi, avec ta lettre et ton CV, et compte dans tes preuves ORP du mois.">
+                <HoverNote text="Elle passe dans ton suivi et compte pour tes preuves ORP du mois.">
                   J'ai postulé
                 </HoverNote>
               </h3>

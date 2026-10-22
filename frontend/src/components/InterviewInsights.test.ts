@@ -61,7 +61,7 @@ describe("Mes enseignements (docs/23 §3)", () => {
     const wrapper = mount(InterviewInsights);
     await flushPromises();
     expect(wrapper.find(".disclosure-value").text()).toBe("aucun entretien");
-    expect(wrapper.find("[data-test=insights-empty]").text()).toContain("Faire le point sur l'entretien");
+    expect(wrapper.find("[data-test=insights-empty]").text()).toContain("fais le point après chaque entretien");
     expect(wrapper.find("[data-test=coach]").exists()).toBe(false);
   });
 });
