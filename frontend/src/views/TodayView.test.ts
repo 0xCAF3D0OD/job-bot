@@ -273,3 +273,45 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     expect(wrapper.find("[data-test=orp-gauge]").exists()).toBe(false);
   });
 });
+
+describe("Aujourd'hui, les moments (docs/123 §2)", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+    try {
+      localStorage.clear();
+    } catch {
+      // stockage indisponible : rien à nettoyer
+    }
+  });
+
+  it("S : rien d'urgent, le visage ravi, le mois en une ligne, les offres quand même", async () => {
+    mockGet(today({ to_review: 0, to_follow_up: 0, orp_due_month: null, orp_due_date: null }));
+    const wrapper = await mountView();
+    const calm = wrapper.find("[data-test=today-calm]");
+    expect(calm.exists()).toBe(true);
+    expect(calm.find(".face-mark").attributes("data-mood")).toBe("ravi");
+    expect(calm.text()).toContain("Rien d'urgent aujourd'hui");
+    expect(calm.find(".orp-month.compact [data-test=month-count]").text()).toBe("Mois ORP · 3 / 20");
+    expect(calm.find("[data-test=today-calm-offers]").attributes("href")).toBe("/candidatures/offres");
+    // Pas de phrase du jour ni de carte « À faire » en même temps.
+    expect(wrapper.find("[data-test=today-sentence]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=best]").exists()).toBe(false);
+  });
+
+  it("un jour avec des offres à examiner n'est pas calme", async () => {
+    mockGet(today());
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-calm]").exists()).toBe(false);
+  });
+
+  it("R : l'objectif atteint, une victoire une seule fois par mois", async () => {
+    mockGet(today({ month_count: 20, month_target: 20 }));
+    const first = await mountView();
+    expect(document.body.querySelector("[data-test=goal-moment]")?.textContent).toContain("Objectif du mois atteint");
+    expect(document.body.querySelector("[data-test=goal-moment] .face-mark")?.classList.contains("wink")).toBe(true);
+    first.unmount();
+    document.body.innerHTML = "";
+    await mountView();
+    expect(document.body.querySelector("[data-test=goal-moment]")).toBeNull();
+  });
+});

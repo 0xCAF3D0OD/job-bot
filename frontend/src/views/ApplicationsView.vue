@@ -225,10 +225,13 @@ function addManual(): void {
 }
 
 // Une candidature qui passe en Engagement : le moment de fête, par-dessus la page (docs/60).
+// Un entretien proposé : une victoire, le visage ravi (docs/123 §2, R).
 const celebrating = ref<string | null>(null);
+const interviewWon = ref<string | null>(null);
 function celebrateIf(id: number | null, status: string | undefined, company: string): void {
   const before = id === null ? undefined : all.value.find((a) => a.id === id)?.status;
   if (status === "engagement" && before !== "engagement") celebrating.value = company;
+  else if (status === "entretien" && before !== "entretien" && before !== "engagement") interviewWon.value = company;
 }
 
 async function save(value: ApplicationFormValue): Promise<void> {
@@ -564,6 +567,15 @@ onUnmounted(() => assistant.setFocus(null));
         :company="celebrating"
         @close="celebrating = null"
       />
+      <SuccessCard
+        v-if="interviewWon"
+        face
+        :title="`Un entretien chez ${interviewWon}`"
+        test-id="interview-moment"
+        @close="interviewWon = null"
+      >
+        <p>Ta candidature a retenu l'attention.</p>
+      </SuccessCard>
       <SuccessCard
         v-if="submitted"
         name="preuves-orp"

@@ -2350,7 +2350,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 
 /* Réussite (docs/61 §1) : une carte qui vient devant, souple ; l'image posée sur son bord. */
 .success-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 1rem; background: color-mix(in srgb, var(--bg) 55%, transparent); animation: overlay-in var(--t-state) ease-out; }
-.success-card { position: relative; display: grid; justify-items: center; gap: 0.5rem; width: min(100%, 26rem); margin-top: 11rem; padding: 1.6rem 1.6rem 1.4rem; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 24px 60px rgb(17 17 31 / 18%); animation: card-pop 420ms cubic-bezier(0.18, 1.25, 0.4, 1) both; }
+.success-card { position: relative; display: grid; justify-items: center; gap: 0.5rem; width: min(100%, 26rem); margin-top: 11rem; padding: 1.6rem 3.5rem 1.4rem; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 24px 60px rgb(17 17 31 / 18%); animation: card-pop 420ms cubic-bezier(0.18, 1.25, 0.4, 1) both; }
 .success-card .success-art { position: absolute; left: 50%; top: 0; width: 220px; margin: 0; transform: translate(-50%, calc(-100% + 14px)); }
 .success-card h3 { margin: 0; font-size: 1.2rem; }
 .success-card p { margin: 0; color: var(--muted); }
@@ -3597,3 +3597,29 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .orp-month-line .reached { color: var(--ok-text); }
 .orp-month-line .on-track { color: var(--accent-text); }
 .orp-month-line .behind { color: var(--warn-text); }
+.face-tile.small { width: 2.5rem; height: 2.5rem; border-radius: 12px; }
+.orp-month.compact { display: flex; align-items: center; gap: 0.75rem 1rem; flex-wrap: wrap; }
+.orp-month.compact h2 { margin: 0; font-size: 1rem; white-space: nowrap; }
+.orp-month.compact .orp-month-bar { flex: 1; min-width: 8rem; margin: 0; }
+.orp-month-word { font-size: 0.9rem; white-space: nowrap; }
+.orp-month-word.reached { color: var(--ok-text); }
+.orp-month-word.on-track { color: var(--accent-text); }
+.orp-month-word.behind { color: var(--warn-text); }
+/* Une victoire (docs/123 §2, R) : le visage ravi au-dessus de la carte, six bulles qui
+   s'écartent une fois, aux couleurs de l'humeur. */
+.success-card .success-face { display: grid; place-items: center; width: 160px; height: 150px; color: var(--logo-line); }
+.success-face .face-mark .face-eye { fill: var(--logo-line); }
+.victory-bubble { position: absolute; left: 50%; top: 50%; width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--mint); opacity: 0; animation: victory-bubble 900ms 200ms ease-out both; }
+.victory-bubble.b2, .victory-bubble.b5 { background: #a8e6d2; width: 0.5rem; height: 0.5rem; }
+.victory-bubble.b3 { background: var(--ok); }
+.victory-bubble.b1 { --x: -80px; --y: -40px; } .victory-bubble.b2 { --x: -60px; --y: 30px; } .victory-bubble.b3 { --x: -20px; --y: -70px; }
+.victory-bubble.b4 { --x: 75px; --y: -45px; } .victory-bubble.b5 { --x: 60px; --y: 35px; } .victory-bubble.b6 { --x: 25px; --y: -72px; }
+@keyframes victory-bubble { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .victory-bubble { display: none; } }
+@media (max-width: 820px) { .success-card .success-face { width: 130px; height: 130px; } }
+/* S, rien d'urgent (docs/123 §2). */
+.today-calm { display: grid; justify-items: center; gap: 1.25rem; margin-bottom: 2rem; }
+.today-calm .face-state { padding-bottom: 0; }
+.today-motto { margin-top: 0.75rem !important; font-weight: 600; color: var(--accent-text); }
+.today-calm-month { width: min(100%, 40rem); }
+.today-empty-line { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); }
