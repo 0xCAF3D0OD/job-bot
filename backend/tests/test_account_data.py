@@ -166,6 +166,7 @@ async def test_privacy_text_public_and_set_by_owner(runtime: Runtime, secured: R
         assert saved.json() == {
             "contact": "Kevin, Lausanne. Hébergé chez moi.",
             "guest_mailbox": False,
+            "billing": False,
         }
     await guest(secured)
     async with client(secured) as api:

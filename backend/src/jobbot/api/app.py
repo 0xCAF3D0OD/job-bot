@@ -20,6 +20,7 @@ from jobbot.api.routes import (
     applications,
     assistant,
     auth,
+    billing,
     certificates,
     collect,
     contacts,
@@ -165,4 +166,5 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(alerts.router)
     app.include_router(interviews.router)
     app.include_router(plan.router)
+    app.include_router(billing.router)
     return app

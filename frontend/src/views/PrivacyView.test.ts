@@ -8,12 +8,12 @@ const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
 afterEach(() => vi.resetAllMocks());
 
-async function mountPage(contact: string | null, guestMailbox = false) {
+async function mountPage(contact: string | null, guestMailbox = false, billing = false) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({
       data:
         path === "/api/privacy"
-          ? { contact, guest_mailbox: guestMailbox }
+          ? { contact, guest_mailbox: guestMailbox, billing }
           : { authenticated: false, username: null, setup_needed: false, auth_enabled: true, is_owner: false },
     }),
   );
@@ -40,6 +40,16 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(text).toContain("30 minutes");
     const shared = await mountPage("Kevin", false);
     expect(shared.find("[data-test=privacy-mailbox]").text()).toContain("que l'exploitant administre");
+  });
+
+  it("le paiement de Plus, seulement une fois ouvert (docs/125 §6)", async () => {
+    const closed = await mountPage("Kevin");
+    expect(closed.find("[data-test=privacy-billing]").exists()).toBe(false);
+    const open = await mountPage("Kevin", true, true);
+    const text = open.find("[data-test=privacy-billing]").text();
+    expect(text).toContain("Payrexx, un prestataire suisse");
+    expect(text).toContain("10 ans");
+    expect(open.find("[data-test=privacy-billing] a").attributes("href")).toBe("/conditions");
   });
 
   it("sans mentions : le dit", async () => {

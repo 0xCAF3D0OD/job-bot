@@ -35,7 +35,11 @@ PUBLIC_READ = [
     re.compile(r"^/api/docs"),
     re.compile(r"^/api/openapi\.json$"),
 ]
-PUBLIC_ANY = [re.compile(r"^/api/auth/")]
+PUBLIC_ANY = [
+    re.compile(r"^/api/auth/"),
+    # Le webhook de Payrexx (docs/125 §6) : sans session, la route vérifie sa signature.
+    re.compile(r"^/api/billing/webhook$"),
+]
 CALENDAR_FEED = re.compile(r"^/api/agenda/feed/([A-Za-z0-9_-]+)\.ics$")
 PROFILE_HEADER = b"x-jobbot-profile"
 # Routes de l'extension du navigateur (docs/25) : jeton obligatoire, connexion ou non.

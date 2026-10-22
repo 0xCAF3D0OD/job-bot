@@ -37,6 +37,8 @@ PERSONAL = (
     "interviews",
     "llm_batches",
     "llm_calls",
+    # Les paiements de Plus reçus (docs/125 §6).
+    "payments",
     "notifications",
     "offer_links",
     "offer_sightings",
