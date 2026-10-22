@@ -41,6 +41,18 @@ function report(extra: Record<string, unknown> = {}) {
   };
 }
 
+// Chaque adresse reçoit sa propre réponse : le Bilan n'est servi qu'à /api/insights, sinon
+// RhythmWeeks et la jauge ORP lisent un bilan à la place de leurs données.
+function serve(insights: Record<string, unknown> | Error, today: Record<string, unknown> | null = null) {
+  GET.mockImplementation((path: string) => {
+    if (path === "/api/insights") {
+      return insights instanceof Error ? Promise.reject(insights) : Promise.resolve({ data: insights });
+    }
+    if (path === "/api/today") return Promise.resolve({ data: today ?? undefined });
+    return Promise.resolve({ data: undefined });
+  });
+}
+
 async function mountView(path = "/candidatures/bilan") {
   const router = createRouter({
     history: createMemoryHistory(),
@@ -57,7 +69,7 @@ async function mountView(path = "/candidatures/bilan") {
 
 describe("Bilan (docs/42, docs/55)", () => {
   it("parcours, délai, phrase de tête et groupes trop petits", async () => {
-    GET.mockResolvedValue({ data: report() });
+    serve(report());
     const { wrapper } = await mountView();
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "recent" } } });
     expect(wrapper.find("[data-test=funnel-received]").text()).toContain("75");
@@ -90,7 +102,7 @@ describe("Bilan (docs/42, docs/55)", () => {
       { start: "2026-10-01", applications: 2, responses: 1 },
       { start: "2026-10-05", applications: 2, responses: 1 },
     ];
-    GET.mockResolvedValue({ data: report({ orp_summary: summary, headline: null, unit: "week", buckets: weeks }) });
+    serve(report({ orp_summary: summary, headline: null, unit: "week", buckets: weeks }));
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     const { wrapper, router } = await mountView("/candidatures/bilan?mois=2026-10");
@@ -113,7 +125,7 @@ describe("Bilan (docs/42, docs/55)", () => {
 
   it("sans candidature : invite au lieu de comparaisons vides", async () => {
     const empty = { received: 3, retained: 1, applications: 0, responses: 0, interviews: 0, engagements: 0 };
-    GET.mockResolvedValue({ data: report({ funnel: empty, delay: null, headline: null }) });
+    serve(report({ funnel: empty, delay: null, headline: null }));
     const { wrapper } = await mountView();
     expect(wrapper.find("[data-test=insights-empty]").exists()).toBe(true);
     expect(wrapper.find("[data-test=comparison-source]").exists()).toBe(false);
@@ -121,20 +133,13 @@ describe("Bilan (docs/42, docs/55)", () => {
   });
 
   it("panne : un message", async () => {
-    GET.mockRejectedValue(new Error("réseau"));
+    serve(new Error("réseau"));
     const { wrapper } = await mountView();
     expect(wrapper.find("[role=alert]").text()).toContain("Bilan indisponible");
   });
 
   it("la jauge de l'objectif ORP, quittée d'Aujourd'hui (docs/95)", async () => {
-    GET.mockImplementation((path: string) =>
-      Promise.resolve({
-        data:
-          path === "/api/today"
-            ? { month: "2026-10", month_count: 3, month_target: 20, orp_history: [{ month: "2026-09", count: 20 }] }
-            : report(),
-      }),
-    );
+    serve(report(), { month: "2026-10", month_count: 3, month_target: 20, orp_history: [{ month: "2026-09", count: 20 }] });
     const { wrapper } = await mountView();
     const gauge = wrapper.find("[data-test=orp-gauge]");
     expect(gauge.exists()).toBe(true);

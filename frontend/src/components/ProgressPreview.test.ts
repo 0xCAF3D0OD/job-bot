@@ -83,9 +83,9 @@ describe("Progresser dans la capsule (docs/92)", () => {
   });
 
   it("rien sur le métier : il le dit, sans remplir avec l'économie (docs/116 §4)", async () => {
-    GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/news" ? { items: [] } : { items: [] } }),
-    );
+    GET.mockResolvedValue({ data: { items: [] } });
+    // Le point est allumé : ouvrir l'aperçu marque les actualités comme lues.
+    POST.mockResolvedValue({});
     const wrapper = await mountAt("/aujourdhui");
     await wrapper.find("[data-test=progress-zone]").trigger("click");
     await flushPromises();

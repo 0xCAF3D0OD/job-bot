@@ -10,10 +10,13 @@ const GET = vi.fn();
 const PATCH = vi.fn();
 const POST = vi.fn();
 const PUT = vi.fn();
+// Aucune note corrigée (docs/114) : sans cette réponse, la fiche recevait une page d'offres
+// à la place de la correction et ScoreCorrection lisait un sens inexistant.
+const NO_CORRECTION = "/api/offers/{offer_id}/score-correction";
 vi.mock("../api/client", () => ({
   api: {
     PUT: (...args: unknown[]) => PUT(...args),
-    GET: (...args: unknown[]) => GET(...args),
+    GET: (...args: unknown[]) => (args[0] === NO_CORRECTION ? Promise.resolve({ data: null }) : GET(...args)),
     PATCH: (...args: unknown[]) => PATCH(...args),
     POST: (...args: unknown[]) => POST(...args),
   },
