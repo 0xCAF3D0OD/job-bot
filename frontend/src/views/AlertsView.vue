@@ -78,11 +78,9 @@ onMounted(() => void load());
         </li>
       </ul>
     </div>
-    <!-- Deux colonnes sur ordinateur (0.83.2) : la tâche à gauche, les e-mails des sites à
-         droite ; chacune un titre puis une carte, de même hauteur (0.84.2), le journal dessous
-         sur toute la largeur. Sur téléphone, l'une sous l'autre ; un code arrivé fait passer
-         les e-mails des sites en premier, le temps de le recopier. « Gérer mes alertes » (le
-         tableau) prend toute la largeur. -->
+    <!-- L'un sous l'autre, chacun sur toute la largeur (docs/130 §F) : les alertes, les e-mails
+         des sites, puis le journal ; plus de carte étirée à la hauteur de sa voisine. Sur
+         téléphone, un code arrivé fait passer les e-mails des sites en premier. -->
     <div
       v-if="page"
       :class="['alerts-columns', { wide: view === 'manage', 'has-code': !!page.codes?.length }]"

@@ -347,7 +347,9 @@ onUnmounted(() => spy?.disconnect());
                 <label for="orp">Objectif mensuel de l'ORP</label>
               </legend>
               <p class="setting-desc">
-                Le nombre de recherches que ton conseiller te demande chaque mois. Le Suivi compte avec toi.
+                <HoverNote text="Le nombre que ton conseiller te demande ; le Suivi compte avec toi.">
+                  Les candidatures demandées chaque mois.
+                </HoverNote>
               </p>
               <div class="inline-field">
                 <input
@@ -366,7 +368,7 @@ onUnmounted(() => spy?.disconnect());
                 <label for="due-day">Date limite de remise des preuves</label>
               </legend>
               <p class="setting-desc">
-                Le jour du mois suivant où tes preuves doivent être remises à l'ORP.
+                Le jour où les preuves sont dues.
               </p>
               <div class="inline-field">
                 <span>le</span>

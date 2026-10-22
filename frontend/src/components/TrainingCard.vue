@@ -54,23 +54,52 @@ function onHeart(): void {
 
 <template>
   <article class="training-tile">
-    <div class="tile-tags">
-      <span class="tile-tag strong">{{ KINDS[training.kind] ?? training.kind }}</span>
-      <span
-        v-if="status"
-        class="tile-tag"
-        data-test="training-state"
-      >{{ STATUSES[status] }}</span>
-      <span
-        v-if="training.mark?.funding_status"
-        :class="['tile-tag', { warn: training.mark.funding_status === 'refused' }]"
-        data-test="funding-badge"
-      >{{ FUNDING[training.mark.funding_status] }}</span>
-      <span
-        v-if="!training.verified"
-        class="tile-tag warn"
-        data-test="unverified"
-      >à vérifier</span>
+    <!-- Les étiquettes et le marque-page sur la même ligne (docs/130 §E) : plus de vide en bas. -->
+    <div class="tile-head">
+      <div class="tile-tags">
+        <span class="tile-tag strong">{{ KINDS[training.kind] ?? training.kind }}</span>
+        <span
+          v-if="status"
+          class="tile-tag"
+          data-test="training-state"
+        >{{ STATUSES[status] }}</span>
+        <span
+          v-if="training.mark?.funding_status"
+          :class="['tile-tag', { warn: training.mark.funding_status === 'refused' }]"
+          data-test="funding-badge"
+        >{{ FUNDING[training.mark.funding_status] }}</span>
+        <span
+          v-if="!training.verified"
+          class="tile-tag warn"
+          data-test="unverified"
+        >à vérifier</span>
+      </div>
+      <div class="tile-foot">
+        <template v-if="!training.verified">
+          <IconButton
+            icon="bookmark"
+            label="Garder"
+            data-test="keep"
+            @click="emit('review', true)"
+          />
+          <IconButton
+            icon="trash"
+            label="Écarter"
+            danger
+            data-test="dismiss"
+            @click="emit('review', false)"
+          />
+        </template>
+        <IconButton
+          v-else
+          icon="bookmark"
+          :label="heartLabel"
+          :class="['tile-heart', { on: status }]"
+          :aria-pressed="Boolean(status)"
+          data-test="interest"
+          @click="onHeart"
+        />
+      </div>
     </div>
     <h3 class="tile-title">
       <button
@@ -103,31 +132,5 @@ function onHeart(): void {
         <span>{{ price }}</span>
       </li>
     </ul>
-    <div class="tile-foot">
-      <template v-if="!training.verified">
-        <IconButton
-          icon="bookmark"
-          label="Garder"
-          data-test="keep"
-          @click="emit('review', true)"
-        />
-        <IconButton
-          icon="trash"
-          label="Écarter"
-          danger
-          data-test="dismiss"
-          @click="emit('review', false)"
-        />
-      </template>
-      <IconButton
-        v-else
-        icon="bookmark"
-        :label="heartLabel"
-        :class="['tile-heart', { on: status }]"
-        :aria-pressed="Boolean(status)"
-        data-test="interest"
-        @click="onHeart"
-      />
-    </div>
   </article>
 </template>

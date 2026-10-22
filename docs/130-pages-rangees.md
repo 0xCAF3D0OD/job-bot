@@ -107,3 +107,18 @@ Le mois
 
 - Tests de l'interface : l'en-tête du Suivi sur deux lignes, les lignes « À relancer » (5 puis « Voir les 2 autres »), « À déclarer » dans la même forme, le Rendez-vous en parties (Préparer, Le mois en une carte, le carnet replié avec « Modifier »). 451 tests, lint, vue-tsc.
 - Les trois audits à zéro sur la démo et sur un compte neuf.
+
+## Écarts (1.3.1)
+
+- **Les titres** : le Profil et les Réglages avaient des règles à part (0.78.4, d'après docs/110 : page à 2,4 rem en gras, sections à 1,5 rem en gras). Elles sont retirées : **une seule taille et une seule graisse** partout, celles des autres pages (page 2 rem, section 1,35 rem, graisse 500). C'est le choix du §F, plus récent que docs/110 ; `docs/interface.md` (Structure 8) est mis à jour. Dis-le si tu préfères l'inverse (tout en gras, à 2,4 et 1,5 rem) : c'est une règle à changer, pas du code.
+- **Les Réglages gardent une carte par rubrique** (docs/106 §1, « une rubrique, une carte ») au lieu d'une carte par réglage comme le proposait le §D : la règle validée l'emporte. Ce qui gênait est corrigé dans la carte : le filet en haut à droite (une règle de séparation tombait au-dessus du second réglage d'une rangée), les descriptions sur une ligne (« Les candidatures demandées chaque mois. », le reste au survol ; « Le jour où les preuves sont dues. »), et la rangée d'actions vide sous les sites suivis, qui laissait un grand vide en bas quand il n'y avait rien à proposer.
+- **Profil** : « Prérequis » devient « Critères » (le titre et le message « Critères enregistrés ») ; un bloc inactif a son titre grisé au lieu d'une carte à 60 % d'opacité.
+- **Formations** : l'encadré « Formation et chômage » avait aussi une barre verticale bleue ; il devient une ligne repliable sur ordinateur comme sur téléphone.
+- **Alertes** : les deux colonnes de la 0.83.2 passent en une colonne ; « Code de vérification » ne s'étire plus.
+- **L'assistant** : consigne `assistant-v18` (le Suivi en lignes et « Classer sans réponse », le Rendez-vous décrit pour la première fois, les Formations sur une ligne). La 1.3.0 avait laissé l'ancienne description du Suivi.
+
+## Vérifié (1.3.1)
+
+- Captures à 1440 et 390 px : Profil (Critères, Parcours), Réglages, Formations, Alertes ; les graisses mesurées sur chaque page (titre de page 500, 32 px ; section 500, 21,6 px).
+- Tests : 451 de l'interface, lint, vue-tsc ; 632 backend (dont la consigne de l'assistant), ruff, mypy.
+- Les trois audits à zéro sur la démo et sur un compte neuf.

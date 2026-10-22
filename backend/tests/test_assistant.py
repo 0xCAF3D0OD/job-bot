@@ -407,6 +407,11 @@ def test_guide_follows_the_pages() -> None:
     # 1.1.1 : les titres des premiers pas sont des noms (docs/interface.md, Titres 2).
     assert "« Première offre gardée »" in service.INSTRUCTIONS
     assert "assistant-v16" not in service.INSTRUCTIONS
+    # 1.3 (docs/130) : le Suivi en lignes, le Rendez-vous en parties, les Formations sur une ligne.
+    assert "Classer sans réponse" in service.INSTRUCTIONS
+    assert "Le carnet » replié" in service.INSTRUCTIONS
+    assert "Carte d'une candidature" not in service.INSTRUCTIONS
+    assert "assistant-v17" not in service.INSTRUCTIONS
     assert "menu « ⋯ »" in service.INSTRUCTIONS and "Plus de filtres" in service.INSTRUCTIONS
     assert "S'entraîner à l'entretien" in service.INSTRUCTIONS
     assert "M'entraîner pour cet entretien" in service.INSTRUCTIONS
