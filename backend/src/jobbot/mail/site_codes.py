@@ -1,6 +1,7 @@
 """Les codes et les messages des sites, côté compte (docs/112).
 
-- Un code reconnu (`mail/codes.py`) est annoncé dans la cloche et sur le téléphone, montré
+- Un code reconnu (`mail/codes.py`) est annoncé dans la cloche (avec le code) et sur le
+  téléphone (sans lui, docs/120), montré
   en haut de la page Alertes, et lu par l'extension pour le remplir ; il s'efface au bout de
   30 minutes, avec la copie de son e-mail (docs/113).
 - « J'attends un code » : la boîte est relevée toutes les 15 secondes pendant 5 minutes.
@@ -15,7 +16,8 @@ from bs4 import BeautifulSoup
 from sqlalchemy import delete, select, update
 from sqlalchemy.dialects.postgresql import insert
 
-from jobbot.db.models import Notification, Search, Setting
+from jobbot import accounts
+from jobbot.db.models import Notification, ParseStatus, Search, Setting
 from jobbot.log import get_logger
 from jobbot.mail.codes import spaced
 from jobbot.mail.message import parse_email
@@ -32,6 +34,8 @@ CODE_SHOWN_FOR = timedelta(minutes=30)
 # L'extension ne remplit qu'un code tout frais.
 CODE_FILLED_WITHIN = timedelta(minutes=10)
 MESSAGES_KEPT_FOR = timedelta(days=30)
+# La copie brute d'une alerte d'invité, déjà analysée (docs/120 §2).
+ALERT_COPY_KEPT_FOR = timedelta(days=90)
 FAST_COLLECT_JOB = "collect_fast"
 EXPECT_KEY = "code_expected"
 # Le relevé rapide : 6 demandes par heure au plus, par compte.
@@ -48,7 +52,10 @@ class SiteCode:
 
 
 async def announce(runtime: Runtime, site: str, code: str) -> None:
-    """Dans la cloche et sur le téléphone : le code lui-même, lisible sans ouvrir jobA1."""
+    """Dans la cloche : le code lui-même, 30 minutes. Sur le téléphone, seulement « Code jobup
+    reçu » (docs/120) : la notification passe par ntfy.sh, un service tiers ; la toucher
+    ouvre la page Alertes, où le code s'affiche."""
+    link = "/candidatures/alertes"
     await notify.deliver(
         runtime,
         notify.Message(
@@ -58,7 +65,14 @@ async def announce(runtime: Runtime, site: str, code: str) -> None:
             tags=["key"],
         ),
         kind=NOTIFICATION_KIND,
-        link="/candidatures/alertes",
+        link=link,
+        phone=notify.Message(
+            title=f"Code {site} reçu",
+            message="Ouvre jobA1 pour le voir.",
+            priority=4,
+            tags=["key"],
+            click=f"{runtime.settings.public_url.rstrip('/')}{link}",
+        ),
     )
 
 
@@ -145,7 +159,8 @@ async def message_text(runtime: Runtime, search_id: int) -> str | None:
 
 async def purge(runtime: Runtime, now: datetime | None = None) -> int:
     """Les codes effacés au bout de 30 minutes (dans le journal et la cloche), les codes et
-    messages supprimés au bout de 30 jours, avec leur e-mail."""
+    messages supprimés au bout de 30 jours, avec leur e-mail ; les copies des alertes d'un
+    invité effacées au bout de 90 jours (docs/120)."""
     now = now or datetime.now(UTC)
     async with runtime.sessionmaker.begin() as session:
         # Le code expiré : effacé du journal, et sa copie de l'e-mail avec lui (docs/113).
@@ -182,4 +197,23 @@ async def purge(runtime: Runtime, now: datetime | None = None) -> int:
             runtime.storage.delete(search.raw_key)
         if old:
             await session.execute(delete(Search).where(Search.id.in_([s.id for s in old])))
-    return len(old)
+        # Les copies des alertes d'un invité, au bout de 90 jours (docs/120 §2) : seulement
+        # celles qui ont été lues (une alerte non reconnue ou en échec reste à relire) ; la
+        # ligne du journal reste. Les alertes de l'exploitant ne sont pas touchées.
+        purged = 0
+        if not await accounts.is_owner(session):
+            copies = list(
+                await session.scalars(
+                    select(Search).where(
+                        Search.kind.is_(None),
+                        Search.raw_purged_at.is_(None),
+                        Search.parse_status.in_([ParseStatus.PARSED, ParseStatus.EMPTY]),
+                        Search.received_at < now - ALERT_COPY_KEPT_FOR,
+                    )
+                )
+            )
+            for search in copies:
+                runtime.storage.delete(search.raw_key)
+                search.raw_purged_at = now
+            purged = len(copies)
+    return len(old) + purged

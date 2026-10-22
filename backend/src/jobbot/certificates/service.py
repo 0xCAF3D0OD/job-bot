@@ -167,9 +167,9 @@ def explain(reading: Reading) -> str:
     return f"Formule clé : « {best.text} ». {best.meaning}"
 
 
-def without_names(text: str, names: list[str]) -> str:
+def without_names(text: str, names: list[str], identity: object | None = None) -> str:
     """Le texte pour l'IA : sans coordonnées, sans ton nom, sans les personnes nommées."""
-    text = scrub(text)
+    text = scrub(text, identity)
     for name in sorted({n for n in names if n and len(n) > 2}, key=len, reverse=True):
         text = re.sub(re.escape(name), "[la personne]", text, flags=re.IGNORECASE)
     text = _TITLED.sub("[nom retiré] ", text)
@@ -214,7 +214,7 @@ async def read_with_ai(runtime: Runtime, document_id: int) -> None:
         if not (document.extracted_text or "").strip():
             raise ReadingUnavailable("texte illisible : dépose une version PDF avec du texte")
         identity = await load_identity(session)
-        text = without_names(document.extracted_text, _identity_names(identity.name))
+        text = without_names(document.extracted_text, _identity_names(identity.name), identity)
     reading = read(document.extracted_text)
     found = "\n".join(f"- « {clean(p.text)} » : {p.meaning}" for p in reading.passages)
     content = (

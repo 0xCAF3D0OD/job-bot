@@ -26,6 +26,7 @@ from jobbot.core.extract import (
     extract,
 )
 from jobbot.db.models import ChunkKind, Document, ProfileChunk
+from jobbot.letters.service import load_identity
 from jobbot.llm import proposals
 from jobbot.llm.client import Refused
 from jobbot.llm.scoring import InvalidScore
@@ -257,6 +258,8 @@ async def propose_chunks(request: Request, document_id: int) -> list[ChunkPropos
     async with runtime.sessionmaker() as session:
         existing = await active_profile(session)
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
+        # Les coordonnées connues, retirées du texte avant l'envoi (docs/121 §A.3).
+        identity = await load_identity(session)
     if spend + PROPOSAL_ESTIMATE_USD * rate > budget:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
@@ -265,7 +268,7 @@ async def propose_chunks(request: Request, document_id: int) -> list[ChunkPropos
 
     client = scoring_service.make_client(settings)
     params = proposals.request_params(
-        settings.llm_model, settings.llm_effort, existing, document.extracted_text
+        settings.llm_model, settings.llm_effort, existing, document.extracted_text, identity
     )
     try:
         raw = await client.score(params)

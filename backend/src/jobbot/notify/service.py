@@ -102,10 +102,13 @@ def new_topic() -> str:
 send: Callable[[Settings, Message], Awaitable[None]] = http_send
 
 
-async def deliver(runtime: Runtime, message: Message, *, kind: str, link: str) -> None:
+async def deliver(
+    runtime: Runtime, message: Message, *, kind: str, link: str, phone: Message | None = None
+) -> None:
     """Une alerte : toujours dans la cloche (docs/15 §1), et sur le téléphone si ntfy est
     configuré, sauf un jour sans recherche pour ce qui peut attendre (docs/86). Un échec de
-    ntfy n'empêche pas l'alerte d'être dans la cloche."""
+    ntfy n'empêche pas l'alerte d'être dans la cloche. `phone` : un autre texte pour le
+    téléphone, quand la cloche peut en dire plus (le code d'un site, docs/120)."""
     async with runtime.sessionmaker.begin() as session:
         session.add(
             Notification(kind=kind, title=message.title, message=message.message, link=link)
@@ -116,7 +119,7 @@ async def deliver(runtime: Runtime, message: Message, *, kind: str, link: str) -
     if target is None:
         return
     try:
-        await send(target, message)
+        await send(target, phone or message)
     except httpx.HTTPError as exc:
         log.warning("ntfy_send_failed", kind=kind, error=type(exc).__name__)
 

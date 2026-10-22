@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/119-structure-coherente.md](docs/119-structure-coherente.md) (0.89.1)
+- Version en cours : [docs/121-demarrage-rapide.md](docs/121-demarrage-rapide.md) (0.90.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -190,7 +190,9 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 0.87.0 | Le poids des pages : chaque page se charge à l'ouverture (premier écran 82 Ko au lieu de 205) ; un budget vérifié par `make poids` | livrée |
 | 0.88.0 | L'accessibilité vérifiée : audit axe-core et parcours au clavier sur la démo, tout corrigé (calendrier du Suivi, contrastes, liens, repères) ; la page « Accessibilité » ; « écris ou dicte » sur téléphone | livrée |
 | 0.89.0 | Les règles de l'interface partout : descriptions en une ligne (le reste au survol), plus de barre verticale dans les repliables, titres sans « ton » ni question ; un troisième audit (`regles.py`), 49 défauts → 0 | livrée |
-| 0.89.1 | Une structure cohérente : 18 règles validées reportées dans docs/interface.md ; repliables à 1,5 rem du bord, « Masquer » sur la ligne du titre, cartes d'une rangée de même hauteur, 2 rem entre grands blocs ; l'audit vérifie marges et hauteurs | en cours |
+| 0.89.1 | Une structure cohérente : 18 règles validées reportées dans docs/interface.md ; repliables à 1,5 rem du bord, « Masquer » sur la ligne du titre, cartes d'une rangée de même hauteur, 2 rem entre grands blocs ; l'audit vérifie marges et hauteurs | livrée |
+| 0.90.0 | Le code d'un site ne part plus dans la notification du téléphone (« Code jobup reçu ») ; les copies des alertes lues des invités effacées au bout de 90 jours | livrée |
+| 0.90.1 | Les coordonnées ne partent jamais à l'IA : nom, adresse et date de naissance retirés du CV et des certificats avant l'envoi, même sans coordonnées saisies | en cours |
 
 ## Lancer en local
 

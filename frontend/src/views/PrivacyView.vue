@@ -39,7 +39,7 @@ onMounted(async () => {
       <h2>Où, et combien de temps</h2>
       <ul>
         <li>Sur le serveur de la plateforme : une base de données et un dossier de fichiers, séparés par compte.</li>
-        <li>Jusqu'à ce que tu supprimes ton compte. Sauf les discussions avec l'assistant (30 jours) et les notifications (90 jours).</li>
+        <li>Jusqu'à ce que tu supprimes ton compte. Sauf les discussions avec l'assistant (30 jours), les notifications et les copies des e-mails d'alerte (90 jours).</li>
         <li>
           Une sauvegarde chiffrée chaque nuit, que seul l'exploitant peut ouvrir, gardée <strong>6 mois au plus</strong>.
           Un compte supprimé y reste jusqu'à 6 mois ; il ne revient que si toute la plateforme est restaurée.
@@ -71,14 +71,14 @@ onMounted(async () => {
           Les sites t'écrivent à ton adresse jobA1. Ces e-mails passent par la boîte e-mail de la plateforme, que
           l'exploitant administre.
         </li>
-        <li>Un code de vérification d'un site est effacé de jobA1 <strong>30 minutes</strong> après son arrivée, avec la copie de son e-mail.</li>
+        <li>Un code de vérification d'un site est effacé de jobA1 <strong>30 minutes</strong> après son arrivée, avec la copie de son e-mail. Il ne part jamais dans la notification du téléphone.</li>
         <li>Les autres messages des sites (bienvenue, alerte modifiée…) sont gardés 30 jours.</li>
       </ul>
 
       <h2>Ce qui part à l'IA (Anthropic)</h2>
       <ul>
         <li>Le texte des offres, tes blocs de profil et ce que tu demandes : pour noter, rédiger et répondre.</li>
-        <li>Le texte de ton CV, quand tu demandes des propositions de blocs.</li>
+        <li>Le texte de ton CV, sans tes coordonnées ni ta date de naissance, pour proposer tes blocs de profil.</li>
         <li>Le contenu des alertes des sites que l'IA lit.</li>
         <li>
           <strong>Jamais tes coordonnées</strong> (nom, adresse, téléphone, e-mail) ni les noms de tes contacts : la
@@ -92,7 +92,7 @@ onMounted(async () => {
       <h2>Ce qui est possible</h2>
       <p>Dans Réglages, rubrique Compte :</p>
       <ul>
-        <li><strong>Exporter</strong> tout : une archive avec tes données, tes documents et tes e-mails d'alerte.</li>
+        <li><strong>Exporter</strong> tout : une archive avec tes données, tes documents et tes e-mails d'alerte des 90 derniers jours.</li>
         <li><strong>Fermer</strong> ton compte : tout est effacé, fichiers compris. Aussi depuis le menu de ton compte.</li>
       </ul>
       <p v-if="loggedIn">
