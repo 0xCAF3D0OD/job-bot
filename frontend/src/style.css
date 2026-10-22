@@ -2371,10 +2371,10 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .page-veil { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 0.6rem; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(3px); }
 .page-veil .face-state-title { font-size: 1.05rem; font-weight: 500; color: var(--muted); }
 .page-veil-enter-active, .page-veil-leave-active { transition: opacity 400ms ease; }
-.page-veil-enter-active .face-mark { animation: veil-rise 400ms var(--ease-out) both; }
+.page-veil-enter-active .face-mark, .page-veil-enter-active .face-transform { animation: veil-rise 400ms var(--ease-out) both; }
 @keyframes veil-rise { from { opacity: 0; transform: translateY(10px) scale(0.96); } }
 .page-veil-enter-from, .page-veil-leave-to { opacity: 0; }
-@media (prefers-reduced-motion: reduce) { .page-veil-enter-active, .page-veil-leave-active { transition: none; } .page-veil-enter-active .face-mark { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .page-veil-enter-active, .page-veil-leave-active { transition: none; } .page-veil-enter-active .face-mark, .page-veil-enter-active .face-transform { animation: none; } }
 /* Un bloc qui n'a pas besoin de toute la largeur (docs/62 §1) : une largeur de lecture. */
 .reading-width { max-width: 40rem; }
 
@@ -3623,3 +3623,61 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .today-motto { margin-top: 0.75rem !important; font-weight: 600; color: var(--accent-text); }
 .today-calm-month { width: min(100%, 40rem); }
 .today-empty-line { display: flex; align-items: center; gap: 0.5rem; color: var(--muted); }
+/* Le personnage se transforme (docs/123, complément 0.96.0 ; d'après la maquette « X ») : pendant
+   le chargement d'une page, le visage du logo prend l'objet de la page. En boucle tant que
+   l'attente dure ; rien de tout ça avec « réduire les animations » (le composant montre alors
+   le visage seul). */
+.face-transform .ft-line { fill: none; stroke: var(--logo-line); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+.face-transform .ft-eye { fill: var(--logo-line); }
+.face-transform .ft-spark { fill: var(--logo-spark); }
+.face-transform .ft-box { transform-box: fill-box; transform-origin: center; }
+.face-transform .ft-top { transform-box: fill-box; transform-origin: 50% 0%; }
+.face-transform .ft-spark-line { stroke: var(--logo-spark); stroke-width: 4; stroke-linecap: round; }
+.face-transform .ft-spark-shape { fill: var(--logo-spark); stroke: var(--logo-spark); stroke-width: 2.5; stroke-linejoin: round; }
+.ft-rays path { fill: none; stroke: var(--logo-spark); stroke-width: 4; stroke-linecap: round; }
+.ft-loupe-glass { fill: color-mix(in srgb, var(--text) 8%, transparent); stroke: var(--text); stroke-width: 4.5; }
+.ft-loupe-handle { stroke: var(--text); stroke-width: 7; stroke-linecap: round; }
+.ft-donut-track { fill: none; stroke: color-mix(in srgb, var(--muted) 30%, transparent); stroke-width: 7; }
+.ft-donut-fill { fill: none; stroke: var(--logo-line); stroke-width: 7; stroke-dasharray: 57; }
+.ft-tie-stripes { stroke: var(--bg); stroke-width: 1.8; stroke-linecap: round; }
+.ft-draw { fill: none; stroke: var(--logo-line); stroke-dasharray: var(--len); stroke-linecap: round; }
+.ft-thin { stroke-width: 5; }
+.ft-ring { stroke-width: 3; }
+.ft-gear-teeth { fill: none; stroke: var(--logo-spark); stroke-width: 6; stroke-dasharray: 4.7 4.72; }
+.ft-gear-body { fill: none; stroke: var(--logo-spark); stroke-width: 4.5; }
+.ft-today .ft-spark-r { animation: ft-sun-open 2.8s cubic-bezier(.2, .8, .2, 1) infinite; }
+.ft-today .ft-rays { animation: ft-rays-in 2.8s ease-out infinite; }
+.ft-offers .ft-loupe { animation: ft-loupe 3s cubic-bezier(.6, 0, .3, 1) infinite; }
+.ft-offers .ft-eye-l { animation: ft-mag-l 3s ease-out infinite; }
+.ft-offers .ft-spark-r { animation: ft-mag-r 3s ease-out infinite; }
+.ft-applications .ft-smile { animation: ft-smile-out 2.8s ease-in-out infinite; }
+.ft-applications .ft-arrow { animation: ft-arrow-in 2.8s cubic-bezier(.3, .8, .3, 1) infinite; }
+.ft-alerts .ft-spark-r, .ft-settings .ft-spark-r { animation: ft-dot-out 2.8s cubic-bezier(.4, 0, .2, 1) infinite; }
+.ft-alerts .ft-pop, .ft-settings .ft-pop { animation: ft-pop-in 2.8s cubic-bezier(.2, .9, .3, 1.2) infinite; }
+.ft-alerts .ft-ring-bell { animation: ft-bell-ring 2.8s ease-in-out infinite; }
+.ft-settings .ft-gear { animation: ft-gear-spin 2.8s cubic-bezier(.4, 0, .2, 1) infinite; }
+.ft-insights .ft-eye-l { animation: ft-dot-out 2.8s cubic-bezier(.4, 0, .2, 1) infinite; }
+.ft-insights .ft-donut { animation: ft-donut-in 2.8s ease infinite; }
+.ft-insights .ft-donut-fill { animation: ft-donut-fill 2.8s cubic-bezier(.3, .8, .3, 1) infinite; }
+.ft-orp-meeting .ft-tie { animation: ft-tie-unroll 2.8s cubic-bezier(.2, .8, .2, 1) infinite; }
+.ft-orp-meeting .ft-tie-swing { animation: ft-tie-swing 2.8s ease-in-out infinite; }
+.ft-profile .ft-eye-l { animation: ft-head 2.8s cubic-bezier(.3, .8, .3, 1) infinite; }
+.ft-profile .ft-draw { animation: ft-draw-in 2.8s ease-out infinite; }
+@keyframes ft-sun-open { 0%, 8% { transform: scaleY(.12); } 28%, 100% { transform: scaleY(1); } }
+@keyframes ft-rays-in { 0%, 22% { opacity: 0; transform: scale(.6) rotate(0); } 40% { opacity: 1; transform: scale(1) rotate(15deg); } 85% { opacity: 1; transform: scale(1) rotate(60deg); } 100% { opacity: 0; transform: scale(1) rotate(75deg); } }
+@keyframes ft-loupe { 0% { transform: translate(40px, 40px); opacity: 0; } 15%, 35% { transform: translate(0, 0); opacity: 1; } 55%, 75% { transform: translate(52px, -4px); opacity: 1; } 95%, 100% { transform: translate(70px, 30px); opacity: 0; } }
+@keyframes ft-mag-l { 0%, 13% { transform: scale(1); } 18%, 33% { transform: scale(1.35); } 38%, 100% { transform: scale(1); } }
+@keyframes ft-mag-r { 0%, 53% { transform: scale(1); } 58%, 73% { transform: scale(1.35); } 78%, 100% { transform: scale(1); } }
+@keyframes ft-smile-out { 0%, 18% { opacity: 1; } 30%, 82% { opacity: 0; } 95%, 100% { opacity: 1; } }
+@keyframes ft-arrow-in { 0%, 26% { opacity: 0; transform: translateX(-6px); } 38% { opacity: 1; transform: translateX(0); } 75% { opacity: 1; transform: translateX(8px); } 86%, 100% { opacity: 0; transform: translateX(10px); } }
+@keyframes ft-dot-out { 0%, 10% { transform: scale(1); } 20%, 80% { transform: scale(0); } 92%, 100% { transform: scale(1); } }
+@keyframes ft-pop-in { 0%, 14% { transform: scale(0); } 28%, 76% { transform: scale(1); } 88%, 100% { transform: scale(0); } }
+@keyframes ft-bell-ring { 0%, 28% { transform: rotate(0); } 36% { transform: rotate(16deg); } 44% { transform: rotate(-14deg); } 52% { transform: rotate(10deg); } 60% { transform: rotate(-6deg); } 68%, 100% { transform: rotate(0); } }
+@keyframes ft-donut-in { 0%, 14% { opacity: 0; } 24%, 82% { opacity: 1; } 92%, 100% { opacity: 0; } }
+@keyframes ft-donut-fill { 0%, 22% { stroke-dashoffset: 57; } 60%, 100% { stroke-dashoffset: 17; } }
+@keyframes ft-tie-unroll { 0%, 8% { transform: scaleY(0); } 30%, 85% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
+@keyframes ft-tie-swing { 0%, 32% { transform: rotate(0); } 42% { transform: rotate(7deg); } 52% { transform: rotate(-5deg); } 62%, 100% { transform: rotate(0); } }
+@keyframes ft-head { 0%, 10% { transform: translateY(0) scale(1); } 26%, 82% { transform: translateY(-4px) scale(.55); } 94%, 100% { transform: translateY(0) scale(1); } }
+@keyframes ft-draw-in { 0%, 20% { stroke-dashoffset: var(--len); } 45%, 82% { stroke-dashoffset: 0; } 94%, 100% { stroke-dashoffset: var(--len); } }
+@keyframes ft-gear-spin { 0%, 14% { transform: rotate(0); } 80%, 100% { transform: rotate(240deg); } }
+@media (prefers-reduced-motion: reduce) { .face-transform, .face-transform * { animation: none !important; } }

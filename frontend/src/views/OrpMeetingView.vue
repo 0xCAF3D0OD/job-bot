@@ -7,6 +7,7 @@ import AppIcon from "../components/AppIcon.vue";
 import CopyLabel from "../components/CopyLabel.vue";
 import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import { usePageReady } from "../composables/usePageTransition";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import HoverNote from "../components/HoverNote.vue";
@@ -19,6 +20,7 @@ type Question = components["schemas"]["QuestionIO"];
 type Meeting = components["schemas"]["MeetingOut"];
 
 const page = ref<Page | null>(null);
+usePageReady("orp-meeting", () => !!page.value);
 const failed = ref(false);
 const editing = ref(false);
 const when = ref("");

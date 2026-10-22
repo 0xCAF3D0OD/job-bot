@@ -4,7 +4,7 @@ import { computed, onMounted, onUnmounted, ref, type ComputedRef } from "vue";
 // d'Aujourd'hui et du Bilan ; jamais si « réduire les animations » est demandé.
 const seen = new Set<string>();
 
-function motionAllowed(): boolean {
+export function motionAllowed(): boolean {
   return typeof window.matchMedia === "function" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
