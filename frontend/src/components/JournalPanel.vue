@@ -6,7 +6,7 @@ import { useCollect } from "../composables/useCollect";
 import AppIcon from "./AppIcon.vue";
 import { SITE_NAMES, formatDateTime, parseStatusLabel, plural, rateText, sourceLabel } from "../format";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 
 const source = ref<Source | "">("");
 const parseStatus = ref<ParseStatus | "">("");

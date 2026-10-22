@@ -213,6 +213,9 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi(() => months.shift() ?? month({ to_declare: 0, rows: [rows[0]] }), [declared, left]);
     PUT.mockResolvedValue({ response: { status: 204 } });
     const { wrapper } = await mountView();
+    // Un onglet à droite du calendrier (docs/133 §1).
+    expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
+    await wrapper.find("[data-test=panel-tab-declare]").trigger("click");
     const list = wrapper.find("[data-test=declare]");
     expect(list.text()).toContain("À déclarer dans Job-Room");
     expect(list.findAll("li")).toHaveLength(1);
@@ -222,7 +225,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(item.find("strong").text()).toBe("Reste SA");
     expect(item.text()).toContain("Ingénieur DevOps junior");
     expect(item.find(".today-row-action").text()).toBe("Déclarer");
-    expect(list.find("h2").text()).toBe("À déclarer dans Job-Room · 1");
+    expect(wrapper.find("[data-test=panel-tab-declare]").text()).toBe("À déclarer · 1");
     expect(item.text()).toContain("à compléter");
     // Un clic ouvre le panneau : l'offre, « Modifier », les champs et « Marquer comme déclarée ».
     await item.trigger("click");
@@ -412,7 +415,7 @@ describe("À relancer : des lignes, 5 puis la suite (docs/130 §A)", () => {
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
     const panel = wrapper.find("[data-test=day-panel]");
-    expect(panel.find("h2").text()).toBe("À relancer · 7");
+    expect(panel.find("[data-test=panel-tab-follow]").text()).toBe("À relancer · 7");
     expect(panel.findAll("[data-test=application-card]")).toHaveLength(5);
     expect(wrapper.find("[data-test=panel-scroll]").exists()).toBe(false);
     const more = panel.find("[data-test=panel-show-all]");

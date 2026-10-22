@@ -18,6 +18,8 @@ from pathlib import Path
 
 from playwright.async_api import Page, async_playwright
 
+from explore import states
+
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 AXE = (Path(__file__).parent.parent / "node_modules" / "axe-core" / "axe.min.js").read_text()
 PAGES = [
@@ -40,6 +42,8 @@ PAGES = [
 SIZES = [{"width": 1440, "height": 900}, {"width": 390, "height": 844}]
 # Les niveaux qui bloquent une PR ; « modéré » et « mineur » sont listés à part, sans bloquer.
 BLOCKING = ("critical", "serious")
+# SCHEME=dark pour vérifier les contrastes en mode sombre (docs/133).
+SCHEME = "dark" if os.environ.get("SCHEME") == "dark" else "light"
 
 RUN = """async () => {
   const result = await axe.run(document, { resultTypes: ['violations'] });
@@ -56,14 +60,15 @@ async def audit(page: Page, path: str, width: int) -> tuple[int, int]:
     await page.wait_for_timeout(1800)
     await page.add_script_tag(content=AXE)
     blocking = minor = 0
-    for v in await page.evaluate(RUN):
-        if v["impact"] in BLOCKING:
-            blocking += 1
-            print(f"{width} px  /{path}  [{v['impact']}] {v['id']} : {v['help']} ({v['count']})")
-            for node in v["nodes"]:
-                print(f"    {node}")
-        else:
-            minor += 1
+    async for state in states(page):
+        for v in await page.evaluate(RUN):
+            if v["impact"] in BLOCKING:
+                blocking += 1
+                print(f"{width} px  /{path}{state}  [{v['impact']}] {v['id']} : {v['help']} ({v['count']})")
+                for node in v["nodes"]:
+                    print(f"    {node}")
+            else:
+                minor += 1
     return blocking, minor
 
 
@@ -130,7 +135,7 @@ async def main() -> int:
         chrome = os.environ.get("CHROME")
         browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
         for size in SIZES:
-            context = await browser.new_context(viewport=size, reduced_motion="reduce")
+            context = await browser.new_context(viewport=size, reduced_motion="reduce", color_scheme=SCHEME)
             page = await context.new_page()
             for path in PAGES:
                 b, m = await audit(page, path, size["width"])

@@ -6,7 +6,10 @@ import InsightsView from "./InsightsView.vue";
 
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
-afterEach(() => vi.resetAllMocks());
+afterEach(() => {
+  vi.resetAllMocks();
+  localStorage.removeItem("jobA1.bilan-vue");
+});
 
 const group = (key: string, responses: number, total: number) => ({
   key,
@@ -80,11 +83,20 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=tile-interviews]").text()).toContain("dont 1 à venir");
     expect(wrapper.find("[data-test=delay]").text()).toContain("9 j");
     expect(wrapper.find("[data-test=delay]").text()).toContain("de réponse, de 2 à 18 j");
+    // Le détail : une vue à la fois, choisie (docs/133 §2) ; le parcours d'abord.
+    expect(wrapper.find("[data-test=period-chart]").exists()).toBe(false);
+    await wrapper.find("[data-test=view-chart]").trigger("click");
+    expect(wrapper.find("[data-test=funnel]").exists()).toBe(false);
     expect(wrapper.findAll("[data-test=period-bucket]")).toHaveLength(3);
     expect(wrapper.find("[data-test=period-bucket]").attributes("aria-label")).toBe(
       "août 2026 : 8 candidatures, 3 réponses",
     );
     expect(wrapper.find("[data-test=headline]").text()).toContain("jobup");
+    // « Ce qui marche » : les comparaisons dans une seule carte, sans carte dedans.
+    await wrapper.find("[data-test=view-compare]").trigger("click");
+    expect(wrapper.find("[data-test=bilan-compare]").findAll(".dash-card")).toHaveLength(0);
+    // Le choix est retenu sur l'appareil.
+    expect(localStorage.getItem("jobA1.bilan-vue")).toBe("compare");
     const jobup = wrapper.find("[data-test=comparison-source] [data-test=group-jobup]");
     expect(jobup.text()).toContain("5 sur 9");
     expect(jobup.classes()).not.toContain("few");
@@ -93,7 +105,7 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(linkedin.text()).toContain("trop peu pour conclure");
     expect(wrapper.find("[data-test=comparison-score]").text()).toContain("Rien à comparer");
     // Pas de résumé ORP hors d'un mois choisi.
-    expect(wrapper.find("[data-test=orp-summary]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=view-orp]").exists()).toBe(false);
   });
 
   it("un mois : navigation et résumé pour l'ORP à copier", async () => {
@@ -108,9 +120,11 @@ describe("Bilan (docs/42, docs/55)", () => {
     const { wrapper, router } = await mountView("/candidatures/bilan?mois=2026-10");
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "month", month: "2026-10" } } });
     expect(wrapper.find("[data-test=headline]").exists()).toBe(false);
-    // Par semaine pour un mois choisi ; le résumé est visible sans le déplier.
+    // Par semaine pour un mois choisi ; le résumé pour l'ORP est une vue.
+    await wrapper.find("[data-test=view-chart]").trigger("click");
     expect(wrapper.find("[data-test=period-chart] h2").text()).toBe("Par semaine");
     expect(wrapper.find("[data-test=period-bucket]").attributes("aria-label")).toContain("semaine du 1 oct");
+    await wrapper.find("[data-test=view-orp]").trigger("click");
     expect(wrapper.find("[data-test=orp-summary]").text()).toContain(summary);
     await wrapper.find("[data-test=orp-summary-copy]").trigger("click");
     expect(writeText).toHaveBeenCalledWith(summary);
@@ -139,13 +153,13 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[role=alert]").text()).toContain("Bilan indisponible");
   });
 
-  it("la jauge de l'objectif ORP, quittée d'Aujourd'hui (docs/95)", async () => {
+  it("les mois précédents à côté des tuiles ; le mois en cours reste sur Aujourd'hui (docs/133 §3)", async () => {
     serve(report(), { month: "2026-10", month_count: 3, month_target: 20, orp_history: [{ month: "2026-09", count: 20 }] });
     const { wrapper } = await mountView();
     const gauge = wrapper.find("[data-test=orp-gauge]");
-    expect(gauge.exists()).toBe(true);
-    expect(gauge.find("[data-test=month-count]").text().replace(/\s+/g, " ")).toBe("3 / 20 candidatures");
-    expect(gauge.find("[role=progressbar]").attributes("aria-valuemax")).toBe("20");
-    expect(gauge.find("[data-test=month-left]").exists()).toBe(true);
+    expect(gauge.find("h2").text()).toBe("Mois précédents");
+    expect(gauge.find("[data-test=month-count]").exists()).toBe(false);
+    expect(gauge.find(".gauge-history li").text().replace(/\s+/g, " ")).toBe("septembre 202620 / 20atteint");
+    expect(gauge.element.parentElement!.classList.contains("bilan-top")).toBe(true);
   });
 });

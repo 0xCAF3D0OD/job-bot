@@ -10,7 +10,6 @@ import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
-import DisclosureRow from "../components/DisclosureRow.vue";
 import InterviewInsights from "../components/InterviewInsights.vue";
 import FaceState from "../components/FaceState.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
@@ -144,6 +143,39 @@ watch(() => route.query, () => void load());
 onMounted(() => void load());
 // Les barres montent à la première ouverture (docs/60 §3).
 const intro = firstTime("bilan-funnel");
+
+// Le détail (docs/133 §2) : une vue à la fois, choisie et retenue sur l'appareil.
+type View = "funnel" | "chart" | "compare" | "weeks" | "interviews" | "orp";
+const VIEW_KEY = "jobA1.bilan-vue";
+function readView(): View {
+  try {
+    const saved = localStorage.getItem(VIEW_KEY);
+    if (saved && ["funnel", "chart", "compare", "weeks", "interviews", "orp"].includes(saved)) return saved as View;
+  } catch {
+    // Stockage indisponible : la première vue.
+  }
+  return "funnel";
+}
+const chosenView = ref<View>(readView());
+const views = computed(() => {
+  const list: { key: View; label: string }[] = [{ key: "funnel", label: "Parcours" }];
+  if (insights.value?.buckets.length) list.push({ key: "chart", label: insights.value.unit === "week" ? "Par semaine" : "Par mois" });
+  list.push({ key: "compare", label: "Ce qui marche" });
+  if (period.value !== "all") list.push({ key: "weeks", label: "Semaines" });
+  list.push({ key: "interviews", label: "Entretiens" });
+  if (period.value === "month" && insights.value?.orp_summary) list.push({ key: "orp", label: "Pour l'ORP" });
+  return list;
+});
+// Une vue qui n'existe pas pour cette période revient au parcours.
+const view = computed<View>(() => (views.value.some((v) => v.key === chosenView.value) ? chosenView.value : "funnel"));
+function setView(key: View): void {
+  chosenView.value = key;
+  try {
+    localStorage.setItem(VIEW_KEY, key);
+  } catch {
+    // Stockage indisponible : le choix vaut pour la visite.
+  }
+}
 </script>
 
 <template>
@@ -243,113 +275,144 @@ const intro = firstTime("bilan-funnel");
         <span class="dash-bubble small"><AppIcon name="trend" /></span>
         <span>{{ insights.headline }}</span>
       </p>
+      <!-- Les quatre tuiles en carrés, les mois précédents à côté (docs/133 §3) : le mois en
+           cours est sur Aujourd'hui. -->
       <div
         v-if="insights.funnel.applications > 0"
-        class="bilan-tiles"
-        data-test="bilan-tiles"
+        :class="['bilan-top', { single: !(showGauge && orp && gaugeUseful) }]"
       >
-        <DashTile
-          :to="SUIVI"
-          icon="send"
-          label="Candidatures"
-          :value="String(insights.funnel.applications)"
-          :trend="tiles.applications"
-          tone="accent"
-          data-test="tile-applications"
-        />
-        <DashTile
-          :to="SUIVI"
-          icon="reply"
-          label="Réponses"
-          :value="String(insights.funnel.responses)"
-          :trend="tiles.responses"
-          data-test="tile-responses"
-        />
-        <DashTile
-          :to="SUIVI"
-          icon="calendar"
-          label="Entretiens"
-          :value="String(insights.funnel.interviews)"
-          :trend="tiles.interviews"
-          data-test="tile-interviews"
-        />
-        <DashTile
-          icon="clock"
-          label="Délai"
-          :value="tiles.delay"
-          :trend="tiles.delayRange"
-          data-test="delay"
-        />
-      </div>
-
-      <OrpGauge
-        v-if="showGauge && orp && gaugeUseful"
-        :count="orp.count"
-        :target="orp.target"
-        :month="orp.month"
-        :history="orp.history"
-      />
-      <DisclosureRow
-        v-if="insights.funnel.applications > 0"
-        class="bilan-detail"
-        title="Le détail"
-        value="parcours, analyses, semaines"
-        data-test="bilan-detail"
-      >
-        <div class="dash-row bilan-mid">
-          <section
-            class="dash-card"
-            data-test="funnel"
-          >
-            <header class="dash-card-head">
-              <h2>Parcours</h2>
-            </header>
-            <ol
-              :class="['bilan-funnel', { intro }]"
-              aria-label="Parcours"
-            >
-              <li
-                v-for="step in STEPS"
-                :key="step.key"
-              >
-                <RouterLink
-                  :to="step.to"
-                  class="bilan-step"
-                  :data-test="`funnel-${step.key}`"
-                >
-                  <span class="bilan-step-label">{{ step.label }}</span>
-                  <span class="bilan-track">
-                    <span
-                      class="bilan-bar"
-                      :style="{ width: funnelWidth(insights.funnel[step.key]) }"
-                    />
-                  </span>
-                  <strong>{{ insights.funnel[step.key] }}</strong>
-                </RouterLink>
-              </li>
-            </ol>
-          </section>
-          <PeriodChart
-            v-if="insights.buckets.length"
-            :buckets="insights.buckets"
-            :unit="insights.unit"
+        <div
+          v-if="insights.funnel.applications > 0"
+          class="bilan-tiles"
+          data-test="bilan-tiles"
+        >
+          <DashTile
+            :to="SUIVI"
+            icon="send"
+            label="Candidatures"
+            :value="String(insights.funnel.applications)"
+            :trend="tiles.applications"
+            tone="accent"
+            data-test="tile-applications"
+          />
+          <DashTile
+            :to="SUIVI"
+            icon="reply"
+            label="Réponses"
+            :value="String(insights.funnel.responses)"
+            :trend="tiles.responses"
+            data-test="tile-responses"
+          />
+          <DashTile
+            :to="SUIVI"
+            icon="calendar"
+            label="Entretiens"
+            :value="String(insights.funnel.interviews)"
+            :trend="tiles.interviews"
+            data-test="tile-interviews"
+          />
+          <DashTile
+            icon="clock"
+            label="Délai"
+            :value="tiles.delay"
+            :trend="tiles.delayRange"
+            data-test="delay"
           />
         </div>
-
-        <div class="bilan-compare">
-          <section
+        <OrpGauge
+          v-if="showGauge && orp && gaugeUseful"
+          :count="orp.count"
+          :target="orp.target"
+          :month="orp.month"
+          :history="orp.history"
+          past
+        />
+      </div>
+      <!-- Le détail (docs/133 §2) : on choisit la vue, une seule carte s'affiche ; plus de cartes
+           dans une carte repliable. -->
+      <section
+        v-if="insights.funnel.applications > 0"
+        class="bilan-detail"
+        data-test="bilan-detail"
+      >
+        <div class="bilan-detail-head">
+          <h2 class="section-title first">
+            Le détail
+          </h2>
+          <div
+            class="segmented small bilan-views"
+            role="radiogroup"
+            aria-label="Vue du détail"
+          >
+            <button
+              v-for="choice in views"
+              :key="choice.key"
+              type="button"
+              role="radio"
+              :aria-checked="view === choice.key"
+              :data-test="`view-${choice.key}`"
+              @click="setView(choice.key)"
+            >
+              {{ choice.label }}
+            </button>
+          </div>
+        </div>
+        <section
+          v-if="view === 'funnel'"
+          class="dash-card"
+          data-test="funnel"
+        >
+          <header class="dash-card-head">
+            <h2>Parcours</h2>
+          </header>
+          <ol
+            :class="['bilan-funnel', { intro }]"
+            aria-label="Parcours"
+          >
+            <li
+              v-for="step in STEPS"
+              :key="step.key"
+            >
+              <RouterLink
+                :to="step.to"
+                class="bilan-step"
+                :data-test="`funnel-${step.key}`"
+              >
+                <span class="bilan-step-label">{{ step.label }}</span>
+                <span class="bilan-track">
+                  <span
+                    class="bilan-bar"
+                    :style="{ width: funnelWidth(insights.funnel[step.key]) }"
+                  />
+                </span>
+                <strong>{{ insights.funnel[step.key] }}</strong>
+              </RouterLink>
+            </li>
+          </ol>
+        </section>
+        <PeriodChart
+          v-else-if="view === 'chart' && insights.buckets.length"
+          :buckets="insights.buckets"
+          :unit="insights.unit"
+        />
+        <section
+          v-else-if="view === 'compare'"
+          class="dash-card bilan-compare"
+          data-test="bilan-compare"
+        >
+          <div
             v-for="comparison in insights.comparisons"
             :key="comparison.key"
-            class="dash-card"
+            class="bilan-compare-part"
             :data-test="`comparison-${comparison.key}`"
           >
             <header class="dash-card-head">
-              <h2>
+              <h3>
                 <span class="dash-bubble small"><AppIcon :name="ICONS[comparison.key] ?? 'search'" /></span>
                 <HoverNote text="Un refus compte comme une réponse ; « Sans réponse », non.">
                   {{ comparison.title }}
                 </HoverNote>
-              </h2>
+              </h3>
             </header>
             <ul
               v-if="comparison.groups.length"
@@ -384,14 +447,19 @@ const intro = firstTime("bilan-funnel");
             >
               Rien à comparer pour l'instant.
             </p>
-          </section>
-        </div>
+          </div>
+        </section>
         <RhythmWeeks
-          v-if="period !== 'all'"
+          v-else-if="view === 'weeks' && period !== 'all'"
           :month="month"
         />
+        <InterviewInsights
+          v-else-if="view === 'interviews'"
+          class="dash-card"
+          bare
+        />
         <section
-          v-if="period === 'month' && insights.orp_summary"
+          v-else-if="view === 'orp' && period === 'month' && insights.orp_summary"
           class="dash-card bilan-summary"
           data-test="orp-summary"
         >
@@ -411,12 +479,7 @@ const intro = firstTime("bilan-funnel");
           </header>
           <p>{{ insights.orp_summary }}</p>
         </section>
-      </DisclosureRow>
-      <!-- Les retours d'entretien regroupés, une analyse (docs/131 §B.10) : venus du Suivi. -->
-      <InterviewInsights
-        v-if="insights.funnel.applications > 0"
-        group="bilan"
-      />
+      </section>
     </div>
   </section>
 </template>

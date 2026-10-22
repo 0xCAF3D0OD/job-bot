@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { api, type InterviewInsights } from "../api/client";
 import InterviewCoaching from "./InterviewCoaching.vue";
@@ -49,14 +49,19 @@ async function coach(): Promise<void> {
 
 defineExpose({ load });
 onMounted(() => void load());
+defineProps<{ bare?: boolean }>();
+const summaryValue = computed(() =>
+  data.value?.count ? `${plural(data.value.count, "entretien", "entretiens")} · ressenti ${data.value.average_rating}/5` : "aucun entretien",
+);
 </script>
 
 <template>
-  <DisclosureRow
+  <!-- `bare` (docs/133 §2) : la vue « Entretiens » du Bilan, dans la carte du détail ; sinon une
+       ligne repliable. -->
+  <component
+    :is="bare ? 'div' : DisclosureRow"
     v-if="data"
-    class="insights"
-    title="Enseignements"
-    :value="data.count ? `${plural(data.count, 'entretien', 'entretiens')} · ressenti ${data.average_rating}/5` : 'aucun entretien'"
+    v-bind="bare ? { class: 'insights insights-bare' } : { class: 'insights', title: 'Enseignements', value: summaryValue }"
     data-test="insights"
   >
     <!-- Toujours visible (retour d'usage du 2026-10-07) : dit comment la remplir. -->
@@ -206,5 +211,5 @@ onMounted(() => void load());
         @close="practicing = false; refreshPlan()"
       />
     </Teleport>
-  </DisclosureRow>
+  </component>
 </template>

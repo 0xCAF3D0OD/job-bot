@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import DisclosureRow from "./DisclosureRow.vue";
 
 import type { Application } from "../api/client";
 import { applicationStatusLabel, localDate, plural } from "../format";
@@ -90,6 +89,28 @@ function label(day: string): string {
 
 <template>
   <div class="suivi-calendar-wrap">
+    <!-- La légende, une ligne discrète au-dessus du calendrier (docs/133 §5). -->
+    <ul
+      class="suivi-legend"
+      aria-label="Légende"
+      data-test="suivi-legend"
+    >
+      <li
+        v-for="status in LEGEND"
+        :key="status"
+      >
+        <span
+          :class="['dot', status]"
+          aria-hidden="true"
+        />{{ applicationStatusLabel[status] }}
+      </li>
+      <li>
+        <span
+          class="dot en_attente incomplete"
+          aria-hidden="true"
+        />à compléter
+      </li>
+    </ul>
     <div
       class="suivi-calendar"
       role="group"
@@ -160,31 +181,5 @@ function label(day: string): string {
         </template>
       </template>
     </div>
-    <DisclosureRow
-      class="suivi-legend"
-      title="Légende"
-      :value="`${LEGEND.length} statuts`"
-      data-test="suivi-legend"
-    >
-      <ul>
-        <li
-          v-for="status in LEGEND"
-          :key="status"
-        >
-          <span
-            :class="['dot', status]"
-            aria-hidden="true"
-          />
-          {{ applicationStatusLabel[status] }}
-        </li>
-        <li>
-          <span
-            class="dot en_attente incomplete"
-            aria-hidden="true"
-          />
-          à compléter pour l'ORP
-        </li>
-      </ul>
-    </DisclosureRow>
   </div>
 </template>
