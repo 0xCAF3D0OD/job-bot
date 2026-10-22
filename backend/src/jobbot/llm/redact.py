@@ -3,8 +3,9 @@
 Avant d'envoyer un document (CV, certificat) à l'IA, jobA1 retire :
 - l'e-mail, le téléphone, les liens ;
 - le nom et le prénom, l'adresse (rue, NPA, localité) tels qu'ils sont dans les coordonnées ;
-- en tête du document (les premières lignes), une ligne qui ressemble à un nom seul, à une
-  rue ou à « NPA Localité », même si les coordonnées ne sont pas encore saisies (à l'accueil) ;
+- en tête du document : la première ligne si elle ressemble à un nom seul, et dans les huit
+  premières lignes, une rue ou « NPA Localité », même si les coordonnées ne sont pas encore
+  saisies (à l'accueil). La ligne d'un poste sous le nom (« Ingénieure DevOps ») reste ;
 - toute ligne qui donne la date de naissance.
 Les dates d'une expérience (« 2019 à 2023 », « mars 2021 ») restent : l'IA en a besoin.
 """
@@ -50,9 +51,10 @@ def _names(name: str | None) -> list[str]:
     return sorted({p for p in [name or "", *parts] if len(p) > 2}, key=len, reverse=True)
 
 
-def redact(text: str, identity: object | None = None) -> str:
+def redact(text: str, identity: object | None = None, *, head: bool = True) -> str:
     """Le texte pour l'IA, sans les coordonnées de la personne. `identity` : ses coordonnées
-    (nom, rue, NPA, localité), quand elles sont connues."""
+    (nom, rue, NPA, localité), quand elles sont connues. `head=False` : un texte court qui
+    n'est pas un document (une réponse de l'IA), sans le repérage de l'en-tête."""
     text = EMAIL.sub("[e-mail retiré]", text)
     text = URL.sub("[lien retiré]", text)
     text = PHONE.sub("[téléphone retiré]", text)
@@ -73,13 +75,13 @@ def redact(text: str, identity: object | None = None) -> str:
         line = BIRTH.sub("[date de naissance retirée]", line)
         lines[i] = line
         stripped = line.strip()
-        if not stripped or stripped == "[date de naissance retirée]":
+        if not head or not stripped or stripped == "[date de naissance retirée]":
             continue
         seen += 1
         if seen > HEAD_LINES:
             continue
         if LOCALITY.match(stripped) or STREET.match(stripped):
             lines[i] = "[adresse retirée]"
-        elif NAME_LINE.match(stripped) and not HEADINGS.match(stripped):
+        elif seen == 1 and NAME_LINE.match(stripped) and not HEADINGS.match(stripped):
             lines[i] = "[nom retiré]"
     return "\n".join(lines)

@@ -8,7 +8,7 @@ import hashlib
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
 import anthropic
 from fastapi import APIRouter, File, HTTPException, Request, Response, UploadFile, status
@@ -232,18 +232,10 @@ class ChunkProposal(BaseModel):
 PROPOSAL_ESTIMATE_USD = Decimal("0.10")
 
 
-@router.post(
-    "/documents/{document_id}/propose-chunks",
-    operation_id="proposeChunks",
-    responses={
-        409: {"description": "IA non configurée, budget atteint ou compte API indisponible"},
-        422: {"description": "Document sans texte lisible"},
-        502: {"description": "Réponse de l'IA inutilisable"},
-    },
-)
-async def propose_chunks(request: Request, document_id: int) -> list[ChunkProposal]:
-    """L'IA lit le document et propose des blocs. Rien n'est enregistré : c'est l'interface
-    qui crée les blocs que Kevin accepte."""
+async def _propose(
+    request: Request, document_id: int, *, understand: bool = False
+) -> tuple[list[ChunkProposal], str]:
+    """L'IA lit le document : les blocs proposés, et la réponse brute (pour `understood`)."""
     runtime = _runtime(request)
     settings = runtime.settings
     if not settings.llm_configured:
@@ -268,7 +260,12 @@ async def propose_chunks(request: Request, document_id: int) -> list[ChunkPropos
 
     client = scoring_service.make_client(settings)
     params = proposals.request_params(
-        settings.llm_model, settings.llm_effort, existing, document.extracted_text, identity
+        settings.llm_model,
+        settings.llm_effort,
+        existing,
+        document.extracted_text,
+        identity,
+        understand=understand,
     )
     try:
         raw = await client.score(params)
@@ -296,7 +293,50 @@ async def propose_chunks(request: Request, document_id: int) -> list[ChunkPropos
             status.HTTP_502_BAD_GATEWAY, "réponse de l'IA inutilisable, réessayer"
         ) from None
     log.info("chunks_proposed", document_id=document_id, proposals=len(result))
-    return [ChunkProposal(**p.model_dump()) for p in result]
+    return [ChunkProposal(**p.model_dump()) for p in result], raw.text
+
+
+@router.post(
+    "/documents/{document_id}/propose-chunks",
+    operation_id="proposeChunks",
+    responses={
+        409: {"description": "IA non configurée, budget atteint ou compte API indisponible"},
+        422: {"description": "Document sans texte lisible"},
+        502: {"description": "Réponse de l'IA inutilisable"},
+    },
+)
+async def propose_chunks(request: Request, document_id: int) -> list[ChunkProposal]:
+    """L'IA lit le document et propose des blocs. Rien n'est enregistré : c'est l'interface
+    qui crée les blocs que Kevin accepte."""
+    chunks, _ = await _propose(request, document_id)
+    return chunks
+
+
+class Understanding(BaseModel):
+    """Le CV lu à l'accueil (docs/121 §A) : les blocs proposés, et ce que le CV dit de la
+    recherche (postes, taux, langues, télétravail), seulement s'il le dit."""
+
+    chunks: list[ChunkProposal]
+    roles: list[str]
+    min_rate: int | None
+    languages: list[str]
+    remote: Literal["remote", "onsite"] | None
+
+
+@router.post(
+    "/documents/{document_id}/understand",
+    operation_id="understandCv",
+    responses={
+        409: {"description": "IA non configurée, budget atteint ou compte API indisponible"},
+        422: {"description": "Document sans texte lisible"},
+        502: {"description": "Réponse de l'IA inutilisable"},
+    },
+)
+async def understand_cv(request: Request, document_id: int) -> Understanding:
+    """Rien n'est enregistré : l'accueil montre ce qui a été compris, la personne valide."""
+    chunks, text = await _propose(request, document_id, understand=True)
+    found = proposals.parse_understood(text)
+    return Understanding(chunks=chunks, **found.model_dump())
 
 
 # --- Blocs de profil ------------------------------------------------------------------

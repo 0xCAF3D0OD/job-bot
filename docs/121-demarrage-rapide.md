@@ -73,6 +73,23 @@ Ce qu'on ne fera pas : créer l'alerte à la place de la personne, se connecter 
 
 - Tests : un CV d'exemple sans coordonnées saisies (nom, rue, « CH-1020 Renens », téléphone, e-mail, site, date de naissance retirés ; le parcours gardé) ; les coordonnées connues retirées partout ; la requête de proposition sans nom, localité ni année de naissance ; les certificats sans les noms, employeur gardé. 603 tests backend, ruff, mypy.
 
+## Écarts (0.91.0 : A)
+
+- **Règles relues avant de construire** (`docs/interface.md`), et vérifiées sur captures : l'accueil est une page de présentation, ses titres restent des phrases (titres 1) ; une seule ligne d'aide par écran, celle qui dit ce qui part à l'IA (titres 5) ; les blocs en liste, une ligne par bloc séparée par un filet, dans une seule carte à 1,5 rem de marge (listes, aéré, structure 3) ; les postes et les langues en pastilles, comme les autres choix de l'accueil ; un seul bouton plein ; la carte des blocs à la largeur des boutons (cohérence).
+- **L'ordre des écrans** : objectif, métier, lieux, taux, (ORP), CV, **« Voici ce que j'ai compris »**, **langues**, **télétravail**, notifications, récapitulatif, la suite. L'écran du CV lu n'apparaît que si l'IA a répondu ; « Continuer » attend la fin de la lecture (« Lecture de ton CV… » dans la carte du CV).
+- **Les blocs** : cochés, sauf ceux qui existent déjà (« déjà dans le profil »), décochés. « C'est bon » les ajoute au profil, rattachés au CV. Pas de modification dans l'accueil : elle se fait dans Profil (une liste à cocher reste lisible sur téléphone).
+- **Les postes visés** : en pastilles, le métier de l'accueil n'y est pas répété ; gardés dans l'accueil (`roles`, 3 au plus) pour préparer les alertes (B).
+- **Les langues** : « En plus du français, quelles langues parles-tu au travail ? » (allemand, italien, anglais, aucune), préremplies par le CV ; elles remplissent le critère des langues non parlées. **Le télétravail** : « Sur place ou hybride » ou « Aussi à distance » (depuis la Suisse), prérempli si le CV le dit.
+- **Le taux** lu dans le CV ne remplace pas la réponse déjà donnée à l'accueil.
+- **Une seule lecture** : la route `POST /api/documents/{id}/understand` (consignes `propose-chunks-v1` + `cv-understand-v1`), comptée comme une proposition de blocs.
+- **Correction de la 0.90.1** : le repérage d'un nom en tête de document ne regarde plus que la **première ligne** (le poste écrit sous le nom, « Ingénieure DevOps », restait masqué) ; les réponses de l'IA (titres de blocs, postes) ne passent plus que par le retrait des contacts.
+
+## Vérifié (0.91.0)
+
+- Tests backend : la lecture du CV à l'accueil (postes dédoublonnés et limités à 3, taux insensé ignoré, langue inconnue écartée, rien d'enregistré, sans coordonnées) ; une réponse sans la partie « understood » ; le poste sous le nom gardé. 606 tests, ruff, mypy.
+- Tests de l'interface : le CV déposé est lu, l'écran propose les blocs et les postes, un doublon décoché, « C'est bon » crée les blocs gardés et note les postes, les langues préremplies ; sans IA, l'écran est sauté ; les langues et le télétravail remplissent les critères. 411 tests, lint, vue-tsc.
+- Captures à 1440 et 390 px des trois nouveaux écrans ; axe-core sur ces écrans : aucun défaut de l'interface.
+
 ## Les questions
 
 1. **A** : l'IA lit le CV pendant l'accueil (environ 0,05 à 0,10 $), un seul écran « Voici ce que j'ai compris » : d'accord ?

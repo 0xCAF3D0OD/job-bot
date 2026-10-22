@@ -3477,6 +3477,48 @@
         }
       }
     },
+    "/api/documents/{document_id}/understand": {
+      "post": {
+        "tags": [
+          "profile"
+        ],
+        "summary": "Understand Cv",
+        "description": "Rien n'est enregistré : l'accueil montre ce qui a été compris, la personne valide.",
+        "operationId": "understandCv",
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Understanding"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA non configurée, budget atteint ou compte API indisponible"
+          },
+          "422": {
+            "description": "Document sans texte lisible"
+          },
+          "502": {
+            "description": "Réponse de l'IA inutilisable"
+          }
+        }
+      }
+    },
     "/api/profile-chunks": {
       "get": {
         "tags": [
@@ -20927,6 +20969,67 @@
         "title": "TrainingReview",
         "description": "Suggestion de l'IA : la garder (vérifiée) ou l'écarter (ne plus la proposer)."
       },
+      "Understanding": {
+        "properties": {
+          "chunks": {
+            "items": {
+              "$ref": "#/components/schemas/ChunkProposal"
+            },
+            "type": "array",
+            "title": "Chunks"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "min_rate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Rate"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "remote": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "remote",
+                  "onsite"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chunks",
+          "roles",
+          "min_rate",
+          "languages",
+          "remote"
+        ],
+        "title": "Understanding",
+        "description": "Le CV lu à l'accueil (docs/121 §A) : les blocs proposés, et ce que le CV dit de la\nrecherche (postes, taux, langues, télétravail), seulement s'il le dit."
+      },
       "UpcomingInterview": {
         "properties": {
           "application_id": {
@@ -21035,6 +21138,23 @@
             ],
             "title": "Trade"
           },
+          "roles": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "maxLength": 80,
+                  "minLength": 1
+                },
+                "type": "array",
+                "maxItems": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roles"
+          },
           "postponed": {
             "anyOf": [
               {
@@ -21102,6 +21222,13 @@
               }
             ],
             "title": "Trade"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles"
           }
         },
         "type": "object",

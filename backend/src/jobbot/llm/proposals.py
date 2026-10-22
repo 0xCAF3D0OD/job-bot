@@ -18,13 +18,18 @@ PROMPT_VERSION = "propose-chunks-v1"
 INSTRUCTIONS = (
     resources.files("jobbot.llm").joinpath("prompts/propose-chunks-v1.md").read_text("utf-8")
 )
+# Le CV lu à l'accueil (docs/121 §A) : les blocs, et ce que le CV dit de la recherche.
+UNDERSTAND_VERSION = "cv-understand-v1"
+UNDERSTAND_INSTRUCTIONS = INSTRUCTIONS + (
+    resources.files("jobbot.llm").joinpath("prompts/cv-understand-v1.md").read_text("utf-8")
+)
 MAX_DOCUMENT_CHARS = 30_000
 MAX_TOKENS = 8_000
 
 
-def scrub(text: str, identity: object | None = None) -> str:
+def scrub(text: str, identity: object | None = None, *, head: bool = True) -> str:
     """Les coordonnées retirées avant l'envoi à l'IA (docs/121 §A.3, `llm/redact.py`)."""
-    return redact(text, identity)
+    return redact(text, identity, head=head)
 
 
 class Proposal(BaseModel):
@@ -66,12 +71,43 @@ OUTPUT_SCHEMA: dict[str, Any] = {
 }
 
 
+LANGUAGES = ("allemand", "italien", "anglais")
+
+UNDERSTOOD_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "roles": {"type": "array", "items": {"type": "string"}},
+        "min_rate": {"type": ["integer", "null"]},
+        "languages": {"type": "array", "items": {"type": "string", "enum": list(LANGUAGES)}},
+        "remote": {"type": ["string", "null"], "enum": ["remote", "onsite", None]},
+    },
+    "required": ["roles", "min_rate", "languages", "remote"],
+    "additionalProperties": False,
+}
+UNDERSTAND_SCHEMA: dict[str, Any] = {
+    **OUTPUT_SCHEMA,
+    "properties": {**OUTPUT_SCHEMA["properties"], "understood": UNDERSTOOD_SCHEMA},
+    "required": ["chunks", "understood"],
+}
+
+
+class Understood(BaseModel):
+    """Ce que le CV dit de la recherche, seulement s'il le dit (docs/121 §A)."""
+
+    roles: list[str] = Field(default_factory=list)
+    min_rate: int | None = None
+    languages: list[str] = Field(default_factory=list)
+    remote: Literal["remote", "onsite"] | None = None
+
+
 def request_params(
     model: str,
     effort: str,
     existing: list[ProfileChunkData],
     document_text: str,
     identity: object | None = None,
+    *,
+    understand: bool = False,
 ) -> dict[str, Any]:
     blocks = (
         "\n".join(
@@ -86,7 +122,9 @@ def request_params(
     return {
         "model": model,
         "max_tokens": MAX_TOKENS,
-        "system": [{"type": "text", "text": INSTRUCTIONS}],
+        "system": [
+            {"type": "text", "text": UNDERSTAND_INSTRUCTIONS if understand else INSTRUCTIONS}
+        ],
         "messages": [
             {
                 "role": "user",
@@ -96,7 +134,10 @@ def request_params(
         ],
         "output_config": {
             "effort": effort,
-            "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
+            "format": {
+                "type": "json_schema",
+                "schema": UNDERSTAND_SCHEMA if understand else OUTPUT_SCHEMA,
+            },
         },
     }
 
@@ -113,8 +154,8 @@ def parse_output(text: str, existing: list[ProfileChunkData]) -> list[Proposal]:
         cleaned.append(
             proposal.model_copy(
                 update={
-                    "title": scrub(proposal.title.strip())[:200],
-                    "content": scrub(proposal.content.strip())[:2000],
+                    "title": scrub(proposal.title.strip(), head=False)[:200],
+                    "content": scrub(proposal.content.strip(), head=False)[:2000],
                     "tags": tags,
                     # Un doublon qui désigne un bloc inexistant est ignoré.
                     "duplicate_of": proposal.duplicate_of
@@ -124,3 +165,17 @@ def parse_output(text: str, existing: list[ProfileChunkData]) -> list[Proposal]:
             )
         )
     return cleaned
+
+
+def parse_understood(text: str) -> Understood:
+    """La partie « understood » de la réponse, nettoyée ; vide si elle manque ou déraille."""
+    try:
+        raw = json.loads(text).get("understood") or {}
+        found = Understood.model_validate(raw)
+    except (json.JSONDecodeError, ValidationError, AttributeError):
+        return Understood()
+    roles = [scrub(r.strip(), head=False)[:80] for r in found.roles if r.strip()]
+    roles = list(dict.fromkeys(roles))[:3]
+    rate = found.min_rate if found.min_rate is not None and 10 <= found.min_rate <= 100 else None
+    languages = [lang for lang in LANGUAGES if lang in found.languages]
+    return Understood(roles=roles, min_rate=rate, languages=languages, remote=found.remote)

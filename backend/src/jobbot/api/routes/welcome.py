@@ -25,12 +25,17 @@ class WelcomeOut(BaseModel):
     step: int
     goal: Goal | None
     trade: str | None
+    # Les postes visés lus dans le CV et gardés à l'accueil (docs/121 §A) : pour les alertes.
+    roles: list[str] = Field(default_factory=list)
 
 
 class WelcomeIn(BaseModel):
     step: Annotated[int | None, Field(ge=1, le=20)] = None
     goal: Goal | None = None
     trade: Annotated[str | None, Field(max_length=80)] = None
+    roles: list[Annotated[str, Field(min_length=1, max_length=80)]] | None = Field(
+        default=None, max_length=3
+    )
     # « Plus tard » : Aujourd'hui, avec « Terminer mon accueil » ; reprise à la connexion.
     postponed: bool | None = None
     done: bool | None = None
@@ -40,7 +45,9 @@ def _out(value: dict[str, object]) -> WelcomeOut:
     goal = value.get("goal")
     trade = value.get("trade")
     step = value.get("step")
+    roles = value.get("roles")
     return WelcomeOut(
+        roles=[r for r in roles if isinstance(r, str)] if isinstance(roles, list) else [],
         status=welcome.status(value),
         step=step if isinstance(step, int) else 1,
         goal=goal if goal in ("job", "orp", "news") else None,

@@ -1340,6 +1340,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents/{document_id}/understand": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Understand Cv
+         * @description Rien n'est enregistré : l'accueil montre ce qui a été compris, la personne valide.
+         */
+        post: operations["understandCv"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile-chunks": {
         parameters: {
             query?: never;
@@ -7182,6 +7202,23 @@ export interface components {
             keep: boolean;
         };
         /**
+         * Understanding
+         * @description Le CV lu à l'accueil (docs/121 §A) : les blocs proposés, et ce que le CV dit de la
+         *     recherche (postes, taux, langues, télétravail), seulement s'il le dit.
+         */
+        Understanding: {
+            /** Chunks */
+            chunks: components["schemas"]["ChunkProposal"][];
+            /** Roles */
+            roles: string[];
+            /** Min Rate */
+            min_rate: number | null;
+            /** Languages */
+            languages: string[];
+            /** Remote */
+            remote: ("remote" | "onsite") | null;
+        };
+        /**
          * UpcomingInterview
          * @description Entretien aujourd'hui ou demain : en tête d'Aujourd'hui (docs/43 n° 30).
          */
@@ -7217,6 +7254,8 @@ export interface components {
             goal?: ("job" | "orp" | "news") | null;
             /** Trade */
             trade?: string | null;
+            /** Roles */
+            roles?: string[] | null;
             /** Postponed */
             postponed?: boolean | null;
             /** Done */
@@ -7235,6 +7274,8 @@ export interface components {
             goal: ("job" | "orp" | "news") | null;
             /** Trade */
             trade: string | null;
+            /** Roles */
+            roles?: string[];
         };
         /** WorkerStatus */
         WorkerStatus: {
@@ -10044,6 +10085,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChunkProposal"][];
+                };
+            };
+            /** @description IA non configurée, budget atteint ou compte API indisponible */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Document sans texte lisible */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réponse de l'IA inutilisable */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    understandCv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Understanding"];
                 };
             };
             /** @description IA non configurée, budget atteint ou compte API indisponible */

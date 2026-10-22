@@ -55,6 +55,7 @@ async def test_new_account_goes_through_welcome(
             "step": 1,
             "goal": None,
             "trade": None,
+            "roles": [],
         }
         saved = await api.put(
             "/api/welcome", json={"goal": "orp", "trade": "Infirmière", "step": 3}
@@ -64,6 +65,7 @@ async def test_new_account_goes_through_welcome(
             "step": 3,
             "goal": "orp",
             "trade": "Infirmière",
+            "roles": [],
         }
         # « Plus tard » : plus d'envoi forcé vers l'accueil, mais pas fini.
         later = (await api.put("/api/welcome", json={"postponed": True})).json()
