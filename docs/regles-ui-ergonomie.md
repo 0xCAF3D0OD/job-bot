@@ -64,7 +64,7 @@ Règles :
 
 | Composant | Règle |
 |---|---|
-| **Note d'une offre** | Visage du 1 + un mot. Pas de pastille, pas de chiffre sur 100 en premier plan. Quatre mots fixes : Très proche · Proche · À creuser · Loin. Jamais de visage triste. Sans jauge. « À creuser » en gris chaud (`--score-dig`), jamais l'orange. |
+| **Note d'une offre** | Visage du 1 + un mot, avec une jauge discrète pour la nuance. Pas de pastille, pas de chiffre sur 100 en premier plan. Quatre mots fixes : Très proche · Proche · À creuser · Loin. Jamais de visage triste. « À creuser » en gris chaud (`--score-dig`), jamais l'orange. |
 | **Couleur orange** | Réservée à ce qui demande d'agir : notifications, relances, rattrapage. |
 | **Rouge** | Uniquement les vraies erreurs. |
 | **Progression ORP** | 10 cases, une par candidature. |
