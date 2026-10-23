@@ -29,7 +29,10 @@ const label = computed(() =>
     data-test="score"
   >
     <span class="score-word-label">
-      <FaceMark :mood="word.mood" />
+      <FaceMark
+        :mood="word.mood"
+        snug
+      />
       <span aria-hidden="true">{{ word.word }}</span>
     </span>
   </span>

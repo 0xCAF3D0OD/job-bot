@@ -306,3 +306,16 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 - **Dans l'application** : chaque état photographié (survol, focus au clavier, désactivé, ouvert), en clair et en sombre, conforme à Figma.
 - **Avant / après** : 50 captures de la démo et 68 d'un compte neuf changent, sur les pages qui ont des boutons secondaires, des notes ou un bouton désactivé.
 - 455 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.5)
+
+- **Offres, fiche d'une offre, Préparer à l'échelle** : 130 valeurs (espacements, tailles, rayons) des règles propres à ces pages. Une règle n'est arrondie que si aucune de ses classes ne sert aussi une autre page (`.notice`, `.meta-line`, `.jobs-head`, `.step`, les filtres des Actualités, les blocs et « Effet des critères » du Profil, l'entraînement à l'entretien…) : ces règles attendent la version de leurs autres pages. La lettre, le CV et la feuille ORP restent hors échelle.
+- **« Il te manque : … »** sur une offre : à 14 px, l'interligne 1,3 collait la ligne à celle du dessus sur téléphone (l'audit l'a trouvé) ; c'est une phrase, elle passe à `--leading-normal` (1,5), comme le texte courant.
+- **Le visage du 1 dans la note** est cadré au plus près de son dessin (`viewBox` 13 15 74 74 au lieu de 8 8 86 86) : il remplit ses 20 px, à la hauteur du mot. Seulement dans la note (`FaceMark snug`) : ailleurs (écrans vides, réussite, tuiles), le visage garde son cadre. Figma suit.
+- **L'anneau de focus du repliable** suit les coins de la carte (`--radius`), même là où le repliable n'a pas de cadre (dans les formulaires), comme dans Figma.
+- Test : la note sans jauge, le visage cadré au plus près.
+
+## Vérifié (1.6.5)
+
+- Avant / après : seules changent les Offres, la fiche d'une offre, Préparer, et la note de l'offre du jour sur Aujourd'hui (le visage). Dans la liste, les métadonnées passent de 13,6 à 14 px : sur certaines offres, le lieu passe à la ligne et la ligne grandit un peu ; rien n'est ajouté ni déplacé.
+- Tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
