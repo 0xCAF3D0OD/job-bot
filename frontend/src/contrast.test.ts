@@ -52,6 +52,21 @@ describe.each([
   });
 });
 
+describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", () => {
+  it("au moins 3,3:1 en clair et 3:1 en sombre sur les fonds de page", () => {
+    for (const background of BACKGROUNDS) {
+      expect(ratio(light.faint!, light[background]!), `clair, ${background}`).toBeGreaterThanOrEqual(3.3);
+      expect(ratio(dark.faint!, dark[background]!), `sombre, ${background}`).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("seulement pour les chevrons, les soulignés et l'encre des dessins ; le texte gris est en --muted", () => {
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.trim());
+    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing )/);
+    expect(rules.length).toBeGreaterThan(0);
+  });
+});
+
 describe("pastilles teintées (mode clair)", () => {
   it("le texte reste lisible sur sa teinte", () => {
     const white = light.surface!;

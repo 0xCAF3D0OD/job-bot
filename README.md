@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.0)
+- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.1)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -217,7 +217,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 1.4.1 | La lecture : les phrases longues raccourcies (16 mots au plus), toutes les cases à cocher en interrupteurs, le texte collé détecté par l'audit et écarté (docs/132) | livrée |
 | 1.5.0 | Les vues choisies : le Suivi en deux onglets (à relancer, à déclarer), la légende au-dessus du calendrier ; le Bilan avec les tuiles en carrés et les mois précédents à côté, « Le détail » en une vue choisie à la fois (plus de cartes dans une carte) ; le Rendez-vous sur toute la largeur ; les audits ouvrent les repliables et chaque vue, en clair et en sombre (docs/133) | livrée |
 | 1.5.1 | Le Suivi : la colonne de droite reprend la hauteur du calendrier et défile dedans (retour du 7 octobre rétabli) ; l'état des preuves en bandeau daté, une phrase et une action (docs/134) | livrée |
-| 1.6.0 | Les échelles de design, le socle : espacements, tailles de texte, rayons et graisses en variables, doublons de couleurs fusionnés, rendu identique au pixel près ; captures avant/après de toutes les pages (docs/135) | en cours |
+| 1.6.0 | Les échelles de design, le socle : espacements, tailles de texte, rayons et graisses en variables, doublons de couleurs fusionnés, rendu identique au pixel près ; captures avant/après de toutes les pages (docs/135) | livrée |
+| 1.6.1 | Le gris du texte : tout texte gris en `--muted`, `--faint` réservé aux chevrons, soulignés et dessins (3,3:1 au moins en clair) ; le compteur des Actualités ne revient plus après la visite ; captures à heure figée côté serveur (docs/135) | en cours |
 
 ## Lancer en local
 
