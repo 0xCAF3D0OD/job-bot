@@ -73,7 +73,7 @@ describe("pastilles teintées (mode clair)", () => {
     const pairs: [string, string][] = [
       [light.accent!, light["accent-soft"]!],
       [light.accent!, mix(light.accent!, white, 0.15)],
-      [light["orange-text"]!, mix(light.warn!, white, 0.18)],
+      [light["orange-text"]!, mix(light.orange!, white, 0.18)],
       [light["orange-text"]!, light["orange-soft"]!],
       [light["ok-text"]!, mix(light.ok!, white, 0.16)],
       ["#ffffff", light.accent!],
