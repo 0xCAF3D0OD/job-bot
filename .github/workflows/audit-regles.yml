@@ -1,0 +1,29 @@
+# L'audit des règles de l'interface trouve toujours un texte collé au bord (docs/135, 1.6.3) :
+# à chaque envoi et chaque PR qui touche aux audits.
+name: Test de l'audit des règles
+
+on:
+  push:
+    paths:
+      - "frontend/scripts/**"
+      - ".github/workflows/audit-regles.yml"
+  pull_request:
+    paths:
+      - "frontend/scripts/**"
+      - ".github/workflows/audit-regles.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Navigateur de Playwright
+        working-directory: backend
+        run: uv run --with playwright playwright install --with-deps chromium
+      - name: Test de l'audit
+        run: make test-audit

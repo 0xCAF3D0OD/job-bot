@@ -72,9 +72,12 @@ demo-image: ## la démo en ligne dans Docker, sur http://localhost:8280 (make de
 demo-image-stop: ## arrête la démo Docker locale et efface ses données
 	$(DEMO_LOCAL) down -v
 
-test: ## tests backend (base jobbot_test) et frontend
+test: test-audit ## tests backend (base jobbot_test), frontend et audit des règles
 	cd backend && uv run pytest
 	cd frontend && npm run -s test && npm run -s typecheck && npm run -s poids
+
+test-audit: ## l'audit des règles trouve un texte collé au bord (navigateur requis, docs/135)
+	cd backend && uv run --with playwright --with pytest pytest -q ../frontend/scripts/test_regles.py
 
 poids: ## le budget de poids des pages (docs/117 §3)
 	cd frontend && npm run -s poids
