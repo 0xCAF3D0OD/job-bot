@@ -1,6 +1,6 @@
 # 135 — Les échelles de design : peu de valeurs, les mêmes partout (versions 1.6.x)
 
-> Statut : **validé** le 2026-10-23 : graisses en option A (600), sauf les liens inactifs du menu en 400 ; lettre, CV et feuille ORP hors échelle ; les trois règles modifiées. `--faint` est corrigé dans une version à part, juste après la 1.6.0 (§5). Les variables Figma changent une fois la 1.6.0 fusionnée.
+> Statut : **validé** le 2026-10-23 : graisses en option A (600), sauf les liens inactifs du menu en 400 ; lettre, CV et feuille ORP hors échelle ; les trois règles modifiées. `--faint` est corrigé dans une version à part, juste après la 1.6.0 (§5) ; le 23 octobre : le texte gris passe tout en `--muted`, `--faint` est réservé au non-texte. Les variables Figma changent une fois la 1.6.0 fusionnée.
 > Origine : l'inventaire des styles fait pour les variables Figma (22 octobre 2026) et ta demande : une échelle d'espacements en base 4 px de 8 valeurs, 6 à 7 tailles de texte, 3 rayons, les graisses 400, 600 et 700, une seule couleur orange (logo-spark réservé au logo), la fusion des doublons.
 
 ## Le constat
@@ -162,7 +162,17 @@ Où l'écart se verra :
 
 `--bg` et `--surface` sont tous deux blancs en clair mais différents en sombre : ce n'est pas un doublon, ils restent.
 
-**`--faint`** (#9a9aae) n'a que 2,8:1 sur blanc ; il est employé 7 fois en texte. Il passe à au moins 4,5:1 sur tous ses fonds, en clair et en sombre, dans une version à part juste après la 1.6.0 (la 1.6.1).
+**`--faint`** (#9a9aae) n'a que 2,6 à 2,8:1 sur les fonds clairs. Décision du 23 octobre : pas deux gris quasi identiques. **Tout le texte gris passe par `--muted`** ; `--faint` ne sert plus qu'aux éléments qui ne sont pas du texte, avec au moins 3,3:1 en clair (3:1 exigé, une marge gardée) :
+
+| Emploi de `--faint` | Nature | Devient |
+|---|---|---|
+| « Effacer » des filtres, désactivé | texte | règle supprimée : l'état n'existe plus, le bouton est masqué tant qu'aucun filtre n'est actif (docs/43 n° 13) |
+| Le « i » des boutons d'aide | texte (une lettre) | `--muted` |
+| Chevron des lignes repliables | icône | `--faint` |
+| Soulignement en pointillé des aides au survol | décoration | `--faint` |
+| Encre des dessins de chargement | illustration | `--faint` |
+
+`--faint` passe à #868698 en clair (3,31 à 3,57:1 selon le fond) ; en sombre il reste #9a9aae (6 à 6,9:1). C'est la 1.6.1.
 
 ## 6. Tranché
 
@@ -180,7 +190,7 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 | Version | Étape | Ce qui change |
 |---|---|---|
 | 1.6.0 | **Le socle, sans rien de visible** | Les variables entrent dans `style.css` ; chaque valeur déjà sur l'échelle passe par sa variable ; les doublons de même valeur fusionnent ; `12px` → `var(--radius)`. Les captures avant et après doivent être identiques au pixel près. |
-| 1.6.1 | **`--faint` lisible** | Au moins 4,5:1 sur tous ses fonds, en clair et en sombre. |
+| 1.6.1 | **Le gris du texte** | Tout texte gris en `--muted` ; `--faint` réservé au non-texte, au moins 3,3:1 en clair. Correctif du compteur des Actualités (commit à part). |
 | 1.6.2 | **Le commun** | Barre du haut et menu, boutons, champs, pastilles, cartes, repliables, toasts, pied de page, l'orange, les graisses. Visible sur toutes les pages : captures de toutes les pages. |
 | 1.6.3 | Aujourd'hui | Lignes, phrase du jour, compte du mois, Premiers pas. |
 | 1.6.4 | Candidatures › Offres et la fiche d'une offre, Préparer | |
@@ -200,7 +210,7 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 
 ## 8. Figma
 
-Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacements nommés par leur valeur, 19 tailles, 8 rayons, 4 graisses, 29 couleurs). **Elles changent une fois la 1.6.0 fusionnée** : elles prennent alors les noms et valeurs du §1 au §5 (ceux que la 1.6.0 a mis dans le code).
+Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacements nommés par leur valeur, 19 tailles, 8 rayons, 4 graisses, 29 couleurs). **Mises à jour le 23 octobre**, après la fusion de la 1.6.0 : elles portent les noms et valeurs du §1 au §5. Figma montre la cible ; le code la rejoint au fil des 1.6.x.
 
 ## Garde-fous
 
@@ -218,6 +228,20 @@ Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacement
 
 ## Vérifié (1.6.0)
 
-- **Identique au pixel près** : 168 captures de la démo et 128 d'un compte neuf, avant et après. Seule « Bilan › Actualités » (sombre, 1440 px) diffère de 450 pixels, autant qu'entre deux séries d'avant : la ligne « Relevé il y a … », calculée par le serveur.
+- **Identique au pixel près** : 168 captures de la démo et 128 d'un compte neuf, avant et après. Seule « Bilan › Actualités » (sombre, 1440 px) diffère de 450 pixels, autant qu'entre deux séries d'avant. *Rectifié en 1.6.1* : ce n'était pas « Relevé il y a … » mais le compteur des nouveautés sur l'onglet, qui revenait parfois après la visite (une course entre deux requêtes, corrigée en 1.6.1).
 - Test de contraste mis à jour (`--accent`, `--orange-text`, le texte orange sur son fond en clair et en sombre). 438 tests de l'interface, lint, vue-tsc.
 - Les trois audits à zéro sur la démo et sur un compte neuf (l'accessibilité aussi en sombre).
+
+## Écarts (1.6.1)
+
+- **Le gris du texte** : le « i » des boutons d'aide passe à `--muted` ; `--faint` (#868698 en clair, 3,31 à 3,57:1 ; #9a9aae en sombre, 6 à 6,9:1) ne sert plus qu'au chevron des repliables, au soulignement en pointillé des aides et à l'encre des dessins de chargement. Un test vérifie le contraste et que `--faint` ne sert à rien d'autre.
+- **« Effacer » désactivé n'existe pas** : le bouton est masqué tant qu'aucun filtre n'est actif (docs/43 n° 13) ; la règle `.filters-clear:disabled`, restée de la 0.20.0, est supprimée. Il n'y a donc pas de version désactivée à comparer à l'active.
+- **Le compteur des Actualités** (commit à part) : la requête partie au démarrage pouvait revenir après la visite des Actualités et ramener le compteur remis à zéro, selon l'ordre d'arrivée. Elle est ignorée si une visite a eu lieu entre-temps ; un test reproduit la course (il échoue sans le correctif). C'était la capture qui bougeait toute seule en 1.6.0.
+- **Les captures à heure figée côté serveur** : `frontend/scripts/serveur_fige.py` lance `jobbot` (la graine de la démo et l'API) avec l'horloge arrêtée à `CAPTURES_TIME`, la même que celle de la page. Les captures attendent aussi que la page ne défile plus avant de la photographier (ouvrir un repliable pouvait lancer un défilement qui finissait pendant la capture).
+- **Figma** : les variables suivent maintenant les échelles validées (§1 à §5) : 8 espacements, 3 rayons, 7 tailles, 3 graisses, 25 couleurs (une seule orange, `--orange-text`, `--orange-soft`, `--faint` réservé au non-texte, doublons fusionnés). Le code les rejoint au fil des 1.6.x : l'orange, `--panel` et les couleurs de la mascotte changent en 1.6.2.
+
+## Vérifié (1.6.1)
+
+- **Deux séries d'avant identiques** (démo et compte neuf), sauf le compteur des Actualités, corrigé ici.
+- **Avant / après** : 73 captures de la démo et 66 du compte neuf changent, toutes sur les pages à repliables ou à aides au survol (Réglages, Profil, Alertes, Formations, Rendez-vous, Bilan › Ce qui marche, la fiche d'une offre) ; seuls bougent le chevron, le pointillé et le « i », un peu plus foncés en clair. Le texte ne bouge pas.
+- 453 tests de l'interface, lint, vue-tsc ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.

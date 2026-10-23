@@ -14,7 +14,9 @@
   --panel: #f6f6fa;
   --text: #11111f;
   --muted: #6e6e82;
-  --faint: #9a9aae;
+  /* Réservé à ce qui n'est pas du texte (chevrons, soulignés, encre des dessins) : 3,3:1 au
+     moins ; le texte gris est en --muted (docs/135, 1.6.1). */
+  --faint: #868698;
   --border: #ebebf1;
   --divider: #f0f0f5;
   /* L'accent est le bleu du logo (docs/107) : une seule couleur pour les actions. */
@@ -73,6 +75,7 @@
     --panel: #1d1d31;
     --text: #f1f1f8;
     --muted: #a2a2b8;
+    --faint: #9a9aae;
     --ok-text: #3fc2a3;
     --orange-text: #f0a35a;
     --orange-soft: #3a2a1a;
@@ -1261,7 +1264,6 @@ input[type="checkbox"]:checked::after { transform: translateX(0.9rem); }
 .filters-footer { display: grid; grid-template-columns: 1fr; gap: var(--space-2); }
 .filters-clear, .filters-done { border-radius: var(--radius-pill); padding: 0.6rem 0.9rem; font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
 .filters-clear { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
-.filters-clear:disabled { color: var(--faint); cursor: default; }
 .filters-done { display: none; background: var(--text); color: var(--bg); border: 1px solid var(--text); }
 .sheet-grabber { display: none; }
 @media (max-width: 860px) {
@@ -3277,7 +3279,7 @@ button.secondary.danger { color: var(--down-text); }
 button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); color: var(--down-text); }
 
 /* L'aide au doigt (docs/108 §2) : le « i » à droite du titre, une ligne grise sous lui. */
-.hover-note-info { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; margin: -0.9rem -0.9rem -0.9rem -0.35rem; padding: 0; border: 0; background: none; color: var(--faint); vertical-align: middle; cursor: pointer; }
+.hover-note-info { display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; margin: -0.9rem -0.9rem -0.9rem -0.35rem; padding: 0; border: 0; background: none; color: var(--muted); vertical-align: middle; cursor: pointer; }
 .hover-note-info > span { display: grid; place-items: center; width: 1rem; height: 1rem; border: 1.5px solid currentColor; border-radius: 50%; font-size: 0.68rem; font-weight: var(--weight-bold); line-height: 1; font-style: normal; }
 .hover-note-info[aria-expanded="true"] { color: var(--accent); }
 .hover-note-line { display: block; margin-top: 0.3rem; font-size: 0.86rem; font-weight: var(--weight-regular); line-height: 1.5; color: var(--muted); text-transform: none; letter-spacing: 0; white-space: normal; }
