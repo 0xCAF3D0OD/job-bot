@@ -34,10 +34,12 @@ Les mêmes mots pour les mêmes choses, sur chaque écran :
 
 ## Aéré (docs/93)
 
+Les valeurs viennent des échelles de `docs/regles-ui-ergonomie.md` §4 bis (docs/135).
+
 1. Une carte a au moins 1,25 rem de marge intérieure (1,5 rem pour une carte de catalogue).
 2. Le texte courant a un interligne d'au moins 1,5 ; au moins 0,75 rem entre un texte et ce qui suit.
 3. Si une carte se serre, on retire un élément plutôt que de réduire les marges.
-4. Les logos d'entreprise sont des carrés aux coins arrondis (0,6 rem) ; restent ronds la note, l'initiale du compte et les pastilles.
+4. Les logos d'entreprise sont des carrés aux coins arrondis (8 px, `--radius-sm`, docs/135) ; restent ronds la note, l'initiale du compte et les pastilles.
 
 ## La structure (docs/32, 43, 63, 84, 88, 93, 95, 106, 110 ; reprises en docs/119)
 
@@ -48,9 +50,9 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 3. **Dans une carte** : 1,5 rem de marge intérieure, sur ordinateur comme sur téléphone (docs/106 complément 0.77.6), jamais moins de 1,25 rem ; 1 rem entre étiquettes, titre et faits, 0,5 rem entre deux faits, 1,25 rem avant le bas (docs/93). Les repliables suivent la même marge que les cartes.
 4. **Une rangée, une hauteur** : les cartes côte à côte ont la même hauteur ; la plus courte s'étire, son contenu reste en haut (docs/32, 43, 93). Un vide qui reste se remplit d'une information utile, jamais d'une image (docs/63).
 5. **Les grilles** : 3 colonnes au plus (18 rem au moins par carte), 2 sur tablette, 1 sur téléphone ; deux cartes côte à côte en 3 / 2 (docs/93, 95). Une liste courte dans une carte de toute la largeur passe en deux colonnes plutôt que de laisser la moitié vide (docs/119).
-6. **Les filets** : 1,75 rem de chaque côté sur ordinateur, 1,5 rem sur téléphone (docs/106).
+6. **Les filets** : 2 rem de chaque côté sur ordinateur, 1,5 rem sur téléphone (docs/106, docs/135).
 7. **Les interlignes** : 1,5 pour le texte, 1,6 pour les aides, 1,3 pour un titre (docs/93, 106).
-8. **Les titres** (docs/110, docs/130) : une seule taille et une seule graisse par niveau, sur toutes les pages : page en 2 rem, section en 1,35 rem au-dessus de sa carte (graisse 500), réglage en gras (600) dans sa carte ; pas de point final ; un titre de partie n'est pas souligné.
+8. **Les titres** (docs/110, docs/130) : une seule taille et une seule graisse par niveau, sur toutes les pages : page en 2 rem, section en 1,375 rem au-dessus de sa carte, en graisse 600 comme les boutons et les liens actifs (docs/135 ; les liens inactifs du menu restent en 400), réglage en 600 dans sa carte ; pas de point final ; un titre de partie n'est pas souligné.
 9. **Les repliables** (docs/133 : jamais de cartes dedans ; plusieurs contenus du même rang → un sélecteur et une vue à la fois) : le résumé en gris à droite de la ligne ; une seule ligne ouverte par groupe ; le contenu long et secondaire dans un panneau latéral (docs/32). Une action sur un repliable ouvert (« Masquer ») se met sur sa ligne de titre, jamais sur une ligne à elle (docs/119).
 10. **Une partie à une seule action** devient une ligne : le nom à gauche, l'action à droite (docs/106).
 11. **Consulter ou modifier** : une carte ne mélange pas les deux (docs/110).
