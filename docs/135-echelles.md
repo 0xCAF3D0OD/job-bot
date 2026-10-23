@@ -95,6 +95,22 @@ Le nom dit le multiple de 4 px, pour qu'on retrouve la valeur sans ouvrir le fic
 
 **Hors échelle** : les textes des graphiques en SVG (7 à 12 unités, mis à l'échelle avec le dessin).
 
+## 2 bis. Interlignes : 3 (ajouté le 23 octobre)
+
+| Variable | Valeur | Rôle |
+|---|---|---|
+| `--leading-none` | 1 | pastilles, icônes, compteurs |
+| `--leading-tight` | 1,3 | titres de carte, lignes courtes |
+| `--leading-normal` | 1,5 | texte courant (1,5 au moins, `docs/interface.md` Aéré 2) ; la base de la page (avant 1,55) |
+
+| Valeur actuelle | Emplois | Devient | Où l'écart se verra |
+|---|---|---|---|
+| 1 · 1,1 | 12 | 1 | — |
+| 1,15 · 1,2 · 1,25 · 1,3 · 1,35 · 1,4 | 21 | 1,3 | À peine : titres d'actualités (1,15 → 1,3), compte du mois (1,4 → 1,3). |
+| 1,45 · 1,5 · 1,55 · 1,6 · 1,65 | 59 | 1,5 | **Partout un peu** : la base passe de 1,55 à 1,5, soit 0,8 px de moins par ligne de 16 px ; les descriptions des Réglages et les encadrés (1,6) se resserrent de 1,6 px par ligne. |
+
+Dans Figma, une variable d'interligne se lit en pixels : les trois valeurs y sont des variables de documentation, et l'interligne passe par **7 styles de texte** (`jobA1/font-caption` à `jobA1/font-page`), liés aux variables de taille, interligne en pourcentage.
+
 ## 3. Rayons : 3
 
 | Variable | Valeur | Rôle |
@@ -244,4 +260,17 @@ Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacement
 
 - **Deux séries d'avant identiques** (démo et compte neuf), sauf le compteur des Actualités, corrigé ici.
 - **Avant / après** : 73 captures de la démo et 66 du compte neuf changent, toutes sur les pages à repliables ou à aides au survol (Réglages, Profil, Alertes, Formations, Rendez-vous, Bilan › Ce qui marche, la fiche d'une offre) ; seuls bougent le chevron, le pointillé et le « i », un peu plus foncés en clair. Le texte ne bouge pas.
+- 453 tests de l'interface, lint, vue-tsc ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.2)
+
+- **Partout** : les graisses (500 → 600 ; les liens inactifs des menus et des onglets en 400, l'onglet actif de Préparer passe à 600 pour rester distinct), les interlignes (§2 bis ; la base 1,55 → 1,5), l'orange unique (`--warn` disparaît, `--orange` passe à #e08a2e ; le texte orange écrit en dur en sombre passe par `--orange-text`), `--panel` = `--band` en clair, la mascotte aux couleurs du logo et de `--on-accent`.
+- **Composants communs seulement** pour les espacements, les tailles et les rayons : barre du haut, menu, cloche et compte, barre d'onglets du téléphone, boutons, champs, étiquettes et pastilles, repliables, onglets et sélecteurs, toasts, titres, aides au survol, écrans vides, pied de page. Les règles propres à une page attendent leur version (1.6.3 à 1.6.10).
+- **Les marges négatives du bouton d'aide « i »** restent hors échelle (§1) : le script les avait arrondies, ce qui décalait le texte d'une carte ; rétablies.
+- **L'audit des règles** ne mesure plus la partie cachée d'un texte coupé par « … » (« facult… » dans une ligne repliable était compté comme un texte à 4 px du bord, alors que la partie visible s'arrête bien avant).
+- **Figma** : trois variables d'interligne (documentation : Figma lit une variable d'interligne en pixels) et sept styles de texte `jobA1/font-caption` à `jobA1/font-page`, liés aux variables de taille, interligne en pourcentage.
+
+## Vérifié (1.6.2)
+
+- **Avant / après** : toutes les captures changent (168 de la démo, 128 d'un compte neuf), comme attendu : l'interligne de base et les graisses touchent chaque page. Revues une à une sur Aujourd'hui, le Suivi, la fiche d'une offre, les Réglages, le Profil, en clair et en sombre, à 1440 et 390 px : même structure, lignes un peu plus serrées, titres et boutons en 600, l'orange unique sur les marques « relancer » et l'initiale orange.
 - 453 tests de l'interface, lint, vue-tsc ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.

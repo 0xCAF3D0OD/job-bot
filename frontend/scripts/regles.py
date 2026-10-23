@@ -104,7 +104,13 @@ AUDIT = r"""(maxWords) => {
       if (!node.textContent.trim() || !vis(node.parentElement) || node.parentElement.closest('button.pill, .pill, .chip, .badge, input, select, textarea, .segmented, .icon-button, .logo, .score-ring')) continue;
       const range = document.createRange();
       range.selectNodeContents(node);
-      for (const r of range.getClientRects()) {
+      // Un texte coupé par « … » : seule sa partie visible compte (1.6.2).
+      const clipper = node.parentElement.closest('*');
+      const clip = getComputedStyle(clipper).overflowX !== 'visible' ? clipper.getBoundingClientRect() : null;
+      for (const raw of range.getClientRects()) {
+        const r = clip
+          ? { width: raw.width, top: raw.top, bottom: raw.bottom, left: Math.max(raw.left, clip.left), right: Math.min(raw.right, clip.right) }
+          : raw;
         // Ce qui n'est pas dans la carte (caché, replié, défilé) ne compte pas.
         if (r.width === 0 || r.left < box.left || r.right > box.right || r.top < box.top || r.bottom > box.bottom) continue;
         worst = Math.min(worst, r.left - box.left, box.right - r.right);
