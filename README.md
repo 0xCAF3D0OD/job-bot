@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.3)
+- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.4)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -220,7 +220,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 1.6.0 | Les échelles de design, le socle : espacements, tailles de texte, rayons et graisses en variables, doublons de couleurs fusionnés, rendu identique au pixel près ; captures avant/après de toutes les pages (docs/135) | livrée |
 | 1.6.1 | Le gris du texte : tout texte gris en `--muted`, `--faint` réservé aux chevrons, soulignés et dessins (3,3:1 au moins en clair) ; le compteur des Actualités ne revient plus après la visite ; captures à heure figée côté serveur (docs/135) | livrée |
 | 1.6.2 | Les échelles, le commun : barre du haut, menu, boutons, champs, pastilles, repliables, onglets, toasts, titres, pied de page à l'échelle ; titres et boutons en 600 ; trois interlignes ; une seule orange ; doublons de la mascotte et de `--panel` fusionnés (docs/135) | livrée |
-| 1.6.3 | Les échelles, Aujourd'hui : la page à l'échelle ; les initiales d'entreprise sans orange (accent, menthe, ciel) ; un test prouve que l'audit trouve toujours un texte collé au bord (docs/135) | en cours |
+| 1.6.3 | Les échelles, Aujourd'hui : la page à l'échelle ; les initiales d'entreprise sans orange (accent, menthe, ciel) ; un test prouve que l'audit trouve toujours un texte collé au bord (docs/135) | livrée |
+| 1.6.4 | Les trois composants : bouton secondaire bordé à 3:1, principal gris une fois désactivé et survol visible en sombre ; repliable entouré au focus et teinté au survol ; note d'une offre sans jauge, « À creuser » en gris chaud ; styles de texte en 600 dans Figma (docs/135) | en cours |
 
 ## Lancer en local
 

@@ -209,20 +209,21 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 | 1.6.1 | **Le gris du texte** | Tout texte gris en `--muted` ; `--faint` réservé au non-texte, au moins 3,3:1 en clair. Correctif du compteur des Actualités (commit à part). |
 | 1.6.2 | **Le commun** | Barre du haut et menu, boutons, champs, pastilles, cartes, repliables, toasts, pied de page, l'orange, les graisses. Visible sur toutes les pages : captures de toutes les pages. |
 | 1.6.3 | Aujourd'hui | Lignes, phrase du jour, compte du mois, Premiers pas ; les initiales d'entreprise sans orange (accent, menthe, ciel). |
-| 1.6.4 | Candidatures › Offres et la fiche d'une offre, Préparer | |
-| 1.6.5 | Suivi | Calendrier, colonne, panneau d'une candidature. |
-| 1.6.6 | Bilan | Tuiles, Mois précédents, les vues du détail. |
-| 1.6.7 | Rendez-vous | |
-| 1.6.8 | Alertes, Profil, Réglages | |
-| 1.6.9 | Formations, Actualités, l'assistant | |
-| 1.6.10 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable | Puis le garde-fou ci-dessous. |
+| 1.6.4 | **Les trois composants** (retours du 23 octobre) | Bouton, note d'une offre, repliable : Figma et code (ci-dessous). |
+| 1.6.5 | Candidatures › Offres et la fiche d'une offre, Préparer | |
+| 1.6.6 | Suivi | Calendrier, colonne, panneau d'une candidature. |
+| 1.6.7 | Bilan | Tuiles, Mois précédents, les vues du détail. |
+| 1.6.8 | Rendez-vous | |
+| 1.6.9 | Alertes, Profil, Réglages | |
+| 1.6.10 | Formations, Actualités, l'assistant | |
+| 1.6.11 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable | Puis le garde-fou ci-dessous. |
 
 **Pour chaque étape** :
 - captures **avant et après**, côte à côte, à 1440 et 390 px, en clair et en sombre, sur la démo et sur un compte neuf (base jetable) ; avec, pour chaque paire, une image des différences (les pixels changés en couleur), pour voir d'un coup d'œil ce qui a bougé ;
 - les trois audits (règles, alignement, accessibilité, avec exploration des repliables et des vues) à zéro ;
 - les tests de l'interface, lint et vue-tsc.
 
-**Le garde-fou (1.6.10)** : un contrôle ajouté à `frontend/scripts/regles.py` (ou un test) refuse dans les styles un espacement, une taille de texte, un rayon ou une graisse qui ne passe pas par une variable, sauf les exceptions listées aux §1 et §2.
+**Le garde-fou (1.6.11)** : un contrôle ajouté à `frontend/scripts/regles.py` (ou un test) refuse dans les styles un espacement, une taille de texte, un rayon ou une graisse qui ne passe pas par une variable, sauf les exceptions listées aux §1 et §2.
 
 ## 8. Figma
 
@@ -286,3 +287,22 @@ Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacement
 
 - **Avant / après** : 72 captures de la démo et 48 d'un compte neuf changent : Aujourd'hui, les initiales (Offres, la fiche d'une offre, le Suivi), et le rythme là où il apparaît aussi (Réglages, Bilan › Semaines), décalé d'1 à 2 px. Revues en clair et en sombre, à 1440 et 390 px.
 - 453 tests de l'interface (dont le contraste des trois initiales), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.4)
+
+Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note d'une offre, repliable), appliqués dans Figma et dans le code. Les versions de pages se décalent d'un cran (Offres en 1.6.5, … , garde-fou en 1.6.11).
+
+- **Bouton secondaire** : sa bordure passe à `--faint` (3,3 à 3,6:1 en clair, 6 à 6,9:1 en sombre ; avant 1,2:1). Elle vaut pour les boutons sans classe, `secondary` et `small`, qui ont le même aspect.
+- **Bouton principal** : en sombre, le survol passe à #d4ddff (`--accent-strong`, écart de 1,55 avec le normal au lieu de 1,25) ; ce bleu sert aussi au survol des liens en sombre. Désactivé, il devient gris (`--panel`, `--border`, `--muted`) au lieu d'un bleu pâle à 60 %.
+- **Repliable** : le titre reste en 600, ouvert et fermé. L'anneau de focus entoure toute la carte (autour de la seule ligne, il passait sur le contenu ouvert) ; dans une liste, il reste à l'intérieur pour ne pas mordre sur la voisine. Ouvert, le survol teinte la ligne (`--accent-soft`) ; le résumé gris y tombait à 4,3:1, il passe à l'accent (6,9:1).
+- **Note d'une offre** : plus de jauge (règle §4 : le visage et un mot) ; le visage reste à 20 px ; « À creuser » passe à un gris chaud (#766b60 en clair, #968779 en sombre, 4,75:1 au moins), proposé plutôt que le ciel : en texte, le ciel n'atteint que 1,9:1, et foncé à 4,8:1 il se confond avec le bleu de « Proche ». Le mot passe à 14 px et l'écart à 8 px (l'échelle, en avance sur la 1.6.5).
+- **Styles de texte** : trois styles en 600 (`jobA1/font-caption-semibold`, `font-small-semibold`, `font-body-semibold`), les seules tailles en 600 qui n'avaient qu'un style en 400 ; les styles de titre, de section et de page sont déjà en 600.
+- **Le test de contraste** vérifie aussi `--score-dig`, et accepte `--faint` sur le bord des boutons secondaires.
+- **CLAUDE.md** : la migration 1.6.x est dispensée de la règle « écran manquant dans Figma », tant qu'elle n'ajoute, ne retire ni ne déplace aucun élément.
+
+## Vérifié (1.6.4)
+
+- **Figma** : les trois composants refaits ; contraste WCAG 2.2 AA recalculé sur 56 paires (textes 4,5:1, bords et anneaux 3:1, en clair et en sombre) : tout passe, le bouton désactivé étant exempté.
+- **Dans l'application** : chaque état photographié (survol, focus au clavier, désactivé, ouvert), en clair et en sombre, conforme à Figma.
+- **Avant / après** : 50 captures de la démo et 68 d'un compte neuf changent, sur les pages qui ont des boutons secondaires, des notes ou un bouton désactivé.
+- 455 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.

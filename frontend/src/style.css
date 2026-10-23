@@ -37,7 +37,7 @@
   --orange-text: #a34b07;
   --orange-soft: #fff1e4;
   /* « À creuser » (docs/121 §C.5) : un gris chaud, pas l'orange de l'action. */
-  --score-dig: #7a6450;
+  --score-dig: #766b60;
   --down-text: #c4373b;
   /* Les échelles (docs/135, docs/regles-ui-ergonomie.md §4 bis) : toute valeur passe par elles. */
   --space-1: 0.25rem;
@@ -83,12 +83,12 @@
     --orange-text: #f0a35a;
     --orange-soft: #3a2a1a;
     --down-text: #ff7a7e;
-    --score-dig: #c4b19d;
+    --score-dig: #968779;
     --border: #2a2a42;
     --divider: #24243a;
     /* En sombre, le bleu clair du logo ; le texte posé dessus est foncé (9:1). */
     --accent: #9db0ff;
-    --accent-strong: #b8c6ff;
+    --accent-strong: #d4ddff;
     --accent-soft: #1e2550;
     --on-accent: #0f0f1a;
     color-scheme: dark;
@@ -171,7 +171,11 @@ button {
   color: var(--text);
 }
 button:disabled { opacity: 0.6; cursor: default; }
+/* Le bouton secondaire se voit à son bord : --faint, 3,3:1 au moins (WCAG 1.4.11, 1.6.4). */
+button:where(.secondary, .small, :not([class])) { border-color: var(--faint); }
 button.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+/* Désactivé, le bouton principal passe au gris : un bleu pâle passait pour actif (1.6.4). */
+button.primary:disabled { opacity: 1; background: var(--panel); border-color: var(--border); color: var(--muted); }
 button.primary:hover:not(:disabled) { background: var(--accent-strong); border-color: var(--accent-strong); }
 button.secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-small); }
@@ -1408,6 +1412,15 @@ button, .button-link { max-width: 100%; }
 .disclosure-list > .disclosure + .disclosure { border-top: 1px solid var(--divider); }
 .disclosure-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
 .disclosure-row:hover .disclosure-title, .disclosure.open .disclosure-title { color: var(--accent); }
+/* Ouvert, le titre est déjà en accent : le survol teinte la ligne (1.6.4). */
+.disclosure.open > .disclosure-row:hover { background: var(--accent-soft); border-top-left-radius: inherit; border-top-right-radius: inherit; }
+/* Sur la teinte, le résumé gris tombait à 4,3:1 : il passe à l'accent (6,9:1). */
+.disclosure.open > .disclosure-row:hover .disclosure-value { color: var(--accent); }
+/* Le focus entoure toute la carte : autour de la seule ligne, l'anneau passait sur le contenu ouvert
+   (1.6.4). Dans une liste, il reste à l'intérieur pour ne pas mordre sur la voisine. */
+.disclosure-row:focus-visible { outline: none; }
+.disclosure:has(> .disclosure-row:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.disclosure-list > .disclosure:has(> .disclosure-row:focus-visible) { outline-offset: -2px; }
 .disclosure.open .disclosure-title { font-weight: var(--weight-semibold); }
 .disclosure-title { flex: 0 1 auto; }
 .disclosure-value { flex: 1 1 0; margin-left: auto; color: var(--muted); font-size: var(--font-small); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -3535,9 +3548,8 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 /* La note en mots (docs/121 §C.5, docs/123) : le visage du 1 et un mot, à la couleur de la
    note ; le chiffre au survol. Le filet en bas de la ligne d'offre, à la longueur de la note,
    sur le filet gris de la liste. Pas encore notée : en gris, filet en pointillés. */
-.score-word { display: inline-grid; justify-items: end; gap: 0.4rem; flex: none; font-size: 0.88rem; font-weight: var(--weight-semibold); white-space: nowrap; }
-.score-word-label { display: inline-flex; align-items: center; gap: 0.4rem; }
-.score-gauge { display: block; width: 4.5rem; height: 4px; border-radius: var(--radius-pill); background: linear-gradient(to right, currentColor calc(var(--p, 0) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); }
+.score-word { display: inline-grid; justify-items: end; flex: none; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
+.score-word-label { display: inline-flex; align-items: center; gap: var(--space-2); }
 .score-word.very-close { color: var(--ok-text); }
 .score-word.close { color: var(--accent); }
 .score-word.dig { color: var(--score-dig); }
