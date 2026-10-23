@@ -208,7 +208,7 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 | 1.6.0 | **Le socle, sans rien de visible** | Les variables entrent dans `style.css` ; chaque valeur déjà sur l'échelle passe par sa variable ; les doublons de même valeur fusionnent ; `12px` → `var(--radius)`. Les captures avant et après doivent être identiques au pixel près. |
 | 1.6.1 | **Le gris du texte** | Tout texte gris en `--muted` ; `--faint` réservé au non-texte, au moins 3,3:1 en clair. Correctif du compteur des Actualités (commit à part). |
 | 1.6.2 | **Le commun** | Barre du haut et menu, boutons, champs, pastilles, cartes, repliables, toasts, pied de page, l'orange, les graisses. Visible sur toutes les pages : captures de toutes les pages. |
-| 1.6.3 | Aujourd'hui | Lignes, phrase du jour, compte du mois, Premiers pas. |
+| 1.6.3 | Aujourd'hui | Lignes, phrase du jour, compte du mois, Premiers pas ; les initiales d'entreprise sans orange (accent, menthe, ciel). |
 | 1.6.4 | Candidatures › Offres et la fiche d'une offre, Préparer | |
 | 1.6.5 | Suivi | Calendrier, colonne, panneau d'une candidature. |
 | 1.6.6 | Bilan | Tuiles, Mois précédents, les vues du détail. |
@@ -274,3 +274,15 @@ Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacement
 
 - **Avant / après** : toutes les captures changent (168 de la démo, 128 d'un compte neuf), comme attendu : l'interligne de base et les graisses touchent chaque page. Revues une à une sur Aujourd'hui, le Suivi, la fiche d'une offre, les Réglages, le Profil, en clair et en sombre, à 1440 et 390 px : même structure, lignes un peu plus serrées, titres et boutons en 600, l'orange unique sur les marques « relancer » et l'initiale orange.
 - 453 tests de l'interface, lint, vue-tsc ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.3)
+
+- **Les initiales d'entreprise** n'utilisent plus l'orange (règle §4 : l'orange est réservé à ce qui demande d'agir) : trois couleurs, l'accent (`--on-accent` dessus, 8:1 en clair, 9:1 en sombre), la menthe et le ciel (initiale foncée, 11:1 et 10:1). Une entreprise peut donc changer de couleur d'initiale : le partage se fait désormais sur trois couleurs au lieu de quatre. Le test de contraste vérifie les trois et l'absence d'orange.
+- **Aujourd'hui à l'échelle** : 59 valeurs (espacements, tailles, rayons) des règles propres à la page (`.today-*`, l'offre du jour, le mois ORP, Premiers pas, le rythme, la carte de réussite) et de l'initiale (`.logo`, coins 8 px). Le rythme et la carte de réussite servent aussi au Suivi et à Préparer : ils y changent de la même façon. Le grand chiffre du mois passe de 2,4 à 2 rem (prévu au §2).
+- **Le test de l'audit** (`frontend/scripts/test_regles.py`, Playwright) : un vrai texte à 4 px du bord est trouvé, coupé ou non ; la partie cachée d'un texte coupé par « … » ne compte pas. Avec l'audit d'avant la 1.6.2, seul ce dernier cas échoue : le test distingue bien les deux. Il se lance à part (`uv run --with playwright --with pytest pytest ../frontend/scripts/test_regles.py`), pas dans la suite du backend.
+- `--on-accent` s'écrit `#ffffff` au lieu de `#fff` (même couleur) : le test de contraste ne lit que les couleurs à six chiffres.
+
+## Vérifié (1.6.3)
+
+- **Avant / après** : 72 captures de la démo et 48 d'un compte neuf changent : Aujourd'hui, les initiales (Offres, la fiche d'une offre, le Suivi), et le rythme là où il apparaît aussi (Réglages, Bilan › Semaines), décalé d'1 à 2 px. Revues en clair et en sombre, à 1440 et 390 px.
+- 453 tests de l'interface (dont le contraste des trois initiales), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.

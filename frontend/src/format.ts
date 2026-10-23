@@ -94,7 +94,8 @@ export function dayShort(iso: string, now: Date = new Date()): string {
 export function colorIndex(name: string): number {
   let hash = 0;
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return hash % 4;
+  // Trois couleurs d'initiale : l'accent, la menthe, le ciel (jamais l'orange, docs/135).
+  return hash % 3;
 }
 
 /** Niveau d'une note, pour sa couleur : bonne (≥ 70), moyenne (≥ 50) ou faible. */
