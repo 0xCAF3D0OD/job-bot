@@ -38,7 +38,7 @@ function mix(color: string, base: string, share: number): string {
 }
 
 // Textes et fonds où ils s'affichent ; les fonds teintés sont ceux des pastilles.
-const TEXTS = ["text", "muted", "accent", "ok-text", "orange-text", "down-text"];
+const TEXTS = ["text", "muted", "accent", "ok-text", "orange-text", "down-text", "score-dig"];
 const BACKGROUNDS = ["bg", "band", "surface", "panel"];
 
 describe.each([
@@ -60,9 +60,9 @@ describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", ()
     }
   });
 
-  it("seulement pour les chevrons, les soulignés et l'encre des dessins ; le texte gris est en --muted", () => {
-    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.trim());
-    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing )/);
+  it("seulement pour les chevrons, les soulignés, l'encre des dessins et le bord des boutons secondaires ; le texte gris est en --muted", () => {
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "").trim());
+    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\()/);
     expect(rules.length).toBeGreaterThan(0);
   });
 });

@@ -64,7 +64,7 @@ Règles :
 
 | Composant | Règle |
 |---|---|
-| **Note d'une offre** | Visage du 1 + un mot. Pas de pastille, pas de chiffre sur 100 en premier plan. Quatre mots fixes : Très proche · Proche · À creuser · Loin. Jamais de visage triste. |
+| **Note d'une offre** | Visage du 1 + un mot. Pas de pastille, pas de chiffre sur 100 en premier plan. Quatre mots fixes : Très proche · Proche · À creuser · Loin. Jamais de visage triste. Sans jauge. « À creuser » en gris chaud (`--score-dig`), jamais l'orange. |
 | **Couleur orange** | Réservée à ce qui demande d'agir : notifications, relances, rattrapage. |
 | **Rouge** | Uniquement les vraies erreurs. |
 | **Progression ORP** | 10 cases, une par candidature. |
@@ -90,6 +90,7 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 | Interlignes | `--leading-none` · `--leading-tight` · `--leading-normal` | 1 · 1,3 · 1,5 (styles de texte en % dans Figma) |
 
 - Les titres, boutons et liens actifs sont en 600 ; les liens inactifs du menu en 400.
+- Le bouton secondaire se voit à son bord : `--faint`, 3:1 au moins. Le bouton principal désactivé est gris, pas bleu pâle.
 - Un seul gris pour le texte secondaire, `--muted` (au moins 4,5:1) ; `--faint` est réservé à ce qui n'est pas du texte (chevrons, soulignés en pointillé, encre des dessins), au moins 3:1 (3,3:1 visé en clair).
 - Une seule orange pour l'interface, `--orange`, avec `--orange-text` pour le texte et `--orange-soft` pour les fonds ; `--logo-spark` est réservé au logo et au visage du 1.
 - Hors échelle : la lettre, le CV et la feuille ORP (ils imitent le papier et le PDF), les valeurs en `em`, les pourcentages, les réserves de place d'un élément fixe, les textes des graphiques en SVG.
