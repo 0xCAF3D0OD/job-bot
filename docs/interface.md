@@ -104,7 +104,7 @@ Des règles validées au fil des versions, réunies ici en 0.89.1 : elles n'éta
 2. **Le titre de l'onglet** du navigateur dit la page : « Offres · jobA1 » (WCAG 2.4.2) ; une nouvelle page s'ajoute à `PAGE_TITLES` (`router.ts`).
 3. **Des onglets qui ne changent que l'adresse `?…`** (étapes de Préparer, Profil, Réglages) disent eux-mêmes lequel est ouvert (`aria-current`) ; sinon RouterLink les annonce tous comme la page actuelle (WCAG 4.1.2).
 4. **Une cible au doigt fait au moins 24 px de haut**, liens seuls sur leur ligne compris (WCAG 2.5.8).
-5. **Un texte sur une couleur claire** (initiales d'entreprise sur orange, menthe, bleu ciel) est foncé ; le blanc ne passe que sur le bleu d'accent ou un rouge sombre (WCAG 1.4.3).
+5. **Un texte sur une couleur claire** (initiales d'entreprise sur menthe ou bleu ciel ; sur l'accent, `--on-accent` ; jamais sur l'orange, docs/135) est foncé ; le blanc ne passe que sur le bleu d'accent ou un rouge sombre (WCAG 1.4.3).
 6. **Ouvrir un élément d'une liste** change l'adresse (« Retour » le referme) et met le focus sur son titre.
 7. **Un seul gris pour le texte secondaire**, `--muted` (4,5:1 au moins) ; `--faint` seulement pour ce qui n'est pas du texte (chevrons, soulignés, encre des dessins), à 3:1 au moins (docs/135, WCAG 1.4.3 et 1.4.11).
 8. **Pas de jargon technique** pour une personne invitée : ni « README », ni « réglage d'installation », ni « lecteur intégré » ; le Diagnostic est à l'exploitant seulement.

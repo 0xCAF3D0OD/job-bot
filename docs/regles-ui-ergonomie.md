@@ -69,7 +69,7 @@ Règles :
 | **Rouge** | Uniquement les vraies erreurs. |
 | **Progression ORP** | 10 cases, une par candidature. |
 | **Semaine** | Points par jour : rempli = candidature, cerclé = aujourd'hui. |
-| **Initiales d'entreprise** | Texte foncé sur fond clair, contraste ≥ 4,5:1. |
+| **Initiales d'entreprise** | Fond accent, menthe ou ciel, jamais l'orange (réservé à ce qui demande d'agir). Contraste ≥ 4,5:1 : `--on-accent` sur l'accent, texte foncé sur la menthe et le ciel. |
 | **Offre du jour** | Une à la fois, avec la phrase « pourquoi » et au plus deux manques. Boutons Garder et Écarter, « Annuler » pendant 6 s. Balayage autorisé sur téléphone, en plus des boutons. |
 | **Écran vide** | Dit ce que la page fera et quoi faire maintenant, avec une action. |
 | **Premiers pas** | Une carte, une étape à la fois, « 2 sur 5 ». |

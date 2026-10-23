@@ -91,10 +91,15 @@ describe("étiquettes orange (docs/135)", () => {
 
 describe("initiales des entreprises et pastille de la cloche (audit du 22.10.2026)", () => {
   it("l'initiale foncée sur les fonds clairs, le chiffre blanc sur un rouge assez sombre", () => {
-    for (const tone of ["orange", "mint", "sky"]) {
+    for (const tone of ["mint", "sky"]) {
       expect(css).toMatch(new RegExp(`\\.logo\\.c\\d \\{ background: var\\(--${tone}\\); color: #11111f; \\}`));
       expect(ratio("#11111f", light[tone]!)).toBeGreaterThanOrEqual(4.5);
     }
+    // L'accent, avec --on-accent, en clair et en sombre ; jamais l'orange (docs/135, 1.6.3).
+    expect(css).toContain(".logo.c0 { background: var(--accent); color: var(--on-accent); }");
+    expect(ratio(light["on-accent"]!, light.accent!)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(dark["on-accent"]!, dark.accent!)).toBeGreaterThanOrEqual(4.5);
+    expect(css).not.toMatch(/\.logo\.c\d \{ background: var\(--orange\)/);
     expect(css).toContain("background: #c62a2f; color: #fff;");
     expect(ratio("#ffffff", "#c62a2f")).toBeGreaterThanOrEqual(4.5);
   });
