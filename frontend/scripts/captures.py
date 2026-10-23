@@ -18,6 +18,17 @@ from explore import states
 from playwright.async_api import async_playwright
 from regles import PAGES
 
+# Remonte en haut et attend que la page n'y bouge plus pendant 300 ms : ouvrir un repliable
+# peut lancer un défilement qui finirait pendant la capture.
+SETTLE_AT_TOP = """async () => {
+  let still = 0;
+  for (let i = 0; i < 100 && still < 6; i++) {
+    window.scrollTo(0, 0);
+    await new Promise((r) => setTimeout(r, 50));
+    still = window.scrollY === 0 ? still + 1 : 0;
+  }
+}"""
+
 SIZES = [{"width": 1440, "height": 900}, {"width": 390, "height": 844}]
 SCHEMES = ["light", "dark"]
 # Un rendu stable d'une série à l'autre : sans ces options, l'anticrénelage du texte varie de
@@ -74,9 +85,8 @@ async def main(base: str, out: Path) -> int:
                         file = f"{name}{suffix}-{size['width']}-{scheme}.png"
                         # Toujours depuis le haut : une rubrique fait défiler la page, et les
                         # en-têtes collants se placent selon le défilement du moment.
-                        await page.evaluate("window.scrollTo(0, 0)")
                         await page.wait_for_load_state("networkidle")
-                        await page.wait_for_timeout(300)
+                        await page.evaluate(SETTLE_AT_TOP)
                         await page.screenshot(
                             path=out / file, full_page=True, animations="disabled", caret="hide"
                         )
