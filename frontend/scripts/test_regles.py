@@ -1,8 +1,7 @@
 """Test de l'audit des règles (1.6.3) : la mesure « texte à moins de 1,25 rem du bord » ignore la
 partie cachée d'un texte coupé par « … » (1.6.2), mais trouve toujours un vrai texte collé au bord.
 
-    cd backend
-    uv run --with playwright --with pytest pytest ../frontend/scripts/test_regles.py
+    make test-audit
 """
 
 import os
@@ -29,8 +28,15 @@ BASE = """
 @pytest.fixture(scope="module")
 def page():
     with sync_playwright() as p:
+        # CHROME si donné ; sinon le Chrome installé ; sinon le Chromium de Playwright (la CI).
         chrome = os.environ.get("CHROME")
-        browser = p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
+        if chrome:
+            browser = p.chromium.launch(executable_path=chrome)
+        else:
+            try:
+                browser = p.chromium.launch(channel="chrome")
+            except Exception:
+                browser = p.chromium.launch()
         yield browser.new_page(viewport={"width": 400, "height": 400})
         browser.close()
 
