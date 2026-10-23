@@ -38,7 +38,7 @@ function mix(color: string, base: string, share: number): string {
 }
 
 // Textes et fonds où ils s'affichent ; les fonds teintés sont ceux des pastilles.
-const TEXTS = ["text", "muted", "accent-text", "ok-text", "warn-text", "down-text"];
+const TEXTS = ["text", "muted", "accent", "ok-text", "orange-text", "down-text"];
 const BACKGROUNDS = ["bg", "band", "surface", "panel"];
 
 describe.each([
@@ -56,13 +56,21 @@ describe("pastilles teintées (mode clair)", () => {
   it("le texte reste lisible sur sa teinte", () => {
     const white = light.surface!;
     const pairs: [string, string][] = [
-      [light["accent-text"]!, light["accent-soft"]!],
-      [light["accent-text"]!, mix(light.accent!, white, 0.15)],
-      [light["warn-text"]!, mix(light.warn!, white, 0.18)],
+      [light.accent!, light["accent-soft"]!],
+      [light.accent!, mix(light.accent!, white, 0.15)],
+      [light["orange-text"]!, mix(light.warn!, white, 0.18)],
+      [light["orange-text"]!, light["orange-soft"]!],
       [light["ok-text"]!, mix(light.ok!, white, 0.16)],
       ["#ffffff", light.accent!],
     ];
     for (const [text, background] of pairs) expect(ratio(text, background), `${text} sur ${background}`).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("étiquettes orange (docs/135)", () => {
+  it("le texte orange reste lisible sur son fond, en clair et en sombre", () => {
+    expect(ratio(light["orange-text"]!, light["orange-soft"]!)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(dark["orange-text"]!, dark["orange-soft"]!)).toBeGreaterThanOrEqual(4.5);
   });
 });
 

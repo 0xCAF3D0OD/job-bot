@@ -1,6 +1,6 @@
 # 135 — Les échelles de design : peu de valeurs, les mêmes partout (versions 1.6.x)
 
-> Statut : **à valider**. Aucun code ni aucune variable Figma ne change avant ta validation.
+> Statut : **validé** le 2026-10-23 : graisses en option A (600), sauf les liens inactifs du menu en 400 ; lettre, CV et feuille ORP hors échelle ; les trois règles modifiées. `--faint` est corrigé dans une version à part, juste après la 1.6.0 (§5). Les variables Figma changent une fois la 1.6.0 fusionnée.
 > Origine : l'inventaire des styles fait pour les variables Figma (22 octobre 2026) et ta demande : une échelle d'espacements en base 4 px de 8 valeurs, 6 à 7 tailles de texte, 3 rayons, les graisses 400, 600 et 700, une seule couleur orange (logo-spark réservé au logo), la fusion des doublons.
 
 ## Le constat
@@ -125,9 +125,9 @@ Les cercles (`50 %` : visage du 1, initiale du compte, points) sont une forme, p
 | 650 | 1 | 600 | Invisible (la note en cercle, presque plus utilisée). |
 | 700 | 18 | 700 | — |
 
-**À trancher** : la 1.3.1 (docs/130 §F, `docs/interface.md` Structure 8) a fixé les titres en graisse 500 ; supprimer 500 change ce choix. Deux options :
-- **A (recommandée)** : tout le 500 passe à 600. La hiérarchie avec le texte courant (400) est plus nette.
-- **B** : les titres passent à 400 (plus légers, plus proches de la maquette d'origine), les boutons et libellés à 600.
+**Tranché (option A)** : tout le 500 passe à 600, sauf les liens inactifs du menu, en 400. La 1.3.1 (docs/130 §F) avait fixé les titres en 500 ; `docs/interface.md` (Structure 8) est mis à jour. L'option B (titres en 400) est écartée.
+
+Variables : `--weight-regular` (400), `--weight-semibold` (600), `--weight-bold` (700).
 
 ## 5. Couleurs
 
@@ -162,13 +162,13 @@ Où l'écart se verra :
 
 `--bg` et `--surface` sont tous deux blancs en clair mais différents en sombre : ce n'est pas un doublon, ils restent.
 
-**Hors de ce cadrage, à signaler** : `--faint` (#9a9aae) n'a que 2,8:1 sur blanc ; il est employé 7 fois en texte. Il faudra le foncer ou le remplacer par `--muted`, dans un cadrage à part.
+**`--faint`** (#9a9aae) n'a que 2,8:1 sur blanc ; il est employé 7 fois en texte. Il passe à au moins 4,5:1 sur tous ses fonds, en clair et en sombre, dans une version à part juste après la 1.6.0 (la 1.6.1).
 
-## 6. À trancher avant de commencer
+## 6. Tranché
 
-1. **Les graisses** : option A ou B (§4).
-2. **Les feuilles imprimables** (lettre, CV, feuille ORP) imitent le papier et le PDF : marges de 3,2 et 3,6 rem, police Arial. Je propose de les **laisser hors échelle**, pour que l'aperçu reste fidèle au PDF. Sinon, leurs marges changent aussi (date et signature de la lettre, nom du CV).
-3. **Les règles validées à mettre à jour** dans `docs/interface.md` et `docs/regles-ui-ergonomie.md` (§10.5 : une règle change d'abord dans ce document) :
+1. **Les graisses** : option A, sauf les liens inactifs du menu en 400 (§4).
+2. **Les feuilles imprimables** (lettre, CV, feuille ORP) imitent le papier et le PDF : elles restent **hors échelle**, pour que l'aperçu reste fidèle au PDF.
+3. **Les règles validées mises à jour** dans `docs/regles-ui-ergonomie.md` (§10.5 : une règle change d'abord dans ce document), puis dans `docs/interface.md` :
    - Structure 6, les filets : 1,75 rem → 2 rem (32 px) ;
    - Coins 4, les logos d'entreprise : 0,6 rem → 8 px ;
    - Structure 8, la graisse des titres : 500 → selon le choix A ou B.
@@ -179,30 +179,45 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 
 | Version | Étape | Ce qui change |
 |---|---|---|
-| 1.6.0 | **Le socle, sans rien de visible** | Les variables entrent dans `style.css` ; les doublons de même valeur fusionnent ; `12px` → `var(--radius)`. Les captures avant et après doivent être identiques au pixel près. |
-| 1.6.1 | **Le commun** | Barre du haut et menu, boutons, champs, pastilles, cartes, repliables, toasts, pied de page, l'orange. Visible sur toutes les pages : captures de toutes les pages. |
-| 1.6.2 | Aujourd'hui | Lignes, phrase du jour, compte du mois, Premiers pas. |
-| 1.6.3 | Candidatures › Offres et la fiche d'une offre, Préparer | |
-| 1.6.4 | Suivi | Calendrier, colonne, panneau d'une candidature. |
-| 1.6.5 | Bilan | Tuiles, Mois précédents, les vues du détail. |
-| 1.6.6 | Rendez-vous | |
-| 1.6.7 | Alertes, Profil, Réglages | |
-| 1.6.8 | Formations, Actualités, l'assistant | |
-| 1.6.9 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable | Puis le garde-fou ci-dessous. |
+| 1.6.0 | **Le socle, sans rien de visible** | Les variables entrent dans `style.css` ; chaque valeur déjà sur l'échelle passe par sa variable ; les doublons de même valeur fusionnent ; `12px` → `var(--radius)`. Les captures avant et après doivent être identiques au pixel près. |
+| 1.6.1 | **`--faint` lisible** | Au moins 4,5:1 sur tous ses fonds, en clair et en sombre. |
+| 1.6.2 | **Le commun** | Barre du haut et menu, boutons, champs, pastilles, cartes, repliables, toasts, pied de page, l'orange, les graisses. Visible sur toutes les pages : captures de toutes les pages. |
+| 1.6.3 | Aujourd'hui | Lignes, phrase du jour, compte du mois, Premiers pas. |
+| 1.6.4 | Candidatures › Offres et la fiche d'une offre, Préparer | |
+| 1.6.5 | Suivi | Calendrier, colonne, panneau d'une candidature. |
+| 1.6.6 | Bilan | Tuiles, Mois précédents, les vues du détail. |
+| 1.6.7 | Rendez-vous | |
+| 1.6.8 | Alertes, Profil, Réglages | |
+| 1.6.9 | Formations, Actualités, l'assistant | |
+| 1.6.10 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable | Puis le garde-fou ci-dessous. |
 
 **Pour chaque étape** :
 - captures **avant et après**, côte à côte, à 1440 et 390 px, en clair et en sombre, sur la démo et sur un compte neuf (base jetable) ; avec, pour chaque paire, une image des différences (les pixels changés en couleur), pour voir d'un coup d'œil ce qui a bougé ;
 - les trois audits (règles, alignement, accessibilité, avec exploration des repliables et des vues) à zéro ;
 - les tests de l'interface, lint et vue-tsc.
 
-**Le garde-fou (1.6.9)** : un contrôle ajouté à `frontend/scripts/regles.py` (ou un test) refuse dans les styles un espacement, une taille de texte, un rayon ou une graisse qui ne passe pas par une variable, sauf les exceptions listées aux §1 et §2.
+**Le garde-fou (1.6.10)** : un contrôle ajouté à `frontend/scripts/regles.py` (ou un test) refuse dans les styles un espacement, une taille de texte, un rayon ou une graisse qui ne passe pas par une variable, sauf les exceptions listées aux §1 et §2.
 
 ## 8. Figma
 
-Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacements nommés par leur valeur, 19 tailles, 8 rayons, 4 graisses, 29 couleurs). **Elles ne changent qu'après ta validation de ce cadrage** : elles prendront alors les noms et valeurs du §1 au §5, avant le début de la 1.6.0, pour que le code suive Figma.
+Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacements nommés par leur valeur, 19 tailles, 8 rayons, 4 graisses, 29 couleurs). **Elles changent une fois la 1.6.0 fusionnée** : elles prennent alors les noms et valeurs du §1 au §5 (ceux que la 1.6.0 a mis dans le code).
 
 ## Garde-fous
 
 - Rien ne disparaît : seules des valeurs changent, aucune information ni action.
 - Un écart visible qui n'est pas dans ce document est un défaut : il se corrige ou s'ajoute ici avant la PR.
 - Les règles validées (`docs/interface.md`) ne changent qu'avec ton accord, au §6.
+
+## Écarts (1.6.0)
+
+- **978 valeurs** passent par leur variable : celles qui étaient déjà exactement sur une échelle (espacements de 0,25 à 3 rem, tailles 0,75, 1 et 2 rem, rayons 8, 12 et 999 px, graisses 400, 600 et 700). Les autres changent page par page à partir de la 1.6.2. La lettre, le CV et la feuille ORP ne sont pas touchés.
+- **L'orange** : `--warn-text` devient `--orange-text` ; `--orange-soft` remplace le fond des étiquettes écrit en dur (#fff1e4, #3a2a1a en sombre). `--orange` et `--warn` gardent leurs valeurs jusqu'à la 1.6.2, où ils deviennent une seule orange.
+- **Doublons fusionnés** (même valeur) : `--accent-text` → `--accent`, `--mascot-face` → `--logo-line`, `--faint` redéfini en sombre, `--border-strong` → `--border`. Ceux dont la valeur change un peu (`--mascot-line`, `--mascot-star`, `--panel` en clair) attendent la 1.6.2, pour que la 1.6.0 reste identique au pixel près.
+- **Les règles** (`docs/regles-ui-ergonomie.md` §4 bis, `docs/interface.md` : filets, coins des logos, graisse des titres) sont à jour dès maintenant ; le code les rejoint au fil des 1.6.x.
+- **Deux outils** pour toute la migration : `frontend/scripts/captures.py` photographie chaque page et chaque état (repliables ouverts, vues choisies) à 1440 et 390 px, en clair et en sombre ; `frontend/scripts/compare.py` compare deux séries et produit, pour chaque capture changée, avant | après | différences en rouge. Pour qu'une série soit reproductible : l'horloge de la page est figée, le rendu de Chrome est stabilisé (sans quoi l'anticrénelage du texte variait de quelques pixels), chaque capture part du haut de la page, après le voile de chargement, et deux navigateurs au plus tournent en même temps.
+
+## Vérifié (1.6.0)
+
+- **Identique au pixel près** : 168 captures de la démo et 128 d'un compte neuf, avant et après. Seule « Bilan › Actualités » (sombre, 1440 px) diffère de 450 pixels, autant qu'entre deux séries d'avant : la ligne « Relevé il y a … », calculée par le serveur.
+- Test de contraste mis à jour (`--accent`, `--orange-text`, le texte orange sur son fond en clair et en sombre). 438 tests de l'interface, lint, vue-tsc.
+- Les trois audits à zéro sur la démo et sur un compte neuf (l'accessibilité aussi en sombre).

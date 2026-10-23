@@ -1,6 +1,6 @@
 # jobA1 : règles d'interface et d'ergonomie
 
-Version 1 · 22 octobre 2026
+Version 1.1 · 23 octobre 2026 (échelles, docs/135)
 
 Ce document fixe la structure de jobA1. Toute interface doit s'y conformer. **Claude Code n'invente aucune structure, aucun composant et aucun mot qui ne figure pas ici ou dans la bibliothèque Figma.** Un besoin nouveau se propose d'abord, il ne se code pas.
 
@@ -76,6 +76,22 @@ Règles :
 | **Visage du 1** | 16 à 32 px dans l'usage courant. Grande taille réservée aux moments rares. Un seul visage animé à l'écran. |
 
 Un composant absent de cette liste ou de Figma ne se crée pas sans validation.
+
+## 4 bis. Échelles (docs/135)
+
+Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle quelle dans Figma.
+
+| Échelle | Variables | Valeurs |
+|---|---|---|
+| Espacements (base 4 px) | `--space-1` · `-2` · `-3` · `-4` · `-5` · `-6` · `-8` · `-12` | 4 · 8 · 12 · 16 · 20 · 24 · 32 · 48 px |
+| Texte | `--font-caption` · `-small` · `-body` · `-title` · `-section` · `-figure` · `-page` | 12 · 14 · 16 · 18 · 22 · 26 · 32 px |
+| Rayons | `--radius-sm` · `--radius` · `--radius-pill` | 8 · 12 · 999 px (les cercles restent des cercles) |
+| Graisses | `--weight-regular` · `--weight-semibold` · `--weight-bold` | 400 · 600 · 700 |
+
+- Les titres, boutons et liens actifs sont en 600 ; les liens inactifs du menu en 400.
+- Une seule orange pour l'interface, `--orange`, avec `--orange-text` pour le texte et `--orange-soft` pour les fonds ; `--logo-spark` est réservé au logo et au visage du 1.
+- Hors échelle : la lettre, le CV et la feuille ORP (ils imitent le papier et le PDF), les valeurs en `em`, les pourcentages, les réserves de place d'un élément fixe, les textes des graphiques en SVG.
+- Les filets : 2 rem de chaque côté sur ordinateur. Les logos d'entreprise : coins de 8 px.
 
 ## 5. Mots
 
