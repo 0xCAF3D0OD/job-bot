@@ -592,8 +592,8 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: var(-
 .applications-head { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
 .month-nav { display: flex; align-items: center; gap: 0.6rem; }
 .month-nav strong { min-width: 9rem; text-align: center; font-weight: var(--weight-semibold); text-transform: capitalize; }
-.month-goal { display: grid; gap: 0.35rem; min-width: 14rem; flex: 1; max-width: 22rem; }
-.status-select { font: inherit; font-size: 0.86rem; padding: 0.3rem var(--space-2); border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+.month-goal { display: grid; gap: var(--space-1); min-width: 14rem; flex: 1; max-width: 22rem; }
+.status-select { font: inherit; font-size: var(--font-small); padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .status-select.entretien { border-color: var(--accent); color: var(--accent); }
 .status-select.engagement { border-color: var(--ok); color: var(--ok-text); }
 .status-select.refus, .status-select.sans_reponse { color: var(--muted); }
@@ -697,7 +697,7 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: var(-
 .table-scroll { overflow-x: auto; position: relative; }
 /* Un long lien (Workday, Indeed…) se coupe au lieu de pousser le bouton hors de la carte. */
 /* Déclarée dans Job-Room (docs/70 §6). */
-.job-room-declared { display: flex; flex-wrap: wrap; gap: 0.3rem 0.7rem; align-items: baseline; margin: 0 0 var(--space-3); font-size: 0.86rem; }
+.job-room-declared { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; margin: 0 0 var(--space-3); font-size: var(--font-small); }
 .job-room-declared .done { color: var(--accent); font-weight: var(--weight-semibold); }
 .orp-sheet { display: none; }
 #print-root .orp-sheet { display: block; color: #000; font-family: Arial, Helvetica, sans-serif; font-size: 8.5pt; }
@@ -885,7 +885,7 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: var(-
 .profile-banner span { color: var(--muted); }
 
 /* Candidatures et preuves ORP réunies (docs/18 §2) */
-.all-months { display: inline-flex; margin: 0 0 0.8rem; font-size: 0.88rem; }
+.all-months { display: inline-flex; margin: 0 0 var(--space-3); font-size: var(--font-small); }
 
 /* Connexion (docs/18 §1) */
 .container.narrow { max-width: 30rem; }
@@ -1084,18 +1084,18 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: var(--rad
 .layout-switch { width: 14rem; margin: 0; }
 .suivi-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr); gap: var(--space-5); align-items: start; }
 /* Toutes les cases à la même taille : chaque semaine prend la hauteur de la plus haute (0.67.3). */
-.suivi-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto; grid-auto-rows: 1fr; gap: 0.35rem; }
-.suivi-calendar .weekday { font-size: var(--font-caption); color: var(--muted); text-align: center; padding-bottom: 0.2rem; }
-.suivi-calendar .day { min-height: 5.2rem; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); padding: 0.35rem 0.4rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.suivi-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: auto; grid-auto-rows: 1fr; gap: var(--space-1); }
+.suivi-calendar .weekday { font-size: var(--font-caption); color: var(--muted); text-align: center; padding-bottom: var(--space-1); }
+.suivi-calendar .day { min-height: 5.2rem; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-1); padding: var(--space-1) var(--space-2); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
 .suivi-calendar .day.empty { border: none; background: transparent; cursor: default; }
 .suivi-calendar .day.today { border-color: var(--accent); }
 .suivi-calendar .day.selected { outline: 2px solid var(--accent); outline-offset: -1px; background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
-.suivi-calendar .day-number { font-size: 0.8rem; color: var(--muted); }
+.suivi-calendar .day-number { font-size: var(--font-caption); color: var(--muted); }
 .suivi-calendar .day.busy .day-number { color: var(--text); font-weight: var(--weight-semibold); }
-.day-dots { display: flex; flex-wrap: wrap; gap: var(--space-2) 0.65rem; align-items: center; padding: var(--space-1); }
-.day-dots .more { font-size: 0.7rem; color: var(--muted); }
-.day-marks { display: grid; gap: 0.1rem; margin-top: auto; }
-.day-marks .mark { font-size: 0.65rem; border-radius: 4px; padding: 0 var(--space-1); width: fit-content; }
+.day-dots { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; padding: var(--space-1); }
+.day-dots .more { font-size: var(--font-caption); color: var(--muted); }
+.day-marks { display: grid; gap: var(--space-1); margin-top: auto; }
+.day-marks .mark { font-size: var(--font-caption); border-radius: var(--radius-sm); padding: 0 var(--space-1); width: fit-content; }
 .day-marks .mark.interview { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 .day-marks .mark.remind { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange-text); }
 .suivi-panel { display: flex; flex-direction: column; gap: var(--space-3); min-height: 0; min-width: 0; }
@@ -1110,12 +1110,12 @@ pre.command { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: var(--rad
 .applications-banner .link { font-weight: var(--weight-semibold); white-space: nowrap; }
 /* Une candidature en ligne (docs/130 §A) : la forme d'Aujourd'hui, la partie centrale ouvre le
    panneau, l'action à droite fait l'étape du moment. */
-.application-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; gap: 0.9rem; padding: 0.8rem 0; }
-.application-row-main { display: grid; gap: 0.15rem; min-width: 0; padding: 0; border: 0; background: none; color: var(--text); font: inherit; line-height: var(--leading-tight); text-align: left; cursor: pointer; white-space: normal; }
-.application-row-main strong { display: flex; align-items: center; gap: 0.4rem; min-width: 0; font-weight: var(--weight-semibold); overflow: hidden; white-space: nowrap; }
+.application-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; }
+.application-row-main { display: grid; gap: var(--space-1); min-width: 0; padding: 0; border: 0; background: none; color: var(--text); font: inherit; line-height: var(--leading-tight); text-align: left; cursor: pointer; white-space: normal; }
+.application-row-main strong { display: flex; align-items: center; gap: var(--space-2); min-width: 0; font-weight: var(--weight-semibold); overflow: hidden; white-space: nowrap; }
 .application-row-main:hover strong { color: var(--accent); }
 .application-row-step:is(.follow-up, .no-answer, .complete) { color: var(--orange-text); }
-.application-row-action { justify-self: end; font-size: 0.9rem; font-weight: var(--weight-semibold); white-space: nowrap; }
+.application-row-action { justify-self: end; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
 button.today-row { width: 100%; border: 0; border-radius: 0; background: none; font: inherit; text-align: left; cursor: pointer; white-space: normal; }
 /* L'en-tête du Suivi sur deux lignes : le mois et les outils, puis le compte et l'état ORP. */
 .applications-tools { display: flex; align-items: center; gap: var(--space-3); }
@@ -1134,13 +1134,13 @@ button.today-row { width: 100%; border: 0; border-radius: 0; background: none; f
 .application-panel-head p { margin: 0; }
 /* « ⋯ » centré sur la première ligne du texte, même quand il passe à la ligne (docs/74). */
 .application-panel-head .more-menu { margin-top: calc((1lh - 2.25rem) / 2); }
-.application-panel .card-status select { font-size: 0.9rem; padding: 0.35rem 0.6rem; }
-.application-panel .follow-up-line, .application-panel .contact-due-line, .panel-line { margin: 0; font-size: 0.9rem; }
+.application-panel .card-status select { font-size: var(--font-small); padding: var(--space-1) var(--space-2); }
+.application-panel .follow-up-line, .application-panel .contact-due-line, .panel-line { margin: 0; font-size: var(--font-small); }
 .table-open { font-weight: var(--weight-semibold); text-align: left; }
-.card-status { display: flex; align-items: center; gap: var(--space-2); font-size: 0.82rem; }
-.card-status select { padding: 0.15rem 0.4rem; font-size: 0.82rem; }
-.card-missing { margin: 0; font-size: 0.82rem; }
-.card-job-room { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) 0.7rem; margin: 0; font-size: 0.82rem; }
+.card-status { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); }
+.card-status select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); }
+.card-missing { margin: 0; font-size: var(--font-small); }
+.card-job-room { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--font-small); }
 .card-job-room dt { color: var(--muted); }
 .card-job-room dd { margin: 0; display: flex; align-items: baseline; gap: var(--space-2); justify-content: space-between; }
 /* Un long lien passe à la ligne au lieu d'élargir le panneau (docs/74). */
@@ -1152,14 +1152,14 @@ button.today-row { width: 100%; border: 0; border-radius: 0; background: none; f
 }
 
 /* Retour d'entretien (docs/23) */
-.interview-form fieldset { border: none; padding: 0; margin: 0 0 var(--space-4); display: grid; gap: 0.6rem; }
-.interview-form legend { font-weight: var(--weight-semibold); margin-bottom: 0.4rem; }
-.choice-row { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+.interview-form fieldset { border: none; padding: 0; margin: 0 0 var(--space-4); display: grid; gap: var(--space-2); }
+.interview-form legend { font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
+.choice-row { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
 .choice-label { font-size: 0.85rem; color: var(--muted); min-width: 9rem; }
 .score-chip { min-width: 2.2rem; justify-content: center; }
-.question-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
-.question-list li { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); font-size: 0.9rem; }
-.interview-summary { margin: 0; font-size: 0.82rem; color: var(--muted); }
+.question-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.question-list li { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); font-size: var(--font-small); }
+.interview-summary { margin: 0; font-size: var(--font-small); color: var(--muted); }
 .day-marks .mark.next { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok-text); }
 
 /* Mes enseignements et préparation (docs/23 §3) */
@@ -1241,7 +1241,7 @@ button.today-row { width: 100%; border: 0; border-radius: 0; background: none; f
 .site-suggestions li { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
 /* Un lien dans une phrase se voit sans la couleur (WCAG 1.4.1) : souligné. */
 .site-suggestions a { text-decoration: underline; text-underline-offset: 0.15em; }
-.remote-orp { color: var(--muted); font-size: 0.82rem; }
+.remote-orp { color: var(--muted); font-size: var(--font-small); }
 
 /* --- Filtres des offres en cartes (docs/27) --- */
 .filters-panel { display: grid; gap: var(--space-3); padding: var(--space-3); background: var(--band); border: 1px solid var(--border); border-radius: var(--radius); }
@@ -1345,8 +1345,8 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .day-dots .dot.engagement, .suivi-legend .dot.engagement, .app-status .dot.engagement { background: var(--mint); }
 .day-dots .dot.sans_reponse, .suivi-legend .dot.sans_reponse, .app-status .dot.sans_reponse { background: #c4c8d2; }
 .day-dots .dot.incomplete, .suivi-legend .dot.incomplete { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--orange); }
-.suivi-legend { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: 0.82rem; color: var(--muted); }
-.suivi-legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.suivi-legend { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--font-small); color: var(--muted); }
+.suivi-legend li { display: inline-flex; align-items: center; gap: var(--space-2); }
 /* §3.2 Exigence non couverte par le profil : un ✗ en plus de l'orange. */
 /* §4 Zones de clic sur écran tactile : 44 × 44 px au moins, sans changer l'aspect (zone
    invisible agrandie autour des petits éléments). */
@@ -1364,8 +1364,8 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
   input[type="checkbox"]::after { width: 1.3rem; height: 1.3rem; }
   input[type="checkbox"]:checked::after { transform: translateX(1.15rem); }
 }
-.suivi-legend li { gap: 0.55rem; }
-.suivi-legend .dot.incomplete { margin: 0 0.15rem; }
+.suivi-legend li { gap: var(--space-2); }
+.suivi-legend .dot.incomplete { margin: 0 var(--space-1); }
 
 /* Finitions du 2026-10-14 : onglets soulignés bien droits (le soulignement suivait l'arrondi des
    liens), page ouverte dans le menu en gras de la couleur principale. */
@@ -1627,7 +1627,7 @@ html.side-open { overflow: hidden; }
   .applications-head .add-application { grid-column: 2; grid-row: 1; }
   .applications-head .more-button, .applications-head .more-menu { grid-column: 3; grid-row: 1; }
   .applications-tools .layout-switch { grid-column: 1 / -1; grid-row: 2; width: 100%; }
-  .applications-summary { margin-bottom: 0.9rem; }
+  .applications-summary { margin-bottom: var(--space-4); }
   .panel-scroll { max-height: 70vh; }
 }
 
@@ -1641,11 +1641,11 @@ html.side-open { overflow: hidden; }
 
 /* Relancer une candidature (docs/38) */
 .follow-up-line { color: var(--orange-text); }
-.follow-up-panel { display: grid; gap: 0.8rem; justify-items: start; }
+.follow-up-panel { display: grid; gap: var(--space-3); justify-items: start; }
 .follow-up-panel .muted { margin: 0; }
-.follow-up-field { display: grid; gap: var(--space-1); width: 100%; font-size: 0.85rem; }
+.follow-up-field { display: grid; gap: var(--space-1); width: 100%; font-size: var(--font-small); }
 .follow-up-field input, .follow-up-field textarea { width: 100%; font: inherit; }
-.follow-up-actions { display: flex; flex-wrap: wrap; gap: 0.6rem var(--space-4); align-items: center; }
+.follow-up-actions { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; }
 
 /* Candidatures spontanées (docs/39) */
 /* Le code d'un site, en tête de la page Alertes (docs/112). */
@@ -3549,8 +3549,10 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 /* La note en mots (docs/121 §C.5, docs/123) : le visage du 1 et un mot, à la couleur de la
    note ; le chiffre au survol. Le filet en bas de la ligne d'offre, à la longueur de la note,
    sur le filet gris de la liste. Pas encore notée : en gris, filet en pointillés. */
-.score-word { display: inline-grid; justify-items: end; flex: none; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
+.score-word { display: inline-grid; justify-items: end; gap: var(--space-2); flex: none; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
 .score-word-label { display: inline-flex; align-items: center; gap: var(--space-2); }
+/* La jauge discrète, pour la nuance à l'intérieur d'un niveau (rétablie en 1.6.6) ; la piste sur --border. */
+.score-gauge { display: block; width: 4.5rem; height: 4px; border-radius: var(--radius-pill); background: linear-gradient(to right, currentColor calc(var(--p, 0) * 1%), var(--border) 0); }
 .score-word.very-close { color: var(--ok-text); }
 .score-word.close { color: var(--accent); }
 .score-word.dig { color: var(--score-dig); }

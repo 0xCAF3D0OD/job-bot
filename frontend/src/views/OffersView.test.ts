@@ -251,8 +251,8 @@ describe("note et résumé", () => {
     expect(scored?.find("[data-test=score]").text()).toBe("Proche");
     expect(scored?.find("[data-test=score]").classes()).toContain("close");
     expect(scored?.find("[data-test=score]").attributes("aria-label")).toBe("Proche : 82 sur 100");
-    // Le visage et le mot, sans jauge (règles §4, 1.6.4).
-    expect(scored?.find(".score-gauge").exists()).toBe(false);
+    // La jauge discrète sous le mot, pour la nuance (règles §4, rétablie en 1.6.6).
+    expect(scored?.find(".score-gauge").attributes("style")).toContain("--p: 82");
     expect(scored?.find(".score-line").exists()).toBe(false);
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);

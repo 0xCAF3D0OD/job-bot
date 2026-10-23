@@ -1,9 +1,9 @@
 // Le logo jobA1 (docs/103) : le visage du 1. Le 1 du nom trace le sourcil et le nez, un œil
 // bleu, un œil pêche (la bille), un sourire discret. viewBox « 8 8 86 86 », trait de 14.
 export const LOGO_VIEWBOX = "8 8 86 86";
-// Le visage du 1 cadré au plus près de son dessin (de l'œil à la bille, du 1 à la bouche) : à
-// côté d'un mot, il remplit sa taille au lieu de paraître plus petit (1.6.5).
-export const FACE_VIEWBOX_SNUG = "13 15 74 74";
+// Le visage du 1 cadré au plus près de son dessin (de l'œil à la bille, du 1 à la bouche) : il
+// remplit sa taille au lieu de paraître plus petit (1.6.5 dans la note, 1.6.6 partout).
+export const FACE_VIEWBOX = "13 15 74 74";
 // S4, l'en-tête : le visage penché de −6° autour du centre.
 export const LOGO_TILT = "rotate(-6 50 50)";
 export const LOGO_ONE = "M43 31 L54 22 V56";

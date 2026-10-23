@@ -216,7 +216,7 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 | 1.6.8 | Rendez-vous | |
 | 1.6.9 | Alertes, Profil, Réglages | |
 | 1.6.10 | Formations, Actualités, l'assistant | |
-| 1.6.11 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable | Puis le garde-fou ci-dessous. |
+| 1.6.11 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable | Puis les composants partagés entre plusieurs pages (encadrés, contacts, entraînement à l'entretien, menu « ⋯ », chargement…), qu'aucune page seule ne peut arrondir sans toucher les autres ; puis le garde-fou ci-dessous. |
 
 **Pour chaque étape** :
 - captures **avant et après**, côte à côte, à 1440 et 390 px, en clair et en sombre, sur la démo et sur un compte neuf (base jetable) ; avec, pour chaque paire, une image des différences (les pixels changés en couleur), pour voir d'un coup d'œil ce qui a bougé ;
@@ -319,3 +319,13 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 
 - Avant / après : seules changent les Offres, la fiche d'une offre, Préparer, et la note de l'offre du jour sur Aujourd'hui (le visage). Dans la liste, les métadonnées passent de 13,6 à 14 px : sur certaines offres, le lieu passe à la ligne et la ligne grandit un peu ; rien n'est ajouté ni déplacé.
 - Tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.6)
+
+- **Le Suivi à l'échelle** : 50 valeurs. Le périmètre est maintenant calculé : les composants de la page (sa vue et ce qu'elle importe), moins ceux qu'une autre vue importe aussi ; une règle n'est arrondie que si sa classe de tête n'appartient qu'à la page. Les composants partagés (contacts, entraînement à l'entretien, menu « ⋯ », chargement, confirmation…) attendent la passe prévue en 1.6.11.
+- **La jauge d'affinité revient** partout (liste, fiche, offre du jour), décision du 23 octobre : elle donne la nuance à l'intérieur d'un niveau. Règle §4 : « visage + un mot, avec une jauge discrète pour la nuance ». Sa piste passe de `--muted` mêlé à 22 % (une valeur calculée, sans variable) à `--border`, comme dans Figma : indiscernable en clair, à peine plus sombre en sombre. Figma suit.
+- **Le visage du 1 cadré au plus près partout** (écrans vides, carte de réussite, tuiles, la note) : il remplit sa taille. Le logo garde son cadre.
+
+## Vérifié (1.6.6)
+- Avant / après : changent le Suivi (cases du calendrier un peu plus basses, la colonne de droite suit), la note avec sa jauge (Offres, fiche, Préparer, Aujourd'hui) et, sur un compte neuf, les écrans vides dont le visage remplit maintenant son cadre (Bilan, Actualités, Rendez-vous, Compte).
+- 456 tests de l'interface (la jauge et le visage), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
