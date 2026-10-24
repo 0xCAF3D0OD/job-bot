@@ -339,3 +339,11 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 ## Vérifié (1.6.7)
 - Avant / après : seul le Bilan change (24 captures de la démo ; sur un compte neuf, le Bilan est vide et ne change pas) : tuiles un peu plus hautes, lignes du parcours plus serrées.
 - 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.8)
+
+- **Le Rendez-vous à l'échelle** : 19 valeurs (le bloc « Préparer », le mois, le résultat du rendez-vous, le carnet). La feuille ORP imprimable reste hors échelle ; les contacts et le menu « ⋯ », partagés, attendent la 1.6.11.
+
+## Vérifié (1.6.8)
+- Avant / après : seul le Rendez-vous change (8 captures de la démo, 4 d'un compte neuf), de quelques pixels (questions, feuille, mois).
+- 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
