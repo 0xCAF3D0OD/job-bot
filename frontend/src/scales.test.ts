@@ -62,6 +62,13 @@ function tokens(value: string): string[] {
   return out;
 }
 
+// À l'intérieur d'un calcul aussi, une longueur passe par une variable (1.6.12) : seuls ±1 px et
+// les unités relatives restent admis ; les nombres sans unité (multiplicateurs) aussi.
+function hardInside(token: string): string[] {
+  if (!/^(calc|max|min|clamp)\(/.test(token)) return [];
+  return (token.match(/-?\d*\.?\d+(rem|px)\b/g) ?? []).filter((length) => !/^-?1px$/.test(length));
+}
+
 function offenders(): string[] {
   const found: string[] = [];
   for (const file of styleFiles(SRC)) {
@@ -70,7 +77,7 @@ function offenders(): string[] {
       if (EXEMPT_RULES.some(([pattern]) => pattern.test(selector))) continue;
       for (const [, prop, value] of body.matchAll(PROPS)) {
         if (RESERVED.some(([sel, props]) => sel.test(selector) && props.test(prop!))) continue;
-        const bad = tokens(value!).filter((token) => !ALLOWED_TOKEN.test(token));
+        const bad = tokens(value!).filter((token) => !ALLOWED_TOKEN.test(token) || hardInside(token).length > 0);
         if (bad.length) found.push(`${file.replace(SRC, "src")} « ${selector} » ${prop}: ${value!.trim()}`);
       }
     }
@@ -83,9 +90,13 @@ describe("Le garde-fou des échelles (docs/135, 1.6.12)", () => {
     expect(offenders()).toEqual([]);
   });
 
-  it("le garde-fou trouve bien une valeur en dur", () => {
+  it("le garde-fou trouve bien une valeur en dur, aussi dans un calcul", () => {
     const value = "0.9rem 1.5rem";
     expect(tokens(value).filter((token) => !ALLOWED_TOKEN.test(token))).toEqual(["0.9rem", "1.5rem"]);
     expect(tokens("var(--space-4) calc(var(--space-2) * -1)").every((token) => ALLOWED_TOKEN.test(token))).toBe(true);
+    // Et à l'intérieur d'un calcul.
+    expect(hardInside("calc(5.5rem + env(safe-area-inset-bottom))")).toEqual(["5.5rem"]);
+    expect(hardInside("calc(var(--dock-h) + env(safe-area-inset-bottom))")).toEqual([]);
+    expect(hardInside("calc(var(--space-2) * -1)")).toEqual([]);
   });
 });

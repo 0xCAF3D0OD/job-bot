@@ -18,5 +18,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // Deux processus : sous charge, davantage de processus ne démarraient pas tous à temps.
+    maxWorkers: 2,
+    // Un fichier de test qui ne démarre pas fait échouer la suite (vitest.total.ts).
+    reporters: ["default", "./vitest.total.ts"],
   },
 });
