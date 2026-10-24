@@ -363,3 +363,15 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 ## Vérifié (1.6.10)
 - Avant / après : changent Formations et Actualités (démo et compte neuf), de quelques pixels (tuiles, filtres, une des actualités). Une capture des Réglages › Outils d'un compte neuf diffère aussi : l'en-tête collant photographié en cours de défilement, le contenu identique ; artefact de capture, pas de changement.
 - 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.11)
+
+- **Le reste du site à l'échelle** : les pages publiques (connexion, inscription, « La plateforme », accueil, conditions, à propos, page introuvable) et les composants partagés entre plusieurs pages (encadrés, contacts, entraînement à l'entretien, menu « ⋯ », chargement, cartes du tableau de bord, confirmation, assistant de recherche…). Plus aucune règle n'attend sa page : ce qui reste hors échelle est listé au §1 et ci-dessous.
+- **Hors échelle, en plus des exceptions du §1** : la maquette de l'application dessinée sur « La plateforme » (`.dmock-*`, une illustration en miniature) et les confettis de la réussite : comme les dessins en SVG, leurs tailles font partie du dessin.
+- **`captures.py`** photographie aussi les pages publiques et la page introuvable.
+- **Code mort repéré** : les règles `.preview-*` (l'ancien aperçu du menu Progresser) ne servent plus à aucun gabarit ; arrondies avec le reste, à supprimer avec le garde-fou (1.6.12).
+
+## Vérifié (1.6.11)
+- Avant / après : toutes les pages changent (196 captures de la démo, 156 d'un compte neuf), comme attendu : les composants partagés sont partout. Le plus visible : les cartes du tableau de bord (Aujourd'hui, Bilan) passent au rayon commun de 12 px au lieu de 20 à 24 px, comme prévu au §3 ; « La plateforme » élargit un peu son texte d'introduction.
+- **Non vérifiable par les captures** : la connexion et l'inscription renvoient vers Aujourd'hui une fois connecté (démo et compte de test sans connexion) ; leurs valeurs sont arrondies comme les autres, à regarder déconnecté.
+- 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
