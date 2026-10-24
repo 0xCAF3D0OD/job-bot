@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.13)
+- Version en cours : [docs/exploitation.md](docs/exploitation.md) (1.6.14)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -230,7 +230,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 1.6.10 | Les échelles, Formations, Actualités et l'assistant à l'échelle (docs/135) | livrée |
 | 1.6.11 | Les échelles, les pages publiques et les composants partagés à l'échelle (docs/135) | livrée |
 | 1.6.12 | Les échelles, le garde-fou : un test refuse toute valeur en dur hors des exceptions listées ; code mort `.preview-*` supprimé (docs/135) | livrée |
-| 1.6.13 | Des tests fiables : un fichier qui ne démarre pas fait échouer la suite, deux processus par défaut ; le garde-fou contrôle aussi l'intérieur des calculs (`--dock-h`, centrage du bouton « ⋯ ») (docs/135) | en cours |
+| 1.6.13 | Des tests fiables : un fichier qui ne démarre pas fait échouer la suite, deux processus par défaut ; le garde-fou contrôle aussi l'intérieur des calculs (`--dock-h`, centrage du bouton « ⋯ ») (docs/135) | livrée |
+| 1.6.14 | Les tests en CI : serveur (pytest sur PostgreSQL 17) et interface (vitest, types, poids) à chaque envoi sur main et chaque PR (docs/exploitation.md) | en cours |
 
 ## Lancer en local
 
