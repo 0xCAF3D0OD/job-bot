@@ -21,6 +21,7 @@ import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import PlanLimit from "../components/PlanLimit.vue";
@@ -45,6 +46,19 @@ const applyError = ref("");
 const notice = ref("");
 const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored: 0 });
 const loading = ref(false);
+// La fin de la phrase selon le statut regardé : « 4 offres à examiner. », « 1 offre écartée. ».
+const VIEW_END: Record<string, [string, string]> = {
+  to_review: [" à examiner", " à examiner"],
+  in_progress: [" en cours", " en cours"],
+  later: [" pour plus tard", " pour plus tard"],
+  filtered_out: [" écartée", " écartées"],
+  expired: [" expirée", " expirées"],
+  all: ["", ""],
+};
+const sentenceEnd = computed(() => {
+  const [one, many] = VIEW_END[filters.value.view] ?? ["", ""];
+  return `${total.value > 1 ? many : one}.`;
+});
 const failed = ref(false);
 const firstLoaded = ref(false);
 usePageReady("offers", () => firstLoaded.value);
@@ -365,6 +379,14 @@ onUnmounted(() => {
 
 <template>
   <section class="offers-page">
+    <!-- La conclusion en une phrase (règles §3.2), le compte en accent comme sur Aujourd'hui. -->
+    <p
+      v-if="!loading || items.length"
+      class="offers-sentence"
+      data-test="offers-sentence"
+    >
+      <strong v-if="total">{{ plural(total, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}
+    </p>
     <!-- Titre et onglets : en-tête de la rubrique Candidatures (docs/19 §2). -->
     <div class="offers-heading">
       <!-- Filtrer (docs/101) : l'entonnoir seul, le nombre de filtres actifs en pastille. -->
@@ -447,11 +469,10 @@ onUnmounted(() => {
         <!-- « Ajouter une offre » et « Candidature spontanée » sur la ligne du nombre d'offres
              (docs/43 n° 11, docs/111). -->
         <div class="list-count-row">
-          <p class="count list-count">
-            {{ plural(total, "offre", "offres") }}{{ loading ? "…" : "" }}
-          </p>
           <span class="list-count-actions">
+            <!-- Liste vide d'un compte neuf : « Ajouter une offre » seulement dans l'écran vide. -->
             <button
+              v-if="!noOffersYet"
               type="button"
               class="secondary small"
               data-test="manual-open"
@@ -476,6 +497,11 @@ onUnmounted(() => {
         >
           Impossible de charger les offres.
         </p>
+        <!-- La liste charge : des blocs gardent sa place (comme Aujourd'hui). -->
+        <LoadingBlocks
+          v-else-if="loading && !items.length"
+          :heights="['4.5rem', '4.5rem', '4.5rem']"
+        />
         <!-- Un compte neuf, sans filtre (docs/128 §3) : pourquoi c'est vide, et quoi faire. -->
         <FaceState
           v-else-if="!loading && items.length === 0 && noOffersYet"

@@ -249,7 +249,7 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 .offer-cards > li:last-child .offer-row,
 .offer-cards > li:has(+ .offer-day) .offer-row { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
 .offer-row:hover { background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
-.offer-row.selected { background: color-mix(in srgb, var(--accent) 7%, var(--surface)); box-shadow: inset 3px 0 0 var(--accent); }
+.offer-row.selected { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); box-shadow: inset 3px 0 0 var(--accent); }
 .offer-row.expired { opacity: 0.6; }
 .offer-row-main { display: grid; gap: var(--space-1); min-width: 0; }
 .offer-row-title { font-weight: var(--weight-semibold); font-size: var(--font-body); line-height: var(--leading-tight); overflow-wrap: anywhere; }
@@ -829,7 +829,9 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: var(-
 .bell { position: relative; }
 .bell-button { position: relative; border-radius: var(--radius-pill); width: 2.4rem; height: 2.4rem; padding: 0; justify-content: center; }
 .bell-button .icon { width: 1.15rem; height: 1.15rem; }
-.bell-badge { position: absolute; top: -0.25rem; right: -0.25rem; min-width: 1.2rem; height: 1.2rem; padding: 0 var(--space-1); border-radius: var(--radius-pill); background: #c62a2f; color: #fff; font-size: var(--font-caption); font-weight: var(--weight-bold); display: grid; place-items: center; }
+.bell-badge { position: absolute; top: -0.25rem; right: -0.25rem; min-width: 1.2rem; height: 1.2rem; padding: 0 var(--space-1); border-radius: var(--radius-pill); background: var(--orange); color: var(--text); font-size: var(--font-caption); font-weight: var(--weight-bold); display: grid; place-items: center; }
+/* La seule pastille orange (règles §4) : chiffre foncé, --on-accent en sombre où --text devient clair. */
+@media (prefers-color-scheme: dark) { .bell-badge { color: var(--on-accent); } }
 .bell-panel { position: absolute; right: 0; top: 2.9rem; z-index: 40; width: min(24rem, calc(100vw - 2rem)); max-height: 70vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 16px 40px rgba(17, 17, 31, 0.16); padding: var(--space-2); }
 .bell-head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-2) var(--space-2); }
 .bell-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
@@ -1762,6 +1764,8 @@ html.side-open { overflow: hidden; }
   .list-count-row { flex-wrap: wrap; row-gap: var(--space-3); }
   .list-count-actions { width: 100%; margin-left: 0; display: grid; grid-template-columns: 1fr 1fr; }
   .list-count-actions > button { min-height: 3rem; white-space: normal; justify-content: center; text-align: center; }
+  /* Seul (liste vide d'un compte neuf), le bouton prend toute la largeur. */
+  .list-count-actions > button:only-child { grid-column: 1 / -1; }
 }
 .list-count-row { display: flex; align-items: center; gap: var(--space-4); margin: 0 0 var(--space-3); }
 .list-count-row .list-count { margin: 0; }
@@ -3013,8 +3017,9 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
    les bandeaux datés, puis deux cartes neutres — À faire et Mois ORP. Aéré (docs/93) : 2 rem
    entre les étages, 1,5 rem dans les cartes ; la couleur pour ce qui demande une action. */
 .today-lead { display: grid; justify-items: start; gap: var(--space-5); margin: var(--space-2) 0 0; }
-.today-sentence { margin: 0; max-width: 40rem; font-size: var(--font-figure); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: -0.01em; color: var(--text); }
-.today-sentence strong { font-weight: var(--weight-semibold); color: var(--accent); }
+.today-sentence, .offers-sentence { margin: 0; max-width: 40rem; font-size: var(--font-figure); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: -0.01em; color: var(--text); }
+.today-sentence strong, .offers-sentence strong { font-weight: var(--weight-semibold); color: var(--accent); }
+.offers-sentence { margin-bottom: var(--space-6); }
 .today-cta { border-radius: var(--radius-pill); padding-inline: var(--space-5); }
 .today-banners { list-style: none; margin: 0 0 var(--space-8); padding: 0; display: grid; gap: var(--space-3); }
 .today-banner { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; font-size: var(--font-body); line-height: var(--leading-normal); }
@@ -3066,7 +3071,7 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .rhythm-nested { display: grid; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--divider); }
 .rhythm-nested .rhythm-head { align-items: center; }
 @media (max-width: 820px) {
-  .today-sentence { font-size: var(--font-section); }
+  .today-sentence, .offers-sentence { font-size: var(--font-section); }
   .today-grid, .today-grid.halves { grid-template-columns: minmax(0, 1fr); }
   .today-grid .dash-card { padding: var(--space-6); }
   .today-lead { margin-bottom: var(--space-6); }

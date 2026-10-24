@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.17)
+- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.18)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -234,7 +234,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 1.6.14 | Les tests en CI : serveur (pytest sur PostgreSQL 17) et interface (vitest, types, poids) à chaque envoi sur main et chaque PR (docs/exploitation.md) | livrée |
 | 1.6.15 | Les repères : l'anneau d'aujourd'hui en accent, jours vides et cases ORP à faire en `--faint`, visage de la tuile ORP à 32 px, initiales sans couleur en dur (docs/135) | livrée |
 | 1.6.16 | La tuile du visage sur les variables (`--mint-soft`, le beige retiré, l'orange pour « à agir »), l'étiquette en majuscules (`--letter-label`), les points des premiers pas en `--faint` (docs/135) | livrée |
-| 1.6.17 | La date au-dessus du titre en style étiquette (exception de la §3 des règles), l'action des écrans vides en bouton principal, la devise anglaise retirée de l'interface (docs/135) | en cours |
+| 1.6.17 | La date au-dessus du titre en style étiquette (exception de la §3 des règles), l'action des écrans vides en bouton principal, la devise anglaise retirée de l'interface (docs/135) | livrée |
+| 1.6.18 | Candidatures : la conclusion en une phrase, des blocs de chargement, « Ajouter une offre » seul dans l'écran vide ; la pastille de la cloche en orange ; la sélection d'une offre lisible (4,5:1) ; « au plus une action principale » (docs/135) | en cours |
 
 ## Lancer en local
 
