@@ -113,7 +113,9 @@ async def test_ai_message_never_gets_your_name_and_marks_the_follow_up(
         assert list(await session.scalars(select(LlmCall.purpose))) == ["relance"]
 
     marked = (await api.post(f"/api/applications/{application_id}/follow-up")).json()
-    assert marked["status"] == "relancee" and marked["followed_up_at"] == date.today().isoformat()
+    # La date de Zurich, comme le service : de minuit à 2 h, la machine (UTC) a un jour de retard.
+    assert marked["status"] == "relancee"
+    assert marked["followed_up_at"] == service.local_today().isoformat()
 
 
 async def test_status_set_by_hand_keeps_the_follow_up_date(
