@@ -15,7 +15,7 @@ defineProps<{ mood: Mood; act?: boolean; wink?: boolean; small?: boolean; waitin
   >
     <FaceMark
       :mood="mood"
-      :size="small ? 28 : 40"
+      :size="small ? 28 : 32"
       :wink="wink"
       :waiting="waiting"
     />

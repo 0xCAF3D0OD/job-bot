@@ -91,7 +91,7 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 
 - Les titres, boutons et liens actifs sont en 600 ; les liens inactifs du menu en 400.
 - Le bouton secondaire se voit à son bord : `--faint`, 3:1 au moins. Le bouton principal désactivé est gris, pas bleu pâle.
-- Un seul gris pour le texte secondaire, `--muted` (au moins 4,5:1) ; `--faint` est réservé à ce qui n'est pas du texte (chevrons, soulignés en pointillé, encre des dessins), au moins 3:1 (3,3:1 visé en clair).
+- Un seul gris pour le texte secondaire, `--muted` (au moins 4,5:1) ; `--faint` est réservé à ce qui n'est pas du texte (chevrons, soulignés en pointillé, encre des dessins, bord des boutons secondaires, jours vides et cases ORP à faire), au moins 3:1 (3,3:1 visé en clair).
 - Une seule orange pour l'interface, `--orange`, avec `--orange-text` pour le texte et `--orange-soft` pour les fonds ; `--logo-spark` est réservé au logo et au visage du 1.
 - Hors échelle : la lettre, le CV et la feuille ORP (ils imitent le papier et le PDF), les valeurs en `em`, les pourcentages, les réserves de place d'un élément fixe, les textes des graphiques en SVG.
 - Les filets : 2 rem de chaque côté sur ordinateur. Les logos d'entreprise : coins de 8 px.

@@ -397,3 +397,18 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 ## Vérifié (1.6.13)
 
 - 111 fichiers de tests sur 111, 458 tests ; le rapporteur fait échouer une suite incomplète ; lint, vue-tsc.
+
+## Écarts (1.6.15)
+
+Décisions du 24 octobre, prises en revoyant le premier lot de composants Figma (carte, initiales, progression ORP, semaine, visage du 1). Le numéro 1.6.14 était déjà pris par la CI.
+
+- **L'anneau d'aujourd'hui** passe de `--accent-soft` (1,2:1) à `--accent` : c'est le seul repère du jour dans la semaine.
+- **Les jours vides et les cases ORP à faire** passent en `--faint` (3,3:1 au moins) ; la case vide mêlait `--muted` à 22 % (une valeur calculée, sans variable). La bordure des cartes reste telle quelle : elle est décorative, le contenu délimite la carte.
+- **Le visage de la tuile du mois ORP** passe de 40 à 32 px (la règle §4 : 16 à 32 px dans l'usage courant) ; la tuile garde sa taille.
+- **Les initiales sur menthe et ciel** n'ont plus de couleur en dur : `--text` en clair, `--on-accent` en sombre (tous deux foncés, 10 à 11:1).
+- Figma suit : Case ORP, Jour (et donc Semaine), Visage du 1 (taille 32 au lieu de 40), Initiales.
+- **Relevé au passage, non traité** : les fonds de la tuile du visage (`.face-tile`) sont des couleurs en dur, sans variable (vert, lavande, beige, gris, et un orange pour « à agir »).
+
+## Vérifié (1.6.15)
+- Avant / après : changent Aujourd'hui (la semaine, les cases du mois ORP), et en sombre les pages avec des initiales menthe ou ciel (encre #11111f → #0f0f1a, imperceptible).
+- 458 tests de l'interface (111 fichiers sur 111), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.

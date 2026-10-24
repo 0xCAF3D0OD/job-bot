@@ -267,8 +267,10 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
    Sur l'accent, --on-accent (8:1 en clair, 9:1 en sombre) ; sur la menthe et le ciel, l'initiale
    en foncé (10 à 11:1) : le blanc n'y atteignait que ~1,9:1 (WCAG 1.4.3). */
 .logo.c0 { background: var(--accent); color: var(--on-accent); }
-.logo.c1 { background: var(--mint); color: #11111f; }
-.logo.c2 { background: var(--sky); color: #11111f; }
+.logo.c1 { background: var(--mint); color: var(--text); }
+.logo.c2 { background: var(--sky); color: var(--text); }
+/* En sombre, --text devient clair : l'initiale prend --on-accent, foncé (1.6.15). */
+@media (prefers-color-scheme: dark) { .logo.c1, .logo.c2 { color: var(--on-accent); } }
 .logo.large { width: 3rem; height: 3rem; border-radius: var(--radius); font-size: var(--font-title); }
 .job-title { font-weight: var(--weight-semibold); font-size: var(--font-body); line-height: var(--leading-tight); display: block; }
 
@@ -2002,12 +2004,12 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 .rhythm-count strong { color: var(--text); font-size: var(--font-section); }
 .rhythm-days { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-1); text-align: center; font-size: var(--font-caption); color: var(--muted); }
 .rhythm-days li { display: grid; justify-items: center; gap: var(--space-1); }
-.rhythm-dot { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid var(--border); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: #fff; }
+.rhythm-dot { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 2px solid var(--faint); font-size: var(--font-caption); font-weight: var(--weight-semibold); color: #fff; }
 .rhythm-days li.sent .rhythm-dot { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .rhythm-days li.rest .rhythm-dot { border-style: dashed; opacity: 0.6; }
 .rhythm-days li.paused .rhythm-dot { border-style: dotted; background: var(--band); }
 .rhythm-days li.today { color: var(--text); font-weight: var(--weight-semibold); }
-.rhythm-days li.today .rhythm-dot { box-shadow: 0 0 0 3px var(--accent-soft); }
+.rhythm-days li.today .rhythm-dot { box-shadow: 0 0 0 3px var(--accent); }
 .rhythm-sentence { margin: 0; }
 .rhythm-card.done .rhythm-sentence { color: var(--accent); font-weight: var(--weight-semibold); }
 .dash-bottom { grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
@@ -3609,9 +3611,9 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .orp-month-count { margin: var(--space-3) 0 0; color: var(--muted); font-size: var(--font-body); }
 .orp-month-count strong { font-size: var(--font-page); font-weight: var(--weight-semibold); color: var(--text); line-height: var(--leading-none); }
 .orp-month-bar { display: flex; gap: var(--space-1); height: 0.5rem; margin: var(--space-4) 0 var(--space-3); }
-.orp-month-bar .segment { flex: 1; border-radius: var(--radius-pill); background: color-mix(in srgb, var(--muted) 22%, transparent); }
+.orp-month-bar .segment { flex: 1; border-radius: var(--radius-pill); background: var(--faint); }
 .orp-month-bar .segment.done { background: var(--accent); }
-.orp-month-bar.continuous { border-radius: var(--radius-pill); background: color-mix(in srgb, var(--muted) 22%, transparent); overflow: hidden; }
+.orp-month-bar.continuous { border-radius: var(--radius-pill); background: var(--faint); overflow: hidden; }
 .orp-month-bar .fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
 .orp-month-line { margin: 0; line-height: var(--leading-normal); color: var(--muted); }
 .orp-month-line strong { font-weight: var(--weight-semibold); }
