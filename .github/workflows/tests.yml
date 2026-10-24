@@ -1,0 +1,71 @@
+# Les tests du serveur et de l'interface, à chaque envoi sur main et à chaque PR (1.6.14), comme
+# `make test` en local. Le test de l'audit des règles a son propre workflow (audit-regles.yml).
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  serveur:
+    name: Serveur (pytest)
+    runs-on: ubuntu-latest
+    # Une vraie base PostgreSQL, comme en local (backend/tests/conftest.py) ; le rôle de
+    # l'application (jobbot_app) est créé par les migrations.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jobbot_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      JOBBOT_TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/jobbot_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Dépendances
+        working-directory: backend
+        run: uv sync --frozen
+      - name: Tests
+        working-directory: backend
+        run: uv run pytest -q
+
+  interface:
+    name: Interface (vitest, types, poids)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dépendances
+        working-directory: frontend
+        run: npm ci
+      # La suite complète : un fichier de test qui ne démarre pas la fait échouer (vitest.total.ts).
+      - name: Tests
+        working-directory: frontend
+        run: npm test
+      - name: Types
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Budget de poids des pages
+        working-directory: frontend
+        run: npm run poids
