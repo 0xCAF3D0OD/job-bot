@@ -216,14 +216,15 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 | 1.6.8 | Rendez-vous | |
 | 1.6.9 | Alertes, Profil, Réglages | |
 | 1.6.10 | Formations, Actualités, l'assistant | |
-| 1.6.11 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable | Puis les composants partagés entre plusieurs pages (encadrés, contacts, entraînement à l'entretien, menu « ⋯ », chargement…), qu'aucune page seule ne peut arrondir sans toucher les autres ; puis le garde-fou ci-dessous. |
+| 1.6.11 | Connexion, inscription, accueil, Découvrir, pages légales, page introuvable ; les composants partagés entre plusieurs pages | Encadrés, contacts, entraînement à l'entretien, menu « ⋯ », chargement, cartes du tableau de bord… : ce qu'aucune page seule ne peut arrondir sans toucher les autres. |
+| 1.6.12 | **Le garde-fou**, seul | Ci-dessous. |
 
 **Pour chaque étape** :
 - captures **avant et après**, côte à côte, à 1440 et 390 px, en clair et en sombre, sur la démo et sur un compte neuf (base jetable) ; avec, pour chaque paire, une image des différences (les pixels changés en couleur), pour voir d'un coup d'œil ce qui a bougé ;
 - les trois audits (règles, alignement, accessibilité, avec exploration des repliables et des vues) à zéro ;
 - les tests de l'interface, lint et vue-tsc.
 
-**Le garde-fou (1.6.11)** : un contrôle ajouté à `frontend/scripts/regles.py` (ou un test) refuse dans les styles un espacement, une taille de texte, un rayon ou une graisse qui ne passe pas par une variable, sauf les exceptions listées aux §1 et §2.
+**Le garde-fou (1.6.12)** : un contrôle ajouté à `frontend/scripts/regles.py` (ou un test) refuse dans les styles un espacement, une taille de texte, un rayon ou une graisse qui ne passe pas par une variable, sauf les exceptions listées aux §1 et §2.
 
 ## 8. Figma
 
@@ -329,3 +330,12 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 ## Vérifié (1.6.6)
 - Avant / après : changent le Suivi (cases du calendrier un peu plus basses, la colonne de droite suit), la note avec sa jauge (Offres, fiche, Préparer, Aujourd'hui) et, sur un compte neuf, les écrans vides dont le visage remplit maintenant son cadre (Bilan, Actualités, Rendez-vous, Compte).
 - 456 tests de l'interface (la jauge et le visage), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.7)
+
+- **Le Bilan à l'échelle** : 52 valeurs (tuiles, « Mois précédents », la conclusion, les vues du détail : parcours, par mois, ce qui marche, semaines). Les cartes `.dash-card` servent aussi à Aujourd'hui (le rythme) : elles attendent la passe des composants partagés (1.6.11), avec leur rayon de 20 à 24 px.
+- **Décisions du 23 octobre** : la piste de la jauge reste sur `--border` ; la fin de la migration se sépare en 1.6.11 (pages publiques et composants partagés) et 1.6.12 (le garde-fou, seul).
+
+## Vérifié (1.6.7)
+- Avant / après : seul le Bilan change (24 captures de la démo ; sur un compte neuf, le Bilan est vide et ne change pas) : tuiles un peu plus hautes, lignes du parcours plus serrées.
+- 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
