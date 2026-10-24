@@ -2035,11 +2035,12 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 
 .dash-tile { display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-6); min-height: 11rem; padding: var(--space-5) var(--space-5); border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); color: var(--text); text-decoration: none; transition: border-color 0.15s, transform 0.15s; }
 .dash-tile:hover { border-color: var(--accent); }
-.dash-tile-head { display: flex; align-items: center; gap: var(--space-3); }
-.dash-tile-label { min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-tile-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+/* Jamais de libellé coupé : trop long, il passe sous la bulle (décision du 24 octobre). */
+.dash-tile-label { min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
 .dash-tile .sparkline { flex: 0 1 auto; width: 4.5rem; margin-left: auto; color: var(--muted); }
 .dash-tile-foot { display: grid; gap: var(--space-1); }
-.dash-trend { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; font-size: var(--font-small); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-trend { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; font-size: var(--font-small); color: var(--muted); }
 .dash-trend .icon { width: 13px; height: 13px; stroke-width: 2.2; }
 .dash-value { font-size: var(--font-page); font-weight: var(--weight-bold); line-height: var(--leading-none); letter-spacing: -0.01em; }
 .dash-tile.accent { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
@@ -2127,8 +2128,9 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 .bilan-detail-head .section-title { margin: 0; }
 /* Les vues sur une ligne, même à cinq ou six (le sélecteur passe sinon sur deux colonnes) ; sur
    téléphone, la ligne défile. */
-.bilan-detail-head .segmented.bilan-views { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: auto; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-.bilan-views button { white-space: nowrap; padding-inline: var(--space-3); }
+/* Dans une ligne repliable, la vue n'a ni cadre ni titre à elle : la ligne les porte. */
+.bilan-detail .disclosure-body > .dash-card { padding: 0; border: 0; background: none; }
+.bilan-detail .disclosure-body > .dash-card > .dash-card-head > h2 { display: none; }
 .orp-gauge:has(.gauge-history.past) { justify-content: flex-start; gap: var(--space-3); }
 .orp-gauge .gauge-history.past { flex: 1; grid-auto-rows: 1fr; }
 .orp-gauge .gauge-history.past li { align-content: center; }
@@ -2153,6 +2155,8 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 .period-bars li.active .bar-fill.answered, .period-bars li:focus-visible .bar-fill.answered { background: linear-gradient(to bottom, color-mix(in srgb, var(--mint) 65%, transparent), color-mix(in srgb, var(--mint) 14%, transparent)); }
 .bilan-headline { display: flex; align-items: center; gap: var(--space-4); margin: 0; padding: var(--space-4) var(--space-5); border-radius: var(--radius); background: color-mix(in srgb, var(--mint) 24%, var(--surface)); border: 1px solid color-mix(in srgb, var(--mint) 45%, var(--border)); font-weight: var(--weight-semibold); }
 .bilan-headline .dash-bubble { background: var(--surface); }
+/* La conclusion en haut de Bilan, puis la période (1.6.19). */
+.insights > .bilan-headline { margin-bottom: var(--space-6); }
 .bilan-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-8); }
 .bilan-groups { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
 .bilan-groups li { display: grid; grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr) 4.5rem; align-items: center; column-gap: var(--space-4); row-gap: var(--space-1); }

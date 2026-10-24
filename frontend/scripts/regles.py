@@ -144,10 +144,18 @@ AUDIT = r"""(maxWords) => {
       const b = blockOf(el);
       if (!b) continue;
       const clip = b.getBoundingClientRect();
+      // Les conteneurs qui défilent ou rognent (une fiche fixée qui défile en elle-même) : un texte
+      // hors de leur partie visible ne se voit pas, il ne compte pas (1.6.19).
+      const frames = [];
+      for (let p = b.parentElement; p && p !== document.body; p = p.parentElement) {
+        const s = getComputedStyle(p);
+        if (/(auto|scroll|hidden|clip)/.test(s.overflowY)) frames.push(p.getBoundingClientRect());
+      }
       const range = document.createRange();
       range.selectNodeContents(n);
       for (const q of range.getClientRects()) {
         if (q.width < 1 || q.bottom > clip.bottom + 1 || q.top < clip.top - 1) continue;
+        if (frames.some((f) => q.bottom <= f.top + 1 || q.top >= f.bottom - 1)) continue;
         const it = items.get(b) || { top: 1e9, bottom: -1e9, left: 1e9, right: -1e9, ctl: false };
         it.top = Math.min(it.top, q.top); it.bottom = Math.max(it.bottom, q.bottom);
         it.left = Math.min(it.left, q.left); it.right = Math.max(it.right, q.right);

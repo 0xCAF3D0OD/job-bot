@@ -80,3 +80,27 @@ def test_un_texte_coupe_mais_visible_pres_du_bord_est_trouve(page: Page) -> None
     body = f'<div class="form-card" style="padding: 24px 4px"><span class="cut">{LONG}</span></div>'
     found = faults(page, body)
     assert found and "texte à 5 px du bord" in found[0]
+
+
+def stuck(page: Page, body: str) -> list[str]:
+    page.set_content(BASE % body)
+    return [f for f in page.evaluate(AUDIT, MAX_WORDS) if "texte collé" in f]
+
+
+def test_un_vrai_texte_colle_a_celui_du_dessus_est_trouve(page: Page) -> None:
+    line = '<p style="margin: 0; line-height: 1.2">%s</p>'
+    body = line % "Premier texte" + line % "Second texte"
+    assert stuck(page, body)
+
+
+def test_un_texte_rogne_par_une_fiche_qui_defile_ne_compte_pas(page: Page) -> None:
+    # 1.6.19 : sur téléphone, le détail d'une offre est une fiche fixée qui défile en elle-même ;
+    # sa suite, rognée sous l'écran, n'est pas visible et ne colle à rien.
+    body = (
+        '<div style="position: fixed; inset: 0; overflow: auto; background: #fff">'
+        '<div style="height: 430px"></div>'
+        '<p style="margin: 0; line-height: 1">Suite rognée de la fiche</p></div>'
+        '<div style="height: 448px"></div>'
+        '<p style="margin: 0; line-height: 1">Il te manque : Spark, SQL</p>'
+    )
+    assert stuck(page, body) == []

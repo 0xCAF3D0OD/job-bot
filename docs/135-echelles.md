@@ -487,3 +487,27 @@ Retours sur l'écran de référence Candidatures dans Figma (24 octobre).
   pastille et de l'offre sélectionnée ; lint, types et test de l'audit propres.
 - Trois audits sans défaut grave, démo et compte neuf, l'accessibilité aussi en sombre (les deux défauts
   mineurs de Bilan › Entretiens précèdent cette version).
+
+## Écarts (1.6.19)
+
+Retours sur l'écran de référence Bilan dans Figma (24 octobre) ; l'annexe de l'audit (« Suivi et Bilan trop
+chargés ») pour Bilan.
+
+- **La conclusion en haut** (règles §3.2) : la phrase de ce qui marche passe avant le choix de la période.
+- **Le détail replié** (règles §3.4) : une ligne repliable par vue (Parcours, Par mois ou Par semaine, Ce qui
+  marche, Semaines, Entretiens, Pour l'ORP), toutes fermées, à la place du sélecteur, qui faisait un troisième
+  niveau d'onglets (§2). La vue n'est plus retenue sur l'appareil ; dans une ligne, elle perd son cadre et son
+  titre, que la ligne porte.
+- **Les tuiles, jamais de libellé coupé** : deux tuiles par ligne sur téléphone ; trop long, le nom passe sous
+  la bulle, et la précision sur plusieurs lignes. Le chiffre reste en 700 (style Figma jobA1/font-page-bold).
+- **L'audit des règles** ne compte plus un texte rogné par un conteneur qui défile : sur téléphone, la suite
+  du détail d'une offre (une fiche fixée) passait pour « collée » à une ligne de la liste dessous, depuis la
+  1.6.18 (la phrase de conclusion avait décalé la liste). Deux tests de plus dans `test_regles.py`.
+
+## Vérifié (1.6.19)
+
+- Captures avant/après (horloge figée) : seule Bilan change sur la démo (24 captures), rien sur un compte neuf.
+- Bilan, Figma et code côte à côte en 390 et 1440 px : `docs/captures/1.6.19/`. Écart restant : le titre d'une
+  ligne repliable fermée est en 400 dans le code (DisclosureRow, partout), en 600 dans Figma ; à trancher.
+- 463 tests, lint, types ; 5 tests de l'audit (dont les 2 nouveaux) ; trois audits sans défaut, démo et compte
+  neuf, l'accessibilité aussi en sombre (plus aucun défaut mineur).
