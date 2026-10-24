@@ -39,7 +39,7 @@ function rowItems(application: Application): MoreMenuItem[] {
         <th>Poste</th>
         <th>Mode</th>
         <th>Statut</th>
-        <th />
+        <th><span class="visually-hidden">Actions</span></th>
       </tr>
     </thead>
     <tbody>
