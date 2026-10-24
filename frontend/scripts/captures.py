@@ -30,6 +30,8 @@ SETTLE_AT_TOP = """async () => {
 }"""
 
 SIZES = [{"width": 1440, "height": 900}, {"width": 390, "height": 844}]
+# Les pages publiques et la page introuvable (1.6.11), en plus des pages des audits.
+PUBLIC = ["connexion", "inscription", "la-plateforme", "conditions", "a-propos", "bienvenue", "page-introuvable"]
 SCHEMES = ["light", "dark"]
 # Un rendu stable d'une série à l'autre : sans ces options, l'anticrénelage du texte varie de
 # quelques pixels entre deux captures identiques.
@@ -73,7 +75,7 @@ async def main(base: str, out: Path) -> int:
                 )
                 await context.clock.set_fixed_time(datetime.fromisoformat(now))
                 page = await context.new_page()
-                for path in PAGES + extra:
+                for path in PAGES + extra + PUBLIC:
                     await page.goto(f"{base}/{path}")
                     await page.wait_for_timeout(1700)
                     # La page est chargée : plus de requête en cours ni de voile de chargement.

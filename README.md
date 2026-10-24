@@ -5,7 +5,7 @@
 Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-mail (jobup et Indeed, les autres sites lus par l'IA), écarte celles qui ne respectent pas tes prérequis, note les autres par rapport à ton profil, prépare lettre et CV, et tient le journal des candidatures exportable pour l'ORP. Tu valides chaque envoi.
 
 - Cadrage : [docs/01-cadrage.md](docs/01-cadrage.md)
-- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.10)
+- Version en cours : [docs/135-echelles.md](docs/135-echelles.md) (1.6.11)
 - Règles de sécurité : [docs/securite.md](docs/securite.md) ; signaler une faille : [SECURITY.md](SECURITY.md)
 - Règles de l'interface (illustrations, mouvement, clic) : [docs/interface.md](docs/interface.md)
 - Contrat d'exploitation, pour l'infrastructure : [docs/exploitation.md](docs/exploitation.md)
@@ -227,7 +227,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 | 1.6.7 | Les échelles, le Bilan à l'échelle : tuiles, mois précédents, vues du détail (docs/135) | livrée |
 | 1.6.8 | Les échelles, le Rendez-vous à l'échelle (docs/135) | livrée |
 | 1.6.9 | Les échelles, Alertes, Profil et Réglages à l'échelle (docs/135) | livrée |
-| 1.6.10 | Les échelles, Formations, Actualités et l'assistant à l'échelle (docs/135) | en cours |
+| 1.6.10 | Les échelles, Formations, Actualités et l'assistant à l'échelle (docs/135) | livrée |
+| 1.6.11 | Les échelles, les pages publiques et les composants partagés à l'échelle (docs/135) | en cours |
 
 ## Lancer en local
 
