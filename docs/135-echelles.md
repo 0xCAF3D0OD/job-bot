@@ -511,3 +511,24 @@ chargés ») pour Bilan.
   ligne repliable fermée est en 400 dans le code (DisclosureRow, partout), en 600 dans Figma ; à trancher.
 - 463 tests, lint, types ; 5 tests de l'audit (dont les 2 nouveaux) ; trois audits sans défaut, démo et compte
   neuf, l'accessibilité aussi en sombre (plus aucun défaut mineur).
+
+## Écarts (1.6.21)
+
+Retours du 24 octobre sur l'écran de référence Détail d'une offre dans Figma.
+
+- **« ← Offres » en haut à gauche** (règles §2), au-dessus du logo et du titre, sur téléphone ; il était en
+  haut à droite, à côté du « ⋯ ». Sur ordinateur, rien ne change (la croix sur écran moyen).
+- **L'entreprise et l'annonce repliées** (règles §3.4) : deux lignes repliables, moins utiles pour décider ; le
+  résumé donne le nom de l'entreprise et le site de l'annonce. Le « ⋯ » de chaque partie passe sur la ligne
+  ouverte (comme en docs/119), à la marge du texte.
+
+## Vérifié (1.6.21)
+
+- Captures avant/après (horloge figée) : seul le détail d'une offre change sur la démo (10 captures), rien
+  sur un compte neuf.
+- Figma et code côte à côte en 1440 et 390 px : `docs/captures/1.6.21/`. Le titre des lignes est en 400
+  ici ; il passe en 600 avec la 1.6.20. Écarts déjà là avant cette version : au-dessus de la liste, le code
+  montre « Ajouter une offre », « Candidature spontanée » et le filtre Note, que Figma n'a pas.
+- 463 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
+  aussi en sombre.
+

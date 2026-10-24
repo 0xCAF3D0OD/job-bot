@@ -106,8 +106,14 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
         description: "Missions. ".repeat(60),
       }),
     );
-    const titles = wrapper.findAll(".panel-section h3").map((h) => h.text());
+    const titles = wrapper.findAll(".panel-section h3, .disclosure-title").map((h) => h.text());
     expect(titles).toEqual(["Pour toi", "À savoir", "Entreprise", "Annonce"]);
+    // L'entreprise et l'annonce, repliées, avec leur résumé (règles §3.4, 1.6.21).
+    const rows = wrapper.findAll(".detail-disclosure > .disclosure-row");
+    expect(rows.map((r) => r.attributes("aria-expanded"))).toEqual(["false", "false"]);
+    expect(wrapper.find("[data-test=company-section] .disclosure-value").text()).toBe("Exemple SA");
+    // « ← Offres » vient en premier, au-dessus du logo et du titre (règles §2).
+    expect(wrapper.find("[data-test=offer-detail]").element.firstElementChild!.getAttribute("data-test")).toBe("back-detail");
     expect(wrapper.find("[data-test=score-note]").text()).toBe("Ton profil a changé depuis : note à refaire.");
     // docs/101 : taux, télétravail, contrat en pastilles ; les faits prennent leur icône.
     const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark [data-icon]").attributes("data-icon"));

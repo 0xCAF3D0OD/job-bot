@@ -3167,6 +3167,12 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
   .detail-panel .detail-close { display: none; }
   .detail-panel .detail-back { display: inline-flex; align-items: center; min-height: var(--control-h); font-size: var(--font-body); color: var(--accent); }
 }
+/* Le retour au-dessus du logo et du titre (règles §2) ; l'entreprise et l'annonce repliées, comme
+   des cartes sur le fond du détail (1.6.21). */
+.detail-panel > .detail-back { justify-self: start; }
+.detail-panel .detail-disclosure + .detail-disclosure { margin-top: 0; }
+/* L'action d'une ligne ouverte (« Voir sur jobs.ch ») à la marge du texte, pas collée au bord. */
+.detail-panel .detail-disclosure .disclosure-actions { padding-right: var(--space-6); }
 /* « À savoir » : les pastilles taux, télétravail, contrat, puis les faits avec leur icône. */
 .offer-terms { list-style: none; margin: 0 0 var(--space-4); padding: 0; }
 .offer-facts .fact-mark { display: inline-flex; justify-content: center; align-self: start; padding-top: 0.2em; }
