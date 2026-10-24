@@ -412,3 +412,23 @@ Décisions du 24 octobre, prises en revoyant le premier lot de composants Figma 
 ## Vérifié (1.6.15)
 - Avant / après : changent Aujourd'hui (la semaine, les cases du mois ORP), et en sombre les pages avec des initiales menthe ou ciel (encre #11111f → #0f0f1a, imperceptible).
 - 458 tests de l'interface (111 fichiers sur 111), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.16)
+
+Décisions du 24 octobre sur le second lot de composants Figma.
+
+- **Les points « à faire » des premiers pas** passent en `--faint` (le bord était à 1,2:1).
+- **La tuile du visage** (`.face-tile`, le mois ORP et les premiers pas) n'a plus de couleur en dur : ravi `--mint-soft` (nouvelle variable : #a8e6d2 en clair, la valeur d'avant ; #253f49 en sombre), content `--accent-soft`, attentif et neutre `--border` (le beige est retiré ; `--band` aurait rendu la tuile presque invisible sur une carte blanche, 1,07:1), à agir `--orange-soft` (l'orange de l'action, règles §4). Le visage passe à `--text` : **en sombre, la tuile devient foncée et le visage clair** (avant, elle restait pastel). Un test vérifie le visage sur chaque fond (3:1 au moins ; de 9,9 à 17:1).
+- **L'étiquette en majuscules** : l'espacement de 7 % servait à « Premiers pas · 2 sur 5 » et à « Cette semaine » ; il devient la variable `--letter-label`, et le style de texte `jobA1/etiquette` dans Figma. D'autres étiquettes en majuscules du même rôle gardent 4 à 8 % (`.points h3`, `.facts dt`, `.wizard-step`, `.contacts-block h3`, `.assistant-label`, `.news-group-title`, `.page-head-eyebrow`, `.welcome-label`…) : à unifier si tu le décides.
+- **L'ombre du toast** devient le style d'effet `jobA1/ombre-toast` dans Figma (0 8 24, #11111f à 10 %), appliqué à l'Annulation.
+- Figma : la variable `mint-soft`, la Tuile du visage (cinq humeurs × deux thèmes) utilisée dans les Premiers pas, leurs points à faire en `--faint`, leur compte au style `jobA1/etiquette`.
+
+## Vérifié (1.6.16)
+
+- Captures avant/après (horloge figée) : seules changent Aujourd'hui (la tuile du visage, les
+  points et le compte des premiers pas), et connexion et inscription, qui y redirigent une fois
+  connecté. Réglages › Compte (1440, clair) différait dans la série : l'en-tête collant pris au
+  milieu de l'image ; prise seule, la page est identique à l'avant.
+- 459 tests (111 fichiers), dont le contraste du visage sur chaque fond de tuile en clair et en
+  sombre ; lint, types et test de l'audit propres.
+- Trois audits à zéro sur la démo et sur un compte neuf, l'accessibilité aussi en sombre.

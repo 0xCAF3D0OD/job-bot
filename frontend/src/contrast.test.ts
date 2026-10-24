@@ -60,9 +60,9 @@ describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", ()
     }
   });
 
-  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides et les cases ORP à faire ; le texte gris est en --muted", () => {
+  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP et les points des premiers pas à faire ; le texte gris est en --muted", () => {
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "").trim());
-    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar)/);
+    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots)/);
     expect(rules.length).toBeGreaterThan(0);
   });
 });
@@ -86,6 +86,16 @@ describe("étiquettes orange (docs/135)", () => {
   it("le texte orange reste lisible sur son fond, en clair et en sombre", () => {
     expect(ratio(light["orange-text"]!, light["orange-soft"]!)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(dark["orange-text"]!, dark["orange-soft"]!)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe("la tuile du visage (1.6.16)", () => {
+  it("le visage (--text) se voit sur chaque fond de tuile, en clair et en sombre", () => {
+    for (const theme of [light, dark]) {
+      for (const background of ["mint-soft", "accent-soft", "border", "orange-soft"]) {
+        expect(ratio(theme.text!, theme[background]!), background).toBeGreaterThanOrEqual(3);
+      }
+    }
   });
 });
 
