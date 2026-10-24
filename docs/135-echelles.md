@@ -355,3 +355,11 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 ## Vérifié (1.6.9)
 - Avant / après : seules changent les Alertes, le Profil (trois onglets) et les Réglages (toutes les rubriques), sur la démo comme sur un compte neuf. Les lignes des sites suivis et des documents prennent un peu plus d'air ; le sommaire des Réglages se resserre.
 - 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.10)
+
+- **Formations, Actualités et l'assistant à l'échelle** : 114 valeurs (tuiles et fiches de formation, filtres, une des actualités et lignes, panneau de l'assistant). L'assistant est importé par le cadre de l'application, pas par une page : son panneau compte comme une racine du périmètre. **Il n'apparaît pas sans clé d'IA** (ni dans la démo ni sur un compte de test) : ses valeurs sont arrondies comme les autres, mais aucune capture ne le montre ; à vérifier sur une instance avec l'IA.
+
+## Vérifié (1.6.10)
+- Avant / après : changent Formations et Actualités (démo et compte neuf), de quelques pixels (tuiles, filtres, une des actualités). Une capture des Réglages › Outils d'un compte neuf diffère aussi : l'en-tête collant photographié en cours de défilement, le contenu identique ; artefact de capture, pas de changement.
+- 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
