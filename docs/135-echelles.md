@@ -347,3 +347,11 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 ## Vérifié (1.6.8)
 - Avant / après : seul le Rendez-vous change (8 captures de la démo, 4 d'un compte neuf), de quelques pixels (questions, feuille, mois).
 - 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.9)
+
+- **Alertes, Profil et Réglages à l'échelle** : 146 valeurs propres à ces trois pages (alertes et assistant de création, e-mails des sites, critères et « Effet des critères », blocs et certificats du Profil, rubriques des Réglages, extension, plateforme). Les composants que d'autres pages importent aussi attendent la 1.6.11.
+
+## Vérifié (1.6.9)
+- Avant / après : seules changent les Alertes, le Profil (trois onglets) et les Réglages (toutes les rubriques), sur la démo comme sur un compte neuf. Les lignes des sites suivis et des documents prennent un peu plus d'air ; le sommaire des Réglages se resserre.
+- 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
