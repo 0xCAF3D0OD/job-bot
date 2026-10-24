@@ -60,9 +60,9 @@ describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", ()
     }
   });
 
-  it("seulement pour les chevrons, les soulignés, l'encre des dessins et le bord des boutons secondaires ; le texte gris est en --muted", () => {
+  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides et les cases ORP à faire ; le texte gris est en --muted", () => {
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "").trim());
-    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\()/);
+    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar)/);
     expect(rules.length).toBeGreaterThan(0);
   });
 });
@@ -91,10 +91,13 @@ describe("étiquettes orange (docs/135)", () => {
 
 describe("initiales des entreprises et pastille de la cloche (audit du 22.10.2026)", () => {
   it("l'initiale foncée sur les fonds clairs, le chiffre blanc sur un rouge assez sombre", () => {
+    // Sur la menthe et le ciel, l'initiale reste foncée : --text en clair, --on-accent en sombre (1.6.15).
     for (const tone of ["mint", "sky"]) {
-      expect(css).toMatch(new RegExp(`\\.logo\\.c\\d \\{ background: var\\(--${tone}\\); color: #11111f; \\}`));
-      expect(ratio("#11111f", light[tone]!)).toBeGreaterThanOrEqual(4.5);
+      expect(css).toMatch(new RegExp(`\\.logo\\.c\\d \\{ background: var\\(--${tone}\\); color: var\\(--text\\); \\}`));
+      expect(ratio(light.text!, light[tone]!)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(dark["on-accent"]!, dark[tone]!)).toBeGreaterThanOrEqual(4.5);
     }
+    expect(css).toContain("@media (prefers-color-scheme: dark) { .logo.c1, .logo.c2 { color: var(--on-accent); } }");
     // L'accent, avec --on-accent, en clair et en sombre ; jamais l'orange (docs/135, 1.6.3).
     expect(css).toContain(".logo.c0 { background: var(--accent); color: var(--on-accent); }");
     expect(ratio(light["on-accent"]!, light.accent!)).toBeGreaterThanOrEqual(4.5);
