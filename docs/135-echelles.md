@@ -511,3 +511,37 @@ chargés ») pour Bilan.
   ligne repliable fermée est en 400 dans le code (DisclosureRow, partout), en 600 dans Figma ; à trancher.
 - 463 tests, lint, types ; 5 tests de l'audit (dont les 2 nouveaux) ; trois audits sans défaut, démo et compte
   neuf, l'accessibilité aussi en sombre (plus aucun défaut mineur).
+
+## Écarts (1.6.20)
+
+Retours du 24 octobre sur l'écran de référence Suivi dans Figma ; l'annexe de l'audit (« Suivi et Bilan trop
+chargés ») pour le Suivi.
+
+- **La conclusion en haut** (règles §3.2) : « 6 relances à faire et 4 candidatures à déclarer. », les nombres
+  en accent ; « Rien à relancer ni à déclarer. » quand tout est fait.
+- **Une ligne pour le mois** : le mois, l'objectif en cases (une par candidature, règles §4, comme sur
+  Aujourd'hui ; au-delà de 15, une barre continue), « Ajouter » et le « ⋯ ». Sur téléphone, trois lignes.
+- **« À faire » d'abord**, aussi sur téléphone : une carte avec les onglets À relancer et À déclarer, trois
+  lignes au plus, « Tout voir » pour le reste (§3). Sur téléphone, l'action passe sous le texte : le nom de
+  l'entreprise n'est jamais coupé.
+- **Le détail replié** (règles §3.4) : « Calendrier d'octobre » et « Toutes les candidatures d'octobre », deux
+  lignes repliables à la place du sélecteur « Calendrier · Liste » (§2). Le jour choisi s'affiche sous le
+  calendrier ; un lien vers un jour (« fais le point », assistant) ouvre le calendrier. L'affichage n'est plus
+  retenu sur l'appareil, et la colonne défilante à côté du calendrier disparaît.
+- **La liste du mois sur téléphone** : la date, l'entreprise (sur deux lignes au besoin) et le statut ; le poste,
+  le mode et le « ⋯ » sont dans le panneau qu'ouvre le nom. La colonne d'actions a un nom pour les lecteurs
+  d'écran (axe : en-tête de tableau vide).
+- **Le titre des repliables en 600**, ouvert ou fermé, partout (comme le composant Repliable de Figma).
+- **Les statuts** : « Refus » passe en gris `--muted` (un refus n'est pas une erreur, §4) ; « Sans réponse » en
+  `--faint` au lieu de `#c4c8d2` en dur, toujours avec son mot. Figma suit (Point de statut).
+
+
+## Vérifié (1.6.20)
+
+- Captures avant/après (horloge figée) : le Suivi change ; ailleurs, seul le titre des repliables fermés passe
+  en 600 (Bilan, Alertes, Rendez-vous ORP, Profil, Réglages).
+- Suivi, Figma et code côte à côte en 1440 px et en 390 px (calendrier ouvert) : `docs/captures/1.6.20/`.
+  Écarts restants : sur téléphone, l'action de « À faire » passe sous le texte dans le code (le nom entier),
+  alors que Figma la garde à droite et coupe le nom ; la légende du code a « à compléter », pas Figma.
+- 468 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
+  aussi en sombre (plus aucun défaut mineur).
