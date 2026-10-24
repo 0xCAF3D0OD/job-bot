@@ -350,7 +350,11 @@ describe("Aujourd'hui, les moments (docs/123 §2)", () => {
     expect(calm.find(".face-mark").attributes("data-mood")).toBe("ravi");
     expect(calm.text()).toContain("Rien d'urgent aujourd'hui");
     expect(calm.find(".orp-month.compact [data-test=month-count]").text()).toBe("Mois ORP · 3 / 20");
-    expect(calm.find("[data-test=today-calm-offers]").attributes("href")).toBe("/candidatures/offres");
+    // L'action de l'écran vide : un bouton principal plein (règles §3.3, §4), sans devise anglaise (§5).
+    const offers = calm.find(".face-state [data-test=today-calm-offers]");
+    expect(offers.attributes("href")).toBe("/candidatures/offres");
+    expect(offers.classes()).toEqual(expect.arrayContaining(["button-link", "primary-link"]));
+    expect(calm.text()).not.toContain("Less searching");
     // Pas de phrase du jour ni de carte « À faire » en même temps.
     expect(wrapper.find("[data-test=today-sentence]").exists()).toBe(false);
     expect(wrapper.find("[data-test=best]").exists()).toBe(false);

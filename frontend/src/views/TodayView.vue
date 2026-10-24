@@ -287,9 +287,15 @@ const { me } = useAuth();
           title="Rien d'urgent aujourd'hui"
         >
           <p>Aucune offre à examiner, aucune relance, rien de daté.</p>
-          <p class="today-motto">
-            Less searching. More living.
-          </p>
+          <div class="face-state-actions">
+            <RouterLink
+              to="/candidatures/offres"
+              class="button-link primary-link"
+              data-test="today-calm-offers"
+            >
+              Voir les offres quand même
+            </RouterLink>
+          </div>
         </FaceState>
         <div class="dash-card today-calm-month">
           <OrpMonth
@@ -300,13 +306,6 @@ const { me } = useAuth();
             compact
           />
         </div>
-        <RouterLink
-          to="/candidatures/offres"
-          class="today-more"
-          data-test="today-calm-offers"
-        >
-          Voir les offres quand même
-        </RouterLink>
       </section>
       <template v-else>
         <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->

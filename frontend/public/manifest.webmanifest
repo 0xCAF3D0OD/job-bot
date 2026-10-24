@@ -1,7 +1,7 @@
 {
   "name": "jobA1",
   "short_name": "jobA1",
-  "description": "Less searching. More living. Recherche d'emploi et preuves ORP.",
+  "description": "Recherche d'emploi et preuves ORP.",
   "lang": "fr",
   "start_url": "/aujourdhui",
   "scope": "/",

@@ -23,7 +23,7 @@ onMounted(async () => {
     >
       <h2>Pourquoi jobA1</h2>
       <p>
-        Chercher un emploi, c'est trouver les bonnes offres et prouver chaque mois ses recherches. jobA1 s'occupe des preuves et t'aide pour les offres : <strong>Less searching. More living.</strong>
+        Chercher un emploi, c'est trouver les bonnes offres et prouver chaque mois ses recherches. jobA1 s'occupe des preuves et t'aide pour les offres.
       </p>
 
       <h2>Ce que jobA1 promet</h2>

@@ -376,12 +376,17 @@ onUnmounted(() => {
         <p v-else-if="preferences?.domain_only || preferences?.countries.length || preferences?.languages.length">
           Rien avec ces filtres pour l'instant.
         </p>
-        <RouterLink
+        <div
           v-else
-          to="/reglages?rubrique=actualites"
+          class="face-state-actions"
         >
-          Gérer les sources
-        </RouterLink>
+          <RouterLink
+            to="/reglages?rubrique=actualites"
+            class="button-link primary-link"
+          >
+            Gérer les sources
+          </RouterLink>
+        </div>
       </FaceState>
       <div
         v-else

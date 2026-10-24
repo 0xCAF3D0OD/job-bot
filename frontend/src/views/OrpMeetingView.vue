@@ -451,7 +451,7 @@ onMounted(() => void load());
         <div class="face-state-actions">
           <RouterLink
             to="/candidatures/offres"
-            class="pill"
+            class="button-link primary-link"
           >
             <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
           </RouterLink>

@@ -486,13 +486,13 @@ onUnmounted(() => {
           <div class="face-state-actions">
             <RouterLink
               to="/candidatures/alertes"
-              class="pill"
+              class="button-link primary-link"
             >
               <span class="with-icon"><AppIcon name="bell" />Créer mes alertes</span>
             </RouterLink>
             <button
               type="button"
-              class="pill"
+              class="button-link"
               data-test="offers-none-add"
               @click="manualOpen = true"
             >
@@ -505,17 +505,20 @@ onUnmounted(() => {
           title="Aucune offre"
           data-test="offers-empty"
         >
-          <p>
-            Rien ne correspond pour l'instant.
+          <p>Rien ne correspond pour l'instant.</p>
+          <div
+            v-if="activeCount(filters)"
+            class="face-state-actions"
+          >
             <button
-              v-if="activeCount(filters)"
               type="button"
-              class="link"
+              class="primary"
+              data-test="offers-reset"
               @click="reset"
             >
               <span class="with-icon"><AppIcon name="close" />Effacer les filtres</span>
             </button>
-          </p>
+          </div>
         </FaceState>
         <TransitionGroup
           tag="ul"

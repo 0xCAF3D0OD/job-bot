@@ -19,7 +19,8 @@ describe("À propos et le pied de page", () => {
     const wrapper = mount(AboutView, { global: { plugins: [router()] } });
     await flushPromises();
     const text = wrapper.find("[data-test=about]").text();
-    expect(text).toContain("Less searching. More living.");
+    expect(text).toContain("jobA1 s'occupe des preuves et t'aide pour les offres.");
+    expect(text).not.toContain("Less searching");
     expect(text).toContain("Tes coordonnées ne partent jamais à l'IA.");
     expect(text).toContain("Kevin Di Nocera");
     expect(wrapper.find("[data-test=about-contact]").text()).toBe("contact@joba1.ch");

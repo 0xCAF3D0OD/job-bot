@@ -49,7 +49,7 @@ Une fonction qui ne sert aucun de ces niveaux ne s'ajoute pas.
 
 Ordre fixe, de haut en bas :
 
-1. Titre de la page (**pas de sous-titre**).
+1. Titre de la page (**pas de sous-titre**). Exception : une étiquette au-dessus du titre, en style étiquette (majuscules, `--font-caption` 600, `--letter-label`, `--muted`), pour une précision courte comme la date d'Aujourd'hui. Ce n'est pas un sous-titre : quelques mots, jamais une phrase, toujours au-dessus du titre.
 2. Conclusion ou état principal en une phrase (ex. « 4 offres à examiner, 6 relances… », « Les offres de jobs.ch obtiennent plus souvent une réponse »).
 3. **Une seule action principale** (bouton plein).
 4. Contenu, l'essentiel d'abord ; le détail est replié et s'ouvre au clic.
@@ -71,7 +71,7 @@ Règles :
 | **Semaine** | Points par jour : rempli = candidature, cerclé = aujourd'hui. |
 | **Initiales d'entreprise** | Fond accent, menthe ou ciel, jamais l'orange (réservé à ce qui demande d'agir). Contraste ≥ 4,5:1 : `--on-accent` sur l'accent, texte foncé sur la menthe et le ciel. |
 | **Offre du jour** | Une à la fois, avec la phrase « pourquoi » et au plus deux manques. Boutons Garder et Écarter, « Annuler » pendant 6 s. Balayage autorisé sur téléphone, en plus des boutons. |
-| **Écran vide** | Dit ce que la page fera et quoi faire maintenant, avec une action. |
+| **Écran vide** | Dit ce que la page fera et quoi faire maintenant, avec une action : un bouton principal plein (§3.3), une éventuelle seconde action en contour. |
 | **Premiers pas** | Une carte, une étape à la fois, « 2 sur 5 ». |
 | **Visage du 1** | 16 à 32 px dans l'usage courant. Grande taille réservée aux moments rares. Un seul visage animé à l'écran. |
 

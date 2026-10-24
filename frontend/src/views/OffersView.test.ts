@@ -135,6 +135,8 @@ describe("OffersView", () => {
     const filtered = await mountAt("/offres?canton=VD");
     expect(filtered.find("[data-test=offers-none-yet]").exists()).toBe(false);
     expect(filtered.find("[data-test=offers-empty]").exists()).toBe(true);
+    // L'action de l'écran vide : un bouton principal plein (règles §3.3, §4), plus un lien.
+    expect(filtered.find("[data-test=offers-reset]").classes()).toContain("primary");
   });
 
   it("transmet les filtres de l'adresse à l'API", async () => {

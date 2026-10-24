@@ -1813,7 +1813,7 @@ html.side-open { overflow: hidden; }
    gauche, onglets dessous, sur la même largeur que le contenu. */
 .page-head .page-head-sub { margin: calc(var(--space-2) * -1) 0 var(--space-4); color: var(--muted); font-size: var(--font-body); }
 /* docs/88 : une petite précision au-dessus du titre (la date d'Aujourd'hui), en capitales. */
-.page-head .page-head-eyebrow { margin: 0 0 var(--space-1); color: var(--muted); font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: 0.06em; text-transform: uppercase; }
+.page-head .page-head-eyebrow { margin: 0 0 var(--space-1); color: var(--muted); font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: var(--letter-label); text-transform: uppercase; }
 .page-head:not(:has(.prep-tabs)) { padding-bottom: var(--space-2); }
 .jobs-head .prep-tabs { margin-bottom: 0; border-bottom: 0; }
 @media (max-width: 820px) {
@@ -2477,11 +2477,9 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 /* Ses couleurs suivent le ciel, pas le thème : foncées le jour, claires le soir (elles basculent
    à 3 s, dès que le ciel de la vidéo s'assombrit ; 0.67.6). */
 .auth-caption { position: absolute; left: 0; top: 0; display: grid; gap: var(--space-1); max-width: min(26rem, 70%); padding: var(--space-8) var(--space-8) 0; text-align: left; }
-.auth-tagline { margin: 0; font-size: var(--font-figure); font-weight: var(--weight-semibold); color: #1f1d33; transition: color 1.2s ease; }
 .auth-pitch { margin: 0; color: #4a4860; transition: color 1.2s ease; }
-.auth-scene.dusk .auth-tagline, .auth-scene.night .auth-tagline { color: #fff; text-shadow: 0 1px 8px rgb(20 18 50 / 35%); }
 .auth-scene.dusk .auth-pitch, .auth-scene.night .auth-pitch { color: rgb(255 255 255 / 85%); text-shadow: 0 1px 8px rgb(20 18 50 / 35%); }
-.auth-scene.dusk .auth-tagline, .auth-scene.dusk .auth-pitch { transition-delay: 3s; }
+.auth-scene.dusk .auth-pitch { transition-delay: 3s; }
 .auth-panel { display: grid; place-items: center; padding: var(--space-12) var(--space-6); background: var(--bg); }
 .auth-box { display: grid; gap: var(--space-4); width: min(100%, 24rem); }
 .auth-box h1 { margin: 0; font-size: var(--font-figure); }
@@ -2509,8 +2507,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .auth-art { height: calc(round(up, 100vw / 1.4994, 1px) + 46px); }
   .auth-scene-media { --h: round(up, 100cqw / 1.4994, 1px); }
   .auth-caption { padding: var(--space-4) var(--space-4) 0; max-width: 80%; }
-  .auth-tagline { font-size: var(--font-title); }
-  .auth-pitch { display: none; }
   .auth-panel { padding: var(--space-6) var(--space-4) var(--space-8); place-items: start center; }
 }
 
@@ -3062,8 +3058,6 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .today-row-main strong { font-weight: var(--weight-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .today-row-line { color: var(--muted); font-size: var(--font-small); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .today-row-action { justify-self: end; color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
-.today-more { display: inline-block; margin-top: var(--space-4); color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
-.today-more:hover { text-decoration: underline; }
 .today-month-count { margin: 0; color: var(--muted); font-size: var(--font-body); }
 .today-month-count strong { font-size: var(--font-page); font-weight: var(--weight-semibold); color: var(--text); line-height: var(--leading-none); }
 .today-bar { height: 0.4rem; margin: var(--space-4) 0 var(--space-2); border-radius: var(--radius-pill); background: var(--band); overflow: hidden; }
@@ -3649,7 +3643,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 /* S, rien d'urgent (docs/123 §2). */
 .today-calm { display: grid; justify-items: center; gap: var(--space-5); margin-bottom: var(--space-8); }
 .today-calm .face-state { padding-bottom: 0; }
-.today-motto { margin-top: var(--space-3) !important; font-weight: var(--weight-semibold); color: var(--accent); }
 .today-calm-month { width: min(100%, 40rem); }
 .today-empty-line { display: flex; align-items: center; gap: var(--space-2); color: var(--muted); }
 /* Le personnage se transforme (docs/123, complément 0.96.0 ; d'après la maquette « X ») : pendant
@@ -3782,7 +3775,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 main:focus { outline: none; }
 
 /* Les liens seuls sur leur ligne ont au moins 24 px de haut (WCAG 2.5.8, audit du 22.10.2026). */
-.today-more, .demo-banner a { display: inline-flex; align-items: center; min-height: 24px; }
+.demo-banner a { display: inline-flex; align-items: center; min-height: 24px; }
 .prep-back { margin-bottom: var(--space-2); min-height: 24px; }
 [data-test=offer-detail-title]:focus { outline: none; }
 /* L'entreprise et le lieu, détachés du titre de la fiche (docs/132). */
