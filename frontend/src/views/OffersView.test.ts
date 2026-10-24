@@ -129,6 +129,10 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     const empty = wrapper.find("[data-test=offers-none-yet]");
     expect(empty.text()).toContain("Elles arrivent par tes alertes.");
+    // « Ajouter une offre » seulement dans l'écran vide, et la conclusion en une phrase (1.6.18).
+    expect(wrapper.find("[data-test=manual-open]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=offers-none-add]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à examiner.");
     expect(empty.find("a").attributes("href")).toBe("/candidatures/alertes");
     expect(wrapper.find("[data-test=offers-empty]").exists()).toBe(false);
     // Des filtres : c'est « rien ne correspond », pas un compte neuf.
@@ -137,6 +141,17 @@ describe("OffersView", () => {
     expect(filtered.find("[data-test=offers-empty]").exists()).toBe(true);
     // L'action de l'écran vide : un bouton principal plein (règles §3.3, §4), plus un lien.
     expect(filtered.find("[data-test=offers-reset]").classes()).toContain("primary");
+  });
+
+  it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
+    const wrapper = await mountAt("/offres");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres à examiner.");
+    expect(wrapper.find("[data-test=offers-sentence] strong").text()).toBe("2 offres");
+    expect(wrapper.find("[data-test=manual-open]").exists()).toBe(true);
+    mockOffers(page([offer(3, "Trois")]));
+    const dropped = await mountAt("/offres?statut=filtered_out");
+    expect(dropped.find("[data-test=offers-sentence]").text()).toBe("1 offre écartée.");
   });
 
   it("transmet les filtres de l'adresse à l'API", async () => {

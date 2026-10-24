@@ -459,3 +459,31 @@ Retours sur l'écran de référence Aujourd'hui dans Figma (24 octobre).
   devise ; lint, types et test de l'audit propres.
 - Trois audits sans défaut grave, sur la démo et sur un compte neuf, l'accessibilité aussi en sombre. Les
   deux défauts mineurs de la démo (ordre des titres dans Bilan › Entretiens) précèdent cette version.
+
+## Écarts (1.6.18)
+
+Retours sur l'écran de référence Candidatures dans Figma (24 octobre).
+
+- **Offres, la conclusion en une phrase** (règles §3.2) : « 4 offres à examiner. », en haut de la page, le
+  compte en accent comme sur Aujourd'hui ; la fin suit le statut regardé (« 1 offre écartée. », « Aucune
+  offre à examiner. »). Elle remplace « 4 offres » au-dessus de la liste.
+- **Au plus une action principale** (règles §3) : aucune quand l'écran se parcourt, comme la liste des offres.
+- **Liste vide d'un compte neuf** : « Ajouter une offre » seulement dans l'écran vide, plus au-dessus de la liste.
+- **Blocs de chargement** sous le voile, pour la liste des offres (trois de 4,5 rem), comme Aujourd'hui.
+- **La pastille de la cloche en orange** (règles §4, annexe de l'audit) : fond `--orange`, chiffre `--text`
+  (6,98:1), `--on-accent` en sombre (7,11:1) ; plus de rouge. Les comptes des onglets restent en `--accent`.
+- **Une offre sélectionnée** : le voile passe de 7 à 5 % d'accent ; `--muted` y fait 4,58:1 en clair (4,46
+  avant, sous le seuil de 4,5:1). Le filet de 3 px marque toujours la sélection.
+- **Figma** : Cloche et Pastille orange à chiffre foncé, comptes des onglets en accent, Carte d'offre
+  sélectionnée à 5 %, l'écran Candidatures sans « Ajouter une offre » au-dessus d'une liste vide.
+
+## Vérifié (1.6.18)
+
+- Captures avant/après (horloge figée) : sur la démo, 192 captures changent, toutes à la seule pastille de la
+  cloche (en orange sur chaque page), sauf Offres et le détail d'une offre (la phrase de conclusion, la sélection).
+  Sur un compte neuf, seule Offres change (la phrase, « Ajouter une offre » dans l'écran vide seulement ; sur
+  téléphone, « Candidature spontanée » prend toute la largeur, vérifié à part).
+- 462 tests, dont la phrase selon le statut, « Ajouter une offre » seul dans l'écran vide, le contraste de la
+  pastille et de l'offre sélectionnée ; lint, types et test de l'audit propres.
+- Trois audits sans défaut grave, démo et compte neuf, l'accessibilité aussi en sombre (les deux défauts
+  mineurs de Bilan › Entretiens précèdent cette version).

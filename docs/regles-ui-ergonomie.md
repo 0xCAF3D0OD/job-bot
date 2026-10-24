@@ -51,12 +51,12 @@ Ordre fixe, de haut en bas :
 
 1. Titre de la page (**pas de sous-titre**). Exception : une étiquette au-dessus du titre, en style étiquette (majuscules, `--font-caption` 600, `--letter-label`, `--muted`), pour une précision courte comme la date d'Aujourd'hui. Ce n'est pas un sous-titre : quelques mots, jamais une phrase, toujours au-dessus du titre.
 2. Conclusion ou état principal en une phrase (ex. « 4 offres à examiner, 6 relances… », « Les offres de jobs.ch obtiennent plus souvent une réponse »).
-3. **Une seule action principale** (bouton plein).
+3. **Au plus une action principale** (bouton plein) ; aucune quand l'écran se parcourt, comme une liste d'offres à ouvrir.
 4. Contenu, l'essentiel d'abord ; le détail est replié et s'ouvre au clic.
 5. Pied de page : mentions légales, confidentialité, À propos.
 
 Règles :
-- Une seule action principale par écran. Les autres actions sont secondaires (bouton contour ou lien).
+- Au plus une action principale par écran. Les autres actions sont secondaires (bouton contour ou lien).
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
 - Les listes longues se replient au-delà de 3 éléments (« Tout voir »).
 
