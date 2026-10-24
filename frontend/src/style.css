@@ -58,6 +58,8 @@
   --radius-sm: 8px;
   --radius: 12px;
   --radius-pill: 999px;
+  /* La barre « Postuler » du téléphone : la place qu'elle réserve sous le contenu (1.6.12). */
+  --dock-h: 5.5rem;
   --weight-regular: 400;
   --weight-semibold: 600;
   --weight-bold: 700;
@@ -1133,7 +1135,7 @@ button.today-row { width: 100%; border: 0; border-radius: 0; background: none; f
 .application-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); }
 .application-panel-head p { margin: 0; }
 /* « ⋯ » centré sur la première ligne du texte, même quand il passe à la ligne (docs/74). */
-.application-panel-head .more-menu { margin-top: calc((1lh - 2.25rem) / 2); }
+.application-panel-head .more-menu { margin-top: calc((1lh - var(--control-h)) / 2); }
 .application-panel .card-status select { font-size: var(--font-small); padding: var(--space-1) var(--space-2); }
 .application-panel .follow-up-line, .application-panel .contact-due-line, .panel-line { margin: 0; font-size: var(--font-small); }
 .table-open { font-weight: var(--weight-semibold); text-align: left; }
@@ -1503,12 +1505,12 @@ html.side-open { overflow: hidden; }
   }
   /* Côte à côte quand elles tiennent, sinon chacune sur toute la largeur. */
   .mobile-dock > * { flex: 1 1 auto; justify-content: center; text-align: center; min-height: 2.9rem; margin: 0; }
-  :root:has(.mobile-dock) main { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+  :root:has(.mobile-dock) main { padding-bottom: calc(var(--dock-h) + env(safe-area-inset-bottom)); }
   :root:has(.mobile-dock) .assistant-fab { bottom: calc(5.2rem + env(safe-area-inset-bottom)); }
   /* Un menu « ⋯ » ne passe pas sous la barre du bas (docs/74 §5). */
   :root:has(.mobile-dock) .more-menu .menu { scroll-margin-bottom: calc(9rem + env(safe-area-inset-bottom)); }
   :root:has(.mobile-dock) .toast { bottom: calc(9rem + env(safe-area-inset-bottom)); }
-  .detail-panel:has(.mobile-dock) { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+  .detail-panel:has(.mobile-dock) { padding-bottom: calc(var(--dock-h) + env(safe-area-inset-bottom)); }
 
   .assistant-fab { width: 3rem; height: 3rem; padding: 0; justify-content: center; border-radius: 50%; }
   .assistant-fab-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -2943,7 +2945,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   :root:has(.tab-bar) main { padding-bottom: calc(var(--tabbar-h) + var(--space-6) + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) .assistant-fab { bottom: calc(var(--tabbar-h) + 0.9rem + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) main .mobile-dock { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: var(--space-3); }
-  :root:has(.tab-bar):has(main .mobile-dock) main { padding-bottom: calc(var(--tabbar-h) + 5.5rem + env(safe-area-inset-bottom)); }
+  :root:has(.tab-bar):has(main .mobile-dock) main { padding-bottom: calc(var(--tabbar-h) + var(--dock-h) + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar):has(main .mobile-dock) .assistant-fab { bottom: calc(var(--tabbar-h) + 5.2rem + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) .toast { bottom: calc(var(--tabbar-h) + 1rem + env(safe-area-inset-bottom)); }
 }
@@ -3790,7 +3792,7 @@ main:focus { outline: none; }
 @media (max-width: 820px) {
   :root:has(.tab-bar):has(.app-footer) main, :root:has(.mobile-dock):has(.app-footer) main { padding-bottom: var(--space-6); }
   :root:has(.tab-bar) .app-footer { padding-bottom: calc(var(--tabbar-h) + var(--space-8) + env(safe-area-inset-bottom)); }
-  :root:has(.mobile-dock) .app-footer { padding-bottom: calc(5.5rem + var(--space-8) + env(safe-area-inset-bottom)); }
+  :root:has(.mobile-dock) .app-footer { padding-bottom: calc(var(--dock-h) + var(--space-8) + env(safe-area-inset-bottom)); }
 }
 
 /* La note en trois choix (docs/131 §C.12) : des pastilles qui passent à la ligne dans la colonne. */

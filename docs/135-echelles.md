@@ -386,3 +386,14 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 - Le garde-fou passe sur le code (aucune valeur en dur hors des exceptions) et son second test prouve qu'il trouve une valeur en dur. Avant d'ajouter l'impression de la feuille ORP aux exceptions, il avait relevé six valeurs : cinq de l'impression (millimètres, points) et la carte de réussite.
 - Avant / après : aucune capture ne change (196 de la démo, 156 d'un compte neuf) ; la carte de réussite n'apparaît pas dans les captures et le code supprimé ne servait plus.
 - 458 tests de l'interface (dont les 2 du garde-fou ; la machine chargée, la suite tourne avec 2 processus), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.13)
+
+- **Un fichier de test qui ne démarre pas fait échouer la suite** : un rapporteur de vitest (`frontend/vitest.total.ts`) compare, sur la suite complète (`npm test`, `make test`), le nombre de fichiers lancés au nombre de fichiers `*.test.ts` de `src/`, et fait aussi échouer la suite sur toute erreur hors d'un test. Lancer un seul fichier (`npx vitest run src/x.test.ts`) n'est pas contrôlé, exprès. Deux processus par défaut (`maxWorkers: 2`) : sous charge, davantage ne démarraient pas tous. Vérifié : un fichier laissé de côté exprès fait échouer la suite (« 110 fichiers de tests lancés sur 111 attendus », code de sortie 1).
+- **Le garde-fou contrôle aussi l'intérieur des calculs** (`calc`, `max`, `min`, `clamp`) : une longueur y passe aussi par une variable, sauf ±1 px. Il a trouvé deux cas, corrigés :
+  - la place de la barre « Postuler » du téléphone (5,5 rem, quatre fois) devient `--dock-h`, une taille comme `--tabbar-h`, ajoutée à Figma ;
+  - le centrage du bouton « ⋯ » d'une candidature comptait encore 2,25 rem, sa taille d'avant : il compte `--control-h`, sa taille réelle ; le bouton remonte de 2 px, aligné sur la ligne du titre.
+
+## Vérifié (1.6.13)
+
+- 111 fichiers de tests sur 111, 458 tests ; le rapporteur fait échouer une suite incomplète ; lint, vue-tsc.
