@@ -375,3 +375,14 @@ Les retours du 23 octobre sur les trois premiers composants Figma (bouton, note 
 - Avant / après : toutes les pages changent (196 captures de la démo, 156 d'un compte neuf), comme attendu : les composants partagés sont partout. Le plus visible : les cartes du tableau de bord (Aujourd'hui, Bilan) passent au rayon commun de 12 px au lieu de 20 à 24 px, comme prévu au §3 ; « La plateforme » élargit un peu son texte d'introduction.
 - **Non vérifiable par les captures** : la connexion et l'inscription renvoient vers Aujourd'hui une fois connecté (démo et compte de test sans connexion) ; leurs valeurs sont arrondies comme les autres, à regarder déconnecté.
 - 456 tests de l'interface, lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.12)
+
+- **Le garde-fou** est un test de l'interface (`frontend/src/scales.test.ts`), lancé par `npm test` et `make test` : dans `style.css` et les styles des composants, un espacement, une taille de texte, un rayon, une graisse ou un interligne doit passer par une variable des échelles. Admis partout : les variables, 0, les bordures d'un pixel (±1 px), les unités relatives (`em`, `%`, `vw`, `vh`, `lh`), les calculs (`calc`, `max`, `min`, `clamp`, `env`) et les mots-clés. Admis par règle, chacun avec sa raison dans le test : la lettre, le CV et la feuille ORP (et son impression en millimètres), les illustrations (maquette de « La plateforme », confettis), les marges du bouton d'aide, les champs à 16 px (sous 16 px, l'iPhone zoome), la place réservée au bouton d'une carte, les marges de la carte de réussite autour de son dessin. Un second test vérifie que le garde-fou trouve bien une valeur en dur.
+- **Dernière valeur arrondie** : la marge intérieure de la carte de réussite (3,5 rem → `--space-12`, 48 px), oubliée par la table d'arrondi.
+- **Code mort supprimé** : les règles `.preview-*` (l'ancien aperçu du menu Progresser), qu'aucun gabarit n'utilise.
+
+## Vérifié (1.6.12)
+- Le garde-fou passe sur le code (aucune valeur en dur hors des exceptions) et son second test prouve qu'il trouve une valeur en dur. Avant d'ajouter l'impression de la feuille ORP aux exceptions, il avait relevé six valeurs : cinq de l'impression (millimètres, points) et la carte de réussite.
+- Avant / après : aucune capture ne change (196 de la démo, 156 d'un compte neuf) ; la carte de réussite n'apparaît pas dans les captures et le code supprimé ne servait plus.
+- 458 tests de l'interface (dont les 2 du garde-fou ; la machine chargée, la suite tourne avec 2 processus), lint, vue-tsc ; les 3 tests de l'audit ; les trois audits à zéro sur la démo et un compte neuf, l'accessibilité aussi en sombre.
