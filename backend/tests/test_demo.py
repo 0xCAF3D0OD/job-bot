@@ -24,7 +24,12 @@ from jobbot.settings import ConfigError, load_settings
 from .conftest import TEST_DATABASE_URL, make_settings
 
 TODAY = date(2026, 10, 18)
-DEMO_DATABASE_URL = str(make_url(TEST_DATABASE_URL).set(database="jobbot_demo_test"))
+# render_as_string(hide_password=False) : str() remplacerait le mot de passe par « *** ».
+DEMO_DATABASE_URL = (
+    make_url(TEST_DATABASE_URL)
+    .set(database="jobbot_demo_test")
+    .render_as_string(hide_password=False)
+)
 
 
 @pytest.fixture(scope="module")
