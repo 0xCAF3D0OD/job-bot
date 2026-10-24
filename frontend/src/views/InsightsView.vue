@@ -10,6 +10,7 @@ import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import InterviewInsights from "../components/InterviewInsights.vue";
 import FaceState from "../components/FaceState.vue";
 import RhythmWeeks from "../components/RhythmWeeks.vue";
@@ -144,19 +145,8 @@ onMounted(() => void load());
 // Les barres montent à la première ouverture (docs/60 §3).
 const intro = firstTime("bilan-funnel");
 
-// Le détail (docs/133 §2) : une vue à la fois, choisie et retenue sur l'appareil.
+// Le détail (règles §3.4) : les vues de la période, chacune dans une ligne repliable.
 type View = "funnel" | "chart" | "compare" | "weeks" | "interviews" | "orp";
-const VIEW_KEY = "jobA1.bilan-vue";
-function readView(): View {
-  try {
-    const saved = localStorage.getItem(VIEW_KEY);
-    if (saved && ["funnel", "chart", "compare", "weeks", "interviews", "orp"].includes(saved)) return saved as View;
-  } catch {
-    // Stockage indisponible : la première vue.
-  }
-  return "funnel";
-}
-const chosenView = ref<View>(readView());
 const views = computed(() => {
   const list: { key: View; label: string }[] = [{ key: "funnel", label: "Parcours" }];
   if (insights.value?.buckets.length) list.push({ key: "chart", label: insights.value.unit === "week" ? "Par semaine" : "Par mois" });
@@ -166,20 +156,19 @@ const views = computed(() => {
   if (period.value === "month" && insights.value?.orp_summary) list.push({ key: "orp", label: "Pour l'ORP" });
   return list;
 });
-// Une vue qui n'existe pas pour cette période revient au parcours.
-const view = computed<View>(() => (views.value.some((v) => v.key === chosenView.value) ? chosenView.value : "funnel"));
-function setView(key: View): void {
-  chosenView.value = key;
-  try {
-    localStorage.setItem(VIEW_KEY, key);
-  } catch {
-    // Stockage indisponible : le choix vaut pour la visite.
-  }
-}
 </script>
 
 <template>
   <section class="jobs-body insights">
+    <!-- La conclusion d'abord, avant la période (règles §3.2 ; annexe de l'audit : Bilan). -->
+    <p
+      v-if="insights && tiles && insights.funnel.applications > 0 && insights.headline"
+      class="bilan-headline"
+      data-test="headline"
+    >
+      <span class="dash-bubble small"><AppIcon name="trend" /></span>
+      <span>{{ insights.headline }}</span>
+    </p>
     <div class="insights-head">
       <div
         class="segmented insights-period"
@@ -267,14 +256,6 @@ function setView(key: View): void {
           </RouterLink>
         </div>
       </FaceState>
-      <p
-        v-if="insights.funnel.applications > 0 && insights.headline"
-        class="bilan-headline"
-        data-test="headline"
-      >
-        <span class="dash-bubble small"><AppIcon name="trend" /></span>
-        <span>{{ insights.headline }}</span>
-      </p>
       <!-- Les quatre tuiles en carrés, les mois précédents à côté (docs/133 §3) : le mois en
            cours est sur Aujourd'hui. -->
       <div
@@ -328,157 +309,142 @@ function setView(key: View): void {
           past
         />
       </div>
-      <!-- Le détail (docs/133 §2) : on choisit la vue, une seule carte s'affiche ; plus de cartes
-           dans une carte repliable. -->
+      <!-- Le détail replié (règles §3.4 ; annexe de l'audit : Bilan) : une ligne par vue, toutes
+           fermées ; le sélecteur faisait un troisième niveau d'onglets (§2). -->
       <section
         v-if="insights.funnel.applications > 0"
         class="bilan-detail"
         data-test="bilan-detail"
       >
-        <div class="bilan-detail-head">
-          <h2 class="section-title first">
-            Le détail
-          </h2>
-          <div
-            class="segmented small bilan-views"
-            role="radiogroup"
-            aria-label="Vue du détail"
-          >
-            <button
-              v-for="choice in views"
-              :key="choice.key"
-              type="button"
-              role="radio"
-              :aria-checked="view === choice.key"
-              :data-test="`view-${choice.key}`"
-              @click="setView(choice.key)"
-            >
-              {{ choice.label }}
-            </button>
-          </div>
-        </div>
-        <section
-          v-if="view === 'funnel'"
-          class="dash-card"
-          data-test="funnel"
+        <h2 class="section-title first">
+          Le détail
+        </h2>
+        <DisclosureRow
+          v-for="choice in views"
+          :key="choice.key"
+          :title="choice.label"
+          :data-test="`detail-${choice.key}`"
         >
-          <header class="dash-card-head">
-            <h2>Parcours</h2>
-          </header>
-          <ol
-            :class="['bilan-funnel', { intro }]"
-            aria-label="Parcours"
+          <section
+            v-if="choice.key === 'funnel'"
+            class="dash-card"
+            data-test="funnel"
           >
-            <li
-              v-for="step in STEPS"
-              :key="step.key"
-            >
-              <RouterLink
-                :to="step.to"
-                class="bilan-step"
-                :data-test="`funnel-${step.key}`"
-              >
-                <span class="bilan-step-label">{{ step.label }}</span>
-                <span class="bilan-track">
-                  <span
-                    class="bilan-bar"
-                    :style="{ width: funnelWidth(insights.funnel[step.key]) }"
-                  />
-                </span>
-                <strong>{{ insights.funnel[step.key] }}</strong>
-              </RouterLink>
-            </li>
-          </ol>
-        </section>
-        <PeriodChart
-          v-else-if="view === 'chart' && insights.buckets.length"
-          :buckets="insights.buckets"
-          :unit="insights.unit"
-        />
-        <section
-          v-else-if="view === 'compare'"
-          class="dash-card bilan-compare"
-          data-test="bilan-compare"
-        >
-          <div
-            v-for="comparison in insights.comparisons"
-            :key="comparison.key"
-            class="bilan-compare-part"
-            :data-test="`comparison-${comparison.key}`"
-          >
-            <header class="dash-card-head">
-              <h3>
-                <span class="dash-bubble small"><AppIcon :name="ICONS[comparison.key] ?? 'search'" /></span>
-                <HoverNote text="Un refus compte comme une réponse ; « Sans réponse », non.">
-                  {{ comparison.title }}
-                </HoverNote>
-              </h3>
-            </header>
-            <ul
-              v-if="comparison.groups.length"
-              class="bilan-groups"
+            <ol
+              :class="['bilan-funnel', { intro }]"
+              aria-label="Parcours"
             >
               <li
-                v-for="group in comparison.groups"
-                :key="group.key"
-                :class="{ few: !group.enough }"
-                :data-test="`group-${group.key}`"
+                v-for="step in STEPS"
+                :key="step.key"
               >
-                <span class="bilan-group-label">{{ group.label }}</span>
-                <span
-                  class="bilan-track"
-                  aria-hidden="true"
+                <RouterLink
+                  :to="step.to"
+                  class="bilan-step"
+                  :data-test="`funnel-${step.key}`"
                 >
-                  <span
-                    class="bilan-bar"
-                    :style="{ width: rate(group.responses, group.total) }"
-                  />
-                </span>
-                <span class="bilan-count">{{ group.responses }} sur {{ group.total }}</span>
-                <span
-                  v-if="!group.enough"
-                  class="bilan-few"
-                >trop peu pour conclure</span>
+                  <span class="bilan-step-label">{{ step.label }}</span>
+                  <span class="bilan-track">
+                    <span
+                      class="bilan-bar"
+                      :style="{ width: funnelWidth(insights.funnel[step.key]) }"
+                    />
+                  </span>
+                  <strong>{{ insights.funnel[step.key] }}</strong>
+                </RouterLink>
               </li>
-            </ul>
-            <p
-              v-else
-              class="hint"
+            </ol>
+          </section>
+          <PeriodChart
+            v-else-if="choice.key === 'chart' && insights.buckets.length"
+            :buckets="insights.buckets"
+            :unit="insights.unit"
+          />
+          <section
+            v-else-if="choice.key === 'compare'"
+            class="dash-card bilan-compare"
+            data-test="bilan-compare"
+          >
+            <div
+              v-for="comparison in insights.comparisons"
+              :key="comparison.key"
+              class="bilan-compare-part"
+              :data-test="`comparison-${comparison.key}`"
             >
-              Rien à comparer pour l'instant.
-            </p>
-          </div>
-        </section>
-        <RhythmWeeks
-          v-else-if="view === 'weeks' && period !== 'all'"
-          :month="month"
-        />
-        <InterviewInsights
-          v-else-if="view === 'interviews'"
-          class="dash-card"
-          bare
-        />
-        <section
-          v-else-if="view === 'orp' && period === 'month' && insights.orp_summary"
-          class="dash-card bilan-summary"
-          data-test="orp-summary"
-        >
-          <header class="dash-card-head">
-            <h2>
-              <span class="dash-bubble small"><AppIcon name="file" /></span>
-              Résumé pour l'ORP
-            </h2>
-            <button
-              type="button"
-              class="secondary small"
-              data-test="orp-summary-copy"
-              @click="copy"
-            >
-              <CopyLabel :done="copied" />
-            </button>
-          </header>
-          <p>{{ insights.orp_summary }}</p>
-        </section>
+              <header class="dash-card-head">
+                <h3>
+                  <span class="dash-bubble small"><AppIcon :name="ICONS[comparison.key] ?? 'search'" /></span>
+                  <HoverNote text="Un refus compte comme une réponse ; « Sans réponse », non.">
+                    {{ comparison.title }}
+                  </HoverNote>
+                </h3>
+              </header>
+              <ul
+                v-if="comparison.groups.length"
+                class="bilan-groups"
+              >
+                <li
+                  v-for="group in comparison.groups"
+                  :key="group.key"
+                  :class="{ few: !group.enough }"
+                  :data-test="`group-${group.key}`"
+                >
+                  <span class="bilan-group-label">{{ group.label }}</span>
+                  <span
+                    class="bilan-track"
+                    aria-hidden="true"
+                  >
+                    <span
+                      class="bilan-bar"
+                      :style="{ width: rate(group.responses, group.total) }"
+                    />
+                  </span>
+                  <span class="bilan-count">{{ group.responses }} sur {{ group.total }}</span>
+                  <span
+                    v-if="!group.enough"
+                    class="bilan-few"
+                  >trop peu pour conclure</span>
+                </li>
+              </ul>
+              <p
+                v-else
+                class="hint"
+              >
+                Rien à comparer pour l'instant.
+              </p>
+            </div>
+          </section>
+          <RhythmWeeks
+            v-else-if="choice.key === 'weeks' && period !== 'all'"
+            :month="month"
+          />
+          <InterviewInsights
+            v-else-if="choice.key === 'interviews'"
+            class="dash-card"
+            bare
+          />
+          <section
+            v-else-if="choice.key === 'orp' && period === 'month' && insights.orp_summary"
+            class="dash-card bilan-summary"
+            data-test="orp-summary"
+          >
+            <header class="dash-card-head">
+              <h2>
+                <span class="dash-bubble small"><AppIcon name="file" /></span>
+                Résumé pour l'ORP
+              </h2>
+              <button
+                type="button"
+                class="secondary small"
+                data-test="orp-summary-copy"
+                @click="copy"
+              >
+                <CopyLabel :done="copied" />
+              </button>
+            </header>
+            <p>{{ insights.orp_summary }}</p>
+          </section>
+        </DisclosureRow>
       </section>
     </div>
   </section>

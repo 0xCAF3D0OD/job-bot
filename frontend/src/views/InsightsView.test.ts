@@ -83,20 +83,23 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=tile-interviews]").text()).toContain("dont 1 à venir");
     expect(wrapper.find("[data-test=delay]").text()).toContain("9 j");
     expect(wrapper.find("[data-test=delay]").text()).toContain("de réponse, de 2 à 18 j");
-    // Le détail : une vue à la fois, choisie (docs/133 §2) ; le parcours d'abord.
-    expect(wrapper.find("[data-test=period-chart]").exists()).toBe(false);
-    await wrapper.find("[data-test=view-chart]").trigger("click");
-    expect(wrapper.find("[data-test=funnel]").exists()).toBe(false);
+    // Le détail replié (règles §3.4) : une ligne par vue, toutes fermées ; plus de sélecteur (§2).
+    expect(wrapper.find(".bilan-views").exists()).toBe(false);
+    const rows = wrapper.findAll("[data-test=bilan-detail] .disclosure-row");
+    expect(rows.map((r) => r.text())).toEqual(["Parcours", "Par mois", "Ce qui marche", "Semaines", "Entretiens"]);
+    expect(rows.every((r) => r.attributes("aria-expanded") === "false")).toBe(true);
+    await wrapper.find("[data-test=detail-chart] .disclosure-row").trigger("click");
+    expect(wrapper.find("[data-test=detail-chart] .disclosure-row").attributes("aria-expanded")).toBe("true");
     expect(wrapper.findAll("[data-test=period-bucket]")).toHaveLength(3);
     expect(wrapper.find("[data-test=period-bucket]").attributes("aria-label")).toBe(
       "août 2026 : 8 candidatures, 3 réponses",
     );
     expect(wrapper.find("[data-test=headline]").text()).toContain("jobup");
     // « Ce qui marche » : les comparaisons dans une seule carte, sans carte dedans.
-    await wrapper.find("[data-test=view-compare]").trigger("click");
+    await wrapper.find("[data-test=detail-compare] .disclosure-row").trigger("click");
     expect(wrapper.find("[data-test=bilan-compare]").findAll(".dash-card")).toHaveLength(0);
-    // Le choix est retenu sur l'appareil.
-    expect(localStorage.getItem("jobA1.bilan-vue")).toBe("compare");
+    // La conclusion d'abord, avant la période (règles §3.2).
+    expect(wrapper.find(".insights").element.firstElementChild?.getAttribute("data-test")).toBe("headline");
     const jobup = wrapper.find("[data-test=comparison-source] [data-test=group-jobup]");
     expect(jobup.text()).toContain("5 sur 9");
     expect(jobup.classes()).not.toContain("few");
@@ -105,7 +108,7 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(linkedin.text()).toContain("trop peu pour conclure");
     expect(wrapper.find("[data-test=comparison-score]").text()).toContain("Rien à comparer");
     // Pas de résumé ORP hors d'un mois choisi.
-    expect(wrapper.find("[data-test=view-orp]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=detail-orp]").exists()).toBe(false);
   });
 
   it("un mois : navigation et résumé pour l'ORP à copier", async () => {
@@ -121,10 +124,9 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "month", month: "2026-10" } } });
     expect(wrapper.find("[data-test=headline]").exists()).toBe(false);
     // Par semaine pour un mois choisi ; le résumé pour l'ORP est une vue.
-    await wrapper.find("[data-test=view-chart]").trigger("click");
-    expect(wrapper.find("[data-test=period-chart] h2").text()).toBe("Par semaine");
+    expect(wrapper.find("[data-test=detail-chart] .disclosure-row").text()).toBe("Par semaine");
     expect(wrapper.find("[data-test=period-bucket]").attributes("aria-label")).toContain("semaine du 1 oct");
-    await wrapper.find("[data-test=view-orp]").trigger("click");
+    await wrapper.find("[data-test=detail-orp] .disclosure-row").trigger("click");
     expect(wrapper.find("[data-test=orp-summary]").text()).toContain(summary);
     await wrapper.find("[data-test=orp-summary-copy]").trigger("click");
     expect(writeText).toHaveBeenCalledWith(summary);

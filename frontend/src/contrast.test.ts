@@ -131,3 +131,14 @@ describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () =>
     }
   });
 });
+
+describe("les tuiles de Bilan (1.6.19)", () => {
+  it("jamais de libellé coupé : le nom et la précision passent à la ligne", () => {
+    const rule = (name: string) => css.match(new RegExp(`\\.${name} \\{[^}]*\\}`))![0];
+    for (const name of ["dash-tile-label", "dash-trend"]) {
+      expect(rule(name)).not.toContain("ellipsis");
+      expect(rule(name)).not.toContain("nowrap");
+    }
+    expect(rule("dash-tile-head")).toContain("flex-wrap: wrap");
+  });
+});
