@@ -20,7 +20,12 @@ from jobbot.worker.tasks import backup as task
 
 from .conftest import TEST_DATABASE_URL, make_settings
 
-SCRATCH = str(make_url(TEST_DATABASE_URL).set(database="jobbot_backup_test"))
+# render_as_string(hide_password=False) : str() remplacerait le mot de passe par « *** ».
+SCRATCH = (
+    make_url(TEST_DATABASE_URL)
+    .set(database="jobbot_backup_test")
+    .render_as_string(hide_password=False)
+)
 PHRASE = "une phrase d'essai assez longue"
 
 
@@ -104,7 +109,7 @@ def test_refused_without_phrase_or_with_the_api_role(plateforme: Settings) -> No
     with pytest.raises(backup.BackupError, match="JOBBOT_BACKUP_PASSPHRASE"):
         backup.make_backup(plateforme.model_copy(update={"backup_passphrase": None}))
     # Avec le rôle de l'API, la base ne montrerait pas tous les comptes : refusé, pas incomplet.
-    restricted = str(make_url(SCRATCH).set(username="jobbot_app"))
+    restricted = make_url(SCRATCH).set(username="jobbot_app").render_as_string(hide_password=False)
     try:
         psycopg.connect(libpq(restricted), connect_timeout=3).close()
     except psycopg.OperationalError:

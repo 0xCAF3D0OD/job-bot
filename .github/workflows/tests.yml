@@ -24,8 +24,10 @@ jobs:
     services:
       postgres:
         image: postgres:17
+        # Sans mot de passe, comme une installation locale : les tests se connectent aussi avec
+        # le rôle de l'application (jobbot_app), qui n'en a pas.
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: jobbot_test
         ports:
           - 5432:5432
@@ -35,7 +37,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      JOBBOT_TEST_DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/jobbot_test
+      JOBBOT_TEST_DATABASE_URL: postgresql+psycopg://postgres@localhost:5432/jobbot_test
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6

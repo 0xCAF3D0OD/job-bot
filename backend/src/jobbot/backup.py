@@ -338,7 +338,13 @@ def restore_test(settings: Settings, path: Path) -> dict[str, int]:
         admin.execute(sql.SQL("create database {}").format(sql.Identifier(database)))
     try:
         _restore_into(settings, database, archive.dump)
-        url = str(make_url(settings.url_for("admin")).set(database=database))
+        # render_as_string(hide_password=False) : str() remplacerait le mot de passe par « *** »
+        # et la connexion échouerait sur une base protégée par mot de passe.
+        url = (
+            make_url(settings.url_for("admin"))
+            .set(database=database)
+            .render_as_string(hide_password=False)
+        )
         with psycopg.connect(libpq(url)) as conn:
             counts = _counts(conn)
     finally:
