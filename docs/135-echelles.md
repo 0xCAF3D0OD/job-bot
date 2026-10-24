@@ -432,3 +432,30 @@ Décisions du 24 octobre sur le second lot de composants Figma.
 - 459 tests (111 fichiers), dont le contraste du visage sur chaque fond de tuile en clair et en
   sombre ; lint, types et test de l'audit propres.
 - Trois audits à zéro sur la démo et sur un compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.17)
+
+Retours sur l'écran de référence Aujourd'hui dans Figma (24 octobre).
+
+- **La date au-dessus du titre reste**, en style étiquette (`--letter-label` au lieu de 0,06 em) : ce n'est pas
+  un sous-titre. L'exception est écrite à la §3 des règles et dans `docs/interface.md`.
+- **L'action d'un écran vide est un bouton principal plein** (règles §3.3 et §4) : Aujourd'hui (« Voir les offres
+  quand même », désormais dans l'écran vide, avant le mois ORP, comme dans Figma), Candidatures, Bilan,
+  rendez-vous ORP, Offres (« Créer mes alertes » ; « Effacer les filtres » quand rien ne correspond),
+  Actualités (« Gérer les sources »). Une seconde action reste en contour (« Ajouter une offre »).
+- **La devise « Less searching. More living. » quitte l'interface** (anglais, règles §5) : Aujourd'hui,
+  connexion et inscription (la phrase d'accroche reste, aussi sur téléphone), À propos, Découvrir (le titre
+  reprend la phrase guide des règles §1) et la description de l'application installée. Le README et le
+  paquet Python la gardent : ce n'est pas l'interface.
+- **Figma** : la date en style etiquette sur l'écran Aujourd'hui ; l'Écran vide prend le Bouton principal.
+
+## Vérifié (1.6.17)
+
+- Captures avant/après (horloge figée) : changent Aujourd'hui (l'étiquette, l'écran vide), À propos,
+  Découvrir, connexion et inscription (qui redirigent vers Aujourd'hui une fois connecté), et, sur un compte
+  neuf, les écrans vides de Bilan, Offres, Suivi et rendez-vous ORP (le bouton plein). Profil (1440, sombre)
+  différait d'une ligne de 3 px dans un champ : un artefact de capture.
+- 459 tests, dont l'action en bouton plein de l'écran vide d'Aujourd'hui et d'Offres, et l'absence de la
+  devise ; lint, types et test de l'audit propres.
+- Trois audits sans défaut grave, sur la démo et sur un compte neuf, l'accessibilité aussi en sombre. Les
+  deux défauts mineurs de la démo (ordre des titres dans Bilan › Entretiens) précèdent cette version.

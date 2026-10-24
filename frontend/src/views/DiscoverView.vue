@@ -148,9 +148,9 @@ onBeforeUnmount(() => {
         name="porte-ouverte"
         class="discover-hero-art"
       />
-      <h1>Less searching. More living.</h1>
+      <h1>jobA1 tient ton objectif ORP sans y passer tes journées</h1>
       <p class="discover-lead">
-        jobA1 t'aide à chercher un emploi en Suisse et à prouver tes recherches à l'ORP, sans y passer tes journées.
+        Il t'aide à chercher un emploi en Suisse et à prouver tes recherches à l'ORP.
       </p>
       <RouterLink
         v-if="!loggedIn"

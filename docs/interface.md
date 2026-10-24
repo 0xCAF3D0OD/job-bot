@@ -4,7 +4,7 @@ Ce qui vaut pour toute la plateforme, quelle que soit la page. Chaque règle ren
 
 ## Titres et textes (docs/88)
 
-1. Le titre d'une page reprend mot pour mot son entrée du menu, sans sous-titre ; une petite précision peut se mettre au-dessus, en capitales (la date d'Aujourd'hui). Les pages de présentation (connexion, Découvrir, accueil) gardent leurs phrases.
+1. Le titre d'une page reprend mot pour mot son entrée du menu, sans sous-titre ; une petite précision peut se mettre au-dessus, en style étiquette (la date d'Aujourd'hui ; règles §3). Les pages de présentation (connexion, Découvrir, accueil) gardent leurs phrases.
 2. Titres de cartes, d'onglets, de sections et légendes : un nom, sans « ton », « ta », « tes », « mon », « ma », « mes ».
 3. Boutons et liens d'action : un verbe à l'infinitif (« Demander un certificat intermédiaire »).
 4. Le tutoiement reste dans les phrases : messages, erreurs, états vides.

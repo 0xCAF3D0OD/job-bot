@@ -16,9 +16,6 @@ defineProps<{ title: string; subtitle?: string }>();
     >
       <AuthScene>
         <div class="auth-caption">
-          <p class="auth-tagline">
-            Less searching. More living.
-          </p>
           <p class="auth-pitch">
             Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
           </p>
