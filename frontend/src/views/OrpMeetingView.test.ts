@@ -203,3 +203,61 @@ describe("Rendez-vous ORP (docs/83)", () => {
     expect(wrapper.find("[data-test=sheet-text]").text()).toContain("Voici où j'en suis.");
   });
 });
+
+describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () => {
+  const months = [
+    { month: "2026-09", count: 10, target: 10, answered: 4, interviews: 1 },
+    { month: "2026-10", count: 6, target: 10, answered: 1, interviews: 1 },
+  ];
+
+  it("la conclusion : date et heure en accent, le lieu ; « Préparer » et le « ⋯ » à droite", async () => {
+    GET.mockResolvedValue({ data: { meeting: MEETING, preparation: { ...PREP, months }, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    const when = wrapper.find("[data-test=meeting-when]");
+    expect(when.text().replace(/\s+/g, " ")).toMatch(/^Prochain rendez-vous \S+ \d+ octobre à \d\d:\d\d, ORP de Lausanne\.$/);
+    expect(when.find("strong").text()).toMatch(/octobre à \d\d:\d\d$/);
+    expect(wrapper.find(".orp-conclusion [data-test=go-prepare]").text()).toBe("Préparer");
+    expect(wrapper.find(".orp-conclusion [data-test=meeting-more]").exists()).toBe(true);
+    // Plus de carte « Le prochain rendez-vous » : la phrase la remplace.
+    expect(wrapper.find("[data-test=meeting]").exists()).toBe(false);
+    // Le mois : une ligne repliable par partie, « Le mois en bref » ouvert, son résumé.
+    const rows = wrapper.findAll(".orp-month-rows > .disclosure");
+    expect(rows.map((r) => r.find(".disclosure-title").text())).toEqual(["Le mois en bref", "Ce qui bloque", "Compétences demandées qui manquent"]);
+    expect(rows.map((r) => r.find(".disclosure-row").attributes("aria-expanded"))).toEqual(["true", "false", "false"]);
+    expect(rows[0]!.find(".disclosure-value").text()).toBe("6 candidatures sur 10");
+    // La feuille : « Télécharger » en plein, « Rédiger avec l'IA » en contour.
+    expect(wrapper.find("[data-test=sheet-pdf]").classes()).toContain("primary-link");
+    expect(wrapper.find("[data-test=sheet-write]").classes()).toContain("secondary");
+  });
+
+  it("une obligation en retard rejoint la conclusion, en orange", async () => {
+    const obligations = [
+      { text: "Preuves de septembre : à remettre au plus tard le 5 octobre.", due: "2020-10-05", done: false },
+      { text: "Rendez-vous le 27 octobre à 09:30.", due: "2099-10-27", done: false },
+    ];
+    GET.mockResolvedValue({ data: { meeting: MEETING, preparation: { ...PREP, months, obligations }, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    const late = wrapper.find("[data-test=meeting-when] .orp-late");
+    expect(late.text()).toBe("En retard : preuves de septembre, à remettre au plus tard le 5 octobre.");
+    expect(wrapper.find("[data-test=sheet-obligations] .disclosure-value").text()).toBe("1 en retard, 1 échéance");
+  });
+
+  it("premier rendez-vous : « Enregistrer » en plein, « Voir les offres » en lien", async () => {
+    GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, has_applications: false }, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=meeting-save]").classes()).toContain("primary");
+    expect(wrapper.find("[data-test=see-offers]").classes()).toContain("link");
+    expect(wrapper.find("[data-test=meeting-when]").exists()).toBe(false);
+  });
+
+  it("sans candidature, une échéance passée n'est pas une alerte", async () => {
+    const obligations = [{ text: "Preuves de septembre : à remettre au plus tard le 5 octobre.", due: "2020-10-05", done: false }];
+    GET.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, obligations, has_applications: false }, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    expect(wrapper.find(".orp-late").exists()).toBe(false);
+  });
+});

@@ -1268,7 +1268,8 @@ button.filter-row[aria-expanded]:not(.filter-option)::after { content: ""; flex:
 .filter-check input { margin: 0; }
 .filter-switch { cursor: pointer; }
 /* Toutes les cases à cocher en interrupteurs (docs/132) : la même forme partout, cochée en bleu. */
-:root input[type="checkbox"] { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: 2.2rem; height: 1.3rem; padding: 0; border: 0; border-radius: var(--radius-pill); background: var(--border); position: relative; cursor: pointer; flex: none; margin: 0; vertical-align: middle; transition: background-color 0.15s; }
+/* La piste non cochée en --faint : 3,6:1 sur la carte (WCAG 1.4.11) ; --border faisait 1,2:1 (1.6.23). */
+:root input[type="checkbox"] { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: 2.2rem; height: 1.3rem; padding: 0; border: 0; border-radius: var(--radius-pill); background: var(--faint); position: relative; cursor: pointer; flex: none; margin: 0; vertical-align: middle; transition: background-color 0.15s; }
 input[type="checkbox"]:disabled { opacity: 0.5; cursor: not-allowed; }
 input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 input[type="checkbox"]::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1rem; height: 1rem; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 2px rgb(0 0 0 / 20%); }
@@ -2836,19 +2837,23 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 /* Le Rendez-vous en parties (docs/130 §B) : « Préparer » (ce qu'on modifie), « Le mois » (ce
    qu'on consulte, une carte grise en quatre parties), le carnet replié. */
 .orp-meeting h2.orp-section { margin: var(--space-4) 0 0; font-size: var(--font-section); }
-.orp-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-8); padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); line-height: var(--leading-normal); }
+/* La conclusion (1.6.23) : la phrase, puis « Préparer » et le « ⋯ » à droite ; dessous sur téléphone. */
+.orp-conclusion { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3) var(--space-6); margin-bottom: var(--space-2); }
+.orp-conclusion .offers-sentence { margin: 0; }
+.orp-conclusion-actions { display: flex; align-items: center; gap: var(--space-3); flex: none; min-height: var(--control-h); }
+.orp-late { color: var(--orange-text); }
+/* Le mois : une ligne repliable par partie (1.6.23). */
+.orp-month-rows { display: grid; gap: var(--space-3); }
+.orp-month-rows > .disclosure + .disclosure { margin-top: 0; }
+.orp-month-rows .disclosure-body ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
+.orp-month-rows .disclosure-body ul.orp-month-lines { padding-left: 0; list-style: none; }
+.orp-month-rows .disclosure-body p { margin: 0; }
 .orp-meeting-sheet > .orp-sheet-wide, .orp-meeting-sheet > :only-child { grid-column: 1 / -1; }
-.orp-sheet-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; align-items: start; }
-.orp-sheet-columns > div { display: grid; gap: 0.75rem; align-content: start; }
-/* Le PDF et le message côte à côte : leurs boutons à la même hauteur (docs/94). */
-.orp-sheet-columns .form-actions > :is(a, button) { box-sizing: border-box; height: var(--control-h); min-height: var(--control-h); padding-block: 0; }
-.orp-fact h3 { margin: 0 0 var(--space-2); font-size: var(--font-body); font-weight: var(--weight-semibold); }
-.orp-fact p { margin: 0 0 var(--space-2); }
-.orp-fact ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
-.orp-fact ul.orp-month-lines { padding-left: 0; list-style: none; }
+/* La feuille sur une colonne (1.6.23) : le nom, les deux actions à la même hauteur (docs/94), le message. */
+.orp-sheet-name { max-width: 28rem; margin-bottom: var(--space-4); }
+.orp-sheet-actions > :is(a, button) { box-sizing: border-box; height: var(--control-h); min-height: var(--control-h); padding-block: 0; }
 .orp-month-lines strong { font-weight: var(--weight-semibold); }
-.orp-sheet-message { display: grid; gap: 0.5rem; align-content: start; }
-.orp-sheet-message h3 { margin: 0; font-size: 1rem; font-weight: 500; }
+.orp-sheet-message { display: grid; gap: 0.5rem; align-content: start; margin-top: var(--space-3); }
 .orp-log-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
 .orp-log-head h3 { margin: 0; }
 .orp-meeting .inline-field input { flex: 1; min-width: 0; }
@@ -2876,7 +2881,10 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .orp-log h3 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); }
 .orp-log h3::first-letter { text-transform: uppercase; }
 @media (max-width: 820px) {
-  .orp-meeting-form, .orp-meeting-sheet, .orp-outcome, .orp-facts, .orp-sheet-columns { grid-template-columns: minmax(0, 1fr); }
+  .orp-meeting-form, .orp-meeting-sheet, .orp-outcome { grid-template-columns: minmax(0, 1fr); }
+  .orp-conclusion { flex-direction: column; }
+  .orp-sheet-name { max-width: none; }
+  .orp-sheet-actions > :is(a, button) { width: 100%; }
   .orp-agreed { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
   .orp-agreed dd + dt { margin-top: var(--space-2); }
 }
