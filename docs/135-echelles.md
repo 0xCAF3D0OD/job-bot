@@ -825,3 +825,49 @@ Revue de l'interface sur ordinateur (25 octobre). Réglages n'avait pas d'écran
 - 466 tests (un de plus : l'emplacement du réglage), lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et
   compte neuf, l'accessibilité aussi en sombre.
 
+
+## Écarts (1.6.29)
+
+Revue de la largeur sur ordinateur (25 octobre). Ordre suivi : les règles (`docs/regles-ui-ergonomie.md` §3, « Largeurs,
+sur ordinateur »), puis Figma (validé le 25/10), puis le code. Le téléphone ne change pas : tout ce qui touche la mise
+en page est sous `@media (min-width: 821px)`, au-dessus du point de rupture déjà utilisé (820 px).
+
+Références : GOV.UK Layout (page de 1 020 px, colonne des deux tiers, 75 caractères par ligne) ; GOV.UK Text input
+(champs à la taille du contenu prévu, en caractères) ; NHS Design System (boutons pleine largeur seulement sur
+téléphone) ; WCAG 2.2, 1.4.8 (AAA visé : 80 caractères au plus) ; Laws of UX, lois de proximité et de Fitts.
+
+1. **Les variables** (`style.css`, `:root`) : `--page-max` 1 020 px, `--page-wide` 80 rem (1 280 px, remplace
+   `--page-width`), `--column-two-thirds` 680 px, `--measure` 31 em, `--field-20` 13 rem, `--field-30` 18 rem,
+   `--field-5` 5,5 rem, `--header-max` 84 rem (le bandeau du haut, inchangé). Les mêmes dans Figma (collection Tailles).
+2. **La page à 1 020 px** (GOV.UK Layout) : `.container`, l'en-tête et le corps de Candidatures, les Réglages.
+   **Exception, Candidatures › Offres à 1 280 px** : trois colonnes (filtres, liste, détail) ; à 1 020 px, la liste
+   et le détail n'auraient que 338 px chacun. L'en-tête de Candidatures suit l'onglet (`.jobs-head.wide`).
+3. **75 caractères par ligne** (GOV.UK, WCAG 1.4.8) : `p`, `dd` et trois listes de phrases (questions au conseiller,
+   étapes de l'agenda, sites proposés) ont `max-width: var(--measure)` ; les phrases de conclusion aussi (elles
+   avaient 40 rem). La mesure vaut 31 em : avec 75 ch ou 37,5 em, des lignes de petit texte gardaient 76 à 89
+   caractères (un « ch » est plus large que la lettre moyenne). Figma suit (496 px au lieu de 600). Un encadré garde
+   sa largeur : le bandeau du Bilan (seule sa phrase suit la mesure), les avis, le pied d'une carte des Réglages (sa
+   marge de droite limite le texte, son filet reste entier).
+4. **Les boutons à la largeur de leur texte** (NHS, Fitts) : « Écarter » et « Garder » de l'offre du jour ; « J'attends
+   un code » dans les e-mails des sites. Toute la largeur reste sur téléphone.
+5. **Les champs à la taille du contenu** (GOV.UK Text input) : Rendez-vous, le nom sur la feuille à 20 caractères ; le
+   premier rendez-vous, date et heure à leur taille naturelle, lieu à 30, conseiller à 20 ; les nombres (objectif, jour
+   du mois, note sur 100) à 5. La question au conseiller reste fluide (une phrase libre).
+6. **Le statut et l'action près du nom** (loi de proximité) : à relancer et à déclarer (Suivi), les alertes (Alertes)
+   dans la colonne des deux tiers ; Bilan › Semaines, la plage, le compte et l'état groupés à gauche et alignés d'une
+   ligne à l'autre (sous-grille) ; Aujourd'hui › Mois ORP, les 7 jours groupés sous « Cette semaine ».
+
+- **Relevé en passant, corrigé** : la page plus étroite fait passer les étiquettes d'une formation sur deux lignes ; le
+  marque-page se centrait alors 6 px plus bas que ses voisins (audit d'alignement). Il reste en haut de la tuile.
+- **Outil** : `captures.py` prend aussi d'autres largeurs (`CAPTURES_WIDTHS=1440,1920,390`).
+
+## Vérifié (1.6.29)
+
+- Captures avant/après (horloge figée) en **1440, 1920 et 390 px, clair et sombre** : 496 captures, démo et compte neuf.
+  Changent : 156 captures de la démo, 112 du compte neuf, toutes en 1440 et 1920. **En 390 px, aucune capture ne
+  change** (192 sur 192 identiques).
+- **75 caractères** : chaque ligne de chaque paragraphe comptée sur toutes les pages, en 1440 et 1920, démo et compte
+  neuf : avant, 12 paragraphes allaient jusqu'à 121 caractères ; après, aucun ne dépasse 75.
+- Figma et code côte à côte en 1440 px, avant/après en 1920 px clair et en 1440 px sombre : `docs/captures/1.6.29/`.
+- 468 tests (deux de plus : le garde-fou des largeurs, l'en-tête de Candidatures), lint, types ; 5 tests de l'audit ;
+  trois audits sans défaut, démo et compte neuf, l'accessibilité aussi en sombre.

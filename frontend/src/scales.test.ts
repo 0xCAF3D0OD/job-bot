@@ -99,4 +99,22 @@ describe("Le garde-fou des échelles (docs/135, 1.6.12)", () => {
     expect(hardInside("calc(var(--dock-h) + env(safe-area-inset-bottom))")).toEqual([]);
     expect(hardInside("calc(var(--space-2) * -1)")).toEqual([]);
   });
+
+  // 1.6.29 (regles-ui-ergonomie §3) : la largeur d'une page passe par une variable, 1 020 px
+  // partout, 1 280 px pour Candidatures › Offres seulement.
+  it("les conteneurs de page prennent --page-max, seule la page Offres --page-wide", () => {
+    const css = rules(join(SRC, "style.css"));
+    const width = (selector: string) =>
+      css.filter(([sel]) => sel === selector).map(([, body]) => body.match(/max-width:\s*([^;]+)/)?.[1]?.trim());
+    for (const selector of [".container", ".jobs-head", ".jobs-body", ".settings-layout"]) {
+      expect(width(selector), selector).toContain("var(--page-max)");
+    }
+    expect(width(".offers-page")).toContain("var(--page-wide)");
+    expect(width(".jobs-head.wide")).toContain("var(--page-wide)");
+    expect(css.some(([sel, body]) => sel === ":root" && /--page-max:\s*1020px/.test(body))).toBe(true);
+    // Plus d'ancienne variable ni de largeur de page en dur.
+    const all = styleFiles(SRC).map((file) => readFileSync(file, "utf8")).join("\n");
+    expect(all).not.toMatch(/--page-width/);
+    expect(all).not.toMatch(/max-width:\s*(80|84)rem/);
+  });
 });

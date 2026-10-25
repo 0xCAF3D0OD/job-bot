@@ -118,8 +118,29 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 .muted { color: var(--muted); margin: 0; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
 
-:root { --page-width: 80rem; }
-.container { max-width: var(--page-width); margin: 0 auto; padding: 0 var(--space-6); }
+/* Largeurs (1.6.29, regles-ui-ergonomie §3). La page : 1 020 px (GOV.UK Layout), sauf
+   Candidatures › Offres et ses trois colonnes, à 1 280 px. La colonne des deux tiers pour une liste
+   courte (loi de proximité). La mesure : 31 em, soit 496 px à 16 px ; mesuré sur toutes les pages,
+   aucune ligne n'y dépasse 75 caractères, quelle que soit la taille du texte (GOV.UK : 75 au plus ;
+   WCAG 2.2, 1.4.8 : 80). Un « ch » ne suffit pas : il est plus large que la lettre moyenne.
+   Les champs à la taille du contenu prévu (GOV.UK Text input) : un nom 20 caractères, un lieu
+   30, un nombre court 5. Le bandeau du haut garde sa propre largeur, plus grande. */
+:root {
+  --page-max: 1020px;
+  --page-wide: 80rem;
+  --column-two-thirds: 680px;
+  --measure: 31em;
+  --field-20: 13rem;
+  --field-30: 18rem;
+  --field-5: 5.5rem;
+  --header-max: 84rem;
+}
+p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li { max-width: var(--measure); }
+/* Un avis ou un pied de carte encadré garde la largeur de ses voisins ; le texte du pied de carte suit la mesure
+   par sa marge de droite (son filet reste sur toute la largeur). */
+p.notice, p.settings-next-card { max-width: none; }
+p.settings-next-card { padding-right: max(0%, calc(100% - var(--measure))); }
+.container { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); }
 
 /* --- Barre du haut : logo à gauche, liens centrés, bouton violet à droite --- */
 
@@ -127,7 +148,7 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
    (25) : la cloche et le menu du compte s'ouvrent par-dessus ; sous les fenêtres (30). */
 .topbar { position: sticky; top: 0; z-index: 26; background: var(--bg); border-bottom: 1px solid var(--border); }
 .topbar-inner {
-  max-width: 84rem;
+  max-width: var(--header-max);
   margin: 0 auto;
   padding: var(--space-4) var(--space-6);
   display: grid;
@@ -474,7 +495,7 @@ p.badge.reason { margin: 0; }
 
 /* --- Page Offres : filtres toujours visibles (0.4.0-a) --- */
 
-.offers-page { max-width: var(--page-width); margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-12); }
+.offers-page { max-width: var(--page-wide); margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-12); }
 .offers-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); margin-bottom: var(--space-6); }
 .offers-heading h1 { font-size: var(--font-page); margin-top: var(--space-2); }
 .filters-toggle { display: none; }
@@ -955,13 +976,15 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .account-profile select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 
 /* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
-.jobs-head { max-width: var(--page-width); margin: 0 auto; padding: var(--space-8) var(--space-6) 0; }
+.jobs-head { max-width: var(--page-max); margin: 0 auto; padding: var(--space-8) var(--space-6) 0; }
+/* L'en-tête de Candidatures suit la largeur de l'onglet : Offres à 1 280 px (1.6.29). */
+.jobs-head.wide { max-width: var(--page-wide); }
 .jobs-head h1 { font-size: var(--font-page); margin: 0 0 var(--space-4); }
 .jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
 .jobs-tabs a { white-space: nowrap; }
 .jobs-band > .offers-page { padding-top: var(--space-6); }
 .jobs-band > .offers-page .offers-heading { margin-bottom: 0; }
-.jobs-body { max-width: var(--page-width); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12); }
+.jobs-body { max-width: var(--page-max); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12); }
 @media (max-width: 720px) {
   .jobs-head { padding: var(--space-5) var(--space-4) 0; }
   .jobs-head h1 { font-size: var(--font-figure); }
@@ -970,7 +993,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 }
 
 /* Réglages regroupés (docs/19 §4) : sommaire à gauche, sections à droite */
-.settings-layout { max-width: var(--page-width); margin: 0 auto; padding: 0 var(--space-6); display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: var(--space-8); align-items: start; }
+.settings-layout { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: var(--space-8); align-items: start; }
 .settings-toc { position: sticky; top: 6rem; display: grid; gap: var(--space-1); padding-top: var(--space-2); }
 .settings-toc a { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); color: var(--muted); text-decoration: none; font-size: var(--font-small); }
 .settings-toc a:hover { background: var(--surface); color: var(--text); }
@@ -2165,6 +2188,9 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 .period-bars li.active .bar-fill.answered, .period-bars li:focus-visible .bar-fill.answered { background: linear-gradient(to bottom, color-mix(in srgb, var(--mint) 65%, transparent), color-mix(in srgb, var(--mint) 14%, transparent)); }
 .bilan-headline { display: flex; align-items: center; gap: var(--space-4); margin: 0; padding: var(--space-4) var(--space-5); border-radius: var(--radius); background: color-mix(in srgb, var(--mint) 24%, var(--surface)); border: 1px solid color-mix(in srgb, var(--mint) 45%, var(--border)); font-weight: var(--weight-semibold); }
 .bilan-headline .dash-bubble { background: var(--surface); }
+/* Le bandeau garde toute la largeur ; seule sa phrase suit la mesure (1.6.29). */
+.bilan-headline { max-width: none; }
+.bilan-headline > span:last-child { max-width: var(--measure); }
 /* La conclusion en haut de Bilan, puis la période (1.6.19). */
 .insights > .bilan-headline { margin-bottom: var(--space-6); }
 .bilan-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-8); }
@@ -2449,7 +2475,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .platform-accounts p { margin: 0; }
 .platform-usage { font-size: var(--font-small); }
 .platform-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); margin-top: var(--space-1); }
-.platform-actions .inline-field input { width: 5.5rem; }
+.platform-actions .inline-field input { width: var(--field-5); }
 /* Demandes de compte (docs/102) : le mot laissé, « Refuser » en rouge, l'interrupteur sous les comptes. */
 .platform-request-note { line-height: var(--leading-normal); white-space: pre-line; overflow-wrap: anywhere; }
 button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: var(--down-text); }
@@ -3002,6 +3028,9 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .tile-facts .icon { flex: none; width: 1rem; height: 1rem; margin-top: var(--space-1); }
 .tile-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 2.4rem; }
 .tile-foot { position: relative; z-index: 1; display: flex; flex: none; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+/* Sur ordinateur, le marque-page reste en haut quand les étiquettes passent sur deux lignes : aligné avec ceux des
+   tuiles voisines (1.6.29). Sur téléphone, une tuile par rangée : rien à aligner. */
+@media (min-width: 821px) { .tile-head > .tile-foot { align-self: flex-start; } }
 .tile-heart { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; padding: 0; border-radius: 50%; border: 0; background: var(--band); color: var(--muted); }
 .tile-heart:hover { color: var(--accent); }
 .tile-heart.on { background: var(--accent-soft); color: var(--accent); }
@@ -3038,7 +3067,7 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
    les bandeaux datés, puis deux cartes neutres — À faire et Mois ORP. Aéré (docs/93) : 2 rem
    entre les étages, 1,5 rem dans les cartes ; la couleur pour ce qui demande une action. */
 .today-lead { display: grid; justify-items: start; gap: var(--space-5); margin: var(--space-2) 0 0; }
-.today-sentence, .offers-sentence { margin: 0; max-width: 40rem; font-size: var(--font-figure); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: -0.01em; color: var(--text); }
+.today-sentence, .offers-sentence { margin: 0; max-width: var(--measure); font-size: var(--font-figure); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: -0.01em; color: var(--text); }
 .today-sentence strong, .offers-sentence strong { font-weight: var(--weight-semibold); color: var(--accent); }
 .offers-sentence { margin-bottom: var(--space-6); }
 .today-cta { border-radius: var(--radius-pill); padding-inline: var(--space-5); }
@@ -3833,3 +3862,23 @@ main:focus { outline: none; }
 .score-choice { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .score-choice .pill { min-height: 2.25rem; padding: 0 var(--space-4); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .score-choice .pill[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+/* Sur ordinateur (1.6.29, regles-ui-ergonomie §3) ; le téléphone ne change pas.
+   - Une liste courte dans la colonne des deux tiers : le statut et l'action restent près du nom
+     (loi de proximité).
+   - Les boutons à la largeur de leur texte (NHS Design System, loi de Fitts).
+   - Les 7 jours de la semaine groupés, plus étalés sur toute la carte.
+   - Les semaines du Bilan : plage, compte et état groupés à gauche, alignés d'une ligne à l'autre.
+   - Les champs à la taille du contenu prévu (GOV.UK Text input). */
+@media (min-width: 821px) {
+  .suivi-todo, .alerts-summary { max-width: var(--column-two-thirds); }
+  .pick-actions { display: flex; flex-wrap: wrap; }
+  .pick-actions button { width: auto; }
+  .rhythm-days { grid-template-columns: repeat(7, max-content); justify-content: start; column-gap: var(--space-3); }
+  .alerts-aside .site-mail-row { align-items: flex-start; }
+  .rhythm-weeks ol { grid-template-columns: repeat(3, max-content); column-gap: var(--space-8); }
+  .rhythm-weeks li { grid-column: 1 / -1; grid-template-columns: subgrid; }
+  .orp-meeting-form { grid-template-columns: max-content var(--field-30) var(--field-20); justify-content: start; }
+  .orp-sheet-name input { width: var(--field-20); }
+  input[type="number"] { width: var(--field-5); }
+}

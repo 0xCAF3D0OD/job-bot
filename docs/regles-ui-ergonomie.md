@@ -66,7 +66,10 @@ Largeurs, sur ordinateur (1.6.29) :
   (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px, la largeur d'un téléphone ; à
   1 280 px, ils ont environ 460 px, assez pour une ligne de détail lisible (une soixantaine de caractères).
 - **Le texte courant et les phrases de conclusion** : **75 caractères** par ligne au plus (`--measure`, GOV.UK Layout ;
-  WCAG 2.2, 1.4.8, niveau AAA visé : 80 au plus).
+  WCAG 2.2, 1.4.8, niveau AAA visé : 80 au plus). `--measure` vaut 31 em (496 px à 16 px) : mesuré sur toutes les
+  pages, aucune ligne n'y dépasse 75 caractères ; un `ch` ne suffit pas, il est plus large que la lettre moyenne.
+- **Une liste courte** (à relancer, à déclarer, les alertes) tient dans la **colonne des deux tiers** (680 px,
+  `--column-two-thirds`), pour que l'action reste près du nom.
 - **Les boutons** : la largeur de leur texte sur ordinateur ; toute la largeur seulement sous le point de rupture du
   téléphone (820 px) (NHS Design System ; loi de Fitts : sur téléphone, une cible pleine largeur ; sur ordinateur, une
   cible proche de ce qu'elle concerne).
