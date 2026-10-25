@@ -4,7 +4,7 @@ import ScoreRing from "./ScoreRing.vue";
 
 // Un bout de la plateforme, en arrière-plan d'une scène de la présentation (docs/67, complément) :
 // dessiné ici, aux couleurs du thème, avec des exemples inventés ; jamais une capture.
-export type MockKind = "alerts" | "offers" | "apply" | "follow" | "orp" | "news";
+export type MockKind = "alerts" | "offers" | "apply" | "follow" | "orp" | "trainings";
 
 defineProps<{ kind: MockKind }>();
 
@@ -14,7 +14,7 @@ const TITLES: Record<MockKind, string> = {
   apply: "Préparer ma candidature",
   follow: "Candidatures › Suivi",
   orp: "Preuves ORP · octobre",
-  news: "Actualités",
+  trainings: "Bilan › Formations",
 };
 </script>
 
@@ -116,7 +116,7 @@ const TITLES: Record<MockKind, string> = {
       class="dmock-body"
     >
       <div
-        v-for="item in [['Formation', 'Soins palliatifs : nouvelle session'], ['Marché', 'Le canton recrute dans les soins']]"
+        v-for="item in [['Formation', 'Soins palliatifs : nouvelle session'], ['Certificat', 'Gestion de projet, en ligne']]"
         :key="item[1]"
         class="dmock-row"
       >

@@ -15,7 +15,7 @@ describe("routes réservées (docs/18 §1)", () => {
     const { router } = await import("./router");
     await router.push("/la-plateforme");
     expect(router.currentRoute.value.name).toBe("discover");
-    // Les Actualités demandent la connexion depuis la 0.55.0 (docs/67).
+    // Les Actualités sont retirées (1.6.25) : leur ancienne adresse mène au Bilan, qui demande la connexion.
     await router.push("/actualites");
     expect(router.currentRoute.value.name).toBe("login");
     // Ancienne adresse : redirigée vers l'onglet, puis vers la connexion.
@@ -35,12 +35,15 @@ describe("routes réservées (docs/18 §1)", () => {
     // avec leurs paramètres.
     await router.push("/formations?onglet=miennes");
     expect(router.currentRoute.value.fullPath).toBe("/bilan/formations?onglet=miennes");
+    // Les Actualités sont retirées (1.6.25) : leurs anciennes adresses mènent au Bilan.
     await router.push("/actualites?rubrique=videos");
-    expect(router.currentRoute.value.fullPath).toBe("/bilan/actualites?rubrique=videos");
+    expect(router.currentRoute.value.path).toBe("/bilan");
+    await router.push("/bilan/actualites");
+    expect(router.currentRoute.value.path).toBe("/bilan");
     await router.push("/progresser/formations?onglet=miennes");
     expect(router.currentRoute.value.fullPath).toBe("/bilan/formations?onglet=miennes");
     await router.push("/progresser");
-    expect(router.currentRoute.value.path).toBe("/bilan/actualites");
+    expect(router.currentRoute.value.path).toBe("/bilan");
     await router.push("/candidatures/bilan?mois=2026-10");
     expect(router.currentRoute.value.fullPath).toBe("/bilan?mois=2026-10");
     expect(router.currentRoute.value.name).toBe("insights");

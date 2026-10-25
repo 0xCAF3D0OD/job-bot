@@ -104,11 +104,11 @@ describe("SettingsView, date limite ORP", () => {
 });
 
 describe("SettingsView, une rubrique à la fois (docs/48)", () => {
-  it("sept rubriques, une seule affichée ; un ancien lien #agenda mène à Outils", async () => {
+  it("six rubriques, une seule affichée ; un ancien lien #agenda mène à Outils", async () => {
     mockGet(false);
     const { wrapper, router } = await mountSettings();
     const toc = wrapper.findAll(".settings-toc a").map((a) => a.text());
-    expect(toc).toEqual(["Recherche d'emploi", "Rythme", "Actualités", "Notifications", "IA", "Compte", "Outils"]);
+    expect(toc).toEqual(["Recherche d'emploi", "Rythme", "Notifications", "IA", "Compte", "Outils"]);
     expect(wrapper.find("[data-test=settings-form]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
     // Le seuil de notification est dans sa rubrique, dit en clair.

@@ -18,7 +18,6 @@ import PageTransition from "./components/PageTransition.vue";
 import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
-import { useNewsCount } from "./composables/useNewsCount";
 import { useCollect } from "./composables/useCollect";
 import { useFileDownloads } from "./composables/useFileDownloads";
 import { useMaintenance } from "./composables/useMaintenance";
@@ -37,7 +36,6 @@ const {
   retry: maintenanceRetry,
 } = useMaintenance();
 
-const { start: startNewsCount } = useNewsCount();
 const { current: profile, main: mainProfile, choose } = useProfiles();
 const route = useRoute();
 // Fichiers préparés : le retour sur le lien lui-même (docs/59 §4).
@@ -79,9 +77,6 @@ onMounted(async () => {
   window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   window.addEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
   await load();
-  // Le compteur des Actualités, une fois connecté seulement : sans connexion, elles ne
-  // répondent plus (docs/69 §1).
-  watch(loggedIn, (yes) => yes && startNewsCount(), { immediate: true });
 });
 onUnmounted(() => {
   window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
@@ -142,8 +137,8 @@ onUnmounted(() => {
         class="topbar-actions"
       >
         <!-- La capsule (docs/89, docs/91, docs/92) : la cloche et ton initiale ; elle se déroule pour
-             montrer ce qu'on ouvre. Le livre de Progresser l'a quittée : Formations et Actualités
-             sont dans le Bilan (docs/126 §1). -->
+             montrer ce qu'on ouvre. Le livre de Progresser l'a quittée : Formations est dans le
+             Bilan (docs/126 §1). -->
         <HeaderCapsule>
           <NotificationBell />
           <span
@@ -174,7 +169,7 @@ onUnmounted(() => {
     data-test="profile-banner"
   >
     <strong>Profil d'essai : {{ profile.name }}</strong>
-    <span>Seules les Actualités et les Formations suivent ce profil ; les autres pages restent les tiennes.</span>
+    <span>Seules les Formations suivent ce profil ; les autres pages restent les tiennes.</span>
     <button
       v-if="mainProfile"
       type="button"
