@@ -77,7 +77,8 @@ const conclusion = computed<Part[]>(() => {
     const at = new Date(m.starts_at);
     parts.push(
       { text: started.value ? "Rendez-vous du " : "Prochain rendez-vous " },
-      { text: `${dateFormat.format(at)} à ${timeFormat.format(at)}`, strong: true },
+      // « à » et l'heure ne se séparent pas (espace insécable, 1.6.30).
+      { text: `${dateFormat.format(at)} à\u00a0${timeFormat.format(at)}`, strong: true },
       { text: `${m.place ? `, ${m.place}` : ""}.` },
     );
   }
@@ -219,7 +220,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <section class="jobs-body orp-meeting">
+  <section class="jobs-body orp-meeting two-thirds">
     <p
       v-if="failed"
       class="notice error"

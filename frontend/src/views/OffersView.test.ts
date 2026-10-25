@@ -550,7 +550,13 @@ describe("tri « Dernière action »", () => {
 
 describe("Offres, revue des pages (docs/43)", () => {
   it("une ligne par jour, les offres sans leur date ; « Candidature spontanée » sur la ligne du nombre", async () => {
-    const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+    // Des jours de calendrier, pas des tranches de 24 h : le jour du changement d'heure, 24 h plus tôt peut
+    // encore être aujourd'hui (le test échouait le 25 octobre au soir).
+    const ago = (days: number) => {
+      const day = new Date();
+      day.setDate(day.getDate() - days);
+      return day.toISOString();
+    };
     mockOffers(
       page([
         offer(1, "Aujourd'hui", { first_seen_at: ago(0) }),
@@ -572,7 +578,13 @@ describe("Offres, revue des pages (docs/43)", () => {
 
 describe("Offres, offre ouverte par un lien (docs/43, complément)", () => {
   it("posée en tête sans intertitre, hors des groupes", async () => {
-    const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+    // Des jours de calendrier, pas des tranches de 24 h : le jour du changement d'heure, 24 h plus tôt peut
+    // encore être aujourd'hui (le test échouait le 25 octobre au soir).
+    const ago = (days: number) => {
+      const day = new Date();
+      day.setDate(day.getDate() - days);
+      return day.toISOString();
+    };
     GET.mockImplementation((path: string) =>
       Promise.resolve(
         path === "/api/offers/{offer_id}"

@@ -871,3 +871,40 @@ téléphone) ; WCAG 2.2, 1.4.8 (AAA visé : 80 caractères au plus) ; Laws of UX
 - Figma et code côte à côte en 1440 px, avant/après en 1920 px clair et en 1440 px sombre : `docs/captures/1.6.29/`.
 - 468 tests (deux de plus : le garde-fou des largeurs, l'en-tête de Candidatures), lint, types ; 5 tests de l'audit ;
   trois audits sans défaut, démo et compte neuf, l'accessibilité aussi en sombre.
+
+## Écarts (1.6.30)
+
+Correction de la 1.6.29 (revue du 25/10) : la colonne des deux tiers ne tenait que les listes, sous un mois et un
+bandeau pleine largeur ; deux largeurs l'une sous l'autre. Une proposition « deux tiers et un tiers » (le mois dans le
+tiers de droite) n'a pas été retenue : l'objectif ORP et les preuves sont du contenu principal (§1), et GOV.UK Layout
+réserve le tiers de droite au contenu secondaire. Règle retenue (`docs/regles-ui-ergonomie.md` §3), Figma d'abord.
+
+1. **Une seule colonne des deux tiers** (GOV.UK Layout ; Nielsen Norman Group, lecture par la gauche) : Suivi, Alertes
+   (le résumé) et Rendez-vous ont tout leur contenu dans `--column-two-thirds`, alignée à gauche avec le titre et les
+   onglets, de haut en bas ; le tiers de droite reste vide. `--column-two-thirds` vaut 648 px : les deux tiers du
+   contenu (972 px). Classe `.two-thirds` sur la page, sur ordinateur seulement.
+2. **Suivi, dans l'ordre (§1)** : la conclusion, le mois (navigation, objectif, « Ajouter », ⋯, sur une ligne), les
+   preuves, à relancer, à déclarer, le détail. **Exception** : le calendrier ouvert prend la largeur de la page (une
+   grille de 7 colonnes).
+3. **Alertes** : la conclusion, les alertes, le détail. Premiers pas (l'assistant) et « Gérer mes alertes » gardent la
+   pleine largeur.
+4. **Rendez-vous** : tout dans la colonne ; les champs du premier rendez-vous passent à la ligne (date, lieu ; puis
+   conseiller), à leurs largeurs de la 1.6.29. Dans la phrase, « à » et l'heure ne se séparent plus (espace insécable).
+5. **Jamais de « … »** dans une ligne de liste sur ordinateur (« … · envo… ») : le nom et les lignes passent à la ligne
+   (Suivi, Aujourd'hui, à relancer). Figma suit : le composant Ligne de liste, variantes Ordinateur.
+6. **Bilan, Figma** : la phrase du bandeau s'arrête à la mesure et passe sur deux lignes, comme dans le code (composant
+   Conclusion mise en avant, largeur max 496 px : Figma ne lie pas une largeur max de texte à une variable).
+
+- **Reste sur téléphone** : les lignes de liste y gardent leur « … » (le 390 px ne devait pas changer). À trancher.
+
+## Vérifié (1.6.30)
+
+- Captures avant/après (horloge figée) en **1440, 1920 et 390 px, clair et sombre** : changent le Suivi, les Alertes et
+  le Rendez-vous (et leurs états), en 1440 et 1920 seulement ; **en 390 px, aucune capture ne change**. Deux écarts
+  en 1920 sans rapport (une capture « avant » prise pendant un défilement, un pixel d'animation de « La plateforme »).
+- 75 caractères : aucune ligne au-delà, sur toutes les pages, en 1440 et 1920, démo et compte neuf.
+- Figma et code côte à côte en 1440 px, avant/après en 1920 et en sombre : `docs/captures/1.6.30/`. La démo n'a pas de
+  ligne à compléter : le bandeau des preuves n'y paraît pas (il garde sa place, sous le mois, quand il paraît).
+- 468 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité aussi en
+  sombre. **Relevé en passant, corrigé** : un test d'Offres comptait « hier » en tranches de 24 h et échouait le soir du
+  changement d'heure (25 octobre) ; il compte maintenant en jours de calendrier.

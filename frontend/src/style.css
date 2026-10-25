@@ -120,7 +120,8 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 
 /* Largeurs (1.6.29, regles-ui-ergonomie §3). La page : 1 020 px (GOV.UK Layout), sauf
    Candidatures › Offres et ses trois colonnes, à 1 280 px. La colonne des deux tiers pour une liste
-   courte (loi de proximité). La mesure : 31 em, soit 496 px à 16 px ; mesuré sur toutes les pages,
+   courte (loi de proximité) ; depuis la 1.6.30, 648 px : les deux tiers du contenu (972 px), la seule colonne de
+   Suivi, Alertes et Rendez-vous. La mesure : 31 em, soit 496 px à 16 px ; mesuré sur toutes les pages,
    aucune ligne n'y dépasse 75 caractères, quelle que soit la taille du texte (GOV.UK : 75 au plus ;
    WCAG 2.2, 1.4.8 : 80). Un « ch » ne suffit pas : il est plus large que la lettre moyenne.
    Les champs à la taille du contenu prévu (GOV.UK Text input) : un nom 20 caractères, un lieu
@@ -128,7 +129,7 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 :root {
   --page-max: 1020px;
   --page-wide: 80rem;
-  --column-two-thirds: 680px;
+  --column-two-thirds: 648px;
   --measure: 31em;
   --field-20: 13rem;
   --field-30: 18rem;
@@ -3871,14 +3872,28 @@ main:focus { outline: none; }
    - Les semaines du Bilan : plage, compte et état groupés à gauche, alignés d'une ligne à l'autre.
    - Les champs à la taille du contenu prévu (GOV.UK Text input). */
 @media (min-width: 821px) {
-  .suivi-todo, .alerts-summary { max-width: var(--column-two-thirds); }
+  /* Suivi, Alertes et Rendez-vous (1.6.30) : tout dans une seule colonne des deux tiers, alignée à gauche avec le
+     titre et les onglets, même largeur de haut en bas (GOV.UK Layout ; NN/g). Le calendrier ouvert prend la largeur
+     de la page : une grille de 7 colonnes. */
+  .jobs-body.two-thirds > :not(.suivi-detail), .suivi-detail > * { max-width: var(--column-two-thirds); }
+  .suivi-detail > .disclosure.open:has(.suivi-calendar) { max-width: none; }
+  /* Le mois tient sur une ligne dans la colonne, comme dans Figma : l'objectif se resserre. */
+  .jobs-body.two-thirds .month-goal { min-width: 0; }
+  /* Jamais de « … » dans une ligne de liste : le texte passe à la ligne. */
+  .today-row-main strong, .today-row-line, .application-row-main strong { white-space: normal; overflow: visible; overflow-wrap: break-word; }
   .pick-actions { display: flex; flex-wrap: wrap; }
   .pick-actions button { width: auto; }
   .rhythm-days { grid-template-columns: repeat(7, max-content); justify-content: start; column-gap: var(--space-3); }
   .alerts-aside .site-mail-row { align-items: flex-start; }
   .rhythm-weeks ol { grid-template-columns: repeat(3, max-content); column-gap: var(--space-8); }
   .rhythm-weeks li { grid-column: 1 / -1; grid-template-columns: subgrid; }
-  .orp-meeting-form { grid-template-columns: max-content var(--field-30) var(--field-20); justify-content: start; }
+  /* Les champs du premier rendez-vous passent à la ligne dans la colonne (1.6.30) : la date à sa taille, le lieu
+     30 caractères, le conseiller 20. */
+  .orp-meeting-form { display: flex; flex-wrap: wrap; align-items: flex-end; }
+  .orp-meeting-form > label:nth-of-type(1) { width: max-content; }
+  .orp-meeting-form > label:nth-of-type(2) { width: var(--field-30); }
+  .orp-meeting-form > label:nth-of-type(3) { width: var(--field-20); }
+  .orp-meeting-form > .form-actions { flex-basis: 100%; }
   .orp-sheet-name input { width: var(--field-20); }
   input[type="number"] { width: var(--field-5); }
 }
