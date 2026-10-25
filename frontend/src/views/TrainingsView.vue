@@ -245,21 +245,20 @@ onMounted(() => void load());
               Tout
             </button>
           </div>
-          <!-- Filtrer : l'entonnoir seul, le nombre de filtres actifs en pastille (docs/101). -->
+          <!-- Filtrer : l'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille (docs/101). -->
           <button
             v-if="phone"
             type="button"
-            class="icon-button icon-only filter-toggle training-filter-toggle"
-            :aria-label="filterLabel"
-            :data-label="filterLabel"
+            class="pill filter-toggle training-filter-toggle"
+            :aria-label="activeFilters ? filterLabel : undefined"
             :aria-expanded="filtersOpen"
             data-test="training-filter-toggle"
             @click="filtersOpen = !filtersOpen"
           >
-            <AppIcon name="filter" />
+            <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
             <span
               v-if="activeFilters"
-              class="icon-badge"
+              class="tab-count"
               aria-hidden="true"
               data-test="training-filter-count"
             >{{ activeFilters }}</span>

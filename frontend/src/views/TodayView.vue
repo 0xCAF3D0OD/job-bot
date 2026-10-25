@@ -29,7 +29,7 @@ usePageReady("today", () => !!today.value);
 const DOSE = 3;
 const DOSE_CATCH_UP = 5;
 const best = ref<Offer[]>([]);
-// Un jour sans recherche (docs/86) : aucune liste à traiter.
+// Un jour de repos (docs/86) : aucune liste à traiter.
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
 const rhythmPaused = computed(() => !!today.value?.rhythm?.pause_until);
 const preparing = ref<Offer[]>([]);
@@ -85,7 +85,14 @@ const sentence = computed<Part[]>(() => {
   if (!t) return [];
   const pause = t.rhythm?.pause_until;
   if (pause) return [{ text: `En pause jusqu'au ${longDate.format(localDate(pause))}.` }];
-  if (restDay.value) return [{ text: "Jour sans recherche. Les offres t'attendent pour ton prochain jour." }];
+  // Jour de repos (1.6.26) : une seule phrase, qui dit quoi faire si l'on veut avancer ; les
+  // cartes ne le répètent plus.
+  if (restDay.value) {
+    const rest: Part[] = [{ text: "Jour de repos." }];
+    if (t.to_follow_up) rest.push({ text: " Si tu veux avancer : " }, { text: plural(t.to_follow_up, "relance", "relances"), strong: true }, { text: " en attente." });
+    else if (t.to_review) rest.push({ text: " Si tu veux avancer : " }, { text: plural(t.to_review, "offre", "offres"), strong: true }, { text: " à examiner." });
+    return rest;
+  }
   const items: Part[][] = [];
   if (t.to_review) items.push([{ text: plural(t.to_review, "offre", "offres"), strong: true }, { text: " à examiner" }]);
   if (t.to_follow_up) items.push([{ text: plural(t.to_follow_up, "relance", "relances"), strong: true }]);
@@ -177,7 +184,8 @@ const calm = computed(() => {
 // U, Aujourd'hui en compact (docs/123 §2) : sur téléphone, le mois ORP en une ligne.
 const { phone } = usePhone();
 // Pendant les premiers pas, la carte des offres seulement quand il y en a (docs/128 §2).
-const showPick = computed(() => !starting.value || best.value.length > 0);
+// Un jour de repos, pas d'offre du jour : la phrase du haut le dit (1.6.26).
+const showPick = computed(() => !restDay.value && (!starting.value || best.value.length > 0));
 
 // « Voir les offres à préparer », une fois le tri fini : la carte voisine prend le focus.
 function showPreparingCard(): void {
@@ -385,14 +393,7 @@ const { me } = useAuth();
               >{{ pickPosition }}</span>
             </header>
             <p
-              v-if="restDay"
-              class="hint"
-              data-test="rest-day"
-            >
-              Jour sans recherche : les offres t'attendent pour ton prochain jour de recherche.
-            </p>
-            <p
-              v-else-if="rhythmPaused"
+              v-if="rhythmPaused"
               class="hint"
               data-test="paused-day"
             >

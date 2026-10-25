@@ -13,12 +13,12 @@ function at(day: number) {
 }
 
 describe("OrpMonth", () => {
-  it("un segment par candidature, « On rattrape » en orange", () => {
+  it("un segment par candidature, « En retard de N candidatures » en orange", () => {
     at(16);
     const wrapper = mount(OrpMonth, { props: { title: "Mois ORP", count: 3, target: 10, month: "2026-10" } });
     expect(wrapper.findAll(".segment")).toHaveLength(10);
     expect(wrapper.findAll(".segment.done")).toHaveLength(3);
-    expect(wrapper.find("[data-test=month-left]").text()).toBe("On rattrape. Il reste 7 candidatures en 11 jours ouvrables.");
+    expect(wrapper.find("[data-test=month-left]").text()).toBe("En retard de 2 candidatures. Il reste 7 candidatures en 11 jours ouvrables.");
     const tile = wrapper.find("[data-test=orp-face]");
     expect(tile.classes()).toEqual(expect.arrayContaining(["attentif", "act"]));
   });

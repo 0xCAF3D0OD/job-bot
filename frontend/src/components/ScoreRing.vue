@@ -13,7 +13,7 @@ const value = computed(() =>
 const label = computed(() =>
   value.value === null
     ? (props.pending ?? "Pas encore notée")
-    : `Note de l'IA : ${value.value} sur 100${props.stale ? ", faite avec un ancien profil" : ""}`,
+    : `Proximité avec ton profil : ${value.value} sur 100${props.stale ? ", calculée avec un ancien profil" : ""}`,
 );
 </script>
 

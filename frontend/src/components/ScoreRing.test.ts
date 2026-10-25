@@ -9,7 +9,7 @@ describe("ScoreRing", () => {
     const ring = mount(ScoreRing, { props: { score: 75 } }).find("[data-test=score]");
     expect(ring.text()).toBe("75");
     expect(ring.attributes("style")).toContain("--p: 75");
-    expect(ring.attributes("aria-label")).toBe("Note de l'IA : 75 sur 100");
+    expect(ring.attributes("aria-label")).toBe("Proximité avec ton profil : 75 sur 100");
     expect(ring.classes()).toContain("close");
   });
 

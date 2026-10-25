@@ -9,9 +9,9 @@ const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({
   research: i < 5,
   sent: d === 19 ? 1 : d === 20 ? 2 : 0,
 }));
-const mountCard = (week: Record<string, unknown>) =>
+const mountCard = (week: Record<string, unknown>, nested = false) =>
   mount(RhythmCard, {
-    props: { week: { target: 5, count: 3, days, research_today: true, ...week } as never },
+    props: { week: { target: 5, count: 3, days, research_today: true, ...week } as never, nested },
     global: { stubs: { RouterLink: true } },
   });
 
@@ -27,13 +27,15 @@ describe("Ta semaine", () => {
     expect(wrapper.find("[data-test=rhythm-sentence]").text()).toBe("Encore 2 cette semaine.");
   });
 
-  it("semaine faite, jour sans recherche, sans objectif", () => {
+  it("semaine faite, jour de repos, sans objectif", () => {
     expect(mountCard({ count: 5 }).find("[data-test=rhythm-sentence]").text()).toBe(
       "Semaine faite. Le reste du temps est à toi.",
     );
     expect(mountCard({ research_today: false }).find("[data-test=rhythm-sentence]").text()).toContain(
-      "Jour sans recherche",
+      "Jour de repos : rien à faire aujourd'hui.",
     );
+    // Dans la carte d'Aujourd'hui, la phrase du haut le dit déjà (1.6.26).
+    expect(mountCard({ research_today: false }, true).find("[data-test=rhythm-sentence]").exists()).toBe(false);
     const free = mountCard({ target: null });
     expect(free.find("[data-test=rhythm-count]").exists()).toBe(false);
     expect(free.text()).toContain("pour le répartir sur tes semaines");

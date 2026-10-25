@@ -203,9 +203,10 @@ export function gapSkill(text: string): string | null {
   return skill && skill.split(/\s+/).length <= 4 ? skill : null;
 }
 
-// Le mois ORP en une humeur (docs/123 §2, Q) : atteint, dans les temps, ou à rattraper. Le
-// rythme attendu suit les jours ouvrables (lundi à vendredi) passés avant aujourd'hui ; « On
-// rattrape » seulement quand le compte est sous ce rythme. Sans objectif : rien à dire.
+// Le mois ORP en une humeur (docs/123 §2, Q) : atteint, dans les temps, ou en retard. Le
+// rythme attendu suit les jours ouvrables (lundi à vendredi) passés avant aujourd'hui ; « En
+// retard de N candidatures » (1.6.26, au lieu de « On rattrape ») seulement quand le compte est
+// sous ce rythme, N l'écart avec lui. Sans objectif : rien à dire.
 export type OrpPace = {
   state: "reached" | "on-track" | "behind";
   mood: "ravi" | "content" | "attentif";
@@ -234,7 +235,8 @@ export function orpPace(count: number, target: number | null | undefined, month:
   const passed = today > last ? total : workdays(first, yesterday);
   const left = target - count;
   const daysLeft = today > last ? 0 : workdays(today < first ? first : today, last);
-  if (count >= Math.floor((target * passed) / Math.max(1, total))) {
+  const expected = Math.floor((target * passed) / Math.max(1, total));
+  if (count >= expected) {
     const end = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" }).format(last);
     return { state: "on-track", mood: "content", word: "Dans les temps.", line: `Encore ${left} d'ici le ${end}.` };
   }
@@ -242,7 +244,7 @@ export function orpPace(count: number, target: number | null | undefined, month:
   return {
     state: "behind",
     mood: "attentif",
-    word: "On rattrape.",
+    word: `En retard de ${expected - count} ${expected - count === 1 ? "candidature" : "candidatures"}.`,
     line: `Il reste ${left} ${left === 1 ? "candidature" : "candidatures"} en ${days}.`,
   };
 }

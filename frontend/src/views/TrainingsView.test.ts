@@ -179,7 +179,9 @@ describe("TrainingsView", () => {
     expect(wrapper.find(".training-tiles").exists()).toBe(true);
     expect(wrapper.find("[data-test=orp-note]").classes()).toContain("disclosure");
     const toggle = wrapper.find("[data-test=training-filter-toggle]");
-    expect(toggle.attributes("aria-label")).toBe("Filtrer");
+    // Le mot « Filtrer » se lit (1.6.26) ; le nom accessible n'ajoute que le compte.
+    expect(toggle.text()).toBe("Filtrer");
+    expect(toggle.attributes("aria-label")).toBeUndefined();
     expect(toggle.find("[data-test=training-filter-count]").exists()).toBe(false);
     await wrapper.find("[data-test=filter-kind]").setValue("certification");
     expect(toggle.attributes("aria-label")).toBe("Filtrer, 1 actif");

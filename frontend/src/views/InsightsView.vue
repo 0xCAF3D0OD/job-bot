@@ -124,8 +124,8 @@ const tiles = computed(() => {
     delayRange: !r.delay
       ? "pas encore de réponse"
       : r.delay.shortest === r.delay.longest
-        ? "de réponse, d'habitude"
-        : `de réponse, de ${r.delay.shortest} à ${r.delay.longest} j`,
+        ? "d'habitude"
+        : `de ${r.delay.shortest} à ${r.delay.longest} j`,
   };
 });
 
@@ -270,7 +270,7 @@ const views = computed(() => {
           <DashTile
             :to="SUIVI"
             icon="send"
-            label="Candidatures"
+            :label="insights.funnel.applications === 1 ? 'candidature' : 'candidatures'"
             :value="String(insights.funnel.applications)"
             :trend="tiles.applications"
             tone="accent"
@@ -279,7 +279,7 @@ const views = computed(() => {
           <DashTile
             :to="SUIVI"
             icon="reply"
-            label="Réponses"
+            :label="insights.funnel.responses === 1 ? 'réponse' : 'réponses'"
             :value="String(insights.funnel.responses)"
             :trend="tiles.responses"
             data-test="tile-responses"
@@ -287,14 +287,14 @@ const views = computed(() => {
           <DashTile
             :to="SUIVI"
             icon="calendar"
-            label="Entretiens"
+            :label="insights.funnel.interviews === 1 ? 'entretien' : 'entretiens'"
             :value="String(insights.funnel.interviews)"
             :trend="tiles.interviews"
             data-test="tile-interviews"
           />
           <DashTile
             icon="clock"
-            label="Délai"
+            label="délai de réponse"
             :value="tiles.delay"
             :trend="tiles.delayRange"
             data-test="delay"

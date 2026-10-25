@@ -27,7 +27,8 @@ const sentence = computed(() => {
   }
   if (props.week.target === null) return "";
   if (done.value) return "Semaine faite. Le reste du temps est à toi.";
-  if (!props.week.research_today) return "Jour sans recherche : rien à faire aujourd'hui.";
+  // Jour de repos : dans la carte d'Aujourd'hui, la phrase du haut le dit déjà (1.6.26).
+  if (!props.week.research_today) return props.nested ? "" : "Jour de repos : rien à faire aujourd'hui.";
   // Dans la carte du mois (docs/129) : le compte au-dessus le dit déjà.
   if (props.nested) return "";
   return left.value === 1 ? "Encore 1 cette semaine." : `Encore ${left.value} cette semaine.`;
@@ -36,7 +37,7 @@ const sentence = computed(() => {
 function dayLabel(day: Week["days"][number], index: number): string {
   const parts = [NAMES[index] ?? ""];
   if (day.paused) parts.push("en pause");
-  else if (!day.research) parts.push("sans recherche");
+  else if (!day.research) parts.push("jour de repos");
   if (day.sent) parts.push(day.sent === 1 ? "1 candidature" : `${day.sent} candidatures`);
   return parts.join(", ");
 }
