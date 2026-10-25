@@ -7,6 +7,7 @@ import { expiredText, formatDate, gapSkill, rateText, remoteText, sourceLabel } 
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
+import DisclosureRow from "./DisclosureRow.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import ScoreWord from "./ScoreWord.vue";
@@ -279,6 +280,11 @@ const companyItems = computed<MoreMenuItem[]>(() => {
   }
   return items;
 });
+// Le site de l'annonce, résumé de la ligne « Annonce » repliée.
+const adSource = computed(() => {
+  const link = props.offer.links[0];
+  return link && link.source !== "manual" ? sourceLabel[link.source] : "";
+});
 // Les annonces d'origine, dans le « ⋯ » de la partie « Annonce ».
 const announceItems = computed<MoreMenuItem[]>(() =>
   otherLinks.value.map((link) => ({ label: `Voir sur ${sourceLabel[link.source]}`, test: `source-${link.source}`, href: link.url })),
@@ -310,6 +316,15 @@ watch(
     class="detail-panel"
     data-test="offer-detail"
   >
+    <!-- Sur téléphone, le retour en haut à gauche, au-dessus du titre (règles §2 ; Figma, 24/10). -->
+    <button
+      type="button"
+      class="link detail-back"
+      data-test="back-detail"
+      @click="$emit('close')"
+    >
+      <span class="with-icon"><AppIcon name="arrow-left" /><span><span class="visually-hidden">Retour aux </span>Offres</span></span>
+    </button>
     <div class="detail-top">
       <CompanyLogo
         :offer="offer"
@@ -330,14 +345,6 @@ watch(
           data-test="close-detail"
           @click="$emit('close')"
         />
-        <button
-          type="button"
-          class="link detail-back"
-          data-test="back-detail"
-          @click="$emit('close')"
-        >
-          <span class="with-icon"><AppIcon name="arrow-left" /><span><span class="visually-hidden">Retour aux </span>Offres</span></span>
-        </button>
       </div>
     </div>
     <div>
@@ -561,20 +568,24 @@ watch(
       </ul>
     </section>
 
-    <section
-      class="panel-section"
+    <!-- L'entreprise et l'annonce, moins utiles pour décider, repliées (règles §3.4 ; Figma, 24/10). -->
+    <DisclosureRow
+      title="Entreprise"
+      :value="offer.company ?? ''"
+      class="detail-disclosure"
       data-test="company-section"
     >
-      <div class="panel-section-head">
-        <h3>Entreprise</h3>
+      <template
+        v-if="companyItems.length"
+        #actions
+      >
         <MoreMenu
-          v-if="companyItems.length"
           class="section-more"
           :items="companyItems"
           label="Actions sur l'entreprise"
           test-id="company-more"
         />
-      </div>
+      </template>
       <div
         class="address-line"
         data-test="address"
@@ -689,7 +700,7 @@ watch(
           role="status"
         >{{ employerMessage }}</span>
       </p>
-    </section>
+    </DisclosureRow>
     <SidePanel
       v-if="offer.company"
       :open="contactsOpen"
@@ -703,20 +714,23 @@ watch(
       />
     </SidePanel>
 
-    <section
-      class="panel-section"
+    <DisclosureRow
+      title="Annonce"
+      :value="adSource"
+      class="detail-disclosure"
       data-test="section-ad"
     >
-      <div class="panel-section-head">
-        <h3>Annonce</h3>
+      <template
+        v-if="announceItems.length"
+        #actions
+      >
         <MoreMenu
-          v-if="announceItems.length"
           class="section-more"
           :items="announceItems"
           label="Actions sur l'annonce"
           test-id="ad-more"
         />
-      </div>
+      </template>
       <template v-if="offer.description">
         <div
           ref="textEl"
@@ -748,6 +762,6 @@ watch(
       >
         Pas d'extrait dans l'alerte : le texte complet de l'annonce est sur le site.
       </p>
-    </section>
+    </DisclosureRow>
   </article>
 </template>
