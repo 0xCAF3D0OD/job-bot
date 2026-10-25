@@ -906,5 +906,6 @@ réserve le tiers de droite au contenu secondaire. Règle retenue (`docs/regles-
 - Figma et code côte à côte en 1440 px, avant/après en 1920 et en sombre : `docs/captures/1.6.30/`. La démo n'a pas de
   ligne à compléter : le bandeau des preuves n'y paraît pas (il garde sa place, sous le mois, quand il paraît).
 - 468 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité aussi en
-  sombre. **Relevé en passant, corrigé** : un test d'Offres comptait « hier » en tranches de 24 h et échouait le soir du
-  changement d'heure (25 octobre) ; il compte maintenant en jours de calendrier.
+  sombre. **Relevé en passant, corrigé** : deux tests comptaient « hier » comme « maintenant moins 24 h » et ont échoué
+  le soir du changement d'heure (25 octobre, en local et sur la CI en UTC) : celui des jours d'Offres fige maintenant
+  son horloge en milieu de journée ; celui du rendez-vous tenu (serveur) prend la veille à 10 h, heure locale.

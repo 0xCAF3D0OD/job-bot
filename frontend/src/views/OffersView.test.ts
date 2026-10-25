@@ -1,5 +1,5 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
 
 import { fromQuery, toQuery } from "../composables/useOfferFilters";
@@ -550,13 +550,14 @@ describe("tri « Dernière action »", () => {
 
 describe("Offres, revue des pages (docs/43)", () => {
   it("une ligne par jour, les offres sans leur date ; « Candidature spontanée » sur la ligne du nombre", async () => {
-    // Des jours de calendrier, pas des tranches de 24 h : le jour du changement d'heure, 24 h plus tôt peut
-    // encore être aujourd'hui (le test échouait le 25 octobre au soir).
-    const ago = (days: number) => {
-      const day = new Date();
-      day.setDate(day.getDate() - days);
-      return day.toISOString();
-    };
+    // Une horloge figée en milieu de journée : les jours sont rangés à l'heure de Zurich, et le soir du changement
+    // d'heure (ou une machine en UTC), « 24 h plus tôt » pouvait encore être aujourd'hui.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-14T10:00:00Z"));
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
     mockOffers(
       page([
         offer(1, "Aujourd'hui", { first_seen_at: ago(0) }),
@@ -578,13 +579,7 @@ describe("Offres, revue des pages (docs/43)", () => {
 
 describe("Offres, offre ouverte par un lien (docs/43, complément)", () => {
   it("posée en tête sans intertitre, hors des groupes", async () => {
-    // Des jours de calendrier, pas des tranches de 24 h : le jour du changement d'heure, 24 h plus tôt peut
-    // encore être aujourd'hui (le test échouait le 25 octobre au soir).
-    const ago = (days: number) => {
-      const day = new Date();
-      day.setDate(day.getDate() - days);
-      return day.toISOString();
-    };
+    const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
     GET.mockImplementation((path: string) =>
       Promise.resolve(
         path === "/api/offers/{offer_id}"
