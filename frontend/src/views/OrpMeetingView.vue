@@ -52,14 +52,56 @@ const pendingObligations = computed(() => (prep.value?.obligations ?? []).filter
 const noApplications = computed(() => prep.value?.has_applications === false);
 const dateFormat = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
 const timeFormat = new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit" });
-const meetingText = computed(() => {
-  if (!meeting.value) return "";
-  const at = new Date(meeting.value.starts_at);
-  const where = meeting.value.place ? `, ${meeting.value.place}` : "";
-  const who = meeting.value.advisor ? ` avec ${meeting.value.advisor}` : "";
-  return `Le ${dateFormat.format(at)} à ${timeFormat.format(at)}${where}${who}.`;
-});
 const started = computed(() => !!meeting.value && new Date(meeting.value.starts_at) <= new Date());
+
+// Une obligation dont l'échéance est passée (décision du 25/10) : elle rejoint la conclusion.
+function todayIso(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+// Sans candidature encore, pas d'alerte : les preuves d'un mois vide ne sont pas en retard.
+const lateObligations = computed(() =>
+  noApplications.value ? [] : pendingObligations.value.filter((o) => !!o.due && o.due < todayIso()),
+);
+function lateLine(text: string): string {
+  const line = text.replace(" : ", ", ");
+  return ` En retard : ${line.charAt(0).toLowerCase()}${line.slice(1)}`;
+}
+// La conclusion en haut (règles §3.2, 1.6.23) : la date, l'heure en accent, le lieu ; puis ce qui
+// est en retard, en orange (ce qui demande d'agir, §4).
+type Part = { text: string; strong?: boolean; late?: boolean };
+const conclusion = computed<Part[]>(() => {
+  const parts: Part[] = [];
+  const m = meeting.value;
+  if (m && !editing.value) {
+    const at = new Date(m.starts_at);
+    parts.push(
+      { text: started.value ? "Rendez-vous du " : "Prochain rendez-vous " },
+      { text: `${dateFormat.format(at)} à ${timeFormat.format(at)}`, strong: true },
+      { text: `${m.place ? `, ${m.place}` : ""}.` },
+    );
+  }
+  for (const o of lateObligations.value) parts.push({ text: parts.length ? lateLine(o.text) : lateLine(o.text).trimStart(), late: true });
+  return parts;
+});
+// « Préparer », à droite de la conclusion : descend à la préparation.
+const prepareTitle = ref<HTMLElement | null>(null);
+function goPrepare(): void {
+  const reduce = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  prepareTitle.value?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+}
+// Le résumé de chaque ligne du mois (règles §3.4).
+const monthValue = computed(() => {
+  const last = prep.value?.months?.at(-1);
+  if (!last) return "";
+  return last.target ? `${last.count} candidatures sur ${last.target}` : plural(last.count, "candidature", "candidatures");
+});
+const dutiesValue = computed(() => {
+  const late = lateObligations.value.length;
+  const rest = pendingObligations.value.length - late;
+  const parts = [late ? `${late} en retard` : "", rest ? plural(rest, "échéance", "échéances") : ""].filter(Boolean);
+  return parts.join(", ");
+});
 
 function dayText(iso: string): string {
   const at = new Date(iso);
@@ -186,31 +228,60 @@ onMounted(() => void load());
     </p>
     <LoadingBlocks v-else-if="!page" />
     <template v-else>
+      <!-- La conclusion d'abord (règles §3.2, décision du 25/10) : date, heure et lieu ; « Préparer »
+           en lien et le « ⋯ » du rendez-vous à droite (dessous sur téléphone). -->
+      <div
+        v-if="conclusion.length"
+        class="orp-conclusion"
+      >
+        <p
+          class="offers-sentence"
+          data-test="meeting-when"
+        >
+          <component
+            :is="part.strong ? 'strong' : 'span'"
+            v-for="(part, index) in conclusion"
+            :key="index"
+            :class="{ 'orp-late': part.late }"
+          >
+            {{ part.text }}
+          </component>
+        </p>
+        <div class="orp-conclusion-actions">
+          <button
+            v-if="prep && !noApplications"
+            type="button"
+            class="link"
+            data-test="go-prepare"
+            @click="goPrepare"
+          >
+            Préparer
+          </button>
+          <MoreMenu
+            v-if="meeting && !editing"
+            :items="meetingItems"
+            label="Actions sur le rendez-vous"
+            test-id="meeting-more"
+          />
+        </div>
+      </div>
       <!-- Préparer (docs/130 §B, docs/133 §4) : ce qu'on modifie, chaque carte sur toute la
-           largeur pour que le texte respire : le rendez-vous, les questions, la feuille. -->
-      <h2 class="section-title orp-section">
+           largeur pour que le texte respire : les questions, la feuille. -->
+      <h2
+        ref="prepareTitle"
+        class="section-title orp-section"
+      >
         Préparer
       </h2>
       <div class="orp-meeting-sheet">
         <div
+          v-if="!meeting || editing || started"
           class="form-card"
           data-test="meeting"
         >
           <div class="orp-meeting-when">
-            <h2>Le prochain rendez-vous</h2>
-            <MoreMenu
-              v-if="meeting && !editing"
-              :items="meetingItems"
-              label="Actions sur le rendez-vous"
-              test-id="meeting-more"
-            />
+            <h2>{{ meeting && started && !editing ? "Ce qui a été convenu" : "Le prochain rendez-vous" }}</h2>
           </div>
-          <p
-            v-if="meeting && !editing"
-            data-test="meeting-when"
-          >
-            {{ meetingText }}
-          </p>
           <template v-if="meeting && started && !editing">
             <OrpOutcomeForm
               v-if="noting === meeting.id"
@@ -279,8 +350,10 @@ onMounted(() => void load());
               >
             </label>
             <div class="form-actions">
+              <!-- La seule action principale de l'écran (règles §3.3). -->
               <button
                 type="submit"
+                class="primary"
                 data-test="meeting-save"
               >
                 Enregistrer
@@ -365,78 +438,67 @@ onMounted(() => void load());
             <p class="setting-desc">
               Rien n'est envoyé à l'ORP : tu la télécharges, ou tu l'envoies toi-même.
             </p>
-            <div class="orp-sheet-columns">
-              <div>
-                <label>
-                  Ton nom sur la feuille (facultatif)
-                  <input
-                    v-model="name"
-                    type="text"
-                    maxlength="120"
-                    autocomplete="name"
-                  >
-                </label>
-                <div class="form-actions">
-                  <a
-                    class="button-link"
-                    :href="sheetLink"
-                    download
-                    data-test="sheet-pdf"
-                  ><span class="with-icon"><AppIcon name="download" />Télécharger la feuille (PDF)</span></a>
-                </div>
-              </div>
-              <!-- Le même contenu en message, rédigé par l'IA (docs/130 §B). -->
-              <div
-                v-if="meeting"
-                class="orp-sheet-message"
-                data-test="sheet-ai"
+            <label class="orp-sheet-name">
+              Ton nom sur la feuille (facultatif)
+              <input
+                v-model="name"
+                type="text"
+                maxlength="120"
+                autocomplete="name"
               >
-                <h3>En message</h3>
-                <p
-                  v-if="meeting.sheet_text"
-                  class="orp-sheet-text"
-                  data-test="sheet-text"
-                >
-                  {{ meeting.sheet_text }}
-                </p>
-                <p
-                  v-else
-                  class="muted"
-                >
-                  L'IA rédige la feuille en un message suivi, à envoyer avant le rendez-vous.
-                </p>
-                <div class="form-actions">
-                  <button
-                    type="button"
-                    :class="{ secondary: !!meeting.sheet_text }"
-                    :disabled="writing"
-                    data-test="sheet-write"
-                    @click="writeSheet"
-                  >
-                    <HoverNote :text="aiNote('Environ 0,02 CHF.')">
-                      <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
-                    </HoverNote>
-                  </button>
-                  <button
-                    v-if="meeting.sheet_text"
-                    type="button"
-                    class="link"
-                    @click="copySheet"
-                  >
-                    <CopyLabel :done="copied" />
-                  </button>
-                </div>
-                <p
-                  v-if="writeMessage"
-                  role="status"
-                  class="notice error"
-                >
-                  {{ writeMessage }}
-                </p>
-                <p class="hint">
-                  Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
-                </p>
-              </div>
+            </label>
+            <!-- Une colonne (décision du 25/10) : la seule action principale, puis l'IA en contour. -->
+            <div class="form-actions orp-sheet-actions">
+              <a
+                class="button-link primary-link"
+                :href="sheetLink"
+                download
+                data-test="sheet-pdf"
+              ><span class="with-icon"><AppIcon name="download" />Télécharger la feuille (PDF)</span></a>
+              <button
+                v-if="meeting"
+                type="button"
+                class="secondary"
+                :disabled="writing"
+                data-test="sheet-write"
+                @click="writeSheet"
+              >
+                <HoverNote :text="aiNote('Environ 0,02 CHF.')">
+                  <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
+                </HoverNote>
+              </button>
+              <button
+                v-if="meeting?.sheet_text"
+                type="button"
+                class="link"
+                @click="copySheet"
+              >
+                <CopyLabel :done="copied" />
+              </button>
+            </div>
+            <!-- Le même contenu en message, rédigé par l'IA (docs/130 §B). -->
+            <div
+              v-if="meeting"
+              class="orp-sheet-message"
+              data-test="sheet-ai"
+            >
+              <p
+                v-if="meeting.sheet_text"
+                class="orp-sheet-text"
+                data-test="sheet-text"
+              >
+                {{ meeting.sheet_text }}
+              </p>
+              <p
+                v-if="writeMessage"
+                role="status"
+                class="notice error"
+              >
+                {{ writeMessage }}
+              </p>
+              <p class="hint">
+                Ni ton nom, ni le lieu, ni ton conseiller ne partent à l'IA.
+              </p>
             </div>
           </section>
         </template>
@@ -449,177 +511,178 @@ onMounted(() => void load());
       >
         <p>Ta feuille ORP se remplit avec tes candidatures.</p>
         <div class="face-state-actions">
+          <!-- Un lien (décision du 25/10) : « Enregistrer » reste la seule action principale. -->
           <RouterLink
             to="/candidatures/offres"
-            class="button-link primary-link"
+            class="link"
+            data-test="see-offers"
           >
-            <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+            Voir les offres
           </RouterLink>
         </div>
       </FaceState>
-      <!-- Le mois : ce qu'on consulte, une seule carte en quatre parties. -->
-      <template v-if="prep && !noApplications">
+      <!-- Le mois (règles §3.4, décision du 25/10) : une ligne repliable par partie, avec son résumé ;
+           « Le mois en bref » ouvert ; une partie vide ne s'affiche pas (docs/131 §B.8). -->
+      <template v-if="(prep && !noApplications) || page.past.length">
         <h2 class="section-title orp-section">
           Le mois
         </h2>
-        <section
-          class="orp-facts"
+        <div
+          class="orp-month-rows"
           data-test="sheet-facts"
         >
-          <div
-            class="orp-fact"
-            data-test="sheet-summary"
-          >
-            <h3>Mois en bref</h3>
-            <!-- Une ligne de chiffres par mois (docs/131 §A.5) ; le texte complet va à la feuille. -->
-            <ul
-              v-if="prep.months?.length"
-              class="orp-month-lines"
+          <template v-if="prep && !noApplications">
+            <DisclosureRow
+              title="Le mois en bref"
+              :value="monthValue"
+              start-open
+              data-test="sheet-summary"
             >
-              <li
-                v-for="month in prep.months"
-                :key="month.month"
+              <!-- Une ligne de chiffres par mois (docs/131 §A.5) ; le texte complet va à la feuille. -->
+              <ul
+                v-if="prep.months?.length"
+                class="orp-month-lines"
               >
-                <strong>{{ monthTitle(month.month) }}</strong> · {{ plural(month.count, "candidature", "candidatures") }}{{ month.target ? ` sur ${month.target}` : "" }} · {{ plural(month.answered, "réponse", "réponses") }} · {{ plural(month.interviews, "entretien", "entretiens") }}
-              </li>
-            </ul>
-            <template v-else>
+                <li
+                  v-for="month in prep.months"
+                  :key="month.month"
+                >
+                  <strong>{{ monthTitle(month.month) }}</strong> · {{ plural(month.count, "candidature", "candidatures") }}{{ month.target ? ` sur ${month.target}` : "" }} · {{ plural(month.answered, "réponse", "réponses") }} · {{ plural(month.interviews, "entretien", "entretiens") }}
+                </li>
+              </ul>
+              <template v-else>
+                <p
+                  v-for="line in prep.summaries"
+                  :key="line"
+                >
+                  {{ line }}
+                </p>
+              </template>
+            </DisclosureRow>
+            <DisclosureRow
+              v-if="prep.blockers.length || prep.works"
+              title="Ce qui bloque"
+              :value="prep.blockers.length ? plural(prep.blockers.length, 'piste', 'pistes') : ''"
+              data-test="sheet-blockers"
+            >
+              <ul v-if="prep.blockers.length">
+                <li
+                  v-for="line in prep.blockers"
+                  :key="line"
+                >
+                  {{ line }}
+                </li>
+              </ul>
               <p
-                v-for="line in prep.summaries"
-                :key="line"
+                v-if="prep.works"
+                class="orp-meeting-works"
               >
-                {{ line }}
+                Ce qui marche : {{ prep.works }}
               </p>
-            </template>
-          </div>
-
-          <!-- Vide, une partie ne s'affiche pas (docs/131 §B.8). -->
-          <div
-            v-if="prep.blockers.length || prep.works"
-            class="orp-fact"
-            data-test="sheet-blockers"
-          >
-            <h3>Ce qui bloque</h3>
-            <ul v-if="prep.blockers.length">
-              <li
-                v-for="line in prep.blockers"
-                :key="line"
-              >
-                {{ line }}
-              </li>
-            </ul>
-            <p
-              v-if="prep.works"
-              class="orp-meeting-works"
+            </DisclosureRow>
+            <DisclosureRow
+              v-if="prep.missing.length"
+              title="Compétences demandées qui manquent"
+              :value="plural(prep.missing.length, 'compétence', 'compétences')"
+              data-test="sheet-missing"
             >
-              Ce qui marche : {{ prep.works }}
-            </p>
-          </div>
-
-          <div
-            v-if="prep.missing.length"
-            class="orp-fact"
-            data-test="sheet-missing"
-          >
-            <h3>Compétences demandées qui manquent</h3>
-            <ul v-if="prep.missing.length">
-              <li
-                v-for="item in prep.missing"
-                :key="item.skill"
-              >
-                <strong>{{ item.skill }}</strong> : demandé dans {{ item.count }} des
-                {{ plural(prep.offers, "offre bien notée", "offres bien notées") }} des 3 derniers mois.
-                <RouterLink
-                  v-if="item.training_title"
-                  to="/bilan/formations"
+              <ul v-if="prep.missing.length">
+                <li
+                  v-for="item in prep.missing"
+                  :key="item.skill"
                 >
-                  {{ item.training_title }}
-                </RouterLink>
-              </li>
-            </ul>
-          </div>
-
-          <div
-            v-if="pendingObligations.length"
-            class="orp-fact"
-            data-test="sheet-obligations"
+                  <strong>{{ item.skill }}</strong> : demandé dans {{ item.count }} des
+                  {{ plural(prep.offers, "offre bien notée", "offres bien notées") }} des 3 derniers mois.
+                  <RouterLink
+                    v-if="item.training_title"
+                    to="/bilan/formations"
+                  >
+                    {{ item.training_title }}
+                  </RouterLink>
+                </li>
+              </ul>
+            </DisclosureRow>
+            <DisclosureRow
+              v-if="pendingObligations.length"
+              title="Obligations et échéances"
+              :value="dutiesValue"
+              data-test="sheet-obligations"
+            >
+              <ul class="orp-meeting-duties">
+                <li
+                  v-for="item in pendingObligations"
+                  :key="item.text"
+                >
+                  {{ item.text }}
+                </li>
+              </ul>
+            </DisclosureRow>
+          </template>
+          <!-- Le carnet, replié (docs/130 §B) : « Modifier » sur la ligne de chaque rendez-vous. -->
+          <DisclosureRow
+            v-if="page.past.length"
+            class="orp-log"
+            title="Le carnet"
+            :value="plural(page.past.length, 'rendez-vous', 'rendez-vous')"
+            data-test="meeting-log"
           >
-            <h3>Obligations et échéances</h3>
-            <ul class="orp-meeting-duties">
+            <ul>
               <li
-                v-for="item in pendingObligations"
-                :key="item.text"
+                v-for="item in page.past"
+                :key="item.id"
               >
-                {{ item.text }}
+                <div class="orp-log-head">
+                  <h3>{{ dayText(item.starts_at) }}<span v-if="item.place"> · {{ item.place }}</span></h3>
+                  <button
+                    v-if="item.outcome_at && noting !== item.id"
+                    type="button"
+                    class="link"
+                    :data-test="`log-outcome-${item.id}`"
+                    @click="noting = item.id"
+                  >
+                    Modifier
+                  </button>
+                </div>
+                <OrpOutcomeForm
+                  v-if="noting === item.id"
+                  :meeting="item"
+                  :target="page.target"
+                  :trainings="page.trainings"
+                  @saved="outcomeSaved"
+                  @cancel="noting = null"
+                />
+                <template v-else>
+                  <dl
+                    v-if="item.outcome_at"
+                    class="orp-agreed"
+                  >
+                    <template v-if="item.asked.length">
+                      <dt>Questions</dt>
+                      <dd>{{ item.asked.join(" · ") }}</dd>
+                    </template>
+                    <template
+                      v-for="line in agreed(item)"
+                      :key="line.label"
+                    >
+                      <dt>{{ line.label }}</dt>
+                      <dd>{{ line.text }}</dd>
+                    </template>
+                  </dl>
+                  <button
+                    v-if="!item.outcome_at"
+                    type="button"
+                    class="secondary small"
+                    :data-test="`log-outcome-${item.id}`"
+                    @click="noting = item.id"
+                  >
+                    Noter ce qui a été convenu
+                  </button>
+                </template>
               </li>
             </ul>
-          </div>
-        </section>
+          </DisclosureRow>
+        </div>
       </template>
-
-      <!-- Le carnet, replié (docs/130 §B) : « Modifier » sur la ligne de chaque rendez-vous. -->
-      <DisclosureRow
-        v-if="page.past.length"
-        class="orp-log"
-        title="Le carnet"
-        :value="plural(page.past.length, 'rendez-vous', 'rendez-vous')"
-        data-test="meeting-log"
-      >
-        <ul>
-          <li
-            v-for="item in page.past"
-            :key="item.id"
-          >
-            <div class="orp-log-head">
-              <h3>{{ dayText(item.starts_at) }}<span v-if="item.place"> · {{ item.place }}</span></h3>
-              <button
-                v-if="item.outcome_at && noting !== item.id"
-                type="button"
-                class="link"
-                :data-test="`log-outcome-${item.id}`"
-                @click="noting = item.id"
-              >
-                Modifier
-              </button>
-            </div>
-            <OrpOutcomeForm
-              v-if="noting === item.id"
-              :meeting="item"
-              :target="page.target"
-              :trainings="page.trainings"
-              @saved="outcomeSaved"
-              @cancel="noting = null"
-            />
-            <template v-else>
-              <dl
-                v-if="item.outcome_at"
-                class="orp-agreed"
-              >
-                <template v-if="item.asked.length">
-                  <dt>Questions</dt>
-                  <dd>{{ item.asked.join(" · ") }}</dd>
-                </template>
-                <template
-                  v-for="line in agreed(item)"
-                  :key="line.label"
-                >
-                  <dt>{{ line.label }}</dt>
-                  <dd>{{ line.text }}</dd>
-                </template>
-              </dl>
-              <button
-                v-if="!item.outcome_at"
-                type="button"
-                class="secondary small"
-                :data-test="`log-outcome-${item.id}`"
-                @click="noting = item.id"
-              >
-                Noter ce qui a été convenu
-              </button>
-            </template>
-          </li>
-        </ul>
-      </DisclosureRow>
     </template>
   </section>
 </template>

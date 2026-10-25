@@ -60,9 +60,9 @@ describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", ()
     }
   });
 
-  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP, les points des premiers pas à faire et le point « sans réponse » (1.6.20) ; le texte gris est en --muted", () => {
+  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP, les points des premiers pas à faire et le point « sans réponse » (1.6.20), la piste de l'interrupteur (1.6.23) ; le texte gris est en --muted", () => {
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "").trim());
-    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots|\.day-dots \.dot)/);
+    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots|\.day-dots \.dot|:root input\[type="checkbox"\])/);
     expect(rules.length).toBeGreaterThan(0);
   });
 });
@@ -160,5 +160,13 @@ describe("les alertes (1.6.22)", () => {
     expect(css).toContain(".summary-list .late .dot { background: var(--orange); }");
     // #e08a2e n'apparaît qu'une fois : la valeur de --orange.
     expect(css.split("#e08a2e").length - 1).toBe(1);
+  });
+});
+
+describe("l'interrupteur (1.6.23)", () => {
+  it("la piste non cochée se voit sur la carte : --faint, 3:1 au moins (WCAG 1.4.11)", () => {
+    expect(css).toMatch(/:root input\[type="checkbox"\] \{[^}]*background: var\(--faint\)/);
+    expect(ratio(light.faint!, light.surface!)).toBeGreaterThanOrEqual(3);
+    expect(ratio(dark.faint!, dark.surface!)).toBeGreaterThanOrEqual(3);
   });
 });

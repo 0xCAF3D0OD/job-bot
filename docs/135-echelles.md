@@ -590,3 +590,33 @@ Retours du 25 octobre sur l'écran de référence Alertes dans Figma.
   code (points de suspension), sur deux lignes dans Figma ; il l'était déjà avant.
 - 471 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
   aussi en sombre.
+
+## Écarts (1.6.23)
+
+Retours du 25 octobre sur l'écran de référence Rendez-vous dans Figma.
+
+- **La conclusion en haut** (règles §3.2) : « Prochain rendez-vous mardi 27 octobre à 09:30, ORP de Lausanne. »,
+  la date et l'heure en accent ; « Préparer » en lien à droite (dessous sur téléphone), qui descend à la
+  préparation, et le « ⋯ » du rendez-vous à côté. Elle remplace la carte « Le prochain rendez-vous » ; la carte
+  reste pour saisir la date, la modifier, ou noter ce qui a été convenu après le rendez-vous.
+- **Une obligation en retard** (échéance passée, pas faite) rejoint la phrase, en `--orange-text` : « En retard :
+  preuves de septembre, à remettre au plus tard le 5 octobre. » ; « Obligations et échéances » la compte.
+- **La feuille sur une colonne** : le nom, puis « Télécharger la feuille (PDF) » en bouton plein et « Rédiger avec
+  l'IA » en contour ; le message rédigé dessous.
+- **Le mois replié** (règles §3.4) : une ligne repliable par partie, avec son résumé (en bref, ce qui bloque, les
+  compétences qui manquent, les obligations, le carnet) ; « Le mois en bref » ouvert.
+- **Premier rendez-vous** : « Enregistrer » en bouton plein (§3.3) ; « Voir les offres » devient un lien dans
+  l'écran vide.
+- **L'interrupteur** : la piste non cochée en `--faint` (3,6:1 sur la carte) au lieu de `--border` (1,2:1),
+  partout dans l'application (WCAG 1.4.11).
+- **Sans candidature**, une échéance passée (les preuves d'un mois vide) n'est pas une alerte : rien en orange.
+
+## Vérifié (1.6.23)
+
+- Captures avant/après (horloge figée) : la page Rendez-vous change ; ailleurs, seule la piste des interrupteurs
+  non cochés (Réglages, Profil, Bilan, Suivi).
+- Figma et code côte à côte : `docs/captures/1.6.23/` (démo en 1440 et 390 px, compte neuf en 1440 px).
+  Écarts restants : le compte neuf garde le titre « Préparer » au-dessus du formulaire ; « Ce qui bloque » n'a pas
+  de résumé quand il n'y a que « ce qui marche » ; le champ du nom est plus étroit (28 rem) que dans Figma.
+- 476 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
+  aussi en sombre.
