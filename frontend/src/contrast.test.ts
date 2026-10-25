@@ -60,9 +60,9 @@ describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", ()
     }
   });
 
-  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP et les points des premiers pas à faire ; le texte gris est en --muted", () => {
+  it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP, les points des premiers pas à faire et le point « sans réponse » (1.6.20) ; le texte gris est en --muted", () => {
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "").trim());
-    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots)/);
+    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots|\.day-dots \.dot)/);
     expect(rules.length).toBeGreaterThan(0);
   });
 });
@@ -140,5 +140,17 @@ describe("les tuiles de Bilan (1.6.19)", () => {
       expect(rule(name)).not.toContain("nowrap");
     }
     expect(rule("dash-tile-head")).toContain("flex-wrap: wrap");
+  });
+});
+
+describe("le Suivi (1.6.20)", () => {
+  it("un refus n'est pas une erreur : gris ; « sans réponse » en --faint, plus de couleur en dur", () => {
+    expect(css).toContain(".app-status .dot.refus { background: var(--muted); }");
+    expect(css).toContain(".app-status .dot.sans_reponse { background: var(--faint); }");
+    expect(css).not.toContain("#c4c8d2");
+  });
+
+  it("le titre d'une ligne repliable en 600, ouverte ou fermée (comme Figma)", () => {
+    expect(css).toMatch(/\.disclosure-title \{[^}]*font-weight: var\(--weight-semibold\)/);
   });
 });
