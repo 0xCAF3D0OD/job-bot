@@ -192,9 +192,13 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     // Les relances sont dans leur carte, dessous.
     expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
 
-    mockGet(today({ to_review: 0, to_follow_up: 0, rhythm: rhythm({ count: 3 }) }));
+    mockGet(today({ to_review: 0, to_follow_up: 0, month_count: 20, rhythm: rhythm({ count: 3 }) }));
     wrapper = await mountView();
     expect(wrapper.find("[data-test=today-sentence]").text()).toBe("Tout est à jour. Ta semaine est faite.");
+    // Le mois en retard : « Ta semaine est faite » se tait (1.6.27).
+    mockGet(today({ to_review: 0, to_follow_up: 0, month_count: 1, rhythm: rhythm({ count: 3 }) }));
+    wrapper = await mountView();
+    expect(wrapper.find("[data-test=today-sentence]").text()).toBe("Tout est à jour.");
     expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
 
     mockGet(today({ rhythm: rhythm({ research_today: false }) }));

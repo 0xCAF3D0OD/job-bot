@@ -211,9 +211,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi(() => months.shift() ?? month({ to_declare: 0, rows: [rows[0]] }), [declared, left]);
     PUT.mockResolvedValue({ response: { status: 204 } });
     const { wrapper } = await mountView();
-    // Un onglet de « À faire » (docs/133 §1).
-    expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
-    await wrapper.find("[data-test=panel-tab-declare]").trigger("click");
+    // Sa propre liste, sous « À relancer » (1.6.27 : plus d'onglets, règles §2).
     const list = wrapper.find("[data-test=declare]");
     expect(list.text()).toContain("À déclarer dans Job-Room");
     expect(list.findAll("li")).toHaveLength(1);
@@ -223,7 +221,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(item.find("strong").text()).toBe("Reste SA");
     expect(item.text()).toContain("Ingénieur DevOps junior");
     expect(item.find(".today-row-action").text()).toBe("Déclarer");
-    expect(wrapper.find("[data-test=panel-tab-declare]").text()).toBe("À déclarer · 1");
+    expect(list.find("h2").text()).toBe("À déclarer dans Job-Room · 1");
     expect(item.text()).toContain("à compléter");
     // Un clic ouvre le panneau : l'offre, « Modifier », les champs et « Marquer comme déclarée ».
     await item.trigger("click");
@@ -386,7 +384,8 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
     mockApi(() => month(), [late]);
     const { wrapper } = await mountView();
     const card = wrapper.find("[data-test=todo] [data-test=application-card]");
-    expect(card.find("[data-test=card-step]").text()).toContain("Sans réponse depuis 10 jours");
+    // Le vrai nombre de jours depuis l'envoi (1.6.27).
+    expect(card.find("[data-test=card-step]").text()).toContain("Sans réponse depuis 12 jours");
     await card.find("[data-test=card-step-follow-up]").trigger("click");
     expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
     expect(wrapper.text()).toContain("Relancer Lente SA");
@@ -402,20 +401,21 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
 });
 
 describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop chargé)", () => {
-  it("« À faire » : trois lignes, « Tout voir » pour le reste", async () => {
+  it("à relancer et à déclarer : deux listes l'une sous l'autre, trois lignes chacune, « Tout voir »", async () => {
     const many = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
     const todo = wrapper.find("[data-test=todo]");
-    expect(todo.find("[data-test=panel-tab-follow]").text()).toBe("À relancer · 7");
+    expect(todo.find("h2").text()).toBe("À relancer · 7");
+    expect(wrapper.find(".segmented").exists()).toBe(false);
     expect(todo.findAll("[data-test=application-card]")).toHaveLength(3);
     await todo.find("[data-test=todo-all]").trigger("click");
     expect(todo.findAll("[data-test=application-card]")).toHaveLength(7);
     expect(todo.find("[data-test=todo-all]").text()).toBe("Réduire");
-    // Changer d'onglet replie la liste.
-    await todo.find("[data-test=panel-tab-declare]").trigger("click");
-    await todo.find("[data-test=panel-tab-follow]").trigger("click");
-    expect(todo.findAll("[data-test=application-card]")).toHaveLength(3);
+    // La liste à déclarer, dessous, avec ses deux lignes (moins de trois : pas de « Tout voir »).
+    const declare = wrapper.find("[data-test=declare]");
+    expect(declare.findAll("li")).toHaveLength(2);
+    expect(declare.find("[data-test=declare-all]").exists()).toBe(false);
   });
 
   it("la conclusion en haut : relances et candidatures à déclarer, les nombres en accent", async () => {

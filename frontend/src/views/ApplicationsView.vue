@@ -146,16 +146,12 @@ const sentence = computed<{ text: string; strong?: boolean }[]>(() => {
   parts.push({ text: "." });
   return parts;
 });
-// « À faire » (docs/133 §1) : à relancer ou à déclarer dans Job-Room ; trois lignes, « Tout voir »
-// pour le reste (règles §3).
-const panelTab = ref<"follow" | "declare">("follow");
-const showAll = ref(false);
-const todoCount = computed(() => (panelTab.value === "follow" || !orp.value?.count ? toFollowUp.value.length : toDeclare.value.length));
-const followShown = computed(() => (showAll.value ? toFollowUp.value : toFollowUp.value.slice(0, TODO_ROWS)));
-const declareShown = computed(() => (showAll.value ? toDeclare.value : toDeclare.value.slice(0, TODO_ROWS)));
-watch(panelTab, () => {
-  showAll.value = false;
-});
+// À relancer, puis à déclarer dans Job-Room (docs/133 §1) : deux listes l'une sous l'autre (1.6.27 ;
+// le sélecteur faisait un troisième niveau d'onglets, règles §2), trois lignes, « Tout voir » pour le reste.
+const showAllFollow = ref(false);
+const showAllDeclare = ref(false);
+const followShown = computed(() => (showAllFollow.value ? toFollowUp.value : toFollowUp.value.slice(0, TODO_ROWS)));
+const declareShown = computed(() => (showAllDeclare.value ? toDeclare.value : toDeclare.value.slice(0, TODO_ROWS)));
 // Le calendrier replié s'ouvre de lui-même quand un jour est demandé (lien « fais le point »,
 // assistant) : la clé le recrée, ouvert.
 const calendarKey = ref(0);
@@ -579,123 +575,105 @@ onUnmounted(() => assistant.setFocus(null));
         </div>
       </FaceState>
       <template v-else-if="loaded">
-        <!-- L'essentiel : ce qui est à faire, trois lignes au plus (règles §3). -->
+        <!-- L'essentiel : à relancer, puis à déclarer, trois lignes chacune (règles §2 et §3). -->
         <section
           class="dash-card suivi-todo"
           data-test="todo"
         >
           <header class="dash-card-head">
-            <h2>À faire</h2>
+            <h2>À relancer{{ toFollowUp.length ? ` · ${toFollowUp.length}` : "" }}</h2>
             <button
-              v-if="todoCount > TODO_ROWS"
+              v-if="toFollowUp.length > TODO_ROWS"
               type="button"
               class="link"
               data-test="todo-all"
-              :aria-expanded="showAll"
-              @click="showAll = !showAll"
+              :aria-expanded="showAllFollow"
+              @click="showAllFollow = !showAllFollow"
             >
-              {{ showAll ? "Réduire" : "Tout voir" }}
+              {{ showAllFollow ? "Réduire" : "Tout voir" }}
             </button>
           </header>
-          <!-- Deux onglets (docs/133 §1) : une liste à la fois. -->
-          <div
-            v-if="orp.count"
-            class="segmented small suivi-panel-tabs"
-            role="radiogroup"
-            aria-label="Liste affichée"
+          <p
+            v-if="!toFollowUp.length"
+            class="hint"
           >
-            <button
-              type="button"
-              role="radio"
-              :aria-checked="panelTab === 'follow'"
-              data-test="panel-tab-follow"
-              @click="panelTab = 'follow'"
-            >
-              À relancer{{ toFollowUp.length ? ` · ${toFollowUp.length}` : "" }}
-            </button>
-            <button
-              type="button"
-              role="radio"
-              :aria-checked="panelTab === 'declare'"
-              data-test="panel-tab-declare"
-              @click="panelTab = 'declare'"
-            >
-              À déclarer{{ toDeclare.length ? ` · ${toDeclare.length}` : "" }}
-            </button>
-          </div>
-          <template v-if="panelTab === 'follow' || !orp.count">
-            <p
-              v-if="!toFollowUp.length"
-              class="hint"
-            >
-              Rien à relancer.
-            </p>
-            <ul
-              v-else
-              class="today-rows"
-            >
-              <li
-                v-for="application in followShown"
-                :key="application.id"
-              >
-                <ApplicationCard
-                  :application="application"
-                  :orp-row="rowsById.get(application.id) ?? null"
-                  @open="openId = $event.id"
-                  @status="setStatus"
-                  @edit="edit"
-                  @interview="openInterview"
-                  @prepare="preparing = $event"
-                  @changed="load"
-                />
-              </li>
-            </ul>
-          </template>
-          <section
+            Rien à relancer.
+          </p>
+          <ul
             v-else
-            class="suivi-declare"
-            data-test="declare"
+            class="today-rows"
           >
-            <h3 class="visually-hidden">
-              À déclarer dans Job-Room
-            </h3>
-            <p
-              v-if="!toDeclare.length"
-              class="hint"
-              data-test="declare-done"
+            <li
+              v-for="application in followShown"
+              :key="application.id"
             >
-              Tout est déclaré.
-            </p>
-            <ul
-              v-else
-              class="today-rows"
+              <ApplicationCard
+                :application="application"
+                :orp-row="rowsById.get(application.id) ?? null"
+                @open="openId = $event.id"
+                @status="setStatus"
+                @edit="edit"
+                @interview="openInterview"
+                @prepare="preparing = $event"
+                @changed="load"
+              />
+            </li>
+          </ul>
+        </section>
+        <section
+          v-if="orp.count"
+          class="dash-card suivi-todo suivi-declare"
+          data-test="declare"
+        >
+          <header class="dash-card-head">
+            <h2><span>À déclarer<span class="visually-hidden"> dans Job-Room</span>{{ toDeclare.length ? ` · ${toDeclare.length}` : "" }}</span></h2>
+            <button
+              v-if="toDeclare.length > TODO_ROWS"
+              type="button"
+              class="link"
+              data-test="declare-all"
+              :aria-expanded="showAllDeclare"
+              @click="showAllDeclare = !showAllDeclare"
             >
-              <li
-                v-for="item in declareShown"
-                :key="item.id"
+              {{ showAllDeclare ? "Réduire" : "Tout voir" }}
+            </button>
+          </header>
+          <p
+            v-if="!toDeclare.length"
+            class="hint"
+            data-test="declare-done"
+          >
+            Tout est déclaré.
+          </p>
+          <ul
+            v-else
+            class="today-rows"
+          >
+            <li
+              v-for="item in declareShown"
+              :key="item.id"
+            >
+              <button
+                type="button"
+                class="today-row"
+                :data-test="`declare-${item.id}`"
+                :title="`${item.company} · ${item.title}`"
+                @click="openId = item.id"
               >
-                <button
-                  type="button"
-                  class="today-row"
-                  :data-test="`declare-${item.id}`"
-                  :title="`${item.company} · ${item.title}`"
-                  @click="openId = item.id"
-                >
-                  <span
-                    class="logo"
-                    :class="`c${colorIndex(item.company)}`"
-                    aria-hidden="true"
-                  >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
-                  <span class="today-row-main">
-                    <strong>{{ item.company }}</strong>
-                    <span class="today-row-line">{{ item.title }}</span>
-                    <span class="today-row-line">envoyée le {{ item.day }}<template v-if="item.incomplete"> · à compléter</template></span>
-                  </span>
-                  <span class="today-row-action">Déclarer</span>
-                </button>
-              </li>
-            </ul>
-          </section>
+                <span
+                  class="logo"
+                  :class="`c${colorIndex(item.company)}`"
+                  aria-hidden="true"
+                >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
+                <span class="today-row-main">
+                  <strong>{{ item.company }}</strong>
+                  <span class="today-row-line">{{ item.title }}</span>
+                  <span class="today-row-line">envoyée le {{ item.day }}<template v-if="item.incomplete"> · à compléter</template></span>
+                </span>
+                <span class="today-row-action">Déclarer</span>
+              </button>
+            </li>
+          </ul>
         </section>
 
         <!-- Le détail replié (règles §3.4) : le calendrier et la liste du mois, deux lignes à la

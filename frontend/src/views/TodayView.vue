@@ -31,6 +31,11 @@ const DOSE_CATCH_UP = 5;
 const best = ref<Offer[]>([]);
 // Un jour de repos (docs/86) : aucune liste à traiter.
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
+// Le mois ORP en retard sur son rythme (format.orpPace).
+const monthBehind = computed(() => {
+  const t = today.value;
+  return !!t && orpPace(t.month_count, t.month_target, t.month)?.state === "behind";
+});
 const rhythmPaused = computed(() => !!today.value?.rhythm?.pause_until);
 const preparing = ref<Offer[]>([]);
 const { message } = useCollect();
@@ -98,7 +103,8 @@ const sentence = computed<Part[]>(() => {
   if (t.to_follow_up) items.push([{ text: plural(t.to_follow_up, "relance", "relances"), strong: true }]);
   // La semaine est dans le mois ORP, juste dessous (docs/131 §A.2) : la phrase n'en parle plus.
   if (!items.length) {
-    const weekDone = t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target;
+    // « Ta semaine est faite » se tait quand le mois est en retard (1.6.27).
+    const weekDone = t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target && !monthBehind.value;
     return [{ text: weekDone ? "Tout est à jour. Ta semaine est faite." : "Tout est à jour." }];
   }
   const parts: Part[] = [];
@@ -430,6 +436,7 @@ const { me } = useAuth();
             <RhythmCard
               v-if="today.rhythm && !starting"
               :week="today.rhythm"
+              :month-behind="monthBehind"
               nested
             />
           </section>

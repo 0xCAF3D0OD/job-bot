@@ -7,7 +7,8 @@ import type { components } from "../api/schema";
 // une phrase qui dit où tu en es, sans reproche.
 type Week = components["schemas"]["RhythmWeek"];
 // `nested` : dans la carte Mois ORP d'Aujourd'hui (docs/95 §4), sans cadre, un sous-titre.
-const props = defineProps<{ week: Week; nested?: boolean }>();
+// `monthBehind` : le mois ORP est en retard ; « Semaine faite » se tait alors (1.6.27).
+const props = defineProps<{ week: Week; nested?: boolean; monthBehind?: boolean }>();
 
 const LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
 const NAMES = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
@@ -26,7 +27,7 @@ const sentence = computed(() => {
     return `En pause jusqu'au ${longDate.format(new Date(`${props.week.pause_until}T12:00:00`))}. Pense à l'annoncer à ton conseiller.`;
   }
   if (props.week.target === null) return "";
-  if (done.value) return "Semaine faite. Le reste du temps est à toi.";
+  if (done.value) return props.monthBehind ? "" : "Semaine faite. Le reste du temps est à toi.";
   // Jour de repos : dans la carte d'Aujourd'hui, la phrase du haut le dit déjà (1.6.26).
   if (!props.week.research_today) return props.nested ? "" : "Jour de repos : rien à faire aujourd'hui.";
   // Dans la carte du mois (docs/129) : le compte au-dessus le dit déjà.

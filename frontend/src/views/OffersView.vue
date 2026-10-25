@@ -55,9 +55,12 @@ const VIEW_END: Record<string, [string, string]> = {
   expired: [" expirée", " expirées"],
   all: ["", ""],
 };
+// Dans une autre vue que « À examiner », la phrase redit ce que compte la pastille de l'onglet
+// (1.6.27) : « 35 offres en cours · 169 à examiner. »
+const otherView = computed(() => filters.value.view !== "to_review" && counts.value.to_review > 0);
 const sentenceEnd = computed(() => {
   const [one, many] = VIEW_END[filters.value.view] ?? ["", ""];
-  return `${total.value > 1 ? many : one}.`;
+  return `${total.value > 1 ? many : one}`;
 });
 const failed = ref(false);
 const firstLoaded = ref(false);
@@ -385,7 +388,9 @@ onUnmounted(() => {
       class="offers-sentence"
       data-test="offers-sentence"
     >
-      <strong v-if="total">{{ plural(total, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}
+      <strong v-if="total">{{ plural(total, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}<template v-if="otherView">
+        {{ " · " }}<strong data-test="offers-to-review">{{ counts.to_review }}</strong>{{ " à examiner" }}
+      </template>{{ "." }}
     </p>
     <!-- Titre et onglets : en-tête de la rubrique Candidatures (docs/19 §2). -->
     <div class="offers-heading">

@@ -62,7 +62,7 @@ describe("--faint, réservé à ce qui n'est pas du texte (docs/135, 1.6.1)", ()
 
   it("seulement pour les chevrons, les soulignés, l'encre des dessins, le bord des boutons secondaires, les jours vides, les cases ORP, les points des premiers pas à faire et le point « sans réponse » (1.6.20), la piste de l'interrupteur (1.6.23) ; le texte gris est en --muted", () => {
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*var\(--faint\)[^{}]*)\}/g)].map((m) => m[1]!.replace(/\/\*[\s\S]*?\*\//g, "").trim());
-    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots|\.day-dots \.dot|:root input\[type="checkbox"\])/);
+    for (const selector of rules) expect(selector).toMatch(/^(\.disclosure-chevron|\.hover-note|\.drawing |button:where\(|\.rhythm-dot|\.orp-month-bar|\.first-steps-dots|\.day-dots \.dot|:root input\[type="checkbox"\]|\.button-link)/);
     expect(rules.length).toBeGreaterThan(0);
   });
 });
@@ -179,5 +179,15 @@ describe("les lignes repliables (1.6.24)", () => {
     // Jamais au milieu d'un mot : pas de largeur minimale nulle ni de coupure forcée.
     expect(rule).not.toContain("min-width: 0");
     expect(rule).not.toContain("break-word");
+  });
+});
+
+describe("revue sur ordinateur (1.6.27)", () => {
+  it("« en dessous » des semaines en gris ; le lien en bouton a le bord des boutons secondaires", () => {
+    expect(css).toContain(".rhythm-weeks li.missed .rhythm-weeks-state { background: var(--band); color: var(--muted); }");
+    expect(css).toMatch(/\.button-link \{[^}]*border: 1px solid var\(--faint\)/);
+  });
+  it("le bouton « Assistant » laisse sa place en bas de la page", () => {
+    expect(css).toMatch(/:root:has\(\.assistant-fab\) \.app-footer \{ padding-bottom: calc\(/);
   });
 });

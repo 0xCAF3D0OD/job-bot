@@ -262,7 +262,7 @@ def compare(facts: list[Facts], names: dict[str, str], today: date) -> list[Comp
         ),
         Comparison(
             "score",
-            "Proximité avec ton profil",
+            "Proximité avec le profil",
             sorted(by_score.values(), key=lambda g: order[g.key]),
         ),
         Comparison(
