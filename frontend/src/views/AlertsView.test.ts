@@ -102,9 +102,11 @@ describe("Alertes, résumé (docs/21 §4)", () => {
       ]),
     );
     expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(false);
-    const summary = wrapper.find("[data-test=alerts-summary]");
-    expect(summary.text()).toContain("2 recherches suivies");
-    expect(summary.text()).toContain("Dernière alerte reçue le 6 octobre");
+    // La conclusion en haut (1.6.22) : le nombre en accent, la dernière alerte reçue.
+    const sentence = wrapper.find("[data-test=alerts-sentence]");
+    expect(sentence.text()).toBe("2 recherches suivies, la dernière alerte reçue le 6 octobre.");
+    expect(sentence.find("strong").text()).toBe("2 recherches suivies");
+    expect(wrapper.find("[data-test=alerts-summary] h2").text()).toBe("Les alertes");
     const rows = wrapper.findAll("[data-test=summary-row]");
     expect(rows[0]!.classes()).toContain("ok");
     expect(rows[1]!.classes()).toContain("late");
@@ -122,6 +124,19 @@ describe("Alertes, résumé (docs/21 §4)", () => {
   it("tout va bien : pas d'aide au transfert", async () => {
     const wrapper = await mountView(page([search(1, [cell("jobup", { status: "received", received_at: "2026-10-06T08:00:00Z" })])]));
     expect(wrapper.find("[data-test=late-help]").exists()).toBe(false);
+  });
+
+  it("sans alerte reçue : la phrase le dit", async () => {
+    const day = new Date(Date.now() - 4 * DAY).toISOString();
+    const wrapper = await mountView(page([search(1, [cell("jobup", { status: "created", created_at: day })])]));
+    expect(wrapper.find("[data-test=alerts-sentence]").text()).toBe("1 recherche suivie, aucune alerte reçue pour l'instant.");
+  });
+
+  it("des blocs de chargement tant que la page charge (règles §6)", async () => {
+    GET.mockReturnValue(new Promise(() => undefined));
+    const wrapper = mount(AlertsView);
+    await flushPromises();
+    expect(wrapper.find("[data-test=loading]").exists()).toBe(true);
   });
 });
 
@@ -165,6 +180,7 @@ describe("Alertes, une colonne (docs/130 §F)", () => {
     expect(columns.classes()).not.toContain("wide");
     expect(columns.find(".alerts-main h2").text()).toBe("Les alertes");
     expect(columns.find(".alerts-aside [data-test=site-mail]").exists()).toBe(true);
+    expect(columns.find(".alerts-aside > h2").text()).toBe("Le détail");
     expect(columns.find(".alerts-journal").exists()).toBe(true);
   });
 });

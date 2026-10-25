@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
+import { alertsDigest } from "../alertsDigest";
 import AlertsForward from "../components/AlertsForward.vue";
 import AlertsPanel from "../components/AlertsPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
@@ -11,7 +12,9 @@ import AlertsWizard from "../components/AlertsWizard.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import SiteMail from "../components/SiteMail.vue";
 import JournalPanel from "../components/JournalPanel.vue";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { usePageReady } from "../composables/usePageTransition";
+import { plural } from "../format";
 
 // Onglet Alertes (docs/20 §1, docs/21 §4) : l'assistant tant que rien n'est en place,
 // ensuite un résumé ; le tableau complet dans « Gérer mes alertes » ; le journal replié.
@@ -46,6 +49,19 @@ async function confirmed(searchId: number): Promise<void> {
 }
 
 const received = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+
+// La conclusion en haut (règles §3.2, 1.6.22) : le nombre de recherches suivies, en accent, et
+// la dernière alerte reçue.
+const longDay = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+const sentence = computed(() => {
+  if (!page.value) return null;
+  const { active, lastReceived } = alertsDigest(page.value);
+  if (!active) return null;
+  return {
+    count: plural(active, "recherche suivie", "recherches suivies"),
+    rest: lastReceived ? `, la dernière alerte reçue le ${longDay.format(new Date(lastReceived))}.` : ", aucune alerte reçue pour l'instant.",
+  };
+});
 
 onMounted(() => void load());
 </script>
@@ -86,8 +102,16 @@ onMounted(() => void load());
       :class="['alerts-columns', { wide: view === 'manage', 'has-code': !!page.codes?.length }]"
     >
       <div class="alerts-main">
+        <!-- La conclusion d'abord (règles §3.2) ; l'assistant garde son titre. -->
+        <p
+          v-if="view === 'summary' && sentence"
+          class="offers-sentence alerts-sentence"
+          data-test="alerts-sentence"
+        >
+          <strong>{{ sentence.count }}</strong>{{ sentence.rest }}
+        </p>
         <h2
-          v-if="view !== 'manage'"
+          v-else-if="view !== 'manage'"
           class="section-title first"
         >
           Les alertes
@@ -119,8 +143,15 @@ onMounted(() => void load());
 
       <section
         class="alerts-aside"
-        aria-label="Les e-mails des sites"
+        aria-labelledby="alerts-detail-title"
       >
+        <!-- Le détail replié (règles §3.4), sous un titre comme Suivi et Bilan. -->
+        <h2
+          id="alerts-detail-title"
+          class="section-title first"
+        >
+          Le détail
+        </h2>
         <SiteMail
           :codes="page.codes ?? []"
           :guest-mailbox="!!(page.personal_address && page.guest_mailbox)"
@@ -146,5 +177,10 @@ onMounted(() => void load());
         </DisclosureRow>
       </div>
     </div>
+    <!-- Des blocs de chargement gardent la place (règles §6, 1.6.22). -->
+    <LoadingBlocks
+      v-else
+      :heights="['3rem', '17.5rem', '3.5rem', '3.5rem']"
+    />
   </section>
 </template>
