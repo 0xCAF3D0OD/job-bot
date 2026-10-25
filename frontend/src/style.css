@@ -2045,7 +2045,6 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 .dash-tile:hover { border-color: var(--accent); }
 .dash-tile-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 /* Jamais de libellé coupé : trop long, il passe sous la bulle (décision du 24 octobre). */
-.dash-tile-label { min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); overflow-wrap: break-word; }
 .dash-tile .sparkline { flex: 0 1 auto; width: 4.5rem; margin-left: auto; color: var(--muted); }
 .dash-tile-foot { display: grid; gap: var(--space-1); }
 .dash-trend { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; font-size: var(--font-small); color: var(--muted); }
@@ -2105,7 +2104,6 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   .dash-tile .sparkline { display: none; }
   .dash-bubble { width: 2.4rem; height: 2.4rem; }
   .dash-bubble .icon { width: 18px; height: 18px; }
-  .dash-tile-label { font-size: var(--font-small); }
   .dash-value { font-size: var(--font-figure); }
   .dash-card-head .segmented.small { min-width: 0; width: 100%; }
   .bar-chart { min-height: 9rem; }

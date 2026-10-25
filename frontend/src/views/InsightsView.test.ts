@@ -78,11 +78,14 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=funnel-received]").text()).toContain("75");
     expect(wrapper.find("[data-test=funnel-engagements]").text()).toContain("0");
     // Tuiles (docs/55) : candidatures, réponses, entretiens, délai.
-    expect(wrapper.find("[data-test=tile-applications]").text()).toContain("sur 19 offres gardées");
+    // Le chiffre d'abord, puis sa précision en une phrase (1.6.26).
+    expect(wrapper.find("[data-test=tile-applications] [data-test=tile-caption]").text()).toBe("candidatures, sur 19 offres gardées");
+    const tile = wrapper.find("[data-test=tile-applications] .dash-tile-foot").element;
+    expect(tile.firstElementChild!.classList.contains("dash-value")).toBe(true);
     expect(wrapper.find("[data-test=tile-responses]").text()).toContain("41 % des envois");
     expect(wrapper.find("[data-test=tile-interviews]").text()).toContain("dont 1 à venir");
     expect(wrapper.find("[data-test=delay]").text()).toContain("9 j");
-    expect(wrapper.find("[data-test=delay]").text()).toContain("de réponse, de 2 à 18 j");
+    expect(wrapper.find("[data-test=delay] [data-test=tile-caption]").text()).toBe("délai de réponse, de 2 à 18 j");
     // Le détail replié (règles §3.4) : une ligne par vue, toutes fermées ; plus de sélecteur (§2).
     expect(wrapper.find(".bilan-views").exists()).toBe(false);
     const rows = wrapper.findAll("[data-test=bilan-detail] .disclosure-row");

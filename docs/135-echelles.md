@@ -741,3 +741,33 @@ Décision du 25 octobre : les Actualités quittent l'interface ; le code serveur
 - 463 tests (les tests de la vue retirée en moins, celui des onglets du Bilan en plus), lint, types ; 5 tests de
   l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité aussi en sombre.
 
+## Écarts (1.6.26)
+
+Une version de clarté, sans changer la structure (25 octobre).
+
+- **Aujourd'hui, jour de repos** : une seule phrase en haut, qui dit quoi faire si l'on veut avancer (« Jour de
+  repos. Si tu veux avancer : 7 relances en attente. », sinon les offres à examiner). La carte « Offres du jour »
+  disparaît ce jour-là et la semaine du mois ORP ne le répète plus. Figma : un état « Jour de repos ».
+- **Sans jargon** :
+  - « Jour sans recherche » → « Jour de repos » (la phrase du jour, la semaine, le nom d'un jour pour les lecteurs
+    d'écran) ;
+  - « On rattrape » → « En retard de N candidatures », N l'écart avec le rythme attendu du mois ;
+  - « Note de l'IA » → « Proximité avec ton profil » (le nom de la note d'une offre pour les lecteurs d'écran, le
+    titre de la comparaison dans Bilan › Ce qui marche, côté serveur).
+- **Les tuiles du Bilan** : le chiffre d'abord, puis sa précision en une phrase (« 26 · candidatures, sur 33 offres
+  gardées », « 12 j · délai de réponse, d'habitude ») ; le nom ne flotte plus à côté de la bulle. Figma : la Tuile de
+  chiffre perd sa propriété « Libellé », la précision porte la phrase (44 instances mises à jour).
+- **« Filtrer »** en toutes lettres à côté de l'entonnoir (Offres et Formations sur téléphone), le nombre de filtres
+  actifs en pastille. Figma : une Pilule « Filtrer » à la place du bouton icône.
+- **Non changé** : le texte de l'assistant (`llm/prompts/assistant-v20.md`) parle encore de « jour sans
+  recherche » ; il change avec la prochaine version du texte de l'assistant.
+
+## Vérifié (1.6.26)
+
+- Captures avant/après (horloge figée) : changent le Bilan (les tuiles), Offres et Formations sur téléphone
+  (« Filtrer »). Le jour de repos et le retard sur le mois n'apparaissent pas dans la démo (un jeudi de recherche,
+  dans les temps) : ils sont couverts par les tests (Aujourd'hui, la semaine, le mois ORP) et par l'état Figma.
+- Bilan, Figma et code côte à côte en 1440 et 390 px : `docs/captures/1.6.26/`.
+- 463 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
+  aussi en sombre.
+

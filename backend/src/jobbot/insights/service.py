@@ -260,7 +260,11 @@ def compare(facts: list[Facts], names: dict[str, str], today: date) -> list[Comp
             "D'où vient l'offre",
             sorted(by_source.values(), key=lambda g: (-g.total, g.label)),
         ),
-        Comparison("score", "Note de l'IA", sorted(by_score.values(), key=lambda g: order[g.key])),
+        Comparison(
+            "score",
+            "Proximité avec ton profil",
+            sorted(by_score.values(), key=lambda g: order[g.key]),
+        ),
         Comparison(
             "contact",
             "Contact dans l'entreprise",

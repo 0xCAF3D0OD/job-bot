@@ -389,20 +389,19 @@ onUnmounted(() => {
     </p>
     <!-- Titre et onglets : en-tête de la rubrique Candidatures (docs/19 §2). -->
     <div class="offers-heading">
-      <!-- Filtrer (docs/101) : l'entonnoir seul, le nombre de filtres actifs en pastille. -->
+      <!-- Filtrer (docs/101) : l'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille. -->
       <button
         type="button"
-        class="icon-button icon-only filters-toggle"
-        :aria-label="activeCount(filters) ? `Filtrer, ${plural(activeCount(filters), 'filtre actif', 'filtres actifs')}` : 'Filtrer'"
-        data-label="Filtrer"
+        class="pill filters-toggle"
+        :aria-label="activeCount(filters) ? `Filtrer, ${plural(activeCount(filters), 'filtre actif', 'filtres actifs')}` : undefined"
         :aria-expanded="filtersOpen"
         data-test="filters-toggle"
         @click="filtersOpen = !filtersOpen"
       >
-        <AppIcon name="filter" />
+        <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
         <span
           v-if="activeCount(filters)"
-          class="icon-badge"
+          class="tab-count"
           aria-hidden="true"
           data-test="filters-count"
         >{{ activeCount(filters) }}</span>

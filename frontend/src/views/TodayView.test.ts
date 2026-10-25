@@ -185,7 +185,7 @@ describe("Aujourd'hui épuré (docs/95)", () => {
     expect(cta.attributes("href")).toBe("/candidatures/offres");
   });
 
-  it("la phrase suit la situation : relances seules, tout à jour, jour sans recherche, pause", async () => {
+  it("la phrase suit la situation : relances seules, tout à jour, jour de repos, pause", async () => {
     mockGet(today({ to_review: 0, rhythm: rhythm({ count: 3 }) }));
     let wrapper = await mountView();
     expect(wrapper.find("[data-test=today-sentence]").text()).toBe("2 relances.");
@@ -199,8 +199,11 @@ describe("Aujourd'hui épuré (docs/95)", () => {
 
     mockGet(today({ rhythm: rhythm({ research_today: false }) }));
     wrapper = await mountView();
-    expect(wrapper.find("[data-test=today-sentence]").text()).toContain("Jour sans recherche");
-    expect(wrapper.find("[data-test=rest-day]").exists()).toBe(true);
+    // Jour de repos (1.6.26) : une seule phrase, qui dit quoi faire ; plus d'offre du jour ni de répétition.
+    expect(wrapper.find("[data-test=today-sentence]").text()).toBe("Jour de repos. Si tu veux avancer : 2 relances en attente.");
+    expect(wrapper.find("[data-test=today-sentence] strong").text()).toBe("2 relances");
+    expect(wrapper.find("[data-test=best]").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Jour sans recherche");
     expect(wrapper.find("[data-test=today-cta]").exists()).toBe(false);
 
     mockGet(today({ rhythm: rhythm({ pause_until: "2026-11-03" }) }));

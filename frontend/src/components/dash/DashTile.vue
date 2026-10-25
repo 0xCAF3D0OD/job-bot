@@ -5,8 +5,9 @@ import { useCountUp } from "../../composables/useIntro";
 import AppIcon from "../AppIcon.vue";
 import Sparkline from "./Sparkline.vue";
 
-// Tuile d'Aujourd'hui (docs/54 §2) : pictogramme dans une bulle, nom, courbe ; en bas, une
-// petite tendance et le grand chiffre. Toute la tuile mène à sa page, si elle en a une (Bilan).
+// Tuile du Bilan (docs/54 §2) : pictogramme dans une bulle, courbe ; puis le grand chiffre
+// d'abord, et sa précision dessous, en une phrase (« 26 · candidatures, sur 33 offres gardées »,
+// 1.6.26). Toute la tuile mène à sa page, si elle en a une.
 type Icon = InstanceType<typeof AppIcon>["$props"]["name"];
 const props = defineProps<{
   to?: string | Record<string, unknown>;
@@ -36,24 +37,23 @@ const display = computed(() => (parts.value ? `${counted.value}${parts.value[2] 
       <span class="dash-bubble">
         <AppIcon :name="icon" />
       </span>
-      <span class="dash-tile-label">{{ label }}</span>
       <Sparkline
         v-if="values?.length"
         :values="values"
       />
     </span>
     <span class="dash-tile-foot">
+      <strong class="dash-value">{{ display }}</strong>
       <span
-        v-if="trend"
         class="dash-trend"
+        data-test="tile-caption"
       >
-        {{ trend }}
+        {{ trend ? `${label}, ${trend}` : label }}
         <AppIcon
           v-if="rising"
           name="trend"
         />
       </span>
-      <strong class="dash-value">{{ display }}</strong>
       <slot />
     </span>
   </component>
