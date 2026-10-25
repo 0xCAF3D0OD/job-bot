@@ -52,4 +52,13 @@ describe("JobsView (docs/19 §2)", () => {
     expect(wrapper.find("h1").text()).toBe("Candidatures");
     expect(GET).toHaveBeenCalledTimes(4); // pastilles relues au changement d'onglet
   });
+
+  it("l'en-tête suit la largeur de l'onglet : Offres à 1 280 px, les autres à 1 020 (1.6.29)", async () => {
+    GET.mockResolvedValue({ data: {} });
+    const { wrapper, router } = await mountJobs("/candidatures/offres");
+    expect(wrapper.find(".jobs-head").classes()).toContain("wide");
+    await router.push("/candidatures/suivi");
+    await flushPromises();
+    expect(wrapper.find(".jobs-head").classes()).not.toContain("wide");
+  });
 });

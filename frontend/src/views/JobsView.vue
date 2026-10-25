@@ -76,7 +76,7 @@ onMounted(() => void refresh());
 </script>
 
 <template>
-  <div class="jobs-head">
+  <div :class="['jobs-head', { wide: tab === 'offres' }]">
     <h1>Candidatures</h1>
     <nav
       class="prep-tabs jobs-tabs"

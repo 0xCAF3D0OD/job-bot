@@ -1,6 +1,6 @@
 """Captures de toutes les pages pour la migration des échelles (docs/135 §7) : chaque page des
-audits, chaque repliable ouvert et chaque vue choisie (explore.py), à 1440 et 390 px, en clair
-et en sombre. On les prend avant et après un changement, puis `compare.py` montre ce qui a bougé.
+audits, chaque repliable ouvert et chaque vue choisie (explore.py), à 1440 et 390 px (ou CAPTURES_WIDTHS),
+en clair et en sombre. On les prend avant et après un changement, puis `compare.py` montre ce qui a bougé.
 
     make demo
     cd backend && uv run --with playwright python ../frontend/scripts/captures.py \
@@ -30,6 +30,13 @@ SETTLE_AT_TOP = """async () => {
 }"""
 
 SIZES = [{"width": 1440, "height": 900}, {"width": 390, "height": 844}]
+# CAPTURES_WIDTHS=1440,1920,390 ajoute des largeurs (1.6.29 : la largeur maximale se vérifie en 1920).
+HEIGHTS = {390: 844, 1440: 900, 1920: 1080}
+if os.environ.get("CAPTURES_WIDTHS"):
+    SIZES = [
+        {"width": int(w), "height": HEIGHTS.get(int(w), 900)}
+        for w in os.environ["CAPTURES_WIDTHS"].split(",")
+    ]
 # Les pages publiques et la page introuvable (1.6.11), en plus des pages des audits.
 PUBLIC = ["connexion", "inscription", "la-plateforme", "conditions", "a-propos", "bienvenue", "page-introuvable"]
 SCHEMES = ["light", "dark"]
