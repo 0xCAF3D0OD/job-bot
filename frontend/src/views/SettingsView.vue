@@ -398,6 +398,49 @@ onUnmounted(() => spy?.disconnect());
             </div>
           </form>
           <SitesPanel class="settings-status" />
+          <!-- Revenu dans Recherche d'emploi (1.6.28, décision du 25/10 : il n'était ni l'agenda ni
+               l'extension) ; il s'enregistre au changement (docs/106 §5). -->
+          <form
+            v-if="loaded"
+            class="form-card settings-next-card"
+            data-test="settings-employer"
+            @submit.prevent="autosave('employer')"
+          >
+            <fieldset>
+              <legend>
+                <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
+              </legend>
+              <p class="setting-desc">
+                <HoverNote :text="aiNote('Environ 0,02 $ si l\'IA est nécessaire.', undefined, 'Pour postuler sans passer par un site d\'emploi.')">
+                  Dès cette note, l'annonce est cherchée chez l'employeur.
+                </HoverNote>
+              </p>
+              <div class="inline-field">
+                <input
+                  id="employer-threshold"
+                  v-model.number="form.employer_search_threshold"
+                  type="number"
+                  inputmode="numeric"
+                  min="0"
+                  max="100"
+                  required
+                  @change="autosave('employer')"
+                >
+                <span>/ 100</span>
+                <span
+                  v-if="savedField === 'employer'"
+                  class="saved-flash"
+                  role="status"
+                  data-test="employer-saved"
+                >Enregistré</span>
+                <span
+                  v-if="fieldError?.field === 'employer'"
+                  class="field-error"
+                  role="alert"
+                >{{ fieldError.text }}</span>
+              </div>
+            </fieldset>
+          </form>
         </SettingsSection>
 
         <SettingsSection
@@ -761,49 +804,6 @@ onUnmounted(() => spy?.disconnect());
         >
           <!-- Chaque outil a déjà son titre dans sa carte. -->
           <AgendaPanel />
-          <!-- Un réglage d'expert, venu de Recherche d'emploi (docs/131 §C.13) ; il s'enregistre
-               au changement (docs/106 §5). -->
-          <form
-            v-if="loaded"
-            class="form-card settings-next-card"
-            data-test="settings-employer"
-            @submit.prevent="autosave('employer')"
-          >
-            <fieldset>
-              <legend>
-                <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
-              </legend>
-              <p class="setting-desc">
-                <HoverNote :text="aiNote('Environ 0,02 $ si l\'IA est nécessaire.', undefined, 'Pour postuler sans passer par un site d\'emploi.')">
-                  Dès cette note, l'annonce est cherchée chez l'employeur.
-                </HoverNote>
-              </p>
-              <div class="inline-field">
-                <input
-                  id="employer-threshold"
-                  v-model.number="form.employer_search_threshold"
-                  type="number"
-                  inputmode="numeric"
-                  min="0"
-                  max="100"
-                  required
-                  @change="autosave('employer')"
-                >
-                <span>/ 100</span>
-                <span
-                  v-if="savedField === 'employer'"
-                  class="saved-flash"
-                  role="status"
-                  data-test="employer-saved"
-                >Enregistré</span>
-                <span
-                  v-if="fieldError?.field === 'employer'"
-                  class="field-error"
-                  role="alert"
-                >{{ fieldError.text }}</span>
-              </div>
-            </fieldset>
-          </form>
           <ExtensionPanel class="settings-next-card" />
         </SettingsSection>
 

@@ -811,3 +811,17 @@ Revue de l'interface sur ordinateur (25 octobre). Réglages n'avait pas d'écran
 - 465 tests, lint, types ; 5 tests de l'audit ; tests serveur du Bilan ; trois audits sans défaut, démo (API redémarrée)
   et compte neuf, l'accessibilité aussi en sombre.
 
+## Écarts (1.6.28)
+
+- **« Chercher l'annonce chez l'employeur à partir de »** revient dans « Recherche d'emploi », après les sites suivis
+  (décision du 25/10) ; il était dans « Agenda et extension » sans en être. Il en était parti en docs/131 §C.13, comme
+  réglage d'expert ; la rubrique s'appelait alors « Outils ». Il s'enregistre toujours au changement. Figma suit.
+
+## Vérifié (1.6.28)
+
+- Captures avant/après (horloge figée) : seules les pages des Réglages changent (sur téléphone, toutes les rubriques
+  sont sur la même page).
+- Réglages, Figma et code côte à côte en 1440 px : `docs/captures/1.6.28/`.
+- 466 tests (un de plus : l'emplacement du réglage), lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et
+  compte neuf, l'accessibilité aussi en sombre.
+
