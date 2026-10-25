@@ -154,3 +154,11 @@ describe("le Suivi (1.6.20)", () => {
     expect(css).toMatch(/\.disclosure-title \{[^}]*font-weight: var\(--weight-semibold\)/);
   });
 });
+
+describe("les alertes (1.6.22)", () => {
+  it("« Rien reçu depuis 24 heures » : le point en --orange, plus de couleur en dur", () => {
+    expect(css).toContain(".summary-list .late .dot { background: var(--orange); }");
+    // #e08a2e n'apparaît qu'une fois : la valeur de --orange.
+    expect(css.split("#e08a2e").length - 1).toBe(1);
+  });
+});

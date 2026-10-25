@@ -2,37 +2,19 @@
 import { computed } from "vue";
 
 import type { AlertsPage } from "../api/client";
-import { plural } from "../format";
+import { alertRows } from "../alertsDigest";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
 
 // Résumé des alertes (docs/21 §4) : une ligne par recherche, l'aide seulement si besoin.
-// Mise en page 0.84.3 : en tête le nombre et « Gérer mes alertes » ; chaque recherche sur sa
-// ligne, séparée par un filet, les mots et le lieu à gauche, l'état en pastille à droite.
+// Mise en page 0.84.3 : en tête « Les alertes » et « Gérer mes alertes » (le nombre et la date
+// passent dans la phrase de conclusion de la page, 1.6.22) ; chaque recherche sur sa ligne,
+// séparée par un filet, les mots et le lieu à gauche, l'état en pastille à droite.
 const props = defineProps<{ page: AlertsPage }>();
 const emit = defineEmits<{ manage: []; restart: [] }>();
 
-// Rien reçu 24 heures après la création : l'aide (docs/121 §B.3).
-const WAIT_HOURS = 24;
-const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
-
 type Cell = AlertsPage["searches"][number]["cells"][number];
-const late = (cell: Cell): boolean =>
-  cell.status === "created" && !!cell.created_at && Date.now() - Date.parse(cell.created_at) > WAIT_HOURS * 3_600_000;
-
-const rows = computed(() =>
-  props.page.searches
-    .filter((s) => s.active)
-    .map((search) => {
-      const received = search.cells.filter((c) => c.status === "received");
-      const waiting = search.cells.filter(late);
-      const lastReceived = received.map((c) => c.received_at!).sort().at(-1) ?? null;
-      const state = received.length ? "ok" : waiting.length ? "late" : search.cells.some((c) => c.created_at) ? "pending" : "todo";
-      return { search, received, waiting, lastReceived, state };
-    }),
-);
-const activeCount = computed(() => rows.value.filter((r) => r.received.length || r.search.cells.some((c) => c.created_at)).length);
-const lastReceived = computed(() => rows.value.map((r) => r.lastReceived).filter(Boolean).sort().at(-1) ?? null);
+const rows = computed(() => alertRows(props.page));
 // Sites dont une alerte créée n'a rien envoyé depuis 24 heures : l'aide.
 const lateSites = computed(() => {
   const slugs = new Set(rows.value.flatMap((r) => r.waiting.map((c) => c.site)));
@@ -59,13 +41,9 @@ const siteNames = (cells: Cell[]): string =>
     data-test="alerts-summary"
   >
     <div class="summary-head">
-      <div class="summary-title">
-        <strong>{{ plural(activeCount, "recherche suivie", "recherches suivies") }}</strong>
-        <span
-          v-if="lastReceived"
-          class="hint"
-        >Dernière alerte reçue le {{ dateFormat.format(new Date(lastReceived)) }}</span>
-      </div>
+      <h2 class="summary-title">
+        Les alertes
+      </h2>
       <button
         type="button"
         class="pill"

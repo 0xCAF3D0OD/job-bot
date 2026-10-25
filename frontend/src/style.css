@@ -1027,8 +1027,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
    séparée par un filet ; l'état en pastille douce, à droite. */
 .alerts-summary { display: grid; gap: var(--space-5); padding: var(--space-6) var(--space-8); align-content: start; line-height: var(--leading-normal); }
 .summary-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
-.summary-title { display: grid; gap: var(--space-1); }
-.summary-title strong { font-size: var(--font-title); }
+.summary-title { margin: 0; font-size: var(--font-title); }
 .summary-list { list-style: none; margin: 0; padding: 0; display: grid; }
 .summary-list li { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3) var(--space-6); flex-wrap: wrap; padding: var(--space-4) 0; border-top: 1px solid var(--border); }
 .summary-list li:last-child { border-bottom: 1px solid var(--border); }
@@ -1036,7 +1035,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .summary-state { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--band); color: var(--muted); font-size: var(--font-small); }
 .summary-list .dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--border); flex: none; }
 .summary-list .ok .dot { background: var(--ok); }
-.summary-list .late .dot { background: #e08a2e; }
+.summary-list .late .dot { background: var(--orange); }
 .summary-list .pending .dot { background: var(--accent); }
 .summary-list .ok .summary-state { color: var(--text); }
 .alerts-summary .summary-add { justify-self: start; }
@@ -1675,6 +1674,10 @@ html.side-open { overflow: hidden; }
 .alerts-columns { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "aside" "journal"; row-gap: var(--space-8); align-items: start; }
 .alerts-main { grid-area: main; min-width: 0; display: flex; flex-direction: column; }
 .alerts-aside { grid-area: aside; min-width: 0; display: flex; flex-direction: column; gap: var(--space-8); }
+/* Le détail (1.6.22) : son titre, puis les lignes repliables serrées (les e-mails des sites, le journal). */
+.alerts-aside > .section-title { margin: 0 0 calc(var(--space-3) - var(--space-8)); }
+.alerts-columns:not(.has-code) > .alerts-journal { margin-top: calc(var(--space-3) - var(--space-8)); }
+.alerts-sentence { margin-bottom: var(--space-6); }
 .alerts-journal { grid-area: journal; }
 /* Les lignes sous les colonnes (0.86.0) : « J'ai déjà des alertes » puis le journal. */
 .alerts-rows { display: grid; gap: var(--space-3); }
