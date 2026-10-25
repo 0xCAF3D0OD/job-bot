@@ -267,7 +267,9 @@ onMounted(() => void load());
       </div>
       <!-- Préparer (docs/130 §B, docs/133 §4) : ce qu'on modifie, chaque carte sur toute la
            largeur pour que le texte respire : les questions, la feuille. -->
+      <!-- Sans candidature, seul le formulaire du rendez-vous reste : pas de titre (1.6.24, comme Figma). -->
       <h2
+        v-if="prep && !noApplications"
         ref="prepareTitle"
         class="section-title orp-section"
       >
@@ -562,7 +564,7 @@ onMounted(() => void load());
             <DisclosureRow
               v-if="prep.blockers.length || prep.works"
               title="Ce qui bloque"
-              :value="prep.blockers.length ? plural(prep.blockers.length, 'piste', 'pistes') : ''"
+              :value="plural(prep.blockers.length + (prep.works ? 1 : 0), 'piste', 'pistes')"
               data-test="sheet-blockers"
             >
               <ul v-if="prep.blockers.length">

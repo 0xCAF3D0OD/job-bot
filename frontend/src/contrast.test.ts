@@ -170,3 +170,14 @@ describe("l'interrupteur (1.6.23)", () => {
     expect(ratio(dark.faint!, dark.surface!)).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe("les lignes repliables (1.6.24)", () => {
+  it("le résumé n'est jamais coupé : il passe à la ligne", () => {
+    const rule = css.match(/\.disclosure-value \{[^}]*\}/)![0];
+    expect(rule).not.toContain("ellipsis");
+    expect(rule).not.toContain("nowrap");
+    // Jamais au milieu d'un mot : pas de largeur minimale nulle ni de coupure forcée.
+    expect(rule).not.toContain("min-width: 0");
+    expect(rule).not.toContain("break-word");
+  });
+});

@@ -230,6 +230,59 @@ Une version par étape, chacune sur sa branche partie de main, avec ta validatio
 
 Les variables actuelles de Figma reflètent le code d'aujourd'hui (20 espacements nommés par leur valeur, 19 tailles, 8 rayons, 4 graisses, 29 couleurs). **Mises à jour le 23 octobre**, après la fusion de la 1.6.0 : elles portent les noms et valeurs du §1 au §5. Figma montre la cible ; le code la rejoint au fil des 1.6.x.
 
+## 9. Bilan (25 octobre, 1.6.24)
+
+**Le code est à l'échelle.** De la 1.6.0 à la 1.6.12, toutes les pages sont passées aux variables des §1 à §5 ;
+depuis la 1.6.12, le garde-fou (`frontend/src/scales.test.ts`) refuse toute valeur en dur hors des exceptions
+ci-dessous. De la 1.6.13 à la 1.6.23, les écrans ont rejoint leur référence Figma, une page à la fois.
+
+**Figma** (fichier jobA1) :
+- les variables : 55 (couleurs en clair et en sombre, tailles d'ordinateur et de téléphone, typographie,
+  8 espacements, 3 rayons) et 13 styles de texte ;
+- **56 composants** et 35 icônes, construits en 8 lots, chacun avec sa revue (contraste WCAG AA vérifié, un lien
+  vers son code, ses états seulement s'il se clique, clair et sombre) :
+  - lot 1 et premiers : bouton, note d'une offre, repliable, carte, initiales, case et progression ORP, jour,
+    semaine, visage du 1, pilule, bouton icône, annulation, offre du jour, écran vide, premiers pas, tuile du visage ;
+  - lot 3 (le commun) : lien, ligne de liste (ordinateur et téléphone), carte à emplacement, pied de page, bloc et
+    voile de chargement, lien de navigation, cloche, compte, en-tête, onglet, barre d'onglets ;
+  - lot 4 (Candidatures) : pastille, onglet de page, champ de recherche, ligne et puce de filtre, carte d'offre,
+    titre de groupe ;
+  - lot 5 (Bilan) : segment, sélecteur segmenté, conclusion mise en avant, tuile de chiffre, ligne de mois, barre
+    de parcours ;
+  - lots 6 et 7 (Suivi, détail d'une offre) : point de statut, marque de jour, jour du calendrier, navigation de
+    mois, lien de retour, ligne de définition (courte et large), point fort, fait, barre d'actions ;
+  - lot 8 (Alertes, Rendez-vous) : interrupteur, champ de saisie, statut d'alerte, étapes de l'assistant.
+- **7 écrans de référence, 28 états**, chacun en 1440 et 390 px, en clair et en sombre (112 cadres), avec des
+  notes qui citent les règles :
+
+| Écran | États | Code |
+|---|---|---|
+| Aujourd'hui | journée type, écran vide, premiers pas, chargement (voile, puis blocs) | 1.6.17 |
+| Candidatures (offres) | liste, écran vide, aucun résultat, chargement (voile, puis blocs) | 1.6.18 |
+| Bilan | résultats, détail ouvert, écran vide, chargement | 1.6.19 |
+| Suivi | suivi, calendrier ouvert, écran vide, chargement | 1.6.20 |
+| Détail d'une offre | offre ouverte, sections ouvertes | 1.6.21 |
+| Alertes | alertes, premiers pas, chargement | 1.6.22 |
+| Rendez-vous | rendez-vous, carnet ouvert, obligation en retard, premier rendez-vous, chargement | 1.6.23 |
+
+**Exceptions qui restent, voulues** :
+- hors échelle : la lettre, le CV et la feuille ORP (et son impression), qui imitent le papier ; les valeurs en
+  `em`, les pourcentages et les calculs qui réservent la place d'un élément fixe (§1) ; les textes des graphiques
+  en SVG (§2) ; les illustrations (maquette de « La plateforme », confettis) ; les marges du bouton d'aide ; les
+  champs à 16 px (sous 16 px, l'iPhone zoome) ;
+- les règles : la date au-dessus du titre en style étiquette (§3 des règles) ; les liens inactifs du menu en 400 ;
+- `--logo-spark` réservé au logo et au visage du 1 ; « Refus » en gris, pas en rouge (un refus n'est pas une erreur).
+
+**Écarts connus entre Figma et le code** :
+- la légende du calendrier du Suivi a « à compléter » (l'anneau orange d'une ligne ORP incomplète), que le Point de
+  statut de Figma n'a pas ;
+- la phrase de conclusion s'arrête à 40 rem de large dans le code (la largeur de lecture) : sur ordinateur, elle
+  passe à la ligne là où Figma la garde sur une ligne.
+
+**Pas encore d'écran de référence dans Figma** : Profil, Réglages, Bilan › Formations et Actualités, Préparer (la
+lettre), l'assistant, et les pages publiques (connexion, inscription, « La plateforme », pages légales, accueil).
+Leurs styles sont à l'échelle ; leurs écrans attendent une prochaine série.
+
 ## Garde-fous
 
 - Rien ne disparaît : seules des valeurs changent, aucune information ni action.
@@ -620,3 +673,26 @@ Retours du 25 octobre sur l'écran de référence Rendez-vous dans Figma.
   de résumé quand il n'y a que « ce qui marche » ; le champ du nom est plus étroit (28 rem) que dans Figma.
 - 476 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
   aussi en sombre.
+
+## Écarts (1.6.24)
+
+Le nettoyage de fin de série (25 octobre).
+
+- **L'historique des versions** quitte le README pour `CHANGELOG.md` : chaque PR ajoutait sa ligne au même endroit
+  du README, d'où un conflit à chaque fusion. Le README garde un lien ; la ligne « Version en cours » ne porte plus
+  de numéro.
+- **Le résumé d'une ligne repliable n'est plus jamais coupé** : trop long, il passe à la ligne, aligné à droite
+  (« aucun code en attente » dans Alertes sur téléphone ; toutes les lignes repliables de l'application).
+- **Rendez-vous, compte neuf** : plus de titre « Préparer » au-dessus du seul formulaire du rendez-vous.
+- **« Ce qui bloque »** compte aussi « ce qui marche » dans son résumé (« 1 piste »).
+- **La feuille** : le champ du nom sur toute la largeur de la carte, comme dans Figma.
+- **Le bilan du cadrage** (§9) : ce qui est fait, les composants, les exceptions voulues, ce qui reste.
+
+## Vérifié (1.6.24)
+
+- Captures avant/après (horloge figée) : changent seulement Alertes, le détail d'une offre, Rendez-vous et Profil ›
+  Coordonnées, là où un résumé de ligne repliable était coupé ; il passe à la ligne entre deux mots (un premier
+  essai coupait « facultatif » au milieu du mot : corrigé, avec un garde-fou).
+- 478 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
+  aussi en sombre.
+
