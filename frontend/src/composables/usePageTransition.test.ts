@@ -7,19 +7,19 @@ describe("transition des pages qui chargent (docs/61 §2)", () => {
   afterEach(() => vi.useRealTimers());
 
   it("rapide : rien ne s'affiche", () => {
-    startPage("news");
+    startPage("trainings");
     vi.advanceTimersByTime(100);
-    pageReady("news");
+    pageReady("trainings");
     vi.advanceTimersByTime(500);
     expect(pageTransition.shown).toBe(false);
   });
 
   it("lent : le voile après 0,15 s, gardé 1,2 s au moins (docs/63 §3)", () => {
-    startPage("news");
+    startPage("trainings");
     vi.advanceTimersByTime(150);
     expect(pageTransition.shown).toBe(true);
     vi.advanceTimersByTime(100);
-    pageReady("news");
+    pageReady("trainings");
     vi.advanceTimersByTime(1000);
     expect(pageTransition.shown).toBe(true);
     vi.advanceTimersByTime(100);

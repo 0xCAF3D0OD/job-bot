@@ -23,7 +23,6 @@ const WelcomeView = () => import("./views/WelcomeView.vue");
 const ApplicationsView = () => import("./views/ApplicationsView.vue");
 const JobsView = () => import("./views/JobsView.vue");
 const LoginView = () => import("./views/LoginView.vue");
-const NewsView = () => import("./views/NewsView.vue");
 const OffersView = () => import("./views/OffersView.vue");
 const NotFoundView = () => import("./views/NotFoundView.vue");
 const PreparationView = () => import("./views/PreparationView.vue");
@@ -62,7 +61,7 @@ export const mainMenu: NavEntry[] = navigation.filter((entry) => ["today", "jobs
 // Onglets de la rubrique Candidatures (docs/19 §2).
 export type JobsTab = "offres" | "suivi" | "alertes" | "rendez-vous";
 // Onglets du Bilan (docs/126 §1) : les résultats, puis ce qui aide à progresser.
-export type BilanTab = "resultats" | "formations" | "actualites";
+export type BilanTab = "resultats" | "formations";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, () => Promise<unknown>> = {
@@ -98,12 +97,12 @@ export const routes: RouteRecordRaw[] = [
     }),
   },
   { path: "/etat", redirect: "/reglages/diagnostic" },
-  // Actualités et Formations sont dans le Bilan (docs/126 §1) : les anciens liens y mènent,
-  // ceux de Progresser (docs/90) compris.
-  { path: "/actualites", redirect: (to) => ({ path: "/bilan/actualites", query: to.query }) },
+  // Formations est dans le Bilan (docs/126 §1) : les anciens liens y mènent, ceux de Progresser
+  // (docs/90) compris. Les Actualités sont retirées (1.6.25) : leurs liens mènent au Bilan.
+  { path: "/actualites", redirect: "/bilan" },
   { path: "/formations", redirect: (to) => ({ path: "/bilan/formations", query: to.query }) },
-  { path: "/progresser", redirect: "/bilan/actualites" },
-  { path: "/progresser/actualites", redirect: (to) => ({ path: "/bilan/actualites", query: to.query }) },
+  { path: "/progresser", redirect: "/bilan" },
+  { path: "/progresser/actualites", redirect: "/bilan" },
   { path: "/progresser/formations", redirect: (to) => ({ path: "/bilan/formations", query: to.query }) },
   ...navigation
     .filter((entry) => entry.name !== "jobs" && entry.name !== "bilan")
@@ -150,13 +149,13 @@ export const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    // Le Bilan (docs/42, docs/126 §1) : ce qui marche, puis Formations et Actualités.
+    // Le Bilan (docs/42, docs/126 §1) : ce qui marche, puis Formations.
     path: "/bilan",
     component: BilanView,
     children: [
       { path: "", name: "insights", component: InsightsView, meta: { tab: "resultats" } },
       { path: "formations", name: "trainings", component: TrainingsView, meta: { tab: "formations" } },
-      { path: "actualites", name: "news", component: NewsView, meta: { tab: "actualites" } },
+      { path: "actualites", redirect: "/bilan" },
     ],
   },
   // Diagnostic technique, sorti des Réglages (docs/21 §6).
@@ -232,7 +231,6 @@ export const PAGE_TITLES: Record<string, string> = {
   insights: "Bilan",
   "orp-meeting": "Rendez-vous ORP",
   preparation: "Préparer",
-  news: "Actualités",
   trainings: "Formations",
   profile: "Profil",
   settings: "Réglages",

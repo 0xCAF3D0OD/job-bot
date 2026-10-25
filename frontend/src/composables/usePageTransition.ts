@@ -16,7 +16,6 @@ export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform 
   "orp-meeting": { label: "Rendez-vous", face: "orp-meeting" },
   profile: { label: "Profil", face: "profile" },
   settings: { label: "Réglages", face: "settings" },
-  news: { label: "Actualités" },
   trainings: { label: "Formations" },
 };
 export const SHOW_AFTER_MS = 150;

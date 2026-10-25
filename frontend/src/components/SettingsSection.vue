@@ -6,7 +6,6 @@ import type { IconName } from "../icons";
 export const SETTINGS_ICONS: Record<string, IconName> = {
   recherche: "search",
   rythme: "clock",
-  actualites: "news",
   notifications: "bell",
   ia: "spark",
   compte: "shield",

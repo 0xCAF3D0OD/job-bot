@@ -148,7 +148,7 @@ const ART: Partial<Record<StepKey, IllustrationName>> = {
 const GOALS: { id: Goal; icon: Icon; title: string; hint: string }[] = [
   { id: "job", icon: "search", title: "Je cherche un emploi", hint: "Trouver les bonnes offres et postuler vite." },
   { id: "orp", icon: "calendar", title: "Je suis inscrit·e à l'ORP", hint: "Et je dois prouver mes recherches chaque mois." },
-  { id: "news", icon: "news", title: "Je veux suivre mon métier", hint: "Les actualités et les formations de mon domaine." },
+  { id: "news", icon: "news", title: "Je veux suivre mon métier", hint: "Les formations de mon domaine." },
 ];
 const TRADES = ["DevOps", "Informatique", "Infirmier·ère", "Comptable", "Vente", "Logistique", "Enseignement", "Cuisine"];
 const CANTONS = [

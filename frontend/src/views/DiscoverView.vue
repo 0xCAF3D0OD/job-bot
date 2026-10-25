@@ -49,10 +49,10 @@ const SCENES: { art: IllustrationName; mock: MockKind; title: string; text: stri
   },
   {
     art: "formations",
-    mock: "news",
+    mock: "trainings",
     below: true,
     title: "Ton métier, et ce qui bouge",
-    text: "Les actualités et les formations de ton domaine, triées pour toi.",
+    text: "Les formations de ton domaine, triées pour toi.",
   },
 ];
 

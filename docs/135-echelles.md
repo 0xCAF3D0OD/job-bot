@@ -696,3 +696,48 @@ Le nettoyage de fin de série (25 octobre).
 - 478 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
   aussi en sombre.
 
+## Écarts (1.6.25)
+
+Décision du 25 octobre : les Actualités quittent l'interface ; le code serveur reste, en attendant ta décision.
+
+- **Bilan** : deux onglets, Résultats et Formations ; plus d'onglet Actualités ni de pastille des nouveautés (le
+  compteur n'interroge plus le serveur). Figma suit : l'onglet est retiré des 16 cadres de l'écran Bilan.
+- **Réglages** : la rubrique « Actualités » (mots-clés et sources) est retirée ; « Mon domaine » reste modifiable
+  dans Bilan › Formations, qui s'en sert aussi.
+- **Les liens** : `/actualites`, `/bilan/actualites`, `/progresser` et `/progresser/actualites` mènent au Bilan ;
+  l'assistant ne transforme plus ces adresses en liens.
+- **Les textes** : « La plateforme » et l'accueil ne promettent plus que les formations du domaine (la maquette de
+  « La plateforme » montre Bilan › Formations) ; un profil d'essai ne règle plus que les Formations.
+- **Retirés de l'interface** : `NewsView`, `NewsStory`, `NewsCatalog`, `NewsSourcesPanel`, `useNewsCount` et leurs
+  tests ; les audits ne visitent plus la page ni la rubrique. Les styles des Actualités restent dans `style.css` :
+  une partie (`news-filters`, `news-status`, `news-group-title`) sert aussi Formations.
+- **Les onglets sur téléphone** se partagent la largeur, comme dans Figma : à deux, ceux du Bilan restaient serrés à
+  gauche. Candidatures en profite aussi (quatre onglets de même largeur).
+
+### Inutilisé côté serveur, à décider
+
+- **L'API** `/api/news` : 11 routes sur 13 n'ont plus d'appelant (`listNews`, `refreshNews`, `markNewsSeen`,
+  `getNewsImage`, `listNewsSources`, `addNewsSource`, `getNewsCatalog`, `addNewsCatalogSource`, `addNewsSearch`,
+  `updateNewsSource`, `deleteNewsSource`). Restent utilisées : `getNewsPreferences` et `saveNewsPreferences`
+  (« Mon domaine », lu et écrit par Formations).
+- **Le relevé** : la tâche `news` du worker (`worker/tasks/news.py`, `news/service.fetch_news`) continue de relever
+  les sources et d'écrire `news_items` (et les images dans le stockage, dossier `news/`) sans que personne ne les
+  lise.
+- **Les tables** `news_sources` et `news_items` (migrations 0023 à 0025, 0027, 0054, 0064), leurs politiques
+  d'accès (`db/policies.py`) et leurs données de démonstration (`demo/seed.py`).
+- **L'accueil** (`welcome.py`) crée encore les sources de la famille de métiers choisie (docs/116 §4) ; les profils
+  d'essai (`profiles/service.py`) aussi, depuis le catalogue (`news/catalog.json`).
+- **L'assistant** : l'outil `actualites` (`assistant/tools.py`) et la partie « Bilan › Actualités » de son texte
+  (`llm/prompts/assistant-v20.md`, qui cite encore `/bilan/actualites`).
+- **À garder** si Formations reste : `news/domain` (les mots du domaine, lus par `trainings/service.py`) et
+  `news/trades` (les familles de métiers, lues par l'accueil).
+
+## Vérifié (1.6.25)
+
+- Captures avant/après (horloge figée) : la page Actualités et la rubrique des Réglages disparaissent (12 captures
+  de moins) ; changent le Bilan et Formations (les onglets), Candidatures sur téléphone (les onglets), les Réglages
+  (le sommaire), l'accueil et « La plateforme » (les textes et la maquette).
+- Bilan, Figma et code côte à côte en 1440 et 390 px : `docs/captures/1.6.25/`.
+- 463 tests (les tests de la vue retirée en moins, celui des onglets du Bilan en plus), lint, types ; 5 tests de
+  l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité aussi en sombre.
+

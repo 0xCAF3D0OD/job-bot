@@ -29,7 +29,6 @@ PAGES = [
     "candidatures/alertes",
     "bilan",
     "candidatures/rendez-vous-orp",
-    "bilan/actualites",
     "bilan/formations",
     "profil",
     "profil?onglet=parcours",

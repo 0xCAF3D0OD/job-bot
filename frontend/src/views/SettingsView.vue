@@ -13,7 +13,6 @@ import { usePageReady } from "../composables/usePageTransition";
 import AccountDataPanel from "../components/AccountDataPanel.vue";
 import AgendaPanel from "../components/AgendaPanel.vue";
 import ExtensionPanel from "../components/ExtensionPanel.vue";
-import NewsSourcesPanel from "../components/NewsSourcesPanel.vue";
 import PlatformPanel from "../components/PlatformPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
@@ -181,7 +180,6 @@ const summary = computed(() => ({
   ]
     .filter(Boolean)
     .join(" · "),
-  actualites: "mots-clés et sources",
   notifications: [
     notifications.value ? (notifications.value.configured ? "actives" : "non configurées") : "",
     `dès ${form.value.notify_score_threshold} / 100`,
@@ -200,7 +198,6 @@ const summary = computed(() => ({
 const SECTIONS = [
   { id: "recherche", label: "Recherche d'emploi" },
   { id: "rythme", label: "Rythme" },
-  { id: "actualites", label: "Actualités" },
   { id: "notifications", label: "Notifications" },
   { id: "ia", label: "IA" },
   { id: "compte", label: "Compte" },
@@ -210,7 +207,6 @@ const SECTIONS = [
 type SectionId = (typeof SECTIONS)[number]["id"];
 const OLD_ANCHORS: Record<string, SectionId> = {
   recherche: "recherche",
-  actualites: "actualites",
   notifications: "notifications",
   ia: "ia",
   profils: "compte",
@@ -530,15 +526,6 @@ onUnmounted(() => spy?.disconnect());
               >{{ message }}</span>
             </div>
           </form>
-        </SettingsSection>
-
-        <SettingsSection
-          id="actualites"
-          title="Actualités"
-          :value="summary.actualites"
-          :active="active === 'actualites'"
-        >
-          <NewsSourcesPanel />
         </SettingsSection>
 
         <SettingsSection

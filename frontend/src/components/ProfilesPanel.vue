@@ -73,7 +73,7 @@ async function create(): Promise<void> {
     apply(data);
     adding.value = false;
     form.value = empty();
-    message.value = "Profil créé : choisis-le dans le menu en haut pour voir ses Actualités et ses Formations.";
+    message.value = "Profil créé : choisis-le dans le menu en haut pour voir ses Formations.";
   } finally {
     busy.value = false;
   }
