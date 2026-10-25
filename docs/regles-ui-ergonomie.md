@@ -60,6 +60,22 @@ Règles :
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
 - Les listes longues se replient au-delà de 3 éléments (« Tout voir »).
 
+Largeurs, sur ordinateur (1.6.29) :
+- **La page** : contenu centré, largeur maximale de **1 020 px** (`--page-max`), marges comprises (GOV.UK Layout).
+  Seule exception : **Candidatures › Offres**, avec ses trois colonnes (filtres, liste, détail), garde **1 280 px**
+  (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px, la largeur d'un téléphone ; à
+  1 280 px, ils ont environ 460 px, assez pour une ligne de détail lisible (une soixantaine de caractères).
+- **Le texte courant et les phrases de conclusion** : **75 caractères** par ligne au plus (`--measure`, GOV.UK Layout ;
+  WCAG 2.2, 1.4.8, niveau AAA visé : 80 au plus).
+- **Les boutons** : la largeur de leur texte sur ordinateur ; toute la largeur seulement sous le point de rupture du
+  téléphone (820 px) (NHS Design System ; loi de Fitts : sur téléphone, une cible pleine largeur ; sur ordinateur, une
+  cible proche de ce qu'elle concerne).
+- **Les champs** : une largeur selon le contenu prévu (GOV.UK Text input) : **nom 20 caractères** (`--field-20`),
+  **lieu 30 caractères** (`--field-30`), **date et heure à leur taille naturelle** ; les nombres courts (objectif, note
+  sur 100, jour du mois) à 5 caractères (`--field-5`) ; **la recherche peut rester fluide**.
+- **Les listes** : le statut ou l'action reste **près du texte** qu'il concerne (loi de proximité) ; aucune ligne de liste
+  ne dépasse la largeur maximale de la page.
+
 ## 4. Composants (seuls autorisés)
 
 | Composant | Règle |
@@ -134,8 +150,10 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 | Nielsen Norman Group (nngroup.com) | Navigation, architecture de l'information, heuristiques |
 | W3C WCAG 2.2 AA | Accessibilité, norme en vigueur |
 | Design System de la Confédération (github.com/swiss/designsystem) | Repères familiers aux utilisateurs suisses |
-| GOV.UK Design System | Parcours en étapes, formulaires, messages d'erreur |
-| Laws of UX (lawsofux.com) | Hick, Jakob, Fitts |
+| GOV.UK Design System | Parcours en étapes, formulaires, messages d'erreur ; Layout (largeur de page de 1 020 px, colonne des deux tiers, lignes de 75 caractères) ; Text input (champs à la taille du contenu prévu, en caractères) |
+| NHS Design System (basé sur GOV.UK) | Boutons pleine largeur sur téléphone seulement |
+| W3C WCAG 2.2, 1.4.8 (AAA, visé) | 80 caractères par ligne au plus |
+| Laws of UX (lawsofux.com) | Hick, Jakob, Fitts ; proximité (l'action près de ce qu'elle concerne) |
 
 On reprend les principes, jamais l'apparence. Toute proposition cite la règle ou la référence qui la justifie.
 
