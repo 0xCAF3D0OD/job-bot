@@ -609,4 +609,14 @@ Retours du 25 octobre sur l'écran de référence Rendez-vous dans Figma.
   l'écran vide.
 - **L'interrupteur** : la piste non cochée en `--faint` (3,6:1 sur la carte) au lieu de `--border` (1,2:1),
   partout dans l'application (WCAG 1.4.11).
+- **Sans candidature**, une échéance passée (les preuves d'un mois vide) n'est pas une alerte : rien en orange.
 
+## Vérifié (1.6.23)
+
+- Captures avant/après (horloge figée) : la page Rendez-vous change ; ailleurs, seule la piste des interrupteurs
+  non cochés (Réglages, Profil, Bilan, Suivi).
+- Figma et code côte à côte : `docs/captures/1.6.23/` (démo en 1440 et 390 px, compte neuf en 1440 px).
+  Écarts restants : le compte neuf garde le titre « Préparer » au-dessus du formulaire ; « Ce qui bloque » n'a pas
+  de résumé quand il n'y a que « ce qui marche » ; le champ du nom est plus étroit (28 rem) que dans Figma.
+- 476 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
+  aussi en sombre.
