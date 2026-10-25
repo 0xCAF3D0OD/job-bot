@@ -1,5 +1,5 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import ApplicationsView from "./ApplicationsView.vue";
@@ -16,12 +16,8 @@ vi.mock("../api/client", () => ({
     DELETE: (...a: unknown[]) => DELETE(...a),
   },
 }));
-// La vue liste par défaut ici : ces tests portent sur la liste et la feuille ORP ;
-// le calendrier a ses propres tests (docs/22).
-beforeEach(() => localStorage.setItem("jobbot-suivi-vue", "list"));
 afterEach(() => {
   vi.resetAllMocks();
-  localStorage.clear();
 });
 
 const row = (id: number, extra: Record<string, unknown> = {}) => ({
@@ -135,7 +131,9 @@ describe("Candidatures, onglet Suivi", () => {
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
     expect(wrapper.text()).toContain("Acme SA");
     expect(wrapper.find("[data-test=goal]").text()).toContain("1 / 20");
-    expect(wrapper.find("[role=progressbar]").attributes("aria-valuenow")).toBe("5");
+    expect(wrapper.find("[role=progressbar]").attributes("aria-valuenow")).toBe("1");
+    // Au-delà de 15, une barre continue.
+    expect(wrapper.find(".orp-month-bar.continuous").exists()).toBe(true);
   });
 
   it("sans objectif : invite à le saisir", async () => {
@@ -206,7 +204,6 @@ describe("Candidatures, onglet Preuves ORP", () => {
   });
 
   it("À déclarer dans Job-Room : une ligne par candidature, cliquable (docs/85)", async () => {
-    localStorage.setItem("jobbot-suivi-vue", "calendar");
     const declared = { ...application, id: 1, company: "Déjà SA" };
     const left = { ...application, id: 2, company: "Reste SA", sent_at: "2026-10-02" };
     const rows = [row(1, { declared_at: "2026-10-12", company: "Déjà SA" }), row(2, { company: "Reste SA", missing: ["adresse de l'entreprise"] })];
@@ -214,7 +211,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi(() => months.shift() ?? month({ to_declare: 0, rows: [rows[0]] }), [declared, left]);
     PUT.mockResolvedValue({ response: { status: 204 } });
     const { wrapper } = await mountView();
-    // Un onglet à droite du calendrier (docs/133 §1).
+    // Un onglet de « À faire » (docs/133 §1).
     expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
     await wrapper.find("[data-test=panel-tab-declare]").trigger("click");
     const list = wrapper.find("[data-test=declare]");
@@ -238,9 +235,10 @@ describe("Candidatures, onglet Preuves ORP", () => {
       params: { path: { application_id: 2 } },
     });
     expect(wrapper.find("[data-test=declare-done]").text()).toBe("Tout est déclaré.");
-    // Le panneau d'un jour choisi n'affiche pas la liste.
+    // Un jour choisi s'affiche sous le calendrier ; « À faire » reste en haut.
     await wrapper.find("[data-test=day-2026-10-02]").trigger("click");
-    expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=detail-calendar] [data-test=day-panel]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=declare]").exists()).toBe(true);
   });
 
   it("une action à la fois : compléter tant qu'une ligne manque", async () => {
@@ -312,15 +310,16 @@ describe("Suivi en calendrier (docs/22)", () => {
   it("pastilles par jour, cartes au clic, à relancer par défaut, copie Job-Room", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-10T08:00:00Z"));
-    localStorage.setItem("jobbot-suivi-vue", "calendar");
     const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08", interview_at: null };
     const sent = { ...application, id: 2, sent_at: "2026-10-02", interview_at: "2026-10-20T09:00:00Z" };
     mockApi(() => month(), [sent, old]);
     PUT.mockResolvedValue({ data: sent });
     const { wrapper } = await mountView();
-    // Sans jour choisi : les candidatures à relancer.
-    expect(wrapper.find("[data-test=day-panel]").text()).toContain("À relancer");
-    expect(wrapper.find("[data-test=day-panel]").text()).toContain("Ancienne SA");
+    // « À faire » d'abord : les candidatures à relancer ; le calendrier est replié dessous.
+    expect(wrapper.find("[data-test=todo]").text()).toContain("À relancer");
+    expect(wrapper.find("[data-test=todo]").text()).toContain("Ancienne SA");
+    expect(wrapper.find("[data-test=detail-calendar] .disclosure-row").attributes("aria-expanded")).toBe("false");
+    expect(wrapper.find("[data-test=day-panel]").exists()).toBe(false);
     // Le 2 octobre : une pastille, avec le point rouge de la ligne ORP à compléter (ligne 2).
     const day = wrapper.find("[data-test=day-2026-10-02]");
     expect(day.findAll(".dot")).toHaveLength(1);
@@ -347,14 +346,9 @@ describe("Suivi en calendrier (docs/22)", () => {
     const moment = wrapper.find("[data-test=interview-moment]");
     expect(moment.text()).toContain("Un entretien chez");
     expect(moment.find(".face-mark").attributes("data-mood")).toBe("ravi");
-    // Calendrier / Liste, retenu.
-    await wrapper.find("[data-test=layout-list]").trigger("click");
-    expect(localStorage.getItem("jobbot-suivi-vue")).toBe("list");
-    expect(wrapper.find("[data-test=calendar]").exists()).toBe(false);
   });
 
   it("relancée : « Sans réponse » proposé 14 jours après la relance, pas avant", async () => {
-    localStorage.setItem("jobbot-suivi-vue", "calendar");
     const ago = (days: number): string => {
       const d = new Date();
       d.setDate(d.getDate() - days);
@@ -365,7 +359,7 @@ describe("Suivi en calendrier (docs/22)", () => {
     const recent = { ...base, id: 5, company: "Récente SA", followed_up_at: ago(13) };
     mockApi(() => month(), [silent, recent]);
     const { wrapper } = await mountView();
-    const panel = wrapper.find("[data-test=day-panel]");
+    const panel = wrapper.find("[data-test=todo]");
     expect(panel.text()).toContain("Muette SA");
     expect(panel.text()).not.toContain("Récente SA");
     expect(panel.find("[data-test=card-step-no-answer]").exists()).toBe(true);
@@ -383,7 +377,6 @@ describe("Suivi en calendrier (docs/22)", () => {
 
 describe("Suivi, une carte et un panneau (docs/46)", () => {
   it("la prochaine étape suit l'ordre : relance, puis ORP, sinon Gérer ; la liste ouvre le panneau", async () => {
-    localStorage.setItem("jobbot-suivi-vue", "calendar");
     const ago = (days: number): string => {
       const d = new Date();
       d.setDate(d.getDate() - days);
@@ -392,14 +385,13 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
     const late = { ...application, id: 2, company: "Lente SA", sent_at: ago(12), interview_at: null };
     mockApi(() => month(), [late]);
     const { wrapper } = await mountView();
-    const card = wrapper.find("[data-test=day-panel] [data-test=application-card]");
+    const card = wrapper.find("[data-test=todo] [data-test=application-card]");
     expect(card.find("[data-test=card-step]").text()).toContain("Sans réponse depuis 10 jours");
     await card.find("[data-test=card-step-follow-up]").trigger("click");
     expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
     expect(wrapper.text()).toContain("Relancer Lente SA");
 
-    await wrapper.find("[data-test=layout-list]").trigger("click");
-    await wrapper.find("[data-test=table-open]").trigger("click");
+    await wrapper.find("[data-test=detail-list] [data-test=table-open]").trigger("click");
     expect(wrapper.find("[data-test=application-panel]").exists()).toBe(true);
     await wrapper.find("[data-test=panel-more]").trigger("click");
     await wrapper.find("[data-test=panel-edit]").trigger("click");
@@ -409,45 +401,72 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
   });
 });
 
-describe("La colonne défilante, à la hauteur du calendrier (retour du 2026-10-07, docs/134)", () => {
-  it("toutes les lignes dans la colonne, estompée en haut ou en bas selon ce qu'il reste à voir", async () => {
-    localStorage.setItem("jobbot-suivi-vue", "calendar");
+describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop chargé)", () => {
+  it("« À faire » : trois lignes, « Tout voir » pour le reste", async () => {
     const many = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
-    const panel = wrapper.find("[data-test=day-panel]");
-    expect(panel.find("[data-test=panel-tab-follow]").text()).toBe("À relancer · 7");
-    expect(panel.findAll("[data-test=application-card]")).toHaveLength(7);
-    expect(panel.find("[data-test=panel-show-all]").exists()).toBe(false);
-    const scroll = wrapper.find("[data-test=panel-scroll]");
-    const el = scroll.element as HTMLElement;
-    Object.defineProperty(el, "clientHeight", { configurable: true, value: 400 });
-    Object.defineProperty(el, "scrollHeight", { configurable: true, value: 900 });
-    el.scrollTop = 0;
-    await scroll.trigger("scroll");
-    expect(scroll.classes()).toContain("fade-bottom");
-    expect(scroll.classes()).not.toContain("fade-top");
-    el.scrollTop = 500;
-    await scroll.trigger("scroll");
-    expect(scroll.classes()).toContain("fade-top");
-    expect(scroll.classes()).not.toContain("fade-bottom");
-    // Les onglets restent hors de la partie qui défile.
-    expect(scroll.find("[data-test=panel-tab-follow]").exists()).toBe(false);
+    const todo = wrapper.find("[data-test=todo]");
+    expect(todo.find("[data-test=panel-tab-follow]").text()).toBe("À relancer · 7");
+    expect(todo.findAll("[data-test=application-card]")).toHaveLength(3);
+    await todo.find("[data-test=todo-all]").trigger("click");
+    expect(todo.findAll("[data-test=application-card]")).toHaveLength(7);
+    expect(todo.find("[data-test=todo-all]").text()).toBe("Réduire");
+    // Changer d'onglet replie la liste.
+    await todo.find("[data-test=panel-tab-declare]").trigger("click");
+    await todo.find("[data-test=panel-tab-follow]").trigger("click");
+    expect(todo.findAll("[data-test=application-card]")).toHaveLength(3);
+  });
+
+  it("la conclusion en haut : relances et candidatures à déclarer, les nombres en accent", async () => {
+    const many = [1, 2].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
+    mockApi(() => month(), many);
+    const { wrapper } = await mountView();
+    const sentence = wrapper.find("[data-test=suivi-sentence]");
+    expect(sentence.text()).toBe("2 relances à faire et 2 candidatures à déclarer.");
+    expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["2 relances", "2 candidatures"]);
+    // Elle vient avant le mois.
+    const html = wrapper.html();
+    expect(html.indexOf("suivi-sentence")).toBeLessThan(html.indexOf("applications-head"));
+
+    mockApi(() => month({ count: 0, rows: [] }), [{ ...application, sent_at: "2026-10-20" }]);
+    const { wrapper: calm } = await mountView();
+    expect(calm.find("[data-test=suivi-sentence]").text()).toBe("Rien à relancer ni à déclarer.");
+  });
+
+  it("l'objectif en cases, une par candidature (règles §4)", async () => {
+    mockApi(() => month({ count: 6, target: 10 }), [application]);
+    const { wrapper } = await mountView();
+    const bar = wrapper.find("[data-test=goal] .orp-month-bar");
+    expect(bar.findAll(".segment")).toHaveLength(10);
+    expect(bar.findAll(".segment.done")).toHaveLength(6);
+    expect(bar.attributes("aria-valuemax")).toBe("10");
+  });
+
+  it("le détail replié : le calendrier et la liste du mois ; un jour demandé ouvre le calendrier", async () => {
+    mockApi(() => month(), [{ ...application, sent_at: "2026-10-02" }]);
+    const { wrapper } = await mountView();
+    const detail = wrapper.find("[data-test=suivi-detail]");
+    expect(detail.findAll(".disclosure-title").map((d) => d.text())).toEqual(["Calendrier d'octobre", "Toutes les candidatures d'octobre"]);
+    expect(detail.find("[data-test=detail-list] .disclosure-value").text()).toBe("1");
+    expect(wrapper.find("[data-test=layout-calendar]").exists()).toBe(false);
+
+    const { wrapper: day } = await mountView("/candidatures/suivi?jour=2026-10-02");
+    expect(day.find("[data-test=detail-calendar] .disclosure-row").attributes("aria-expanded")).toBe("true");
+    expect(day.find("[data-test=day-panel]").text()).toContain("Acme SA");
   });
 });
 
 describe("Suivi, revue des pages (docs/43 n° 14)", () => {
-  it("ligne 1 : le mois et les outils ; ligne 2 : le compte, et l'état ORP s'il y a à faire (docs/130 §A)", async () => {
+  it("une ligne : le mois, l'objectif et les outils ; l'état ORP s'il y a à faire (docs/130 §A)", async () => {
     mockApi(() => month());
     const { wrapper } = await mountView();
     const head = wrapper.find(".applications-head");
     expect(head.find("[data-test=month]").exists()).toBe(true);
-    expect(head.find(".applications-tools [data-test=layout-calendar]").exists()).toBe(true);
+    expect(head.find("[data-test=goal]").exists()).toBe(true);
     expect(head.find(".applications-tools [data-test=add-application]").text()).toBe("Ajouter");
-    const summary = wrapper.find(".applications-summary");
-    expect(summary.find("[data-test=goal]").exists()).toBe(true);
-    // L'état des preuves n'est plus serré dans la rangée du compte : un bandeau à part (docs/134).
-    expect(summary.find("[data-test=state]").exists()).toBe(false);
+    // L'état des preuves : un bandeau à part (docs/134).
+    expect(head.find("[data-test=state]").exists()).toBe(false);
     expect(wrapper.find("[data-test=orp-banner]").classes()).toContain("today-banner");
 
     mockApi(() => month({ state: "en_cours", incomplete: 0, rows: [row(1)] }));
