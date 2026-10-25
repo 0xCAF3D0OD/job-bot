@@ -121,6 +121,16 @@ describe("SettingsView, une rubrique à la fois (docs/48)", () => {
     await router.push({ path: "/reglages", query: {}, hash: "#agenda" });
     await flushPromises();
     expect(wrapper.find(".settings-toc a.active").text()).toBe("Agenda et extension");
+    // « Chercher l'annonce chez l'employeur » n'est plus ici (1.6.28).
+    expect(wrapper.find("[data-test=settings-employer]").exists()).toBe(false);
+  });
+
+  it("« Chercher l'annonce chez l'employeur à partir de » est dans Recherche d'emploi (1.6.28)", async () => {
+    mockGet(false);
+    const { wrapper } = await mountSettings("recherche");
+    const employer = wrapper.find("[data-test=settings-employer]");
+    expect(employer.exists()).toBe(true);
+    expect(employer.text()).toContain("Chercher l'annonce chez l'employeur à partir de");
   });
 });
 
