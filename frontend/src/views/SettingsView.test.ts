@@ -104,11 +104,11 @@ describe("SettingsView, date limite ORP", () => {
 });
 
 describe("SettingsView, une rubrique à la fois (docs/48)", () => {
-  it("six rubriques, une seule affichée ; un ancien lien #agenda mène à Outils", async () => {
+  it("six rubriques, une seule affichée ; un ancien lien #agenda mène à « Agenda et extension »", async () => {
     mockGet(false);
     const { wrapper, router } = await mountSettings();
     const toc = wrapper.findAll(".settings-toc a").map((a) => a.text());
-    expect(toc).toEqual(["Recherche d'emploi", "Rythme", "Notifications", "IA", "Compte", "Outils"]);
+    expect(toc).toEqual(["Recherche d'emploi", "Rythme", "Notifications", "IA", "Compte", "Agenda et extension"]);
     expect(wrapper.find("[data-test=settings-form]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
     // Le seuil de notification est dans sa rubrique, dit en clair.
@@ -120,7 +120,7 @@ describe("SettingsView, une rubrique à la fois (docs/48)", () => {
 
     await router.push({ path: "/reglages", query: {}, hash: "#agenda" });
     await flushPromises();
-    expect(wrapper.find(".settings-toc a.active").text()).toBe("Outils");
+    expect(wrapper.find(".settings-toc a.active").text()).toBe("Agenda et extension");
   });
 });
 
@@ -208,7 +208,9 @@ describe("SettingsView, comptes (docs/65)", () => {
     await as(true);
     mockGet(false);
     const { wrapper } = await mountSettings("plateforme");
-    expect(wrapper.find("[data-test=toc-plateforme]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=toc-plateforme]").text()).toBe("Administration");
+    // Sans jargon (1.6.27) : « État du service » au lieu de « Diagnostic ».
+    expect(wrapper.find("[data-test=diagnostic-link]").text()).toBe("État du service");
     expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
   });
 });

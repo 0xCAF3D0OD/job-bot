@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
-import { followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../applicationState";
+import { noAnswerText, followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { applicationStatusLabel } from "../format";
 import { contactName, toFollowUp } from "../contactLabels";
@@ -182,7 +182,7 @@ const onStatus = (event: Event): void =>
         class="follow-up-line"
         data-test="panel-follow-up"
       >
-        Sans réponse depuis 10 jours.
+        {{ noAnswerText(application) }}.
         <button
           type="button"
           class="link"

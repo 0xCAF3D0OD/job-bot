@@ -8,7 +8,7 @@ import StatusPanel from "../components/StatusPanel.vue";
 
 <template>
   <PageHero
-    title="Diagnostic"
+    title="État du service"
   />
   <section class="band">
     <div class="container">

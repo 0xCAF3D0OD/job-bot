@@ -771,3 +771,43 @@ Une version de clarté, sans changer la structure (25 octobre).
 - 463 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité
   aussi en sombre.
 
+## Écarts (1.6.27)
+
+Revue de l'interface sur ordinateur (25 octobre). Réglages n'avait pas d'écran Figma : il est créé d'abord (2 états,
+« Recherche d'emploi » et « Agenda et extension », en vue exploitant, 1440 et 390 px, clair et sombre), avec le lot 9
+(Entrée de sommaire, Marqueur de rubrique ; icônes spark, shield, plug, activity).
+
+1. **Suivi** : « Sans réponse depuis N jours » dit le vrai nombre de jours depuis l'envoi (c'était toujours 10), sur la
+   ligne et dans le panneau d'une candidature.
+2. **Le bouton « Assistant »** ne cache plus rien : sur ordinateur, le pied de page réserve sa place en bas de chaque
+   page (vérifié en simulant le bouton, absent de la démo : plus rien dessous en bas de page).
+3. **Suivi** : plus de sélecteur « À relancer / À déclarer » (un troisième niveau d'onglets, §2) ; deux listes l'une
+   sous l'autre, trois lignes chacune et « Tout voir ». Figma suit.
+4. **Bilan › Semaines** : « en dessous » en gris neutre (`--band`, `--muted`) ; l'orange est pour ce qui demande d'agir (§4).
+5. **Réglages sans jargon** (§5), décision du 25/10 : « Outils » → « Agenda et extension », « Plateforme » →
+   « Administration », « Diagnostic » → « État du service » (la page et son lien) ; le nom du modèle d'IA disparaît
+   (« Active : elle note les offres. »).
+6. **Offres** : la pastille de l'onglet compte les offres à examiner ; dans une autre vue, la phrase le redit
+   (« 27 offres en cours · 4 à examiner. »).
+7. **Mineur** : « Postuler chez l'employeur » (un lien en bouton) prend le bord `--faint` des autres boutons
+   secondaires (il avait `--border`, très pâle) ; « Semaine faite » et « Ta semaine est faite » se taisent quand le mois
+   ORP est en retard.
+
+- **Relevé en passant, corrigé** : la 1.6.26 avait renommé le titre de la comparaison du Bilan en « Proximité avec ton
+  profil » ; un titre ne porte pas de pronom (règles des titres, audit) et l'audit de la 1.6.26 tournait sur l'ancienne
+  API de démo, qui n'avait pas été redémarrée. Le titre devient « Proximité avec le profil » ; « Proximité avec ton
+  profil » reste le nom de la note d'une offre pour les lecteurs d'écran.
+- **À trancher** : « Chercher l'annonce chez l'employeur à partir de » est dans « Agenda et extension » sans en être ;
+  proposition : le déplacer dans « Recherche d'emploi ».
+
+## Vérifié (1.6.27)
+
+- Captures avant/après (horloge figée) : changent le Suivi (deux listes, les jours), le Bilan (les semaines), les
+  Réglages (les noms), et les liens en bouton (Offres d'un compte neuf, page introuvable, détail d'une offre : le bord).
+  Les états du sélecteur du Suivi disparaissent des captures (8 de moins).
+- Figma et code côte à côte en 1440 px : `docs/captures/1.6.27/` (Suivi ; Réglages, la démo n'a pas les rubriques de
+  l'exploitant). Petits écarts : les lignes repliables de la rubrique sont encadrées dans Figma, et les étapes de
+  l'extension y sont rédigées en une phrase.
+- 465 tests, lint, types ; 5 tests de l'audit ; tests serveur du Bilan ; trois audits sans défaut, démo (API redémarrée)
+  et compte neuf, l'accessibilité aussi en sombre.
+

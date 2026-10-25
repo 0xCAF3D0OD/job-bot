@@ -234,7 +234,7 @@ export const PAGE_TITLES: Record<string, string> = {
   trainings: "Formations",
   profile: "Profil",
   settings: "Réglages",
-  diagnostic: "Diagnostic",
+  diagnostic: "État du service",
   login: "Connexion",
   access: "Accès",
   signup: "Demander un compte",

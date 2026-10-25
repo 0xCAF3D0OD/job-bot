@@ -17,6 +17,19 @@ export function followUpDue(a: Application): boolean {
   return a.follow_up_on ? a.follow_up_on <= daysAgo(0) : a.sent_at <= daysAgo(REMIND_AFTER_DAYS);
 }
 
+// Les jours depuis l'envoi, pour « Sans réponse depuis N jours » (1.6.27 : c'était toujours 10).
+export function daysSinceSent(a: Application): number {
+  const sent = new Date(`${a.sent_at}T12:00:00`);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+  return Math.max(0, Math.round((today.getTime() - sent.getTime()) / 86_400_000));
+}
+
+export function noAnswerText(a: Application): string {
+  const days = daysSinceSent(a);
+  return `Sans réponse depuis ${days} ${days === 1 ? "jour" : "jours"}`;
+}
+
 export function noAnswerDue(a: Application): boolean {
   return a.status === "relancee" && !!a.followed_up_at && a.followed_up_at <= daysAgo(NO_ANSWER_DAYS);
 }
@@ -52,7 +65,7 @@ export function nextStep(a: Application, row?: OrpRow | null): NextStep {
     return { key: "prepare", text: `Entretien ${interviewDate.format(new Date(a.interview_at!))}`, action: "Préparer" };
   }
   if (needsFeedback(a)) return { key: "feedback", text: "Entretien passé", action: "Faire le point" };
-  if (followUpDue(a)) return { key: "follow-up", text: "Sans réponse depuis 10 jours", action: "Relancer" };
+  if (followUpDue(a)) return { key: "follow-up", text: noAnswerText(a), action: "Relancer" };
   if (noAnswerDue(a)) return { key: "no-answer", text: "Relancée, sans réponse", action: "Classer sans réponse" };
   if (row?.missing.length) {
     return { key: "complete", text: `Pour l'ORP, il manque : ${row.missing.join(", ")}`, action: "Compléter" };

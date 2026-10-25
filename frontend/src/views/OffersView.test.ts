@@ -151,7 +151,8 @@ describe("OffersView", () => {
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(true);
     mockOffers(page([offer(3, "Trois")]));
     const dropped = await mountAt("/offres?statut=filtered_out");
-    expect(dropped.find("[data-test=offers-sentence]").text()).toBe("1 offre écartée.");
+    // Dans une autre vue, la phrase redit ce que compte la pastille de l'onglet (1.6.27).
+    expect(dropped.find("[data-test=offers-sentence]").text().replace(/\s+/g, " ")).toMatch(/^1 offre écartée( · \d+ à examiner)?\.$/);
   });
 
   it("transmet les filtres de l'adresse à l'API", async () => {

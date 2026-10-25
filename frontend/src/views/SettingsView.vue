@@ -190,7 +190,7 @@ const summary = computed(() => ({
   compte: [owner.value ? "profils d'essai" : `formule ${planName.value}`, me.value?.auth_enabled ? (me.value.username ?? "") : ""]
     .filter(Boolean)
     .join(" · "),
-  outils: "agenda, extension",
+  outils: "abonnement, extension du navigateur",
   plateforme: "comptes et IA de la plateforme",
 }));
 
@@ -201,8 +201,8 @@ const SECTIONS = [
   { id: "notifications", label: "Notifications" },
   { id: "ia", label: "IA" },
   { id: "compte", label: "Compte" },
-  { id: "outils", label: "Outils" },
-  { id: "plateforme", label: "Plateforme" },
+  { id: "outils", label: "Agenda et extension" },
+  { id: "plateforme", label: "Administration" },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
 const OLD_ANCHORS: Record<string, SectionId> = {
@@ -303,7 +303,7 @@ onUnmounted(() => spy?.disconnect());
           class="toc-diagnostic"
           data-test="diagnostic-link"
         >
-          <span class="with-icon"><AppIcon name="activity" />Diagnostic</span>
+          <span class="with-icon"><AppIcon name="activity" />État du service</span>
         </RouterLink>
       </nav>
       <!-- Sur téléphone, les marqueurs pour parcourir la longue page (docs/110). -->
@@ -755,7 +755,7 @@ onUnmounted(() => spy?.disconnect());
 
         <SettingsSection
           id="outils"
-          title="Outils"
+          title="Agenda et extension"
           :value="summary.outils"
           :active="active === 'outils'"
         >
@@ -810,7 +810,7 @@ onUnmounted(() => spy?.disconnect());
         <SettingsSection
           v-if="owner"
           id="plateforme"
-          title="Plateforme"
+          title="Administration"
           :value="summary.plateforme"
           :active="active === 'plateforme'"
         >
@@ -826,7 +826,7 @@ onUnmounted(() => spy?.disconnect());
           data-test="diagnostic-row"
         >
           <span>
-            <span class="setting-title">Diagnostic technique</span>
+            <span class="setting-title">État du service</span>
             <span class="setting-desc">La collecte, l'IA et les tâches de la plateforme.</span>
           </span>
           <AppIcon name="chevron" />
