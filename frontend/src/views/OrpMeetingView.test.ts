@@ -251,6 +251,16 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     expect(wrapper.find("[data-test=meeting-save]").classes()).toContain("primary");
     expect(wrapper.find("[data-test=see-offers]").classes()).toContain("link");
     expect(wrapper.find("[data-test=meeting-when]").exists()).toBe(false);
+    // Seul le formulaire : pas de titre « Préparer » au-dessus (1.6.24).
+    expect(wrapper.findAll("h2.orp-section").map((h) => h.text())).toEqual([]);
+  });
+
+  it("« Ce qui bloque » compte aussi ce qui marche dans son résumé", async () => {
+    const prep = { ...PREP, months, blockers: [], works: "Les offres de jobs.ch obtiennent plus souvent une réponse.", missing: [] };
+    GET.mockResolvedValue({ data: { meeting: MEETING, preparation: prep, ...MORE } });
+    const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=sheet-blockers] .disclosure-value").text()).toBe("1 piste");
   });
 
   it("sans candidature, une échéance passée n'est pas une alerte", async () => {
