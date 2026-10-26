@@ -118,13 +118,13 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 .muted { color: var(--muted); margin: 0; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
 
-/* Largeurs (1.6.29, regles-ui-ergonomie §3). La page : 1 020 px (GOV.UK Layout), sauf
+/* Largeurs (1.6.29, regles-ui-ergonomie §3). La page : 1 020 px (la colonne des deux tiers et la mesure y tiennent ; NN/g), sauf
    Candidatures › Offres et ses trois colonnes, à 1 280 px. La colonne des deux tiers pour une liste
    courte (loi de proximité) ; depuis la 1.6.30, 648 px : les deux tiers du contenu (972 px), la seule colonne de
    Suivi, Alertes et Rendez-vous. La mesure : 31 em, soit 496 px à 16 px ; mesuré sur toutes les pages,
-   aucune ligne n'y dépasse 75 caractères, quelle que soit la taille du texte (GOV.UK : 75 au plus ;
+   aucune ligne n'y dépasse 75 caractères, quelle que soit la taille du texte (Baymard : 50 à 75 ;
    WCAG 2.2, 1.4.8 : 80). Un « ch » ne suffit pas : il est plus large que la lettre moyenne.
-   Les champs à la taille du contenu prévu (GOV.UK Text input) : un nom 20 caractères, un lieu
+   Les champs à la taille du contenu prévu (Baymard) : un nom 20 caractères, un lieu
    30, un nombre court 5. Le bandeau du haut garde sa propre largeur, plus grande. */
 :root {
   --page-max: 1020px;
@@ -3867,13 +3867,13 @@ main:focus { outline: none; }
 /* Sur ordinateur (1.6.29, regles-ui-ergonomie §3) ; le téléphone ne change pas.
    - Une liste courte dans la colonne des deux tiers : le statut et l'action restent près du nom
      (loi de proximité).
-   - Les boutons à la largeur de leur texte (NHS Design System, loi de Fitts).
+   - Les boutons à la largeur de leur texte (Material Design 3, Polaris).
    - Les 7 jours de la semaine groupés, plus étalés sur toute la carte.
    - Les semaines du Bilan : plage, compte et état groupés à gauche, alignés d'une ligne à l'autre.
-   - Les champs à la taille du contenu prévu (GOV.UK Text input). */
+   - Les champs à la taille du contenu prévu (Baymard). */
 @media (min-width: 821px) {
   /* Suivi, Alertes et Rendez-vous (1.6.30) : tout dans une seule colonne des deux tiers, alignée à gauche avec le
-     titre et les onglets, même largeur de haut en bas (GOV.UK Layout ; NN/g). Le calendrier ouvert prend la largeur
+     titre et les onglets, même largeur de haut en bas (Polaris ; NN/g). Le calendrier ouvert prend la largeur
      de la page : une grille de 7 colonnes. */
   .jobs-body.two-thirds > :not(.suivi-detail), .suivi-detail > * { max-width: var(--column-two-thirds); }
   .suivi-detail > .disclosure.open:has(.suivi-calendar) { max-width: none; }

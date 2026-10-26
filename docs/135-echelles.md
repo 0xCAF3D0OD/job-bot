@@ -836,6 +836,12 @@ Références : GOV.UK Layout (page de 1 020 px, colonne des deux tiers, 75 carac
 (champs à la taille du contenu prévu, en caractères) ; NHS Design System (boutons pleine largeur seulement sur
 téléphone) ; WCAG 2.2, 1.4.8 (AAA visé : 80 caractères au plus) ; Laws of UX, lois de proximité et de Fitts.
 
+> Depuis la 1.6.32, GOV.UK et NHS ne sont plus des références (`docs/regles-ui-ergonomie.md` §9). Les mêmes règles
+> s'appuient sur : Baymard Institute (50 à 75 caractères par ligne ; la largeur d'un champ selon la longueur attendue) ;
+> Polaris (la colonne d'un tiers pour le contenu d'appui seulement ; boutons à leur largeur propre) ; Material Design 3
+> (la largeur d'un bouton suit son libellé) ; Nielsen Norman Group (l'attention va à gauche ; cibles d'au moins 1 cm) ;
+> Apple HIG (cibles de 44 points). Le détail : §3 des règles.
+
 1. **Les variables** (`style.css`, `:root`) : `--page-max` 1 020 px, `--page-wide` 80 rem (1 280 px, remplace
    `--page-width`), `--column-two-thirds` 680 px, `--measure` 31 em, `--field-20` 13 rem, `--field-30` 18 rem,
    `--field-5` 5,5 rem, `--header-max` 84 rem (le bandeau du haut, inchangé). Les mêmes dans Figma (collection Tailles).
