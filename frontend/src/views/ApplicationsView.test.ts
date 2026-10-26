@@ -130,8 +130,8 @@ describe("Candidatures, onglet Suivi", () => {
     const { wrapper } = await mountView();
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
     expect(wrapper.text()).toContain("Acme SA");
-    // Une seule colonne des deux tiers (règles §3, 1.6.30).
-    expect(wrapper.find(".jobs-body").classes()).toContain("two-thirds");
+    // Un seul conteneur, chaque bloc sur toute sa largeur (règles §3, 1.6.32).
+    expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body"]);
     expect(wrapper.find("[data-test=goal]").text()).toContain("1 / 20");
     expect(wrapper.find("[role=progressbar]").attributes("aria-valuenow")).toBe("1");
     // Au-delà de 15, une barre continue.

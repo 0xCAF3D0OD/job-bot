@@ -60,33 +60,30 @@ Règles :
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
 - Les listes longues se replient au-delà de 3 éléments (« Tout voir »).
 
-Largeurs, sur ordinateur (1.6.29) :
-- **La page** : contenu centré, largeur maximale de **1 020 px** (`--page-max`), marges comprises (GOV.UK Layout).
-  Seule exception : **Candidatures › Offres**, avec ses trois colonnes (filtres, liste, détail), garde **1 280 px**
-  (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px, la largeur d'un téléphone ; à
-  1 280 px, ils ont environ 460 px, assez pour une ligne de détail lisible (une soixantaine de caractères).
-- **Le texte courant et les phrases de conclusion** : **75 caractères** par ligne au plus (`--measure`, GOV.UK Layout ;
-  WCAG 2.2, 1.4.8, niveau AAA visé : 80 au plus). `--measure` vaut 31 em (496 px à 16 px) : mesuré sur toutes les
-  pages, aucune ligne n'y dépasse 75 caractères ; un `ch` ne suffit pas, il est plus large que la lettre moyenne.
-- **Une colonne des deux tiers** (1.6.30) : sur **Suivi, Alertes et Rendez-vous**, tout le contenu tient dans une seule
-  colonne des deux tiers (`--column-two-thirds`), alignée à gauche avec le titre de la page et les onglets, **même
-  largeur de haut en bas** ; le tiers de droite reste vide. GOV.UK Layout : « le contenu principal doit toujours être
-  dans une colonne des deux tiers », le tiers de droite étant réservé au contenu secondaire ; l'objectif ORP et les
-  preuves sont du contenu principal (§1). Nielsen Norman Group : la page se parcourt par la gauche, le contenu le plus
-  informatif y va, et un alignement vertical se lit mieux. Le défaut à éviter : deux largeurs l'une sous l'autre.
-  Ordre par importance (§1). Suivi : la conclusion ; le mois (navigation, objectif et progression, « Ajouter », ⋯) ;
-  les preuves à compléter ; à relancer ; à déclarer ; le détail. Alertes : la conclusion ; les alertes ; le détail.
-  Exception : le calendrier du Suivi, ouvert, prend la largeur de la page (une grille de 7 colonnes). Premiers pas
-  (Alertes) garde sa pleine largeur.
-- **Jamais de « … »** dans une ligne de liste sur ordinateur : le texte passe à la ligne.
-- **Les boutons** : la largeur de leur texte sur ordinateur ; toute la largeur seulement sous le point de rupture du
-  téléphone (820 px) (NHS Design System ; loi de Fitts : sur téléphone, une cible pleine largeur ; sur ordinateur, une
-  cible proche de ce qu'elle concerne).
-- **Les champs** : une largeur selon le contenu prévu (GOV.UK Text input) : **nom 20 caractères** (`--field-20`),
-  **lieu 30 caractères** (`--field-30`), **date et heure à leur taille naturelle** ; les nombres courts (objectif, note
-  sur 100, jour du mois) à 5 caractères (`--field-5`) ; **la recherche peut rester fluide**.
-- **Les listes** : le statut ou l'action reste **près du texte** qu'il concerne (loi de proximité) ; aucune ligne de liste
-  ne dépasse la largeur maximale de la page.
+Largeurs (1.6.32) :
+- **La page** : un seul conteneur centré, largeur maximale de **1 020 px** (`--page-max`), marges comprises ; **chaque
+  bloc prend toute sa largeur**. 1 020 px est un choix de jobA1, compatible avec la largeur large de Polaris (`inlineSize`
+  `large`), recommandée pour les tableaux de bord. Pages concernées : **Aujourd'hui, Suivi, Alertes,
+  Rendez-vous et Bilan**. Seule exception : **Candidatures › Offres**, avec ses trois colonnes (filtres, liste,
+  détail), garde **1 280 px** (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px.
+- **Pas de colonne étroite avec le côté droit vide.** Une colonne d'appui (l'`aside` de Polaris) ne reçoit que du
+  contenu d'appui : **jamais une commande principale, jamais un contenu requis** (Polaris, mise en page).
+- **Le texte courant et les phrases de conclusion** : **75 caractères** par ligne au plus (`--measure`, Baymard
+  Institute : 50 à 75 caractères pour le texte courant ; WCAG 2.2, 1.4.8, niveau AAA visé : 80 au plus). `--measure`
+  vaut 31 em (496 px à 16 px) ; un `ch` ne suffit pas, il est plus large que la lettre moyenne. La mesure limite le
+  texte, pas le bloc : la carte garde toute la largeur de la page.
+- **Les tableaux tiennent dans leur carte** (« Toutes les candidatures ») : aucun défilement horizontal sur ordinateur ;
+  les colonnes se partagent la largeur et le texte passe à la ligne.
+- **Jamais de « … »** dans une ligne de liste : le texte passe à la ligne.
+- **Les boutons** : **la largeur de leur texte, à toutes les tailles** (Material Design 3 : la largeur d'un bouton suit
+  son libellé). Sur téléphone, une cible d'au moins **44 px** de haut (Apple Human Interface Guidelines : 44 points ;
+  Nielsen Norman Group : environ 1 cm). Pas de bouton pleine largeur.
+- **Les champs** : une largeur selon le contenu prévu (Baymard Institute : la largeur d'un champ annonce la longueur
+  attendue ; un écart fait douter de l'étiquette) : **nom 20 caractères** (`--field-20`), **lieu 30 caractères**
+  (`--field-30`), **date et heure à leur taille naturelle** ; les nombres courts (objectif, note sur 100, jour du mois)
+  à 5 caractères (`--field-5`) ; **la recherche peut rester fluide**.
+- **Les listes** : le statut ou l'action reste **près du texte** qu'il concerne ; aucune ligne de liste ne dépasse la
+  largeur de la page.
 
 ## 4. Composants (seuls autorisés)
 
