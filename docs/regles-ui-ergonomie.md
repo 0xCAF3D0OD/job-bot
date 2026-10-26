@@ -140,6 +140,7 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 - Voile de chargement : au moins 1,2 s (docs/63) ; l'animation de la page se lit dans ce temps, jamais de chargement rallongé pour elle.
 - Une animation par page, propre à la page (visage du 1 transformé).
 - Micro-animations seulement sur les gestes clés : candidature envoyée, réponse reçue, objectif atteint.
+- La séparation sous l'en-tête n'apparaît que quand le contenu défile dessous, en fondu bref de 250 ms (Material Design 3, barre du haut) ; sans fondu si l'appareil demande moins d'animations (WCAG 2.2, 2.3.3 ; Apple HIG, Mouvement).
 - Tout mouvement s'arrête si l'appareil demande moins d'animations.
 
 ## 7. Accessibilité (WCAG 2.2 niveau AA, obligatoire)
