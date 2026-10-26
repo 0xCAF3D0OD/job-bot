@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 PG_BIN ?= $(shell brew --prefix postgresql@17 2>/dev/null)/bin
 
-.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -72,12 +72,19 @@ demo-image: ## la démo en ligne dans Docker, sur http://localhost:8280 (make de
 demo-image-stop: ## arrête la démo Docker locale et efface ses données
 	$(DEMO_LOCAL) down -v
 
-test: test-audit ## tests backend (base jobbot_test), frontend et audit des règles
+test: test-audit changelog-check ## tests backend (base jobbot_test), frontend, audit des règles et historique
 	cd backend && uv run pytest
 	cd frontend && npm run -s test && npm run -s typecheck && npm run -s poids
 
 test-audit: ## l'audit des règles trouve un texte collé au bord (navigateur requis, docs/135)
 	cd backend && uv run --with playwright --with pytest pytest -q ../frontend/scripts/test_regles.py
+
+changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml le fait)
+	python3 scripts/changelog.py
+
+changelog-check: ## vérifie les fichiers de changelog.d/ et l'assemblage
+	python3 -m unittest discover -s scripts -q
+	python3 scripts/changelog.py --check
 
 poids: ## le budget de poids des pages (docs/117 §3)
 	cd frontend && npm run -s poids
