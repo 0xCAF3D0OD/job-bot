@@ -8,9 +8,12 @@ Trois sessions de Claude Code travaillent en même temps sur ce dépôt et sur l
 |---|---|---|
 | Design | Figma ; les variables de `frontend/src/style.css` (largeurs, espacements, couleurs, mesures) ; `docs/regles-ui-ergonomie.md` ; l'en-tête | le code des pages et leurs tests ; l'outillage |
 | Pages | le code des pages (`frontend/src/views`, `frontend/src/components`, `backend/`) et leurs tests | les variables de `style.css` ; les règles ; Figma (lecture seule) |
-| Dépôt | l'outillage et l'organisation : `docs/coordination.md`, `docs/versions.md`, `changelog.d/README.md`, `scripts/`, `Makefile`, `.github/` | les pages, les règles, les variables ; Figma (lecture seule) |
+| Dépôt | l'outillage et l'organisation : la structure et les règles de `docs/coordination.md` et `docs/versions.md`, `changelog.d/README.md`, `scripts/`, `Makefile`, `.github/` | les pages, les règles, les variables ; Figma (lecture seule) |
 
 Un fichier hors de son territoire ne se modifie pas : la session s'arrête et le signale ici et à Kevin.
+
+Exception : **chaque session tient elle-même ses propres lignes** dans les deux tableaux (`docs/coordination.md` et
+`docs/versions.md`), dans la PR de sa tâche ou par une PR courte. Elle ne modifie pas les lignes des autres sessions.
 
 ## Avant de commencer une tâche
 
@@ -29,13 +32,14 @@ Partir de main à jour, et se remettre à jour juste avant d'ouvrir la PR. Une P
 | Renommer la PR 344 (1.6.31 pris par la PR 341) | Dépôt | `fix/1.6.31-polaris` | 1.6.35 | titre de la PR | fusionnée |
 | Tableau de coordination et réservation des numéros | Dépôt | `chore/1.6.38-coordination` | 1.6.38 | `docs/coordination.md`, `docs/versions.md`, `changelog.d/1.6.38.md` | fusionnée |
 | Inscriptions de la session Design dans les tableaux | Dépôt | `chore/1.6.40-inscriptions` | 1.6.40 | `docs/coordination.md`, `docs/versions.md`, `changelog.d/1.6.40.md` | fusionnée |
-| Tableaux à jour (1.6.40 fusionnée, 1.6.41 précisée) | Dépôt | `chore/1.6.42-tableaux` | 1.6.42 | `docs/coordination.md`, `docs/versions.md`, `changelog.d/1.6.42.md` | PR ouverte |
+| Tableaux à jour (1.6.40 fusionnée, 1.6.41 précisée) | Dépôt | `chore/1.6.42-tableaux` | 1.6.42 | `docs/coordination.md`, `docs/versions.md`, `changelog.d/1.6.42.md` | fusionnée |
+| Chaque session tient ses lignes ; inscription de la session Pages | Dépôt | `chore/1.6.44-inscriptions` | 1.6.44 | `docs/coordination.md`, `docs/versions.md`, `changelog.d/1.6.44.md` | PR ouverte |
 | Résoudre les conflits des PR ouvertes | Dépôt | — | — | selon la PR | prévu (aucune PR ouverte le 26.10) |
 | Mesure à 31 em partout (annuler les 24 em) | Design | `fix/1.6.31-polaris` | 1.6.35 | `style.css`, `docs/regles-ui-ergonomie.md`, Figma (variables `measure`) | fusionnée |
 | En-tête : sélection, bulles, ligne au défilement | Design | `fix/1.6.37-en-tete` | 1.6.37 | `App.vue`, `style.css`, `docs/interface.md`, Figma | fusionnée |
 | Règles §6, le mouvement | Design | `docs/regles-6-fondu` | 1.6.39 | `docs/regles-ui-ergonomie.md`, `changelog.d/1.6.39.md` | prévu (texte en attente de validation par Kevin) |
 | Boutons segmentés selon Material 3 (rail neutre, pastilles ajustées au texte, actif comme l'onglet de l'en-tête) : filtre Note des Offres et période du Bilan ; règle §4 | Design | `fix/1.6.41-segmentes` | 1.6.41 | Figma (Segment, Sélecteur segmenté, variable `control-inner-h`, filtre Note de l'écran Candidatures), `docs/regles-ui-ergonomie.md` (§4), `frontend/src/style.css` (règles `.segmented` et `.score-choice`, variable `--control-inner-h` ; aucun `.vue`), `changelog.d/1.6.41.md` | PR ouverte (#351) |
 | Micro-animations dans Figma : objectif ORP du mois atteint, réponse d'un employeur reçue, tri du jour terminé, étape des premiers pas franchie, premier entretien obtenu, bouton Assistant (visage → « Fermer ») ; « Candidature envoyée » existe déjà (modèle) | Design | — | — | Figma seulement (aucun fichier du dépôt) | prévu (en cours dès que Kevin valide le §6) |
-| « jour sans recherche » devient « jour de repos » partout (assistant, e-mails, notifications, serveur) | Pages | — | à réserver | à inscrire | prévu |
-| Expliquer la baisse des tests de 478 à 463 | Pages | — | à réserver | à inscrire | prévu |
-| Corriger les tests qui dépendent de la date | Pages | — | à réserver | à inscrire | prévu |
+| « jour sans recherche » devient « jour de repos » partout (assistant, e-mails, notifications, serveur) | Pages | `fix/1.6.43-jour-de-repos` | 1.6.43 | `backend/src/jobbot/llm/prompts/assistant-v21.md` (nouveau), `assistant/service.py`, `notify/service.py`, `rhythm/service.py`, `auth/service.py` ; 12 fichiers de `backend/tests` (test_assistant, test_assistant_actions, test_connexion, test_contacts, test_insights, test_offer_filters, test_revue_0_33_1, test_revue_pages, test_revue_protections, test_rhythm, test_spontaneous, test_trainings) ; `frontend/src/components/InterviewForm.test.ts` ; `changelog.d/1.6.43.md` | en cours (une seule PR pour les trois tâches) |
+| Expliquer la baisse des tests de 478 à 463 | Pages | `fix/1.6.43-jour-de-repos` | 1.6.43 | aucun : la 1.6.25 a retiré les 16 tests d'Actualités et en a ajouté 1 au Bilan | expliquée |
+| Corriger les tests qui dépendent de la date | Pages | `fix/1.6.43-jour-de-repos` | 1.6.43 | dans les fichiers de tests de la ligne « jour de repos » | en cours (même PR) |
