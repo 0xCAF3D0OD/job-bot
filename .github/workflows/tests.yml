@@ -71,3 +71,23 @@ jobs:
       - name: Budget de poids des pages
         working-directory: frontend
         run: npm run poids
+
+  historique:
+    name: Historique (changelog.d)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Les fichiers de changelog.d et leur assemblage
+        run: make changelog-check
+      # Une PR ajoute son fichier changelog.d/X.Y.Z.md et ne touche pas à CHANGELOG.md, assemblé sur
+      # main (changelog.yml) : sinon, chaque PR modifierait le même fichier et entrerait en conflit.
+      - name: CHANGELOG.md n'est pas modifié à la main
+        if: github.event_name == 'pull_request'
+        run: |
+          changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" HEAD)
+          if echo "$changed" | grep -qx CHANGELOG.md && ! echo "$changed" | grep -qx scripts/changelog.py; then
+            echo "::error file=CHANGELOG.md::CHANGELOG.md est assemblé sur main : ajoute plutôt changelog.d/X.Y.Z.md et laisse CHANGELOG.md tel quel."
+            exit 1
+          fi
