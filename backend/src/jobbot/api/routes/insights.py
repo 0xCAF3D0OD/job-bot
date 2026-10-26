@@ -53,6 +53,12 @@ class BucketOut(BaseModel):
     responses: int
 
 
+class HighlightOut(BaseModel):
+    # « À retenir » d'Aujourd'hui (1.6.51) : un mot très grand, une phrase.
+    word: str
+    sentence: str
+
+
 class SearchReportOut(BaseModel):
     start: date | None
     end: date
@@ -61,6 +67,8 @@ class SearchReportOut(BaseModel):
     comparisons: list[ComparisonOut]
     # Une phrase seulement si un écart est net (docs/42 §2).
     headline: str | None
+    # Le même écart en un mot et une phrase, pour « À retenir » d'Aujourd'hui (1.6.51).
+    highlight: HighlightOut | None = None
     # Pour un mois choisi : le résumé à copier pour le rendez-vous ORP (docs/42 §3).
     orp_summary: str | None
     # « Par mois » (docs/55) : mois de la période, ou semaines d'un mois choisi.
@@ -137,6 +145,7 @@ async def get_insights(
             for c in found.comparisons
         ],
         headline=found.headline,
+        highlight=HighlightOut(**vars(found.highlight)) if found.highlight else None,
         orp_summary=summary,
         unit="week" if found.unit == "week" else "month",
         buckets=[BucketOut(**vars(b)) for b in found.buckets],

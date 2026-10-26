@@ -4809,6 +4809,13 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HighlightOut */
+        HighlightOut: {
+            /** Word */
+            word: string;
+            /** Sentence */
+            sentence: string;
+        };
         /** Identity */
         Identity: {
             /** Name */
@@ -6948,6 +6955,7 @@ export interface components {
             comparisons: components["schemas"]["ComparisonOut"][];
             /** Headline */
             headline: string | null;
+            highlight?: components["schemas"]["HighlightOut"] | null;
             /** Orp Summary */
             orp_summary: string | null;
             /**

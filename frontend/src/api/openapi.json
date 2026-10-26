@@ -13439,6 +13439,24 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HighlightOut": {
+        "properties": {
+          "word": {
+            "type": "string",
+            "title": "Word"
+          },
+          "sentence": {
+            "type": "string",
+            "title": "Sentence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "word",
+          "sentence"
+        ],
+        "title": "HighlightOut"
+      },
       "Identity": {
         "properties": {
           "name": {
@@ -20213,6 +20231,16 @@
               }
             ],
             "title": "Headline"
+          },
+          "highlight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HighlightOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "orp_summary": {
             "anyOf": [

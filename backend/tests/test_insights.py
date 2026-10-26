@@ -11,7 +11,15 @@ from sqlalchemy import text
 from jobbot.api.app import create_app
 from jobbot.db.models import Application, Contact, Evaluation, Offer, OfferLink
 from jobbot.followups.service import local_today
-from jobbot.insights.service import Comparison, Facts, Group, buckets, headline
+from jobbot.insights.service import (
+    Comparison,
+    Facts,
+    Group,
+    Highlight,
+    buckets,
+    headline,
+    highlight,
+)
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
@@ -173,6 +181,46 @@ def test_headline_needs_enough_and_a_clear_gap() -> None:
         headline([clear])
         == "Les avec obtiennent plus souvent une réponse (4 sur 6, contre 2 sur 10)."
     )
+
+
+def test_highlight_says_the_same_gap_in_a_word_and_a_sentence() -> None:
+    """« À retenir » d'Aujourd'hui (1.6.51) : le mot, puis la phrase sans le répéter."""
+    sites = Comparison(
+        "source",
+        "D'où vient l'offre",
+        [
+            Group("jobs", "jobs.ch", "Les offres de jobs.ch", 3, 5),
+            Group("linkedin", "LinkedIn", "Les offres de LinkedIn", 2, 10),
+        ],
+    )
+    assert highlight([sites]) == Highlight(
+        "jobs.ch",
+        "Plus souvent une réponse que les offres de LinkedIn : 3 sur 5, contre 2 sur 10.",
+    )
+    scores = Comparison(
+        "score",
+        "Proximité",
+        [
+            Group("high", "80 et plus", "Les offres notées 80 et plus", 4, 6),
+            Group("low", "moins de 60", "Les offres notées moins de 60", 1, 8),
+        ],
+    )
+    assert highlight([scores]) == Highlight(
+        "Notées 80 et plus",
+        "Plus souvent une réponse que les offres notées moins de 60 : 4 sur 6, contre 1 sur 8.",
+    )
+    follow = Comparison(
+        "follow_up",
+        "Relance",
+        [
+            Group("yes", "relancées", "Tes candidatures relancées", 4, 6),
+            Group("no", "jamais relancées", "Tes candidatures jamais relancées", 1, 8),
+        ],
+    )
+    assert highlight([follow]) is not None
+    assert highlight([follow]).word == "Relancées"  # type: ignore[union-attr]
+    close = Comparison("contact", "c", [Group("a", "a", "A", 3, 6), Group("b", "b", "B", 2, 6)])
+    assert highlight([close]) is None
 
 
 def test_buckets_by_month_and_by_week() -> None:

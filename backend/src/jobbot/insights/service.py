@@ -88,12 +88,22 @@ class Bucket:
 
 
 @dataclass
+class Highlight:
+    """« À retenir » d'Aujourd'hui (1.6.51, docs/interface.md n° 17) : le même écart que la
+    phrase du Bilan, en un mot très grand et une phrase."""
+
+    word: str
+    sentence: str
+
+
+@dataclass
 class Insights:
     funnel: Funnel
     delay: Delay | None
     comparisons: list[Comparison]
     headline: str | None
     unit: str = "month"
+    highlight: Highlight | None = None
     buckets: list[Bucket] = field(default_factory=list)
     interviews_upcoming: int = 0
 
@@ -278,10 +288,10 @@ def compare(facts: list[Facts], names: dict[str, str], today: date) -> list[Comp
     ]
 
 
-def headline(comparisons: list[Comparison]) -> str | None:
-    """Une seule phrase, et seulement si un écart est net : au moins le double, avec assez
-    de candidatures des deux côtés et au moins 2 réponses du meilleur côté."""
-    best: tuple[float, str] | None = None
+def _widest(comparisons: list[Comparison]) -> tuple[str, Group, Group] | None:
+    """L'écart le plus net : au moins le double, avec assez de candidatures des deux côtés et au
+    moins 2 réponses du meilleur côté. La comparaison, le meilleur groupe, le moins bon."""
+    best: tuple[float, tuple[str, Group, Group]] | None = None
     for comparison in comparisons:
         groups = [g for g in comparison.groups if g.enough]
         if len(groups) < 2:
@@ -291,13 +301,50 @@ def headline(comparisons: list[Comparison]) -> str | None:
         if top is bottom or top.responses < 2 or top.rate < 2 * bottom.rate:
             continue
         ratio = top.rate / bottom.rate if bottom.rate else float("inf")
-        text = (
-            f"{top.subject} obtiennent plus souvent une réponse "
-            f"({top.responses} sur {top.total}, contre {bottom.responses} sur {bottom.total})."
-        )
         if best is None or ratio > best[0]:
-            best = (ratio, text)
+            best = (ratio, (comparison.key, top, bottom))
     return best[1] if best else None
+
+
+def headline(comparisons: list[Comparison]) -> str | None:
+    """Une seule phrase, et seulement si un écart est net (`_widest`)."""
+    found = _widest(comparisons)
+    if found is None:
+        return None
+    _, top, bottom = found
+    return (
+        f"{top.subject} obtiennent plus souvent une réponse "
+        f"({top.responses} sur {top.total}, contre {bottom.responses} sur {bottom.total})."
+    )
+
+
+def _word(key: str, group: Group) -> str:
+    """Le mot de « À retenir » : le site, la note, le contact ou la relance qui marche le mieux."""
+    if key == "source":
+        if group.key == SPONTANEOUS:
+            return "Spontanées"
+        if group.key == MANUAL:
+            return "Ajoutées à la main"
+        return group.label
+    if key == "score":
+        return "Sans note" if group.key == "none" else f"Notées {group.label}"
+    return group.label[0].upper() + group.label[1:]
+
+
+def highlight(comparisons: list[Comparison]) -> Highlight | None:
+    """« À retenir » : le même écart que `headline`, un mot et une phrase sans le répéter."""
+    found = _widest(comparisons)
+    if found is None:
+        return None
+    key, top, bottom = found
+    other = bottom.subject[0].lower() + bottom.subject[1:]
+    return Highlight(
+        word=_word(key, top),
+        sentence=(
+            f"Plus souvent une réponse que {other} : {top.responses} sur {top.total}, "
+            f"contre {bottom.responses} sur {bottom.total}."
+        ),
+    )
 
 
 # « Tout » : les 12 derniers mois au plus dans « Par mois » (docs/55).
@@ -384,6 +431,7 @@ async def insights(
         delay=Delay(round(median(delays)), min(delays), max(delays)) if delays else None,
         comparisons=comparisons,
         headline=headline(comparisons),
+        highlight=highlight(comparisons),
         unit=unit,
         buckets=buckets(facts, start, end, unit),
         interviews_upcoming=sum(
