@@ -1,6 +1,6 @@
 # jobA1 : règles d'interface et d'ergonomie
 
-Version 1.1 · 23 octobre 2026 (échelles, docs/135)
+Version 1.2 · 26 octobre 2026 (références, §9)
 
 Ce document fixe la structure de jobA1. Toute interface doit s'y conformer. **Claude Code n'invente aucune structure, aucun composant et aucun mot qui ne figure pas ici ou dans la bibliothèque Figma.** Un besoin nouveau se propose d'abord, il ne se code pas.
 
@@ -157,24 +157,21 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 
 ## 9. Références
 
-| Référence | Usage |
-|---|---|
-| Nielsen Norman Group (nngroup.com) | Navigation, architecture de l'information, heuristiques |
-| W3C WCAG 2.2 AA | Accessibilité, norme en vigueur |
-| Design System de la Confédération (github.com/swiss/designsystem) | Repères familiers aux utilisateurs suisses |
-| GOV.UK Design System | Parcours en étapes, formulaires, messages d'erreur ; Layout (largeur de page de 1 020 px, colonne des deux tiers, lignes de 75 caractères) ; Text input (champs à la taille du contenu prévu, en caractères) |
-| NHS Design System (basé sur GOV.UK) | Boutons pleine largeur sur téléphone seulement |
-| W3C WCAG 2.2, 1.4.8 (AAA, visé) | 80 caractères par ligne au plus |
-| Laws of UX (lawsofux.com) | Hick, Jakob, Fitts ; proximité (l'action près de ce qu'elle concerne) |
+Par ordre d'autorité : en cas de désaccord, la plus haute l'emporte.
 
-On reprend les principes, jamais l'apparence. Toute proposition cite la règle ou la référence qui la justifie.
+1. **Normes** : WCAG 2.2 AA (W3C) ; ISO 9241, parties 110 (principes de dialogue) et 210 (conception centrée sur l'utilisateur).
+2. **Recherche** : Nielsen Norman Group ; Baymard Institute.
+3. **Systèmes de design** : Material Design 3 (Google) ; Polaris (Shopify) ; Apple Human Interface Guidelines.
+4. **Aide-mémoire** : Laws of UX. Jamais seul pour trancher.
+
+On reprend les principes, jamais l'apparence. **Chaque choix d'interface dans une PR cite au moins une de ces références.**
 
 ## 10. Méthode de travail pour Claude Code
 
 1. Avant toute interface : lire ce document, puis le composant ou l'écran correspondant dans Figma (via le connecteur).
 2. Utiliser uniquement les composants mappés par Code Connect et les variables Figma (couleurs, espacements, rayons, typographie). Aucune valeur en dur.
 3. Si l'écran n'existe pas dans Figma : proposer une maquette ou une structure, attendre la validation, puis coder.
-4. Après chaque changement : vérifier les sections 3, 4, 5 et 7, et le signaler dans la PR (« Règles vérifiées : … »).
+4. Après chaque changement : vérifier les sections 3, 4, 5 et 7, et le signaler dans la PR (« Règles vérifiées : … »), avec la référence de la section 9 qui justifie chaque choix d'interface.
 5. Une règle à changer se discute et se met à jour **ici d'abord**, jamais directement dans le code.
 
 ---
