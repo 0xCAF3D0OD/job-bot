@@ -12,7 +12,8 @@ Assistant de recherche d'emploi : il collecte les offres reçues par alerte e-ma
 
 ## Versions
 
-L'historique des versions, une ligne par version : [CHANGELOG.md](CHANGELOG.md).
+L'historique des versions, une ligne par version : [CHANGELOG.md](CHANGELOG.md), assemblé sur main depuis
+[changelog.d/](changelog.d/README.md) (un fichier par version, ajouté par sa PR).
 
 ## Lancer en local
 

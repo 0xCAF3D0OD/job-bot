@@ -1,7 +1,11 @@
 # Historique des versions
 
-Une ligne par version, la plus récente en bas. Le détail de chaque version (ce qui change, ce qui est
-vérifié) est dans le document de cadrage qu'elle cite ; les PR ajoutent leur ligne ici, plus dans le README.
+Une ligne par version, la plus récente en bas. Le détail de chaque version (ce qui change, ce
+qui est vérifié) est dans le document de cadrage qu'elle cite.
+
+**Ce fichier est assemblé : ne le modifie pas.** Une version ajoute son fichier
+`changelog.d/X.Y.Z.md` (la première ligne : le contenu ; une ligne « État : … » facultative,
+sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau après chaque fusion.
 
 | Version | Contenu | État |
 |---|---|---|
@@ -165,7 +169,7 @@ vérifié) est dans le document de cadrage qu'elle cite ; les PR ajoutent leur l
 | 0.82.1 | La page d'attente refaite : l'en-tête de jobA1, une carte avec le dessin (qui ne dépend plus du réseau), le compte à rebours et « Réessayer maintenant » | livrée |
 | 0.82.2 | L'assistant ne sort plus du cadre sur téléphone : une infobulle invisible au bord droit élargissait l'écran ; rien ne déborde plus sur le côté | livrée |
 | 0.82.3 | L'adresse d'alerte sans « catch-all » : `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch` donne `alertes+nom-code@joba1.ch`, qui passe par une seule redirection | livrée |
-| 0.82.4 | La recherche publique de jobup coupée : ses conditions d'utilisation (déc. 2025, §7) interdisent les robots ; réglage `JOBBOT_PUBLIC_SEARCH_ENABLED`, faux par défaut | en cours |
+| 0.82.4 | La recherche publique de jobup coupée : ses conditions d'utilisation (déc. 2025, §7) interdisent les robots ; réglage `JOBBOT_PUBLIC_SEARCH_ENABLED`, faux par défaut | livrée |
 | 0.83.0 | La boîte des invités à part : une vraie boîte Infomaniak (`alertes@joba1.ch`), lue puis vidée par jobA1, plus rien dans la boîte de l'exploitant ; la copie d'un code effacée à 30 minutes ; les invités prévenus | livrée |
 | 0.83.1 | La page Alertes remise en ordre : le code en tête, « Les alertes », puis « Les e-mails des sites » en une carte (« J'attends un code », les messages) | livrée |
 | 0.83.2 | La page Alertes en deux colonnes sur ordinateur : les alertes à gauche, les e-mails des sites à droite, titres et cartes alignés | livrée |
