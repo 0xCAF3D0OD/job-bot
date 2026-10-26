@@ -20,6 +20,7 @@ import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import CertificatesSection from "./CertificatesSection.vue";
 import { offerUndo } from "../composables/useUndo";
+import CountBadge from "./CountBadge.vue";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
   { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau." },
@@ -426,7 +427,10 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         :aria-selected="filter === 'all'"
         @click="filter = 'all'"
       >
-        Tous <span class="tab-count">{{ chunks.length }}</span>
+        Tous <CountBadge
+          class="tab-count"
+          :count="chunks.length"
+        />
       </button>
       <button
         v-for="kind in usedKinds"
@@ -436,7 +440,10 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         :aria-selected="filter === kind.value"
         @click="filter = kind.value"
       >
-        {{ kind.label }} <span class="tab-count">{{ kindCount(kind.value) }}</span>
+        {{ kind.label }} <CountBadge
+          class="tab-count"
+          :count="kindCount(kind.value)"
+        />
       </button>
     </div>
 

@@ -19,6 +19,7 @@ import { plural } from "../format";
 
 import HoverNote from "../components/HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
+import CountBadge from "../components/CountBadge.vue";
 
 const { aiNote } = usePlan();
 // Formations (docs/16 §5) : catalogue vérifié, suggestions de l'IA sur demande, suivi.
@@ -209,10 +210,12 @@ onMounted(() => void load());
             :aria-current="tab === 'mine' ? 'true' : undefined"
             data-test="tab-mine"
           >
-            <span class="with-icon"><AppIcon name="bookmark" />Suivies</span>{{ " " }}<span
+            <span class="with-icon"><AppIcon name="bookmark" />Suivies</span>{{ " " }}<CountBadge
               v-if="mineCount"
               class="tab-count"
-            >{{ mineCount }}</span>
+            
+              :count="mineCount"
+            />
           </RouterLink>
         </nav>
 
@@ -256,12 +259,14 @@ onMounted(() => void load());
             @click="filtersOpen = !filtersOpen"
           >
             <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
-            <span
+            <CountBadge
               v-if="activeFilters"
               class="tab-count"
               aria-hidden="true"
               data-test="training-filter-count"
-            >{{ activeFilters }}</span>
+            
+              :count="activeFilters"
+            />
           </button>
           <PushTransition :enabled="phone">
             <div

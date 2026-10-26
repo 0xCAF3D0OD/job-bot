@@ -6,6 +6,7 @@ import { api, type Inbox, type InboxItem } from "../api/client";
 import { plural, since } from "../format";
 import AppIcon from "./AppIcon.vue";
 import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
+import CountBadge from "./CountBadge.vue";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
 const REFRESH_MS = 60_000;
@@ -90,11 +91,13 @@ onUnmounted(() => {
       @click="toggle"
     >
       <AppIcon name="bell" />
-      <span
+      <CountBadge
         v-if="inbox.unread"
         class="bell-badge"
         data-test="bell-badge"
-      >{{ badge }}</span>
+        tone="orange"
+        :count="badge"
+      />
     </button>
     <Teleport
       :to="CAPSULE_BODY"
