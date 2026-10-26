@@ -70,7 +70,10 @@ function mockOffers(response: unknown): void {
 async function mountAt(path: string) {
   router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: "/offres", component: OffersView }],
+    routes: [
+      { path: "/offres", component: OffersView },
+      { path: "/aujourdhui/tri", name: "triage", component: { template: "<div />" } },
+    ],
   });
   await router.push(path);
   const wrapper = mount(OffersView, { global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } } });
@@ -658,3 +661,33 @@ describe("Offres, la note en ligne (1.6.47)", () => {
     expect(old.find("[data-test=row-score] .filter-row-value").text()).toBe("60–90");
   });
 });
+
+describe("Offres, la bande d'action (1.6.50)", () => {
+  it("des offres à examiner : « Offres à examiner. », le résumé, « Commencer le tri » vers l'écran de tri", async () => {
+    const now = new Date().toISOString();
+    mockOffers(page([offer(1, "Une", { score: 90, first_seen_at: now }), offer(2, "Deux", { score: 60, first_seen_at: now })]));
+    const wrapper = await mountAt("/offres");
+    const band = wrapper.find("[data-test=action-band]");
+    expect(band.find("h2").text()).toBe("Offres à examiner.");
+    // Le résumé ne cite aucune offre : les nouvelles depuis hier, dont les très proches.
+    expect(band.text()).toContain("2 nouvelles depuis hier, dont 1 très proche.");
+    expect(band.find("[data-test=action-band-action]").text()).toBe("Commencer le tri");
+    expect(band.find("[data-test=action-band-action]").attributes("href")).toBe("/aujourdhui/tri");
+    // Une autre vue : pas de bande (il n'y a rien à faire là).
+    const later = await mountAt("/offres?statut=later");
+    expect(later.find("[data-test=action-band]").exists()).toBe(false);
+  });
+
+  it("tout est examiné : pas de bande, « Tout est examiné. » sans bouton, « Aucune offre à examiner. »", async () => {
+    const reviewed = { to_review: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
+    mockOffers({ data: { ...page([]).data, counts: reviewed } });
+    const wrapper = await mountAt("/offres");
+    expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
+    const done = wrapper.find("[data-test=offers-all-reviewed]");
+    expect(done.text()).toContain("Tout est examiné.");
+    expect(done.text()).toContain("Les nouvelles arrivent chaque matin.");
+    expect(done.find("button, a").exists()).toBe(false);
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à examiner.");
+  });
+});
+

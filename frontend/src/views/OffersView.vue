@@ -21,12 +21,13 @@ import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
-import { dayKey, dayName, plural } from "../format";
+import { dayKey, dayName, daysBefore, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import PlanLimit from "../components/PlanLimit.vue";
 import CountBadge from "../components/CountBadge.vue";
+import ActionBand from "../components/ActionBand.vue";
 
 const PAGE_SIZE = 50;
 
@@ -175,6 +176,31 @@ function openManual(): void {
   shared.value = { url: null, text: null };
   manualOpen.value = true;
 }
+
+// La bande d'action (1.6.50, règles §3, planche « Bande d'action · 1. Offres ») : seulement s'il y a des
+// offres à examiner, dans la vue « À examiner » ; « Commencer le tri » ouvre l'écran de tri, comme sur
+// Aujourd'hui. Son résumé ne cite aucune offre : les nouvelles depuis hier, dont les très proches.
+const review = ref<{ fresh: number; close: number } | null>(null);
+async function loadReview(): Promise<void> {
+  const { data } = await api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 100 } } });
+  const items = data?.items ?? [];
+  review.value = {
+    fresh: items.filter((o) => daysBefore(o.first_seen_at) <= 1).length,
+    close: items.filter((o) => (o.score ?? 0) >= 85).length,
+  };
+}
+const showBand = computed(() => filters.value.view === "to_review" && counts.value.to_review > 0);
+const bandSummary = computed(() => {
+  const r = review.value;
+  if (!r) return undefined;
+  const close = r.close ? `très ${r.close === 1 ? "proche" : "proches"}` : "";
+  if (r.fresh) return `${plural(r.fresh, "nouvelle", "nouvelles")} depuis hier${close ? `, dont ${r.close} ${close}` : ""}.`;
+  return close ? `Dont ${r.close} ${close}.` : undefined;
+});
+// Tout est examiné (1.6.50) : la vue « À examiner » est vide alors que le compte a des offres.
+const allReviewed = computed(
+  () => !noOffersYet.value && filters.value.view === "to_review" && counts.value.to_review === 0 && !activeCount(filters.value),
+);
 
 // Le menu de « + Ajouter » (1.6.47) : « Ajouter une offre » attend une liste ; un compte neuf la trouve
 // dans l'écran vide.
@@ -377,12 +403,17 @@ async function loadChunkTitles(): Promise<void> {
 
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
+  // Le résumé de la bande d'abord : la liste reste la dernière demande (ses filtres).
+  void loadReview();
   void load().then(openFromQuery);
   openShared();
   void loadChunkTitles();
   void loadVisibility();
 });
-useDataChanged(() => load());
+useDataChanged(() => {
+  void loadReview();
+  void load();
+});
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown);
   assistant.setFocus(null);
@@ -401,6 +432,13 @@ onUnmounted(() => {
         {{ " · " }}<strong data-test="offers-to-review">{{ counts.to_review }}</strong>{{ " à examiner" }}
       </template>{{ "." }}
     </p>
+    <ActionBand
+      v-if="showBand"
+      title="Offres à examiner."
+      :summary="bandSummary"
+      action="Commencer le tri"
+      :to="{ name: 'triage' }"
+    />
     <!-- Titre et onglets : en-tête de la rubrique Candidatures (docs/19 §2). -->
     <div class="offers-heading">
       <!-- Filtrer (docs/101) : l'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille. -->
@@ -530,6 +568,14 @@ onUnmounted(() => {
               <span class="with-icon"><AppIcon name="plus" />Ajouter une offre</span>
             </button>
           </div>
+        </FaceState>
+        <!-- Tout est examiné (1.6.50) : pas de bande, pas de bouton ; les nouvelles viennent seules. -->
+        <FaceState
+          v-else-if="!loading && items.length === 0 && allReviewed"
+          title="Tout est examiné."
+          data-test="offers-all-reviewed"
+        >
+          <p>Les nouvelles arrivent chaque matin.</p>
         </FaceState>
         <FaceState
           v-else-if="!loading && items.length === 0"

@@ -10,7 +10,8 @@ import CountBadge from "./CountBadge.vue";
 // La barre d'onglets du téléphone (docs/92, docs/126 §1) : les trois entrées, en bas de l'écran,
 // avec une icône et un nom ; Candidatures porte le nombre d'offres à examiner. Les écrans de
 // travail (Préparer, l'accueil) la cachent, comme ils prennent déjà tout l'écran (docs/75).
-const HIDDEN = new Set(["preparation", "welcome"]);
+// L'écran de tri (1.6.50) n'a pas de barre d'onglets : on revient par « ← Aujourd'hui ».
+const HIDDEN = new Set(["preparation", "welcome", "triage"]);
 
 const route = useRoute();
 const { last: lastJobsPage } = useJobsMemory();

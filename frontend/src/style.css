@@ -3933,3 +3933,18 @@ main:focus { outline: none; }
   .action-band-card { flex-direction: column; align-items: flex-start; gap: var(--space-4); padding: var(--space-5); }
   .action-band-title { font-size: var(--font-figure); }
 }
+
+/* L'écran de tri (1.6.50, planche « Tri des offres du jour ») : la pile au centre, 560 px au plus ;
+   « 1 sur 4 » au-dessus ; « Écarter » et « Garder » chacun sur la moitié ; deux cartes en dessous font
+   la pile. */
+.triage-pile { max-width: 35rem; margin: var(--space-6) auto 0; display: grid; gap: var(--space-3); }
+.triage-position { margin: 0; font-size: var(--font-small); }
+.triage-pile .daily-pick { margin-top: 0; }
+.triage-pile .pick-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-5);
+  box-shadow: 0 6px 0 -3px var(--surface), 0 6px 0 -2px var(--border), 0 12px 0 -6px var(--surface), 0 12px 0 -5px var(--border);
+}
+.triage-pile .pick-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3); }
+.triage-pile .pick-actions button { width: 100%; justify-content: center; }
+.triage-done { justify-self: center; }
+
