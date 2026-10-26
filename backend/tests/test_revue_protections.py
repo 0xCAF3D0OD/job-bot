@@ -13,6 +13,7 @@ from jobbot.agenda import service as agenda
 from jobbot.api.app import create_app
 from jobbot.core.orp import shift_month
 from jobbot.db.models import Application, OrpMonth, Setting
+from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 from jobbot.settings import Settings
@@ -54,7 +55,7 @@ async def test_spontaneous_orp_line_is_complete(api: AsyncClient) -> None:
         )
     ).json()["id"]
     prefill = (await api.get(f"/api/offers/{offer_id}/application-prefill")).json()
-    today = date.today()
+    today = local_today()
     sent = await api.post(
         "/api/applications",
         json={
@@ -87,11 +88,11 @@ async def test_ai_cap_template_or_refusal_without_a_call(
     async with runtime.sessionmaker.begin() as session:
         await session.merge(Setting(key=BUDGET, value=0))
         application = Application(
-            sent_at=date.today(),
+            sent_at=local_today(),
             method="electronique",
             company="Exemple SA",
             job_title="DevOps Engineer",
-            orp_month=f"{date.today():%Y-%m}",
+            orp_month=f"{local_today():%Y-%m}",
         )
         session.add(application)
         await session.flush()
@@ -106,7 +107,7 @@ async def test_ai_cap_template_or_refusal_without_a_call(
 
 
 async def test_agenda_skips_a_submitted_orp_month(api: AsyncClient, runtime: Runtime) -> None:
-    current = f"{date.today():%Y-%m}"
+    current = f"{local_today():%Y-%m}"
     previous = shift_month(current, -1)
     async with runtime.sessionmaker.begin() as session:
         for month in (previous, current):

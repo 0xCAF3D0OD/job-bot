@@ -1,5 +1,5 @@
 """Le bon rythme (docs/86) : l'objectif réparti par semaine, la dose du jour, le message des
-offres une fois par jour, et le téléphone silencieux les jours sans recherche."""
+offres une fois par jour, et le téléphone silencieux les jours de repos."""
 
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
@@ -132,7 +132,7 @@ async def test_offers_once_a_day_from_the_chosen_hour(rt: Runtime, sent: list[Me
     await _offer(rt, 2, 75, tuesday.replace(hour=11))
     # Déjà un message aujourd'hui : la suivante attend demain.
     assert (await notify.notify_new_scores(rt, tuesday.replace(hour=15))).offers == 0
-    # Samedi, jour sans recherche : rien non plus.
+    # Samedi, jour de repos : rien non plus.
     saturday = datetime(2026, 10, 24, 10, 0, tzinfo=ZURICH)
     assert (await notify.notify_new_scores(rt, saturday)).offers == 0
     monday = datetime(2026, 10, 26, 9, 30, tzinfo=ZURICH)

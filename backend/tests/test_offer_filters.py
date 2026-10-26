@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 from jobbot.api.app import create_app
 from jobbot.db.models import Evaluation, Offer, OfferLink, OfferStatus
+from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
@@ -130,7 +131,7 @@ async def test_invalid_parameters(api: AsyncClient) -> None:
 
 
 async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None:
-    from datetime import UTC, date, datetime, timedelta
+    from datetime import UTC, datetime, timedelta
 
     from jobbot.db.models import Application, Draft, Offer, OfferStatus
 
@@ -159,7 +160,7 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
             [
                 Application(
                     offer_id=offers[0].id,
-                    sent_at=date.today() - timedelta(days=1),
+                    sent_at=local_today() - timedelta(days=1),
                     method="electronique",
                     company="A",
                     job_title="x",
@@ -167,7 +168,7 @@ async def test_sort_by_last_activity(api: AsyncClient, runtime: Runtime) -> None
                 ),
                 Application(
                     offer_id=offers[2].id,
-                    sent_at=date.today() - timedelta(days=5),
+                    sent_at=local_today() - timedelta(days=5),
                     method="electronique",
                     company="B",
                     job_title="y",

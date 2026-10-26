@@ -10,6 +10,7 @@ from sqlalchemy import text
 
 from jobbot.api.app import create_app
 from jobbot.db.models import Application, Contact, Evaluation, Offer, OfferLink
+from jobbot.followups.service import local_today
 from jobbot.insights.service import Comparison, Facts, Group, buckets, headline
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
@@ -30,8 +31,8 @@ async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient
         await conn.execute(text(TRUNCATE))
 
 
-SENT = date.today() - timedelta(days=20)
-MONTH = f"{date.today():%Y-%m}"
+SENT = local_today() - timedelta(days=20)
+MONTH = f"{local_today():%Y-%m}"
 
 
 async def add(

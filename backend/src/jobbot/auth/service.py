@@ -53,6 +53,15 @@ class Authenticated:
     renewed: bool
 
 
+def session_limit(created_at: datetime) -> datetime:
+    """La fin d'une session, 90 jours après la connexion, en temps réel.
+
+    La base rend l'heure avec le fuseau de Zurich : ajouter 90 jours à une heure d'été donnerait
+    l'heure murale d'hiver, une heure de trop (ou de moins au printemps). On compte donc en UTC.
+    """
+    return created_at.astimezone(UTC) + SESSION_MAX_AGE
+
+
 async def authenticate(session: AsyncSession, token: str | None) -> Authenticated | None:
     if not token:
         return None
@@ -72,7 +81,7 @@ async def authenticate(session: AsyncSession, token: str | None) -> Authenticate
     if row is None:
         return None
     stored, username = row
-    limit = stored.created_at + SESSION_MAX_AGE
+    limit = session_limit(stored.created_at)
     if stored.expires_at <= now or limit <= now:
         await session.delete(stored)
         return None

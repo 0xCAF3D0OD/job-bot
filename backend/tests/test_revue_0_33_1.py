@@ -1,7 +1,7 @@
 """Revue 0.33.1 (docs/41) : chaque correction a son test."""
 
 from collections.abc import AsyncIterator
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import anthropic
@@ -14,6 +14,7 @@ from jobbot.agenda import service as agenda
 from jobbot.api.app import create_app
 from jobbot.db.models import Application, Offer
 from jobbot.enrich.service import expire_stale
+from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 from jobbot.settings import Settings
@@ -35,7 +36,7 @@ async def api(runtime: Runtime, settings: Settings) -> AsyncIterator[AsyncClient
 
 
 async def add_application(runtime: Runtime, **values: Any) -> int:
-    today = date.today()
+    today = local_today()
     defaults: dict[str, Any] = {
         "sent_at": today - timedelta(days=12),
         "method": "electronique",
@@ -101,7 +102,7 @@ async def test_follow_up_dates_and_statuses(api: AsyncClient, runtime: Runtime) 
 
 
 async def test_today_counts_like_the_follow_up_list(api: AsyncClient, runtime: Runtime) -> None:
-    today = date.today()
+    today = local_today()
     await add_application(runtime)  # en attente depuis 12 jours
     await add_application(runtime, status="relancee", followed_up_at=today - timedelta(days=15))
     await add_application(runtime, status="relancee", followed_up_at=today - timedelta(days=3))
@@ -109,7 +110,7 @@ async def test_today_counts_like_the_follow_up_list(api: AsyncClient, runtime: R
 
 
 async def test_contact_attachment_is_checked(api: AsyncClient, runtime: Runtime) -> None:
-    contact = {"role": "team", "channel": "email", "contacted_on": date.today().isoformat()}
+    contact = {"role": "team", "channel": "email", "contacted_on": local_today().isoformat()}
     assert (
         await api.post("/api/contacts", json={**contact, "offer_id": 999_999})
     ).status_code == 404
@@ -153,7 +154,7 @@ async def test_one_profile_block_per_training(api: AsyncClient) -> None:
 
 
 async def test_agenda_leaves_out_closed_and_old(runtime: Runtime) -> None:
-    today = date.today()
+    today = local_today()
     soon = datetime.now(UTC) + timedelta(days=2)
     await add_application(runtime, company="Ancienne SA", sent_at=today - timedelta(days=45))
     await add_application(runtime, company="Fermée SA", status="refus", interview_at=soon)

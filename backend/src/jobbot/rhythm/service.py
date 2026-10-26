@@ -1,10 +1,10 @@
-"""Le bon rythme (docs/86) : l'objectif ORP réparti par semaine, les jours sans recherche, la
+"""Le bon rythme (docs/86) : l'objectif ORP réparti par semaine, les jours de repos, la
 pause, le signal de fin de semaine. Sans IA : des comptes et des règles simples, écrites ici.
 
 - **L'objectif de la semaine** : ce qui reste de l'objectif du mois, au prorata des jours de
   recherche de la semaine sur ceux qui restent dans le mois. Une semaine en retard reporte le
   manque sur toutes les suivantes, sans tout rattraper d'un coup.
-- **Les jours sans recherche** : rien sur le téléphone, sauf les rappels qui ont une date limite.
+- **Les jours de repos** : rien sur le téléphone, sauf les rappels qui ont une date limite.
 - **La pause** (0.68.1) : ses jours ne sont pas des jours de recherche, et l'objectif du mois
   est réduit d'autant pour le rythme, sans dette à rattraper. L'objectif ORP, lui, ne change
   pas : c'est le conseiller qui décide.

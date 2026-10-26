@@ -4,7 +4,7 @@
   par passage, une seule fois par offre.
 - Dépense de l'IA à 80 % du plafond mensuel : une notification par mois.
 - Le bon rythme (docs/86) : par défaut, les offres arrivent en un seul message par jour, dès
-  l'heure choisie, un jour de recherche ; les jours sans recherche, rien ne part vers le
+  l'heure choisie, un jour de recherche ; les jours de repos, rien ne part vers le
   téléphone, sauf les rappels qui ont une date limite (la cloche garde tout).
 
 Envoi en JSON (UTF-8 sûr pour les accents), au serveur JOBBOT_NTFY_URL, sur le sujet
@@ -108,7 +108,7 @@ async def deliver(
     runtime: Runtime, message: Message, *, kind: str, link: str, phone: Message | None = None
 ) -> None:
     """Une alerte : toujours dans la cloche (docs/15 §1), et sur le téléphone si ntfy est
-    configuré, sauf un jour sans recherche pour ce qui peut attendre (docs/86). Un échec de
+    configuré, sauf un jour de repos pour ce qui peut attendre (docs/86). Un échec de
     ntfy n'empêche pas l'alerte d'être dans la cloche. `phone` : un autre texte pour le
     téléphone, quand la cloche peut en dire plus (le code d'un site, docs/120)."""
     async with runtime.sessionmaker.begin() as session:

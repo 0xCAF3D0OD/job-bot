@@ -157,7 +157,9 @@ async def test_stale_proposal_changes_nothing(runtime: Runtime) -> None:
 
 async def test_application_status_and_expiry(client: AsyncClient, runtime: Runtime) -> None:
     await reset(runtime)
-    today = datetime.now(UTC).date()
+    from jobbot.followups.service import local_today
+
+    today = local_today()
     offer_id = await _offer(runtime)
     async with runtime.sessionmaker.begin() as session:
         application = Application(
