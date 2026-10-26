@@ -103,6 +103,7 @@ Largeurs (1.6.32) :
 | **Offre du jour** | Une à la fois, avec la phrase « pourquoi » et au plus deux manques. Boutons Garder et Écarter, « Annuler » pendant 6 s. Balayage autorisé sur téléphone, en plus des boutons. |
 | **Écran vide** | Dit ce que la page fera et quoi faire maintenant, avec une action : un bouton principal plein (§3.3), une éventuelle seconde action en contour. |
 | **Premiers pas** | Une carte, une étape à la fois, « 2 sur 5 ». |
+| **Boutons segmentés** | Pour filtrer ou changer l'affichage d'une même carte, ou choisir une option : 2 à 5 choix (Material Design 3, boutons segmentés). Jamais pour aller vers un autre contenu : on navigue par le menu et les onglets de page (§2 : pas de troisième niveau d'onglets). Un rail au fond neutre (`--panel`), coins entièrement arrondis ; une pastille par option, à la largeur de son texte, fond `--surface` et contour `--border` ; le texte reste sur une ligne, jamais coupé : si la place manque, la pastille entière passe à la ligne (Material 3, puces). L'option active a le style de l'onglet actif de l'en-tête (fond accent léger, contour et texte accent en 600 ; NN/g, cohérence) ; le survol, une couche neutre à 8 %. Le rail fait `--control-h`. Du texte seul, sans colonne d'icônes sur le côté. Exemples : la période du Bilan, la Note des Offres. |
 | **Visage du 1** | 16 à 32 px dans l'usage courant. Grande taille réservée aux moments rares. Un seul visage animé à l'écran. |
 
 Un composant absent de cette liste ou de Figma ne se crée pas sans validation.
