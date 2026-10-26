@@ -12,6 +12,7 @@ import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
 import ManualOfferForm from "../components/ManualOfferForm.vue";
+import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
@@ -174,6 +175,13 @@ function openManual(): void {
   shared.value = { url: null, text: null };
   manualOpen.value = true;
 }
+
+// Le menu de « + Ajouter » (1.6.47) : « Ajouter une offre » attend une liste ; un compte neuf la trouve
+// dans l'écran vide.
+const addItems = computed<MoreMenuItem[]>(() => [
+  ...(noOffersYet.value ? [] : [{ label: "Ajouter une offre", test: "manual-open", icon: "briefcase" as const, run: openManual }]),
+  { label: "Postuler spontanément", test: "spontaneous-open", icon: "send" as const, run: () => (spontaneousOpen.value = true) },
+]);
 
 // L'offre ajoutée (ou déjà là) s'ouvre ; écartée par les critères, elle est gardée avec la raison.
 async function manualAdded(result: { id: number; existing: boolean; status: string; reasons: string[] }): Promise<void> {
@@ -473,28 +481,18 @@ onUnmounted(() => {
           where="offers"
           @arrived="load()"
         />
-        <!-- « Ajouter une offre » et « Candidature spontanée » sur la ligne du nombre d'offres
-             (docs/43 n° 11, docs/111). -->
+        <!-- Un seul bouton « + Ajouter » sur la ligne du nombre d'offres, son menu propose « Ajouter une
+             offre » et « Postuler spontanément » (1.6.47, Polaris : les actions de la page regroupées ;
+             docs/43 n° 11, docs/111). -->
         <div class="list-count-row">
           <span class="list-count-actions">
-            <!-- Liste vide d'un compte neuf : « Ajouter une offre » seulement dans l'écran vide. -->
-            <button
-              v-if="!noOffersYet"
-              type="button"
-              class="secondary small"
-              data-test="manual-open"
-              @click="openManual"
-            >
-              Ajouter une offre
-            </button>
-            <button
-              type="button"
-              class="secondary small"
-              data-test="spontaneous-open"
-              @click="spontaneousOpen = true"
-            >
-              Candidature spontanée
-            </button>
+            <MoreMenu
+              :items="addItems"
+              trigger="Ajouter"
+              trigger-icon="plus"
+              test-id="add-menu"
+              :inline="false"
+            />
           </span>
         </div>
         <PlanLimit usage="score" />

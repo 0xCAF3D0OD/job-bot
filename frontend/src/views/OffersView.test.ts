@@ -148,6 +148,8 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres à examiner.");
     expect(wrapper.find("[data-test=offers-sentence] strong").text()).toBe("2 offres");
+    // Un seul bouton « + Ajouter » (1.6.47) ; son menu propose les deux façons d'ajouter.
+    await wrapper.find("[data-test=add-menu]").trigger("click");
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(true);
     mockOffers(page([offer(3, "Trois")]));
     const dropped = await mountAt("/offres?statut=filtered_out");
@@ -571,7 +573,14 @@ describe("Offres, revue des pages (docs/43)", () => {
     expect(days.map((h) => h.find(".offer-day-name").text())).toEqual(["Aujourd'hui", "Hier", dayName(ago(20))]);
     expect(days.map((h) => h.find(".offer-day-count").text())).toEqual(["1 offre", "2 offres", "1 offre"]);
     expect(wrapper.find("[data-test=offer-date]").exists()).toBe(false);
-    expect(wrapper.find(".list-count-row [data-test=spontaneous-open]").exists()).toBe(true);
+    // « + Ajouter » sur la ligne du nombre (1.6.47) : « Ajouter une offre » et « Postuler spontanément ».
+    const add = wrapper.find(".list-count-row [data-test=add-menu]");
+    expect(add.text()).toBe("Ajouter");
+    await add.trigger("click");
+    expect(wrapper.findAll(".list-count-row [role=menuitem]").map((i) => i.text())).toEqual([
+      "Ajouter une offre",
+      "Postuler spontanément",
+    ]);
     // Aucun filtre actif : pas de « Effacer tout ».
     expect(wrapper.find("[data-test=reset]").exists()).toBe(false);
   });
@@ -614,7 +623,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
       ),
     );
     const wrapper = await mountAt("/offres?ajouter=1&text=" + encodeURIComponent("Menuisier CFC https://bois.ch/emplois/1"));
-    expect(wrapper.find(".list-count-row [data-test=manual-open]").exists()).toBe(true);
+    expect(wrapper.find(".list-count-row [data-test=add-menu]").exists()).toBe(true);
     const input = wrapper.find("[data-test=manual-url]").element as HTMLInputElement;
     expect(input.value).toBe("https://bois.ch/emplois/1");
     expect(router.currentRoute.value.query.ajouter).toBeUndefined();
@@ -624,5 +633,28 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     mockOffers(page([offer(1, "Une", { added_by_you: true, links: [] })]));
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=added-badge]").text()).toBe("Ajoutée par toi");
+  });
+});
+
+describe("Offres, la note en ligne (1.6.47)", () => {
+  it("une ligne « Note · Toutes » comme Statut et Tri, ses trois choix dépliés dessous", async () => {
+    mockOffers(page([offer(1, "Une")]));
+    const wrapper = await mountAt("/offres");
+    const row = wrapper.find("[data-test=row-score]");
+    expect(row.find(".with-icon").text()).toBe("Note");
+    expect(row.find(".filter-row-value").text()).toBe("Toutes");
+    expect(row.attributes("aria-expanded")).toBe("false");
+    await row.trigger("click");
+    expect(wrapper.findAll("[data-test^=score-choice-]").map((c) => c.text())).toEqual([
+      "Toutes",
+      "Proche et plus",
+      "Très proche",
+    ]);
+    await wrapper.find("[data-test=score-choice-70]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query.note).toBe("70");
+    // Une adresse d'avant (?note=60-90) : la ligne dit les bornes.
+    const old = await mountAt("/offres?note=60-90");
+    expect(old.find("[data-test=row-score] .filter-row-value").text()).toBe("60–90");
   });
 });

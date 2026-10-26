@@ -553,6 +553,11 @@ p.badge.reason { margin: 0; }
 .offers-grid { grid-template-columns: 18rem minmax(0, 1fr) minmax(0, 1.05fr); }
 .filters-column { overflow-x: hidden; }
 .filters-panel { min-width: 0; }
+/* La colonne masque ce qui déborde : une marge intérieure garde entier l'anneau de focus de la recherche
+   (1.6.47), compensée pour que la colonne reste alignée sur la liste. */
+@media (min-width: 861px) {
+  .filters-column { padding: var(--space-1); margin: calc(var(--space-1) * -1); }
+}
 @media (max-width: 1200px) { .offers-grid { grid-template-columns: 18rem minmax(0, 1fr); } }
 @media (max-width: 860px) { .offers-grid { grid-template-columns: minmax(0, 1fr); } }
 
