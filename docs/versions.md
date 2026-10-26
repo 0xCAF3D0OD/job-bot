@@ -20,5 +20,6 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.44 | Dépôt | Chaque session tient ses lignes ; inscription de la session Pages | `chore/1.6.44-inscriptions` | PR ouverte |
 | 1.6.45 | Pages | Passe de concision des textes de l'interface | `fix/1.6.45-concision` | prévu (tableau avant/après à valider) |
 | 1.6.46 | Design | Revue de la plateforme : en-tête sans bulle (soulignement, boutons ronds), Offre du jour en pile, « + Ajouter » des Offres, filtre Note en ligne, focus de la recherche ; Figma d'abord, code de l'en-tête | `design/1.6.46-revue` | fusionnée (#356) |
+| 1.6.47 | Pages | Revue 1.6.46, Offres : un seul « + Ajouter » (Ajouter une offre, Postuler spontanément), la Note en ligne comme Statut et Tri, la marge de la colonne des filtres | `fix/1.6.47-offres` | PR ouverte |
 | 1.6.48 | Design | Règle §3 : la bande d'action | `docs/1.6.48-bande-action` | PR ouverte |
 | 1.6.49 | Design | Composant « Bande d'action » dans le code | `feat/1.6.49-bande-action` | prévu |

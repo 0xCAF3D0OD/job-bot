@@ -30,9 +30,18 @@ function iconOf(item: MoreMenuItem): IconName | null {
 }
 
 // `inline` : faux quand une autre action est déjà visible à côté (une seule visible par partie).
+// `trigger` : un bouton secondaire à libellé (« + Ajouter », 1.6.47) au lieu des trois points ; le menu
+// s'ouvre de la même façon. Polaris : les actions d'une page dans son en-tête, regroupées.
 const props = withDefaults(
-  defineProps<{ items: MoreMenuItem[]; label?: string; testId?: string; inline?: boolean }>(),
-  { label: "Actions", testId: "more", inline: true },
+  defineProps<{
+    items: MoreMenuItem[];
+    label?: string;
+    testId?: string;
+    inline?: boolean;
+    trigger?: string;
+    triggerIcon?: IconName;
+  }>(),
+  { label: "Actions", testId: "more", inline: true, trigger: undefined, triggerIcon: undefined },
 );
 
 // Une seule action ordinaire : pas de menu, l'action directement (docs/76 §3).
@@ -149,6 +158,23 @@ onUnmounted(() => document.removeEventListener("click", onDocumentClick));
     @keydown="onKeydown"
   >
     <button
+      v-if="trigger"
+      :id="toggleId"
+      ref="toggleButton"
+      type="button"
+      class="secondary small more-trigger"
+      aria-haspopup="menu"
+      :aria-expanded="open"
+      :data-test="testId"
+      @click="toggle"
+    >
+      <span class="with-icon"><AppIcon
+        v-if="triggerIcon"
+        :name="triggerIcon"
+      />{{ trigger }}</span>
+    </button>
+    <button
+      v-else
       :id="toggleId"
       ref="toggleButton"
       type="button"

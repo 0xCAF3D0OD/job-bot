@@ -108,10 +108,17 @@ const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filt
 function onScore(min: number | null, max: number | null): void {
   emit("update", { minScore: min, maxScore: max });
 }
+// La valeur de la ligne Note (1.6.47) : le mot du choix, ou les bornes d'une adresse d'avant (?note=60-90).
+const scoreValue = computed(() => {
+  const choice = SCORE_CHOICES.find((c) => c.min === scoreChoice.value);
+  if (choice) return choice.label;
+  const { minScore, maxScore } = props.filters;
+  return `${minScore ?? 0}–${maxScore ?? 100}`;
+});
 
 // Cartes (docs/27) : une ligne par filtre, « nom · valeur », la flèche qui tourne ; un clic déplie le choix
 // sous la ligne, un seul à la fois : ouvrir un autre filtre (ou recliquer) referme le premier.
-type Page = "view" | "sort" | "remote" | "rate" | "sources" | "cantons";
+type Page = "view" | "sort" | "score" | "remote" | "rate" | "sources" | "cantons";
 const page = ref<Page | null>(null);
 
 function open(next: Page): void {
@@ -229,32 +236,38 @@ const more = ref(secondaryActive.value > 0);
           <span>{{ entry.label }}</span>
         </button>
       </div>
-    </div>
-
-    <div
-      v-if="visible.includes('score')"
-      class="filter-card filter-card-body"
-    >
-      <span class="filter-card-title with-icon"><AppIcon name="star" />Note</span>
-      <!-- Trois choix, en mots (docs/131 §C.12) : plus de courbe ni de champs de 0 à 100. -->
-      <div
-        class="score-choice"
-        role="radiogroup"
-        aria-label="Note"
-      >
+      <!-- La note en ligne, comme Statut et Tri (1.6.47, composant Ligne de filtre) : trois choix en mots
+           (docs/131 §C.12), qui se déplient sous la ligne. -->
+      <template v-if="visible.includes('score')">
         <button
-          v-for="choice in SCORE_CHOICES"
-          :key="choice.label"
           type="button"
-          role="radio"
-          class="pill small"
-          :aria-checked="scoreChoice === choice.min"
-          :data-test="`score-choice-${choice.min ?? 'all'}`"
-          @click="onScore(choice.min, null)"
+          class="filter-row"
+          :aria-expanded="page === 'score'"
+          data-test="row-score"
+          @click="open('score')"
         >
-          {{ choice.label }}
+          <span class="with-icon"><AppIcon name="star" />Note</span><span class="filter-row-value">{{ scoreValue }}</span>
         </button>
-      </div>
+        <div
+          v-if="page === 'score'"
+          class="filter-drop"
+          role="radiogroup"
+          aria-label="Note"
+        >
+          <button
+            v-for="choice in SCORE_CHOICES"
+            :key="choice.label"
+            type="button"
+            class="filter-row filter-option"
+            role="radio"
+            :aria-checked="scoreChoice === choice.min"
+            :data-test="`score-choice-${choice.min ?? 'all'}`"
+            @click="onScore(choice.min, null)"
+          >
+            <span>{{ choice.label }}</span>
+          </button>
+        </div>
+      </template>
     </div>
 
     <button
