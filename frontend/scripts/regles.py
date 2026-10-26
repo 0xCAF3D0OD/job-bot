@@ -93,7 +93,7 @@ AUDIT = r"""(maxWords) => {
   // Le texte à au moins 1,25 rem (20 px) du bord de sa carte ; la carte la plus extérieure.
   const cards = [...main.querySelectorAll('.dash-card, .form-card, .settings-card, .disclosure, .training-tile, .alerts-summary')]
     .filter((c) => vis(c) && !c.parentElement.closest('.dash-card, .form-card, .settings-card, .disclosure, .training-tile'));
-  // Réglages sur ordinateur (1.6.31, modèle Polaris) : la grande carte n'a plus de cadre ; chaque réglage a sa
+  // Réglages sur ordinateur (1.6.35, modèle Polaris) : la grande carte n'a plus de cadre ; chaque réglage a sa
   // carte, dessinée derrière ses contrôles (::before). C'est elle qui compte.
   const boxOf = new Map();
   for (const c of [...cards]) {

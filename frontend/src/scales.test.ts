@@ -161,7 +161,7 @@ describe("Les largeurs (1.6.32)", () => {
 });
 
 // 1.6.35 (regles-ui-ergonomie §3) : les Réglages selon le modèle de Polaris (« App settings layout » : titre et
-// description à gauche, 2/7 ; la carte à droite, 5/7) ; 60 caractères par ligne sur ordinateur (Material).
+// description à gauche, 2/7 ; la carte à droite, 5/7) ; la mesure reste à 31 em partout (75 caractères, Baymard).
 describe("Réglages et mesure (1.6.35)", () => {
   const css = () => rules(join(SRC, "style.css"));
 
@@ -172,9 +172,8 @@ describe("Réglages et mesure (1.6.35)", () => {
     expect(drawn?.[1]).toMatch(/inset:\s*0 0 0 var\(--annotation\)/);
   });
 
-  it("la mesure : 24 em sur ordinateur (60 caractères), 31 em sur téléphone (inchangé)", () => {
-    const roots = css().filter(([sel]) => sel === ":root").map(([, body]) => body.match(/--measure:\s*([^;]+)/)?.[1]?.trim());
-    expect(roots).toContain("31em");
-    expect(roots).toContain("24em");
+  it("la mesure : 31 em à toutes les tailles d'écran (75 caractères, Baymard avant Material)", () => {
+    const roots = css().filter(([sel]) => sel === ":root").map(([, body]) => body.match(/--measure:\s*([^;]+)/)?.[1]?.trim()).filter(Boolean);
+    expect(roots).toEqual(["31em"]);
   });
 });

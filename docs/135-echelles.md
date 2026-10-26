@@ -927,14 +927,14 @@ téléphone ne change pas.
    le récapitulatif de l'IA dans la colonne des cartes. En CSS seulement (le titre et la description flottent à
    gauche, la carte est dessinée derrière les contrôles) : toutes les rubriques en profitent sans changer leur
    balisage. Le sommaire des rubriques reste à gauche.
-2. **60 caractères par ligne** sur ordinateur (Material, typographie : 40 à 60) : `--measure` passe de 31 à 24 em
-   au-dessus de 820 px ; sur téléphone, 31 em, rien ne change. La mesure s'étend aux lignes de liste, au mois en bref,
+2. **La mesure reste à 31 em** (75 caractères, Baymard) à toutes les tailles d'écran : un passage à 24 em sur
+   ordinateur (60 caractères, Material) a été annulé, Baymard passant avant Material (§9). La mesure s'étend aux lignes de liste, au mois en bref,
    à la page des données personnelles et aux avis (leur cadre garde sa largeur, une marge droite limite le texte).
 3. **L'audit des règles** mesure le texte des Réglages par rapport à la carte de chaque réglage : la grande carte n'a
    plus de cadre.
 4. **Figma** : Réglages recomposés (Recherche d'emploi, Agenda et extension, clair et sombre) ; les variables de
-   mesure de la 1.6.34 suivent les 24 em du code sur ordinateur (`measure` 384 px, `measure-small` 336 px,
-   `measure-figure` 624 px) et restent à 31 em sur téléphone (496, 434, 682) ; les 8 écrans en 1920 sur la page
+   mesure de la 1.6.34 restent à 31 em (`measure` 496 px, `measure-small` 434 px, `measure-figure` 806 px sur
+   ordinateur et 682 px sur téléphone) ; les 8 écrans en 1920 sur la page
    « Planche · 1920 ».
 
 - **Écart avec Polaris** : le titre et la description restent dans la rangée de leur carte ; quand ils sont plus hauts
@@ -948,8 +948,8 @@ téléphone ne change pas.
 - Captures avant/après (horloge figée) en **1440, 1920 et 390 px, clair et sombre** (496 captures, démo et compte
   neuf) : changent en 1440 et 1920 les Réglages (le modèle Polaris) et les pages où la mesure resserre le texte ;
   **en 390 px, aucune capture ne change**.
-- 60 caractères : aucune ligne au-delà, sur toutes les pages, en 1440 et 1920, démo et compte neuf (hors lignes de
-  liste, où la mesure compte l'initiale et l'action avec le texte : le texte seul y fait moins de 60 caractères).
+- 75 caractères : la mesure de 31 em est celle de la 1.6.29 ; les captures de `docs/captures/1.6.35/` ont été prises
+  avec 24 em, avant l'annulation : la largeur du texte y est plus étroite que dans le code livré.
 - Figma et code côte à côte en 1440 et 1920, planches Figma, avant/après en sombre : `docs/captures/1.6.35/`.
 - 476 tests (deux de plus : le modèle des Réglages, la mesure), lint, types ; 5 tests de l'audit ; trois audits sans
   défaut, démo et compte neuf, l'accessibilité aussi en sombre.

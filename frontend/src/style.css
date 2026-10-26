@@ -133,9 +133,8 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   --field-5: 5.5rem;
   --header-max: 84rem;
 }
-/* 60 caractères par ligne sur ordinateur (1.6.35, Material Design, typographie : 40 à 60 pour le texte courant) ;
-   sur téléphone, la largeur de l'écran limite déjà les lignes : 31 em, rien ne change. */
-@media (min-width: 821px) { :root { --measure: 24em; } }
+/* 75 caractères par ligne au plus, à toutes les tailles d'écran (§3, Baymard : 50 à 75 ; WCAG 1.4.8 : 80). Baymard
+   passe avant Material (40 à 60) dans l'ordre des références (§9) : 31 em partout. */
 p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li, .privacy-page li, .orp-month-lines li,
 .today-row-main, .application-row-main { max-width: var(--measure); }
 /* Un avis ou un pied de carte encadré garde la largeur de ses voisins ; le texte du pied de carte suit la mesure
