@@ -916,7 +916,7 @@ réserve le tiers de droite au contenu secondaire. Règle retenue (`docs/regles-
   le soir du changement d'heure (25 octobre, en local et sur la CI en UTC) : celui des jours d'Offres fige maintenant
   son horloge en milieu de journée ; celui du rendez-vous tenu (serveur) prend la veille à 10 h, heure locale.
 
-## Écarts (1.6.34)
+## Écarts (1.6.35)
 
 Suite de la revue des références (25/10) : ce que les 1.6.31 et 1.6.32 n'avaient pas encore repris de Material
 Design 3 et de Polaris (`docs/regles-ui-ergonomie.md` §3). Figma d'abord (planches 1440 et 1920), puis le code. Le
@@ -932,21 +932,24 @@ téléphone ne change pas.
    à la page des données personnelles et aux avis (leur cadre garde sa largeur, une marge droite limite le texte).
 3. **L'audit des règles** mesure le texte des Réglages par rapport à la carte de chaque réglage : la grande carte n'a
    plus de cadre.
-4. **Figma** : Réglages recomposés (Recherche d'emploi, Agenda et extension, clair et sombre) ; `measure` à 384 px et
-   la phrase du bandeau du Bilan à 384 px ; les 8 écrans en 1920 sur la page « Planche · 1920 ».
+4. **Figma** : Réglages recomposés (Recherche d'emploi, Agenda et extension, clair et sombre) ; les variables de
+   mesure de la 1.6.34 suivent les 24 em du code sur ordinateur (`measure` 384 px, `measure-small` 336 px,
+   `measure-figure` 624 px) et restent à 31 em sur téléphone (496, 434, 682) ; les 8 écrans en 1920 sur la page
+   « Planche · 1920 ».
 
 - **Écart avec Polaris** : le titre et la description restent dans la rangée de leur carte ; quand ils sont plus hauts
   que les contrôles (« Date limite de remise des preuves »), la carte s'allonge d'autant.
-- **Doublon évité** : une première version (PR 344) refaisait aussi ce que les 1.6.31 à 1.6.33 avaient déjà livré
-  (références, conteneur unique, tableau) ; elle est fermée, seule la nouveauté est ici.
+- **Doublon évité** : la PR 344 refaisait d'abord ce que les 1.6.31 à 1.6.33 avaient déjà livré (références,
+  conteneur unique, tableau) ; remise à jour sur main, elle ne garde que la nouveauté (1.6.34 étant pris par une
+  autre PR, elle devient la 1.6.35).
 
-## Vérifié (1.6.34)
+## Vérifié (1.6.35)
 
 - Captures avant/après (horloge figée) en **1440, 1920 et 390 px, clair et sombre** (496 captures, démo et compte
   neuf) : changent en 1440 et 1920 les Réglages (le modèle Polaris) et les pages où la mesure resserre le texte ;
   **en 390 px, aucune capture ne change**.
 - 60 caractères : aucune ligne au-delà, sur toutes les pages, en 1440 et 1920, démo et compte neuf (hors lignes de
   liste, où la mesure compte l'initiale et l'action avec le texte : le texte seul y fait moins de 60 caractères).
-- Figma et code côte à côte en 1440 et 1920, planches Figma, avant/après en sombre : `docs/captures/1.6.34/`.
+- Figma et code côte à côte en 1440 et 1920, planches Figma, avant/après en sombre : `docs/captures/1.6.35/`.
 - 476 tests (deux de plus : le modèle des Réglages, la mesure), lint, types ; 5 tests de l'audit ; trois audits sans
   défaut, démo et compte neuf, l'accessibilité aussi en sombre.

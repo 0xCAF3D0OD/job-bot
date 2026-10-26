@@ -160,9 +160,9 @@ describe("Les largeurs (1.6.32)", () => {
   });
 });
 
-// 1.6.34 (regles-ui-ergonomie §3) : les Réglages selon le modèle de Polaris (« App settings layout » : titre et
+// 1.6.35 (regles-ui-ergonomie §3) : les Réglages selon le modèle de Polaris (« App settings layout » : titre et
 // description à gauche, 2/7 ; la carte à droite, 5/7) ; 60 caractères par ligne sur ordinateur (Material).
-describe("Réglages et mesure (1.6.34)", () => {
+describe("Réglages et mesure (1.6.35)", () => {
   const css = () => rules(join(SRC, "style.css"));
 
   it("les Réglages : le titre et la description à gauche (2/7), la carte des contrôles à droite", () => {

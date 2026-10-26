@@ -68,12 +68,12 @@ Largeurs (1.6.32) :
   détail), garde **1 280 px** (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px.
 - **Pas de colonne étroite avec le côté droit vide.** Une colonne d'appui (l'`aside` de Polaris) ne reçoit que du
   contenu d'appui : **jamais une commande principale, jamais un contenu requis** (Polaris, mise en page).
-- **Le texte courant et les phrases de conclusion** : **60 caractères** par ligne au plus sur ordinateur (1.6.34,
+- **Le texte courant et les phrases de conclusion** : **60 caractères** par ligne au plus sur ordinateur (1.6.35,
   `--measure`, Material Design, typographie : 40 à 60 caractères pour le texte courant ; Baymard Institute : 50 à 75 ;
   WCAG 2.2, 1.4.8 : 80 au plus). `--measure` vaut 24 em sur ordinateur (384 px à 16 px), mesuré sur toutes les pages ;
   sur téléphone, la largeur de l'écran limite déjà les lignes (31 em). Un `ch` ne suffit pas, il est plus large que la
   lettre moyenne. La mesure limite le texte, pas le bloc : la carte garde toute la largeur de la page.
-- **Réglages** (1.6.34) : le modèle de réglages de Polaris (« App settings layout », grille 2fr / 5fr) : pour chaque
+- **Réglages** (1.6.35) : le modèle de réglages de Polaris (« App settings layout », grille 2fr / 5fr) : pour chaque
   réglage, **le titre et sa description à gauche, les contrôles dans une carte à droite** ; plus de filets entre les
   réglages. Le sommaire des rubriques reste à gauche de la page. Sur téléphone, une seule colonne : le titre, puis les
   contrôles.

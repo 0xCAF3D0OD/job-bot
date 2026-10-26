@@ -133,7 +133,7 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   --field-5: 5.5rem;
   --header-max: 84rem;
 }
-/* 60 caractères par ligne sur ordinateur (1.6.34, Material Design, typographie : 40 à 60 pour le texte courant) ;
+/* 60 caractères par ligne sur ordinateur (1.6.35, Material Design, typographie : 40 à 60 pour le texte courant) ;
    sur téléphone, la largeur de l'écran limite déjà les lignes : 31 em, rien ne change. */
 @media (min-width: 821px) { :root { --measure: 24em; } }
 p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li, .privacy-page li, .orp-month-lines li,
@@ -3882,7 +3882,7 @@ main:focus { outline: none; }
   input[type="number"] { width: var(--field-5); }
 }
 
-/* Réglages, sur ordinateur (1.6.34) : le modèle de réglages de Polaris (« App settings layout »). Pour chaque
+/* Réglages, sur ordinateur (1.6.35) : le modèle de réglages de Polaris (« App settings layout »). Pour chaque
    réglage, le titre et sa description à gauche (2/7), les contrôles dans une carte à droite (5/7). Le titre et la
    description flottent à gauche ; la carte est dessinée derrière les contrôles. Sur téléphone, rien ne change. */
 @media (min-width: 861px) {
