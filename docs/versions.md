@@ -23,5 +23,5 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.47 | Pages | Revue 1.6.46, Offres : un seul « + Ajouter » (Ajouter une offre, Postuler spontanément), la Note en ligne comme Statut et Tri, la marge de la colonne des filtres | `fix/1.6.47-offres` | fusionnée (#359) |
 | 1.6.48 | Design | Règle §3 : la bande d'action | `docs/1.6.48-bande-action` | PR ouverte |
 | 1.6.49 | Design | Composant « Bande d'action » dans le code | `feat/1.6.49-bande-action` | prévu |
-| 1.6.50 | Pages | Revue 1.6.46 : l'écran de tri des offres du jour (`/aujourdhui/tri`), la bande d'action d'Offres « Commencer le tri » | `feat/1.6.50-tri` | PR ouverte |
-| 1.6.51 | Pages | Revue 1.6.46 : Aujourd'hui en une colonne, la bande « Tri du jour. » | `feat/1.6.51-aujourdhui` | prévu |
+| 1.6.50 | Pages | Revue 1.6.46 : l'écran de tri des offres du jour (`/aujourdhui/tri`), la bande d'action d'Offres « Commencer le tri » | `feat/1.6.50-tri` | fusionnée (#360) |
+| 1.6.51 | Pages | Revue 1.6.46 : Aujourd'hui en une colonne (la bande « Tri du jour. », « À faire aujourd'hui. », « Mois ORP. », « À retenir. ») | `feat/1.6.51-aujourdhui` | PR ouverte |

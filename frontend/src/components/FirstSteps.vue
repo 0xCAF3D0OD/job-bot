@@ -44,7 +44,8 @@ const target = computed<RouteLocationRaw>(() => {
     case "alerts":
       return "/candidatures/alertes";
     case "keep":
-      return props.pickReady ? { path: "/aujourdhui", hash: "#offres-du-jour" } : "/candidatures/offres";
+      // Le tri du jour a son écran (1.6.50) : « Garder » s'y fait.
+      return props.pickReady ? { name: "triage" } : "/candidatures/offres";
     case "prepare":
       return preparation;
     default:

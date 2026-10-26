@@ -3019,20 +3019,14 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 /* Dans une rangée de filtres, l'action se centre avec les autres contrôles. */
 .news-filters .news-status { margin: 0; }
 
-/* Aujourd'hui épuré (docs/95, d'après Sphere) : la phrase du jour en grand et une seule action,
-   les bandeaux datés, puis deux cartes neutres — À faire et Mois ORP. Aéré (docs/93) : 2 rem
-   entre les étages, 1,5 rem dans les cartes ; la couleur pour ce qui demande une action. */
-.today-lead { display: grid; justify-items: start; gap: var(--space-5); margin: var(--space-2) 0 0; }
+/* Aujourd'hui : la phrase du jour en grand (docs/95) ; la structure en une colonne est plus bas
+   (1.6.51). */
 .today-sentence, .offers-sentence { margin: 0; max-width: var(--measure); font-size: var(--font-figure); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: -0.01em; color: var(--text); }
 .today-sentence strong, .offers-sentence strong { font-weight: var(--weight-semibold); color: var(--accent); }
 .offers-sentence { margin-bottom: var(--space-6); }
-.today-cta { border-radius: var(--radius-pill); padding-inline: var(--space-5); }
-.today-banners { list-style: none; margin: 0 0 var(--space-8); padding: 0; display: grid; gap: var(--space-3); }
 .today-banner { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; font-size: var(--font-body); line-height: var(--leading-normal); }
 .today-banner a { color: var(--accent); font-weight: var(--weight-semibold); white-space: nowrap; text-decoration: none; }
 .today-banner a:hover { text-decoration: underline; }
-.today-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-5); align-items: stretch; }
-.today-grid.single { grid-template-columns: minmax(0, 1fr); }
 /* Les premiers pas (docs/128 §1) : le visage en tuile, l'étape, pourquoi, le bouton ; « 2 sur 5 »
    et « Masquer » sur la ligne du haut ; les cinq points comme ceux de l'accueil. */
 .first-steps { flex-direction: row; align-items: flex-start; gap: var(--space-5); margin: var(--space-2) 0 0; }
@@ -3046,20 +3040,8 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .first-steps-dots span { width: 0.7rem; height: 0.7rem; border-radius: var(--radius-pill); background: var(--band); border: 2px solid var(--faint); box-sizing: border-box; }
 .first-steps-dots span.done { background: var(--accent); border-color: var(--accent); }
 .first-steps-dots span.current { width: 1.6rem; background: var(--accent); border-color: var(--accent); }
-.today-grid .dash-card { padding: var(--space-6); }
-.today-grid h2 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-semibold); }
-/* Une carte, un rôle (docs/129) : le titre porte le compte et le lien ; les lignes ont trois
-   colonnes fixes (le logo, le texte coupé par « … », l'action), à la même place partout. */
-.today-grid.halves { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.today-grid.halves.single { grid-template-columns: minmax(0, 1fr); }
-.today-grid .dash-card { gap: var(--space-3); }
-.today-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); min-height: 1.75rem; }
-.today-grid .today-card-head h2 { margin: 0; }
-.today-card-side { color: var(--muted); font-size: var(--font-small); white-space: nowrap; }
-.today-card-link { color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; white-space: nowrap; display: inline-flex; align-items: center; min-height: 24px; }
-.today-card-link:hover { text-decoration: underline; }
-.today-list:focus { outline: none; }
-.today-list:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Les lignes de liste (docs/129, Candidatures) : trois colonnes fixes (le logo, le texte, l'action),
+   à la même place partout. */
 .today-sub-title { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--muted); }
 .today-rows { list-style: none; margin: 0; padding: 0; }
 .today-rows li + li { border-top: 1px solid var(--divider); }
@@ -3070,18 +3052,10 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .today-row-main strong { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
 .today-row-line { color: var(--muted); font-size: var(--font-small); overflow-wrap: anywhere; }
 .today-row-action { justify-self: end; color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
-.today-month-count { margin: 0; color: var(--muted); font-size: var(--font-body); }
-.today-month-count strong { font-size: var(--font-page); font-weight: var(--weight-semibold); color: var(--text); line-height: var(--leading-none); }
-.today-bar { height: 0.4rem; margin: var(--space-4) 0 var(--space-2); border-radius: var(--radius-pill); background: var(--band); overflow: hidden; }
-.today-bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
-.today-month-left { margin: 0; font-size: var(--font-small); line-height: var(--leading-normal); }
 .rhythm-nested { display: grid; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--divider); }
 .rhythm-nested .rhythm-head { align-items: center; }
 @media (max-width: 820px) {
   .today-sentence, .offers-sentence { font-size: var(--font-section); }
-  .today-grid, .today-grid.halves { grid-template-columns: minmax(0, 1fr); }
-  .today-grid .dash-card { padding: var(--space-6); }
-  .today-lead { margin-bottom: var(--space-6); }
   .first-steps { gap: var(--space-4); }
   .first-steps h2 { font-size: var(--font-section); }
   .first-steps-action { min-height: var(--control-h); }
@@ -3628,10 +3602,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 @media (prefers-reduced-motion: reduce) { .victory-bubble { display: none; } }
 @media (max-width: 820px) { .success-card .success-face { width: 130px; height: 130px; } }
 /* S, rien d'urgent (docs/123 §2). */
-.today-calm { display: grid; justify-items: center; gap: var(--space-5); margin-bottom: var(--space-8); }
-.today-calm .face-state { padding-bottom: 0; }
-.today-calm-month { width: min(100%, 40rem); }
-.today-empty-line { display: flex; align-items: center; gap: var(--space-2); color: var(--muted); }
 /* Le personnage se transforme (docs/123, complément 0.96.0 ; d'après la maquette « X ») : pendant
    le chargement d'une page, le visage du logo prend l'objet de la page. En boucle tant que
    l'attente dure ; rien de tout ça avec « réduire les animations » (le composant montre alors
@@ -3948,3 +3918,51 @@ main:focus { outline: none; }
 .triage-pile .pick-actions button { width: 100%; justify-content: center; }
 .triage-done { justify-self: center; }
 
+/* --- Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») ---
+   Tous les blocs sur les mêmes bords ; fond de page clair, les blocs neutres sur --band. */
+.band:has(> .today) { background: var(--bg); }
+.today .action-band-card {
+  box-shadow: var(--lift), 0 6px 0 -3px var(--surface), 0 12px 0 -6px var(--surface);
+}
+.today-triage-preview { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3) var(--space-4); align-items: center; margin-top: var(--space-1); }
+.today-triage-offer { display: grid; gap: var(--space-1); line-height: var(--leading-tight); min-width: 0; }
+.today-triage-offer strong { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.today-triage-offer .muted { font-size: var(--font-small); }
+.today-triage-why { grid-column: 1 / -1; display: grid; justify-items: start; gap: var(--space-1); font-size: var(--font-small); line-height: var(--leading-normal); }
+@media (min-width: 821px) {
+  .today-triage-preview { grid-template-columns: auto minmax(0, max-content) minmax(0, 1fr); column-gap: var(--space-5); }
+  .today-triage-why { grid-column: auto; }
+}
+.today-triage-done { display: grid; gap: var(--space-2); padding: var(--space-6); border-radius: var(--radius); background: var(--band); }
+.today-triage-done h2 { margin: 0; font-size: var(--font-section); font-weight: var(--weight-semibold); }
+.today-triage-done p { margin: 0; color: var(--muted); }
+.today-section { display: grid; gap: var(--space-4); }
+.today-section > h2 { margin: 0; font-size: var(--font-section); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.today-tasks { list-style: none; margin: 0; padding: var(--space-1) var(--space-3); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.today-tasks li + li { border-top: 1px solid var(--divider); }
+.today-task {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-4);
+  padding: var(--space-4) var(--space-3); color: var(--text); text-decoration: none; border-radius: var(--radius-sm);
+}
+.today-task-icon { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-pill); background: var(--band); color: var(--text); }
+.today-task-main { display: grid; gap: var(--space-1); min-width: 0; line-height: var(--leading-normal); }
+.today-task-main strong { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.today-task-main span { color: var(--muted); font-size: var(--font-small); overflow-wrap: anywhere; }
+.today-task-action { min-height: var(--control-h); white-space: nowrap; }
+.today-task:hover strong, .today-task:hover .today-task-action { color: var(--accent); }
+.today-task:hover .today-task-action { border-color: var(--accent); }
+.today-orp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--space-6); }
+.today-orp .orp-month.compact { display: grid; justify-items: center; gap: var(--space-2); }
+.today-orp .rhythm-nested { margin: 0; padding: 0 0 0 var(--space-6); border-top: 0; border-left: 1px solid var(--divider); justify-items: center; }
+.today-retain { display: grid; justify-items: start; gap: var(--space-4); padding: var(--space-8); border-radius: var(--radius); background: var(--band); }
+.today-retain p { margin: 0; line-height: var(--leading-normal); }
+.today-retain .today-retain-word { font-size: calc(var(--font-page) * 1.5); font-weight: var(--weight-bold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+@media (max-width: 820px) {
+  .today-task { grid-template-columns: auto minmax(0, 1fr); align-items: start; padding-inline: var(--space-2); }
+  .today-task-action { grid-column: 2; justify-self: start; }
+  .today-orp { grid-template-columns: minmax(0, 1fr); }
+  .today-orp .orp-month.compact { justify-items: start; }
+  .today-orp .rhythm-nested { padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid var(--divider); justify-items: start; }
+  .today-retain { padding: var(--space-5); }
+  .today-retain .today-retain-word { font-size: var(--font-page); }
+}

@@ -73,6 +73,7 @@ api.use({
 type Schemas = components["schemas"];
 export type StatusResponse = Schemas["StatusResponse"];
 export type JobRun = Schemas["JobRunOut"];
+export type Highlight = Schemas["HighlightOut"];
 export type Search = Schemas["SearchOut"];
 export type SearchDetail = Schemas["SearchDetail"];
 export type Offer = Schemas["OfferOut"];

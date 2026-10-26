@@ -1,34 +1,39 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import type { RouteLocationRaw } from "vue-router";
 
-import { api, type Offer, type Today } from "../api/client";
+import { api, type Highlight, type Offer, type Today } from "../api/client";
+import ActionBand from "../components/ActionBand.vue";
 import AppIcon from "../components/AppIcon.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
-import DailyPick from "../components/DailyPick.vue";
 import RhythmCard from "../components/RhythmCard.vue";
 import FirstSteps from "../components/FirstSteps.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import FaceMark from "../components/FaceMark.vue";
-import FaceState from "../components/FaceState.vue";
 import OrpMonth from "../components/OrpMonth.vue";
+import ScoreWord from "../components/ScoreWord.vue";
 import SuccessCard from "../components/SuccessCard.vue";
-import { usePhone } from "../composables/usePhone";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
-import { colorIndex, formatMonth, localDate, orpPace, plural, scoreWord } from "../format";
+import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
+import { daysBefore, formatMonth, localDate, orpPace, plural } from "../format";
+import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
 
+// Aujourd'hui (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») : une seule colonne. La
+// phrase de conclusion ; le tri du jour dans la bande d'action, seule action principale ; puis
+// « À faire aujourd'hui. », « Mois ORP. » et « À retenir. ».
 const today = ref<Today | null>(null);
 usePageReady("today", () => !!today.value);
-// La dose du jour (docs/86) : 3 offres ; 5 quand le mois ORP est à rattraper (docs/124 §D).
-const DOSE = 3;
-const DOSE_CATCH_UP = 5;
 const best = ref<Offer[]>([]);
+const preparing = ref<Offer[]>([]);
+const highlight = ref<Highlight | null>(null);
+// Le tri du jour fini sur cet appareil (l'écran de tri le note à la fin de la pile).
+const triageDone = ref(false);
 // Un jour de repos (docs/86) : aucune liste à traiter.
 const restDay = computed(() => today.value?.rhythm?.research_today === false);
 // Le mois ORP en retard sur son rythme (format.orpPace).
@@ -37,51 +42,38 @@ const monthBehind = computed(() => {
   return !!t && orpPace(t.month_count, t.month_target, t.month)?.state === "behind";
 });
 const rhythmPaused = computed(() => !!today.value?.rhythm?.pause_until);
-const preparing = ref<Offer[]>([]);
 const { message } = useCollect();
 
-// Au plus 3 lignes par carte (docs/129 §3) ; « Tout voir » pour le reste.
-const ROWS = 3;
-// « 1 sur 5 » de l'offre du jour, sur la ligne du titre de sa carte (docs/129 §2).
-const pick = ref<{ position: string } | null>(null);
-const pickPosition = computed(() => pick.value?.position ?? "");
-
-// Le plus urgent en tête (docs/43 n° 30) : entretien aujourd'hui ou demain, remise ORP dans
-// moins de 5 jours.
-const URGENT_DAYS = 5;
 const DAY_MS = 86_400_000;
+// Une remise ORP dans moins de 5 jours passe en tête de « À faire » (docs/43 n° 30).
+const URGENT_DAYS = 5;
 const time = new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit" });
+const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
 function startOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
-
-// Rendez-vous ORP aujourd'hui ou demain (docs/83) : sa feuille est prête.
-function meetingText(iso: string): string {
+// « Aujourd'hui à 09:30 », « Demain à 14:00 ».
+function dayAndTime(iso: string): string {
   const at = new Date(iso);
-  const day = startOfDay(at) === startOfDay(new Date()) ? "aujourd'hui" : "demain";
-  return `Rendez-vous ORP ${day} à ${time.format(at)} : ta feuille est prête.`;
+  const day = startOfDay(at) === startOfDay(new Date()) ? "Aujourd'hui" : "Demain";
+  return `${day} à ${time.format(at)}`;
 }
 
-function interviewText(iso: string, company: string): string {
-  const at = new Date(iso);
-  const day = startOfDay(at) === startOfDay(new Date()) ? "aujourd'hui" : "demain";
-  return `Entretien ${day} à ${time.format(at)} chez ${company}`;
-}
-
-const orpDays = computed(() => {
-  const due = today.value?.orp_due_date;
-  if (!due) return null;
-  return Math.round((localDate(due).getTime() - startOfDay(new Date())) / DAY_MS);
+// La dose du jour (docs/86) : 3 offres ; 5 quand le mois ORP est à rattraper (docs/124 §D).
+const dose = computed(() => best.value.slice(0, monthBehind.value ? DOSE_CATCH_UP : DOSE));
+// Les premiers pas (docs/128) : tant qu'il en manque, la carte remplace la phrase et le tri ; le mois
+// ORP reste, le reste attend.
+const starting = computed(() => {
+  const t = today.value;
+  return !!t && !t.first_steps_dismissed && t.first_steps.some((s) => !s.done);
 });
-const orpUrgent = computed(() => orpDays.value !== null && orpDays.value <= URGENT_DAYS);
-const orpText = computed(() => {
-  const days = orpDays.value ?? 0;
-  const month = formatMonth(today.value?.orp_due_month ?? "");
-  if (days < 0) return `Preuves de ${month} à remettre : échéance passée le ${longDate.format(new Date(today.value!.orp_due_date!))}.`;
-  const when = days === 0 ? "aujourd'hui" : days === 1 ? "demain" : `dans ${days} jours`;
-  return `Preuves de ${month} à remettre ${when}.`;
-});
+// Le tri à faire : la bande d'action. Sinon, la carte neutre « Tri terminé · À demain ».
+const triagePending = computed(() => !restDay.value && !rhythmPaused.value && dose.value.length > 0 && !triageDone.value);
+const showTriage = computed(() => !starting.value && !restDay.value && !rhythmPaused.value);
+const triageSummary = computed(() =>
+  dose.value.length === 1 ? "1 offre à trier :" : `${dose.value.length} offres, la meilleure d'abord :`,
+);
 
 // La phrase du jour (docs/95 §1) : ce qu'il y a à faire, les nombres en avant.
 type Part = { text: string; strong?: boolean };
@@ -90,8 +82,7 @@ const sentence = computed<Part[]>(() => {
   if (!t) return [];
   const pause = t.rhythm?.pause_until;
   if (pause) return [{ text: `En pause jusqu'au ${longDate.format(localDate(pause))}.` }];
-  // Jour de repos (1.6.26) : une seule phrase, qui dit quoi faire si l'on veut avancer ; les
-  // cartes ne le répètent plus.
+  // Jour de repos (1.6.26) : une seule phrase, qui dit quoi faire si l'on veut avancer.
   if (restDay.value) {
     const rest: Part[] = [{ text: "Jour de repos." }];
     if (t.to_follow_up) rest.push({ text: " Si tu veux avancer : " }, { text: plural(t.to_follow_up, "relance", "relances"), strong: true }, { text: " en attente." });
@@ -99,15 +90,15 @@ const sentence = computed<Part[]>(() => {
     return rest;
   }
   const items: Part[][] = [];
-  if (t.to_review) items.push([{ text: plural(t.to_review, "offre", "offres"), strong: true }, { text: " à examiner" }]);
+  if (triagePending.value) items.push([{ text: plural(dose.value.length, "offre", "offres"), strong: true }, { text: " à trier" }]);
   if (t.to_follow_up) items.push([{ text: plural(t.to_follow_up, "relance", "relances"), strong: true }]);
-  // La semaine est dans le mois ORP, juste dessous (docs/131 §A.2) : la phrase n'en parle plus.
   if (!items.length) {
     // « Ta semaine est faite » se tait quand le mois est en retard (1.6.27).
     const weekDone = t.rhythm && t.rhythm.target !== null && t.rhythm.count >= t.rhythm.target && !monthBehind.value;
     return [{ text: weekDone ? "Tout est à jour. Ta semaine est faite." : "Tout est à jour." }];
   }
-  const parts: Part[] = [];
+  // Le tri fini : « Il reste 6 relances. »
+  const parts: Part[] = triageDone.value ? [{ text: "Il reste " }] : [];
   items.forEach((item, index) => {
     if (index) parts.push({ text: index === items.length - 1 ? " et " : ", " });
     parts.push(...item);
@@ -117,61 +108,88 @@ const sentence = computed<Part[]>(() => {
   parts[0] = { ...first, text: first.text.charAt(0).toUpperCase() + first.text.slice(1) };
   return parts;
 });
-// Une seule action, la plus utile (docs/95 §1).
-const cta = computed(() => {
-  const t = today.value;
-  if (!t || restDay.value || t.rhythm?.pause_until) return null;
-  // Seulement quand sa carte n'est pas sur la page (docs/131 §A.1) : des offres à examiner pas
-  // encore notées, des relances au-delà de celles affichées.
-  if (t.to_review && !best.value.length) return { label: "Examiner les offres", to: "/candidatures/offres", icon: "briefcase" as const };
-  return null;
-});
 
-// Ce qui a une date, trois au plus (docs/95 §2) : le plus proche d'abord.
-const banners = computed(() => {
+// « À faire aujourd'hui. » : des lignes toutes construites pareil (icône, titre avec un verbe, une
+// ligne de détail, un bouton à contour) ; seulement ce qui a quelque chose à faire, le daté d'abord.
+type Task = { key: string; test: string; icon: IconName; title: string; detail: string; action: string; to: RouteLocationRaw };
+const tasks = computed<Task[]>(() => {
   const t = today.value;
-  if (!t) return [];
-  const list: { key: string; test: string; text: string; action: string; to: string | Record<string, unknown> }[] = [];
+  if (!t || starting.value) return [];
+  const list: Task[] = [];
   if (t.orp_meeting_at) {
-    list.push({ key: "meeting", test: "orp-meeting-soon", text: meetingText(t.orp_meeting_at), action: "Voir la feuille", to: "/candidatures/rendez-vous-orp" });
+    list.push({ key: "meeting", test: "orp-meeting-soon", icon: "calendar", title: "Préparer le rendez-vous ORP", detail: `${dayAndTime(t.orp_meeting_at)} : ta feuille est prête.`, action: "Voir", to: "/candidatures/rendez-vous-orp" });
   }
   for (const item of t.upcoming_interviews ?? []) {
-    list.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", text: `${interviewText(item.at, item.company)}.`, action: "Préparer", to: "/candidatures/suivi" });
+    list.push({ key: `interview-${item.application_id}`, test: "upcoming-interview", icon: "users", title: "Préparer l'entretien", detail: `${dayAndTime(item.at)} chez ${item.company}.`, action: "Préparer", to: "/candidatures/suivi" });
   }
-  if (t.orp_due_month) {
+  const orp = orpTask.value;
+  if (orp?.urgent) list.push(orp.task);
+  if (t.to_follow_up) {
+    const oldest = Math.max(0, ...(t.follow_ups ?? []).map((f) => daysBefore(f.sent_at)));
     list.push({
-      key: "orp",
-      test: orpUrgent.value ? "orp-urgent" : "orp-due",
-      text: orpText.value,
-      action: "Préparer la remise",
-      to: { path: "/candidatures/suivi", query: { mois: t.orp_due_month } },
+      key: "follow-ups",
+      test: "follow-ups",
+      icon: "message",
+      title: `Relancer ${plural(t.to_follow_up, "candidature", "candidatures")}`,
+      detail: oldest ? (t.to_follow_up === 1 ? `Elle attend depuis ${oldest} jours.` : `La plus ancienne attend depuis ${oldest} jours.`) : "Sans réponse depuis 10 jours.",
+      action: "Relancer",
+      to: "/candidatures/suivi",
     });
   }
+  if (preparing.value.length) {
+    const n = preparing.value.length;
+    list.push({
+      key: "preparing",
+      test: "preparing",
+      icon: "send",
+      title: `Préparer ${plural(n, "candidature", "candidatures")}`,
+      detail: n === 1 ? "Une offre gardée attend sa lettre." : `${n} offres gardées attendent leur lettre.`,
+      action: "Préparer",
+      to: n === 1 ? `/candidatures/offres/${preparing.value[0]!.id}/preparer` : { path: "/candidatures/offres", query: { statut: "in_progress" } },
+    });
+  }
+  if (orp && !orp.urgent) list.push(orp.task);
   for (const item of t.interviews_to_review ?? []) {
-    list.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", text: `Comment s'est passé ton entretien chez ${item.company} ?`, action: "Faire le point", to: item.link });
+    list.push({ key: `review-${item.application_id}-${item.interview_on}`, test: "interview-to-review", icon: "clipboard-check", title: "Faire le point sur l'entretien", detail: `Chez ${item.company} : comment s'est-il passé ?`, action: "Faire le point", to: item.link });
   }
   if (t.alerts_waiting) {
     list.push({
       key: "alerts",
       test: "alerts-waiting",
-      text: t.alerts_waiting === 1 ? "1 alerte créée hier n'a encore rien envoyé." : `${t.alerts_waiting} alertes créées depuis hier n'ont encore rien envoyé.`,
-      action: "Vérifier mes alertes",
+      icon: "bell",
+      title: `Vérifier ${plural(t.alerts_waiting, "alerte", "alertes")}`,
+      detail: t.alerts_waiting === 1 ? "Créée hier, elle n'a encore rien envoyé." : "Créées depuis hier, elles n'ont encore rien envoyé.",
+      action: "Vérifier",
       to: "/candidatures/alertes",
     });
   }
-  return list.slice(0, 3);
+  return list;
 });
 
-// Les premiers pas (docs/128) : tant qu'il en manque, la carte remplace la phrase du jour et
-// son action, et Aujourd'hui s'allège (pas de rythme, pas d'onglet vide, pas de jour calme).
-const starting = computed(() => {
+// Les preuves ORP à remettre (docs/95 §2) : en tête quand l'échéance approche.
+const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
   const t = today.value;
-  return !!t && !t.first_steps_dismissed && t.first_steps.some((s) => !s.done);
+  if (!t?.orp_due_month || !t.orp_due_date) return null;
+  const due = localDate(t.orp_due_date);
+  const days = Math.round((due.getTime() - startOfDay(new Date())) / DAY_MS);
+  const urgent = days <= URGENT_DAYS;
+  return {
+    urgent,
+    task: {
+      key: "orp",
+      test: urgent ? "orp-urgent" : "orp-due",
+      icon: "check-circle",
+      title: `Remettre les preuves de ${formatMonth(t.orp_due_month)}`,
+      detail: days < 0 ? `Échéance passée le ${longDate.format(due)}.` : days === 0 ? "À remettre aujourd'hui." : `À remettre avant le ${longDate.format(due)}.`,
+      action: "Compléter",
+      to: { path: "/candidatures/suivi", query: { mois: t.orp_due_month } },
+    },
+  };
 });
+
 const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" }).format(
   new Date(),
 );
-const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 // L'étiquette au-dessus du titre : la date et la dernière collecte.
 const eyebrow = computed(() => {
   // La collecte seulement quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
@@ -180,25 +198,6 @@ const eyebrow = computed(() => {
   const collect = message.value || (late ? `collecte ${sinceText(last!)}` : "");
   return collect ? `${dateTitle} · ${collect}` : dateTitle;
 });
-
-// S, « Rien d'urgent aujourd'hui » (docs/123 §2) : un jour de recherche sans offre à examiner,
-// sans relance ni rien de daté. Le visage ravi, la devise, le mois ORP en une ligne.
-const calm = computed(() => {
-  const t = today.value;
-  return !!t && !starting.value && !restDay.value && !rhythmPaused.value && !t.to_review && !t.to_follow_up && !banners.value.length;
-});
-// U, Aujourd'hui en compact (docs/123 §2) : sur téléphone, le mois ORP en une ligne.
-const { phone } = usePhone();
-// Pendant les premiers pas, la carte des offres seulement quand il y en a (docs/128 §2).
-// Un jour de repos, pas d'offre du jour : la phrase du haut le dit (1.6.26).
-const showPick = computed(() => !restDay.value && (!starting.value || best.value.length > 0));
-
-// « Voir les offres à préparer », une fois le tri fini : la carte voisine prend le focus.
-function showPreparingCard(): void {
-  const card = document.getElementById("a-preparer");
-  card?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
-  card?.focus({ preventScroll: true });
-}
 
 // R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil.
 const goalWon = ref(false);
@@ -216,27 +215,17 @@ function firstGoal(t: Today | null): boolean {
   }
 }
 
-const dose = computed(() => {
-  const t = today.value;
-  const behind = !!t && orpPace(t.month_count, t.month_target, t.month)?.state === "behind";
-  return best.value.slice(0, behind ? DOSE_CATCH_UP : DOSE);
-});
-
-// Une offre gardée passe dans « À préparer » : la liste se recharge. Toutes sont gardées pour
-// le compte du titre ; 3 lignes s'affichent.
-async function reloadPreparing(): Promise<void> {
-  const { data } = await api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } });
-  preparing.value = (data?.items ?? []).filter((o) => o.status === "preparing");
-}
-
 async function load(): Promise<void> {
-  const [day, offers, current] = await Promise.all([
+  const [day, offers, current, report] = await Promise.all([
     api.GET("/api/today"),
-    // La dose du jour (docs/86) : les 3 meilleures, pas toute la pile.
+    // La dose du jour (docs/86) : les meilleures, pas toute la pile.
     api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE_CATCH_UP } } }),
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } }),
+    // « À retenir. » : l'écart du Bilan sur les 3 derniers mois.
+    api.GET("/api/insights", { params: { query: { period: "recent" } } }),
   ]);
   today.value = day.data ?? null;
+  triageDone.value = triageDoneToday();
   goalWon.value = firstGoal(today.value);
   // Montrée une fois : on le dit au serveur, elle ne revient plus (docs/128 §1).
   if (today.value?.first_steps_finished && !stepsWon.value) {
@@ -245,6 +234,7 @@ async function load(): Promise<void> {
   }
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing");
+  highlight.value = report.data?.highlight ?? null;
 }
 
 // Masquer les premiers pas : la carte s'en va tout de suite, « Annuler » pendant 6 secondes
@@ -289,255 +279,154 @@ const { me } = useAuth();
         <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
       </RouterLink>
 
-      <!-- S, rien d'urgent (docs/123 §2) : le visage ravi, pourquoi, la devise, le mois en une
-           ligne, et les offres quand même. -->
-      <section
-        v-if="calm"
-        class="today-calm"
-        data-test="today-calm"
+      <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
+      <FirstSteps
+        v-if="starting"
+        :steps="today.first_steps"
+        :has-offers="today.has_offers ?? true"
+        :offer-id="today.first_steps_offer_id ?? null"
+        :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+        @dismiss="dismissSteps"
+      />
+      <!-- La phrase de conclusion, en grand (docs/95 §1). -->
+      <p
+        v-else
+        class="today-sentence"
+        data-test="today-sentence"
       >
-        <FaceState
-          mood="ravi"
-          title="Rien d'urgent aujourd'hui"
+        <template
+          v-for="(part, index) in sentence"
+          :key="index"
         >
-          <p>Aucune offre à examiner, aucune relance, rien de daté.</p>
-          <div class="face-state-actions">
-            <RouterLink
-              to="/candidatures/offres"
-              class="button-link primary-link"
-              data-test="today-calm-offers"
-            >
-              Voir les offres quand même
-            </RouterLink>
+          <strong v-if="part.strong">{{ part.text }}</strong><template v-else>
+            {{ part.text }}
+          </template>
+        </template>
+      </p>
+
+      <!-- Le tri du jour : la bande d'action, seule action principale ; ouvre l'écran de tri. -->
+      <template v-if="showTriage">
+        <ActionBand
+          v-if="triagePending"
+          title="Tri du jour."
+          :summary="triageSummary"
+          action="Commencer le tri"
+          :to="{ name: 'triage' }"
+        >
+          <div
+            class="today-triage-preview"
+            data-test="best"
+          >
+            <CompanyLogo :offer="dose[0]!" />
+            <span class="today-triage-offer">
+              <strong>{{ dose[0]!.title }}</strong>
+              <span class="muted">{{ [dose[0]!.company || "Entreprise non indiquée", dose[0]!.location].filter(Boolean).join(" · ") }}</span>
+            </span>
+            <span class="today-triage-why">
+              <ScoreWord :score="dose[0]!.score ?? null" />
+              <span v-if="dose[0]!.why">{{ dose[0]!.why }}</span>
+            </span>
           </div>
-        </FaceState>
-        <div class="dash-card today-calm-month">
+        </ActionBand>
+        <section
+          v-else
+          class="today-triage-done"
+          aria-labelledby="today-triage-title"
+          data-test="triage-done"
+        >
+          <h2 id="today-triage-title">
+            Tri du jour.
+          </h2>
+          <p>{{ triageDone ? "Tri terminé · À demain" : "Rien à trier · À demain" }}</p>
+        </section>
+      </template>
+
+      <!-- À faire aujourd'hui : masqué s'il n'y a rien, la conclusion le dit. -->
+      <section
+        v-if="tasks.length"
+        class="today-section"
+        aria-labelledby="today-tasks-title"
+        data-test="today-tasks"
+      >
+        <h2 id="today-tasks-title">
+          À faire aujourd'hui.
+        </h2>
+        <ul class="today-tasks">
+          <li
+            v-for="task in tasks"
+            :key="task.key"
+          >
+            <RouterLink
+              :to="task.to"
+              class="today-task"
+              :data-test="task.test"
+            >
+              <span
+                class="today-task-icon"
+                aria-hidden="true"
+              ><AppIcon :name="task.icon" /></span>
+              <span class="today-task-main">
+                <strong>{{ task.title }}</strong>
+                <span>{{ task.detail }}</span>
+              </span>
+              <span class="button-link today-task-action">{{ task.action }}</span>
+            </RouterLink>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Mois ORP : le mois puis la semaine, face à face sur ordinateur (docs/95 §4, docs/123 Q). -->
+      <section
+        class="today-section"
+        aria-labelledby="today-orp-title"
+      >
+        <h2 id="today-orp-title">
+          Mois ORP.
+        </h2>
+        <div
+          class="dash-card today-orp"
+          data-test="orp-month"
+        >
           <OrpMonth
-            title="Mois ORP"
+            title="Ce mois"
             :count="today.month_count"
             :target="today.month_target ?? null"
             :month="today.month"
             compact
           />
+          <RhythmCard
+            v-if="today.rhythm && !starting"
+            :week="today.rhythm"
+            :month-behind="monthBehind"
+            nested
+          />
         </div>
       </section>
-      <template v-else>
-        <!-- Les premiers pas (docs/128) : la seule action tant qu'il en manque. -->
-        <FirstSteps
-          v-if="starting"
-          :steps="today.first_steps"
-          :has-offers="today.has_offers ?? true"
-          :offer-id="today.first_steps_offer_id ?? null"
-          :pick-ready="!restDay && !rhythmPaused && best.length > 0"
-          @dismiss="dismissSteps"
-        />
-        <!-- La phrase du jour, en grand, et une seule action (docs/95 §1, d'après Sphere). -->
-        <div
-          v-else
-          class="today-lead"
-        >
-          <p
-            class="today-sentence"
-            data-test="today-sentence"
-          >
-            <template
-              v-for="(part, index) in sentence"
-              :key="index"
-            >
-              <strong v-if="part.strong">{{ part.text }}</strong><template v-else>
-                {{ part.text }}
-              </template>
-            </template>
+
+      <!-- À retenir : l'écart du Bilan, un mot en très grand, une phrase. -->
+      <section
+        v-if="highlight && !starting"
+        class="today-section"
+        aria-labelledby="today-retain-title"
+        data-test="today-retain"
+      >
+        <h2 id="today-retain-title">
+          À retenir.
+        </h2>
+        <div class="today-retain">
+          <p class="today-retain-word">
+            {{ highlight.word }}
           </p>
+          <p>{{ highlight.sentence }}</p>
           <RouterLink
-            v-if="cta"
-            :to="cta.to"
-            class="button-link primary-link today-cta"
-            data-test="today-cta"
+            to="/bilan"
+            class="button-link"
+            data-test="today-retain-link"
           >
-            <span class="with-icon"><AppIcon :name="cta.icon" />{{ cta.label }}</span>
+            Voir le Bilan
           </RouterLink>
         </div>
-
-        <!-- Ce qui a une date, trois au plus (docs/95 §2). -->
-        <ul
-          v-if="banners.length"
-          class="today-banners"
-        >
-          <li
-            v-for="banner in banners"
-            :key="banner.key"
-            class="today-banner"
-            :data-test="banner.test"
-          >
-            <span>{{ banner.text }}</span>
-            <RouterLink :to="banner.to">
-              {{ banner.action }}
-            </RouterLink>
-          </li>
-        </ul>
-
-        <!-- Rangée 1 (docs/129 §1) : les offres du jour et le mois ORP. -->
-        <div
-          class="today-grid"
-          :class="{ single: !showPick }"
-        >
-          <section
-            v-if="showPick"
-            class="dash-card today-pick"
-            aria-labelledby="today-pick-title"
-            data-test="best"
-          >
-            <header class="today-card-head">
-              <h2 id="today-pick-title">
-                Offres du jour
-              </h2>
-              <span
-                v-if="pickPosition"
-                class="today-card-side"
-                data-test="pick-count"
-              >{{ pickPosition }}</span>
-            </header>
-            <p
-              v-if="rhythmPaused"
-              class="hint"
-              data-test="paused-day"
-            >
-              En pause : pas d'offre du jour.
-            </p>
-            <p
-              v-else-if="!best.length"
-              class="hint today-empty-line"
-            >
-              <FaceMark mood="neutre" />Aucune offre notée en attente.
-            </p>
-            <DailyPick
-              v-else
-              id="offres-du-jour"
-              ref="pick"
-              :offers="dose"
-              @changed="reloadPreparing"
-              @show-preparing="showPreparingCard"
-            />
-          </section>
-
-          <!-- Mois ORP (docs/95 §4, docs/123 Q) : le compte du mois et son humeur, puis la semaine. -->
-          <section
-            class="dash-card today-month"
-            data-test="orp-month"
-          >
-            <OrpMonth
-              title="Mois ORP"
-              :count="today.month_count"
-              :target="today.month_target ?? null"
-              :month="today.month"
-              :compact="phone"
-            />
-            <RhythmCard
-              v-if="today.rhythm && !starting"
-              :week="today.rhythm"
-              :month-behind="monthBehind"
-              nested
-            />
-          </section>
-        </div>
-
-        <!-- Rangée 2 (docs/129 §1, §3) : à préparer et à relancer, la même forme de ligne ; une
-             carte vide ne s'affiche pas, sa voisine prend toute la largeur. -->
-        <div
-          v-if="preparing.length || today.follow_ups?.length"
-          class="today-grid halves"
-          :class="{ single: !preparing.length || !today.follow_ups?.length }"
-        >
-          <section
-            v-if="preparing.length"
-            id="a-preparer"
-            class="dash-card today-list"
-            aria-labelledby="today-preparing-title"
-            data-test="preparing"
-            tabindex="-1"
-          >
-            <header class="today-card-head">
-              <h2 id="today-preparing-title">
-                À préparer · {{ preparing.length }}
-              </h2>
-              <RouterLink
-                :to="{ path: '/candidatures/offres', query: { statut: 'in_progress' } }"
-                class="today-card-link"
-                data-test="preparing-all"
-              >
-                Tout voir
-              </RouterLink>
-            </header>
-            <ul class="today-rows">
-              <li
-                v-for="offer in preparing.slice(0, ROWS)"
-                :key="offer.id"
-              >
-                <RouterLink
-                  :to="`/candidatures/offres/${offer.id}/preparer`"
-                  class="today-row"
-                  :title="`${offer.company || 'Entreprise non indiquée'} · ${offer.title}`"
-                >
-                  <CompanyLogo :offer="offer" />
-                  <span class="today-row-main">
-                    <strong>{{ offer.company || "Entreprise non indiquée" }}</strong>
-                    <span class="today-row-line">{{ offer.title }}</span>
-                    <span
-                      v-if="offer.score !== null && offer.score !== undefined"
-                      class="today-row-line"
-                    >{{ scoreWord(offer.score).word }}</span>
-                  </span>
-                  <span class="today-row-action">Préparer</span>
-                </RouterLink>
-              </li>
-            </ul>
-          </section>
-
-          <section
-            v-if="today.follow_ups?.length"
-            class="dash-card today-list"
-            aria-labelledby="today-follow-title"
-            data-test="follow-ups"
-          >
-            <header class="today-card-head">
-              <h2 id="today-follow-title">
-                À relancer · {{ today.to_follow_up }}
-              </h2>
-              <RouterLink
-                to="/candidatures/suivi"
-                class="today-card-link"
-                data-test="follow-ups-all"
-              >
-                Tout voir
-              </RouterLink>
-            </header>
-            <ul class="today-rows">
-              <li
-                v-for="item in today.follow_ups.slice(0, ROWS)"
-                :key="item.application_id"
-              >
-                <RouterLink
-                  :to="{ path: '/candidatures/suivi', query: { mois: item.orp_month, candidature: String(item.application_id) } }"
-                  class="today-row"
-                  :title="`${item.company} · ${item.job_title}`"
-                >
-                  <span
-                    class="logo"
-                    :class="`c${colorIndex(item.company)}`"
-                  >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
-                  <span class="today-row-main">
-                    <strong>{{ item.company }}</strong>
-                    <span class="today-row-line">{{ item.job_title }}</span>
-                    <span class="today-row-line">{{ item.status === "relancee" ? "relancée, sans réponse" : `envoyée le ${longDate.format(localDate(item.sent_at))}` }}</span>
-                  </span>
-                  <span class="today-row-action">Relancer</span>
-                </RouterLink>
-              </li>
-            </ul>
-          </section>
-        </div>
-      </template>
+      </section>
     </div>
     <div
       v-else

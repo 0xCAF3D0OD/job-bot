@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import AppIcon from "../components/AppIcon.vue";
@@ -7,7 +7,7 @@ import DailyPick from "../components/DailyPick.vue";
 import FaceState from "../components/FaceState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
-import { useDailyDose } from "../composables/useDailyDose";
+import { markTriageDone, useDailyDose } from "../composables/useDailyDose";
 import { plural } from "../format";
 
 // L'écran de tri (1.6.50, revue 1.6.46, planche « Tri des offres du jour ») : un deuxième niveau,
@@ -22,6 +22,14 @@ const pick = ref<InstanceType<typeof DailyPick> | null>(null);
 const remaining = computed(() => pick.value?.remaining ?? dose.value.length);
 const position = computed(() => pick.value?.position ?? "");
 const sentence = computed(() => (remaining.value ? `${plural(remaining.value, "offre", "offres")}` : ""));
+
+// La pile vidée : Aujourd'hui passe à « Tri terminé · À demain » (1.6.51).
+watch(
+  () => !!pick.value && pick.value.remaining === 0,
+  (done) => {
+    if (done) markTriageDone();
+  },
+);
 
 function showPreparing(): void {
   void router.push({ path: "/candidatures/offres", query: { statut: "in_progress" } });
