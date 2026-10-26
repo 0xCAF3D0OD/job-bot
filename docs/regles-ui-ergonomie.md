@@ -100,7 +100,7 @@ Largeurs (1.6.32) :
 | **Progression ORP** | 10 cases, une par candidature. |
 | **Semaine** | Points par jour : rempli = candidature, cerclé = aujourd'hui. |
 | **Initiales d'entreprise** | Fond accent, menthe ou ciel, jamais l'orange (réservé à ce qui demande d'agir). Contraste ≥ 4,5:1 : `--on-accent` sur l'accent, texte foncé sur la menthe et le ciel. |
-| **Offre du jour** | Une à la fois, avec la phrase « pourquoi » et au plus deux manques. Boutons Garder et Écarter, « Annuler » pendant 6 s. Balayage autorisé sur téléphone, en plus des boutons. |
+| **Offre du jour** | Une à la fois, avec la phrase « pourquoi » et au plus deux manques. Boutons Garder et Écarter, « Annuler » pendant 6 s. Sur téléphone, Garder et Écarter côte à côte, chacun sur la moitié de la carte : une décision binaire, deux grandes cibles (loi de Fitts) ; c'est la seule exception à « pas de bouton pleine largeur » (§3). Balayage autorisé sur téléphone, en plus des boutons. |
 | **Écran vide** | Dit ce que la page fera et quoi faire maintenant, avec une action : un bouton principal plein (§3.3), une éventuelle seconde action en contour. |
 | **Premiers pas** | Une carte, une étape à la fois, « 2 sur 5 ». |
 | **Boutons segmentés** | Pour filtrer ou changer l'affichage d'une même carte, ou choisir une option : 2 à 5 choix (Material Design 3, boutons segmentés). Jamais pour aller vers un autre contenu : on navigue par le menu et les onglets de page (§2 : pas de troisième niveau d'onglets). Un rail au fond neutre (`--panel`), coins entièrement arrondis ; une pastille par option, à la largeur de son texte, fond `--surface` et contour `--border` ; le texte reste sur une ligne, jamais coupé : si la place manque, la pastille entière passe à la ligne (Material 3, puces). L'option active a le style de l'onglet actif de l'en-tête (fond accent léger, contour et texte accent en 600 ; NN/g, cohérence) ; le survol, une couche neutre à 8 %. Le rail fait `--control-h`. Du texte seul, sans colonne d'icônes sur le côté. Exemples : la période du Bilan, la Note des Offres. |
@@ -140,6 +140,7 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 - Voile de chargement : au moins 1,2 s (docs/63) ; l'animation de la page se lit dans ce temps, jamais de chargement rallongé pour elle.
 - Une animation par page, propre à la page (visage du 1 transformé).
 - Micro-animations seulement sur les gestes clés : candidature envoyée, réponse reçue, objectif atteint.
+- La séparation sous l'en-tête n'apparaît que quand le contenu défile dessous, en fondu bref de 250 ms (Material Design 3, barre du haut) ; sans fondu si l'appareil demande moins d'animations (WCAG 2.2, 2.3.3 ; Apple HIG, Mouvement).
 - Tout mouvement s'arrête si l'appareil demande moins d'animations.
 
 ## 7. Accessibilité (WCAG 2.2 niveau AA, obligatoire)
