@@ -133,11 +133,15 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   --field-5: 5.5rem;
   --header-max: 84rem;
 }
-p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li { max-width: var(--measure); }
+/* 75 caractères par ligne au plus, à toutes les tailles d'écran (§3, Baymard : 50 à 75 ; WCAG 1.4.8 : 80). Baymard
+   passe avant Material (40 à 60) dans l'ordre des références (§9) : 31 em partout. */
+p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li, .privacy-page li, .orp-month-lines li,
+.today-row-main, .application-row-main { max-width: var(--measure); }
 /* Un avis ou un pied de carte encadré garde la largeur de ses voisins ; le texte du pied de carte suit la mesure
    par sa marge de droite (son filet reste sur toute la largeur). */
 p.notice, p.settings-next-card { max-width: none; }
 p.settings-next-card { padding-right: max(0%, calc(100% - var(--measure))); }
+p.notice { padding-right: max(var(--space-4), calc(100% - var(--measure))); }
 .container { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); }
 
 /* --- Barre du haut : logo à gauche, liens centrés, bouton violet à droite --- */
@@ -3876,3 +3880,28 @@ main:focus { outline: none; }
   .orp-sheet-name input { width: var(--field-20); }
   input[type="number"] { width: var(--field-5); }
 }
+
+/* Réglages, sur ordinateur (1.6.35) : le modèle de réglages de Polaris (« App settings layout »). Pour chaque
+   réglage, le titre et sa description à gauche (2/7), les contrôles dans une carte à droite (5/7). Le titre et la
+   description flottent à gauche ; la carte est dessinée derrière les contrôles. Sur téléphone, rien ne change. */
+@media (min-width: 861px) {
+  .settings-card { --annotation: calc((100% - var(--space-8)) * 2 / 7 + var(--space-8)); background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
+  .settings-card > * + * { padding-top: 0; }
+  .settings-card .settings-numbers { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .settings-card .form-card fieldset { display: block; position: relative; isolation: isolate; padding: var(--space-6) 0; }
+  .settings-card .form-card fieldset::before { content: ""; position: absolute; inset: 0 0 0 var(--annotation); z-index: -1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .settings-card .form-card fieldset > legend { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: 0; }
+  .settings-card .form-card fieldset > legend + .setting-desc { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: var(--space-1) 0 0; }
+  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) { margin-left: calc(var(--annotation) + var(--space-6)); margin-right: var(--space-6); }
+  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) ~ :not(legend, legend + .setting-desc) { margin-top: var(--space-3); }
+  .settings-card .form-card > .form-actions { margin-left: var(--annotation); }
+  /* Plus de filets entre les réglages : chacun a sa carte, séparée par un espace. */
+  .settings-card.settings-card > * + *, .settings-card .settings-next-card { border-top: 0; }
+  .settings-card .form-card fieldset + fieldset { border-top: 0; margin-top: var(--space-6); }
+  .settings-card .settings-numbers fieldset + fieldset { margin-top: 0; }
+  /* Une note seule (la démo) et le récapitulatif de l'IA vont dans la colonne des cartes. */
+  .settings-card > p.hint, .settings-card .ai-spend { margin-left: var(--annotation); }
+  .settings-card > p.hint.settings-next-card { padding-right: 0; max-width: var(--measure); }
+  .settings-card .ai-layout { grid-template-columns: minmax(0, 1fr); }
+}
+

@@ -915,3 +915,41 @@ réserve le tiers de droite au contenu secondaire. Règle retenue (`docs/regles-
   sombre. **Relevé en passant, corrigé** : deux tests comptaient « hier » comme « maintenant moins 24 h » et ont échoué
   le soir du changement d'heure (25 octobre, en local et sur la CI en UTC) : celui des jours d'Offres fige maintenant
   son horloge en milieu de journée ; celui du rendez-vous tenu (serveur) prend la veille à 10 h, heure locale.
+
+## Écarts (1.6.35)
+
+Suite de la revue des références (25/10) : ce que les 1.6.31 et 1.6.32 n'avaient pas encore repris de Material
+Design 3 et de Polaris (`docs/regles-ui-ergonomie.md` §3). Figma d'abord (planches 1440 et 1920), puis le code. Le
+téléphone ne change pas.
+
+1. **Réglages, modèle de Polaris** (« App settings layout », grille 2fr / 5fr) : pour chaque réglage, le titre et la
+   description à gauche, les contrôles dans une carte à droite ; plus de filets entre les réglages ; la note de démo et
+   le récapitulatif de l'IA dans la colonne des cartes. En CSS seulement (le titre et la description flottent à
+   gauche, la carte est dessinée derrière les contrôles) : toutes les rubriques en profitent sans changer leur
+   balisage. Le sommaire des rubriques reste à gauche.
+2. **La mesure reste à 31 em** (75 caractères, Baymard) à toutes les tailles d'écran : un passage à 24 em sur
+   ordinateur (60 caractères, Material) a été annulé, Baymard passant avant Material (§9). La mesure s'étend aux lignes de liste, au mois en bref,
+   à la page des données personnelles et aux avis (leur cadre garde sa largeur, une marge droite limite le texte).
+3. **L'audit des règles** mesure le texte des Réglages par rapport à la carte de chaque réglage : la grande carte n'a
+   plus de cadre.
+4. **Figma** : Réglages recomposés (Recherche d'emploi, Agenda et extension, clair et sombre) ; les variables de
+   mesure de la 1.6.34 restent à 31 em (`measure` 496 px, `measure-small` 434 px, `measure-figure` 806 px sur
+   ordinateur et 682 px sur téléphone) ; les 8 écrans en 1920 sur la page
+   « Planche · 1920 ».
+
+- **Écart avec Polaris** : le titre et la description restent dans la rangée de leur carte ; quand ils sont plus hauts
+  que les contrôles (« Date limite de remise des preuves »), la carte s'allonge d'autant.
+- **Doublon évité** : la PR 344 refaisait d'abord ce que les 1.6.31 à 1.6.33 avaient déjà livré (références,
+  conteneur unique, tableau) ; remise à jour sur main, elle ne garde que la nouveauté (1.6.34 étant pris par une
+  autre PR, elle devient la 1.6.35).
+
+## Vérifié (1.6.35)
+
+- Captures avant/après (horloge figée) en **1440, 1920 et 390 px, clair et sombre** (496 captures, démo et compte
+  neuf) : changent en 1440 et 1920 les Réglages (le modèle Polaris) et les pages où la mesure resserre le texte ;
+  **en 390 px, aucune capture ne change**.
+- 75 caractères : la mesure de 31 em est celle de la 1.6.29 ; les captures de `docs/captures/1.6.35/` ont été prises
+  avec 24 em, avant l'annulation : la largeur du texte y est plus étroite que dans le code livré.
+- Figma et code côte à côte en 1440 et 1920, planches Figma, avant/après en sombre : `docs/captures/1.6.35/`.
+- 476 tests (deux de plus : le modèle des Réglages, la mesure), lint, types ; 5 tests de l'audit ; trois audits sans
+  défaut, démo et compte neuf, l'accessibilité aussi en sombre.
