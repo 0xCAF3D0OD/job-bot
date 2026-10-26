@@ -335,6 +335,8 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     expect(wrapper.find("#today-orp-title").text()).toBe("Mois ORP.");
     const card = wrapper.find("[data-test=orp-month]");
     expect(card.find("[data-test=month-count]").text()).toBe("Ce mois · 3 / 20");
+    // Sans la tuile du visage : le mois prend la place (1.6.51, choix de Kevin).
+    expect(card.find("[data-test=orp-face]").exists()).toBe(false);
     expect(card.find("[role=progressbar]").attributes("aria-valuenow")).toBe("3");
     expect(card.find(".orp-month-bar.continuous").exists()).toBe(true);
     expect(card.find("[data-test=month-left]").text()).toContain("Dans les temps");

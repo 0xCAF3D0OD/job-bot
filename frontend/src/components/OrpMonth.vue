@@ -10,7 +10,9 @@ import FaceTile from "./FaceTile.vue";
 // de 15, une barre continue) et une phrase dont le mot porte la couleur de l'humeur.
 // `compact` (docs/123 §2, S et U) : tout sur une ligne, la tuile, « Mois ORP · 6 / 10 », les
 // segments et le mot.
-const props = defineProps<{ title: string; count: number; target: number | null; month: string; sub?: string; compact?: boolean }>();
+// `noFace` (1.6.51) : sans la tuile du visage, quand le mois doit prendre toute la place
+// (« Mois ORP. » d'Aujourd'hui).
+const props = defineProps<{ title: string; count: number; target: number | null; month: string; sub?: string; compact?: boolean; noFace?: boolean }>();
 
 const SEGMENTS_MAX = 15;
 const pace = computed(() => orpPace(props.count, props.target, props.month));
@@ -26,7 +28,7 @@ const wink = pace.value?.state === "reached" && firstTime("orp-wink");
     class="orp-month compact"
   >
     <FaceTile
-      v-if="pace"
+      v-if="pace && !noFace"
       :mood="pace.mood"
       :act="pace.state === 'behind'"
       small
