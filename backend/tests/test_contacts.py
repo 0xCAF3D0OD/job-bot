@@ -1,7 +1,7 @@
 """Contacts dans l'entreprise (docs/31) : recherches, prises de contact, relance, Aujourd'hui."""
 
 from collections.abc import AsyncIterator
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
@@ -12,6 +12,7 @@ from sqlalchemy import select, text
 from jobbot.api.app import create_app
 from jobbot.contacts import message, service
 from jobbot.db.models import Application, Contact, LlmCall, Notification, Offer, ProfileChunk
+from jobbot.followups.service import local_today
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
@@ -70,11 +71,11 @@ async def test_searches_contacts_and_follow_up(api: AsyncClient, runtime: Runtim
         await session.flush()
         application = Application(
             offer_id=offer.id,
-            sent_at=date.today(),
+            sent_at=local_today(),
             method="electronique",
             company="Exemple SA",
             job_title="DevOps Engineer",
-            orp_month=f"{date.today():%Y-%m}",
+            orp_month=f"{local_today():%Y-%m}",
         )
         session.add(application)
         await session.flush()
@@ -88,7 +89,7 @@ async def test_searches_contacts_and_follow_up(api: AsyncClient, runtime: Runtim
     assert page["website"] == "https://www.exemple.ch" and page["contacts"] == []
 
     # Contact ajouté depuis l'offre : rattaché aussi à la candidature.
-    old = (date.today() - timedelta(days=8)).isoformat()
+    old = (local_today() - timedelta(days=8)).isoformat()
     created = (
         await api.post(
             "/api/contacts",
@@ -117,7 +118,7 @@ async def test_searches_contacts_and_follow_up(api: AsyncClient, runtime: Runtim
     # « A répondu » : plus rien à relancer.
     answered = await api.put(
         f"/api/contacts/{created['id']}",
-        json={**created, "answered_on": date.today().isoformat(), "note": "Appel jeudi"},
+        json={**created, "answered_on": local_today().isoformat(), "note": "Appel jeudi"},
     )
     assert answered.json()["note"] == "Appel jeudi"
     assert (await api.get("/api/today")).json()["contacts_to_follow_up"] == 0
@@ -151,7 +152,7 @@ async def test_message_never_sends_names(
                 name="Marie Dupont",
                 role="recruiter",
                 channel="linkedin_invite",
-                contacted_on=date.today(),
+                contacted_on=local_today(),
             )
         )
         offer_id = offer.id

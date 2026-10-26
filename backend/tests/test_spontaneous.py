@@ -1,7 +1,6 @@
 """Candidatures spontanées (docs/39) : créée sans annonce, jamais notée, ligne ORP habituelle."""
 
 from collections.abc import AsyncIterator
-from datetime import date
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -10,6 +9,7 @@ from sqlalchemy import text
 from jobbot.api.app import create_app
 from jobbot.db.models import Offer
 from jobbot.filtering.duplicates import group_duplicates
+from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.scoring import service as scoring
 from jobbot.settings import Settings
@@ -81,7 +81,7 @@ async def test_spontaneous_application(api: AsyncClient, runtime: Runtime) -> No
     # Envoyée : une candidature comme les autres, marquée « spontanée ».
     prefill = (await api.get(f"/api/offers/{offer_id}/application-prefill")).json()
     sent = await api.post(
-        "/api/applications", json={**prefill, "sent_at": date.today().isoformat()}
+        "/api/applications", json={**prefill, "sent_at": local_today().isoformat()}
     )
     assert sent.status_code in (200, 201)
     applications = (await api.get("/api/applications")).json()

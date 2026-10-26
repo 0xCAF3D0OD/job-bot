@@ -57,7 +57,8 @@ const application = {
   company: "Exemple SA",
   job_title: "Ingénieur DevOps",
   status: "entretien",
-  interview_at: "2026-10-06T09:00:00Z",
+  // Un entretien passé, quelle que soit la date du jour (pas une date écrite en dur).
+  interview_at: new Date(Date.now() - 20 * 86_400_000).toISOString(),
   orp_month: "2026-10",
   reminded_at: null,
   created_at: "2026-10-02T10:00:00Z",

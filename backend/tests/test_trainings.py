@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -20,6 +20,7 @@ from jobbot.db.models import (
     Training,
     TrainingMark,
 )
+from jobbot.followups.service import local_today
 from jobbot.llm.client import RawResult
 from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
@@ -354,7 +355,7 @@ async def test_funding_request_argument_status_and_reminder(rt: Runtime) -> None
                 select(TrainingMark).where(TrainingMark.training_id == cka["id"])
             )
             assert mark is not None
-            mark.funding_requested_at = date.today() - timedelta(days=15)
+            mark.funding_requested_at = local_today() - timedelta(days=15)
         assert await funding.notify_funding(rt) == 1
         assert await funding.notify_funding(rt) == 0
         async with rt.sessionmaker() as session:

@@ -13,7 +13,14 @@ from sqlalchemy import text
 from jobbot import accounts
 from jobbot.api.app import create_app
 from jobbot.auth import passwords
-from jobbot.auth.service import SESSION_MAX_AGE, Throttle, authenticate, create_session, token_hash
+from jobbot.auth.service import (
+    SESSION_MAX_AGE,
+    Throttle,
+    authenticate,
+    create_session,
+    session_limit,
+    token_hash,
+)
 from jobbot.core.extract import UnsupportedDocument, detect_type
 from jobbot.db.models import CalendarToken, ExtensionToken, Offer, OfferStatus, User, UserSession
 from jobbot.logos import service as logos
@@ -207,3 +214,13 @@ async def test_guest_typed_site_does_not_choose_the_common_logo(
         finally:
             await worker.dispose()
     assert not any("pirate.example" in url for url in requested)
+
+
+def test_session_limit_counts_real_time_across_the_clock_change() -> None:
+    # Connecté le 28 juillet à 15 h (heure d'été) : la session finit 90 jours plus tard en temps
+    # réel, le 26 octobre à 13 h UTC (14 h en hiver), pas à 15 h d'hiver (une heure de trop).
+    from zoneinfo import ZoneInfo
+
+    created = datetime(2026, 7, 28, 15, 0, tzinfo=ZoneInfo("Europe/Zurich"))
+    assert session_limit(created) == datetime(2026, 10, 26, 13, 0, tzinfo=UTC)
+    assert session_limit(created) - created == SESSION_MAX_AGE

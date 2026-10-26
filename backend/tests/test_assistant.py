@@ -18,6 +18,7 @@ from jobbot.db.models import (
     LlmCall,
     Offer,
 )
+from jobbot.followups.service import local_today
 from jobbot.llm.client import ChatTurn, RawResult
 from jobbot.llm.pricing import Usage
 from jobbot.runtime import Runtime
@@ -80,7 +81,7 @@ async def test_answer_with_tool_and_history(
     client: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch, llm: None
 ) -> None:
     await reset(runtime)
-    today = datetime.now(UTC).date()
+    today = local_today()
     async with runtime.sessionmaker.begin() as session:
         session.add(
             Application(
@@ -427,3 +428,7 @@ def test_guide_follows_the_pages() -> None:
         and "Relier ce navigateur" in service.INSTRUCTIONS
     )
     assert "Voir chez l'employeur" not in service.INSTRUCTIONS
+    # « Jour de repos », comme la page Aujourd'hui (règles §5, renommé dans l'interface en 1.6.26).
+    assert "assistant-v20" not in service.INSTRUCTIONS
+    assert "« Jour de repos »" in service.INSTRUCTIONS
+    assert "sans recherche" not in service.INSTRUCTIONS

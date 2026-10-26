@@ -1,7 +1,7 @@
 """Revue page par page (docs/43) : ce qui passe en tête d'Aujourd'hui."""
 
 from collections.abc import AsyncIterator
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 from jobbot.api.app import create_app
 from jobbot.db.models import Application
+from jobbot.followups.service import local_today
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
 
@@ -39,11 +40,11 @@ async def test_upcoming_interviews_come_first(api: AsyncClient, runtime: Runtime
         ]:
             session.add(
                 Application(
-                    sent_at=date.today() - timedelta(days=10),
+                    sent_at=local_today() - timedelta(days=10),
                     method="electronique",
                     company=company,
                     job_title="SRE",
-                    orp_month=f"{date.today():%Y-%m}",
+                    orp_month=f"{local_today():%Y-%m}",
                     status=status,
                     interview_at=at,
                 )
