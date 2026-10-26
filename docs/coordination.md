@@ -33,6 +33,7 @@ Partir de main à jour, et se remettre à jour juste avant d'ouvrir la PR. Une P
 | Mesure à 31 em partout (annuler les 24 em) | Design | `fix/1.6.31-polaris` | 1.6.35 | `style.css`, `docs/regles-ui-ergonomie.md`, Figma (variables `measure`) | fusionnée |
 | En-tête : sélection, bulles, ligne au défilement | Design | `fix/1.6.37-en-tete` | 1.6.37 | `App.vue`, `style.css`, `docs/interface.md`, Figma | fusionnée |
 | Règles §6, le mouvement | Design | `docs/regles-6-fondu` | 1.6.39 | `docs/regles-ui-ergonomie.md`, `changelog.d/1.6.39.md` | prévu (texte en attente de validation par Kevin) |
+| Boutons segmentés au style de l'en-tête (Bilan, Note des Offres) et règle §4 | Design | `fix/1.6.41-segmentes` | 1.6.41 | Figma (composants Segment et Sélecteur segmenté), `docs/regles-ui-ergonomie.md` (§4), `frontend/src/style.css` (règles `.segmented` et `.score-choice` seulement, aucun `.vue`), `changelog.d/1.6.41.md` | en cours (Figma d'abord) |
 | Micro-animations dans Figma : objectif ORP du mois atteint, réponse d'un employeur reçue, tri du jour terminé, étape des premiers pas franchie, premier entretien obtenu, bouton Assistant (visage → « Fermer ») ; « Candidature envoyée » existe déjà (modèle) | Design | — | — | Figma seulement (aucun fichier du dépôt) | prévu (en cours dès que Kevin valide le §6) |
 | « jour sans recherche » devient « jour de repos » partout (assistant, e-mails, notifications, serveur) | Pages | — | à réserver | à inscrire | prévu |
 | Expliquer la baisse des tests de 478 à 463 | Pages | — | à réserver | à inscrire | prévu |
