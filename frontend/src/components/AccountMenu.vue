@@ -3,7 +3,6 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { useAuth } from "../composables/useAuth";
-import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
 import { useCollect } from "../composables/useCollect";
 import { useProfiles } from "../composables/useProfiles";
 import AppIcon from "./AppIcon.vue";
@@ -16,15 +15,13 @@ const router = useRouter();
 const { me, logout } = useAuth();
 const { list, current, load, choose } = useProfiles();
 const { running, collectNow } = useCollect();
-// Dans la capsule (docs/91), le menu se déroule dans son cadre ; une chose ouverte à la fois.
-const { open, inCapsule } = useCapsuleZone("account");
+// Un bouton rond, sans capsule (1.6.46) : le menu s'ouvre sous lui.
+const open = ref(false);
 const root = ref<HTMLElement | null>(null);
 const trigger = ref<HTMLButtonElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 
 const initial = computed(() => me.value?.username?.trim().charAt(0).toUpperCase() ?? "");
-// Une page du menu ouverte : l'initiale est marquée comme active.
-const active = computed(() => ["/profil", "/reglages", "/tes-donnees"].some((path) => route.path.startsWith(path)));
 
 function onChange(event: Event): void {
   choose(Number((event.target as HTMLSelectElement).value));
@@ -49,7 +46,6 @@ async function toggle(): Promise<void> {
   open.value = !open.value;
   if (open.value) {
     await nextTick();
-    // Sans défilement : la capsule se déroule encore, la rangée du haut doit rester visible.
     items()[0]?.focus({ preventScroll: true });
   }
 }
@@ -100,14 +96,16 @@ onUnmounted(() => {
     ref="root"
     class="account-menu"
   >
+    <!-- L'initiale seule, dans un rond neutre (1.6.46) : ni nom, ni flèche, ni anneau (on le
+         confondait avec le focus). La légende reprend le nom accessible (WCAG 1.4.13). -->
     <button
       ref="trigger"
       type="button"
-      :class="['account-trigger', 'capsule-zone', { active }]"
-      data-capsule-zone="account"
+      class="header-round account-trigger"
       :aria-expanded="open"
       aria-haspopup="menu"
       :aria-label="me?.username ? `Compte : ${me.username}` : 'Compte'"
+      :data-label="me?.username ? `Compte : ${me.username}` : 'Compte'"
       data-test="account-menu"
       @click="toggle"
     >
@@ -120,120 +118,104 @@ onUnmounted(() => {
         v-else
         name="user"
       />
-      <!-- Le nom à côté de l'initiale, sur ordinateur (docs/109) : la capsule a sa largeur fixe. -->
-      <span
-        v-if="me?.username"
-        class="account-username"
-        aria-hidden="true"
-      >{{ me.username }}</span>
-      <AppIcon
-        name="chevron"
-        class="account-chevron"
-      />
     </button>
-    <Teleport
-      :to="CAPSULE_BODY"
-      defer
-      :disabled="!inCapsule"
+    <div
+      v-if="open"
+      ref="panel"
+      class="account-panel"
+      role="menu"
+      aria-label="Compte"
+      data-test="account-panel"
+      @keydown="onPanelKeydown"
     >
-      <div
-        v-if="open"
-        ref="panel"
-        class="account-panel"
-        role="menu"
-        aria-label="Compte"
-        data-test="account-panel"
-        @keydown="onPanelKeydown"
+      <p
+        v-if="me?.username"
+        class="account-name"
       >
-        <p
-          v-if="me?.username"
-          class="account-name"
+        Connecté : <strong>{{ me.username }}</strong>
+      </p>
+      <label
+        v-if="list && list.items.length > 1"
+        class="account-profile"
+      >Profil affiché
+        <select
+          :value="current?.id"
+          data-test="profile-switcher"
+          @change="onChange"
         >
-          Connecté : <strong>{{ me.username }}</strong>
-        </p>
-        <label
-          v-if="list && list.items.length > 1"
-          class="account-profile"
-        >Profil affiché
-          <select
-            :value="current?.id"
-            data-test="profile-switcher"
-            @change="onChange"
+          <option
+            v-for="profile in list.items"
+            :key="profile.id"
+            :value="profile.id"
           >
-            <option
-              v-for="profile in list.items"
-              :key="profile.id"
-              :value="profile.id"
-            >
-              {{ profile.name }} {{ profile.is_main ? "(principal)" : "(essai)" }}
-            </option>
-          </select>
-        </label>
-        <RouterLink
-          to="/profil"
-          role="menuitem"
-          data-test="account-profile"
-        >
-          <span class="with-icon"><AppIcon name="user" />Profil</span>
-        </RouterLink>
-        <RouterLink
-          to="/reglages"
-          role="menuitem"
-          data-test="account-settings"
-        >
-          <span class="with-icon"><AppIcon name="settings" />Réglages</span>
-        </RouterLink>
-        <RouterLink
-          to="/tes-donnees"
-          role="menuitem"
-          data-test="account-privacy"
-        >
-          <span class="with-icon"><AppIcon name="shield" />Données personnelles</span>
-        </RouterLink>
-        <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
-        <RouterLink
-          v-if="me?.is_owner || (me?.auth_enabled === false && !me?.demo)"
-          to="/reglages/diagnostic"
-          role="menuitem"
-          data-test="account-diagnostic"
-        >
-          <span class="with-icon"><AppIcon name="activity" />Diagnostic</span>
-        </RouterLink>
-        <!-- La démo ne collecte rien (docs/72). -->
-        <button
-          v-if="!me?.demo"
-          type="button"
-          class="link"
-          role="menuitem"
-          :disabled="running"
-          data-test="account-collect"
-          @click="collect"
-        >
-          <span class="with-icon"><AppIcon name="refresh" />Collecter maintenant</span>
-        </button>
-        <!-- Fermer son compte (docs/105) : mène à la confirmation, dans Réglages › Compte. Ni
+            {{ profile.name }} {{ profile.is_main ? "(principal)" : "(essai)" }}
+          </option>
+        </select>
+      </label>
+      <RouterLink
+        to="/profil"
+        role="menuitem"
+        data-test="account-profile"
+      >
+        <span class="with-icon"><AppIcon name="user" />Profil</span>
+      </RouterLink>
+      <RouterLink
+        to="/reglages"
+        role="menuitem"
+        data-test="account-settings"
+      >
+        <span class="with-icon"><AppIcon name="settings" />Réglages</span>
+      </RouterLink>
+      <RouterLink
+        to="/tes-donnees"
+        role="menuitem"
+        data-test="account-privacy"
+      >
+        <span class="with-icon"><AppIcon name="shield" />Données personnelles</span>
+      </RouterLink>
+      <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
+      <RouterLink
+        v-if="me?.is_owner || (me?.auth_enabled === false && !me?.demo)"
+        to="/reglages/diagnostic"
+        role="menuitem"
+        data-test="account-diagnostic"
+      >
+        <span class="with-icon"><AppIcon name="activity" />Diagnostic</span>
+      </RouterLink>
+      <!-- La démo ne collecte rien (docs/72). -->
+      <button
+        v-if="!me?.demo"
+        type="button"
+        class="link"
+        role="menuitem"
+        :disabled="running"
+        data-test="account-collect"
+        @click="collect"
+      >
+        <span class="with-icon"><AppIcon name="refresh" />Collecter maintenant</span>
+      </button>
+      <!-- Fermer son compte (docs/105) : mène à la confirmation, dans Réglages › Compte. Ni
              l'exploitant, ni la démo, ni sans connexion : ils ne peuvent pas le fermer. -->
-        <RouterLink
-          v-if="me?.auth_enabled && !me.is_owner && !me.demo"
-          :to="{ path: '/reglages', query: { rubrique: 'compte', fermer: '1' } }"
-          active-class=""
-          exact-active-class=""
-          role="menuitem"
-          data-test="account-close"
-        >
-          <span class="with-icon"><AppIcon name="close" />Fermer mon compte</span>
-        </RouterLink>
-        <button
-          v-if="me?.auth_enabled"
-          type="button"
-          class="link account-logout"
-          role="menuitem"
-          data-test="logout"
-          @click="signOut"
-        >
-          <span class="with-icon"><AppIcon name="logout" />Se déconnecter</span>
-        </button>
-      </div>
-    </Teleport>
+      <RouterLink
+        v-if="me?.auth_enabled && !me.is_owner && !me.demo"
+        :to="{ path: '/reglages', query: { rubrique: 'compte', fermer: '1' } }"
+        active-class=""
+        exact-active-class=""
+        role="menuitem"
+        data-test="account-close"
+      >
+        <span class="with-icon"><AppIcon name="close" />Fermer mon compte</span>
+      </RouterLink>
+      <button
+        v-if="me?.auth_enabled"
+        type="button"
+        class="link account-logout"
+        role="menuitem"
+        data-test="logout"
+        @click="signOut"
+      >
+        <span class="with-icon"><AppIcon name="logout" />Se déconnecter</span>
+      </button>
+    </div>
   </div>
 </template>

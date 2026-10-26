@@ -1,5 +1,6 @@
 # 129 — « À faire » rangé : une carte, un rôle (version 1.2.0)
 
+> **Remplacé par la revue 1.6.46** (2026-10-26) : Aujourd'hui en une colonne, le tri du jour sur une bande pleine largeur, « À faire aujourd'hui. » en liste de lignes, « Mois ORP. », « À retenir. » ; voir `docs/interface.md`, règle 17.
 > Statut : **validé** le 2026-10-22 (« oui pour tout »). Lu ainsi : les deux rangées (1), 3 lignes au plus (2), **la note** dans la ligne d'une offre à préparer (3 : la date à laquelle elle a été gardée n'est pas enregistrée, il faudrait une migration). Dis-le si une de ces lectures est fausse.
 > Origine : ta remarque du 22 octobre 2026 sur Aujourd'hui, « ce n'est pas très structuré, surtout la partie à faire, c'est pas bien rangé », avec une capture à 1440 px.
 
