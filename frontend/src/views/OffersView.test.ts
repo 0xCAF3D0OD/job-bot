@@ -1,5 +1,5 @@
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 import { createMemoryHistory, createRouter, type Router } from "vue-router";
 
 import { fromQuery, toQuery } from "../composables/useOfferFilters";
@@ -550,6 +550,13 @@ describe("tri « Dernière action »", () => {
 
 describe("Offres, revue des pages (docs/43)", () => {
   it("une ligne par jour, les offres sans leur date ; « Candidature spontanée » sur la ligne du nombre", async () => {
+    // Une horloge figée en milieu de journée : les jours sont rangés à l'heure de Zurich, et le soir du changement
+    // d'heure (ou une machine en UTC), « 24 h plus tôt » pouvait encore être aujourd'hui.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-14T10:00:00Z"));
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
     mockOffers(
       page([

@@ -216,9 +216,11 @@ async def test_what_was_agreed_updates_jobA1(client: AsyncClient, rt: Runtime) -
     refused = await client.put(f"/api/orp-meeting/{soon}/convenu", json={})
     assert refused.status_code == 409
     await client.delete("/api/orp-meeting")
+    # Hier à 10 h, heure locale : « maintenant moins 24 h » tombe encore aujourd'hui
+    # le soir du changement d'heure.
     held = await _meeting_at(
         rt,
-        NOW - timedelta(days=1),
+        datetime.combine(TODAY - timedelta(days=1), datetime.min.time(), LOCAL_TZ).replace(hour=10),
         place="ORP de Lausanne",
         questions=[{"key": "measure", "text": "Une mesure ?", "checked": True}],
     )

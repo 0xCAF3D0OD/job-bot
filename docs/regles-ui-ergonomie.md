@@ -68,8 +68,17 @@ Largeurs, sur ordinateur (1.6.29) :
 - **Le texte courant et les phrases de conclusion** : **75 caractères** par ligne au plus (`--measure`, GOV.UK Layout ;
   WCAG 2.2, 1.4.8, niveau AAA visé : 80 au plus). `--measure` vaut 31 em (496 px à 16 px) : mesuré sur toutes les
   pages, aucune ligne n'y dépasse 75 caractères ; un `ch` ne suffit pas, il est plus large que la lettre moyenne.
-- **Une liste courte** (à relancer, à déclarer, les alertes) tient dans la **colonne des deux tiers** (680 px,
-  `--column-two-thirds`), pour que l'action reste près du nom.
+- **Une colonne des deux tiers** (1.6.30) : sur **Suivi, Alertes et Rendez-vous**, tout le contenu tient dans une seule
+  colonne des deux tiers (`--column-two-thirds`), alignée à gauche avec le titre de la page et les onglets, **même
+  largeur de haut en bas** ; le tiers de droite reste vide. GOV.UK Layout : « le contenu principal doit toujours être
+  dans une colonne des deux tiers », le tiers de droite étant réservé au contenu secondaire ; l'objectif ORP et les
+  preuves sont du contenu principal (§1). Nielsen Norman Group : la page se parcourt par la gauche, le contenu le plus
+  informatif y va, et un alignement vertical se lit mieux. Le défaut à éviter : deux largeurs l'une sous l'autre.
+  Ordre par importance (§1). Suivi : la conclusion ; le mois (navigation, objectif et progression, « Ajouter », ⋯) ;
+  les preuves à compléter ; à relancer ; à déclarer ; le détail. Alertes : la conclusion ; les alertes ; le détail.
+  Exception : le calendrier du Suivi, ouvert, prend la largeur de la page (une grille de 7 colonnes). Premiers pas
+  (Alertes) garde sa pleine largeur.
+- **Jamais de « … »** dans une ligne de liste sur ordinateur : le texte passe à la ligne.
 - **Les boutons** : la largeur de leur texte sur ordinateur ; toute la largeur seulement sous le point de rupture du
   téléphone (820 px) (NHS Design System ; loi de Fitts : sur téléphone, une cible pleine largeur ; sur ordinateur, une
   cible proche de ce qu'elle concerne).
