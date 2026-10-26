@@ -57,6 +57,7 @@ Ordre fixe, de haut en bas :
 
 Règles :
 - Au plus une action principale par écran. Les autres actions sont secondaires (bouton contour ou lien).
+- Bande d'action (1.6.48) : une bande accent pleine largeur sous la conclusion, avec une carte posée dessus qui rend explicite l'action la plus importante de la page et porte sa seule action principale. Une seule bande par page. Elle n'apparaît que s'il y a quelque chose à faire.
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
 - Les listes longues se replient au-delà de 3 éléments (« Tout voir »).
 
