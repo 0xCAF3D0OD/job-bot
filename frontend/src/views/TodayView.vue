@@ -393,6 +393,7 @@ const { me } = useAuth();
             :target="today.month_target ?? null"
             :month="today.month"
             compact
+            no-face
           />
           <RhythmCard
             v-if="today.rhythm && !starting"
