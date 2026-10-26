@@ -3905,3 +3905,41 @@ main:focus { outline: none; }
   .settings-card .ai-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
+
+/* --- En-tête sur ordinateur (1.6.37, planche Figma « Planche · En-tête ») ---
+   Deux bulles au même style, le menu et le compte (NN/g, cohérence) ; le logo reste hors des bulles
+   (NN/g, région commune). Une bulle fait --control-h + 2 × --space-1 (48 px) : la bordure de 1 px est
+   prise sur la marge intérieure, comme le trait intérieur de Figma. L'en-tête garde sa hauteur
+   (NN/g, en-têtes fixes : le moins de place possible). */
+@media (min-width: 821px) {
+  .topbar-inner { padding-block: var(--space-3); }
+  .topbar .nav {
+    gap: var(--space-2);
+    padding: calc(var(--space-1) - 1px) calc(var(--space-2) - 1px);
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+  }
+  .topbar nav.main-nav { display: flex; justify-content: center; }
+  .topbar .nav a {
+    display: inline-flex; align-items: center; height: var(--control-h); padding: 0 var(--space-5);
+    border: 0; border-radius: var(--radius-pill); color: var(--muted); font-weight: var(--weight-regular);
+    transition: background-color 150ms;
+  }
+  /* Survol : une couche neutre à 8 %, sans accent (Material 3, couches d'état) ; seul l'onglet actif
+     a la pastille accent et le texte en 600 (WCAG 1.4.1 : jamais la couleur seule). */
+  .topbar .nav a:hover:not(.router-link-active) { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); }
+  .topbar .nav a.router-link-active { background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-semibold); }
+  .topbar .nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* La bulle du compte reçoit exactement les mêmes marges. */
+  .capsule-row { box-sizing: content-box; height: var(--control-h); padding: calc(var(--space-1) - 1px) calc(var(--space-2) - 1px); gap: var(--space-2); }
+  .capsule .capsule-zone { height: var(--control-h); padding: 0 var(--space-5); border-radius: var(--radius-pill); transition: background-color 150ms, color 150ms; }
+  .capsule .capsule-zone:hover, .capsule .capsule-zone[aria-expanded="true"] { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .capsule .bell-button { padding-right: var(--space-5); }
+  .capsule-sep { margin: var(--space-2) 0; }
+  /* La ligne du bas : absente en haut de page, elle revient dès que le contenu passe sous l'en-tête
+     (Material 3, barre du haut : un changement quand le contenu défile derrière). */
+  .topbar { border-bottom-color: transparent; transition: border-bottom-color 250ms; }
+  .topbar.scrolled { border-bottom-color: var(--border); }
+}
+@media (min-width: 821px) and (prefers-reduced-motion: reduce) {
+  .topbar, .topbar .nav a, .capsule .capsule-zone { transition: none; }
+}

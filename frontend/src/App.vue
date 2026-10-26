@@ -73,14 +73,23 @@ function onDemoRefused(event: Event): void {
   demoRefused.value = String((event as CustomEvent<string>).detail || "Dans la démo, rien n'est enregistré.");
 }
 
+// La ligne du bas de l'en-tête (1.6.37) : seulement quand le contenu défile sous l'en-tête fixe.
+const scrolled = ref(false);
+function onScroll(): void {
+  scrolled.value = window.scrollY > 0;
+}
+
 onMounted(async () => {
   window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   window.addEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
   await load();
 });
 onUnmounted(() => {
   window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   window.removeEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
+  window.removeEventListener("scroll", onScroll);
 });
 </script>
 
@@ -95,7 +104,7 @@ onUnmounted(() => {
   >Aller au contenu</a>
   <header
     v-if="!route.meta.bare"
-    :class="['topbar', { 'has-burger': loggedIn }]"
+    :class="['topbar', { 'has-burger': loggedIn, scrolled }]"
   >
     <div class="topbar-inner">
       <RouterLink
