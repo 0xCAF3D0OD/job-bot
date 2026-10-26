@@ -60,33 +60,27 @@ Règles :
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
 - Les listes longues se replient au-delà de 3 éléments (« Tout voir »).
 
-Largeurs, sur ordinateur (1.6.29) :
-- **La page** : contenu centré, largeur maximale de **1 020 px** (`--page-max`), marges comprises (GOV.UK Layout).
-  Seule exception : **Candidatures › Offres**, avec ses trois colonnes (filtres, liste, détail), garde **1 280 px**
-  (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px, la largeur d'un téléphone ; à
-  1 280 px, ils ont environ 460 px, assez pour une ligne de détail lisible (une soixantaine de caractères).
-- **Le texte courant et les phrases de conclusion** : **75 caractères** par ligne au plus (`--measure`, GOV.UK Layout ;
-  WCAG 2.2, 1.4.8, niveau AAA visé : 80 au plus). `--measure` vaut 31 em (496 px à 16 px) : mesuré sur toutes les
-  pages, aucune ligne n'y dépasse 75 caractères ; un `ch` ne suffit pas, il est plus large que la lettre moyenne.
-- **Une colonne des deux tiers** (1.6.30) : sur **Suivi, Alertes et Rendez-vous**, tout le contenu tient dans une seule
-  colonne des deux tiers (`--column-two-thirds`), alignée à gauche avec le titre de la page et les onglets, **même
-  largeur de haut en bas** ; le tiers de droite reste vide. GOV.UK Layout : « le contenu principal doit toujours être
-  dans une colonne des deux tiers », le tiers de droite étant réservé au contenu secondaire ; l'objectif ORP et les
-  preuves sont du contenu principal (§1). Nielsen Norman Group : la page se parcourt par la gauche, le contenu le plus
-  informatif y va, et un alignement vertical se lit mieux. Le défaut à éviter : deux largeurs l'une sous l'autre.
-  Ordre par importance (§1). Suivi : la conclusion ; le mois (navigation, objectif et progression, « Ajouter », ⋯) ;
-  les preuves à compléter ; à relancer ; à déclarer ; le détail. Alertes : la conclusion ; les alertes ; le détail.
-  Exception : le calendrier du Suivi, ouvert, prend la largeur de la page (une grille de 7 colonnes). Premiers pas
-  (Alertes) garde sa pleine largeur.
-- **Jamais de « … »** dans une ligne de liste sur ordinateur : le texte passe à la ligne.
-- **Les boutons** : la largeur de leur texte sur ordinateur ; toute la largeur seulement sous le point de rupture du
-  téléphone (820 px) (NHS Design System ; loi de Fitts : sur téléphone, une cible pleine largeur ; sur ordinateur, une
-  cible proche de ce qu'elle concerne).
-- **Les champs** : une largeur selon le contenu prévu (GOV.UK Text input) : **nom 20 caractères** (`--field-20`),
-  **lieu 30 caractères** (`--field-30`), **date et heure à leur taille naturelle** ; les nombres courts (objectif, note
-  sur 100, jour du mois) à 5 caractères (`--field-5`) ; **la recherche peut rester fluide**.
-- **Les listes** : le statut ou l'action reste **près du texte** qu'il concerne (loi de proximité) ; aucune ligne de liste
-  ne dépasse la largeur maximale de la page.
+Largeurs, sur ordinateur (1.6.31, selon Material Design 3 et Shopify Polaris) :
+- **Pages de données** (Aujourd'hui, Suivi, Alertes, Rendez-vous, Bilan) : la largeur « large » de Polaris (Page,
+  `inlineSize="large"` : pour les vues de données denses), **un seul conteneur de 1 020 px** (`--page-max`, marges
+  comprises), centré ; **chaque bloc prend toute sa largeur**. Pas de colonne des deux tiers : une seule largeur de
+  haut en bas (le défaut de la 1.6.29 était deux largeurs l'une sous l'autre).
+- **Offres et le détail d'une offre** : des panneaux **liste et détail** (Material 3, mise en page canonique
+  « list-detail » ; Polaris, mise en page à deux colonnes), à **1 280 px** (`--page-wide`) : à 1 020 px, la liste et
+  le détail n'auraient chacun que 338 px.
+- **Réglages** : le modèle de réglages de Polaris (« App settings layout ») : pour chaque groupe, **le titre et sa
+  description à gauche, le formulaire dans une carte à droite** (grille 2fr / 5fr de Polaris). Le sommaire des
+  rubriques reste à gauche de la page. Sur téléphone, une seule colonne : le titre, puis la carte.
+- **Le texte** : **60 caractères par ligne au plus** (`--measure`, Material Design, typographie : 40 à 60 caractères
+  pour le texte courant). Mesuré sur toutes les pages : un `ch` ne suffit pas, il est plus large que la lettre moyenne.
+- **Les boutons et les champs à la taille de leur contenu** (Material 3 : un bouton épouse son libellé, un champ
+  reflète la longueur attendue ; Polaris, TextField) : nom 20 caractères (`--field-20`), lieu 30 (`--field-30`),
+  nombre court 5 (`--field-5`), date et heure à leur taille naturelle ; la recherche reste fluide. Toute la largeur
+  seulement sous le point de rupture du téléphone (820 px) (NN/g et loi de Fitts : une grande cible sur écran tactile).
+- **Les tableaux** tiennent dans leur carte, **sans débordement** (WCAG 2.2, 1.4.10 Reflow) : les colonnes se
+  resserrent et le texte passe à la ligne.
+- **Les lignes de liste** : le statut ou l'action reste près du texte qu'il concerne (NN/g, loi de proximité) ; le
+  texte **passe à la ligne, jamais de « … »**.
 
 ## 4. Composants (seuls autorisés)
 
@@ -159,13 +153,14 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 
 | Référence | Usage |
 |---|---|
-| Nielsen Norman Group (nngroup.com) | Navigation, architecture de l'information, heuristiques |
-| W3C WCAG 2.2 AA | Accessibilité, norme en vigueur |
-| Design System de la Confédération (github.com/swiss/designsystem) | Repères familiers aux utilisateurs suisses |
-| GOV.UK Design System | Parcours en étapes, formulaires, messages d'erreur ; Layout (largeur de page de 1 020 px, colonne des deux tiers, lignes de 75 caractères) ; Text input (champs à la taille du contenu prévu, en caractères) |
-| NHS Design System (basé sur GOV.UK) | Boutons pleine largeur sur téléphone seulement |
-| W3C WCAG 2.2, 1.4.8 (AAA, visé) | 80 caractères par ligne au plus |
+| Material Design 3 (m3.material.io) | Mise en page canonique liste et détail ; typographie (40 à 60 caractères par ligne) ; boutons et champs à la taille de leur contenu |
+| Shopify Polaris (polaris.shopify.com) | Largeur des pages (« large » pour les vues de données) ; modèle de réglages (titre et description à gauche, carte à droite) ; panneaux à deux colonnes |
+| W3C WCAG 2.2 AA | Accessibilité, norme en vigueur ; 1.4.10 Reflow (pas de défilement horizontal) |
+| ISO 9241 (110, 112, 125) | Principes de dialogue, présentation de l'information, présentation visuelle |
+| Nielsen Norman Group (nngroup.com) | Navigation, architecture de l'information, heuristiques ; lecture par la gauche |
 | Laws of UX (lawsofux.com) | Hick, Jakob, Fitts ; proximité (l'action près de ce qu'elle concerne) |
+| Design System de la Confédération (github.com/swiss/designsystem) | Repères familiers aux utilisateurs suisses |
+| GOV.UK Design System | Parcours en étapes et messages d'erreur seulement : plus pour la mise en page (1.6.31), faite pour des démarches publiques, pas pour une application |
 
 On reprend les principes, jamais l'apparence. Toute proposition cite la règle ou la référence qui la justifie.
 

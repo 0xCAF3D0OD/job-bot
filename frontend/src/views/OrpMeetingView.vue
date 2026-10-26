@@ -220,7 +220,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <section class="jobs-body orp-meeting two-thirds">
+  <section class="jobs-body orp-meeting">
     <p
       v-if="failed"
       class="notice error"

@@ -118,29 +118,30 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 .muted { color: var(--muted); margin: 0; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
 
-/* Largeurs (1.6.29, regles-ui-ergonomie §3). La page : 1 020 px (GOV.UK Layout), sauf
-   Candidatures › Offres et ses trois colonnes, à 1 280 px. La colonne des deux tiers pour une liste
-   courte (loi de proximité) ; depuis la 1.6.30, 648 px : les deux tiers du contenu (972 px), la seule colonne de
-   Suivi, Alertes et Rendez-vous. La mesure : 31 em, soit 496 px à 16 px ; mesuré sur toutes les pages,
-   aucune ligne n'y dépasse 75 caractères, quelle que soit la taille du texte (GOV.UK : 75 au plus ;
-   WCAG 2.2, 1.4.8 : 80). Un « ch » ne suffit pas : il est plus large que la lettre moyenne.
-   Les champs à la taille du contenu prévu (GOV.UK Text input) : un nom 20 caractères, un lieu
-   30, un nombre court 5. Le bandeau du haut garde sa propre largeur, plus grande. */
+/* Largeurs (1.6.31, regles-ui-ergonomie §3, selon Material Design 3 et Shopify Polaris). Les pages de
+   données : la largeur « large » de Polaris, un seul conteneur de 1 020 px, chaque bloc sur toute sa largeur.
+   Offres et le détail d'une offre : liste et détail (Material 3, « list-detail » ; Polaris) à 1 280 px.
+   La mesure : 60 caractères par ligne au plus (Material, typographie : 40 à 60) ; en em, mesuré sur toutes les
+   pages (un « ch » est plus large que la lettre moyenne). Les champs à la taille de leur contenu (Material 3,
+   Polaris) : un nom 20 caractères, un lieu 30, un nombre court 5. Le bandeau du haut garde sa propre largeur. */
 :root {
   --page-max: 1020px;
   --page-wide: 80rem;
-  --column-two-thirds: 648px;
   --measure: 31em;
   --field-20: 13rem;
   --field-30: 18rem;
   --field-5: 5.5rem;
   --header-max: 84rem;
 }
-p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li { max-width: var(--measure); }
+/* 60 caractères sur ordinateur (Material) ; sur téléphone, la largeur de l'écran les limite déjà et rien ne change. */
+@media (min-width: 821px) { :root { --measure: 24em; } }
+p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li, .privacy-page li, .orp-month-lines li,
+.today-row-main, .application-row-main { max-width: var(--measure); }
 /* Un avis ou un pied de carte encadré garde la largeur de ses voisins ; le texte du pied de carte suit la mesure
    par sa marge de droite (son filet reste sur toute la largeur). */
 p.notice, p.settings-next-card { max-width: none; }
 p.settings-next-card { padding-right: max(0%, calc(100% - var(--measure))); }
+p.notice { padding-right: max(var(--space-4), calc(100% - var(--measure))); }
 .container { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); }
 
 /* --- Barre du haut : logo à gauche, liens centrés, bouton violet à droite --- */
@@ -3872,13 +3873,6 @@ main:focus { outline: none; }
    - Les semaines du Bilan : plage, compte et état groupés à gauche, alignés d'une ligne à l'autre.
    - Les champs à la taille du contenu prévu (GOV.UK Text input). */
 @media (min-width: 821px) {
-  /* Suivi, Alertes et Rendez-vous (1.6.30) : tout dans une seule colonne des deux tiers, alignée à gauche avec le
-     titre et les onglets, même largeur de haut en bas (GOV.UK Layout ; NN/g). Le calendrier ouvert prend la largeur
-     de la page : une grille de 7 colonnes. */
-  .jobs-body.two-thirds > :not(.suivi-detail), .suivi-detail > * { max-width: var(--column-two-thirds); }
-  .suivi-detail > .disclosure.open:has(.suivi-calendar) { max-width: none; }
-  /* Le mois tient sur une ligne dans la colonne, comme dans Figma : l'objectif se resserre. */
-  .jobs-body.two-thirds .month-goal { min-width: 0; }
   /* Jamais de « … » dans une ligne de liste : le texte passe à la ligne. */
   .today-row-main strong, .today-row-line, .application-row-main strong { white-space: normal; overflow: visible; overflow-wrap: break-word; }
   .pick-actions { display: flex; flex-wrap: wrap; }
@@ -3896,4 +3890,37 @@ main:focus { outline: none; }
   .orp-meeting-form > .form-actions { flex-basis: 100%; }
   .orp-sheet-name input { width: var(--field-20); }
   input[type="number"] { width: var(--field-5); }
+}
+
+/* Réglages, sur ordinateur (1.6.31) : le modèle de réglages de Polaris (« App settings layout »). Pour chaque
+   réglage, le titre et sa description à gauche (2/7), les contrôles dans une carte à droite (5/7). Le titre et la
+   description flottent à gauche ; la carte est dessinée derrière les contrôles. Sur téléphone, rien ne change. */
+@media (min-width: 861px) {
+  .settings-card { --annotation: calc((100% - var(--space-8)) * 2 / 7 + var(--space-8)); background: none; border: 0; padding: 0; display: grid; gap: var(--space-6); }
+  .settings-card > * + * { padding-top: 0; }
+  .settings-card .settings-numbers { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .settings-card .form-card fieldset { display: block; position: relative; isolation: isolate; padding: var(--space-6) 0; }
+  .settings-card .form-card fieldset::before { content: ""; position: absolute; inset: 0 0 0 var(--annotation); z-index: -1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+  .settings-card .form-card fieldset > legend { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: 0; }
+  .settings-card .form-card fieldset > legend + .setting-desc { float: left; clear: left; width: calc(var(--annotation) - var(--space-8)); margin: var(--space-1) 0 0; }
+  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) { margin-left: calc(var(--annotation) + var(--space-6)); margin-right: var(--space-6); }
+  .settings-card .form-card fieldset > :not(legend, legend + .setting-desc) ~ :not(legend, legend + .setting-desc) { margin-top: var(--space-3); }
+  .settings-card .form-card > .form-actions { margin-left: var(--annotation); }
+  /* Plus de filets entre les réglages : chacun a sa carte, séparée par un espace. */
+  .settings-card.settings-card > * + *, .settings-card .settings-next-card { border-top: 0; }
+  .settings-card .form-card fieldset + fieldset { border-top: 0; margin-top: var(--space-6); }
+  .settings-card .settings-numbers fieldset + fieldset { margin-top: 0; }
+  /* Une note seule (la démo) et le récapitulatif de l'IA vont dans la colonne des cartes. */
+  .settings-card > p.hint, .settings-card .ai-spend { margin-left: var(--annotation); }
+  .settings-card > p.hint.settings-next-card { padding-right: 0; max-width: var(--measure); }
+  .settings-card .ai-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Le tableau « Toutes les candidatures » tient dans sa carte (WCAG 2.2, 1.4.10) : sur ordinateur, des colonnes
+   fixes et le texte qui passe à la ligne, plus de débordement à droite (1.6.31). */
+@media (min-width: 821px) {
+  .suivi-detail .runs { table-layout: fixed; }
+  .suivi-detail .runs th:last-child { width: calc(var(--control-h) + var(--space-8)); }
+  .suivi-detail .runs td { overflow-wrap: break-word; }
+  .suivi-detail .runs .status-select { max-width: 100%; }
 }

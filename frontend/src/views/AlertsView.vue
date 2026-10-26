@@ -67,7 +67,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <section :class="['jobs-body', { 'two-thirds': view === 'summary' }]">
+  <section class="jobs-body">
     <div
       v-if="page?.to_confirm?.length"
       class="notice to-confirm"

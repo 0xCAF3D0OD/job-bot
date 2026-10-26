@@ -396,7 +396,7 @@ onUnmounted(() => assistant.setFocus(null));
 </script>
 
 <template>
-  <section class="jobs-body two-thirds">
+  <section class="jobs-body">
     <template v-if="orp">
       <!-- La conclusion d'abord (règles §3.2 ; annexe de l'audit : Suivi trop chargé). -->
       <p

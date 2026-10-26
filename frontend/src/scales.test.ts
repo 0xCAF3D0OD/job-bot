@@ -111,8 +111,9 @@ describe("Le garde-fou des échelles (docs/135, 1.6.12)", () => {
     }
     expect(width(".offers-page")).toContain("var(--page-wide)");
     expect(width(".jobs-head.wide")).toContain("var(--page-wide)");
-    // 1.6.30 : Suivi, Alertes et Rendez-vous dans une seule colonne des deux tiers.
-    expect(css.some(([sel, body]) => sel.includes(".jobs-body.two-thirds") && /max-width:\s*var\(--column-two-thirds\)/.test(body))).toBe(true);
+    // 1.6.31 (Polaris) : plus de colonne des deux tiers ; les Réglages en titre à gauche (2/7), carte à droite.
+    expect(css.some(([sel]) => sel.includes("two-thirds"))).toBe(false);
+    expect(css.some(([sel, body]) => sel === ".settings-card" && /--annotation:\s*calc\(\(100% - var\(--space-8\)\) \* 2 \/ 7/.test(body))).toBe(true);
     expect(css.some(([sel, body]) => sel === ":root" && /--page-max:\s*1020px/.test(body))).toBe(true);
     // Plus d'ancienne variable ni de largeur de page en dur.
     const all = styleFiles(SRC).map((file) => readFileSync(file, "utf8")).join("\n");

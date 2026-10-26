@@ -909,3 +909,46 @@ réserve le tiers de droite au contenu secondaire. Règle retenue (`docs/regles-
   sombre. **Relevé en passant, corrigé** : deux tests comptaient « hier » comme « maintenant moins 24 h » et ont échoué
   le soir du changement d'heure (25 octobre, en local et sur la CI en UTC) : celui des jours d'Offres fige maintenant
   son horloge en milieu de journée ; celui du rendez-vous tenu (serveur) prend la veille à 10 h, heure locale.
+
+## Écarts (1.6.31)
+
+Changement de références pour la mise en page (25/10) : GOV.UK est fait pour des démarches publiques, pas pour une
+application. Références (`docs/regles-ui-ergonomie.md` §9) : Material Design 3 et Shopify Polaris d'abord, puis
+WCAG 2.2 AA, ISO 9241 et Nielsen Norman Group ; GOV.UK, USWDS et DSFR ne servent plus à la mise en page. Règles (§3)
+puis Figma (planche en 1440 et 1920), puis le code. Le téléphone ne change pas.
+
+1. **Pages de données** (Aujourd'hui, Suivi, Alertes, Rendez-vous, Bilan) : la largeur « large » de Polaris (Page,
+   `inlineSize="large"`, pour les vues de données) : un seul conteneur de 1 020 px, chaque bloc sur toute sa largeur.
+   La colonne des deux tiers de la 1.6.30 et `--column-two-thirds` disparaissent (code et Figma).
+2. **Offres et le détail d'une offre** : liste et détail (Material 3, mise en page canonique « list-detail » ;
+   Polaris, deux colonnes) à 1 280 px, inchangé.
+3. **Réglages** : le modèle de réglages de Polaris (« App settings layout », grille 2fr / 5fr) : pour chaque réglage,
+   le titre et la description à gauche, les contrôles dans une carte à droite ; plus de filets entre les réglages.
+   En CSS seulement (le titre et la description flottent à gauche, la carte est dessinée derrière les contrôles) :
+   toutes les rubriques en profitent sans changer leur balisage. Le sommaire des rubriques reste à gauche.
+4. **60 caractères par ligne** (Material, typographie : 40 à 60) : `--measure` passe de 31 à 24 em sur ordinateur
+   (sur téléphone, la largeur de l'écran limite déjà les lignes : 31 em, rien ne change en 390 px) ; aussi les
+   lignes de liste, les lignes du mois en bref, la page des données personnelles et les avis (leur cadre garde sa
+   largeur, une marge droite limite le texte). Figma suit (384 px).
+5. **Le tableau « Toutes les candidatures »** tient dans sa carte (WCAG 2.2, 1.4.10) : des colonnes fixes sur
+   ordinateur, le texte passe à la ligne ; il débordait à droite (la colonne ⋯ sortait de la carte).
+6. **Figma** : les écrans en 1920 réunis sur la page « Planche · 1920 » ; les annotations citent Polaris et
+   Material 3 au lieu de GOV.UK et NHS.
+
+- **Écart avec Polaris** : le titre et la description restent dans la rangée de leur carte ; quand ils sont plus hauts
+  que les contrôles (« Date limite de remise des preuves »), la carte s'allonge d'autant.
+- **Audit des règles** : la grande carte des Réglages n'a plus de cadre ; l'audit mesure maintenant le texte par
+  rapport à la carte de chaque réglage (dessinée derrière ses contrôles).
+
+## Vérifié (1.6.31)
+
+- Captures avant/après (horloge figée) en **1440, 1920 et 390 px, clair et sombre** (496 captures, démo et compte
+  neuf) : changent en 1440 et 1920 le Suivi, les Alertes, le Rendez-vous, les Réglages, les pages de texte (la mesure)
+  et Aujourd'hui (les lignes de liste). **En 390 px, rien ne change** : deux captures sombres de la démo différaient,
+  la capture « avant » était fausse (le même paragraphe, recapturé depuis main, a la même largeur et les mêmes
+  lignes que le nouveau code).
+- 60 caractères : aucune ligne au-delà, sur toutes les pages, en 1440 et 1920, démo et compte neuf (hors lignes de
+  liste, où la mesure compte l'initiale et l'action avec le texte : le texte seul y fait moins de 60 caractères).
+- Figma et code côte à côte en 1440 et 1920, planches Figma, avant/après en sombre : `docs/captures/1.6.31/`.
+- 468 tests, lint, types ; 5 tests de l'audit ; trois audits sans défaut, démo et compte neuf, l'accessibilité aussi en
+  sombre.

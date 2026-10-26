@@ -93,8 +93,23 @@ AUDIT = r"""(maxWords) => {
   // Le texte à au moins 1,25 rem (20 px) du bord de sa carte ; la carte la plus extérieure.
   const cards = [...main.querySelectorAll('.dash-card, .form-card, .settings-card, .disclosure, .training-tile, .alerts-summary')]
     .filter((c) => vis(c) && !c.parentElement.closest('.dash-card, .form-card, .settings-card, .disclosure, .training-tile'));
+  // Réglages sur ordinateur (1.6.31, modèle Polaris) : la grande carte n'a plus de cadre ; chaque réglage a sa
+  // carte, dessinée derrière ses contrôles (::before). C'est elle qui compte.
+  const boxOf = new Map();
+  for (const c of [...cards]) {
+    const s = getComputedStyle(c);
+    if (!c.matches('.settings-card') || parseFloat(s.borderTopWidth) > 0 || s.backgroundColor !== 'rgba(0, 0, 0, 0)') continue;
+    cards.splice(cards.indexOf(c), 1);
+    for (const f of c.querySelectorAll('fieldset')) {
+      const b = getComputedStyle(f, '::before');
+      if (!vis(f) || b.content === 'none') continue;
+      const r = f.getBoundingClientRect();
+      boxOf.set(f, { left: r.left + parseFloat(b.left), right: r.right - parseFloat(b.right), top: r.top, bottom: r.bottom });
+      cards.push(f);
+    }
+  }
   for (const c of cards) {
-    const box = c.getBoundingClientRect();
+    const box = boxOf.get(c) ?? c.getBoundingClientRect();
     const walker = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
     let worst = Infinity;
     while (walker.nextNode()) {
