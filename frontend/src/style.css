@@ -3907,3 +3907,24 @@ main:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) { .header-round::after { transition: none; } }
 /* Le menu s'ouvre sous son bouton. */
 .bell-panel, .account-panel { top: calc(var(--control-h) + var(--space-2)); }
+
+/* --- La bande d'action (§3, 1.6.48 ; composant ActionBand, 1.6.49) ---
+   Pleine largeur sous la conclusion, fond --accent-band ; la carte posée dessus garde les bords de la page.
+   Sur ordinateur, le texte à gauche et l'action à droite ; sur téléphone, l'un sous l'autre. */
+.action-band {
+  margin-inline: calc(50% - 50vw); padding: var(--space-8) max(var(--space-4), calc(50vw - 50%));
+  background: var(--accent-band);
+}
+.action-band-card {
+  display: flex; align-items: center; gap: var(--space-8);
+  padding: var(--space-8); border-radius: var(--radius); background: var(--surface); box-shadow: var(--lift);
+}
+.action-band-body { display: grid; gap: var(--space-3); flex: 1; min-width: 0; }
+.action-band-title { margin: 0; font-size: var(--font-page); font-weight: var(--weight-bold); line-height: var(--leading-tight); color: var(--text); }
+.action-band-summary { margin: 0; color: var(--muted); max-width: var(--measure); }
+.action-band-action { flex: none; }
+@media (max-width: 820px) {
+  .action-band { padding-block: var(--space-5); }
+  .action-band-card { flex-direction: column; align-items: flex-start; gap: var(--space-4); padding: var(--space-5); }
+  .action-band-title { font-size: var(--font-figure); }
+}
