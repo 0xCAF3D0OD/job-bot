@@ -36,6 +36,12 @@ describe("NotificationBell", () => {
     POST.mockResolvedValue({ data: { unread: 1, items: [] } });
     const { wrapper, router } = await mountBell();
     expect(wrapper.find("[data-test=bell-badge]").text()).toBe("2");
+    // Avec des alertes (1.6.46) : une capsule orange clair, la cloche et le chiffre côte à côte ; la
+    // légende reprend le nom accessible.
+    const bell = wrapper.find("[data-test=bell]");
+    expect(bell.classes()).toContain("has-unread");
+    expect(bell.attributes("aria-label")).toBe("Alertes, 2 non lues");
+    expect(bell.attributes("data-label")).toBe("Alertes, 2 non lues");
 
     await wrapper.find("[data-test=bell]").trigger("click");
     await flushPromises();
@@ -56,6 +62,8 @@ describe("NotificationBell", () => {
     GET.mockResolvedValue({ data: { unread: 0, items: [] } });
     const { wrapper } = await mountBell();
     expect(wrapper.find("[data-test=bell-badge]").exists()).toBe(false);
+    // Sans alerte : un rond neutre.
+    expect(wrapper.find("[data-test=bell]").classes()).not.toContain("has-unread");
     await wrapper.find("[data-test=bell]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=bell-panel]").text()).toContain("Aucune alerte");

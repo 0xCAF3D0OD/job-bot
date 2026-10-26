@@ -34,8 +34,10 @@ describe("Menu du compte (docs/89)", () => {
   it("l'initiale ouvre Profil, Réglages, Données personnelles, Diagnostic, la collecte et la déconnexion", async () => {
     const { router, wrapper } = await mountAt("/aujourdhui");
     const trigger = wrapper.find("[data-test=account-menu]");
-    expect(trigger.text()).toContain("K");
-    expect(trigger.classes()).not.toContain("active");
+    // L'initiale seule (1.6.46) : ni nom, ni flèche ; la légende reprend le nom accessible.
+    expect(trigger.text()).toBe("K");
+    expect(trigger.find(".icon").exists()).toBe(false);
+    expect(trigger.attributes("data-label")).toBe(trigger.attributes("aria-label"));
     await trigger.trigger("click");
     await flushPromises();
     expect(wrapper.text()).toContain("Connecté : kevin");
@@ -53,7 +55,8 @@ describe("Menu du compte (docs/89)", () => {
     await router.push("/reglages");
     await flushPromises();
     expect(wrapper.find("[data-test=account-panel]").exists()).toBe(false);
-    expect(trigger.classes()).toContain("active");
+    // Plus d'anneau autour de l'initiale sur une page du compte (on le confondait avec le focus).
+    expect(trigger.classes()).not.toContain("active");
   });
 
   it("au clavier : les flèches parcourent, Échap ferme et rend le focus à l'initiale", async () => {

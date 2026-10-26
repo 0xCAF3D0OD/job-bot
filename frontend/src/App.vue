@@ -9,7 +9,6 @@ import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import AppIcon from "./components/AppIcon.vue";
 import BrandMark from "./components/BrandMark.vue";
-import HeaderCapsule from "./components/HeaderCapsule.vue";
 import TabBar from "./components/TabBar.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
@@ -145,17 +144,10 @@ onUnmounted(() => {
         v-if="loggedIn"
         class="topbar-actions"
       >
-        <!-- La capsule (docs/89, docs/91, docs/92) : la cloche et ton initiale ; elle se déroule pour
-             montrer ce qu'on ouvre. Le livre de Progresser l'a quittée : Formations est dans le
-             Bilan (docs/126 §1). -->
-        <HeaderCapsule>
-          <NotificationBell />
-          <span
-            class="capsule-sep"
-            aria-hidden="true"
-          />
-          <AccountMenu />
-        </HeaderCapsule>
+        <!-- Deux boutons ronds, sans capsule (1.6.46) : la cloche et l'initiale ; chacun ouvre son menu
+             sous lui, au clic, et se ferme à Échap ou par un clic ailleurs. -->
+        <NotificationBell />
+        <AccountMenu />
       </div>
       <div
         v-else-if="me"

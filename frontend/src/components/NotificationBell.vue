@@ -5,23 +5,22 @@ import { useRouter } from "vue-router";
 import { api, type Inbox, type InboxItem } from "../api/client";
 import { plural, since } from "../format";
 import AppIcon from "./AppIcon.vue";
-import { CAPSULE_BODY, useCapsuleZone } from "../composables/useCapsule";
-import CountBadge from "./CountBadge.vue";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
 const REFRESH_MS = 60_000;
 
 const router = useRouter();
 const inbox = ref<Inbox>({ unread: 0, items: [] });
-// Dans la capsule (docs/91), une seule chose ouverte à la fois : la cloche ou le compte.
-const { open, inCapsule } = useCapsuleZone("bell");
+// Un bouton rond, sans capsule (1.6.46) : le menu s'ouvre sous lui.
+const open = ref(false);
 const root = ref<HTMLElement | null>(null);
-// Elle se déroule dans la capsule (docs/91) ; sur téléphone, la capsule l'ouvre en plein écran
-// sous l'en-tête, comme Sphere (docs/109).
 const panel = ref<HTMLElement | null>(null);
 let timer: ReturnType<typeof setInterval> | undefined;
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
+const label = computed(() =>
+  inbox.value.unread ? `Alertes, ${plural(inbox.value.unread, "non lue", "non lues")}` : "Alertes",
+);
 
 async function refresh(): Promise<void> {
   try {
@@ -81,76 +80,71 @@ onUnmounted(() => {
     ref="root"
     class="bell"
   >
+    <!-- Sans alerte : un rond neutre ; avec des alertes : une capsule orange clair, la cloche et le
+         chiffre côte à côte (1.6.46). La légende reprend le nom accessible (WCAG 1.4.13). -->
     <button
       type="button"
-      class="bell-button capsule-zone"
-      data-capsule-zone="bell"
-      :aria-label="inbox.unread ? `Alertes, ${plural(inbox.unread, 'non lue', 'non lues')}` : 'Alertes'"
+      :class="['header-round', 'bell-button', { 'has-unread': inbox.unread }]"
+      :aria-label="label"
+      :data-label="label"
       :aria-expanded="open"
       data-test="bell"
       @click="toggle"
     >
       <AppIcon name="bell" />
-      <CountBadge
+      <span
         v-if="inbox.unread"
-        class="bell-badge"
+        class="bell-count"
+        aria-hidden="true"
         data-test="bell-badge"
-        tone="orange"
-        :count="badge"
-      />
+      >{{ badge }}</span>
     </button>
-    <Teleport
-      :to="CAPSULE_BODY"
-      defer
-      :disabled="!inCapsule"
+    <div
+      v-if="open"
+      ref="panel"
+      class="bell-panel"
+      role="dialog"
+      aria-label="Alertes"
+      data-test="bell-panel"
     >
-      <div
-        v-if="open"
-        ref="panel"
-        class="bell-panel"
-        role="dialog"
-        aria-label="Alertes"
-        data-test="bell-panel"
-      >
-        <div class="bell-head">
-          <strong>Alertes</strong>
-          <button
-            v-if="inbox.unread"
-            type="button"
-            class="link"
-            data-test="read-all"
-            @click="readAll"
-          >
-            <span class="with-icon"><AppIcon name="done" />Tout marquer comme lu</span>
-          </button>
-        </div>
-        <p
-          v-if="!inbox.items.length"
-          class="hint bell-empty"
+      <div class="bell-head">
+        <strong>Alertes</strong>
+        <button
+          v-if="inbox.unread"
+          type="button"
+          class="link"
+          data-test="read-all"
+          @click="readAll"
         >
-          Aucune alerte pour l'instant.
-        </p>
-        <ul v-else>
-          <li
-            v-for="item in inbox.items"
-            :key="item.id"
-          >
-            <button
-              type="button"
-              :class="['bell-item', { unread: !item.read_at }]"
-              data-test="bell-item"
-              @click="select(item)"
-            >
-              <span class="bell-title">{{ item.title }}</span>
-              <span
-                v-if="item.message"
-                class="bell-text"
-              >{{ item.message.split("\n")[0] }}</span>
-              <span class="bell-time">{{ since(item.created_at) }}</span>
-            </button>
-          </li>
-        </ul>
+          <span class="with-icon"><AppIcon name="done" />Tout marquer comme lu</span>
+        </button>
       </div>
-    </Teleport>
+      <p
+        v-if="!inbox.items.length"
+        class="hint bell-empty"
+      >
+        Aucune alerte pour l'instant.
+      </p>
+      <ul v-else>
+        <li
+          v-for="item in inbox.items"
+          :key="item.id"
+        >
+          <button
+            type="button"
+            :class="['bell-item', { unread: !item.read_at }]"
+            data-test="bell-item"
+            @click="select(item)"
+          >
+            <span class="bell-title">{{ item.title }}</span>
+            <span
+              v-if="item.message"
+              class="bell-text"
+            >{{ item.message.split("\n")[0] }}</span>
+            <span class="bell-time">{{ since(item.created_at) }}</span>
+          </button>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
