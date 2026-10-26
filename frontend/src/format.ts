@@ -56,7 +56,7 @@ const ZURICH = "Europe/Zurich";
 export function dayKey(iso: string): string {
   return new Date(iso).toLocaleDateString("sv-SE", { timeZone: ZURICH });
 }
-function daysBefore(iso: string, now: Date): number {
+export function daysBefore(iso: string, now: Date = new Date()): number {
   return Math.round((Date.parse(dayKey(now.toISOString())) - Date.parse(dayKey(iso))) / 86_400_000);
 }
 /** Ligne d'un jour : « Aujourd'hui », « Hier », « Jeudi 15 octobre » (avec l'année si autre). */

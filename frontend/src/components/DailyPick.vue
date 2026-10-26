@@ -81,7 +81,9 @@ function up(): void {
 
 // « 1 sur 5 », sur la ligne du titre de la carte (docs/129 §2) ; rien une fois le tri fini.
 const position = computed(() => (current.value ? `${index.value + 1} sur ${queue.value.length}` : ""));
-defineExpose({ position });
+// Ce qu'il reste à trier (l'écran de tri, 1.6.50, le dit dans sa phrase du haut).
+const remaining = computed(() => Math.max(0, queue.value.length - index.value));
+defineExpose({ position, remaining });
 
 const summary = computed(() =>
   [

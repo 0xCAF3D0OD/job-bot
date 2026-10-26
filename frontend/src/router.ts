@@ -31,6 +31,7 @@ const ProfileView = () => import("./views/ProfileView.vue");
 const SettingsView = () => import("./views/SettingsView.vue");
 const SignupView = () => import("./views/SignupView.vue");
 const TodayView = () => import("./views/TodayView.vue");
+const TriageView = () => import("./views/TriageView.vue");
 const TrainingsView = () => import("./views/TrainingsView.vue");
 
 export interface NavEntry {
@@ -97,6 +98,8 @@ export const routes: RouteRecordRaw[] = [
     }),
   },
   { path: "/etat", redirect: "/reglages/diagnostic" },
+  // L'écran de tri des offres du jour (1.6.50) : un deuxième niveau d'Aujourd'hui.
+  { path: "/aujourdhui/tri", name: "triage", component: TriageView },
   // Formations est dans le Bilan (docs/126 §1) : les anciens liens y mènent, ceux de Progresser
   // (docs/90) compris. Les Actualités sont retirées (1.6.25) : leurs liens mènent au Bilan.
   { path: "/actualites", redirect: "/bilan" },

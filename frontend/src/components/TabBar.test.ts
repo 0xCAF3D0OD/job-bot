@@ -15,6 +15,7 @@ describe("La barre d'onglets du téléphone (docs/92)", () => {
       history: createMemoryHistory(),
       routes: [
         { path: "/candidatures/offres/:id/preparer", name: "preparation", component: view },
+        { path: "/aujourdhui/tri", name: "triage", component: view },
         { path: "/:any(.*)*", name: "any", component: view },
       ],
     });
@@ -28,6 +29,10 @@ describe("La barre d'onglets du téléphone (docs/92)", () => {
     expect(jobs.text()).toContain("4");
     expect(wrapper.find("[data-test=tab-today]").attributes("href")).toBe("/aujourdhui");
     await router.push("/candidatures/offres/12/preparer");
+    await flushPromises();
+    expect(wrapper.find("[data-test=tab-bar]").exists()).toBe(false);
+    // L'écran de tri (1.6.50) : pas de barre d'onglets, on revient par « ← Aujourd'hui ».
+    await router.push("/aujourdhui/tri");
     await flushPromises();
     expect(wrapper.find("[data-test=tab-bar]").exists()).toBe(false);
   });
