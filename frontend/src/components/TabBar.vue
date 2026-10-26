@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { api } from "../api/client";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import AppIcon from "./AppIcon.vue";
+import CountBadge from "./CountBadge.vue";
 
 // La barre d'onglets du téléphone (docs/92, docs/126 §1) : les trois entrées, en bas de l'écran,
 // avec une icône et un nom ; Candidatures porte le nombre d'offres à examiner. Les écrans de
@@ -52,10 +53,12 @@ onMounted(() => void refresh());
     >
       <span class="tab-bar-icon">
         <AppIcon :name="tab.icon" />
-        <span
+        <CountBadge
           v-if="tab.name === 'jobs' && toReview"
           class="tab-bar-count"
-        >{{ toReview > 9 ? "9+" : toReview }}</span>
+        
+          :count="toReview > 9 ? '9+' : toReview"
+        />
       </span>
       {{ tab.label }}
     </RouterLink>

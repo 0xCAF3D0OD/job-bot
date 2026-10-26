@@ -119,7 +119,8 @@ describe("initiales des entreprises et pastille de la cloche (audit du 22.10.202
 describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () => {
   it("la cloche, seule pastille orange : chiffre foncé, 4,5:1 au moins en clair et en sombre", () => {
     expect(css).toContain("background: var(--orange); color: var(--text);");
-    expect(css).toContain("@media (prefers-color-scheme: dark) { .bell-badge { color: var(--on-accent); } }");
+    // La pastille unique (CountBadge, 1.6.33), en orange pour la cloche.
+    expect(css).toContain("@media (prefers-color-scheme: dark) { .count-badge.orange { color: var(--on-accent); } }");
     expect(ratio(light.text!, light.orange!)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(dark["on-accent"]!, dark.orange!)).toBeGreaterThanOrEqual(4.5);
     expect(css).not.toContain("#c62a2f");

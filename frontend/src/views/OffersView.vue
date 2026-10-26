@@ -25,6 +25,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import PlanLimit from "../components/PlanLimit.vue";
+import CountBadge from "../components/CountBadge.vue";
 
 const PAGE_SIZE = 50;
 
@@ -404,12 +405,14 @@ onUnmounted(() => {
         @click="filtersOpen = !filtersOpen"
       >
         <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
-        <span
+        <CountBadge
           v-if="activeCount(filters)"
           class="tab-count"
           aria-hidden="true"
           data-test="filters-count"
-        >{{ activeCount(filters) }}</span>
+        
+          :count="activeCount(filters)"
+        />
       </button>
     </div>
 

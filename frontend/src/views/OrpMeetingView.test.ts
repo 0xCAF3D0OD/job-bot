@@ -216,8 +216,10 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     await flushPromises();
     const when = wrapper.find("[data-test=meeting-when]");
     expect(when.text().replace(/\s+/g, " ")).toMatch(/^Prochain rendez-vous \S+ \d+ octobre à \d\d:\d\d, ORP de Lausanne\.$/);
-    // « à » et l'heure ne se séparent pas (1.6.30, espace insécable).
+    // « à » et l'heure ne se séparent pas (1.6.30, espace insécable) ; un seul conteneur, chaque bloc sur
+    // toute sa largeur (règles §3, 1.6.32).
     expect(when.find("strong").text()).toMatch(/octobre à\u00a0\d\d:\d\d$/);
+    expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body", "orp-meeting"]);
     expect(wrapper.find(".orp-conclusion [data-test=go-prepare]").text()).toBe("Préparer");
     expect(wrapper.find(".orp-conclusion [data-test=meeting-more]").exists()).toBe(true);
     // Plus de carte « Le prochain rendez-vous » : la phrase la remplace.

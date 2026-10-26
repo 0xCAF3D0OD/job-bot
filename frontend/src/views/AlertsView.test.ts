@@ -61,6 +61,8 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     DELETE.mockResolvedValue({ data: page([search(1, [cell("jobup"), cell("linkedin")])]) });
     const wrapper = await mountView(todo);
     expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(true);
+    // Un seul conteneur, chaque bloc sur toute sa largeur (règles §3, 1.6.32).
+    expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body"]);
     expect(wrapper.find("[data-test=journal-toggle]").attributes("open")).toBeUndefined();
 
     // Étape 1 : retirer une recherche.
@@ -102,6 +104,8 @@ describe("Alertes, résumé (docs/21 §4)", () => {
       ]),
     );
     expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(false);
+    // Le résumé aussi : un seul conteneur, chaque bloc sur toute sa largeur (règles §3, 1.6.32).
+    expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body"]);
     // La conclusion en haut (1.6.22) : le nombre en accent, la dernière alerte reçue.
     const sentence = wrapper.find("[data-test=alerts-sentence]");
     expect(sentence.text()).toBe("2 recherches suivies, la dernière alerte reçue le 6 octobre.");

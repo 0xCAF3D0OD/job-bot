@@ -6,6 +6,7 @@ import { api } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import type { IconName } from "../icons";
 import type { JobsTab } from "../router";
+import CountBadge from "../components/CountBadge.vue";
 
 // Rubrique Candidatures (docs/19 §2, docs/83, docs/126 §1) : quatre onglets toujours visibles sous le
 // titre ; le Bilan est une entrée du menu.
@@ -103,11 +104,13 @@ onMounted(() => void refresh());
             :aria-label="item.label"
           >{{ item.tabShort }}</span>
           {{ item.tabShort ? "" : item.label }}
-        </span>{{ " " }}<span
+        </span>{{ " " }}<CountBadge
           v-if="badge(item.key)"
           class="tab-count"
           :title="`${badge(item.key)} ${item.hint}`"
-        >{{ badge(item.key) }}</span>
+        
+          :count="badge(item.key)"
+        />
       </RouterLink>
     </nav>
   </div>

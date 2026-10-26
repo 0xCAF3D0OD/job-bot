@@ -1,6 +1,6 @@
 # jobA1 : règles d'interface et d'ergonomie
 
-Version 1.1 · 23 octobre 2026 (échelles, docs/135)
+Version 1.2 · 26 octobre 2026 (références, §9)
 
 Ce document fixe la structure de jobA1. Toute interface doit s'y conformer. **Claude Code n'invente aucune structure, aucun composant et aucun mot qui ne figure pas ici ou dans la bibliothèque Figma.** Un besoin nouveau se propose d'abord, il ne se code pas.
 
@@ -60,27 +60,35 @@ Règles :
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
 - Les listes longues se replient au-delà de 3 éléments (« Tout voir »).
 
-Largeurs, sur ordinateur (1.6.31, selon Material Design 3 et Shopify Polaris) :
-- **Pages de données** (Aujourd'hui, Suivi, Alertes, Rendez-vous, Bilan) : la largeur « large » de Polaris (Page,
-  `inlineSize="large"` : pour les vues de données denses), **un seul conteneur de 1 020 px** (`--page-max`, marges
-  comprises), centré ; **chaque bloc prend toute sa largeur**. Pas de colonne des deux tiers : une seule largeur de
-  haut en bas (le défaut de la 1.6.29 était deux largeurs l'une sous l'autre).
-- **Offres et le détail d'une offre** : des panneaux **liste et détail** (Material 3, mise en page canonique
-  « list-detail » ; Polaris, mise en page à deux colonnes), à **1 280 px** (`--page-wide`) : à 1 020 px, la liste et
-  le détail n'auraient chacun que 338 px.
-- **Réglages** : le modèle de réglages de Polaris (« App settings layout ») : pour chaque groupe, **le titre et sa
-  description à gauche, le formulaire dans une carte à droite** (grille 2fr / 5fr de Polaris). Le sommaire des
-  rubriques reste à gauche de la page. Sur téléphone, une seule colonne : le titre, puis la carte.
-- **Le texte** : **60 caractères par ligne au plus** (`--measure`, Material Design, typographie : 40 à 60 caractères
-  pour le texte courant). Mesuré sur toutes les pages : un `ch` ne suffit pas, il est plus large que la lettre moyenne.
-- **Les boutons et les champs à la taille de leur contenu** (Material 3 : un bouton épouse son libellé, un champ
-  reflète la longueur attendue ; Polaris, TextField) : nom 20 caractères (`--field-20`), lieu 30 (`--field-30`),
-  nombre court 5 (`--field-5`), date et heure à leur taille naturelle ; la recherche reste fluide. Toute la largeur
-  seulement sous le point de rupture du téléphone (820 px) (NN/g et loi de Fitts : une grande cible sur écran tactile).
-- **Les tableaux** tiennent dans leur carte, **sans débordement** (WCAG 2.2, 1.4.10 Reflow) : les colonnes se
-  resserrent et le texte passe à la ligne.
-- **Les lignes de liste** : le statut ou l'action reste près du texte qu'il concerne (NN/g, loi de proximité) ; le
-  texte **passe à la ligne, jamais de « … »**.
+Largeurs (1.6.32) :
+- **La page** : un seul conteneur centré, largeur maximale de **1 020 px** (`--page-max`), marges comprises ; **chaque
+  bloc prend toute sa largeur**. 1 020 px est un choix de jobA1, compatible avec la largeur large de Polaris (`inlineSize`
+  `large`), recommandée pour les tableaux de bord. Pages concernées : **Aujourd'hui, Suivi, Alertes,
+  Rendez-vous et Bilan**. Seule exception : **Candidatures › Offres**, avec ses trois colonnes (filtres, liste,
+  détail), garde **1 280 px** (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px.
+- **Pas de colonne étroite avec le côté droit vide.** Une colonne d'appui (l'`aside` de Polaris) ne reçoit que du
+  contenu d'appui : **jamais une commande principale, jamais un contenu requis** (Polaris, mise en page).
+- **Le texte courant et les phrases de conclusion** : **60 caractères** par ligne au plus sur ordinateur (1.6.34,
+  `--measure`, Material Design, typographie : 40 à 60 caractères pour le texte courant ; Baymard Institute : 50 à 75 ;
+  WCAG 2.2, 1.4.8 : 80 au plus). `--measure` vaut 24 em sur ordinateur (384 px à 16 px), mesuré sur toutes les pages ;
+  sur téléphone, la largeur de l'écran limite déjà les lignes (31 em). Un `ch` ne suffit pas, il est plus large que la
+  lettre moyenne. La mesure limite le texte, pas le bloc : la carte garde toute la largeur de la page.
+- **Réglages** (1.6.34) : le modèle de réglages de Polaris (« App settings layout », grille 2fr / 5fr) : pour chaque
+  réglage, **le titre et sa description à gauche, les contrôles dans une carte à droite** ; plus de filets entre les
+  réglages. Le sommaire des rubriques reste à gauche de la page. Sur téléphone, une seule colonne : le titre, puis les
+  contrôles.
+- **Les tableaux tiennent dans leur carte** (« Toutes les candidatures ») : aucun défilement horizontal sur ordinateur ;
+  les colonnes se partagent la largeur et le texte passe à la ligne.
+- **Jamais de « … »** dans une ligne de liste : le texte passe à la ligne.
+- **Les boutons** : **la largeur de leur texte, à toutes les tailles** (Material Design 3 : la largeur d'un bouton suit
+  son libellé). Sur téléphone, une cible d'au moins **44 px** de haut (Apple Human Interface Guidelines : 44 points ;
+  Nielsen Norman Group : environ 1 cm). Pas de bouton pleine largeur.
+- **Les champs** : une largeur selon le contenu prévu (Baymard Institute : la largeur d'un champ annonce la longueur
+  attendue ; un écart fait douter de l'étiquette) : **nom 20 caractères** (`--field-20`), **lieu 30 caractères**
+  (`--field-30`), **date et heure à leur taille naturelle** ; les nombres courts (objectif, note sur 100, jour du mois)
+  à 5 caractères (`--field-5`) ; **la recherche peut rester fluide**.
+- **Les listes** : le statut ou l'action reste **près du texte** qu'il concerne ; aucune ligne de liste ne dépasse la
+  largeur de la page.
 
 ## 4. Composants (seuls autorisés)
 
@@ -151,25 +159,21 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 
 ## 9. Références
 
-| Référence | Usage |
-|---|---|
-| Material Design 3 (m3.material.io) | Mise en page canonique liste et détail ; typographie (40 à 60 caractères par ligne) ; boutons et champs à la taille de leur contenu |
-| Shopify Polaris (polaris.shopify.com) | Largeur des pages (« large » pour les vues de données) ; modèle de réglages (titre et description à gauche, carte à droite) ; panneaux à deux colonnes |
-| W3C WCAG 2.2 AA | Accessibilité, norme en vigueur ; 1.4.10 Reflow (pas de défilement horizontal) |
-| ISO 9241 (110, 112, 125) | Principes de dialogue, présentation de l'information, présentation visuelle |
-| Nielsen Norman Group (nngroup.com) | Navigation, architecture de l'information, heuristiques ; lecture par la gauche |
-| Laws of UX (lawsofux.com) | Hick, Jakob, Fitts ; proximité (l'action près de ce qu'elle concerne) |
-| Design System de la Confédération (github.com/swiss/designsystem) | Repères familiers aux utilisateurs suisses |
-| GOV.UK Design System | Parcours en étapes et messages d'erreur seulement : plus pour la mise en page (1.6.31), faite pour des démarches publiques, pas pour une application |
+Par ordre d'autorité : en cas de désaccord, la plus haute l'emporte.
 
-On reprend les principes, jamais l'apparence. Toute proposition cite la règle ou la référence qui la justifie.
+1. **Normes** : WCAG 2.2 AA (W3C) ; ISO 9241, parties 110 (principes de dialogue) et 210 (conception centrée sur l'utilisateur).
+2. **Recherche** : Nielsen Norman Group ; Baymard Institute.
+3. **Systèmes de design** : Material Design 3 (Google) ; Polaris (Shopify) ; Apple Human Interface Guidelines.
+4. **Aide-mémoire** : Laws of UX. Jamais seul pour trancher.
+
+On reprend les principes, jamais l'apparence. **Chaque choix d'interface dans une PR cite au moins une de ces références.**
 
 ## 10. Méthode de travail pour Claude Code
 
 1. Avant toute interface : lire ce document, puis le composant ou l'écran correspondant dans Figma (via le connecteur).
 2. Utiliser uniquement les composants mappés par Code Connect et les variables Figma (couleurs, espacements, rayons, typographie). Aucune valeur en dur.
 3. Si l'écran n'existe pas dans Figma : proposer une maquette ou une structure, attendre la validation, puis coder.
-4. Après chaque changement : vérifier les sections 3, 4, 5 et 7, et le signaler dans la PR (« Règles vérifiées : … »).
+4. Après chaque changement : vérifier les sections 3, 4, 5 et 7, et le signaler dans la PR (« Règles vérifiées : … »), avec la référence de la section 9 qui justifie chaque choix d'interface.
 5. Une règle à changer se discute et se met à jour **ici d'abord**, jamais directement dans le code.
 
 ---
