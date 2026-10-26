@@ -662,20 +662,14 @@ describe("Offres, la note en ligne (1.6.47)", () => {
   });
 });
 
-describe("Offres, la bande d'action (1.6.50)", () => {
-  it("des offres à examiner : « Offres à examiner. », le résumé, « Commencer le tri » vers l'écran de tri", async () => {
+describe("Offres, sans bande d'action (1.6.53)", () => {
+  it("des offres à examiner : pas de bande, la liste est déjà la tâche", async () => {
     const now = new Date().toISOString();
     mockOffers(page([offer(1, "Une", { score: 90, first_seen_at: now }), offer(2, "Deux", { score: 60, first_seen_at: now })]));
     const wrapper = await mountAt("/offres");
-    const band = wrapper.find("[data-test=action-band]");
-    expect(band.find("h2").text()).toBe("Offres à examiner.");
-    // Le résumé ne cite aucune offre : les nouvelles depuis hier, dont les très proches.
-    expect(band.text()).toContain("2 nouvelles depuis hier, dont 1 très proche.");
-    expect(band.find("[data-test=action-band-action]").text()).toBe("Commencer le tri");
-    expect(band.find("[data-test=action-band-action]").attributes("href")).toBe("/aujourdhui/tri");
-    // Une autre vue : pas de bande (il n'y a rien à faire là).
-    const later = await mountAt("/offres?statut=later");
-    expect(later.find("[data-test=action-band]").exists()).toBe(false);
+    // Le nombre est dans l'onglet et dans la conclusion ; la bande ne le répète pas (règles §3).
+    expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Commencer le tri");
   });
 
   it("tout est examiné : pas de bande, « Tout est examiné. » sans bouton, « Aucune offre à examiner. »", async () => {
