@@ -5,8 +5,8 @@ import type { RouteLocationRaw } from "vue-router";
 
 import { api, type Highlight, type Offer, type Today } from "../api/client";
 import ActionBand from "../components/ActionBand.vue";
+import OfferLine from "../components/OfferLine.vue";
 import AppIcon from "../components/AppIcon.vue";
-import CompanyLogo from "../components/CompanyLogo.vue";
 import RhythmCard from "../components/RhythmCard.vue";
 import FirstSteps from "../components/FirstSteps.vue";
 import { useAuth } from "../composables/useAuth";
@@ -15,7 +15,6 @@ import Illustration from "../components/Illustration.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import OrpMonth from "../components/OrpMonth.vue";
-import ScoreWord from "../components/ScoreWord.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import PageHero from "../components/PageHero.vue";
 import { sinceText } from "../components/status";
@@ -331,15 +330,16 @@ const { me } = useAuth();
             class="today-triage-preview"
             data-test="best"
           >
-            <CompanyLogo :offer="dose[0]!" />
-            <span class="today-triage-offer">
-              <strong>{{ dose[0]!.title }}</strong>
-              <span class="muted">{{ [dose[0]!.company || "Entreprise non indiquée", dose[0]!.location].filter(Boolean).join(" · ") }}</span>
-            </span>
-            <span class="today-triage-why">
-              <ScoreWord :score="dose[0]!.score ?? null" />
-              <span v-if="dose[0]!.why">{{ dose[0]!.why }}</span>
-            </span>
+            <!-- La Ligne d'offre compacte (planche « Ligne d'offre », 184:587) : le verdict en mot ; la
+                 ligne mène au tri, qui commence par elle. -->
+            <OfferLine
+              :title="dose[0]!.title"
+              :company="dose[0]!.company || 'Entreprise non indiquée'"
+              :location="dose[0]!.location ?? null"
+              :logo="dose[0]!.has_logo ? `/api/offers/${dose[0]!.id}/logo` : null"
+              :score="dose[0]!.score ?? null"
+              :to="{ name: 'triage' }"
+            />
           </div>
         </ActionBand>
         <section

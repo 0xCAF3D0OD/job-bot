@@ -85,7 +85,8 @@ async def tab_to(page: Page, text: str, limit: int = 80) -> bool:
         if text.lower() in (await focused(page)).lower():
             outline = await page.evaluate(
                 "(() => { const s = getComputedStyle(document.activeElement);"
-                " return s.outlineStyle !== 'none' || s.boxShadow !== 'none'; })()"
+                " const a = getComputedStyle(document.activeElement, '::after');"
+                " return s.outlineStyle !== 'none' || s.boxShadow !== 'none' || a.outlineStyle !== 'none'; })()"
             )
             return bool(outline)
     return False
@@ -105,7 +106,7 @@ async def keyboard_journey(page: Page) -> list[str]:
     await page.goto(f"{BASE}/candidatures/offres")
     await page.wait_for_timeout(1800)
     first = await page.evaluate(
-        "(() => { const b = document.querySelector('.offer-row');"
+        "(() => { const b = document.querySelector('.offer-line-title');"
         " return b ? (b.getAttribute('aria-label') || b.textContent || '').trim().slice(0, 20) : ''; })()"
     )
     # Un compte sans offre (docs/128) : rien à atteindre, l'écran vide est vérifié plus haut.

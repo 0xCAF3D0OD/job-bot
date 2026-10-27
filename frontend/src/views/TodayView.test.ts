@@ -189,11 +189,13 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     const band = wrapper.find("[data-test=action-band]");
     expect(band.find("h2").text()).toBe("Tri du jour.");
     expect(band.text()).toContain("1 offre à trier :");
-    // La meilleure offre en aperçu : le titre, l'entreprise et le lieu, la note en mot, pourquoi.
+    // La meilleure offre en aperçu, en Ligne d'offre compacte : le poste, l'entreprise et le lieu, le
+    // verdict en mot ; la ligne mène au tri.
     const preview = band.find("[data-test=best]");
-    expect(preview.text()).toContain("Ingénieur DevOps");
-    expect(preview.text()).toContain("Acme SA · Lausanne");
-    expect(preview.text()).toContain("Kubernetes : dans ton profil.");
+    expect(preview.find(".offer-line-title").text()).toBe("Ingénieur DevOps");
+    expect(preview.find(".offer-line-title").attributes("href")).toBe("/aujourdhui/tri");
+    expect(preview.find(".offer-line-sub").text()).toBe("Acme SA · Lausanne");
+    expect(preview.find(".offer-line-word").text()).toBe("Proche");
     const action = band.find("[data-test=action-band-action]");
     expect(action.text()).toBe("Commencer le tri");
     expect(action.attributes("href")).toBe("/aujourdhui/tri");

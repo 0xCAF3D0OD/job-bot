@@ -45,6 +45,31 @@ class Changelog(unittest.TestCase):
         errors = changelog.check(folder)
         self.assertEqual(len(errors), 3)
 
+    def test_un_fragment_sans_numero_est_accepte(self) -> None:
+        folder = self.folder({"1.6.40.md": "Avant\n", "boutons-segmentes.md": "Les boutons\n"})
+        self.assertEqual(changelog.check(folder), [])
+        # Pas encore numéroté : il n'entre pas dans le tableau.
+        self.assertNotIn("Les boutons", changelog.assemble(folder))
+
+    def test_les_fragments_numerotes_dans_l_ordre_de_fusion(self) -> None:
+        folder = self.folder(
+            {"1.6.76.md": "Avant\n", "a-fusionne-second.md": "B\n", "z-fusionne-premier.md": "A\n"}
+        )
+        merged = {"z-fusionne-premier.md": 1, "a-fusionne-second.md": 2}
+        renamed = changelog.number(folder, order=lambda path: (merged[path.name], path.name))
+        self.assertEqual(
+            renamed,
+            [("z-fusionne-premier.md", "1.6.77.md"), ("a-fusionne-second.md", "1.6.78.md")],
+        )
+        self.assertEqual(changelog.fragments(folder), [])
+        text = changelog.assemble(folder)
+        self.assertIn("| 1.6.77 | A | livrée |", text)
+        self.assertIn("| 1.6.78 | B | livrée |", text)
+
+    def test_un_nom_de_fragment_invalide_est_signale(self) -> None:
+        folder = self.folder({"Boutons Segmentés.md": "x\n", "1.6.x.md": "y\n"})
+        self.assertEqual(len(changelog.check(folder)), 2)
+
     def test_le_depot_est_bien_forme(self) -> None:
         self.assertEqual(changelog.check(), [])
 

@@ -3,9 +3,9 @@
 Une ligne par version, la plus récente en bas. Le détail de chaque version (ce qui change, ce
 qui est vérifié) est dans le document de cadrage qu'elle cite.
 
-**Ce fichier est assemblé : ne le modifie pas.** Une version ajoute son fichier
-`changelog.d/X.Y.Z.md` (la première ligne : le contenu ; une ligne « État : … » facultative,
-sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau après chaque fusion.
+**Ce fichier est assemblé : ne le modifie pas.** Une PR dépose `changelog.d/<sujet>.md`, sans
+numéro (la première ligne : le contenu ; une ligne « État : … » facultative, sinon « livrée ») ;
+sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et assemble ce tableau.
 
 | Version | Contenu | État |
 |---|---|---|
@@ -285,4 +285,7 @@ sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau apr�
 | 1.6.71 | Réglages et Alertes : un état court (« Reçue le 22 oct. ») reste à droite de sa ligne sur téléphone au lieu de passer dessous | livrée |
 | 1.6.72 | Recherche globale : un champ dans l'en-tête (la loupe sur écran étroit), les résultats dans tes offres, candidatures et entreprises, au clavier comme à la souris ; « Suivre cette recherche » crée la recherche d'alerte avec les lieux du profil et dit sur quels sites l'alerte reste à créer | livrée |
 | 1.6.73 | Illustrations : une nouvelle série pour les écrans vides, les réussites et les erreurs, prête à être posée dans les pages ; la règle de leur usage | livrée |
+| 1.6.74 | Une pastille d'état commune (neutre, à faire, réussi, erreur) et une seule façon d'écrire les dates, prêtes pour toutes les pages | livrée |
+| 1.6.75 | Ligne d'offre : une seule ligne pour une offre ou une candidature, partout (Tri du jour, Offres, Suivi) ; toute la ligne est un vrai lien, le verdict en mot ou ScoreWord au bout, l'état d'une candidature sous le titre en orange s'il faut agir, l'action à droite ou sous le texte sur téléphone ; les lignes d'un même jour d'Offres dans une seule carte | livrée |
 | 1.6.76 | Suivi : un filtre par mots (poste, entreprise) dans la liste des candidatures, dans tous les mois ; la recherche globale y mène par « Tout voir (N) » pour les candidatures et les entreprises ; la date ne se coupe plus sur téléphone | livrée |
+| 1.6.77 | Le numéro de version donné à la fusion : une PR dépose `changelog.d/<sujet>.md` sans numéro, numéroté dans l'ordre de fusion sur main avec l'assemblage de `CHANGELOG.md` ; `docs/versions.md` retiré et le tableau de `docs/coordination.md` gelé dans `docs/coordination-historique.md` ; les tâches se suivent dans les PR ouvertes ; la CI refuse un numéro posé dans une PR | livrée |
