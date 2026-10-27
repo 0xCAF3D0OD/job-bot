@@ -10,10 +10,12 @@ import HoverNote from "./HoverNote.vue";
 import MailboxAddress from "./MailboxAddress.vue";
 
 // Assistant des alertes (docs/21 §4) : un écran à la fois, tant qu'aucune alerte n'est en place.
-const props = defineProps<{ page: AlertsPage }>();
+// `focus` (1.6.70) : « Créer » ou « Vérifier l'alerte » sur une ligne de la page Alertes ouvre le pas à
+// pas directement sur ce site, pour cette recherche ; à la fin, retour à la page.
+const props = defineProps<{ page: AlertsPage; focus?: { site: string; terms: string } | null }>();
 const emit = defineEmits<{ updated: [page: AlertsPage]; done: [] }>();
 
-const step = ref<1 | 2 | 3>(1);
+const step = ref<1 | 2 | 3>(props.focus ? 2 : 1);
 // À gauche sur ordinateur, à côté du formulaire et pas dedans (docs/60 §2.2 et complément) :
 // tes recherches, le site, c'est prêt.
 // Des images hautes (0.84.3) : dans la colonne étroite de l'ordinateur, une image en longueur
@@ -23,7 +25,11 @@ const siteIndex = ref(0);
 const form = ref({ terms: "", location: "" });
 const busy = ref(false);
 
-const searches = computed(() => props.page.searches.filter((s) => s.active));
+const searches = computed(() =>
+  props.page.searches.filter(
+    (s) => s.active && (!props.focus || s.terms.trim().toLowerCase() === props.focus.terms.trim().toLowerCase()),
+  ),
+);
 // Les exemples des champs suivent ta recherche (le métier choisi à l'accueil), pas un métier
 // au hasard (docs/104 §5).
 const termsExample = computed(() => props.page.searches[0]?.terms ?? "ton métier");
@@ -33,6 +39,7 @@ const sites = computed(() =>
   props.page.sites.filter((site) => searches.value.some((s) => s.cells.find((c) => c.site === site.slug)?.url)),
 );
 const site = computed(() => sites.value[siteIndex.value] ?? null);
+if (props.focus) siteIndex.value = Math.max(0, sites.value.findIndex((s) => s.slug === props.focus!.site));
 
 // Même recherche en télétravail (docs/26 §5) : une fois par mots, le lieu ne compte pas.
 const remoteLinks = computed(() => {
@@ -94,7 +101,8 @@ function continueToSites(): void {
 }
 
 function nextSite(): void {
-  if (siteIndex.value + 1 < sites.value.length) siteIndex.value += 1;
+  if (props.focus) emit("done");
+  else if (siteIndex.value + 1 < sites.value.length) siteIndex.value += 1;
   else step.value = 3;
 }
 

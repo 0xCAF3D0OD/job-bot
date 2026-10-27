@@ -1,27 +1,33 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
 import { alertsDigest } from "../alertsDigest";
+import { alertsBand, searchGroups, type SearchGroup } from "../alertsState";
+import ActionBand from "../components/ActionBand.vue";
+import AlertSearchCard from "../components/AlertSearchCard.vue";
 import AlertsForward from "../components/AlertsForward.vue";
 import AlertsPanel from "../components/AlertsPanel.vue";
-import AppIcon from "../components/AppIcon.vue";
-import DisclosureRow from "../components/DisclosureRow.vue";
-import AlertsSummary from "../components/AlertsSummary.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
+import AppIcon from "../components/AppIcon.vue";
 import FirstOffers from "../components/FirstOffers.vue";
-import SiteMail from "../components/SiteMail.vue";
-import JournalPanel from "../components/JournalPanel.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import ReceivedAlerts from "../components/ReceivedAlerts.vue";
+import SidePanel from "../components/SidePanel.vue";
+import SiteMail from "../components/SiteMail.vue";
 import { usePageReady } from "../composables/usePageTransition";
+import { offerUndo } from "../composables/useUndo";
 import { plural } from "../format";
 
-// Onglet Alertes (docs/20 §1, docs/21 §4) : l'assistant tant que rien n'est en place,
-// ensuite un résumé ; le tableau complet dans « Gérer mes alertes » ; le journal replié.
+// Onglet Alertes (planche « 6. Alertes », 1.6.70, structure inspirée des pages des CFF) : la
+// conclusion, une seule bande d'action (§3), puis « Mes recherches » (une carte par recherche, une
+// ligne par site), les messages des sites et les alertes reçues, chacun en trois lignes avec « Tout
+// voir » (divulgation progressive). L'assistant reste l'entrée tant que rien n'est en place.
 const page = ref<AlertsPage | null>(null);
 usePageReady("alerts", () => !!page.value);
 const mode = ref<"auto" | "wizard" | "manage">("auto");
-const journalOpen = ref(false);
+// « Créer » sur une ligne : le pas à pas de ce site, pour cette recherche.
+const focus = ref<{ site: string; terms: string } | null>(null);
 
 // Rien de créé ni reçu : on commence par l'assistant.
 const nothingYet = computed(
@@ -34,13 +40,18 @@ async function load(): Promise<void> {
   if (data) page.value = data;
 }
 
-async function closeManage(): Promise<void> {
+async function backToSummary(): Promise<void> {
   mode.value = "auto";
+  focus.value = null;
   await load();
 }
 
-// Un site demande de confirmer l'alerte (docs/65 §3) : la personne ouvre le lien elle-même,
-// puis la ligne s'en va.
+function create(site: string, terms: string): void {
+  focus.value = { site, terms };
+  mode.value = "wizard";
+}
+
+// Un site demande de confirmer l'alerte (docs/65 §3) : la personne ouvre le lien elle-même.
 async function confirmed(searchId: number): Promise<void> {
   const { data } = await api.POST("/api/alert-searches/confirmations/{search_id}", {
     params: { path: { search_id: searchId } },
@@ -48,139 +59,224 @@ async function confirmed(searchId: number): Promise<void> {
   if (data) page.value = data;
 }
 
-const received = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
-
-// La conclusion en haut (règles §3.2, 1.6.22) : le nombre de recherches suivies, en accent, et
-// la dernière alerte reçue.
+// La conclusion en haut (règles §3.2) : le nombre de recherches suivies, et la dernière alerte reçue.
 const longDay = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 const sentence = computed(() => {
   if (!page.value) return null;
   const { active, lastReceived } = alertsDigest(page.value);
   if (!active) return null;
   return {
-    count: plural(active, "recherche suivie", "recherches suivies"),
-    rest: lastReceived ? `, la dernière alerte reçue le ${longDay.format(new Date(lastReceived))}.` : ", aucune alerte reçue pour l'instant.",
+    count: plural(active, "recherche", "recherches"),
+    rest: ` ${active > 1 ? "suivies" : "suivie"}${lastReceived ? `, la dernière alerte reçue le ${longDay.format(new Date(lastReceived))}.` : ", aucune alerte reçue pour l'instant."}`,
   };
 });
+
+const now = ref(new Date());
+const groups = computed<SearchGroup[]>(() => (page.value ? searchGroups(page.value, now.value) : []));
+const band = computed(() => (page.value ? alertsBand(page.value, now.value) : null));
+
+async function bandAction(): Promise<void> {
+  const current = band.value;
+  if (!current) return;
+  if (current.kind === "code") {
+    await nextTick();
+    document.getElementById("site-messages")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  } else if (current.kind === "confirm") {
+    window.open(current.url, "_blank", "noopener,noreferrer");
+    await confirmed(current.searchId);
+  } else {
+    create(current.site, current.terms);
+  }
+}
+
+// « + Ajouter » : une recherche, des mots et un lieu ; elle arrive « à créer » sur chaque site.
+const adding = ref(false);
+const form = ref({ terms: "", location: "" });
+const addError = ref("");
+async function add(): Promise<void> {
+  addError.value = "";
+  if (!form.value.terms.trim()) {
+    addError.value = "Écris au moins un mot.";
+    return;
+  }
+  const { data } = await api.POST("/api/alert-searches", {
+    body: { terms: form.value.terms.trim(), location: form.value.location.trim() || null },
+  });
+  if (!data) {
+    addError.value = "Ajout refusé : réessaie.";
+    return;
+  }
+  page.value = data;
+  adding.value = false;
+  form.value = { terms: "", location: "" };
+}
+
+// Supprimer une recherche : tout de suite à l'écran, « Annuler » pendant 6 s (§4).
+async function remove(group: SearchGroup): Promise<void> {
+  const before = page.value;
+  if (!before) return;
+  page.value = { ...before, searches: before.searches.filter((s) => !group.ids.includes(s.id)) };
+  await offerUndo({
+    message: `« ${group.terms} » n'est plus suivie.`,
+    commit: async (keepalive) => {
+      let latest: AlertsPage | undefined;
+      for (const id of group.ids) {
+        const { data } = await api.DELETE("/api/alert-searches/{search_id}", { params: { path: { search_id: id } }, keepalive });
+        if (!data) return false;
+        latest = data;
+      }
+      if (latest) page.value = latest;
+    },
+    restore: () => {
+      page.value = before;
+    },
+  });
+}
 
 onMounted(() => void load());
 </script>
 
 <template>
-  <section class="jobs-body">
-    <div
-      v-if="page?.to_confirm?.length"
-      class="notice to-confirm"
-      data-test="to-confirm"
-    >
-      <p>
-        <strong>À confirmer</strong> : {{ page.to_confirm?.length === 1 ? "un site demande" : "des sites demandent" }}
-        de confirmer ton alerte avant de l'envoyer.
-      </p>
-      <ul>
-        <li
-          v-for="item in page.to_confirm"
-          :key="item.search_id"
-        >
-          <span>{{ item.subject || item.site }} <span class="muted">· {{ received.format(new Date(item.received_at)) }}</span></span>
-          <a
-            :href="item.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="button-link small"
-            data-test="confirm-link"
-            @click="confirmed(item.search_id)"
-          ><span class="with-icon">Confirmer<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
-        </li>
-      </ul>
-    </div>
-    <!-- L'un sous l'autre, chacun sur toute la largeur (docs/130 §F) : les alertes, les e-mails
-         des sites, puis le journal ; plus de carte étirée à la hauteur de sa voisine. Sur
-         téléphone, un code arrivé fait passer les e-mails des sites en premier. -->
-    <div
-      v-if="page"
-      :class="['alerts-columns', { wide: view === 'manage', 'has-code': !!page.codes?.length }]"
-    >
-      <div class="alerts-main">
-        <!-- La conclusion d'abord (règles §3.2) ; l'assistant garde son titre. -->
-        <p
-          v-if="view === 'summary' && sentence"
-          class="offers-sentence alerts-sentence"
-          data-test="alerts-sentence"
-        >
-          <strong>{{ sentence.count }}</strong>{{ sentence.rest }}
-        </p>
-        <h2
-          v-else-if="view !== 'manage'"
-          class="section-title first"
-        >
-          Les alertes
-        </h2>
-        <AlertsWizard
-          v-if="view === 'wizard'"
-          :page="page"
-          @updated="page = $event"
-          @done="mode = 'auto'"
-        />
-        <template v-else-if="view === 'manage'">
-          <button
-            type="button"
-            class="link"
-            data-test="close-manage"
-            @click="closeManage"
-          >
-            <span class="with-icon"><AppIcon name="arrow-left" />Retour au résumé</span>
-          </button>
-          <AlertsPanel />
-        </template>
-        <AlertsSummary
-          v-else
-          :page="page"
-          @manage="mode = 'manage'"
-          @restart="mode = 'wizard'"
-        />
-      </div>
-
-      <section
-        class="alerts-aside"
-        aria-labelledby="alerts-detail-title"
+  <section class="jobs-body alerts-page">
+    <template v-if="page">
+      <!-- La conclusion d'abord (règles §3.2), puis une seule bande d'action (§3). -->
+      <p
+        v-if="view === 'summary' && sentence"
+        class="offers-sentence alerts-sentence"
+        data-test="alerts-sentence"
       >
-        <!-- Le détail replié (règles §3.4), sous un titre comme Suivi et Bilan. -->
-        <h2
-          id="alerts-detail-title"
-          class="section-title first"
+        <strong>{{ sentence.count }}</strong>{{ sentence.rest }}
+      </p>
+      <ActionBand
+        v-if="view === 'summary' && band"
+        :title="band.title"
+        :summary="band.summary"
+        :action="band.action"
+        @action="bandAction"
+      />
+
+      <template v-if="view === 'wizard'">
+        <button
+          v-if="focus"
+          type="button"
+          class="link"
+          data-test="close-wizard"
+          @click="backToSummary"
         >
-          Le détail
-        </h2>
+          <span class="with-icon"><AppIcon name="arrow-left" />Retour aux alertes</span>
+        </button>
+        <AlertsWizard
+          :page="page"
+          :focus="focus"
+          @updated="page = $event"
+          @done="backToSummary"
+        />
+      </template>
+      <template v-else-if="view === 'manage'">
+        <button
+          type="button"
+          class="link"
+          data-test="close-manage"
+          @click="backToSummary"
+        >
+          <span class="with-icon"><AppIcon name="arrow-left" />Retour aux alertes</span>
+        </button>
+        <AlertsPanel />
+      </template>
+      <template v-else>
+        <section
+          class="alerts-section"
+          data-test="alert-searches"
+        >
+          <div class="alerts-section-head">
+            <h2 class="section-title">
+              Recherches suivies
+            </h2>
+            <button
+              type="button"
+              class="secondary"
+              data-test="add-search"
+              @click="adding = true"
+            >
+              <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
+            </button>
+          </div>
+          <div class="setting-cards">
+            <AlertSearchCard
+              v-for="group in groups"
+              :key="group.terms"
+              :group="group"
+              @create="create($event, group.terms)"
+              @manage="mode = 'manage'"
+              @remove="remove(group)"
+            />
+          </div>
+          <AlertsForward
+            v-if="page.personal_address && page.mailbox"
+            :address="page.mailbox"
+          />
+        </section>
         <SiteMail
           :codes="page.codes ?? []"
           :guest-mailbox="!!(page.personal_address && page.guest_mailbox)"
           @refresh="load()"
         />
+        <ReceivedAlerts />
         <FirstOffers where="alerts" />
-      </section>
-
-      <!-- Sous les deux colonnes : lier ses alertes existantes (docs/116 §1), puis le journal. -->
-      <div class="alerts-journal alerts-rows">
-        <AlertsForward
-          v-if="page.personal_address && page.mailbox"
-          :address="page.mailbox"
-        />
-        <DisclosureRow
-          class="journal-toggle"
-          title="Alertes reçues"
-          value="le journal des e-mails lus"
-          data-test="journal-toggle"
-          @toggle="journalOpen = $event"
-        >
-          <JournalPanel v-if="journalOpen" />
-        </DisclosureRow>
-      </div>
-    </div>
+      </template>
+    </template>
     <!-- Des blocs de chargement gardent la place (règles §6, 1.6.22). -->
     <LoadingBlocks
       v-else
       :heights="['3rem', '17.5rem', '3.5rem', '3.5rem']"
     />
+    <SidePanel
+      v-if="adding"
+      open
+      title="Ajouter une recherche"
+      @close="adding = false"
+    >
+      <form
+        class="manual-form"
+        data-test="add-search-form"
+        @submit.prevent="add"
+      >
+        <label>Les mots
+          <input
+            v-model="form.terms"
+            type="text"
+            placeholder="Linux"
+            :aria-invalid="addError ? true : undefined"
+            :aria-describedby="addError ? 'add-search-error' : undefined"
+            data-test="add-search-terms"
+          >
+        </label>
+        <label>Le lieu <span class="hint">(facultatif)</span>
+          <input
+            v-model="form.location"
+            type="text"
+            placeholder="Lausanne"
+            data-test="add-search-location"
+          >
+        </label>
+        <p
+          v-if="addError"
+          id="add-search-error"
+          class="field-error"
+          role="alert"
+        >
+          {{ addError }}
+        </p>
+        <div class="form-actions">
+          <button
+            type="submit"
+            class="primary"
+            data-test="add-search-submit"
+          >
+            Ajouter la recherche
+          </button>
+        </div>
+      </form>
+    </SidePanel>
   </section>
 </template>

@@ -1603,17 +1603,9 @@ html.side-open { overflow: hidden; }
 .site-mail-card .site-code .pill { background: var(--surface); }
 /* La page Alertes en une colonne (docs/130 §F) : les alertes, les e-mails des sites, puis le
    journal, chacun un titre et sa carte sur toute la largeur ; plus de carte étirée. */
-.alerts-columns { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "aside" "journal"; row-gap: var(--space-8); align-items: start; }
-.alerts-main { grid-area: main; min-width: 0; display: flex; flex-direction: column; }
-.alerts-aside { grid-area: aside; min-width: 0; display: flex; flex-direction: column; gap: var(--space-8); }
 /* Le détail (1.6.22) : son titre, puis les lignes repliables serrées (les e-mails des sites, le journal). */
-.alerts-aside > .section-title { margin: 0 0 calc(var(--space-3) - var(--space-8)); }
-.alerts-columns:not(.has-code) > .alerts-journal { margin-top: calc(var(--space-3) - var(--space-8)); }
 .alerts-sentence { margin-bottom: var(--space-6); }
-.alerts-journal { grid-area: journal; }
 /* Les lignes sous les colonnes (0.86.0) : « J'ai déjà des alertes » puis le journal. */
-.alerts-rows { display: grid; gap: var(--space-3); }
-.alerts-rows > .journal-toggle { margin-top: 0; }
 /* Les alertes existantes (0.86.1, docs/interface.md) : pas de barre verticale dans la carte,
    le contenu au retrait du titre ; une étape par ligne, séparée par un filet, au plus une
    action (copier) à droite. */
@@ -1626,57 +1618,26 @@ html.side-open { overflow: hidden; }
 .forward-steps .step-number { flex: none; margin: 0; }
 .forward-step-text { flex: 1; min-width: 0; display: grid; gap: var(--space-1); }
 .forward-steps .icon-button { flex: none; }
-.alerts-main .wizard-side .illustrated-body { display: flex; flex-direction: column; height: 100%; }
-.alerts-main .wizard-side .illustrated-body > .form-card { flex: 1; }
 /* La carte étirée garde son contenu en haut : l'espace en plus va sous le dernier bouton. */
-.alerts-main .form-card { align-content: start; }
-.alerts-aside .site-mail { display: flex; flex-direction: column; }
-.alerts-aside .site-mail-card { display: flex; flex-direction: column; }
-.alerts-columns.wide { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "aside" "journal"; align-items: start; }
 /* L'assistant dans la colonne : l'image plus petite, en haut de la carte (deux colonnes
    seulement ; sur téléphone, la règle des illustrations s'applique). La carte s'étire avec
    la colonne. */
 @media (min-width: 1101px) {
-  .alerts-main .wizard-side { grid-template-columns: 240px minmax(0, 1fr); gap: var(--space-8); align-items: stretch; }
-  .alerts-main .wizard-side > .illu { width: 240px; margin-top: var(--space-6); align-self: start; }
-  .alerts-aside .first-offers { margin-top: 0; }
 }
 @media (max-width: 1100px) {
-  .alerts-columns { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "aside" "journal"; row-gap: var(--space-8); align-items: start; }
-  .alerts-columns.has-code:not(.wide) { grid-template-areas: "aside" "main" "journal"; }
 }
 /* La carte : le code (ou « J'attends un code »), les messages, puis le pied. Chaque partie
    aérée de 1,5 rem au-dessus et au-dessous du filet qui la sépare. */
 .settings-card.site-mail-card { padding: 0 var(--space-8); }
-.site-mail-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-6); padding: var(--space-6) 0; }
 .site-mail-foot { margin: auto 0 0; padding: var(--space-5) 0 var(--space-6); border-top: 1px solid var(--border); line-height: var(--leading-normal); }
 /* Dans la colonne étroite : la pilule sous le texte, pleine largeur, comme sur téléphone. */
-.alerts-aside .settings-card.site-mail-card { padding: 0 var(--space-6); }
-.alerts-aside .site-mail-row { flex-direction: column; align-items: stretch; gap: var(--space-4); }
-.alerts-aside .site-code { flex-direction: column; align-items: stretch; padding: var(--space-5); }
-.alerts-aside .site-message-head { flex-direction: column; align-items: flex-start; }
-.site-mail-text { display: grid; gap: var(--space-2); min-width: 0; line-height: var(--leading-normal); }
-.site-mail-text p { margin: 0; }
-.site-mail-row > .pill { flex: none; }
 .site-mail-messages { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); padding: var(--space-6) 0 var(--space-1); border-top: 1px solid var(--border); line-height: var(--leading-normal); }
 .site-mail-messages > p { margin: 0 0 var(--space-1); }
-.site-message-list { list-style: none; margin: 0; padding: 0; }
-.site-message-list > li { border-top: 1px solid var(--border); }
-.site-message-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); width: 100%; padding: var(--space-4) 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.site-message-row:hover .site-message-subject { color: var(--accent); }
-.site-message-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-1) var(--space-4); flex: 1; min-width: 0; }
-.site-message-meta { color: var(--muted); font-size: var(--font-small); }
-.site-message-subject { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
-.site-message-chevron { flex: none; color: var(--muted); transition: transform 200ms; }
-.site-message-row[aria-expanded="true"] .site-message-chevron { transform: rotate(90deg); }
 .site-message-text { margin: 0; padding: 0 0 var(--space-5); white-space: pre-line; line-height: var(--leading-normal); }
 @media (max-width: 820px) {
   .site-code { flex-direction: column; align-items: stretch; padding: var(--space-5); }
   .site-code .pill { min-height: var(--control-h); }
   .settings-card.site-mail-card { padding: 0 var(--space-6); }
-  .site-mail-row { flex-direction: column; align-items: stretch; gap: var(--space-4); padding: var(--space-5) 0; }
-  .site-mail-row > .pill { min-height: var(--control-h); }
-  .site-message-head { flex-direction: column; align-items: flex-start; }
 }
 /* Les premières offres (docs/104, 0.80.0). */
 .first-offers-line { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); line-height: var(--leading-normal); }
@@ -2332,10 +2293,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .platform-link > p { flex-basis: 100%; margin: 0; }
 
 /* Alertes à confirmer (docs/65 §3) : le lien de chaque site, ouvert par la personne. */
-.to-confirm { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
-.to-confirm p { margin: 0; }
-.to-confirm ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.to-confirm li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); }
 
 /* Tes données (docs/65 §6) : une page de lecture. */
 .privacy-page { max-width: 44rem; }
@@ -3681,7 +3638,6 @@ main:focus { outline: none; }
    - Les champs à la taille du contenu prévu (Baymard). */
 @media (min-width: 821px) {
   .rhythm-days { grid-template-columns: repeat(7, max-content); justify-content: start; column-gap: var(--space-3); }
-  .alerts-aside .site-mail-row { align-items: flex-start; }
   .rhythm-weeks ol { grid-template-columns: repeat(3, max-content); column-gap: var(--space-8); }
   .rhythm-weeks li { grid-column: 1 / -1; grid-template-columns: subgrid; }
   /* Les champs du premier rendez-vous passent à la ligne dans la colonne (1.6.30) : la date à sa taille, le lieu
@@ -4039,3 +3995,30 @@ html.filters-open { overflow: hidden; }
 .state-word.warn { color: var(--orange-text); }
 .state-word.down { color: var(--down-text); }
 .budget-bar { width: 8rem; }
+
+/* --- Alertes (1.6.70, planche « 6. Alertes ») ---
+   Une colonne : la conclusion, la bande, puis trois sections, chacune avec son action à droite du titre
+   (« + Ajouter », « Tout voir »). L'état d'une recherche ou d'un site en pastille : un point de couleur
+   et le mot (WCAG 1.4.1) ; vert reçue, bleu en attente, orange seulement quand il y a une action (§4). */
+.alerts-page > .alerts-sentence { margin: 0 0 var(--space-6); }
+.alerts-page > .action-band { margin-bottom: var(--space-6); }
+.alerts-section { display: grid; gap: var(--space-3); margin-bottom: var(--space-8); }
+.alerts-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.alerts-section-head .section-title { margin: 0; }
+.alert-state {
+  display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill); background: var(--band); color: var(--text); font-size: var(--font-small); white-space: nowrap;
+}
+.alert-state::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--muted); }
+.alert-state.received::before { background: var(--ok); }
+.alert-state.waiting::before { background: var(--accent); }
+.alert-state.silent::before { background: var(--orange); }
+.alert-quiet, .alert-date { color: var(--muted); font-size: var(--font-small); white-space: nowrap; }
+/* Sur téléphone aussi, l'état reste à droite de son site (planche 215:651) : le nom est court. */
+.alert-site .setting-row-text, .alert-search-head .setting-row-text { flex-basis: 0; }
+.alert-search-head .setting-row-text { min-width: 8rem; }
+.site-message-text { white-space: pre-line; overflow-wrap: anywhere; }
+@media (max-width: 820px) {
+  .alerts-section { margin-bottom: var(--space-6); }
+  .alert-state { white-space: normal; text-align: right; }
+}

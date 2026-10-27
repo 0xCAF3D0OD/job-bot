@@ -64,7 +64,8 @@ describe("Les codes des sites (docs/112)", () => {
     GET.mockResolvedValueOnce({ data: { text: "Ton compte est prêt." } });
     const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: true } });
     await flushPromises();
-    expect(wrapper.find("[data-test=guest-mailbox-note]").attributes("aria-description")).toContain("effacés de la boîte une fois rangés");
+    // L'invité : le code arrive dans la boîte de jobA1, dit sur la ligne du code (1.6.70).
+    expect(wrapper.find("[data-test=site-code-row]").text()).toContain("la boîte de jobA1");
     expect(wrapper.find("[data-test=site-message]").text()).toContain("Bienvenue sur jobup");
     await wrapper.find("[data-test=site-message] button").trigger("click");
     await flushPromises();
@@ -77,7 +78,7 @@ describe("Les codes des sites (docs/112)", () => {
     const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });
     await flushPromises();
     expect(wrapper.find("[data-test=site-messages]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=guest-mailbox-note]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=site-code-row]").text()).not.toContain("jobA1");
     // La rubrique reste : « J'attends un code » sert même sans message.
     expect(wrapper.find("[data-test=site-code-expect]").exists()).toBe(true);
   });

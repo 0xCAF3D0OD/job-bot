@@ -320,7 +320,7 @@ onMounted(async () => {
     </SettingRow>
     <p
       v-if="message"
-      class="hint setting-row-message"
+      class="muted setting-row-message"
       role="status"
     >
       {{ message }}
