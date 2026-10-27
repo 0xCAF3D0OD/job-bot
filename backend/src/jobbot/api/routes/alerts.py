@@ -212,6 +212,74 @@ async def add_alert_search(request: Request, body: AlertSearchIn) -> AlertsPage:
     return await _page(_runtime(request))
 
 
+class FollowIn(BaseModel):
+    terms: Terms
+
+
+class FollowOut(BaseModel):
+    # Les recherches créées (ou déjà là) pour ces mots : « Annuler » les retire.
+    ids: list[int]
+    created: list[int]
+    terms: str
+    locations: list[str]
+    # Les sites suivis, et ceux où l'alerte reste à créer (cellules « todo ») : tant qu'il en
+    # reste, rien n'arrive de ce site ; la confirmation ne dit jamais « suivie » trop tôt.
+    sites: list[str]
+    todo: list[str]
+
+
+@router.post("/follow", operation_id="followSearch", status_code=status.HTTP_201_CREATED)
+async def follow_search(request: Request, body: FollowIn) -> FollowOut:
+    """« Suivre cette recherche » (recherche globale) : les mots tapés, avec les lieux du profil.
+
+    Une recherche d'alerte par lieu (comme les recherches proposées) ; une recherche déjà suivie
+    n'est pas doublée. Elle ne crée l'alerte sur aucun site : les sites encore à créer sont rendus,
+    calculés à partir des cellules réelles."""
+    terms = " ".join(body.terms.split())
+    async with _runtime(request).sessionmaker.begin() as session:
+        criteria = await load_criteria(session)
+        places = [loc for loc in criteria.locations if not service.is_canton(loc)][:4]
+        locations: list[str | None] = list(places) if places else [None]
+        existing = list(await session.scalars(select(AlertSearch)))
+        ids: list[int] = []
+        created: list[int] = []
+        searches: list[AlertSearch] = []
+        for location in locations:
+            same = next(
+                (
+                    s
+                    for s in existing
+                    if s.terms.lower() == terms.lower()
+                    and (s.location or "").lower() == (location or "").lower()
+                ),
+                None,
+            )
+            if same is None:
+                same = AlertSearch(terms=terms, location=location)
+                session.add(same)
+                await session.flush()
+                created.append(same.id)
+            elif not same.active:
+                same.active = True
+            ids.append(same.id)
+            searches.append(same)
+        sites = list(await session.scalars(select(Site).where(followed()).order_by(Site.id)))
+        todo: set[str] = set()
+        for search in searches:
+            for cell in await service.cells(session, search, sites):
+                if cell.status == "todo":
+                    todo.add(cell.site)
+    names = {s.slug: s.name for s in sites}
+    return FollowOut(
+        ids=ids,
+        created=created,
+        terms=terms,
+        locations=[loc for loc in locations if loc],
+        sites=[s.name for s in sites],
+        todo=[names[slug] for slug in names if slug in todo],
+    )
+
+
 @router.patch("/{search_id}", operation_id="updateAlertSearch")
 async def update_alert_search(
     request: Request, search_id: int, body: AlertSearchUpdate

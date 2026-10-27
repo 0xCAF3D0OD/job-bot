@@ -7584,6 +7584,48 @@
         }
       }
     },
+    "/api/alert-searches/follow": {
+      "post": {
+        "tags": [
+          "alerts"
+        ],
+        "summary": "Follow Search",
+        "description": "« Suivre cette recherche » (recherche globale) : les mots tapés, avec les lieux du profil.\n\nUne recherche d'alerte par lieu (comme les recherches proposées) ; une recherche déjà suivie\nn'est pas doublée. Elle ne crée l'alerte sur aucun site : les sites encore à créer sont rendus,\ncalculés à partir des cellules réelles.",
+        "operationId": "followSearch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/alert-searches/{search_id}": {
       "patch": {
         "tags": [
@@ -7892,6 +7934,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SiteMessageText"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Search",
+        "operationId": "searchEverything",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalSearchOut"
                 }
               }
             }
@@ -9309,6 +9395,86 @@
           "text"
         ],
         "title": "AnswerOut"
+      },
+      "ApplicationHit": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Sent At"
+          },
+          "interview_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview At"
+          },
+          "orp_month": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orp Month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "company",
+          "job_title",
+          "status",
+          "sent_at",
+          "interview_at",
+          "orp_month"
+        ],
+        "title": "ApplicationHit"
+      },
+      "ApplicationHits": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationHit"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ApplicationHits"
       },
       "ApplicationIn": {
         "properties": {
@@ -11142,6 +11308,50 @@
           "last_error"
         ],
         "title": "CollectStatus"
+      },
+      "CompanyHit": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "offers": {
+            "type": "integer",
+            "title": "Offers"
+          },
+          "applications": {
+            "type": "integer",
+            "title": "Applications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "offers",
+          "applications"
+        ],
+        "title": "CompanyHit"
+      },
+      "CompanyHits": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyHit"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "CompanyHits"
       },
       "ComparisonOut": {
         "properties": {
@@ -13089,6 +13299,74 @@
         "title": "FocusIn",
         "description": "Élément choisi sur la page : l'offre ouverte, la carte, le jour ou le mois affiché."
       },
+      "FollowIn": {
+        "properties": {
+          "terms": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Terms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terms"
+        ],
+        "title": "FollowIn"
+      },
+      "FollowOut": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Ids"
+          },
+          "created": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Created"
+          },
+          "terms": {
+            "type": "string",
+            "title": "Terms"
+          },
+          "locations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Locations"
+          },
+          "sites": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sites"
+          },
+          "todo": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Todo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ids",
+          "created",
+          "terms",
+          "locations",
+          "sites",
+          "todo"
+        ],
+        "title": "FollowOut"
+      },
       "FollowUp": {
         "properties": {
           "application_id": {
@@ -13392,6 +13670,31 @@
           "score"
         ],
         "title": "GapBlockOut"
+      },
+      "GlobalSearchOut": {
+        "properties": {
+          "q": {
+            "type": "string",
+            "title": "Q"
+          },
+          "offers": {
+            "$ref": "#/components/schemas/OfferHits"
+          },
+          "applications": {
+            "$ref": "#/components/schemas/ApplicationHits"
+          },
+          "companies": {
+            "$ref": "#/components/schemas/CompanyHits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "q",
+          "offers",
+          "applications",
+          "companies"
+        ],
+        "title": "GlobalSearchOut"
       },
       "GroupOut": {
         "properties": {
@@ -17110,6 +17413,81 @@
         ],
         "title": "OfferFiltersVisible",
         "description": "Filtres affichés dans le panneau ; statut, recherche et tri le sont toujours."
+      },
+      "OfferHit": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "company",
+          "location",
+          "score"
+        ],
+        "title": "OfferHit"
+      },
+      "OfferHits": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OfferHit"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "OfferHits"
       },
       "OfferLinkOut": {
         "properties": {
