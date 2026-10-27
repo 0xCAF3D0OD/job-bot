@@ -217,12 +217,12 @@ describe("Candidatures, onglet Preuves ORP", () => {
     const list = wrapper.find("[data-test=declare]");
     expect(list.text()).toContain("À déclarer dans Job-Room");
     expect(list.findAll("li")).toHaveLength(1);
-    const item = list.find("[data-test=declare-2]");
-    // La forme de ligne d'Aujourd'hui (docs/130 §A) : l'entreprise, le poste, la date ; « Déclarer ».
-    expect(item.text()).toContain("envoyée le 2 octobre");
-    expect(item.find("strong").text()).toBe("Reste SA");
-    expect(item.text()).toContain("Ingénieur DevOps junior");
-    expect(item.find(".today-row-action").text()).toBe("Déclarer");
+    const item = list.find("[data-test=offer-line]");
+    // La Ligne d'offre compacte (planche « Ligne d'offre ») : le poste, l'entreprise, l'état ; « Déclarer ».
+    expect(item.find(".offer-line-title").text()).toBe("Ingénieur DevOps junior");
+    expect(item.find(".offer-line-sub").text()).toContain("Reste SA");
+    expect(item.find("[data-test=offer-line-state]").text()).toContain("Envoyée le 2 octobre");
+    expect(item.find("[data-test=declare-2]").text()).toBe("Déclarer");
     expect(list.find("h2").text()).toBe("À déclarer dans Job-Room · 1");
     expect(item.text()).toContain("à compléter");
     // Un clic ouvre le panneau : l'offre, « Modifier », les champs et « Marquer comme déclarée ».
@@ -333,7 +333,7 @@ describe("Suivi en calendrier (docs/22)", () => {
     expect(cards[0]!.find("[data-test=card-step-prepare]").exists()).toBe(true);
     expect(cards[0]!.find("[data-test=card-missing]").exists()).toBe(false);
     // Le panneau : statut, ORP (Job-Room déplié), contacts.
-    await cards[0]!.find("[data-test=card-open]").trigger("click");
+    await cards[0]!.find("[data-test=offer-line-open]").trigger("click");
     const panel = wrapper.find("[data-test=application-panel]");
     expect(panel.find("[data-test=card-missing]").text()).toContain("adresse de l'entreprise");
     expect(panel.find("[data-test=card-job-room-fields]").text()).toContain("Par voie électronique");
@@ -387,7 +387,7 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
     const { wrapper } = await mountView();
     const card = wrapper.find("[data-test=todo] [data-test=application-card]");
     // Le vrai nombre de jours depuis l'envoi (1.6.27).
-    expect(card.find("[data-test=card-step]").text()).toContain("Sans réponse depuis 12 jours");
+    expect(card.find("[data-test=offer-line-state]").text()).toContain("Sans réponse depuis 12 jours");
     await card.find("[data-test=card-step-follow-up]").trigger("click");
     expect(wrapper.find("[data-test=application-panel]").exists()).toBe(false);
     expect(wrapper.text()).toContain("Relancer Lente SA");

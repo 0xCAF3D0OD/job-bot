@@ -14,6 +14,7 @@ import AppIcon from "../components/AppIcon.vue";
 import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import ApplicationCard from "../components/ApplicationCard.vue";
+import OfferLine from "../components/OfferLine.vue";
 import ApplicationPanel from "../components/ApplicationPanel.vue";
 import SidePanel from "../components/SidePanel.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
@@ -31,7 +32,7 @@ import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
-import { colorIndex, formatMonth, ofMonth, plural, shiftMonth } from "../format";
+import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
@@ -653,25 +654,18 @@ onUnmounted(() => assistant.setFocus(null));
               v-for="item in declareShown"
               :key="item.id"
             >
-              <button
-                type="button"
-                class="today-row"
-                :data-test="`declare-${item.id}`"
-                :title="`${item.company} · ${item.title}`"
-                @click="openId = item.id"
-              >
-                <span
-                  class="logo"
-                  :class="`c${colorIndex(item.company)}`"
-                  aria-hidden="true"
-                >{{ item.company.trim().charAt(0).toUpperCase() }}</span>
-                <span class="today-row-main">
-                  <strong>{{ item.company }}</strong>
-                  <span class="today-row-line">{{ item.title }}</span>
-                  <span class="today-row-line">envoyée le {{ item.day }}<template v-if="item.incomplete"> · à compléter</template></span>
-                </span>
-                <span class="today-row-action">Déclarer</span>
-              </button>
+              <!-- La Ligne d'offre compacte (planche « Ligne d'offre ») : « Déclarer » à droite. -->
+              <OfferLine
+                :title="item.title"
+                :company="item.company"
+                :location="all.find((x) => x.id === item.id)?.location ?? null"
+                :state="`Envoyée le ${item.day}${item.incomplete ? ' · à compléter' : ''}`"
+                :urgent="item.incomplete"
+                action="Déclarer"
+                :action-test="`declare-${item.id}`"
+                @select="openId = item.id"
+                @action="openId = item.id"
+              />
             </li>
           </ul>
         </section>

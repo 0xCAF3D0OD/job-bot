@@ -140,7 +140,6 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 /* 75 caractères par ligne au plus, à toutes les tailles d'écran (§3, Baymard : 50 à 75 ; WCAG 1.4.8 : 80). Baymard
    passe avant Material (40 à 60) dans l'ordre des références (§9) : 31 em partout. */
 p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li, .privacy-page li, .orp-month-lines li,
-.today-row-main, .application-row-main { max-width: var(--measure); }
 /* Un avis ou un pied de carte encadré garde la largeur de ses voisins ; le texte du pied de carte suit la mesure
    par sa marge de droite (son filet reste sur toute la largeur). */
 p.notice, p.settings-next-card { max-width: none; }
@@ -256,33 +255,6 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 .offer-day-name { font-weight: var(--weight-semibold); font-size: var(--font-body); color: var(--text); }
 .offer-day-count { font-size: var(--font-small); color: var(--muted); white-space: nowrap; }
 .offer-day-title::after { content: ""; flex: 1; align-self: center; height: 1px; background: var(--border); }
-.offer-row {
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-3) var(--space-5);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-top-width: 0;
-  border-radius: 0;
-  text-align: left;
-  font-weight: var(--weight-regular);
-  transition: background-color 0.15s, box-shadow 0.15s;
-}
-.offer-cards > li:first-child .offer-row,
-.offer-day + li .offer-row { border-top-width: 1px; border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
-.offer-cards > li:last-child .offer-row,
-.offer-cards > li:has(+ .offer-day) .offer-row { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
-.offer-row:hover { background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
-.offer-row.selected { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); box-shadow: inset 3px 0 0 var(--accent); }
-.offer-row.expired { opacity: 0.6; }
-.offer-row-main { display: grid; gap: var(--space-1); min-width: 0; }
-.offer-row-title { font-weight: var(--weight-semibold); font-size: var(--font-body); line-height: var(--leading-tight); overflow-wrap: anywhere; }
-.offer-row-sub { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
-.offer-row-alert { margin-top: var(--space-2); font-size: var(--font-small); line-height: var(--leading-normal); color: var(--orange-text); }
-.offer-row-alert.danger { color: var(--down-text); }
 .filter-more { justify-self: start; margin: var(--space-1) var(--space-1); font-size: var(--font-small); }
 .logo {
   display: grid;
@@ -1074,13 +1046,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .applications-banner .link { font-weight: var(--weight-semibold); white-space: nowrap; }
 /* Une candidature en ligne (docs/130 §A) : la forme d'Aujourd'hui, la partie centrale ouvre le
    panneau, l'action à droite fait l'étape du moment. */
-.application-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; }
-.application-row-main { display: grid; gap: var(--space-1); min-width: 0; padding: 0; border: 0; background: none; color: var(--text); font: inherit; line-height: var(--leading-tight); text-align: left; cursor: pointer; white-space: normal; }
-.application-row-main strong { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
-.application-row-main:hover strong { color: var(--accent); }
-.application-row-step:is(.follow-up, .no-answer, .complete) { color: var(--orange-text); }
-.application-row-action { justify-self: end; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
-button.today-row { width: 100%; border: 0; border-radius: 0; background: none; font: inherit; text-align: left; cursor: pointer; white-space: normal; }
 /* L'en-tête du Suivi sur deux lignes : le mois et les outils, puis le compte et l'état ORP. */
 .applications-tools { display: flex; align-items: center; gap: var(--space-3); }
 /* « À faire » d'abord (1.6.20), puis le détail replié ; le jour choisi sous le calendrier. */
@@ -1334,7 +1299,6 @@ input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--
 /* Alléger (docs/32) : boutons et liens sur une ligne, « ? » toujours rond */
 button, .button-link, .link, .apply-bar a, .apply-bar button { white-space: nowrap; }
 /* Cartes et lignes cliquables : leur texte passe à la ligne normalement (docs/33 §3.1). */
-.offer-row, .disclosure-row, .filter-row, .news-row, .bell-item { white-space: normal; }
 /* Les liens de recherche LinkedIn sont longs : ils passent à la ligne au lieu de déborder. */
 .contacts-searches .link { white-space: normal; overflow-wrap: anywhere; }
 button, .button-link { max-width: 100%; }
@@ -1349,6 +1313,7 @@ button, .button-link { max-width: 100%; }
 .disclosure-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .disclosure-list > .disclosure { border: 0; border-radius: 0; margin: 0; }
 .disclosure-list > .disclosure + .disclosure { border-top: 1px solid var(--divider); }
+.disclosure-row, .filter-row, .news-row, .bell-item { white-space: normal; }
 .disclosure-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
 .disclosure-row:hover .disclosure-title, .disclosure.open .disclosure-title { color: var(--accent); }
 /* Ouvert, le titre est déjà en accent : le survol teinte la ligne (1.6.4). */
@@ -1552,10 +1517,6 @@ html.side-open { overflow: hidden; }
   .jobs-head .eyebrow { display: none; }
   .jobs-head h1 { font-size: var(--font-section); margin: 0 0 var(--space-2); }
 
-  /* Offres (docs/73) : la même ligne, un peu plus serrée sur les côtés. */
-  .offer-row { gap: var(--space-3); padding: var(--space-3) var(--space-4); }
-  .offer-row .logo:not(.large) { width: 2rem; height: 2rem; border-radius: var(--radius-sm); font-size: var(--font-caption); }
-  .offer-row-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .job-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* Suivi : le mois, puis l'objectif, puis « Ajouter » et le « ⋯ » (1.6.20, comme Figma). */
@@ -1563,10 +1524,6 @@ html.side-open { overflow: hidden; }
   .applications-head .month-nav { gap: var(--space-1); }
   .applications-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   .applications-head .month-goal { min-width: 0; }
-  /* « À faire » dans une carte : l'action passe sous le texte, le nom n'est jamais coupé. */
-  .suivi-todo :is(.application-row, .today-row) { grid-template-columns: 2.5rem minmax(0, 1fr); align-items: start; }
-  .suivi-todo :is(.application-row-action, .today-row-action) { grid-column: 2; justify-self: start; }
-  .suivi-todo :is(.application-row-main, .today-row-main) strong { white-space: normal; overflow-wrap: break-word; }
   /* La liste du mois dans son repliable : la date, l'entreprise, le statut ; le poste, le mode et le « ⋯ »
      sont dans le panneau, qu'ouvre le nom de l'entreprise. */
   .suivi-detail .runs :is(th, td):is(:nth-child(3), :nth-child(4), :nth-child(6)) { display: none; }
@@ -1618,26 +1575,9 @@ html.side-open { overflow: hidden; }
 .forward-steps .step-number { flex: none; margin: 0; }
 .forward-step-text { flex: 1; min-width: 0; display: grid; gap: var(--space-1); }
 .forward-steps .icon-button { flex: none; }
-/* La carte étirée garde son contenu en haut : l'espace en plus va sous le dernier bouton. */
-/* L'assistant dans la colonne : l'image plus petite, en haut de la carte (deux colonnes
-   seulement ; sur téléphone, la règle des illustrations s'applique). La carte s'étire avec
-   la colonne. */
-@media (min-width: 1101px) {
-}
-@media (max-width: 1100px) {
-}
-/* La carte : le code (ou « J'attends un code »), les messages, puis le pied. Chaque partie
-   aérée de 1,5 rem au-dessus et au-dessous du filet qui la sépare. */
-.settings-card.site-mail-card { padding: 0 var(--space-8); }
-.site-mail-foot { margin: auto 0 0; padding: var(--space-5) 0 var(--space-6); border-top: 1px solid var(--border); line-height: var(--leading-normal); }
-/* Dans la colonne étroite : la pilule sous le texte, pleine largeur, comme sur téléphone. */
-.site-mail-messages { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); padding: var(--space-6) 0 var(--space-1); border-top: 1px solid var(--border); line-height: var(--leading-normal); }
-.site-mail-messages > p { margin: 0 0 var(--space-1); }
-.site-message-text { margin: 0; padding: 0 0 var(--space-5); white-space: pre-line; line-height: var(--leading-normal); }
 @media (max-width: 820px) {
   .site-code { flex-direction: column; align-items: stretch; padding: var(--space-5); }
   .site-code .pill { min-height: var(--control-h); }
-  .settings-card.site-mail-card { padding: 0 var(--space-6); }
 }
 /* Les premières offres (docs/104, 0.80.0). */
 .first-offers-line { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); line-height: var(--leading-normal); }
@@ -2163,7 +2103,7 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .empty-state p { margin: 0; max-width: 28rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  button, .button-link, .offer-row, .chunk-card, .dash-tile, .dash-link, input[type="checkbox"]::after { transition: none !important; }
+  button, .button-link, .offer-line, .chunk-card, .dash-tile, .dash-link, input[type="checkbox"]::after { transition: none !important; }
   button:active, .button-link:active { transform: none !important; }
   .chunk-card:hover, .dash-tile:hover, .dash-link:hover { transform: none !important; }
   input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before { animation: none !important; }
@@ -2906,13 +2846,6 @@ input:where([type="text"], [type="search"], [type="number"], [type="tel"], [type
 .today-sub-title { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--muted); }
 .today-rows { list-style: none; margin: 0; padding: 0; }
 .today-rows li + li { border-top: 1px solid var(--divider); }
-.today-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; color: var(--text); text-decoration: none; }
-.today-row:hover strong { color: var(--accent); }
-.today-row-main { display: grid; gap: var(--space-1); min-width: 0; line-height: var(--leading-tight); }
-/* Jamais de « … » dans une ligne de liste (§3) : le texte passe à la ligne. */
-.today-row-main strong { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
-.today-row-line { color: var(--muted); font-size: var(--font-small); overflow-wrap: anywhere; }
-.today-row-action { justify-self: end; color: var(--accent); font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
 .rhythm-nested { display: grid; gap: var(--space-3); margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid var(--divider); }
 .rhythm-nested .rhythm-head { align-items: center; }
 @media (max-width: 820px) {
@@ -3404,7 +3337,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .face-mark .face-line { fill: none; stroke: currentColor; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
 .face-mark .face-eye { fill: currentColor; }
 .face-mark .face-spark { fill: var(--logo-spark); }
-.offer-row-alert.gap { color: var(--muted); }
 
 /* La note expliquée, dans la fiche (docs/121 §C.1-3) : la phrase sous le résumé ; le niveau
    en étiquette neutre, le détail au survol ; « Je l'ai » au bout d'un manque, son bloc relu
@@ -3817,15 +3749,7 @@ main:focus { outline: none; }
 .today .action-band-card {
   box-shadow: var(--lift), 0 6px 0 -3px var(--surface), 0 12px 0 -6px var(--surface);
 }
-.today-triage-preview { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3) var(--space-4); align-items: center; margin-top: var(--space-1); }
-.today-triage-offer { display: grid; gap: var(--space-1); line-height: var(--leading-tight); min-width: 0; }
-.today-triage-offer strong { font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
-.today-triage-offer .muted { font-size: var(--font-small); }
-.today-triage-why { grid-column: 1 / -1; display: grid; justify-items: start; gap: var(--space-1); font-size: var(--font-small); line-height: var(--leading-normal); }
-@media (min-width: 821px) {
-  .today-triage-preview { grid-template-columns: auto minmax(0, max-content) minmax(0, 1fr); column-gap: var(--space-5); }
-  .today-triage-why { grid-column: auto; }
-}
+.today-triage-preview { margin-top: var(--space-1); }
 .today-triage-done { display: grid; gap: var(--space-2); padding: var(--space-6); border-radius: var(--radius); background: var(--band); }
 .today-triage-done h2 { margin: 0; font-size: var(--font-section); font-weight: var(--weight-semibold); }
 .today-triage-done p { margin: 0; color: var(--muted); }
@@ -4092,3 +4016,61 @@ html.filters-open { overflow: hidden; }
 .global-search-box.sheet .global-search-input-wrap input { width: 100%; }
 .global-search-box.sheet .global-search-panel { position: static; width: auto; max-width: none; max-height: none; overflow: visible; padding: var(--space-2) 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
 html.search-open { overflow: hidden; }
+
+/* --- Ligne d'offre (planche « Ligne d'offre », composant 179:2912) ---
+   La même partout : logo ou initiale, poste en gras, « entreprise · lieu » en gris, puis au bout de la
+   ligne le verdict et l'action. Toute la ligne est un vrai lien (le titre, étiré sur elle) ; l'action
+   reste au-dessus. Survol : fond accent à 5 %, poste en accent. Focus clavier : contour de 2 px, rayon 8
+   (WCAG 2.4.7). Sur téléphone, le verdict reste à droite et l'action passe sous le texte. */
+.offer-line {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "logo text verdict action"; align-items: center; gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); color: var(--text); cursor: pointer;
+  transition: background-color 150ms;
+}
+.offer-line > .logo { grid-area: logo; }
+.offer-line-text { grid-area: text; display: grid; gap: var(--space-1); min-width: 0; line-height: var(--leading-tight); }
+.offer-line-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
+.offer-line-title {
+  padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: var(--weight-semibold);
+  text-align: left; text-decoration: none; overflow-wrap: anywhere; cursor: pointer;
+}
+.offer-line-title::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+/* Le focus clavier : le contour sur la zone du lien, toute la ligne (WCAG 2.4.7). */
+.offer-line-title:focus-visible { outline: none; }
+.offer-line-title:focus-visible::after { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius-sm); }
+.offer-line-sub, .offer-line-note, .offer-line-state { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); overflow-wrap: anywhere; }
+.offer-line-note.alert { color: var(--orange-text); }
+.offer-line-state { font-weight: var(--weight-semibold); }
+/* La ligne du dessous respire (§3, texte jamais collé) : elle se détache de « entreprise · lieu ». */
+.offer-line-note, .offer-line-state { margin-top: var(--space-1); }
+.offer-line-state.urgent { color: var(--orange-text); }
+.offer-line-verdict { grid-area: verdict; justify-self: end; }
+.offer-line-word { font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
+.offer-line-word.very-close { color: var(--ok-text); }
+.offer-line-word.close { color: var(--accent); }
+.offer-line-word.dig { color: var(--score-dig); }
+.offer-line-word.far { color: var(--muted); }
+.offer-line-action { grid-area: action; position: relative; justify-self: end; font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
+.offer-line:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.offer-line:hover .offer-line-title { color: var(--accent); }
+.offer-line.selected { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); box-shadow: inset 3px 0 0 var(--accent); }
+.offer-line.expired { opacity: 0.6; }
+/* Les lignes d'un même jour (Offres) tiennent dans une seule carte, séparées d'un filet. */
+.offer-cards > li > .offer-line { background: var(--surface); border: 1px solid var(--border); border-top-width: 0; border-radius: 0; }
+.offer-cards > li:not(.offer-day) + li:not(.offer-day) > .offer-line { border-top: 1px solid var(--divider); }
+.offer-cards > li:first-child > .offer-line,
+.offer-day + li > .offer-line { border-top-width: 1px; border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+.offer-cards > li:last-child > .offer-line,
+.offer-cards > li:has(+ .offer-day) > .offer-line { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+.offer-cards > li > .offer-line:hover { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+/* Dans une carte (Suivi, Tri du jour) : la ligne s'aligne sur le titre de la carte. */
+.today-rows .offer-line, .today-triage-preview .offer-line { margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }
+@media (max-width: 820px) {
+  .offer-line { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "logo text verdict" ". action action"; column-gap: var(--space-3); }
+  .offer-line:not(.has-action) { grid-template-areas: "logo text verdict"; }
+  .offer-line-action { justify-self: start; }
+  .offer-line > .logo:not(.large) { width: 2rem; height: 2rem; border-radius: var(--radius-sm); font-size: var(--font-caption); }
+  .offer-line.full .offer-line-verdict { align-self: start; }
+}
+@media (prefers-reduced-motion: reduce) { .offer-line { transition: none; } }
