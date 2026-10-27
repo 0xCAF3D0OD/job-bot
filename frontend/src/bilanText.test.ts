@@ -49,11 +49,16 @@ describe("textes du Bilan (1.6.62)", () => {
     expect(text(at(19, 3, null))).toBe("Premières réponses : 3 sur 19 candidatures.");
     // 1 réponse contre 0 : pas « avance ».
     expect(text(at(19, 1, 0))).toBe("Premières réponses : 1 sur 19 candidatures.");
-    expect(at(19, 5, 3)).toEqual({ before: "Ta recherche ", accent: "avance", after: " : plus de réponses qu'au trimestre d'avant." });
-    expect(text(at(19, 3, 3))).toBe("Ta recherche tient le rythme : autant de réponses qu'au trimestre d'avant.");
-    expect(text(at(19, 2, 3))).toBe("Ta recherche ralentit : moins de réponses qu'au trimestre d'avant.");
+    expect(at(19, 5, 3)).toEqual({ before: "Ta recherche ", accent: "avance", after: " : 5 réponses, contre 3 au trimestre d'avant." });
+    expect(text(at(19, 1, 1))).toBe("Ta recherche tient le rythme : 1 réponse, contre 1 au trimestre d'avant.");
     expect(conclusion({ funnel: { received: 0, retained: 0, applications: 9, responses: 2, interviews: 0, engagements: 0 }, previous_responses: 4 } as Parameters<typeof conclusion>[0], "month").after).toBe(
-      " : moins de réponses qu'au mois d'avant.",
+      " : 2 réponses, contre 4 au mois d'avant.",
     );
+    // Les seuils de la stabilité : une réponse d'écart, ou moins de 10 % au-delà de 10 réponses avant.
+    const accent = (r: number, p: number) => at(60, r, p).accent;
+    expect([accent(6, 5), accent(7, 5), accent(4, 5), accent(3, 5)]).toEqual(["tient le rythme", "avance", "tient le rythme", "ralentit"]);
+    expect([accent(21, 20), accent(22, 20), accent(18, 20)]).toEqual(["tient le rythme", "avance", "ralentit"]);
+    expect([accent(32, 30), accent(33, 30), accent(27, 30)]).toEqual(["tient le rythme", "avance", "ralentit"]);
+    expect([accent(11, 10), accent(12, 10)]).toEqual(["tient le rythme", "avance"]);
   });
 });

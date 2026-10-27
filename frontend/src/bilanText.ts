@@ -32,9 +32,11 @@ export function conclusion(report: Report, period: Period): { before: string; ac
     return { before: "", accent: "Premières réponses", after: ` : ${r} sur ${n} candidatures.` };
   }
   const span = period === "month" ? "au mois d'avant" : "au trimestre d'avant";
-  if (r > p) return { before: "Ta recherche ", accent: "avance", after: ` : plus de réponses qu'${span}.` };
-  if (r === p) return { before: "Ta recherche ", accent: "tient le rythme", after: ` : autant de réponses qu'${span}.` };
-  return { before: "Ta recherche ", accent: "ralentit", after: ` : moins de réponses qu'${span}.` };
+  const after = ` : ${r} ${word(r, "réponse", "réponses")}, contre ${p} ${span}.`;
+  // Stable : une réponse d'écart au plus, ou, au-delà de 10 réponses avant, moins de 10 % d'écart.
+  const gap = Math.abs(r - p);
+  if (gap <= 1 || (p > 10 && gap < 0.1 * p)) return { before: "Ta recherche ", accent: "tient le rythme", after };
+  return { before: "Ta recherche ", accent: r > p ? "avance" : "ralentit", after };
 }
 
 const NOT_SITES = ["spontaneous", "manual"];

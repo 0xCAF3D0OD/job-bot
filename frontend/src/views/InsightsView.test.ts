@@ -89,7 +89,7 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "recent" } } });
     // La conclusion d'abord (règles §3.2), comparée au trimestre d'avant, sans redire la bande.
     expect(wrapper.find(".insights").element.firstElementChild?.getAttribute("data-test")).toBe("headline");
-    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche avance : plus de réponses qu'au trimestre d'avant.");
+    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche avance : 9 réponses, contre 4 au trimestre d'avant.");
     expect(wrapper.find("[data-test=headline] strong").text()).toBe("avance");
     // La bande (§3) : le site qui répond le plus, contre les autres sites qui ont assez de données.
     const band = wrapper.find("[data-test=action-band]");
@@ -176,7 +176,7 @@ describe("Bilan (docs/42, docs/55)", () => {
     Object.assign(navigator, { clipboard: { writeText } });
     const { wrapper, router } = await mountView("/candidatures/bilan?mois=2026-10");
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "month", month: "2026-10" } } });
-    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche tient le rythme : autant de réponses qu'au mois d'avant.");
+    expect(wrapper.find("[data-test=headline]").text()).toBe("Ta recherche tient le rythme : 9 réponses, contre 9 au mois d'avant.");
     const orp = wrapper.find("[data-test=detail-orp]");
     expect(orp.find("[data-test=disclosure-description]").text()).toBe("Le résumé d'octobre à copier");
     await orp.find(".disclosure-row").trigger("click");
