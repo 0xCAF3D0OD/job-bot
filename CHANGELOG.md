@@ -273,4 +273,5 @@ sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau apr�
 | 1.6.59 | Coordination : la série de modifications du 27.10 inscrite au tableau (en-tête, recherche globale, Bilan, Réglages, Alertes, règles), la barre d'outils d'Offres et la sélection des onglets transmises à Pages | livrée |
 | 1.6.60 | Barre d'onglets du téléphone un peu plus haute (4 rem au lieu de 3,6) : de l'air au-dessus de la pastille de l'onglet actif | livrée |
 | 1.6.61 | Repliable : une icône dans une pastille et une phrase en gris sous le titre, en option ; elles serviront aux cartes du Bilan | livrée |
+| 1.6.62 | Bilan selon la planche « 3 et 4. Bilan » : la conclusion comparée à la période d'avant, la bande du site qui répond le plus, la période en pastilles (Un mois, 3 mois, Tout), quatre repliables chiffrés (Parcours, Ce qui marche, Par mois, Entretiens) et « Pour l'ORP » sur un mois ; les mois d'avant la première activité ne s'affichent plus | PR ouverte |
 | 1.6.63 | Repliable ouvert et survolé : la phrase sous le titre passe en couleur de texte, pour rester lisible sur le fond accentué (contraste 4,5:1) | livrée |
