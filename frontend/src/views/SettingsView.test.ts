@@ -70,25 +70,32 @@ describe("SettingsView, notifications", () => {
     await wrapper.find("[data-test=test-notification]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/notifications/test");
-    expect(wrapper.find("[data-test=notifications] [role=status]").text()).toContain("Notification envoyée");
+    expect(wrapper.find("[data-test=notifications] span.muted[role=status]").text()).toContain("Notification envoyée");
   });
 });
 
-describe("SettingsView, date limite ORP", () => {
-  it("enregistre le jour de remise", async () => {
+describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
+  function settings(extra: Record<string, unknown> = {}) {
+    return { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 5, ...extra };
+  }
+  function serveSettings() {
     GET.mockImplementation((path: string) =>
-      Promise.resolve({
-        data:
-          path === "/api/notifications"
-            ? { configured: false, server: "https://ntfy.sh" }
-            : { orp_monthly_target: 20, notify_score_threshold: 70, llm_monthly_budget_chf: 10, orp_due_day: 5 },
-      }),
+      Promise.resolve({ data: path === "/api/notifications" ? { configured: false, server: "https://ntfy.sh" } : settings() }),
     );
+  }
+
+  it("un champ chiffré s'enregistre quand on le quitte, pas à chaque frappe ; « Enregistré » sur la ligne", async () => {
+    serveSettings();
     const { api } = await import("../api/client");
-    const put = vi.mocked(api.PUT).mockResolvedValue({ data: {} } as never);
+    const put = vi.mocked(api.PUT).mockResolvedValue({ data: settings({ orp_due_day: 10 }) } as never);
     const { wrapper } = await mountSettings();
-    await wrapper.find("[data-test=due-day]").setValue(10);
-    await wrapper.find("[data-test=settings-form]").trigger("submit");
+    const input = wrapper.find("[data-test=due-day]");
+    // La frappe seule (événement input) n'enregistre rien.
+    (input.element as HTMLInputElement).value = "10";
+    await input.trigger("input");
+    await flushPromises();
+    expect(put).not.toHaveBeenCalled();
+    await input.trigger("change");
     await flushPromises();
     expect(put).toHaveBeenCalledWith("/api/settings", {
       body: {
@@ -100,6 +107,25 @@ describe("SettingsView, date limite ORP", () => {
         rhythm_pause_until: null,
       },
     });
+    const row = input.element.closest("[data-test=setting-row]")!;
+    expect(row.querySelector("[data-test=setting-saved]")!.textContent).toContain("Enregistré");
+    // Plus de bouton « Enregistrer » nulle part.
+    expect(wrapper.text()).not.toContain("Enregistrer");
+  });
+
+  it("une valeur impossible : l'erreur sous le champ, l'ancienne reste enregistrée, la saisie reste", async () => {
+    serveSettings();
+    const { api } = await import("../api/client");
+    const put = vi.mocked(api.PUT);
+    const { wrapper } = await mountSettings();
+    const input = wrapper.find("[data-test=due-day]");
+    await input.setValue(31);
+    await input.trigger("change");
+    await flushPromises();
+    expect(put).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=setting-error]").text()).toBe("Entre 2 et 28. Le 5 reste enregistré.");
+    expect(input.attributes("aria-invalid")).toBe("true");
+    expect((input.element as HTMLInputElement).value).toBe("31");
   });
 });
 
@@ -109,28 +135,28 @@ describe("SettingsView, une rubrique à la fois (docs/48)", () => {
     const { wrapper, router } = await mountSettings();
     const toc = wrapper.findAll(".settings-toc a").map((a) => a.text());
     expect(toc).toEqual(["Recherche d'emploi", "Rythme", "Notifications", "IA", "Compte", "Agenda et extension"]);
-    expect(wrapper.find("[data-test=settings-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=due-day]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
     // Le seuil de notification est dans sa rubrique, dit en clair.
     expect(wrapper.text()).not.toContain("M'avertir d'une offre");
     await router.push({ query: { rubrique: "notifications" } });
     await flushPromises();
-    expect(wrapper.text()).toContain("M'avertir d'une offre à partir de");
-    expect(wrapper.find("[data-test=settings-form]").exists()).toBe(false);
+    expect(wrapper.text()).toContain("M'avertir d'une offre dès");
+    expect(wrapper.find("[data-test=due-day]").exists()).toBe(false);
 
     await router.push({ path: "/reglages", query: {}, hash: "#agenda" });
     await flushPromises();
     expect(wrapper.find(".settings-toc a.active").text()).toBe("Agenda et extension");
     // « Chercher l'annonce chez l'employeur » n'est plus ici (1.6.28).
-    expect(wrapper.find("[data-test=settings-employer]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=employer-threshold]").exists()).toBe(false);
   });
 
-  it("« Chercher l'annonce chez l'employeur à partir de » est dans Recherche d'emploi (1.6.28)", async () => {
+  it("« Chercher l'annonce chez l'employeur » est dans Recherche d'emploi (1.6.28)", async () => {
     mockGet(false);
     const { wrapper } = await mountSettings("recherche");
-    const employer = wrapper.find("[data-test=settings-employer]");
+    const employer = wrapper.find("[data-test=employer-threshold]");
     expect(employer.exists()).toBe(true);
-    expect(employer.text()).toContain("Chercher l'annonce chez l'employeur à partir de");
+    expect(employer.element.closest("[data-test=setting-row]")!.textContent).toContain("Chercher l'annonce chez l'employeur");
   });
 });
 
@@ -205,13 +231,12 @@ describe("SettingsView, comptes (docs/65)", () => {
     const { api } = await import("../api/client");
     const put = vi.mocked(api.PUT).mockResolvedValue({ data: { llm_monthly_budget_chf: 12 } } as never);
     const { wrapper } = await mountSettings("ia");
-    expect(wrapper.find("[data-test=save-budget]").exists()).toBe(false);
-    const input = wrapper.find("#budget");
+    const input = wrapper.find("[data-test=budget]");
     await input.setValue(12);
     await input.trigger("change");
     await flushPromises();
     expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ llm_monthly_budget_chf: 12 }) });
-    expect(wrapper.find("[data-test=budget-saved]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=budget-form] [data-test=setting-saved]").text()).toContain("Enregistré");
   });
 
   it("exploitant : la rubrique Plateforme", async () => {
@@ -226,38 +251,35 @@ describe("SettingsView, comptes (docs/65)", () => {
 });
 
 describe("SettingsView, le bon rythme (docs/86)", () => {
-  it("les jours de recherche et l'heure du message des offres", async () => {
+  it("les jours, la pause et le message des offres s'appliquent tout de suite", async () => {
     mockGet(false);
-    const { wrapper } = await mountSettings("rythme");
-    const form = wrapper.find("[data-test=rhythm-form]");
-    expect((form.find("[data-test=rhythm-day-0]").element as HTMLInputElement).checked).toBe(true);
-    expect((form.find("[data-test=rhythm-day-5]").element as HTMLInputElement).checked).toBe(false);
-    await form.find("[data-test=rhythm-day-2]").setValue(false);
-    await form.find("[data-test=rhythm-hour]").setValue("8");
     const PUT = vi.mocked((await import("../api/client")).api.PUT).mockResolvedValue({ data: null } as never);
-    await form.trigger("submit");
+    const { wrapper } = await mountSettings("rythme");
+    const last = () => (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
+    expect((wrapper.find("[data-test=rhythm-day-0]").element as HTMLInputElement).checked).toBe(true);
+    expect((wrapper.find("[data-test=rhythm-day-5]").element as HTMLInputElement).checked).toBe(false);
+    await wrapper.find("[data-test=rhythm-day-2]").setValue(false);
     await flushPromises();
-    const body = (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
-    expect(body.rhythm_days).toEqual([0, 1, 3, 4]);
-    expect(body.offers_notify_hour).toBe(8);
-    expect(body.offers_notify_mode).toBe("daily");
+    expect(last().rhythm_days).toEqual([0, 1, 3, 4]);
+    await wrapper.find("[data-test=rhythm-hour]").setValue("8");
+    await flushPromises();
+    expect(last().offers_notify_hour).toBe(8);
+    expect(last().offers_notify_mode).toBe("daily");
     // Une pause, puis la terminer.
-    await form.find("[data-test=pause-from]").setValue("2026-10-26");
-    await form.find("[data-test=pause-until]").setValue("2026-11-01");
-    await form.trigger("submit");
+    await wrapper.find("[data-test=pause-from]").setValue("2026-10-26");
+    await wrapper.find("[data-test=pause-until]").setValue("2026-11-01");
     await flushPromises();
-    const paused = (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
-    expect([paused.rhythm_pause_from, paused.rhythm_pause_until]).toEqual(["2026-10-26", "2026-11-01"]);
-    await form.find("[data-test=pause-end]").trigger("click");
+    expect([last().rhythm_pause_from, last().rhythm_pause_until]).toEqual(["2026-10-26", "2026-11-01"]);
+    await wrapper.find("[data-test=pause-end]").trigger("click");
     await flushPromises();
-    const ended = (PUT.mock.calls.at(-1) as unknown as [string, { body: Record<string, unknown> }])[1].body;
-    expect(ended.rhythm_pause_from).toBeNull();
+    expect(last().rhythm_pause_from).toBeNull();
     // « Dès qu'elles arrivent » : l'heure ne sert plus.
-    await form.find("[data-test=rhythm-instant]").setValue(true);
-    expect(form.find("[data-test=rhythm-hour]").attributes("disabled")).toBeDefined();
+    await wrapper.find("[data-test=rhythm-instant]").setValue(true);
+    await flushPromises();
+    expect(last().offers_notify_mode).toBe("instant");
+    expect(wrapper.find("[data-test=rhythm-hour]").attributes("disabled")).toBeDefined();
   });
 });
-
 
 describe("Des Réglages épurés (docs/106)", () => {
   it("une rubrique, une carte ; le seuil en pastilles, enregistré au clic", async () => {
@@ -269,15 +291,15 @@ describe("Des Réglages épurés (docs/106)", () => {
     const choices = wrapper.findAll("[data-test=notify-form] [role=radio]").map((b) => b.text());
     expect(choices).toEqual(["50", "60", "70", "80", "90"]);
     expect(wrapper.find("[data-test=threshold-70]").attributes("aria-checked")).toBe("true");
-    expect(wrapper.find("[data-test=save-notify]").exists()).toBe(false);
+
     await wrapper.find("[data-test=threshold-80]").trigger("click");
     await flushPromises();
     expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ notify_score_threshold: 80 }) });
-    expect(wrapper.find("[data-test=threshold-saved]").text()).toBe("Enregistré");
+    expect(wrapper.find("[data-test=notify-form] [data-test=setting-saved]").text()).toContain("Enregistré");
     // La notification de test : une ligne, son nom à gauche, « Envoyer » à droite.
     expect(wrapper.find("[data-test=test-notification]").text()).toBe("Envoyer");
     // L'interrupteur du téléphone n'est que pour un compte invité ; ici, la ligne de test seule.
-    expect(wrapper.find("[data-test=notifications] .settings-line strong").text()).toBe("Notification de test");
+    expect(wrapper.find("[data-test=notifications] .setting-row-title").text()).toBe("Notification de test");
   });
 
   it("un seuil d'avant, hors des cinq, reste proposé", async () => {
@@ -291,9 +313,4 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(choices).toEqual(["50", "60", "70", "75", "80", "90"]);
   });
 
-  it("« Enregistrer » plein pour un formulaire de plusieurs champs", async () => {
-    mockGet(false);
-    const { wrapper } = await mountSettings();
-    expect(wrapper.find("[data-test=save-settings]").classes()).toContain("primary");
-  });
 });

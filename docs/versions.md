@@ -35,6 +35,9 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.59 | Design | Série du 27.10 inscrite au tableau (points 1 à 7) | `docs/1.6.58-serie-27-10` | fusionnée (#368) |
 | 1.6.60 | Design | Barre d'onglets du téléphone : `--tabbar-h` de 3,6 à 4 rem, de l'air au-dessus de la pastille | `fix/1.6.60-tabbar-h` | fusionnée (#370) |
 | 1.6.61 | Design | Repliable : icône et phrase facultatives (pour le Bilan, série du 27.10 point 4) | `feat/1.6.61-repliable` | fusionnée (#371) |
+| 1.6.62 | Pages | Série du 27.10, points 3 et 4 : le Bilan selon la planche « 3 et 4. Bilan » (conclusion exacte, bande du meilleur site, période en pastilles, quatre repliables chiffrés et « Pour l'ORP », mois d'avant la première activité masqués) | `feat/1.6.62-bilan` | fusionnée (#374) |
 | 1.6.63 | Design | Repliable ouvert et survolé : la phrase en --text, contraste 4,5:1 (signalé par Pages) | `fix/1.6.63-repliable-contraste` | fusionnée (#373) |
 | 1.6.64 | Design | Coordination : le numéro se réserve dans la PR de la tâche | `docs/1.6.64-reservation` | fusionnée (#375) |
 | 1.6.65 | Design | Réglages : composants SettingCard et SettingRow (une carte par réglage, contrôle à droite, « Enregistré » annoncé, erreur sous le champ) | `feat/1.6.65-ligne-reglage` | PR ouverte |
+| 1.6.66 | Pages | Série du 27.10, point 5 (première partie) : Réglages en cartes, Recherche d'emploi, Rythme, Notifications, IA ; enregistrement réglage par réglage, « Annuler » 6 s sur un site | `feat/1.6.66-reglages` | PR ouverte |
+| 1.6.67 | Pages | Série du 27.10, point 5 (seconde partie) : Compte, Agenda et extension, Administration, État du service en cartes | `feat/1.6.67-reglages` | réservée |

@@ -18,11 +18,13 @@ import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
+import SettingCard from "../components/SettingCard.vue";
+import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 import AiSpend from "../components/AiSpend.vue";
-import HoverNote from "../components/HoverNote.vue";
-const form = ref<SettingsModel>({
+
+const DEFAULTS: SettingsModel = {
   orp_monthly_target: null,
   notify_score_threshold: 70,
   llm_monthly_budget_chf: 10,
@@ -33,7 +35,11 @@ const form = ref<SettingsModel>({
   offers_notify_hour: 9,
   rhythm_pause_from: null,
   rhythm_pause_until: null,
-});
+};
+// La saisie (`form`) et la dernière valeur enregistrée (`stored`, 1.6.66) : une valeur refusée reste
+// dans le champ pour la corriger, l'ancienne reste enregistrée.
+const form = ref<SettingsModel>({ ...DEFAULTS });
+const stored = ref<SettingsModel>({ ...DEFAULTS });
 // Le bon rythme (docs/86) : tes jours de recherche, lundi = 0.
 const WEEK = [
   { value: 0, label: "Lundi" },
@@ -47,8 +53,6 @@ const WEEK = [
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 const loaded = ref(false);
 usePageReady("settings", () => loaded.value);
-const saving = ref(false);
-const message = ref("");
 const notifications = ref<{ configured: boolean; server: string; personal?: boolean; topic?: string | null } | null>(
   null,
 );
@@ -76,7 +80,10 @@ async function sendTest(): Promise<void> {
 
 onMounted(async () => {
   const { data } = await api.GET("/api/settings");
-  if (data) form.value = data;
+  if (data) {
+    form.value = { ...data };
+    stored.value = { ...data };
+  }
   loaded.value = true;
   void setupMarkers();
   // Ancien lien vers l'état technique : il a maintenant sa page (docs/21 §6).
@@ -105,44 +112,100 @@ async function setPhone(enabled: boolean): Promise<void> {
   testMessage.value = "";
 }
 
+// L'enregistrement réglage par réglage (1.6.66, planche « 5. Réglages ») : un interrupteur ou un choix
+// s'applique tout de suite ; un champ chiffré quand on le quitte. « Enregistré » s'affiche sur la ligne
+// (message d'état, WCAG 4.1.3) ; une erreur sous le champ (WCAG 3.3.1).
+const savedRow = ref<string | null>(null);
+const rowErrors = ref<Record<string, string>>({});
+let savedTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearError(row: string): void {
+  rowErrors.value = Object.fromEntries(Object.entries(rowErrors.value).filter(([key]) => key !== row));
+}
+
+function refusal(error: unknown): string {
+  const detail = (error as { detail?: unknown } | undefined)?.detail;
+  if (typeof detail === "string") return `${detail.charAt(0).toUpperCase()}${detail.slice(1)}.`;
+  return "Refusé : vérifie la valeur.";
+}
+
+async function persist(row: string, patch: Partial<SettingsModel>): Promise<boolean> {
+  const body = { ...stored.value, ...patch };
+  body.orp_monthly_target = body.orp_monthly_target || null;
+  body.rhythm_pause_from = body.rhythm_pause_from || null;
+  body.rhythm_pause_until = body.rhythm_pause_until || null;
+  if (savedTimer) clearTimeout(savedTimer);
+  savedRow.value = null;
+  try {
+    const { data, error } = await api.PUT("/api/settings", { body });
+    if (!data) {
+      // Dans la démo, la bulle « rien n'est enregistré » le dit déjà : pas d'erreur sous le champ.
+      if (!me.value?.demo) rowErrors.value = { ...rowErrors.value, [row]: refusal(error) };
+      return false;
+    }
+    stored.value = { ...data };
+    for (const key of Object.keys(patch) as (keyof SettingsModel)[]) (form.value as Record<string, unknown>)[key] = data[key];
+    clearError(row);
+    savedRow.value = row;
+    savedTimer = setTimeout(() => (savedRow.value = null), 3000);
+    return true;
+  } catch {
+    rowErrors.value = { ...rowErrors.value, [row]: "API injoignable." };
+    return false;
+  }
+}
+
+// Les champs chiffrés et leur règle : une valeur impossible n'est pas envoyée, l'ancienne reste.
+type NumberKey = "orp_monthly_target" | "orp_due_day" | "employer_search_threshold" | "llm_monthly_budget_chf";
+const RULES: Record<NumberKey, { row: string; min: number; max: number; text: string; optional?: boolean; decimal?: boolean }> = {
+  orp_monthly_target: { row: "orp", min: 1, max: 100, text: "Entre 1 et 100.", optional: true },
+  orp_due_day: { row: "due", min: 2, max: 28, text: "Entre 2 et 28." },
+  employer_search_threshold: { row: "employer", min: 0, max: 100, text: "Entre 0 et 100." },
+  llm_monthly_budget_chf: { row: "budget", min: 0, max: 1000, text: "Entre 0 et 1000 CHF.", decimal: true },
+};
+async function saveNumber(key: NumberKey): Promise<void> {
+  const rule = RULES[key];
+  const value = form.value[key] as number | string | null;
+  const empty = value === null || value === "";
+  if (empty && rule.optional) {
+    if (stored.value[key] !== null) await persist(rule.row, { [key]: null });
+    return;
+  }
+  const fine = typeof value === "number" && value >= rule.min && value <= rule.max && (rule.decimal || Number.isInteger(value));
+  if (!fine) {
+    const old = stored.value[key];
+    savedRow.value = null;
+    rowErrors.value = {
+      ...rowErrors.value,
+      [rule.row]: `${rule.text} ${old === null || old === undefined ? "Rien n'est enregistré." : `Le ${old} reste enregistré.`}`,
+    };
+    return;
+  }
+  if (value === stored.value[key]) {
+    clearError(rule.row);
+    return;
+  }
+  await persist(rule.row, { [key]: value });
+}
+
+async function saveDays(): Promise<void> {
+  await persist("days", { rhythm_days: [...(form.value.rhythm_days ?? [])].sort() });
+}
+async function savePause(): Promise<void> {
+  const { rhythm_pause_from: from, rhythm_pause_until: until } = form.value;
+  if (from && until && until < from) {
+    rowErrors.value = { ...rowErrors.value, pause: "La fin vient après le début." };
+    return;
+  }
+  await persist("pause", { rhythm_pause_from: from, rhythm_pause_until: until });
+}
 async function endPause(): Promise<void> {
   form.value.rhythm_pause_from = null;
   form.value.rhythm_pause_until = null;
-  await save();
+  await persist("pause", { rhythm_pause_from: null, rhythm_pause_until: null });
 }
-
-async function save(): Promise<void> {
-  saving.value = true;
-  try {
-    const body = {
-      ...form.value,
-      orp_monthly_target: form.value.orp_monthly_target || null,
-      rhythm_pause_from: form.value.rhythm_pause_from || null,
-      rhythm_pause_until: form.value.rhythm_pause_until || null,
-    };
-    const { data } = await api.PUT("/api/settings", { body });
-    message.value = data ? "Réglages enregistrés." : "L'enregistrement a échoué : vérifie les valeurs.";
-    if (data) form.value = data;
-  } catch {
-    message.value = "API injoignable.";
-  } finally {
-    saving.value = false;
-  }
-}
-// Un réglage d'un seul champ s'enregistre au changement (docs/106 §5) : « Enregistré » une
-// seconde à côté, ou l'erreur à sa place.
-const savedField = ref<string | null>(null);
-const fieldError = ref<{ field: string; text: string } | null>(null);
-let savedTimer: ReturnType<typeof setTimeout> | null = null;
-async function autosave(field: string): Promise<void> {
-  await save();
-  const ok = message.value === "Réglages enregistrés.";
-  // Dans la démo, la bulle « rien n'est enregistré » le dit déjà : pas d'erreur sous le champ.
-  fieldError.value = ok || me.value?.demo ? null : { field, text: message.value };
-  message.value = "";
-  if (savedTimer) clearTimeout(savedTimer);
-  savedField.value = ok ? field : null;
-  if (ok) savedTimer = setTimeout(() => (savedField.value = null), 1500);
+async function saveMode(): Promise<void> {
+  await persist("mode", { offers_notify_mode: form.value.offers_notify_mode, offers_notify_hour: form.value.offers_notify_hour });
 }
 // Le seuil des notifications en cinq pastilles (docs/106, décision 2) ; une valeur d'avant,
 // hors des cinq, reste proposée.
@@ -155,14 +218,14 @@ const thresholdChoices = computed(() => {
 });
 async function setThreshold(value: number): Promise<void> {
   form.value.notify_score_threshold = value;
-  await autosave("threshold");
+  await persist("threshold", { notify_score_threshold: value });
 }
 const router = useRouter();
 const { me } = useAuth();
 // L'exploitant (docs/65) : la rubrique Plateforme, son plafond de l'IA, les profils d'essai.
 const owner = computed(() => Boolean(me.value?.is_owner));
 // La formule d'une personne invitée (docs/125).
-const { plan, aiNote } = usePlan();
+const { plan } = usePlan();
 const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3).
 // Pas dans la démo : un écran technique, du jargon pour qui découvre jobA1 (audit du 22.10.2026).
@@ -326,121 +389,95 @@ onUnmounted(() => spy?.disconnect());
         >{{ section.label }}</a>
       </nav>
       <div class="settings-sections">
+        <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
+             contrôle à droite ; plus de bouton « Enregistrer ». -->
         <SettingsSection
           id="recherche"
           title="Recherche d'emploi"
           :value="summary.recherche"
           :active="active === 'recherche'"
+          cards
         >
-          <form
-            v-if="loaded"
-            class="form-card settings-numbers"
-            data-test="settings-form"
-            @submit.prevent="save"
-          >
-            <fieldset>
-              <legend>
-                <label for="orp">Objectif mensuel de l'ORP</label>
-              </legend>
-              <p class="setting-desc">
-                <HoverNote text="Le nombre que ton conseiller te demande ; le Suivi compte avec toi.">
-                  Les candidatures demandées chaque mois.
-                </HoverNote>
-              </p>
-              <div class="inline-field">
+          <template v-if="loaded">
+            <SettingCard>
+              <SettingRow
+                v-slot="c"
+                title="Objectif mensuel de l'ORP"
+                description="Les candidatures demandées chaque mois."
+                :saved="savedRow === 'orp'"
+                :error="rowErrors.orp"
+                stack
+              >
                 <input
-                  id="orp"
                   v-model.number="form.orp_monthly_target"
+                  class="setting-number"
                   type="number"
                   inputmode="numeric"
                   min="1"
                   max="100"
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
+                  :aria-invalid="c.invalid"
+                  data-test="orp-target"
+                  @change="saveNumber('orp_monthly_target')"
                 >
-                <span>candidatures par mois</span>
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>
-                <label for="due-day">Date limite de remise des preuves</label>
-              </legend>
-              <p class="setting-desc">
-                Le jour où les preuves sont dues.
-              </p>
-              <div class="inline-field">
+                <span>par mois</span>
+              </SettingRow>
+            </SettingCard>
+            <SettingCard>
+              <SettingRow
+                v-slot="c"
+                title="Date limite des preuves"
+                description="Le jour du mois suivant où les preuves sont dues."
+                :saved="savedRow === 'due'"
+                :error="rowErrors.due"
+                stack
+              >
                 <span>le</span>
                 <input
-                  id="due-day"
                   v-model.number="form.orp_due_day"
+                  class="setting-number"
                   type="number"
                   inputmode="numeric"
                   min="2"
                   max="28"
-                  required
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
+                  :aria-invalid="c.invalid"
                   data-test="due-day"
+                  @change="saveNumber('orp_due_day')"
                 >
                 <span>du mois suivant</span>
-              </div>
-            </fieldset>
-            <div class="form-actions">
-              <button
-                type="submit"
-                class="primary"
-                :disabled="saving"
-                data-test="save-settings"
+              </SettingRow>
+            </SettingCard>
+            <SitesPanel />
+            <SettingCard>
+              <SettingRow
+                v-slot="c"
+                title="Chercher l'annonce chez l'employeur"
+                description="Dès cette note, l'annonce est aussi cherchée chez l'employeur."
+                :saved="savedRow === 'employer'"
+                :error="rowErrors.employer"
+                stack
               >
-                Enregistrer
-              </button>
-              <span
-                v-if="message"
-                role="status"
-                class="muted"
-              >{{ message }}</span>
-            </div>
-          </form>
-          <SitesPanel class="settings-status" />
-          <!-- Revenu dans Recherche d'emploi (1.6.28, décision du 25/10 : il n'était ni l'agenda ni
-               l'extension) ; il s'enregistre au changement (docs/106 §5). -->
-          <form
-            v-if="loaded"
-            class="form-card settings-next-card"
-            data-test="settings-employer"
-            @submit.prevent="autosave('employer')"
-          >
-            <fieldset>
-              <legend>
-                <label for="employer-threshold">Chercher l'annonce chez l'employeur à partir de</label>
-              </legend>
-              <p class="setting-desc">
-                <HoverNote :text="aiNote('Environ 0,02 $ si l\'IA est nécessaire.', undefined, 'Pour postuler sans passer par un site d\'emploi.')">
-                  Dès cette note, l'annonce est cherchée chez l'employeur.
-                </HoverNote>
-              </p>
-              <div class="inline-field">
+                <span>dès</span>
                 <input
-                  id="employer-threshold"
                   v-model.number="form.employer_search_threshold"
+                  class="setting-number"
                   type="number"
                   inputmode="numeric"
                   min="0"
                   max="100"
-                  required
-                  @change="autosave('employer')"
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
+                  :aria-invalid="c.invalid"
+                  data-test="employer-threshold"
+                  @change="saveNumber('employer_search_threshold')"
                 >
                 <span>/ 100</span>
-                <span
-                  v-if="savedField === 'employer'"
-                  class="saved-flash"
-                  role="status"
-                  data-test="employer-saved"
-                >Enregistré</span>
-                <span
-                  v-if="fieldError?.field === 'employer'"
-                  class="field-error"
-                  role="alert"
-                >{{ fieldError.text }}</span>
-              </div>
-            </fieldset>
-          </form>
+              </SettingRow>
+            </SettingCard>
+          </template>
         </SettingsSection>
 
         <SettingsSection
@@ -448,127 +485,149 @@ onUnmounted(() => spy?.disconnect());
           title="Rythme"
           :value="summary.rythme"
           :active="active === 'rythme'"
+          cards
         >
-          <form
-            v-if="loaded"
-            class="form-card rhythm-form"
-            data-test="rhythm-form"
-            @submit.prevent="save"
-          >
-            <fieldset>
-              <legend>Jours de recherche</legend>
-              <p class="setting-desc">
-                Les autres jours, seulement les rappels avec une date limite.
-              </p>
-              <div class="rhythm-week">
-                <!-- Des pastilles Lu à Di (docs/110) : de vraies cases à cocher, présentées en pastilles. -->
-                <label
-                  v-for="day in WEEK"
-                  :key="day.value"
-                  class="day-pill"
-                >
-                  <input
-                    v-model="form.rhythm_days"
-                    type="checkbox"
-                    :value="day.value"
-                    :disabled="form.rhythm_days?.length === 1 && form.rhythm_days.includes(day.value)"
-                    :data-test="`rhythm-day-${day.value}`"
-                  >
-                  <span aria-hidden="true">{{ day.label.slice(0, 2) }}</span>
-                  <span class="visually-hidden">{{ day.label }}</span>
-                </label>
-              </div>
-            </fieldset>
-            <fieldset data-test="rhythm-pause">
-              <legend>Une pause</legend>
-              <p class="setting-desc">
-                <HoverNote text="Pas de retard au retour. Annonce-la à ton conseiller : c'est lui qui décide.">
-                  Vacances, maladie : ni offres ni message pendant la pause.
-                </HoverNote>
-              </p>
-              <div class="rhythm-pause">
-                <label>
-                  Du
-                  <input
-                    v-model="form.rhythm_pause_from"
-                    type="date"
-                    data-test="pause-from"
-                  >
-                </label>
-                <label>
-                  Jusqu'au
-                  <input
-                    v-model="form.rhythm_pause_until"
-                    type="date"
-                    :min="form.rhythm_pause_from ?? undefined"
-                    data-test="pause-until"
-                  >
-                </label>
-                <button
-                  v-if="form.rhythm_pause_from"
-                  type="button"
-                  class="link"
-                  data-test="pause-end"
-                  @click="endPause"
-                >
-                  Terminer la pause
-                </button>
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>Les offres bien notées</legend>
-              <!-- Le libellé à côté du bouton, sa description dessous, alignée sur lui (docs/110). -->
-              <label class="choice">
-                <input
-                  v-model="form.offers_notify_mode"
-                  type="radio"
-                  value="daily"
-                  data-test="rhythm-daily"
-                >
-                <span class="choice-label">Un message par jour, à
-                  <select
-                    v-model.number="form.offers_notify_hour"
-                    aria-label="Heure du message"
-                    :disabled="form.offers_notify_mode !== 'daily'"
-                    data-test="rhythm-hour"
-                  >
-                    <option
-                      v-for="hour in HOURS"
-                      :key="hour"
-                      :value="hour"
-                    >
-                      {{ hour }} h
-                    </option>
-                  </select></span>
-                <span class="choice-desc">Toutes les offres bien notées du jour, en un seul message.</span>
-              </label>
-              <label class="choice">
-                <input
-                  v-model="form.offers_notify_mode"
-                  type="radio"
-                  value="instant"
-                  data-test="rhythm-instant"
-                >
-                <span class="choice-label">Dès qu'elles arrivent</span>
-                <span class="choice-desc">Un message par offre, dès qu'elle est notée.</span>
-              </label>
-            </fieldset>
-            <div class="form-actions">
-              <button
-                type="submit"
-                class="primary"
-                :disabled="saving"
-                data-test="save-rhythm"
+          <template v-if="loaded">
+            <SettingCard data-test="rhythm-form">
+              <SettingRow
+                v-slot="c"
+                title="Jours de recherche"
+                description="Les autres jours, seulement les rappels avec une date limite."
+                :saved="savedRow === 'days'"
+                :error="rowErrors.days"
+                stack
               >
-                Enregistrer
-              </button>
-              <span
-                v-if="message"
-                role="status"
-                class="muted"
-              >{{ message }}</span>
-            </div>
-          </form>
+                <!-- Des pastilles Lu à Di (docs/110) : de vraies cases à cocher, présentées en pastilles. -->
+                <div
+                  class="rhythm-week"
+                  role="group"
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
+                >
+                  <label
+                    v-for="day in WEEK"
+                    :key="day.value"
+                    class="day-pill"
+                  >
+                    <input
+                      v-model="form.rhythm_days"
+                      type="checkbox"
+                      :value="day.value"
+                      :disabled="form.rhythm_days?.length === 1 && form.rhythm_days.includes(day.value)"
+                      :data-test="`rhythm-day-${day.value}`"
+                      @change="saveDays"
+                    >
+                    <span aria-hidden="true">{{ day.label.slice(0, 2) }}</span>
+                    <span class="visually-hidden">{{ day.label }}</span>
+                  </label>
+                </div>
+              </SettingRow>
+            </SettingCard>
+            <SettingCard data-test="rhythm-pause">
+              <SettingRow
+                v-slot="c"
+                title="Une pause"
+                description="Vacances, maladie : ni offres ni message pendant la pause."
+                :saved="savedRow === 'pause'"
+                :error="rowErrors.pause"
+                stack
+              >
+                <div
+                  class="rhythm-pause"
+                  role="group"
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
+                >
+                  <label>
+                    Du
+                    <input
+                      v-model="form.rhythm_pause_from"
+                      type="date"
+                      data-test="pause-from"
+                      @change="savePause"
+                    >
+                  </label>
+                  <label>
+                    Jusqu'au
+                    <input
+                      v-model="form.rhythm_pause_until"
+                      type="date"
+                      :min="form.rhythm_pause_from ?? undefined"
+                      :aria-invalid="c.invalid"
+                      data-test="pause-until"
+                      @change="savePause"
+                    >
+                  </label>
+                  <button
+                    v-if="form.rhythm_pause_from"
+                    type="button"
+                    class="link"
+                    data-test="pause-end"
+                    @click="endPause"
+                  >
+                    Terminer la pause
+                  </button>
+                </div>
+              </SettingRow>
+            </SettingCard>
+            <!-- Les deux façons de recevoir les offres, liées : une carte, une ligne d'en-tête, une ligne
+                 par choix (loi de proximité). -->
+            <SettingCard data-test="rhythm-mode">
+              <SettingRow
+                title="Les offres bien notées"
+                description="Comment elles t'arrivent."
+                :saved="savedRow === 'mode'"
+                :error="rowErrors.mode"
+              />
+              <SettingRow
+                v-slot="c"
+                title="Un message par jour"
+                description="Toutes les offres bien notées du jour, en un seul message."
+              >
+                <select
+                  v-model.number="form.offers_notify_hour"
+                  aria-label="Heure du message"
+                  :disabled="form.offers_notify_mode !== 'daily'"
+                  data-test="rhythm-hour"
+                  @change="saveMode"
+                >
+                  <option
+                    v-for="hour in HOURS"
+                    :key="hour"
+                    :value="hour"
+                  >
+                    {{ hour }} h
+                  </option>
+                </select>
+                <input
+                  v-model="form.offers_notify_mode"
+                  type="radio"
+                  name="offers-mode"
+                  value="daily"
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
+                  data-test="rhythm-daily"
+                  @change="saveMode"
+                >
+              </SettingRow>
+              <SettingRow
+                v-slot="c"
+                title="Dès qu'elles arrivent"
+                description="Un message par offre, dès qu'elle est notée."
+              >
+                <input
+                  v-model="form.offers_notify_mode"
+                  type="radio"
+                  name="offers-mode"
+                  value="instant"
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
+                  data-test="rhythm-instant"
+                  @change="saveMode"
+                >
+              </SettingRow>
+            </SettingCard>
+          </template>
         </SettingsSection>
 
         <SettingsSection
@@ -576,139 +635,112 @@ onUnmounted(() => spy?.disconnect());
           title="Notifications"
           :value="summary.notifications"
           :active="active === 'notifications'"
+          cards
         >
-          <div
-            v-if="loaded"
-            class="form-card"
-            data-test="notify-form"
-          >
-            <fieldset>
-              <legend id="threshold-label">
-                M'avertir d'une offre à partir de
-              </legend>
-              <p class="setting-desc">
-                Une offre notée sous ce seuil reste dans la liste, sans notification.
-              </p>
-              <div
-                class="score-choices"
-                role="radiogroup"
-                aria-labelledby="threshold-label"
+          <template v-if="loaded">
+            <SettingCard data-test="notify-form">
+              <SettingRow
+                v-slot="c"
+                title="M'avertir d'une offre dès"
+                description="Une offre notée sous ce seuil reste dans la liste, sans notification."
+                :saved="savedRow === 'threshold'"
+                :error="rowErrors.threshold"
+                stack
               >
-                <button
-                  v-for="value in thresholdChoices"
-                  :key="value"
-                  type="button"
-                  role="radio"
-                  :aria-checked="form.notify_score_threshold === value"
-                  :class="['chip', { on: form.notify_score_threshold === value }]"
-                  :data-test="`threshold-${value}`"
-                  @click="setThreshold(value)"
+                <div
+                  class="score-choices"
+                  role="radiogroup"
+                  :aria-labelledby="c.labelledby"
+                  :aria-describedby="c.describedby"
                 >
-                  {{ value }}
-                </button>
-                <span class="muted score-max">/ 100</span>
-              </div>
-              <!-- Le retour sous les pastilles, pas à côté : rien ne se tasse (retour du 2026-10-20). -->
-              <p
-                v-if="savedField === 'threshold'"
-                class="saved-flash"
-                role="status"
-                data-test="threshold-saved"
-              >
-                Enregistré
-              </p>
-              <p
-                v-if="fieldError?.field === 'threshold'"
-                class="field-error"
-                role="alert"
-              >
-                {{ fieldError.text }}
-              </p>
-            </fieldset>
-          </div>
-          <div
-            v-if="loaded"
-            class="form-card"
-          >
-            <fieldset data-test="notifications">
+                  <button
+                    v-for="value in thresholdChoices"
+                    :key="value"
+                    type="button"
+                    role="radio"
+                    :aria-checked="form.notify_score_threshold === value"
+                    :class="['chip', { on: form.notify_score_threshold === value }]"
+                    :data-test="`threshold-${value}`"
+                    @click="setThreshold(value)"
+                  >
+                    {{ value }}
+                  </button>
+                  <span class="muted score-max">/ 100</span>
+                </div>
+              </SettingRow>
+            </SettingCard>
+            <SettingCard data-test="notifications">
               <template v-if="notifications?.personal">
-                <!-- Un interrupteur, comme les CFF (docs/110) : le titre et sa description à gauche. -->
-                <label class="filter-switch setting-switch">
-                  <span>
-                    <span class="setting-title">Recevoir sur mon téléphone</span>
-                    <span class="setting-desc">Offres bien notées, relances et rappel ORP, par l'application ntfy.</span>
-                  </span>
+                <SettingRow
+                  v-slot="c"
+                  title="Recevoir sur mon téléphone"
+                  description="Offres bien notées, relances et rappel ORP, par l'application ntfy."
+                >
                   <input
                     type="checkbox"
                     role="switch"
                     :checked="notifications.configured"
+                    :aria-labelledby="c.labelledby"
+                    :aria-describedby="c.describedby"
                     data-test="phone-switch"
                     @change="setPhone(!notifications.configured)"
                   >
-                </label>
-                <template v-if="notifications.configured">
-                  <p
-                    class="setting-info"
-                    data-test="phone-on"
+                </SettingRow>
+                <SettingRow
+                  v-if="notifications.configured"
+                  title="Notification de test"
+                  :description="`Dans l'application ntfy, abonne-toi au sujet ${notifications.topic ?? ''} sur le serveur ${notifications.server}.`"
+                  data-test="phone-on"
+                >
+                  <span
+                    v-if="testMessage"
+                    role="status"
+                    class="muted"
+                  >{{ testMessage }}</span>
+                  <button
+                    type="button"
+                    class="secondary small"
+                    :disabled="testing"
+                    data-test="test-notification"
+                    @click="sendTest"
                   >
-                    Dans l'application ntfy, abonne-toi au sujet <code>{{ notifications.topic }}</code> sur le serveur
-                    {{ notifications.server }}.
-                  </p>
-                  <div class="settings-line">
-                    <strong>Notification de test</strong>
-                    <span class="inline-field">
-                      <span
-                        v-if="testMessage"
-                        role="status"
-                      >{{ testMessage }}</span>
-                      <button
-                        type="button"
-                        class="secondary small"
-                        :disabled="testing"
-                        data-test="test-notification"
-                        @click="sendTest"
-                      >
-                        Envoyer
-                      </button>
-                    </span>
-                  </div>
-                </template>
+                    Envoyer
+                  </button>
+                </SettingRow>
               </template>
-              <template v-else-if="notifications?.configured">
-                <div class="settings-line">
-                  <strong>Notification de test</strong>
-                  <span class="inline-field">
-                    <span
-                      v-if="testMessage"
-                      role="status"
-                    >{{ testMessage }}</span>
-                    <button
-                      type="button"
-                      class="secondary small"
-                      :disabled="testing"
-                      data-test="test-notification"
-                      @click="sendTest"
-                    >
-                      Envoyer
-                    </button>
-                  </span>
-                </div>
-              </template>
-              <p
+              <SettingRow
+                v-else-if="notifications?.configured"
+                title="Notification de test"
+                description="Un message sur ton téléphone, pour vérifier."
+              >
+                <span
+                  v-if="testMessage"
+                  role="status"
+                  class="muted"
+                >{{ testMessage }}</span>
+                <button
+                  type="button"
+                  class="secondary small"
+                  :disabled="testing"
+                  data-test="test-notification"
+                  @click="sendTest"
+                >
+                  Envoyer
+                </button>
+              </SettingRow>
+              <SettingRow
                 v-else-if="notificationsUnknown"
-                class="notice error"
+                title="Notifications sur le téléphone"
+                description="Impossible de vérifier pour l'instant : la plateforme ne répond pas. Réessaie dans un moment."
                 data-test="notifications-unknown"
-              >
-                Impossible de vérifier pour l'instant : la plateforme ne répond pas. Réessaie dans un moment.
-              </p>
-              <p
+              />
+              <SettingRow
                 v-else
-                class="hint"
-              >
-                Pas encore disponibles sur cette plateforme.
-              </p>
-            </fieldset>
-          </div>
+                title="Notifications sur le téléphone"
+                description="Pas encore disponibles sur cette plateforme."
+              />
+            </SettingCard>
+          </template>
         </SettingsSection>
 
         <SettingsSection
@@ -716,70 +748,60 @@ onUnmounted(() => spy?.disconnect());
           title="IA"
           :value="summary.ia"
           :active="active === 'ia'"
+          cards
         >
-          <div class="ai-layout">
-            <!-- Une personne invitée : ce que l'IA fait chaque mois dépend de sa formule, en
-                 nombres, pas en francs (docs/125 §2). -->
-            <div
-              v-if="loaded && !owner"
-              class="form-card"
+          <template v-if="loaded">
+            <!-- Une personne invitée : ce que l'IA fait chaque mois dépend de sa formule, en nombres, pas
+                 en francs (docs/125 §2). -->
+            <SettingCard
+              v-if="!owner"
               data-test="budget-fixed"
             >
-              <fieldset>
-                <legend>Formule {{ planName }}</legend>
-                <p class="setting-desc">
-                  Ce que l'IA fait chaque mois : les offres notées, les lettres, les CV, l'assistant.
-                </p>
+              <SettingRow
+                :title="`Formule ${planName}`"
+                description="Ce que l'IA fait chaque mois : les offres notées, les lettres, les CV, l'assistant."
+              >
                 <RouterLink
                   :to="{ query: { rubrique: 'compte' } }"
+                  class="button-link"
                   data-test="see-plan"
                 >
-                  Voir ce qui reste ce mois-ci
+                  Voir ce qui reste
                 </RouterLink>
-              </fieldset>
-            </div>
-            <form
-              v-else-if="loaded"
-              class="form-card"
-              data-test="budget-form"
-              @submit.prevent="autosave('budget')"
-            >
-              <fieldset>
-                <legend>
-                  <label for="budget">Plafond mensuel du coût de l'IA</label>
-                </legend>
-                <p class="setting-desc">
-                  Au-delà, les offres ne sont plus notées jusqu'au mois suivant.
-                </p>
-                <div class="inline-field">
+              </SettingRow>
+            </SettingCard>
+            <template v-else>
+              <SettingCard data-test="budget-form">
+                <SettingRow
+                  v-slot="c"
+                  title="Plafond mensuel du coût de l'IA"
+                  description="Au-delà, les offres ne sont plus notées jusqu'au mois suivant."
+                  :saved="savedRow === 'budget'"
+                  :error="rowErrors.budget"
+                  stack
+                >
                   <input
-                    id="budget"
                     v-model.number="form.llm_monthly_budget_chf"
+                    class="setting-number"
                     type="number"
                     min="0"
                     max="1000"
                     step="0.5"
                     inputmode="decimal"
-                    required
-                    @change="autosave('budget')"
+                    :aria-labelledby="c.labelledby"
+                    :aria-describedby="c.describedby"
+                    :aria-invalid="c.invalid"
+                    data-test="budget"
+                    @change="saveNumber('llm_monthly_budget_chf')"
                   >
                   <span>CHF</span>
-                  <span
-                    v-if="savedField === 'budget'"
-                    class="saved-flash"
-                    role="status"
-                    data-test="budget-saved"
-                  >Enregistré</span>
-                  <span
-                    v-if="fieldError?.field === 'budget'"
-                    class="field-error"
-                    role="alert"
-                  >{{ fieldError.text }}</span>
-                </div>
-              </fieldset>
-            </form>
-            <AiSpend v-if="owner" />
-          </div>
+                </SettingRow>
+              </SettingCard>
+              <SettingCard class="setting-card-body">
+                <AiSpend />
+              </SettingCard>
+            </template>
+          </template>
         </SettingsSection>
 
         <SettingsSection
