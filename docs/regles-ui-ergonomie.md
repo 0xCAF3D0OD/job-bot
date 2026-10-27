@@ -58,6 +58,15 @@ Ordre fixe, de haut en bas :
 Règles :
 - Au plus une action principale par écran. Les autres actions sont secondaires (bouton contour ou lien).
 - Bande d'action (1.6.48) : une bande accent pleine largeur sous la conclusion, avec une carte posée dessus qui rend explicite l'action la plus importante de la page et porte sa seule action principale. Une seule bande par page. Elle n'apparaît que s'il y a quelque chose à faire. Elle ne répète jamais le contenu de la page (1.6.54) : pas de bande sur Offres, où la liste est déjà la tâche et le nombre déjà dans l'onglet et la conclusion.
+- La conclusion (1.6.62) donne l'état général, sans répéter la bande, qui porte l'enseignement transformé en action. Elle reste exacte dans tous les cas : aucune réponse, trop peu de données, rien à comparer (NN/g : être exact, ne pas embellir).
+- **Structure des sections (1.6.69, série du 27.10)**, inspirée de la structure des pages des CFF (la structure seulement : ni leurs textes, ni leur police, ni leurs couleurs, ni leurs pictogrammes ; on écrit « inspiré de la structure des pages des CFF », jamais « style CFF ») :
+  - un **titre de section sans point final**, puis des **cartes construites pareil** : un titre en gras, une phrase dessous, le contrôle, l'état ou l'action **à droite sur la même ligne** (loi de proximité) ;
+  - les éléments liés vont dans **la même carte**, séparés d'un filet (les sites suivis, les sites d'une recherche d'alerte) ;
+  - un détail long se **replie** : le repliable porte une icône, un titre et **l'enseignement en une phrase**, visible replié ; chevron vers la droite fermé, vers le bas ouvert (Bilan) ;
+  - sur téléphone, un contrôle large (champ et son texte, jours de la semaine) passe sous le texte ; un interrupteur reste à droite. Un contrôle très large (jeton, adresse, zone de texte) passe sous le texte à toutes les tailles ;
+  - composants : `SettingCard` et `SettingRow` (Réglages, Alertes), `DisclosureRow` avec `icon` et `description` (Bilan).
+- **Enregistrement immédiat (1.6.65)** : pas de bouton « Enregistrer ». Un interrupteur ou un choix s'applique tout de suite ; un champ chiffré s'enregistre quand on le quitte, pas à chaque frappe. « Enregistré » s'affiche à côté du champ et s'annonce aux lecteurs d'écran (message d'état, WCAG 4.1.3). Une valeur impossible : l'erreur sous le champ, reliée à lui (WCAG 3.3.1), et l'ancienne valeur reste enregistrée. Une désactivation qui se rattrape (un site suivi) propose « Annuler » pendant 6 s (§4).
+- **Une confirmation dit ce qui est vraiment fait (1.6.69)** : jamais « c'est fait » si une étape reste à l'utilisateur. Exemple : ajouter une recherche ne crée l'alerte sur aucun site ; la confirmation dit « Recherche ajoutée » et « Il te reste à créer l'alerte sur … », avec l'action en bouton principal.
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
 - Les listes longues se replient au-delà de 3 éléments (« Tout voir »).
 
@@ -74,10 +83,8 @@ Largeurs (1.6.32) :
   Material Design (40 à 60) vient après Baymard dans l'ordre des références (§9) : il ne s'applique pas ici.
   `--measure` vaut 31 em (496 px à 16 px), relatif à la taille du texte. Un `ch` ne suffit pas, il est plus large que la
   lettre moyenne. La mesure limite le texte, pas le bloc : la carte garde toute la largeur de la page.
-- **Réglages** (1.6.35) : le modèle de réglages de Polaris (« App settings layout », grille 2fr / 5fr) : pour chaque
-  réglage, **le titre et sa description à gauche, les contrôles dans une carte à droite** ; plus de filets entre les
-  réglages. Le sommaire des rubriques reste à gauche de la page. Sur téléphone, une seule colonne : le titre, puis les
-  contrôles.
+- **Réglages** (1.6.65, remplace le modèle de Polaris de la 1.6.35) : une seule colonne, la structure des sections
+  ci-dessus (une carte par réglage, le contrôle à droite). Le sommaire des rubriques reste à gauche sur ordinateur.
 - **Les tableaux tiennent dans leur carte** (« Toutes les candidatures ») : aucun défilement horizontal sur ordinateur ;
   les colonnes se partagent la largeur et le texte passe à la ligne.
 - **Jamais de « … »** dans une ligne de liste : le texte passe à la ligne.
@@ -104,7 +111,10 @@ Largeurs (1.6.32) :
 | **Offres du jour** | Sur Aujourd'hui, la carte « Tri du jour. » (le nombre d'offres, la meilleure en aperçu, « Commencer le tri ») ; le tri terminé : « Tri terminé · À demain », sans bouton plein. Le tri dans son écran (2e niveau, §2) : une offre à la fois en pile de cartes, avec une phrase « pourquoi » d'une ligne ; les manques sont dans la fiche. Garder et Écarter côte à côte, chacun sur la moitié de la carte : une décision binaire, deux grandes cibles (loi de Fitts) ; c'est la seule exception à « pas de bouton pleine largeur » (§3). « Annuler » pendant 6 s ; à la fin, retour à Aujourd'hui. Balayage autorisé sur téléphone, en plus des boutons. |
 | **Écran vide** | Dit ce que la page fera et quoi faire maintenant, avec une action : un bouton principal plein (§3.3), une éventuelle seconde action en contour. |
 | **Premiers pas** | Une carte, une étape à la fois, « 2 sur 5 ». |
-| **Boutons segmentés** | Pour filtrer ou changer l'affichage d'une même carte, ou choisir une option : 2 à 5 choix (Material Design 3, boutons segmentés). Jamais pour aller vers un autre contenu : on navigue par le menu et les onglets de page (§2 : pas de troisième niveau d'onglets). Un rail au fond neutre (`--panel`), coins entièrement arrondis ; une pastille par option, à la largeur de son texte, fond `--surface` et contour `--border` ; le texte reste sur une ligne, jamais coupé : si la place manque, la pastille entière passe à la ligne (Material 3, puces). L'option active a le style de l'onglet actif de l'en-tête (fond accent léger, contour et texte accent en 600 ; NN/g, cohérence) ; le survol, une couche neutre à 8 %. Le rail fait `--control-h`. Du texte seul, sans colonne d'icônes sur le côté. Exemples : la période du Bilan, la Note des Offres. |
+| **Sélection unique (1.6.58, 1.6.69)** | Un seul style de sélection partout : le menu de l'en-tête, la barre du bas sur téléphone, les sous-onglets et les sélecteurs. Le choix actif porte une **pastille teintée** (fond `--accent-soft`, texte accent en 600, coins entièrement arrondis) ; les autres n'ont **aucun fond** ; le survol, une couche neutre à 8 % sans accent ; le focus clavier, un contour accent de 2 px. Pas de soulignement, pas de rail gris, et jamais de pastille pleine, pour ne pas imiter le bouton principal (§3). Sur la barre du bas, la pastille de 64 × 32 se place derrière l'icône (Material 3, indicateur actif). NN/g, cohérence. |
+| **Boutons segmentés** | Pour filtrer ou changer l'affichage d'une même carte, ou choisir une option : 2 à 5 choix (Material Design 3, boutons segmentés), dans l'ordre naturel (du plus court au plus long : Un mois, 3 mois, Tout). Jamais pour aller vers un autre contenu : on navigue par le menu et les onglets de page (§2 : pas de troisième niveau d'onglets). La sélection suit la **sélection unique** ci-dessus, sans rail (1.6.69 ; remplace le rail de la 1.6.41). Le texte reste sur une ligne, jamais coupé. Hauteur `--control-h`. Du texte seul. Exemples : la période du Bilan, la Note des Offres. |
+| **Recherche globale (1.6.69)** | Ordinateur : un champ visible dans l'en-tête, à gauche de la cloche. Téléphone : la loupe seule, nommée « Rechercher » (légende au survol et au focus, WCAG 1.4.13), qui ouvre la recherche en plein écran. Elle cherche dans les données de l'utilisateur (offres, candidatures, entreprises) ; résultats groupés par type, 3 au plus par groupe, puis « Tout voir » ; clavier selon le combobox de l'APG du W3C. En bas : « Suivre cette recherche », en un clic, qui ajoute une recherche d'alerte (la recherche se fait une fois, puis la collecte est automatique, §1) ; la confirmation dit ce qu'il reste à faire (§3). |
+| **Repliable (1.6.61)** | Une ligne qui se déplie sur place : titre, et en option une icône dans une pastille et une phrase (l'enseignement, visible replié). Chevron vers la droite fermé, vers le bas ouvert, partout. Jamais un repliable dans un repliable (NN/g). |
 | **Visage du 1** | 16 à 32 px dans l'usage courant. Grande taille réservée aux moments rares. Un seul visage animé à l'écran. |
 
 Un composant absent de cette liste ou de Figma ne se crée pas sans validation.
@@ -169,7 +179,7 @@ Par ordre d'autorité : en cas de désaccord, la plus haute l'emporte.
 3. **Systèmes de design** : Material Design 3 (Google) ; Polaris (Shopify) ; Apple Human Interface Guidelines.
 4. **Aide-mémoire** : Laws of UX. Jamais seul pour trancher.
 
-On reprend les principes, jamais l'apparence. **Chaque choix d'interface dans une PR cite au moins une de ces références.**
+On reprend les principes, jamais l'apparence. Une structure de page empruntée à un site (les pages des CFF pour les sections, 1.6.69) se dit « inspirée de la structure de … », jamais « style … ». **Chaque choix d'interface dans une PR cite au moins une de ces références.**
 
 ## 10. Méthode de travail pour Claude Code
 
