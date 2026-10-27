@@ -30,4 +30,4 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.54 | Design | Règle §3 : la bande ne répète jamais le contenu de la page (pas de bande sur Offres) | `docs/1.6.54-bande-sans-repetition` | fusionnée (#364) |
 | 1.6.55 | Pages | Offres : barre d'outils (recherche, « Filtrer » en panneau ou feuille, « + Ajouter »), filtres actifs en pastilles, sans colonne de filtres | `feat/1.6.55-barre-outils` | PR ouverte |
 | 1.6.56 | Pages | Test du retour d'entretien indépendant de la date du jour (signalé par Design) | `fix/1.6.56-test-retour` | fusionnée (#365) |
-| 1.6.58 | Design | Série du 27.10 inscrite au tableau (points 1 à 7) | `docs/1.6.58-serie-27-10` | PR ouverte |
+| 1.6.59 | Design | Série du 27.10 inscrite au tableau (points 1 à 7) | `docs/1.6.58-serie-27-10` (numéro 1.6.58 pris par Pages) | PR ouverte |
