@@ -47,3 +47,4 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.71 | Design | SettingRow : prop `inline` (un état court reste à droite sur téléphone) | `feat/1.6.71-reglage-inline` | fusionnée (#382) |
 | 1.6.73 | Design | Illustrations : la série de l'archive, `FaceState` avec `illustration`, règle §4 | `feat/1.6.73-illustrations` | PR ouverte |
 | 1.6.76 | Pages | Suivi : un filtre par mots (poste, entreprise), dans tous les mois ; la recherche globale y mène par « Tout voir (N) » (candidatures, entreprises) | `feat/1.6.76-suivi-filtre` | PR ouverte |
+| 1.6.77 | Design | Repliable : la teinte couvre toute la ligne de titre, « ⋯ » compris | `fix/1.6.77-repliable-ligne` | PR ouverte |
