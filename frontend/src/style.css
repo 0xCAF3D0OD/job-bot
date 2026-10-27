@@ -1352,7 +1352,7 @@ button, .button-link { max-width: 100%; }
 .disclosure-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
 .disclosure-row:hover .disclosure-title, .disclosure.open .disclosure-title { color: var(--accent); }
 /* Ouvert, le titre est déjà en accent : le survol teinte la ligne (1.6.4). */
-/* 1.6.77 : la teinte couvre toute la ligne de titre, « ⋯ » compris (dernier élément à droite), que
+/* 1.6.78 : la teinte couvre toute la ligne de titre, « ⋯ » compris (dernier élément à droite), que
    le pointeur soit sur le titre ou sur le menu. */
 .disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > :is(.disclosure-row, .disclosure-actions) { background: var(--accent-soft); }
 .disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-left-radius: inherit; border-top-right-radius: inherit; }
