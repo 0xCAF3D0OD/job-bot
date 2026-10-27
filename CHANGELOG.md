@@ -285,3 +285,5 @@ sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau apr�
 | 1.6.71 | Réglages et Alertes : un état court (« Reçue le 22 oct. ») reste à droite de sa ligne sur téléphone au lieu de passer dessous | livrée |
 | 1.6.72 | Recherche globale : un champ dans l'en-tête (la loupe sur écran étroit), les résultats dans tes offres, candidatures et entreprises, au clavier comme à la souris ; « Suivre cette recherche » crée la recherche d'alerte avec les lieux du profil et dit sur quels sites l'alerte reste à créer | livrée |
 | 1.6.73 | Illustrations : une nouvelle série pour les écrans vides, les réussites et les erreurs, prête à être posée dans les pages ; la règle de leur usage | livrée |
+| 1.6.74 | Une pastille d'état commune (neutre, à faire, réussi, erreur) et une seule façon d'écrire les dates, prêtes pour toutes les pages | livrée |
+| 1.6.76 | Suivi : un filtre par mots (poste, entreprise) dans la liste des candidatures, dans tous les mois ; la recherche globale y mène par « Tout voir (N) » pour les candidatures et les entreprises ; la date ne se coupe plus sur téléphone | livrée |
