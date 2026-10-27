@@ -22,6 +22,8 @@ Exception : **chaque session tient elle-même ses propres lignes** dans les deux
 3. Si un fichier est déjà pris par une autre session, ne pas le modifier : le signaler et attendre.
 4. Mettre sa ligne à jour à chaque changement d'état : prévu, en cours, PR ouverte, fusionnée.
 
+Le numéro de version se réserve dans la PR de la tâche elle-même : sa ligne dans `docs/versions.md` et son fichier `changelog.d/X.Y.Z.md`, jamais dans une PR de réservation à part (décision de Kevin, 27.10, après la #372). Avant de choisir le numéro, regarder main, les PR ouvertes (`gh pr list`) et les fichiers `changelog.d/` de leurs branches ; prendre le suivant.
+
 Partir de main à jour, et se remettre à jour juste avant d'ouvrir la PR. Une PR ne dépend jamais de la branche d'une autre session. La CI doit être au vert avant d'annoncer une PR.
 
 ## Tableau
@@ -57,7 +59,8 @@ Partir de main à jour, et se remettre à jour juste avant d'ouvrir la PR. Une P
 | Série du 27.10, point 3 : sélecteur de période du Bilan (Un mois, 3 mois, Tout ; pastille teintée comme l'en-tête, sans rail) | Design | — | — | Figma ; le code ira à Pages | planche validée par Kevin (27.10), transmise à Pages |
 | Série du 27.10, point 4 : Bilan (haut inchangé ; dessous, titres de section sans point et lignes construites pareil, à la place des repliables ; bande d'action « ce qui marche » ; masquer les mois antérieurs à l'inscription) | Design | — | — | Figma ; le code ira à Pages | planche validée par Kevin (27.10, avec ses trois ajustements), transmise à Pages |
 | Repliable : icône dans une pastille et phrase sous le titre, en option (pour les cartes du Bilan) | Design | `feat/1.6.61-repliable` | 1.6.61 | `frontend/src/components/DisclosureRow.vue` et son test, `style.css` (règles `.disclosure-*`), Figma (composant « Repliable », propriétés Avec icône, Icône, Avec description, Description), `changelog.d/1.6.61.md`, ces deux tableaux | fusionnée (#371) |
-| Repliable ouvert et survolé : la phrase passe en --text sur --accent-soft (WCAG 1.4.3, relevé par axe sur le Bilan de Pages) | Design | `fix/1.6.63-repliable-contraste` | 1.6.63 | `frontend/src/style.css` (une règle `.disclosure-description`), `changelog.d/1.6.63.md`, ces deux tableaux | PR ouverte |
+| Repliable ouvert et survolé : la phrase passe en --text sur --accent-soft (WCAG 1.4.3, relevé par axe sur le Bilan de Pages) | Design | `fix/1.6.63-repliable-contraste` | 1.6.63 | `frontend/src/style.css` (une règle `.disclosure-description`), `changelog.d/1.6.63.md`, ces deux tableaux | fusionnée (#373) |
+| Règle de coordination : le numéro se réserve dans la PR de la tâche, pas dans une PR à part | Design | `docs/1.6.64-reservation` | 1.6.64 | `docs/coordination.md`, `docs/versions.md`, `changelog.d/1.6.64.md` | PR ouverte |
 | Série du 27.10, point 5 : Réglages inspirés de la structure des pages des CFF (une colonne ; titre de section puis une carte par réglage ; contrôle à droite ; enregistrement immédiat, « Enregistré » ; sommaire de gauche gardé) | Design | — | — | Figma ; le code ira à Pages | planche prévue |
 | Série du 27.10, point 6 : Alertes avec la même structure (une carte par recherche ; « Créer » en bouton ; « Messages des sites » : 3 puis « Tout voir » ; lieux accentués ; bande seulement si une alerte ne reçoit rien ou un code est attendu) | Design | — | — | Figma ; le code ira à Pages | planche prévue |
 | Série du 27.10, point 2 : recherche globale dans l'en-tête (champ sur ordinateur, loupe sur téléphone ; offres, candidatures, entreprises ; « Suivre cette recherche » crée une alerte) | Design | — | — | Figma (résultats, aucun résultat, alerte créée) ; le code ira à Pages | planche prévue (en dernier) |
