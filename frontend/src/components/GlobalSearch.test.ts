@@ -138,4 +138,15 @@ describe("recherche globale (série du 27.10, point 2)", () => {
     expect(wrapper.find("[data-test=search-create-alerts]").exists()).toBe(false);
     wrapper.unmount();
   });
+
+  it("plus de 3 candidatures ou entreprises : « Tout voir (N) » mène au Suivi filtré", async () => {
+    GET.mockResolvedValue({ data: { ...RESULTS, applications: { ...RESULTS.applications, total: 5 }, companies: { ...RESULTS.companies, total: 4 } } });
+    const { wrapper } = await mountSearch();
+    await type(wrapper, "devops");
+    const apps = wrapper.find("[data-test=search-all-applications]");
+    expect(apps.text()).toBe("Tout voir (5)");
+    expect(apps.attributes("href")).toBe("/candidatures/suivi?q=devops");
+    expect(wrapper.find("[data-test=search-all-companies]").text()).toBe("Tout voir (4)");
+    wrapper.unmount();
+  });
 });
