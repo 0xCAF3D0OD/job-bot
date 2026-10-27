@@ -476,3 +476,32 @@ describe("Suivi, revue des pages (docs/43 n° 14)", () => {
     expect(calm.find("[data-test=orp-banner]").exists()).toBe(false);
   });
 });
+
+describe("Suivi, le filtre par mots (décision de Kevin, 27.10)", () => {
+  it("?q= ouvre la liste filtrée, dans tous les mois, sans accents ni casse", async () => {
+    const others = [
+      { ...application, id: 11, company: "Témoin Industrie SA", job_title: "Ingénieur DevOps", orp_month: "2026-09" },
+      { ...application, id: 12, company: "Banque Exemple", job_title: "Comptable", orp_month: "2026-10" },
+    ];
+    mockApi(undefined, [application, ...others]);
+    const { wrapper, router } = await mountView("/candidatures/suivi?q=temoin%20INGENIEUR");
+    const list = wrapper.find("[data-test=detail-list]");
+    expect(list.find(".disclosure-row").attributes("aria-expanded")).toBe("true");
+    expect(list.find(".disclosure-title").text()).toBe("Candidatures « temoin INGENIEUR »");
+    expect((list.find("[data-test=suivi-search]").element as HTMLInputElement).value).toBe("temoin INGENIEUR");
+    expect(list.text()).toContain("Témoin Industrie SA");
+    expect(list.text()).not.toContain("Banque Exemple");
+    // Effacer les mots : la liste du mois revient, l'adresse aussi.
+    await list.find("[data-test=suivi-search]").setValue("");
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    await flushPromises();
+    expect(router.currentRoute.value.query.q).toBeUndefined();
+    expect(wrapper.find("[data-test=all-months]").exists()).toBe(true);
+  });
+
+  it("aucun résultat : la phrase le dit", async () => {
+    mockApi();
+    const { wrapper } = await mountView("/candidatures/suivi?q=boulanger");
+    expect(wrapper.find("[data-test=applications-empty]").text()).toBe("Aucune candidature pour « boulanger ».");
+  });
+});

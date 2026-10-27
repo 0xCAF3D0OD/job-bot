@@ -378,10 +378,15 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
                     id="gs-applications"
                     class="gs-group-title"
                   >Candidatures</span>
-                  <span
+                  <RouterLink
                     v-if="results.applications.total > 3"
-                    class="gs-more"
-                  >{{ results.applications.total }} en tout</span>
+                    :to="{ path: '/candidatures/suivi', query: { q: terms } }"
+                    class="link"
+                    data-test="search-all-applications"
+                    @click="close"
+                  >
+                    Tout voir ({{ results.applications.total }})
+                  </RouterLink>
                 </div>
                 <div
                   v-for="a in results.applications.items"
@@ -414,10 +419,15 @@ const panelVisible = computed(() => open.value && (compact.value || terms.value.
                     id="gs-companies"
                     class="gs-group-title"
                   >Entreprises</span>
-                  <span
+                  <RouterLink
                     v-if="results.companies.total > 3"
-                    class="gs-more"
-                  >{{ results.companies.total }} en tout</span>
+                    :to="{ path: '/candidatures/suivi', query: { q: terms } }"
+                    class="link"
+                    data-test="search-all-companies"
+                    @click="close"
+                  >
+                    Tout voir ({{ results.companies.total }})
+                  </RouterLink>
                 </div>
                 <div
                   v-for="c in results.companies.items"

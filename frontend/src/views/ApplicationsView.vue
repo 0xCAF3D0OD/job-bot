@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import {
@@ -59,7 +59,35 @@ const busy = ref(false);
 const selectedDay = ref<string | null>(typeof route.query.jour === "string" ? route.query.jour : null);
 const month = computed(() => orp.value?.month ?? "");
 const monthItems = computed(() => all.value.filter((a) => a.orp_month === month.value));
-const items = computed(() => (allMonths.value ? all.value : monthItems.value));
+// Le filtre par mots (poste, entreprise ; décision de Kevin, 27.10) : dans tous les mois, sans accents ni
+// casse ; ?q= dans l'adresse, où mène « Tout voir (N) » de la recherche globale.
+const words = ref(typeof route.query.q === "string" ? route.query.q : "");
+function plain(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+const wanted = computed(() => plain(words.value).split(/\s+/).filter(Boolean));
+function matches(a: Application): boolean {
+  const text = plain(`${a.job_title} ${a.company} ${a.location ?? ""}`);
+  return wanted.value.every((w) => text.includes(w));
+}
+const items = computed(() => {
+  if (wanted.value.length) return all.value.filter(matches);
+  return allMonths.value ? all.value : monthItems.value;
+});
+// Venu de la recherche globale avec des mots : la liste filtrée, ouverte, à l'écran.
+watch(loaded, async (done) => {
+  if (!done || !wanted.value.length) return;
+  await nextTick();
+  document.querySelector<HTMLElement>("[data-test=detail-list]")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+});
+let wordsTimer: ReturnType<typeof setTimeout> | undefined;
+watch(words, (value) => {
+  clearTimeout(wordsTimer);
+  wordsTimer = setTimeout(() => {
+    const q = value.trim() || undefined;
+    if (q !== route.query.q) void router.replace({ query: { ...route.query, q } });
+  }, 300);
+});
 const rowsById = computed(() => new Map((orp.value?.rows ?? []).map((r) => [r.application_id, r])));
 const incomplete = computed(() => new Set((orp.value?.rows ?? []).filter((r) => r.missing.length).map((r) => r.application_id)));
 // À déclarer dans Job-Room (docs/85) : les candidatures du mois pas encore marquées déclarées,
@@ -743,28 +771,47 @@ onUnmounted(() => assistant.setFocus(null));
             </section>
           </DisclosureRow>
           <DisclosureRow
-            :title="`Toutes les candidatures ${ofMonth(orp.month)}`"
-            :value="String(monthItems.length)"
+            :title="wanted.length ? `Candidatures « ${words.trim()} »` : `Toutes les candidatures ${ofMonth(orp.month)}`"
+            :value="String(wanted.length ? items.length : monthItems.length)"
+            :start-open="wanted.length > 0"
+            class="suivi-list"
             data-test="detail-list"
           >
-            <label class="check all-months">
-              <input
-                v-model="allMonths"
-                type="checkbox"
-                data-test="all-months"
-              > Tous les mois
-            </label>
+            <!-- Le filtre par mots : le poste ou l'entreprise, dans tous les mois. -->
+            <div class="suivi-list-tools">
+              <span class="filters-search-wrap suivi-search">
+                <AppIcon name="search" />
+                <input
+                  v-model="words"
+                  class="filters-search"
+                  type="search"
+                  aria-label="Filtrer par mots"
+                  placeholder="Poste, entreprise"
+                  data-test="suivi-search"
+                >
+              </span>
+              <label
+                v-if="!wanted.length"
+                class="check all-months"
+              >
+                <input
+                  v-model="allMonths"
+                  type="checkbox"
+                  data-test="all-months"
+                > Tous les mois
+              </label>
+            </div>
             <p
               v-if="!items.length"
               class="hint"
               data-test="applications-empty"
             >
-              Aucune candidature en {{ formatMonth(orp.month) }}.
+              {{ wanted.length ? `Aucune candidature pour « ${words.trim()} ».` : `Aucune candidature en ${formatMonth(orp.month)}.` }}
             </p>
             <ApplicationsTable
               v-else
               :items="items"
-              :show-month="allMonths"
+              :show-month="allMonths || wanted.length > 0"
               @open="openId = $event.id"
               @edit="edit"
               @status="setStatus"
