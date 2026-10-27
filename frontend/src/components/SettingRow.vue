@@ -5,13 +5,14 @@ import AppIcon from "./AppIcon.vue";
 
 // Une ligne de réglage (1.6.65, planche « 5. Réglages ») : le titre en gras, une phrase dessous,
 // le contrôle à droite sur la même ligne (loi de proximité). `stack` : sur téléphone, le contrôle
-// passe sous le texte (un champ et son texte ne tiennent pas à côté du titre en 390 px).
+// passe sous le texte (un champ et son texte ne tiennent pas à côté du titre en 390 px). `wide`
+// (1.6.68) : un contrôle large (jeton, adresse, zone de texte) passe sous le texte à toutes les tailles.
 // L'enregistrement est immédiat : la page passe `saved` quand la valeur est enregistrée et `error`
 // quand elle est refusée. « Enregistré » est dit aux lecteurs d'écran (message d'état, WCAG
 // 4.1.3) ; l'erreur s'affiche sous le champ et lui est reliée (WCAG 3.3.1).
 const props = withDefaults(
-  defineProps<{ title: string; description?: string; saved?: boolean; error?: string; stack?: boolean }>(),
-  { description: "", saved: false, error: "", stack: false },
+  defineProps<{ title: string; description?: string; saved?: boolean; error?: string; stack?: boolean; wide?: boolean }>(),
+  { description: "", saved: false, error: "", stack: false, wide: false },
 );
 
 const id = useId();
@@ -28,7 +29,7 @@ const control = computed(() => ({
 
 <template>
   <div
-    :class="['setting-row', { stack, invalid: !!error }]"
+    :class="['setting-row', { stack, wide, invalid: !!error }]"
     data-test="setting-row"
   >
     <div class="setting-row-text">

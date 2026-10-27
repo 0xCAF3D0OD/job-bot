@@ -3173,9 +3173,23 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .setting-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .setting-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-6); padding: var(--space-5) var(--space-6); }
 .setting-row + .setting-row { border-top: 1px solid var(--divider); }
+/* 1.6.68 : les blocs posés dans une carte sous une ligne (formulaire, message, confirmation sur place),
+   séparés d'un filet comme les lignes ; la ligne qui les suit reprend le filet. */
+.setting-card > :is(.setting-row-form, .setting-row-message, .inline-confirm) { margin: 0; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--divider); }
+.setting-card > :is(.setting-row-form, .setting-row-message, .inline-confirm) + .setting-row { border-top: 1px solid var(--divider); }
+/* Champs chiffrés à la largeur de leur nombre ; le texte à côté d'un champ ne se coupe pas (repris de la 1.6.66). */
+.setting-row-control .setting-number { width: 4.5rem; }
+.setting-row-control > span:not([role="status"]) { white-space: nowrap; }
+/* `wide` (1.6.68) : un contrôle large (jeton, adresse à copier, zone de texte) passe sous le texte, sur toute
+   la largeur, à toutes les tailles d'écran. */
+.setting-row.wide { flex-direction: column; align-items: stretch; }
+.setting-row.wide .setting-row-text { flex: none; }
+.setting-row.wide .setting-row-control { flex-wrap: wrap; }
+.setting-row.wide .setting-row-control > :not([role="status"]) { flex: 1 1 auto; min-width: 0; }
+.setting-row.wide .setting-row-error { text-align: left; }
 .setting-row-text { display: grid; gap: var(--space-1); flex: 1 1 16rem; min-width: 0; }
 .setting-row-title { font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
-.setting-row-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); text-decoration: none; }
+.setting-row-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); text-decoration: none; overflow-wrap: anywhere; }
 .setting-row-control { display: flex; align-items: center; gap: var(--space-2); flex: none; }
 .setting-row-status { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ok-text); font-size: var(--font-small); }
 .setting-row-status:empty { position: absolute; } /* vide, il reste dans la page (message d'état prêt à parler) sans prendre de place */
@@ -3183,6 +3197,7 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 @media (max-width: 820px) {
   .setting-row { padding: var(--space-4); }
   .setting-row.stack { flex-direction: column; align-items: stretch; }
+  .setting-card > :is(.setting-row-form, .setting-row-message, .inline-confirm) { padding: var(--space-4); }
   .setting-row.stack .setting-row-text { flex: none; } /* en colonne, la base de 16 rem deviendrait une hauteur */
   .setting-row.stack .setting-row-control { flex-wrap: wrap; }
   .setting-row.stack .setting-row-error { text-align: left; }
@@ -4021,11 +4036,8 @@ html.filters-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .bilan-period button { transition: none; } }
 
 /* --- Réglages, rubriques en cartes (1.6.66, planche « 5. Réglages ») : les règles de la page ---
-   Les champs chiffrés à la largeur de leur nombre ; le formulaire d'ajout d'un site et les messages dans
-   la carte des sites ; la dépense de l'IA dans sa carte. */
-.setting-row-control .setting-number { width: 4.5rem; }
-.setting-row-control > span:not([role="status"]) { white-space: nowrap; }
-.sites-card .setting-row-form, .sites-card .setting-row-message { margin: 0; padding: var(--space-4) var(--space-6); border-top: 1px solid var(--divider); }
+   La dépense de l'IA dans sa carte ; les jours de la semaine. Les règles du composant sont dans le bloc
+   « .setting-* » (1.6.65, 1.6.68). */
 .sites-card .setting-row.paused .setting-row-title { color: var(--muted); }
 .setting-card-body .ai-spend { padding: var(--space-5) var(--space-6); }
 .setting-row-control .rhythm-week, .setting-row-control .rhythm-pause { margin: 0; }
@@ -4033,6 +4045,5 @@ html.filters-open { overflow: hidden; }
    partagent (comme avant 1.6.66). */
 .setting-row.stack .setting-row-control .rhythm-week { flex: 1 1 100%; }
 @media (max-width: 820px) {
-  .sites-card .setting-row-form, .sites-card .setting-row-message { padding: var(--space-4); }
   .setting-card-body .ai-spend { padding: var(--space-4); }
 }
