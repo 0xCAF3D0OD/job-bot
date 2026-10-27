@@ -45,4 +45,9 @@ describe("Ligne de réglage (1.6.65)", () => {
     expect(input.attributes("aria-invalid")).toBe("true");
     expect(wrapper.find("[data-test=setting-saved]").text()).toBe("");
   });
+
+  it("`wide` : la classe qui met le contrôle sous le texte à toutes les tailles", () => {
+    const wrapper = mount(SettingRow, { props: { title: "Jeton", wide: true }, slots: { default: "<code>abc</code>" } });
+    expect(wrapper.find(".setting-row").classes()).toContain("wide");
+  });
 });

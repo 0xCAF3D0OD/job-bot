@@ -41,3 +41,4 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.65 | Design | Réglages : composants SettingCard et SettingRow (une carte par réglage, contrôle à droite, « Enregistré » annoncé, erreur sous le champ) | `feat/1.6.65-ligne-reglage` | PR ouverte |
 | 1.6.66 | Pages | Série du 27.10, point 5 (première partie) : Réglages en cartes, Recherche d'emploi, Rythme, Notifications, IA ; enregistrement réglage par réglage, « Annuler » 6 s sur un site | `feat/1.6.66-reglages` | PR ouverte |
 | 1.6.67 | Pages | Série du 27.10, point 5 (seconde partie) : Compte, Agenda et extension, Administration, État du service en cartes | `feat/1.6.67-reglages` | réservée |
+| 1.6.68 | Design | SettingCard et SettingRow : blocs dans une carte (formulaire, message, confirmation), prop `wide`, longues adresses coupées | `feat/1.6.68-reglage-blocs` | PR ouverte |
