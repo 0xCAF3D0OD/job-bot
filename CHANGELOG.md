@@ -269,3 +269,4 @@ sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau apr�
 | 1.6.55 | Offres, barre d'outils : la recherche, « Filtrer » et « + Ajouter » sur une ligne ; « Filtrer » ouvre un panneau sous le bouton sur ordinateur, une feuille en bas de l'écran sur téléphone (avec la recherche) ; les filtres actifs en pastilles avec « Tout effacer » ; la liste sur toute la largeur, sans colonne de filtres (planche validée par Kevin) | livrée |
 | 1.6.56 | Test du retour d'entretien indépendant de la date du jour : le jour du retour calculé comme celui de l'entretien (il cassait depuis le 27.10) | livrée |
 | 1.6.57 | Offres, feuille « Filtres » sur téléphone selon la planche : voile à 40 %, coins du haut à 16 px | livrée |
+| 1.6.59 | Coordination : la série de modifications du 27.10 inscrite au tableau (en-tête, recherche globale, Bilan, Réglages, Alertes, règles), la barre d'outils d'Offres et la sélection des onglets transmises à Pages | livrée |
