@@ -1,5 +1,6 @@
-# L'historique des versions, assemblé sur main après chaque fusion (1.6.36) : chaque PR ajoute son
-# fichier changelog.d/X.Y.Z.md et ne touche plus à CHANGELOG.md, donc plus de conflit entre PR.
+# L'historique des versions, numéroté et assemblé sur main après chaque fusion : chaque PR dépose un
+# fragment changelog.d/<sujet>.md sans numéro ; ici, il reçoit le numéro suivant dans l'ordre de fusion
+# (changelog.d/X.Y.Z.md) et CHANGELOG.md est assemblé. Une PR ne touche aucun fichier partagé.
 name: Historique
 
 on:
@@ -22,19 +23,23 @@ jobs:
     name: Assembler CHANGELOG.md
     runs-on: ubuntu-latest
     steps:
+      # L'historique complet : l'ordre de fusion d'un fragment est la date du commit qui l'a ajouté.
       - uses: actions/checkout@v4
-      - name: Assembler
-        run: python3 scripts/changelog.py
+        with:
+          fetch-depth: 0
+      - name: Numéroter et assembler
+        run: python3 scripts/changelog.py --number
       # Un envoi fait avec le jeton de l'action ne relance pas les workflows : pas de boucle.
       - name: Enregistrer s'il a changé
         run: |
-          if git diff --quiet -- CHANGELOG.md; then echo "CHANGELOG.md déjà à jour"; exit 0; fi
+          git add -A changelog.d CHANGELOG.md
+          if git diff --cached --quiet; then echo "Rien à numéroter, CHANGELOG.md déjà à jour"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "chore: CHANGELOG.md assemblé depuis changelog.d/"
+          git commit -m "chore: numéros attribués et CHANGELOG.md assemblé depuis changelog.d/"
           git pull --rebase origin main
-          python3 scripts/changelog.py
-          git add CHANGELOG.md
+          # Une autre fusion arrivée entre-temps : ses fragments prennent les numéros suivants.
+          python3 scripts/changelog.py --number
+          git add -A changelog.d CHANGELOG.md
           git diff --cached --quiet || git commit --amend --no-edit
           git push origin HEAD:main

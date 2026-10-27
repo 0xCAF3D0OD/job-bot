@@ -286,7 +286,7 @@ describe("note et résumé", () => {
     expect(scored?.find(".score-line").exists()).toBe(false);
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
-    expect(scored?.find("[data-test=offer-date]").exists()).toBe(true);
+    expect(scored?.find(".offer-line-sub").text()).toMatch(/ · \d{1,2} \S+$/);
     expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
     expect(unscored?.find("[data-test=score]").classes()).toContain("pending");
 
@@ -586,7 +586,7 @@ describe("Offres, revue des pages (docs/43)", () => {
     const days = wrapper.findAll("[data-test=offer-day]");
     expect(days.map((h) => h.find(".offer-day-name").text())).toEqual(["Aujourd'hui", "Hier", dayName(ago(20))]);
     expect(days.map((h) => h.find(".offer-day-count").text())).toEqual(["1 offre", "2 offres", "1 offre"]);
-    expect(wrapper.find("[data-test=offer-date]").exists()).toBe(false);
+    expect(wrapper.findAll(".offer-line-sub").every((sub) => !/ · \d{1,2} \S+$/.test(sub.text()))).toBe(true);
     // « + Ajouter » dans la barre d'outils (1.6.55) : « Ajouter une offre » et « Postuler spontanément ».
     const add = wrapper.find("[data-test=offers-toolbar] [data-test=add-menu]");
     expect(add.text()).toBe("Ajouter");
@@ -619,7 +619,7 @@ describe("Offres, offre ouverte par un lien (docs/43, complément)", () => {
     const first = wrapper.findAll("[data-test=offer]")[0]!;
     expect(first.text()).toContain("En préparation");
     // Sans ligne de jour au-dessus, elle garde sa date.
-    expect(first.find("[data-test=offer-date]").exists()).toBe(true);
+    expect(first.find(".offer-line-sub").text()).toMatch(/ · \d{1,2} \S+$/);
     expect(wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text())).toEqual([
       dayName(ago(2)),
       dayName(ago(20)),

@@ -126,7 +126,7 @@ describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () =>
     expect(css).not.toContain("#c62a2f");
   });
   it("une offre sélectionnée : --muted reste à 4,5:1 sur le voile d'accent", () => {
-    const share = Number(css.match(/\.offer-row\.selected \{ background: color-mix\(in srgb, var\(--accent\) (\d+)%/)![1]) / 100;
+    const share = Number(css.match(/\.offer-line\.selected \{ background: color-mix\(in srgb, var\(--accent\) (\d+)%/)![1]) / 100;
     for (const theme of [light, dark]) {
       expect(ratio(theme.muted!, mix(theme.accent!, theme.surface!, share))).toBeGreaterThanOrEqual(4.5);
     }
