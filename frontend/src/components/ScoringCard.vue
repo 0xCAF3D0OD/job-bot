@@ -169,7 +169,7 @@ defineExpose({ load });
     <p
       v-if="message"
       role="status"
-      class="hint setting-row-message"
+      class="muted setting-row-message"
       data-test="scoring-message"
     >
       {{ message }}

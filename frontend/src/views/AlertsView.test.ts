@@ -49,7 +49,7 @@ function page(searches: unknown[]) {
 
 async function mountView(data: unknown) {
   GET.mockResolvedValue({ data });
-  const wrapper = mount(AlertsView);
+  const wrapper = mount(AlertsView, { global: { stubs: { teleport: true } } });
   await flushPromises();
   return wrapper;
 }
@@ -61,9 +61,6 @@ describe("Alertes, assistant (docs/21 §4)", () => {
     DELETE.mockResolvedValue({ data: page([search(1, [cell("jobup"), cell("linkedin")])]) });
     const wrapper = await mountView(todo);
     expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(true);
-    // Un seul conteneur, chaque bloc sur toute sa largeur (règles §3, 1.6.32).
-    expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body"]);
-    expect(wrapper.find("[data-test=journal-toggle]").attributes("open")).toBeUndefined();
 
     // Étape 1 : retirer une recherche.
     expect(wrapper.findAll("[data-test=wizard-search]")).toHaveLength(2);
@@ -95,45 +92,63 @@ describe("Alertes, assistant (docs/21 §4)", () => {
   });
 });
 
-describe("Alertes, résumé (docs/21 §4)", () => {
-  it("un point par recherche, aide seulement pour ce qui n'arrive pas", async () => {
+describe("Alertes, la page (planche « 6. Alertes », 1.6.70)", () => {
+  it("la conclusion, la bande de l'alerte muette, une carte par recherche, une ligne par site", async () => {
     const wrapper = await mountView(
       page([
-        search(1, [cell("jobup", { status: "received", received_at: "2026-10-06T08:00:00Z" }), cell("linkedin")]),
+        search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - 2 * DAY).toISOString() }), cell("linkedin")]),
         search(2, [cell("jobup"), cell("linkedin", { status: "created", created_at: new Date(Date.now() - 4 * DAY).toISOString() })]),
       ]),
     );
     expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(false);
-    // Le résumé aussi : un seul conteneur, chaque bloc sur toute sa largeur (règles §3, 1.6.32).
-    expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body"]);
     // La conclusion en haut (1.6.22) : le nombre en accent, la dernière alerte reçue.
     const sentence = wrapper.find("[data-test=alerts-sentence]");
-    expect(sentence.text()).toBe("2 recherches suivies, la dernière alerte reçue le 6 octobre.");
-    expect(sentence.find("strong").text()).toBe("2 recherches suivies");
-    expect(wrapper.find("[data-test=alerts-summary] h2").text()).toBe("Les alertes");
-    const rows = wrapper.findAll("[data-test=summary-row]");
-    expect(rows[0]!.classes()).toContain("ok");
-    expect(rows[1]!.classes()).toContain("late");
-    expect(wrapper.find("[data-test=late-help]").text()).toContain("Rien reçu de LinkedIn");
-    expect(wrapper.find("[data-test=late-help] [data-test=hover-note]").attributes("aria-description")).toContain("jobs-noreply@linkedin.com");
-
-    await wrapper.find("[data-test=manage-alerts]").trigger("click");
+    expect(sentence.find("strong").text()).toBe("2 recherches");
+    expect(sentence.text()).toMatch(/^2 recherches suivies, la dernière alerte reçue le /);
+    // La bande (§3) : LinkedIn n'a rien reçu 4 jours après sa création.
+    const band = wrapper.find("[data-test=action-band]");
+    expect(band.text()).toContain("LinkedIn n'a encore rien reçu.");
+    expect(band.text()).toContain("Ta recherche « Kubernetes » y existe depuis 4 jours");
+    expect(wrapper.find("[data-test=action-band-action]").text()).toBe("Vérifier l'alerte");
+    // Une carte par recherche, ses lieux, l'état ; une ligne par site.
+    const devops = wrapper.find("[data-test=alert-search-1]");
+    expect(devops.find(".setting-row-title").text()).toBe("DevOps");
+    expect(devops.find(".setting-row-description").text()).toBe("Lausanne");
+    expect(devops.find("[data-test=search-state]").text()).toBe("Reçue · jobup");
+    expect(devops.find("[data-test=site-jobup]").text()).toContain("Reçue le");
+    expect(devops.find("[data-test=create-linkedin]").text()).toBe("Créer");
+    const kube = wrapper.find("[data-test=alert-search-2]");
+    expect(kube.find("[data-test=site-linkedin]").text()).toContain("Rien reçu depuis la création");
+    expect(kube.find("[data-test=site-linkedin] .alert-state").classes()).toContain("silent");
+    // « Créer » ouvre le pas à pas sur ce site, pour cette recherche.
+    await devops.find("[data-test=create-linkedin]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=alerts-panel]").exists()).toBe(true);
-    await wrapper.find("[data-test=close-manage]").trigger("click");
+    expect(wrapper.text()).toContain("Crée l'alerte sur LinkedIn");
+    expect(wrapper.findAll("[data-test=wizard-open]").map((a) => a.text())).toEqual([expect.stringContaining("DevOps")]);
+    await wrapper.find("[data-test=close-wizard]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=alerts-summary]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=alert-search-1]").exists()).toBe(true);
   });
 
-  it("tout va bien : pas d'aide au transfert", async () => {
-    const wrapper = await mountView(page([search(1, [cell("jobup", { status: "received", received_at: "2026-10-06T08:00:00Z" })])]));
-    expect(wrapper.find("[data-test=late-help]").exists()).toBe(false);
+  it("tout va bien : pas de bande ; « + Ajouter » ajoute une recherche", async () => {
+    const one = page([search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - DAY).toISOString() })])]);
+    POST.mockResolvedValue({ data: page([...one.searches, search(2, [cell("jobup")])]) });
+    const wrapper = await mountView(one);
+    expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=alert-searches] h2").text()).toBe("Recherches suivies");
+    await wrapper.find("[data-test=add-search]").trigger("click");
+    await wrapper.find("[data-test=add-search-terms]").setValue("Kubernetes");
+    await wrapper.find("[data-test=add-search-form]").trigger("submit");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "Kubernetes", location: null } });
+    expect(wrapper.find("[data-test=alert-search-2]").exists()).toBe(true);
   });
 
   it("sans alerte reçue : la phrase le dit", async () => {
-    const day = new Date(Date.now() - 4 * DAY).toISOString();
+    const day = new Date(Date.now() - DAY).toISOString();
     const wrapper = await mountView(page([search(1, [cell("jobup", { status: "created", created_at: day })])]));
     expect(wrapper.find("[data-test=alerts-sentence]").text()).toBe("1 recherche suivie, aucune alerte reçue pour l'instant.");
+    expect(wrapper.find("[data-test=site-jobup]").text()).toContain("En attente du premier envoi");
   });
 
   it("des blocs de chargement tant que la page charge (règles §6)", async () => {
@@ -145,7 +160,7 @@ describe("Alertes, résumé (docs/21 §4)", () => {
 });
 
 describe("Alertes, adresse par compte (docs/65 §3)", () => {
-  it("un site demande de confirmer : le lien, puis la ligne s'en va", async () => {
+  it("un site demande de confirmer : la bande ouvre le lien, puis s'en va", async () => {
     const pending = {
       search_id: 9,
       site: "jobsch",
@@ -153,39 +168,39 @@ describe("Alertes, adresse par compte (docs/65 §3)", () => {
       received_at: "2026-10-16T08:00:00Z",
       url: "https://jobs.example/confirm?t=1",
     };
-    const data = { ...page([search(1, [cell("jobup", { status: "receiving" })])]), to_confirm: [pending] };
+    const data = { ...page([search(1, [cell("jobup", { status: "received", received_at: new Date().toISOString() })])]), to_confirm: [pending] };
     POST.mockResolvedValue({ data: { ...data, to_confirm: [] } });
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
     const wrapper = await mountView(data);
-    const link = wrapper.find("[data-test=confirm-link]");
-    expect(link.attributes("href")).toBe("https://jobs.example/confirm?t=1");
-    expect(link.attributes("rel")).toContain("noopener");
-    await link.trigger("click");
+    expect(wrapper.find("[data-test=action-band]").text()).toContain("attend ta confirmation");
+    await wrapper.find("[data-test=action-band-action]").trigger("click");
     await flushPromises();
+    expect(open).toHaveBeenCalledWith("https://jobs.example/confirm?t=1", "_blank", "noopener,noreferrer");
     expect(POST).toHaveBeenCalledWith("/api/alert-searches/confirmations/{search_id}", {
       params: { path: { search_id: 9 } },
     });
-    expect(wrapper.find("[data-test=to-confirm]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
+    open.mockRestore();
   });
 });
 
 describe("Alertes, où vont les e-mails des sites (docs/113)", () => {
-  it("dit à l'invité que la boîte de jobA1 range puis efface ; rien pour l'exploitant", async () => {
-    const guest = await mountView({ ...page([]), personal_address: true, guest_mailbox: true });
-    expect(guest.find("[data-test=guest-mailbox-note]").attributes("aria-description")).toContain("effacés de la boîte une fois rangés");
-    const owner = await mountView({ ...page([]), personal_address: false, guest_mailbox: false });
-    expect(owner.find("[data-test=guest-mailbox-note]").exists()).toBe(false);
+  it("dit à l'invité que les codes passent par la boîte de jobA1 ; rien pour l'exploitant", async () => {
+    const received = [search(1, [cell("jobup", { status: "received", received_at: new Date().toISOString() })])];
+    const guest = await mountView({ ...page(received), personal_address: true, guest_mailbox: true });
+    expect(guest.find("[data-test=site-code-row]").text()).toContain("la boîte de jobA1");
+    const owner = await mountView({ ...page(received), personal_address: false, guest_mailbox: false });
+    expect(owner.find("[data-test=site-code-row]").text()).not.toContain("jobA1");
   });
 });
 
-describe("Alertes, une colonne (docs/130 §F)", () => {
-  it("les alertes, puis les e-mails des sites, puis le journal", async () => {
-    const wrapper = await mountView({ ...page([]), personal_address: true, guest_mailbox: true });
-    const columns = wrapper.find(".alerts-columns");
-    expect(columns.classes()).not.toContain("wide");
-    expect(columns.find(".alerts-main h2").text()).toBe("Les alertes");
-    expect(columns.find(".alerts-aside [data-test=site-mail]").exists()).toBe(true);
-    expect(columns.find(".alerts-aside > h2").text()).toBe("Le détail");
-    expect(columns.find(".alerts-journal").exists()).toBe(true);
+describe("Alertes, une colonne (planche « 6. Alertes »)", () => {
+  it("les recherches, puis les messages des sites, puis les alertes reçues", async () => {
+    const received = [search(1, [cell("jobup", { status: "received", received_at: new Date().toISOString() })])];
+    const wrapper = await mountView(page(received));
+    const order = wrapper.findAll(".alerts-section").map((s) => s.attributes("data-test"));
+    expect(order).toEqual(["alert-searches", "site-mail", "received-alerts"]);
+    expect(wrapper.findAll(".alerts-section h2").map((h) => h.text())).toEqual(["Recherches suivies", "Messages des sites", "Alertes reçues"]);
   });
 });
 
