@@ -272,3 +272,4 @@ sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau apr�
 | 1.6.58 | Sélection des onglets : l'onglet actif de l'en-tête dans une pastille teintée (survol neutre, focus de 2 px, plus de soulignement) ; sur téléphone, une pastille de 64 × 32 derrière l'icône de l'onglet actif (indicateur de Material 3) | livrée |
 | 1.6.59 | Coordination : la série de modifications du 27.10 inscrite au tableau (en-tête, recherche globale, Bilan, Réglages, Alertes, règles), la barre d'outils d'Offres et la sélection des onglets transmises à Pages | livrée |
 | 1.6.60 | Barre d'onglets du téléphone un peu plus haute (4 rem au lieu de 3,6) : de l'air au-dessus de la pastille de l'onglet actif | livrée |
+| 1.6.61 | Repliable : une icône dans une pastille et une phrase en gris sous le titre, en option ; elles serviront aux cartes du Bilan | livrée |
