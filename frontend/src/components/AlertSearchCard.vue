@@ -28,6 +28,7 @@ const menu = computed<MoreMenuItem[]>(() => [
       :title="group.terms"
       :description="group.locations.join(', ') || 'Toute la Suisse'"
       class="alert-search-head"
+      inline
     >
       <span
         :class="['alert-state', group.pill.kind]"
@@ -44,6 +45,7 @@ const menu = computed<MoreMenuItem[]>(() => [
       :key="site.slug"
       :title="site.name"
       class="alert-site"
+      inline
       :data-test="`site-${site.slug}`"
     >
       <button

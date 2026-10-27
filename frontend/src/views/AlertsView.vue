@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
 
 import { api, type AlertsPage } from "../api/client";
 import { alertsDigest } from "../alertsDigest";
@@ -133,7 +134,30 @@ async function remove(group: SearchGroup): Promise<void> {
   });
 }
 
-onMounted(() => void load());
+// Venu de la recherche globale (série du 27.10, point 2) : « Créer les alertes » amène à la carte de
+// cette recherche (?recherche=…), « Modifier » au tableau des recherches (?gerer=1).
+// Sans routeur (tests du composant seul), pas d'adresse à lire.
+const route = useRoute() as ReturnType<typeof useRoute> | undefined;
+const highlighted = ref<string | null>(null);
+async function arrive(): Promise<void> {
+  const query = route?.query ?? {};
+  if (query.gerer) {
+    mode.value = "manage";
+    return;
+  }
+  const wanted = typeof query.recherche === "string" ? query.recherche.trim().toLowerCase() : "";
+  const group = groups.value.find((g) => g.terms.trim().toLowerCase() === wanted);
+  if (!group) return;
+  highlighted.value = group.terms;
+  await nextTick();
+  const card = document.querySelector<HTMLElement>(`[data-test="alert-search-${group.ids[0]}"]`);
+  card?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+}
+
+onMounted(async () => {
+  await load();
+  await arrive();
+});
 </script>
 
 <template>
@@ -206,6 +230,7 @@ onMounted(() => void load());
               v-for="group in groups"
               :key="group.terms"
               :group="group"
+              :class="{ highlighted: highlighted === group.terms }"
               @create="create($event, group.terms)"
               @manage="mode = 'manage'"
               @remove="remove(group)"
