@@ -9,9 +9,12 @@ import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
 import { offerUndo } from "../composables/useUndo";
+import SettingCard from "./SettingCard.vue";
+import SettingRow from "./SettingRow.vue";
 
 // Profils d'essai (docs/17 §2) : des chercheurs d'emploi fictifs, pour juger si les
-// Actualités et les Formations leur conviennent.
+// Actualités et les Formations leur conviennent. Une carte (1.6.67, planche « 5. Réglages ») :
+// une ligne d'en-tête, une ligne par profil avec « Utiliser » et « ⋯ » à droite, puis « Créer ».
 const { list, current, load, set, choose } = useProfiles();
 const adding = ref(false);
 const busy = ref(false);
@@ -79,6 +82,17 @@ async function create(): Promise<void> {
   }
 }
 
+// La phrase d'un profil : « infirmière · soins, EMS · 3 sources ».
+function line(profile: Profile): string {
+  return [
+    profile.occupation,
+    profile.domain_keywords.length ? profile.domain_keywords.join(", ") : "domaine non renseigné",
+    plural(profile.sources, "source", "sources"),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 // « Utiliser » visible, le reste dans « ⋯ » (docs/74).
 function profileItems(profile: Profile): MoreMenuItem[] {
   return [
@@ -93,6 +107,7 @@ async function duplicate(profile: Profile): Promise<void> {
 }
 
 // Renommer sur place (docs/108, complément 0.77.1) : le nom devient un champ, à sa place.
+// Pas de bouton « Enregistrer » (1.6.67) : Entrée ou quitter le champ enregistre, Échap annule.
 const renaming = ref<{ id: number; name: string } | null>(null);
 async function rename(profile: Profile): Promise<void> {
   renaming.value = { id: profile.id, name: profile.name };
@@ -139,198 +154,176 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
+  <SettingCard
     v-if="list"
-    class="form-card sites-card"
+    class="sites-card"
     data-test="profiles-panel"
   >
-    <fieldset>
-      <legend>
-        Profils d'essai
-      </legend>
-      <ul class="sites-list">
-        <li
-          v-for="profile in list.items"
-          :key="profile.id"
-          data-test="profile"
-        >
-          <form
-            v-if="renaming?.id === profile.id"
-            class="inline-edit"
-            data-test="profile-rename-form"
-            @submit.prevent="saveRename(profile)"
-            @keydown.esc="renaming = null"
-          >
-            <input
-              v-model="renaming.name"
-              type="text"
-              maxlength="60"
-              required
-              aria-label="Nom du profil"
-              data-test="profile-rename-input"
-            >
-            <button
-              type="submit"
-              class="primary small"
-              data-test="profile-rename-save"
-            >
-              Enregistrer
-            </button>
-            <button
-              type="button"
-              class="secondary small"
-              @click="renaming = null"
-            >
-              Annuler
-            </button>
-          </form>
-          <span
-            v-else
-            class="site-main"
-          >
-            <strong>{{ profile.name }}<template v-if="profile.is_main"> (principal)</template></strong>
-            <span class="hint">
-              <template v-if="profile.occupation">{{ profile.occupation }} · </template>
-              {{ profile.domain_keywords.length ? profile.domain_keywords.join(", ") : "domaine non renseigné" }}
-              · {{ plural(profile.sources, "source", "sources") }}
-            </span>
-          </span>
-          <template v-if="renaming?.id === profile.id" />
-          <span
-            v-else-if="current?.id === profile.id"
-            class="hint with-icon"
-          ><AppIcon name="done" />utilisé</span>
-          <button
-            v-else
-            type="button"
-            class="secondary small"
-            data-test="profile-use"
-            @click="choose(profile.id)"
-          >
-            Utiliser
-          </button>
-          <MoreMenu
-            v-if="renaming?.id !== profile.id"
-            :items="profileItems(profile)"
-            :label="`Actions sur le profil ${profile.name}`"
-            test-id="profile-more"
-          />
-        </li>
-      </ul>
+    <SettingRow
+      title="Profils d'essai"
+      description="Des chercheurs d'emploi fictifs, pour juger les Actualités et les Formations."
+    />
+    <template
+      v-for="profile in list.items"
+      :key="profile.id"
+    >
       <form
-        v-if="adding"
-        class="form-grid"
-        data-test="add-profile"
-        @submit.prevent="create"
+        v-if="renaming?.id === profile.id"
+        class="inline-edit setting-row-form"
+        data-test="profile-rename-form"
+        @submit.prevent="saveRename(profile)"
+        @keydown.esc="renaming = null"
       >
-        <label>Nom
-          <input
-            v-model="form.name"
-            type="text"
-            maxlength="60"
-            required
-            placeholder="Infirmière à Lausanne"
-            data-test="profile-name"
-          >
-        </label>
-        <label>Métier (facultatif)
-          <input
-            v-model="form.occupation"
-            type="text"
-            maxlength="120"
-            placeholder="infirmière en soins généraux"
-            data-test="profile-occupation"
-          >
-        </label>
-        <label class="wide">« Domaine » : mots-clés séparés par des virgules
-          <input
-            v-model="form.keywords"
-            type="text"
-            maxlength="600"
-            placeholder="soins, infirmière, hôpital, EMS"
-            data-test="profile-keywords"
-          >
-        </label>
-        <div
-          v-if="canPropose"
-          class="wide"
+        <input
+          v-model="renaming.name"
+          type="text"
+          maxlength="60"
+          required
+          aria-label="Nom du profil"
+          data-test="profile-rename-input"
+          @blur="saveRename(profile)"
         >
-          <button
-            type="button"
-            class="secondary small"
-            :disabled="proposing"
-            data-test="propose-keywords"
-            @click="propose"
-          >
-            <HoverNote :text="proposing ? '' : 'Environ 0,001 $.'">
-              <span class="with-icon"><AppIcon name="ai" />{{ proposing ? "Proposition…" : "Proposer des mots-clés" }}</span>
-            </HoverNote>
-          </button>
-        </div>
-        <div class="wide chip-group">
-          <span class="chip-label">Langues</span>
-          <button
-            v-for="(label, code) in LANGUAGES"
-            :key="code"
-            type="button"
-            :class="['chip', { on: form.languages.includes(code) }]"
-            :aria-pressed="form.languages.includes(code)"
-            @click="toggle('languages', code)"
-          >
-            {{ label }}
-          </button>
-        </div>
-        <div class="wide chip-group">
-          <span class="chip-label">Pays</span>
-          <button
-            v-for="(label, code) in COUNTRIES"
-            :key="code"
-            type="button"
-            :class="['chip', { on: form.countries.includes(code) }]"
-            :aria-pressed="form.countries.includes(code)"
-            @click="toggle('countries', code)"
-          >
-            {{ label }}
-          </button>
-        </div>
-        <div class="form-actions wide">
-          <button
-            type="submit"
-            class="secondary small"
-            :disabled="busy"
-            data-test="save-profile"
-          >
-            Créer le profil
-          </button>
-          <button
-            type="button"
-            class="link"
-            @click="adding = false"
-          >
-            Annuler
-          </button>
-        </div>
       </form>
-      <div
+      <SettingRow
         v-else
-        class="form-actions"
+        :title="profile.is_main ? `${profile.name} (principal)` : profile.name"
+        :description="line(profile)"
+        data-test="profile"
+      >
+        <span
+          v-if="current?.id === profile.id"
+          class="hint with-icon"
+        ><AppIcon name="done" />Utilisé</span>
+        <button
+          v-else
+          type="button"
+          class="secondary small"
+          data-test="profile-use"
+          @click="choose(profile.id)"
+        >
+          Utiliser
+        </button>
+        <MoreMenu
+          :items="profileItems(profile)"
+          :label="`Actions sur le profil ${profile.name}`"
+          test-id="profile-more"
+        />
+      </SettingRow>
+    </template>
+    <form
+      v-if="adding"
+      class="form-grid setting-row-form"
+      data-test="add-profile"
+      @submit.prevent="create"
+    >
+      <label>Nom
+        <input
+          v-model="form.name"
+          type="text"
+          maxlength="60"
+          required
+          placeholder="Infirmière à Lausanne"
+          data-test="profile-name"
+        >
+      </label>
+      <label>Métier (facultatif)
+        <input
+          v-model="form.occupation"
+          type="text"
+          maxlength="120"
+          placeholder="infirmière en soins généraux"
+          data-test="profile-occupation"
+        >
+      </label>
+      <label class="wide">« Domaine » : mots-clés séparés par des virgules
+        <input
+          v-model="form.keywords"
+          type="text"
+          maxlength="600"
+          placeholder="soins, infirmière, hôpital, EMS"
+          data-test="profile-keywords"
+        >
+      </label>
+      <div
+        v-if="canPropose"
+        class="wide"
       >
         <button
           type="button"
           class="secondary small"
-          data-test="add-profile-open"
-          @click="adding = true"
+          :disabled="proposing"
+          data-test="propose-keywords"
+          @click="propose"
         >
-          <span class="with-icon"><AppIcon name="plus" />Créer un profil d'essai</span>
+          <HoverNote :text="proposing ? '' : 'Environ 0,001 $.'">
+            <span class="with-icon"><AppIcon name="ai" />{{ proposing ? "Proposition…" : "Proposer des mots-clés" }}</span>
+          </HoverNote>
         </button>
       </div>
-      <p
-        v-if="message"
-        class="hint"
-        role="status"
+      <div class="wide chip-group">
+        <span class="chip-label">Langues</span>
+        <button
+          v-for="(label, code) in LANGUAGES"
+          :key="code"
+          type="button"
+          :class="['chip', { on: form.languages.includes(code) }]"
+          :aria-pressed="form.languages.includes(code)"
+          @click="toggle('languages', code)"
+        >
+          {{ label }}
+        </button>
+      </div>
+      <div class="wide chip-group">
+        <span class="chip-label">Pays</span>
+        <button
+          v-for="(label, code) in COUNTRIES"
+          :key="code"
+          type="button"
+          :class="['chip', { on: form.countries.includes(code) }]"
+          :aria-pressed="form.countries.includes(code)"
+          @click="toggle('countries', code)"
+        >
+          {{ label }}
+        </button>
+      </div>
+      <div class="form-actions wide">
+        <button
+          type="submit"
+          class="secondary small"
+          :disabled="busy"
+          data-test="save-profile"
+        >
+          Créer le profil
+        </button>
+        <button
+          type="button"
+          class="link"
+          @click="adding = false"
+        >
+          Annuler
+        </button>
+      </div>
+    </form>
+    <SettingRow
+      v-else
+      title="Un autre profil"
+      description="Un métier, ses mots-clés, ses langues et ses pays."
+    >
+      <button
+        type="button"
+        class="secondary small"
+        data-test="add-profile-open"
+        @click="adding = true"
       >
-        {{ message }}
-      </p>
-    </fieldset>
-  </div>
+        <span class="with-icon"><AppIcon name="plus" />Créer un profil</span>
+      </button>
+    </SettingRow>
+    <p
+      v-if="message"
+      class="hint setting-row-message"
+      role="status"
+    >
+      {{ message }}
+    </p>
+  </SettingCard>
 </template>

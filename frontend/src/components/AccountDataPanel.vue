@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import AppIcon from "./AppIcon.vue";
 import InlineConfirm from "./InlineConfirm.vue";
+import SettingCard from "./SettingCard.vue";
+import SettingRow from "./SettingRow.vue";
+import { plural } from "../format";
 
-// Tes données (docs/65 §6) : ce qui est gardé, l'export complet, la fermeture du compte.
+// Tes données (docs/65 §6) : ce qui est gardé, l'export complet, la fermeture du compte. Une carte
+// (1.6.67, planche « 5. Réglages ») : une ligne par action, la confirmation sous sa ligne.
 type Summary = {
   offers: number;
   applications: number;
@@ -27,6 +31,19 @@ const router = useRouter();
 const route = useRoute();
 const { expired } = useAuth();
 const passwordInput = ref<HTMLInputElement | null>(null);
+
+// Les compteurs en une phrase : « 12 offres · 3 candidatures · … ».
+const counts = computed(() => {
+  const s = summary.value;
+  if (!s) return "Ce que jobA1 garde de toi, et combien de temps.";
+  return [
+    plural(s.offers, "offre", "offres"),
+    plural(s.applications, "candidature", "candidatures"),
+    plural(s.documents, "document", "documents"),
+    plural(s.profile_blocks, "bloc de profil", "blocs de profil"),
+    plural(s.alert_emails, "e-mail d'alerte", "e-mails d'alerte"),
+  ].join(" · ");
+});
 
 onMounted(async () => {
   const { data } = await api.GET("/api/account/data");
@@ -62,85 +79,82 @@ async function remove(): Promise<void> {
 </script>
 
 <template>
-  <div
-    class="form-card sites-card"
-    data-test="account-data"
-  >
-    <fieldset>
-      <legend>Données personnelles</legend>
-      <!-- Une ligne par compteur (docs/132) : une liste plutôt qu'une longue phrase. -->
-      <ul
-        v-if="summary"
-        class="plan-usage"
-        data-test="account-counts"
+  <SettingCard data-test="account-data">
+    <SettingRow
+      title="Données personnelles"
+      :description="counts"
+      data-test="account-counts"
+    >
+      <RouterLink
+        to="/tes-donnees"
+        class="button-link"
+        data-test="data-retention"
       >
-        <li><span class="plan-usage-name">Offres</span><span class="plan-usage-count">{{ summary.offers }}</span></li>
-        <li><span class="plan-usage-name">Candidatures</span><span class="plan-usage-count">{{ summary.applications }}</span></li>
-        <li><span class="plan-usage-name">Documents</span><span class="plan-usage-count">{{ summary.documents }}</span></li>
-        <li><span class="plan-usage-name">Blocs de profil</span><span class="plan-usage-count">{{ summary.profile_blocks }}</span></li>
-        <li><span class="plan-usage-name">E-mails d'alerte</span><span class="plan-usage-count">{{ summary.alert_emails }}</span></li>
-      </ul>
-      <p
-        v-if="summary"
-        class="setting-desc"
+        Voir les durées
+      </RouterLink>
+    </SettingRow>
+    <SettingRow
+      title="Exporter mes données"
+      description="Un fichier ZIP avec tout ce que jobA1 garde de toi."
+    >
+      <a
+        href="/api/account/export"
+        download
+        class="button-link"
+        data-test="export"
+      ><span class="with-icon"><AppIcon name="download" />Télécharger</span></a>
+    </SettingRow>
+    <template v-if="summary?.can_delete">
+      <SettingRow
+        title="Fermer le compte"
+        description="Tout est effacé : offres, candidatures, documents, preuves ORP."
       >
-        <RouterLink to="/tes-donnees">Ce qui est gardé, et combien de temps</RouterLink>
-      </p>
-      <div class="form-actions setting-pills">
-        <a
-          href="/api/account/export"
-          download
-          class="pill"
-          data-test="export"
-        ><span class="with-icon"><AppIcon name="download" />Exporter mes données (ZIP)</span></a>
-      </div>
-      <template v-if="summary?.can_delete">
         <button
           v-if="!confirming"
           type="button"
-          class="link danger"
+          class="secondary small danger"
           data-test="delete-account"
           @click="confirming = true"
         >
           <span class="with-icon"><AppIcon name="trash" />Fermer mon compte</span>
         </button>
-        <!-- La même confirmation que partout (docs/108 §1), le mot de passe dedans : rien ne
-             dépasse de l'écran sur téléphone (docs/105, complément 0.77.4). -->
-        <form
-          v-else
-          class="account-delete"
-          data-test="delete-form"
-          @submit.prevent="remove"
+      </SettingRow>
+      <!-- La même confirmation que partout (docs/108 §1), le mot de passe dedans : rien ne
+           dépasse de l'écran sur téléphone (docs/105, complément 0.77.4). -->
+      <form
+        v-if="confirming"
+        class="account-delete setting-row-form"
+        data-test="delete-form"
+        @submit.prevent="remove"
+      >
+        <InlineConfirm
+          message="Tout est effacé : offres, candidatures, documents, preuves ORP. Exporte d'abord ce que tu veux garder."
+          confirm-label="Fermer définitivement"
+          :busy="busy || !password"
+          @confirm="remove"
+          @cancel="confirming = false"
         >
-          <InlineConfirm
-            message="Tout est effacé : offres, candidatures, documents, preuves ORP. Exporte d'abord ce que tu veux garder."
-            confirm-label="Fermer définitivement"
-            :busy="busy || !password"
-            @confirm="remove"
-            @cancel="confirming = false"
-          >
-            <label class="account-delete-password">
-              Ton mot de passe pour confirmer
-              <input
-                ref="passwordInput"
-                v-model="password"
-                type="password"
-                autocomplete="current-password"
-                required
-                data-test="delete-password"
-              >
-            </label>
-            <p
-              v-if="error"
-              class="notice"
-              role="alert"
-              data-test="delete-error"
+          <label class="account-delete-password">
+            Ton mot de passe pour confirmer
+            <input
+              ref="passwordInput"
+              v-model="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              data-test="delete-password"
             >
-              {{ error }}
-            </p>
-          </InlineConfirm>
-        </form>
-      </template>
-    </fieldset>
-  </div>
+          </label>
+          <p
+            v-if="error"
+            class="notice"
+            role="alert"
+            data-test="delete-error"
+          >
+            {{ error }}
+          </p>
+        </InlineConfirm>
+      </form>
+    </template>
+  </SettingCard>
 </template>

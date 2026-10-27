@@ -34,12 +34,34 @@ async function mountPanel(summary = SUMMARY, path = "/reglages") {
 describe("Tes données (docs/65 §6)", () => {
   it("le résumé et l'export en un clic", async () => {
     const { wrapper } = await mountPanel();
-    // Une ligne par compteur (docs/132).
-    const counts = wrapper.findAll("[data-test=account-counts] li").map((li) => li.text());
-    expect(counts.slice(0, 2)).toEqual(["Offres12", "Candidatures3"]);
+    // Les compteurs en une phrase (1.6.67).
+    expect(wrapper.find("[data-test=account-counts] .setting-row-description").text()).toBe(
+      "12 offres · 3 candidatures · 1 document · 5 blocs de profil · 20 e-mails d'alerte",
+    );
     const link = wrapper.find("[data-test=export]");
     expect(link.attributes("href")).toBe("/api/account/export");
     expect(link.attributes("download")).toBeDefined();
+  });
+
+  it("le modèle des Réglages (1.6.67) : une carte, une ligne par action, l'action à droite", async () => {
+    const { wrapper } = await mountPanel();
+    const card = wrapper.find("[data-test=account-data]");
+    expect(card.classes()).toContain("setting-card");
+    expect(wrapper.find("fieldset").exists()).toBe(false);
+    expect(card.findAll(".setting-row-title").map((t) => t.text())).toEqual(["Données personnelles", "Exporter mes données", "Fermer le compte"]);
+    expect(card.findAll("[data-test=setting-row]")).toHaveLength(2);
+    // Plus de lien dans la phrase : « Voir les durées » est l'action de la ligne.
+    expect(card.find(".setting-row-description a").exists()).toBe(false);
+    const retention = card.find("[data-test=account-counts] .setting-row-control [data-test=data-retention]");
+    expect(retention.text()).toBe("Voir les durées");
+    expect(retention.attributes("href")).toBe("/tes-donnees");
+    expect(card.find(".setting-row-control [data-test=export]").text()).toBe("Télécharger");
+    expect(card.find(".setting-row-control [data-test=delete-account]").exists()).toBe(true);
+    // La confirmation sous sa ligne, dans la même carte ; le bouton s'efface pendant ce temps.
+    await wrapper.find("[data-test=delete-account]").trigger("click");
+    expect(card.find("[data-test=delete-form].setting-row-form").exists()).toBe(true);
+    expect(wrapper.find("[data-test=delete-account]").exists()).toBe(false);
+    wrapper.unmount();
   });
 
   it("fermer demande le mot de passe, puis renvoie à la connexion", async () => {

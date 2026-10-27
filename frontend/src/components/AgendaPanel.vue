@@ -8,6 +8,8 @@ import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
 import { offerUndo } from "../composables/useUndo";
+import SettingCard from "./SettingCard.vue";
+import SettingRow from "./SettingRow.vue";
 
 // Tes dates dans ton agenda (docs/40 §2) : une adresse d'abonnement à jeton secret,
 // révocable ; ton agenda la relit tout seul.
@@ -74,32 +76,51 @@ async function copy(): Promise<void> {
   }
 }
 
-function day(value: string | null | undefined): string {
-  return value ? new Date(value).toLocaleDateString("fr-CH", { day: "numeric", month: "short" }) : "jamais";
+// « Relue le 15 oct. » : la dernière fois que l'agenda a lu l'adresse (texte seul, sans icône).
+function lastRead(token: Token): string {
+  if (!token.last_used_at) return "Pas encore relue par ton agenda.";
+  return `Relue le ${new Date(token.last_used_at).toLocaleDateString("fr-CH", { day: "numeric", month: "short" })}.`;
 }
 
 onMounted(load);
 </script>
 
 <template>
-  <div
-    class="form-card sites-card"
+  <!-- L'abonnement d'agenda (1.6.67, planche « 5. Réglages ») : une ligne d'en-tête avec l'action,
+       puis l'adresse à copier et une ligne par adresse, dans la même carte (loi de proximité). -->
+  <SettingCard
+    class="sites-card"
     data-test="agenda-panel"
   >
-    <fieldset>
-      <legend>
-        Abonnement d'agenda
-      </legend>
-      <MoreInfo label="Comment l'ajouter">
-        <ul class="extension-steps">
-          <li><strong>iPhone</strong> : Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un calendrier avec abonnement, puis colle l'adresse.</li>
-          <li><strong>Google Agenda</strong> (ordinateur) : « Autres agendas » › + › « À partir de l'URL ».</li>
-          <li><strong>Outlook</strong> : Ajouter un calendrier › « S'abonner à partir du web ».</li>
-          <li>Google et Outlook lisent l'adresse depuis Internet : la plateforme doit y être joignable.</li>
-        </ul>
-      </MoreInfo>
+    <SettingRow
+      title="Abonnement d'agenda"
+      description="Une adresse secrète que ton agenda relit tout seul pour y montrer tes dates."
+    >
+      <button
+        type="button"
+        class="secondary small"
+        :disabled="creating"
+        data-test="agenda-create"
+        @click="create"
+      >
+        <span class="with-icon"><AppIcon name="plus" />Créer l'abonnement</span>
+      </button>
+    </SettingRow>
+    <p
+      v-if="createError"
+      class="field-error setting-row-message"
+      role="alert"
+      data-test="agenda-error"
+    >
+      {{ createError }}
+    </p>
+    <SettingRow
+      v-if="created"
+      title="Nouvelle adresse"
+      description="Montrée une seule fois : colle-la maintenant dans ton agenda."
+      stack
+    >
       <div
-        v-if="created"
         class="extension-token"
         data-test="agenda-url"
       >
@@ -114,50 +135,30 @@ onMounted(load);
             label="Copier l'adresse"
           />
         </button>
-        <p class="hint">
-          Montrée une seule fois : colle-la maintenant dans ton agenda.
-        </p>
       </div>
-      <ul
-        v-if="tokens.length"
-        class="extension-tokens"
-      >
-        <li
-          v-for="token in tokens"
-          :key="token.id"
-        >
-          <span class="meta-line">
-            <span>{{ token.name }}</span>
-            <span class="muted"><AppIcon name="clock" />relu {{ day(token.last_used_at) }}</span>
-          </span>
-          <IconButton
-            icon="trash"
-            :label="`Révoquer ${token.name}`"
-            danger
-            data-test="agenda-revoke"
-            @click="revoke(token)"
-          />
-        </li>
-      </ul>
-      <p
-        v-if="createError"
-        class="notice error"
-        role="alert"
-        data-test="agenda-error"
-      >
-        {{ createError }}
-      </p>
-      <div class="form-actions">
-        <button
-          type="button"
-          class="pill"
-          :disabled="creating"
-          data-test="agenda-create"
-          @click="create"
-        >
-          Créer une adresse d'abonnement
-        </button>
-      </div>
-    </fieldset>
-  </div>
+    </SettingRow>
+    <SettingRow
+      v-for="token in tokens"
+      :key="token.id"
+      :title="token.name"
+      :description="lastRead(token)"
+    >
+      <IconButton
+        icon="trash"
+        :label="`Révoquer ${token.name}`"
+        danger
+        data-test="agenda-revoke"
+        @click="revoke(token)"
+      />
+    </SettingRow>
+  </SettingCard>
+  <!-- Les étapes par agenda restent repliées sous la carte (trop longues pour une phrase). -->
+  <MoreInfo label="Comment l'ajouter à ton agenda">
+    <ul class="extension-steps">
+      <li><strong>iPhone</strong> : Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un calendrier avec abonnement, puis colle l'adresse.</li>
+      <li><strong>Google Agenda</strong> (ordinateur) : « Autres agendas » › + › « À partir de l'URL ».</li>
+      <li><strong>Outlook</strong> : Ajouter un calendrier › « S'abonner à partir du web ».</li>
+      <li>Google et Outlook lisent l'adresse depuis Internet : la plateforme doit y être joignable.</li>
+    </ul>
+  </MoreInfo>
 </template>

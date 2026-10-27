@@ -59,8 +59,12 @@ describe("Plateforme (docs/65 §5)", () => {
     const wrapper = mount(PlatformPanel);
     await flushPromises();
     expect(wrapper.find("[data-test=first-steps-rate]").text()).toContain("2 sur 5");
-    const rows = wrapper.findAll("[data-test=first-steps-stopped] li").map((li) => li.text());
-    expect(rows).toEqual(["Étape 2 · Alertes sur les sites d'emploi2 comptes", "Étape 3 · Première offre gardée1 compte"]);
+    const rows = wrapper.findAll("[data-test=first-steps-stopped]");
+    expect(rows.map((row) => row.find(".setting-row-title").text())).toEqual([
+      "Étape 2 · Alertes sur les sites d'emploi",
+      "Étape 3 · Première offre gardée",
+    ]);
+    expect(rows.map((row) => row.find(".setting-row-control").text())).toEqual(["2 comptes", "1 compte"]);
   });
 
   it("l'usage de chaque compte, les actions seulement pour les autres", async () => {
@@ -71,7 +75,7 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(camille.text()).toContain("IA 0,40 CHF sur 5,00");
     expect(camille.text()).toContain("12 offres reçues");
     expect(camille.text()).toContain("jamais connecté");
-    expect(wrapper.find("[data-test=account-kevin]").text()).toContain("toi");
+    expect(wrapper.find("[data-test=account-kevin] .setting-row-title").text()).toBe("kevin (toi)");
     expect(wrapper.find("[data-test=reset-kevin]").exists()).toBe(false);
     expect(wrapper.find("[data-test=platform-ai]").text()).toContain("0,80 CHF");
   });
@@ -124,7 +128,7 @@ describe("Plateforme (docs/65 §5)", () => {
     await flushPromises();
     await wrapper.find("[data-test=account-more-camille]").trigger("click");
     await wrapper.find("[data-test=delete-camille]").trigger("click");
-    const confirm = wrapper.find("[data-test=account-camille] [data-test=inline-confirm]");
+    const confirm = wrapper.find("[data-test=platform-accounts] [data-test=inline-confirm]");
     expect(confirm.text()).toContain("Écris son identifiant");
     await wrapper.find("[data-test=delete-account-name]").setValue("autre");
     expect(wrapper.find("[data-test=inline-confirm-yes]").attributes("disabled")).toBeDefined();
@@ -166,13 +170,57 @@ describe("Plateforme (docs/65 §5)", () => {
     PUT.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);
     await flushPromises();
-    expect(wrapper.find("[data-test=platform-ai] button[type=submit]").exists()).toBe(false);
-    const input = wrapper.find("#platform-total");
+    expect(wrapper.find("[data-test=platform-ai] button").exists()).toBe(false);
+    const input = wrapper.find("[data-test=platform-total]");
     await input.setValue("60");
     await input.trigger("change");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/platform/settings", { body: { ai_total_budget_chf: 60 } });
-    expect(wrapper.find("[data-test=platform-ai] .saved-flash").text()).toBe("Enregistré");
+    expect(wrapper.find("[data-test=platform-ai] [data-test=setting-saved]").text()).toContain("Enregistré");
+  });
+
+  it("un plafond impossible n'est pas envoyé : l'ancien reste, la saisie aussi (1.6.67)", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    const total = wrapper.find("[data-test=platform-total]");
+    await total.setValue("20000");
+    await total.trigger("change");
+    await flushPromises();
+    expect(PUT).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=platform-ai] [data-test=setting-error]").text()).toBe(
+      "Entre 0 et 10000 CHF. Le 50 reste enregistré.",
+    );
+    expect((total.element as HTMLInputElement).value).toBe("20000");
+    expect(total.attributes("aria-invalid")).toBe("true");
+    const cap = wrapper.find("[data-test=cap-camille]");
+    await cap.setValue("-1");
+    await cap.trigger("change");
+    expect(PATCH).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=account-camille] [data-test=setting-error]").text()).toBe(
+      "Entre 0 et 1000 CHF. Le 5 reste enregistré.",
+    );
+  });
+
+  it("des cartes de lignes : titre, phrase, l'action à droite, sans « Enregistrer » (1.6.67)", async () => {
+    GET.mockResolvedValue({ data: PLATFORM });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    expect(wrapper.find(".form-card, fieldset, legend").exists()).toBe(false);
+    expect(wrapper.find("button[type=submit]").exists()).toBe(false);
+    const titles = wrapper.findAll("[data-test=setting-row] .setting-row-title").map((t) => t.text());
+    expect(titles).toEqual(expect.arrayContaining(["Comptes", "Demandes de compte", "Inviter quelqu'un", "Plafond total de l'IA, tous comptes"]));
+    const invite = wrapper.findAll("[data-test=setting-row]").find((row) => row.text().startsWith("Inviter quelqu'un"));
+    expect(invite?.find(".setting-row-control [data-test=invite]").exists()).toBe(true);
+    // Chaque contrôle est nommé par sa ligne.
+    const signup = wrapper.find("[data-test=signup-open]");
+    const name = wrapper.find(`#${signup.attributes("aria-labelledby")}`);
+    expect(name.text()).toBe("Demandes de compte");
+    expect(wrapper.find("[data-test=plan-camille]").attributes("aria-labelledby")).toContain(
+      wrapper.find("[data-test=account-camille] .setting-row-title").attributes("id"),
+    );
+    // Le lien vers la page publique est l'action de sa ligne, pas un lien dans la phrase.
+    expect(wrapper.find(".setting-row-description a").exists()).toBe(false);
   });
 });
 
@@ -193,13 +241,13 @@ describe("Plateforme, demandes de compte (docs/102)", () => {
     GET.mockResolvedValue({ data: { ...PLATFORM, signup_requests: REQUESTS } });
     const wrapper = mount(PlatformPanel);
     await flushPromises();
-    const cards = wrapper.findAll(".form-card");
+    const cards = wrapper.findAll(".setting-card");
     expect(cards[0]?.attributes("data-test")).toBe("platform-requests");
     const lea = wrapper.find("[data-test=request-lea]");
     expect(lea.text()).toContain("lea");
     expect(lea.text()).toContain("Amie de Camille.");
-    expect(lea.find(".meta-line .icon").exists()).toBe(true);
-    expect(wrapper.find("[data-test=request-noah] .platform-request-note").exists()).toBe(false);
+    expect(lea.find(".setting-row-description").text()).toMatch(/^Demandé le .+ · « Amie de Camille\. »$/);
+    expect(wrapper.find("[data-test=request-noah] .setting-row-description").text()).not.toContain("«");
   });
 
   it("accepter, puis refuser après confirmation", async () => {
@@ -234,6 +282,7 @@ describe("Plateforme, demandes de compte (docs/102)", () => {
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/platform/settings", { body: { signup_open: false } });
     expect((wrapper.find("[data-test=signup-open]").element as HTMLInputElement).checked).toBe(false);
-    expect(wrapper.text()).toContain("Demandes de compte fermées.");
+    expect(wrapper.text()).toContain("Fermées : seules tes invitations ouvrent un compte.");
+    expect(wrapper.find("[data-test=platform-invite] [data-test=setting-saved]").text()).toContain("Enregistré");
   });
 });

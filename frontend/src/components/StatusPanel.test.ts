@@ -44,7 +44,7 @@ describe("StatusView", () => {
     expect(lights).toHaveLength(4);
     expect(lights.every((l) => l.classes().includes("ok"))).toBe(true);
     expect(wrapper.findAll("[data-test=run]")).toHaveLength(1);
-    expect(wrapper.text()).toContain("réussie");
+    expect(wrapper.text()).toContain("Réussie");
     wrapper.unmount();
   });
 
@@ -55,6 +55,42 @@ describe("StatusView", () => {
     expect(wrapper.findAll("[data-test=indicator]").every((l) => l.classes().includes("down"))).toBe(true);
     expect(GET.mock.calls.some((c) => c[0] === "/api/job-runs")).toBe(false);
     expect(wrapper.text()).toContain("Aucune exécution enregistrée.");
+    wrapper.unmount();
+  });
+
+  it("une colonne de lignes : le voyant, son détail, l'état en mots à droite (1.6.67, WCAG 1.4.1)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/status"
+            ? { ...healthy, collect: { ...healthy.collect, last_error: "IMAP refusé" } }
+            : [
+                {
+                  id: 2,
+                  job: "collect",
+                  run_id: "00000000-0000-0000-0000-000000000002",
+                  started_at: new Date().toISOString(),
+                  finished_at: new Date().toISOString(),
+                  status: "failure",
+                  items_in: 3,
+                  items_out: null,
+                  error: "IMAP refusé",
+                },
+              ],
+      }),
+    );
+    const wrapper = mount(StatusView);
+    await flushPromises();
+    expect(wrapper.find("table").exists()).toBe(false);
+    const collect = wrapper.findAll("[data-test=indicator]").find((row) => row.find(".setting-row-title").text() === "Collecte");
+    expect(collect?.find(".setting-row-description").text()).toContain("IMAP refusé");
+    expect(collect?.find(".setting-row-control").text()).toBe("En panne");
+    const header = wrapper.find("[data-test=runs] [data-test=setting-row]");
+    expect(header.find(".setting-row-title").text()).toBe("Dernières tâches");
+    const run = wrapper.find("[data-test=run]");
+    expect(run.find(".setting-row-title").text()).toBe("collect");
+    expect(run.find(".setting-row-description").text()).toContain("entrées 3, sorties –");
+    expect(run.find(".setting-row-control").text()).toBe("Échec");
     wrapper.unmount();
   });
 });
