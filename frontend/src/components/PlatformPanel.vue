@@ -642,7 +642,7 @@ function size(bytes: number | null | undefined): string {
         description="Responsable, contact, hébergement. Publiques, même sans compte."
         :saved="savedRow === 'mentions'"
         :error="rowErrors.mentions"
-        stack
+        wide
       >
         <textarea
           id="platform-mentions"

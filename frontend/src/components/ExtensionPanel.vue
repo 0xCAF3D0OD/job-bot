@@ -128,7 +128,7 @@ onMounted(load);
       v-if="created"
       title="Nouveau jeton"
       description="Montré une seule fois : colle-le maintenant dans l'extension."
-      stack
+      wide
     >
       <div
         class="extension-token"

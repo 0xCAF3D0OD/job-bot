@@ -4031,7 +4031,7 @@ html.filters-open { overflow: hidden; }
 /* --- Réglages, seconde partie (1.6.67) : les éléments propres aux panneaux ---
    La jauge d'un usage de la formule à droite de sa ligne ; la case des conditions sans marge de plus ;
    l'état d'un voyant ou d'une tâche écrit en mots, coloré en plus (WCAG 1.4.1) ; la barre de dépense de
-   l'IA ; le texte des mentions sur toute la largeur de son champ. */
+   l'IA. */
 .plan-usage-gauge { width: 4.5rem; }
 .plan-terms { margin-top: 0; }
 .state-word { font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
@@ -4039,4 +4039,3 @@ html.filters-open { overflow: hidden; }
 .state-word.warn { color: var(--orange-text); }
 .state-word.down { color: var(--down-text); }
 .budget-bar { width: 8rem; }
-.platform-mentions textarea { width: 100%; }

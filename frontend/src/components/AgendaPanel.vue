@@ -118,7 +118,7 @@ onMounted(load);
       v-if="created"
       title="Nouvelle adresse"
       description="Montrée une seule fois : colle-la maintenant dans ton agenda."
-      stack
+      wide
     >
       <div
         class="extension-token"
@@ -153,7 +153,7 @@ onMounted(load);
     </SettingRow>
   </SettingCard>
   <!-- Les étapes par agenda restent repliées sous la carte (trop longues pour une phrase). -->
-  <MoreInfo label="Comment l'ajouter à ton agenda">
+  <MoreInfo label="Comment l'ajouter">
     <ul class="extension-steps">
       <li><strong>iPhone</strong> : Réglages › Calendrier › Comptes › Ajouter un compte › Autre › Ajouter un calendrier avec abonnement, puis colle l'adresse.</li>
       <li><strong>Google Agenda</strong> (ordinateur) : « Autres agendas » › + › « À partir de l'URL ».</li>
