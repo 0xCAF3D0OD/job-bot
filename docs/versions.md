@@ -32,3 +32,5 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.56 | Pages | Test du retour d'entretien indépendant de la date du jour (signalé par Design) | `fix/1.6.56-test-retour` | fusionnée (#365) |
 | 1.6.57 | Pages | Offres, feuille « Filtres » sur téléphone selon la planche : voile à 40 %, coins du haut à 16 px | `fix/1.6.57-feuille-filtres` | fusionnée (#367) |
 | 1.6.58 | Pages | Série de Kevin, point 1 : sélection des onglets (pastille teintée dans l'en-tête, indicateur actif de Material 3 sur la barre du bas), en-tête confié par Design | `feat/1.6.58-onglets` | PR ouverte |
+| 1.6.59 | Design | Série du 27.10 inscrite au tableau (points 1 à 7) | `docs/1.6.58-serie-27-10` | fusionnée (#368) |
+| 1.6.60 | Design | Barre d'onglets du téléphone : `--tabbar-h` de 3,6 à 4 rem, de l'air au-dessus de la pastille | `fix/1.6.60-tabbar-h` | PR ouverte |
