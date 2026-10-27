@@ -1377,6 +1377,8 @@ button, .button-link { max-width: 100%; }
 .disclosure-text .disclosure-title { font-size: var(--font-body); }
 .disclosure-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
 .disclosure-row:has(.disclosure-text) { gap: var(--space-4); }
+/* Ouvert et survolé, le fond passe à --accent-soft : la phrase passe en --text pour garder 4,5:1 (WCAG 1.4.3, 1.6.63). */
+.disclosure.open > .disclosure-row:hover .disclosure-description { color: var(--text); }
 /* Le résumé n'est jamais coupé (1.6.24) : trop long, il passe à la ligne entre deux mots, aligné à droite ;
    jamais plus étroit que son mot le plus long (largeur minimale automatique). */
 .disclosure-value { flex: 1 1 0; margin-left: auto; color: var(--muted); font-size: var(--font-small); text-align: right; }
