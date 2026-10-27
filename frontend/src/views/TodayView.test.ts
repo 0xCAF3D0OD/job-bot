@@ -368,7 +368,9 @@ describe("Aujourd'hui, les moments (docs/123 §2)", () => {
     mockGet(today({ month_count: 20, month_target: 20 }));
     const first = await mountView();
     expect(document.body.querySelector("[data-test=goal-moment]")?.textContent).toContain("Objectif du mois atteint");
-    expect(document.body.querySelector("[data-test=goal-moment] .face-mark")?.classList.contains("wink")).toBe(true);
+    // L'illustration de la réussite à la place du visage (planche « Illustrations »).
+    expect(document.body.querySelector("[data-test=goal-moment] .illu")).not.toBeNull();
+    expect(document.body.querySelector("[data-test=goal-moment] .face-mark")).toBeNull();
     first.unmount();
     document.body.innerHTML = "";
     await mountView();

@@ -12,6 +12,8 @@ import BilanInterviews from "../components/bilan/BilanInterviews.vue";
 import BilanMonths from "../components/bilan/BilanMonths.vue";
 import DashTile from "../components/dash/DashTile.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import NetworkError from "../components/NetworkError.vue";
+import { isNetworkError } from "../network";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
@@ -38,6 +40,7 @@ const route = useRoute();
 const router = useRouter();
 const insights = ref<Insights | null>(null);
 const error = ref("");
+const offline = ref(false);
 usePageReady("insights", () => !!insights.value || !!error.value);
 const copied = ref(false);
 
@@ -80,6 +83,7 @@ async function loadOrp(): Promise<void> {
 
 async function load(): Promise<void> {
   error.value = "";
+  offline.value = false;
   if (!orp.value) void loadOrp().catch(() => undefined);
   try {
     const { data } = await api.GET("/api/insights", {
@@ -87,7 +91,8 @@ async function load(): Promise<void> {
     });
     if (!data) throw new Error();
     insights.value = data;
-  } catch {
+  } catch (cause) {
+    offline.value = isNetworkError(cause);
     error.value = "Bilan indisponible pour l'instant.";
   }
 }
@@ -203,8 +208,12 @@ const PERIODS: { key: Period; label: string }[] = [
       </div>
     </div>
 
+    <NetworkError
+      v-if="error && offline"
+      @retry="load()"
+    />
     <p
-      v-if="error"
+      v-else-if="error"
       class="notice error"
       role="alert"
     >
@@ -223,10 +232,11 @@ const PERIODS: { key: Period; label: string }[] = [
            demande (docs/126 §2 : « une page, une question »). -->
       <FaceState
         v-if="insights.funnel.applications === 0"
-        title="Pas encore de candidature"
+        title="Trop tôt pour conclure"
+        illustration="trop-tot"
         data-test="insights-empty"
       >
-        <p>Le bilan commence après tes premières candidatures.</p>
+        <p>Le Bilan se remplit avec tes premières candidatures et réponses.</p>
         <div class="face-state-actions">
           <RouterLink
             to="/candidatures/offres"

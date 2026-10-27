@@ -1,0 +1,1 @@
+Illustrations aux écrans vides et aux réussites : tri terminé et objectif atteint, rien à préparer, Bilan trop tôt, assistant, formations, rendez-vous ORP, offre et page introuvables, IA pas encore branchée ; un écran commun « Pas de connexion » qui réessaie seul dès que le réseau revient ; les illustrations centrées ne s'affichaient plus (largeur nulle)

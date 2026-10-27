@@ -23,6 +23,7 @@ import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
 
 import AiSpend from "../components/AiSpend.vue";
+import FaceState from "../components/FaceState.vue";
 
 const DEFAULTS: SettingsModel = {
   orp_monthly_target: null,
@@ -229,6 +230,21 @@ const { plan } = usePlan();
 const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
 // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3).
 // Pas dans la démo : un écran technique, du jargon pour qui découvre jobA1 (audit du 22.10.2026).
+// L'IA est-elle branchée ? Lu pour l'exploitant seulement (la rubrique IA, planche « Illustrations »).
+const aiConfigured = ref<boolean | null>(null);
+watch(
+  owner,
+  async (isOwner) => {
+    if (!isOwner || aiConfigured.value !== null) return;
+    try {
+      const { data } = await api.GET("/api/scoring");
+      aiConfigured.value = data ? data.configured : null;
+    } catch {
+      aiConfigured.value = null;
+    }
+  },
+  { immediate: true },
+);
 const showDiagnostic = computed(() => owner.value || (me.value?.auth_enabled === false && !me.value?.demo));
 // Résumés des rubriques, affichés sur téléphone (docs/34 §3).
 const summary = computed(() => ({
@@ -771,6 +787,19 @@ onUnmounted(() => spy?.disconnect());
               </SettingRow>
             </SettingCard>
             <template v-else>
+              <!-- L'IA pas encore branchée (planche « Illustrations ») : pour l'exploitant seulement. C'est un
+                   réglage d'installation, sans écran dans l'application : pas de bouton qui ne mènerait nulle part. -->
+              <FaceState
+                v-if="aiConfigured === false"
+                title="L'IA n'est pas encore branchée"
+                illustration="ia-vide"
+                data-test="ai-not-configured"
+              >
+                <p>Elle note les offres et t'aide à rédiger.</p>
+                <p class="muted">
+                  Un réglage d'installation, sur le serveur.
+                </p>
+              </FaceState>
               <SettingCard data-test="budget-form">
                 <SettingRow
                   v-slot="c"

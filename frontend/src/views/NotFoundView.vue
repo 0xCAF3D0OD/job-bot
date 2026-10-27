@@ -10,7 +10,7 @@ import IllustratedSide from "../components/IllustratedSide.vue";
   <section class="band not-found">
     <div class="container">
       <IllustratedSide
-        name="lecture-calme"
+        name="introuvable"
         phone="small"
         class="empty-state"
       >

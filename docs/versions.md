@@ -46,4 +46,5 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.70 | Pages | Série du 27.10, point 6 : les Alertes selon la planche « 6. Alertes » (conclusion, une bande, une carte par recherche et une ligne par site, messages des sites et alertes reçues en trois lignes avec « Tout voir », lieux avec accents) | `feat/1.6.70-alertes` | PR ouverte |
 | 1.6.71 | Design | SettingRow : prop `inline` (un état court reste à droite sur téléphone) | `feat/1.6.71-reglage-inline` | fusionnée (#382) |
 | 1.6.73 | Design | Illustrations : la série de l'archive, `FaceState` avec `illustration`, règle §4 | `feat/1.6.73-illustrations` | PR ouverte |
-| 1.6.76 | Pages | Suivi : un filtre par mots (poste, entreprise), dans tous les mois ; la recherche globale y mène par « Tout voir (N) » (candidatures, entreprises) | `feat/1.6.76-suivi-filtre` | PR ouverte |
+| 1.6.76 | Pages | Suivi : un filtre par mots (poste, entreprise), dans tous les mois ; la recherche globale y mène par « Tout voir (N) » (candidatures, entreprises) | `feat/1.6.76-suivi-filtre` | fusionnée (#387) |
+| 1.6.77 | Pages | Illustrations aux écrans vides et aux réussites (placements de Design), écran commun « Pas de connexion » | `feat/1.6.77-illustrations` | PR ouverte |

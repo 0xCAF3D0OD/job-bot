@@ -13,6 +13,8 @@ import {
 import AppIcon from "../components/AppIcon.vue";
 import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import NetworkError from "../components/NetworkError.vue";
+import { isNetworkError } from "../network";
 import ApplicationCard from "../components/ApplicationCard.vue";
 import ApplicationPanel from "../components/ApplicationPanel.vue";
 import SidePanel from "../components/SidePanel.vue";
@@ -184,15 +186,23 @@ const declareShown = computed(() => (showAllDeclare.value ? toDeclare.value : to
 // assistant) : la clé le recrée, ouvert.
 const calendarKey = ref(0);
 
+// Une panne de réseau au chargement : l'écran « Pas de connexion » (planche « Illustrations »).
+const offline = ref(false);
 async function load(): Promise<void> {
   const wanted = typeof route.query.mois === "string" ? route.query.mois : undefined;
-  const [sheet, list] = await Promise.all([
-    api.GET("/api/orp", { params: { query: { month: wanted } } }),
-    api.GET("/api/applications"),
-  ]);
-  orp.value = sheet.data ?? null;
-  all.value = list.data ?? [];
-  loaded.value = true;
+  try {
+    const [sheet, list] = await Promise.all([
+      api.GET("/api/orp", { params: { query: { month: wanted } } }),
+      api.GET("/api/applications"),
+    ]);
+    orp.value = sheet.data ?? null;
+    all.value = list.data ?? [];
+    offline.value = false;
+    loaded.value = true;
+  } catch (cause) {
+    if (!isNetworkError(cause)) throw cause;
+    offline.value = true;
+  }
 }
 
 function go(delta: number): void {
@@ -821,6 +831,10 @@ onUnmounted(() => assistant.setFocus(null));
         </section>
       </template>
     </template>
+    <NetworkError
+      v-else-if="offline"
+      @retry="load()"
+    />
     <LoadingBlocks
       v-else
       :heights="['3rem', '22rem']"

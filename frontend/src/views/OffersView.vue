@@ -24,6 +24,8 @@ import { useJobsMemory } from "../composables/useJobsMemory";
 import { activeChips, activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import NetworkError from "../components/NetworkError.vue";
+import { isNetworkError } from "../network";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import PlanLimit from "../components/PlanLimit.vue";
@@ -66,6 +68,8 @@ const sentenceEnd = computed(() => {
   return `${total.value > 1 ? many : one}`;
 });
 const failed = ref(false);
+// Une panne de réseau (planche « Illustrations ») : l'écran « Pas de connexion », qui réessaie seul.
+const offline = ref(false);
 const firstLoaded = ref(false);
 usePageReady("offers", () => firstLoaded.value);
 const selectedId = ref<number | null>(null);
@@ -262,8 +266,11 @@ async function load(append = false): Promise<void> {
     total.value = data.total;
     counts.value = data.counts;
     facets.value = data.facets;
-  } catch {
-    if (current === requestId) failed.value = true;
+  } catch (cause) {
+    if (current === requestId) {
+      failed.value = true;
+      offline.value = isNetworkError(cause);
+    }
   } finally {
     if (current === requestId) {
       loading.value = false;
@@ -562,8 +569,12 @@ onUnmounted(() => {
           @arrived="load()"
         />
         <PlanLimit usage="score" />
+        <NetworkError
+          v-if="failed && offline"
+          @retry="load()"
+        />
         <p
-          v-if="failed"
+          v-else-if="failed"
           class="notice error"
         >
           Impossible de charger les offres.
@@ -601,9 +612,27 @@ onUnmounted(() => {
         <FaceState
           v-else-if="!loading && items.length === 0 && allReviewed"
           title="Tout est examiné."
+          illustration="reussite"
           data-test="offers-all-reviewed"
         >
           <p>Les nouvelles arrivent chaque matin.</p>
+        </FaceState>
+        <!-- Rien en préparation (planche « Illustrations ») : garder une offre dans le tri. -->
+        <FaceState
+          v-else-if="!loading && items.length === 0 && filters.view === 'in_progress' && !activeCount(filters)"
+          title="Rien à préparer pour l'instant"
+          illustration="preparer-vide"
+          data-test="offers-nothing-to-prepare"
+        >
+          <p>Garde une offre dans le tri : sa lettre et son CV se préparent ici.</p>
+          <div class="face-state-actions">
+            <RouterLink
+              :to="{ name: 'triage' }"
+              class="button-link primary-link"
+            >
+              Commencer le tri
+            </RouterLink>
+          </div>
         </FaceState>
         <FaceState
           v-else-if="!loading && items.length === 0"

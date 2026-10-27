@@ -5,6 +5,7 @@ import { api } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import FaceState from "../components/FaceState.vue";
+import Illustration from "../components/Illustration.vue";
 import CopyLabel from "../components/CopyLabel.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import IconButton from "../components/IconButton.vue";
@@ -282,8 +283,16 @@ onMounted(() => void load());
           class="form-card"
           data-test="meeting"
         >
+          <!-- Aucun rendez-vous prévu (planche « Illustrations ») : l'illustration au-dessus du formulaire ; pas
+               avec l'écran « Pas encore de candidature », une seule par écran. -->
+          <Illustration
+            v-if="!meeting && !editing && !noApplications"
+            name="rendez-vous-vide"
+            class="spot"
+            sizes="(max-width: 820px) 260px, 424px"
+          />
           <div class="orp-meeting-when">
-            <h2>{{ meeting && started && !editing ? "Ce qui a été convenu" : "Le prochain rendez-vous" }}</h2>
+            <h2>{{ meeting && started && !editing ? "Ce qui a été convenu" : meeting || editing ? "Le prochain rendez-vous" : "Aucun rendez-vous ORP prévu" }}</h2>
           </div>
           <template v-if="meeting && started && !editing">
             <OrpOutcomeForm

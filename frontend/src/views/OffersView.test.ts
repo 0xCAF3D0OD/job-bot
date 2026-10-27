@@ -742,3 +742,23 @@ describe("Offres, barre d'outils (1.6.55)", () => {
     expect(wrapper.find("[data-test=filter-chips]").exists()).toBe(false);
   });
 });
+
+describe("Offres, illustrations (planche « Illustrations »)", () => {
+  it("rien en préparation : « Rien à préparer pour l'instant », vers le tri", async () => {
+    mockOffers(page([]));
+    const wrapper = await mountAt("/offres?statut=in_progress");
+    const empty = wrapper.find("[data-test=offers-nothing-to-prepare]");
+    expect(empty.find(".face-state-title").text()).toBe("Rien à préparer pour l'instant");
+    expect(empty.find(".illu").exists()).toBe(true);
+    expect(empty.find("a").attributes("href")).toBe("/aujourdhui/tri");
+  });
+
+  it("panne de réseau : l'écran « Pas de connexion » au lieu du message d'erreur", async () => {
+    GET.mockImplementation((path: string) =>
+      path === "/api/offers" ? Promise.reject(new TypeError("Failed to fetch")) : Promise.resolve({ data: [] }),
+    );
+    const wrapper = await mountAt("/offres");
+    expect(wrapper.find("[data-test=network-error]").exists()).toBe(true);
+    expect(wrapper.text()).not.toContain("Impossible de charger les offres.");
+  });
+});
