@@ -1,10 +1,14 @@
 # Une version, un fichier
 
-Chaque version ajoute ici son fichier `X.Y.Z.md` (par exemple `1.6.37.md`) :
+Chaque PR dépose ici un fragment **sans numéro**, `<sujet>.md` (minuscules, chiffres et tirets, par exemple
+`boutons-segmentes.md`) :
 
 - la première ligne : le contenu de la version, en une phrase (sans « | ») ;
 - une ligne facultative `État : …` quand la version n'est pas simplement « livrée ».
 
-Ne modifie pas `CHANGELOG.md` : il est assemblé sur main après chaque fusion (`scripts/changelog.py`, action
-`changelog.yml`). En local : `make changelog` pour le voir, `make changelog-check` pour vérifier les fichiers.
-Deux PR qui prendraient le même numéro ajouteraient le même fichier : GitHub le signale aussitôt.
+Le numéro est donné à la fusion : sur main, l'action `changelog.yml` (`scripts/changelog.py --number`) renomme chaque
+fragment en `X.Y.Z.md`, le numéro suivant dans l'ordre de fusion, puis assemble `CHANGELOG.md`. Deux PR ne prennent
+donc jamais le même numéro, et aucune ne touche un fichier partagé.
+
+Ne crée pas de fichier `X.Y.Z.md` (la CI le refuse) et ne modifie pas `CHANGELOG.md`. En local : `make changelog` pour
+voir l'assemblage, `make changelog-check` pour vérifier les fichiers.

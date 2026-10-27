@@ -1,0 +1,1 @@
+Le numéro de version donné à la fusion : une PR dépose `changelog.d/<sujet>.md` sans numéro, numéroté dans l'ordre de fusion sur main avec l'assemblage de `CHANGELOG.md` ; `docs/versions.md` retiré et le tableau de `docs/coordination.md` gelé dans `docs/coordination-historique.md` ; les tâches se suivent dans les PR ouvertes ; la CI refuse un numéro posé dans une PR

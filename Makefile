@@ -79,7 +79,7 @@ test: test-audit changelog-check ## tests backend (base jobbot_test), frontend, 
 test-audit: ## l'audit des règles trouve un texte collé au bord (navigateur requis, docs/135)
 	cd backend && uv run --with playwright --with pytest pytest -q ../frontend/scripts/test_regles.py
 
-changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml le fait)
+changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml numérote et assemble)
 	python3 scripts/changelog.py
 
 changelog-check: ## vérifie les fichiers de changelog.d/ et l'assemblage
