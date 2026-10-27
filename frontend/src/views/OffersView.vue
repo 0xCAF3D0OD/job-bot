@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, Teleport, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client";
@@ -8,7 +8,6 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import IconButton from "../components/IconButton.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
-import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
 import ManualOfferForm from "../components/ManualOfferForm.vue";
@@ -16,11 +15,13 @@ import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import { usePhone } from "../composables/usePhone";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
+import OfferFilterChips from "../components/OfferFilterChips.vue";
+import OfferSearch from "../components/OfferSearch.vue";
 import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
+import { activeChips, activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { useDataChanged } from "../composables/useDataChanged";
@@ -71,6 +72,32 @@ const selectedId = ref<number | null>(null);
 const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 const { phone } = usePhone();
+// Barre d'outils (1.6.55) : « Filtrer » ouvre un panneau sous le bouton (ordinateur) ou une feuille en
+// bas de l'écran (téléphone) ; les filtres actifs restent visibles en pastilles sous la barre.
+const chips = computed(() => activeChips(filters.value, phone.value));
+const filterAnchor = ref<HTMLElement | null>(null);
+const filterToggle = ref<HTMLButtonElement | null>(null);
+// Le panneau tient sous le bouton, dans la fenêtre ; au-delà, il défile et garde son pied en bas.
+const filtersRoom = ref("");
+function openFilters(): void {
+  const bottom = filterToggle.value?.getBoundingClientRect().bottom ?? 0;
+  filtersRoom.value = `${Math.max(240, window.innerHeight - bottom - 24)}px`;
+  filtersOpen.value = true;
+}
+function closeFilters(): void {
+  filtersOpen.value = false;
+  void nextTick(() => filterToggle.value?.focus({ preventScroll: true }));
+}
+// Un clic hors du panneau le referme (ordinateur) ; sur téléphone, c'est le voile.
+function onPointerDown(event: PointerEvent): void {
+  if (!filtersOpen.value || phone.value) return;
+  if (event.target instanceof Node && filterAnchor.value?.contains(event.target)) return;
+  filtersOpen.value = false;
+}
+// La feuille ouverte, la page dessous ne défile plus.
+watch([filtersOpen, phone], ([open, onPhone]) => {
+  document.documentElement.classList.toggle("filters-open", open && onPhone);
+});
 // Candidature spontanée (docs/39) : sans annonce, préparée comme une offre.
 const spontaneousOpen = ref(false);
 // Ajouter une offre trouvée ailleurs (docs/111), aussi par « Partager vers jobA1 » sur Android :
@@ -338,7 +365,7 @@ function onKeydown(event: KeyboardEvent): void {
   // Échap ferme la couche du dessus seulement : bulle d'aide ou panneau latéral d'abord.
   if (event.defaultPrevented || document.documentElement.classList.contains("side-open")) return;
   if (applying.value) applying.value = null;
-  else if (filtersOpen.value) filtersOpen.value = false;
+  else if (filtersOpen.value) closeFilters();
   else selectedId.value = null;
 }
 
@@ -382,6 +409,7 @@ async function loadChunkTitles(): Promise<void> {
 
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
+  document.addEventListener("pointerdown", onPointerDown);
   void load().then(openFromQuery);
   openShared();
   void loadChunkTitles();
@@ -392,6 +420,8 @@ useDataChanged(() => {
 });
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown);
+  document.removeEventListener("pointerdown", onPointerDown);
+  document.documentElement.classList.remove("filters-open");
   assistant.setFocus(null);
 });
 </script>
@@ -408,64 +438,107 @@ onUnmounted(() => {
         {{ " · " }}<strong data-test="offers-to-review">{{ counts.to_review }}</strong>{{ " à examiner" }}
       </template>{{ "." }}
     </p>
-    <!-- Titre et onglets : en-tête de la rubrique Candidatures (docs/19 §2). -->
-    <div class="offers-heading">
-      <!-- Filtrer (docs/101) : l'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille. -->
-      <button
-        type="button"
-        class="pill filters-toggle"
-        :aria-label="activeCount(filters) ? `Filtrer, ${plural(activeCount(filters), 'filtre actif', 'filtres actifs')}` : undefined"
-        :aria-expanded="filtersOpen"
-        data-test="filters-toggle"
-        @click="filtersOpen = !filtersOpen"
+    <!-- La barre d'outils (1.6.55, planche « Barre d'outils Offres ») : la recherche qui prend la ligne
+         (ordinateur), « Filtrer » et « + Ajouter » ; les filtres actifs en pastilles dessous. La liste a
+         toute la largeur, sans colonne de filtres. -->
+    <div
+      class="offers-toolbar"
+      data-test="offers-toolbar"
+    >
+      <OfferSearch
+        v-if="!phone"
+        class="offers-toolbar-search"
+        :value="filters.q"
+        @search="(q) => update({ q })"
+      />
+      <div
+        ref="filterAnchor"
+        class="offers-filter"
       >
-        <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
-        <CountBadge
-          v-if="activeCount(filters)"
-          class="tab-count"
-          aria-hidden="true"
-          data-test="filters-count"
-        
-          :count="activeCount(filters)"
-        />
-      </button>
+        <!-- L'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille. -->
+        <button
+          ref="filterToggle"
+          type="button"
+          class="secondary offers-toolbar-button"
+          :aria-label="chips.length ? `Filtrer, ${plural(chips.length, 'filtre actif', 'filtres actifs')}` : undefined"
+          :aria-expanded="filtersOpen"
+          aria-controls="offers-filters"
+          data-test="filters-toggle"
+          @click="filtersOpen ? closeFilters() : openFilters()"
+        >
+          <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
+          <CountBadge
+            v-if="chips.length"
+            aria-hidden="true"
+            data-test="filters-count"
+            :count="chips.length"
+          />
+        </button>
+        <!-- Téléphone : la feuille sort de la page (Teleport), au-dessus de la barre du bas ; ordinateur :
+             le panneau reste sous le bouton, sans Teleport, pour ne pas être recréé à chaque filtre. -->
+        <component
+          :is="phone ? Teleport : 'div'"
+          v-bind="phone ? { to: 'body' } : { class: 'offers-filters-anchor' }"
+        >
+          <div
+            v-if="filtersOpen && phone"
+            class="offers-filters-veil"
+            data-test="filters-veil"
+            @click="closeFilters"
+          />
+          <section
+            v-if="filtersOpen"
+            id="offers-filters"
+            :class="['offers-filters', { sheet: phone }]"
+            :style="phone ? undefined : { '--filters-room': filtersRoom }"
+            role="dialog"
+            aria-labelledby="offers-filters-title"
+            data-test="filters-dialog"
+          >
+            <div class="offers-filters-head">
+              <h2 id="offers-filters-title">
+                Filtres
+              </h2>
+              <IconButton
+                icon="close"
+                label="Fermer les filtres"
+                class="close"
+                data-test="close-filters"
+                @click="closeFilters"
+              />
+            </div>
+            <OfferFiltersPanel
+              :filters="filters"
+              :counts="counts"
+              :facets="facets"
+              :visible="visibleFilters"
+              :total="total"
+              :with-search="phone"
+              @update="update"
+              @reset="reset"
+              @visibility="setVisibility"
+              @done="closeFilters"
+            />
+          </section>
+        </component>
+      </div>
+      <!-- Un seul « + Ajouter » (1.6.47) : « Ajouter une offre » et « Postuler spontanément ». -->
+      <MoreMenu
+        class="offers-add"
+        :items="addItems"
+        trigger="Ajouter"
+        trigger-icon="plus"
+        test-id="add-menu"
+        :inline="false"
+      />
     </div>
+    <OfferFilterChips
+      :chips="chips"
+      @update="update"
+      @reset="reset"
+    />
 
     <div :class="['offers-grid', { 'has-selection': selected }]">
-      <!-- Téléphone (docs/36 §3) : une carte pleine largeur qui pousse la liste. -->
-      <PushTransition :enabled="phone">
-        <section
-          v-show="!phone || filtersOpen"
-          :class="['filters-column', { open: filtersOpen }]"
-        >
-          <div class="filters-sheet-head">
-            <span
-              class="sheet-grabber"
-              aria-hidden="true"
-            />
-            <strong>Filtres</strong>
-            <IconButton
-              icon="close"
-              label="Fermer les filtres"
-              class="close"
-              data-test="close-filters"
-              @click="filtersOpen = false"
-            />
-          </div>
-          <OfferFiltersPanel
-            :filters="filters"
-            :counts="counts"
-            :facets="facets"
-            :visible="visibleFilters"
-            :total="total"
-            @update="update"
-            @reset="reset"
-            @visibility="setVisibility"
-            @done="filtersOpen = false"
-          />
-        </section>
-      </PushTransition>
-
       <div class="offers-list">
         <p
           v-if="notice"
@@ -488,20 +561,6 @@ onUnmounted(() => {
           where="offers"
           @arrived="load()"
         />
-        <!-- Un seul bouton « + Ajouter » sur la ligne du nombre d'offres, son menu propose « Ajouter une
-             offre » et « Postuler spontanément » (1.6.47, Polaris : les actions de la page regroupées ;
-             docs/43 n° 11, docs/111). -->
-        <div class="list-count-row">
-          <span class="list-count-actions">
-            <MoreMenu
-              :items="addItems"
-              trigger="Ajouter"
-              trigger-icon="plus"
-              test-id="add-menu"
-              :inline="false"
-            />
-          </span>
-        </div>
         <PlanLimit usage="score" />
         <p
           v-if="failed"

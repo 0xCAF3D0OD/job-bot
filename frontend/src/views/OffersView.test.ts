@@ -81,6 +81,12 @@ async function mountAt(path: string) {
   return wrapper;
 }
 
+// « Filtrer » ouvre le panneau des filtres (1.6.55) : sans colonne, il est fermé à l'arrivée.
+async function openFilters(wrapper: Awaited<ReturnType<typeof mountAt>>) {
+  await wrapper.find("[data-test=filters-toggle]").trigger("click");
+  await flushPromises();
+}
+
 function lastQuery(): Record<string, unknown> {
   const call = GET.mock.calls.filter((c) => c[0] === "/api/offers").at(-1);
   return (call?.[1] as { params: { query: Record<string, unknown> } }).params.query;
@@ -174,6 +180,7 @@ describe("OffersView", () => {
 
   it("un clic sur un filtre met à jour l'adresse et recharge", async () => {
     const wrapper = await mountAt("/offres");
+    await openFilters(wrapper);
     // Cartes (docs/27) : la ligne déplie le choix dessous ; un autre filtre le replie.
     expect(wrapper.find("[data-test=row-view]").text()).toContain("À examiner");
     // Les filtres secondaires sont repliés dans « Plus de filtres » (docs/73 §6).
@@ -195,7 +202,7 @@ describe("OffersView", () => {
     await wrapper.find("[data-test=view-all]").trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.query).toEqual({ canton: ["VD"], site: ["indeed"], statut: "all" });
-    expect(wrapper.find("[data-test=reset]").text()).toContain("(2)");
+    expect(wrapper.find("[data-test=reset]").text()).toBe("Tout effacer");
 
     await wrapper.find("[data-test=reset]").trigger("click");
     await flushPromises();
@@ -376,7 +383,9 @@ describe("offres expirées", () => {
     );
     const wrapper = await mountAt("/offres?statut=expired");
     expect(lastQuery().view).toBe("expired");
-    expect(wrapper.text()).toContain("Expirées");
+    await openFilters(wrapper);
+    expect(wrapper.find("[data-test=row-view]").text()).toContain("Expirées");
+    await wrapper.find("[data-test=close-filters]").trigger("click");
     await wrapper.find("[data-test=offer]").trigger("click");
     expect(wrapper.find("[data-test=expired]").text()).toContain("Probablement expirée");
   });
@@ -395,6 +404,7 @@ describe("filtres au choix", () => {
     );
     PUT.mockResolvedValue({ data: { visible: ["sources"] } });
     const wrapper = await mountAt("/offres?taux=80");
+    await openFilters(wrapper);
     const panel = wrapper.find("[data-test=filters]");
     expect(panel.text()).toContain("Sites");
     expect(panel.text()).not.toContain("Cantons");
@@ -540,6 +550,7 @@ describe("tri « Dernière action »", () => {
   it("devient le tri de l'onglet En cours, et disparaît en le quittant", async () => {
     const wrapper = await mountAt("/offres");
     expect(wrapper.text()).not.toContain("Dernière action");
+    await openFilters(wrapper);
     await wrapper.find("[data-test=row-view]").trigger("click");
     await wrapper.find("[data-test=view-in_progress]").trigger("click");
     await flushPromises();
@@ -554,7 +565,7 @@ describe("tri « Dernière action »", () => {
 });
 
 describe("Offres, revue des pages (docs/43)", () => {
-  it("une ligne par jour, les offres sans leur date ; « Candidature spontanée » sur la ligne du nombre", async () => {
+  it("une ligne par jour, les offres sans leur date ; « + Ajouter » dans la barre d'outils", async () => {
     // Une horloge figée en milieu de journée : les jours sont rangés à l'heure de Zurich, et le soir du changement
     // d'heure (ou une machine en UTC), « 24 h plus tôt » pouvait encore être aujourd'hui.
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -576,15 +587,18 @@ describe("Offres, revue des pages (docs/43)", () => {
     expect(days.map((h) => h.find(".offer-day-name").text())).toEqual(["Aujourd'hui", "Hier", dayName(ago(20))]);
     expect(days.map((h) => h.find(".offer-day-count").text())).toEqual(["1 offre", "2 offres", "1 offre"]);
     expect(wrapper.find("[data-test=offer-date]").exists()).toBe(false);
-    // « + Ajouter » sur la ligne du nombre (1.6.47) : « Ajouter une offre » et « Postuler spontanément ».
-    const add = wrapper.find(".list-count-row [data-test=add-menu]");
+    // « + Ajouter » dans la barre d'outils (1.6.55) : « Ajouter une offre » et « Postuler spontanément ».
+    const add = wrapper.find("[data-test=offers-toolbar] [data-test=add-menu]");
     expect(add.text()).toBe("Ajouter");
     await add.trigger("click");
-    expect(wrapper.findAll(".list-count-row [role=menuitem]").map((i) => i.text())).toEqual([
+    expect(wrapper.findAll("[data-test=offers-toolbar] [role=menuitem]").map((i) => i.text())).toEqual([
       "Ajouter une offre",
       "Postuler spontanément",
     ]);
-    // Aucun filtre actif : pas de « Effacer tout ».
+    // Aucun filtre actif : ni pastille, ni nombre sur « Filtrer », ni « Tout effacer ».
+    expect(wrapper.find("[data-test=filter-chips]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=filters-count]").exists()).toBe(false);
+    await openFilters(wrapper);
     expect(wrapper.find("[data-test=reset]").exists()).toBe(false);
   });
 });
@@ -626,7 +640,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
       ),
     );
     const wrapper = await mountAt("/offres?ajouter=1&text=" + encodeURIComponent("Menuisier CFC https://bois.ch/emplois/1"));
-    expect(wrapper.find(".list-count-row [data-test=add-menu]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=offers-toolbar] [data-test=add-menu]").exists()).toBe(true);
     const input = wrapper.find("[data-test=manual-url]").element as HTMLInputElement;
     expect(input.value).toBe("https://bois.ch/emplois/1");
     expect(router.currentRoute.value.query.ajouter).toBeUndefined();
@@ -643,6 +657,7 @@ describe("Offres, la note en ligne (1.6.47)", () => {
   it("une ligne « Note · Toutes » comme Statut et Tri, ses trois choix dépliés dessous", async () => {
     mockOffers(page([offer(1, "Une")]));
     const wrapper = await mountAt("/offres");
+    await openFilters(wrapper);
     const row = wrapper.find("[data-test=row-score]");
     expect(row.find(".with-icon").text()).toBe("Note");
     expect(row.find(".filter-row-value").text()).toBe("Toutes");
@@ -658,6 +673,7 @@ describe("Offres, la note en ligne (1.6.47)", () => {
     expect(router.currentRoute.value.query.note).toBe("70");
     // Une adresse d'avant (?note=60-90) : la ligne dit les bornes.
     const old = await mountAt("/offres?note=60-90");
+    await openFilters(old);
     expect(old.find("[data-test=row-score] .filter-row-value").text()).toBe("60–90");
   });
 });
@@ -685,3 +701,44 @@ describe("Offres, sans bande d'action (1.6.53)", () => {
   });
 });
 
+describe("Offres, barre d'outils (1.6.55)", () => {
+  it("la recherche dans la barre, « Filtrer » ouvre le panneau, « Afficher N offres » le referme", async () => {
+    mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
+    const wrapper = await mountAt("/offres");
+    const bar = wrapper.find("[data-test=offers-toolbar]");
+    // Ordinateur : la recherche est dans la barre, pas dans le panneau.
+    expect(bar.find("[data-test=search]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=filters-dialog]").exists()).toBe(false);
+    const toggle = wrapper.find("[data-test=filters-toggle]");
+    expect(toggle.attributes("aria-expanded")).toBe("false");
+    await openFilters(wrapper);
+    expect(toggle.attributes("aria-expanded")).toBe("true");
+    const dialog = wrapper.find("[data-test=filters-dialog]");
+    expect(dialog.find("h2").text()).toBe("Filtres");
+    expect(dialog.find("[data-test=search]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=filters-done]").text()).toBe("Afficher 2 offres");
+    await wrapper.find("[data-test=filters-done]").trigger("click");
+    expect(wrapper.find("[data-test=filters-dialog]").exists()).toBe(false);
+    // Un clic hors du panneau le referme aussi.
+    await openFilters(wrapper);
+    document.body.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    await flushPromises();
+    expect(wrapper.find("[data-test=filters-dialog]").exists()).toBe(false);
+  });
+
+  it("les filtres actifs en pastilles : le nombre sur « Filtrer », la croix retire, « Tout effacer » vide", async () => {
+    const wrapper = await mountAt("/offres?note=70&canton=VD&canton=GE&externe=1&q=dev");
+    const chips = wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text());
+    // La recherche n'a pas de pastille : son champ est dans la barre.
+    expect(chips).toEqual(["Note : Proche et plus", "Canton : VD", "Canton : GE", "Chez l'employeur"]);
+    expect(wrapper.find("[data-test=filters-count]").text()).toBe("4");
+    expect(wrapper.find("[data-test=filters-toggle]").attributes("aria-label")).toBe("Filtrer, 4 filtres actifs");
+    await wrapper.find("[data-test=chip-remove-canton-VD]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({ note: "70", canton: ["GE"], externe: "1", q: "dev" });
+    await wrapper.find("[data-test=chips-reset]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.query).toEqual({});
+    expect(wrapper.find("[data-test=filter-chips]").exists()).toBe(false);
+  });
+});

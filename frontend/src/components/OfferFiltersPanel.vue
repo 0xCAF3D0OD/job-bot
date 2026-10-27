@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 
 import type { FilterKey, OfferFacets, Source } from "../api/client";
 import type { OfferFilters, Remote, Sort, View } from "../composables/useOfferFilters";
-import { activeCount, DEFAULT_FILTERS } from "../composables/useOfferFilters";
+import { activeCount, DEFAULT_FILTERS, SCORE_CHOICES, scoreLabel } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
+import OfferSearch from "./OfferSearch.vue";
 
 const props = defineProps<{
   filters: OfferFilters;
   counts: Record<View, number>;
   facets: OfferFacets;
-  // Offres affichées avec ces filtres, pour « Afficher N offres » (téléphone).
+  // Offres affichées avec ces filtres, pour « Afficher N offres ».
   total: number;
+  // La recherche en tête du panneau (téléphone, 1.6.55) ; sur ordinateur, elle est dans la barre d'outils.
+  withSearch?: boolean;
   // Filtres affichés (docs/10 §3) ; statut, recherche et tri le sont toujours.
   visible: FilterKey[];
 }>();
@@ -73,20 +76,6 @@ function selectView(view: View): void {
   else emit("update", { view });
 }
 
-// Recherche : appliquée 300 ms après la dernière frappe.
-const search = ref(props.filters.q);
-let timer: ReturnType<typeof setTimeout> | undefined;
-watch(search, (value) => {
-  clearTimeout(timer);
-  timer = setTimeout(() => emit("update", { q: value }), 300);
-});
-watch(
-  () => props.filters.q,
-  (value) => {
-    if (value !== search.value.trim()) search.value = value;
-  },
-);
-
 function toggle<T extends string>(values: T[], value: T): T[] {
   return values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
 }
@@ -96,12 +85,6 @@ function onRate(event: Event): void {
   emit("update", { minRate: value > 0 ? value : null });
 }
 
-// Les seuils des mots de la note (format.ts, scoreWord) : 70 « Proche », 85 « Très proche ».
-const SCORE_CHOICES = [
-  { label: "Toutes", min: null },
-  { label: "Proche et plus", min: 70 },
-  { label: "Très proche", min: 85 },
-] as const;
 // Une adresse d'avant (?note=60-90) reste lue ; elle ne coche aucun des trois choix.
 const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
 
@@ -109,12 +92,7 @@ function onScore(min: number | null, max: number | null): void {
   emit("update", { minScore: min, maxScore: max });
 }
 // La valeur de la ligne Note (1.6.47) : le mot du choix, ou les bornes d'une adresse d'avant (?note=60-90).
-const scoreValue = computed(() => {
-  const choice = SCORE_CHOICES.find((c) => c.min === scoreChoice.value);
-  if (choice) return choice.label;
-  const { minScore, maxScore } = props.filters;
-  return `${minScore ?? 0}–${maxScore ?? 100}`;
-});
+const scoreValue = computed(() => scoreLabel(props.filters));
 
 // Cartes (docs/27) : une ligne par filtre, « nom · valeur », la flèche qui tourne ; un clic déplie le choix
 // sous la ligne, un seul à la fois : ouvrir un autre filtre (ou recliquer) referme le premier.
@@ -169,19 +147,11 @@ const more = ref(secondaryActive.value > 0);
     class="filters-panel"
     data-test="filters"
   >
-    <!-- Recherche : loupe devant, libellé lu par les lecteurs d'écran (docs/29 §5). -->
-    <span class="filters-search-wrap">
-      <AppIcon name="search" />
-      <input
-        id="offer-search"
-        v-model="search"
-        class="filters-search"
-        type="search"
-        aria-label="Recherche"
-        placeholder="Titre, entreprise, mot-clé…"
-        data-test="search"
-      >
-    </span>
+    <OfferSearch
+      v-if="withSearch"
+      :value="filters.q"
+      @search="(q) => emit('update', { q })"
+    />
 
     <div class="filter-card">
       <button
@@ -472,20 +442,21 @@ const more = ref(secondaryActive.value > 0);
       </fieldset>
     </div>
 
+    <!-- Le pied (1.6.55) : « Tout effacer » à gauche, masqué sans filtre actif (docs/43 n° 13), et
+         « Afficher N offres » qui referme le panneau. -->
     <div class="filters-footer">
-      <!-- Masqué tant qu'aucun filtre n'est actif (docs/43 n° 13). -->
       <button
         v-if="activeCount(filters)"
         type="button"
-        class="filters-clear"
+        class="link filters-clear"
         data-test="reset"
         @click="emit('reset')"
       >
-        <span class="with-icon"><AppIcon name="close" />Effacer tout ({{ activeCount(filters) }})</span>
+        Tout effacer
       </button>
       <button
         type="button"
-        class="filters-done"
+        class="primary filters-done"
         data-test="filters-done"
         @click="emit('done')"
       >
