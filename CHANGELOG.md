@@ -275,3 +275,4 @@ sinon « livrée ») ; sur main, `scripts/changelog.py` assemble ce tableau apr�
 | 1.6.61 | Repliable : une icône dans une pastille et une phrase en gris sous le titre, en option ; elles serviront aux cartes du Bilan | livrée |
 | 1.6.62 | Bilan selon la planche « 3 et 4. Bilan » : la conclusion comparée à la période d'avant, la bande du site qui répond le plus, la période en pastilles (Un mois, 3 mois, Tout), quatre repliables chiffrés (Parcours, Ce qui marche, Par mois, Entretiens) et « Pour l'ORP » sur un mois ; les mois d'avant la première activité ne s'affichent plus | PR ouverte |
 | 1.6.63 | Repliable ouvert et survolé : la phrase sous le titre passe en couleur de texte, pour rester lisible sur le fond accentué (contraste 4,5:1) | livrée |
+| 1.6.64 | Coordination : le numéro de version se réserve dans la PR de la tâche elle-même, plus dans une PR de réservation à part | livrée |
