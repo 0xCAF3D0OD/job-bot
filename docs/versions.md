@@ -34,3 +34,4 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.58 | Pages | Série de Kevin, point 1 : sélection des onglets (pastille teintée dans l'en-tête, indicateur actif de Material 3 sur la barre du bas), en-tête confié par Design | `feat/1.6.58-onglets` | PR ouverte |
 | 1.6.59 | Design | Série du 27.10 inscrite au tableau (points 1 à 7) | `docs/1.6.58-serie-27-10` | fusionnée (#368) |
 | 1.6.60 | Design | Barre d'onglets du téléphone : `--tabbar-h` de 3,6 à 4 rem, de l'air au-dessus de la pastille | `fix/1.6.60-tabbar-h` | PR ouverte |
+| 1.6.61 | Design | Repliable : icône et phrase facultatives (pour le Bilan, série du 27.10 point 4) | `feat/1.6.61-repliable` | PR ouverte |
