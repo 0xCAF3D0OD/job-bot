@@ -43,6 +43,6 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.67 | Pages | Série du 27.10, point 5 (seconde partie) : Compte, Agenda et extension, Administration, État du service en cartes | `feat/1.6.67-reglages` | fusionnée (#379) |
 | 1.6.68 | Design | SettingCard et SettingRow : blocs dans une carte (formulaire, message, confirmation), prop `wide`, longues adresses coupées | `feat/1.6.68-reglage-blocs` | fusionnée (#378) |
 | 1.6.69 | Design | Règles §3 et §4 de la série du 27.10 (structure des sections, enregistrement immédiat, confirmation exacte, sélection unique, recherche globale) | `docs/1.6.69-regles-serie` | PR ouverte |
-| 1.6.70 | Pages | Série du 27.10, point 6 : les Alertes selon la planche « 6. Alertes » (conclusion, une bande, une carte par recherche et une ligne par site, messages des sites et alertes reçues en trois lignes avec « Tout voir », lieux avec accents) | `feat/1.6.70-alertes` | fusionnée (#381) |
-| 1.6.71 | Design | SettingRow : prop `inline` (un état court reste à droite sur téléphone) | `feat/1.6.71-reglage-inline` | PR ouverte |
-| 1.6.72 | Pages | Série du 27.10, point 2 : la recherche globale (champ dans l'en-tête, loupe sur écran étroit ; offres, candidatures, entreprises ; « Suivre cette recherche » qui dit ce qui reste à créer) | `feat/1.6.72-recherche` | PR ouverte |
+| 1.6.70 | Pages | Série du 27.10, point 6 : les Alertes selon la planche « 6. Alertes » (conclusion, une bande, une carte par recherche et une ligne par site, messages des sites et alertes reçues en trois lignes avec « Tout voir », lieux avec accents) | `feat/1.6.70-alertes` | PR ouverte |
+| 1.6.71 | Design | SettingRow : prop `inline` (un état court reste à droite sur téléphone) | `feat/1.6.71-reglage-inline` | fusionnée (#382) |
+| 1.6.73 | Design | Illustrations : la série de l'archive, `FaceState` avec `illustration`, règle §4 | `feat/1.6.73-illustrations` | PR ouverte |
