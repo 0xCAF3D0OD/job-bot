@@ -10,10 +10,11 @@ import { plural } from "../format";
 
 import { useAuth } from "../composables/useAuth";
 import { offerUndo } from "../composables/useUndo";
-import HoverNote from "./HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
+import SettingCard from "./SettingCard.vue";
+import SettingRow from "./SettingRow.vue";
 
-const { aiNote, plan } = usePlan();
+const { plan } = usePlan();
 // Mettre un site en pause vaut pour son compte ; ajouter ou retirer un site change la liste
 // commune à tous les comptes : réservé à l'exploitant (docs/65).
 const { me } = useAuth();
@@ -55,12 +56,32 @@ async function load(): Promise<void> {
   suggestions.value = proposed.data ?? [];
 }
 
-async function toggle(site: SiteOut): Promise<void> {
+async function setActive(site: SiteOut, active: boolean, keepalive = false): Promise<boolean> {
   const { data } = await api.PATCH("/api/sites/{site_id}", {
     params: { path: { site_id: site.id } },
-    body: { active: !site.active },
+    body: { active },
+    keepalive,
   });
   if (data) sites.value = data;
+  return Boolean(data);
+}
+
+// Suivre un site s'applique tout de suite ; ne plus le suivre aussi, avec « Annuler » pendant 6 s
+// (1.6.66, §4, comme Garder et Écarter) : le serveur ne le reçoit qu'à la fin.
+async function toggle(site: SiteOut): Promise<void> {
+  if (!site.active) {
+    await setActive(site, true);
+    return;
+  }
+  const before = sites.value;
+  sites.value = before.map((s) => (s.id === site.id ? { ...s, active: false } : s));
+  await offerUndo({
+    message: `${site.name} n'est plus suivi.`,
+    commit: (keepalive) => setActive(site, false, keepalive),
+    restore: () => {
+      sites.value = before;
+    },
+  });
 }
 
 // Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1) ; les offres déjà collectées restent.
@@ -84,6 +105,10 @@ async function remove(site: SiteOut): Promise<void> {
 // Lignes calmes (docs/48 §3) : le détail et « Retirer » dans le panneau.
 const openId = ref<number | null>(null);
 const opened = computed(() => sites.value.find((s) => s.id === openId.value) ?? null);
+// « Lu directement · 83 alertes · dernière le 22 oct. » (planche « 5. Réglages »).
+function line(site: SiteOut): string {
+  return `${site.reader === "ai" ? "Lu par l'IA" : "Lu directement"} · ${stats(site)}`;
+}
 function stats(site: SiteOut): string {
   const last = site.last_alert_at ? ` · dernière le ${dateFormat.format(new Date(site.last_alert_at))}` : "";
   return `${plural(site.alerts, "alerte", "alertes", "aucune alerte")}${last}`;
@@ -138,234 +163,202 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <div
+  <!-- Les sites suivis (1.6.66, planche « 5. Réglages ») : une ligne d'en-tête, puis une ligne par site
+       avec son interrupteur, dans la même carte (loi de proximité). -->
+  <SettingCard
     v-if="loaded"
-    class="form-card sites-card"
+    class="sites-card"
     data-test="sites"
   >
-    <fieldset>
-      <legend>
-        Sites suivis
-      </legend>
-      <!-- La description toujours visible, comme les CFF (docs/110). -->
-      <p class="setting-desc">
-        <HoverNote :text="aiNote('Environ 0,01 $ par e-mail.', undefined, 'jobup et Indeed sont lus directement ; les autres par l\'IA, tes coordonnées retirées.')">
-          La plateforme lit leurs e-mails d'alerte.
-        </HoverNote>
-      </p>
-      <ul class="calm-list">
-        <li
-          v-for="site in sites"
-          :key="site.id"
-          :class="{ paused: !site.active }"
-          data-test="site"
-        >
-          <button
-            type="button"
-            class="calm-row"
-            :data-test="`open-${site.slug}`"
-            @click="openId = site.id"
-          >
-            <strong>{{ site.name }}</strong>
-            <span class="hint">
-              {{ site.reader === "ai" ? "lu par l'IA" : "lu directement" }} · {{ stats(site) }}
-            </span>
-          </button>
-          <label class="filter-switch calm-switch">
-            <span class="visually-hidden">{{ site.name }} suivi</span>
-            <input
-              type="checkbox"
-              role="switch"
-              :checked="site.active"
-              :data-test="`active-${site.slug}`"
-              @change="toggle(site)"
-            >
-          </label>
-        </li>
-      </ul>
-      <SidePanel
-        v-if="opened"
-        open
-        :title="opened.name"
-        @close="openId = null"
+    <SettingRow
+      title="Sites suivis"
+      description="La plateforme lit leurs e-mails d'alerte."
+    />
+    <SettingRow
+      v-for="site in sites"
+      :key="site.id"
+      v-slot="c"
+      :title="site.name"
+      :description="line(site)"
+      :class="{ paused: !site.active }"
+      data-test="site"
+    >
+      <IconButton
+        v-if="owner"
+        icon="more"
+        :label="`Détails de ${site.name}`"
+        :data-test="`open-${site.slug}`"
+        @click="openId = site.id"
+      />
+      <input
+        type="checkbox"
+        role="switch"
+        :checked="site.active"
+        :aria-labelledby="c.labelledby"
+        :aria-describedby="c.describedby"
+        :data-test="`active-${site.slug}`"
+        @change="toggle(site)"
       >
-        <div
-          class="calm-panel"
-          data-test="site-panel"
+    </SettingRow>
+    <SettingRow
+      v-for="suggestion in owner ? suggestions : []"
+      :key="suggestion.name"
+      :title="suggestion.name"
+      :description="`Site de télétravail à ajouter · ${suggestion.note}`"
+      data-test="site-suggestions"
+    >
+      <IconButton
+        icon="plus"
+        :label="`Ajouter ${suggestion.name}`"
+        :data-test="`suggest-${suggestion.name}`"
+        @click="addSuggestion(suggestion)"
+      />
+    </SettingRow>
+    <SettingRow
+      v-if="unrecognized"
+      title="Alertes non reconnues"
+      :description="`${plural(unrecognized, 'alerte', 'alertes')} à relire par l'IA.`"
+    >
+      <button
+        type="button"
+        class="secondary small"
+        :disabled="busy"
+        data-test="reread"
+        @click="reread"
+      >
+        {{ busy ? "Relecture…" : "Relire" }}
+      </button>
+    </SettingRow>
+    <SettingRow
+      v-if="owner && !adding"
+      title="Un autre site"
+      description="Ses e-mails d'alerte seront lus par l'IA."
+    >
+      <button
+        type="button"
+        class="secondary small"
+        data-test="add-site"
+        @click="adding = true"
+      >
+        <span class="with-icon"><AppIcon name="plus" />Ajouter un site</span>
+      </button>
+    </SettingRow>
+    <form
+      v-if="owner && adding"
+      class="form-grid setting-row-form"
+      data-test="add-site-form"
+      @submit.prevent="add"
+    >
+      <label>Nom
+        <input
+          v-model="form.name"
+          type="text"
+          placeholder="JobScout24"
+          required
+          data-test="site-name"
         >
-          <dl class="summary-rows">
-            <div>
-              <dt>Lecture</dt>
-              <dd>{{ opened.reader === "ai" ? plan?.unlimited ? "par l'IA (environ 0,01 $ par e-mail)" : "par l'IA" : "directement" }}</dd>
-            </div>
-            <div>
-              <dt>E-mails de</dt>
-              <dd>{{ opened.senders.join(", ") }}</dd>
-            </div>
-            <div>
-              <dt>Alertes reçues</dt>
-              <dd>{{ stats(opened) }}</dd>
-            </div>
-            <div v-if="opened.unrecognized">
-              <dt>Non reconnues</dt>
-              <dd>{{ opened.unrecognized }}</dd>
-            </div>
-          </dl>
-          <label class="filter-switch calm-panel-switch">
-            <span>Suivi</span>
-            <input
-              type="checkbox"
-              role="switch"
-              :checked="opened.active"
-              @change="toggle(opened)"
-            >
-          </label>
-          <p
-            v-if="!opened.builtin && owner"
-            class="calm-panel-foot"
-          >
-            <IconButton
-              icon="trash"
-              label="Retirer ce site"
-              danger
-              :data-test="`remove-${opened.slug}`"
-              @click="remove(opened)"
-            />
-          </p>
-        </div>
-      </SidePanel>
-
+      </label>
+      <label>Adresse du site
+        <input
+          id="site-url"
+          v-model="form.url"
+          type="text"
+          placeholder="https://www.jobscout24.ch"
+          :aria-invalid="Boolean(errors.url)"
+          :aria-describedby="errors.url ? 'site-url-error' : undefined"
+          @blur="check('url')"
+          @input="clearIfFixed('url')"
+        >
+        <span
+          v-if="errors.url"
+          id="site-url-error"
+          class="field-error"
+        >{{ errors.url }}</span>
+      </label>
+      <label class="wide">Adresses d'expédition des alertes
+        <input
+          id="site-senders"
+          v-model="form.senders"
+          type="text"
+          placeholder="alerts@jobscout24.ch ou jobscout24.ch"
+          data-test="site-senders"
+          :aria-invalid="Boolean(errors.senders)"
+          :aria-describedby="errors.senders ? 'site-senders-error' : undefined"
+          @blur="check('senders')"
+          @input="clearIfFixed('senders')"
+        >
+        <span
+          v-if="errors.senders"
+          id="site-senders-error"
+          class="field-error"
+          data-test="error-senders"
+        >{{ errors.senders }}</span>
+      </label>
+      <div class="form-actions wide">
+        <button
+          type="submit"
+          class="secondary small"
+          data-test="save-site"
+        >
+          <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
+        </button>
+        <button
+          type="button"
+          class="link"
+          @click="adding = false"
+        >
+          Annuler
+        </button>
+      </div>
+    </form>
+    <p
+      v-if="message"
+      class="hint setting-row-message"
+      role="status"
+    >
+      {{ message }}
+    </p>
+    <SidePanel
+      v-if="opened"
+      open
+      :title="opened.name"
+      @close="openId = null"
+    >
       <div
-        v-if="owner && suggestions.length"
-        class="site-suggestions"
-        data-test="site-suggestions"
+        class="calm-panel"
+        data-test="site-panel"
       >
-        <p class="hint">
-          Sites de télétravail à ajouter :
+        <dl class="summary-rows">
+          <div>
+            <dt>Lecture</dt>
+            <dd>{{ opened.reader === "ai" ? plan?.unlimited ? "par l'IA (environ 0,01 $ par e-mail)" : "par l'IA" : "directement" }}</dd>
+          </div>
+          <div>
+            <dt>E-mails de</dt>
+            <dd>{{ opened.senders.join(", ") }}</dd>
+          </div>
+          <div>
+            <dt>Alertes reçues</dt>
+            <dd>{{ stats(opened) }}</dd>
+          </div>
+          <div v-if="opened.unrecognized">
+            <dt>Non reconnues</dt>
+            <dd>{{ opened.unrecognized }}</dd>
+          </div>
+        </dl>
+        <p
+          v-if="!opened.builtin"
+          class="calm-panel-foot"
+        >
+          <IconButton
+            icon="trash"
+            label="Retirer ce site"
+            danger
+            :data-test="`remove-${opened.slug}`"
+            @click="remove(opened)"
+          />
         </p>
-        <ul>
-          <li
-            v-for="suggestion in suggestions"
-            :key="suggestion.name"
-          >
-            <span>
-              <a
-                :href="suggestion.url"
-                target="_blank"
-                rel="noopener noreferrer"
-              >{{ suggestion.name }}</a>
-              <span class="muted"> · {{ suggestion.note }}</span>
-            </span>
-            <IconButton
-              icon="plus"
-              :label="`Ajouter ${suggestion.name}`"
-              :data-test="`suggest-${suggestion.name}`"
-              @click="addSuggestion(suggestion)"
-            />
-          </li>
-        </ul>
       </div>
-
-      <form
-        v-if="owner && adding"
-        class="form-grid"
-        data-test="add-site-form"
-        @submit.prevent="add"
-      >
-        <label>Nom
-          <input
-            v-model="form.name"
-            type="text"
-            placeholder="JobScout24"
-            required
-            data-test="site-name"
-          >
-        </label>
-        <label>Adresse du site
-          <input
-            id="site-url"
-            v-model="form.url"
-            type="text"
-            placeholder="https://www.jobscout24.ch"
-            :aria-invalid="Boolean(errors.url)"
-            :aria-describedby="errors.url ? 'site-url-error' : undefined"
-            @blur="check('url')"
-            @input="clearIfFixed('url')"
-          >
-          <span
-            v-if="errors.url"
-            id="site-url-error"
-            class="field-error"
-          >{{ errors.url }}</span>
-        </label>
-        <label class="wide">Adresses d'expédition des alertes
-          <input
-            id="site-senders"
-            v-model="form.senders"
-            type="text"
-            placeholder="alerts@jobscout24.ch ou jobscout24.ch"
-            data-test="site-senders"
-            :aria-invalid="Boolean(errors.senders)"
-            :aria-describedby="errors.senders ? 'site-senders-error' : undefined"
-            @blur="check('senders')"
-            @input="clearIfFixed('senders')"
-          >
-          <span
-            v-if="errors.senders"
-            id="site-senders-error"
-            class="field-error"
-            data-test="error-senders"
-          >{{ errors.senders }}</span>
-        </label>
-        <div class="form-actions wide">
-          <button
-            type="submit"
-            class="secondary small"
-            data-test="save-site"
-          >
-            <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
-          </button>
-          <button
-            type="button"
-            class="link"
-            @click="adding = false"
-          >
-            Annuler
-          </button>
-        </div>
-      </form>
-      <!-- Rien à proposer (un invité sans alerte à relire) : pas de rangée vide (docs/130 §D). -->
-      <div
-        v-else-if="owner || unrecognized"
-        class="form-actions"
-      >
-        <button
-          v-if="owner"
-          type="button"
-          class="secondary small"
-          data-test="add-site"
-          @click="adding = true"
-        >
-          <span class="with-icon"><AppIcon name="plus" />Ajouter un site</span>
-        </button>
-        <button
-          v-if="unrecognized"
-          type="button"
-          class="secondary small"
-          :disabled="busy"
-          data-test="reread"
-          @click="reread"
-        >
-          <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Relecture…" : `Relire les alertes non reconnues (${unrecognized})` }}</span>
-        </button>
-      </div>
-      <p
-        v-if="message"
-        class="hint"
-        role="status"
-      >
-        {{ message }}
-      </p>
-    </fieldset>
-  </div>
+    </SidePanel>
+  </SettingCard>
 </template>

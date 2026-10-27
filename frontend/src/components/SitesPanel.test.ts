@@ -2,6 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useAuth } from "../composables/useAuth";
+import { useUndo } from "../composables/useUndo";
 import SitesPanel from "./SitesPanel.vue";
 
 const GET = vi.fn();
@@ -53,10 +54,28 @@ describe("SitesPanel", () => {
     await flushPromises();
     expect(wrapper.findAll("[data-test=site]")).toHaveLength(2);
     expect(wrapper.find("[data-test=remove-jobup]").exists()).toBe(false);
+    // Le site décrit sur sa ligne : comment il est lu, ses alertes.
+    expect(wrapper.find("[data-test=site] .setting-row-description").text()).toBe("Lu directement · 16 alertes");
 
+    // Ne plus suivre un site : tout de suite à l'écran, « Annuler » pendant 6 s, puis le serveur (1.6.66, §4).
     await wrapper.find("[data-test=active-linkedin]").setValue(false);
     await flushPromises();
-    expect(PATCH).toHaveBeenCalledWith("/api/sites/{site_id}", { params: { path: { site_id: 2 } }, body: { active: false } });
+    expect(PATCH).not.toHaveBeenCalled();
+    expect((wrapper.find("[data-test=active-linkedin]").element as HTMLInputElement).checked).toBe(false);
+    const { pending, undo, flush } = useUndo();
+    expect(pending.value?.message).toBe("linkedin n'est plus suivi.");
+    await undo();
+    await flushPromises();
+    expect((wrapper.find("[data-test=active-linkedin]").element as HTMLInputElement).checked).toBe(true);
+    expect(PATCH).not.toHaveBeenCalled();
+    await wrapper.find("[data-test=active-linkedin]").setValue(false);
+    await flush();
+    await flushPromises();
+    expect(PATCH).toHaveBeenCalledWith("/api/sites/{site_id}", {
+      params: { path: { site_id: 2 } },
+      body: { active: false },
+      keepalive: false,
+    });
 
     await wrapper.find("[data-test=reread]").trigger("click");
     await flushPromises();
