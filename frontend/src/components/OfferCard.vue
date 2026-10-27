@@ -1,20 +1,24 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 
 import type { Offer } from "../api/client";
 import { dayShort } from "../format";
-import AppIcon from "./AppIcon.vue";
-import CompanyLogo from "./CompanyLogo.vue";
+import OfferLine from "./OfferLine.vue";
 import ScoreWord from "./ScoreWord.vue";
 import { usePlan } from "../composables/usePlan";
 
-// Une offre sur une ligne (docs/73 §4) : de quoi choisir ; le détail est dans le panneau de
-// droite. La date n'y est que hors du tri « Par jour », où la ligne du jour la donne.
+// Une offre dans la liste d'Offres : la Ligne d'offre complète (planche « Ligne d'offre », 1.6.7x) ;
+// le détail s'ouvre à droite. Toute la ligne sélectionne l'offre ; pas de mot d'action sur une offre
+// nouvelle (choix de Kevin), « Préparer » seulement sur une offre gardée. La date n'y est que hors du
+// tri « Par jour », où la ligne du jour la donne.
 const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean }>();
 defineEmits<{ select: [] }>();
+const router = useRouter();
 
 const expired = computed(() => Boolean(props.offer.expired_at) && props.offer.status !== "applied");
-// Une seule alerte, la plus utile pour décider : écartée, douteuse, retirée, puis ce qui manque.
+// Une seule ligne sous le lieu, la plus utile pour décider : écartée, douteuse, retirée, puis ce qui
+// manque (en gris : il explique la note ; l'orange dit d'agir, docs/121 §C.5).
 const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>(() => {
   const o = props.offer;
   if (o.filter_reasons?.length) return { text: o.filter_reasons[0]!, kind: "warn" };
@@ -24,62 +28,69 @@ const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>
   }
   if (expired.value) return { text: "Retirée", kind: "warn" };
   const missing = (o.keywords_asks ?? []).filter((a) => a.covered === false).map((a) => a.text);
-  // Ce qui manque explique la note : en gris, pas en orange (l'orange dit d'agir, docs/121 §C.5).
   if (missing.length) return { text: `Il te manque : ${missing.slice(0, 3).join(", ")}`, kind: "gap" };
   if (o.remote_from_switzerland === false) return { text: "Télétravail fermé depuis la Suisse", kind: "warn" };
   return null;
 });
 const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" ") ?? "");
+const location = computed(() =>
+  [props.offer.location, props.showDate ? dayShort(props.offer.first_seen_at) : ""].filter(Boolean).join(" · ") || null,
+);
 
 // La limite de la formule (docs/125) explique une offre sans note.
 const { reached } = usePlan();
+
+function prepare(): void {
+  void router.push(`/candidatures/offres/${props.offer.id}/preparer`);
+}
 </script>
 
 <template>
-  <button
-    type="button"
-    :class="['offer-row', { selected, expired }]"
-    :aria-pressed="selected"
+  <OfferLine
+    variant="full"
+    :class="{ expired }"
+    :title="offer.title"
+    :company="offer.company ?? 'Entreprise non indiquée'"
+    :location="location"
+    :logo="offer.has_logo ? `/api/offers/${offer.id}/logo` : null"
+    :note="alert?.text ?? null"
+    :alert="!!alert && alert.kind !== 'gap'"
+    :action="offer.status === 'preparing' ? 'Préparer' : null"
+    :selected="selected"
     data-test="offer"
-    @click="$emit('select')"
+    @select="$emit('select')"
+    @action="prepare"
   >
-    <CompanyLogo :offer="offer" />
-    <span class="offer-row-main">
-      <span class="offer-row-title">
-        {{ offer.title }}
-        <span
-          v-if="offer.spontaneous"
-          class="badge spontaneous-badge"
-          data-test="spontaneous-badge"
-        >Spontanée</span>
-        <span
-          v-else-if="offer.added_by_you"
-          class="badge spontaneous-badge"
-          data-test="added-badge"
-        >Ajoutée par toi</span>
-      </span>
-      <span class="offer-row-sub meta-line">
-        <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ offer.company ?? "Entreprise non indiquée" }}</span>
-        <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
-        <span
-          v-if="showDate"
-          data-test="offer-date"
-        ><AppIcon name="clock" /><span class="visually-hidden">Repérée le </span>{{ dayShort(offer.first_seen_at) }}</span>
-      </span>
+    <template #badges>
       <span
-        v-if="alert"
-        :class="['offer-row-alert', alert.kind]"
+        v-if="offer.spontaneous"
+        class="badge spontaneous-badge"
+        data-test="spontaneous-badge"
+      >Spontanée</span>
+      <span
+        v-else-if="offer.added_by_you"
+        class="badge spontaneous-badge"
+        data-test="added-badge"
+      >Ajoutée par toi</span>
+    </template>
+    <template
+      v-if="alert"
+      #note
+    >
+      <span
         :title="alert.kind === 'danger' ? doubtText : undefined"
         data-test="offer-alert"
       >{{ alert.text }}<span
         v-if="alert.kind === 'danger' && doubtText"
         class="visually-hidden"
       > : {{ doubtText }}</span></span>
-    </span>
-    <ScoreWord
-      :score="offer.score ?? null"
-      :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
-      :stale="offer.score_stale"
-    />
-  </button>
+    </template>
+    <template #verdict>
+      <ScoreWord
+        :score="offer.score ?? null"
+        :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
+        :stale="offer.score_stale"
+      />
+    </template>
+  </OfferLine>
 </template>
