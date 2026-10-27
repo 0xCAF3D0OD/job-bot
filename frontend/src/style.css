@@ -3941,14 +3941,14 @@ main:focus { outline: none; }
 .offers-chip-remove:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .offers-chip-remove .icon { width: 1rem; height: 1rem; }
 .offers-chips-clear { font-size: var(--font-small); }
-.offers-filters-veil { position: fixed; inset: 0; z-index: 55; background: rgb(17 17 31 / 35%); }
+.offers-filters-veil { position: fixed; inset: 0; z-index: 55; background: rgb(17 17 31 / 40%); }
 html.filters-open { overflow: hidden; }
 @media (max-width: 820px) {
   .offers-toolbar { justify-content: space-between; }
   .offers-filters.sheet {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 56; width: auto; max-width: none; max-height: 88vh;
     padding: var(--space-5) var(--space-5) calc(var(--space-5) + env(safe-area-inset-bottom));
-    border: 0; border-radius: var(--radius) var(--radius) 0 0; box-shadow: 0 -12px 40px rgb(17 17 31 / 20%);
+    border: 0; border-radius: calc(var(--radius-sm) * 2) calc(var(--radius-sm) * 2) 0 0; box-shadow: 0 -12px 40px rgb(17 17 31 / 20%);
     overscroll-behavior: contain;
   }
   .offers-filters.sheet .filters-footer { bottom: calc((var(--space-5) + env(safe-area-inset-bottom)) * -1); margin-bottom: calc((var(--space-5) + env(safe-area-inset-bottom)) * -1); padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
