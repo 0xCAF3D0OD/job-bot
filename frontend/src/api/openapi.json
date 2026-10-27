@@ -14026,6 +14026,64 @@
         "title": "InterviewIn",
         "description": "Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2)."
       },
+      "InterviewLineOut": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "upcoming",
+              "rejected",
+              "rated",
+              "done"
+            ],
+            "title": "State"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "company",
+          "day",
+          "kind",
+          "state"
+        ],
+        "title": "InterviewLineOut"
+      },
       "InterviewOut": {
         "properties": {
           "kind": {
@@ -15972,6 +16030,24 @@
           "training_title"
         ],
         "title": "MissingOut"
+      },
+      "MonthCountOut": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "count"
+        ],
+        "title": "MonthCountOut"
       },
       "MonthFactsOut": {
         "properties": {
@@ -20274,6 +20350,44 @@
             "type": "integer",
             "title": "Interviews Upcoming",
             "default": 0
+          },
+          "previous_responses": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Responses"
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/MonthCountOut"
+            },
+            "type": "array",
+            "title": "Months",
+            "default": []
+          },
+          "month_target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month Target"
+          },
+          "interviews": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewLineOut"
+            },
+            "type": "array",
+            "title": "Interviews",
+            "default": []
           }
         },
         "type": "object",

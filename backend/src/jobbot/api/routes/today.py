@@ -24,6 +24,7 @@ from jobbot.db.models import (
     Setting,
 )
 from jobbot.followups.remind import remind_due
+from jobbot.insights import service as insights_service
 from jobbot.notify import interviews as interview_reminders
 from jobbot.orp import meeting as orp_meeting
 from jobbot.orp.service import load_due_day
@@ -288,6 +289,10 @@ async def get_today(request: Request) -> TodayOut:
         )
 
         week = await _week(session, today)
+        # Rien avant la première activité du compte (1.6.62) : pas de « 0 / 13 manqué » pour un mois
+        # où le compte n'existait pas encore.
+        first = await insights_service.first_activity(session)
+        since = f"{first:%Y-%m}" if first else month
         orp_history = [
             MonthResult(
                 month=m,
@@ -296,6 +301,7 @@ async def get_today(request: Request) -> TodayOut:
                 ),
             )
             for m in (shift_month(month, -3), shift_month(month, -2), previous)
+            if m >= since
         ]
 
     target = values.get("orp_monthly_target")

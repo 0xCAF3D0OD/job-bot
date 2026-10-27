@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from jobbot.core.orp import LOCAL_TZ, shift_month
 from jobbot.insights import service
+from jobbot.orp.service import load_target
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["insights"])
@@ -59,6 +60,22 @@ class HighlightOut(BaseModel):
     sentence: str
 
 
+class MonthCountOut(BaseModel):
+    # « Par mois » du Bilan (1.6.62) : les candidatures d'un mois ORP.
+    month: str
+    count: int
+
+
+class InterviewLineOut(BaseModel):
+    # « Entretiens » du Bilan (1.6.62) : une ligne par entretien.
+    application_id: int
+    company: str
+    day: date
+    kind: str | None
+    state: Literal["upcoming", "rejected", "rated", "done"]
+    rating: int | None = None
+
+
 class SearchReportOut(BaseModel):
     start: date | None
     end: date
@@ -76,6 +93,14 @@ class SearchReportOut(BaseModel):
     buckets: list[BucketOut] = []
     # Entretiens encore à venir, parmi les candidatures de la période.
     interviews_upcoming: int = 0
+    # Les réponses de la période d'avant, de même longueur (1.6.62) : « Ta recherche avance ».
+    # Absent pour « Tout ».
+    previous_responses: int | None = None
+    # « Par mois » (1.6.62) : de la première activité du compte au mois en cours, et l'objectif.
+    months: list[MonthCountOut] = []
+    month_target: int | None = None
+    # « Entretiens » (1.6.62) : ceux de la période, et ceux à venir.
+    interviews: list[InterviewLineOut] = []
 
 
 class FilterReasonOut(BaseModel):
@@ -90,6 +115,13 @@ class FilterSummaryOut(BaseModel):
     received: int
     retained: int
     reasons: list[FilterReasonOut]
+
+
+def _months_before(day: date, n: int) -> date:
+    """Le même jour n mois plus tôt, ramené au dernier jour du mois s'il n'existe pas."""
+    year, month = divmod(day.year * 12 + day.month - 1 - n, 12)
+    month += 1
+    return date(year, month, min(day.day, calendar.monthrange(year, month)[1]))
 
 
 def _runtime(request: Request) -> Runtime:
@@ -122,6 +154,16 @@ async def get_insights(
             session, start, end, "week" if period == "month" else "month"
         )
         summary = await service.orp_summary(session, month) if period == "month" and month else None
+        # La période d'avant, de même longueur : un mois ou trois plus tôt, arrêtée au même jour.
+        previous: int | None = None
+        if start is not None:
+            back = 1 if period == "month" else 3
+            previous = await service.responses(
+                session, _months_before(start, back), _months_before(end, back)
+            )
+        months = await service.months(session, await service.first_activity(session), today)
+        target = await load_target(session)
+        lines = await service.interview_lines(session, start, end)
     return SearchReportOut(
         start=start,
         end=end,
@@ -150,6 +192,10 @@ async def get_insights(
         unit="week" if found.unit == "week" else "month",
         buckets=[BucketOut(**vars(b)) for b in found.buckets],
         interviews_upcoming=found.interviews_upcoming,
+        previous_responses=previous,
+        months=[MonthCountOut(**vars(m)) for m in months],
+        month_target=target,
+        interviews=[InterviewLineOut(**vars(line)) for line in lines],
     )
 
 

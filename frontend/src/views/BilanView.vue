@@ -45,5 +45,12 @@ function link(path: string) {
       </RouterLink>
     </nav>
   </PageHero>
-  <RouterView />
+  <!-- Résultats sur la bande grise, comme Candidatures (1.6.62, planche « 3 et 4. Bilan »). -->
+  <section
+    v-if="tab === 'resultats'"
+    class="band jobs-band"
+  >
+    <RouterView />
+  </section>
+  <RouterView v-else />
 </template>

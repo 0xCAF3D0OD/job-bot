@@ -133,5 +133,7 @@ async def test_week_and_orp_history(rt: Runtime) -> None:
     assert week[3]["applications"] == 1
     assert sum(w["offers"] for w in week) == 2
     history = {h["month"]: h["count"] for h in day["orp_history"]}
-    assert list(history) == [shift_month(f"{today:%Y-%m}", d) for d in (-3, -2, -1)]
+    # Rien avant la première activité du compte (1.6.62) : la première candidature date de deux
+    # mois, le mois d'avant n'apparaît pas (plus de « 0 / 13 manqué »).
+    assert list(history) == [shift_month(f"{today:%Y-%m}", d) for d in (-2, -1)]
     assert history[two_ago] == 1
