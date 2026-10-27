@@ -11,6 +11,9 @@ import RhythmCard from "../components/RhythmCard.vue";
 import FirstSteps from "../components/FirstSteps.vue";
 import { useAuth } from "../composables/useAuth";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
+import Illustration from "../components/Illustration.vue";
+import NetworkError from "../components/NetworkError.vue";
+import { isNetworkError } from "../network";
 import OrpMonth from "../components/OrpMonth.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import PageHero from "../components/PageHero.vue";
@@ -214,7 +217,18 @@ function firstGoal(t: Today | null): boolean {
   }
 }
 
+// Une panne de réseau au chargement : l'écran « Pas de connexion » (planche « Illustrations »).
+const offline = ref(false);
 async function load(): Promise<void> {
+  try {
+    await fetchAll();
+    offline.value = false;
+  } catch (cause) {
+    if (!isNetworkError(cause)) throw cause;
+    offline.value = true;
+  }
+}
+async function fetchAll(): Promise<void> {
   const [day, offers, current, report] = await Promise.all([
     api.GET("/api/today"),
     // La dose du jour (docs/86) : les meilleures, pas toute la pile.
@@ -334,6 +348,13 @@ const { me } = useAuth();
           aria-labelledby="today-triage-title"
           data-test="triage-done"
         >
+          <!-- Le tri fait : l'illustration de la réussite (planche « Illustrations », règle §4). -->
+          <Illustration
+            v-if="triageDone"
+            name="reussite"
+            class="spot"
+            sizes="(max-width: 820px) 260px, 424px"
+          />
           <h2 id="today-triage-title">
             Tri du jour.
           </h2>
@@ -433,13 +454,19 @@ const { me } = useAuth();
       v-else
       class="container today"
     >
-      <LoadingBlocks :heights="['7rem', '7rem', '12rem']" />
+      <NetworkError
+        v-if="offline"
+        @retry="load()"
+      />
+      <LoadingBlocks
+        v-else
+        :heights="['7rem', '7rem', '12rem']"
+      />
     </div>
   </section>
   <SuccessCard
     v-if="goalWon && today"
-    face
-    wink
+    name="reussite"
     keep-focus
     title="Objectif du mois atteint"
     test-id="goal-moment"

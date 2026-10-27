@@ -14,6 +14,7 @@ import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
 import AppIcon from "../components/AppIcon.vue";
+import FaceState from "../components/FaceState.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { useAssistant } from "../composables/useAssistant";
@@ -358,17 +359,23 @@ onMounted(() => void load());
 
   <section class="band">
     <div class="container">
-      <p
+      <!-- Offre introuvable (planche « Illustrations ») : retirée par l'employeur, peut-être. -->
+      <FaceState
         v-if="notFound"
-        class="notice error"
+        title="Offre introuvable"
+        illustration="introuvable"
+        data-test="offer-not-found"
       >
-        Cette offre n'existe plus. <RouterLink
-          to="/candidatures/offres"
-          class="with-icon"
-        >
-          <AppIcon name="arrow-left" />Retour aux offres
-        </RouterLink>
-      </p>
+        <p>Elle a peut-être été retirée par l'employeur.</p>
+        <div class="face-state-actions">
+          <RouterLink
+            to="/candidatures/offres"
+            class="button-link"
+          >
+            <span class="with-icon"><AppIcon name="arrow-left" />Retour aux offres</span>
+          </RouterLink>
+        </div>
+      </FaceState>
 
       <p
         v-if="offer?.expired_at && offer.status !== 'applied'"

@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import FaceState from "../components/FaceState.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import DomainField from "../components/DomainField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
@@ -380,11 +381,20 @@ onMounted(() => void load());
         :heights="['16rem', '16rem', '16rem']"
       />
 
+      <!-- Aucune formation suivie (planche « Illustrations ») ; un filtre vide garde sa phrase. -->
+      <FaceState
+        v-if="loaded && !shown.length && tab === 'mine'"
+        title="Aucune formation suivie"
+        illustration="formations-vide"
+        data-test="trainings-none"
+      >
+        <p>Marque une formation « Intéressé » dans le catalogue.</p>
+      </FaceState>
       <p
-        v-if="loaded && !shown.length"
+        v-else-if="loaded && !shown.length"
         class="muted empty"
       >
-        {{ tab === "mine" ? "Aucune formation suivie : marque une formation « Intéressé » dans le catalogue." : "Aucune formation avec ces filtres." }}
+        Aucune formation avec ces filtres.
       </p>
       <template v-else>
         <section

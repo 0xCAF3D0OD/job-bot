@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Illustration from "./Illustration.vue";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
@@ -351,6 +352,12 @@ const headItems: MoreMenuItem[] = [
         aria-live="polite"
       >
         <template v-if="!lines.length">
+          <!-- Avant la première question (planche « Illustrations », règle §4). -->
+          <Illustration
+            name="assistant-vide"
+            class="spot assistant-spot"
+            sizes="(max-width: 820px) 260px, 424px"
+          />
           <p class="muted assistant-intro">
             Pose une question sur tes offres, candidatures ou preuves ORP. Il propose, tu confirmes.
           </p>

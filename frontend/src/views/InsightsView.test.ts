@@ -196,7 +196,11 @@ describe("Bilan (docs/42, docs/55)", () => {
     const empty = { received: 3, retained: 1, applications: 0, responses: 0, interviews: 0, engagements: 0 };
     serve(report({ funnel: empty, delay: null, headline: null }));
     const { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=insights-empty]").text()).toContain("Le bilan commence après tes premières candidatures.");
+    // L'écran vide du Bilan (planche « Illustrations ») : « Trop tôt pour conclure », l'illustration à la place du visage.
+    expect(wrapper.find("[data-test=insights-empty]").text()).toContain("Trop tôt pour conclure");
+    expect(wrapper.find("[data-test=insights-empty]").text()).toContain("Le Bilan se remplit avec tes premières candidatures et réponses.");
+    expect(wrapper.find("[data-test=insights-empty] .illu").exists()).toBe(true);
+    expect(wrapper.find("[data-test=insights-empty] .face-mark").exists()).toBe(false);
     expect(wrapper.find("[data-test=comparison-source]").exists()).toBe(false);
     // Des tuiles à zéro n'apprennent rien (docs/128 §3) : seulement l'invitation.
     expect(wrapper.find("[data-test=bilan-tiles]").exists()).toBe(false);
