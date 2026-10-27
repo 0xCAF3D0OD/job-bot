@@ -30,4 +30,5 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.54 | Design | Règle §3 : la bande ne répète jamais le contenu de la page (pas de bande sur Offres) | `docs/1.6.54-bande-sans-repetition` | PR ouverte |
 | 1.6.55 | Pages | Offres : barre d'outils (recherche, « Filtrer » en panneau ou feuille, « + Ajouter »), filtres actifs en pastilles, sans colonne de filtres | `feat/1.6.55-barre-outils` | fusionnée (#366) |
 | 1.6.56 | Pages | Test du retour d'entretien indépendant de la date du jour (signalé par Design) | `fix/1.6.56-test-retour` | fusionnée (#365) |
-| 1.6.57 | Pages | Offres, feuille « Filtres » sur téléphone selon la planche : voile à 40 %, coins du haut à 16 px | `fix/1.6.57-feuille-filtres` | PR ouverte |
+| 1.6.57 | Pages | Offres, feuille « Filtres » sur téléphone selon la planche : voile à 40 %, coins du haut à 16 px | `fix/1.6.57-feuille-filtres` | fusionnée (#367) |
+| 1.6.58 | Pages | Série de Kevin, point 1 : sélection des onglets (pastille teintée dans l'en-tête, indicateur actif de Material 3 sur la barre du bas), en-tête confié par Design | `feat/1.6.58-onglets` | PR ouverte |
