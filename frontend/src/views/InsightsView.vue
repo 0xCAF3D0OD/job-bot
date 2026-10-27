@@ -153,7 +153,7 @@ const PERIODS: { key: Period; label: string }[] = [
       class="today-sentence bilan-sentence"
       data-test="headline"
     >
-      Ta recherche <strong>{{ summary.word }}</strong>{{ summary.rest }}
+      {{ summary.before }}<strong>{{ summary.accent }}</strong>{{ summary.after }}
     </p>
     <!-- La bande d'action (§3) : le site qui répond le plus, et le cibler dans les alertes. Sans site
          qui se détache, pas de bande. -->

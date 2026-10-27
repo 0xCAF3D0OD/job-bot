@@ -19,18 +19,22 @@ export function word(n: number, one: string, many: string): string {
   return n > 1 ? many : one;
 }
 
-/** La conclusion : l'état général, comparé à la période d'avant (pas de chiffre de la bande). */
-export function conclusion(report: Report, period: Period): { word: string; rest: string } {
-  const now = report.funnel.responses;
-  const before = report.previous_responses;
-  if (before === null || before === undefined) {
-    return { word: "en tout", rest: ` : ${now} ${word(now, "réponse", "réponses")} sur ${report.funnel.applications} ${word(report.funnel.applications, "candidature", "candidatures")}.` };
+/** La conclusion (règles §3) : l'état général de la période, exact et sans embellir (NN/g). Les cas se
+ *  testent dans cet ordre ; « avance » seulement s'il y a plus de réponses qu'une période d'avant qui en
+ *  avait. `before` précède l'accent, `accent` est en couleur, `after` suit. */
+export function conclusion(report: Report, period: Period): { before: string; accent: string; after: string } {
+  const n = report.funnel.applications;
+  const r = report.funnel.responses;
+  const p = report.previous_responses;
+  if (n < 5) return { before: "", accent: "Trop tôt pour conclure", after: ` : ${n} ${word(n, "candidature", "candidatures")} sur la période.` };
+  if (r === 0) return { before: "", accent: "Pas encore de réponse", after: ` : ${n} candidatures envoyées.` };
+  if (p === null || p === undefined || p === 0) {
+    return { before: "", accent: "Premières réponses", after: ` : ${r} sur ${n} candidatures.` };
   }
   const span = period === "month" ? "au mois d'avant" : "au trimestre d'avant";
-  if (now === 0 && before === 0) return { word: "attend", rest: " ses premières réponses." };
-  if (now > before) return { word: "avance", rest: ` : plus de réponses qu'${span}.` };
-  if (now < before) return { word: "ralentit", rest: ` : moins de réponses qu'${span}.` };
-  return { word: "tient le rythme", rest: ` : autant de réponses qu'${span}.` };
+  if (r > p) return { before: "Ta recherche ", accent: "avance", after: ` : plus de réponses qu'${span}.` };
+  if (r === p) return { before: "Ta recherche ", accent: "tient le rythme", after: ` : autant de réponses qu'${span}.` };
+  return { before: "Ta recherche ", accent: "ralentit", after: ` : moins de réponses qu'${span}.` };
 }
 
 const NOT_SITES = ["spontaneous", "manual"];
