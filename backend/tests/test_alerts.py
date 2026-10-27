@@ -151,3 +151,24 @@ async def test_remote_search_link_follows_policy(api: AsyncClient, runtime: Runt
     assert urls["jobup"] is None
     linkedin = urls["linkedin"]
     assert linkedin is not None and "f_WT=2" in linkedin and "location=Switzerland" in linkedin
+
+
+async def test_follow_search_with_profile_places_and_real_todo(
+    api: AsyncClient, runtime: Runtime
+) -> None:
+    """« Suivre cette recherche » (recherche globale) : les mots, les lieux du profil (sans code
+    de canton), et les sites où l'alerte reste à créer, d'après les cellules réelles."""
+    await add_alert(runtime, "jobup", "Kubernetes")
+    followed = await api.post("/api/alert-searches/follow", json={"terms": " Kubernetes "})
+    assert followed.status_code == 201, followed.text
+    data = followed.json()
+    assert data["terms"] == "Kubernetes"
+    assert data["locations"] == ["Lausanne", "Genève"]
+    assert len(data["ids"]) == 2 and data["created"] == data["ids"]
+    # jobup a déjà reçu une alerte « Kubernetes » : pas à créer ; les autres sites, si.
+    sites = {s["slug"]: s["name"] for s in (await api.get("/api/alert-searches")).json()["sites"]}
+    assert sites["jobup"] not in data["todo"]
+    assert data["todo"] and set(data["todo"]) <= set(data["sites"])
+    # Une seconde fois : rien n'est doublé.
+    again = (await api.post("/api/alert-searches/follow", json={"terms": "kubernetes"})).json()
+    assert again["created"] == [] and again["ids"] == data["ids"]

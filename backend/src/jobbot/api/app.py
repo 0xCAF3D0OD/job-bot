@@ -44,6 +44,7 @@ from jobbot.api.routes import (
     registry,
     rhythm,
     scoring,
+    search,
     sites,
     spontaneous,
     status,
@@ -164,6 +165,7 @@ def create_app(settings: Settings, runtime: Runtime | None = None) -> FastAPI:
     app.include_router(trainings.router)
     app.include_router(profiles.router)
     app.include_router(alerts.router)
+    app.include_router(search.router)
     app.include_router(interviews.router)
     app.include_router(plan.router)
     app.include_router(billing.router)

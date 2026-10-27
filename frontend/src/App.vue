@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import AppFooter from "./components/AppFooter.vue";
 import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 
+import GlobalSearch from "./components/GlobalSearch.vue";
 import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import AppIcon from "./components/AppIcon.vue";
@@ -146,6 +147,9 @@ onUnmounted(() => {
       >
         <!-- Deux boutons ronds, sans capsule (1.6.46) : la cloche et l'initiale ; chacun ouvre son menu
              sous lui, au clic, et se ferme à Échap ou par un clic ailleurs. -->
+        <!-- La recherche globale (série du 27.10, point 2) : le champ à gauche de la cloche ; sur écran
+             étroit, la loupe. -->
+        <GlobalSearch />
         <NotificationBell />
         <AccountMenu />
       </div>
