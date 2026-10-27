@@ -4014,8 +4014,11 @@ html.filters-open { overflow: hidden; }
 .alert-state.waiting::before { background: var(--accent); }
 .alert-state.silent::before { background: var(--orange); }
 .alert-quiet, .alert-date { color: var(--muted); font-size: var(--font-small); white-space: nowrap; }
+/* Sur téléphone aussi, l'état reste à droite de son site (planche 215:651) : le nom est court. */
+.alert-site .setting-row-text, .alert-search-head .setting-row-text { flex-basis: 0; }
+.alert-search-head .setting-row-text { min-width: 8rem; }
 .site-message-text { white-space: pre-line; overflow-wrap: anywhere; }
 @media (max-width: 820px) {
   .alerts-section { margin-bottom: var(--space-6); }
-  .alert-state { white-space: normal; }
+  .alert-state { white-space: normal; text-align: right; }
 }
