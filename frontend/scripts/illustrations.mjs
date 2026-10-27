@@ -7,7 +7,7 @@
 // qui reste nette (240 px affichés sur téléphone, jusqu'à 440 px sur ordinateur). Si la série sombre
 // contient la même image, elle est écrite à côté (<nom>-sombre-480.webp…) ; sinon, en sombre, la
 // version claire est simplement assombrie (feuille de style).
-import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +40,17 @@ export const ILLUSTRATIONS = {
   "preuves-orp": { source: "04_Preuves_ORP" },
   "suivi-envoi": { source: "03_Candidatures_Suivi" },
   "tableau-de-bord": { source: "01_Dashboard" },
+  // La série de l'archive illustrations_transparentes.zip (série du 27.10, règle §4) : seulement les
+  // écrans vides, les premiers pas, les réussites et les erreurs ; une par écran.
+  reussite: { source: "009_completed" },
+  "connexion-perdue": { source: "010_connection_lost" },
+  "assistant-vide": { source: "008_chatting" },
+  "preparer-vide": { source: "004_ai_generated_document_8im" },
+  "ia-vide": { source: "005_artificial_intelligence" },
+  "rendez-vous-vide": { source: "006_booking" },
+  "formations-vide": { source: "007_certification" },
+  "trop-tot": { source: "001_absorbed" },
+  introuvable: { source: "002_action_required" },
 };
 
 const OUT = fileURLToPath(new URL("../src/assets/illustrations/", import.meta.url));
@@ -72,10 +83,12 @@ if (!light) {
   console.error("usage : node scripts/illustrations.mjs <transparentes> [<sombres>]");
   process.exit(1);
 }
-rmSync(OUT, { recursive: true, force: true });
+// Les séries viennent de dossiers différents : on écrit ce que le dossier contient, sans effacer le
+// reste (1.6.73). Un nom dont l'original n'est pas dans le dossier est laissé tel quel.
 mkdirSync(OUT, { recursive: true });
 const darkFiles = dark && existsSync(dark) ? readdirSync(dark) : [];
 for (const [name, spec] of Object.entries(ILLUSTRATIONS)) {
+  if (!existsSync(join(light, `${spec.source}.webp`))) continue;
   await write(join(light, `${spec.source}.webp`), name, spec, "");
   if (darkFiles.includes(`${spec.source}.webp`)) await write(join(dark, `${spec.source}.webp`), name, spec, "-sombre");
 }

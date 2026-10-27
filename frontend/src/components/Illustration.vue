@@ -51,7 +51,17 @@ export type IllustrationName =
   | "porte-ouverte"
   | "preuves-orp"
   | "suivi-envoi"
-  | "tableau-de-bord";
+  | "tableau-de-bord"
+  // Série du 27.10 (règle §4) : écrans vides, premiers pas, réussites, erreurs.
+  | "reussite"
+  | "connexion-perdue"
+  | "assistant-vide"
+  | "preparer-vide"
+  | "ia-vide"
+  | "rendez-vous-vide"
+  | "formations-vide"
+  | "trop-tot"
+  | "introuvable";
 </script>
 
 <template>
