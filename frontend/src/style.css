@@ -3173,6 +3173,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .setting-row.wide .setting-row-control { flex-wrap: wrap; }
 .setting-row.wide .setting-row-control > :not([role="status"]) { flex: 1 1 auto; min-width: 0; }
 .setting-row.wide .setting-row-error { text-align: left; }
+/* `inline` (1.6.71) : le texte ne réserve pas 16 rem ; l'état court reste à droite sur téléphone, un long passe dessous. */
+.setting-row.inline .setting-row-text { flex-basis: 0; min-width: 8rem; }
 .setting-row-text { display: grid; gap: var(--space-1); flex: 1 1 16rem; min-width: 0; }
 .setting-row-title { font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
 .setting-row-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); text-decoration: none; overflow-wrap: anywhere; }

@@ -42,4 +42,5 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.66 | Pages | Série du 27.10, point 5 (première partie) : Réglages en cartes, Recherche d'emploi, Rythme, Notifications, IA ; enregistrement réglage par réglage, « Annuler » 6 s sur un site | `feat/1.6.66-reglages` | fusionnée (#377) |
 | 1.6.67 | Pages | Série du 27.10, point 5 (seconde partie) : Compte, Agenda et extension, Administration, État du service en cartes | `feat/1.6.67-reglages` | PR ouverte |
 | 1.6.68 | Design | SettingCard et SettingRow : blocs dans une carte (formulaire, message, confirmation), prop `wide`, longues adresses coupées | `feat/1.6.68-reglage-blocs` | fusionnée (#378) |
-| 1.6.69 | Design | Règles §3 et §4 de la série du 27.10 (structure des sections, enregistrement immédiat, confirmation exacte, sélection unique, recherche globale) | `docs/1.6.69-regles-serie` | PR ouverte |
+| 1.6.69 | Design | Règles §3 et §4 de la série du 27.10 (structure des sections, enregistrement immédiat, confirmation exacte, sélection unique, recherche globale) | `docs/1.6.69-regles-serie` | fusionnée (#380) |
+| 1.6.71 | Design | SettingRow : prop `inline` (un état court reste à droite sur téléphone) | `feat/1.6.71-reglage-inline` | PR ouverte |

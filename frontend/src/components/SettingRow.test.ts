@@ -50,4 +50,9 @@ describe("Ligne de réglage (1.6.65)", () => {
     const wrapper = mount(SettingRow, { props: { title: "Jeton", wide: true }, slots: { default: "<code>abc</code>" } });
     expect(wrapper.find(".setting-row").classes()).toContain("wide");
   });
+
+  it("`inline` : la classe qui garde un état court à droite sur téléphone", () => {
+    const wrapper = mount(SettingRow, { props: { title: "jobup", inline: true }, slots: { default: "<span>Reçue</span>" } });
+    expect(wrapper.find(".setting-row").classes()).toContain("inline");
+  });
 });
