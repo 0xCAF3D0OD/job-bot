@@ -45,6 +45,28 @@ describe("ProfilesPanel", () => {
     expect(wrapper.find("[data-test=propose-keywords]").exists()).toBe(false);
   });
 
+  it("le modèle des Réglages (1.6.67) : une carte, une ligne par profil, l'action à droite", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: false } : { current_id: 1, items: [main, nurse] } }),
+    );
+    const wrapper = mount(ProfilesPanel);
+    await flushPromises();
+    const card = wrapper.find("[data-test=profiles-panel]");
+    expect(card.classes()).toContain("setting-card");
+    expect(wrapper.find("fieldset").exists()).toBe(false);
+    // En-tête, deux profils, « Un autre profil ».
+    const titles = card.findAll(".setting-row-title").map((t) => t.text());
+    expect(titles).toEqual(["Profils d'essai", "Profil principal (principal)", "Infirmière", "Un autre profil"]);
+    expect(card.findAll("[data-test=setting-row]")).toHaveLength(2);
+    const [first, second] = card.findAll("[data-test=profile]");
+    expect(second!.find(".setting-row-description").text()).toBe("infirmière · soins · 3 sources");
+    // Le profil utilisé le dit en mots (WCAG 1.4.1) ; les autres ont « Utiliser » et « ⋯ » à droite.
+    expect(first!.find(".setting-row-control").text()).toContain("Utilisé");
+    expect(second!.find(".setting-row-control [data-test=profile-use]").exists()).toBe(true);
+    expect(second!.find(".setting-row-control [data-test=profile-more]").exists()).toBe(true);
+    expect(card.find(".setting-row-control [data-test=add-profile-open]").exists()).toBe(true);
+  });
+
   it("mots-clés proposés par l'IA à partir du métier", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: true } : { current_id: 1, items: [main] } }),
@@ -102,8 +124,20 @@ describe("ProfilesPanel", () => {
     await wrapper.find("[data-test=profile-rename-input]").setValue(" Soins ");
     await wrapper.find("[data-test=profile-rename-form]").trigger("submit");
     await flushPromises();
+    // Pas de bouton « Enregistrer » (1.6.67) : Entrée enregistre ; le champ quitté ensuite ne renvoie rien.
+    expect(PATCH).toHaveBeenCalledTimes(1);
     expect(PATCH).toHaveBeenCalledWith("/api/profiles/{profile_id}", { params: { path: { profile_id: 2 } }, body: { name: "Soins" } });
     expect(wrapper.text()).toContain("Soins");
+    // Quitter le champ enregistre aussi.
+    PATCH.mockResolvedValue({ data: { current_id: 1, items: [main, { ...nurse, name: "Soins à domicile" }] } });
+    await wrapper.findAll("[data-test=profile-more]")[1]!.trigger("click");
+    await wrapper.find("[data-test=profile-rename]").trigger("click");
+    await flushPromises();
+    await wrapper.find("[data-test=profile-rename-input]").setValue("Soins à domicile");
+    await wrapper.find("[data-test=profile-rename-input]").trigger("blur");
+    await flushPromises();
+    expect(PATCH).toHaveBeenLastCalledWith("/api/profiles/{profile_id}", { params: { path: { profile_id: 2 } }, body: { name: "Soins à domicile" } });
+    expect(wrapper.find("[data-test=profile-rename-form]").exists()).toBe(false);
     wrapper.unmount();
   });
 });

@@ -567,17 +567,10 @@ p.badge.reason { margin: 0; }
 .points li::marker { color: var(--ok-text); }
 .points .gaps li::marker { color: var(--orange-text); }
 .points .detail { font-size: var(--font-caption); }
-.scoring-card { margin-top: var(--space-6); padding: var(--space-6); display: grid; gap: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-.scoring-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; }
-.scoring-head h2 { font-size: var(--font-title); }
-.scoring-card .notice { margin: 0; }
 .budget { display: grid; gap: var(--space-2); }
-.budget-line { display: flex; justify-content: space-between; font-size: var(--font-small); color: var(--muted); }
-.budget-line strong { color: var(--text); font-weight: var(--weight-semibold); }
 .budget-bar { height: 0.5rem; border-radius: var(--radius-pill); background: var(--band); overflow: hidden; }
 .budget-bar span { display: block; height: 100%; background: var(--mint); border-radius: var(--radius-pill); }
 .budget-bar span.full { background: var(--down); }
-.scoring-card .facts div { background: var(--band); }
 .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: var(--space-2); margin: 0; }
 .facts div { background: var(--band); border-radius: var(--radius); padding: var(--space-3) var(--space-3); }
 .facts dt { font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -2332,17 +2325,10 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .platform-accounts > li { display: grid; gap: var(--space-1); padding: var(--space-4) 0; border-bottom: 1px solid var(--divider); }
 .platform-accounts > li:first-child { padding-top: 0; }
 .platform-accounts > li:last-child { border-bottom: 0; }
-.platform-account-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .platform-accounts p { margin: 0; }
-.platform-usage { font-size: var(--font-small); }
-.platform-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); margin-top: var(--space-1); }
-.platform-actions .inline-field input { width: var(--field-5); }
 /* Demandes de compte (docs/102) : le mot laissé, « Refuser » en rouge, l'interrupteur sous les comptes. */
-.platform-request-note { line-height: var(--leading-normal); white-space: pre-line; overflow-wrap: anywhere; }
 button.secondary.danger, button.secondary.danger:hover:not(:disabled) { color: var(--down-text); }
 button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
-.platform-signup { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-4) 0; border-top: 1px solid var(--divider); }
-.platform-signup label { display: inline-flex; align-items: center; gap: var(--space-2); }
 .platform-link > p { flex-basis: 100%; margin: 0; }
 
 /* Alertes à confirmer (docs/65 §3) : le lien de chaque site, ouvert par la personne. */
@@ -3281,7 +3267,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .settings-card legend, .setting-title { font-weight: var(--weight-semibold); font-size: var(--font-body); color: var(--text); }
 .setting-desc { display: block; margin: 0; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-regular); }
 .settings-card legend + .setting-desc { margin-top: calc(var(--space-2) * -1); }
-.setting-info { margin: 0; padding: var(--space-4) var(--space-5); border-radius: var(--radius); background: var(--band); line-height: var(--leading-normal); font-size: var(--font-small); }
 /* L'interrupteur à droite, centré sur le titre et sa description. */
 .setting-switch { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: var(--space-5); }
 .setting-switch > span { display: grid; gap: var(--space-1); }
@@ -3319,11 +3304,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 /* Les actions d'une section : des pilules bordées ; pleine largeur sur téléphone (docs/110). */
 .pill { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--control-h); padding: 0 var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font: inherit; font-weight: var(--weight-semibold); font-size: var(--font-body); text-decoration: none; cursor: pointer; transition: border-color 150ms, color 150ms; }
 .pill:hover { border-color: var(--accent); color: var(--accent); }
-.setting-pills { gap: var(--space-3); }
-.setting-info + .setting-pills, .setting-info + .form-actions { padding-top: 0; }
 @media (max-width: 820px) {
-  .setting-pills { display: grid; grid-template-columns: minmax(0, 1fr); }
-  .setting-pills > .pill { width: 100%; min-height: var(--control-h); }
   .settings-card .link.danger[data-test="delete-account"] { justify-self: center; margin: var(--space-1) auto 0; display: flex; }
 }
 .choice-label { font-size: var(--font-body); color: var(--text); }
@@ -3438,7 +3419,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
    un gris un peu plus sombre, dans les deux thèmes. */
 .dmock-bar strong, .dmock-grow small { color: color-mix(in srgb, var(--muted) 75%, var(--text)); }
 /* Un lien dans une phrase se voit sans la couleur : souligné. */
-.setting-info a, .setting-desc a { text-decoration: underline; text-underline-offset: 0.15em; }
 /* La note en mots (docs/121 §C.5, docs/123) : le visage du 1 et un mot, à la couleur de la
    note ; le chiffre au survol. Le filet en bas de la ligne d'offre, à la longueur de la note,
    sur le filet gris de la liste. Pas encore notée : en gris, filet en pointillés. */
@@ -3659,7 +3639,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .plan-usage li:last-child { border-bottom: 0; }
 .plan-usage-count { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
 .plan-usage-gauge { display: block; height: 4px; border-radius: var(--radius-pill); background: linear-gradient(to right, var(--accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); }
-.plan-resets { margin: var(--space-2) 0 0; }
 .plan-plus { margin-top: var(--space-4); }
 .plan-limit { margin: var(--space-2) 0 var(--space-3); line-height: var(--leading-normal); }
 .plan-terms { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); line-height: var(--leading-normal); }
@@ -4047,3 +4026,16 @@ html.filters-open { overflow: hidden; }
 @media (max-width: 820px) {
   .setting-card-body .ai-spend { padding: var(--space-4); }
 }
+
+
+/* --- Réglages, seconde partie (1.6.67) : les éléments propres aux panneaux ---
+   La jauge d'un usage de la formule à droite de sa ligne ; la case des conditions sans marge de plus ;
+   l'état d'un voyant ou d'une tâche écrit en mots, coloré en plus (WCAG 1.4.1) ; la barre de dépense de
+   l'IA. */
+.plan-usage-gauge { width: 4.5rem; }
+.plan-terms { margin-top: 0; }
+.state-word { font-size: var(--font-small); font-weight: var(--weight-semibold); white-space: nowrap; }
+.state-word.ok { color: var(--ok-text); }
+.state-word.warn { color: var(--orange-text); }
+.state-word.down { color: var(--down-text); }
+.budget-bar { width: 8rem; }

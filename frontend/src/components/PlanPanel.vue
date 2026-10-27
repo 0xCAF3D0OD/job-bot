@@ -5,12 +5,14 @@ import { useRoute, useRouter } from "vue-router";
 import { api } from "../api/client";
 import { usePlan } from "../composables/usePlan";
 import InlineConfirm from "./InlineConfirm.vue";
+import SettingCard from "./SettingCard.vue";
+import SettingRow from "./SettingRow.vue";
 
-// La formule (docs/125 §4 et §6), dans Réglages › Compte : son nom, ce qu'elle limite, une ligne
-// par usage (« 37 sur 150 ») avec sa jauge, quand les compteurs repartent, ce que Plus ajoute ;
-// une fois le paiement ouvert, « Passer à Plus » (les conditions acceptées d'abord), la date de
-// fin, « Résilier » et les paiements reçus. L'exploitant n'a pas de formule : la carte ne
-// s'affiche pas.
+// La formule (docs/125 §4 et §6), dans Réglages › Compte (1.6.67, planche « 5. Réglages ») : une
+// carte avec une ligne d'en-tête (son nom, ce qu'elle limite, quand les compteurs repartent) puis
+// une ligne par usage (« 37 sur 150 ») avec sa jauge ; une carte pour Plus (ce qu'il ajoute, ou
+// la date de fin et « Résilier »), les conditions acceptées sous « Passer à Plus » ; une carte
+// des paiements reçus. L'exploitant n'a pas de formule : les cartes ne s'affichent pas.
 const { plan, refresh } = usePlan();
 const route = useRoute();
 const router = useRouter();
@@ -26,6 +28,12 @@ function money(cents: number, currency: string): string {
 }
 
 const resets = computed(() => day(plan.value?.resets_on));
+// La phrase de l'en-tête : ce que la formule limite, et quand les compteurs repartent.
+const planLine = computed(() => {
+  if (plan.value?.plan !== "plus") return `Gratuite : seule l'IA a des limites, remises à zéro le ${resets.value}.`;
+  const who = offered.value ? "Offerte par l'équipe jobA1" : "Payée chaque mois";
+  return `${who} : l'IA va plus loin, compteurs remis à zéro le ${resets.value}.`;
+});
 const plusLimits = computed(() => plan.value?.limits.plus ?? {});
 const paid = computed(() => plan.value?.plan === "plus" && !!plan.value.plan_until);
 const offered = computed(() => plan.value?.plan === "plus" && !plan.value.plan_until);
@@ -101,143 +109,123 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    v-if="plan && !plan.unlimited"
-    class="form-card plan-card"
-    data-test="plan-panel"
-  >
-    <fieldset>
-      <legend>Formule</legend>
-      <p
-        class="setting-desc"
+  <template v-if="plan && !plan.unlimited">
+    <SettingCard data-test="plan-panel">
+      <SettingRow
+        :title="`Formule ${plan.plan === 'plus' ? 'Plus' : 'Essentiel'}`"
+        :description="planLine"
         data-test="plan-name"
-      >
-        <template v-if="plan.plan === 'plus'">
-          <strong>Plus</strong>{{ offered ? ", offerte par l'équipe jobA1" : "" }} : l'IA va plus loin chaque mois ; le reste n'a pas de limite.
-        </template>
-        <template v-else>
-          <strong>Essentiel</strong>, gratuite : l'IA a des limites chaque mois ; le reste n'en a pas.
-        </template>
-      </p>
+      />
       <p
         v-if="message"
-        :class="message.kind === 'error' ? 'notice error' : 'hint plan-message'"
+        :class="['setting-row-message', message.kind === 'error' ? 'notice error' : 'hint']"
         :role="message.kind === 'error' ? 'alert' : 'status'"
         data-test="plan-message"
       >
         {{ message.text }}
       </p>
-      <ul
-        class="plan-usage"
-        data-test="plan-usage"
+      <!-- Une ligne par usage, le compteur à droite ; la jauge redit le compteur, sans rien de plus
+           (WCAG 1.4.1) : elle est cachée aux lecteurs d'écran. -->
+      <SettingRow
+        v-for="usage in plan.usage"
+        :key="usage.key"
+        :title="capitalized(usage.label)"
+        :data-test="`plan-${usage.key}`"
       >
-        <li
-          v-for="usage in plan.usage"
-          :key="usage.key"
-          :data-test="`plan-${usage.key}`"
-        >
-          <span class="plan-usage-name">{{ capitalized(usage.label) }}</span>
-          <span class="plan-usage-count">{{ usage.used }} sur {{ usage.limit }}</span>
-          <span
-            class="plan-usage-gauge"
-            :style="{ '--p': Math.min(100, Math.round((usage.used / (usage.limit || 1)) * 100)) }"
-            aria-hidden="true"
-          />
-        </li>
-      </ul>
-      <p
-        class="hint plan-resets"
-        data-test="plan-resets"
-      >
-        Les compteurs repartent le {{ resets }}.
-      </p>
+        <span class="plan-usage-count">{{ usage.used }} sur {{ usage.limit }}</span>
+        <span
+          class="plan-usage-gauge"
+          :style="{ '--p': Math.min(100, Math.round((usage.used / (usage.limit || 1)) * 100)) }"
+          aria-hidden="true"
+        />
+      </SettingRow>
+    </SettingCard>
 
-      <!-- Plus payé : la date de fin, et résilier. -->
-      <template v-if="paid">
-        <p
-          class="setting-info plan-plus"
-          data-test="plan-paid"
-        >
-          <strong>Plus jusqu'au {{ day(plan.plan_until) }}</strong>{{ plan.cancelled ? ", puis Essentiel. Pas de nouveau paiement." : ", renouvelé chaque mois." }}
-        </p>
-        <div
+    <!-- Plus payé : la date de fin, et résilier (confirmé sous la ligne). -->
+    <SettingCard v-if="paid">
+      <SettingRow
+        :title="`Plus jusqu'au ${day(plan.plan_until)}`"
+        :description="plan.cancelled ? 'Puis Essentiel. Pas de nouveau paiement.' : 'Renouvelé chaque mois, sans engagement.'"
+        data-test="plan-paid"
+      >
+        <button
           v-if="!plan.cancelled && !confirming"
-          class="form-actions setting-pills"
+          type="button"
+          class="secondary small"
+          data-test="plan-cancel"
+          @click="confirming = true"
         >
-          <button
-            type="button"
-            class="pill"
-            data-test="plan-cancel"
-            @click="confirming = true"
-          >
-            Résilier
-          </button>
-        </div>
+          Résilier
+        </button>
+      </SettingRow>
+      <div
+        v-if="confirming"
+        class="setting-row-form"
+      >
         <InlineConfirm
-          v-if="confirming"
           :message="`Résilier Plus ? Il reste actif jusqu'au ${day(plan.plan_until)}, sans nouveau paiement.`"
           confirm-label="Résilier"
           :busy="busy"
           @confirm="cancel"
           @cancel="confirming = false"
         />
-      </template>
+      </div>
+    </SettingCard>
 
-      <!-- Essentiel : ce que Plus ajoute, et l'acheter une fois le paiement ouvert. -->
-      <template v-else-if="plan.plan !== 'plus'">
-        <p
-          class="setting-info plan-plus"
-          data-test="plan-plus"
+    <!-- Essentiel : ce que Plus ajoute ; une fois le paiement ouvert, « Passer à Plus », les
+         conditions acceptées d'abord, juste dessous. -->
+    <SettingCard v-else-if="plan.plan !== 'plus'">
+      <SettingRow
+        v-slot="c"
+        :title="`Plus · ${plan.plus_price_chf} CHF par mois`"
+        :description="`${plusLimits.letter} lettres et CV, ${plusLimits.practice} entraînements, ${plusLimits.score} offres notées. ${canBuy ? 'Sans engagement.' : 'Le paiement arrive bientôt.'}`"
+        data-test="plan-plus"
+      >
+        <button
+          v-if="canBuy"
+          type="button"
+          class="primary small"
+          :disabled="!accepted || busy"
+          :aria-describedby="`${c.describedby ?? ''} plan-terms`.trim()"
+          data-test="plan-buy"
+          @click="buy"
         >
-          <strong>Plus · {{ plan.plus_price_chf }} CHF par mois</strong> :
-          {{ plusLimits.letter }} lettres et CV, {{ plusLimits.practice }} entraînements, {{ plusLimits.score }} offres notées.
-        </p>
-        <p
-          class="hint"
-          data-test="plan-buy-note"
+          Passer à Plus
+        </button>
+      </SettingRow>
+      <div
+        v-if="canBuy"
+        class="setting-row-form"
+      >
+        <label
+          id="plan-terms"
+          class="checkbox plan-terms"
         >
-          {{ canBuy ? "Sans engagement." : "Le paiement arrive bientôt." }}
-        </p>
-        <template v-if="canBuy">
-          <label class="checkbox plan-terms">
-            <input
-              v-model="accepted"
-              type="checkbox"
-              data-test="plan-accept"
-            >
-            <span>J'accepte les <RouterLink to="/conditions">conditions d'utilisation</RouterLink></span>
-          </label>
-          <div class="form-actions">
-            <button
-              type="button"
-              class="primary"
-              :disabled="!accepted || busy"
-              data-test="plan-buy"
-              @click="buy"
-            >
-              Passer à Plus
-            </button>
-          </div>
-        </template>
-      </template>
-
-      <template v-if="plan.payments.length">
-        <p class="plan-payments-title">
-          Paiements
-        </p>
-        <ul
-          class="plan-usage plan-payments"
-          data-test="plan-payments"
-        >
-          <li
-            v-for="(payment, index) in plan.payments"
-            :key="index"
+          <input
+            v-model="accepted"
+            type="checkbox"
+            data-test="plan-accept"
           >
-            <span>{{ day(payment.paid_on, true) }}</span>
-            <span class="plan-usage-count">{{ money(payment.amount_cents, payment.currency) }}</span>
-          </li>
-        </ul>
-      </template>
-    </fieldset>
-  </div>
+          <span>J'accepte les <RouterLink to="/conditions">conditions d'utilisation</RouterLink></span>
+        </label>
+      </div>
+    </SettingCard>
+
+    <SettingCard
+      v-if="plan.payments.length"
+      data-test="plan-payments"
+    >
+      <SettingRow
+        title="Paiements"
+        description="Les paiements reçus pour Plus."
+      />
+      <SettingRow
+        v-for="(payment, index) in plan.payments"
+        :key="index"
+        :title="day(payment.paid_on, true)"
+      >
+        <span class="plan-usage-count">{{ money(payment.amount_cents, payment.currency) }}</span>
+      </SettingRow>
+    </SettingCard>
+  </template>
 </template>

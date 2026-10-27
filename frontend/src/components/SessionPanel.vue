@@ -5,8 +5,11 @@ import { useRouter } from "vue-router";
 import { api } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import InlineConfirm from "./InlineConfirm.vue";
+import SettingCard from "./SettingCard.vue";
+import SettingRow from "./SettingRow.vue";
 
-// Connexion (docs/18 §1) : compte connecté, « Se déconnecter partout ».
+// Connexion (docs/18 §1) : compte connecté, « Se déconnecter partout » (1.6.67, planche
+// « 5. Réglages ») : une carte, une ligne par action, la confirmation sous sa ligne.
 const router = useRouter();
 const { me, logout } = useAuth();
 
@@ -27,59 +30,62 @@ async function everywhere(): Promise<void> {
 </script>
 
 <template>
-  <div
+  <SettingCard
     v-if="me?.auth_enabled && me.authenticated"
-    class="form-card sites-card"
     data-test="session-panel"
   >
-    <fieldset>
-      <legend>
-        Connexion
-      </legend>
-      <!-- Ce qu'on consulte, sur fond gris (docs/110) ; les actions en pilules dessous. -->
-      <p class="setting-info">
-        Connecté en tant que <strong>{{ me.username }}</strong>.
-      </p>
-      <div class="form-actions setting-pills">
-        <button
-          v-if="!me.is_owner"
-          type="button"
-          class="pill"
-          data-test="welcome-again"
-          @click="welcomeAgain"
-        >
-          Refaire l'accueil
-        </button>
-        <button
-          type="button"
-          class="pill"
-          data-test="logout-all"
-          @click="confirming = true"
-        >
-          Se déconnecter partout
-        </button>
-      </div>
+    <SettingRow
+      title="Connexion"
+      :description="`Connecté en tant que ${me.username ?? ''}.`"
+    >
+      <button
+        v-if="!confirming"
+        type="button"
+        class="secondary small"
+        data-test="logout-all"
+        @click="confirming = true"
+      >
+        Se déconnecter partout
+      </button>
+    </SettingRow>
+    <div
+      v-if="confirming"
+      class="setting-row-form"
+    >
       <InlineConfirm
-        v-if="confirming"
         message="Fermer toutes les sessions ouvertes, celle-ci comprise ? Tu devras te reconnecter."
         confirm-label="Se déconnecter partout"
         @confirm="everywhere"
         @cancel="confirming = false"
       />
-    </fieldset>
-  </div>
-  <p
-    v-else-if="me?.demo"
-    class="hint"
-    data-test="auth-demo"
-  >
-    Démo : rien de ce que tu fais n'est enregistré.
-  </p>
-  <p
-    v-else-if="me && !me.auth_enabled"
-    class="hint"
-    data-test="auth-disabled"
-  >
-    Connexion désactivée sur cette installation : toutes les pages sont ouvertes.
-  </p>
+    </div>
+    <SettingRow
+      v-if="!me.is_owner"
+      title="L'accueil"
+      description="Les premières questions, avec tes réponses actuelles."
+    >
+      <button
+        type="button"
+        class="secondary small"
+        data-test="welcome-again"
+        @click="welcomeAgain"
+      >
+        Refaire l'accueil
+      </button>
+    </SettingRow>
+  </SettingCard>
+  <SettingCard v-else-if="me?.demo">
+    <SettingRow
+      title="Connexion"
+      description="Démo : rien de ce que tu fais n'est enregistré."
+      data-test="auth-demo"
+    />
+  </SettingCard>
+  <SettingCard v-else-if="me && !me.auth_enabled">
+    <SettingRow
+      title="Connexion"
+      description="Connexion désactivée sur cette installation : toutes les pages sont ouvertes."
+      data-test="auth-disabled"
+    />
+  </SettingCard>
 </template>

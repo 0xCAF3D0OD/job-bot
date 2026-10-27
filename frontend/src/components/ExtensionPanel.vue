@@ -9,9 +9,11 @@ import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
 import CopyLabel from "./CopyLabel.vue";
 import { offerUndo } from "../composables/useUndo";
+import SettingCard from "./SettingCard.vue";
+import SettingRow from "./SettingRow.vue";
 
 // Extension du navigateur (docs/25 §4, docs/71) : installée depuis la boutique de Mozilla, reliée
-// en un clic (« Relier ce navigateur ») ; le jeton à copier reste, replié.
+// en un clic (« Relier ce navigateur ») ; le jeton à copier reste, en secours.
 // La fiche de la boutique, en ligne depuis le 2026-10-21 (docs/71 §8) ; vide : le mode d'emploi.
 const STORE_URL = "https://addons.mozilla.org/addon/joba1-remplir-mes-candidatures/";
 type Token = components["schemas"]["TokenOut"];
@@ -23,7 +25,7 @@ const origin = globalThis.location?.origin ?? "";
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/extension-tokens");
-  tokens.value = data ?? [];
+  tokens.value = Array.isArray(data) ? data : [];
 }
 
 async function create(): Promise<void> {
@@ -61,118 +63,113 @@ async function copy(): Promise<void> {
   }
 }
 
-function day(value: string | null | undefined): string {
-  return value ? new Date(value).toLocaleDateString("fr-CH", { day: "numeric", month: "short" }) : "jamais";
+// « Navigateur relié · utilisé le 15 oct. » (texte seul, sans icône).
+function lastUsed(token: Token): string {
+  if (!token.last_used_at) return "Navigateur relié · pas encore utilisé.";
+  return `Navigateur relié · utilisé le ${new Date(token.last_used_at).toLocaleDateString("fr-CH", { day: "numeric", month: "short" })}.`;
 }
 
 onMounted(load);
 </script>
 
 <template>
-  <div
-    class="form-card sites-card"
+  <!-- L'extension (1.6.67, planche « 5. Réglages ») : l'installer, la relier, puis une ligne par
+       navigateur relié et le jeton de secours, dans la même carte (loi de proximité). -->
+  <SettingCard
+    class="sites-card"
     data-test="extension-panel"
   >
-    <fieldset>
-      <legend>
-        Extension du navigateur
-      </legend>
-      <!-- La description toujours visible, comme les CFF (docs/110). -->
-      <p class="setting-desc">
-        Elle remplit tes candidatures et tes codes, sans envoyer de candidature.
-      </p>
-      <ol class="extension-steps">
-        <li>
-          <a
-            v-if="STORE_URL"
-            :href="STORE_URL"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="button-link"
-            data-test="extension-install"
-          ><span class="with-icon"><AppIcon name="external" />Installer l'extension (Firefox)<span class="visually-hidden"> (nouvel onglet)</span></span></a>
-          <template v-else>
-            Installe l'extension : voir « Comment l'installer ».
-          </template>
-        </li>
-        <li>
-          Un onglet « Relier jobA1 » s'ouvre : indique <code>{{ origin }}</code>, puis « Relier », et
-          « Relier ce navigateur » sur la page qui s'ouvre.
-        </li>
-      </ol>
-      <MoreInfo
-        v-if="!STORE_URL"
-        label="Comment l'installer"
+    <!-- La description toujours visible, comme les CFF (docs/110). -->
+    <SettingRow
+      title="Extension du navigateur"
+      description="Elle remplit tes candidatures et tes codes dans Firefox, sans envoyer de candidature."
+    >
+      <a
+        v-if="STORE_URL"
+        :href="STORE_URL"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="button-link"
+        data-test="extension-install"
+      ><span class="with-icon"><AppIcon name="external" />Installer l'extension<span class="visually-hidden"> (Firefox, nouvel onglet)</span></span></a>
+    </SettingRow>
+    <SettingRow
+      title="Relier l'extension"
+      :description="`Dans l'onglet « Relier jobA1 » qui s'ouvre, indique ${origin}, puis « Relier » et « Relier ce navigateur ».`"
+    />
+    <SettingRow
+      v-for="token in tokens"
+      :key="token.id"
+      :title="token.name"
+      :description="lastUsed(token)"
+    >
+      <IconButton
+        icon="trash"
+        :label="`Révoquer ${token.name}`"
+        danger
+        data-test="extension-revoke"
+        @click="revoke(token)"
+      />
+    </SettingRow>
+    <SettingRow
+      title="Relier avec un jeton"
+      description="Si « Relier » ne marche pas : crée un jeton et colle-le dans l'extension."
+    >
+      <button
+        type="button"
+        class="secondary small"
+        data-test="extension-create"
+        @click="create"
       >
-        <!-- En étapes, par navigateur (retour du 2026-10-20 : le texte d'un bloc était illisible). -->
-        <p class="install-browser">
-          Firefox
-        </p>
-        <ol class="install-steps">
-          <li>Dans le dépôt : <code>make extension</code>.</li>
-          <li>Ouvre <code>about:debugging#/runtime/this-firefox</code>.</li>
-          <li>« Charger un module complémentaire temporaire », puis choisis <code>extension/web-ext-artifacts/joba1-….zip</code>.</li>
-          <li>À refaire après chaque redémarrage de Firefox.</li>
-        </ol>
-        <p class="install-browser">
-          Chrome, Edge ou Brave
-        </p>
-        <ol class="install-steps">
-          <li>Ouvre <code>chrome://extensions</code>.</li>
-          <li>Active le mode développeur.</li>
-          <li>« Charger l'extension non empaquetée », puis choisis le dossier <code>extension/</code>.</li>
-        </ol>
-      </MoreInfo>
-      <template v-if="tokens.length">
-        <p class="extension-tokens-title">
-          Navigateurs reliés
-        </p>
-        <ul class="extension-tokens">
-          <li
-            v-for="token in tokens"
-            :key="token.id"
-          >
-            <span>{{ token.name }} <span class="muted">· utilisé {{ day(token.last_used_at) }}</span></span>
-            <IconButton
-              icon="trash"
-              :label="`Révoquer ${token.name}`"
-              danger
-              data-test="extension-revoke"
-              @click="revoke(token)"
-            />
-          </li>
-        </ul>
-      </template>
-      <MoreInfo label="Relier avec un jeton">
-        <p>Si « Relier » ne marche pas : crée un jeton et colle-le dans l'extension.</p>
-        <div
-          v-if="created"
-          class="extension-token"
-          data-test="extension-token"
+        <span class="with-icon"><AppIcon name="plus" />Créer un jeton</span>
+      </button>
+    </SettingRow>
+    <SettingRow
+      v-if="created"
+      title="Nouveau jeton"
+      description="Montré une seule fois : colle-le maintenant dans l'extension."
+      wide
+    >
+      <div
+        class="extension-token"
+        data-test="extension-token"
+      >
+        <code>{{ created }}</code>
+        <button
+          type="button"
+          class="link"
+          @click="copy"
         >
-          <code>{{ created }}</code>
-          <button
-            type="button"
-            class="link"
-            @click="copy"
-          >
-            <CopyLabel :done="copied" />
-          </button>
-          <p class="hint">
-            Montré une seule fois : colle-le maintenant dans l'extension.
-          </p>
-        </div>
-        <div class="form-actions">
-          <button
-            type="button"
-            class="secondary small"
-            data-test="extension-create"
-            @click="create"
-          >
-            <span class="with-icon"><AppIcon name="plus" />Créer un jeton</span>
-          </button>
-        </div>
-      </MoreInfo>
-    </fieldset>
-  </div>
+          <CopyLabel
+            :done="copied"
+            label="Copier le jeton"
+          />
+        </button>
+      </div>
+    </SettingRow>
+  </SettingCard>
+  <!-- Sans fiche de boutique : les étapes par navigateur, repliées sous la carte (retour du
+       2026-10-20 : le texte d'un bloc était illisible). -->
+  <MoreInfo
+    v-if="!STORE_URL"
+    label="Comment l'installer"
+  >
+    <p class="install-browser">
+      Firefox
+    </p>
+    <ol class="install-steps">
+      <li>Dans le dépôt : <code>make extension</code>.</li>
+      <li>Ouvre <code>about:debugging#/runtime/this-firefox</code>.</li>
+      <li>« Charger un module complémentaire temporaire », puis choisis <code>extension/web-ext-artifacts/joba1-….zip</code>.</li>
+      <li>À refaire après chaque redémarrage de Firefox.</li>
+    </ol>
+    <p class="install-browser">
+      Chrome, Edge ou Brave
+    </p>
+    <ol class="install-steps">
+      <li>Ouvre <code>chrome://extensions</code>.</li>
+      <li>Active le mode développeur.</li>
+      <li>« Charger l'extension non empaquetée », puis choisis le dossier <code>extension/</code>.</li>
+    </ol>
+  </MoreInfo>
 </template>

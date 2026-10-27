@@ -181,14 +181,17 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(owner.wrapper.find("[data-test=diagnostic-link]").exists()).toBe(true);
   });
 
-  it("Compte : un seul titre par partie, « Se déconnecter partout » en pilule (0.77.2, docs/110)", async () => {
+  it("Compte : des cartes de réglages, « Se déconnecter partout » à droite de sa ligne (1.6.67)", async () => {
     await as(false);
     mockGet(false);
     const { wrapper } = await mountSettings("compte");
-    const titles = wrapper.findAll("[data-test=settings-card] legend, [data-test=settings-card] h3").map((t) => t.text());
+    expect(wrapper.find("[data-test=settings-card] fieldset").exists()).toBe(false);
+    const titles = wrapper.findAll("[data-test=settings-card] .setting-row-title").map((t) => t.text());
     expect(titles.filter((t) => t === "Connexion")).toHaveLength(1);
     expect(titles).not.toContain("Compte");
-    expect(wrapper.find("[data-test=logout-all]").classes()).toContain("pill");
+    const logout = wrapper.find("[data-test=logout-all]");
+    expect(logout.element.closest(".setting-row-control")).not.toBeNull();
+    expect(logout.classes()).toContain("secondary");
   });
 
   it("compte invité : la formule plutôt qu'un plafond en francs, ni Plateforme ni profils d'essai", async () => {

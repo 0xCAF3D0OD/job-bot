@@ -42,20 +42,44 @@ function plan(over: Record<string, unknown> = {}, letters = 2) {
 const router = () => createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
 
 describe("la formule", () => {
-  it("Essentiel : une ligne par usage, quand ça repart, ce que Plus ajoute", async () => {
+  it("Essentiel : une ligne d'en-tête, une ligne par usage, ce que Plus ajoute", async () => {
     GET.mockResolvedValue({ data: plan() });
     await usePlan().refresh();
     const wrapper = mount(PlanPanel, { global: { plugins: [router()] } });
     await flushPromises();
-    expect(wrapper.find("[data-test=plan-name]").text()).toContain("Essentiel, gratuite");
-    expect(wrapper.find("[data-test=plan-score]").text()).toBe("Offres notées37 sur 150");
+    const name = wrapper.find("[data-test=plan-name]");
+    expect(name.find(".setting-row-title").text()).toBe("Formule Essentiel");
+    // Quand les compteurs repartent, dans la phrase de l'en-tête.
+    expect(name.find(".setting-row-description").text()).toBe("Gratuite : seule l'IA a des limites, remises à zéro le 1er novembre.");
+    // Le compteur à droite de sa ligne, la jauge cachée aux lecteurs d'écran.
+    const score = wrapper.find("[data-test=plan-score]");
+    expect(score.find(".setting-row-title").text()).toBe("Offres notées");
+    expect(score.find(".setting-row-control").text()).toBe("37 sur 150");
     expect(wrapper.find("[data-test=plan-letter] .plan-usage-gauge").attributes("style")).toContain("--p: 20");
-    expect(wrapper.find("[data-test=plan-resets]").text()).toBe("Les compteurs repartent le 1er novembre.");
-    expect(wrapper.find("[data-test=plan-plus]").text()).toContain("Plus · 7 CHF par mois");
-    expect(wrapper.find("[data-test=plan-plus]").text()).toContain("60 lettres");
+    expect(wrapper.find("[data-test=plan-letter] .plan-usage-gauge").attributes("aria-hidden")).toBe("true");
+    const plus = wrapper.find("[data-test=plan-plus]");
+    expect(plus.find(".setting-row-title").text()).toBe("Plus · 7 CHF par mois");
+    expect(plus.text()).toContain("60 lettres");
     // Le paiement pas encore ouvert : pas de bouton.
-    expect(wrapper.find("[data-test=plan-buy-note]").text()).toBe("Le paiement arrive bientôt.");
+    expect(plus.find(".setting-row-description").text()).toContain("Le paiement arrive bientôt.");
     expect(wrapper.find("[data-test=plan-buy]").exists()).toBe(false);
+  });
+
+  it("le modèle des Réglages (1.6.67) : des cartes de lignes, ni fieldset ni « Enregistrer »", async () => {
+    GET.mockResolvedValue({ data: plan({ billing_available: true }) });
+    await usePlan().refresh();
+    const wrapper = mount(PlanPanel, { global: { plugins: [router()] } });
+    await flushPromises();
+    expect(wrapper.findAll(".setting-card")).toHaveLength(2);
+    // En-tête + cinq usages dans la première carte ; la ligne Plus dans la seconde.
+    expect(wrapper.find("[data-test=plan-panel]").findAll(".setting-row")).toHaveLength(6);
+    expect(wrapper.find("fieldset").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Enregistrer");
+    // « Passer à Plus » est l'action à droite de sa ligne ; les conditions juste dessous, dans la même carte.
+    const buy = wrapper.find("[data-test=plan-plus] .setting-row-control [data-test=plan-buy]");
+    expect(buy.exists()).toBe(true);
+    expect(buy.attributes("aria-describedby")).toContain("plan-terms");
+    expect(wrapper.find("[data-test=plan-plus] + .setting-row-form [data-test=plan-accept]").exists()).toBe(true);
   });
 
   it("les descriptions au survol : le compteur pour une personne invitée, le coût pour l'exploitant", async () => {
@@ -124,7 +148,9 @@ describe("le paiement de Plus (docs/125 §6)", () => {
     expect(POST).toHaveBeenCalledWith("/api/billing/sync");
     expect(wrapper.find("[data-test=plan-message]").text()).toBe("Merci : Plus est actif jusqu'au 25 novembre.");
     expect(r.currentRoute.value.query.paiement).toBeUndefined();
-    expect(wrapper.find("[data-test=plan-paid]").text()).toBe("Plus jusqu'au 25 novembre, renouvelé chaque mois.");
+    expect(wrapper.find("[data-test=plan-paid] .setting-row-title").text()).toBe("Plus jusqu'au 25 novembre");
+    expect(wrapper.find("[data-test=plan-paid] .setting-row-description").text()).toBe("Renouvelé chaque mois, sans engagement.");
+    expect(wrapper.find("[data-test=plan-paid] .setting-row-control [data-test=plan-cancel]").exists()).toBe(true);
     expect(wrapper.find("[data-test=plan-payments]").text()).toContain("22 octobre 2026");
     expect(wrapper.find("[data-test=plan-payments]").text()).toContain("7,00 CHF");
     await wrapper.find("[data-test=plan-cancel]").trigger("click");

@@ -809,13 +809,14 @@ onUnmounted(() => spy?.disconnect());
           title="Compte"
           :value="summary.compte"
           :active="active === 'compte'"
+          cards
         >
-          <!-- Chaque panneau porte son titre (Profils d'essai, Connexion, Données personnelles) :
-               pas de second titre au-dessus (docs/108, 0.77.2). -->
+          <!-- Chaque panneau porte ses cartes (1.6.67) : la formule, les profils d'essai, la connexion,
+               les données personnelles. -->
           <PlanPanel />
           <ProfilesPanel v-if="owner" />
-          <SessionPanel class="settings-next-card" />
-          <AccountDataPanel class="settings-next-card" />
+          <SessionPanel />
+          <AccountDataPanel />
         </SettingsSection>
 
         <SettingsSection
@@ -823,10 +824,10 @@ onUnmounted(() => spy?.disconnect());
           title="Agenda et extension"
           :value="summary.outils"
           :active="active === 'outils'"
+          cards
         >
-          <!-- Chaque outil a déjà son titre dans sa carte. -->
           <AgendaPanel />
-          <ExtensionPanel class="settings-next-card" />
+          <ExtensionPanel />
         </SettingsSection>
 
         <SettingsSection
@@ -835,6 +836,7 @@ onUnmounted(() => spy?.disconnect());
           title="Administration"
           :value="summary.plateforme"
           :active="active === 'plateforme'"
+          cards
         >
           <PlatformPanel />
         </SettingsSection>
