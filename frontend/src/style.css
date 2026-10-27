@@ -2877,9 +2877,11 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .tab-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); background: var(--surface); border-top: 1px solid var(--border); }
   .tab-bar a { flex: 1; display: grid; place-items: center; align-content: center; gap: var(--space-1); color: var(--muted); font-size: var(--font-caption); text-decoration: none; }
   .tab-bar a.active { color: var(--accent); font-weight: var(--weight-semibold); }
-  .tab-bar-icon { position: relative; display: grid; place-items: center; }
+  /* L'onglet actif : une pastille de 64 × 32 derrière l'icône (1.6.58, indicateur actif de Material 3). */
+  .tab-bar-icon { position: relative; display: grid; place-items: center; width: 4rem; height: 2rem; border-radius: var(--radius-pill); }
+  .tab-bar a.active .tab-bar-icon { background: var(--accent-soft); }
   .tab-bar-icon .icon { width: 1.35rem; height: 1.35rem; }
-  .tab-bar-count { position: absolute; top: -0.4rem; left: calc(50% + 0.3rem); }
+  .tab-bar-count { position: absolute; top: -0.1rem; left: calc(50% + 0.3rem); }
   :root:has(.tab-bar) main { padding-bottom: calc(var(--tabbar-h) + var(--space-6) + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) .assistant-fab { bottom: calc(var(--tabbar-h) + 0.9rem + env(safe-area-inset-bottom)); }
   :root:has(.tab-bar) main .mobile-dock { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: var(--space-3); }
@@ -3757,20 +3759,25 @@ main:focus { outline: none; }
   .segmented > button, .score-choice > .pill { transition: none; }
 }
 
-/* --- En-tête (1.6.46, planche Figma « Planche · Revue 1.6.46 ») ---
-   Ordinateur : le menu sans bulle ; l'onglet actif en accent et en 600, souligné de 3 px collé au bas de
-   l'en-tête ; au survol, seul le texte fonce ; rien ne glisse (Apple HIG : pas de mouvement sur une
-   interaction fréquente). L'en-tête garde 73 px : --control-h + 2 × --space-4 et la ligne du bas. */
+/* --- En-tête (1.6.46, planche Figma « Planche · Revue 1.6.46 » ; sélection, 1.6.58, « Planche · 1. Sélection
+   des onglets ») ---
+   Ordinateur : l'onglet actif dans une pastille teintée (--accent-soft, texte accent en 600), à la hauteur des
+   contrôles ; pas de pastille pleine, qui imiterait le bouton principal (§3). Au survol, un fond neutre léger,
+   sans accent ; l'actif garde sa pastille. Rien ne glisse (Apple HIG : pas de mouvement sur une interaction
+   fréquente). L'en-tête garde 73 px : --control-h + 2 × --space-4 et la ligne du bas. */
 @media (min-width: 821px) {
   .topbar-inner { padding-block: 0; height: calc(var(--control-h) + 2 * var(--space-4)); }
   .topbar nav.main-nav { align-self: stretch; display: flex; justify-content: center; }
-  .topbar .nav { height: 100%; align-items: stretch; }
+  .topbar .nav { height: 100%; align-items: center; gap: var(--space-2); }
   .topbar .nav li { display: flex; }
-  .topbar .nav a { position: relative; display: inline-flex; align-items: center; border: 0; padding: 0; color: var(--muted); font-weight: var(--weight-regular); transition: color 150ms; }
-  .topbar .nav a:hover { color: var(--text); }
-  .topbar .nav a.router-link-active { color: var(--accent); font-weight: var(--weight-semibold); }
-  .topbar .nav a.router-link-active::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: var(--radius-pill) var(--radius-pill) 0 0; background: var(--accent); }
-  .topbar .nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+  .topbar .nav a {
+    display: inline-flex; align-items: center; box-sizing: border-box; height: var(--control-h); padding: 0 var(--space-5);
+    border: 0; border-radius: var(--radius-pill); color: var(--muted); font-weight: var(--weight-regular); transition: background-color 150ms;
+  }
+  .topbar .nav a .with-icon { gap: var(--space-2); }
+  .topbar .nav a:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .topbar .nav a.router-link-active { background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-semibold); }
+  .topbar .nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   /* La ligne du bas : absente en haut de page, elle revient quand le contenu défile dessous (§6). */
   .topbar { border-bottom-color: transparent; transition: border-bottom-color 250ms; }
   .topbar.scrolled { border-bottom-color: var(--border); }
