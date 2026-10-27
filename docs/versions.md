@@ -26,5 +26,7 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.50 | Pages | Revue 1.6.46 : l'écran de tri des offres du jour (`/aujourdhui/tri`), la bande d'action d'Offres « Commencer le tri » | `feat/1.6.50-tri` | fusionnée (#360) |
 | 1.6.51 | Pages | Revue 1.6.46 : Aujourd'hui en une colonne (la bande « Tri du jour. », « À faire aujourd'hui. », « Mois ORP. », « À retenir. ») | `feat/1.6.51-aujourdhui` | fusionnée (#361) |
 | 1.6.52 | Pages | Aujourd'hui, Mois ORP : sans la tuile du visage, le mois plus grand (choix de Kevin) | `fix/1.6.52-mois-orp` | fusionnée (#362) |
-| 1.6.53 | Pages | Offres sans bande d'action (décision de Kevin : la liste est déjà la tâche, le nombre est dans l'onglet et la conclusion) | `fix/1.6.53-offres-sans-bande` | PR ouverte |
+| 1.6.53 | Pages | Offres sans bande d'action (décision de Kevin : la liste est déjà la tâche, le nombre est dans l'onglet et la conclusion) | `fix/1.6.53-offres-sans-bande` | fusionnée (#363) |
 | 1.6.54 | Design | Règle §3 : la bande ne répète jamais le contenu de la page (pas de bande sur Offres) | `docs/1.6.54-bande-sans-repetition` | PR ouverte |
+| 1.6.55 | Pages | Offres : barre d'outils (recherche, « Filtrer » en panneau ou feuille, « + Ajouter »), filtres actifs en pastilles, sans colonne de filtres | `feat/1.6.55-barre-outils` | en cours |
+| 1.6.56 | Pages | Test du retour d'entretien indépendant de la date du jour (signalé par Design) | `fix/1.6.56-test-retour` | PR ouverte |

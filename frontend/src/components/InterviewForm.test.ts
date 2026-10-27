@@ -74,7 +74,10 @@ describe("Carte et panneau d'une candidature, retour d'entretien (docs/23 §3, d
   });
 
   it("retour fait : résumé d'une ligne et « Voir le retour » dans le panneau", async () => {
-    const interview = { id: 9, application_id: 3, kind: "technique", held_at: "2026-10-06", rating: 4, next_step: "reponse", next_step_at: "2026-10-20" };
+    // Le retour porte le jour de l'entretien, calculé comme lui depuis la date du jour : écrit en dur
+    // (« 2026-10-06 »), il ne correspondait à l'entretien « il y a 20 jours » que le 26.10.
+    const heldAt = application.interview_at.slice(0, 10);
+    const interview = { id: 9, application_id: 3, kind: "technique", held_at: heldAt, rating: 4, next_step: "reponse", next_step_at: "2026-10-20" };
     const wrapper = mount(ApplicationPanel, {
       props: { application: { ...application, interviews: [interview] } as never },
       global: { stubs: { teleport: true, ContactsPanel: true } },
