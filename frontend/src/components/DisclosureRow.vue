@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from "vue";
 
+import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 
 // Ligne dépliable (docs/32 §2.1), au style des filtres des offres : le titre, un résumé en
 // gris, un chevron qui tourne ; le contenu glisse, souligné d'un trait vertical. Dans un
-// même groupe, une seule ligne ouverte à la fois.
-const props = withDefaults(defineProps<{ title: string; value?: string; group?: string; startOpen?: boolean }>(), {
-  value: "",
-  group: "",
-  startOpen: false,
-});
+// même groupe, une seule ligne ouverte à la fois. En option (1.6.61) : une icône dans une pastille
+// devant le titre, et une phrase en gris sous le titre (l'enseignement, visible replié).
+const props = withDefaults(
+  defineProps<{ title: string; value?: string; description?: string; icon?: IconName; group?: string; startOpen?: boolean }>(),
+  {
+    value: "",
+    description: "",
+    icon: undefined,
+    group: "",
+    startOpen: false,
+  },
+);
 const emit = defineEmits<{ toggle: [open: boolean] }>();
 
 const id = `disclosure-${Math.random().toString(36).slice(2, 8)}`;
@@ -41,7 +48,25 @@ const openInGroup = reactive<Record<string, string | null>>({});
       :aria-controls="id"
       @click="toggle"
     >
-      <span class="disclosure-title">{{ title }}</span>
+      <span
+        v-if="icon"
+        class="disclosure-icon"
+        aria-hidden="true"
+      ><AppIcon :name="icon" /></span>
+      <span
+        v-if="description"
+        class="disclosure-text"
+      >
+        <span class="disclosure-title">{{ title }}</span>
+        <span
+          class="disclosure-description"
+          data-test="disclosure-description"
+        >{{ description }}</span>
+      </span>
+      <span
+        v-else
+        class="disclosure-title"
+      >{{ title }}</span>
       <span
         v-if="value"
         class="disclosure-value"

@@ -1370,6 +1370,13 @@ button, .button-link { max-width: 100%; }
 .disclosure-list > .disclosure:has(> .disclosure-row:focus-visible) { outline-offset: -2px; }
 /* Le titre en 600, ouvert ou fermé (1.6.20, comme le composant Repliable de Figma). */
 .disclosure-title { flex: 0 1 auto; font-weight: var(--weight-semibold); }
+/* Repliable avec icône et phrase (1.6.61) : la pastille, puis le titre et l'enseignement en gris. */
+.disclosure-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; width: var(--control-h); height: var(--control-h); border-radius: var(--radius-pill); background: var(--panel); color: var(--text); }
+.disclosure-icon .icon { width: 20px; height: 20px; }
+.disclosure-text { display: grid; gap: var(--space-1); flex: 1 1 auto; min-width: 0; }
+.disclosure-text .disclosure-title { font-size: var(--font-body); }
+.disclosure-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
+.disclosure-row:has(.disclosure-text) { gap: var(--space-4); }
 /* Le résumé n'est jamais coupé (1.6.24) : trop long, il passe à la ligne entre deux mots, aligné à droite ;
    jamais plus étroit que son mot le plus long (largeur minimale automatique). */
 .disclosure-value { flex: 1 1 0; margin-left: auto; color: var(--muted); font-size: var(--font-small); text-align: right; }

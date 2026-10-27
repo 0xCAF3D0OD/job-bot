@@ -29,6 +29,27 @@ describe("Ligne dépliable (docs/32 §2.1)", () => {
   });
 });
 
+describe("Repliable avec icône et phrase (1.6.61)", () => {
+  it("la pastille est décorative ; la phrase reste lisible repliée et fait partie du nom du bouton", () => {
+    const wrapper = mount(DisclosureRow, {
+      props: { title: "Parcours", description: "Le plus de pertes : entre les réponses et les entretiens", icon: "trend" },
+      slots: { default: "<p>détail</p>" },
+    });
+    expect(wrapper.find(".disclosure-icon").attributes("aria-hidden")).toBe("true");
+    expect(wrapper.find("[data-test=disclosure-description]").text()).toBe("Le plus de pertes : entre les réponses et les entretiens");
+    expect(wrapper.find("button").text()).toContain("Parcours");
+    expect(wrapper.find("button").text()).toContain("Le plus de pertes");
+    expect(wrapper.find("button").attributes("aria-expanded")).toBe("false");
+  });
+
+  it("sans icône ni phrase : la ligne d'avant, inchangée", () => {
+    const wrapper = mount(DisclosureRow, { props: { title: "Un", value: "2 lignes" } });
+    expect(wrapper.find(".disclosure-icon").exists()).toBe(false);
+    expect(wrapper.find(".disclosure-text").exists()).toBe(false);
+    expect(wrapper.find(".disclosure-title").text()).toBe("Un");
+  });
+});
+
 describe("Panneau latéral (docs/32 §2.2)", () => {
   it("se ferme avec Échap, le × ou un clic à côté", async () => {
     const wrapper = mount(SidePanel, {
