@@ -1309,7 +1309,7 @@ button, .button-link { max-width: 100%; }
 /* L'action d'un repliable ouvert, à droite de sa ligne de titre (docs/119). */
 .disclosure:has(> .disclosure-actions) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .disclosure:has(> .disclosure-actions) > .disclosure-panel { grid-column: 1 / -1; }
-.disclosure-actions { padding-right: var(--space-4); }
+.disclosure-actions { align-self: stretch; display: flex; align-items: center; padding-right: var(--space-4); }
 .disclosure-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .disclosure-list > .disclosure { border: 0; border-radius: 0; margin: 0; }
 .disclosure-list > .disclosure + .disclosure { border-top: 1px solid var(--divider); }
@@ -1317,9 +1317,14 @@ button, .button-link { max-width: 100%; }
 .disclosure-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
 .disclosure-row:hover .disclosure-title, .disclosure.open .disclosure-title { color: var(--accent); }
 /* Ouvert, le titre est déjà en accent : le survol teinte la ligne (1.6.4). */
-.disclosure.open > .disclosure-row:hover { background: var(--accent-soft); border-top-left-radius: inherit; border-top-right-radius: inherit; }
+/* La teinte couvre toute la ligne de titre, « ⋯ » compris (dernier élément à droite), que
+   le pointeur soit sur le titre ou sur le menu. */
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > :is(.disclosure-row, .disclosure-actions) { background: var(--accent-soft); }
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-left-radius: inherit; border-top-right-radius: inherit; }
+.disclosure.open:has(> .disclosure-actions):has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row { border-top-right-radius: 0; }
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-actions { border-top-right-radius: inherit; }
 /* Sur la teinte, le résumé gris tombait à 4,3:1 : il passe à l'accent (6,9:1). */
-.disclosure.open > .disclosure-row:hover .disclosure-value { color: var(--accent); }
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row .disclosure-value { color: var(--accent); }
 /* Le focus entoure toute la carte : autour de la seule ligne, l'anneau passait sur le contenu ouvert
    (1.6.4). Dans une liste, il reste à l'intérieur pour ne pas mordre sur la voisine. */
 .disclosure-row:focus-visible { outline: none; }
@@ -1336,7 +1341,7 @@ button, .button-link { max-width: 100%; }
 .disclosure-description { color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
 .disclosure-row:has(.disclosure-text) { gap: var(--space-4); }
 /* Ouvert et survolé, le fond passe à --accent-soft : la phrase passe en --text pour garder 4,5:1 (WCAG 1.4.3, 1.6.63). */
-.disclosure.open > .disclosure-row:hover .disclosure-description { color: var(--text); }
+.disclosure.open:has(> :is(.disclosure-row, .disclosure-actions):hover) > .disclosure-row .disclosure-description { color: var(--text); }
 /* Le résumé n'est jamais coupé (1.6.24) : trop long, il passe à la ligne entre deux mots, aligné à droite ;
    jamais plus étroit que son mot le plus long (largeur minimale automatique). */
 .disclosure-value { flex: 1 1 0; margin-left: auto; color: var(--muted); font-size: var(--font-small); text-align: right; }
