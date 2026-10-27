@@ -4,21 +4,30 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api, type Today } from "../api/client";
 import type { components } from "../api/schema";
+import ActionBand from "../components/ActionBand.vue";
 import AppIcon from "../components/AppIcon.vue";
+import BilanCompare from "../components/bilan/BilanCompare.vue";
+import BilanFunnel from "../components/bilan/BilanFunnel.vue";
+import BilanInterviews from "../components/bilan/BilanInterviews.vue";
+import BilanMonths from "../components/bilan/BilanMonths.vue";
 import DashTile from "../components/dash/DashTile.vue";
-import PeriodChart from "../components/dash/PeriodChart.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { formatMonth, plural, shiftMonth } from "../format";
 import CopyLabel from "../components/CopyLabel.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
-import InterviewInsights from "../components/InterviewInsights.vue";
 import FaceState from "../components/FaceState.vue";
-import RhythmWeeks from "../components/RhythmWeeks.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
-import HoverNote from "../components/HoverNote.vue";
 import IconButton from "../components/IconButton.vue";
-import { firstTime } from "../composables/useIntro";
 import { usePageReady } from "../composables/usePageTransition";
+import {
+  bestComparison,
+  bestSite,
+  conclusion,
+  interviewsLine,
+  monthLine,
+  monthName,
+  weakStep,
+} from "../bilanText";
 
 // Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP ;
 // présenté comme le tableau d'Aujourd'hui (docs/55) : tuiles, barres, cartes à bulles.
@@ -83,31 +92,7 @@ async function load(): Promise<void> {
   }
 }
 
-const STEPS = [
-  { key: "received", label: "Offres reçues", to: "/candidatures/offres" },
-  { key: "retained", label: "Gardées", to: "/candidatures/offres" },
-  { key: "applications", label: "Candidatures", to: "/candidatures/suivi" },
-  { key: "responses", label: "Réponses", to: "/candidatures/suivi" },
-  { key: "interviews", label: "Entretiens", to: "/candidatures/suivi" },
-  { key: "engagements", label: "Poste obtenu", to: "/candidatures/suivi" },
-] as const;
-
 const SUIVI = "/candidatures/suivi";
-const ICONS: Record<string, InstanceType<typeof AppIcon>["$props"]["name"]> = {
-  source: "globe",
-  score: "star",
-  contact: "user",
-  follow_up: "refresh",
-};
-
-// Les barres du parcours, à l'échelle de la plus longue (les offres reçues).
-const funnelMax = computed(() => Math.max(1, ...STEPS.map((step) => insights.value?.funnel[step.key] ?? 0)));
-function funnelWidth(n: number): string {
-  return `${Math.max(n ? 2 : 0, (n / funnelMax.value) * 100)}%`;
-}
-function rate(responses: number, total: number): string {
-  return `${total ? Math.max(responses ? 3 : 0, (responses / total) * 100) : 0}%`;
-}
 
 const tiles = computed(() => {
   const r = insights.value;
@@ -142,65 +127,60 @@ async function copy(): Promise<void> {
 
 watch(() => route.query, () => void load());
 onMounted(() => void load());
-// Les barres montent à la première ouverture (docs/60 §3).
-const intro = firstTime("bilan-funnel");
 
-// Le détail (règles §3.4) : les vues de la période, chacune dans une ligne repliable.
-type View = "funnel" | "chart" | "compare" | "weeks" | "interviews" | "orp";
-const views = computed(() => {
-  const list: { key: View; label: string }[] = [{ key: "funnel", label: "Parcours" }];
-  if (insights.value?.buckets.length) list.push({ key: "chart", label: insights.value.unit === "week" ? "Par semaine" : "Par mois" });
-  list.push({ key: "compare", label: "Ce qui marche" });
-  if (period.value !== "all") list.push({ key: "weeks", label: "Semaines" });
-  list.push({ key: "interviews", label: "Entretiens" });
-  if (period.value === "month" && insights.value?.orp_summary) list.push({ key: "orp", label: "Pour l'ORP" });
-  return list;
+// La conclusion, la bande et la phrase de chaque repliable (1.6.62, planche « 3 et 4. Bilan »).
+const summary = computed(() => (insights.value ? conclusion(insights.value, period.value) : null));
+const site = computed(() => (insights.value ? bestSite(insights.value.comparisons) : null));
+const weak = computed(() => (insights.value ? weakStep(insights.value.funnel) : null));
+// « Le résumé d'octobre à copier », « Le résumé de mai à copier ».
+const orpDescription = computed(() => {
+  const name = monthName(month.value);
+  return `Le résumé ${/^[aeiou]/.test(name) ? "d'" : "de "}${name} à copier`;
 });
+const PERIODS: { key: Period; label: string }[] = [
+  { key: "month", label: "Un mois" },
+  { key: "recent", label: "3 mois" },
+  { key: "all", label: "Tout" },
+];
 </script>
 
 <template>
   <section class="jobs-body insights">
-    <!-- La conclusion d'abord, avant la période (règles §3.2 ; annexe de l'audit : Bilan). -->
+    <!-- La conclusion (règles §3.2) : l'état général, comparé à la période d'avant ; elle ne redit pas
+         la bande (1.6.62). -->
     <p
-      v-if="insights && tiles && insights.funnel.applications > 0 && insights.headline"
-      class="bilan-headline"
+      v-if="insights && summary && insights.funnel.applications > 0"
+      class="today-sentence bilan-sentence"
       data-test="headline"
     >
-      <span class="dash-bubble small"><AppIcon name="trend" /></span>
-      <span>{{ insights.headline }}</span>
+      {{ summary.before }}<strong>{{ summary.accent }}</strong>{{ summary.after }}
     </p>
+    <!-- La bande d'action (§3) : le site qui répond le plus, et le cibler dans les alertes. Sans site
+         qui se détache, pas de bande. -->
+    <ActionBand
+      v-if="insights && site && insights.funnel.applications > 0"
+      :title="site.title"
+      :summary="site.summary"
+      :action="`Cibler ${site.label} dans mes alertes`"
+      to="/candidatures/alertes"
+    />
     <div class="insights-head">
+      <!-- La période (1.6.62) : le choix actif dans la pastille teintée de l'en-tête, sans rail. -->
       <div
-        class="segmented insights-period"
+        class="bilan-period"
         role="radiogroup"
         aria-label="Période"
       >
         <button
+          v-for="choice in PERIODS"
+          :key="choice.key"
           type="button"
           role="radio"
-          :aria-checked="period === 'recent'"
-          data-test="period-recent"
-          @click="choose('recent')"
+          :aria-checked="period === choice.key"
+          :data-test="`period-${choice.key}`"
+          @click="choose(choice.key)"
         >
-          3 derniers mois
-        </button>
-        <button
-          type="button"
-          role="radio"
-          :aria-checked="period === 'month'"
-          data-test="period-month"
-          @click="choose('month')"
-        >
-          Un mois
-        </button>
-        <button
-          type="button"
-          role="radio"
-          :aria-checked="period === 'all'"
-          data-test="period-all"
-          @click="choose('all')"
-        >
-          Tout
+          {{ choice.label }}
         </button>
       </div>
       <div
@@ -309,141 +289,71 @@ const views = computed(() => {
           past
         />
       </div>
-      <!-- Le détail replié (règles §3.4 ; annexe de l'audit : Bilan) : une ligne par vue, toutes
-           fermées ; le sélecteur faisait un troisième niveau d'onglets (§2). -->
+      <!-- Le détail replié (règles §3.4, 1.6.62) : chaque ligne dit déjà l'essentiel ; on déplie pour
+           le graphique (NN/g, divulgation progressive). -->
       <section
         v-if="insights.funnel.applications > 0"
         class="bilan-detail"
         data-test="bilan-detail"
       >
-        <h2 class="section-title first">
-          Le détail
-        </h2>
         <DisclosureRow
-          v-for="choice in views"
-          :key="choice.key"
-          :title="choice.label"
-          :data-test="`detail-${choice.key}`"
+          title="Parcours"
+          icon="trend"
+          :description="weak ? `Le plus de pertes : ${weak.between}` : 'Les six étapes de ta recherche'"
+          data-test="detail-funnel"
         >
-          <section
-            v-if="choice.key === 'funnel'"
-            class="dash-card"
-            data-test="funnel"
-          >
-            <ol
-              :class="['bilan-funnel', { intro }]"
-              aria-label="Parcours"
-            >
-              <li
-                v-for="step in STEPS"
-                :key="step.key"
-              >
-                <RouterLink
-                  :to="step.to"
-                  class="bilan-step"
-                  :data-test="`funnel-${step.key}`"
-                >
-                  <span class="bilan-step-label">{{ step.label }}</span>
-                  <span class="bilan-track">
-                    <span
-                      class="bilan-bar"
-                      :style="{ width: funnelWidth(insights.funnel[step.key]) }"
-                    />
-                  </span>
-                  <strong>{{ insights.funnel[step.key] }}</strong>
-                </RouterLink>
-              </li>
-            </ol>
-          </section>
-          <PeriodChart
-            v-else-if="choice.key === 'chart' && insights.buckets.length"
-            :buckets="insights.buckets"
-            :unit="insights.unit"
+          <BilanFunnel :funnel="insights.funnel" />
+        </DisclosureRow>
+        <DisclosureRow
+          title="Ce qui marche"
+          icon="star"
+          :description="bestComparison(insights.comparisons, !!site)"
+          data-test="detail-compare"
+        >
+          <BilanCompare :comparisons="insights.comparisons" />
+        </DisclosureRow>
+        <DisclosureRow
+          v-if="insights.months.length"
+          title="Par mois"
+          icon="calendar"
+          :description="monthLine(insights.months, insights.month_target, new Date())"
+          data-test="detail-months"
+        >
+          <BilanMonths
+            :months="insights.months"
+            :target="insights.month_target"
           />
-          <section
-            v-else-if="choice.key === 'compare'"
-            class="dash-card bilan-compare"
-            data-test="bilan-compare"
-          >
-            <div
-              v-for="comparison in insights.comparisons"
-              :key="comparison.key"
-              class="bilan-compare-part"
-              :data-test="`comparison-${comparison.key}`"
-            >
-              <header class="dash-card-head">
-                <h3>
-                  <span class="dash-bubble small"><AppIcon :name="ICONS[comparison.key] ?? 'search'" /></span>
-                  <HoverNote text="Un refus compte comme une réponse ; « Sans réponse », non.">
-                    {{ comparison.title }}
-                  </HoverNote>
-                </h3>
-              </header>
-              <ul
-                v-if="comparison.groups.length"
-                class="bilan-groups"
-              >
-                <li
-                  v-for="group in comparison.groups"
-                  :key="group.key"
-                  :class="{ few: !group.enough }"
-                  :data-test="`group-${group.key}`"
-                >
-                  <span class="bilan-group-label">{{ group.label }}</span>
-                  <span
-                    class="bilan-track"
-                    aria-hidden="true"
-                  >
-                    <span
-                      class="bilan-bar"
-                      :style="{ width: rate(group.responses, group.total) }"
-                    />
-                  </span>
-                  <span class="bilan-count">{{ group.responses }} sur {{ group.total }}</span>
-                  <span
-                    v-if="!group.enough"
-                    class="bilan-few"
-                  >trop peu pour conclure</span>
-                </li>
-              </ul>
-              <p
-                v-else
-                class="hint"
-              >
-                Rien à comparer pour l'instant.
-              </p>
-            </div>
-          </section>
-          <RhythmWeeks
-            v-else-if="choice.key === 'weeks' && period !== 'all'"
-            :month="month"
-          />
-          <InterviewInsights
-            v-else-if="choice.key === 'interviews'"
-            class="dash-card"
-            bare
-          />
-          <section
-            v-else-if="choice.key === 'orp' && period === 'month' && insights.orp_summary"
-            class="dash-card bilan-summary"
+        </DisclosureRow>
+        <DisclosureRow
+          title="Entretiens"
+          icon="user"
+          :description="interviewsLine(insights.interviews)"
+          data-test="detail-interviews"
+        >
+          <BilanInterviews :lines="insights.interviews" />
+        </DisclosureRow>
+        <!-- « Pour l'ORP » (période « Un mois ») : le résumé du mois à copier pour le rendez-vous. -->
+        <DisclosureRow
+          v-if="period === 'month' && insights.orp_summary"
+          title="Pour l'ORP"
+          icon="file"
+          :description="orpDescription"
+          data-test="detail-orp"
+        >
+          <div
+            class="bilan-summary"
             data-test="orp-summary"
           >
-            <header class="dash-card-head">
-              <h2>
-                <span class="dash-bubble small"><AppIcon name="file" /></span>
-                Résumé pour l'ORP
-              </h2>
-              <button
-                type="button"
-                class="secondary small"
-                data-test="orp-summary-copy"
-                @click="copy"
-              >
-                <CopyLabel :done="copied" />
-              </button>
-            </header>
             <p>{{ insights.orp_summary }}</p>
-          </section>
+            <button
+              type="button"
+              class="secondary small"
+              data-test="orp-summary-copy"
+              @click="copy"
+            >
+              <CopyLabel :done="copied" />
+            </button>
+          </div>
         </DisclosureRow>
       </section>
     </div>

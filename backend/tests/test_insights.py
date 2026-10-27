@@ -9,7 +9,15 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
 from jobbot.api.app import create_app
-from jobbot.db.models import Application, Contact, Evaluation, Offer, OfferLink
+from jobbot.db.models import (
+    Application,
+    Contact,
+    Evaluation,
+    Interview,
+    Offer,
+    OfferLink,
+    Setting,
+)
 from jobbot.followups.service import local_today
 from jobbot.insights.service import (
     Comparison,
@@ -277,3 +285,55 @@ async def test_filter_summary(api: AsyncClient, runtime: Runtime) -> None:
         ("langue", 1),
         ("taux d'activité", 1),
     ]
+
+
+async def test_bilan_previous_period_months_and_interviews(
+    api: AsyncClient, runtime: Runtime
+) -> None:
+    """Bilan 1.6.62 : la période d'avant, les mois depuis la première activité, les entretiens."""
+    now = datetime.now(UTC)
+    today = local_today()
+    # Une candidature répondue il y a quatre mois : la période d'avant les « 3 mois ».
+    async with runtime.sessionmaker.begin() as session:
+        old = today - timedelta(days=125)
+        session.add(
+            Application(
+                sent_at=old,
+                method="electronique",
+                company="Ancienne SA",
+                job_title="SRE",
+                orp_month=f"{old:%Y-%m}",
+                status="refus",
+                status_at=old + timedelta(days=3),
+            )
+        )
+    await add(runtime, "Avenir SA", interview_at=now + timedelta(days=2), status="entretien")
+    passed = await add(
+        runtime, "Passé SA", interview_at=now - timedelta(days=3), status="entretien"
+    )
+    await add(runtime, "Refus SA", interview_at=now - timedelta(days=5), status="refus")
+    async with runtime.sessionmaker.begin() as session:
+        session.add(
+            Interview(
+                application_id=passed, kind="technique", held_at=today - timedelta(days=3), rating=4
+            )
+        )
+        await session.merge(Setting(key="orp_monthly_target", value="10"))
+
+    report = (await api.get("/api/insights")).json()
+    assert report["previous_responses"] == 1
+    months = [m["month"] for m in report["months"]]
+    assert months[0] == f"{today - timedelta(days=125):%Y-%m}"
+    assert months[-1] == MONTH
+    assert report["months"][-1]["count"] == 3
+    assert report["month_target"] == 10
+    assert [(i["company"], i["state"]) for i in report["interviews"]] == [
+        ("Avenir SA", "upcoming"),
+        ("Passé SA", "rated"),
+        ("Refus SA", "rejected"),
+    ]
+    assert report["interviews"][1]["kind"] == "technique"
+    assert report["interviews"][1]["rating"] == 4
+    assert (await api.get("/api/insights", params={"period": "all"})).json()[
+        "previous_responses"
+    ] is None

@@ -18,6 +18,7 @@ from jobbot.db.models import (
     ApplicationStatus,
     Contact,
     Evaluation,
+    Interview,
     Offer,
     OfferLink,
     Profile,
@@ -440,6 +441,108 @@ async def insights(
             for f in facts
         ),
     )
+
+
+async def first_activity(session: AsyncSession) -> date | None:
+    """Le premier jour d'activité du compte (1.6.62) : la première offre reçue ou la première
+    candidature. Il borne « Par mois » et « Mois précédents » : rien avant l'inscription."""
+    first_offer = await session.scalar(
+        select(func.min(Offer.first_seen_at)).where(Offer.duplicate_of.is_(None))
+    )
+    first_sent = await session.scalar(select(func.min(Application.sent_at)))
+    days = [first_sent] if first_sent else []
+    if first_offer is not None:
+        days.append(first_offer.astimezone(LOCAL_TZ).date())
+    return min(days) if days else None
+
+
+async def responses(session: AsyncSession, start: date, end: date) -> int:
+    """Les réponses aux candidatures envoyées entre deux dates (la période d'avant, 1.6.62)."""
+    return sum(f.answered for f in await _facts(session, start, end))
+
+
+@dataclass
+class MonthCount:
+    month: str
+    count: int
+
+
+async def months(session: AsyncSession, first: date | None, today: date) -> list[MonthCount]:
+    """« Par mois » (1.6.62) : les candidatures de chaque mois ORP, du mois de la première activité
+    au mois en cours, les 12 derniers au plus."""
+    start = _month_start(first or today)
+    found: list[date] = []
+    month = start
+    while month <= today:
+        found.append(month)
+        month = _next_month(month)
+    keys = [f"{m:%Y-%m}" for m in found[-MAX_MONTHS:]]
+    counts = dict(
+        (
+            await session.execute(
+                select(Application.orp_month, func.count())
+                .where(Application.orp_month.in_(keys))
+                .group_by(Application.orp_month)
+            )
+        ).all()
+    )
+    return [MonthCount(key, int(counts.get(key, 0))) for key in keys]
+
+
+@dataclass
+class InterviewLine:
+    application_id: int
+    company: str
+    day: date
+    kind: str | None
+    # « upcoming » à venir, « rejected » pas retenu, « rated » ressenti noté, « done » passé.
+    state: str
+    rating: int | None = None
+
+
+async def interview_lines(
+    session: AsyncSession, start: date | None, end: date
+) -> list[InterviewLine]:
+    """Les entretiens de la période (1.6.62), le plus récent d'abord : date, entreprise, type, état.
+    Un entretien à venir compte, même après la fin de la période."""
+    now = datetime.now(UTC)
+    query = select(Application).where(Application.interview_at.is_not(None))
+    if start is not None:
+        query = query.where(Application.interview_at >= _start_of(start))
+    applications = list(await session.scalars(query.order_by(Application.interview_at.desc())))
+    latest: dict[int, Interview] = {}
+    for found in await session.scalars(
+        select(Interview)
+        .where(Interview.application_id.in_([a.id for a in applications]))
+        .order_by(Interview.held_at, Interview.id)
+    ):
+        latest[found.application_id] = found
+    lines = []
+    for application in applications:
+        at = application.interview_at
+        assert at is not None
+        if at > now:
+            state = "upcoming"
+        elif at.astimezone(LOCAL_TZ).date() > end:
+            continue
+        elif application.status == ApplicationStatus.REFUS:
+            state = "rejected"
+        elif application.id in latest:
+            state = "rated"
+        else:
+            state = "done"
+        review = latest.get(application.id)
+        lines.append(
+            InterviewLine(
+                application_id=application.id,
+                company=application.company,
+                day=at.astimezone(LOCAL_TZ).date(),
+                kind=review.kind if review else None,
+                state=state,
+                rating=review.rating if review and state == "rated" else None,
+            )
+        )
+    return lines
 
 
 def _count(n: int, singular: str, plural: str) -> str:

@@ -4924,6 +4924,27 @@ export interface components {
             /** Employer Feedback */
             employer_feedback?: string | null;
         };
+        /** InterviewLineOut */
+        InterviewLineOut: {
+            /** Application Id */
+            application_id: number;
+            /** Company */
+            company: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Kind */
+            kind: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "upcoming" | "rejected" | "rated" | "done";
+            /** Rating */
+            rating?: number | null;
+        };
         /** InterviewOut */
         InterviewOut: {
             /** Kind */
@@ -5524,6 +5545,13 @@ export interface components {
             training_id: number | null;
             /** Training Title */
             training_title: string | null;
+        };
+        /** MonthCountOut */
+        MonthCountOut: {
+            /** Month */
+            month: string;
+            /** Count */
+            count: number;
         };
         /** MonthFactsOut */
         MonthFactsOut: {
@@ -6974,6 +7002,20 @@ export interface components {
              * @default 0
              */
             interviews_upcoming: number;
+            /** Previous Responses */
+            previous_responses?: number | null;
+            /**
+             * Months
+             * @default []
+             */
+            months: components["schemas"]["MonthCountOut"][];
+            /** Month Target */
+            month_target?: number | null;
+            /**
+             * Interviews
+             * @default []
+             */
+            interviews: components["schemas"]["InterviewLineOut"][];
         };
         /** SegmentOut */
         SegmentOut: {
