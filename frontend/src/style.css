@@ -4061,7 +4061,7 @@ html.filters-open { overflow: hidden; }
 .gs-group { padding: var(--space-2) 0; }
 .gs-group + .gs-group, .gs-group + .gs-follow, .gs-empty + .gs-follow { border-top: 1px solid var(--divider); }
 .gs-group-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; font-size: var(--font-small); }
-.gs-group-title, .gs-more { color: var(--muted); }
+.gs-group-title { color: var(--muted); }
 .gs-row { display: flex; align-items: center; gap: var(--space-4); margin: 0 calc(var(--space-2) * -1); padding: var(--space-2); border-radius: var(--radius-sm); cursor: pointer; }
 .gs-row:hover, .gs-row.active { background: color-mix(in srgb, var(--accent) 5%, transparent); }
 .gs-row:hover strong, .gs-row.active strong { color: var(--accent); }
@@ -4092,3 +4092,17 @@ html.filters-open { overflow: hidden; }
 .global-search-box.sheet .global-search-input-wrap input { width: 100%; }
 .global-search-box.sheet .global-search-panel { position: static; width: auto; max-width: none; max-height: none; overflow: visible; padding: var(--space-2) 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
 html.search-open { overflow: hidden; }
+
+/* --- Suivi, le filtre par mots (décision de Kevin, 27.10) --- le champ et « Tous les mois » sur une ligne. */
+.suivi-list-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); margin-bottom: var(--space-4); }
+.suivi-search { flex: 1 1 16rem; max-width: 24rem; }
+.suivi-search .filters-search { height: var(--control-h); padding-left: var(--space-8); border-radius: var(--radius-sm); }
+.suivi-list-tools .all-months { margin: 0; }
+/* Venu de la recherche globale, la liste s'arrête sous l'en-tête collant. La date ne se coupe pas ; sur
+   téléphone, le mois ORP (presque toujours celui de la date) laisse la place. */
+.suivi-list { scroll-margin-top: 6rem; }
+.app-date { white-space: nowrap; }
+@media (max-width: 820px) {
+  .app-date .hint { display: none; }
+  .suivi-detail .disclosure .runs :is(td.app-date, th:first-child) { white-space: nowrap; }
+}

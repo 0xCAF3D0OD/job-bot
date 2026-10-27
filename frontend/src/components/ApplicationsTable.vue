@@ -48,7 +48,7 @@ function rowItems(application: Application): MoreMenuItem[] {
         :key="application.id"
         data-test="application"
       >
-        <td>
+        <td class="app-date">
           {{ new Date(application.sent_at).toLocaleDateString("fr-CH") }}
           <span
             v-if="showMonth"
