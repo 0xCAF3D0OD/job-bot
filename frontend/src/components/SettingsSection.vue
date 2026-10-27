@@ -21,9 +21,12 @@ import AppIcon from "./AppIcon.vue";
 // Section des Réglages, comme les CFF (docs/110) : le titre de la section au-dessus de sa carte.
 // Sur ordinateur, une rubrique à la fois (docs/48 §2) ; sur téléphone, toutes l'une sous l'autre,
 // une longue page parcourue par les marqueurs du haut. `value` résume la rubrique (marqueurs).
-withDefaults(defineProps<{ id: string; title: string; value?: string; active?: boolean }>(), {
+// `cards` (1.6.65, planche « 5. Réglages ») : une carte par réglage (SettingCard), empilées,
+// au lieu d'une seule carte pour la rubrique.
+withDefaults(defineProps<{ id: string; title: string; value?: string; active?: boolean; cards?: boolean }>(), {
   value: "",
   active: true,
+  cards: false,
 });
 const { phone } = usePhone();
 </script>
@@ -44,7 +47,7 @@ const { phone } = usePhone();
     </h2>
     <!-- Une rubrique, une carte (docs/106 §1) : les cartes du contenu y perdent leur cadre. -->
     <div
-      class="settings-card"
+      :class="cards ? 'setting-cards' : 'settings-card'"
       data-test="settings-card"
     >
       <slot />
