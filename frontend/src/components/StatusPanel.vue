@@ -24,7 +24,7 @@ async function refresh(): Promise<void> {
   if (status.value?.database?.up_to_date) {
     try {
       const { data } = await api.GET("/api/job-runs", { params: { query: { limit: 10 } } });
-      runs.value = data ?? [];
+      runs.value = Array.isArray(data) ? data : [];
     } catch {
       runs.value = [];
     }

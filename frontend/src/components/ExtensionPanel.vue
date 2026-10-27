@@ -25,7 +25,7 @@ const origin = globalThis.location?.origin ?? "";
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/extension-tokens");
-  tokens.value = data ?? [];
+  tokens.value = Array.isArray(data) ? data : [];
 }
 
 async function create(): Promise<void> {

@@ -22,7 +22,7 @@ const createError = ref("");
 
 async function load(): Promise<void> {
   const { data } = await api.GET("/api/agenda/tokens");
-  tokens.value = data ?? [];
+  tokens.value = Array.isArray(data) ? data : [];
 }
 
 // Chaque adresse porte sa date de création (« Agenda du 15 oct. ») : on sait laquelle révoquer.
