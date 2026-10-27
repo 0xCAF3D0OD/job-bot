@@ -2835,6 +2835,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alert-searches/follow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Follow Search
+         * @description « Suivre cette recherche » (recherche globale) : les mots tapés, avec les lieux du profil.
+         *
+         *     Une recherche d'alerte par lieu (comme les recherches proposées) ; une recherche déjà suivie
+         *     n'est pas doublée. Elle ne crée l'alerte sur aucun site : les sites encore à créer sont rendus,
+         *     calculés à partir des cellules réelles.
+         */
+        post: operations["followSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/alert-searches/{search_id}": {
         parameters: {
             query?: never;
@@ -2950,6 +2974,23 @@ export interface paths {
         };
         /** Get Message */
         get: operations["getSiteMessage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search */
+        get: operations["searchEverything"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3440,6 +3481,33 @@ export interface components {
         AnswerOut: {
             /** Text */
             text: string;
+        };
+        /** ApplicationHit */
+        ApplicationHit: {
+            /** Id */
+            id: number;
+            /** Company */
+            company: string;
+            /** Job Title */
+            job_title: string;
+            /** Status */
+            status: string;
+            /**
+             * Sent At
+             * Format: date
+             */
+            sent_at: string;
+            /** Interview At */
+            interview_at: string | null;
+            /** Orp Month */
+            orp_month: string | null;
+        };
+        /** ApplicationHits */
+        ApplicationHits: {
+            /** Items */
+            items: components["schemas"]["ApplicationHit"][];
+            /** Total */
+            total: number;
         };
         /** ApplicationIn */
         ApplicationIn: {
@@ -4026,6 +4094,22 @@ export interface components {
             last_failure_at: string | null;
             /** Last Error */
             last_error: string | null;
+        };
+        /** CompanyHit */
+        CompanyHit: {
+            /** Name */
+            name: string;
+            /** Offers */
+            offers: number;
+            /** Applications */
+            applications: number;
+        };
+        /** CompanyHits */
+        CompanyHits: {
+            /** Items */
+            items: components["schemas"]["CompanyHit"][];
+            /** Total */
+            total: number;
         };
         /** ComparisonOut */
         ComparisonOut: {
@@ -4681,6 +4765,26 @@ export interface components {
             /** Month */
             month?: string | null;
         };
+        /** FollowIn */
+        FollowIn: {
+            /** Terms */
+            terms: string;
+        };
+        /** FollowOut */
+        FollowOut: {
+            /** Ids */
+            ids: number[];
+            /** Created */
+            created: number[];
+            /** Terms */
+            terms: string;
+            /** Locations */
+            locations: string[];
+            /** Sites */
+            sites: string[];
+            /** Todo */
+            todo: string[];
+        };
         /**
          * FollowUp
          * @description Une candidature à relancer, en tête d'« À faire » sur Aujourd'hui (docs/95).
@@ -4790,6 +4894,14 @@ export interface components {
             chunk_id: number;
             /** Score */
             score: number | null;
+        };
+        /** GlobalSearchOut */
+        GlobalSearchOut: {
+            /** Q */
+            q: string;
+            offers: components["schemas"]["OfferHits"];
+            applications: components["schemas"]["ApplicationHits"];
+            companies: components["schemas"]["CompanyHits"];
         };
         /** GroupOut */
         GroupOut: {
@@ -5898,6 +6010,26 @@ export interface components {
         OfferFiltersVisible: {
             /** Visible */
             visible: ("score" | "remote" | "sources" | "cantons" | "rate" | "external" | "doubtful")[];
+        };
+        /** OfferHit */
+        OfferHit: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /** Location */
+            location: string | null;
+            /** Score */
+            score: number | null;
+        };
+        /** OfferHits */
+        OfferHits: {
+            /** Items */
+            items: components["schemas"]["OfferHit"][];
+            /** Total */
+            total: number;
         };
         /** OfferLinkOut */
         OfferLinkOut: {
@@ -13571,6 +13703,39 @@ export interface operations {
             };
         };
     };
+    followSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FollowIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FollowOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     deleteAlertSearch: {
         parameters: {
             query?: never;
@@ -13799,6 +13964,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SiteMessageText"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    searchEverything: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalSearchOut"];
                 };
             };
             /** @description Validation Error */

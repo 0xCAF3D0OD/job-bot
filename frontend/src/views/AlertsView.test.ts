@@ -219,3 +219,22 @@ describe("Alertes, un site en un geste (docs/121 §B.2)", () => {
     expect(wrapper.find("[data-test=alerts-wizard]").text()).toContain("Adresse copiée");
   });
 });
+
+describe("Alertes, depuis la recherche globale (série du 27.10, point 2)", () => {
+  it("?recherche= met en avant la carte de la recherche ; ?gerer=1 ouvre le tableau", async () => {
+    const { createMemoryHistory, createRouter } = await import("vue-router");
+    const data = page([search(1, [cell("jobup", { status: "received", received_at: new Date().toISOString() })])]);
+    GET.mockResolvedValue({ data });
+    for (const [query, check] of [
+      ["?recherche=devops", (w: ReturnType<typeof mount>) => expect(w.find("[data-test=alert-search-1]").classes()).toContain("highlighted")],
+      ["?gerer=1", (w: ReturnType<typeof mount>) => expect(w.find("[data-test=close-manage]").exists()).toBe(true)],
+    ] as const) {
+      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+      await router.push(`/candidatures/alertes${query}`);
+      const wrapper = mount(AlertsView, { global: { plugins: [router], stubs: { teleport: true, AlertsPanel: true } } });
+      await flushPromises();
+      check(wrapper);
+      wrapper.unmount();
+    }
+  });
+});
