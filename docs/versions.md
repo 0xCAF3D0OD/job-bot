@@ -35,4 +35,5 @@ Une fois la PR fusionnée, sa ligne peut rester : `changelog.d/X.Y.Z.md` fait al
 | 1.6.59 | Design | Série du 27.10 inscrite au tableau (points 1 à 7) | `docs/1.6.58-serie-27-10` | fusionnée (#368) |
 | 1.6.60 | Design | Barre d'onglets du téléphone : `--tabbar-h` de 3,6 à 4 rem, de l'air au-dessus de la pastille | `fix/1.6.60-tabbar-h` | fusionnée (#370) |
 | 1.6.61 | Design | Repliable : icône et phrase facultatives (pour le Bilan, série du 27.10 point 4) | `feat/1.6.61-repliable` | fusionnée (#371) |
+| 1.6.62 | Pages | Série du 27.10, points 3 et 4 : le Bilan selon la planche « 3 et 4. Bilan » (conclusion exacte, bande du meilleur site, période en pastilles, quatre repliables chiffrés et « Pour l'ORP », mois d'avant la première activité masqués) | `feat/1.6.62-bilan` | PR ouverte |
 | 1.6.63 | Design | Repliable ouvert et survolé : la phrase en --text, contraste 4,5:1 (signalé par Pages) | `fix/1.6.63-repliable-contraste` | PR ouverte |
