@@ -4105,7 +4105,9 @@ html.search-open { overflow: hidden; }
 
 /* --- Tête de carte, Copier et « ⋯ » (règles §4) --- */
 /* « Titre · nombre » à gauche, le lien ou l'action puis « ⋯ » à droite, à la même hauteur. */
-.card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); min-height: var(--control-h); }
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); box-sizing: border-box; height: var(--control-h); }
+/* Hauteur fixe avec ou sans action (planche « vide et chargement ») : le bouton de tête en taille compacte. */
+.card-head-actions :is(button, .button-link):not(.more-button) { min-height: 2rem; height: 2rem; padding-block: 0; padding-inline: var(--space-3); font-size: var(--font-small); }
 .card-head-title { margin: 0; font-size: var(--font-title); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
 .card-head-count { color: var(--muted); font-weight: var(--weight-regular); }
 .card-head-actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
@@ -4116,3 +4118,15 @@ html.search-open { overflow: hidden; }
 .show-more { margin-top: var(--space-3); }
 .show-more .icon { transition: transform var(--t-state) var(--ease-out); }
 .show-more[aria-expanded="true"] .icon { transform: rotate(180deg); }
+
+/* --- Vide et chargement (règles §4) --- */
+/* Un bouton occupé : les deux libellés dans la même case, la largeur du plus long ; aria-disabled
+   garde le focus, l'aspect suit celui d'un bouton désactivé. */
+.busy-button { display: inline-grid; justify-items: center; align-items: center; }
+.busy-button > .busy-label { grid-area: 1 / 1; }
+.busy-button > .busy-label-on, .busy-button.busy > .busy-label:not(.busy-label-on) { visibility: hidden; }
+.busy-button.busy > .busy-label-on { visibility: visible; }
+.busy-button[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
+@media (prefers-reduced-motion: reduce) {
+  .show-more .icon, .copy-button { transition: none; }
+}
