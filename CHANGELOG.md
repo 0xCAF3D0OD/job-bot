@@ -294,3 +294,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.80 | Le README de `changelog.d/` donne un exemple de fragment avec une ligne « État : … » et dit quand l'employer | livrée |
 | 1.6.81 | Composants communs : tête de carte « Titre · nombre », « Afficher plus (N) », bouton Copier annoncé, menu « ⋯ » nommé « Plus d'actions » et sans rouge | livrée |
 | 1.6.82 | Vide et chargement : rien avant 300 ms puis les blocs gris, voile du visage seulement au premier chargement, bouton occupé à largeur fixe et focus gardé, tête de carte à hauteur fixe | livrée |
+| 1.6.83 | Tri : la phrase « pourquoi » tient sur une ligne de 80 caractères, coupée au mot sans « … » ; le visage du 1 remplace les illustrations de l'accueil des nouveaux comptes et du moment d'engagement ; plus d'illustration dans l'assistant de création d'alertes | livrée |
