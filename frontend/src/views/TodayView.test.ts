@@ -187,7 +187,7 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["1 offre", "2 relances"]);
     expect(GET).toHaveBeenCalledWith("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: 5 } } });
     const band = wrapper.find("[data-test=action-band]");
-    expect(band.find("h2").text()).toBe("Tri du jour.");
+    expect(band.find("h2").text()).toBe("Tri du jour");
     expect(band.text()).toContain("1 offre à trier :");
     // La meilleure offre en aperçu, en Ligne d'offre compacte : le poste, l'entreprise et le lieu, le
     // verdict en mot ; la ligne mène au tri.
@@ -287,7 +287,7 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     });
     const wrapper = await mountView();
     const section = wrapper.find("[data-test=today-tasks]");
-    expect(section.find("h2").text()).toBe("À faire aujourd'hui.");
+    expect(section.find("h2").text()).toBe("À faire aujourd'hui");
     expect(section.findAll(".today-task").map((r) => r.attributes("data-test"))).toEqual([
       "orp-meeting-soon",
       "upcoming-interview",
