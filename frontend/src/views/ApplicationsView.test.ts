@@ -216,7 +216,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     const { wrapper } = await mountView();
     // Sa propre liste, sous « À relancer » (1.6.27 : plus d'onglets, règles §2).
     const list = wrapper.find("[data-test=declare]");
-    expect(list.text()).toContain("À déclarer dans Job-Room");
+    expect(list.attributes("aria-label")).toBe("À déclarer dans Job-Room");
     expect(list.findAll("li")).toHaveLength(1);
     const item = list.find("[data-test=offer-line]");
     // La Ligne d'offre compacte (planche « Ligne d'offre ») : le poste, l'entreprise, l'état ; « Déclarer ».
@@ -224,7 +224,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     expect(item.find(".offer-line-sub").text()).toContain("Reste SA");
     expect(item.find("[data-test=offer-line-state]").text()).toContain("Envoyée le 2 octobre");
     expect(item.find("[data-test=declare-2]").text()).toBe("Déclarer");
-    expect(list.find("h2").text()).toBe("À déclarer dans Job-Room · 1");
+    expect(list.find("h2").text()).toBe("À déclarer · 1");
     expect(item.text()).toContain("à compléter");
     // Un clic ouvre le panneau : l'offre, « Modifier », les champs et « Marquer comme déclarée ».
     await item.trigger("click");
@@ -404,7 +404,7 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
 });
 
 describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop chargé)", () => {
-  it("à relancer et à déclarer : deux listes l'une sous l'autre, trois lignes chacune, « Tout voir »", async () => {
+  it("à relancer et à déclarer : deux listes l'une sous l'autre, trois lignes chacune, « Afficher plus »", async () => {
     const many = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
@@ -412,10 +412,11 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     expect(todo.find("h2").text()).toBe("À relancer · 7");
     expect(wrapper.find(".segmented").exists()).toBe(false);
     expect(todo.findAll("[data-test=application-card]")).toHaveLength(3);
+    expect(todo.find("[data-test=todo-all]").text()).toBe("Afficher plus (4)");
     await todo.find("[data-test=todo-all]").trigger("click");
     expect(todo.findAll("[data-test=application-card]")).toHaveLength(7);
-    expect(todo.find("[data-test=todo-all]").text()).toBe("Réduire");
-    // La liste à déclarer, dessous, avec ses deux lignes (moins de trois : pas de « Tout voir »).
+    expect(todo.find("[data-test=todo-all]").text()).toBe("Afficher moins");
+    // La liste à déclarer, dessous, avec ses deux lignes (moins de trois : pas de « Afficher plus »).
     const declare = wrapper.find("[data-test=declare]");
     expect(declare.findAll("li")).toHaveLength(2);
     expect(declare.find("[data-test=declare-all]").exists()).toBe(false);

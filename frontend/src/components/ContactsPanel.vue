@@ -5,7 +5,8 @@ import { api, type Contact, type ContactIn, type ContactsPage } from "../api/cli
 import { CHANNELS, contactName, isoDay, ROLES, toFollowUp } from "../contactLabels";
 import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
-import CopyLabel from "./CopyLabel.vue";
+import BusyButton from "./BusyButton.vue";
+import CopyButton from "./CopyButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HoverNote from "./HoverNote.vue";
 import { offerUndo } from "../composables/useUndo";
@@ -43,9 +44,9 @@ const writer = reactive({ role: "recruiter" as Contact["role"], channel: "linked
 const written = ref("");
 const limit = ref<number | null>(null);
 const writeError = ref("");
-const copied = ref(false);
 
 async function write(): Promise<void> {
+  if (writing.value) return;
   writing.value = true;
   writeError.value = "";
   try {
@@ -64,16 +65,6 @@ async function write(): Promise<void> {
     draft.channel = writer.channel;
   } finally {
     writing.value = false;
-  }
-}
-
-async function copyMessage(): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(written.value);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
-  } catch {
-    copied.value = false;
   }
 }
 
@@ -106,6 +97,7 @@ function body(contact: Contact, changes: Partial<ContactIn>): ContactIn {
 }
 
 async function add(): Promise<void> {
+  if (busy.value) return;
   busy.value = true;
   actionError.value = "";
   try {
@@ -141,7 +133,7 @@ function contactItems(contact: Contact): MoreMenuItem[] {
     ...(contact.answered_on
       ? [{ label: "Modifier la note", test: "contact-answered", icon: "pencil" as const, run: () => startAnswer(contact) }]
       : []),
-    { label: "Retirer", test: "contact-remove", danger: true, run: () => void remove(contact) },
+    { label: "Retirer", test: "contact-remove", icon: "trash", danger: true, run: () => void remove(contact) },
   ];
 }
 
@@ -151,6 +143,7 @@ function startAnswer(contact: Contact): void {
 }
 
 async function saveAnswer(contact: Contact): Promise<void> {
+  if (busy.value) return;
   busy.value = true;
   try {
     await api.PUT("/api/contacts/{contact_id}", {
@@ -261,16 +254,17 @@ onMounted(() => void load());
             </select>
           </label>
           <div class="contact-writer-actions">
-            <button
+            <BusyButton
               type="submit"
               class="secondary small"
-              :disabled="writing"
+              :busy="writing"
+              busy-label="Rédaction…"
               data-test="contact-write"
             >
               <HoverNote :text="writing ? '' : aiNote('Environ 0,002 $.')">
-                <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : written ? "Rédiger à nouveau" : "Rédiger un message" }}</span>
+                <span class="with-icon"><AppIcon name="ai" />{{ written ? "Rédiger à nouveau" : "Rédiger un message" }}</span>
               </HoverNote>
-            </button>
+            </BusyButton>
           </div>
         </form>
         <p
@@ -293,14 +287,11 @@ onMounted(() => void load());
               :class="['hint', { 'over-limit': written.length > limit }]"
               data-test="contact-count"
             >{{ written.length }} / {{ limit }} caractères{{ written.length > limit ? " : trop long pour une invitation" : "" }}</span>
-            <button
-              type="button"
-              class="link"
-              data-test="contact-copy"
-              @click="copyMessage"
-            >
-              <CopyLabel :done="copied" />
-            </button>
+            <CopyButton
+              :value="written"
+              label="Copier le message"
+              test-id="contact-copy"
+            />
           </p>
         </template>
       </section>
@@ -355,7 +346,7 @@ onMounted(() => void load());
               </button>
               <MoreMenu
                 :items="contactItems(contact)"
-                :label="`Actions sur le contact ${contactName(contact)}`"
+                :label="`Plus d'actions sur le contact ${contactName(contact)}`"
                 test-id="contact-more"
               />
             </span>
@@ -374,14 +365,15 @@ onMounted(() => void load());
                 >
               </label>
               <div>
-                <button
+                <BusyButton
                   type="submit"
                   class="secondary small"
-                  :disabled="busy"
+                  :busy="busy"
+                  busy-label="Enregistrement…"
                   data-test="contact-save-answer"
                 >
                   Enregistrer
-                </button>
+                </BusyButton>
                 <button
                   type="button"
                   class="link"
@@ -398,7 +390,7 @@ onMounted(() => void load());
           v-if="!page.contacts.length && !adding"
           class="muted contacts-empty"
         >
-          Aucune pour l'instant.
+          Aucun contact pour l'instant.
         </p>
         <button
           v-if="!adding"
@@ -453,14 +445,15 @@ onMounted(() => void load());
             >
           </label>
           <div class="contact-writer-actions">
-            <button
+            <BusyButton
               type="submit"
               class="secondary small"
-              :disabled="busy"
+              :busy="busy"
+              busy-label="Enregistrement…"
               data-test="contact-save"
             >
               Enregistrer
-            </button>
+            </BusyButton>
             <button
               type="button"
               class="link"

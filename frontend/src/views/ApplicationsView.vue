@@ -27,9 +27,11 @@ import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
+import CardHead from "../components/CardHead.vue";
 import FaceState from "../components/FaceState.vue";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import EngagementMoment from "../components/EngagementMoment.vue";
+import ShowMore from "../components/ShowMore.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
@@ -115,7 +117,7 @@ const monthMenu = computed<MoreMenuItem[]>(() => {
     ...(data.searches.length
       ? [{ label: "PDF avec le journal des recherches", test: "pdf-with-searches", icon: "download" as const, count: data.searches.length, run: () => void sheet.value?.printPdf(true) }]
       : []),
-    { label: "Télécharger en CSV (Excel)", test: "csv", href: `/api/orp/${data.month}/csv`, download: true },
+    { label: "Télécharger en CSV (Excel)", test: "csv", icon: "download", href: `/api/orp/${data.month}/csv`, download: true },
   ];
 });
 const firstIncomplete = computed(() => monthItems.value.find((a) => incomplete.value.has(a.id)) ?? null);
@@ -177,7 +179,7 @@ const sentence = computed<{ text: string; strong?: boolean }[]>(() => {
   return parts;
 });
 // À relancer, puis à déclarer dans Job-Room (docs/133 §1) : deux listes l'une sous l'autre (1.6.27 ;
-// le sélecteur faisait un troisième niveau d'onglets, règles §2), trois lignes, « Tout voir » pour le reste.
+// le sélecteur faisait un troisième niveau d'onglets, règles §2), trois lignes, « Afficher plus » pour le reste.
 const showAllFollow = ref(false);
 const showAllDeclare = ref(false);
 const followShown = computed(() => (showAllFollow.value ? toFollowUp.value : toFollowUp.value.slice(0, TODO_ROWS)));
@@ -511,7 +513,7 @@ onUnmounted(() => assistant.setFocus(null));
           <MoreMenu
             v-if="orp.count"
             :items="monthMenu"
-            label="Actions sur le mois"
+            label="Plus d'actions sur le mois"
             test-id="orp-more"
           />
         </div>
@@ -618,19 +620,10 @@ onUnmounted(() => assistant.setFocus(null));
           class="dash-card suivi-todo"
           data-test="todo"
         >
-          <header class="dash-card-head">
-            <h2>À relancer{{ toFollowUp.length ? ` · ${toFollowUp.length}` : "" }}</h2>
-            <button
-              v-if="toFollowUp.length > TODO_ROWS"
-              type="button"
-              class="link"
-              data-test="todo-all"
-              :aria-expanded="showAllFollow"
-              @click="showAllFollow = !showAllFollow"
-            >
-              {{ showAllFollow ? "Réduire" : "Tout voir" }}
-            </button>
-          </header>
+          <CardHead
+            title="À relancer"
+            :count="toFollowUp.length || undefined"
+          />
           <p
             v-if="!toFollowUp.length"
             class="hint"
@@ -657,25 +650,23 @@ onUnmounted(() => assistant.setFocus(null));
               />
             </li>
           </ul>
+          <ShowMore
+            v-if="toFollowUp.length > TODO_ROWS"
+            v-model="showAllFollow"
+            :hidden="toFollowUp.length - TODO_ROWS"
+            test-id="todo-all"
+          />
         </section>
         <section
           v-if="orp.count"
           class="dash-card suivi-todo suivi-declare"
+          aria-label="À déclarer dans Job-Room"
           data-test="declare"
         >
-          <header class="dash-card-head">
-            <h2><span>À déclarer<span class="visually-hidden"> dans Job-Room</span>{{ toDeclare.length ? ` · ${toDeclare.length}` : "" }}</span></h2>
-            <button
-              v-if="toDeclare.length > TODO_ROWS"
-              type="button"
-              class="link"
-              data-test="declare-all"
-              :aria-expanded="showAllDeclare"
-              @click="showAllDeclare = !showAllDeclare"
-            >
-              {{ showAllDeclare ? "Réduire" : "Tout voir" }}
-            </button>
-          </header>
+          <CardHead
+            title="À déclarer"
+            :count="toDeclare.length || undefined"
+          />
           <p
             v-if="!toDeclare.length"
             class="hint"
@@ -705,6 +696,12 @@ onUnmounted(() => assistant.setFocus(null));
               />
             </li>
           </ul>
+          <ShowMore
+            v-if="toDeclare.length > TODO_ROWS"
+            v-model="showAllDeclare"
+            :hidden="toDeclare.length - TODO_ROWS"
+            test-id="declare-all"
+          />
         </section>
 
         <!-- Le détail replié (règles §3.4) : le calendrier et la liste du mois, deux lignes à la

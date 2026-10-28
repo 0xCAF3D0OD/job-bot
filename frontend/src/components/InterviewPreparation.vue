@@ -7,6 +7,7 @@ import InterviewCoaching from "./InterviewCoaching.vue";
 import InterviewPractice from "./InterviewPractice.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
@@ -233,18 +234,18 @@ onMounted(async () => {
         kind="coaching"
       />
       <div class="form-actions">
-        <button
+        <BusyButton
           v-if="insights?.can_coach && insights.count"
-          type="button"
           class="secondary small"
-          :disabled="busy"
+          :busy="busy"
+          busy-label="Analyse en cours…"
           data-test="prep-coach"
           @click="coach"
         >
           <HoverNote :text="busy ? '' : aiNote('Environ 0,03 $.')">
-            <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Analyse en cours…" : "Pistes de l'IA" }}</span>
+            <span class="with-icon"><AppIcon name="ai" />Pistes de l'IA</span>
           </HoverNote>
-        </button>
+        </BusyButton>
       </div>
     </article>
     <InterviewPractice

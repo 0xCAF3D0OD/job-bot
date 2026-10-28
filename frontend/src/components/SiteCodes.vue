@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
 
 import { timeOfDay } from "../dates";
 import { sourceLabel } from "../format";
+import CopyButton from "./CopyButton.vue";
 
 // Les codes des sites (docs/112) : le code de vérification qu'un site envoie à l'adresse
 // jobA1 de la personne, 30 minutes, dans la carte « Les e-mails des sites » (SiteMail), à la
@@ -10,7 +11,6 @@ import { sourceLabel } from "../format";
 type SiteCode = { search_id: number; site: string; code: string; received_at: string };
 const props = defineProps<{ codes: SiteCode[] }>();
 
-const copied = ref<number | null>(null);
 const shown = computed(() =>
   props.codes.map((c) => ({
     ...c,
@@ -18,16 +18,6 @@ const shown = computed(() =>
     spaced: c.code.length === 6 ? `${c.code.slice(0, 3)} ${c.code.slice(3)}` : c.code,
   })),
 );
-
-async function copy(code: SiteCode): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(code.code);
-    copied.value = code.search_id;
-    setTimeout(() => (copied.value = null), 2000);
-  } catch {
-    copied.value = null;
-  }
-}
 </script>
 
 <template>
@@ -44,19 +34,18 @@ async function copy(code: SiteCode): Promise<void> {
     >
       <span class="site-code-text">
         <span class="site-code-label">Code {{ item.name }} · reçu à {{ timeOfDay(item.received_at) }}</span>
-        <strong
-          class="site-code-value"
-          data-test="site-code-value"
-        >{{ item.spaced }}</strong>
+        <span class="with-icon">
+          <strong
+            class="site-code-value"
+            data-test="site-code-value"
+          >{{ item.spaced }}</strong>
+          <CopyButton
+            :value="item.code"
+            label="Copier le code"
+            test-id="site-code-copy"
+          />
+        </span>
       </span>
-      <button
-        type="button"
-        class="pill"
-        data-test="site-code-copy"
-        @click="copy(item)"
-      >
-        {{ copied === item.search_id ? "Copié" : "Copier le code" }}
-      </button>
     </li>
   </ul>
 </template>

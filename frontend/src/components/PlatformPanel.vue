@@ -5,10 +5,11 @@ import { api, type AccountOut, type PlatformOut } from "../api/client";
 import { dateInList, dateInSentence, dateWithTime } from "../dates";
 import { onDay, plural, untilDay } from "../format";
 import AppIcon from "./AppIcon.vue";
-import CopyLabel from "./CopyLabel.vue";
+import CopyButton from "./CopyButton.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import InlineConfirm from "./InlineConfirm.vue";
+import LoadingBlocks from "./LoadingBlocks.vue";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
 import StatusPill from "./StatusPill.vue";
@@ -29,7 +30,6 @@ const stoppedAt = computed(() =>
 const failed = ref(false);
 // Le dernier lien créé, montré une seule fois, à transmettre soi-même.
 const link = ref<{ kind: "invite" | "reset"; username: string | null; url: string; expires: string } | null>(null);
-const copied = ref(false);
 // Les champs chiffrés : ce qui est saisi (un nombre, ou un texte tant que le champ est vide).
 const total = ref<string | number>("");
 const caps = ref<Record<number, string | number>>({});
@@ -62,7 +62,6 @@ async function invite(): Promise<void> {
   const { data } = await api.POST("/api/platform/invitations");
   if (!data) return;
   link.value = { kind: "invite", username: null, url: address(data.token), expires: data.expires_at };
-  copied.value = false;
   await load();
 }
 
@@ -72,7 +71,7 @@ function accountItems(account: Account): MoreMenuItem[] {
   return [
     { label: "Lien de nouveau mot de passe", test: `reset-${u}`, icon: "lock", run: () => void reset(account) },
     { label: account.suspended ? "Réactiver" : "Suspendre", test: `suspend-${u}`, icon: account.suspended ? "refresh" : "lock", run: () => void suspend(account) },
-    { label: "Supprimer", test: `delete-${u}`, danger: true, run: () => void remove(account) },
+    { label: "Supprimer", test: `delete-${u}`, icon: "trash", danger: true, run: () => void remove(account) },
   ];
 }
 
@@ -82,14 +81,6 @@ async function reset(account: Account): Promise<void> {
   });
   if (!data) return;
   link.value = { kind: "reset", username: account.username, url: address(data.token), expires: data.expires_at };
-  copied.value = false;
-}
-
-async function copy(): Promise<void> {
-  if (!link.value) return;
-  await navigator.clipboard.writeText(link.value.url);
-  copied.value = true;
-  setTimeout(() => (copied.value = false), 2000);
 }
 
 async function withdraw(id: number): Promise<void> {
@@ -460,7 +451,7 @@ function size(bytes: number | null | undefined): string {
             <span :id="`cap-label-${account.id}`">CHF d'IA / mois</span>
             <MoreMenu
               :items="accountItems(account)"
-              :label="`Actions sur le compte ${account.username}`"
+              :label="`Plus d'actions sur le compte ${account.username}`"
               :test-id="`account-more-${account.username}`"
             />
           </template>
@@ -531,16 +522,11 @@ function size(bytes: number | null | undefined): string {
         :description="linkLine(link)"
         data-test="platform-link"
       >
-        <button
-          type="button"
-          class="secondary small"
-          @click="copy"
-        >
-          <CopyLabel
-            :done="copied"
-            label="Copier le lien"
-          />
-        </button>
+        <CopyButton
+          :value="link.url"
+          label="Copier le lien"
+          test-id="platform-link-copy"
+        />
       </SettingRow>
       <SettingRow
         v-for="invitation in platform.invitations"
@@ -731,4 +717,9 @@ function size(bytes: number | null | undefined): string {
       </SettingRow>
     </SettingCard>
   </template>
+  <!-- Le temps du chargement : des blocs gris à la forme des cartes (règles §4). -->
+  <LoadingBlocks
+    v-else
+    :heights="['12rem', '10rem', '6rem']"
+  />
 </template>

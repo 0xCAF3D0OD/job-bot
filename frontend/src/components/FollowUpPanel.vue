@@ -4,7 +4,8 @@ import { computed, ref } from "vue";
 import { api, type Application } from "../api/client";
 import { dateInList } from "../dates";
 import AppIcon from "./AppIcon.vue";
-import CopyLabel from "./CopyLabel.vue";
+import BusyButton from "./BusyButton.vue";
+import CopyButton from "./CopyButton.vue";
 import HoverNote from "./HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
 
@@ -20,7 +21,6 @@ const text = ref("");
 const reason = ref<string | null>(null);
 const writing = ref(false);
 const saving = ref(false);
-const copied = ref(false);
 const error = ref("");
 
 // Ouvre la messagerie avec destinataire, objet et texte (rien n'est envoyé d'office).
@@ -50,16 +50,6 @@ async function write(): Promise<void> {
   }
 }
 
-async function copy(): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(`${subject.value}\n\n${text.value}`);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
-  } catch {
-    copied.value = false;
-  }
-}
-
 async function markDone(): Promise<void> {
   saving.value = true;
   try {
@@ -86,18 +76,18 @@ async function markDone(): Promise<void> {
       <span>{{ application.job_title }}</span>
       <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ dateInList(`${application.sent_at}T12:00:00`) }}</span>
     </p>
-    <button
+    <BusyButton
       v-if="!text"
-      type="button"
       class="secondary small"
-      :disabled="writing"
+      :busy="writing"
+      busy-label="Rédaction…"
       data-test="follow-up-write"
       @click="write"
     >
       <HoverNote :text="writing ? '' : aiNote('Environ 0,002 $.')">
-        <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : "Rédiger la relance" }}</span>
+        <span class="with-icon"><AppIcon name="ai" />Rédiger la relance</span>
       </HoverNote>
-    </button>
+    </BusyButton>
     <template v-else>
       <p
         v-if="reason"
@@ -126,14 +116,11 @@ async function markDone(): Promise<void> {
           :href="mailto"
           data-test="follow-up-mail"
         ><span class="with-icon"><AppIcon name="mail" />Ouvrir dans ma messagerie</span></a>
-        <button
-          type="button"
-          class="link"
-          data-test="follow-up-copy"
-          @click="copy"
-        >
-          <CopyLabel :done="copied" />
-        </button>
+        <CopyButton
+          :value="`${subject}\n\n${text}`"
+          label="Copier la relance"
+          test-id="follow-up-copy"
+        />
       </div>
     </template>
     <p

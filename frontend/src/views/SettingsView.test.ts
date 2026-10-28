@@ -300,7 +300,7 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ notify_score_threshold: 80 }) });
     expect(wrapper.find("[data-test=notify-form] [data-test=setting-saved]").text()).toContain("Enregistré");
     // La notification de test : une ligne, son nom à gauche, « Envoyer » à droite.
-    expect(wrapper.find("[data-test=test-notification]").text()).toBe("Envoyer");
+    expect(wrapper.find("[data-test=test-notification] .busy-label").text()).toBe("Envoyer");
     // L'interrupteur du téléphone n'est que pour un compte invité ; ici, la ligne de test seule.
     expect(wrapper.find("[data-test=notifications] .setting-row-title").text()).toBe("Notification de test");
   });

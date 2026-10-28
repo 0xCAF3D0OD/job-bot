@@ -6,7 +6,8 @@ import { onDay } from "../format";
 import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
-import CopyLabel from "./CopyLabel.vue";
+import BusyButton from "./BusyButton.vue";
+import CopyButton from "./CopyButton.vue";
 import IconButton from "./IconButton.vue";
 import StatusPill from "./StatusPill.vue";
 
@@ -48,7 +49,6 @@ const FUNDING_LABELS: Record<Funding, string> = {
 };
 const letter = ref("");
 const preparing = ref(false);
-const copied = ref(false);
 const fundingError = ref("");
 
 function argumentText(offers: number, matched: string[], examples: { title: string; company: string | null }[]): string {
@@ -84,16 +84,6 @@ async function prepareRequest(): Promise<void> {
       .join("\n\n");
   } finally {
     preparing.value = false;
-  }
-}
-
-async function copyLetter(): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(letter.value);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
-  } catch {
-    copied.value = false;
   }
 }
 
@@ -339,16 +329,16 @@ const stateText = computed(() => {
         data-test="training-funding"
       >
         <template v-if="!training.mark.funding_status">
-          <button
+          <BusyButton
             v-if="!letter"
-            type="button"
             class="secondary small"
-            :disabled="preparing"
+            :busy="preparing"
+            busy-label="Préparation…"
             data-test="prepare-funding"
             @click="prepareRequest"
           >
-            <span class="with-icon"><AppIcon name="file" />{{ preparing ? "Préparation…" : "Préparer la demande à l'ORP" }}</span>
-          </button>
+            <span class="with-icon"><AppIcon name="file" />Préparer la demande à l'ORP</span>
+          </BusyButton>
           <template v-else>
             <textarea
               v-model="letter"
@@ -357,14 +347,11 @@ const stateText = computed(() => {
               data-test="funding-letter"
             />
             <div class="training-actions">
-              <button
-                type="button"
-                class="link"
-                data-test="funding-copy"
-                @click="copyLetter"
-              >
-                <CopyLabel :done="copied" />
-              </button>
+              <CopyButton
+                :value="letter"
+                label="Copier la demande"
+                test-id="funding-copy"
+              />
               <button
                 type="button"
                 class="secondary small"

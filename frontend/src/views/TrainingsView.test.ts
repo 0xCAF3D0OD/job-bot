@@ -85,6 +85,19 @@ describe("TrainingsView", () => {
     expect(GET).toHaveBeenLastCalledWith("/api/trainings", { params: { query: { domain_only: false } } });
   });
 
+  it("aucun résultat avec des filtres : une ligne grise et « Effacer les filtres » (règles §4)", async () => {
+    GET.mockResolvedValue({ data: page([training(1)]) });
+    const wrapper = await mountView();
+    await wrapper.find("[data-test=filter-price]").setValue("free");
+    const none = wrapper.find("[data-test=trainings-no-result]");
+    expect(none.text()).toContain("Aucune formation avec ces filtres.");
+    expect(none.find("[data-test=face-state]").exists()).toBe(false);
+    await none.find("[data-test=trainings-reset]").trigger("click");
+    await flushPromises();
+    expect(GET).toHaveBeenLastCalledWith("/api/trainings", { params: { query: { domain_only: false } } });
+    expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);
+  });
+
   it("suivi : intéressé, en cours avec progression, retrait", async () => {
     GET.mockResolvedValue({ data: page([training(1)]) });
     PUT.mockImplementation((_p: string, { body }: { body: Record<string, unknown> }) =>

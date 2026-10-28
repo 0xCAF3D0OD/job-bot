@@ -3,14 +3,13 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type Identity } from "../api/client";
 import AppIcon from "./AppIcon.vue";
-import CopyLabel from "./CopyLabel.vue";
+import CopyButton from "./CopyButton.vue";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
 // ligne de l'employeur, dans l'ordre habituel de ces formulaires.
 const props = defineProps<{ letterText?: string | null; letterId?: number | null; cvId?: number | null }>();
 
 const identity = ref<Identity | null>(null);
-const copied = ref<string | null>(null);
 
 onMounted(async () => {
   const { data } = await api.GET("/api/identity");
@@ -51,18 +50,6 @@ const missing = computed(() => {
   if (!who) return false;
   return !who.name || !who.email || !who.phone;
 });
-
-async function copy(label: string, value: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(value);
-    copied.value = label;
-    setTimeout(() => {
-      if (copied.value === label) copied.value = null;
-    }, 1500);
-  } catch {
-    copied.value = null;
-  }
-}
 </script>
 
 <template>
@@ -97,14 +84,11 @@ async function copy(label: string, value: string): Promise<void> {
         <dt>{{ label }}</dt>
         <dd>
           <span :class="{ 'form-sheet-long': value.length > 80 }">{{ value }}</span>
-          <button
-            type="button"
-            class="link"
-            data-test="sheet-copy"
-            @click="copy(label, value)"
-          >
-            <CopyLabel :done="copied === label" />
-          </button>
+          <CopyButton
+            :value="value"
+            :label="`Copier : ${label}`"
+            test-id="sheet-copy"
+          />
         </dd>
       </template>
     </dl>

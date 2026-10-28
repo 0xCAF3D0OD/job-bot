@@ -4,9 +4,11 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { api } from "../api/client";
 import { dateInList, timeOfDay } from "../dates";
 import { sourceLabel } from "../format";
+import BusyButton from "./BusyButton.vue";
 import IconButton from "./IconButton.vue";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
+import ShowMore from "./ShowMore.vue";
 import SiteCodes from "./SiteCodes.vue";
 
 // Les messages des sites (docs/112, docs/113 ; planche « 6. Alertes », 1.6.70) : une section, une
@@ -19,7 +21,8 @@ const props = defineProps<{ codes: SiteCode[]; guestMailbox: boolean }>();
 const emit = defineEmits<{ refresh: [] }>();
 
 const waiting = ref(false);
-// Les trois derniers messages, tous avec « Tout voir » (1.6.70, divulgation progressive).
+// Les trois derniers messages, les autres avec « Afficher plus », sur place en bas de la carte
+// (1.6.70, divulgation progressive ; règles §4).
 const LATEST = 3;
 const all = ref(false);
 const shown = computed(() => (all.value ? items.value : items.value.slice(0, LATEST)));
@@ -90,16 +93,6 @@ onUnmounted(stop);
       <h2 class="section-title">
         Messages des sites
       </h2>
-      <button
-        v-if="items.length > LATEST"
-        type="button"
-        class="link"
-        :aria-expanded="all"
-        data-test="site-mail-all"
-        @click="all = !all"
-      >
-        {{ all ? "Les trois derniers" : "Tout voir" }}
-      </button>
     </div>
     <SettingCard class="site-mail-card">
       <!-- Le code arrivé prend la place de « J'attends un code » (0.84.2). -->
@@ -113,16 +106,16 @@ onUnmounted(stop);
           v-if="codes.length"
           :codes="codes"
         />
-        <button
+        <BusyButton
           v-else
-          type="button"
           class="secondary small"
-          :disabled="waiting"
+          :busy="waiting"
+          busy-label="J'attends…"
           data-test="site-code-expect"
           @click="expect"
         >
-          {{ waiting ? "J'attends…" : "J'attends un code" }}
-        </button>
+          J'attends un code
+        </BusyButton>
       </SettingRow>
       <p
         v-if="message"
@@ -162,6 +155,16 @@ onUnmounted(stop);
         class="setting-row-message muted"
       >
         Aucun message pour l'instant.
+      </p>
+      <p
+        v-if="items.length > LATEST"
+        class="setting-row-message"
+      >
+        <ShowMore
+          v-model="all"
+          :hidden="items.length - LATEST"
+          test-id="site-mail-all"
+        />
       </p>
     </SettingCard>
   </section>

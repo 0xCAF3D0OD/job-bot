@@ -15,7 +15,7 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
 import { formatMonth, plural, shiftMonth } from "../format";
-import CopyLabel from "../components/CopyLabel.vue";
+import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import FaceState from "../components/FaceState.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
@@ -42,7 +42,6 @@ const insights = ref<Insights | null>(null);
 const error = ref("");
 const offline = ref(false);
 usePageReady("insights", () => !!insights.value || !!error.value);
-const copied = ref(false);
 
 function currentMonth(): string {
   const now = new Date();
@@ -118,17 +117,6 @@ const tiles = computed(() => {
         : `de ${r.delay.shortest} à ${r.delay.longest} j`,
   };
 });
-
-async function copy(): Promise<void> {
-  if (!insights.value?.orp_summary) return;
-  try {
-    await navigator.clipboard.writeText(insights.value.orp_summary);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
-  } catch {
-    copied.value = false;
-  }
-}
 
 watch(() => route.query, () => void load());
 onMounted(() => void load());
@@ -355,14 +343,11 @@ const PERIODS: { key: Period; label: string }[] = [
             data-test="orp-summary"
           >
             <p>{{ insights.orp_summary }}</p>
-            <button
-              type="button"
-              class="secondary small"
-              data-test="orp-summary-copy"
-              @click="copy"
-            >
-              <CopyLabel :done="copied" />
-            </button>
+            <CopyButton
+              :value="insights.orp_summary"
+              label="Copier le résumé"
+              test-id="orp-summary-copy"
+            />
           </div>
         </DisclosureRow>
       </section>

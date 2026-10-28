@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import { api } from "../api/client";
 import { plural } from "../format";
+import BusyButton from "./BusyButton.vue";
 
 // Les premières offres (docs/104, 0.80.0) : à la fin de l'accueil, jobA1 lit la recherche
 // publique de jobup pour le métier et les lieux du compte. Sur la page Offres, une ligne dit
@@ -137,15 +138,15 @@ onUnmounted(() => clearTimeout(timer));
         >
           {{ message }}
         </p>
-        <button
-          type="button"
+        <BusyButton
           class="pill"
-          :disabled="busy || state.status === 'queued'"
+          :busy="busy || state.status === 'queued'"
+          busy-label="Recherche en cours…"
           data-test="first-offers-start"
           @click="start"
         >
-          {{ state.status === "queued" ? "Recherche en cours…" : "Chercher sur jobup maintenant" }}
-        </button>
+          Chercher sur jobup maintenant
+        </BusyButton>
       </div>
     </div>
   </section>

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type SiteOut } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import IconButton from "./IconButton.vue";
 import SidePanel from "./SidePanel.vue";
 import { secureAddress, senders, useChecks } from "../validators";
@@ -145,6 +146,7 @@ async function addSuggestion(suggestion: Suggestion): Promise<void> {
 }
 
 async function reread(): Promise<void> {
+  if (busy.value) return;
   busy.value = true;
   message.value = "";
   try {
@@ -218,15 +220,15 @@ onMounted(() => void load());
       title="Alertes non reconnues"
       :description="`${plural(unrecognized, 'alerte', 'alertes')} à relire par l'IA.`"
     >
-      <button
-        type="button"
+      <BusyButton
         class="secondary small"
-        :disabled="busy"
+        :busy="busy"
+        busy-label="Relecture…"
         data-test="reread"
         @click="reread"
       >
-        {{ busy ? "Relecture…" : "Relire" }}
-      </button>
+        Relire
+      </BusyButton>
     </SettingRow>
     <SettingRow
       v-if="owner && !adding"

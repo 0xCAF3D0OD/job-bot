@@ -12,7 +12,7 @@ describe("L'adresse des alertes (docs/104)", () => {
     await wrapper.find("[data-test=mailbox-copy]").trigger("click");
     await flushPromises();
     expect(writeText).toHaveBeenCalledWith("kevin.dinocera+k9dyqou7@gmail.com");
-    expect(wrapper.find("[data-test=mailbox-copy]").text()).toBe("Adresse copiée");
+    expect(wrapper.find("[data-test=mailbox-copy]").text()).toBe("Copié");
   });
 
   it("l'adresse du domaine des alertes, ou celle de l'exploitant : entière", () => {

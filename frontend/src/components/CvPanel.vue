@@ -6,6 +6,7 @@ import { onDayAt } from "../format";
 import OfferBrief from "./OfferBrief.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import IconButton from "./IconButton.vue";
 import HoverNote from "./HoverNote.vue";
 import InlineConfirm from "./InlineConfirm.vue";
@@ -83,6 +84,7 @@ async function saveThenWrite(): Promise<void> {
   await write(true);
 }
 async function write(force = false): Promise<void> {
+  if (writing.value) return;
   if (dirty.value && !force) {
     choosingWrite.value = true;
     return;
@@ -313,17 +315,18 @@ onMounted(() => void load());
           />
         </label>
         <div class="mobile-dock">
-          <button
-            type="button"
+          <BusyButton
             :class="primary ? 'primary' : 'secondary'"
-            :disabled="writing || reached('cv')"
+            :busy="writing"
+            busy-label="Préparation…"
+            :disabled="reached('cv')"
             data-test="write-cv"
             @click="write()"
           >
             <HoverNote :text="writing ? '' : aiNote('Environ 0,05 $.', 'cv')">
-              <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Préparation…" : selected ? "Nouvelle version" : "Préparer le CV" }}</span>
+              <span class="with-icon"><AppIcon name="ai" />{{ selected ? "Nouvelle version" : "Préparer le CV" }}</span>
             </HoverNote>
-          </button>
+          </BusyButton>
         </div>
         <PlanLimit usage="cv" />
         <InlineConfirm
@@ -397,15 +400,15 @@ onMounted(() => void load());
       >
         <h2>Télécharger</h2>
         <template v-if="dirty">
-          <button
-            type="button"
+          <BusyButton
             class="secondary"
-            :disabled="saving"
+            :busy="saving"
+            busy-label="Enregistrement…"
             data-test="save-cv"
             @click="save()"
           >
             Enregistrer le titre et le résumé
-          </button>
+          </BusyButton>
           <p class="hint">
             Enregistre d'abord tes modifications pour les télécharger.
           </p>

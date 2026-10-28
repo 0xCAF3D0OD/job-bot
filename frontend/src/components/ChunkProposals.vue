@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import { api, type Chunk, type ChunkKind, type ChunkProposal } from "../api/client";
 import { plural } from "../format";
+import BusyButton from "./BusyButton.vue";
 
 const props = defineProps<{
   documentId: number;
@@ -35,6 +36,7 @@ function duplicateTitle(id: number | null): string | null {
 }
 
 async function save(): Promise<void> {
+  if (saving.value) return;
   // Bouton toujours actif (docs/29 §3) : sans bloc coché, il le dit.
   if (!selectedCount.value) {
     error.value = "Coche au moins un bloc à ajouter.";
@@ -125,14 +127,15 @@ async function save(): Promise<void> {
         {{ error }}
       </p>
       <div class="form-actions">
-        <button
+        <BusyButton
           type="submit"
           class="primary"
-          :disabled="saving"
+          :busy="saving"
+          busy-label="Ajout…"
           data-test="add-proposals"
         >
           Ajouter {{ plural(selectedCount, "bloc", "blocs") }}
-        </button>
+        </BusyButton>
         <button
           type="button"
           class="secondary"

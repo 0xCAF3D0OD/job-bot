@@ -17,11 +17,13 @@ import { dateInList } from "../dates";
 import { plural } from "../format";
 
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import CertificatesSection from "./CertificatesSection.vue";
 import { offerUndo } from "../composables/useUndo";
 import CountBadge from "./CountBadge.vue";
+import LoadingBlocks from "./LoadingBlocks.vue";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
   { value: "competence", label: "Compétence", hint: "Un savoir-faire, un outil, un niveau." },
@@ -134,6 +136,8 @@ async function showText(id: number): Promise<void> {
 }
 
 async function propose(doc: DocumentOut): Promise<void> {
+  // Une lecture à la fois : les autres boutons restent actifs, sans effet tant qu'elle dure.
+  if (proposing.value !== null) return;
   proposing.value = doc.id;
   message.value = "";
   try {
@@ -266,9 +270,12 @@ const missingProfile = computed(() => {
 
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
-  void Promise.all([loadDocuments(), loadChunks()]).then(() => {
-    ready.value = true;
-  });
+  // Le temps du chargement : des blocs gris à la forme des documents et des blocs (règles §4).
+  void Promise.all([loadDocuments(), loadChunks()])
+    .catch(() => undefined)
+    .finally(() => {
+      ready.value = true;
+    });
 });
 onUnmounted(() => window.removeEventListener("keydown", onKeydown));
 
@@ -278,14 +285,14 @@ const documentItems = computed<MoreMenuItem[]>(() => {
   if (!doc) return [];
   const certificate = doc.kind === "certificate";
   return [
-    { label: "Ouvrir le fichier", test: "open-document-file", href: `/api/documents/${doc.id}/file` },
+    { label: "Ouvrir le fichier", test: "open-document-file", icon: "external", href: `/api/documents/${doc.id}/file` },
     {
       label: certificate ? "Ce n'est pas un certificat de travail" : "C'est un certificat de travail",
       test: "toggle-certificate",
       icon: "file",
       run: () => void setCertificate(doc, !certificate),
     },
-    { label: "Supprimer ce document", test: "remove-document", danger: true, run: () => void removeDocument(doc) },
+    { label: "Supprimer ce document", test: "remove-document", icon: "trash", danger: true, run: () => void removeDocument(doc) },
   ];
 });
 </script>
@@ -310,9 +317,14 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     <h2 class="section-title first">
       Documents
     </h2>
+    <!-- Une seule zone « Chargement… » (règles §4) : la liste, le dépôt et les blocs. -->
+    <LoadingBlocks
+      v-if="!ready"
+      :heights="['4rem', '7rem', '12rem']"
+    />
     <!-- Lignes calmes (docs/49 §2) : une action, le texte et « Supprimer » dans le panneau. -->
     <ul
-      v-if="documents.length"
+      v-if="ready && documents.length"
       class="calm-list doc-list"
     >
       <li
@@ -333,19 +345,20 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             </template>
           </span>
         </button>
-        <button
+        <BusyButton
           v-if="doc.text_status === 'ok' && doc.kind !== 'certificate'"
-          type="button"
           :class="[doc.id === firstReadable ? 'primary' : 'secondary', 'small']"
-          :disabled="proposing !== null"
+          :busy="proposing === doc.id"
+          busy-label="L'IA lit le document… (≈ 30 s)"
           :data-test="`propose-${doc.id}`"
           @click="propose(doc)"
         >
-          <span class="with-icon"><AppIcon name="ai" />{{ proposing === doc.id ? "L'IA lit le document… (≈ 30 s)" : "Proposer des blocs" }}</span>
-        </button>
+          <span class="with-icon"><AppIcon name="ai" />Proposer des blocs</span>
+        </BusyButton>
       </li>
     </ul>
     <label
+      v-if="ready"
       :class="['drop-zone', { busy: uploading, 'drop-zone-first': !documents.length }]"
       data-test="drop-zone"
     >
@@ -362,6 +375,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
     </label>
 
     <CertificatesSection
+      v-if="ready"
       :version="certificatesVersion"
       :documents="documents.length"
     />
@@ -390,7 +404,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
             v-if="documentItems.length"
             class="section-more"
             :items="documentItems"
-            label="Actions sur le document"
+            label="Plus d'actions sur le document"
             test-id="document-more"
           />
         </p>
@@ -403,80 +417,82 @@ const documentItems = computed<MoreMenuItem[]>(() => {
       </div>
     </SidePanel>
 
-    <div class="chunks-head">
-      <h2 class="section-title">
-        Blocs de profil
-      </h2>
-      <button
-        type="button"
-        class="pill"
-        data-test="new-chunk"
-        @click="newChunk()"
-      >
-        <span class="with-icon"><AppIcon name="plus" />Nouveau bloc</span>
-      </button>
-    </div>
-    <div
-      v-if="chunks.length"
-      class="tabs kind-tabs"
-      role="tablist"
-      aria-label="Types de blocs"
-    >
-      <button
-        type="button"
-        role="tab"
-        :aria-selected="filter === 'all'"
-        @click="filter = 'all'"
-      >
-        Tous <CountBadge
-          class="tab-count"
-          :count="chunks.length"
-        />
-      </button>
-      <button
-        v-for="kind in usedKinds"
-        :key="kind.value"
-        type="button"
-        role="tab"
-        :aria-selected="filter === kind.value"
-        @click="filter = kind.value"
-      >
-        {{ kind.label }} <CountBadge
-          class="tab-count"
-          :count="kindCount(kind.value)"
-        />
-      </button>
-    </div>
-
-    <!-- Cartes calmes (docs/49 §3) : 3 lignes, le type en bas, toute la carte ouvre le bloc, avec
-         survol ; 3 colonnes au plus, sans crayon (docs/130 §C). -->
-    <ul class="chunk-grid">
-      <li
-        v-for="chunk in visibleChunks"
-        :key="chunk.id"
-        :class="{ inactive: !chunk.active }"
-        data-test="chunk"
+    <template v-if="ready">
+      <div class="chunks-head">
+        <h2 class="section-title">
+          Blocs de profil
+        </h2>
+        <button
+          type="button"
+          class="pill"
+          data-test="new-chunk"
+          @click="newChunk()"
+        >
+          <span class="with-icon"><AppIcon name="plus" />Nouveau bloc</span>
+        </button>
+      </div>
+      <div
+        v-if="chunks.length"
+        class="tabs kind-tabs"
+        role="tablist"
+        aria-label="Types de blocs"
       >
         <button
           type="button"
-          class="chunk-card"
-          :data-test="`open-chunk-${chunk.id}`"
-          @click="editChunk(chunk)"
+          role="tab"
+          :aria-selected="filter === 'all'"
+          @click="filter = 'all'"
         >
-          <span class="job-title">{{ chunk.title }}</span>
-          <span class="chunk-content">{{ chunk.content }}</span>
-          <span class="chunk-foot">
-            <span>{{ chunkFoot(chunk) }}<template v-if="!chunk.active"> · inactif</template></span>
-          </span>
+          Tous <CountBadge
+            class="tab-count"
+            :count="chunks.length"
+          />
         </button>
-      </li>
-    </ul>
-    <p
-      v-if="!visibleChunks.length"
-      class="muted empty"
-    >
-      Aucun bloc ici. Crée-en un, ou sélectionne un passage dans un document.
-    </p>
+        <button
+          v-for="kind in usedKinds"
+          :key="kind.value"
+          type="button"
+          role="tab"
+          :aria-selected="filter === kind.value"
+          @click="filter = kind.value"
+        >
+          {{ kind.label }} <CountBadge
+            class="tab-count"
+            :count="kindCount(kind.value)"
+          />
+        </button>
+      </div>
+
+      <!-- Cartes calmes (docs/49 §3) : 3 lignes, le type en bas, toute la carte ouvre le bloc, avec
+         survol ; 3 colonnes au plus, sans crayon (docs/130 §C). -->
+      <ul class="chunk-grid">
+        <li
+          v-for="chunk in visibleChunks"
+          :key="chunk.id"
+          :class="{ inactive: !chunk.active }"
+          data-test="chunk"
+        >
+          <button
+            type="button"
+            class="chunk-card"
+            :data-test="`open-chunk-${chunk.id}`"
+            @click="editChunk(chunk)"
+          >
+            <span class="job-title">{{ chunk.title }}</span>
+            <span class="chunk-content">{{ chunk.content }}</span>
+            <span class="chunk-foot">
+              <span>{{ chunkFoot(chunk) }}<template v-if="!chunk.active"> · inactif</template></span>
+            </span>
+          </button>
+        </li>
+      </ul>
+      <p
+        v-if="!visibleChunks.length"
+        class="muted empty"
+      >
+        Aucun bloc ici. Crée-en un, ou sélectionne un passage dans un document.
+      </p>
+    </template>
   </div>
 
   <ChunkProposals

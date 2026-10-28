@@ -45,7 +45,7 @@ const menu = computed<MoreMenuItem[]>(() => [
       </StatusPill>
       <MoreMenu
         :items="menu"
-        :label="`Actions pour « ${group.terms} »`"
+        :label="`Plus d'actions sur la recherche « ${group.terms} »`"
         :test-id="`search-more-${group.ids[0]}`"
       />
     </SettingRow>

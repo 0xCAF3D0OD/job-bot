@@ -4,8 +4,8 @@ import { ref } from "vue";
 
 import type { Offer } from "../api/client";
 import { plural } from "../format";
-import AppIcon from "./AppIcon.vue";
 import ScoreWord from "./ScoreWord.vue";
+import ShowMore from "./ShowMore.vue";
 
 // « Pour cette offre » (docs/47 §2) : la note, les points forts et les manques, à côté de la
 // lettre et du CV, pour écrire en ayant l'offre sous les yeux.
@@ -53,14 +53,12 @@ const gaps = () => props.offer.gaps ?? [];
         </li>
       </ul>
     </div>
-    <button
-      v-if="!open && strengths().length + gaps().length > 3"
-      type="button"
-      class="link offer-brief-more"
-      data-test="offer-brief-more"
-      @click="open = true"
-    >
-      <span class="with-icon">Tout voir<AppIcon name="chevron-down" /></span>
-    </button>
+    <ShowMore
+      v-if="strengths().length + gaps().length > 3"
+      v-model="open"
+      class="offer-brief-more"
+      :hidden="strengths().length + gaps().length - 3"
+      test-id="offer-brief-more"
+    />
   </div>
 </template>

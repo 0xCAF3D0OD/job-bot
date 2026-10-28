@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import DomainField from "../components/DomainField.vue";
@@ -181,6 +182,13 @@ const opened = computed(() => items.value.find((t) => t.id === openId.value) ?? 
 const filtersOpen = ref(false);
 const activeFilters = computed(() => [kind.value, price.value, language.value].filter(Boolean).length);
 // Le nom du bouton Filtrer, annoncé et en infobulle, avec le nombre de filtres actifs (docs/101).
+// « Effacer les filtres » (règles §4, aucun résultat) : le type, le prix, la langue, puis le domaine.
+function clearFilters(): void {
+  kind.value = "";
+  price.value = "";
+  language.value = "";
+  if (domainOnly.value) setDomain(false);
+}
 const filterLabel = computed(() =>
   activeFilters.value ? `Filtrer, ${activeFilters.value} ${activeFilters.value > 1 ? "actifs" : "actif"}` : "Filtrer",
 );
@@ -328,17 +336,17 @@ onMounted(() => void load());
             v-if="canSuggest && tab === 'catalog'"
             class="news-status"
           >
-            <button
-              type="button"
+            <BusyButton
               class="secondary small"
-              :disabled="suggesting"
+              :busy="suggesting"
+              busy-label="Recherche en cours…"
               data-test="suggest"
               @click="suggest"
             >
               <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
-                <span class="with-icon"><AppIcon name="ai" />{{ suggesting ? "Recherche en cours…" : "Chercher d'autres formations" }}</span>
+                <span class="with-icon"><AppIcon name="ai" />Chercher d'autres formations</span>
               </HoverNote>
-            </button>
+            </BusyButton>
           </span>
         </div>
       </div>
@@ -390,11 +398,22 @@ onMounted(() => void load());
       >
         <p>Marque une formation « Intéressé » dans le catalogue.</p>
       </FaceState>
+      <!-- Aucun résultat (règles §4) : une ligne grise et « Effacer les filtres ». -->
       <p
         v-else-if="loaded && !shown.length"
         class="muted empty"
+        data-test="trainings-no-result"
       >
         Aucune formation avec ces filtres.
+        <button
+          v-if="activeFilters || domainOnly"
+          type="button"
+          class="link"
+          data-test="trainings-reset"
+          @click="clearFilters"
+        >
+          Effacer les filtres
+        </button>
       </p>
       <template v-else>
         <section

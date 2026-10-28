@@ -4,6 +4,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { api } from "../api/client";
 import { plural } from "../format";
 import { usePlan } from "../composables/usePlan";
+import BusyButton from "./BusyButton.vue";
 
 const { plan } = usePlan();
 
@@ -218,14 +219,16 @@ function openExisting(): void {
       </button>
     </p>
     <div class="form-actions">
-      <button
+      <BusyButton
         type="submit"
         class="primary"
-        :disabled="reading || full"
+        :busy="reading"
+        busy-label="Lecture…"
+        :disabled="full"
         data-test="manual-read"
       >
-        {{ reading ? "Lecture…" : "Lire l'annonce" }}
-      </button>
+        Lire l'annonce
+      </BusyButton>
     </div>
     <p
       class="hint"
@@ -322,14 +325,15 @@ function openExisting(): void {
       {{ error }}
     </p>
     <div class="form-actions">
-      <button
+      <BusyButton
         type="submit"
         class="primary"
-        :disabled="saving"
+        :busy="saving"
+        busy-label="Ajout…"
         data-test="manual-add"
       >
-        {{ saving ? "Ajout…" : "Ajouter l'offre" }}
-      </button>
+        Ajouter l'offre
+      </BusyButton>
       <button
         type="button"
         class="pill"
