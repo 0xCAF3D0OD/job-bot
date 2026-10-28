@@ -5,9 +5,10 @@ import { api } from "../api/client";
 import type { components } from "../api/schema";
 import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
-import CopyLabel from "./CopyLabel.vue";
+import CopyButton from "./CopyButton.vue";
 import { offerUndo } from "../composables/useUndo";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
@@ -17,7 +18,6 @@ import SettingRow from "./SettingRow.vue";
 type Token = components["schemas"]["CalendarTokenOut"];
 const tokens = ref<Token[]>([]);
 const created = ref<string | null>(null);
-const copied = ref(false);
 const creating = ref(false);
 const createError = ref("");
 
@@ -41,7 +41,6 @@ async function create(): Promise<void> {
       return;
     }
     created.value = data.url;
-    copied.value = false;
     await load();
   } catch {
     createError.value = "Création impossible : réessaie dans un instant.";
@@ -67,16 +66,6 @@ async function revoke(token: Token): Promise<void> {
   });
 }
 
-async function copy(): Promise<void> {
-  if (!created.value) return;
-  try {
-    await navigator.clipboard.writeText(created.value);
-    copied.value = true;
-  } catch {
-    copied.value = false;
-  }
-}
-
 // « Relue le 15 octobre » : la dernière fois que l'agenda a lu l'adresse (texte seul, sans icône).
 function lastRead(token: Token): string {
   if (!token.last_used_at) return "Pas encore relue par ton agenda.";
@@ -97,15 +86,15 @@ onMounted(load);
       title="Abonnement d'agenda"
       description="Une adresse secrète que ton agenda relit tout seul pour y montrer tes dates."
     >
-      <button
-        type="button"
+      <BusyButton
         class="secondary small"
-        :disabled="creating"
+        :busy="creating"
+        busy-label="Création…"
         data-test="agenda-create"
         @click="create"
       >
         <span class="with-icon"><AppIcon name="plus" />Créer l'abonnement</span>
-      </button>
+      </BusyButton>
     </SettingRow>
     <p
       v-if="createError"
@@ -126,16 +115,11 @@ onMounted(load);
         data-test="agenda-url"
       >
         <code>{{ created }}</code>
-        <button
-          type="button"
-          class="link"
-          @click="copy"
-        >
-          <CopyLabel
-            :done="copied"
-            label="Copier l'adresse"
-          />
-        </button>
+        <CopyButton
+          :value="created"
+          label="Copier l'adresse"
+          test-id="agenda-url-copy"
+        />
       </div>
     </SettingRow>
     <SettingRow

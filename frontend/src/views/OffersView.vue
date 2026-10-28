@@ -8,6 +8,7 @@ import ApplicationForm, { type ApplicationFormValue } from "../components/Applic
 import IconButton from "../components/IconButton.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
+import ShowMore from "../components/ShowMore.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SpontaneousForm from "../components/SpontaneousForm.vue";
 import ManualOfferForm from "../components/ManualOfferForm.vue";
@@ -233,6 +234,10 @@ async function manualAdded(result: { id: number; existing: boolean; status: stri
   await openFromQuery();
 }
 let requestId = 0;
+
+function loadMore(): void {
+  if (!loading.value) void load(true);
+}
 
 async function load(append = false): Promise<void> {
   const current = ++requestId;
@@ -611,7 +616,7 @@ onUnmounted(() => {
         <!-- Tout est examiné (1.6.50) : pas de bande, pas de bouton ; les nouvelles viennent seules. -->
         <FaceState
           v-else-if="!loading && items.length === 0 && allReviewed"
-          title="Tout est examiné."
+          title="Tout est examiné"
           illustration="reussite"
           data-test="offers-all-reviewed"
         >
@@ -634,25 +639,28 @@ onUnmounted(() => {
             </RouterLink>
           </div>
         </FaceState>
+        <!-- Aucun résultat avec des filtres (règles §4) : une ligne grise et « Effacer les filtres ». -->
+        <p
+          v-else-if="!loading && items.length === 0 && activeCount(filters)"
+          class="muted empty"
+          data-test="offers-empty"
+        >
+          Aucune offre avec ces filtres.
+          <button
+            type="button"
+            class="link"
+            data-test="offers-reset"
+            @click="reset"
+          >
+            Effacer les filtres
+          </button>
+        </p>
         <FaceState
           v-else-if="!loading && items.length === 0"
           title="Aucune offre"
           data-test="offers-empty"
         >
           <p>Rien ne correspond pour l'instant.</p>
-          <div
-            v-if="activeCount(filters)"
-            class="face-state-actions"
-          >
-            <button
-              type="button"
-              class="primary"
-              data-test="offers-reset"
-              @click="reset"
-            >
-              <span class="with-icon"><AppIcon name="close" />Effacer les filtres</span>
-            </button>
-          </div>
         </FaceState>
         <TransitionGroup
           tag="ul"
@@ -681,15 +689,14 @@ onUnmounted(() => {
             />
           </li>
         </TransitionGroup>
-        <button
+        <!-- La suite de la liste, sur place (règles §4, « Afficher plus (N) ») : chargée par pages. -->
+        <ShowMore
           v-if="items.length < total"
-          type="button"
-          class="secondary more"
-          :disabled="loading"
-          @click="load(true)"
-        >
-          <span class="with-icon"><AppIcon name="chevron-down" />Afficher plus</span>
-        </button>
+          :model-value="false"
+          :hidden="total - items.length"
+          test-id="offers-more"
+          @update:model-value="loadMore"
+        />
       </div>
 
       <Transition name="detail">

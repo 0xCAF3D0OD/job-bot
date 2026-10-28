@@ -18,16 +18,16 @@ const emit = defineEmits<{
 function rowItems(application: Application): MoreMenuItem[] {
   const items: MoreMenuItem[] = [];
   if (application.letter_draft_id) {
-    items.push({ label: "Lettre (Word)", test: "letter-docx", href: `/api/letters/${application.letter_draft_id}/docx`, download: true });
+    items.push({ label: "Lettre (Word)", test: "letter-docx", icon: "download", href: `/api/letters/${application.letter_draft_id}/docx`, download: true });
   }
   if (application.cv_draft_id) {
-    items.push({ label: "CV (Word)", test: "cv-docx", href: `/api/cvs/${application.cv_draft_id}/docx`, download: true });
+    items.push({ label: "CV (Word)", test: "cv-docx", icon: "download", href: `/api/cvs/${application.cv_draft_id}/docx`, download: true });
   }
   if (application.application_url?.startsWith("http")) {
-    items.push({ label: "Ouvrir l'annonce", test: "application-link", href: application.application_url });
+    items.push({ label: "Ouvrir l'annonce", test: "application-link", icon: "external", href: application.application_url });
   }
   items.push({ label: "Modifier", test: "edit-application", icon: "pencil", run: () => emit("edit", application) });
-  items.push({ label: "Supprimer", test: "remove-application", danger: true, run: () => emit("remove", application) });
+  items.push({ label: "Supprimer", test: "remove-application", icon: "trash", run: () => emit("remove", application) });
   return items;
 }
 </script>
@@ -100,7 +100,7 @@ function rowItems(application: Application): MoreMenuItem[] {
         <td class="row-more">
           <MoreMenu
             :items="rowItems(application)"
-            :label="`Actions sur la candidature chez ${application.company}`"
+            :label="`Plus d'actions sur la candidature chez ${application.company}`"
             test-id="row-more"
           />
         </td>

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import AuthSplit from "../components/AuthSplit.vue";
+import BusyButton from "../components/BusyButton.vue";
 import { useAuth } from "../composables/useAuth";
 import { untilDay } from "../format";
 
@@ -39,6 +40,7 @@ onMounted(async () => {
 });
 
 async function submit(): Promise<void> {
+  if (busy.value) return;
   error.value = "";
   if (password.value !== again.value) {
     error.value = "Les deux mots de passe diffèrent.";
@@ -136,14 +138,15 @@ async function submit(): Promise<void> {
         {{ error }}
       </p>
       <div class="form-actions">
-        <button
+        <BusyButton
           type="submit"
           class="primary"
-          :disabled="busy"
+          :busy="busy"
+          :busy-label="link.kind === 'reset' ? 'Changement…' : 'Création…'"
           data-test="access-submit"
         >
           {{ link.kind === "reset" ? "Changer mon mot de passe" : "Créer mon compte" }}
-        </button>
+        </BusyButton>
       </div>
     </form>
   </AuthSplit>

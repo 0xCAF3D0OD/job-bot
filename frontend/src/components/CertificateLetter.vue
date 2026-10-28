@@ -4,7 +4,8 @@ import { onMounted, ref } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "./AppIcon.vue";
-import CopyLabel from "./CopyLabel.vue";
+import BusyButton from "./BusyButton.vue";
+import CopyButton from "./CopyButton.vue";
 import HoverNote from "./HoverNote.vue";
 import SidePanel from "./SidePanel.vue";
 import { usePlan } from "../composables/usePlan";
@@ -21,12 +22,10 @@ const letter = ref<Letter | null>(null);
 const text = ref("");
 const busy = ref(false);
 const failed = ref("");
-const copied = ref(false);
 
 async function load(ai = false): Promise<void> {
   busy.value = true;
   failed.value = "";
-  copied.value = false;
   try {
     const path = { params: { path: { document_id: props.documentId ?? 0 } } };
     const result = !props.documentId
@@ -42,15 +41,6 @@ async function load(ai = false): Promise<void> {
     }
   } finally {
     busy.value = false;
-  }
-}
-
-async function copy(): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(`${letter.value?.subject ?? ""}\n\n${text.value}`);
-    copied.value = true;
-  } catch {
-    copied.value = false;
   }
 }
 
@@ -92,26 +82,23 @@ onMounted(() => void load());
           Modèle simple : {{ letter.reason }}.
         </p>
         <div class="form-actions">
-          <button
-            type="button"
-            class="secondary small"
-            data-test="certificate-letter-copy"
-            @click="copy"
-          >
-            <CopyLabel :done="copied" />
-          </button>
-          <button
+          <CopyButton
+            :value="`${letter.subject}\n\n${text}`"
+            label="Copier la lettre"
+            test-id="certificate-letter-copy"
+          />
+          <BusyButton
             v-if="documentId && !letter.ai"
-            type="button"
             class="link"
-            :disabled="busy"
+            :busy="busy"
+            busy-label="L'IA rédige…"
             data-test="certificate-letter-ai"
             @click="load(true)"
           >
             <HoverNote :text="aiNote('Environ 0,02 CHF.', undefined, 'Le certificat part sans ton nom ni les personnes citées.')">
-              <span class="with-icon"><AppIcon name="ai" />{{ busy ? "L'IA rédige…" : "Rédiger avec l'IA" }}</span>
+              <span class="with-icon"><AppIcon name="ai" />Rédiger avec l'IA</span>
             </HoverNote>
-          </button>
+          </BusyButton>
         </div>
         <p class="hint">
           Pour un désaccord, parle-en à ton conseiller ORP ou à un service juridique.

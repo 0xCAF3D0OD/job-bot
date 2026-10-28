@@ -65,7 +65,7 @@ function width(responses: number, total: number): string {
       v-if="!parts.length"
       class="hint"
     >
-      Rien à comparer pour l'instant.
+      Aucune comparaison pour l'instant.
     </p>
   </div>
 </template>

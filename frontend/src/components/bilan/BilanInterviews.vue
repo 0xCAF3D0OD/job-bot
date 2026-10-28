@@ -48,7 +48,7 @@ function state(line: components["schemas"]["InterviewLineOut"]): string {
       v-else
       class="hint"
     >
-      Pas encore d'entretien.
+      Aucun entretien pour l'instant.
     </p>
   </div>
 </template>

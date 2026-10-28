@@ -234,6 +234,29 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     expect(wrapper.find("[data-test=sheet-write]").classes()).toContain("secondary");
   });
 
+  it("supprimer le rendez-vous : retiré tout de suite, « Annuler » pendant 6 s, sans rouge dans « ⋯ »", async () => {
+    vi.useFakeTimers();
+    try {
+      GET.mockResolvedValue({ data: { meeting: MEETING, preparation: { ...PREP, months }, ...MORE } });
+      DELETE.mockResolvedValue({ data: { meeting: null, preparation: { ...PREP, months }, ...MORE } });
+      const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
+      await flushPromises();
+      const more = wrapper.find("[data-test=meeting-more]");
+      expect(more.attributes("aria-label")).toBe("Plus d'actions sur le rendez-vous");
+      await more.trigger("click");
+      const remove = wrapper.find("[data-test=meeting-delete]");
+      expect(remove.classes()).not.toContain("danger");
+      await remove.trigger("click");
+      await flushPromises();
+      expect(wrapper.find("[data-test=meeting-when]").exists()).toBe(false);
+      expect(DELETE).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(6000);
+      expect(DELETE).toHaveBeenCalledWith("/api/orp-meeting", { keepalive: false });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("une obligation en retard rejoint la conclusion, en orange", async () => {
     const obligations = [
       { text: "Preuves de septembre : à remettre au plus tard le 5 octobre.", due: "2020-10-05", done: false },

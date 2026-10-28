@@ -17,6 +17,7 @@ import PlatformPanel from "../components/PlatformPanel.vue";
 import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
+import BusyButton from "../components/BusyButton.vue";
 import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
 import SettingCard from "../components/SettingCard.vue";
 import SettingRow from "../components/SettingRow.vue";
@@ -24,6 +25,7 @@ import SitesPanel from "../components/SitesPanel.vue";
 
 import AiSpend from "../components/AiSpend.vue";
 import FaceState from "../components/FaceState.vue";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 
 const DEFAULTS: SettingsModel = {
   orp_monthly_target: null,
@@ -63,6 +65,7 @@ const testMessage = ref("");
 const testing = ref(false);
 
 async function sendTest(): Promise<void> {
+  if (testing.value) return;
   testing.value = true;
   try {
     const { error, response } = await api.POST("/api/notifications/test");
@@ -501,6 +504,11 @@ onUnmounted(() => spy?.disconnect());
               </SettingRow>
             </SettingCard>
           </template>
+          <!-- Le temps du chargement : des blocs gris à la forme des cartes (règles §4). -->
+          <LoadingBlocks
+            v-else
+            :heights="['4.5rem', '4.5rem', '14rem', '4.5rem']"
+          />
         </SettingsSection>
 
         <SettingsSection
@@ -657,6 +665,11 @@ onUnmounted(() => spy?.disconnect());
               </SettingRow>
             </SettingCard>
           </template>
+          <!-- Le temps du chargement : des blocs gris à la forme des cartes (règles §4). -->
+          <LoadingBlocks
+            v-else
+            :heights="['4.5rem', '6rem', '10rem']"
+          />
         </SettingsSection>
 
         <SettingsSection
@@ -726,15 +739,15 @@ onUnmounted(() => spy?.disconnect());
                     role="status"
                     class="muted"
                   >{{ testMessage }}</span>
-                  <button
-                    type="button"
+                  <BusyButton
                     class="secondary small"
-                    :disabled="testing"
+                    :busy="testing"
+                    busy-label="Envoi…"
                     data-test="test-notification"
                     @click="sendTest"
                   >
                     Envoyer
-                  </button>
+                  </BusyButton>
                 </SettingRow>
               </template>
               <SettingRow
@@ -747,15 +760,15 @@ onUnmounted(() => spy?.disconnect());
                   role="status"
                   class="muted"
                 >{{ testMessage }}</span>
-                <button
-                  type="button"
+                <BusyButton
                   class="secondary small"
-                  :disabled="testing"
+                  :busy="testing"
+                  busy-label="Envoi…"
                   data-test="test-notification"
                   @click="sendTest"
                 >
                   Envoyer
-                </button>
+                </BusyButton>
               </SettingRow>
               <SettingRow
                 v-else-if="notificationsUnknown"
@@ -770,6 +783,11 @@ onUnmounted(() => spy?.disconnect());
               />
             </SettingCard>
           </template>
+          <!-- Le temps du chargement : des blocs gris à la forme des cartes (règles §4). -->
+          <LoadingBlocks
+            v-else
+            :heights="['4.5rem', '8rem']"
+          />
         </SettingsSection>
 
         <SettingsSection
@@ -844,6 +862,11 @@ onUnmounted(() => spy?.disconnect());
               </SettingCard>
             </template>
           </template>
+          <!-- Le temps du chargement : des blocs gris à la forme des cartes (règles §4). -->
+          <LoadingBlocks
+            v-else
+            :heights="['4.5rem', '4.5rem', '8rem']"
+          />
         </SettingsSection>
 
         <SettingsSection

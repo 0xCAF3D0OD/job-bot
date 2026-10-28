@@ -62,7 +62,7 @@ describe("Certificats de travail", () => {
     const read = wrapper.find("[data-test=certificate-2]");
     expect(read.find("[data-test=certificate-advice]").text()).toContain("Demande une reformulation.");
     expect(read.find(".certificate-notes").text()).toContain("Les tâches manquent.");
-    expect(read.find("[data-test=certificate-read-2]").text()).toBe("Relire en détail");
+    expect(read.find("[data-test=certificate-read-2] .busy-label").text()).toBe("Relire en détail");
   });
 
   it("sans certificat : rien ; l'IA indisponible : le dit", async () => {

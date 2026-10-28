@@ -148,8 +148,9 @@ describe("OffersView", () => {
     const filtered = await mountAt("/offres?canton=VD");
     expect(filtered.find("[data-test=offers-none-yet]").exists()).toBe(false);
     expect(filtered.find("[data-test=offers-empty]").exists()).toBe(true);
-    // L'action de l'écran vide : un bouton principal plein (règles §3.3, §4), plus un lien.
-    expect(filtered.find("[data-test=offers-reset]").classes()).toContain("primary");
+    // Aucun résultat avec des filtres (règles §4) : une ligne grise et le lien « Effacer les filtres ».
+    expect(filtered.find("[data-test=offers-empty]").text()).toContain("Aucune offre avec ces filtres.");
+    expect(filtered.find("[data-test=offers-reset]").classes()).toContain("link");
   });
 
   it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
@@ -689,13 +690,13 @@ describe("Offres, sans bande d'action (1.6.53)", () => {
     expect(wrapper.text()).not.toContain("Commencer le tri");
   });
 
-  it("tout est examiné : pas de bande, « Tout est examiné. » sans bouton, « Aucune offre à examiner. »", async () => {
+  it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre à examiner. »", async () => {
     const reviewed = { to_review: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
     mockOffers({ data: { ...page([]).data, counts: reviewed } });
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
     const done = wrapper.find("[data-test=offers-all-reviewed]");
-    expect(done.text()).toContain("Tout est examiné.");
+    expect(done.find(".face-state-title").text()).toBe("Tout est examiné");
     expect(done.text()).toContain("Les nouvelles arrivent chaque matin.");
     expect(done.find("button, a").exists()).toBe(false);
     expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à examiner.");

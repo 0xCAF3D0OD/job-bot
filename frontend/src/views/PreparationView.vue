@@ -14,7 +14,9 @@ import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import AiWriting from "../components/AiWriting.vue";
 import AppIcon from "../components/AppIcon.vue";
+import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
+import LoadingBlocks from "../components/LoadingBlocks.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { useAssistant } from "../composables/useAssistant";
@@ -282,7 +284,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <PageHero :title="offer?.title ?? (notFound ? 'Offre introuvable' : 'Chargement…')">
+  <PageHero :title="offer?.title ?? (notFound ? 'Offre introuvable' : '')">
     <!-- Toujours visible : revenir aux offres à tout moment (retour d'usage du 2026-10-07), en
          haut à gauche (0.99.1). -->
     <template #back>
@@ -374,6 +376,8 @@ onMounted(() => void load());
           </RouterLink>
         </div>
       </FaceState>
+      <!-- Le chargement : des blocs gris, pas de « Chargement… » à l'écran (règles §4). -->
+      <LoadingBlocks v-else-if="!offer" />
 
       <p
         v-if="offer?.expired_at && offer.status !== 'applied'"
@@ -639,17 +643,18 @@ onMounted(() => void load());
               />
             </label>
             <div class="mobile-dock">
-              <button
-                type="button"
+              <BusyButton
                 :class="nextStep === 'letter' ? 'primary' : 'secondary'"
-                :disabled="writing || reached('letter')"
+                :busy="writing"
+                busy-label="Rédaction…"
+                :disabled="reached('letter')"
                 data-test="write"
                 @click="write()"
               >
                 <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
-                  <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : selected ? "Nouvelle version" : "Rédiger la lettre" }}</span>
+                  <span class="with-icon"><AppIcon name="ai" />{{ selected ? "Nouvelle version" : "Rédiger la lettre" }}</span>
                 </HoverNote>
-              </button>
+              </BusyButton>
             </div>
             <PlanLimit usage="letter" />
             <InlineConfirm

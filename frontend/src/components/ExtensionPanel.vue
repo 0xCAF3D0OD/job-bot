@@ -8,7 +8,7 @@ import { browserName } from "../browserName";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
-import CopyLabel from "./CopyLabel.vue";
+import CopyButton from "./CopyButton.vue";
 import { offerUndo } from "../composables/useUndo";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
@@ -21,7 +21,6 @@ type Token = components["schemas"]["TokenOut"];
 
 const tokens = ref<Token[]>([]);
 const created = ref<string | null>(null);
-const copied = ref(false);
 const origin = globalThis.location?.origin ?? "";
 
 async function load(): Promise<void> {
@@ -33,7 +32,6 @@ async function create(): Promise<void> {
   const { data } = await api.POST("/api/extension-tokens", { body: { name: browserName(), link: false } });
   if (!data) return;
   created.value = data.token;
-  copied.value = false;
   await load();
 }
 
@@ -52,16 +50,6 @@ async function revoke(token: Token): Promise<void> {
       tokens.value = before;
     },
   });
-}
-
-async function copy(): Promise<void> {
-  if (!created.value) return;
-  try {
-    await navigator.clipboard.writeText(created.value);
-    copied.value = true;
-  } catch {
-    copied.value = false;
-  }
 }
 
 // « Navigateur relié · utilisé le 15 oct. », « utilisé hier » (texte seul, sans icône).
@@ -136,16 +124,11 @@ onMounted(load);
         data-test="extension-token"
       >
         <code>{{ created }}</code>
-        <button
-          type="button"
-          class="link"
-          @click="copy"
-        >
-          <CopyLabel
-            :done="copied"
-            label="Copier le jeton"
-          />
-        </button>
+        <CopyButton
+          :value="created"
+          label="Copier le jeton"
+          test-id="extension-token-copy"
+        />
       </div>
     </SettingRow>
   </SettingCard>

@@ -7,10 +7,11 @@ import { plural, sourceLabel } from "../format";
 import JournalPanel from "./JournalPanel.vue";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
+import ShowMore from "./ShowMore.vue";
 
 // Les alertes reçues (planche « 6. Alertes », 1.6.70) : les trois dernières, le site et le nombre
-// d'offres en titre, la recherche et l'heure en phrase ; « Tout voir » ouvre le journal complet, avec
-// ses filtres (divulgation progressive).
+// d'offres en titre, la recherche et l'heure en phrase ; « Afficher plus », en bas, déplie sur place le
+// journal complet, avec ses filtres (divulgation progressive ; règles §4, ShowMore).
 const LATEST = 3;
 const items = ref<Search[]>([]);
 const total = ref(0);
@@ -41,16 +42,6 @@ onMounted(async () => {
       <h2 class="section-title">
         Alertes reçues
       </h2>
-      <button
-        v-if="total > LATEST || all"
-        type="button"
-        class="link"
-        :aria-expanded="all"
-        data-test="received-all"
-        @click="all = !all"
-      >
-        {{ all ? "Les trois dernières" : "Tout voir" }}
-      </button>
     </div>
     <JournalPanel v-if="all" />
     <SettingCard v-else>
@@ -68,5 +59,11 @@ onMounted(async () => {
         Aucune alerte reçue pour l'instant.
       </p>
     </SettingCard>
+    <ShowMore
+      v-if="total > LATEST || all"
+      v-model="all"
+      :hidden="Math.max(total - LATEST, 0)"
+      test-id="received-all"
+    />
   </section>
 </template>

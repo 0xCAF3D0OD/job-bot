@@ -5,6 +5,7 @@ import { api, type Profile, type ProfileList } from "../api/client";
 import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import { plural } from "../format";
+import BusyButton from "./BusyButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
@@ -57,6 +58,7 @@ function apply(data: ProfileList | undefined): void {
 }
 
 async function create(): Promise<void> {
+  if (busy.value) return;
   busy.value = true;
   message.value = "";
   try {
@@ -98,7 +100,7 @@ function profileItems(profile: Profile): MoreMenuItem[] {
   return [
     { label: "Dupliquer", test: "profile-duplicate", icon: "copy", run: () => void duplicate(profile) },
     { label: "Renommer", test: "profile-rename", icon: "pencil", run: () => void rename(profile) },
-    ...(profile.is_main ? [] : [{ label: "Supprimer", test: "profile-delete", danger: true, run: () => void remove(profile) }]),
+    ...(profile.is_main ? [] : [{ label: "Supprimer", test: "profile-delete", icon: "trash" as const, danger: true, run: () => void remove(profile) }]),
   ];
 }
 
@@ -205,7 +207,7 @@ onMounted(async () => {
         </button>
         <MoreMenu
           :items="profileItems(profile)"
-          :label="`Actions sur le profil ${profile.name}`"
+          :label="`Plus d'actions sur le profil ${profile.name}`"
           test-id="profile-more"
         />
       </SettingRow>
@@ -248,17 +250,17 @@ onMounted(async () => {
         v-if="canPropose"
         class="wide"
       >
-        <button
-          type="button"
+        <BusyButton
           class="secondary small"
-          :disabled="proposing"
+          :busy="proposing"
+          busy-label="Proposition…"
           data-test="propose-keywords"
           @click="propose"
         >
           <HoverNote :text="proposing ? '' : 'Environ 0,001 $.'">
-            <span class="with-icon"><AppIcon name="ai" />{{ proposing ? "Proposition…" : "Proposer des mots-clés" }}</span>
+            <span class="with-icon"><AppIcon name="ai" />Proposer des mots-clés</span>
           </HoverNote>
-        </button>
+        </BusyButton>
       </div>
       <div class="wide chip-group">
         <span class="chip-label">Langues</span>
@@ -287,14 +289,15 @@ onMounted(async () => {
         </button>
       </div>
       <div class="form-actions wide">
-        <button
+        <BusyButton
           type="submit"
           class="secondary small"
-          :disabled="busy"
+          :busy="busy"
+          busy-label="Création…"
           data-test="save-profile"
         >
           Créer le profil
-        </button>
+        </BusyButton>
         <button
           type="button"
           class="link"

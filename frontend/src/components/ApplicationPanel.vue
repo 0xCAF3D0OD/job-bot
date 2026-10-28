@@ -14,7 +14,7 @@ import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
 import StatusPill from "./StatusPill.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
-import CopyLabel from "./CopyLabel.vue";
+import CopyButton from "./CopyButton.vue";
 import JobRoomDeclared from "./JobRoomDeclared.vue";
 
 // Panneau d'une candidature (docs/46 §3) : Statut, Entretiens, Pour l'ORP, Documents, Contacts.
@@ -80,7 +80,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [];
   if (a.cv_draft_id) items.push({ label: "CV (Word)", test: "panel-cv", icon: "download", href: `/api/cvs/${a.cv_draft_id}/docx`, download: true });
   if (a.application_url?.startsWith("http")) {
-    items.push({ label: "Ouvrir l'annonce", test: "panel-link", href: a.application_url });
+    items.push({ label: "Ouvrir l'annonce", test: "panel-link", icon: "external", href: a.application_url });
   }
   return items;
 });
@@ -101,19 +101,6 @@ const remoteAbroad = computed(
   () => props.application.remote_full && !/suisse|switzerland|schweiz/i.test(props.application.remote_region ?? ""),
 );
 
-const copied = ref("");
-async function copy(value: string, key: string): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(value);
-    copied.value = key;
-    setTimeout(() => {
-      if (copied.value === key) copied.value = "";
-    }, 1500);
-  } catch {
-    copied.value = "";
-  }
-}
-
 // « ⋯ » (docs/50 §1) : Modifier, Demander à l'assistant, Supprimer.
 const assistant = useAssistant();
 function askAssistant(): void {
@@ -123,7 +110,7 @@ function askAssistant(): void {
 const menuItems = computed<MoreMenuItem[]>(() => [
   { label: "Modifier", test: "panel-edit", icon: "pencil", run: () => emit("edit", props.application) },
   ...(assistant.available.value ? [{ label: "Demander à l'assistant", test: "panel-ask", icon: "ai" as const, run: askAssistant }] : []),
-  { label: "Supprimer", test: "panel-remove", danger: true, run: () => emit("remove", props.application) },
+  { label: "Supprimer", test: "panel-remove", icon: "trash", run: () => emit("remove", props.application) },
 ]);
 
 const onStatus = (event: Event): void =>
@@ -156,7 +143,7 @@ const onStatus = (event: Event): void =>
       </p>
       <MoreMenu
         :items="menuItems"
-        label="Actions sur la candidature"
+        label="Plus d'actions sur la candidature"
         test-id="panel-more"
       />
     </div>
@@ -236,7 +223,7 @@ const onStatus = (event: Event): void =>
           v-if="interviewItems.length"
           class="section-more"
           :items="interviewItems"
-          label="Actions sur les entretiens"
+          label="Plus d'actions sur les entretiens"
           test-id="interviews-more"
         />
       </div>
@@ -329,15 +316,12 @@ const onStatus = (event: Event): void =>
               class="job-room-choice"
             >{{ item.value ? `à cocher : ${item.value}` : "—" }}</span>
             <span v-else>{{ item.value || "—" }}</span>
-            <button
+            <CopyButton
               v-if="item.value && !item.choice"
-              type="button"
-              class="link"
-              data-test="card-copy"
-              @click="copy(item.value, item.label)"
-            >
-              <CopyLabel :done="copied === item.label" />
-            </button>
+              :value="item.value"
+              :label="`Copier : ${item.label}`"
+              test-id="card-copy"
+            />
           </dd>
         </template>
       </dl>
@@ -355,7 +339,7 @@ const onStatus = (event: Event): void =>
           class="section-more"
           :items="documentItems"
           :inline="!application.letter_draft_id"
-          label="Actions sur les documents"
+          label="Plus d'actions sur les documents"
           test-id="documents-more"
         />
       </div>

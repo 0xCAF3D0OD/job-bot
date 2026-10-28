@@ -10,8 +10,9 @@ import { blocks, readEvents } from "../assistantText";
 import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssistant";
 import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
-import CopyLabel from "./CopyLabel.vue";
+import CopyButton from "./CopyButton.vue";
 import IconButton from "./IconButton.vue";
+import InlineConfirm from "./InlineConfirm.vue";
 import AssistantMascot, { type MascotMood } from "./AssistantMascot.vue";
 import EngagementMoment from "./EngagementMoment.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -31,7 +32,6 @@ const recent = ref<Conversation[]>([]);
 const draft = ref("");
 const busy = ref(false);
 const reading = ref<string | null>(null);
-const copied = ref<number | null>(null);
 const scroller = ref<HTMLElement | null>(null);
 const input = ref<HTMLTextAreaElement | null>(null);
 let controller: AbortController | null = null;
@@ -114,7 +114,11 @@ async function resume(conversation: Conversation): Promise<void> {
   scrollDown();
 }
 
+// Effacer ne se rattrape pas : la confirmation s'ouvre sur place, sous la tête (règles §4, Menu « ⋯ »).
+const confirmingErase = ref(false);
+
 function startOver(): void {
+  confirmingErase.value = false;
   controller?.abort();
   conversationId.value = null;
   lines.value = [];
@@ -239,18 +243,6 @@ function onBeforeInput(event: InputEvent): void {
   void send();
 }
 
-async function copy(text: string, index: number): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(text);
-    copied.value = index;
-    setTimeout(() => {
-      if (copied.value === index) copied.value = null;
-    }, 1500);
-  } catch {
-    copied.value = null;
-  }
-}
-
 // « Confirmer », « Non merci », « Annuler » : seul un clic change quelque chose (docs/52).
 const deciding = ref<number | null>(null);
 const celebrated = ref<number | null>(null);
@@ -286,9 +278,9 @@ const DONE_TEXT: Record<string, string> = {
   stale: "Plus à faire : rien n'a été changé.",
 };
 
-// « Nouvelle discussion » visible, l'effacement dans « ⋯ » (docs/74).
+// « Nouvelle discussion » visible, l'effacement dans « ⋯ » (docs/74), confirmé sur place.
 const headItems: MoreMenuItem[] = [
-  { label: "Effacer la discussion", test: "assistant-erase", danger: true, run: () => void erase() },
+  { label: "Effacer la discussion", test: "assistant-erase", icon: "trash", danger: true, run: () => (confirmingErase.value = true) },
 ];
 </script>
 
@@ -331,7 +323,7 @@ const headItems: MoreMenuItem[] = [
           <MoreMenu
             v-if="lines.length"
             :items="headItems"
-            label="Actions sur la discussion"
+            label="Plus d'actions sur la discussion"
             test-id="assistant-more"
           />
           <IconButton
@@ -342,6 +334,14 @@ const headItems: MoreMenuItem[] = [
           />
         </div>
       </header>
+      <InlineConfirm
+        v-if="confirmingErase && lines.length"
+        message="Effacer la discussion ? Elle ne pourra pas être retrouvée."
+        confirm-label="Effacer"
+        @confirm="erase"
+        @cancel="confirmingErase = false"
+        @keydown.esc.stop
+      />
 
       <div
         ref="scroller"
@@ -484,14 +484,10 @@ const headItems: MoreMenuItem[] = [
                 class="assistant-copy"
               >
                 <pre>{{ block.text }}</pre>
-                <button
-                  type="button"
-                  class="link"
-                  data-test="assistant-copy"
-                  @click="copy(block.text, index * 100 + b)"
-                >
-                  <CopyLabel :done="copied === index * 100 + b" />
-                </button>
+                <CopyButton
+                  :value="block.text"
+                  test-id="assistant-copy"
+                />
               </div>
             </template>
           </template>

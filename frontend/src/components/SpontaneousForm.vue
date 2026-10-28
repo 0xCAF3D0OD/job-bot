@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 
 // Candidature spontanée (docs/39 §1) : entreprise, poste visé, « Pourquoi elle » ; puis, au
 // choix, l'adresse au registre du commerce ; enfin la préparation habituelle (lettre, CV).
@@ -154,15 +155,15 @@ function prepare(): void {
     </p>
     <template v-else>
       <span class="spontaneous-search">
-        <button
-          type="button"
+        <BusyButton
           class="secondary small"
-          :disabled="searching"
+          :busy="searching"
+          busy-label="Recherche…"
           data-test="spontaneous-search"
           @click="searchAddress"
         >
-          <span class="with-icon"><AppIcon name="ai" />{{ searching ? "Recherche…" : "Chercher l'adresse au registre" }}</span>
-        </button>
+          <span class="with-icon"><AppIcon name="ai" />Chercher l'adresse au registre</span>
+        </BusyButton>
       </span>
       <ul
         v-if="candidates.length"

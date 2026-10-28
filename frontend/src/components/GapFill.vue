@@ -4,6 +4,7 @@ import { ref } from "vue";
 import { api } from "../api/client";
 import { gapSkill } from "../format";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import HoverNote from "./HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
 
@@ -29,7 +30,7 @@ function start(): void {
 }
 
 async function add(): Promise<void> {
-  if (!title.value.trim() || !content.value.trim()) return;
+  if (busy.value || !title.value.trim() || !content.value.trim()) return;
   busy.value = true;
   error.value = "";
   try {
@@ -92,14 +93,16 @@ async function add(): Promise<void> {
       {{ error }}
     </p>
     <div class="pill-row">
-      <button
+      <BusyButton
         type="submit"
         class="primary"
-        :disabled="busy || !title.trim() || !content.trim()"
+        :busy="busy"
+        busy-label="Ajout…"
+        :disabled="!title.trim() || !content.trim()"
         data-test="gap-fill-add"
       >
         <span class="with-icon"><AppIcon name="ai" /><HoverNote :text="aiNote('Environ 0,003 $.', undefined, 'L\'offre est renotée avec ce bloc.')">Ajouter au profil</HoverNote></span>
-      </button>
+      </BusyButton>
       <button
         type="button"
         class="link"

@@ -8,9 +8,10 @@ import AssistantPanel from "./AssistantPanel.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();
+const DELETE = vi.fn();
 vi.mock("../api/client", async (original) => ({
   ...(await original<typeof import("../api/client")>()),
-  api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), DELETE: vi.fn() },
+  api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), DELETE: (...a: unknown[]) => DELETE(...a) },
 }));
 afterEach(() => {
   vi.resetAllMocks();
@@ -132,6 +133,47 @@ describe("AssistantPanel, propositions (docs/52)", () => {
     const lines = wrapper.findAll(".assistant-line");
     expect(lines[1]!.find("[data-test=assistant-action]").text()).toContain("rien n'a été changé");
     expect(wrapper.find("[data-test=assistant-action-confirm]").exists()).toBe(false);
+  });
+});
+
+describe("AssistantPanel, effacer la discussion (règles §4, menu « ⋯ »)", () => {
+  it("« Effacer la discussion » se confirme sur place ; « Garder » n'efface rien", async () => {
+    const wrapper = await mountPanel();
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data: path.endsWith("{conversation_id}")
+          ? {
+              id: 3,
+              title: "Trie",
+              updated_at: "2026-10-15T10:01:00Z",
+              messages: [{ id: 1, role: "user", content: "Trie", created_at: "2026-10-15T09:59:00Z" }],
+              actions: [],
+            }
+          : [{ id: 3, title: "Trie", updated_at: "2026-10-15T10:01:00Z" }],
+      }),
+    );
+    useAssistant().open.value = false;
+    await flushPromises();
+    useAssistant().open.value = true;
+    await flushPromises();
+    await wrapper.find("[data-test=assistant-recent]").trigger("click");
+    await flushPromises();
+    const more = wrapper.find("[data-test=assistant-more]");
+    expect(more.attributes("aria-label")).toBe("Plus d'actions sur la discussion");
+
+    await more.trigger("click");
+    await wrapper.find("[data-test=assistant-erase]").trigger("click");
+    expect(wrapper.find("[data-test=inline-confirm]").exists()).toBe(true);
+    await wrapper.find("[data-test=inline-confirm-no]").trigger("click");
+    expect(wrapper.find("[data-test=inline-confirm]").exists()).toBe(false);
+    expect(DELETE).not.toHaveBeenCalled();
+
+    await wrapper.find("[data-test=assistant-more]").trigger("click");
+    await wrapper.find("[data-test=assistant-erase]").trigger("click");
+    await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/assistant/conversations/{conversation_id}", { params: { path: { conversation_id: 3 } } });
+    expect(wrapper.find(".assistant-line").exists()).toBe(false);
   });
 });
 

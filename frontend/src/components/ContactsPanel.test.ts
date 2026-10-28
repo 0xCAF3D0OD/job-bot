@@ -55,6 +55,14 @@ function page(contacts: unknown[]) {
 }
 
 describe("ContactsPanel", () => {
+  it("vide : « Aucun contact pour l'instant. » sous la tête, sans « · 0 » (règles §4)", async () => {
+    GET.mockResolvedValue(page([]));
+    const wrapper = mount(ContactsPanel, { props: { applicationId: 3 } });
+    await flushPromises();
+    expect(wrapper.find(".contacts-empty").text()).toBe("Aucun contact pour l'instant.");
+    expect(wrapper.text()).not.toContain("· 0");
+  });
+
   it("ouvre les recherches dans un nouvel onglet et propose la relance après 7 jours", async () => {
     GET.mockResolvedValue(page([contact(1, { name: "Marie" }), contact(2, { contacted_on: daysAgo(2) })]));
     const wrapper = mount(ContactsPanel, { props: { applicationId: 3, company: "Acme SA", bare: true } });

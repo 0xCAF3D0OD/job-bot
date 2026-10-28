@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Today } from "../../api/client";
 import { formatMonth } from "../../format";
+import CardHead from "../CardHead.vue";
 import OrpMonth from "../OrpMonth.vue";
 
 // « Objectif ORP » (docs/54 §2) : le mois en cours comme dans Aujourd'hui (docs/123 §2, Q :
@@ -21,12 +22,10 @@ const short = (month: string): string => formatMonth(month).split(" ")[0] ?? mon
     class="dash-card dash-link orp-gauge"
     data-test="orp-gauge"
   >
-    <header
+    <CardHead
       v-if="past"
-      class="dash-card-head"
-    >
-      <h2>Mois précédents</h2>
-    </header>
+      title="Mois précédents"
+    />
     <OrpMonth
       v-else
       title="Objectif ORP"

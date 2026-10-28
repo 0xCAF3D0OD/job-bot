@@ -7,6 +7,7 @@ import InterviewPractice from "./InterviewPractice.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import HoverNote from "./HoverNote.vue";
 import { dateInList } from "../dates";
 import { plural } from "../format";
@@ -71,7 +72,7 @@ const summaryValue = computed(() =>
       class="hint reading-width"
       data-test="insights-empty"
     >
-      Rien pour l'instant : fais le point après chaque entretien.
+      Aucun retour d'entretien pour l'instant : fais le point après chaque entretien.
     </p>
     <div
       v-if="data.count"
@@ -170,18 +171,18 @@ const summaryValue = computed(() =>
         v-if="busy"
         kind="coaching"
       />
-      <button
+      <BusyButton
         v-if="data.can_coach"
-        type="button"
         class="secondary small"
-        :disabled="busy"
+        :busy="busy"
+        busy-label="Analyse en cours…"
         data-test="coach"
         @click="coach"
       >
         <HoverNote :text="busy ? '' : aiNote('Environ 0,03 $.')">
-          <span class="with-icon"><AppIcon name="ai" />{{ busy ? "Analyse en cours…" : data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}</span>
+          <span class="with-icon"><AppIcon name="ai" />{{ data.coaching ? "Nouvelles pistes de l'IA" : "Pistes de l'IA" }}</span>
         </HoverNote>
-      </button>
+      </BusyButton>
       <p
         v-if="message"
         class="notice error"

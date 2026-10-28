@@ -44,7 +44,7 @@ function searchItems(search: AlertSearch): MoreMenuItem[] {
   return [
     { label: "Modifier", test: "edit-alert", icon: "pencil", run: () => void edit(search) },
     { label: "Mettre de côté", test: "pause", icon: "clock", run: () => void setActive(search, false) },
-    { label: "Supprimer", test: "remove-alert", danger: true, run: () => void remove(search) },
+    { label: "Supprimer", test: "remove-alert", icon: "trash", danger: true, run: () => void remove(search) },
   ];
 }
 
@@ -275,7 +275,7 @@ onMounted(() => void load());
             <td class="row-more">
               <MoreMenu
                 :items="searchItems(search)"
-                :label="`Actions sur la recherche ${search.terms}`"
+                :label="`Plus d'actions sur la recherche ${search.terms}`"
                 test-id="alert-more"
               />
             </td>

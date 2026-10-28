@@ -4,6 +4,7 @@ import { onMounted, ref, watch } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
 import CertificateLetter from "./CertificateLetter.vue";
 import HoverNote from "./HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
@@ -32,6 +33,8 @@ async function load(): Promise<void> {
 }
 
 async function readInDetail(item: Certificate): Promise<void> {
+  // Une lecture à la fois.
+  if (reading.value !== null) return;
   reading.value = item.document_id;
   message.value = "";
   try {
@@ -186,17 +189,17 @@ onMounted(() => void load());
           </ul>
         </div>
         <div class="form-actions">
-          <button
-            type="button"
+          <BusyButton
             class="secondary small"
-            :disabled="reading !== null"
+            :busy="reading === item.document_id"
+            busy-label="L'IA lit le certificat…"
             :data-test="`certificate-read-${item.document_id}`"
             @click="readInDetail(item)"
           >
             <HoverNote :text="aiNote('Environ 0,03 CHF.')">
-              <span class="with-icon"><AppIcon name="ai" />{{ reading === item.document_id ? "L'IA lit le certificat…" : item.ai ? "Relire en détail" : "Lire en détail" }}</span>
+              <span class="with-icon"><AppIcon name="ai" />{{ item.ai ? "Relire en détail" : "Lire en détail" }}</span>
             </HoverNote>
-          </button>
+          </BusyButton>
           <button
             v-if="item.advice !== 'attach'"
             type="button"

@@ -73,6 +73,34 @@ describe("Les codes des sites (docs/112)", () => {
     expect(wrapper.text()).toContain("Ton compte est prêt.");
   });
 
+  it("trois messages, les autres avec « Afficher plus (n) » en bas de la carte (règles §4)", async () => {
+    const messages = [1, 2, 3, 4, 5].map((id) => ({ id, site: "jobup", subject: `Message ${id}`, received_at: "2026-10-21T08:00:00Z" }));
+    GET.mockResolvedValueOnce({ data: messages });
+    const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });
+    await flushPromises();
+    expect(wrapper.findAll("[data-test=site-message]")).toHaveLength(3);
+    const more = wrapper.find("[data-test=site-mail-all]");
+    expect(more.text()).toBe("Afficher plus (2)");
+    await more.trigger("click");
+    expect(wrapper.findAll("[data-test=site-message]")).toHaveLength(5);
+    expect(more.text()).toBe("Afficher moins");
+  });
+
+  it("« J'attends un code » : le bouton reste actif et dit « J'attends… » (règles §4)", async () => {
+    POST.mockResolvedValueOnce({ data: { queued: true } });
+    GET.mockResolvedValue({ data: [] });
+    const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });
+    await flushPromises();
+    const button = wrapper.find("[data-test=site-code-expect]");
+    await button.trigger("click");
+    await flushPromises();
+    expect(button.attributes("disabled")).toBeUndefined();
+    expect(button.attributes("aria-disabled")).toBe("true");
+    await button.trigger("click");
+    expect(POST).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
   it("sans message, rien", async () => {
     GET.mockResolvedValueOnce({ data: [] });
     const wrapper = mount(SiteMail, { props: { codes: [], guestMailbox: false } });

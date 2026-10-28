@@ -4,13 +4,15 @@ import { computed, onMounted, ref } from "vue";
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
+import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import Illustration from "../components/Illustration.vue";
-import CopyLabel from "../components/CopyLabel.vue";
+import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import IconButton from "../components/IconButton.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import { usePageReady } from "../composables/usePageTransition";
+import { offerUndo } from "../composables/useUndo";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import HoverNote from "../components/HoverNote.vue";
@@ -40,7 +42,6 @@ const message = ref("");
 const noting = ref<number | null>(null);
 const writing = ref(false);
 const writeMessage = ref("");
-const copied = ref(false);
 
 const meeting = computed(() => page.value?.meeting ?? null);
 const prep = computed(() => page.value?.preparation ?? null);
@@ -127,23 +128,12 @@ function outcomeSaved(data: Page): void {
 async function writeSheet(): Promise<void> {
   writing.value = true;
   writeMessage.value = "";
-  copied.value = false;
   try {
     const { data, error } = await api.POST("/api/orp-meeting/redaction");
     if (data) page.value = data;
     else writeMessage.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible de rédiger pour l'instant.";
   } finally {
     writing.value = false;
-  }
-}
-
-async function copySheet(): Promise<void> {
-  if (!meeting.value?.sheet_text) return;
-  try {
-    await navigator.clipboard.writeText(meeting.value.sheet_text);
-    copied.value = true;
-  } catch {
-    copied.value = false;
   }
 }
 
@@ -183,9 +173,22 @@ async function saveMeeting(): Promise<void> {
   }
 }
 
+// Retiré tout de suite, « Annuler » pendant 6 s (docs/108 §1, règles §4 : pas de rouge dans « ⋯ »).
 async function removeMeeting(): Promise<void> {
-  const { data } = await api.DELETE("/api/orp-meeting");
-  if (data) page.value = data;
+  const before = page.value;
+  if (!before) return;
+  page.value = { ...before, meeting: null };
+  await offerUndo({
+    message: "Rendez-vous supprimé",
+    commit: async (keepalive) => {
+      const { data } = await api.DELETE("/api/orp-meeting", { keepalive });
+      if (!data) return false;
+      page.value = data;
+    },
+    restore: () => {
+      page.value = before;
+    },
+  });
 }
 
 async function saveQuestions(questions: Question[]): Promise<void> {
@@ -212,7 +215,7 @@ function addQuestion(): void {
 
 const meetingItems = computed<MoreMenuItem[]>(() => [
   { label: "Modifier", test: "meeting-edit", run: startEditing, icon: "pencil" },
-  { label: "Supprimer", test: "meeting-delete", run: () => void removeMeeting(), danger: true },
+  { label: "Supprimer", test: "meeting-delete", icon: "trash", run: () => void removeMeeting() },
 ]);
 
 onMounted(() => void load());
@@ -260,7 +263,7 @@ onMounted(() => void load());
           <MoreMenu
             v-if="meeting && !editing"
             :items="meetingItems"
-            label="Actions sur le rendez-vous"
+            label="Plus d'actions sur le rendez-vous"
             test-id="meeting-more"
           />
         </div>
@@ -465,26 +468,18 @@ onMounted(() => void load());
                 download
                 data-test="sheet-pdf"
               ><span class="with-icon"><AppIcon name="download" />Télécharger la feuille (PDF)</span></a>
-              <button
+              <BusyButton
                 v-if="meeting"
-                type="button"
                 class="secondary"
-                :disabled="writing"
+                :busy="writing"
+                busy-label="Rédaction…"
                 data-test="sheet-write"
                 @click="writeSheet"
               >
                 <HoverNote :text="aiNote('Environ 0,02 CHF.')">
-                  <span class="with-icon"><AppIcon name="ai" />{{ writing ? "Rédaction…" : meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
+                  <span class="with-icon"><AppIcon name="ai" />{{ meeting.sheet_text ? "Rédiger à nouveau" : "Rédiger avec l'IA" }}</span>
                 </HoverNote>
-              </button>
-              <button
-                v-if="meeting?.sheet_text"
-                type="button"
-                class="link"
-                @click="copySheet"
-              >
-                <CopyLabel :done="copied" />
-              </button>
+              </BusyButton>
             </div>
             <!-- Le même contenu en message, rédigé par l'IA (docs/130 §B). -->
             <div
@@ -499,6 +494,12 @@ onMounted(() => void load());
               >
                 {{ meeting.sheet_text }}
               </p>
+              <CopyButton
+                v-if="meeting.sheet_text"
+                :value="meeting.sheet_text"
+                label="Copier le message"
+                test-id="sheet-copy"
+              />
               <p
                 v-if="writeMessage"
                 role="status"

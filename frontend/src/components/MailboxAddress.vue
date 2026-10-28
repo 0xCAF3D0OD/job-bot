@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed } from "vue";
+
+import CopyButton from "./CopyButton.vue";
 
 // L'adresse où un compte reçoit ses alertes (docs/65 §3, docs/104). Pour un invité, tant
 // qu'elle passe par la boîte de l'exploitant (« boite+code@… »), le nom de la boîte est abrégé
-// (« k…+code@… ») ; « Copier l'adresse » copie l'adresse entière, à donner aux sites. Avec le
+// (« k…+code@… ») ; le bouton Copier, juste à côté, copie l'adresse entière, à donner aux sites. Avec le
 // domaine des alertes (« nom-code@alertes… », ou « alertes+nom-code@… » sans « catch-all »),
 // rien n'est à cacher.
 const props = defineProps<{ address: string; personal?: boolean }>();
-const copied = ref(false);
 
 const shown = computed(() => {
   const [local = "", domain = ""] = props.address.split("@");
@@ -18,28 +19,15 @@ const shown = computed(() => {
   if (code.includes("-")) return props.address;
   return `${box.charAt(0)}…+${code}@${domain}`;
 });
-
-async function copy(): Promise<void> {
-  try {
-    await navigator.clipboard.writeText(props.address);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 2000);
-  } catch {
-    copied.value = false;
-  }
-}
 </script>
 
 <template>
   <span class="mailbox-address">
     <strong data-test="mailbox-address">{{ shown }}</strong>
-    <button
-      type="button"
-      class="link"
-      data-test="mailbox-copy"
-      @click="copy"
-    >
-      {{ copied ? "Adresse copiée" : "Copier l'adresse" }}
-    </button>
+    <CopyButton
+      :value="address"
+      label="Copier l'adresse"
+      test-id="mailbox-copy"
+    />
   </span>
 </template>

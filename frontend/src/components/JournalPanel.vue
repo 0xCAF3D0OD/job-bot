@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { api, type ParseStatus, type Search, type SearchDetail, type Source } from "../api/client";
 import { useCollect } from "../composables/useCollect";
 import AppIcon from "./AppIcon.vue";
+import BusyButton from "./BusyButton.vue";
+import ShowMore from "./ShowMore.vue";
 import StatusPill from "./StatusPill.vue";
 import { dateWithTime } from "../dates";
 import { SITE_NAMES, parseStatusLabel, plural, rateText, sourceLabel } from "../format";
@@ -57,6 +59,17 @@ async function select(search: Search): Promise<void> {
   selected.value = data ?? null;
 }
 
+// « Afficher plus (n) » charge la page suivante, sur place ; tout chargé, « Afficher moins » revient
+// à la première page (règles §4, ShowMore).
+const allShown = computed({
+  get: () => items.value.length >= total.value,
+  set: (open: boolean) => {
+    if (loading.value) return;
+    if (open) void load(true);
+    else items.value = items.value.slice(0, PAGE_SIZE);
+  },
+});
+
 watch([source, parseStatus], () => {
   selected.value = null;
   void load();
@@ -66,15 +79,15 @@ onMounted(() => void load());
 
 <template>
   <div class="panel-actions">
-    <button
-      type="button"
+    <BusyButton
       class="primary small"
-      :disabled="collecting"
+      :busy="collecting"
+      busy-label="Collecte…"
       data-test="collect"
       @click="collectNow"
     >
       Collecter maintenant
-    </button>
+    </BusyButton>
   </div>
   <div class="panel">
     <div class="toolbar">
@@ -225,14 +238,11 @@ onMounted(() => void load());
       </tbody>
     </table>
 
-    <button
-      v-if="items.length < total"
-      type="button"
-      class="secondary more"
-      :disabled="loading"
-      @click="load(true)"
-    >
-      <span class="with-icon"><AppIcon name="chevron-down" />Afficher plus</span>
-    </button>
+    <ShowMore
+      v-if="total > PAGE_SIZE"
+      v-model="allShown"
+      :hidden="total - items.length"
+      test-id="journal-more"
+    />
   </div>
 </template>
