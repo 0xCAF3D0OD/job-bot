@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 PG_BIN ?= $(shell brew --prefix postgresql@17 2>/dev/null)/bin
 
-.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check
+.PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
 	@command -v uv >/dev/null || { echo "uv manquant : brew install uv"; exit 1; }
@@ -76,8 +76,11 @@ test: test-audit changelog-check ## tests backend (base jobbot_test), frontend, 
 	cd backend && uv run pytest
 	cd frontend && npm run -s test && npm run -s typecheck && npm run -s poids
 
-test-audit: ## l'audit des règles trouve un texte collé au bord (navigateur requis, docs/135)
-	cd backend && uv run --with playwright --with pytest pytest -q ../frontend/scripts/test_regles.py
+test-audit: ## les audits trouvent ce qu'ils doivent trouver : texte collé au bord, débordement et cibles sur téléphone (navigateur requis)
+	cd backend && uv run --with playwright --with pytest pytest -q ../frontend/scripts/test_regles.py ../frontend/scripts/test_telephone.py
+
+audit-telephone: ## l'audit téléphone sur la démo (320, 360, 390 px ; DEMO_URL, par défaut http://localhost:5200)
+	cd backend && uv run --with playwright python ../frontend/scripts/telephone.py $(or $(DEMO_URL),http://localhost:5200)
 
 changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml numérote et assemble)
 	python3 scripts/changelog.py

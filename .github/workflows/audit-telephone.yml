@@ -1,0 +1,41 @@
+# L'audit téléphone de la démo (frontend/scripts/telephone.py) : en 320, 360 et 390 px, sur chaque
+# page et avec le panneau de la cloche ouvert, rien ne sort de l'écran et chaque cible tactile fait au
+# moins 24 × 24 px (WCAG 2.2, 2.5.8). La démo tourne dans Docker, comme en ligne (make demo-image).
+name: Audit téléphone
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: audit-telephone-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  telephone:
+    name: Téléphone (320, 360, 390 px)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Navigateur de Playwright
+        working-directory: backend
+        run: uv run --with playwright playwright install --with-deps chromium
+      - name: L'audit trouve ce qu'il doit trouver
+        run: make test-audit
+      - name: La démo (Docker, http://localhost:8280)
+        run: make demo-image
+      - name: Audit téléphone de la démo
+        run: make audit-telephone DEMO_URL=http://localhost:8280
+      - name: Journaux de la démo en cas d'échec
+        if: failure()
+        run: cd deploy/demo && docker compose -p joba1-demo-local logs --tail=80 api web
+      - name: Arrêter la démo
+        if: always()
+        run: make demo-image-stop
