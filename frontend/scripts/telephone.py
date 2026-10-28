@@ -173,20 +173,29 @@ AUDIT = r"""() => {
       }
       return false;
     };
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.textContent.trim() && !floating(n) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
+    // Un texte masqué pour l'écran (lu par les lecteurs d'écran seulement) n'est pas une ligne non plus.
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.textContent.trim() && !floating(n) && shown(n.parentElement) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
     const nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
     return nodes;
   };
   // Le nombre de lignes du texte (les icônes au-dessus du libellé ne comptent pas).
+  // Deux morceaux de texte sont sur la même ligne s'ils se chevauchent en hauteur : un numéro plus
+  // petit, centré à côté du libellé, ne compte pas comme une ligne de plus, quelle que soit la police.
   const lines = (el) => {
-    const tops = new Set();
+    const boxes = [];
     for (const node of textNodes(el)) {
       const range = document.createRange();
       range.selectNodeContents(node);
-      for (const r of range.getClientRects()) if (r.width > 1) tops.add(Math.round(r.top / 4));
+      for (const r of range.getClientRects()) if (r.width > 1 && r.height > 1) boxes.push({ top: r.top, bottom: r.bottom });
     }
-    return tops.size;
+    boxes.sort((a, b) => a.top - b.top);
+    let count = 0, bottom = -Infinity;
+    for (const b of boxes) {
+      if (b.top >= bottom - 2) { count += 1; bottom = b.bottom; }
+      else bottom = Math.max(bottom, b.bottom);
+    }
+    return count;
   };
   const seen = new Set();
   const checkLabel = (el, segment) => {

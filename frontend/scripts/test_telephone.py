@@ -194,3 +194,27 @@ def test_la_pastille_posee_sur_l_onglet_n_est_pas_une_seconde_ligne(page: Page) 
     """
     assert audit(page, html) == []
 
+
+def test_un_texte_masque_pour_l_ecran_n_est_pas_une_seconde_ligne(page: Page) -> None:
+    html = """
+    <style>.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }</style>
+    <nav class="prep-tabs" style="display: flex">
+      <a href="#" style="display: inline-flex; align-items: center; padding: 8px; min-height: 44px">
+        <span>1</span><span>Lettre</span><span><svg width="16" height="16"></svg><span class="vh">faite</span></span>
+      </a>
+    </nav>
+    """
+    assert audit(page, html) == []
+
+
+def test_un_numero_plus_petit_a_cote_du_libelle_reste_sur_la_meme_ligne(page: Page) -> None:
+    html = """
+    <nav class="prep-tabs" style="display: flex">
+      <a href="#" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px; min-height: 44px; font-size: 16px">
+        <span style="display: inline-grid; place-items: center; width: 22px; height: 22px; font-size: 11px; line-height: 1; border-radius: 50%; border: 1px solid">1</span>
+        <span style="line-height: 1.6">Lettre</span>
+      </a>
+    </nav>
+    """
+    assert audit(page, html) == []
+
