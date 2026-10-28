@@ -1,32 +1,44 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { pageReady, pageTransition, startPage } from "./usePageTransition";
+import { pageReady, pageTransition, resetFirstLoad, startPage } from "./usePageTransition";
 
-describe("transition des pages qui chargent (docs/61 §2)", () => {
-  beforeEach(() => vi.useFakeTimers());
+describe("voile du premier chargement (planche « vide et chargement »)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    resetFirstLoad();
+  });
   afterEach(() => vi.useRealTimers());
 
-  it("rapide : rien ne s'affiche", () => {
+  it("rapide : rien ne s'affiche avant 300 ms", () => {
     startPage("trainings");
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(250);
+    expect(pageTransition.shown).toBe(false);
     pageReady("trainings");
     vi.advanceTimersByTime(500);
     expect(pageTransition.shown).toBe(false);
   });
 
-  it("lent : le voile après 0,15 s, gardé 1,2 s au moins (docs/63 §3)", () => {
+  it("lent : le voile après 300 ms, gardé 1,2 s au moins (docs/63 §3)", () => {
     startPage("trainings");
-    vi.advanceTimersByTime(150);
+    vi.advanceTimersByTime(300);
     expect(pageTransition.shown).toBe(true);
     vi.advanceTimersByTime(100);
     pageReady("trainings");
     vi.advanceTimersByTime(1000);
     expect(pageTransition.shown).toBe(true);
-    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(200);
     expect(pageTransition.shown).toBe(false);
   });
 
-  it("une page sans données : pas de transition", () => {
+  it("seulement au premier chargement : un changement de page n'a pas de voile", () => {
+    startPage("today");
+    pageReady("today");
+    startPage("trainings");
+    vi.advanceTimersByTime(2000);
+    expect(pageTransition.shown).toBe(false);
+  });
+
+  it("une page sans données : pas de voile", () => {
     startPage("diagnostic");
     vi.advanceTimersByTime(1000);
     expect(pageTransition.shown).toBe(false);

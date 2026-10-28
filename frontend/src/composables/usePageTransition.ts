@@ -18,13 +18,17 @@ export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform 
   settings: { label: "Réglages", face: "settings" },
   trainings: { label: "Formations" },
 };
-export const SHOW_AFTER_MS = 150;
+// Planche « vide et chargement » : rien avant 300 ms (NN/g, Response Time Limits).
+export const SHOW_AFTER_MS = 300;
 // Plus lente (docs/63 §3) : le temps de voir le visage.
 export const SHOW_AT_LEAST_MS = 1200;
 const GIVE_UP_MS = 8000;
 
 export const pageTransition = reactive({ page: null as string | null, shown: false });
 let ready = true;
+// Le voile seulement au tout premier chargement de l'application (planche « vide et chargement ») ;
+// ensuite chaque page montre ses blocs gris : un seul système de chargement (ISO 9241-110).
+let firstLoad = true;
 let shownAt = 0;
 const timers: ReturnType<typeof setTimeout>[] = [];
 
@@ -40,7 +44,9 @@ function hide(): void {
 // À l'arrivée sur une page (le routeur l'appelle quand le nom de la page change).
 export function startPage(name: string | null): void {
   clear();
-  if (!name || !(name in PAGE_TRANSITIONS)) {
+  const first = firstLoad;
+  firstLoad = false;
+  if (!first || !name || !(name in PAGE_TRANSITIONS)) {
     hide();
     ready = true;
     return;
@@ -56,6 +62,11 @@ export function startPage(name: string | null): void {
     }, SHOW_AFTER_MS),
     setTimeout(hide, GIVE_UP_MS),
   );
+}
+
+// Pour les tests : comme au lancement de l'application.
+export function resetFirstLoad(): void {
+  firstLoad = true;
 }
 
 // La page dit que ses données sont là.
