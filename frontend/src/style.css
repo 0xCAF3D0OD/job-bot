@@ -2440,6 +2440,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 @media (max-width: 359px) { .profile-tabs .with-icon > .icon { display: none; } }
 /* Réglages : toute la ligne d'un choix « offres » se touche, pas seulement la radio. */
 .radio-row { cursor: pointer; }
+.radio-row input[type="radio"] { width: 1.5rem; height: 1.5rem; } /* 24 px au moins (WCAG 2.5.8) */
 /* Tri sur téléphone : « Garder » et « Écarter » restent visibles sans défiler, au-dessus de la barre. */
 @media (max-width: 820px) {
   .triage-pile .pick-actions { position: sticky; bottom: env(safe-area-inset-bottom); z-index: 5; margin-inline: calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4); background: var(--bg); border-top: 1px solid var(--border); }
