@@ -34,6 +34,7 @@ import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
 import { isoDay } from "../contactLabels";
 import { useAssistant } from "../composables/useAssistant";
+import { dateInList, dateInSentence } from "../dates";
 import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
 import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
@@ -95,13 +96,12 @@ const rowsById = computed(() => new Map((orp.value?.rows ?? []).map((r) => [r.ap
 const incomplete = computed(() => new Set((orp.value?.rows ?? []).filter((r) => r.missing.length).map((r) => r.application_id)));
 // À déclarer dans Job-Room (docs/85) : les candidatures du mois pas encore marquées déclarées,
 // date · entreprise · poste ; un clic ouvre le panneau, avec l'offre et les champs à copier.
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 const toDeclare = computed(() =>
   (orp.value?.rows ?? [])
     .filter((r) => !r.declared_at)
     .map((r) => {
       const application = all.value.find((a) => a.id === r.application_id);
-      const day = application ? shortDate.format(new Date(`${application.sent_at}T12:00:00`)) : r.date;
+      const day = application ? dateInSentence(`${application.sent_at}T12:00:00`) : `le ${r.date}`;
       return { id: r.application_id, day, company: r.company, title: r.job_title, incomplete: r.missing.length > 0 };
     }),
 );
@@ -123,17 +123,16 @@ const firstIncomplete = computed(() => monthItems.value.find((a) => incomplete.v
 // une barre continue.
 const segments = computed(() => (orp.value?.target && orp.value.target <= SEGMENTS_MAX ? orp.value.target : 0));
 const share = computed(() => (orp.value?.target ? Math.min(100, Math.round((orp.value.count / orp.value.target) * 100)) : 0));
-const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric" });
 const dayTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
 // Le bandeau des preuves (docs/134) : ce qui reste à faire, et pour quand.
 const bannerText = computed(() => {
   const d = orp.value;
   if (!d) return "";
   const month = ofMonth(d.month);
-  if (d.state === "remis" && d.submitted_at) return `Preuves ${month} remises le ${longDate.format(new Date(d.submitted_at))}.`;
-  const due = longDate.format(new Date(d.due_date));
-  if (d.incomplete) return `Preuves ${month} : ${plural(d.incomplete, "ligne", "lignes")} à compléter, remise avant le ${due}.`;
-  return `Preuves ${month} prêtes : à remettre avant le ${due}.`;
+  if (d.state === "remis" && d.submitted_at) return `Preuves ${month} remises ${dateInSentence(d.submitted_at)}.`;
+  const due = dateInSentence(`${d.due_date}T12:00:00`);
+  if (d.incomplete) return `Preuves ${month} : ${plural(d.incomplete, "ligne", "lignes")} à compléter, remise avant ${due}.`;
+  return `Preuves ${month} prêtes : à remettre avant ${due}.`;
 });
 // À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours ;
 // les plus anciennes d'abord.
@@ -416,7 +415,7 @@ watch(
   ([m, day]) => {
     if (!m) return;
     const label = day
-      ? new Date(`${day}T12:00:00`).toLocaleDateString("fr-CH", { day: "numeric", month: "long" })
+      ? dateInList(`${day}T12:00:00`)
       : formatMonth(m);
     assistant.setFocus({ month: m, day: day ?? undefined, label });
   },
@@ -593,7 +592,7 @@ onUnmounted(() => assistant.setFocus(null));
         @close="submitted = null"
       >
         <p v-if="submitted.nextDue">
-          Prochaine remise avant le {{ longDate.format(new Date(submitted.nextDue)) }}.
+          Prochaine remise avant {{ dateInSentence(`${submitted.nextDue}T12:00:00`) }}.
         </p>
       </SuccessCard>
 
@@ -697,7 +696,7 @@ onUnmounted(() => assistant.setFocus(null));
                 :title="item.title"
                 :company="item.company"
                 :location="all.find((x) => x.id === item.id)?.location ?? null"
-                :state="`Envoyée le ${item.day}${item.incomplete ? ' · à compléter' : ''}`"
+                :state="`Envoyée ${item.day}${item.incomplete ? ' · à compléter' : ''}`"
                 :urgent="item.incomplete"
                 action="Déclarer"
                 :action-test="`declare-${item.id}`"

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api, type Application } from "../api/client";
 import { applicationBody } from "../applicationBody";
+import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
 
 // ④ Suivre, après « Marquer comme envoyée » (docs/124 §G) : ce que jobA1 fera ensuite, en trois
@@ -21,7 +22,6 @@ const missing = ref<string[]>([]);
 const editing = ref<"date" | "address" | null>(null);
 const draft = ref("");
 const error = ref("");
-const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
 function shift(day: string, days: number): string {
   const d = new Date(`${day}T12:00:00`);
@@ -42,6 +42,8 @@ const remindOn = computed(() => {
   const a = application.value;
   return a ? (a.follow_up_on ?? shift(a.sent_at, REMIND_AFTER_DAYS)) : "";
 });
+// « Le 30 octobre » en tête de phrase : la date de phrase (dates.ts) avec sa majuscule.
+const remindText = computed(() => dateInSentence(`${remindOn.value}T12:00:00`).replace(/^le/, "Le"));
 const contact = computed(() => application.value?.contact_name || application.value?.contacts.find((c) => c.name)?.name || "");
 
 function start(what: "date" | "address"): void {
@@ -125,7 +127,7 @@ async function save(): Promise<void> {
           <span
             v-if="application.status === 'en_attente'"
             class="follow-value"
-          >Le {{ longDate.format(new Date(`${remindOn}T12:00:00`)) }}, si l'employeur n'a pas répondu.</span>
+          >{{ remindText }}, si l'employeur n'a pas répondu.</span>
           <span
             v-else
             class="follow-value muted"

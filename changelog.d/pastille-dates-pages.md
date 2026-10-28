@@ -1,0 +1,1 @@
+Pastille d'état et dates dans les pages : StatusPill aux états en bout de ligne (sites des alertes, analyse du journal, statut d'une offre, sauvegardes, formations) et en étiquette sans point (Spontanée, ORP, type de formation) ; toutes les dates passent par dates.ts, plus jamais « il y a 3 h »

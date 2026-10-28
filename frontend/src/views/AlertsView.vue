@@ -18,6 +18,7 @@ import SidePanel from "../components/SidePanel.vue";
 import SiteMail from "../components/SiteMail.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
+import { dateInSentence } from "../dates";
 import { plural } from "../format";
 
 // Onglet Alertes (planche « 6. Alertes », 1.6.70, structure inspirée des pages des CFF) : la
@@ -61,14 +62,13 @@ async function confirmed(searchId: number): Promise<void> {
 }
 
 // La conclusion en haut (règles §3.2) : le nombre de recherches suivies, et la dernière alerte reçue.
-const longDay = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 const sentence = computed(() => {
   if (!page.value) return null;
   const { active, lastReceived } = alertsDigest(page.value);
   if (!active) return null;
   return {
     count: plural(active, "recherche", "recherches"),
-    rest: ` ${active > 1 ? "suivies" : "suivie"}${lastReceived ? `, la dernière alerte reçue le ${longDay.format(new Date(lastReceived))}.` : ", aucune alerte reçue pour l'instant."}`,
+    rest: ` ${active > 1 ? "suivies" : "suivie"}${lastReceived ? `, la dernière alerte reçue ${dateInSentence(lastReceived)}.` : ", aucune alerte reçue pour l'instant."}`,
   };
 });
 

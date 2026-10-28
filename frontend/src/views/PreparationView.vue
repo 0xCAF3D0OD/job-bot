@@ -19,7 +19,9 @@ import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
+import { dateWithTime } from "../dates";
 import { expiredText, ofMonth } from "../format";
+import StatusPill from "../components/StatusPill.vue";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
 import PlanLimit from "../components/PlanLimit.vue";
@@ -270,12 +272,8 @@ function sources(ids: number[]): string {
 }
 
 function versionLabel(letter: Letter): string {
-  const when = new Date(letter.edited_at ?? letter.created_at).toLocaleString("fr-CH", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // L'heure compte : plusieurs versions le même jour (« modifiée aujourd'hui à 14 h 05 »).
+  const when = dateWithTime(letter.edited_at ?? letter.created_at);
   const what = letter.instruction ? `« ${letter.instruction} »` : "première rédaction";
   return `v${letter.version} · ${LANGUAGES[letter.language]} · ${what} · ${letter.edited_at ? "modifiée" : "rédigée"} ${when}`;
 }
@@ -389,7 +387,12 @@ onMounted(() => void load());
         class="apply-bar"
         data-test="apply-bar"
       >
-        <span class="status-pill applied">Candidature envoyée</span>
+        <StatusPill
+          tone="ok"
+          data-test="applied-pill"
+        >
+          Candidature envoyée
+        </StatusPill>
         <RouterLink
           to="/candidatures/offres"
           class="button-link primary-link"

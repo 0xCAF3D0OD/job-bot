@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
+import { onDay } from "../format";
 import type { components } from "../api/schema";
 import { browserName } from "../browserName";
 import AppIcon from "./AppIcon.vue";
@@ -63,10 +64,10 @@ async function copy(): Promise<void> {
   }
 }
 
-// « Navigateur relié · utilisé le 15 oct. » (texte seul, sans icône).
+// « Navigateur relié · utilisé le 15 oct. », « utilisé hier » (texte seul, sans icône).
 function lastUsed(token: Token): string {
   if (!token.last_used_at) return "Navigateur relié · pas encore utilisé.";
-  return `Navigateur relié · utilisé le ${new Date(token.last_used_at).toLocaleDateString("fr-CH", { day: "numeric", month: "short" })}.`;
+  return `Navigateur relié · utilisé ${onDay(token.last_used_at)}.`;
 }
 
 onMounted(load);

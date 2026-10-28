@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { api } from "../api/client";
 import AuthSplit from "../components/AuthSplit.vue";
 import { useAuth } from "../composables/useAuth";
-import { formatDate } from "../format";
+import { untilDay } from "../format";
 
 // Lien reçu de l'exploitant (docs/65 §2) : une invitation (choisir son identifiant et son
 // mot de passe) ou une réinitialisation (un nouveau mot de passe). Il ne sert qu'une fois.
@@ -90,7 +90,7 @@ async function submit(): Promise<void> {
         v-else
         class="hint"
       >
-        Choisis ton identifiant et ton mot de passe. Lien valable jusqu'au {{ formatDate(link.expires_at) }}.
+        Choisis ton identifiant et ton mot de passe. Lien valable {{ untilDay(link.expires_at) }}.
         Avant : <RouterLink
           to="/tes-donnees"
           target="_blank"

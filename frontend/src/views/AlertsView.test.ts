@@ -119,7 +119,9 @@ describe("Alertes, la page (planche « 6. Alertes », 1.6.70)", () => {
     expect(devops.find("[data-test=create-linkedin]").text()).toBe("Créer");
     const kube = wrapper.find("[data-test=alert-search-2]");
     expect(kube.find("[data-test=site-linkedin]").text()).toContain("Rien reçu depuis la création");
-    expect(kube.find("[data-test=site-linkedin] .alert-state").classes()).toContain("silent");
+    // Rien reçu depuis la création : une action (la bande), la pastille « à faire » (§4).
+    expect(kube.find("[data-test=site-linkedin] [data-test=state-pill]").classes()).toContain("todo");
+    expect(devops.find("[data-test=search-state]").classes()).toContain("ok");
     // « Créer » ouvre le pas à pas sur ce site, pour cette recherche.
     await devops.find("[data-test=create-linkedin]").trigger("click");
     await flushPromises();

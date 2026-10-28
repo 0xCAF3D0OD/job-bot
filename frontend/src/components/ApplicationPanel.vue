@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { noAnswerText, followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
+import { dateInList, dateInSentence, meetingDate } from "../dates";
 import { applicationStatusLabel } from "../format";
 import { contactName, toFollowUp } from "../contactLabels";
 import AppIcon from "./AppIcon.vue";
@@ -11,6 +12,7 @@ import ContactsPanel from "./ContactsPanel.vue";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SidePanel from "./SidePanel.vue";
+import StatusPill from "./StatusPill.vue";
 import { KINDS, NEXT_STEPS } from "../interviewLabels";
 import CopyLabel from "./CopyLabel.vue";
 import JobRoomDeclared from "./JobRoomDeclared.vue";
@@ -34,13 +36,12 @@ const upcoming = computed(() => interviewUpcoming(props.application));
 const feedback = computed(() => needsFeedback(props.application));
 const latest = computed<Interview | null>(() => props.application.interviews?.at(-1) ?? null);
 const hasInterviews = computed(() => props.application.status === "entretien" || !!props.application.interview_at || !!latest.value);
-const interviewDate = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
 const summary = computed(() => {
   const i = latest.value;
   if (!i) return "";
   const parts = [(i.kind && KINDS[i.kind]) || "Entretien", `ressenti ${i.rating}/5`];
   if (i.next_step && i.next_step !== "rien") {
-    const when = i.next_step_at ? ` avant le ${new Date(`${i.next_step_at}T12:00:00`).toLocaleDateString("fr-CH")}` : "";
+    const when = i.next_step_at ? ` avant ${dateInSentence(`${i.next_step_at}T12:00:00`)}` : "";
     parts.push(`suite : ${(NEXT_STEPS[i.next_step] ?? "").toLowerCase()}${when}`);
   }
   return parts.join(" · ");
@@ -125,7 +126,6 @@ const menuItems = computed<MoreMenuItem[]>(() => [
   { label: "Supprimer", test: "panel-remove", danger: true, run: () => emit("remove", props.application) },
 ]);
 
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", year: "numeric" });
 const onStatus = (event: Event): void =>
   emit("status", props.application, (event.target as HTMLSelectElement).value as ApplicationStatus);
 </script>
@@ -138,15 +138,21 @@ const onStatus = (event: Event): void =>
     <div class="application-panel-head">
       <p class="muted meta-line">
         <span>{{ application.job_title }}</span>
-        <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ shortDate.format(new Date(application.sent_at)) }}</span>
-        <span
+        <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ dateInList(`${application.sent_at}T12:00:00`) }}</span>
+        <!-- Des étiquettes sans état, au bout de la ligne : sans point, neutres (règle §4). -->
+        <StatusPill
           v-if="application.assigned_by_orp"
-          class="badge"
-        >ORP</span>
-        <span
+          :dot="false"
+        >
+          ORP
+        </StatusPill>
+        <StatusPill
           v-if="application.spontaneous"
-          class="badge spontaneous-badge"
-        >Spontanée</span>
+          :dot="false"
+          data-test="panel-spontaneous"
+        >
+          Spontanée
+        </StatusPill>
       </p>
       <MoreMenu
         :items="menuItems"
@@ -238,7 +244,7 @@ const onStatus = (event: Event): void =>
         v-if="upcoming"
         class="panel-line"
       >
-        Prévu {{ interviewDate.format(new Date(application.interview_at!)) }}
+        Prévu {{ meetingDate(application.interview_at!) }}
       </p>
       <p
         v-if="summary"

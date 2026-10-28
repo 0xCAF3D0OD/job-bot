@@ -57,7 +57,7 @@ describe("AlertsPanel (docs/20 §1)", () => {
     await flushPromises();
     expect(wrapper.find("[data-test=mailbox]").text()).toContain("moi@exemple.ch");
     const jobup = wrapper.find("[data-test=cell-jobup]");
-    expect(jobup.text()).toContain("reçue le 6 octobre");
+    expect(jobup.text()).toContain("reçue le 6 oct.");
     expect(jobup.find("a").exists()).toBe(false);
     const linkedin = wrapper.find("[data-test=cell-linkedin]");
     expect(linkedin.find("a").attributes("href")).toBe("https://linkedin.example/?term=DevOps");

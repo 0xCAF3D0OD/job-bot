@@ -17,9 +17,9 @@ import { isNetworkError } from "../network";
 import OrpMonth from "../components/OrpMonth.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import PageHero from "../components/PageHero.vue";
-import { sinceText } from "../components/status";
 import { useCollect } from "../composables/useCollect";
 import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
+import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
 import { daysBefore, formatMonth, localDate, orpPace, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
@@ -49,17 +49,18 @@ const { message } = useCollect();
 const DAY_MS = 86_400_000;
 // Une remise ORP dans moins de 5 jours passe en tête de « À faire » (docs/43 n° 30).
 const URGENT_DAYS = 5;
-const time = new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit" });
-const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
 function startOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
-// « Aujourd'hui à 09:30 », « Demain à 14:00 ».
+// « Aujourd'hui à 9 h 30 », « Demain à 14 h » (dates.ts : l'heure compte, c'est un rendez-vous).
 function dayAndTime(iso: string): string {
-  const at = new Date(iso);
-  const day = startOfDay(at) === startOfDay(new Date()) ? "Aujourd'hui" : "Demain";
-  return `${day} à ${time.format(at)}`;
+  const day = inDays(iso);
+  return `${day.charAt(0).toUpperCase()}${day.slice(1)} à ${timeOfDay(iso)}`;
+}
+// « jusqu'au 1er novembre » : la date de phrase sans son « le », contracté dans « au ».
+function untilDay(day: string): string {
+  return dateInSentence(`${day}T12:00:00`).replace(/^le /, "");
 }
 
 // La dose du jour (docs/86) : 3 offres ; 5 quand le mois ORP est à rattraper (docs/124 §D).
@@ -83,7 +84,7 @@ const sentence = computed<Part[]>(() => {
   const t = today.value;
   if (!t) return [];
   const pause = t.rhythm?.pause_until;
-  if (pause) return [{ text: `En pause jusqu'au ${longDate.format(localDate(pause))}.` }];
+  if (pause) return [{ text: `En pause jusqu'au ${untilDay(pause)}.` }];
   // Jour de repos (1.6.26) : une seule phrase, qui dit quoi faire si l'on veut avancer.
   if (restDay.value) {
     const rest: Part[] = [{ text: "Jour de repos." }];
@@ -182,7 +183,7 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       test: urgent ? "orp-urgent" : "orp-due",
       icon: "check-circle",
       title: `Remettre les preuves de ${formatMonth(t.orp_due_month)}`,
-      detail: days < 0 ? `Échéance passée le ${longDate.format(due)}.` : days === 0 ? "À remettre aujourd'hui." : `À remettre avant le ${longDate.format(due)}.`,
+      detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd'hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Compléter",
       to: { path: "/candidatures/suivi", query: { mois: t.orp_due_month } },
     },
@@ -197,7 +198,8 @@ const eyebrow = computed(() => {
   // La collecte seulement quand elle tourne ou a plus d'un jour de retard (docs/131 §B.6).
   const last = today.value?.last_collect_at;
   const late = !!last && Date.now() - new Date(last).getTime() > DAY_MS;
-  const collect = message.value || (late ? `collecte ${sinceText(last!)}` : "");
+  // dates.ts, jamais « il y a 136 heures » : « collecte hier », sinon « collecte le 22 octobre ».
+  const collect = message.value || (late ? `collecte ${dateInList(last!) === "hier" ? "hier" : dateInSentence(last!)}` : "");
   return collect ? `${dateTitle} · ${collect}` : dateTitle;
 });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { AlertsPage } from "./api/client";
 import { NOTHING_YET_DAYS, QUIET_DAYS, alertsBand, placeLabel, searchGroups, siteState } from "./alertsState";
+import { onDay } from "./format";
 
 const NOW = new Date("2026-10-27T12:00:00Z");
 const ago = (days: number) => new Date(NOW.getTime() - days * 86_400_000).toISOString();
@@ -79,7 +80,7 @@ describe("état des alertes (planche « 6. Alertes »)", () => {
       ["jobs.ch", "todo"],
     ]);
     // jobup : la réception la plus récente des deux lieux.
-    expect(linux!.sites[0]!.state.label).toBe(`Reçue le ${new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short", timeZone: "Europe/Zurich" }).format(new Date(ago(2)))}`);
+    expect(linux!.sites[0]!.state.label).toBe(`Reçue ${onDay(ago(2), NOW)}`);
     expect(linux!.pill).toEqual({ kind: "received", label: "Reçue · jobup" });
   });
 

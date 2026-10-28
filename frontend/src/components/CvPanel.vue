@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type Cv, type LetterLanguage, type Offer } from "../api/client";
+import { onDayAt } from "../format";
 import OfferBrief from "./OfferBrief.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
@@ -182,12 +183,7 @@ function onInput(event: Event): void {
 }
 
 function versionLabel(cv: Cv): string {
-  const when = new Date(cv.edited_at ?? cv.created_at).toLocaleString("fr-CH", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const when = onDayAt(cv.edited_at ?? cv.created_at);
   const what = cv.instruction ? `« ${cv.instruction} »` : "première version";
   return `v${cv.version} · ${LANGUAGES[cv.language]} · ${what} · ${cv.edited_at ? "modifiée" : "préparée"} ${when}`;
 }

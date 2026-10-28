@@ -3,10 +3,12 @@ import { computed, ref } from "vue";
 
 import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
 import { nextStep } from "../applicationState";
+import { dateInSentence } from "../dates";
 import { applicationStatusLabel } from "../format";
 import FollowUpPanel from "./FollowUpPanel.vue";
 import OfferLine from "./OfferLine.vue";
 import SidePanel from "./SidePanel.vue";
+import StatusPill from "./StatusPill.vue";
 
 // Carte d'une candidature (docs/46 §2) : qui, quoi, le statut, et une seule prochaine étape.
 // Le reste (statut, entretiens, ORP, documents, contacts) est dans le panneau.
@@ -21,10 +23,9 @@ const emit = defineEmits<{
 }>();
 
 const step = computed(() => nextStep(props.application, props.orpRow));
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 // L'état sous le titre (planche « Ligne d'offre ») : en orange s'il faut agir, en gris sinon.
 const URGENT = ["feedback", "follow-up", "no-answer", "complete"];
-const state = computed(() => step.value.text || `Envoyée le ${shortDate.format(new Date(props.application.sent_at))}`);
+const state = computed(() => step.value.text || `Envoyée ${dateInSentence(`${props.application.sent_at}T12:00:00`)}`);
 const urgent = computed(() => URGENT.includes(step.value.key));
 
 // Relance (docs/38) : son panneau s'ouvre depuis la carte.
@@ -75,15 +76,20 @@ function run(): void {
     @action="run"
   >
     <template #badges>
-      <span
+      <!-- Des étiquettes sans état : sans point, neutres (règle §4). -->
+      <StatusPill
         v-if="application.assigned_by_orp"
-        class="badge"
-      >ORP</span>
-      <span
+        :dot="false"
+      >
+        ORP
+      </StatusPill>
+      <StatusPill
         v-if="application.spontaneous"
-        class="badge spontaneous-badge"
+        :dot="false"
         data-test="card-spontaneous"
-      >Spontanée</span>
+      >
+        Spontanée
+      </StatusPill>
       <span
         class="visually-hidden"
         data-test="card-status"

@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 
 import { api, type Application } from "../api/client";
+import { dateInList } from "../dates";
 import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import HoverNote from "./HoverNote.vue";
@@ -83,7 +84,7 @@ async function markDone(): Promise<void> {
   >
     <p class="muted meta-line">
       <span>{{ application.job_title }}</span>
-      <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ new Date(`${application.sent_at}T12:00:00`).toLocaleDateString("fr-CH") }}</span>
+      <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ dateInList(`${application.sent_at}T12:00:00`) }}</span>
     </p>
     <button
       v-if="!text"

@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { dateWithTime } from "../dates";
 import PlatformPanel from "./PlatformPanel.vue";
 
 const GET = vi.fn();
@@ -95,7 +96,9 @@ describe("Plateforme (docs/65 §5)", () => {
     GET.mockResolvedValue({ data: PLATFORM });
     const fine = mount(PlatformPanel);
     await flushPromises();
-    expect(fine.find("[data-test=backup-last]").text()).toContain("il y a 5 h, 42 Mo");
+    expect(fine.find("[data-test=backup-last]").text()).toContain(`Faite ${dateWithTime(PLATFORM.backup.last_at)}, 42 Mo`);
+    expect(fine.find("[data-test=backup-last] [data-test=backup-state]").text()).toBe("À jour");
+    expect(fine.find("[data-test=backup-last] [data-test=backup-state]").classes()).toContain("ok");
     expect(fine.find("[data-test=backup-last]").text()).toContain("3 sauvegardes gardées");
     expect(fine.find("[data-test=backup-late]").exists()).toBe(false);
     GET.mockResolvedValue({
@@ -104,6 +107,7 @@ describe("Plateforme (docs/65 §5)", () => {
     const late = mount(PlatformPanel);
     await flushPromises();
     expect(late.find("[data-test=backup-late]").text()).toContain("pg_dump introuvable");
+    expect(late.find("[data-test=backup-late] [data-test=backup-state]").classes()).toContain("error");
     GET.mockResolvedValue({ data: { ...PLATFORM, backup: { ...PLATFORM.backup, configured: false } } });
     const missing = mount(PlatformPanel);
     await flushPromises();

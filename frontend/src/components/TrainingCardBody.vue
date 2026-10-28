@@ -2,11 +2,13 @@
 import { computed, reactive, ref } from "vue";
 
 import { api, type Training } from "../api/client";
+import { onDay } from "../format";
 import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, LEVELS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import IconButton from "./IconButton.vue";
+import StatusPill from "./StatusPill.vue";
 
 // Contenu d'une formation (docs/16 §5). Deux présentations (docs/44) : la carte du catalogue,
 // calme (description sur 3 lignes, une ligne en bas : « Suivre », ou l'état et « Gérer ») ;
@@ -33,11 +35,12 @@ const saving = ref(false);
 const error = ref("");
 const block = reactive({ title: "", content: "", tags: "" });
 const monthYear = new Intl.DateTimeFormat("fr-CH", { month: "long", year: "numeric" });
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
 // Demande de financement à l'ORP (docs/37 §2) : un texte sans IA, avec l'argument tiré de
 // tes offres, à copier ; puis le suivi (demandée, acceptée, refusée).
 type Funding = NonNullable<NonNullable<Training["mark"]>["funding_status"]>;
+// En pastille (§4) : acceptée en vert ; demandée ou refusée en neutre (un refus n'est pas une erreur).
+const FUNDING_TONES: Record<Funding, "neutral" | "ok"> = { requested: "neutral", accepted: "ok", refused: "neutral" };
 const FUNDING_LABELS: Record<Funding, string> = {
   requested: "Financement demandé",
   accepted: "Financement accepté",
@@ -109,7 +112,7 @@ async function setFunding(status: Funding | null): Promise<void> {
 }
 
 function day(value: string): string {
-  return shortDate.format(new Date(`${value}T12:00:00`));
+  return onDay(`${value}T12:00:00`);
 }
 
 function startDraft(): void {
@@ -165,16 +168,20 @@ const stateText = computed(() => {
       <span>{{ KINDS[training.kind] }}</span>
       <span><AppIcon name="building" /><span class="visually-hidden">Organisme : </span>{{ training.provider }}</span>
     </span>
-    <span
+    <StatusPill
       v-if="training.mark?.funding_status"
-      :class="['badge', training.mark.funding_status === 'refused' ? 'warn' : 'new']"
+      :tone="FUNDING_TONES[training.mark.funding_status]"
       data-test="funding-badge"
-    >{{ FUNDING_LABELS[training.mark.funding_status] }}</span>
-    <span
+    >
+      {{ FUNDING_LABELS[training.mark.funding_status] }}
+    </StatusPill>
+    <StatusPill
       v-if="!training.verified"
-      class="badge warn"
+      tone="todo"
       data-test="unverified"
-    >à vérifier</span>
+    >
+      À vérifier
+    </StatusPill>
   </div>
   <!-- Panneau : le titre est déjà en tête ; ici, le lien vers la page officielle. -->
   <a
@@ -376,7 +383,7 @@ const stateText = computed(() => {
           <span
             v-if="training.mark.funding_status === 'requested' && training.mark.funding_requested_at"
             class="muted"
-          >Demandée le {{ day(training.mark.funding_requested_at) }}</span>
+          >Demandée {{ day(training.mark.funding_requested_at) }}</span>
           <template v-if="training.mark.funding_status === 'requested'">
             <button
               type="button"

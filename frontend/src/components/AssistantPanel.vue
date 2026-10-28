@@ -4,6 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { useRoute } from "vue-router";
 
 import { api, type ChatAction, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT } from "../api/client";
+import { dateInList } from "../dates";
 import type { components } from "../api/schema";
 import { blocks, readEvents } from "../assistantText";
 import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssistant";
@@ -285,10 +286,6 @@ const DONE_TEXT: Record<string, string> = {
   stale: "Plus à faire : rien n'a été changé.",
 };
 
-function day(value: string): string {
-  return new Date(value).toLocaleDateString("fr-CH", { day: "numeric", month: "short" });
-}
-
 // « Nouvelle discussion » visible, l'effacement dans « ⋯ » (docs/74).
 const headItems: MoreMenuItem[] = [
   { label: "Effacer la discussion", test: "assistant-erase", danger: true, run: () => void erase() },
@@ -389,7 +386,7 @@ const headItems: MoreMenuItem[] = [
               @click="resume(conversation)"
             >
               <span>{{ conversation.title }}</span>
-              <span class="muted">{{ day(conversation.updated_at) }}</span>
+              <span class="muted">{{ dateInList(conversation.updated_at) }}</span>
             </button>
           </div>
         </template>

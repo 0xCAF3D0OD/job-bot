@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import type { components } from "../api/schema";
+import { dateInSentence } from "../dates";
 
 // Ta semaine (docs/86) : la part de l'objectif ORP pour cette semaine, un point par jour, et
 // une phrase qui dit où tu en es, sans reproche.
@@ -18,13 +19,14 @@ const todayIso = (() => {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 })();
 
-const longDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 const done = computed(() => props.week.target !== null && props.week.count >= props.week.target);
 const left = computed(() => Math.max(0, (props.week.target ?? 0) - props.week.count));
 const sentence = computed(() => {
   // En pause (0.68.1) : ni dose ni retard ; l'annoncer au conseiller.
   if (props.week.pause_until) {
-    return `En pause jusqu'au ${longDate.format(new Date(`${props.week.pause_until}T12:00:00`))}. Pense à l'annoncer à ton conseiller.`;
+    // « jusqu'au 1er novembre » : la date de phrase sans son « le », contracté dans « au ».
+    const until = dateInSentence(`${props.week.pause_until}T12:00:00`).replace(/^le /, "");
+    return `En pause jusqu'au ${until}. Pense à l'annoncer à ton conseiller.`;
   }
   if (props.week.target === null) return "";
   if (done.value) return props.monthBehind ? "" : "Semaine faite. Le reste du temps est à toi.";

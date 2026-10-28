@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import MoreInfo from "./MoreInfo.vue";
@@ -25,13 +26,13 @@ async function load(): Promise<void> {
   tokens.value = Array.isArray(data) ? data : [];
 }
 
-// Chaque adresse porte sa date de création (« Agenda du 15 oct. ») : on sait laquelle révoquer.
+// Chaque adresse porte sa date de création (« Agenda du 15 octobre », la date de phrase sans « le ») : on sait laquelle révoquer.
 async function create(): Promise<void> {
   if (creating.value) return;
   creating.value = true;
   createError.value = "";
   try {
-    const name = `Agenda du ${new Date().toLocaleDateString("fr-CH", { day: "numeric", month: "short" })}`;
+    const name = `Agenda du ${dateInSentence(new Date()).replace(/^le /, "")}`;
     const { data } = await api.POST("/api/agenda/tokens", {
       body: { name, origin: globalThis.location?.origin ?? null },
     });
@@ -76,10 +77,10 @@ async function copy(): Promise<void> {
   }
 }
 
-// « Relue le 15 oct. » : la dernière fois que l'agenda a lu l'adresse (texte seul, sans icône).
+// « Relue le 15 octobre » : la dernière fois que l'agenda a lu l'adresse (texte seul, sans icône).
 function lastRead(token: Token): string {
   if (!token.last_used_at) return "Pas encore relue par ton agenda.";
-  return `Relue le ${new Date(token.last_used_at).toLocaleDateString("fr-CH", { day: "numeric", month: "short" })}.`;
+  return `Relue ${dateInSentence(token.last_used_at)}.`;
 }
 
 onMounted(load);

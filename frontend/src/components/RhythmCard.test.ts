@@ -45,7 +45,7 @@ describe("Ta semaine", () => {
     const paused = days.map((d, i) => ({ ...d, research: false, paused: i < 5 }));
     const wrapper = mountCard({ days: paused, research_today: false, pause_until: "2026-11-01" });
     expect(wrapper.find("[data-test=rhythm-sentence]").text()).toBe(
-      "En pause jusqu'au 1 novembre. Pense à l'annoncer à ton conseiller.",
+      "En pause jusqu'au 1er novembre. Pense à l'annoncer à ton conseiller.",
     );
     expect(wrapper.findAll(".rhythm-days li")[0]!.attributes("aria-label")).toBe("lundi, en pause, 1 candidature");
   });

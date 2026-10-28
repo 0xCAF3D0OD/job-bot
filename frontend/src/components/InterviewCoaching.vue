@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { InterviewInsights } from "../api/client";
+import { dateInSentence } from "../dates";
 
 // Pistes de l'IA (docs/23 §3), affichées telles quelles.
 defineProps<{ coaching: NonNullable<InterviewInsights["coaching"]> }>();
-const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
+// « du 12 octobre » : la date de phrase sans son « le », contracté dans « du ».
+const day = (iso: string): string => dateInSentence(iso).replace(/^le /, "");
 </script>
 
 <template>
@@ -12,7 +14,7 @@ const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "lo
     data-test="coaching"
   >
     <p class="hint">
-      Pistes de l'IA du {{ dateFormat.format(new Date(coaching.created_at)) }}.
+      Pistes de l'IA du {{ day(coaching.created_at) }}.
     </p>
     <ul v-if="coaching.pistes.length">
       <li

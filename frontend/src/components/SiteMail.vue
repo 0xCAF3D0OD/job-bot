@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 
 import { api } from "../api/client";
+import { dateInList, timeOfDay } from "../dates";
 import { sourceLabel } from "../format";
 import IconButton from "./IconButton.vue";
 import SettingCard from "./SettingCard.vue";
@@ -22,7 +23,6 @@ const waiting = ref(false);
 const LATEST = 3;
 const all = ref(false);
 const shown = computed(() => (all.value ? items.value : items.value.slice(0, LATEST)));
-const time = new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Zurich" });
 function siteName(item: SiteMessage): string {
   return item.site === "unknown" ? "Un site" : (sourceLabel[item.site] ?? item.site);
 }
@@ -34,7 +34,6 @@ const WAIT_MS = 5 * 60_000;
 const items = ref<SiteMessage[]>([]);
 const openId = ref<number | null>(null);
 const texts = reactive<Record<number, string>>({});
-const day = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short", timeZone: "Europe/Zurich" });
 
 function stop(): void {
   clearInterval(timer);
@@ -138,10 +137,10 @@ onUnmounted(stop);
       >
         <SettingRow
           :title="siteName(item)"
-          :description="`${item.subject || 'Sans sujet'} · reçu à ${time.format(new Date(item.received_at))}`"
+          :description="`${item.subject || 'Sans sujet'} · reçu à ${timeOfDay(item.received_at)}`"
           data-test="site-message"
         >
-          <span class="muted alert-date">{{ day.format(new Date(item.received_at)) }}</span>
+          <span class="muted alert-date">{{ dateInList(item.received_at) }}</span>
           <IconButton
             icon="chevron-down"
             :label="openId === item.id ? 'Refermer le message' : 'Lire le message'"
