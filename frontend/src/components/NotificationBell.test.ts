@@ -2,7 +2,6 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import { dateWithTime } from "../dates";
 import NotificationBell from "./NotificationBell.vue";
 
 const GET = vi.fn();
@@ -12,14 +11,13 @@ vi.mock("../api/client", () => ({
 }));
 afterEach(() => vi.resetAllMocks());
 
-const CREATED = new Date(Date.now() - 2 * 3600_000).toISOString();
 const item = (id: number, extra: Record<string, unknown> = {}) => ({
   id,
   kind: "orp_due",
   title: "Preuves de septembre à remettre avant le 5 octobre",
   message: "18 candidatures, 2 lignes à compléter.",
   link: "/orp?mois=2026-09",
-  created_at: CREATED,
+  created_at: new Date(Date.now() - 2 * 3600_000).toISOString(),
   read_at: null,
   ...extra,
 });
@@ -50,8 +48,8 @@ describe("NotificationBell", () => {
     const items = wrapper.findAll("[data-test=bell-item]");
     expect(items).toHaveLength(2);
     expect(items[0]!.classes()).toContain("unread");
-    // L'heure de l'alerte, jamais « il y a 2 h » (§5).
-    expect(items[0]!.text()).toContain(dateWithTime(CREATED));
+    // La règle des dates (§5) : jamais « il y a 2 h », « aujourd'hui » (ou « hier » juste après minuit).
+    expect(items[0]!.text()).toMatch(/aujourd'hui|hier/);
     expect(items[0]!.text()).not.toContain("il y a");
 
     await items[0]!.trigger("click");
