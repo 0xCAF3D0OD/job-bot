@@ -208,6 +208,13 @@ async function endPause(): Promise<void> {
 async function saveMode(): Promise<void> {
   await persist("mode", { offers_notify_mode: form.value.offers_notify_mode, offers_notify_hour: form.value.offers_notify_hour });
 }
+// Toute la ligne choisit le mode, pas seulement le rond de 20 px (audit téléphone) ; le menu de
+// l'heure et la radio elle-même gardent leur propre comportement.
+function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
+  if ((event.target as HTMLElement).closest("select, input") || form.value.offers_notify_mode === mode) return;
+  form.value.offers_notify_mode = mode;
+  void saveMode();
+}
 // Le seuil des notifications en cinq pastilles (docs/106, décision 2) ; une valeur d'avant,
 // hors des cinq, reste proposée.
 const THRESHOLDS = [50, 60, 70, 80, 90];
@@ -596,6 +603,9 @@ onUnmounted(() => spy?.disconnect());
                 :error="rowErrors.mode"
               />
               <SettingRow
+                class="radio-row"
+                data-test="rhythm-daily-row"
+                @click="pickMode($event, 'daily')"
                 v-slot="c"
                 title="Un message par jour"
                 description="Toutes les offres bien notées du jour, en un seul message."
@@ -627,6 +637,9 @@ onUnmounted(() => spy?.disconnect());
                 >
               </SettingRow>
               <SettingRow
+                class="radio-row"
+                data-test="rhythm-instant-row"
+                @click="pickMode($event, 'instant')"
                 v-slot="c"
                 title="Dès qu'elles arrivent"
                 description="Un message par offre, dès qu'elle est notée."

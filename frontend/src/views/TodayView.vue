@@ -323,7 +323,7 @@ const { me } = useAuth();
       <template v-if="showTriage">
         <ActionBand
           v-if="triagePending"
-          title="Tri du jour."
+          title="Tri du jour"
           :summary="triageSummary"
           action="Commencer le tri"
           :to="{ name: 'triage' }"
@@ -358,7 +358,7 @@ const { me } = useAuth();
             sizes="(max-width: 820px) 260px, 424px"
           />
           <h2 id="today-triage-title">
-            Tri du jour.
+            Tri du jour
           </h2>
           <p>{{ triageDone ? "Tri terminé · À demain" : "Rien à trier · À demain" }}</p>
         </section>
@@ -372,7 +372,7 @@ const { me } = useAuth();
         data-test="today-tasks"
       >
         <h2 id="today-tasks-title">
-          À faire aujourd'hui.
+          À faire aujourd'hui
         </h2>
         <ul class="today-tasks">
           <li

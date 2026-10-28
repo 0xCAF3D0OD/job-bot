@@ -198,11 +198,20 @@ AUDIT = r"""(maxWords) => {
       return !!hit && (e.contains(hit) || hit.contains(e));
     };
     const list = [...items.entries()].filter(([e, r]) => onTop(e, r));
+    // Deux textes de deux zones qui défilent chacune de leur côté (la liste et la fiche ouverte à
+    // côté) ne se touchent jamais pour de vrai : on ne les compare pas.
+    const scroller = (e) => {
+      for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+        if (/(auto|scroll)/.test(getComputedStyle(p).overflowY) && p.scrollHeight > p.clientHeight + 1) return p;
+      }
+      return null;
+    };
+    const zone = new Map(list.map(([e]) => [e, scroller(e)]));
     for (const [b, rb] of list) {
       if (rb.ctl) continue;
       let best = null;
       for (const [a, ra] of list) {
-        if (a === b || a.contains(b) || b.contains(a) || ra.top >= rb.top) continue;
+        if (a === b || a.contains(b) || b.contains(a) || ra.top >= rb.top || zone.get(a) !== zone.get(b)) continue;
         if (Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left) < 24) continue;
         const gap = rb.top - ra.bottom;
         if (best === null || gap < best[1]) best = [a, gap, ra.ctl];

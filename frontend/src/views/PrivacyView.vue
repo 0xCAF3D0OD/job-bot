@@ -112,6 +112,7 @@ onMounted(async () => {
       <p v-if="loggedIn">
         <RouterLink
           :to="{ path: '/reglages', query: { rubrique: 'compte' } }"
+          class="link"
           data-test="privacy-settings"
         >
           Ouvrir Réglages, rubrique Compte
@@ -138,6 +139,7 @@ onMounted(async () => {
       <p>
         <RouterLink
           to="/accessibilite"
+          class="link"
           data-test="privacy-accessibility"
         >
           Voir ce qui est vérifié

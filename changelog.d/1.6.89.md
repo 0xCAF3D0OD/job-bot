@@ -1,0 +1,1 @@
+Le contrôle « Historique » d'une PR compare au main du moment (premier parent du commit de fusion de test), plus à l'ancien main de l'événement : une PR remise à jour sur main ne se voit plus attribuer les fichiers numérotés qu'apporte main
