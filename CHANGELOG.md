@@ -292,3 +292,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.78 | Illustrations aux écrans vides et aux réussites : tri terminé et objectif atteint, rien à préparer, Bilan trop tôt, assistant, formations, rendez-vous ORP, offre et page introuvables, IA pas encore branchée ; un écran commun « Pas de connexion » qui réessaie seul dès que le réseau revient ; les illustrations centrées ne s'affichaient plus (largeur nulle) | livrée |
 | 1.6.79 | Repliables : au survol d'un repliable ouvert, la teinte couvre toute la ligne de titre, menu « ⋯ » compris | livrée |
 | 1.6.80 | Le README de `changelog.d/` donne un exemple de fragment avec une ligne « État : … » et dit quand l'employer | livrée |
+| 1.6.81 | Composants communs : tête de carte « Titre · nombre », « Afficher plus (N) », bouton Copier annoncé, menu « ⋯ » nommé « Plus d'actions » et sans rouge | livrée |
