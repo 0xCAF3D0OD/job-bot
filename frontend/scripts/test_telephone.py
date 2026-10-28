@@ -143,3 +143,28 @@ def test_un_radio_seul_de_20_px_reste_un_defaut(page: Page) -> None:
     faults = audit(page, '<input type="radio" style="width: 20px; height: 20px; margin: 0">')
     assert any("cible de 20 × 20 px" in f for f in faults)
 
+
+def test_l_etiquette_d_un_champ_de_saisie_n_est_pas_mesuree(page: Page) -> None:
+    html = """
+    <label for="nom" style="display: block; font-size: 14px; line-height: 21px">Nom</label>
+    <input id="nom" style="display: block; width: 200px; height: 44px; box-sizing: border-box">
+    """
+    assert run(page, html) == {"faults": [], "warnings": []}
+
+
+def test_l_etiquette_d_une_case_assez_grande_n_est_pas_mesuree(page: Page) -> None:
+    html = """
+    <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 14px; line-height: 18px">
+      <input type="checkbox" style="width: 24px; height: 24px; margin: 0">Oui
+    </label>
+    """
+    assert audit(page, html) == []
+
+
+def test_l_etiquette_d_une_case_a_cocher_cachee_reste_mesuree(page: Page) -> None:
+    html = """
+    <input id="ok" type="checkbox" style="position: absolute; opacity: 0">
+    <label for="ok" style="display: inline-block; font-size: 14px; line-height: 18px">Oui</label>
+    """
+    assert any("label" in f and "Oui" in f for f in audit(page, html))
+
