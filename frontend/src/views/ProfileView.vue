@@ -14,7 +14,7 @@ const TABS = [
   // Sur téléphone, un nom court qui tient sur une ligne (docs/36 §5).
   { key: "recherche", label: "Critères", icon: "filter", short: "Critères" },
   { key: "parcours", label: "Parcours", icon: "folder", short: "Parcours" },
-  { key: "coordonnees", label: "Coordonnées", icon: "mail", short: "Coordonnées" },
+  { key: "coordonnees", label: "Coordonnées", icon: "mail", short: "Contact" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -32,7 +32,7 @@ const tab = computed<Tab>(() => {
     title="Profil"
   >
     <nav
-      class="prep-tabs"
+      class="prep-tabs profile-tabs"
       aria-label="Profil"
     >
       <RouterLink
