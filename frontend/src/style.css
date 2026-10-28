@@ -810,7 +810,7 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: var(-
 .bell-item.unread { background: var(--accent-soft); }
 .bell-item.unread .bell-title { font-weight: var(--weight-bold); }
 .bell-title { font-size: var(--font-small); color: var(--text); }
-.bell-text { font-size: var(--font-small); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bell-text { font-size: var(--font-small); color: var(--muted); overflow-wrap: anywhere; } /* Jamais de « … » dans une ligne de liste (§2) : le texte passe à la ligne. */
 .bell-time { font-size: var(--font-caption); color: var(--muted); }
 .bell-empty { padding: var(--space-2) var(--space-3) var(--space-3); margin: 0; }
 
