@@ -48,7 +48,9 @@ describe("NotificationBell", () => {
     const items = wrapper.findAll("[data-test=bell-item]");
     expect(items).toHaveLength(2);
     expect(items[0]!.classes()).toContain("unread");
-    expect(items[0]!.text()).toContain("il y a 2 h");
+    // La règle des dates (§5) : jamais « il y a 2 h », « aujourd'hui » (ou « hier » juste après minuit).
+    expect(items[0]!.text()).toMatch(/aujourd'hui|hier/);
+    expect(items[0]!.text()).not.toContain("il y a");
 
     await items[0]!.trigger("click");
     await flushPromises();

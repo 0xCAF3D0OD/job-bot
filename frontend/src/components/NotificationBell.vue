@@ -3,7 +3,8 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api, type Inbox, type InboxItem } from "../api/client";
-import { plural, since } from "../format";
+import { dateInList } from "../dates";
+import { plural } from "../format";
 import AppIcon from "./AppIcon.vue";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
@@ -141,7 +142,7 @@ onUnmounted(() => {
               v-if="item.message"
               class="bell-text"
             >{{ item.message.split("\n")[0] }}</span>
-            <span class="bell-time">{{ since(item.created_at) }}</span>
+            <span class="bell-time">{{ dateInList(item.created_at) }}</span>
           </button>
         </li>
       </ul>

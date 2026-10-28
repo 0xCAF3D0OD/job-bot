@@ -172,7 +172,8 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 ## 7. Accessibilité (WCAG 2.2 niveau AA, obligatoire)
 
 - Contraste texte ≥ 4,5:1 (≥ 3:1 au-delà de 24 px).
-- Cibles tactiles ≥ 24 × 24 px (viser 44 px sur téléphone).
+- Cibles tactiles ≥ 24 × 24 px (WCAG 2.5.8) ; **44 px de haut sur téléphone** (sous 820 px ou écran tactile), y compris les liens et boutons texte (« Relancer », « Tout voir », « Modifier ») : une zone invisible agrandie autour du texte, sans changer son aspect. Les zones de deux liens voisins ne se chevauchent pas.
+- Sur téléphone, un panneau qui s'ouvre depuis l'en-tête (cloche, compte) prend toute la largeur moins 16 px de chaque côté, sous l'en-tête ; rien ne sort de l'écran en 320 px.
 - Vrais éléments : `<button>`, `<a href>`, `<label>` ; jamais de clic sur une `div`.
 - Lien « Aller au contenu » en premier.
 - Une seule étape marquée comme courante dans un parcours.

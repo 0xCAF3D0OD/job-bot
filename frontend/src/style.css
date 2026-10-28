@@ -1254,7 +1254,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 /* §3.2 Exigence non couverte par le profil : un ✗ en plus de l'orange. */
 /* §4 Zones de clic sur écran tactile : 44 × 44 px au moins, sans changer l'aspect (zone
    invisible agrandie autour des petits éléments). */
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 820px) {
   .link, button.link, .close, .assistant-close, .chip, .bell-item, .filter-row { position: relative; }
   .link::before, button.link::before, .close::before, .assistant-close::before {
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: max(100%, 2.75rem);
@@ -4129,4 +4129,23 @@ html.search-open { overflow: hidden; }
 .busy-button[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
 @media (prefers-reduced-motion: reduce) {
   .show-more .icon, .copy-button { transition: none; }
+}
+
+/* --- Téléphone : la cloche et les zones tactiles (audit du 28.10, 320 à 390 px) --- */
+@media (max-width: 820px) {
+  /* Le panneau de la cloche et celui du compte : sous l'en-tête, sur toute la largeur moins 16 px de
+     chaque côté. Ils se placent par rapport à l'en-tête (collant), et non plus à leur bouton, pour ne
+     jamais sortir de l'écran. */
+  .bell, .account-menu { position: static; }
+  .bell-panel, .account-panel { position: absolute; top: 100%; left: var(--space-4); right: var(--space-4); width: auto; max-height: calc(100dvh - 10rem); overflow: auto; }
+  /* Zones de clic d'au moins 44 px de haut sans changer l'aspect (WCAG 2.5.8, Apple HIG 44 pt) : une
+     zone invisible agrandie autour des liens et boutons texte. */
+  .back-link, .brand, .app-footer a, .settings-toc a, .demo-banner a, .pick-title a, .settings-markers a, .segmented > button { position: relative; }
+  .prep-tabs a { min-height: 2.75rem; box-sizing: border-box; display: inline-flex; align-items: center; }
+  .app-footer nav { row-gap: var(--space-5); }
+  .back-link::before, .brand::before, .app-footer a::before, .settings-toc a::before, .demo-banner a::before, .pick-title a::before, .settings-markers a::before, .segmented > button::before, .welcome-dot::before {
+    content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: max(100%, 2.75rem);
+    transform: translate(-50%, -50%);
+  }
+  .skip-link { display: inline-flex; align-items: center; min-height: 2.75rem; }
 }
