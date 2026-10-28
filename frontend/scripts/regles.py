@@ -180,8 +180,17 @@ AUDIT = r"""(maxWords) => {
       const r = e.getBoundingClientRect();
       items.set(e, { top: r.top, bottom: r.bottom, left: r.left, right: r.right, ctl: true });
     }
-    // Seulement ce qui est au premier plan : une fiche ouverte par-dessus la liste la cache.
+    // Seulement ce qui est au premier plan : une fiche ouverte par-dessus la liste la cache, y
+    // compris plus bas que l'écran (un calque fixe qui couvre tout l'écran cache tout le reste).
+    const layer = (() => {
+      for (let e = document.elementFromPoint(innerWidth / 2, innerHeight / 2); e && e !== document.body; e = e.parentElement) {
+        const r = e.getBoundingClientRect();
+        if (getComputedStyle(e).position === 'fixed' && r.width >= innerWidth - 1 && r.height >= innerHeight - 1) return e;
+      }
+      return null;
+    })();
     const onTop = (e, r) => {
+      if (layer && !layer.contains(e)) return false;
       const x = (Math.max(r.left, 0) + Math.min(r.right, innerWidth)) / 2;
       const y = (r.top + r.bottom) / 2;
       if (y < 0 || y > innerHeight) return true;

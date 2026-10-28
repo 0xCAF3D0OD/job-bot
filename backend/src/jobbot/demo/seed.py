@@ -242,41 +242,46 @@ def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) ->
     if spec.role:
         strengths = [
             {
-                "text": "Scripts d'automatisation en Bash et Python.",
+                "text": "Automatisation : scripts en Bash et Python.",
                 "chunk_ids": [chunks["exp_support"]],
             }
         ]
     else:
         strengths = [
             {
-                "text": "Plateforme Kubernetes mise en place pour 40 services, avec déploiements "
-                "continus.",
+                "text": "Kubernetes : plateforme de 40 services en production.",
                 "chunk_ids": [chunks["exp_platform"], chunks["comp_k8s"]],
             },
             {
-                "text": "Infrastructure décrite en Terraform, sur Azure et AWS.",
+                "text": "Terraform : infrastructure sur Azure et AWS.",
                 "chunk_ids": [chunks["comp_iac"], chunks["exp_cloud"]],
             },
         ]
     if spec.score is not None and spec.score >= 80:
         strengths.append(
             {
-                "text": "Astreintes et supervision (Prometheus, Grafana).",
+                "text": "Supervision : astreintes avec Prometheus et Grafana.",
                 "chunk_ids": [chunks["comp_obs"]],
             }
         )
     gaps: list[dict[str, Any]] = [
-        {"text": f"{m} : pas d'expérience dans ton profil.", "chunk_ids": []} for m in spec.missing
+        {"text": f"{m} : demandé, absent de ton profil.", "chunk_ids": []} for m in spec.missing
     ]
     # Une note basse sans compétence manquante : le poste penche vers le développement.
     far_from_dev = spec.score is not None and spec.score < 70 and not spec.role and not spec.missing
     if spec.role:
         gaps.append(
-            {"text": "Le poste vise la donnée, ton parcours la plateforme.", "chunk_ids": []}
+            {
+                "text": "Domaine : le poste vise la donnée, ton parcours la plateforme.",
+                "chunk_ids": [chunks["exp_platform"]],
+            }
         )
     elif far_from_dev:
         gaps.append(
-            {"text": "Le poste demande plus de développement que ton profil.", "chunk_ids": []}
+            {
+                "text": "Développement : le poste en demande plus que ton profil.",
+                "chunk_ids": [chunks["exp_platform"]],
+            }
         )
     # La phrase « pourquoi » (score-v5, docs/121 §C.1) dit la même chose que les points forts
     # et les manques de l'offre : ce qu'elle demande et que le profil a, ce qui manque.

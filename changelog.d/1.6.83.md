@@ -1,0 +1,1 @@
+Tri : la phrase « pourquoi » tient sur une ligne de 80 caractères, coupée au mot sans « … » ; le visage du 1 remplace les illustrations de l'accueil des nouveaux comptes et du moment d'engagement ; plus d'illustration dans l'assistant de création d'alertes

@@ -11,7 +11,7 @@ describe("EngagementMoment (docs/60 §2.1)", () => {
     expect(overlay.textContent).toContain("Félicitations !");
     expect(overlay.textContent).toContain("Engagement chez Exemple SA. Pense à le signaler à ton conseiller ORP.");
     expect(overlay.querySelectorAll(".confetti span")).toHaveLength(24);
-    expect(overlay.querySelector("[data-illustration=porte-ouverte]")).not.toBeNull();
+    expect(overlay.querySelector(".face-mark[data-mood=ravi]")).not.toBeNull();
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(wrapper.emitted("close")).toHaveLength(1);
     wrapper.unmount();

@@ -7,6 +7,7 @@ import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import FaceMark from "./FaceMark.vue";
 import ScoreWord from "./ScoreWord.vue";
+import { whyLine } from "../whyLine";
 
 // Les offres du jour, une à la fois (docs/124 §D) : « Garder » (l'offre passe en « À préparer »)
 // ou « Écarter » (« Ignorée »), puis la suivante ; « Annuler » pendant 6 secondes (docs/108).
@@ -136,7 +137,7 @@ const summary = computed(() =>
             v-if="current.why"
             class="pick-why"
           >
-            {{ current.why }}
+            {{ whyLine(current.why) }}
           </p>
         </div>
         <p
