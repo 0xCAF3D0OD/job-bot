@@ -1082,7 +1082,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 /* Un long lien passe à la ligne au lieu d'élargir le panneau (docs/74). */
 .card-job-room dd > span { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 900px) {
-  .suivi-calendar .day { min-height: 3.6rem; }
+  .suivi-calendar .day { min-height: 3.6rem; padding-inline: var(--space-1); }
   .day-marks .mark { display: none; }
 }
 
@@ -2431,6 +2431,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .welcome-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
 .welcome-screen { grid-template-columns: minmax(0, 1fr); }
 .welcome-screen h1, .welcome-card span { min-width: 0; overflow-wrap: break-word; }
+.welcome-card { white-space: normal; }
 .welcome-card > span { flex: 1 1 auto; grid-template-columns: minmax(0, 1fr); }
 /* En 320 et 360 px : les dix points et « Plus tard » tiennent sur la ligne (audit téléphone). */
 @media (max-width: 400px) {
@@ -4079,7 +4080,7 @@ html.search-open { overflow: hidden; }
 .offer-line-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
 .offer-line-title {
   padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: var(--weight-semibold);
-  text-align: left; text-decoration: none; overflow-wrap: anywhere; cursor: pointer;
+  text-align: left; text-decoration: none; overflow-wrap: anywhere; white-space: normal; min-width: 0; cursor: pointer;
 }
 .offer-line-title::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 /* Le focus clavier : le contour sur la zone du lien, toute la ligne (WCAG 2.4.7). */
