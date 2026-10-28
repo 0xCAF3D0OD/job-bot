@@ -1,0 +1,1 @@
+La fiche d'une offre en cartes, comme les Réglages : l'offre et ses deux actions, Pourquoi (la note, la phrase, « Cette note ne me correspond pas »), Points forts et Manques (trois au plus, le mot clé en gras en tête), À savoir en lignes « libellé : valeur » avec l'adresse, puis Entreprise et Annonce repliées

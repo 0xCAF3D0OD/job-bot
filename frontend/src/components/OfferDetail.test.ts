@@ -89,7 +89,7 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     expect(wrapper.find("[data-test=find-employer]").exists()).toBe(false);
   });
 
-  it("sections Pour toi, À savoir, Entreprise, Annonce, dans cet ordre", async () => {
+  it("cartes Pourquoi, Points forts, À savoir, puis Entreprise et Annonce repliées (planche « Fiche d'une offre »)", async () => {
     const wrapper = await mountDetail(
       offer({
         employer_url: "https://exemple.ch/jobs/2",
@@ -101,13 +101,26 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
         summary_offers: "80-100 %",
         rate_min: 80,
         rate_max: 100,
+        remote: "hybrid",
+        remote_days: 2,
+        strengths: [
+          { text: "Kubernetes : plateforme de 40 services en production.", chunk_ids: [1] },
+          { text: "Terraform : infrastructure sur Azure et AWS.", chunk_ids: [1] },
+          { text: "CI/CD : déploiements continus.", chunk_ids: [1] },
+          { text: "Un quatrième point de trop.", chunk_ids: [1] },
+        ],
         doubts: [{ kind: "permanent", text: "Annonce permanente : vue depuis 38 jours", excerpt: null }],
         filter_reasons: ["Type : stage"],
         description: "Missions. ".repeat(60),
       }),
     );
-    const titles = wrapper.findAll(".panel-section h3, .disclosure-title").map((h) => h.text());
-    expect(titles).toEqual(["Pour toi", "À savoir", "Entreprise", "Annonce"]);
+    const titles = wrapper.findAll(".detail-card h3, .disclosure-title").map((h) => h.text());
+    expect(titles).toEqual(["Pourquoi", "Points forts", "À savoir", "Entreprise", "Annonce"]);
+    // Trois puces au plus, le mot clé en gras en tête.
+    const points = wrapper.findAll("[data-test=strengths] li");
+    expect(points).toHaveLength(3);
+    expect(points[0]!.find("strong").text()).toBe("Kubernetes :");
+    expect(points[0]!.text()).toBe("Kubernetes : plateforme de 40 services en production.");
     // L'entreprise et l'annonce, repliées, avec leur résumé (règles §3.4, 1.6.21).
     const rows = wrapper.findAll(".detail-disclosure > .disclosure-row");
     expect(rows.map((r) => r.attributes("aria-expanded"))).toEqual(["false", "false"]);
@@ -115,17 +128,19 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     // « ← Offres » vient en premier, au-dessus du logo et du titre (règles §2).
     expect(wrapper.find("[data-test=offer-detail]").element.firstElementChild!.getAttribute("data-test")).toBe("back-detail");
     expect(wrapper.find("[data-test=score-note]").text()).toBe("Ton profil a changé depuis : note à refaire.");
-    // docs/101 : taux, télétravail, contrat en pastilles ; les faits prennent leur icône.
+    // À savoir : « libellé : valeur », seulement ce qui est connu ; plus de « 1 fois, depuis le… ».
+    const labels = wrapper.findAll("[data-test=terms] dt").map((dt) => dt.text());
+    expect(labels).toEqual(["Taux", "Télétravail", "Reçue", "Adresse"]);
+    expect(wrapper.find("[data-test=term-remote] dd").text()).toBe("2 jours par semaine");
+    expect(wrapper.find("[data-test=term-rate] dd").text()).toBe("80 à 100 %");
     const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark [data-icon]").attributes("data-icon"));
-    expect(marks).toEqual(["eye", "alert", "x-circle"]);
-    expect(wrapper.find("[data-test=term-rate]").text()).toBe("Taux : 80–100 %");
-    expect(wrapper.find("[data-test=term-rate] [data-icon=rate]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=facts] .seen").text()).toMatch(/^Vue \d+ fois/);
+    expect(marks).toEqual(["alert", "x-circle"]);
+    expect(wrapper.text()).not.toMatch(/fois, depuis le/);
     // L'annonce chez l'employeur est le bouton ; celle d'Indeed, seule autre, s'affiche
     // directement, sans « ⋯ » pour une seule action (docs/76 §3).
     expect(wrapper.find("[data-test=ad-more]").exists()).toBe(false);
     expect(wrapper.find("[data-test=source-indeed]").text()).toContain("Voir sur Indeed");
-    expect(wrapper.find("[data-test=company-section] [data-test=address]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=section-facts] [data-test=address]").exists()).toBe(true);
     expect(wrapper.find("[data-test=description]").classes()).toContain("folded");
     await wrapper.find("[data-test=read-more]").trigger("click");
     expect(wrapper.find("[data-test=description]").classes()).not.toContain("folded");
@@ -141,17 +156,19 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
 });
 
 describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
-  it("l'adresse visible, les actions dans « ⋯ », « Ajouter l'adresse » visible si elle manque", async () => {
+  it("l'adresse dans « À savoir », les actions dans le « ⋯ » de l'entreprise, « Adresse inconnue · Ajouter »", async () => {
     const known = await mountDetail(offer({ company_address: "Rue 1\n1201 Genève", company_address_source: "registry" }));
+    expect(known.find("[data-test=address] dd").text()).toContain("Rue 1, 1201 Genève");
+    expect(known.find("[data-test=add-address]").exists()).toBe(false);
     const section = known.find("[data-test=company-section]");
-    expect(section.find("[data-test=address]").text()).toContain("Rue 1, 1201 Genève");
-    expect(section.findAll("button.link")).toHaveLength(0);
     await section.find("[data-test=company-more]").trigger("click");
     const labels = section.findAll("[role=menuitem]").map((item) => item.text());
     expect(labels).toEqual(["Modifier l'adresse", "Chercher l'adresse", "Chercher l'offre chez l'employeur", "Contacts"]);
 
     const missing = await mountDetail(offer());
-    expect(missing.find("[data-test=add-address]").text()).toBe("Ajouter l'adresse");
+    expect(missing.find("[data-test=address] dd").text().replace(/\s+/g, " ")).toBe("Adresse inconnue · Ajouter");
+    await missing.find("[data-test=add-address]").trigger("click");
+    expect(missing.find("[data-test=address-input]").exists()).toBe(true);
   });
 });
 
