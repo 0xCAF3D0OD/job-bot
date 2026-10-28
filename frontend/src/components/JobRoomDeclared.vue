@@ -2,6 +2,7 @@
 import { ref } from "vue";
 
 import { api } from "../api/client";
+import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
 
 // Saisie dans Job-Room (docs/70 §6) : « Marquer comme déclarée », ou la date et « Annuler ».
@@ -10,8 +11,6 @@ const props = defineProps<{ applicationId: number; declaredAt: string | null }>(
 const emit = defineEmits<{ changed: [] }>();
 
 const busy = ref(false);
-const dayMonth = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString("fr-CH", { day: "2-digit", month: "2-digit" });
 
 async function set(declared: boolean): Promise<void> {
   busy.value = true;
@@ -32,7 +31,7 @@ async function set(declared: boolean): Promise<void> {
     data-test="job-room-declared"
   >
     <template v-if="declaredAt">
-      <span class="done with-icon"><AppIcon name="done" />Déclarée dans Job-Room le {{ dayMonth(declaredAt) }}</span>
+      <span class="done with-icon"><AppIcon name="done" />Déclarée dans Job-Room {{ dateInSentence(`${declaredAt}T12:00:00`) }}</span>
       <button
         type="button"
         class="link"

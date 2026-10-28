@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { Application, ApplicationStatus } from "../api/client";
+import { dateInList } from "../dates";
 import { applicationStatusLabel, formatMonth, methodLabel } from "../format";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import StatusPill from "./StatusPill.vue";
 
 // Suivi des candidatures (docs/08), onglet de la page Candidatures (docs/18 §2).
 defineProps<{ items: Application[]; showMonth: boolean }>();
@@ -49,7 +51,7 @@ function rowItems(application: Application): MoreMenuItem[] {
         data-test="application"
       >
         <td class="app-date">
-          {{ new Date(application.sent_at).toLocaleDateString("fr-CH") }}
+          {{ dateInList(`${application.sent_at}T12:00:00`) }}
           <span
             v-if="showMonth"
             class="hint"
@@ -65,10 +67,14 @@ function rowItems(application: Application): MoreMenuItem[] {
           >
             {{ application.company }}
           </button>
-          <span
+          <!-- Une étiquette sans état : sans point, neutre (règle §4). -->
+          <StatusPill
             v-if="application.assigned_by_orp"
-            class="badge"
-          >ORP</span>
+            :dot="false"
+            data-test="orp-tag"
+          >
+            ORP
+          </StatusPill>
         </td>
         <td>
           {{ application.job_title }}

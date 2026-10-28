@@ -3,7 +3,8 @@
 import { computed, ref, watch } from "vue";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
-import { expiredText, formatDate, gapSkill, rateText, remoteText, sourceLabel } from "../format";
+import { dateInSentence } from "../dates";
+import { expiredText, gapSkill, rateText, remoteText, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
@@ -14,6 +15,7 @@ import ScoreWord from "./ScoreWord.vue";
 import GapFill from "./GapFill.vue";
 import ScoreCorrection from "./ScoreCorrection.vue";
 import SidePanel from "./SidePanel.vue";
+import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
 
 import HoverNote from "./HoverNote.vue";
@@ -65,7 +67,6 @@ const EMPLOYER_SOURCES: Record<string, string> = {
 };
 const employerBusy = ref(false);
 const employerMessage = ref("");
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 // Lien vers l'employeur déjà donné par l'annonce jobup : rien à chercher.
 const employerKnown = computed(() => {
   const url = props.offer.apply_url;
@@ -161,8 +162,9 @@ const STATUS_LABEL: Partial<Record<Offer["status"], string>> = {
 const statusLabel = computed(() =>
   props.offer.expired_at && props.offer.status !== "applied" ? "Expirée" : (STATUS_LABEL[props.offer.status] ?? ""),
 );
-const pillClass = computed(() =>
-  props.offer.expired_at && props.offer.status !== "applied" ? "expired" : props.offer.status,
+// Le ton de la pastille (règle §4) : vert seulement pour la candidature envoyée, le reste neutre.
+const pillTone = computed(() =>
+  props.offer.status === "applied" ? ("ok" as const) : ("neutral" as const),
 );
 // « À savoir » (docs/45, docs/101) : taux, télétravail et contrat en pastilles, puis une ligne par
 // fait : cercle coché sûr, alerte à vérifier, croix raison d'un écart, œil pour les passages.
@@ -181,7 +183,7 @@ const terms = computed(() => {
 const facts = computed<Fact[]>(() => {
   const o = props.offer;
   const list: Fact[] = [
-    { mark: "seen", hidden: "Vue ", text: `${o.seen_count} fois, depuis le ${formatDate(o.first_seen_at)}` },
+    { mark: "seen", hidden: "Vue ", text: `${o.seen_count} fois, depuis ${dateInSentence(o.first_seen_at)}` },
   ];
   if (o.remote_from_switzerland === false) list.push({ mark: "check", text: "Télétravail pas ouvert depuis la Suisse" });
   for (const doubt of o.doubts ?? []) {
@@ -362,11 +364,13 @@ watch(
         <span v-if="offer.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ offer.location }}</span>
       </span>
       <div class="status-line">
-        <span
+        <StatusPill
           v-if="statusLabel"
-          :class="['status-pill', pillClass]"
+          :tone="pillTone"
           data-test="status-pill"
-        >{{ statusLabel }}</span>
+        >
+          {{ statusLabel }}
+        </StatusPill>
         <RouterLink
           v-if="offer.status === 'applied'"
           to="/candidatures/suivi"
@@ -690,8 +694,8 @@ watch(
         >Recherche chez l'employeur en cours (jusqu'à 30 s)…</span>
         <span
           v-else-if="offer.employer_url && offer.employer_checked_at"
-        >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée le
-          {{ shortDate.format(new Date(offer.employer_checked_at)) }}.</span>
+        >Trouvée chez l'employeur {{ EMPLOYER_SOURCES[offer.employer_url_source ?? "web"] }}, vérifiée
+          {{ dateInSentence(offer.employer_checked_at) }}.</span>
         <span v-else-if="offer.employer_status === 'agency'">Annonce d'agence : employeur non indiqué.</span>
         <span v-else-if="offer.employer_status === 'not_found'">Pas trouvée chez l'employeur.</span>
         <span v-else-if="offer.employer_status === 'gone'">L'annonce a disparu du site de l'employeur.</span>

@@ -4,7 +4,12 @@ import { onMounted, ref, watch } from "vue";
 import { api, type ParseStatus, type Search, type SearchDetail, type Source } from "../api/client";
 import { useCollect } from "../composables/useCollect";
 import AppIcon from "./AppIcon.vue";
-import { SITE_NAMES, formatDateTime, parseStatusLabel, plural, rateText, sourceLabel } from "../format";
+import StatusPill from "./StatusPill.vue";
+import { dateWithTime } from "../dates";
+import { SITE_NAMES, parseStatusLabel, plural, rateText, sourceLabel } from "../format";
+
+// L'analyse d'une alerte en pastille (§4) : réussie en vert, le rouge seulement pour un vrai échec.
+const PARSE_TONE: Record<ParseStatus, "neutral" | "ok" | "error"> = { parsed: "ok", empty: "neutral", unrecognized: "neutral", failed: "error" };
 
 const PAGE_SIZE = 10;
 
@@ -145,7 +150,7 @@ onMounted(() => void load());
             @click="select(search)"
             @keydown.enter="select(search)"
           >
-            <td>{{ formatDateTime(search.received_at) }}</td>
+            <td>{{ dateWithTime(search.received_at) }}</td>
             <td>{{ sourceLabel[search.source] }}</td>
             <td>{{ search.alert_label ?? search.subject ?? "–" }}</td>
             <td>
@@ -156,8 +161,10 @@ onMounted(() => void load());
               > (+ {{ search.off_topic_count }} hors métier, écartées)</span>
             </td>
             <td>{{ search.new_offers_count }}</td>
-            <td :class="['parse', search.parse_status]">
-              {{ parseStatusLabel[search.parse_status] }}
+            <td>
+              <StatusPill :tone="PARSE_TONE[search.parse_status]">
+                {{ parseStatusLabel[search.parse_status] }}
+              </StatusPill>
             </td>
           </tr>
           <tr
@@ -186,11 +193,14 @@ onMounted(() => void load());
                   :key="offer.id"
                   data-test="detail-offer"
                 >
-                  <span
-                    v-if="offer.is_first"
-                    class="badge new"
-                  >nouvelle</span>
                   <strong>{{ offer.title }}</strong>
+                  <StatusPill
+                    v-if="offer.is_first"
+                    :dot="false"
+                    data-test="detail-offer-new"
+                  >
+                    Nouvelle
+                  </StatusPill>
                   <span
                     class="detail meta-line"
                     data-test="detail-offer-meta"

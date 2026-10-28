@@ -81,7 +81,7 @@ describe("JournalView", () => {
     await rows[0]?.trigger("click");
     await flushPromises();
     const offer = wrapper.find("[data-test=detail-offer]");
-    expect(offer.text()).toContain("nouvelle");
+    expect(offer.find("[data-test=detail-offer-new]").text()).toBe("Nouvelle");
     expect(offer.text()).toContain("80–100 %");
     const link = offer.find("a");
     expect(link.attributes("rel")).toBe("noopener noreferrer");

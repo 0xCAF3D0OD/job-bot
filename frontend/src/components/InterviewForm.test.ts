@@ -82,7 +82,7 @@ describe("Carte et panneau d'une candidature, retour d'entretien (docs/23 §3, d
       props: { application: { ...application, interviews: [interview] } as never },
       global: { stubs: { teleport: true, ContactsPanel: true } },
     });
-    expect(wrapper.find("[data-test=interview-summary]").text()).toBe("Technique · ressenti 4/5 · suite : une réponse attendue avant le 20.10.2026");
+    expect(wrapper.find("[data-test=interview-summary]").text()).toMatch(/^Technique · ressenti 4\/5 · suite : une réponse attendue avant le 20 octobre( 2026)?$/);
     expect(wrapper.find("[data-test=interview-feedback]").exists()).toBe(false);
     // « Voir le retour » est dans le « ⋯ » des entretiens (docs/74).
     await wrapper.find("[data-test=interviews-more]").trigger("click");

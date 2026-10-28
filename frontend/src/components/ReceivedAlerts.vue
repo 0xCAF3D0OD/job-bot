@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import { api, type Search } from "../api/client";
+import { dateWithTime } from "../dates";
 import { plural, sourceLabel } from "../format";
 import JournalPanel from "./JournalPanel.vue";
 import SettingCard from "./SettingCard.vue";
@@ -14,7 +15,6 @@ const LATEST = 3;
 const items = ref<Search[]>([]);
 const total = ref(0);
 const all = ref(false);
-const when = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Zurich" });
 
 function title(item: Search): string {
   const site = sourceLabel[item.source] ?? item.source;
@@ -22,7 +22,7 @@ function title(item: Search): string {
 }
 function line(item: Search): string {
   const what = item.alert_label ? `Recherche « ${item.alert_label} »` : item.subject || "Sans sujet";
-  return `${what} · ${when.format(new Date(item.received_at)).replace(",", " à")}`;
+  return `${what} · ${dateWithTime(item.received_at)}`;
 }
 
 onMounted(async () => {

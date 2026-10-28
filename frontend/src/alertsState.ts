@@ -1,4 +1,6 @@
 import type { AlertsPage } from "./api/client";
+import { sinceDays } from "./dates";
+import { onDay } from "./format";
 
 // L'état des alertes, recherche par recherche et site par site (planche « 6. Alertes ») : ce que dit
 // chaque ligne, la pastille de la recherche et la bande d'action. Fonctions pures, testées à part.
@@ -23,15 +25,14 @@ export type SiteState =
   | { kind: "silent"; label: string; days: number }
   | { kind: "todo"; label: string };
 
-const short = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short", timeZone: "Europe/Zurich" });
 const daysSince = (iso: string, now: Date) => Math.floor((now.getTime() - Date.parse(iso)) / DAY_MS);
 
 /** L'état d'un site pour une recherche, à partir de sa cellule (reçue, créée ou à créer). */
 export function siteState(cell: Pick<Cell, "status" | "received_at" | "created_at">, now: Date): SiteState {
   if (cell.status === "received" && cell.received_at) {
     const days = daysSince(cell.received_at, now);
-    if (days >= QUIET_DAYS) return { kind: "quiet", label: `rien depuis ${days} jours`, days };
-    return { kind: "received", label: `Reçue le ${short.format(new Date(cell.received_at))}` };
+    if (days >= QUIET_DAYS) return { kind: "quiet", label: `rien ${sinceDays(cell.received_at, now)}`, days };
+    return { kind: "received", label: `Reçue ${onDay(cell.received_at, now)}` };
   }
   if (cell.created_at) {
     const days = daysSince(cell.created_at, now);

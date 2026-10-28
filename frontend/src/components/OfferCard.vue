@@ -3,9 +3,10 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 
 import type { Offer } from "../api/client";
-import { dayShort } from "../format";
+import { dateInList } from "../dates";
 import OfferLine from "./OfferLine.vue";
 import ScoreWord from "./ScoreWord.vue";
+import StatusPill from "./StatusPill.vue";
 import { usePlan } from "../composables/usePlan";
 
 // Une offre dans la liste d'Offres : la Ligne d'offre complète (planche « Ligne d'offre », 1.6.7x) ;
@@ -34,7 +35,7 @@ const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>
 });
 const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" ") ?? "");
 const location = computed(() =>
-  [props.offer.location, props.showDate ? dayShort(props.offer.first_seen_at) : ""].filter(Boolean).join(" · ") || null,
+  [props.offer.location, props.showDate ? dateInList(props.offer.first_seen_at) : ""].filter(Boolean).join(" · ") || null,
 );
 
 // La limite de la formule (docs/125) explique une offre sans note.
@@ -62,16 +63,21 @@ function prepare(): void {
     @action="prepare"
   >
     <template #badges>
-      <span
+      <!-- Des étiquettes sans état : sans point, neutres (règle §4). -->
+      <StatusPill
         v-if="offer.spontaneous"
-        class="badge spontaneous-badge"
+        :dot="false"
         data-test="spontaneous-badge"
-      >Spontanée</span>
-      <span
+      >
+        Spontanée
+      </StatusPill>
+      <StatusPill
         v-else-if="offer.added_by_you"
-        class="badge spontaneous-badge"
+        :dot="false"
         data-test="added-badge"
-      >Ajoutée par toi</span>
+      >
+        Ajoutée par toi
+      </StatusPill>
     </template>
     <template
       v-if="alert"

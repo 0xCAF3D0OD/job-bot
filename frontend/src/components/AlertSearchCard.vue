@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import type { SearchGroup } from "../alertsState";
+import type { SearchGroup, SiteState } from "../alertsState";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
+import StatusPill from "./StatusPill.vue";
 
 // Une recherche (planche « 6. Alertes ») : une carte, la ligne d'en-tête (les mots, les lieux, l'état
 // en pastille), puis une ligne par site avec son état ; « Créer » ouvre le pas à pas sur ce site.
-// La pastille et le mot disent l'état (WCAG 1.4.1) ; l'orange est réservé à ce qui demande une action
-// (§4) ; « rien depuis N jours » reste une mention grise.
+// La pastille et le mot disent l'état (WCAG 1.4.1, StatusPill) ; l'orange est réservé à ce qui demande
+// une action (§4) ; « rien depuis N jours » reste une mention grise.
+// Le ton de la pastille (§4) : reçue = réussi ; rien reçu depuis la création ou à créer = à faire
+// (une action, la bande le dit) ; en attente, en pause = neutre.
+type Tone = "neutral" | "todo" | "ok";
+const SEARCH_TONE: Record<SearchGroup["pill"]["kind"], Tone> = { received: "ok", waiting: "neutral", todo: "todo", paused: "neutral" };
+const SITE_TONE: Record<SiteState["kind"], Tone> = { received: "ok", quiet: "neutral", waiting: "neutral", silent: "todo", todo: "todo" };
+
 const props = defineProps<{ group: SearchGroup }>();
 const emit = defineEmits<{ create: [site: string]; manage: []; remove: [] }>();
 
@@ -30,10 +37,12 @@ const menu = computed<MoreMenuItem[]>(() => [
       class="alert-search-head"
       inline
     >
-      <span
-        :class="['alert-state', group.pill.kind]"
+      <StatusPill
+        :tone="SEARCH_TONE[group.pill.kind]"
         data-test="search-state"
-      >{{ group.pill.label }}</span>
+      >
+        {{ group.pill.label }}
+      </StatusPill>
       <MoreMenu
         :items="menu"
         :label="`Actions pour « ${group.terms} »`"
@@ -62,10 +71,12 @@ const menu = computed<MoreMenuItem[]>(() => [
         v-else-if="site.state.kind === 'quiet'"
         class="alert-quiet"
       >{{ site.state.label }}</span>
-      <span
+      <StatusPill
         v-else
-        :class="['alert-state', site.state.kind]"
-      >{{ site.state.label }}</span>
+        :tone="SITE_TONE[site.state.kind]"
+      >
+        {{ site.state.label }}
+      </StatusPill>
     </SettingRow>
   </SettingCard>
 </template>

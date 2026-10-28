@@ -13,7 +13,8 @@ import {
 import ChunkProposals from "./ChunkProposals.vue";
 import SidePanel from "./SidePanel.vue";
 import TagInput from "./TagInput.vue";
-import { formatDate, plural } from "../format";
+import { dateInList } from "../dates";
+import { plural } from "../format";
 
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
@@ -327,7 +328,7 @@ const documentItems = computed<MoreMenuItem[]>(() => {
         >
           <strong>{{ doc.filename }}</strong>
           <span class="hint">
-            {{ sizeText(doc.size) }} · {{ formatDate(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
+            {{ sizeText(doc.size) }} · {{ dateInList(doc.uploaded_at) }} · {{ doc.kind === "certificate" ? "certificat de travail" : plural(doc.chunk_count, "bloc", "blocs") }}<template v-if="doc.text_status !== 'ok'">
               · <span class="danger">{{ doc.text_status === "empty" ? "aucun texte" : "texte non lisible" }}</span>
             </template>
           </span>

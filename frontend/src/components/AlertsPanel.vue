@@ -7,6 +7,7 @@ import DisclosureRow from "./DisclosureRow.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { offerUndo } from "../composables/useUndo";
 import MailboxAddress from "./MailboxAddress.vue";
+import { onDay } from "../format";
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
 // ouvre la recherche déjà remplie ; l'alerte se crée sur le site, avec l'adresse de son choix.
@@ -15,7 +16,6 @@ type Cell = AlertSearch["cells"][number];
 const page = ref<AlertsPage | null>(null);
 const form = ref({ terms: "", location: "" });
 const adding = ref(false);
-const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 
 const active = computed(() => page.value?.searches.filter((s) => s.active) ?? []);
 const paused = computed(() => page.value?.searches.filter((s) => !s.active) ?? []);
@@ -108,7 +108,7 @@ async function toggleCreated(search: AlertSearch, cell: Cell): Promise<void> {
 }
 
 function statusText(cell: Cell): string {
-  if (cell.status === "received" && cell.received_at) return `reçue le ${dateFormat.format(new Date(cell.received_at))}`;
+  if (cell.status === "received" && cell.received_at) return `reçue ${onDay(cell.received_at)}`;
   if (cell.status === "created") return "créée, en attente";
   return "à créer";
 }

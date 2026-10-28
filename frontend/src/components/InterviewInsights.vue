@@ -8,9 +8,11 @@ import DisclosureRow from "./DisclosureRow.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
+import { dateInList } from "../dates";
 import { plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import PlanLimit from "./PlanLimit.vue";
+import StatusPill from "./StatusPill.vue";
 
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
@@ -21,7 +23,6 @@ const busy = ref(false);
 const message = ref("");
 // Un entretien type, sans candidature (docs/75 §3).
 const practicing = ref(false);
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
 async function load(): Promise<void> {
   data.value = (await api.GET("/api/interviews/insights")).data ?? null;
@@ -85,10 +86,12 @@ const summaryValue = computed(() =>
           >
             {{ question.text }}
             <span class="hint">· {{ question.count }} fois</span>
-            <span
+            <StatusPill
               v-if="question.difficult"
-              class="badge warn"
-            >difficile pour {{ question.difficult }}</span>
+              tone="todo"
+            >
+              difficile pour {{ question.difficult }}
+            </StatusPill>
           </li>
         </ul>
       </section>
@@ -117,7 +120,7 @@ const summaryValue = computed(() =>
             v-for="(note, index) in data.went_well.slice(0, 6)"
             :key="index"
           >
-            {{ note.text }} <span class="hint">· {{ note.company }}{{ note.held_at ? `, ${shortDate.format(new Date(note.held_at))}` : "" }}</span>
+            {{ note.text }} <span class="hint">· {{ note.company }}{{ note.held_at ? `, ${dateInList(note.held_at)}` : "" }}</span>
           </li>
         </ul>
       </section>
@@ -128,7 +131,7 @@ const summaryValue = computed(() =>
             v-for="(note, index) in data.went_badly.slice(0, 6)"
             :key="index"
           >
-            {{ note.text }} <span class="hint">· {{ note.company }}{{ note.held_at ? `, ${shortDate.format(new Date(note.held_at))}` : "" }}</span>
+            {{ note.text }} <span class="hint">· {{ note.company }}{{ note.held_at ? `, ${dateInList(note.held_at)}` : "" }}</span>
           </li>
         </ul>
       </section>

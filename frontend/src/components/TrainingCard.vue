@@ -6,6 +6,7 @@ import { highlight, languageLabel } from "../newsLabels";
 import { FORMATS, KINDS, PRICES, SHORT_FORMATS, STATUSES } from "../trainingLabels";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
+import StatusPill from "./StatusPill.vue";
 
 // Une formation en carte (docs/93), à la manière des offres de Sphere : les étiquettes, le
 // titre, trois faits sur leur ligne, et le signet (docs/101). La carte entière ouvre le panneau ; elle ne
@@ -57,22 +58,34 @@ function onHeart(): void {
     <!-- Les étiquettes et le marque-page sur la même ligne (docs/130 §E) : plus de vide en bas. -->
     <div class="tile-head">
       <div class="tile-tags">
-        <span class="tile-tag strong">{{ KINDS[training.kind] ?? training.kind }}</span>
-        <span
+        <!-- Des étiquettes sans point, toujours neutres (§4) : le genre, le suivi, le financement. -->
+        <StatusPill
+          :dot="false"
+          data-test="training-kind"
+        >
+          {{ KINDS[training.kind] ?? training.kind }}
+        </StatusPill>
+        <StatusPill
           v-if="status"
-          class="tile-tag"
+          :dot="false"
           data-test="training-state"
-        >{{ STATUSES[status] }}</span>
-        <span
+        >
+          {{ STATUSES[status] }}
+        </StatusPill>
+        <StatusPill
           v-if="training.mark?.funding_status"
-          :class="['tile-tag', { warn: training.mark.funding_status === 'refused' }]"
+          :dot="false"
           data-test="funding-badge"
-        >{{ FUNDING[training.mark.funding_status] }}</span>
-        <span
+        >
+          {{ FUNDING[training.mark.funding_status] }}
+        </StatusPill>
+        <StatusPill
           v-if="!training.verified"
-          class="tile-tag warn"
+          :dot="false"
           data-test="unverified"
-        >à vérifier</span>
+        >
+          À vérifier
+        </StatusPill>
       </div>
       <div class="tile-foot">
         <template v-if="!training.verified">

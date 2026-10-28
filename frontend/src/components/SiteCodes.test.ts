@@ -21,7 +21,7 @@ describe("Les codes des sites (docs/112)", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     const wrapper = mount(SiteCodes, { props: { codes: [code] } });
-    expect(wrapper.find("[data-test=site-code]").text()).toContain("Code jobup · reçu à 14:32");
+    expect(wrapper.find("[data-test=site-code]").text()).toContain("Code jobup · reçu à 14 h 32");
     expect(wrapper.find("[data-test=site-code-value]").text()).toBe("482 913");
     await wrapper.find("[data-test=site-code-copy]").trigger("click");
     await flushPromises();

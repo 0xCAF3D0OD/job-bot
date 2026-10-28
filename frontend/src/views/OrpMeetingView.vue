@@ -14,6 +14,7 @@ import { usePageReady } from "../composables/usePageTransition";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import HoverNote from "../components/HoverNote.vue";
+import { meetingDate } from "../dates";
 import { formatMonth, plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 
@@ -51,8 +52,6 @@ function monthTitle(month: string): string {
 const pendingObligations = computed(() => (prep.value?.obligations ?? []).filter((o) => !o.done));
 // Aucune candidature encore (docs/128 §3) : la feuille et le mois attendent.
 const noApplications = computed(() => prep.value?.has_applications === false);
-const dateFormat = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
-const timeFormat = new Intl.DateTimeFormat("fr-CH", { hour: "2-digit", minute: "2-digit" });
 const started = computed(() => !!meeting.value && new Date(meeting.value.starts_at) <= new Date());
 
 // Une obligation dont l'échéance est passée (décision du 25/10) : elle rejoint la conclusion.
@@ -75,11 +74,10 @@ const conclusion = computed<Part[]>(() => {
   const parts: Part[] = [];
   const m = meeting.value;
   if (m && !editing.value) {
-    const at = new Date(m.starts_at);
     parts.push(
       { text: started.value ? "Rendez-vous du " : "Prochain rendez-vous " },
       // « à » et l'heure ne se séparent pas (espace insécable, 1.6.30).
-      { text: `${dateFormat.format(at)} à\u00a0${timeFormat.format(at)}`, strong: true },
+      { text: meetingDate(m.starts_at).replace(" à ", " à\u00a0"), strong: true },
       { text: `${m.place ? `, ${m.place}` : ""}.` },
     );
   }
@@ -105,9 +103,9 @@ const dutiesValue = computed(() => {
   return parts.join(", ");
 });
 
+// Un rendez-vous (dates.ts) : « jeudi 29 octobre à 9 h 30 ».
 function dayText(iso: string): string {
-  const at = new Date(iso);
-  return `${dateFormat.format(at)} à ${timeFormat.format(at)}`;
+  return meetingDate(iso);
 }
 
 // Ce qui a été convenu, en lignes courtes : pour le prochain rendez-vous et le carnet.

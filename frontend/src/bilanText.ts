@@ -1,6 +1,7 @@
 // Les textes du Bilan (1.6.62, planche « 3 et 4. Bilan ») : la conclusion, la bande, et la phrase de
 // chaque repliable, tirés des chiffres de /api/insights. Fonctions pures, testées à part.
 import type { components } from "./api/schema";
+import { dateInList, dateInSentence } from "./dates";
 
 type Report = components["schemas"]["SearchReportOut"];
 type Comparison = components["schemas"]["ComparisonOut"];
@@ -169,13 +170,13 @@ export function monthsText(months: MonthCount[], target: number | null | undefin
   return parts.join(" ");
 }
 
-const dayMonth = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
-export const dayShort = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
+// Le jour d'un entretien dans la liste (dates.ts, §5) : « aujourd'hui », « hier », « 12 oct. ».
+export const dayShort = { format: (date: Date): string => dateInList(date) };
 
 /** La phrase repliée de « Entretiens » : combien, et le prochain. */
 export function interviewsLine(lines: InterviewLine[]): string {
   if (!lines.length) return "Pas encore d'entretien";
   const next = lines.filter((l) => l.state === "upcoming").at(-1);
   const count = `${lines.length} ${word(lines.length, "entretien", "entretiens")}`;
-  return next ? `${count}, le prochain le ${dayMonth.format(new Date(`${next.day}T12:00:00`))}` : `${count}, aucun à venir`;
+  return next ? `${count}, le prochain ${dateInSentence(`${next.day}T12:00:00`)}` : `${count}, aucun à venir`;
 }

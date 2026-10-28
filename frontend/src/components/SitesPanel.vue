@@ -6,7 +6,7 @@ import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
 import SidePanel from "./SidePanel.vue";
 import { secureAddress, senders, useChecks } from "../validators";
-import { plural } from "../format";
+import { onDay, plural } from "../format";
 
 import { useAuth } from "../composables/useAuth";
 import { offerUndo } from "../composables/useUndo";
@@ -36,7 +36,6 @@ const message = ref("");
 const busy = ref(false);
 
 const unrecognized = computed(() => sites.value.reduce((n, s) => n + s.unrecognized, 0));
-const dateFormat = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
 
 function detail(err: unknown, fallback: string): string {
   const value = (err as { detail?: unknown } | undefined)?.detail;
@@ -110,7 +109,7 @@ function line(site: SiteOut): string {
   return `${site.reader === "ai" ? "Lu par l'IA" : "Lu directement"} · ${stats(site)}`;
 }
 function stats(site: SiteOut): string {
-  const last = site.last_alert_at ? ` · dernière le ${dateFormat.format(new Date(site.last_alert_at))}` : "";
+  const last = site.last_alert_at ? ` · dernière ${onDay(site.last_alert_at)}` : "";
   return `${plural(site.alerts, "alerte", "alertes", "aucune alerte")}${last}`;
 }
 

@@ -1,4 +1,5 @@
 import type { ParseStatus } from "./api/client";
+import { dateInList, dateInSentence, dateWithTime } from "./dates";
 
 export const SITE_NAMES: Record<string, string> = {
   jobup: "jobup",
@@ -25,30 +26,9 @@ export const parseStatusLabel: Record<ParseStatus, string> = {
   failed: "erreur d'analyse",
 };
 
-const dateTime = new Intl.DateTimeFormat("fr-CH", {
-  dateStyle: "short",
-  timeStyle: "short",
-  timeZone: "Europe/Zurich",
-});
-
-export function formatDateTime(iso: string): string {
-  return dateTime.format(new Date(iso));
-}
-
 export function rateText(min: number | null, max: number | null): string {
   if (min === null || max === null) return "";
   return min === max ? `${min} %` : `${min}–${max} %`;
-}
-
-const shortDate = new Intl.DateTimeFormat("fr-CH", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "Europe/Zurich",
-});
-
-export function formatDate(iso: string): string {
-  return shortDate.format(new Date(iso));
 }
 
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
@@ -76,18 +56,24 @@ export function dayName(iso: string, now: Date = new Date()): string {
   const clean = text.replace(/,/g, "");
   return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
-/** Le jour en bref, dans une offre : « aujourd'hui », « hier », « 15 oct. ». */
+/** Le jour en bref, dans une offre : « aujourd'hui », « hier », « 15 oct. » (dates.ts, §5). */
 export function dayShort(iso: string, now: Date = new Date()): string {
-  const before = daysBefore(iso, now);
-  if (before === 0) return "aujourd'hui";
-  if (before === 1) return "hier";
-  const sameYear = dayKey(iso).slice(0, 4) === dayKey(now.toISOString()).slice(0, 4);
-  return new Date(iso).toLocaleDateString("fr-CH", {
-    day: "numeric",
-    month: "short",
-    ...(sameYear ? {} : { year: "numeric" }),
-    timeZone: ZURICH,
-  });
+  return dateInList(iso, now);
+}
+/** Le jour en bref après un mot, sur une ligne de liste : « le 22 oct. », « aujourd'hui », « hier »
+ *  (« Reçue le 22 oct. », « envoyée hier »). */
+export function onDay(value: string | Date, now: Date = new Date()): string {
+  const day = dateInList(value, now);
+  return /^\d/.test(day) ? `le ${day}` : day;
+}
+/** Le même avec l'heure, quand elle compte : « le 22 oct. à 8 h », « aujourd'hui à 14 h ». */
+export function onDayAt(value: string | Date, now: Date = new Date()): string {
+  const day = dateWithTime(value, now);
+  return /^\d/.test(day) ? `le ${day}` : day;
+}
+/** Une échéance dans une phrase : « jusqu'au 12 octobre » (dates.ts, §5). */
+export function untilDay(value: string | Date, now: Date = new Date()): string {
+  return `jusqu'${dateInSentence(value, now).replace(/^le /, "au ")}`;
 }
 
 /** Couleur stable (0 à 3) pour la pastille d'une entreprise. */
@@ -156,22 +142,11 @@ export function shiftMonth(month: string, delta: number): string {
 // Bandeau d'une offre retirée (docs/10 §1) : certaine (page introuvable) ou probable (Indeed).
 export function expiredText(offer: { expired_at?: string | null; expiry_source?: string | null }): string {
   if (!offer.expired_at) return "";
-  const day = new Date(offer.expired_at).toLocaleDateString("fr-CH");
-  if (offer.expiry_source === "manual") return `Signalée expirée par toi le ${day}.`;
+  const day = dateInSentence(offer.expired_at);
+  if (offer.expiry_source === "manual") return `Signalée expirée par toi ${day}.`;
   return offer.expiry_source === "age"
     ? `Probablement expirée : plus vue dans aucune alerte depuis 30 jours (${day}).`
-    : `Offre expirée le ${day} : l'annonce n'est plus en ligne.`;
-}
-
-// « il y a 2 h » : cloche des alertes, dernier relevé des Actualités.
-export function since(iso: string): string {
-  const minutes = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
-  if (minutes < 1) return "à l'instant";
-  if (minutes < 60) return `il y a ${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `il y a ${hours} h`;
-  const days = Math.round(hours / 24);
-  return days === 1 ? "hier" : `il y a ${days} jours`;
+    : `Offre expirée ${day} : l'annonce n'est plus en ligne.`;
 }
 
 // Télétravail d'une offre (docs/26 §2) : « Télétravail 2 j », « 100 % télétravail · Europe ».
@@ -237,8 +212,7 @@ export function orpPace(count: number, target: number | null | undefined, month:
   const daysLeft = today > last ? 0 : workdays(today < first ? first : today, last);
   const expected = Math.floor((target * passed) / Math.max(1, total));
   if (count >= expected) {
-    const end = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" }).format(last);
-    return { state: "on-track", mood: "content", word: "Dans les temps.", line: `Encore ${left} d'ici le ${end}.` };
+    return { state: "on-track", mood: "content", word: "Dans les temps.", line: `Encore ${left} d'ici ${dateInSentence(last, now)}.` };
   }
   const days = daysLeft === 1 ? "1 jour ouvrable" : `${daysLeft} jours ouvrables`;
   return {

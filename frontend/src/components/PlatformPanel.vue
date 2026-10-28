@@ -2,7 +2,8 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type AccountOut, type PlatformOut } from "../api/client";
-import { formatDate, plural, since } from "../format";
+import { dateInList, dateInSentence, dateWithTime } from "../dates";
+import { onDay, plural, untilDay } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import IconButton from "./IconButton.vue";
@@ -10,6 +11,7 @@ import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import InlineConfirm from "./InlineConfirm.vue";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
+import StatusPill from "./StatusPill.vue";
 
 // Plateforme (docs/65 §2, §4, §5) : les comptes, réservé à l'exploitant. De chaque compte,
 // l'usage seulement (connexion, dépense de l'IA, offres reçues), jamais ses données.
@@ -276,19 +278,19 @@ onMounted(async () => {
 // La phrase d'un compte : son état, sa connexion, son usage du mois ; jamais ses données.
 function accountLine(account: Account): string {
   const state = [account.suspended ? "Suspendu" : "", account.has_password ? "" : "Sans mot de passe"].filter(Boolean);
-  const login = account.last_login_at ? `connecté le ${formatDate(account.last_login_at)}` : "jamais connecté";
+  const login = account.last_login_at ? `connecté ${onDay(account.last_login_at)}` : "jamais connecté";
   const usage = `ce mois : IA ${money(account.month_spend_chf)} CHF sur ${money(account.ai_budget_chf)}`;
   const offers = plural(account.month_offers, "offre reçue", "offres reçues", "aucune offre reçue");
-  return [...state, `Créé le ${formatDate(account.created_at)}`, login, usage, offers].join(" · ");
+  return [...state, `Créé ${onDay(account.created_at)}`, login, usage, offers].join(" · ");
 }
 
 function requestLine(request: Platform["signup_requests"][number]): string {
-  const asked = `Demandé le ${formatDate(request.created_at)}`;
+  const asked = `Demandé ${onDay(request.created_at)}`;
   return request.note ? `${asked} · « ${request.note.trim()} »` : asked;
 }
 
 function linkLine(value: NonNullable<typeof link.value>): string {
-  return `${value.url} · valable une fois, jusqu'au ${formatDate(value.expires)}. Montré une seule fois : transmets-le toi-même.`;
+  return `${value.url} · valable une fois, ${untilDay(value.expires)}. Montré une seule fois : transmets-le toi-même.`;
 }
 
 // Les sauvegardes (docs/82) : la dernière et l'essai de restauration, dits en mots.
@@ -296,23 +298,23 @@ const backupLate = computed(() => {
   const backup = platform.value?.backup;
   if (!backup?.configured || !backup.late) return null;
   return backup.last_error
-    ? { title: "Sauvegarde en échec", text: `La dernière sauvegarde a échoué : ${backup.last_error}.` }
-    : { title: "Sauvegarde en retard", text: "Aucune sauvegarde depuis plus de 36 heures." };
+    ? { title: "Sauvegarde en échec", text: `La dernière sauvegarde a échoué : ${backup.last_error}.`, tone: "error" as const }
+    : { title: "Sauvegarde en retard", text: "Aucune sauvegarde depuis plus de 36 heures.", tone: "todo" as const };
 });
 const backupLast = computed(() => {
   const backup = platform.value?.backup;
   if (!backup) return "";
   const kept = `${plural(backup.count, "sauvegarde gardée", "sauvegardes gardées")} dans ${backup.folder}.`;
   return backup.last_at
-    ? `Faite ${since(backup.last_at)}, ${size(backup.last_size)} · ${kept}`
+    ? `Faite ${dateWithTime(backup.last_at)}, ${size(backup.last_size)} · ${kept}`
     : `Pas encore de sauvegarde : la première se fait dans l'heure. ${kept}`;
 });
 const backupTest = computed(() => {
   const backup = platform.value?.backup;
-  if (!backup?.test_at) return { text: "Pas encore d'essai : il se fait chaque dimanche.", state: "À venir", level: "warn" };
+  if (!backup?.test_at) return { text: "Pas encore d'essai : il se fait chaque dimanche.", state: "À venir", tone: "neutral" } as const;
   return backup.test_ok
-    ? { text: `Dernier essai ${since(backup.test_at)}.`, state: "Réussi", level: "ok" }
-    : { text: `Dernier essai ${since(backup.test_at)} : ${backup.test_error}.`, state: "Échec", level: "down" };
+    ? ({ text: `Dernier essai ${dateInList(backup.test_at)}.`, state: "Réussi", tone: "ok" } as const)
+    : ({ text: `Dernier essai ${dateInList(backup.test_at)} : ${backup.test_error}.`, state: "Échec", tone: "error" } as const);
 });
 
 // Taille d'une sauvegarde (docs/82) : en Mo, ou en Ko sous le Mo.
@@ -543,8 +545,8 @@ function size(bytes: number | null | undefined): string {
       <SettingRow
         v-for="invitation in platform.invitations"
         :key="invitation.id"
-        :title="`Invitation du ${formatDate(invitation.created_at)}`"
-        :description="`Pas encore utilisée, valable jusqu'au ${formatDate(invitation.expires_at)}.`"
+        :title="`Invitation ${dateInSentence(invitation.created_at).replace(/^le /, 'du ')}`"
+        :description="`Pas encore utilisée, valable ${untilDay(invitation.expires_at)}.`"
         data-test="platform-invitation"
       >
         <IconButton
@@ -601,7 +603,12 @@ function size(bytes: number | null | undefined): string {
         description="Ajoute JOBBOT_BACKUP_PASSPHRASE dans .env, puis redémarre (docs/82)."
         data-test="backup-not-configured"
       >
-        <span class="state-word down">Non réglées</span>
+        <StatusPill
+          tone="todo"
+          data-test="backup-state"
+        >
+          Non réglées
+        </StatusPill>
       </SettingRow>
       <template v-else>
         <SettingRow
@@ -611,21 +618,36 @@ function size(bytes: number | null | undefined): string {
           role="alert"
           data-test="backup-late"
         >
-          <span class="state-word down">À vérifier</span>
+          <StatusPill
+            :tone="backupLate.tone"
+            data-test="backup-state"
+          >
+            À vérifier
+          </StatusPill>
         </SettingRow>
         <SettingRow
           title="Dernière sauvegarde"
           :description="backupLast"
           data-test="backup-last"
         >
-          <span :class="['state-word', platform.backup.late ? 'down' : 'ok']">{{ platform.backup.late ? "En retard" : "À jour" }}</span>
+          <StatusPill
+            :tone="platform.backup.late ? (platform.backup.last_error ? 'error' : 'todo') : 'ok'"
+            data-test="backup-state"
+          >
+            {{ platform.backup.late ? "En retard" : "À jour" }}
+          </StatusPill>
         </SettingRow>
         <SettingRow
           title="Essai de restauration"
           :description="backupTest.text"
           data-test="backup-test"
         >
-          <span :class="['state-word', backupTest.level]">{{ backupTest.state }}</span>
+          <StatusPill
+            :tone="backupTest.tone"
+            data-test="backup-state"
+          >
+            {{ backupTest.state }}
+          </StatusPill>
         </SettingRow>
       </template>
     </SettingCard>

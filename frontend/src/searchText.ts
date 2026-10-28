@@ -1,13 +1,11 @@
 // Les textes de la recherche globale (série du 27.10, point 2) : la phrase de chaque résultat et
 // la confirmation de « Suivre cette recherche ». Fonctions pures, testées à part.
 import type { components } from "./api/schema";
-import { plural } from "./format";
+import { onDay, plural } from "./format";
 
 type ApplicationHit = components["schemas"]["ApplicationHit"];
 type CompanyHit = components["schemas"]["CompanyHit"];
 type FollowOut = components["schemas"]["FollowOut"];
-
-const short = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short", timeZone: "Europe/Zurich" });
 
 /** « jobup, jobs.ch, LinkedIn et Indeed ». */
 export function andList(items: string[]): string {
@@ -18,9 +16,9 @@ export function andList(items: string[]): string {
 /** « Démo Data SA · envoyée le 12 oct. », ou l'entretien à venir. */
 export function applicationLine(hit: ApplicationHit, now: Date): string {
   if (hit.interview_at && Date.parse(hit.interview_at) > now.getTime()) {
-    return `${hit.company} · entretien le ${short.format(new Date(hit.interview_at))}`;
+    return `${hit.company} · entretien ${onDay(hit.interview_at, now)}`;
   }
-  return `${hit.company} · envoyée le ${short.format(new Date(`${hit.sent_at}T12:00:00`))}`;
+  return `${hit.company} · envoyée ${onDay(`${hit.sent_at}T12:00:00`, now)}`;
 }
 
 /** « 2 offres, 1 candidature ». */

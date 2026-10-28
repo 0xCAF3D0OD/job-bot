@@ -1,5 +1,6 @@
 import type { Application, OrpRow } from "./api/client";
 import { isoDay } from "./contactLabels";
+import { meetingDate, sinceDays } from "./dates";
 
 // Où en est une candidature (docs/38, docs/23) : partagé par la carte et le panneau du Suivi (docs/46).
 const REMIND_AFTER_DAYS = 10;
@@ -17,17 +18,9 @@ export function followUpDue(a: Application): boolean {
   return a.follow_up_on ? a.follow_up_on <= daysAgo(0) : a.sent_at <= daysAgo(REMIND_AFTER_DAYS);
 }
 
-// Les jours depuis l'envoi, pour « Sans réponse depuis N jours » (1.6.27 : c'était toujours 10).
-export function daysSinceSent(a: Application): number {
-  const sent = new Date(`${a.sent_at}T12:00:00`);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
-  return Math.max(0, Math.round((today.getTime() - sent.getTime()) / 86_400_000));
-}
-
+// « Sans réponse depuis 9 jours » (1.6.27 : c'était toujours 10 ; 1.6.74 : dates.ts).
 export function noAnswerText(a: Application): string {
-  const days = daysSinceSent(a);
-  return `Sans réponse depuis ${days} ${days === 1 ? "jour" : "jours"}`;
+  return `Sans réponse ${sinceDays(`${a.sent_at}T12:00:00`)}`;
 }
 
 export function noAnswerDue(a: Application): boolean {
@@ -51,18 +44,10 @@ export type NextStep = {
   action: string;
 };
 
-const interviewDate = new Intl.DateTimeFormat("fr-CH", {
-  weekday: "long",
-  day: "numeric",
-  month: "short",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
 // Une seule prochaine étape sur la carte, la plus urgente (docs/46 §2).
 export function nextStep(a: Application, row?: OrpRow | null): NextStep {
   if (interviewUpcoming(a)) {
-    return { key: "prepare", text: `Entretien ${interviewDate.format(new Date(a.interview_at!))}`, action: "Préparer" };
+    return { key: "prepare", text: `Entretien ${meetingDate(a.interview_at!)}`, action: "Préparer" };
   }
   if (needsFeedback(a)) return { key: "feedback", text: "Entretien passé", action: "Faire le point" };
   if (followUpDue(a)) return { key: "follow-up", text: noAnswerText(a), action: "Relancer" };

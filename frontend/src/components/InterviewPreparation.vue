@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Application, type InterviewInsights, type Offer, type Practice } from "../api/client";
+import { dateInList, meetingDate } from "../dates";
 import InterviewCoaching from "./InterviewCoaching.vue";
 import InterviewPractice from "./InterviewPractice.vue";
 import AiWriting from "./AiWriting.vue";
@@ -26,7 +27,6 @@ const message = ref("");
 const practices = ref<Practice[]>([]);
 const practicing = ref(false);
 const openPractice = ref<number | null>(null);
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long" });
 const KIND_LABELS: Record<string, string> = { rh: "RH", manager: "manager", technique: "technique" };
 function levels(item: Practice): string {
   if (item.status !== "termine" || !item.feedback) return "en cours";
@@ -48,7 +48,6 @@ function closePractice(): void {
   practicing.value = false;
   openPractice.value = null;
 }
-const longDate = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
 const difficult = computed(() => (insights.value?.questions ?? []).filter((q) => q.difficult));
 const frequent = computed(() => (insights.value?.questions ?? []).filter((q) => !q.difficult && q.count > 1));
@@ -103,7 +102,7 @@ onMounted(async () => {
       </header>
       <p class="hint">
         {{ application.job_title }}<template v-if="application.interview_at">
-          · {{ longDate.format(new Date(application.interview_at)) }}
+          · {{ meetingDate(application.interview_at) }}
         </template>
       </p>
       <div
@@ -212,7 +211,7 @@ onMounted(async () => {
               data-test="prep-practice-open"
               @click="openPractice = item.id"
             >
-              {{ shortDate.format(new Date(item.created_at)) }} · {{ KIND_LABELS[item.kind] }}
+              {{ dateInList(item.created_at) }} · {{ KIND_LABELS[item.kind] }}
             </button>
             <span class="hint">{{ levels(item) }}</span>
           </li>

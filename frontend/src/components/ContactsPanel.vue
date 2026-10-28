@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from "vue";
 
 import { api, type Contact, type ContactIn, type ContactsPage } from "../api/client";
 import { CHANNELS, contactName, isoDay, ROLES, toFollowUp } from "../contactLabels";
+import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
 import CopyLabel from "./CopyLabel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -76,10 +77,9 @@ async function copyMessage(): Promise<void> {
   }
 }
 
-const shortDate = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "short" });
-
+// « le 12 octobre » : la date de phrase (dates.ts), avec son « le ».
 function day(value: string): string {
-  return shortDate.format(new Date(`${value}T12:00:00`));
+  return dateInSentence(`${value}T12:00:00`);
 }
 
 async function load(): Promise<void> {
@@ -327,13 +327,13 @@ onMounted(() => void load());
             <span>
               <strong>{{ contact.name || ROLES[contact.role] }}</strong>
               <span class="muted">
-                {{ contact.name ? `${ROLES[contact.role]} · ` : "" }}{{ CHANNELS[contact.channel] }} le {{ day(contact.contacted_on) }}
+                {{ contact.name ? `${ROLES[contact.role]} · ` : "" }}{{ CHANNELS[contact.channel] }} {{ day(contact.contacted_on) }}
               </span>
             </span>
             <span
               v-if="contact.answered_on"
               class="contact-state answered"
-            >A répondu le {{ day(contact.answered_on) }}{{ contact.note ? ` : ${contact.note}` : "" }}</span>
+            >A répondu {{ day(contact.answered_on) }}{{ contact.note ? ` : ${contact.note}` : "" }}</span>
             <span
               v-else-if="toFollowUp(contact)"
               class="contact-state due"
