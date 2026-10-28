@@ -81,20 +81,31 @@ jobs:
           fetch-depth: 0
       - name: Les fichiers de changelog.d et leur assemblage
         run: make changelog-check
+      # La base de comparaison : sur une PR, la CI travaille sur le commit de fusion de test
+      # (refs/pull/N/merge), dont le premier parent est main au moment du passage. Le base.sha de
+      # l'événement, lui, reste l'ancien main : après une reprise de main dans la branche, tout ce que
+      # main apporte (des changelog.d/X.Y.Z.md numérotés à la fusion) compterait comme ajouté par la PR.
+      - name: Base de comparaison (main au moment du passage)
+        if: github.event_name == 'pull_request'
+        run: |
+          if git rev-parse -q --verify HEAD^2 >/dev/null; then base=$(git rev-parse HEAD^1)
+          else git fetch -q origin "${{ github.base_ref }}" && base=$(git merge-base FETCH_HEAD HEAD); fi
+          echo "BASE=$base" >> "$GITHUB_ENV"
+          echo "Comparé à $base"
       # Une PR ne touche aucun fichier partagé : elle dépose changelog.d/<sujet>.md, sans numéro (donné à
       # la fusion par changelog.yml), et ne modifie ni CHANGELOG.md ni les anciens tableaux de réservation,
       # que deux PR modifiaient au même endroit.
       - name: Aucun fichier partagé (numéro, tableaux)
         if: github.event_name == 'pull_request'
         run: |
-          added=$(git diff --name-only --diff-filter=A "${{ github.event.pull_request.base.sha }}" HEAD)
-          changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" HEAD)
+          added=$(git diff --name-only --diff-filter=A "$BASE" HEAD)
+          changed=$(git diff --name-only "$BASE" HEAD)
           numbered=$(echo "$added" | grep -E '^changelog\.d/[0-9]+\.[0-9]+\.[0-9]+\.md$' || true)
           if [ -n "$numbered" ] && ! echo "$changed" | grep -qx scripts/changelog.py; then
             echo "::error::$numbered : le numéro est donné à la fusion. Renomme-le en changelog.d/<sujet>.md (minuscules, chiffres, tirets)."
             exit 1
           fi
-          edited=$(git diff --name-only --diff-filter=AM "${{ github.event.pull_request.base.sha }}" HEAD)
+          edited=$(git diff --name-only --diff-filter=AM "$BASE" HEAD)
           if echo "$edited" | grep -qx docs/versions.md; then
             echo "::error file=docs/versions.md::docs/versions.md n'existe plus : le numéro est donné à la fusion, changelog.d/ fait foi."
             exit 1
@@ -102,7 +113,7 @@ jobs:
       - name: CHANGELOG.md n'est pas modifié à la main
         if: github.event_name == 'pull_request'
         run: |
-          changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" HEAD)
+          changed=$(git diff --name-only "$BASE" HEAD)
           if echo "$changed" | grep -qx CHANGELOG.md && ! echo "$changed" | grep -qx scripts/changelog.py; then
             echo "::error file=CHANGELOG.md::CHANGELOG.md est assemblé sur main : ajoute plutôt changelog.d/<sujet>.md et laisse CHANGELOG.md tel quel."
             exit 1
