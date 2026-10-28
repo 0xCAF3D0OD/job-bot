@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, reactive, ref } from "vue";
 
 import { api } from "../api/client";
 import { plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import BusyButton from "./BusyButton.vue";
+import FormField from "./FormField.vue";
 
 const { plan } = usePlan();
 
@@ -59,8 +60,41 @@ const textExample = computed(() =>
     : "Colle ici le texte de l'annonce : poste, entreprise, lieu, missions…",
 );
 const full = computed(() => addedToday.value >= limit.value);
+const textHint = computed(
+  () => `${plan.value?.unlimited ? "Lu par l'IA, environ 0,01 $, compté dans ton plafond." : "Lu par l'IA."} Tes coordonnées ne partent pas.`,
+);
 
-async function read(): Promise<void> {
+// Règles §4 (Champ de formulaire, Formulaire) : l'erreur sous le champ, en le quittant puis à
+// l'envoi, et dit quoi faire ; à l'envoi, le curseur va au premier champ en erreur.
+type Field = "url" | "text" | "title";
+const MISSING: Record<Field, string> = {
+  url: "Colle le lien de l'annonce.",
+  text: "Colle le texte de l'annonce.",
+  title: "Indique le poste.",
+};
+const errors = ref<Partial<Record<Field, string>>>({});
+function valueOf(field: Field): string {
+  return field === "url" ? url.value : field === "text" ? text.value : draft.title;
+}
+function check(field: Field): void {
+  const next = { ...errors.value };
+  if (valueOf(field).trim()) delete next[field];
+  else next[field] = MISSING[field];
+  errors.value = next;
+}
+function clearIfFixed(field: Field): void {
+  if (errors.value[field]) check(field);
+}
+async function valid(form: EventTarget | null, field: Field): Promise<boolean> {
+  check(field);
+  if (!errors.value[field]) return true;
+  await nextTick();
+  (form as HTMLElement | null)?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+  return false;
+}
+
+async function read(event: Event): Promise<void> {
+  if (!(await valid(event.currentTarget, mode.value === "link" ? "url" : "text"))) return;
   problem.value = "";
   error.value = "";
   reading.value = true;
@@ -115,7 +149,8 @@ function restart(): void {
   error.value = "";
 }
 
-async function add(): Promise<void> {
+async function add(event: Event): Promise<void> {
+  if (!(await valid(event.currentTarget, "title"))) return;
   error.value = "";
   saving.value = true;
   try {
@@ -131,7 +166,7 @@ async function add(): Promise<void> {
     });
     if (!data) {
       const detail = (refused as { detail?: unknown } | undefined)?.detail;
-      error.value = typeof detail === "string" ? detail : "Ajout impossible : vérifie le titre du poste.";
+      error.value = typeof detail === "string" ? detail : "Ajout impossible pour l'instant : réessaie.";
       return;
     }
     emit("added", data);
@@ -150,6 +185,7 @@ function openExisting(): void {
     v-if="!shown"
     class="manual-form"
     data-test="manual-form"
+    novalidate
     @submit.prevent="read"
   >
     <p class="setting-desc">
@@ -179,29 +215,49 @@ function openExisting(): void {
         Un texte
       </button>
     </div>
-    <label v-if="mode === 'link'">Lien de l'annonce
+    <FormField
+      v-if="mode === 'link'"
+      v-slot="{ id, describedby, invalid }"
+      label="Lien de l'annonce"
+      hint="Une offre vue dans Google Jobs : son bouton « Postuler » mène à la page à copier."
+      :error="errors.url"
+    >
       <input
+        :id="id"
         v-model="url"
         type="url"
         inputmode="url"
         maxlength="2000"
         required
         :placeholder="linkExample"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="manual-url"
+        @blur="check('url')"
+        @input="clearIfFixed('url')"
       >
-      <span class="hint">Une offre vue dans Google Jobs : son bouton « Postuler » mène à la page à copier.</span>
-    </label>
-    <label v-else>Texte de l'annonce
+    </FormField>
+    <FormField
+      v-else
+      v-slot="{ id, describedby, invalid }"
+      label="Texte de l'annonce"
+      :hint="textHint"
+      :error="errors.text"
+    >
       <textarea
+        :id="id"
         v-model="text"
         rows="7"
         maxlength="20000"
         required
         :placeholder="textExample"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="manual-text"
+        @blur="check('text')"
+        @input="clearIfFixed('text')"
       />
-      <span class="hint">{{ plan?.unlimited ? "Lu par l'IA, environ 0,01 $, compté dans ton plafond." : "Lu par l'IA." }} Tes coordonnées ne partent pas.</span>
-    </label>
+    </FormField>
     <p
       v-if="problem"
       class="notice"
@@ -242,6 +298,7 @@ function openExisting(): void {
     v-else
     class="manual-form"
     data-test="manual-draft"
+    novalidate
     @submit.prevent="add"
   >
     <p class="setting-desc">
@@ -269,54 +326,93 @@ function openExisting(): void {
     >
       Cette annonce ne parle pas de « {{ tradeName }} » : la note dira si elle te correspond.
     </p>
-    <label>Poste
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Poste"
+      :error="errors.title"
+    >
       <input
+        :id="id"
         v-model="draft.title"
         maxlength="300"
         required
-        :placeholder="tradeName || 'Intitulé du poste'"
+        :placeholder="tradeName || undefined"
         type="text"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="manual-title"
+        @blur="check('title')"
+        @input="clearIfFixed('title')"
       >
-    </label>
-    <label>Entreprise
+    </FormField>
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Entreprise"
+      optional
+      :width="20"
+    >
       <input
+        :id="id"
         v-model="draft.company"
         maxlength="300"
         autocomplete="organization"
         placeholder="Entreprise SA"
         type="text"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="manual-company"
       >
-    </label>
-    <label>Lieu et taux
+    </FormField>
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Lieu et taux"
+      optional
+      :width="30"
+    >
       <input
+        :id="id"
         v-model="draft.location"
         maxlength="300"
         placeholder="Lausanne 80-100 %"
         type="text"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="manual-location"
       >
-    </label>
-    <label>Lien de l'annonce (facultatif)
+    </FormField>
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Lien de l'annonce"
+      optional
+    >
       <input
+        :id="id"
         v-model="draft.url"
         type="url"
         inputmode="url"
         maxlength="2000"
         :placeholder="linkExample"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="manual-draft-url"
       >
-    </label>
-    <label>Texte de l'annonce
+    </FormField>
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Texte de l'annonce"
+      optional
+      hint="Il sert à la note, à la lettre et au CV adapté."
+    >
       <textarea
+        :id="id"
         v-model="draft.description"
         rows="6"
         maxlength="20000"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="manual-description"
       />
-      <span class="hint">Il sert à la note, à la lettre et au CV adapté.</span>
-    </label>
+    </FormField>
     <p
       v-if="error"
       class="notice error"
@@ -336,7 +432,7 @@ function openExisting(): void {
       </BusyButton>
       <button
         type="button"
-        class="pill"
+        class="secondary"
         data-test="manual-restart"
         @click="restart"
       >

@@ -146,6 +146,24 @@ describe("Alertes, la page (planche « 6. Alertes », 1.6.70)", () => {
     expect(wrapper.find("[data-test=alert-search-2]").exists()).toBe(true);
   });
 
+  it("ajout sans mot : l'erreur sous le champ, le curseur dedans, « (facultatif) » sur le lieu", async () => {
+    GET.mockResolvedValue({ data: page([search(1, [cell("jobup", { status: "received", received_at: new Date(Date.now() - DAY).toISOString() })])]) });
+    const wrapper = mount(AlertsView, { global: { stubs: { teleport: true } }, attachTo: document.body });
+    await flushPromises();
+    await wrapper.find("[data-test=add-search]").trigger("click");
+    expect(wrapper.find("[data-test=add-search-location]").element.closest(".form-field")?.textContent).toContain("Le lieu (facultatif)");
+    await wrapper.find("[data-test=add-search-form]").trigger("submit");
+    await flushPromises();
+    const terms = wrapper.find("[data-test=add-search-terms]");
+    expect(wrapper.find("[data-test=field-error]").text()).toBe("Indique au moins un mot.");
+    expect(terms.attributes("aria-invalid")).toBe("true");
+    expect(document.activeElement).toBe(terms.element);
+    expect(POST).not.toHaveBeenCalled();
+    await terms.setValue("Kubernetes");
+    expect(wrapper.find("[data-test=field-error]").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it("sans alerte reçue : la phrase le dit", async () => {
     const day = new Date(Date.now() - DAY).toISOString();
     const wrapper = await mountView(page([search(1, [cell("jobup", { status: "created", created_at: day })])]));

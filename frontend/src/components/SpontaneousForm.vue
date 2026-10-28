@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { nextTick, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { api } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import BusyButton from "./BusyButton.vue";
+import FormField from "./FormField.vue";
 
 // Candidature spontanée (docs/39 §1) : entreprise, poste visé, « Pourquoi elle » ; puis, au
 // choix, l'adresse au registre du commerce ; enfin la préparation habituelle (lettre, CV).
 const router = useRouter();
-// L'offre existe dès « Continuer » : la liste des offres se recharge pour la montrer, même si
+// L'offre existe dès « Créer la candidature » : la liste des offres se recharge pour la montrer, même si
 // le panneau est fermé sans passer par « Préparer ».
 const emit = defineEmits<{ created: [id: number] }>();
 const form = reactive({ company: "", title: "", website: "", reason: "" });
@@ -24,7 +25,33 @@ const webAddress = ref<string | null>(null);
 const searchMessage = ref("");
 const chosen = ref<string | null>(null);
 
-async function create(): Promise<void> {
+// Règles §4 (Champ de formulaire, Formulaire) : l'erreur sous le champ, en le quittant puis à
+// l'envoi, et dit quoi faire ; à l'envoi, le curseur va au premier champ en erreur.
+type Field = "company" | "title" | "reason";
+const MISSING: Record<Field, string> = {
+  company: "Indique l'entreprise.",
+  title: "Indique le poste visé.",
+  reason: "Dis pourquoi cette entreprise.",
+};
+const errors = ref<Partial<Record<Field, string>>>({});
+function check(field: Field): void {
+  const next = { ...errors.value };
+  if (form[field].trim()) delete next[field];
+  else next[field] = MISSING[field];
+  errors.value = next;
+}
+function clearIfFixed(field: Field): void {
+  if (errors.value[field]) check(field);
+}
+
+async function create(event: Event): Promise<void> {
+  const formEl = event.currentTarget as HTMLElement | null;
+  (Object.keys(MISSING) as Field[]).forEach(check);
+  if (Object.keys(errors.value).length) {
+    await nextTick();
+    formEl?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+    return;
+  }
   saving.value = true;
   error.value = "";
   try {
@@ -32,7 +59,7 @@ async function create(): Promise<void> {
       body: { company: form.company, title: form.title, reason: form.reason, website: form.website || null },
     });
     if (!data) {
-      error.value = "Création impossible : vérifie l'entreprise, le poste et « Pourquoi elle ».";
+      error.value = "Création impossible pour l'instant : réessaie.";
       return;
     }
     offerId.value = data.id;
@@ -81,46 +108,84 @@ function prepare(): void {
     v-if="offerId === null"
     class="spontaneous-form"
     data-test="spontaneous-form"
+    novalidate
     @submit.prevent="create"
   >
-    <label>Entreprise
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Entreprise"
+      :width="20"
+      :error="errors.company"
+    >
       <input
+        :id="id"
         v-model="form.company"
+        type="text"
         maxlength="200"
         required
         autocomplete="organization"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="spontaneous-company"
+        @blur="check('company')"
+        @input="clearIfFixed('company')"
       >
-    </label>
-    <label>Poste visé
+    </FormField>
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Poste visé"
+      :error="errors.title"
+    >
       <input
+        :id="id"
         v-model="form.title"
+        type="text"
         maxlength="200"
         required
         placeholder="Ingénieur DevOps"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="spontaneous-title"
+        @blur="check('title')"
+        @input="clearIfFixed('title')"
       >
-    </label>
-    <label>Site de l'entreprise (facultatif)
+    </FormField>
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Site de l'entreprise"
+      optional
+      :width="30"
+    >
       <input
+        :id="id"
         v-model="form.website"
+        type="text"
         maxlength="300"
         inputmode="url"
         placeholder="exemple.ch"
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="spontaneous-website"
       >
-    </label>
-    <label>
-      <span>Pourquoi elle
-      </span>
+    </FormField>
+    <FormField
+      v-slot="{ id, describedby, invalid }"
+      label="Pourquoi elle"
+      :error="errors.reason"
+    >
       <textarea
+        :id="id"
         v-model="form.reason"
         rows="4"
         maxlength="1500"
         required
+        :aria-describedby="describedby"
+        :aria-invalid="invalid"
         data-test="spontaneous-reason"
+        @blur="check('reason')"
+        @input="clearIfFixed('reason')"
       />
-    </label>
+    </FormField>
     <p
       v-if="error"
       class="notice error"
@@ -134,7 +199,7 @@ function prepare(): void {
       :disabled="saving"
       data-test="spontaneous-create"
     >
-      Continuer
+      Créer la candidature
     </button>
   </form>
 

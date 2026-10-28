@@ -12,6 +12,7 @@ import AlertsPanel from "../components/AlertsPanel.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import AppIcon from "../components/AppIcon.vue";
 import FirstOffers from "../components/FirstOffers.vue";
+import FormField from "../components/FormField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import ReceivedAlerts from "../components/ReceivedAlerts.vue";
 import SidePanel from "../components/SidePanel.vue";
@@ -94,17 +95,20 @@ async function bandAction(): Promise<void> {
 const adding = ref(false);
 const form = ref({ terms: "", location: "" });
 const addError = ref("");
+const addFailed = ref(false);
 async function add(): Promise<void> {
   addError.value = "";
+  addFailed.value = false;
   if (!form.value.terms.trim()) {
-    addError.value = "Écris au moins un mot.";
+    addError.value = "Indique au moins un mot.";
+    document.querySelector<HTMLInputElement>("[data-test=add-search-terms]")?.focus();
     return;
   }
   const { data } = await api.POST("/api/alert-searches", {
     body: { terms: form.value.terms.trim(), location: form.value.location.trim() || null },
   });
   if (!data) {
-    addError.value = "Ajout refusé : réessaie.";
+    addFailed.value = true;
     return;
   }
   page.value = data;
@@ -262,35 +266,49 @@ onMounted(async () => {
       @close="adding = false"
     >
       <form
-        class="manual-form"
+        class="add-search-form"
         data-test="add-search-form"
+        novalidate
         @submit.prevent="add"
       >
-        <label>Les mots
+        <FormField
+          v-slot="{ id, describedby, invalid }"
+          label="Les mots"
+          :width="30"
+          :error="addError"
+        >
           <input
+            :id="id"
             v-model="form.terms"
             type="text"
-            placeholder="Linux"
-            :aria-invalid="addError ? true : undefined"
-            :aria-describedby="addError ? 'add-search-error' : undefined"
+            :aria-describedby="describedby"
+            :aria-invalid="invalid"
             data-test="add-search-terms"
+            @blur="addError = form.terms.trim() ? '' : 'Indique au moins un mot.'"
+            @input="addError && form.terms.trim() && (addError = '')"
           >
-        </label>
-        <label>Le lieu <span class="hint">(facultatif)</span>
+        </FormField>
+        <FormField
+          v-slot="{ id, describedby, invalid }"
+          label="Le lieu"
+          optional
+          :width="30"
+        >
           <input
+            :id="id"
             v-model="form.location"
             type="text"
-            placeholder="Lausanne"
+            :aria-describedby="describedby"
+            :aria-invalid="invalid"
             data-test="add-search-location"
           >
-        </label>
+        </FormField>
         <p
-          v-if="addError"
-          id="add-search-error"
-          class="field-error"
+          v-if="addFailed"
+          class="notice error"
           role="alert"
         >
-          {{ addError }}
+          Ajout refusé : réessaie.
         </p>
         <div class="form-actions">
           <button
@@ -299,6 +317,14 @@ onMounted(async () => {
             data-test="add-search-submit"
           >
             Ajouter la recherche
+          </button>
+          <button
+            type="button"
+            class="secondary"
+            data-test="add-search-cancel"
+            @click="adding = false"
+          >
+            Annuler
           </button>
         </div>
       </form>

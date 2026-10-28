@@ -1,0 +1,1 @@
+Formulaires selon la planche « Formulaires » : un libellé au-dessus de chaque champ, « (facultatif) » en gris, la largeur qui dit la réponse attendue, l'erreur sous le champ avec ce qu'il faut faire, le curseur sur le premier champ à corriger, un seul bouton principal nommé par l'action ; blocs de chargement des Critères et des Coordonnées

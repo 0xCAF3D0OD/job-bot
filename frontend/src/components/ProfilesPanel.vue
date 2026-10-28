@@ -6,6 +6,7 @@ import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
 import { plural } from "../format";
 import BusyButton from "./BusyButton.vue";
+import FormField from "./FormField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import AppIcon from "./AppIcon.vue";
 import HoverNote from "./HoverNote.vue";
@@ -23,6 +24,11 @@ const message = ref("");
 const empty = () => ({ name: "", occupation: "", keywords: "", languages: ["fr"] as string[], countries: ["CH"] as string[] });
 const form = ref(empty());
 const canPropose = ref(false);
+// Le nom est le seul champ exigé : l'erreur sous le champ, en le quittant et à la création.
+const nameError = ref("");
+function checkName(): void {
+  nameError.value = form.value.name.trim() ? "" : "Indique le nom du profil.";
+}
 const proposing = ref(false);
 
 // Mots-clés proposés par l'IA à partir du métier (docs/17 §2), environ 0,001 $.
@@ -59,6 +65,11 @@ function apply(data: ProfileList | undefined): void {
 
 async function create(): Promise<void> {
   if (busy.value) return;
+  checkName();
+  if (nameError.value) {
+    document.querySelector<HTMLInputElement>("[data-test=profile-name]")?.focus();
+    return;
+  }
   busy.value = true;
   message.value = "";
   try {
@@ -77,6 +88,7 @@ async function create(): Promise<void> {
     }
     apply(data);
     adding.value = false;
+    nameError.value = "";
     form.value = empty();
     message.value = "Profil créé : choisis-le dans le menu en haut pour voir ses Formations.";
   } finally {
@@ -214,42 +226,63 @@ onMounted(async () => {
     </template>
     <form
       v-if="adding"
-      class="form-grid setting-row-form"
+      class="profile-form setting-row-form"
       data-test="add-profile"
+      novalidate
       @submit.prevent="create"
     >
-      <label>Nom
+      <FormField
+        v-slot="{ id, describedby, invalid }"
+        label="Nom"
+        :width="30"
+        :error="nameError"
+      >
         <input
+          :id="id"
           v-model="form.name"
           type="text"
           maxlength="60"
-          required
-          placeholder="Infirmière à Lausanne"
+          :aria-describedby="describedby"
+          :aria-invalid="invalid"
           data-test="profile-name"
+          @blur="checkName"
+          @input="nameError && checkName()"
         >
-      </label>
-      <label>Métier (facultatif)
+      </FormField>
+      <FormField
+        v-slot="{ id, describedby, invalid }"
+        label="Métier"
+        optional
+        :width="30"
+      >
         <input
+          :id="id"
           v-model="form.occupation"
           type="text"
           maxlength="120"
-          placeholder="infirmière en soins généraux"
+          :aria-describedby="describedby"
+          :aria-invalid="invalid"
           data-test="profile-occupation"
         >
-      </label>
-      <label class="wide">« Domaine » : mots-clés séparés par des virgules
+      </FormField>
+      <FormField
+        v-slot="{ id, describedby, invalid }"
+        label="Domaine"
+        optional
+        hint="Mots-clés séparés par des virgules."
+      >
         <input
+          :id="id"
           v-model="form.keywords"
           type="text"
           maxlength="600"
           placeholder="soins, infirmière, hôpital, EMS"
+          :aria-describedby="describedby"
+          :aria-invalid="invalid"
           data-test="profile-keywords"
         >
-      </label>
-      <div
-        v-if="canPropose"
-        class="wide"
-      >
+      </FormField>
+      <div v-if="canPropose">
         <BusyButton
           class="secondary small"
           :busy="proposing"
@@ -262,7 +295,7 @@ onMounted(async () => {
           </HoverNote>
         </BusyButton>
       </div>
-      <div class="wide chip-group">
+      <div class="chip-group">
         <span class="chip-label">Langues</span>
         <button
           v-for="(label, code) in LANGUAGES"
@@ -275,7 +308,7 @@ onMounted(async () => {
           {{ label }}
         </button>
       </div>
-      <div class="wide chip-group">
+      <div class="chip-group">
         <span class="chip-label">Pays</span>
         <button
           v-for="(label, code) in COUNTRIES"
@@ -288,10 +321,10 @@ onMounted(async () => {
           {{ label }}
         </button>
       </div>
-      <div class="form-actions wide">
+      <div class="form-actions">
         <BusyButton
           type="submit"
-          class="secondary small"
+          class="primary"
           :busy="busy"
           busy-label="Création…"
           data-test="save-profile"
@@ -300,8 +333,9 @@ onMounted(async () => {
         </BusyButton>
         <button
           type="button"
-          class="link"
-          @click="adding = false"
+          class="secondary"
+          data-test="cancel-profile"
+          @click="adding = false; nameError = ''"
         >
           Annuler
         </button>
