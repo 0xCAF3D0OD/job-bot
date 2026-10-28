@@ -39,9 +39,17 @@ def page():
         browser.close()
 
 
-def audit(page: Page, html: str) -> list[str]:
+def run(page: Page, html: str) -> dict[str, list[str]]:
     page.set_content(BASE % html)
     return page.evaluate(AUDIT)
+
+
+def audit(page: Page, html: str) -> list[str]:
+    return run(page, html)["faults"]
+
+
+def warnings(page: Page, html: str) -> list[str]:
+    return run(page, html)["warnings"]
 
 
 def test_un_bloc_trop_large_sort_de_l_ecran(page: Page) -> None:
@@ -104,3 +112,19 @@ def test_un_texte_masque_pour_l_ecran_est_ignore(page: Page) -> None:
         'clip: rect(0 0 0 0); left: -9999px">Lien caché</span>'
     )
     assert audit(page, html) == []
+
+
+def test_une_cible_entre_24_et_44_px_est_un_avertissement_sans_echec(page: Page) -> None:
+    html = '<button class="moyen" style="width: 30px; height: 30px">x</button>'
+    assert audit(page, html) == []
+    assert any("30 × 30 px, moins de 44 px" in w and "button.moyen" in w for w in warnings(page, html))
+
+
+def test_une_cible_de_44_px_ne_donne_rien(page: Page) -> None:
+    html = '<button style="width: 44px; height: 44px">x</button>'
+    assert run(page, html) == {"faults": [], "warnings": []}
+
+
+def test_un_lien_dans_une_phrase_n_a_pas_d_avertissement(page: Page) -> None:
+    html = '<p style="font-size: 12px">Lis les <a href="#">conditions</a> avant de continuer, merci.</p>'
+    assert warnings(page, html) == []

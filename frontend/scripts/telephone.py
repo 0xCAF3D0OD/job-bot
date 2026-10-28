@@ -5,8 +5,11 @@ panneau de la cloche ouvert, il échoue si
   conteneur qui défile horizontalement exprès (overflow-x auto ou scroll), ou si la page défile
   horizontalement ;
 - une cible tactile visible (button, a, input, select, textarea, [role=button], label cliquable)
-  fait moins de 24 × 24 px (WCAG 2.2, 2.5.8), en comptant la zone étendue par un ::before ou
-  ::after positionné. Un lien dans une phrase est exempté, comme le prévoit la règle.
+  fait moins de 24 × 24 px (WCAG 2.2, 2.5.8, niveau AA), en comptant la zone étendue par un
+  ::before ou ::after positionné. Un lien dans une phrase est exempté (exception « en ligne »).
+
+Une commande isolée (bouton, lien d'action, onglet, radio, ligne cliquable) de moins de 44 × 44 px
+est listée en avertissement, sans échec (Apple HIG : 44 points ; Material 3 : 48 dp).
 
     make demo                      # ou make demo-image (http://localhost:8280)
     cd backend && uv run --with playwright python ../frontend/scripts/telephone.py http://localhost:5200
@@ -25,10 +28,12 @@ WIDTHS = [320, 360, 390]
 HEIGHT = 640
 PUBLIC = ["connexion", "inscription", "la-plateforme", "conditions", "a-propos", "bienvenue", "page-introuvable"]
 MIN_TARGET = 24
+COMFORT_TARGET = 44
 
 AUDIT = r"""() => {
   const W = document.documentElement.clientWidth;
   const faults = [];
+  const warnings = [];
   const label = (e) => {
     const t = (e.innerText || e.value || e.getAttribute('aria-label') || e.getAttribute('title') || '').trim().replace(/\s+/g, ' ');
     const cls = typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/)[0] : '';
@@ -137,10 +142,12 @@ AUDIT = r"""() => {
       if (p) box = { left: Math.min(box.left, p.left), right: Math.max(box.right, p.right), top: Math.min(box.top, p.top), bottom: Math.max(box.bottom, p.bottom) };
     }
     const w = box.right - box.left, h = box.bottom - box.top;
-    if (w < MIN - 0.5 || h < MIN - 0.5) faults.push(`cible de ${Math.round(w)} × ${Math.round(h)} px : ${label(e)}`);
+    const size = `${Math.round(w)} × ${Math.round(h)} px`;
+    if (w < MIN - 0.5 || h < MIN - 0.5) faults.push(`cible de ${size} : ${label(e)}`);
+    else if (w < COMFORT - 0.5 || h < COMFORT - 0.5) warnings.push(`cible de ${size}, moins de 44 px : ${label(e)}`);
   }
-  return faults;
-}""".replace("MIN", str(MIN_TARGET))
+  return { faults, warnings };
+}""".replace("MIN", str(MIN_TARGET)).replace("COMFORT", str(COMFORT_TARGET))
 
 
 async def open_bell(page: Page) -> bool | str:
@@ -157,7 +164,7 @@ async def open_bell(page: Page) -> bool | str:
 
 
 async def main() -> int:
-    total = 0
+    total = warned = 0
     async with async_playwright() as p:
         chrome = os.environ.get("CHROME")
         browser = await p.chromium.launch(**({"executable_path": chrome} if chrome else {}))
@@ -179,15 +186,19 @@ async def main() -> int:
                     opened = await open_bell(page) if bell else True
                     if opened is False:
                         continue
+                    result = await page.evaluate(AUDIT)
                     faults = [opened] if isinstance(opened, str) else []
-                    faults = list(dict.fromkeys(faults + await page.evaluate(AUDIT)))
+                    faults = list(dict.fromkeys(faults + result["faults"]))
                     where = f"/{path}" + (" (cloche ouverte)" if bell else "")
+                    for warning in dict.fromkeys(result["warnings"]):
+                        print(f"{width} px  {where}  avertissement : {warning}")
+                        warned += 1
                     for fault in faults:
                         print(f"{width} px  {where}  {fault}")
                     total += len(faults)
             await page.close()
         await browser.close()
-    print(json.dumps({"défauts": total}, ensure_ascii=False))
+    print(json.dumps({"défauts": total, "avertissements": warned}, ensure_ascii=False))
     return 1 if total else 0
 
 
