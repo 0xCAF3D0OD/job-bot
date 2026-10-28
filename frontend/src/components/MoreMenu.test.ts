@@ -106,3 +106,12 @@ describe("MoreMenu (docs/50 §1)", () => {
   });
 });
 
+
+describe("MoreMenu, planche « tête de carte, Copier et ⋯ »", () => {
+  it("le bouton s'appelle « Plus d'actions » par défaut", () => {
+    const wrapper = mount(MoreMenu, {
+      props: { items: [{ label: "Renommer", test: "a", run: vi.fn() }, { label: "Révoquer", test: "b", run: vi.fn() }] },
+    });
+    expect(wrapper.find("[data-test=more]").attributes("aria-label")).toBe("Plus d'actions");
+  });
+});

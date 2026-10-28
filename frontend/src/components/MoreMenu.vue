@@ -8,6 +8,8 @@ import AppIcon from "./AppIcon.vue";
 // un clic ailleurs le ferme, les flèches passent d'une action à l'autre.
 // docs/74 §5 : une action peut être un lien (page externe « ↗ » ou fichier à télécharger),
 // porter un nombre ; les suppressions viennent en dernier, après un filet.
+// Planche « tête de carte, Copier et ⋯ » : nommé « Plus d'actions », toujours le dernier élément à droite ;
+// pas de rouge dans le menu (une suppression confirme sur place ou propose « Annuler » 6 s).
 // docs/101 : chaque action a son icône devant le nom ; sans icône donnée, un lien externe prend
 // « ouvrir ailleurs », un fichier « télécharger », une suppression la corbeille.
 export type MoreMenuItem = {
@@ -41,7 +43,7 @@ const props = withDefaults(
     trigger?: string;
     triggerIcon?: IconName;
   }>(),
-  { label: "Actions", testId: "more", inline: true, trigger: undefined, triggerIcon: undefined },
+  { label: "Plus d'actions", testId: "more", inline: true, trigger: undefined, triggerIcon: undefined },
 );
 
 // Une seule action ordinaire : pas de menu, l'action directement (docs/76 §3).

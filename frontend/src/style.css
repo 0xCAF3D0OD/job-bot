@@ -717,7 +717,7 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: var(-
 .more-menu .menu { max-width: calc(100vw - 2rem); scroll-margin: 0.5rem; }
 .more-menu .menu.up { top: auto; bottom: 2.4rem; }
 .more-menu .menu.align-left { right: auto; left: 0; }
-.more-menu .menu .danger { color: var(--down-text); }
+.more-menu .menu .danger { color: var(--text); }
 .more-menu .menu-separator { height: 1px; margin: var(--space-1) var(--space-2); background: var(--divider); }
 .more-menu .menu-count { color: var(--muted); font-weight: var(--weight-regular); }
 /* L'icône de chaque action (docs/101), grise ; rouge pour une suppression. */
@@ -1229,7 +1229,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .bell-item:hover .bell-title { color: var(--accent); }
 .account-panel > a.router-link-active,
 .more-menu .menu button[aria-checked="true"] { background: none; color: var(--accent); font-weight: var(--weight-semibold); }
-.more-menu .menu .danger:hover { color: var(--down-text); }
+.more-menu .menu .danger:hover { color: var(--text); }
 
 /* --- Accessibilité (docs/28) --- */
 /* Calendrier : une couleur par statut (sans symbole, choix du 2026-10-14). Une ligne ORP à
@@ -4102,3 +4102,17 @@ html.search-open { overflow: hidden; }
   .app-date .hint { display: none; }
   .suivi-detail .disclosure .runs :is(td.app-date, th:first-child) { white-space: nowrap; }
 }
+
+/* --- Tête de carte, Copier et « ⋯ » (règles §4) --- */
+/* « Titre · nombre » à gauche, le lien ou l'action puis « ⋯ » à droite, à la même hauteur. */
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); min-height: var(--control-h); }
+.card-head-title { margin: 0; font-size: var(--font-title); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.card-head-count { color: var(--muted); font-weight: var(--weight-regular); }
+.card-head-actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
+/* Copier : l'icône seule, juste à côté de la valeur, à la hauteur commune des contrôles. */
+.copy-button { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: var(--control-h); height: var(--control-h); padding: 0; border: none; border-radius: 50%; background: none; color: var(--muted); vertical-align: middle; }
+.copy-button:hover { color: var(--text); background: var(--accent-soft); }
+/* « Afficher plus (4) » : en bas de la carte, le chevron tourne quand c'est ouvert. */
+.show-more { margin-top: var(--space-3); }
+.show-more .icon { transition: transform var(--t-state) var(--ease-out); }
+.show-more[aria-expanded="true"] .icon { transform: rotate(180deg); }
