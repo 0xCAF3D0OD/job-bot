@@ -2,11 +2,11 @@
 import { onMounted, onUnmounted, ref } from "vue";
 
 import IconButton from "./IconButton.vue";
-import Illustration from "./Illustration.vue";
+import FaceMark from "./FaceMark.vue";
 
 // La seule fête de la plateforme (docs/60 §2.1) : une candidature passe en Engagement. En grand,
-// par-dessus la page et sans carte (complément du 2026-10-16) : la poignée de main et quelques
-// confettis, une fois ; « Fermer », Échap ou un clic à côté referment.
+// par-dessus la page et sans carte (complément du 2026-10-16) : le visage du 1, ravi, et quelques
+// confettis, une fois (décision de Kevin du 27.10 : pas d'illustration ici) ; « Fermer », Échap ou un clic à côté referment.
 defineProps<{ company?: string }>();
 const emit = defineEmits<{ close: [] }>();
 
@@ -51,7 +51,10 @@ onUnmounted(() => document.removeEventListener("keydown", onKey, true));
         aria-labelledby="engagement-title"
       >
         <div class="engagement-art">
-          <Illustration name="porte-ouverte" />
+          <FaceMark
+            mood="ravi"
+            :size="120"
+          />
           <span
             class="confetti"
             aria-hidden="true"

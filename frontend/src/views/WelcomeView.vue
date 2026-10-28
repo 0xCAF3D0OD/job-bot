@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import { api, type CriteriaIn, type SettingsModel } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
-import Illustration, { type IllustrationName } from "../components/Illustration.vue";
+import FaceMark from "../components/FaceMark.vue";
 import { useAuth } from "../composables/useAuth";
 
 // L'accueil après la première connexion (docs/66) : un écran, une question, des cartes qu'on
@@ -131,19 +131,10 @@ function jump(to: number): void {
   void remember({ step: to + 1 });
 }
 
-// L'écran de la date a déjà son calendrier : pas d'illustration.
-const ART: Partial<Record<StepKey, IllustrationName>> = {
-  goal: "accueil-reseau",
-  trade: "formations",
-  places: "lieux-carte",
-  rate: "tableau-de-bord",
-  orp: "preuves-orp",
-  cv: "offres-profils",
-  languages: "accueil-reseau",
-  remote: "porte-ouverte",
-  phone: "lecture-calme",
-  ready: "suivi-envoi",
-};
+// Le visage du 1 en tête de chaque écran (décision de Kevin du 27.10 : plus d'illustration ici,
+// elles restent aux pages publiques). Immobile : aucune animation en boucle. L'écran de la date
+// a déjà son calendrier.
+const FACE_STEPS = new Set<StepKey>(["goal", "trade", "places", "rate", "orp", "cv", "languages", "remote", "phone", "ready"]);
 
 const GOALS: { id: Goal; icon: Icon; title: string; hint: string }[] = [
   { id: "job", icon: "search", title: "Je cherche un emploi", hint: "Trouver les bonnes offres et postuler vite." },
@@ -498,9 +489,10 @@ function edit(key: StepKey): void {
         class="welcome-screen"
         :data-test="`welcome-${step}`"
       >
-        <Illustration
-          v-if="ART[step]"
-          :name="ART[step]!"
+        <FaceMark
+          v-if="FACE_STEPS.has(step)"
+          mood="content"
+          :size="72"
           class="welcome-art"
         />
 
@@ -878,8 +870,9 @@ function edit(key: StepKey): void {
             >
               Prochaine étape : créer tes alertes sur les sites d'emploi. La recherche est déjà remplie.
             </h1>
-            <Illustration
-              name="messager"
+            <FaceMark
+              mood="ravi"
+              :size="96"
               class="welcome-character"
             />
           </div>
