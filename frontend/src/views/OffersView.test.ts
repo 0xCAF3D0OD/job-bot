@@ -259,7 +259,7 @@ describe("OffersView", () => {
 });
 
 describe("note et résumé", () => {
-  it("carte avec note et résumé, détail avec points forts reliés aux blocs", async () => {
+  it("carte avec note et résumé, détail avec points forts", async () => {
     mockOffers(
       page([
         offer(9, "Ingénieur système", {
@@ -295,8 +295,9 @@ describe("note et résumé", () => {
     expect(wrapper.find("[data-test=ai]").text()).not.toContain("82/100");
     // Le bloc d'où vient le point fort, au survol (docs/131 §B.7).
     const strengths = wrapper.find("[data-test=strengths]");
-    expect(strengths.text()).not.toContain("Bloc : Linux");
-    expect(strengths.findComponent({ name: "HoverNote" }).props("text")).toBe("Bloc : Linux");
+    // Plus de soulignement pointillé ni de bloc au survol (planche « Fiche d'une offre »).
+    expect(strengths.text()).toBe("Linux solide");
+    expect(strengths.findComponent({ name: "HoverNote" }).exists()).toBe(false);
     expect(wrapper.find("[data-test=gaps]").text()).toContain("Pas d'Ansible");
   });
 });

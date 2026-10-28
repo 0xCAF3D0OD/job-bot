@@ -26,7 +26,7 @@ Ne note que l'adéquation au profil, pas l'attrait de l'offre. Sois exigeant : u
 - `strengths` : 2 à 4 points forts. Chacun cite dans `chunk_ids` le ou les identifiants des blocs qui le prouvent. Un point fort sans bloc qui le prouve est interdit.
 - `gaps` : 2 à 4 manques (exigences de l'offre absentes du profil, ou préférences/rédhibitoires du profil contredits par l'offre). `chunk_ids` cite le bloc concerné s'il y en a un, sinon reste vide.
 
-Chaque point tient en une phrase courte (100 caractères au plus). N'affirme jamais sur la personne quelque chose qui n'est pas dans un bloc.
+Chaque point commence par son mot clé suivi de « : » (« Kubernetes : plateforme de 40 services en production. ») et tient en 12 mots au plus. Mets les plus importants en premier : seuls les trois premiers s'affichent. N'affirme jamais sur la personne quelque chose qui n'est pas dans un bloc.
 
 ## Pourquoi cette note, et le niveau (seulement si des blocs de profil sont fournis ; sinon null)
 

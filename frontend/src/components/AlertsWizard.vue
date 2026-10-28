@@ -4,8 +4,6 @@ import { computed, ref } from "vue";
 import { api, type AlertsPage } from "../api/client";
 import AppIcon from "./AppIcon.vue";
 import IconButton from "./IconButton.vue";
-import IllustratedSide from "./IllustratedSide.vue";
-import type { IllustrationName } from "./Illustration.vue";
 import HoverNote from "./HoverNote.vue";
 import MailboxAddress from "./MailboxAddress.vue";
 
@@ -16,11 +14,7 @@ const props = defineProps<{ page: AlertsPage; focus?: { site: string; terms: str
 const emit = defineEmits<{ updated: [page: AlertsPage]; done: [] }>();
 
 const step = ref<1 | 2 | 3>(props.focus ? 2 : 1);
-// À gauche sur ordinateur, à côté du formulaire et pas dedans (docs/60 §2.2 et complément) :
-// tes recherches, le site, c'est prêt.
-// Des images hautes (0.84.3) : dans la colonne étroite de l'ordinateur, une image en longueur
-// (« emails-tries ») devenait trop petite pour être lue.
-const WIZARD_ILLUSTRATIONS: IllustrationName[] = ["alertes-carte", "messager", "suivi-envoi"];
+// Pas d'illustration : l'assistant est une tâche (décision de Kevin du 27.10).
 const siteIndex = ref(0);
 const form = ref({ terms: "", location: "" });
 const busy = ref(false);
@@ -119,182 +113,177 @@ function copyOnOpen(): void {
 </script>
 
 <template>
-  <IllustratedSide
-    :name="WIZARD_ILLUSTRATIONS[step - 1]!"
-    class="wizard-side"
+  <section
+    class="form-card wizard"
+    data-test="alerts-wizard"
   >
-    <section
-      class="form-card wizard"
-      data-test="alerts-wizard"
+    <ol
+      class="wizard-progress"
+      aria-hidden="true"
     >
-      <ol
-        class="wizard-progress"
-        aria-hidden="true"
-      >
+      <li
+        v-for="n in 3"
+        :key="n"
+        :class="{ done: n < step, current: n === step }"
+      />
+    </ol>
+    <p class="wizard-step">
+      Étape {{ step }} sur 3<span
+        v-if="step === 2 && site"
+        data-test="wizard-site-count"
+      > · site {{ siteIndex + 1 }} sur {{ sites.length }}</span>
+    </p>
+
+    <template v-if="step === 1">
+      <h2>Offres à recevoir</h2>
+      <ul class="keyword-chips">
         <li
-          v-for="n in 3"
-          :key="n"
-          :class="{ done: n < step, current: n === step }"
-        />
-      </ol>
-      <p class="wizard-step">
-        Étape {{ step }} sur 3<span
-          v-if="step === 2 && site"
-          data-test="wizard-site-count"
-        > · site {{ siteIndex + 1 }} sur {{ sites.length }}</span>
-      </p>
-
-      <template v-if="step === 1">
-        <h2>Offres à recevoir</h2>
-        <ul class="keyword-chips">
-          <li
-            v-for="search in searches"
-            :key="search.id"
-            class="chip"
-            data-test="wizard-search"
-          >
-            {{ search.terms }} · {{ search.location || "toute la Suisse" }}
-            <IconButton
-              icon="close"
-              :label="`Retirer ${search.terms}`"
-              data-test="wizard-remove"
-              @click="remove(search.id)"
-            />
-          </li>
-        </ul>
-        <form
-          class="inline-form"
-          data-test="wizard-add"
-          @submit.prevent="add"
+          v-for="search in searches"
+          :key="search.id"
+          class="chip"
+          data-test="wizard-search"
         >
-          <input
-            v-model="form.terms"
-            type="text"
-            maxlength="120"
-            :placeholder="`Mots (${termsExample})`"
-            aria-label="Mots"
-            data-test="wizard-terms"
-          >
-          <input
-            v-model="form.location"
-            type="text"
-            maxlength="80"
-            :placeholder="`Lieu (${placeExample})`"
-            aria-label="Lieu"
-          >
+          {{ search.terms }} · {{ search.location || "toute la Suisse" }}
           <IconButton
-            icon="plus"
-            label="Ajouter la recherche"
-            type="submit"
-            data-test="wizard-add-submit"
+            icon="close"
+            :label="`Retirer ${search.terms}`"
+            data-test="wizard-remove"
+            @click="remove(search.id)"
           />
-        </form>
-        <div class="form-actions">
-          <button
-            type="button"
-            class="primary"
-            data-test="wizard-next"
-            @click="continueToSites"
-          >
-            Continuer
-          </button>
-          <span
-            v-if="searchHint"
-            class="field-error"
-            role="status"
-          >{{ searchHint }}</span>
-        </div>
-      </template>
+        </li>
+      </ul>
+      <form
+        class="inline-form"
+        data-test="wizard-add"
+        @submit.prevent="add"
+      >
+        <input
+          v-model="form.terms"
+          type="text"
+          maxlength="120"
+          :placeholder="`Mots (${termsExample})`"
+          aria-label="Mots"
+          data-test="wizard-terms"
+        >
+        <input
+          v-model="form.location"
+          type="text"
+          maxlength="80"
+          :placeholder="`Lieu (${placeExample})`"
+          aria-label="Lieu"
+        >
+        <IconButton
+          icon="plus"
+          label="Ajouter la recherche"
+          type="submit"
+          data-test="wizard-add-submit"
+        />
+      </form>
+      <div class="form-actions">
+        <button
+          type="button"
+          class="primary"
+          data-test="wizard-next"
+          @click="continueToSites"
+        >
+          Continuer
+        </button>
+        <span
+          v-if="searchHint"
+          class="field-error"
+          role="status"
+        >{{ searchHint }}</span>
+      </div>
+    </template>
 
-      <template v-else-if="step === 2 && site">
-        <h2>Crée l'alerte sur {{ site.name }}</h2>
-        <!-- Une ligne (docs/121 §B.2) : l'adresse est copiée en ouvrant le site, il reste à la
+    <template v-else-if="step === 2 && site">
+      <h2>Crée l'alerte sur {{ site.name }}</h2>
+      <!-- Une ligne (docs/121 §B.2) : l'adresse est copiée en ouvrant le site, il reste à la
              coller dans « Créer une alerte » ; le détail au survol. -->
-        <p class="hint">
-          <template v-if="page.mailbox">
-            <HoverNote text="Sur le site, « Créer une alerte » ou « Activer l'alerte », puis colle l'adresse.">
-              {{ copiedOnOpen ? "Adresse copiée :" : "En ouvrant le site, l'adresse est copiée :" }}
-            </HoverNote>{{ " " }}<MailboxAddress
-              :address="page.mailbox"
-              :personal="page.personal_address"
-              data-test="wizard-address"
-            />
-          </template>
-          <template v-else>
-            Ouvre la recherche, clique sur « Créer une alerte » et donne ton adresse e-mail.
-          </template>
-        </p>
-        <div class="wizard-links">
-          <template
-            v-for="search in searches"
-            :key="search.id"
-          >
-            <a
-              v-if="cellUrl(search.id)"
-              :href="cellUrl(search.id)!"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="button-link"
-              data-test="wizard-open"
-              @click="copyOnOpen"
-            ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
-          </template>
+      <p class="hint">
+        <template v-if="page.mailbox">
+          <HoverNote text="Sur le site, « Créer une alerte » ou « Activer l'alerte », puis colle l'adresse.">
+            {{ copiedOnOpen ? "Adresse copiée :" : "En ouvrant le site, l'adresse est copiée :" }}
+          </HoverNote>{{ " " }}<MailboxAddress
+            :address="page.mailbox"
+            :personal="page.personal_address"
+            data-test="wizard-address"
+          />
+        </template>
+        <template v-else>
+          Ouvre la recherche, clique sur « Créer une alerte » et donne ton adresse e-mail.
+        </template>
+      </p>
+      <div class="wizard-links">
+        <template
+          v-for="search in searches"
+          :key="search.id"
+        >
           <a
-            v-for="link in remoteLinks"
-            :key="link.terms"
-            :href="link.url"
+            v-if="cellUrl(search.id)"
+            :href="cellUrl(search.id)!"
             target="_blank"
             rel="noopener noreferrer"
             class="button-link"
-            data-test="wizard-open-remote"
+            data-test="wizard-open"
             @click="copyOnOpen"
-          ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} en télétravail : {{ link.terms }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
-        </div>
-        <!-- Deux boutons égaux, côte à côte (docs/104 §4). -->
-        <div class="form-actions wizard-site-actions">
-          <button
-            type="button"
-            class="primary"
-            :disabled="busy"
-            data-test="wizard-site-done"
-            @click="siteDone"
-          >
-            J'ai créé l'alerte
-          </button>
-          <button
-            type="button"
-            class="secondary"
-            data-test="wizard-skip"
-            @click="nextSite"
-          >
-            Plus tard
-          </button>
-        </div>
-      </template>
+          ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
+        </template>
+        <a
+          v-for="link in remoteLinks"
+          :key="link.terms"
+          :href="link.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="button-link"
+          data-test="wizard-open-remote"
+          @click="copyOnOpen"
+        ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} en télétravail : {{ link.terms }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
+      </div>
+      <!-- Deux boutons égaux, côte à côte (docs/104 §4). -->
+      <div class="form-actions wizard-site-actions">
+        <button
+          type="button"
+          class="primary"
+          :disabled="busy"
+          data-test="wizard-site-done"
+          @click="siteDone"
+        >
+          J'ai créé l'alerte
+        </button>
+        <button
+          type="button"
+          class="secondary"
+          data-test="wizard-skip"
+          @click="nextSite"
+        >
+          Plus tard
+        </button>
+      </div>
+    </template>
 
-      <template v-else>
-        <h2>C'est prêt</h2>
-        <p>
-          Tes alertes arriveront<template v-if="page.mailbox">
-            à <MailboxAddress
-              :address="page.mailbox"
-              :personal="page.personal_address"
-            />
-          </template><template v-else>
-            dans ta boîte
-          </template>, souvent dès le lendemain, avec le lien de confirmation si besoin.
-        </p>
-        <div class="form-actions">
-          <button
-            type="button"
-            class="primary"
-            data-test="wizard-finish"
-            @click="emit('done')"
-          >
-            Voir mes alertes
-          </button>
-        </div>
-      </template>
-    </section>
-  </IllustratedSide>
+    <template v-else>
+      <h2>C'est prêt</h2>
+      <p>
+        Tes alertes arriveront<template v-if="page.mailbox">
+          à <MailboxAddress
+            :address="page.mailbox"
+            :personal="page.personal_address"
+          />
+        </template><template v-else>
+          dans ta boîte
+        </template>, souvent dès le lendemain, avec le lien de confirmation si besoin.
+      </p>
+      <div class="form-actions">
+        <button
+          type="button"
+          class="primary"
+          data-test="wizard-finish"
+          @click="emit('done')"
+        >
+          Voir mes alertes
+        </button>
+      </div>
+    </template>
+  </section>
 </template>
