@@ -135,6 +135,8 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   --field-20: 13rem;
   --field-30: 18rem;
   --field-5: 5.5rem;
+  /* 10 caractères : une date jj.mm.aaaa (planche « Formulaires »). */
+  --field-10: 8rem;
   --header-max: 84rem;
 }
 /* 75 caractères par ligne au plus, à toutes les tailles d'écran (§3, Baymard : 50 à 75 ; WCAG 1.4.8 : 80). Baymard
@@ -4190,4 +4192,29 @@ html.search-open { overflow: hidden; }
     transform: translate(-50%, -50%);
   }
   .skip-link { display: inline-flex; align-items: center; min-height: 2.75rem; }
+}
+
+/* --- Formulaires (planche « Formulaires », règles §4) --- */
+/* Le champ commun : libellé semi-gras au-dessus, « (facultatif) » en gris, aide d'une ligne, champ,
+   puis l'erreur sous le champ. */
+.form-field { display: grid; gap: var(--space-1); min-width: 0; align-content: start; }
+.form-field-label { font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); line-height: var(--leading-normal); }
+.form-field-optional { font-weight: var(--weight-regular); color: var(--muted); }
+.form-field-hint { margin: 0; font-size: var(--font-small); color: var(--muted); line-height: var(--leading-normal); }
+.form-field > :is(input, select, textarea) { width: 100%; box-sizing: border-box; }
+.form-field:is(.field-w-5, .field-w-10, .field-w-20, .field-w-30) > :is(input, select) { width: min(100%, var(--field-w)); }
+.field-w-5 { --field-w: var(--field-5); }
+.field-w-10 { --field-w: var(--field-10); }
+.field-w-20 { --field-w: var(--field-20); }
+.field-w-30 { --field-w: var(--field-30); }
+/* L'erreur ne repose pas que sur le rouge (WCAG 1.4.1) : une icône devant, partout où .field-error sert. */
+.field-error { display: flex; align-items: flex-start; gap: var(--space-2); }
+.field-error::before {
+  content: ""; flex: none; width: 1em; height: 1em; margin-top: 0.2em; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+/* Case à cocher : toute la ligne est l'étiquette, 44 px de haut sur téléphone (WCAG 2.5.8, Apple HIG). */
+@media (pointer: coarse), (max-width: 820px) {
+  label.check { min-height: 2.75rem; }
 }
