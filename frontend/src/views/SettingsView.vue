@@ -603,12 +603,12 @@ onUnmounted(() => spy?.disconnect());
                 :error="rowErrors.mode"
               />
               <SettingRow
+                v-slot="c"
                 class="radio-row"
                 data-test="rhythm-daily-row"
-                @click="pickMode($event, 'daily')"
-                v-slot="c"
                 title="Un message par jour"
                 description="Toutes les offres bien notées du jour, en un seul message."
+                @click="pickMode($event, 'daily')"
               >
                 <select
                   v-model.number="form.offers_notify_hour"
@@ -637,12 +637,12 @@ onUnmounted(() => spy?.disconnect());
                 >
               </SettingRow>
               <SettingRow
+                v-slot="c"
                 class="radio-row"
                 data-test="rhythm-instant-row"
-                @click="pickMode($event, 'instant')"
-                v-slot="c"
                 title="Dès qu'elles arrivent"
                 description="Un message par offre, dès qu'elle est notée."
+                @click="pickMode($event, 'instant')"
               >
                 <input
                   v-model="form.offers_notify_mode"
