@@ -293,3 +293,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.79 | Repliables : au survol d'un repliable ouvert, la teinte couvre toute la ligne de titre, menu « ⋯ » compris | livrée |
 | 1.6.80 | Le README de `changelog.d/` donne un exemple de fragment avec une ligne « État : … » et dit quand l'employer | livrée |
 | 1.6.81 | Composants communs : tête de carte « Titre · nombre », « Afficher plus (N) », bouton Copier annoncé, menu « ⋯ » nommé « Plus d'actions » et sans rouge | livrée |
+| 1.6.82 | Vide et chargement : rien avant 300 ms puis les blocs gris, voile du visage seulement au premier chargement, bouton occupé à largeur fixe et focus gardé, tête de carte à hauteur fixe | livrée |
