@@ -303,3 +303,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.89 | Le contrôle « Historique » d'une PR compare au main du moment (premier parent du commit de fusion de test), plus à l'ancien main de l'événement : une PR remise à jour sur main ne se voit plus attribuer les fichiers numérotés qu'apporte main | livrée |
 | 1.6.90 | Pastille d'état et dates dans les pages : StatusPill aux états en bout de ligne (sites des alertes, analyse du journal, statut d'une offre, sauvegardes, formations) et en étiquette sans point (Spontanée, ORP, type de formation) ; toutes les dates passent par dates.ts, plus jamais « il y a 3 h » | livrée |
 | 1.6.91 | Réglages : l'ordre des attributs des lignes radio suit la règle du lint (aucun changement visible) | livrée |
+| 1.6.92 | Formulaires : champ commun (libellé, « facultatif », aide, erreur sous le champ avec icône), largeur de 10 caractères pour une date, cases à cocher sur 44 px | livrée |
