@@ -128,3 +128,18 @@ def test_une_cible_de_44_px_ne_donne_rien(page: Page) -> None:
 def test_un_lien_dans_une_phrase_n_a_pas_d_avertissement(page: Page) -> None:
     html = '<p style="font-size: 12px">Lis les <a href="#">conditions</a> avant de continuer, merci.</p>'
     assert warnings(page, html) == []
+
+
+def test_un_radio_dans_une_ligne_cliquable_compte_la_ligne(page: Page) -> None:
+    html = """
+    <div class="ligne" style="cursor: pointer; display: flex; height: 48px; align-items: center">
+      <span>Un message par jour</span><div><input type="radio" style="width: 20px; height: 20px; margin: 0"></div>
+    </div>
+    """
+    assert run(page, html) == {"faults": [], "warnings": []}
+
+
+def test_un_radio_seul_de_20_px_reste_un_defaut(page: Page) -> None:
+    faults = audit(page, '<input type="radio" style="width: 20px; height: 20px; margin: 0">')
+    assert any("cible de 20 × 20 px" in f for f in faults)
+

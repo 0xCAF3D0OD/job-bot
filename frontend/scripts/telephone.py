@@ -136,7 +136,19 @@ AUDIT = r"""() => {
     if (e.tagName === 'INPUT' && e.closest('label') && e.getBoundingClientRect().width < MIN) continue;
     const r = e.getBoundingClientRect();
     if (r.bottom < 0 || r.top > innerHeight * 6) continue;
-    let box = { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
+    // Un champ dans une ligne entière cliquable (cursor: pointer) : c'est la ligne qu'on touche.
+    let rowBox = null;
+    for (let a = e.parentElement, depth = 0; a && a !== document.body && depth < 4; a = a.parentElement, depth++) {
+      if (getComputedStyle(a).cursor !== 'pointer') continue;
+      // Le curseur s'hérite : on remonte jusqu'à l'élément qui le pose (la ligne entière).
+      let top = a;
+      while (top.parentElement && top.parentElement !== document.body && getComputedStyle(top.parentElement).cursor === 'pointer') top = top.parentElement;
+      rowBox = top.getBoundingClientRect();
+      break;
+    }
+    let box = rowBox && e.tagName === 'INPUT'
+      ? { left: rowBox.left, right: rowBox.right, top: rowBox.top, bottom: rowBox.bottom }
+      : { left: r.left, right: r.right, top: r.top, bottom: r.bottom };
     for (const which of ['::before', '::after']) {
       const p = pseudoRect(e, which);
       if (p) box = { left: Math.min(box.left, p.left), right: Math.max(box.right, p.right), top: Math.min(box.top, p.top), bottom: Math.max(box.bottom, p.bottom) };
