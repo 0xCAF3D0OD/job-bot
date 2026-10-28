@@ -1,0 +1,1 @@
+Un audit téléphone en CI : en 320, 360 et 390 px, sur chaque page de la démo et avec le panneau de la cloche ouvert, il échoue si un élément sort de l'écran ou si une cible tactile fait moins de 24 × 24 px (WCAG 2.5.8), zone d'un ::before ou ::after positionné comprise (`frontend/scripts/telephone.py`, `make audit-telephone`, workflow « Audit téléphone » sur la démo Docker)
