@@ -125,6 +125,7 @@ def test_l_etiquette_d_une_case_a_cocher_cachee_reste_mesuree(page: Page) -> Non
     """
     assert any("label" in f and "Oui" in f for f in audit(page, html))
 
+
 def test_un_lien_dans_une_phrase_est_exempte(page: Page) -> None:
     html = '<p style="font-size: 12px">Lis les <a href="#">conditions</a> avant de continuer, merci.</p>'
     assert audit(page, html) == []
@@ -166,3 +167,4 @@ def test_un_radio_dans_une_ligne_cliquable_compte_la_ligne(page: Page) -> None:
 def test_un_radio_seul_de_20_px_reste_un_defaut(page: Page) -> None:
     faults = audit(page, '<input type="radio" style="width: 20px; height: 20px; margin: 0">')
     assert any("cible de 20 × 20 px" in f for f in faults)
+
