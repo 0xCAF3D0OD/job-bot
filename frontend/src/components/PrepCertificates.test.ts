@@ -24,7 +24,7 @@ describe("Les certificats dans Préparer", () => {
     });
     const wrapper = mount(PrepCertificates, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
-    expect(wrapper.text()).toContain("Certificats à joindre : Acme SA, Exemple Sàrl.");
+    expect(wrapper.text()).toContain("Certificats à joindre : Acme SA (nouvel onglet), Exemple Sàrl (nouvel onglet).");
     expect(wrapper.find("[data-test=prep-certificate-3]").attributes("href")).toBe("/api/documents/3/file");
     expect(wrapper.text()).toContain("Pas encore « Démo SA »");
     expect(wrapper.text()).not.toContain("Autre");

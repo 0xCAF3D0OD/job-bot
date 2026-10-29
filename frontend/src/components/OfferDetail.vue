@@ -422,7 +422,7 @@ watch(
           rel="noopener noreferrer"
           class="button-link"
           :data-test="offer.employer_url ? 'employer' : 'apply'"
-        ><span class="with-icon"><AppIcon name="send" />{{ postLink.label }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
+        ><span class="with-icon"><AppIcon name="send" />{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
       </div>
     </section>
 

@@ -231,7 +231,7 @@ onMounted(() => void load());
                     target="_blank"
                     rel="noopener noreferrer"
                     class="link"
-                  ><span class="with-icon"><AppIcon name="external" />voir sur {{ sourceLabel[link.source] }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
+                  ><span class="with-icon">voir sur {{ sourceLabel[link.source] }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
                 </li>
               </ul>
             </td>

@@ -181,7 +181,7 @@ const stateText = computed(() => {
     target="_blank"
     rel="noopener noreferrer"
     data-test="official-page"
-  ><span class="with-icon"><AppIcon name="external" />Page officielle<span class="visually-hidden"> (nouvel onglet)</span></span></a>
+  ><span class="with-icon">Page officielle<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
   <a
     v-else
     class="training-title"
@@ -191,7 +191,10 @@ const stateText = computed(() => {
   ><template
     v-for="(part, index) in highlight(training.title, training.matched)"
     :key="index"
-  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></a>
+  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template><AppIcon
+    name="external"
+    class="training-title-external"
+  /><span class="visually-hidden"> (nouvel onglet)</span></a>
   <!-- Les faits avec les icônes de la carte (docs/101) : le mot reste pour un lecteur d'écran. -->
   <p
     class="training-facts meta-line"
