@@ -11,7 +11,8 @@ import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
 
-// Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
+// Cloche des notifications (docs/15 §1 ; « Notifications » et non « Alertes », le nom de l'onglet des
+// sources d'offres dans Candidatures) : les mêmes que sur le téléphone, relues chaque minute.
 const REFRESH_MS = 60_000;
 
 const router = useRouter();
@@ -28,7 +29,7 @@ const read = computed(() => inbox.value.items.filter((i) => i.read_at));
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
 const label = computed(() =>
-  inbox.value.unread ? `Alertes, ${plural(inbox.value.unread, "non lue", "non lues")}` : "Alertes",
+  inbox.value.unread ? `Notifications, ${plural(inbox.value.unread, "non lue", "non lues")}` : "Notifications",
 );
 
 async function refresh(): Promise<void> {
@@ -112,12 +113,12 @@ onUnmounted(() => {
     <component
       :is="narrow ? BottomSheet : 'div'"
       v-if="narrow || open"
-      v-bind="narrow ? { open, title: 'Alertes', full: true } : { class: 'bell-panel', role: 'dialog', 'aria-label': 'Alertes' }"
+      v-bind="narrow ? { open, title: 'Notifications', full: true } : { class: 'bell-panel', role: 'dialog', 'aria-label': 'Notifications' }"
       data-test="bell-panel"
       @close="open = false"
     >
       <div class="bell-head">
-        <strong v-if="!narrow">Alertes</strong>
+        <strong v-if="!narrow">Notifications</strong>
         <button
           v-if="inbox.unread"
           type="button"
@@ -132,7 +133,7 @@ onUnmounted(() => {
         v-if="!inbox.items.length"
         class="hint bell-empty"
       >
-        Aucune alerte pour l'instant.
+        Aucune notification pour l'instant.
       </p>
       <!-- Sur téléphone, deux listes groupées : les nouvelles, puis celles déjà lues (planche). -->
       <template v-else-if="narrow">
