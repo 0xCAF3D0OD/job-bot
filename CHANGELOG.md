@@ -320,3 +320,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.106 | Champs : un champ posé dans une rangée de boutons prend la hauteur des contrôles, la rangée reste alignée ; contrôle segmenté pleine largeur selon la planche | livrée |
 | 1.6.107 | Liste groupée : l'entrée affichée à côté (liste et détail) porte la pastille de sélection et aria-current | livrée |
 | 1.6.108 | Budget de poids : le total du JavaScript passe de 270 à 285 Ko compressés pour la structure téléphone, premier écran toujours à 120 Ko | livrée |
+| 1.6.109 | Liste groupée : sur l'entrée affichée, la phrase grise passe en couleur du texte (contraste 4,5:1) | livrée |
