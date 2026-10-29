@@ -105,6 +105,32 @@ def test_save_try_and_restore(plateforme: Settings) -> None:
         ).fetchone() == (True,)
 
 
+def test_restore_from_another_owner(plateforme: Settings) -> None:
+    """Une sauvegarde du Mac (propriétaire « dkey ») se restaure sur le serveur, où ce rôle
+    n'existe pas : ses droits par défaut sont reposés au nom du propriétaire d'ici."""
+    _admin_execute("drop role if exists ancien_proprietaire")
+    _admin_execute("create role ancien_proprietaire")
+    with psycopg.connect(libpq(SCRATCH)) as conn:
+        conn.execute(
+            "alter default privileges for role ancien_proprietaire in schema public "
+            "grant select on tables to jobbot_app"
+        )
+    made = backup.make_backup(plateforme)
+    with psycopg.connect(libpq(SCRATCH)) as conn:
+        conn.execute("drop owned by ancien_proprietaire")
+    _admin_execute("drop role ancien_proprietaire")
+
+    assert backup.restore_test(plateforme, made.path)["rows"] >= 2
+    backup.restore(plateforme, made.path)
+    assert _count("select count(*) from offers") == 1
+    # Une table créée ensuite par une migration est ouverte à l'API, comme avant.
+    with psycopg.connect(libpq(SCRATCH)) as conn:
+        conn.execute("create table apres_restauration (id int)")
+        assert conn.execute(
+            "select has_table_privilege('jobbot_app', 'apres_restauration', 'insert')"
+        ).fetchone() == (True,)
+
+
 def test_refused_without_phrase_or_with_the_api_role(plateforme: Settings) -> None:
     with pytest.raises(backup.BackupError, match="JOBBOT_BACKUP_PASSPHRASE"):
         backup.make_backup(plateforme.model_copy(update={"backup_passphrase": None}))

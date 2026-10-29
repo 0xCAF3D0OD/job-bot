@@ -21,6 +21,7 @@ import secrets
 import shutil
 import subprocess
 import tarfile
+import tempfile
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path, PurePosixPath
@@ -32,6 +33,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from psycopg import sql
 from sqlalchemy.engine import make_url
 
+from jobbot.db.base import APP_ROLE
 from jobbot.settings import Settings, libpq
 
 MAGIC = b"JOBA1SV1"
@@ -312,22 +314,61 @@ def prune(settings: Settings, now: datetime | None = None) -> list[Path]:
 
 
 def _restore_into(settings: Settings, database: str, dump: bytes) -> None:
-    done = subprocess.run(
-        [
-            _tool("pg_restore"),
-            "--no-owner",
-            "--exit-on-error",
-            "--single-transaction",
-            "--dbname",
-            database,
-        ],
-        input=dump,
-        env=_environment(settings.url_for("admin"), database),
-        capture_output=True,
-        check=False,
-    )
+    """Les règles de droits par défaut (`ALTER DEFAULT PRIVILEGES FOR ROLE …`) nomment le
+    propriétaire de la base d'origine (sur un Mac, l'utilisateur du Mac) : elles sont laissées
+    de côté, puis reposées au nom de celui qui restaure (`_default_privileges`)."""
+    env = _environment(settings.url_for("admin"), database)
+    with tempfile.TemporaryDirectory() as folder:
+        archive = Path(folder) / "base.dump"
+        archive.write_bytes(dump)
+        listed = subprocess.run(
+            [_tool("pg_restore"), "--list", str(archive)],
+            env=env,
+            capture_output=True,
+            check=False,
+        )
+        if listed.returncode != 0:
+            raise BackupError(
+                f"pg_restore a échoué : {listed.stderr.decode(errors='replace')[:300]}"
+            )
+        kept = Path(folder) / "liste"
+        kept.write_text(
+            "".join(
+                line
+                for line in listed.stdout.decode().splitlines(keepends=True)
+                if " DEFAULT ACL " not in line
+            )
+        )
+        done = subprocess.run(
+            [
+                _tool("pg_restore"),
+                "--no-owner",
+                "--exit-on-error",
+                "--single-transaction",
+                "--use-list",
+                str(kept),
+                "--dbname",
+                database,
+                str(archive),
+            ],
+            env=env,
+            capture_output=True,
+            check=False,
+        )
     if done.returncode != 0:
         raise BackupError(f"pg_restore a échoué : {done.stderr.decode(errors='replace')[:300]}")
+
+
+def _default_privileges(conn: psycopg.Connection[Any]) -> None:
+    """Les droits que l'API recevra sur les tables créées par les prochaines migrations, comme
+    les pose la migration 0054, au nom du propriétaire d'ici."""
+    conn.execute(
+        f"alter default privileges in schema public "
+        f"grant select, insert, update, delete on tables to {APP_ROLE}"
+    )
+    conn.execute(
+        f"alter default privileges in schema public grant usage, select on sequences to {APP_ROLE}"
+    )
 
 
 def restore_test(settings: Settings, path: Path) -> dict[str, int]:
@@ -372,6 +413,8 @@ def restore(settings: Settings, path: Path) -> Archive:
         admin.execute("drop schema public cascade")
         admin.execute("create schema public")
     _restore_into(settings, database, archive.dump)
+    with _connect(settings, autocommit=True) as admin:
+        _default_privileges(admin)
     root = settings.storage_path.resolve()
     for name, data in archive.files.items():
         target = (root / name).resolve()
