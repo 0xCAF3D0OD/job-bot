@@ -1,0 +1,25 @@
+# La démo (deploy/demo, docs/77) sur le serveur de la vraie plateforme (docs/136) : ajouté par
+# `-f` à deploy/demo/docker-compose.yml. L'image de l'API est celle de la plateforme, construite
+# par GitHub Actions ; le site de la démo est servi par le Caddy de la plateforme, qui joint
+# son API sur le réseau partagé `joba1`. Le Caddy de la démo ne tourne donc pas ici.
+x-image: &image ${JOBA1_REGISTRY:-ghcr.io/0xcaf3d0od}/joba1-api:${JOBA1_TAG:?JOBA1_TAG manquant}
+
+services:
+  api:
+    image: *image
+    networks:
+      default: {}
+      joba1:
+        aliases: [demo-api]
+
+  nightly:
+    image: *image
+
+  # Seulement quand la démo tourne seule (make demo-image, ou un serveur à part).
+  web:
+    profiles: [autonome]
+
+networks:
+  joba1:
+    name: joba1
+    external: true

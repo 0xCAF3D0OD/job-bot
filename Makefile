@@ -1,9 +1,17 @@
-# Commandes de développement local. Ne construit aucune image et ne déploie rien :
-# l'infrastructure (conteneurs, CI, Kubernetes…) se branche sur docs/exploitation.md.
+# Commandes de développement local, et mise en ligne sur le serveur (docs/136) : les images
+# sont construites par GitHub Actions, `make deploy` les fait tourner sur le serveur.
 
 SHELL := /bin/bash
 PG_BIN ?= $(shell brew --prefix postgresql@17 2>/dev/null)/bin
 
+# Le serveur de jobA1 (VPS Infomaniak). Changeable à la volée :
+#   make deploy SERVER=ubuntu@1.2.3.4 SSH_KEY=~/.ssh/autre_cle
+SERVER ?= ubuntu@179.237.122.64
+SSH_KEY ?= ~/.ssh/jobbot
+REMOTE_DIR ?= joba1
+PROD := SERVER=$(SERVER) SSH_KEY=$(SSH_KEY) REMOTE_DIR=$(REMOTE_DIR) bash deploy/prod/mac.sh
+
+.PHONY: deploy deploy-install prod-etat prod-logs prod-ssh prod-reglages prod-mot-de-passe prod-sauvegardes prod-restaurer
 .PHONY: setup migrate update dev demo demo-image demo-image-stop test lint openapi check-openapi check extension changelog changelog-check audit-telephone audit-controles
 
 setup: ## installe les dépendances et crée les bases jobbot et jobbot_test
@@ -116,3 +124,32 @@ extension: ## paquet de l'extension pour la boutique de Mozilla (extension/web-e
 		&& rm -f web-ext-artifacts/joba1-$$version.zip \
 		&& zip -q -X -r web-ext-artifacts/joba1-$$version.zip $(EXTENSION_FILES) \
 		&& echo "extension/web-ext-artifacts/joba1-$$version.zip"
+
+# ---------- Le serveur (docs/136) : depuis le Mac ----------
+
+deploy: ## met le serveur à jour : le dernier commit de main dont tests et images ont réussi (REF=… pour un autre)
+	@$(PROD) deploy
+
+deploy-install: ## première installation sur le serveur : make deploy-install DOMAIN=app.joba1.ch
+	@DOMAIN=$(DOMAIN) $(PROD) install
+
+prod-etat: ## état de la plateforme et de la démo sur le serveur, mémoire et disque
+	@$(PROD) etat
+
+prod-logs: ## journal en direct (SERVICES="api worker web" par défaut)
+	@SERVICES="$(SERVICES)" $(PROD) logs
+
+prod-ssh: ## ouvre un terminal sur le serveur
+	@$(PROD) ssh
+
+prod-reglages: ## modifie les réglages de la plateforme (jobbot.env), puis relance l'API et le worker
+	@$(PROD) reglages
+
+prod-mot-de-passe: ## crée le compte de l'exploitant ou change son mot de passe
+	@$(PROD) mot-de-passe
+
+prod-sauvegardes: ## copie les sauvegardes du serveur sur le Mac (DEST=…, par défaut ~/Documents/joba1-sauvegardes-serveur)
+	@DEST="$(DEST)" $(PROD) sauvegardes
+
+prod-restaurer: ## remet la plateforme du serveur à une sauvegarde : make prod-restaurer FICHIER=…
+	@FICHIER="$(FICHIER)" $(PROD) restaurer
