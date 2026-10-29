@@ -333,3 +333,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.119 | Réglages : la liste et le titre de chaque rubrique ont les mêmes icônes (Compte et Administration remis à l'endroit) ; « Recevoir sur mon téléphone » a son icône | livrée |
 | 1.6.120 | Offres sur téléphone (sous 600 px) : la recherche sur toute la largeur, les jours avec leur nombre en pastille, et une feuille « Filtres » (statut, note, télétravail, taux, sites, cantons) avec « Réinitialiser » et « Afficher N offres » | livrée |
 | 1.6.121 | Champs : les radios sont de nouveau rondes (la règle commune des cases l'emportait) | livrée |
+| 1.6.122 | Tri : la phrase « pourquoi » suit la note ; pour une note basse, la cause principale d'abord (« Zurich, hors de tes lieux. Kubernetes et CI/CD collent. »), pour une bonne note ce qui colle d'abord ; elle ne répète jamais le mot de la note et tient en 80 caractères | livrée |
