@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, useId } from "vue";
-import type { RouteLocationRaw } from "vue-router";
+import { type RouteLocationRaw, useRouter } from "vue-router";
 
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
@@ -20,7 +20,19 @@ const props = withDefaults(
 );
 const emit = defineEmits<{ click: [event: MouseEvent] }>();
 const descriptionId = useId();
-const tag = computed(() => (props.to ? "RouterLink" : props.href ? "a" : props.button ? "button" : props.label ? "label" : "div"));
+// Un lien interne est un vrai <a href> (atteignable au Tab, ouvrable dans un nouvel onglet) ; le routeur
+// prend le clic simple. Pas de RouterLink : il marquerait « page » toute ligne qui ne diffère que par la
+// query (/reglages?rubrique=…), seul `current` le décide.
+const router = useRouter();
+const tag = computed(() => (props.to || props.href ? "a" : props.button ? "button" : props.label ? "label" : "div"));
+const linkHref = computed(() => (props.to ? router.resolve(props.to).href : props.href));
+const attrs = computed(() => (tag.value === "a" ? { href: linkHref.value } : tag.value === "button" ? { type: "button" } : {}));
+function onClick(event: MouseEvent): void {
+  if (tag.value === "button") emit("click", event);
+  if (!props.to || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  void router.push(props.to);
+}
 const showChevron = computed(() => props.chevron ?? Boolean(props.to || props.href || props.button));
 </script>
 
@@ -31,11 +43,9 @@ const showChevron = computed(() => props.chevron ?? Boolean(props.to || props.hr
       class="grouped-row"
       :class="{ 'grouped-row-action': tag !== 'div', 'grouped-row-current': current }"
       :aria-current="current ? 'page' : undefined"
-      :to="to"
-      :href="href"
-      :type="tag === 'button' ? 'button' : undefined"
+      v-bind="attrs"
       :aria-describedby="description && tag !== 'label' ? descriptionId : undefined"
-      @click="tag === 'button' && emit('click', $event)"
+      @click="onClick"
     >
       <slot name="start" />
       <AppIcon

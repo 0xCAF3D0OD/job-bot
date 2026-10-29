@@ -1,10 +1,16 @@
-import { mount, RouterLinkStub } from "@vue/test-utils";
+import { flushPromises, mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
+import { createMemoryHistory, createRouter } from "vue-router";
 
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
 
-const global = { stubs: { RouterLink: RouterLinkStub } };
+function router() {
+  const r = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:p(.*)*", component: { template: "<div />" } }] });
+  void r.push("/reglages");
+  return r;
+}
+const global = { plugins: [router()] };
 
 describe("GroupedList et GroupedRow (règles §4)", () => {
   it("titre hors de la carte avec son compteur, une ligne par entrée", () => {
@@ -19,12 +25,19 @@ describe("GroupedList et GroupedRow (règles §4)", () => {
     expect(wrapper.findAll(".grouped-card > li")).toHaveLength(2);
   });
 
-  it("un lien : toute la ligne, chevron, phrase reliée", () => {
-    const wrapper = mount(GroupedRow, { props: { title: "Notifications", description: "Seuil, message du jour", icon: "bell", to: "/reglages/notifications" }, global });
-    const link = wrapper.findComponent(RouterLinkStub);
-    expect(link.props("to")).toBe("/reglages/notifications");
+  it("un lien : un vrai <a href>, chevron, phrase reliée ; le clic simple passe par le routeur", async () => {
+    const r = router();
+    await r.isReady();
+    const wrapper = mount(GroupedRow, { props: { title: "Notifications", description: "Seuil, message du jour", icon: "bell", to: "/reglages?rubrique=notifications" }, global: { plugins: [r] } });
+    const link = wrapper.find("a.grouped-row");
+    expect(link.attributes("href")).toBe("/reglages?rubrique=notifications");
     expect(link.find(".grouped-chevron").exists()).toBe(true);
     expect(link.attributes("aria-describedby")).toBe(wrapper.find(".grouped-row-description").attributes("id"));
+    // Une ligne qui ne diffère que par la query n'est jamais marquée « page » d'elle-même.
+    expect(link.attributes("aria-current")).toBeUndefined();
+    await link.trigger("click", { button: 0 });
+    await flushPromises();
+    expect(r.currentRoute.value.fullPath).toBe("/reglages?rubrique=notifications");
   });
 
   it("une étiquette : la radio dans la ligne entière, sans chevron", () => {
@@ -41,11 +54,9 @@ describe("GroupedList et GroupedRow (règles §4)", () => {
 
   it("l'entrée affichée (liste et détail) : aria-current et la pastille de sélection", () => {
     const wrapper = mount(GroupedRow, { props: { title: "Notifications", to: "/reglages?rubrique=notifications", current: true }, global });
-    const link = wrapper.findComponent(RouterLinkStub);
+    const link = wrapper.find("a.grouped-row");
     expect(link.attributes("aria-current")).toBe("page");
     expect(link.classes()).toContain("grouped-row-current");
-    const other = mount(GroupedRow, { props: { title: "Rythme", to: "/reglages?rubrique=rythme" }, global });
-    expect(other.findComponent(RouterLinkStub).attributes("aria-current")).toBeUndefined();
   });
 
   it("un bouton : émet click", async () => {
