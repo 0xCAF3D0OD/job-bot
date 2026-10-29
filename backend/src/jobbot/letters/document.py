@@ -1,7 +1,8 @@
 """Assemblage de la lettre : coordonnées, lieu et date, destinataire, objet, corps (docs/08 §3).
 
-L'IA n'écrit que l'objet et le corps ; tout le reste vient d'ici, à partir des coordonnées
-saisies dans les Réglages et de l'offre. Le même assemblage sert à l'affichage et au Word.
+L'IA écrit l'objet, la formule d'appel, le corps et la formule de politesse ; tout le reste vient
+d'ici, à partir des coordonnées saisies dans le Profil et de l'offre. Le même assemblage sert
+à l'affichage et au Word.
 """
 
 import io
@@ -102,6 +103,9 @@ def assemble(
     subject: str,
     paragraphs: list[str],
     day: date,
+    *,
+    salutation: str | None = None,
+    closing: str | None = None,
 ) -> LetterDocument:
     city_line = " ".join(x for x in (identity.postcode, identity.city) if x)
     sender = [
@@ -129,9 +133,9 @@ def assemble(
         place_date=place_date,
         recipient=[line for line in lines if line],
         subject_line=SUBJECT_PREFIX[language] + subject,
-        salutation=SALUTATION[language],
+        salutation=salutation or SALUTATION[language],
         paragraphs=paragraphs,
-        closing=CLOSING[language],
+        closing=closing or CLOSING[language],
         signature=identity.name or "",
         enclosure=ENCLOSURE[language],
         missing_identity=identity.missing,

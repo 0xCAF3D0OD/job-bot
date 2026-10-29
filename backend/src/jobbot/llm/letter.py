@@ -20,8 +20,8 @@ from jobbot.llm.scoring import (
     profile_block,
 )
 
-PROMPT_VERSION = "letter-v1"
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/letter-v1.md").read_text("utf-8")
+PROMPT_VERSION = "letter-v2"
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/letter-v2.md").read_text("utf-8")
 MAX_TOKENS = 16_000
 Language = Literal["fr", "en", "de"]
 
@@ -40,8 +40,15 @@ class Employer(BaseModel):
 class LetterOutput(BaseModel):
     language: Language
     subject: str = Field(min_length=1, max_length=200)
+    # La formule d'appel et la formule de politesse : rédigées par l'IA, donc modifiables par une
+    # consigne (« Dear Hiring Committee »). Absentes d'une ancienne version : celles de la langue.
+    salutation: str | None = Field(default=None, max_length=200)
     paragraphs: list[Paragraph] = Field(min_length=1, max_length=6)
+    closing: str | None = Field(default=None, max_length=300)
     employer: Employer = Field(default_factory=Employer)
+    # Une consigne qui touche une partie que l'IA ne peut pas changer (coordonnées, date,
+    # destinataire, signature) : une ligne qui le dit, et aucune version n'est créée.
+    refusal: str | None = Field(default=None, max_length=200)
 
 
 _NULLABLE = {"anyOf": [{"type": "string"}, {"type": "null"}]}
@@ -50,6 +57,9 @@ OUTPUT_SCHEMA: dict[str, Any] = {
     "properties": {
         "language": {"type": "string", "enum": ["fr", "en", "de"]},
         "subject": {"type": "string"},
+        "salutation": {"type": "string"},
+        "closing": {"type": "string"},
+        "refusal": _NULLABLE,
         "paragraphs": {
             "type": "array",
             "items": {
@@ -73,7 +83,15 @@ OUTPUT_SCHEMA: dict[str, Any] = {
             "additionalProperties": False,
         },
     },
-    "required": ["language", "subject", "paragraphs", "employer"],
+    "required": [
+        "language",
+        "subject",
+        "salutation",
+        "paragraphs",
+        "closing",
+        "employer",
+        "refusal",
+    ],
     "additionalProperties": False,
 }
 
@@ -98,8 +116,13 @@ def assessment_text(assessment: Assessment | None) -> str:
 
 def _previous_text(previous: dict[str, Any]) -> str:
     body = "\n\n".join(p["text"] for p in previous.get("paragraphs", []))
-    subject = previous.get("subject", "")
-    return f"<version_precedente>\nobjet : {subject}\n\n{body}\n</version_precedente>"
+    lines = [f"objet : {previous.get('subject', '')}"]
+    if previous.get("salutation"):
+        lines.append(f"formule d'appel : {previous['salutation']}")
+    if previous.get("closing"):
+        lines.append(f"formule de politesse : {previous['closing']}")
+    head = "\n".join(lines)
+    return f"<version_precedente>\n{head}\n\n{body}\n</version_precedente>"
 
 
 def request_params(
@@ -171,11 +194,19 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> LetterOutput:
     subject = no_dash(output.subject)
     for prefix in ("Objet :", "Objet:", "Subject:", "Betreff:"):
         subject = subject.removeprefix(prefix).strip()
+    salutation = no_dash(output.salutation) if output.salutation else None
+    closing = no_dash(output.closing) if output.closing else None
     employer = Employer(
         address=_clean(output.employer.address),
         contact_name=_clean(output.employer.contact_name),
         contact_phone=_clean(output.employer.contact_phone),
     )
     return LetterOutput(
-        language=output.language, subject=subject, paragraphs=paragraphs, employer=employer
+        language=output.language,
+        subject=subject,
+        salutation=salutation or None,
+        paragraphs=paragraphs,
+        closing=closing or None,
+        employer=employer,
+        refusal=(output.refusal or "").strip() or None,
     )

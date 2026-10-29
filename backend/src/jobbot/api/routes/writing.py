@@ -40,6 +40,8 @@ class WritingContext:
     # Version à retravailler, quand Kevin donne une consigne.
     previous: dict[str, Any] | None
     rate: Decimal
+    # La langue de cette version (une version dans une autre langue n'est jamais « identique »).
+    previous_language: str | None = None
 
 
 async def get_draft(session: AsyncSession, draft_id: int, kind: str) -> Draft:
@@ -74,11 +76,13 @@ async def prepare(
             )
         evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == offer_id))
         previous = None
+        previous_language = None
         if base_draft_id is not None:
             base = await get_draft(session, base_draft_id, kind)
             if base.offer_id != offer_id:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, f"{NOUN[kind]} introuvable")
             previous = base.content
+            previous_language = base.language
         elif instruction:
             latest = await session.scalar(
                 select(Draft)
@@ -87,6 +91,7 @@ async def prepare(
                 .limit(1)
             )
             previous = latest.content if latest else None
+            previous_language = latest.language if latest else None
         # La formule (docs/125) : les lettres et les CV du mois.
         try:
             await plans.check(session, kind)
@@ -105,7 +110,7 @@ async def prepare(
             strengths=[p["text"] for p in evaluation.strengths or []],
             gaps=[p["text"] for p in evaluation.gaps or []],
         )
-    return WritingContext(data, chunks, assessment, previous, rate)
+    return WritingContext(data, chunks, assessment, previous, rate, previous_language)
 
 
 async def call(

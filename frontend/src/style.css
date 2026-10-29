@@ -617,13 +617,8 @@ p.badge.reason { margin: 0; }
 .side-card > label { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--muted); }
 .side-card button { justify-content: center; }
 .side-card .hint { margin: 0; font-size: var(--font-small); }
-.versions { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); font-size: var(--font-small); }
-.versions .link { display: grid; gap: var(--space-1); text-align: left; color: var(--muted); white-space: normal; overflow-wrap: anywhere; min-width: 0; }
-.versions .version-name { color: var(--text); }
-.versions .link.active .version-name { color: var(--accent); }
-.versions .version-meta { color: var(--muted); font-weight: var(--weight-regular); }
 .version-instruction { margin: 0; overflow-wrap: anywhere; }
-.versions .link.active { color: var(--accent); font-weight: var(--weight-semibold); }
+.versions .grouped-row-title { overflow-wrap: anywhere; }
 .letter-sheet {
   background: #fff; color: #1a1a1a; border: 1px solid var(--border); border-radius: 6px;
   box-shadow: 0 12px 32px rgba(17, 17, 31, 0.08);
