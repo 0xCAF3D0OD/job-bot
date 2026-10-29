@@ -168,3 +168,78 @@ def test_un_radio_seul_de_20_px_reste_un_defaut(page: Page) -> None:
     faults = audit(page, '<input type="radio" style="width: 20px; height: 20px; margin: 0">')
     assert any("cible de 20 × 20 px" in f for f in faults)
 
+
+SEGMENTS = """
+<style>
+  .segmented { display: flex; width: %s; }
+  .segmented > button { flex: 1; min-width: 0; height: 44px; font: 16px sans-serif; padding: 0 8px; overflow: hidden; %s }
+</style>
+<div class="segmented"><button>Critères</button><button>Parcours</button><button>Coordonnées</button></div>
+"""
+
+
+def test_un_segment_dont_le_texte_deborde_est_un_defaut(page: Page) -> None:
+    faults = audit(page, SEGMENTS % ("200px", "white-space: nowrap;"))
+    assert any("libellé coupé" in f and "Coordonnées" in f and " px dans " in f for f in faults)
+
+
+def test_un_segment_coupe_par_des_points_de_suspension(page: Page) -> None:
+    faults = audit(page, SEGMENTS % ("200px", "white-space: nowrap; text-overflow: ellipsis;"))
+    assert any("coupé par « … »" in f and "Coordonnées" in f for f in faults)
+
+
+def test_un_segment_sur_deux_lignes_est_un_defaut(page: Page) -> None:
+    faults = audit(page, SEGMENTS % ("200px", "white-space: normal; overflow-wrap: anywhere; height: auto;"))
+    assert any("lignes" in f and "Coordonnées" in f for f in faults)
+
+
+def test_des_segments_qui_tiennent_ne_donnent_rien(page: Page) -> None:
+    assert audit(page, SEGMENTS % ("320px", "white-space: nowrap; padding: 0;")) == []
+
+
+def test_un_onglet_avec_son_icone_au_dessus_tient_sur_une_ligne(page: Page) -> None:
+    html = """
+    <nav class="prep-tabs" style="display: flex">
+      <a href="#" style="display: inline-flex; flex-direction: column; align-items: center; padding: 8px; min-height: 44px">
+        <svg width="20" height="20"></svg><span>Parcours</span>
+      </a>
+    </nav>
+    """
+    assert audit(page, html) == []
+
+
+def test_la_pastille_posee_sur_l_onglet_n_est_pas_une_seconde_ligne(page: Page) -> None:
+    html = """
+    <nav class="prep-tabs" style="display: flex">
+      <a href="#" style="position: relative; display: inline-flex; flex-direction: column; align-items: center; padding: 8px; min-height: 44px">
+        <svg width="20" height="20"></svg><span>Offres</span>
+        <span style="position: absolute; top: 0; left: 60%">4</span>
+      </a>
+    </nav>
+    """
+    assert audit(page, html) == []
+
+
+def test_un_texte_masque_pour_l_ecran_n_est_pas_une_seconde_ligne(page: Page) -> None:
+    html = """
+    <style>.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }</style>
+    <nav class="prep-tabs" style="display: flex">
+      <a href="#" style="display: inline-flex; align-items: center; padding: 8px; min-height: 44px">
+        <span>1</span><span>Lettre</span><span><svg width="16" height="16"></svg><span class="vh">faite</span></span>
+      </a>
+    </nav>
+    """
+    assert audit(page, html) == []
+
+
+def test_un_numero_plus_petit_a_cote_du_libelle_reste_sur_la_meme_ligne(page: Page) -> None:
+    html = """
+    <nav class="prep-tabs" style="display: flex">
+      <a href="#" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px; min-height: 44px; font-size: 16px">
+        <span style="display: inline-grid; place-items: center; width: 22px; height: 22px; font-size: 11px; line-height: 1; border-radius: 50%; border: 1px solid">1</span>
+        <span style="line-height: 1.6">Lettre</span>
+      </a>
+    </nav>
+    """
+    assert audit(page, html) == []
+

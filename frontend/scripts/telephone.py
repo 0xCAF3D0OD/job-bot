@@ -11,6 +11,10 @@ panneau de la cloche ouvert, il échoue si
 Une commande isolée (bouton, lien d'action, onglet, radio, ligne cliquable) de moins de 44 × 44 px
 est listée en avertissement, sans échec (Apple HIG : 44 points ; Material 3 : 48 dp).
 
+Il échoue aussi si le libellé d'un segment, d'un onglet ou d'un bouton est coupé : texte plus large
+que sa boîte, « … » par text-overflow, ou, pour un segment et un onglet, libellé sur deux lignes.
+Le message nomme le libellé et sa largeur (par exemple « Coordonnées » dans le Profil en 320 px).
+
     make demo                      # ou make demo-image (http://localhost:8280)
     cd backend && uv run --with playwright python ../frontend/scripts/telephone.py http://localhost:5200
 """
@@ -166,6 +170,76 @@ AUDIT = r"""() => {
     if (w < MIN - 0.5 || h < MIN - 0.5) faults.push(`cible de ${size} : ${label(e)}`);
     else if (w < COMFORT - 0.5 || h < COMFORT - 0.5) warnings.push(`cible de ${size}, moins de 44 px : ${label(e)}`);
   }
+  // Les libellés coupés : un segment, un onglet ou un bouton dont le texte ne tient pas.
+  const SEGMENTS = '.segmented > button, .segmented-full button, .segmented-label, .prep-tabs a, [role=tab], .tabs button';
+  const textNodes = (el) => {
+    // Le texte d'un élément posé en absolu (la pastille de nombre sur l'icône) n'est pas une ligne du libellé.
+    const floating = (n) => {
+      for (let a = n.parentElement; a && a !== el; a = a.parentElement) {
+        const p = getComputedStyle(a).position;
+        if (p === 'absolute' || p === 'fixed') return true;
+      }
+      return false;
+    };
+    // Un texte masqué pour l'écran (lu par les lecteurs d'écran seulement) n'est pas une ligne non plus.
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.textContent.trim() && !floating(n) && shown(n.parentElement) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    return nodes;
+  };
+  // Le nombre de lignes du texte (les icônes au-dessus du libellé ne comptent pas).
+  // Deux morceaux de texte sont sur la même ligne s'ils se chevauchent en hauteur : un numéro plus
+  // petit, centré à côté du libellé, ne compte pas comme une ligne de plus, quelle que soit la police.
+  const lines = (el) => {
+    const boxes = [];
+    for (const node of textNodes(el)) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const r of range.getClientRects()) if (r.width > 1 && r.height > 1) boxes.push({ top: r.top, bottom: r.bottom });
+    }
+    boxes.sort((a, b) => a.top - b.top);
+    let count = 0, bottom = -Infinity;
+    for (const b of boxes) {
+      if (b.top >= bottom - 2) { count += 1; bottom = b.bottom; }
+      else bottom = Math.max(bottom, b.bottom);
+    }
+    return count;
+  };
+  const seen = new Set();
+  const checkLabel = (el, segment) => {
+    if (seen.has(el) || !shown(el)) return;
+    seen.add(el);
+    const text = (el.innerText || '').trim().replace(/\s+/g, ' ');
+    if (!text) return;
+    const s = getComputedStyle(el);
+    const where = `${el.tagName.toLowerCase()}${typeof el.className === 'string' && el.className ? '.' + el.className.trim().split(/\s+/)[0] : ''}`;
+    // Chaque boîte qui porte du texte : la largeur du texte lui-même (pas celle d'un ::before qui
+    // agrandit la cible) comparée à la place que lui laisse la boîte (sans ses marges intérieures).
+    for (const box of [el, ...el.querySelectorAll('*')]) {
+      if (!shown(box)) continue;
+      const own = [...box.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim());
+      if (!own.length) continue;
+      let left = Infinity, right = -Infinity;
+      for (const node of own) {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const r of range.getClientRects()) if (r.width > 0) { left = Math.min(left, r.left); right = Math.max(right, r.right); }
+      }
+      const bs = getComputedStyle(box), br = box.getBoundingClientRect();
+      const inner = { left: br.left + parseFloat(bs.borderLeftWidth) + parseFloat(bs.paddingLeft), right: br.right - parseFloat(bs.borderRightWidth) - parseFloat(bs.paddingRight) };
+      if (right - left > 0 && (right > inner.right + 1 || left < inner.left - 1)) {
+        const cut = bs.textOverflow === 'ellipsis' ? 'coupé par « … »' : 'coupé';
+        faults.push(`libellé ${cut} : « ${text.slice(0, 40)} » (texte de ${Math.round(right - left)} px dans ${Math.round(inner.right - inner.left)} px) : ${where}`);
+        return;
+      }
+    }
+    if (segment && lines(el) > 1) {
+      faults.push(`libellé sur ${lines(el)} lignes : « ${text.slice(0, 40)} » (largeur ${Math.round(el.getBoundingClientRect().width)} px) : ${where}`);
+    }
+  };
+  for (const el of document.body.querySelectorAll(SEGMENTS)) checkLabel(el, true);
+  for (const el of document.body.querySelectorAll('button, [role=button]')) checkLabel(el, false);
+
   return { faults, warnings };
 }""".replace("MIN", str(MIN_TARGET)).replace("COMFORT", str(COMFORT_TARGET))
 

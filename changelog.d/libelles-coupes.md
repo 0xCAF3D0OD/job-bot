@@ -1,0 +1,1 @@
+L'audit téléphone vérifie aussi les libellés : un segment, un onglet ou un bouton dont le texte dépasse sa boîte, est coupé par « … » ou, pour un segment et un onglet, passe sur deux lignes, fait échouer la CI ; le message nomme le libellé et sa largeur
