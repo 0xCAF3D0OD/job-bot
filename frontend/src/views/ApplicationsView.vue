@@ -34,7 +34,7 @@ import EngagementMoment from "../components/EngagementMoment.vue";
 import ShowMore from "../components/ShowMore.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import { applicationBody, applicationUpdateBody } from "../applicationBody";
-import { isoDay } from "../contactLabels";
+import { followUpList } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { dateInList, dateInSentence } from "../dates";
 import { formatMonth, ofMonth, plural, shiftMonth } from "../format";
@@ -43,13 +43,13 @@ import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
+import { useNarrow } from "../composables/usePhone";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois. L'essentiel d'abord (règles §3.2,
 // annexe de l'audit) : la phrase de ce qui est à faire, le mois, la liste « À faire » ; le
 // calendrier et la liste du mois sont repliés dessous (§3.4).
-const REMIND_AFTER_DAYS = 10;
-const NO_ANSWER_DAYS = 14;
 const TODO_ROWS = 3;
+const { phone: narrow } = useNarrow();
 const SEGMENTS_MAX = 15;
 
 const route = useRoute();
@@ -138,24 +138,8 @@ const bannerText = computed(() => {
   if (d.incomplete) return `Preuves ${month} : ${plural(d.incomplete, "ligne", "lignes")} à compléter, remise avant ${due}.`;
   return `Preuves ${month} prêtes : à remettre avant ${due}.`;
 });
-// À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours ;
-// les plus anciennes d'abord.
-const toFollowUp = computed(() => {
-  const limit = new Date();
-  limit.setDate(limit.getDate() - REMIND_AFTER_DAYS);
-  // Dates locales, comme sur la carte : en UTC, le soir, la relance tomberait un jour trop tôt.
-  const day = isoDay(limit);
-  const noAnswer = new Date();
-  noAnswer.setDate(noAnswer.getDate() - NO_ANSWER_DAYS);
-  const after = isoDay(noAnswer);
-  return all.value
-    .filter(
-      (a) =>
-        (a.status === "en_attente" && a.sent_at <= day) ||
-        (a.status === "relancee" && !!a.followed_up_at && a.followed_up_at <= after),
-    )
-    .sort((a, b) => a.sent_at.localeCompare(b.sent_at));
-});
+// À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours.
+const toFollowUp = computed(() => followUpList(all.value));
 // Cartes du jour choisi : envoyées ce jour-là ou entretien ce jour-là.
 const dayCards = computed(() => {
   const day = selectedDay.value;
@@ -661,6 +645,15 @@ onUnmounted(() => assistant.setFocus(null));
             :hidden="toFollowUp.length - TODO_ROWS"
             test-id="todo-all"
           />
+          <!-- Sur téléphone, les relances une à une (planche « Tri et panneau de commande »). -->
+          <RouterLink
+            v-if="narrow && toFollowUp.length"
+            to="/candidatures/relances"
+            class="button-link"
+            data-test="follow-ups-start"
+          >
+            <span class="with-icon"><AppIcon name="reply" />Relancer une à une</span>
+          </RouterLink>
         </section>
         <section
           v-if="orp.count"
