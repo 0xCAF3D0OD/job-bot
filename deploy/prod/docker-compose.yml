@@ -73,6 +73,11 @@ services:
       <<: *environment
       JOBBOT_API_PORT: "8000"
       JOBBOT_DATABASE_URL: *url-app
+    # Caddy la joint par ce nom-là : sur le réseau partagé « joba1 », « api » désigne aussi
+    # l'API de la démo, et Caddy envoyait app.joba1.ch vers la démo.
+    networks:
+      default:
+        aliases: [app-api]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
       interval: 30s

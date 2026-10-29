@@ -62,7 +62,8 @@
 		max_size 11MB
 	}
 
-	import site api:8000
+	# Pas « api » : sur le réseau partagé, ce nom désigne aussi l'API de la démo.
+	import site app-api:8000
 
 	# Journal d'accès : 7 jours au plus.
 	log {
