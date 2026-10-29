@@ -23,8 +23,8 @@ describe("InterviewForm (docs/23 §2)", () => {
     const questions = wrapper.findAll("[data-test=interview-question]");
     expect(questions).toHaveLength(2);
     await questions[1]!.find("input").setValue(true);
-    await wrapper.find("[data-test=salary-yes]").trigger("click");
-    await wrapper.find("input[aria-label='Ce que tu as répondu']").setValue("95 000 CHF");
+    await wrapper.find("[data-test=salary-yes]").setValue(true);
+    await wrapper.find("[data-test=salary-answer]").setValue("95 000 CHF");
     await wrapper.find("[data-test=went-well]").setValue("Démo réussie");
     await wrapper.find("[data-test=next-step]").setValue("reponse");
     await wrapper.find("[data-test=next-step-at]").setValue("2026-10-20");

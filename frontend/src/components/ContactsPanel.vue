@@ -7,6 +7,7 @@ import { dateInSentence } from "../dates";
 import AppIcon from "./AppIcon.vue";
 import BusyButton from "./BusyButton.vue";
 import CopyButton from "./CopyButton.vue";
+import FormField from "./FormField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import HoverNote from "./HoverNote.vue";
 import { offerUndo } from "../composables/useUndo";
@@ -233,26 +234,44 @@ onMounted(() => void load());
           class="contact-writer-form"
           @submit.prevent="write"
         >
-          <label>
-            Écrire à
-            <select v-model="writer.role">
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Écrire à"
+          >
+            <select
+              :id="id"
+              v-model="writer.role"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+            >
               <option
                 v-for="(text, value) in ROLES"
                 :key="value"
                 :value="value"
-              >{{ text }}</option>
+              >
+                {{ text }}
+              </option>
             </select>
-          </label>
-          <label>
-            Canal
-            <select v-model="writer.channel">
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Canal"
+          >
+            <select
+              :id="id"
+              v-model="writer.channel"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+            >
               <option
                 v-for="(text, value) in MESSAGE_CHANNELS"
                 :key="value"
                 :value="value"
-              >{{ text }}</option>
+              >
+                {{ text }}
+              </option>
             </select>
-          </label>
+          </FormField>
           <div class="contact-writer-actions">
             <BusyButton
               type="submit"
@@ -355,28 +374,35 @@ onMounted(() => void load());
               class="contact-form"
               @submit.prevent="saveAnswer(contact)"
             >
-              <label>
-                Note (facultative)
+              <FormField
+                v-slot="{ id, describedby, invalid }"
+                label="Note"
+                optional
+                hint="Ce qui a été dit, la suite."
+              >
                 <input
+                  :id="id"
                   v-model="note"
+                  type="text"
                   maxlength="1000"
-                  placeholder="Ce qui a été dit, la suite"
+                  :aria-describedby="describedby"
+                  :aria-invalid="invalid"
                   data-test="contact-note"
                 >
-              </label>
-              <div>
+              </FormField>
+              <div class="contact-writer-actions">
                 <BusyButton
                   type="submit"
-                  class="secondary small"
+                  class="primary small"
                   :busy="busy"
                   busy-label="Enregistrement…"
                   data-test="contact-save-answer"
                 >
-                  Enregistrer
+                  Enregistrer la réponse
                 </BusyButton>
                 <button
                   type="button"
-                  class="link"
+                  class="secondary small"
                   @click="answering = null"
                 >
                   Annuler
@@ -407,56 +433,88 @@ onMounted(() => void load());
           data-test="contact-form"
           @submit.prevent="add"
         >
-          <label>
-            Nom (facultatif)
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Nom"
+            optional
+            :width="20"
+          >
             <input
+              :id="id"
               v-model="draft.name"
+              type="text"
               maxlength="120"
               autocomplete="off"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
               data-test="contact-name"
             >
-          </label>
-          <label>
-            Rôle
-            <select v-model="draft.role">
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Rôle"
+          >
+            <select
+              :id="id"
+              v-model="draft.role"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+            >
               <option
                 v-for="(text, value) in ROLES"
                 :key="value"
                 :value="value"
-              >{{ text }}</option>
+              >
+                {{ text }}
+              </option>
             </select>
-          </label>
-          <label>
-            Canal
-            <select v-model="draft.channel">
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Canal"
+          >
+            <select
+              :id="id"
+              v-model="draft.channel"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+            >
               <option
                 v-for="(text, value) in CHANNELS"
                 :key="value"
                 :value="value"
-              >{{ text }}</option>
+              >
+                {{ text }}
+              </option>
             </select>
-          </label>
-          <label>
-            Date
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Date"
+            :width="10"
+          >
             <input
+              :id="id"
               v-model="draft.contacted_on"
               type="date"
               :max="isoDay()"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             >
-          </label>
+          </FormField>
           <div class="contact-writer-actions">
             <BusyButton
               type="submit"
-              class="secondary small"
+              class="primary small"
               :busy="busy"
               busy-label="Enregistrement…"
               data-test="contact-save"
             >
-              Enregistrer
+              Enregistrer le contact
             </BusyButton>
             <button
               type="button"
-              class="link"
+              class="secondary small"
               @click="adding = false"
             >
               Annuler

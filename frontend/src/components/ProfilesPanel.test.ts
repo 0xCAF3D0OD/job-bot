@@ -45,6 +45,26 @@ describe("ProfilesPanel", () => {
     expect(wrapper.find("[data-test=propose-keywords]").exists()).toBe(false);
   });
 
+  it("sans nom : l'erreur sous le champ, pas de création ; Annuler referme", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: false } : { current_id: 1, items: [main] } }),
+    );
+    const wrapper = mount(ProfilesPanel, { attachTo: document.body });
+    await flushPromises();
+    await wrapper.find("[data-test=add-profile-open]").trigger("click");
+    const occupation = wrapper.find("[data-test=profile-occupation]");
+    expect(wrapper.find(`label[for="${occupation.attributes("id")}"]`).text()).toBe("Métier (facultatif)");
+    await wrapper.find("[data-test=add-profile]").trigger("submit");
+    await flushPromises();
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=field-error]").text()).toBe("Indique le nom du profil.");
+    expect(document.activeElement).toBe(wrapper.find("[data-test=profile-name]").element);
+    expect(wrapper.find("[data-test=save-profile]").classes()).toContain("primary");
+    await wrapper.find("[data-test=cancel-profile]").trigger("click");
+    expect(wrapper.find("[data-test=add-profile]").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it("le modèle des Réglages (1.6.67) : une carte, une ligne par profil, l'action à droite", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/profiles/keywords" ? { keywords: [], available: false } : { current_id: 1, items: [main, nurse] } }),

@@ -363,7 +363,7 @@ async function saveApplication(value: ApplicationFormValue): Promise<void> {
   });
   if (!data) {
     const detail = (error as { detail?: unknown } | undefined)?.detail;
-    applyError.value = typeof detail === "string" ? detail : "Vérifie les champs obligatoires.";
+    applyError.value = typeof detail === "string" ? detail : "Enregistrement impossible pour l'instant : réessaie.";
     return;
   }
   applying.value = null;

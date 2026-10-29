@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api, type ContractType, type CriteriaIn, type Keywords, type Language } from "../api/client";
 import type { components } from "../api/schema";
@@ -11,6 +11,7 @@ import { placeLabel } from "../cantons";
 
 import AppIcon from "./AppIcon.vue";
 import FilterOutcome from "./FilterOutcome.vue";
+import LoadingBlocks from "./LoadingBlocks.vue";
 const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "stage", label: "Stages" },
   { value: "apprentissage", label: "Apprentissages" },
@@ -88,7 +89,19 @@ const summary = computed(() => {
   return rows;
 });
 
+// Le taux minimum : vide, ou un nombre de 1 à 100 ; l'erreur sous le champ, en le quittant et à
+// l'enregistrement (règles §4, Champ de formulaire).
+const rateError = ref("");
+function checkRate(): void {
+  const rate = form.value.min_rate as number | string | null;
+  rateError.value =
+    rate === null || rate === "" || (Number.isInteger(rate) && Number(rate) >= 1 && Number(rate) <= 100)
+      ? ""
+      : "Indique un taux entier de 1 à 100, ou laisse vide.";
+}
+
 async function load(): Promise<void> {
+  rateError.value = "";
   try {
     const { data } = await api.GET("/api/criteria");
     if (!data) throw new Error("réponse vide");
@@ -104,6 +117,13 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
+  checkRate();
+  if (rateError.value) {
+    await nextTick();
+    document.getElementById("min_rate")?.focus();
+    return;
+  }
+  if ((form.value.min_rate as number | string | null) === "") form.value.min_rate = null;
   saving.value = true;
   message.value = "";
   try {
@@ -132,14 +152,18 @@ onMounted(() => void load());
     >
       Aucun lieu indiqué : les offres de toute la Suisse passent le filtre.
     </p>
+    <LoadingBlocks
+      v-if="!loaded"
+      :heights="['14rem']"
+    />
     <p
-      v-if="failed"
+      v-else-if="failed"
       class="notice error"
     >
       Impossible de charger les prérequis.
     </p>
     <div
-      v-else-if="loaded && !editing"
+      v-else-if="!editing"
       class="criteria-layout"
     >
       <!-- Ce qu'on consulte, comme les CFF (docs/110) : le titre au-dessus, le résumé sur fond
@@ -183,9 +207,10 @@ onMounted(() => void load());
       <FilterOutcome />
     </div>
     <form
-      v-else-if="loaded"
+      v-else
       class="form-card"
       data-test="criteria-form"
+      novalidate
       @submit.prevent="save"
     >
       <fieldset>
@@ -225,8 +250,13 @@ onMounted(() => void load());
       </fieldset>
 
       <fieldset>
-        <legend>Taux d'activité minimum</legend>
-        <p class="setting-desc">
+        <legend id="min_rate-legend">
+          Taux d'activité minimum
+        </legend>
+        <p
+          id="min_rate-desc"
+          class="setting-desc"
+        >
           « 60-80 % » passe avec un minimum de 80 ; sans taux, l'offre passe.
         </p>
         <div class="inline-field">
@@ -237,9 +267,23 @@ onMounted(() => void load());
             min="1"
             max="100"
             placeholder="80"
+            aria-labelledby="min_rate-legend"
+            :aria-describedby="rateError ? 'min_rate-desc min_rate-error' : 'min_rate-desc'"
+            :aria-invalid="rateError ? true : undefined"
+            data-test="criteria-min-rate"
+            @blur="checkRate"
+            @input="rateError && checkRate()"
           >
           <span>%</span>
         </div>
+        <p
+          v-if="rateError"
+          id="min_rate-error"
+          class="field-error"
+          data-test="field-error"
+        >
+          {{ rateError }}
+        </p>
       </fieldset>
 
       <fieldset>
@@ -320,7 +364,7 @@ onMounted(() => void load());
         <button
           v-if="savedAt"
           type="button"
-          class="link"
+          class="secondary"
           data-test="cancel-criteria"
           @click="load"
         >

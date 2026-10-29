@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import { email, postcode, webAddress, type Check } from "../validators";
 import DisclosureRow from "./DisclosureRow.vue";
+import FormField from "./FormField.vue";
 import HoverNote from "./HoverNote.vue";
+import LoadingBlocks from "./LoadingBlocks.vue";
 
 // Coordonnées pour l'en-tête des lettres, du CV et du formulaire ORP : base locale seulement,
 // jamais envoyées à l'IA.
@@ -14,14 +16,19 @@ const IDENTITY_FIELDS = [
   "linkedin", "website", "availability", "salary", "permit",
 ] as const;
 type IdentityForm = Record<(typeof IDENTITY_FIELDS)[number], string>;
-const identity = ref<IdentityForm>(Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, ""])) as IdentityForm);
+const blank = (): IdentityForm => Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, ""])) as IdentityForm;
+const identity = ref<IdentityForm>(blank());
+// Les valeurs enregistrées : « Annuler » y revient.
+const saved = ref<IdentityForm>(blank());
+const changed = computed(() => IDENTITY_FIELDS.some((f) => identity.value[f] !== saved.value[f]));
 const formFilled = computed(() =>
   (["linkedin", "website", "availability", "salary", "permit"] as const).filter((f) => identity.value[f].trim()).length,
 );
 const identityMessage = ref("");
+const formEl = ref<HTMLFormElement | null>(null);
 
 // Vérification en quittant chaque champ (docs/29 §4) ; à l'enregistrement, tout est revérifié
-// et le premier champ en erreur reçoit le curseur.
+// et le premier champ en erreur reçoit le curseur. L'erreur s'affiche sous le champ (FormField).
 const CHECKS: Partial<Record<keyof IdentityForm, Check>> = {
   postcode,
   email,
@@ -42,19 +49,27 @@ function clearIfFixed(field: keyof IdentityForm): void {
   if (errors.value[field]) check(field);
 }
 
+function cancel(): void {
+  identity.value = { ...saved.value };
+  errors.value = {};
+  identityMessage.value = "";
+}
+
 async function saveIdentity(): Promise<void> {
+  identityMessage.value = "";
   (Object.keys(CHECKS) as (keyof IdentityForm)[]).forEach(check);
-  const first = (Object.keys(CHECKS) as (keyof IdentityForm)[]).find((f) => errors.value[f]);
-  if (first) {
-    document.getElementById(`identity-${first}`)?.focus();
-    identityMessage.value = "Corrige le champ signalé.";
+  if (Object.keys(errors.value).length) {
+    await nextTick();
+    formEl.value?.querySelector<HTMLElement>("[aria-invalid=true]")?.focus();
     return;
   }
   const body = Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, identity.value[f].trim() || null]));
   try {
     const { data, response } = await api.PUT("/api/identity", { body });
-    if (data) identityMessage.value = "Coordonnées enregistrées.";
-    else if (response.status === 404) identityMessage.value = "La plateforme n'est pas à jour : redémarre-la.";
+    if (data) {
+      identityMessage.value = "Coordonnées enregistrées.";
+      saved.value = { ...identity.value };
+    } else if (response.status === 404) identityMessage.value = "La plateforme n'est pas à jour : redémarre-la.";
     else identityMessage.value = "Enregistrement refusé : vérifie le NPA (quatre chiffres) et les adresses web.";
   } catch {
     identityMessage.value = "API injoignable.";
@@ -73,29 +88,37 @@ const REQUIRED: [keyof IdentityForm, string][] = [
 const missing = computed(() => REQUIRED.filter(([key]) => !identity.value[key].trim()).map(([, label]) => label));
 
 onMounted(async () => {
-  const who = await api.GET("/api/identity");
-  if (who.data) {
-    const loadedIdentity = who.data;
-    identity.value = Object.fromEntries(
-      IDENTITY_FIELDS.map((f) => [f, loadedIdentity[f] ?? ""]),
-    ) as IdentityForm;
+  try {
+    const who = await api.GET("/api/identity");
+    if (who.data) {
+      const loadedIdentity = who.data;
+      identity.value = Object.fromEntries(
+        IDENTITY_FIELDS.map((f) => [f, loadedIdentity[f] ?? ""]),
+      ) as IdentityForm;
+      saved.value = { ...identity.value };
+    }
+  } finally {
+    loaded.value = true;
   }
-  loaded.value = true;
 });
 </script>
 
 <template>
   <!-- Comme les CFF (docs/110) : le titre au-dessus de la carte, ce qu'elle sert à faire dessous. -->
-  <section
-    v-if="loaded"
-    class="identity-section"
-  >
+  <section class="identity-section">
     <h2 class="section-title">
       Coordonnées
     </h2>
+    <LoadingBlocks
+      v-if="!loaded"
+      :heights="['30rem']"
+    />
     <form
+      v-else
+      ref="formEl"
       class="form-card"
       data-test="identity-form"
+      novalidate
       @submit.prevent="saveIdentity"
     >
       <fieldset>
@@ -111,77 +134,106 @@ onMounted(async () => {
         >
           Il manque : {{ missing.join(", ") }}.
         </p>
-        <div class="form-grid">
-          <label class="wide">Nom et prénom
+        <div class="identity-fields">
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Nom et prénom"
+            :width="20"
+          >
             <input
+              :id="id"
               v-model="identity.name"
               type="text"
               autocomplete="name"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
               data-test="identity-name"
             >
-          </label>
-          <label class="wide">Rue et numéro
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Rue et numéro"
+          >
             <input
+              :id="id"
               v-model="identity.street"
               type="text"
               autocomplete="address-line1"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
               data-test="identity-street"
             >
-          </label>
-          <label>NPA
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="NPA"
+            :width="5"
+            :error="errors.postcode"
+          >
             <input
-              id="identity-postcode"
+              :id="id"
               v-model="identity.postcode"
               type="text"
               inputmode="numeric"
               maxlength="4"
               autocomplete="postal-code"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
               data-test="identity-postcode"
-              :aria-invalid="Boolean(errors.postcode)"
-              :aria-describedby="errors.postcode ? 'identity-postcode-error' : undefined"
               @blur="check('postcode')"
               @input="clearIfFixed('postcode')"
             >
-            <span
-              v-if="errors.postcode"
-              id="identity-postcode-error"
-              class="field-error"
-              data-test="error-postcode"
-            >{{ errors.postcode }}</span>
-          </label>
-          <label>Localité
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Localité"
+            :width="30"
+          >
             <input
+              :id="id"
               v-model="identity.city"
               type="text"
               autocomplete="address-level2"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
               data-test="identity-city"
             >
-          </label>
-          <label>Téléphone
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Téléphone"
+            optional
+            :width="20"
+          >
             <input
+              :id="id"
               v-model="identity.phone"
               type="tel"
               autocomplete="tel"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+              data-test="identity-phone"
             >
-          </label>
-          <label>E-mail
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="E-mail"
+            optional
+            :width="30"
+            :error="errors.email"
+          >
             <input
-              id="identity-email"
+              :id="id"
               v-model="identity.email"
               type="email"
               autocomplete="email"
-              :aria-invalid="Boolean(errors.email)"
-              :aria-describedby="errors.email ? 'identity-email-error' : undefined"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+              data-test="identity-email"
               @blur="check('email')"
               @input="clearIfFixed('email')"
             >
-            <span
-              v-if="errors.email"
-              id="identity-email-error"
-              class="field-error"
-              data-test="error-email"
-            >{{ errors.email }}</span>
-          </label>
+          </FormField>
         </div>
         <DisclosureRow
           class="identity-more"
@@ -189,68 +241,88 @@ onMounted(async () => {
           :value="formFilled ? `facultatif · ${formFilled} / 5` : 'facultatif'"
           data-test="identity-more"
         >
-          <div class="form-grid">
-            <label>LinkedIn
+          <div class="identity-fields">
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="LinkedIn"
+              optional
+              :error="errors.linkedin"
+            >
               <input
-                id="identity-linkedin"
+                :id="id"
                 v-model="identity.linkedin"
                 type="text"
                 inputmode="url"
                 placeholder="linkedin.com/in/…"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
                 data-test="identity-linkedin"
-                :aria-invalid="Boolean(errors.linkedin)"
-                :aria-describedby="errors.linkedin ? 'identity-linkedin-error' : undefined"
                 @blur="check('linkedin')"
                 @input="clearIfFixed('linkedin')"
               >
-              <span
-                v-if="errors.linkedin"
-                id="identity-linkedin-error"
-                class="field-error"
-                data-test="error-linkedin"
-              >{{ errors.linkedin }}</span>
-            </label>
-            <label>Site personnel
+            </FormField>
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="Site personnel"
+              optional
+              :error="errors.website"
+            >
               <input
-                id="identity-website"
+                :id="id"
                 v-model="identity.website"
                 type="text"
                 inputmode="url"
-                placeholder="facultatif"
-                :aria-invalid="Boolean(errors.website)"
-                :aria-describedby="errors.website ? 'identity-website-error' : undefined"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
+                data-test="identity-website"
                 @blur="check('website')"
                 @input="clearIfFixed('website')"
               >
-              <span
-                v-if="errors.website"
-                id="identity-website-error"
-                class="field-error"
-                data-test="error-website"
-              >{{ errors.website }}</span>
-            </label>
-            <label>Disponibilité
+            </FormField>
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="Disponibilité"
+              optional
+            >
               <input
+                :id="id"
                 v-model="identity.availability"
                 type="text"
                 placeholder="dès le 1er novembre, 1 mois de préavis…"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
               >
-            </label>
-            <label>Prétentions salariales
+            </FormField>
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="Prétentions salariales"
+              optional
+              :width="20"
+            >
               <input
+                :id="id"
                 v-model="identity.salary"
                 type="text"
                 placeholder="CHF 90'000 par an"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
               >
-            </label>
-            <label>Permis de travail
+            </FormField>
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="Permis de travail"
+              optional
+              :width="20"
+            >
               <input
+                :id="id"
                 v-model="identity.permit"
                 type="text"
                 list="identity-permits"
-                placeholder="Suisse, permis C, B…"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
               >
-            </label>
+            </FormField>
             <datalist id="identity-permits">
               <option value="Nationalité suisse" />
               <option value="Permis C" />
@@ -266,7 +338,16 @@ onMounted(async () => {
           class="primary"
           data-test="save-identity"
         >
-          Enregistrer mes coordonnées
+          Enregistrer
+        </button>
+        <button
+          v-if="changed"
+          type="button"
+          class="secondary"
+          data-test="cancel-identity"
+          @click="cancel"
+        >
+          Annuler
         </button>
         <span
           v-if="identityMessage"

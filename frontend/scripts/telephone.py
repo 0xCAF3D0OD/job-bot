@@ -136,6 +136,14 @@ AUDIT = r"""() => {
   for (const e of targets) {
     if (!shown(e) || inline(e)) continue;
     if (e.tagName === 'LABEL' && !(e.htmlFor || e.querySelector('input, select, textarea'))) continue;
+    // Une étiquette (label[for] ou qui entoure son champ) ne fait que donner le focus à son champ :
+    // si le champ, visible, fait lui-même au moins 24 × 24 px, c'est lui la cible et l'étiquette en est un
+    // équivalent (WCAG 2.5.8, exception « équivalent »). Une étiquette dont le champ est trop petit ou
+    // caché (case ou radio dessinée, dont la ligne est l'étiquette) reste la cible et se mesure.
+    if (e.tagName === 'LABEL' && e.control && shown(e.control)) {
+      const cr = e.control.getBoundingClientRect();
+      if (cr.width >= MIN - 0.5 && cr.height >= MIN - 0.5) continue;
+    }
     // Un champ caché derrière son étiquette (case ou bouton radio dessiné) : c'est l'étiquette qui compte.
     if (e.tagName === 'INPUT' && e.closest('label') && e.getBoundingClientRect().width < MIN) continue;
     const r = e.getBoundingClientRect();
