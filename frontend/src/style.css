@@ -414,12 +414,15 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):disabled { border-color: var(--border); background-color: var(--panel); color: var(--muted); cursor: not-allowed; }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea)[readonly] { border-style: dashed; background-color: var(--band); }
 ::placeholder { color: var(--muted); opacity: 1; }
-/* Un champ posé dans une rangée de boutons (barre d'outils, filtres, ajout rapide, cellule de tableau) prend la
-   hauteur des contrôles, comme la recherche de l'en-tête : la rangée reste alignée (docs/94). Dans un formulaire, 48 px. */
-:is(input.filters-search, .inline-field :is(input, select), .training-filter-group select, select.status-select) { min-height: var(--control-h); height: var(--control-h); padding-block: 0; }
-select.status-select { border-radius: var(--radius-pill); font-size: var(--font-small); }
+/* Variante compacte (`field-compact`, Material 3 : puce de filtre avec menu) : dans une barre de filtres ou d'outils,
+   un ajout rapide, une cellule de tableau ou un menu, la rangée entière prend --control-h (40 px, 44 sur téléphone),
+   comme les boutons ; dans un formulaire, 48 px. Une liste compacte est une capsule. La place du chevron
+   (padding-right de select) n'est jamais écrasée : aucune règle de page ne fixe le padding d'un champ. */
+:is(input, select).field-compact { min-height: var(--control-h); height: var(--control-h); padding-block: 0; font-size: var(--font-small); }
+select.field-compact { padding-left: var(--space-4); border-radius: var(--radius-pill); }
 /* Liste : la même boîte, le chevron de notre jeu d'icônes à droite. */
-select { appearance: none; -webkit-appearance: none; padding-right: var(--space-8); background-image: var(--field-chevron); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1.1rem; }
+/* `:root select` : au moins aussi fort que la règle commune des champs, pour que son `padding` n'écrase jamais la place du chevron. */
+:root select { appearance: none; -webkit-appearance: none; padding-right: var(--space-8); background-image: var(--field-chevron); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1.1rem; }
 /* Zone de texte : 3 lignes au moins, elle s'agrandit avec le contenu. */
 textarea { width: 100%; min-height: calc(3lh + 2 * var(--space-2) + 2px); resize: vertical; field-sizing: content; }
 input[type="number"] { width: 7rem; }
@@ -601,7 +604,6 @@ p.badge.reason { margin: 0; }
 .month-nav strong { min-width: 9rem; text-align: center; font-weight: var(--weight-semibold); text-transform: capitalize; }
 .month-goal { display: grid; gap: var(--space-2); min-width: 14rem; flex: 1; }
 .month-goal .orp-month-bar { margin: 0; }
-.status-select { font: inherit; font-size: var(--font-small); padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .status-select.entretien { border-color: var(--accent); color: var(--accent); }
 .status-select.engagement { border-color: var(--ok); color: var(--ok-text); }
 .status-select.refus, .status-select.sans_reponse { color: var(--muted); }
@@ -855,7 +857,6 @@ p.badge.reason { margin: 0; }
 /* Formations (docs/16 §5) */
 .orp-note { margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface); font-size: var(--font-small); color: var(--muted); }
 .orp-links { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin-top: var(--space-2); }
-.news-filters select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); }
 .training-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); }
 .training-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .training-head { display: flex; justify-content: space-between; gap: var(--space-2); align-items: center; }
@@ -875,7 +876,7 @@ p.badge.reason { margin: 0; }
 @media (prefers-color-scheme: dark) { .badge.warn { background: var(--orange-soft); color: var(--orange-text); } }
 
 /* Profils d'essai (docs/17) */
-.profile-switcher select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); max-width: 14rem; }
+.profile-switcher select { max-width: 14rem; }
 .profile-banner { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); align-items: center; justify-content: center; padding: var(--space-2) var(--space-4); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-bottom: 1px solid var(--border); font-size: var(--font-small); color: var(--text); }
 .profile-banner span { color: var(--muted); }
 
@@ -901,7 +902,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .account-panel > a.router-link-active { color: var(--accent); }
 .account-name { margin: 0 0 var(--space-1); padding: var(--space-1) var(--space-2) var(--space-2); border-bottom: 1px solid var(--border); font-size: var(--font-small); color: var(--muted); }
 .account-profile { display: grid; gap: var(--space-1); padding: var(--space-2) var(--space-2); font-size: var(--font-small); color: var(--muted); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: var(--space-1) 0; }
-.account-profile select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 
 /* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
 .jobs-head { max-width: var(--page-max); margin: 0 auto; padding: var(--space-8) var(--space-6) 0; }
@@ -1065,11 +1065,9 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .application-panel-head p { margin: 0; }
 /* « ⋯ » centré sur la première ligne du texte, même quand il passe à la ligne (docs/74). */
 .application-panel-head .more-menu { margin-top: calc((1lh - var(--control-h)) / 2); }
-.application-panel .card-status select { font-size: var(--font-small); padding: var(--space-1) var(--space-2); }
 .application-panel .follow-up-line, .application-panel .contact-due-line, .panel-line { margin: 0; font-size: var(--font-small); }
 .table-open { font-weight: var(--weight-semibold); text-align: left; }
 .card-status { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); }
-.card-status select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); }
 .card-missing { margin: 0; font-size: var(--font-small); }
 .card-job-room { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--font-small); }
 .card-job-room dt { color: var(--muted); }
@@ -2306,8 +2304,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .welcome-dot { width: 1rem; }
   .welcome-dot.current::after { width: 1rem; }
 }
-/* Profil en 320 px : les trois onglets tiennent sans leurs icônes. */
-@media (max-width: 359px) { .profile-tabs .with-icon > .icon { display: none; } }
 /* Réglages : toute la ligne d'un choix « offres » se touche, pas seulement la radio. */
 .radio-row { cursor: pointer; }
 /* Tri sur téléphone : « Garder » et « Écarter » restent visibles sans défiler, au-dessus de la barre. */
@@ -4061,6 +4057,8 @@ html.search-open { overflow: hidden; }
 /* L'entrée affichée à côté (liste et détail) : la pastille de sélection, texte accent en demi-gras. */
 .grouped-row-current, .grouped-row-current:hover { background: var(--accent-soft); color: var(--accent); }
 .grouped-row-current .grouped-row-title { font-weight: var(--weight-semibold); }
+/* Sur le fond teinté, --muted ne fait que 4,3:1 en clair : la phrase passe en --text (16,1:1, WCAG 1.4.3). */
+.grouped-row-current .grouped-row-description { color: var(--text); }
 .grouped-row-current :is(.grouped-icon, .grouped-chevron) { color: var(--accent); }
 .grouped-icon { flex: none; width: 1.25rem; height: 1.25rem; color: var(--text); }
 .grouped-text { display: grid; gap: calc(var(--space-1) / 2); flex: 1 1 auto; min-width: 0; }

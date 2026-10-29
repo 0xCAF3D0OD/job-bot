@@ -788,7 +788,7 @@ onUnmounted(() => assistant.setFocus(null));
                 <AppIcon name="search" />
                 <input
                   v-model="words"
-                  class="filters-search"
+                  class="field-compact filters-search"
                   type="search"
                   aria-label="Filtrer par mots"
                   placeholder="Poste, entreprise"

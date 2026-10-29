@@ -28,7 +28,7 @@ watch(
     <AppIcon name="search" />
     <input
       v-model="search"
-      class="filters-search"
+      class="field-compact filters-search"
       type="search"
       aria-label="Recherche"
       placeholder="Titre, entreprise, mot-clé…"
