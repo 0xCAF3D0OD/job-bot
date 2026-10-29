@@ -96,6 +96,7 @@ onMounted(() => void load());
           Site
           <select
             v-model="source"
+            class="field-compact"
             data-test="filter-source"
           >
             <option value="">Tous</option>
@@ -110,6 +111,7 @@ onMounted(() => void load());
           Analyse
           <select
             v-model="parseStatus"
+            class="field-compact"
             data-test="filter-status"
           >
             <option value="">Toutes</option>

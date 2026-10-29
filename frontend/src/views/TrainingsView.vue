@@ -284,6 +284,7 @@ onMounted(() => void load());
             >
               <select
                 v-model="kind"
+                class="field-compact"
                 aria-label="Type"
                 data-test="filter-kind"
               >
@@ -300,6 +301,7 @@ onMounted(() => void load());
               </select>
               <select
                 v-model="price"
+                class="field-compact"
                 aria-label="Prix"
                 data-test="filter-price"
               >
@@ -317,6 +319,7 @@ onMounted(() => void load());
               <select
                 v-if="languages.length > 1"
                 v-model="language"
+                class="field-compact"
                 aria-label="Langue"
               >
                 <option value="">

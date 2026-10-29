@@ -468,6 +468,7 @@ onMounted(() => void load());
                 <input
                   :id="id"
                   v-model="custom"
+                  class="field-compact"
                   type="text"
                   maxlength="300"
                   :aria-describedby="describedby"

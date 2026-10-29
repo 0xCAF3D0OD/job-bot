@@ -157,7 +157,7 @@ const onStatus = (event: Event): void =>
         <span class="visually-hidden">Statut</span>
         <select
           :value="application.status"
-          :class="['status-select', application.status]"
+          :class="['status-select', 'field-compact', application.status]"
           data-test="panel-status"
           @change="onStatus"
         >
