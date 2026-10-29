@@ -2308,11 +2308,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 }
 /* Réglages : toute la ligne d'un choix « offres » se touche, pas seulement la radio. */
 .radio-row { cursor: pointer; }
-/* Tri sur téléphone : « Garder » et « Écarter » restent visibles sans défiler, au-dessus de la barre. */
-@media (max-width: 820px) {
-  .triage-pile .pick-actions { position: sticky; bottom: env(safe-area-inset-bottom); z-index: 5; margin-inline: calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4); background: var(--bg); border-top: 1px solid var(--border); }
-  :root:has(.tab-bar) .triage-pile .pick-actions { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
-}
 .welcome-cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .welcome-card { display: flex; align-items: center; gap: var(--space-4); width: 100%; padding: var(--space-4) var(--space-4); text-align: left; font: inherit; color: var(--text); background: var(--surface); border: 2px solid var(--border); border-bottom-width: 4px; border-radius: var(--radius); cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast); }
 .welcome-card .icon { width: 22px; height: 22px; flex: none; color: var(--accent); }
@@ -3364,15 +3359,9 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .pick-title { display: grid; gap: var(--space-1); flex: 1; min-width: 0; }
 .pick-title a { color: var(--text); text-decoration: none; }
 .pick-title a:hover strong { text-decoration: underline; }
-.pick-count { flex: none; font-size: var(--font-small); white-space: nowrap; }
-.pick-score { display: grid; gap: var(--space-2); justify-items: start; }
-.pick-score .score-word { justify-items: start; }
+.pick-score { display: flex; align-items: flex-start; gap: var(--space-3); }
+.pick-score .score-word { flex: none; justify-items: start; }
 .pick-why { margin: 0; }
-.pick-gaps { margin: 0; font-size: var(--font-small); }
-.pick-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-.pick-done { display: grid; gap: var(--space-3); justify-items: start; padding: var(--space-2) 0; line-height: var(--leading-normal); }
-.pick-done-line { display: flex; align-items: center; gap: var(--space-2); margin: 0; }
-.pick-done-line .face-mark { flex: none; }
 .pick-keep-enter-active, .pick-keep-leave-active, .pick-dismiss-enter-active, .pick-dismiss-leave-active { transition: opacity 125ms ease, transform 125ms ease; }
 .pick-keep-leave-to { opacity: 0; transform: translateX(2rem); }
 .pick-dismiss-leave-to { opacity: 0; transform: translateX(-2rem); }
@@ -3594,19 +3583,20 @@ main:focus { outline: none; }
   .action-band-title { font-size: var(--font-figure); }
 }
 
-/* L'écran de tri (1.6.50, planche « Tri des offres du jour ») : la pile au centre, 560 px au plus ;
-   « 1 sur 4 » au-dessus ; « Écarter » et « Garder » chacun sur la moitié ; deux cartes en dessous font
-   la pile. */
-.triage-pile { max-width: 35rem; margin: var(--space-6) auto 0; display: grid; gap: var(--space-3); }
-.triage-position { margin: 0; font-size: var(--font-small); }
+/* L'écran de tri (planche « Tri et panneau de commande ») : une colonne de 50 rem au plus ; la
+   progression en haut ; la carte comme la fiche ; « Écarter » et « Garder » chacun sur la moitié, les
+   raccourcis dessous. Sur téléphone, la note et les actions passent dans le panneau de commande. */
+.jobs-head.triage-head, .container.triage-page { max-width: calc(50rem + 2 * var(--space-6)); }
+.band:has(> .triage-page) { background: var(--bg); border-top: 0; padding-top: 0; }
+.triage-pile { display: grid; gap: var(--space-4); }
 .triage-pile .daily-pick { margin-top: 0; }
-.triage-pile .pick-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-5);
-  box-shadow: 0 6px 0 -3px var(--surface), 0 6px 0 -2px var(--border), 0 12px 0 -6px var(--surface), 0 12px 0 -5px var(--border);
-}
-.triage-pile .pick-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3); }
-.triage-pile .pick-actions button { width: 100%; justify-content: center; }
-.triage-done { justify-self: center; }
+.pick-step { display: grid; gap: var(--space-4); }
+.triage-pile .pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-5); }
+.pick-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.pick-tags li { padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill); background: var(--band); font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.pick-ad { justify-self: start; }
+.triage-pile .pick-done { padding: 0; justify-items: start; text-align: left; }
+.triage-pile .pick-done .illu.spot { margin-inline: 0; }
 
 /* --- Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») ---
    Tous les blocs sur les mêmes bords ; fond de page clair, les blocs neutres sur --band. */

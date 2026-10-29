@@ -47,30 +47,32 @@ async function mountTriage() {
 }
 
 describe("L'écran de tri (1.6.50)", () => {
-  it("« ← Aujourd'hui », le titre, la phrase, « 1 sur 3 », une offre à la fois", async () => {
+  it("« ← Aujourd'hui », le titre, « 1 sur 3 », une offre à la fois", async () => {
     mockApi([offer(1, "DevOps", 90), offer(2, "SRE", 80), offer(3, "Cloud", 75), offer(4, "Data", 70)]);
     const { wrapper } = await mountTriage();
     expect(wrapper.find("h1").text()).toBe("Offres du jour");
     expect(wrapper.find("[data-test=triage-back]").attributes("href")).toBe("/aujourdhui");
     // La dose du jour : 3 offres (5 si le mois est en retard), comme Aujourd'hui.
-    expect(wrapper.find("[data-test=triage-sentence]").text()).toBe("3 offres à trier.");
-    expect(wrapper.find("[data-test=triage-position]").text()).toBe("1 sur 3");
+    // La progression remplace la phrase « 3 offres à trier. ».
+    expect(wrapper.text()).not.toContain("à trier");
+    expect(wrapper.find("[data-test=step-progress]").text()).toBe("1 sur 3");
     expect(wrapper.findAll("[data-test=pick-card]")).toHaveLength(1);
-    // Garder : la phrase et la position suivent.
+    // Garder : la progression suit.
     await wrapper.find("[data-test=pick-keep]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=triage-sentence]").text()).toBe("2 offres à trier.");
-    expect(wrapper.find("[data-test=triage-position]").text()).toBe("2 sur 3");
+    expect(wrapper.find("[data-test=step-progress]").text()).toBe("2 sur 3");
   });
 
-  it("le tri fini : le récapitulatif et « Revenir à Aujourd'hui »", async () => {
+  it("le tri fini : l'illustration, le récapitulatif, « Revenir à Aujourd'hui » sans offre gardée", async () => {
     mockApi([offer(1, "DevOps", 90)]);
     const { wrapper } = await mountTriage();
     await wrapper.find("[data-test=pick-dismiss]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=pick-done]").text()).toContain("Tri du jour terminé.");
-    expect(wrapper.find("[data-test=triage-sentence]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=triage-done]").attributes("href")).toBe("/aujourdhui");
+    const done = wrapper.find("[data-test=pick-done]");
+    expect(done.text()).toContain("Tri du jour terminé");
+    expect(done.text()).toContain("1 écartée.");
+    expect(wrapper.find("[data-test=step-progress]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=pick-today]").attributes("href")).toBe("/aujourdhui");
   });
 
   it("rien à trier, ou un jour de repos : un écran vide qui dit pourquoi", async () => {
