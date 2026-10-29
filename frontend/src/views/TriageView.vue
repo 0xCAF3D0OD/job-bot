@@ -7,21 +7,20 @@ import DailyPick from "../components/DailyPick.vue";
 import FaceState from "../components/FaceState.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PageHero from "../components/PageHero.vue";
+import StepProgress from "../components/StepProgress.vue";
 import { markTriageDone, useDailyDose } from "../composables/useDailyDose";
-import { plural } from "../format";
 
-// L'écran de tri (1.6.50, revue 1.6.46, planche « Tri des offres du jour ») : un deuxième niveau,
-// ouvert par « Commencer le tri » (Aujourd'hui, Offres). Une offre à la fois, en pile au centre ;
-// « Écarter » et « Garder » côte à côte, « Annuler » pendant 6 secondes ; au doigt, balayer à droite
-// garde, à gauche écarte. Pas de barre d'onglets : on revient par « ← Aujourd'hui ».
+// L'écran de tri (planche « Tri et panneau de commande ») : un deuxième niveau, ouvert par
+// « Commencer le tri » (Aujourd'hui, Offres). Une colonne : la progression « 1 sur 5 » en haut, une
+// offre à la fois, « Écarter » et « Garder » de même largeur (dans le panneau sur téléphone),
+// « Annuler » pendant 6 secondes. On revient par « ← Aujourd'hui ».
 const router = useRouter();
 const { dose, restDay, loaded, load } = useDailyDose();
 const pick = ref<InstanceType<typeof DailyPick> | null>(null);
 
-// Ce qu'il reste à trier, pour la phrase du haut : il diminue à chaque offre gardée ou écartée.
-const remaining = computed(() => pick.value?.remaining ?? dose.value.length);
-const position = computed(() => pick.value?.position ?? "");
-const sentence = computed(() => (remaining.value ? `${plural(remaining.value, "offre", "offres")}` : ""));
+// La place dans la pile : « 1 sur 5 » ; plus rien une fois le tri fini.
+const position = computed(() => pick.value?.position ?? 1);
+const total = computed(() => pick.value?.total ?? dose.value.length);
 
 // La pile vidée : Aujourd'hui passe à « Tri terminé · À demain » (1.6.51).
 watch(
@@ -39,7 +38,10 @@ onMounted(load);
 </script>
 
 <template>
-  <PageHero title="Offres du jour">
+  <PageHero
+    title="Offres du jour"
+    class="triage-head"
+  >
     <template #back>
       <RouterLink
         :to="{ name: 'today' }"
@@ -72,34 +74,17 @@ onMounted(load);
         </div>
       </FaceState>
       <template v-else>
-        <p
-          v-if="sentence"
-          class="offers-sentence"
-          data-test="triage-sentence"
-        >
-          <strong>{{ sentence }}</strong> à trier.
-        </p>
         <div class="triage-pile">
-          <p
+          <StepProgress
             v-if="position"
-            class="triage-position muted"
-            data-test="triage-position"
-          >
-            {{ position }}
-          </p>
+            :current="position"
+            :total="total"
+          />
           <DailyPick
             ref="pick"
             :offers="dose"
             @show-preparing="showPreparing"
           />
-          <RouterLink
-            v-if="!remaining"
-            :to="{ name: 'today' }"
-            class="button-link primary-link triage-done"
-            data-test="triage-done"
-          >
-            Revenir à Aujourd'hui
-          </RouterLink>
         </div>
       </template>
     </div>

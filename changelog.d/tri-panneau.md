@@ -1,0 +1,1 @@
+Tri des offres du jour : une colonne, progression « 1 sur N », carte comme la fiche, Écarter/Garder au clavier (← →), sur téléphone la note et les actions dans le panneau du bas, écran de fin illustré ; plus de balayage

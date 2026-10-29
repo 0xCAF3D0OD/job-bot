@@ -2,18 +2,23 @@
 import { computed, ref, watch } from "vue";
 
 import { api, type Offer } from "../api/client";
+import { useArrowKeys } from "../composables/useArrowKeys";
+import { useNarrow } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
+import { plural, rateText, remoteText } from "../format";
+import { whyLine } from "../whyLine";
+import ActionBar from "./ActionBar.vue";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
-import FaceMark from "./FaceMark.vue";
+import FaceState from "./FaceState.vue";
+import KeyHints from "./KeyHints.vue";
 import ScoreWord from "./ScoreWord.vue";
-import { whyLine } from "../whyLine";
+import UndoToast from "./UndoToast.vue";
 
-// Les offres du jour, une à la fois (docs/124 §D) : « Garder » (l'offre passe en « À préparer »)
-// ou « Écarter » (« Ignorée »), puis la suivante ; « Annuler » pendant 6 secondes (docs/108).
-// La phrase « pourquoi » dit déjà ce qui manque : « Il te manque » seulement sans elle.
-// Sur téléphone, balayer à droite ou à gauche fait la même chose, en plus des boutons. Toucher
-// le titre ouvre la fiche.
+// Les offres du jour, une à la fois (planche « Tri et panneau de commande ») : la carte comme la
+// fiche (note et pourquoi sur une ligne, 2 ou 3 étiquettes, « Voir l'annonce »), puis « Écarter » et
+// « Garder » de même largeur, dans le panneau de commande sur téléphone. ← écarte, → garde ;
+// « Annuler » pendant 6 secondes. Pas de balayage (décision de Kevin). Toucher le titre ouvre la fiche.
 const props = defineProps<{ offers: Offer[] }>();
 const emit = defineEmits<{ changed: []; showPreparing: [] }>();
 
@@ -33,7 +38,19 @@ const current = computed(() => queue.value[index.value] ?? null);
 const gaps = computed(() =>
   (current.value?.keywords_asks ?? []).filter((a) => a.covered === false).map((a) => a.text).slice(0, 2),
 );
+// Les étiquettes de la fiche : taux, contrat, télétravail ; trois au plus.
+const tags = computed(() => {
+  const o = current.value;
+  if (!o) return [];
+  return [rateText(o.rate_min, o.rate_max).replace("–", " à "), o.employment_type ?? "", remoteText(o)?.replace(" j", " jours") ?? ""]
+    .filter(Boolean)
+    .slice(0, 3);
+});
+const adUrl = computed(() => current.value?.links[0]?.url ?? null);
 const direction = ref<Choice>("keep");
+// Sous 600 px, on lit en haut et on agit en bas : la note, son pourquoi et l'annonce passent dans le
+// panneau, la carte ne garde que ce qu'on lit (planche, B1).
+const { phone: narrow } = useNarrow();
 
 function decide(choice: Choice): void {
   const offer = current.value;
@@ -60,31 +77,13 @@ function decide(choice: Choice): void {
     },
   });
 }
+useArrowKeys({ left: () => decide("dismiss"), right: () => decide("keep") });
 
-// Le balayage, au doigt seulement : 80 px suffisent ; la carte suit le doigt.
-const drag = ref(0);
-let start: number | null = null;
-function down(event: PointerEvent): void {
-  if (event.pointerType !== "touch") return;
-  start = event.clientX;
-}
-function move(event: PointerEvent): void {
-  if (start !== null) drag.value = event.clientX - start;
-}
-function up(): void {
-  if (start === null) return;
-  const dx = drag.value;
-  start = null;
-  drag.value = 0;
-  if (dx > 80) decide("keep");
-  else if (dx < -80) decide("dismiss");
-}
-
-// « 1 sur 5 », sur la ligne du titre de la carte (docs/129 §2) ; rien une fois le tri fini.
-const position = computed(() => (current.value ? `${index.value + 1} sur ${queue.value.length}` : ""));
-// Ce qu'il reste à trier (l'écran de tri, 1.6.50, le dit dans sa phrase du haut).
+// La place dans la pile, pour la progression de l'écran (« 1 sur 5 ») ; rien une fois le tri fini.
+const position = computed(() => (current.value ? index.value + 1 : 0));
+const total = computed(() => queue.value.length);
 const remaining = computed(() => Math.max(0, queue.value.length - index.value));
-defineExpose({ position, remaining });
+defineExpose({ position, total, remaining });
 
 const summary = computed(() =>
   [
@@ -94,6 +93,7 @@ const summary = computed(() =>
     .filter(Boolean)
     .join(", "),
 );
+const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gardée" : `les ${plural(kept.value, "offre gardée", "offres gardées")}`}`);
 </script>
 
 <template>
@@ -105,84 +105,164 @@ const summary = computed(() =>
       :name="`pick-${direction}`"
       mode="out-in"
     >
-      <article
+      <div
         v-if="current"
         :key="current.id"
-        class="pick-card"
-        :style="drag ? { transform: `translateX(${drag}px) rotate(${drag / 40}deg)` } : undefined"
-        data-test="pick-card"
-        @pointerdown="down"
-        @pointermove="move"
-        @pointerup="up"
-        @pointercancel="up"
+        class="pick-step"
       >
-        <header class="pick-head">
-          <CompanyLogo :offer="current" />
-          <div class="pick-title">
-            <RouterLink
-              :to="{ path: '/candidatures/offres', query: { offre: current.id } }"
-              data-test="pick-open"
-            >
-              <strong>{{ current.title }}</strong>
-            </RouterLink>
-            <span class="muted meta-line">
-              <span><AppIcon name="building" /><span class="visually-hidden">Entreprise : </span>{{ current.company || "Entreprise non indiquée" }}</span>
-              <span v-if="current.location"><AppIcon name="pin" /><span class="visually-hidden">Lieu : </span>{{ current.location }}</span>
-            </span>
-          </div>
-        </header>
-        <div class="pick-score">
-          <ScoreWord :score="current.score ?? null" />
-          <p
-            v-if="current.why"
-            class="pick-why"
-          >
-            {{ whyLine(current.why) }}
-          </p>
-        </div>
-        <p
-          v-if="gaps.length && !current.why"
-          class="pick-gaps muted"
+        <article
+          class="pick-card"
+          data-test="pick-card"
         >
-          Il te manque : {{ gaps.join(", ") }}
-        </p>
-        <div class="pick-actions">
-          <button
-            type="button"
-            class="secondary"
-            data-test="pick-dismiss"
-            @click="decide('dismiss')"
+          <header class="pick-head">
+            <CompanyLogo :offer="current" />
+            <div class="pick-title">
+              <RouterLink
+                :to="{ path: '/candidatures/offres', query: { offre: current.id } }"
+                data-test="pick-open"
+              >
+                <strong>{{ current.title }}</strong>
+              </RouterLink>
+              <span class="muted">{{ [current.company || "Entreprise non indiquée", current.location].filter(Boolean).join(" · ") }}</span>
+            </div>
+          </header>
+          <template v-if="!narrow">
+            <div
+              class="pick-score"
+              data-test="pick-score"
+            >
+              <ScoreWord :score="current.score ?? null" />
+              <p
+                v-if="current.why"
+                class="pick-why"
+              >
+                {{ whyLine(current.why) }}
+              </p>
+              <p
+                v-else-if="gaps.length"
+                class="pick-why muted"
+              >
+                Il te manque : {{ gaps.join(", ") }}
+              </p>
+            </div>
+          </template>
+          <ul
+            v-if="tags.length"
+            class="pick-tags"
+            data-test="pick-tags"
           >
-            <span class="with-icon"><AppIcon name="x-circle" />Écarter</span>
-          </button>
-          <button
-            type="button"
-            class="primary"
-            data-test="pick-keep"
-            @click="decide('keep')"
-          >
-            <span class="with-icon"><AppIcon name="done" />Garder</span>
-          </button>
-        </div>
-      </article>
+            <li
+              v-for="tag in tags"
+              :key="tag"
+            >
+              {{ tag }}
+            </li>
+          </ul>
+          <template v-if="!narrow">
+            <a
+              v-if="adUrl"
+              :href="adUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="pick-ad"
+              data-test="pick-ad"
+            ><span class="with-icon">Voir l'annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+          </template>
+        </article>
+        <!-- « Annuler » entre la carte et les boutons, sur ordinateur (planche) ; sur téléphone, celui
+             d'App, au-dessus du panneau. -->
+        <UndoToast inline />
+        <ActionBar>
+          <template v-if="narrow">
+            <div
+              class="pick-score"
+              data-test="pick-score"
+            >
+              <ScoreWord :score="current.score ?? null" />
+              <p
+                v-if="current.why"
+                class="pick-why"
+              >
+                {{ whyLine(current.why) }}
+              </p>
+              <p
+                v-else-if="gaps.length"
+                class="pick-why muted"
+              >
+                Il te manque : {{ gaps.join(", ") }}
+              </p>
+            </div>
+            <a
+              v-if="adUrl"
+              :href="adUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="pick-ad"
+              data-test="pick-ad"
+            ><span class="with-icon">Voir l'annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+          </template>
+          <div class="action-bar-row">
+            <button
+              type="button"
+              class="secondary"
+              aria-keyshortcuts="ArrowLeft"
+              data-test="pick-dismiss"
+              @click="decide('dismiss')"
+            >
+              <span class="with-icon"><AppIcon name="x-circle" />Écarter</span>
+            </button>
+            <button
+              type="button"
+              class="primary"
+              aria-keyshortcuts="ArrowRight"
+              data-test="pick-keep"
+              @click="decide('keep')"
+            >
+              <span class="with-icon"><AppIcon name="done" />Garder</span>
+            </button>
+          </div>
+        </ActionBar>
+        <KeyHints
+          v-if="!narrow"
+          left="Écarter"
+          right="Garder"
+        />
+      </div>
       <div
         v-else
-        class="pick-done"
-        data-test="pick-done"
+        class="pick-step"
       >
-        <p class="pick-done-line">
-          <FaceMark mood="ravi" />
-          <span><strong>Tri du jour terminé.</strong>{{ summary ? ` ${summary}.` : "" }}</span>
-        </p>
-        <button
-          v-if="kept"
-          type="button"
-          class="link"
-          data-test="pick-preparing"
-          @click="emit('showPreparing')"
+        <FaceState
+          title="Tri du jour terminé"
+          illustration="reussite"
+          class="pick-done"
+          data-test="pick-done"
         >
-          Voir les offres à préparer
-        </button>
+          <p v-if="summary">
+            {{ summary }}.
+          </p>
+          <div class="face-state-actions">
+            <button
+              v-if="kept"
+              type="button"
+              class="secondary"
+              data-test="pick-preparing"
+              @click="emit('showPreparing')"
+            >
+              {{ prepareLabel }}
+            </button>
+            <RouterLink
+              v-else
+              :to="{ name: 'today' }"
+              class="button-link"
+              data-test="pick-today"
+            >
+              Revenir à Aujourd'hui
+            </RouterLink>
+          </div>
+        </FaceState>
+        <!-- Le dernier « Annuler » reste à sa place, sous l'action (sur ordinateur). -->
+        <UndoToast inline />
       </div>
     </Transition>
   </div>
