@@ -42,6 +42,7 @@ Correction de ma comparaison précédente : j'avais écrit « pas de vidéo » ;
 
 - **Le découpage** : toutes les pages se chargent à l'ouverture (`router.ts`), sauf la page provisoire des entrées à venir. Le premier écran (l'application et Aujourd'hui) passe de **205 Ko à 82 Ko** compressés (−60 %).
 - **Les limites** (`frontend/scripts/poids.mjs`, `make poids`, et dans `make test`) : premier écran 120 Ko, CSS 45 Ko, et **total 270 Ko au lieu de 260** : découpé en 50 fichiers, le code pèse un peu plus au total (257 Ko au lieu de 226), chaque fichier se compressant à part. Vite écrit son manifeste (`build.manifest`) pour que le script sache ce que charge chaque page.
+- **Total porté à 285 Ko** (29.10, décision de Kevin) : main pèse 268,4 Ko, et la structure téléphone charge pour la première fois GroupedList, GroupedRow et SegmentedControl (+1,7 Ko pour le Profil, 270,4 Ko) ; ses 7 étapes suivantes ajoutent chacune un peu. Le premier écran reste limité à 120 Ko et le CSS à 45 Ko.
 - **Le temps de chargement** (version construite, téléphone simulé, processeur ralenti 4 fois, médiane de 5) : **inchangé**. Aujourd'hui s'affiche en 1,0 s en 4G rapide (avant 1,0 s) et en 2,0 s en 4G lente (avant 2,0 s). Ce temps vient des appels à l'API et de la transition de page (docs/63), pas du code. Le gain est ailleurs : 120 Ko de moins à télécharger et à lire à chaque première visite, ce qui compte sur un forfait limité ou un vieux téléphone.
 
 ## Vérifié (0.87.0)

@@ -414,6 +414,10 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):disabled { border-color: var(--border); background-color: var(--panel); color: var(--muted); cursor: not-allowed; }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea)[readonly] { border-style: dashed; background-color: var(--band); }
 ::placeholder { color: var(--muted); opacity: 1; }
+/* Un champ posé dans une rangée de boutons (barre d'outils, filtres, ajout rapide, cellule de tableau) prend la
+   hauteur des contrôles, comme la recherche de l'en-tête : la rangée reste alignée (docs/94). Dans un formulaire, 48 px. */
+:is(input.filters-search, .inline-field :is(input, select), .training-filter-group select, select.status-select) { min-height: var(--control-h); height: var(--control-h); padding-block: 0; }
+select.status-select { border-radius: var(--radius-pill); font-size: var(--font-small); }
 /* Liste : la même boîte, le chevron de notre jeu d'icônes à droite. */
 select { appearance: none; -webkit-appearance: none; padding-right: var(--space-8); background-image: var(--field-chevron); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1.1rem; }
 /* Zone de texte : 3 lignes au moins, elle s'agrandit avec le contenu. */
@@ -3070,7 +3074,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .rhythm-pause > .link { grid-column: 1 / -1; justify-self: start; }
 /* Les marqueurs (téléphone) : une rangée de pastilles collée sous la barre du haut. */
 .settings-markers { position: sticky; z-index: 15; display: flex; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4); background: var(--bg); border-bottom: 1px solid var(--border); }
-.settings-markers::-webkit-scrollbar { display: none; }
 .settings-markers a { flex: none; padding: var(--space-2) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); text-decoration: none; white-space: nowrap; }
 .settings-markers a.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 @media (max-width: 820px) {
@@ -4033,6 +4036,11 @@ html.search-open { overflow: hidden; }
 .segmented > a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .segmented-full { display: flex; flex-wrap: nowrap; width: 100%; }
 .segmented-full > :is(a, button) { flex: 1 1 0; min-width: 0; padding-inline: var(--space-2); }
+/* Pleine largeur (planche « Structure téléphone ») : segments sans bordure sur le rail gris ; l'actif en pastille
+   teintée, texte accent en demi-gras (Sélection unique, §4). */
+.segmented-full > :is(a, button) { border-color: transparent; background: transparent; }
+.segmented-full > :is(a[aria-current="page"], button[aria-checked="true"]) { border-color: transparent; background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-semibold); }
+.segmented-full > :is(a:not([aria-current="page"]), button:not([aria-checked="true"])):hover { background: color-mix(in srgb, var(--text) 8%, var(--panel)); }
 /* Jamais coupé ni « … » : un débordement se voit, et la CI le refuse en 320 px. */
 .segmented-label { white-space: nowrap; }
 
@@ -4048,6 +4056,10 @@ html.search-open { overflow: hidden; }
 .grouped-row-action { cursor: pointer; }
 .grouped-row-action:hover { background: color-mix(in srgb, var(--text) 4%, var(--surface)); }
 .grouped-row-action:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* L'entrée affichée à côté (liste et détail) : la pastille de sélection, texte accent en demi-gras. */
+.grouped-row-current, .grouped-row-current:hover { background: var(--accent-soft); color: var(--accent); }
+.grouped-row-current .grouped-row-title { font-weight: var(--weight-semibold); }
+.grouped-row-current :is(.grouped-icon, .grouped-chevron) { color: var(--accent); }
 .grouped-icon { flex: none; width: 1.25rem; height: 1.25rem; color: var(--text); }
 .grouped-text { display: grid; gap: calc(var(--space-1) / 2); flex: 1 1 auto; min-width: 0; }
 .grouped-row-title { line-height: var(--leading-normal); }
@@ -4105,3 +4117,36 @@ html.search-open { overflow: hidden; }
 :root input[type="radio"]:checked { border-width: 2px; background: radial-gradient(circle, var(--accent) 0 0.3rem, var(--field-bg) calc(0.3rem + 0.5px)); }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):disabled { border-color: var(--border); background: var(--panel); cursor: not-allowed; }
+
+/* --- Barres de défilement (ordinateur) --- */
+/* Aux couleurs de la plateforme : curseur en capsule de 10 px au moins (NN/g, Scrollbars), rail transparent ;
+   au repos --field-border (3,7:1, WCAG 1.4.11), au survol --field-border-hover, en glissement --accent. Les
+   mêmes variables donnent le clair et le sombre. Rien sur téléphone (barre du système) ni en contraste élevé
+   (forced-colors). Firefox lit scrollbar-color ; Chrome et Safari, ::-webkit-scrollbar (Chrome ignore ces
+   pseudo-éléments dès qu'un élément a scrollbar-color : Firefox seulement, donc). */
+:root { --scrollbar-size: 0.875rem; --scrollbar-gap: 0.125rem; }
+@media (hover: hover) and (pointer: fine) and (forced-colors: none) {
+  @supports (-moz-appearance: none) {
+    :root, * { scrollbar-color: var(--field-border) transparent; }
+    :hover { scrollbar-color: var(--field-border-hover) transparent; }
+  }
+  ::-webkit-scrollbar { width: var(--scrollbar-size); height: var(--scrollbar-size); background: transparent; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-thumb { border: var(--scrollbar-gap) solid transparent; border-radius: var(--radius-pill); background: var(--field-border) padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--field-border-hover); }
+  ::-webkit-scrollbar-thumb:active { background-color: var(--accent); }
+}
+/* Une zone horizontale qui cache sa barre (onglets, rubriques) le dit par un fondu au bord tant qu'il reste du
+   contenu, de ce côté seulement (animation liée au défilement). Sans cette animation, la barre réapparaît. */
+@property --fade-start { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --fade-end { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes scroll-fade { 0% { --fade-start: 0px; --fade-end: var(--space-8); } 4%, 96% { --fade-start: var(--space-8); --fade-end: var(--space-8); } 100% { --fade-start: var(--space-8); --fade-end: 0px; } }
+@supports (animation-timeline: scroll()) {
+  :is(.topbar nav.main-nav, .jobs-tabs, .kind-tabs, .settings-markers, .prep-tabs.prep-steps) {
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+    animation: scroll-fade linear both; animation-timeline: scroll(self inline);
+  }
+}
+@supports not (animation-timeline: scroll()) {
+  :is(.topbar nav.main-nav, .jobs-tabs, .kind-tabs, .settings-markers, .prep-tabs.prep-steps) { scrollbar-width: thin; }
+}
