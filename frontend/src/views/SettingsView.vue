@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
-import { usePhone } from "../composables/usePhone";
+import { useNarrow, usePhone } from "../composables/usePhone";
+import type { IconName } from "../icons";
 import PageHero from "../components/PageHero.vue";
 import PlanPanel from "../components/PlanPanel.vue";
 import { usePlan } from "../composables/usePlan";
@@ -18,7 +19,10 @@ import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
-import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
+import SettingsSection from "../components/SettingsSection.vue";
+import GroupedList from "../components/GroupedList.vue";
+import GroupedRow from "../components/GroupedRow.vue";
+import SavedStatus from "../components/SavedStatus.vue";
 import SettingCard from "../components/SettingCard.vue";
 import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
@@ -110,9 +114,13 @@ onMounted(async () => {
 });
 
 // Compte invité (docs/65 §4) : ses alertes sur son téléphone, avec un sujet ntfy à lui.
+const phoneSavedAt = ref(0);
 async function setPhone(enabled: boolean): Promise<void> {
   const { data } = await api.PUT("/api/notifications/phone", { body: { enabled } });
-  if (data) notifications.value = data;
+  if (data) {
+    notifications.value = data;
+    phoneSavedAt.value = Date.now();
+  }
   testMessage.value = "";
 }
 
@@ -310,9 +318,45 @@ const active = computed<SectionId>(() => {
   return sections.value.find((s) => s.id === wanted)?.id ?? OLD_ANCHORS[route.hash.slice(1)] ?? "recherche";
 });
 
-// Sur téléphone, une longue page (docs/110) : les marqueurs du haut mènent à chaque rubrique et
-// suivent la lecture. Ils se collent sous la barre du haut.
-const { phone } = usePhone();
+// Sous 600 px (planche « Structure téléphone », 249:645) : une liste groupée ; chaque entrée ouvre sa
+// sous-page, avec « ← Réglages ». Sans rubrique dans l'adresse, la liste seule.
+const { phone: narrow } = useNarrow();
+const listOnly = computed(() => narrow.value && !route.query.rubrique);
+const shown = (id: SectionId): boolean => !narrow.value || active.value === id;
+type Entry = { title: string; description?: string; icon: IconName; to: RouteLocationRaw; id?: SectionId };
+const GROUPS = computed<{ title: string; entries: Entry[] }[]>(() => [
+  {
+    title: "La recherche",
+    entries: [
+      { id: "recherche", title: "Recherche d'emploi", description: "Objectif ORP, preuves, sites suivis", icon: "briefcase", to: { query: { rubrique: "recherche" } } },
+      { id: "rythme", title: "Rythme", description: "Jours de recherche, pause", icon: "calendar", to: { query: { rubrique: "rythme" } } },
+      { title: "Alertes", description: "Recherches suivies sur les sites", icon: "list-check", to: "/candidatures/alertes" },
+    ],
+  },
+  {
+    title: "Être averti",
+    entries: [
+      { id: "notifications", title: "Notifications", description: "Seuil, message du jour, téléphone", icon: "bell", to: { query: { rubrique: "notifications" } } },
+      { id: "ia", title: "IA", description: "Ce qu'elle fait chaque mois", icon: "ai", to: { query: { rubrique: "ia" } } },
+      { id: "outils", title: "Agenda et extension", description: "Calendrier, navigateur", icon: "plug", to: { query: { rubrique: "outils" } } },
+    ],
+  },
+  {
+    title: "Compte et aide",
+    entries: [
+      { id: "compte", title: "Compte", description: "Formule, export, fermeture", icon: "user", to: { query: { rubrique: "compte" } } },
+      ...(owner.value
+        ? [{ id: "plateforme" as const, title: "Administration", description: "Comptes et IA de la plateforme", icon: "shield" as IconName, to: { query: { rubrique: "plateforme" } } }]
+        : []),
+      ...(showDiagnostic.value ? [{ title: "État du service", icon: "activity" as IconName, to: "/reglages/diagnostic" }] : []),
+    ],
+  },
+]);
+
+// Entre 600 et 820 px, une longue page (docs/110) : les marqueurs du haut mènent à chaque rubrique
+// et suivent la lecture. Ils se collent sous la barre du haut.
+const { phone: wide } = usePhone();
+const phone = computed(() => wide.value && !narrow.value);
 const current = ref<SectionId>("recherche");
 const markers = ref<HTMLElement | null>(null);
 const markersTop = ref(0);
@@ -362,38 +406,71 @@ onUnmounted(() => spy?.disconnect());
 
 <template>
   <PageHero
+    v-if="!narrow || listOnly"
     title="Réglages"
   />
-  <section class="band">
-    <div class="settings-layout">
-      <nav
-        class="settings-toc"
-        aria-label="Sections des réglages"
+  <PageHero
+    v-else
+    :title="sections.find((s) => s.id === active)?.label ?? 'Réglages'"
+  >
+    <template #back>
+      <RouterLink
+        :to="{ query: {} }"
+        class="back-link"
+        data-test="settings-back"
       >
-        <RouterLink
-          v-for="section in sections"
-          :key="section.id"
-          :to="{ query: { rubrique: section.id } }"
-          :class="{ active: active === section.id }"
-          :aria-current="active === section.id ? 'page' : undefined"
-          :data-test="`toc-${section.id}`"
+        <span class="with-icon"><AppIcon name="arrow-left" />Réglages</span>
+      </RouterLink>
+    </template>
+  </PageHero>
+  <section class="band">
+    <div :class="['settings-layout', { 'settings-sub': narrow && !listOnly, 'settings-list': listOnly }]">
+      <!-- La liste (planche « Structure téléphone », 249:645) : seule sous 600 px, à gauche sur ordinateur
+           (liste et détail, Material 3), l'entrée affichée marquée (current). -->
+      <nav
+        v-if="listOnly || !wide"
+        class="settings-nav"
+        aria-label="Sections des réglages"
+        data-test="settings-list"
+      >
+        <GroupedList
+          v-for="group in GROUPS"
+          :key="group.title"
+          :title="group.title"
         >
-          <span class="with-icon">
-            <AppIcon
-              v-if="SETTINGS_ICONS[section.id]"
-              :name="SETTINGS_ICONS[section.id]!"
-            />{{ section.label }}
-          </span>
-        </RouterLink>
-        <!-- Sur ordinateur, le Diagnostic est une entrée du sommaire, sous un filet (0.78.4). -->
-        <RouterLink
-          v-if="showDiagnostic"
-          to="/reglages/diagnostic"
-          class="toc-diagnostic"
-          data-test="diagnostic-link"
-        >
-          <span class="with-icon"><AppIcon name="activity" />État du service</span>
-        </RouterLink>
+          <template
+            v-for="entry in group.entries"
+            :key="entry.title"
+          >
+            <GroupedRow
+              :title="entry.title"
+              :description="entry.description"
+              :icon="entry.icon"
+              :to="entry.to"
+              :current="!narrow && entry.id === active"
+              :data-test="`settings-entry-${entry.id ?? entry.title}`"
+            />
+            <!-- Le réglage à un toucher (choix provisoire de Kevin, à revoir avec le test utilisateurs). -->
+            <GroupedRow
+              v-if="listOnly && entry.id === 'notifications' && notifications?.personal"
+              title="Recevoir sur mon téléphone"
+              description="Offres, relances et rappel ORP, par ntfy."
+              label
+              data-test="settings-phone-row"
+            >
+              <template #end>
+                <SavedStatus :at="phoneSavedAt" />
+                <input
+                  type="checkbox"
+                  role="switch"
+                  :checked="notifications.configured"
+                  data-test="list-phone-switch"
+                  @change="setPhone(!notifications.configured)"
+                >
+              </template>
+            </GroupedRow>
+          </template>
+        </GroupedList>
       </nav>
       <!-- Sur téléphone, les marqueurs pour parcourir la longue page (docs/110). -->
       <nav
@@ -414,10 +491,14 @@ onUnmounted(() => spy?.disconnect());
           @click.prevent="goTo(section.id)"
         >{{ section.label }}</a>
       </nav>
-      <div class="settings-sections">
+      <div
+        v-if="!listOnly"
+        class="settings-sections"
+      >
         <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
              contrôle à droite ; plus de bouton « Enregistrer ». -->
         <SettingsSection
+          v-if="shown('recherche')"
           id="recherche"
           title="Recherche d'emploi"
           :value="summary.recherche"
@@ -512,6 +593,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('rythme')"
           id="rythme"
           title="Rythme"
           :value="summary.rythme"
@@ -673,6 +755,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('notifications')"
           id="notifications"
           title="Notifications"
           :value="summary.notifications"
@@ -791,6 +874,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('ia')"
           id="ia"
           title="IA"
           :value="summary.ia"
@@ -870,6 +954,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('compte')"
           id="compte"
           title="Compte"
           :value="summary.compte"
@@ -885,6 +970,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('outils')"
           id="outils"
           title="Agenda et extension"
           :value="summary.outils"
@@ -896,7 +982,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
-          v-if="owner"
+          v-if="owner && shown('plateforme')"
           id="plateforme"
           title="Administration"
           :value="summary.plateforme"

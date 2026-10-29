@@ -139,6 +139,7 @@ onUnmounted(() => {
         class="account-profile"
       >Profil affiché
         <select
+          class="field-compact"
           :value="current?.id"
           data-test="profile-switcher"
           @change="onChange"

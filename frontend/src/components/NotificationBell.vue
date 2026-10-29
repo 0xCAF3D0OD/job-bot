@@ -5,7 +5,11 @@ import { useRouter } from "vue-router";
 import { api, type Inbox, type InboxItem } from "../api/client";
 import { dateInList } from "../dates";
 import { plural } from "../format";
+import { useNarrow } from "../composables/usePhone";
 import AppIcon from "./AppIcon.vue";
+import BottomSheet from "./BottomSheet.vue";
+import GroupedList from "./GroupedList.vue";
+import GroupedRow from "./GroupedRow.vue";
 
 // Cloche des alertes (docs/15 §1) : les mêmes que sur le téléphone, relues chaque minute.
 const REFRESH_MS = 60_000;
@@ -15,8 +19,12 @@ const inbox = ref<Inbox>({ unread: 0, items: [] });
 // Un bouton rond, sans capsule (1.6.46) : le menu s'ouvre sous lui.
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
-const panel = ref<HTMLElement | null>(null);
 let timer: ReturnType<typeof setInterval> | undefined;
+// Sous 600 px (planche « Structure téléphone ») : la cloche s'ouvre en feuille plein écran, titre à gauche et
+// ✕ rond à droite ; au-delà, le panneau sous le bouton.
+const { phone: narrow } = useNarrow();
+const unread = computed(() => inbox.value.items.filter((i) => !i.read_at));
+const read = computed(() => inbox.value.items.filter((i) => i.read_at));
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
 const label = computed(() =>
@@ -56,7 +64,8 @@ async function readAll(): Promise<void> {
 
 function onDocumentClick(event: MouseEvent): void {
   const target = event.target as Node;
-  if (open.value && !root.value?.contains(target) && !panel.value?.contains(target)) open.value = false;
+  // Le panneau et la feuille sont dans la cloche : un clic ailleurs la ferme.
+  if (open.value && !root.value?.contains(target)) open.value = false;
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -100,16 +109,15 @@ onUnmounted(() => {
         data-test="bell-badge"
       >{{ badge }}</span>
     </button>
-    <div
-      v-if="open"
-      ref="panel"
-      class="bell-panel"
-      role="dialog"
-      aria-label="Alertes"
+    <component
+      :is="narrow ? BottomSheet : 'div'"
+      v-if="narrow || open"
+      v-bind="narrow ? { open, title: 'Alertes', full: true } : { class: 'bell-panel', role: 'dialog', 'aria-label': 'Alertes' }"
       data-test="bell-panel"
+      @close="open = false"
     >
       <div class="bell-head">
-        <strong>Alertes</strong>
+        <strong v-if="!narrow">Alertes</strong>
         <button
           v-if="inbox.unread"
           type="button"
@@ -126,6 +134,28 @@ onUnmounted(() => {
       >
         Aucune alerte pour l'instant.
       </p>
+      <!-- Sur téléphone, deux listes groupées : les nouvelles, puis celles déjà lues (planche). -->
+      <template v-else-if="narrow">
+        <GroupedList
+          v-for="group in [{ title: 'Nouvelles', items: unread }, { title: 'Déjà lues', items: read }].filter((g) => g.items.length)"
+          :key="group.title"
+          :title="group.title"
+          :level="3"
+        >
+          <GroupedRow
+            v-for="item in group.items"
+            :key="item.id"
+            :title="item.title"
+            :description="item.message?.split('\n')[0] ?? ''"
+            :value="dateInList(item.created_at)"
+            :class="{ 'bell-unread': !item.read_at }"
+            button
+            :chevron="Boolean(item.link)"
+            data-test="bell-item"
+            @click="select(item)"
+          />
+        </GroupedList>
+      </template>
       <ul v-else>
         <li
           v-for="item in inbox.items"
@@ -146,6 +176,6 @@ onUnmounted(() => {
           </button>
         </li>
       </ul>
-    </div>
+    </component>
   </div>
 </template>

@@ -414,12 +414,15 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea):disabled { border-color: var(--border); background-color: var(--panel); color: var(--muted); cursor: not-allowed; }
 :is(input:is([type="text"], [type="number"], [type="tel"], [type="email"], [type="password"], [type="url"], [type="search"], [type="date"], [type="datetime-local"], [type="time"], :not([type])), select, textarea)[readonly] { border-style: dashed; background-color: var(--band); }
 ::placeholder { color: var(--muted); opacity: 1; }
-/* Un champ posé dans une rangée de boutons (barre d'outils, filtres, ajout rapide, cellule de tableau) prend la
-   hauteur des contrôles, comme la recherche de l'en-tête : la rangée reste alignée (docs/94). Dans un formulaire, 48 px. */
-:is(input.filters-search, .inline-field :is(input, select), .training-filter-group select, select.status-select) { min-height: var(--control-h); height: var(--control-h); padding-block: 0; }
-select.status-select { border-radius: var(--radius-pill); font-size: var(--font-small); }
+/* Variante compacte (`field-compact`, Material 3 : puce de filtre avec menu) : dans une barre de filtres ou d'outils,
+   un ajout rapide, une cellule de tableau ou un menu, la rangée entière prend --control-h (40 px, 44 sur téléphone),
+   comme les boutons ; dans un formulaire, 48 px. Une liste compacte est une capsule. La place du chevron
+   (padding-right de select) n'est jamais écrasée : aucune règle de page ne fixe le padding d'un champ. */
+:is(input, select).field-compact { min-height: var(--control-h); height: var(--control-h); padding-block: 0; font-size: var(--font-small); }
+select.field-compact { padding-left: var(--space-4); border-radius: var(--radius-pill); }
 /* Liste : la même boîte, le chevron de notre jeu d'icônes à droite. */
-select { appearance: none; -webkit-appearance: none; padding-right: var(--space-8); background-image: var(--field-chevron); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1.1rem; }
+/* `:root select` : au moins aussi fort que la règle commune des champs, pour que son `padding` n'écrase jamais la place du chevron. */
+:root select { appearance: none; -webkit-appearance: none; padding-right: var(--space-8); background-image: var(--field-chevron); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1.1rem; }
 /* Zone de texte : 3 lignes au moins, elle s'agrandit avec le contenu. */
 textarea { width: 100%; min-height: calc(3lh + 2 * var(--space-2) + 2px); resize: vertical; field-sizing: content; }
 input[type="number"] { width: 7rem; }
@@ -601,7 +604,6 @@ p.badge.reason { margin: 0; }
 .month-nav strong { min-width: 9rem; text-align: center; font-weight: var(--weight-semibold); text-transform: capitalize; }
 .month-goal { display: grid; gap: var(--space-2); min-width: 14rem; flex: 1; }
 .month-goal .orp-month-bar { margin: 0; }
-.status-select { font: inherit; font-size: var(--font-small); padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .status-select.entretien { border-color: var(--accent); color: var(--accent); }
 .status-select.engagement { border-color: var(--ok); color: var(--ok-text); }
 .status-select.refus, .status-select.sans_reponse { color: var(--muted); }
@@ -822,6 +824,11 @@ p.badge.reason { margin: 0; }
 .bell-badge { position: absolute; top: -0.25rem; right: -0.25rem; }
 .bell-panel { position: absolute; right: 0; top: 2.9rem; z-index: 40; width: min(24rem, calc(100vw - 2rem)); max-height: 70vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 16px 40px rgba(17, 17, 31, 0.16); padding: var(--space-2); }
 .bell-head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-2) var(--space-2); }
+/* Sur téléphone, la cloche en feuille plein écran : les alertes non lues gardent leur fond teinté. */
+.sheet .bell-head { padding: 0; }
+.bell-unread > .grouped-row { background: var(--accent-soft); }
+.bell-unread .grouped-row-title { font-weight: var(--weight-semibold); }
+.bell-unread :is(.grouped-row-description, .grouped-value) { color: var(--text); } /* --muted : 4,3:1 seulement sur ce fond */
 .bell-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
 .bell-item { width: 100%; display: grid; gap: var(--space-1); text-align: left; border: 0; background: transparent; padding: var(--space-2) var(--space-3); border-radius: var(--radius); font-weight: var(--weight-regular); }
 .bell-item:hover { background: var(--band); }
@@ -855,7 +862,6 @@ p.badge.reason { margin: 0; }
 /* Formations (docs/16 §5) */
 .orp-note { margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface); font-size: var(--font-small); color: var(--muted); }
 .orp-links { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin-top: var(--space-2); }
-.news-filters select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); }
 .training-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr)); }
 .training-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .training-head { display: flex; justify-content: space-between; gap: var(--space-2); align-items: center; }
@@ -875,7 +881,7 @@ p.badge.reason { margin: 0; }
 @media (prefers-color-scheme: dark) { .badge.warn { background: var(--orange-soft); color: var(--orange-text); } }
 
 /* Profils d'essai (docs/17) */
-.profile-switcher select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); max-width: 14rem; }
+.profile-switcher select { max-width: 14rem; }
 .profile-banner { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); align-items: center; justify-content: center; padding: var(--space-2) var(--space-4); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); border-bottom: 1px solid var(--border); font-size: var(--font-small); color: var(--text); }
 .profile-banner span { color: var(--muted); }
 
@@ -901,7 +907,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .account-panel > a.router-link-active { color: var(--accent); }
 .account-name { margin: 0 0 var(--space-1); padding: var(--space-1) var(--space-2) var(--space-2); border-bottom: 1px solid var(--border); font-size: var(--font-small); color: var(--muted); }
 .account-profile { display: grid; gap: var(--space-1); padding: var(--space-2) var(--space-2); font-size: var(--font-small); color: var(--muted); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: var(--space-1) 0; }
-.account-profile select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 
 /* Rubrique Candidatures (docs/19 §2) : titre et onglets communs */
 .jobs-head { max-width: var(--page-max); margin: 0 auto; padding: var(--space-8) var(--space-6) 0; }
@@ -919,10 +924,9 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 }
 
 /* Réglages regroupés (docs/19 §4) : sommaire à gauche, sections à droite */
-.settings-layout { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: var(--space-8); align-items: start; }
-.settings-toc { position: sticky; top: 6rem; display: grid; gap: var(--space-1); padding-top: var(--space-2); }
-.settings-toc a { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); color: var(--muted); text-decoration: none; font-size: var(--font-small); }
-.settings-toc a:hover { background: var(--surface); color: var(--text); }
+.settings-layout { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--space-6); display: grid; grid-template-columns: 18rem minmax(0, 1fr); gap: var(--space-8); align-items: start; }
+/* La liste des réglages à gauche (liste et détail) ; sous 600 px, seule. */
+.settings-nav { position: sticky; top: 6rem; display: grid; gap: var(--space-5); min-width: 0; }
 .settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); min-width: 0; }
 .settings-sections > .section-title { margin: var(--space-6) 0 0; scroll-margin-top: 6rem; }
 .settings-sections > .section-title:first-child { margin-top: 0; }
@@ -931,8 +935,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .settings-sections > .section-title .icon { width: 20px; height: 20px; color: var(--muted); }
 @media (max-width: 860px) {
   .settings-layout { grid-template-columns: 1fr; gap: var(--space-4); padding: 0 var(--space-4); }
-  .settings-toc { position: static; display: flex; flex-wrap: wrap; gap: var(--space-1); }
-  .settings-toc a { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); font-size: var(--font-small); }
+  .settings-nav { position: static; gap: var(--space-6); }
 }
 
 /* Saisie Job-Room : une section par étape de leur formulaire */
@@ -1065,11 +1068,9 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .application-panel-head p { margin: 0; }
 /* « ⋯ » centré sur la première ligne du texte, même quand il passe à la ligne (docs/74). */
 .application-panel-head .more-menu { margin-top: calc((1lh - var(--control-h)) / 2); }
-.application-panel .card-status select { font-size: var(--font-small); padding: var(--space-1) var(--space-2); }
 .application-panel .follow-up-line, .application-panel .contact-due-line, .panel-line { margin: 0; font-size: var(--font-small); }
 .table-open { font-weight: var(--weight-semibold); text-align: left; }
 .card-status { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); }
-.card-status select { padding: var(--space-1) var(--space-2); font-size: var(--font-small); }
 .card-missing { margin: 0; font-size: var(--font-small); }
 .card-job-room { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1) var(--space-3); margin: 0; font-size: var(--font-small); }
 .card-job-room dt { color: var(--muted); }
@@ -1222,7 +1223,6 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .more-menu .menu a:hover,
 .account-panel > a:hover,
 .account-panel > .link:hover,
-.settings-toc a:hover,
 .assistant-recent-item:hover,
 .bell-item:not(.unread):hover { background: none; color: var(--accent); text-shadow: var(--hover-bold); }
 .bell-item:hover .bell-title { color: var(--accent); }
@@ -1437,10 +1437,6 @@ html.side-open { overflow: hidden; }
 .training-row-facts { font-size: var(--font-caption); color: var(--muted); }
 .training-sheet { border: 0; padding: 0; background: none; box-shadow: none; }
 
-/* Téléphone : Réglages en lignes dépliables (docs/34 §3) */
-@media (max-width: 820px) {
-  .settings-toc { display: none; }
-}
 
 /* Téléphone : Aujourd'hui, l'essentiel d'abord (docs/34 §4) */
 
@@ -1697,7 +1693,6 @@ html.side-open { overflow: hidden; }
 .prep-side [data-test=apply-contacts] .link { justify-self: start; justify-content: flex-start; }
 
 /* Réglages (docs/48) : une rubrique à la fois ; sites et sources en lignes calmes. */
-.settings-toc a.active { color: var(--accent); font-weight: var(--weight-semibold); }
 .calm-list { list-style: none; margin: var(--space-2) 0 var(--space-4); padding: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .calm-list li { display: flex; align-items: center; gap: var(--space-3); padding-right: var(--space-4); }
 .calm-list li + li { border-top: 1px solid var(--divider); }
@@ -2306,8 +2301,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .welcome-dot { width: 1rem; }
   .welcome-dot.current::after { width: 1rem; }
 }
-/* Profil en 320 px : les trois onglets tiennent sans leurs icônes. */
-@media (max-width: 359px) { .profile-tabs .with-icon > .icon { display: none; } }
 /* Réglages : toute la ligne d'un choix « offres » se touche, pas seulement la radio. */
 .radio-row { cursor: pointer; }
 /* Tri sur téléphone : « Garder » et « Écarter » restent visibles sans défiler, au-dessus de la barre. */
@@ -3075,9 +3068,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .rhythm-pause > label input { width: min(100%, calc(var(--field-10) + var(--control-h))); }
 .rhythm-pause > .link { grid-column: 1 / -1; justify-self: start; }
 /* Les marqueurs (téléphone) : une rangée de pastilles collée sous la barre du haut. */
-.settings-markers { position: sticky; z-index: 15; display: flex; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; margin: 0 calc(var(--space-4) * -1); padding: var(--space-3) var(--space-4); background: var(--bg); border-bottom: 1px solid var(--border); }
-.settings-markers a { flex: none; padding: var(--space-2) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); text-decoration: none; white-space: nowrap; }
-.settings-markers a.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 @media (max-width: 820px) {
   .settings-card { padding: 0 var(--space-6); border-radius: var(--radius); }
   .settings-card fieldset { padding: var(--space-6) 0; }
@@ -3104,8 +3094,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 }
 /* Les marqueurs (docs/110, complément 0.78.1) : quand la rangée défile pour montrer le marqueur
    en cours, il garde sa marge ; un espace au bout, et un fondu sur les bords dit qu'elle défile. */
-.settings-markers { scroll-padding-inline: 1rem 1.75rem; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1.5rem), transparent); }
-.settings-markers::after { content: ""; flex: 0 0 1rem; }
 
 /* --- Le Profil comme les CFF (docs/110, 0.78.2) --- */
 /* Ce qu'on consulte : sur fond gris, sans bordure ; un crayon rond, blanc, pour le modifier. */
@@ -3155,7 +3143,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .criteria-layout { align-items: start; }
 .filter-outcome-section > .section-title { margin: 0 0 var(--space-4); }
 /* Le Diagnostic : une entrée du sommaire sous un filet (ordinateur), une ligne grise en fin de page (téléphone). */
-.toc-diagnostic { margin-top: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--divider); }
 .diagnostic-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-8); color: var(--text); text-decoration: none; }
 .diagnostic-row > span { display: grid; gap: var(--space-1); }
 .diagnostic-row:hover { box-shadow: 0 0 0 1px var(--accent) inset; }
@@ -3987,10 +3974,10 @@ html.search-open { overflow: hidden; }
   .bell-panel, .account-panel { position: absolute; top: 100%; left: var(--space-4); right: var(--space-4); width: auto; max-height: calc(100dvh - 10rem); overflow: auto; }
   /* Zones de clic d'au moins 44 px de haut sans changer l'aspect (WCAG 2.5.8, Apple HIG 44 pt) : une
      zone invisible agrandie autour des liens et boutons texte. */
-  .back-link, .brand, .app-footer a, .settings-toc a, .demo-banner a, .pick-title a, .settings-markers a, .segmented > button { position: relative; }
+  .back-link, .brand, .app-footer a, .demo-banner a, .pick-title a, .segmented > button { position: relative; }
   .prep-tabs a { min-height: 2.75rem; box-sizing: border-box; display: inline-flex; align-items: center; }
   .app-footer nav { row-gap: var(--space-5); }
-  .back-link::before, .brand::before, .app-footer a::before, .settings-toc a::before, .demo-banner a::before, .pick-title a::before, .settings-markers a::before, .segmented > button::before, .welcome-dot::before {
+  .back-link::before, .brand::before, .app-footer a::before, .demo-banner a::before, .pick-title a::before, .segmented > button::before, .welcome-dot::before {
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: max(100%, 2.75rem);
     transform: translate(-50%, -50%);
   }
@@ -4054,6 +4041,7 @@ html.search-open { overflow: hidden; }
 .grouped-row {
   display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: 3rem;
   padding: var(--space-3) var(--space-4); border: 0; background: none; color: var(--text); font: inherit; text-align: left; text-decoration: none;
+  white-space: normal; /* un bouton ne passe pas à la ligne par défaut ; une ligne de liste, si (jamais de « … »). */
 }
 .grouped-row-action { cursor: pointer; }
 .grouped-row-action:hover { background: color-mix(in srgb, var(--text) 4%, var(--surface)); }
@@ -4061,6 +4049,8 @@ html.search-open { overflow: hidden; }
 /* L'entrée affichée à côté (liste et détail) : la pastille de sélection, texte accent en demi-gras. */
 .grouped-row-current, .grouped-row-current:hover { background: var(--accent-soft); color: var(--accent); }
 .grouped-row-current .grouped-row-title { font-weight: var(--weight-semibold); }
+/* Sur le fond teinté, --muted ne fait que 4,3:1 en clair : la phrase passe en --text (16,1:1, WCAG 1.4.3). */
+.grouped-row-current .grouped-row-description { color: var(--text); }
 .grouped-row-current :is(.grouped-icon, .grouped-chevron) { color: var(--accent); }
 .grouped-icon { flex: none; width: 1.25rem; height: 1.25rem; color: var(--text); }
 .grouped-text { display: grid; gap: calc(var(--space-1) / 2); flex: 1 1 auto; min-width: 0; }
@@ -4119,6 +4109,8 @@ html.search-open { overflow: hidden; }
 :root input[type="radio"]:checked { border-width: 2px; background: radial-gradient(circle, var(--accent) 0 0.3rem, var(--field-bg) calc(0.3rem + 0.5px)); }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):disabled { border-color: var(--border); background: var(--panel); cursor: not-allowed; }
+/* Réglages sous 600 px : la sous-page a son titre en haut de page, la section ne le répète pas. */
+.settings-sub .settings-section > .section-title { display: none; }
 
 /* --- Barres de défilement (ordinateur) --- */
 /* Aux couleurs de la plateforme : curseur en capsule de 10 px au moins (NN/g, Scrollbars), rail transparent ;
@@ -4144,11 +4136,11 @@ html.search-open { overflow: hidden; }
 @property --fade-end { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @keyframes scroll-fade { 0% { --fade-start: 0px; --fade-end: var(--space-8); } 4%, 96% { --fade-start: var(--space-8); --fade-end: var(--space-8); } 100% { --fade-start: var(--space-8); --fade-end: 0px; } }
 @supports (animation-timeline: scroll()) {
-  :is(.topbar nav.main-nav, .jobs-tabs, .kind-tabs, .settings-markers, .prep-tabs.prep-steps) {
+  :is(.topbar nav.main-nav, .jobs-tabs, .kind-tabs, .prep-tabs.prep-steps) {
     mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
     animation: scroll-fade linear both; animation-timeline: scroll(self inline);
   }
 }
 @supports not (animation-timeline: scroll()) {
-  :is(.topbar nav.main-nav, .jobs-tabs, .kind-tabs, .settings-markers, .prep-tabs.prep-steps) { scrollbar-width: thin; }
+  :is(.topbar nav.main-nav, .jobs-tabs, .kind-tabs, .prep-tabs.prep-steps) { scrollbar-width: thin; }
 }
