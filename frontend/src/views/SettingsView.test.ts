@@ -386,3 +386,16 @@ describe("SettingsView, Compte et aide (décision de Kevin)", () => {
     expect(write.find("a").attributes("href")).toBe("mailto:contact@exemple.ch");
   });
 });
+
+describe("SettingsView, une seule table d'icônes", () => {
+  it("l'entrée affichée et le titre de sa rubrique ont la même icône", async () => {
+    mockGet(true);
+    for (const rubrique of ["recherche", "rythme", "notifications", "ia", "compte", "outils"]) {
+      const { wrapper } = await mountSettings(rubrique);
+      const listIcon = wrapper.find("[data-test=settings-list] [aria-current=page] [data-icon]").attributes("data-icon");
+      const titleIcon = wrapper.find(`[data-test=section-${rubrique}] .section-title [data-icon]`).attributes("data-icon");
+      expect(titleIcon, rubrique).toBe(listIcon);
+      wrapper.unmount();
+    }
+  });
+});

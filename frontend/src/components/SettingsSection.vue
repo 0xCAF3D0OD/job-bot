@@ -3,14 +3,15 @@ import type { IconName } from "../icons";
 
 // Une petite icône au trait devant le titre, de la famille de la navigation (docs/62 §1) ;
 // plus d'illustration dans un formulaire. Le sommaire des Réglages reprend les mêmes (docs/101).
+// La seule table : la liste des Réglages et le titre de chaque rubrique lisent les mêmes icônes.
 export const SETTINGS_ICONS: Record<string, IconName> = {
-  recherche: "search",
-  rythme: "clock",
+  recherche: "briefcase",
+  rythme: "calendar",
   notifications: "bell",
-  ia: "spark",
-  compte: "shield",
+  ia: "ai",
+  compte: "user",
   outils: "plug",
-  plateforme: "user",
+  plateforme: "shield",
 };
 </script>
 
