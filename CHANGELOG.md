@@ -317,3 +317,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.103 | Champs : fond distinct, bordure à 3:1 au moins, focus visible, 48 px et rayon des cartes partout ; cases et radios dessinées, interrupteur seulement pour un réglage isolé ; consentements jamais cochés d'avance | livrée |
 | 1.6.104 | Info-bulle : au focus clavier, fermée par Échap, la souris peut passer dessus sans qu'elle disparaisse (WCAG 1.4.13) | livrée |
 | 1.6.105 | Barres de défilement aux couleurs de la plateforme sur ordinateur, fondu au bord des onglets qui défilent ; rien ne change sur téléphone ni en contraste élevé | livrée |
+| 1.6.106 | Champs : un champ posé dans une rangée de boutons prend la hauteur des contrôles, la rangée reste alignée ; contrôle segmenté pleine largeur selon la planche | livrée |
