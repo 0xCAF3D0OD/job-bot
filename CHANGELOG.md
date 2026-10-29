@@ -309,3 +309,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.95 | Règles : structure téléphone inspirée de l'application CFF (listes groupées, feuilles du bas, action fixée en bas, contrôle segmenté, recherche) ; Réglages en liste sur téléphone, liste et détail sur ordinateur | livrée |
 | 1.6.96 | Cloche : le texte d'une alerte passe à la ligne au lieu d'être coupé par « … » | livrée |
 | 1.6.97 | Téléphone : les titres d'offres, les jours du calendrier du Suivi et les cartes de l'accueil passent à la ligne au lieu d'être coupés en 320 px | livrée |
+| 1.6.98 | L'audit téléphone ne compte plus une étiquette (label[for] ou qui entoure son champ) comme cible quand son champ fait lui-même au moins 24 × 24 px (WCAG 2.5.8, exception « équivalent ») ; une étiquette dont le champ est caché ou trop petit reste mesurée | livrée |
