@@ -185,6 +185,9 @@ mettre_a_jour() {
 
   etape "Vérification"
   plateforme exec -T api python -c "import json, urllib.request; v = json.load(urllib.request.urlopen('http://127.0.0.1:8000/version')); print('  Plateforme :', v['version'], '· migration', v['migration_head'])"
+  # Caddy doit joindre la plateforme, pas la démo (les deux sont sur le réseau partagé).
+  plateforme exec -T web wget -qO- http://app-api:8000/api/auth/me | grep -q '"demo":false' \
+    || erreur "https://$(reglage APP_DOMAIN "$PROD/.env") ne mène pas à la plateforme (Caddy joint une autre API)"
   printf '\n\033[1;32m✓ jobA1 est à jour\033[0m : https://%s  ·  démo : https://%s\n' \
     "$(reglage APP_DOMAIN "$PROD/.env")" "$(reglage DEMO_DOMAIN "$PROD/.env")"
 }

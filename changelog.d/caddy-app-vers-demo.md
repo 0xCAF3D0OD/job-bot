@@ -1,0 +1,1 @@
+Mise en ligne : app.joba1.ch menait à la démo (sur le réseau partagé, « api » désignait aussi l'API de la démo) ; Caddy joint maintenant la plateforme par un nom à elle, et `make deploy` vérifie que l'adresse mène bien à la plateforme
