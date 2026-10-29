@@ -133,8 +133,19 @@ describe("SettingsView, une rubrique à la fois (docs/48)", () => {
   it("six rubriques, une seule affichée ; un ancien lien #agenda mène à « Agenda et extension »", async () => {
     mockGet(false);
     const { wrapper, router } = await mountSettings();
-    const toc = wrapper.findAll(".settings-toc a").map((a) => a.text());
-    expect(toc).toEqual(["Recherche d'emploi", "Rythme", "Notifications", "IA", "Compte", "Agenda et extension"]);
+    // Liste et détail (planche « Structure téléphone ») : la liste groupée à gauche, l'entrée affichée marquée.
+    const list = wrapper.find("[data-test=settings-list]");
+    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["La recherche", "Être averti", "Compte et aide"]);
+    expect(list.findAll(".grouped-row-title").map((t) => t.text())).toEqual([
+      "Recherche d'emploi",
+      "Rythme",
+      "Alertes",
+      "Notifications",
+      "IA",
+      "Agenda et extension",
+      "Compte",
+    ]);
+    expect(list.find("[aria-current=page] .grouped-row-title").text()).toBe("Recherche d'emploi");
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
     // Le seuil de notification est dans sa rubrique, dit en clair.
@@ -146,7 +157,7 @@ describe("SettingsView, une rubrique à la fois (docs/48)", () => {
 
     await router.push({ path: "/reglages", query: {}, hash: "#agenda" });
     await flushPromises();
-    expect(wrapper.find(".settings-toc a.active").text()).toBe("Agenda et extension");
+    expect(wrapper.find("[data-test=settings-list] [aria-current=page] .grouped-row-title").text()).toBe("Agenda et extension");
     // « Chercher l'annonce chez l'employeur » n'est plus ici (1.6.28).
     expect(wrapper.find("[data-test=employer-threshold]").exists()).toBe(false);
   });
@@ -175,10 +186,10 @@ describe("SettingsView, comptes (docs/65)", () => {
     await as(false);
     mockGet(false);
     const { wrapper } = await mountSettings();
-    expect(wrapper.find("[data-test=diagnostic-link]").exists()).toBe(false);
+    expect(wrapper.find("[data-test='settings-entry-État du service']").exists()).toBe(false);
     await as(true);
     const owner = await mountSettings();
-    expect(owner.wrapper.find("[data-test=diagnostic-link]").exists()).toBe(true);
+    expect(owner.wrapper.find("[data-test='settings-entry-État du service']").exists()).toBe(true);
   });
 
   it("Compte : des cartes de réglages, « Se déconnecter partout » à droite de sa ligne (1.6.67)", async () => {
@@ -204,7 +215,7 @@ describe("SettingsView, comptes (docs/65)", () => {
     expect(fixed.text()).not.toContain("CHF");
     expect(fixed.find("[data-test=see-plan]").attributes("href")).toContain("rubrique=compte");
     expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=toc-plateforme]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=settings-entry-plateforme]").exists()).toBe(false);
   });
 
   it("compte invité : active les notifications sur son téléphone", async () => {
@@ -246,9 +257,9 @@ describe("SettingsView, comptes (docs/65)", () => {
     await as(true);
     mockGet(false);
     const { wrapper } = await mountSettings("plateforme");
-    expect(wrapper.find("[data-test=toc-plateforme]").text()).toBe("Administration");
+    expect(wrapper.find("[data-test=settings-entry-plateforme] .grouped-row-title").text()).toBe("Administration");
     // Sans jargon (1.6.27) : « État du service » au lieu de « Diagnostic ».
-    expect(wrapper.find("[data-test=diagnostic-link]").text()).toBe("État du service");
+    expect(wrapper.find("[data-test='settings-entry-État du service'] .grouped-row-title").text()).toBe("État du service");
     expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
   });
 });
@@ -333,7 +344,7 @@ describe("SettingsView sous 600 px (planche « Structure téléphone »)", () =>
     mockGet(true);
     const { wrapper } = await mountSettings();
     const list = wrapper.find("[data-test=settings-list]");
-    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["Ma recherche", "Être averti", "Compte et aide"]);
+    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["La recherche", "Être averti", "Compte et aide"]);
     expect(list.text()).toContain("Seuil, message du jour, téléphone");
     expect(wrapper.find("[data-test=section-notifications]").exists()).toBe(false);
     expect(wrapper.find("[data-test=settings-markers]").exists()).toBe(false);

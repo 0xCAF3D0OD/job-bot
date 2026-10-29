@@ -1,0 +1,1 @@
+Réglages selon la planche « Structure téléphone » : une liste groupée (La recherche, Être averti, Compte et aide) ; sur téléphone, la liste seule puis une sous-page par rubrique avec « ← Réglages », et « Recevoir sur mon téléphone » à un toucher depuis la liste ; sur ordinateur, la liste à gauche et la rubrique à droite

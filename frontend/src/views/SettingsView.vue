@@ -19,9 +19,10 @@ import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
-import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
+import SettingsSection from "../components/SettingsSection.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
+import SavedStatus from "../components/SavedStatus.vue";
 import SettingCard from "../components/SettingCard.vue";
 import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
@@ -113,9 +114,13 @@ onMounted(async () => {
 });
 
 // Compte invité (docs/65 §4) : ses alertes sur son téléphone, avec un sujet ntfy à lui.
+const phoneSavedAt = ref(0);
 async function setPhone(enabled: boolean): Promise<void> {
   const { data } = await api.PUT("/api/notifications/phone", { body: { enabled } });
-  if (data) notifications.value = data;
+  if (data) {
+    notifications.value = data;
+    phoneSavedAt.value = Date.now();
+  }
   testMessage.value = "";
 }
 
@@ -321,7 +326,7 @@ const shown = (id: SectionId): boolean => !narrow.value || active.value === id;
 type Entry = { title: string; description?: string; icon: IconName; to: RouteLocationRaw; id?: SectionId };
 const GROUPS = computed<{ title: string; entries: Entry[] }[]>(() => [
   {
-    title: "Ma recherche",
+    title: "La recherche",
     entries: [
       { id: "recherche", title: "Recherche d'emploi", description: "Objectif ORP, preuves, sites suivis", icon: "briefcase", to: { query: { rubrique: "recherche" } } },
       { id: "rythme", title: "Rythme", description: "Jours de recherche, pause", icon: "calendar", to: { query: { rubrique: "rythme" } } },
@@ -418,63 +423,54 @@ onUnmounted(() => spy?.disconnect());
       </RouterLink>
     </template>
   </PageHero>
-  <section
-    v-if="listOnly"
-    class="band settings-list"
-    data-test="settings-list"
-  >
-    <div class="container">
-      <GroupedList
-        v-for="group in GROUPS"
-        :key="group.title"
-        :title="group.title"
-      >
-        <GroupedRow
-          v-for="entry in group.entries"
-          :key="entry.title"
-          :title="entry.title"
-          :description="entry.description"
-          :icon="entry.icon"
-          :to="entry.to"
-          :data-test="`settings-entry-${entry.id ?? entry.title}`"
-        />
-      </GroupedList>
-    </div>
-  </section>
-  <section
-    v-else
-    class="band"
-  >
-    <div :class="['settings-layout', { 'settings-sub': narrow }]">
+  <section class="band">
+    <div :class="['settings-layout', { 'settings-sub': narrow && !listOnly, 'settings-list': listOnly }]">
+      <!-- La liste (planche « Structure téléphone », 249:645) : seule sous 600 px, à gauche sur ordinateur
+           (liste et détail, Material 3), l'entrée affichée marquée (current). -->
       <nav
-        v-if="!narrow"
-        class="settings-toc"
+        v-if="listOnly || !wide"
+        class="settings-nav"
         aria-label="Sections des réglages"
+        data-test="settings-list"
       >
-        <RouterLink
-          v-for="section in sections"
-          :key="section.id"
-          :to="{ query: { rubrique: section.id } }"
-          :class="{ active: active === section.id }"
-          :aria-current="active === section.id ? 'page' : undefined"
-          :data-test="`toc-${section.id}`"
+        <GroupedList
+          v-for="group in GROUPS"
+          :key="group.title"
+          :title="group.title"
         >
-          <span class="with-icon">
-            <AppIcon
-              v-if="SETTINGS_ICONS[section.id]"
-              :name="SETTINGS_ICONS[section.id]!"
-            />{{ section.label }}
-          </span>
-        </RouterLink>
-        <!-- Sur ordinateur, le Diagnostic est une entrée du sommaire, sous un filet (0.78.4). -->
-        <RouterLink
-          v-if="showDiagnostic"
-          to="/reglages/diagnostic"
-          class="toc-diagnostic"
-          data-test="diagnostic-link"
-        >
-          <span class="with-icon"><AppIcon name="activity" />État du service</span>
-        </RouterLink>
+          <template
+            v-for="entry in group.entries"
+            :key="entry.title"
+          >
+            <GroupedRow
+              :title="entry.title"
+              :description="entry.description"
+              :icon="entry.icon"
+              :to="entry.to"
+              :current="!narrow && entry.id === active"
+              :data-test="`settings-entry-${entry.id ?? entry.title}`"
+            />
+            <!-- Le réglage à un toucher (choix provisoire de Kevin, à revoir avec le test utilisateurs). -->
+            <GroupedRow
+              v-if="listOnly && entry.id === 'notifications' && notifications?.personal"
+              title="Recevoir sur mon téléphone"
+              description="Offres, relances et rappel ORP, par ntfy."
+              label
+              data-test="settings-phone-row"
+            >
+              <template #end>
+                <SavedStatus :at="phoneSavedAt" />
+                <input
+                  type="checkbox"
+                  role="switch"
+                  :checked="notifications.configured"
+                  data-test="list-phone-switch"
+                  @change="setPhone(!notifications.configured)"
+                >
+              </template>
+            </GroupedRow>
+          </template>
+        </GroupedList>
       </nav>
       <!-- Sur téléphone, les marqueurs pour parcourir la longue page (docs/110). -->
       <nav
@@ -495,7 +491,10 @@ onUnmounted(() => spy?.disconnect());
           @click.prevent="goTo(section.id)"
         >{{ section.label }}</a>
       </nav>
-      <div class="settings-sections">
+      <div
+        v-if="!listOnly"
+        class="settings-sections"
+      >
         <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
              contrôle à droite ; plus de bouton « Enregistrer ». -->
         <SettingsSection
