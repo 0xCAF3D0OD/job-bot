@@ -1,6 +1,8 @@
 # L'audit téléphone de la démo (frontend/scripts/telephone.py) : en 320, 360 et 390 px, sur chaque
 # page et avec le panneau de la cloche ouvert, rien ne sort de l'écran et chaque cible tactile fait au
-# moins 24 × 24 px (WCAG 2.2, 2.5.8). La démo tourne dans Docker, comme en ligne (make demo-image).
+# moins 24 × 24 px (WCAG 2.2, 2.5.8). Puis l'audit des contrôles (frontend/scripts/controles.py), en 1440,
+# 320, 360 et 390 px : une rangée de contrôles a une seule hauteur à 1 px près, et le texte d'une liste de
+# choix ne passe pas sous son chevron. La démo tourne dans Docker, comme en ligne (make demo-image).
 name: Audit téléphone
 
 on:
@@ -33,6 +35,9 @@ jobs:
         run: make demo-image
       - name: Audit téléphone de la démo
         run: make audit-telephone DEMO_URL=http://localhost:8280
+      - name: Rangées de contrôles et listes de choix (1440, 320, 360, 390 px)
+        if: success() || failure()
+        run: make audit-controles DEMO_URL=http://localhost:8280
       - name: Journaux de la démo en cas d'échec
         if: failure()
         run: cd deploy/demo && docker compose -p joba1-demo-local logs --tail=80 api web
