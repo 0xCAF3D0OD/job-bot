@@ -177,6 +177,16 @@ describe("les champs (planche « Champs »)", () => {
   });
 });
 
+describe("l'entrée affichée d'une liste groupée", () => {
+  it("la phrase reste lisible sur le fond teinté, en clair et en sombre (WCAG 1.4.3)", () => {
+    expect(css).toContain(".grouped-row-current .grouped-row-description { color: var(--text); }");
+    for (const theme of [light, dark]) {
+      expect(ratio(theme.text!, theme["accent-soft"]!)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(theme.accent!, theme["accent-soft"]!)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
 describe("l'interrupteur (1.6.23)", () => {
   it("la piste non cochée se voit sur la carte : --faint, 3:1 au moins (WCAG 1.4.11)", () => {
     expect(css).toMatch(/:root input\[type="checkbox"\]\[role="switch"\] \{[^}]*background: var\(--faint\)/);

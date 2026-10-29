@@ -4061,6 +4061,8 @@ html.search-open { overflow: hidden; }
 /* L'entrée affichée à côté (liste et détail) : la pastille de sélection, texte accent en demi-gras. */
 .grouped-row-current, .grouped-row-current:hover { background: var(--accent-soft); color: var(--accent); }
 .grouped-row-current .grouped-row-title { font-weight: var(--weight-semibold); }
+/* Sur le fond teinté, --muted ne fait que 4,3:1 en clair : la phrase passe en --text (16,1:1, WCAG 1.4.3). */
+.grouped-row-current .grouped-row-description { color: var(--text); }
 .grouped-row-current :is(.grouped-icon, .grouped-chevron) { color: var(--accent); }
 .grouped-icon { flex: none; width: 1.25rem; height: 1.25rem; color: var(--text); }
 .grouped-text { display: grid; gap: calc(var(--space-1) / 2); flex: 1 1 auto; min-width: 0; }
