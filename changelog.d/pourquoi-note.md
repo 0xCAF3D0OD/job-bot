@@ -1,0 +1,1 @@
+Tri : la phrase « pourquoi » suit la note ; pour une note basse, la cause principale d'abord (« Zurich, hors de tes lieux. Kubernetes et CI/CD collent. »), pour une bonne note ce qui colle d'abord ; elle ne répète jamais le mot de la note et tient en 80 caractères
