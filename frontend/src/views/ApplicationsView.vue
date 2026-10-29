@@ -256,8 +256,11 @@ async function save(value: ApplicationFormValue): Promise<void> {
           params: { path: { application_id: editing.value.id } },
           body: applicationUpdateBody(value),
         });
+  // Les champs obligatoires se vérifient sous chaque champ (règles §4, Formulaire) : il ne reste ici
+  // que le refus du serveur, dit tel quel.
   if (!result.data) {
-    error.value = "Vérifie les champs obligatoires (date, entreprise, poste).";
+    const detail = (result.error as { detail?: unknown } | undefined)?.detail;
+    error.value = typeof detail === "string" ? detail : "Enregistrement impossible pour l'instant : réessaie.";
     return;
   }
   celebrateIf(editing.value.id, value.status, value.company);

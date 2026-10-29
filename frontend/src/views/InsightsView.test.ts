@@ -7,6 +7,7 @@ import InsightsView from "./InsightsView.vue";
 const GET = vi.fn();
 vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }));
 afterEach(() => {
+  vi.useRealTimers();
   vi.resetAllMocks();
   localStorage.removeItem("jobA1.bilan-vue");
 });
@@ -113,6 +114,9 @@ describe("Bilan (docs/42, docs/55)", () => {
   });
 
   it("quatre repliables chiffrés : la phrase repliée, le dessin déplié", async () => {
+    // Une date fixe : les dates des données (le 29 octobre) ne deviennent pas « aujourd'hui ».
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-22T10:00:00Z"));
     serve(report({
       comparisons: [
         { key: "source", title: "", groups: [group("jobs.ch", 3, 5), group("jobup.ch", 2, 10), group("LinkedIn", 1, 4)] },

@@ -3,6 +3,7 @@ import { ref } from "vue";
 
 import type { Interview, InterviewIn } from "../api/client";
 import AppIcon from "./AppIcon.vue";
+import FormField from "./FormField.vue";
 import IconButton from "./IconButton.vue";
 import {
   DURATIONS,
@@ -126,40 +127,82 @@ function submit(): void {
           </button>
         </div>
         <div class="form-grid">
-          <label>Date
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Date"
+            optional
+            :width="10"
+          >
             <input
+              :id="id"
               v-model="form.held_at"
               type="date"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             >
-          </label>
-          <label>Format
-            <select v-model="form.format">
-              <option :value="null">—</option>
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Format"
+            optional
+          >
+            <select
+              :id="id"
+              v-model="form.format"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+            >
+              <option :value="null">
+                —
+              </option>
               <option
                 v-for="(label, key) in FORMATS"
                 :key="key"
                 :value="key"
-              >{{ label }}</option>
+              >
+                {{ label }}
+              </option>
             </select>
-          </label>
-          <label>Durée
-            <select v-model="form.duration">
-              <option :value="null">—</option>
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Durée"
+            optional
+          >
+            <select
+              :id="id"
+              v-model="form.duration"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+            >
+              <option :value="null">
+                —
+              </option>
               <option
                 v-for="(label, key) in DURATIONS"
                 :key="key"
                 :value="key"
-              >{{ label }}</option>
+              >
+                {{ label }}
+              </option>
             </select>
-          </label>
-          <label>Nombre de personnes
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Nombre de personnes"
+            optional
+            :width="5"
+          >
             <input
+              :id="id"
               v-model.number="form.people_count"
               type="number"
               min="1"
               max="30"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             >
-          </label>
+          </FormField>
         </div>
         <div class="choice-row">
           <span class="choice-label">Avec qui</span>
@@ -179,7 +222,7 @@ function submit(): void {
       <fieldset>
         <legend>Ressenti</legend>
         <div class="choice-row">
-          <span class="choice-label">Globalement *</span>
+          <span class="choice-label">Globalement</span>
           <span
             v-if="ratingMissing && !form.rating"
             class="field-error"
@@ -280,159 +323,257 @@ function submit(): void {
             <span class="with-icon"><AppIcon name="plus" />{{ text }}</span>
           </button>
         </div>
-        <div class="inline-form">
+        <FormField
+          v-slot="{ id, describedby, invalid }"
+          label="Une autre question"
+          optional
+        >
+          <div class="inline-form">
+            <input
+              :id="id"
+              v-model="newQuestion"
+              type="text"
+              maxlength="300"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+              data-test="new-question"
+              @keydown.enter.prevent="addQuestion(newQuestion)"
+            >
+            <IconButton
+              icon="plus"
+              label="Ajouter la question"
+              data-test="add-question"
+              @click="addQuestion(newQuestion)"
+            />
+          </div>
+        </FormField>
+        <!-- Oui ou non pris en compte à l'envoi : une case à cocher (règles §4, Choisir). -->
+        <label class="check">
           <input
-            v-model="newQuestion"
-            type="text"
-            maxlength="300"
-            placeholder="Une autre question…"
-            aria-label="Autre question"
-            data-test="new-question"
-            @keydown.enter.prevent="addQuestion(newQuestion)"
-          >
-          <IconButton
-            icon="plus"
-            label="Ajouter la question"
-            data-test="add-question"
-            @click="addQuestion(newQuestion)"
-          />
-        </div>
-        <div class="choice-row">
-          <span class="choice-label">Question sur le salaire</span>
-          <button
-            type="button"
-            :class="['chip', { on: form.salary_asked === false }]"
-            @click="form.salary_asked = false"
-          >
-            Non
-          </button>
-          <button
-            type="button"
-            :class="['chip', { on: form.salary_asked === true }]"
+            v-model="form.salary_asked"
+            type="checkbox"
             data-test="salary-yes"
-            @click="form.salary_asked = true"
           >
-            Oui
-          </button>
+          On t'a posé la question du salaire
+        </label>
+        <FormField
+          v-if="form.salary_asked"
+          v-slot="{ id, describedby, invalid }"
+          label="Ce que tu as répondu"
+          optional
+        >
           <input
-            v-if="form.salary_asked"
+            :id="id"
             v-model="form.salary_answer"
             type="text"
             maxlength="300"
-            placeholder="Ce que tu as répondu"
-            aria-label="Ce que tu as répondu"
+            :aria-describedby="describedby"
+            :aria-invalid="invalid"
+            data-test="salary-answer"
           >
-        </div>
+        </FormField>
       </fieldset>
 
       <fieldset>
         <legend>Ce qui a marché, ce qui n'a pas marché</legend>
         <div class="form-grid">
-          <label class="wide">Ce qui a bien fonctionné
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            class="wide"
+            label="Ce qui a bien fonctionné"
+            optional
+          >
             <textarea
+              :id="id"
               v-model="form.went_well"
               rows="2"
               maxlength="2000"
               placeholder="Un exemple qui a porté, une réponse bien préparée…"
               data-test="went-well"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
-          <label class="wide">Ce qui a moins bien fonctionné
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            class="wide"
+            label="Ce qui a moins bien fonctionné"
+            optional
+          >
             <textarea
+              :id="id"
               v-model="form.went_badly"
               rows="2"
               maxlength="2000"
               placeholder="Une réponse hésitante, un point du CV mal expliqué…"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
-          <label class="wide">Ce que tu aurais dû préparer (une idée par ligne)
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            class="wide"
+            label="Ce que tu aurais dû préparer"
+            optional
+            hint="Une idée par ligne."
+          >
             <textarea
+              :id="id"
               v-model="form.to_prepare"
               rows="2"
               placeholder="Un exemple chiffré de projet&#10;Les chiffres de l'entreprise"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
-          <label>Tes questions posées
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Tes questions posées"
+            optional
+          >
             <textarea
+              :id="id"
               v-model="form.my_questions"
               rows="2"
               maxlength="2000"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
-          <label>Celles que tu regrettes de ne pas avoir posées
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Celles que tu regrettes de ne pas avoir posées"
+            optional
+          >
             <textarea
+              :id="id"
               v-model="form.missed_questions"
               rows="2"
               maxlength="2000"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
+          </FormField>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Ce que tu as appris sur le poste</legend>
         <div class="form-grid">
-          <label>Missions, équipe, outils, télétravail…
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Missions, équipe, outils, télétravail…"
+            optional
+          >
             <textarea
+              :id="id"
               v-model="form.learned"
               rows="2"
               maxlength="2000"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
-          <label>Points d'attention
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Points d'attention"
+            optional
+          >
             <textarea
+              :id="id"
               v-model="form.warnings"
               rows="2"
               maxlength="2000"
               placeholder="Charge, ambiance, flou sur le poste…"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
+          </FormField>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>La suite</legend>
         <div class="form-grid">
-          <label>Prochaine étape annoncée
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Prochaine étape annoncée"
+            optional
+          >
             <select
+              :id="id"
               v-model="form.next_step"
               data-test="next-step"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             >
-              <option :value="null">—</option>
+              <option :value="null">
+                —
+              </option>
               <option
                 v-for="(label, key) in NEXT_STEPS"
                 :key="key"
                 :value="key"
-              >{{ label }}</option>
+              >
+                {{ label }}
+              </option>
             </select>
-          </label>
-          <label v-if="form.next_step && form.next_step !== 'rien'">Avant le
+          </FormField>
+          <FormField
+            v-if="form.next_step && form.next_step !== 'rien'"
+            v-slot="{ id, describedby, invalid }"
+            label="Avant le"
+            optional
+            :width="10"
+          >
             <input
+              :id="id"
               v-model="form.next_step_at"
               type="date"
               data-test="next-step-at"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             >
-          </label>
-          <label>Remerciement
-            <select v-model="form.thanks">
-              <option :value="null">—</option>
+          </FormField>
+          <FormField
+            v-slot="{ id, describedby, invalid }"
+            label="Remerciement"
+            optional
+          >
+            <select
+              :id="id"
+              v-model="form.thanks"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
+            >
+              <option :value="null">
+                —
+              </option>
               <option
                 v-for="(label, key) in THANKS"
                 :key="key"
                 :value="key"
-              >{{ label }}</option>
+              >
+                {{ label }}
+              </option>
             </select>
-          </label>
-          <label
+          </FormField>
+          <FormField
             v-if="withEmployerFeedback"
+            v-slot="{ id, describedby, invalid }"
             class="wide"
-          >Le retour de l'employeur (motif, conseils)
+            label="Le retour de l'employeur (motif, conseils)"
+            optional
+          >
             <textarea
+              :id="id"
               v-model="form.employer_feedback"
               rows="2"
               maxlength="2000"
+              :aria-describedby="describedby"
+              :aria-invalid="invalid"
             />
-          </label>
+          </FormField>
         </div>
       </fieldset>
 
@@ -449,11 +590,11 @@ function submit(): void {
           class="primary"
           data-test="save-interview"
         >
-          Enregistrer
+          Enregistrer le retour
         </button>
         <button
           type="button"
-          class="link"
+          class="secondary"
           @click="emit('close')"
         >
           Annuler

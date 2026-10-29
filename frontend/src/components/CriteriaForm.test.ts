@@ -92,3 +92,32 @@ describe("CriteriaForm, déjà saisis", () => {
     expect(wrapper.find("[data-test=cancel-criteria]").exists()).toBe(true);
   });
 });
+
+describe("CriteriaForm, chargement et erreurs (règles §4)", () => {
+  it("des blocs gris tant que les critères chargent, pas un formulaire vide", async () => {
+    GET.mockReturnValue(new Promise(() => undefined));
+    const wrapper = mount(CriteriaView);
+    await flushPromises();
+    expect(wrapper.find("[data-test=loading]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=criteria-missing]").exists()).toBe(false);
+  });
+
+  it("taux hors limites : l'erreur sous le champ, pas d'enregistrement", async () => {
+    GET.mockResolvedValue({ data: { criteria: { locations: ["VD"], min_rate: null }, keywords } });
+    const wrapper = mount(CriteriaView, { attachTo: document.body });
+    await flushPromises();
+    const rate = wrapper.find("[data-test=criteria-min-rate]");
+    await rate.setValue("150");
+    await rate.trigger("blur");
+    expect(wrapper.find("[data-test=field-error]").text()).toBe("Indique un taux entier de 1 à 100, ou laisse vide.");
+    expect(rate.attributes("aria-invalid")).toBe("true");
+    await wrapper.find("[data-test=criteria-form]").trigger("submit");
+    await flushPromises();
+    expect(PUT).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(rate.element);
+    await rate.setValue("80");
+    expect(wrapper.find("[data-test=field-error]").exists()).toBe(false);
+    wrapper.unmount();
+  });
+});

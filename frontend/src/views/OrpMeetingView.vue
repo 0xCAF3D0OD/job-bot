@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
+import FormField from "../components/FormField.vue";
 import Illustration from "../components/Illustration.vue";
 import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
@@ -153,6 +154,7 @@ function startEditing(): void {
   when.value = meeting.value ? localInput(meeting.value.starts_at) : "";
   place.value = meeting.value?.place ?? "";
   advisor.value = meeting.value?.advisor ?? "";
+  whenError.value = "";
   editing.value = true;
 }
 
@@ -162,8 +164,21 @@ async function load(): Promise<void> {
   else failed.value = true;
 }
 
-async function saveMeeting(): Promise<void> {
-  if (!when.value) return;
+// Règles §4 (Champ de formulaire, Formulaire) : l'erreur sous le champ, en le quittant puis à
+// l'envoi, et dit quoi faire ; à l'envoi, le curseur va dans le champ.
+const whenError = ref("");
+function checkWhen(): void {
+  whenError.value = when.value ? "" : "Indique la date et l'heure du rendez-vous.";
+}
+
+async function saveMeeting(event: Event): Promise<void> {
+  const formEl = event.currentTarget as HTMLElement | null;
+  checkWhen();
+  if (whenError.value) {
+    await nextTick();
+    formEl?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
+    return;
+  }
   const { data } = await api.PUT("/api/orp-meeting", {
     body: { starts_at: new Date(when.value).toISOString(), place: place.value, advisor: advisor.value },
   });
@@ -334,34 +349,57 @@ onMounted(() => void load());
             v-else-if="editing || !meeting"
             class="orp-meeting-form"
             data-test="meeting-form"
+            novalidate
             @submit.prevent="saveMeeting"
           >
-            <label>
-              Date et heure
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="Date et heure"
+              :error="whenError"
+            >
               <input
+                :id="id"
                 v-model="when"
                 type="datetime-local"
                 required
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
                 data-test="meeting-at"
+                @blur="checkWhen"
+                @input="whenError && checkWhen()"
               >
-            </label>
-            <label>
-              Lieu (facultatif)
+            </FormField>
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="Lieu"
+              optional
+              :width="30"
+            >
               <input
+                :id="id"
                 v-model="place"
                 type="text"
                 maxlength="200"
                 placeholder="ORP de Lausanne, ou visio"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
               >
-            </label>
-            <label>
-              Conseiller (facultatif)
+            </FormField>
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              label="Conseiller"
+              optional
+              :width="20"
+            >
               <input
+                :id="id"
                 v-model="advisor"
                 type="text"
                 maxlength="120"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
               >
-            </label>
+            </FormField>
             <div class="form-actions">
               <!-- La seule action principale de l'écran (règles §3.3). -->
               <button
@@ -369,7 +407,7 @@ onMounted(() => void load());
                 class="primary"
                 data-test="meeting-save"
               >
-                Enregistrer
+                Enregistrer le rendez-vous
               </button>
               <button
                 v-if="editing"
@@ -411,26 +449,33 @@ onMounted(() => void load());
                 </label>
               </li>
             </ul>
-            <form
+            <FormField
               v-if="meeting"
-              class="inline-field"
-              @submit.prevent="addQuestion"
+              v-slot="{ id, describedby, invalid }"
+              label="Une autre question"
+              class="orp-question-new"
             >
-              <input
-                v-model="custom"
-                type="text"
-                maxlength="300"
-                placeholder="Une autre question"
-                aria-label="Une autre question"
-                data-test="question-new"
+              <form
+                class="inline-field"
+                @submit.prevent="addQuestion"
               >
-              <IconButton
-                type="submit"
-                icon="plus"
-                label="Ajouter la question"
-                data-test="question-add"
-              />
-            </form>
+                <input
+                  :id="id"
+                  v-model="custom"
+                  type="text"
+                  maxlength="300"
+                  :aria-describedby="describedby"
+                  :aria-invalid="invalid"
+                  data-test="question-new"
+                >
+                <IconButton
+                  type="submit"
+                  icon="plus"
+                  label="Ajouter la question"
+                  data-test="question-add"
+                />
+              </form>
+            </FormField>
             <p
               v-if="message"
               role="status"
@@ -451,15 +496,23 @@ onMounted(() => void load());
             <p class="setting-desc">
               Rien n'est envoyé à l'ORP : tu la télécharges, ou tu l'envoies toi-même.
             </p>
-            <label class="orp-sheet-name">
-              Ton nom sur la feuille (facultatif)
+            <FormField
+              v-slot="{ id, describedby, invalid }"
+              class="orp-sheet-name"
+              label="Ton nom sur la feuille"
+              optional
+              :width="20"
+            >
               <input
+                :id="id"
                 v-model="name"
                 type="text"
                 maxlength="120"
                 autocomplete="name"
+                :aria-describedby="describedby"
+                :aria-invalid="invalid"
               >
-            </label>
+            </FormField>
             <!-- Une colonne (décision du 25/10) : la seule action principale, puis l'IA en contour. -->
             <div class="form-actions orp-sheet-actions">
               <a
