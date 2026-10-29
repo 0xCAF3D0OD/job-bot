@@ -27,6 +27,20 @@ export function noAnswerDue(a: Application): boolean {
   return a.status === "relancee" && !!a.followed_up_at && a.followed_up_at <= daysAgo(NO_ANSWER_DAYS);
 }
 
+// À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours ; les
+// plus anciennes d'abord. La carte « À relancer » du Suivi et les relances une à une.
+export function followUpList(all: Application[]): Application[] {
+  const day = daysAgo(REMIND_AFTER_DAYS);
+  const after = daysAgo(NO_ANSWER_DAYS);
+  return all
+    .filter(
+      (a) =>
+        (a.status === "en_attente" && a.sent_at <= day) ||
+        (a.status === "relancee" && !!a.followed_up_at && a.followed_up_at <= after),
+    )
+    .sort((a, b) => a.sent_at.localeCompare(b.sent_at));
+}
+
 export function interviewUpcoming(a: Application): boolean {
   return !!a.interview_at && new Date(a.interview_at).getTime() > Date.now();
 }

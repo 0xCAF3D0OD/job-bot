@@ -3598,6 +3598,13 @@ main:focus { outline: none; }
 .triage-pile .pick-done { padding: 0; justify-items: start; text-align: left; }
 .triage-pile .pick-done .illu.spot { margin-inline: 0; }
 .triage-pile .pick-done .face-state-actions { justify-content: flex-start; }
+/* Les relances une à une : la même colonne que le tri ; l'envoi et le dernier échange sous le titre. */
+.follow-up-lines { display: grid; gap: var(--space-1); line-height: var(--leading-normal); }
+.follow-up-lines p { margin: 0; }
+.pick-card > .state-pill { justify-self: start; }
+/* Sur ordinateur, les boutons gardent la largeur de leur texte (§3) ; pleine largeur dans le panneau. */
+@media (min-width: 600px) { .follow-up-main, .follow-up-row { justify-self: start; } }
+.suivi-todo > .follow-ups-start { align-self: flex-start; }
 
 /* --- Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») ---
    Tous les blocs sur les mêmes bords ; fond de page clair, les blocs neutres sur --band. */

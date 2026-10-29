@@ -308,6 +308,20 @@ describe("Suivi en calendrier (docs/22)", () => {
   // quel que soit le jour où le test tourne. Les minuteries restent réelles.
   afterEach(() => vi.useRealTimers());
 
+  it("sur téléphone seulement : « Relancer une à une » sous « À relancer »", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-10T08:00:00Z"));
+    const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08", interview_at: null };
+    mockApi(() => month(), [old]);
+    const desktop = (await mountView()).wrapper;
+    expect(desktop.find("[data-test=follow-ups-start]").exists()).toBe(false);
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
+    const phone = (await mountView()).wrapper;
+    expect(phone.find("[data-test=follow-ups-start]").attributes("href")).toBe("/candidatures/relances");
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
   it("pastilles par jour, cartes au clic, à relancer par défaut, copie Job-Room", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-10T08:00:00Z"));
