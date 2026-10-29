@@ -121,3 +121,59 @@ describe("CriteriaForm, chargement et erreurs (règles §4)", () => {
     wrapper.unmount();
   });
 });
+
+describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () => {
+  const original = globalThis.matchMedia;
+  afterEach(() => {
+    globalThis.matchMedia = original;
+  });
+
+  it("le résumé en liste groupée ; toucher une ligne ouvre le formulaire sur ce critère", async () => {
+    globalThis.matchMedia = ((query: string) =>
+      ({ matches: query.includes("599px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList);
+    GET.mockImplementation((path: string) =>
+      Promise.resolve(
+        path === "/api/criteria"
+          ? {
+              data: {
+                criteria: { locations: ["VD"], min_rate: 80, excluded_types: ["stage", "temporaire"] },
+                keywords,
+                saved_at: "2026-10-20T10:00:00Z",
+              },
+            }
+          : {
+              data: {
+                received: 36,
+                retained: 33,
+                reasons: [
+                  { rule: "type", label: "Type d'offre", count: 1 },
+                  { rule: "lieu", label: "Lieu", count: 1 },
+                  { rule: "taux", label: "Taux d'activité", count: 1 },
+                ],
+              },
+            },
+      ),
+    );
+    const wrapper = mount(CriteriaView, { attachTo: document.body });
+    await flushPromises();
+
+    const summary = wrapper.find("[data-test=criteria-summary]");
+    expect(summary.find(".grouped-title").text()).toBe("Recherche");
+    const titles = summary.findAll(".grouped-row-title").map((t) => t.text());
+    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d'activité", "Types d'offres exclus"]);
+    expect(summary.find("[data-test=criteria-row-taux] .grouped-row-description").text()).toBe("80 % au moins");
+
+    const outcome = wrapper.find("[data-test=filter-outcome]");
+    expect(outcome.findAll(".grouped-row-title").map((t) => t.text())).toEqual([
+      "33 offres passent sur 36",
+      "Écartées surtout pour",
+    ]);
+    expect(outcome.text()).toContain("Type d'offre, lieu, taux d'activité : 1 chacune.");
+
+    await wrapper.find("[data-test=criteria-row-taux] button").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=criteria-form]").exists()).toBe(true);
+    expect(document.activeElement?.id).toBe("min_rate");
+    wrapper.unmount();
+  });
+});

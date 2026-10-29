@@ -11,7 +11,11 @@ import { placeLabel } from "../cantons";
 
 import AppIcon from "./AppIcon.vue";
 import FilterOutcome from "./FilterOutcome.vue";
+import GroupedList from "./GroupedList.vue";
+import GroupedRow from "./GroupedRow.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
+import type { IconName } from "../icons";
+import { useNarrow } from "../composables/usePhone";
 const CONTRACTS: { value: ContractType; label: string }[] = [
   { value: "stage", label: "Stages" },
   { value: "apprentissage", label: "Apprentissages" },
@@ -74,20 +78,36 @@ const languagesHelp = computed(() => {
 // en toutes lettres (n° 24).
 const summary = computed(() => {
   const f = form.value;
-  const rows: { label: string; value: string }[] = [
-    { label: "Lieux", value: f.locations.length ? f.locations.map(placeLabel).join(", ") : "partout" },
+  const rows: { key: string; label: string; value: string }[] = [
+    { key: "lieux", label: "Lieux", value: f.locations.length ? f.locations.map(placeLabel).join(", ") : "partout" },
   ];
   const remote = REMOTE_POLICIES.find((p) => p.value === f.remote_policy)?.summary ?? "";
   const [remoteLabel, remoteValue] = remote.split(" : ");
-  if (remoteLabel && remoteValue) rows.push({ label: remoteLabel, value: remoteValue });
-  rows.push({ label: "Taux d'activité", value: f.min_rate ? `${f.min_rate} % au moins` : "tous" });
-  const types = CONTRACTS.filter((c) => f.excluded_types.includes(c.value)).map((c) => c.label.toLowerCase());
-  rows.push({ label: "Types d'offres exclus", value: types.length ? types.join(", ") : "aucun" });
-  if (f.banned_words.length) rows.push({ label: "Mots interdits dans le titre", value: f.banned_words.join(", ") });
+  if (remoteLabel && remoteValue) rows.push({ key: "teletravail", label: remoteLabel, value: remoteValue });
+  rows.push({ key: "taux", label: "Taux d'activité", value: f.min_rate ? `${f.min_rate} % au moins` : "tous" });
+  // Seule l'initiale passe en minuscule : « temporaires et CDD », pas « cdd ».
+  const types = CONTRACTS.filter((c) => f.excluded_types.includes(c.value)).map((c) => c.label.charAt(0).toLowerCase() + c.label.slice(1));
+  rows.push({ key: "types", label: "Types d'offres exclus", value: types.length ? types.join(", ") : "aucun" });
+  if (f.banned_words.length) rows.push({ key: "mots", label: "Mots interdits dans le titre", value: f.banned_words.join(", ") });
   const langs = LANGUAGES.filter((l) => f.unspoken_languages.includes(l.value)).map((l) => l.label.toLowerCase());
-  if (langs.length) rows.push({ label: "Langues non parlées", value: langs.join(", ") });
+  if (langs.length) rows.push({ key: "langues", label: "Langues non parlées", value: langs.join(", ") });
   return rows;
 });
+
+// Sous 600 px (planche « Structure téléphone ») : le résumé en liste groupée, une ligne par critère,
+// la valeur en phrase grise ; toucher une ligne ouvre le formulaire sur ce critère.
+const { phone: narrow } = useNarrow();
+const ICONS: Record<string, IconName> = { lieux: "pin", teletravail: "plug", taux: "stats", types: "briefcase", mots: "filter", langues: "globe" };
+function sentence(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+async function editAt(key: string): Promise<void> {
+  editing.value = true;
+  await nextTick();
+  const fieldset = document.getElementById(`criteria-${key}`);
+  fieldset?.scrollIntoView?.({ block: "start" });
+  fieldset?.querySelector<HTMLElement>("input, select, textarea, button")?.focus({ preventScroll: true });
+}
 
 // Le taux minimum : vide, ou un nombre de 1 à 100 ; l'erreur sous le champ, en le quittant et à
 // l'enregistrement (règles §4, Champ de formulaire).
@@ -163,6 +183,34 @@ onMounted(() => void load());
       Impossible de charger les prérequis.
     </p>
     <div
+      v-else-if="!editing && narrow"
+      class="criteria-layout"
+    >
+      <GroupedList
+        title="Recherche"
+        data-test="criteria-summary"
+      >
+        <GroupedRow
+          v-for="row in summary"
+          :key="row.key"
+          :title="row.label"
+          :description="sentence(row.value)"
+          :icon="ICONS[row.key]"
+          button
+          :data-test="`criteria-row-${row.key}`"
+          @click="editAt(row.key)"
+        />
+      </GroupedList>
+      <p
+        v-if="message"
+        role="status"
+        class="muted"
+      >
+        {{ message }}
+      </p>
+      <FilterOutcome grouped />
+    </div>
+    <div
       v-else-if="!editing"
       class="criteria-layout"
     >
@@ -213,7 +261,7 @@ onMounted(() => void load());
       novalidate
       @submit.prevent="save"
     >
-      <fieldset>
+      <fieldset id="criteria-lieux">
         <legend>Lieux acceptés</legend>
         <p class="setting-desc">
           Communes (Lausanne) ou cantons (VD). Vide : partout.
@@ -225,7 +273,7 @@ onMounted(() => void load());
         />
       </fieldset>
 
-      <fieldset>
+      <fieldset id="criteria-teletravail">
         <legend>Télétravail complet</legend>
         <p class="setting-desc">
           « Si ouvert depuis la Suisse » écarte les postes « US only ».
@@ -249,7 +297,7 @@ onMounted(() => void load());
         </div>
       </fieldset>
 
-      <fieldset>
+      <fieldset id="criteria-taux">
         <legend id="min_rate-legend">
           Taux d'activité minimum
         </legend>
@@ -286,7 +334,7 @@ onMounted(() => void load());
         </p>
       </fieldset>
 
-      <fieldset>
+      <fieldset id="criteria-types">
         <legend>Types d'offres exclus</legend>
         <p class="setting-desc">
           <HoverNote
@@ -313,7 +361,7 @@ onMounted(() => void load());
         </label>
       </fieldset>
 
-      <fieldset>
+      <fieldset id="criteria-mots">
         <legend>Mots interdits dans le titre</legend>
         <p class="setting-desc">
           Une offre dont le titre contient l'un de ces mots est écartée.
@@ -325,7 +373,7 @@ onMounted(() => void load());
         />
       </fieldset>
 
-      <fieldset>
+      <fieldset id="criteria-langues">
         <legend>Langues non parlées</legend>
         <p class="setting-desc">
           <HoverNote
