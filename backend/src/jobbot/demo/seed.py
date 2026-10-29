@@ -47,7 +47,7 @@ from jobbot.db.models import (
 from jobbot.demo import data
 from jobbot.filtering.service import run_filter, save_criteria
 from jobbot.followups.service import local_today
-from jobbot.llm.scoring import PROMPT_VERSION, profile_hash
+from jobbot.llm.scoring import PROMPT_VERSION, profile_hash, why_sentence
 from jobbot.runtime import Runtime
 from jobbot.scoring.service import active_profile
 from jobbot.trainings.service import sync_catalog
@@ -283,19 +283,22 @@ def _evaluation(spec: data.OfferSpec, chunks: dict[str, int], seen: datetime) ->
                 "chunk_ids": [chunks["exp_platform"]],
             }
         )
-    # La phrase « pourquoi » (score-v5, docs/121 §C.1) dit la même chose que les points forts
-    # et les manques de l'offre : ce qu'elle demande et que le profil a, ce qui manque.
-    parts = []
-    if covered:
-        parts.append(f"{_and(covered)} : dans ton profil")
-    if spec.missing:
-        parts.append(f"il manque {_and(list(spec.missing))}")
-    if far_from_dev:
-        parts.append("le poste demande plus de développement")
-    why = spec.why or " ; ".join(parts) + "."
+    # La phrase « pourquoi » (score-v6) : ce qui colle et la cause de l'écart, mis dans l'ordre
+    # par la note comme pour une vraie note (why_sentence).
+    fit = (
+        f"{_and(covered)} collent"
+        if len(covered) > 1
+        else (f"{covered[0]} colle" if covered else None)
+    )
+    gap = (
+        f"Il manque {_and(list(spec.missing))}"
+        if spec.missing
+        else ("Le poste demande plus de développement" if far_from_dev else None)
+    )
+    why = spec.why or why_sentence(spec.score, fit, gap) or ""
     return {
         "score": spec.score,
-        "why": why[0].upper() + why[1:],
+        "why": (why[0].upper() + why[1:]) or None,
         "level": spec.level,
         "level_detail": spec.level_detail or None,
         "summary_role": f"{spec.title} chez {spec.company}, à {spec.city} : "

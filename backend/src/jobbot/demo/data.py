@@ -473,7 +473,7 @@ OFFERS = [
         asks=("Spark", "Python", "SQL"),
         missing=("Spark", "SQL"),
         role="construire et faire tourner les flux de données de l'entreprise.",
-        why="Le poste vise la donnée (Spark, SQL) ; ton parcours est la plateforme et le cloud.",
+        why="Le poste vise la donnée (Spark, SQL). Ton parcours cloud colle en partie.",
     ),
     OfferSpec(
         "o32",

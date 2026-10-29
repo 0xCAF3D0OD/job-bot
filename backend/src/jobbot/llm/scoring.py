@@ -6,6 +6,7 @@ n'a aucun outil ; sa réponse suit un schéma JSON imposé, puis elle est revali
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from html import escape
 from importlib import resources
@@ -13,12 +14,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-PROMPT_VERSION = "score-v5"
+PROMPT_VERSION = "score-v6"
 # score-v3 n'ajoute que le télétravail (docs/26), score-v4 les signes d'arnaque (docs/30),
 # score-v5 la phrase « pourquoi » et le niveau (docs/121 §C) : une note plus ancienne reste
-# valable, elle n'est pas refaite (« Renoter » la refait, sur demande).
-COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4", "score-v5")
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v5.md").read_text("utf-8")
+# valable, elle n'est pas refaite (« Renoter » la refait, sur demande). score-v6 : la phrase
+# « pourquoi » en deux morceaux (ce qui colle, la cause de l'écart), mis dans l'ordre par la note.
+COMPATIBLE_VERSIONS = ("score-v2", "score-v3", "score-v4", "score-v5", "score-v6")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/score-v6.md").read_text("utf-8")
 KEYWORD_LENGTH = 25
 MAX_OFFER_CHARS = 12_000
 MAX_TOKENS = 4_000
@@ -60,6 +62,9 @@ class ScoreOutput(BaseModel):
     scam_signals: list[ScamSignal] = Field(default_factory=list)
     # Pourquoi cette note, et le niveau (score-v5, docs/121 §C.1-2).
     why: str | None = Field(default=None, max_length=300)
+    # score-v6 : les deux morceaux de la phrase, que why_sentence met dans l'ordre selon la note.
+    why_fit: str | None = Field(default=None, max_length=120)
+    why_gap: str | None = Field(default=None, max_length=120)
     level: Literal["above", "below"] | None = None
     level_detail: str | None = Field(default=None, max_length=200)
 
@@ -111,7 +116,8 @@ OUTPUT_SCHEMA: dict[str, Any] = {
                 "additionalProperties": False,
             },
         },
-        "why": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "why_fit": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "why_gap": {"anyOf": [{"type": "string"}, {"type": "null"}]},
         "level": {"anyOf": [{"type": "string", "enum": ["above", "below"]}, {"type": "null"}]},
         "level_detail": {"anyOf": [{"type": "string"}, {"type": "null"}]},
     },
@@ -130,7 +136,8 @@ OUTPUT_SCHEMA: dict[str, Any] = {
         "remote_region",
         "remote_from_switzerland",
         "scam_signals",
-        "why",
+        "why_fit",
+        "why_gap",
         "level",
         "level_detail",
     ],
@@ -260,6 +267,38 @@ class RemoteOutput(BaseModel):
     remote_from_switzerland: bool | None = None
 
 
+WHY_MAX = 80
+# Les mots de la note : la phrase s'affiche juste après, elle ne les répète pas.
+_NOTE_WORD = re.compile(r"^\s*(très proche|proche|à creuser|loin)\s*[:,\u2013-]?\s*", re.IGNORECASE)
+
+
+def _part(text: str | None) -> str:
+    """Un morceau de la phrase : sans le mot de la note, sans point final, une majuscule."""
+    if not text:
+        return ""
+    clean = _NOTE_WORD.sub("", " ".join(text.split())).strip(" .;,")
+    return clean[:1].upper() + clean[1:]
+
+
+def why_sentence(score: int | None, fit: str | None, gap: str | None) -> str | None:
+    """La phrase « pourquoi », cohérente avec la note (décision de Kevin) : pour une note basse
+    (À creuser, Loin), la cause principale d'abord, puis ce qui colle ; pour une bonne note, ce
+    qui colle d'abord, jamais un point faible en tête. 80 caractères au plus : la seconde idée
+    tombe si elle ne tient pas."""
+    first, second = _part(fit), _part(gap)
+    if score is not None and score < 70 and second:
+        first, second = second, first
+    if not first:
+        first, second = second, ""
+    if not first:
+        return None
+    whole = f"{first}. {second}." if second else f"{first}."
+    if len(whole) <= WHY_MAX:
+        return whole
+    alone = f"{first}."
+    return alone if len(alone) <= WHY_MAX else alone[: WHY_MAX - 1].rsplit(" ", 1)[0] + "."
+
+
 def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
     """Valide la réponse et retire ce qui n'est pas prouvé par un bloc actif."""
     try:
@@ -281,7 +320,9 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> ScoreOutput:
             "keywords_asks": _asks(output.keywords_asks),
             "keywords_offers": _keywords(output.keywords_offers, 4),
             # Une phrase, nettoyée ; le détail du niveau seulement avec un niveau.
-            "why": " ".join(output.why.split())[:140] or None if output.why else None,
+            "why": why_sentence(output.score, output.why_fit, output.why_gap)
+            if output.why_fit or output.why_gap
+            else (" ".join(output.why.split())[:140] or None if output.why else None),
             "level_detail": (" ".join(output.level_detail.split())[:100] or None)
             if output.level and output.level_detail
             else None,

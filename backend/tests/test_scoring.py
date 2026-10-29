@@ -35,6 +35,7 @@ from jobbot.llm.scoring import (
     parse_output,
     profile_hash,
     request_params,
+    why_sentence,
 )
 from jobbot.runtime import Runtime
 from jobbot.scoring import remote, service
@@ -232,7 +233,7 @@ async def test_direct_scoring_stores_note_and_cost(ai: Runtime, fake: FakeClient
     stored = await evaluation(ai, first)
     assert stored is not None and stored.score == 78 and stored.summary_partial is True
     assert stored.strengths == [{"text": "Linux solide", "chunk_ids": [1]}]
-    assert stored.prompt_version == "score-v5" and stored.model == "claude-opus-5"
+    assert stored.prompt_version == "score-v6" and stored.model == "claude-opus-5"
     assert await evaluation(ai, filtered) is None
     async with ai.sessionmaker() as session:
         calls = await session.scalar(select(func.count()).select_from(LlmCall))
@@ -440,7 +441,7 @@ async def test_new_prompt_rescores_offers_kept_aside(ai: Runtime, fake: FakeClie
     await service.run_scoring(ai)
     async with ai.sessionmaker() as session:
         evaluation = await session.scalar(select(Evaluation).where(Evaluation.offer_id == later))
-        assert evaluation is not None and evaluation.prompt_version == "score-v5"
+        assert evaluation is not None and evaluation.prompt_version == "score-v6"
         assert evaluation.keywords_asks == [
             {"text": "5 ans Linux", "covered": True},
             {"text": "Ansible", "covered": False},
@@ -474,7 +475,7 @@ async def test_old_prompt_batch_is_rescored_and_canceled_items_are_retried(
         rows = {e.offer_id: e for e in await session.scalars(select(Evaluation))}
     # La note du lot est gardée puis refaite avec les nouvelles consignes ; l'offre du lot
     # annulé est notée comme une nouvelle, sans erreur.
-    assert rows[old].prompt_version == "score-v5" and rows[old].score_error is None
+    assert rows[old].prompt_version == "score-v6" and rows[old].score_error is None
     assert rows[canceled].score_error is None and rows[canceled].scored_at is not None
     assert len(fake.calls) - calls_before == 2
 
@@ -619,3 +620,43 @@ def test_why_and_level_score_v5() -> None:
         None,
         None,
     )
+
+
+def _with_why(score: int, fit: str | None, gap: str | None) -> str:
+    data = json.loads(answer(score))
+    return json.dumps({**data, "why_fit": fit, "why_gap": gap})
+
+
+def test_why_low_note_names_the_cause_first() -> None:
+    """Une offre « Loin » à cause du lieu nomme le lieu en premier, puis ce qui colle."""
+    out = parse_output(
+        _with_why(35, "Kubernetes et CI/CD collent", "Zurich, hors de tes lieux"), CHUNKS
+    )
+    assert out.why == "Zurich, hors de tes lieux. Kubernetes et CI/CD collent."
+    assert why_sentence(55, "Linux solide", "L'allemand courant manque") == (
+        "L'allemand courant manque. Linux solide."
+    )
+
+
+def test_why_good_note_never_opens_on_a_weakness() -> None:
+    """Une offre « Proche » : ce qui colle d'abord ; le manque après, s'il tient."""
+    out = parse_output(_with_why(78, "Kubernetes et CI/CD collent", "Pas de Bicep"), CHUNKS)
+    assert out.why == "Kubernetes et CI/CD collent. Pas de Bicep."
+    assert why_sentence(90, "Linux solide", None) == "Linux solide."
+
+
+def test_why_never_repeats_the_note_and_fits_80_characters() -> None:
+    assert why_sentence(30, "Proche : Linux solide", "Loin : Zurich, hors de tes lieux") == (
+        "Zurich, hors de tes lieux. Linux solide."
+    )
+    long = why_sentence(
+        40,
+        "Kubernetes, Terraform et Prometheus en production collent",
+        "Zurich et Berne, hors de tes lieux habituels",
+    )
+    assert long is not None and len(long) <= 80 and long.startswith("Zurich et Berne")
+    assert why_sentence(80, None, None) is None
+    # Une note plus ancienne (score-v5) garde sa phrase.
+    old = json.dumps({**json.loads(answer(70)), "why": "Ton expérience Linux colle."})
+    assert parse_output(old, CHUNKS).why == "Ton expérience Linux colle."
+    assert {"why_fit", "why_gap"} <= set(OUTPUT_SCHEMA["required"])

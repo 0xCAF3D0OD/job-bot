@@ -143,12 +143,10 @@ async def test_seed_fills_a_believable_search(demo_runtime: Runtime, demo_admin:
     # La phrase « pourquoi » suit l'offre (docs/121 §C.1) ; le niveau, seulement là où
     # l'annonce le dit (§C.2).
     assert notes["Data Engineer"] == (
-        "Le poste vise la donnée (Spark, SQL) ; ton parcours est la plateforme et le cloud.",
+        "Le poste vise la donnée (Spark, SQL). Ton parcours cloud colle en partie.",
         None,
     )
-    assert notes["Cloud Engineer (Azure)"][0] == (
-        "Azure et PowerShell : dans ton profil ; il manque Bicep."
-    )
+    assert notes["Cloud Engineer (Azure)"][0] == ("Il manque Bicep. Azure et PowerShell collent.")
     assert {t for t, (_, level) in notes.items() if level} == {"SRE junior"}
     assert all(why and len(why) <= 140 for why, _ in notes.values())
     assert len(showcased) == 2
