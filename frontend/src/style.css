@@ -1755,6 +1755,9 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   box-shadow: 0 10px 28px rgb(17 17 31 / 14%); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-regular); line-height: var(--leading-normal);
   text-transform: none; letter-spacing: 0; white-space: normal; text-decoration: none; animation: hover-note-in 0.15s ease;
 }
+/* Un pont invisible sur l'écart entre le libellé et la bulle : la souris passe dessus sans la fermer (WCAG 1.4.13). */
+.hover-note-bubble::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 0.5rem; }
+.hover-note[tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
 @keyframes hover-note-in { from { opacity: 0; transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) { .hover-note-bubble { animation: none; } }
 
