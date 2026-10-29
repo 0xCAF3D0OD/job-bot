@@ -191,7 +191,10 @@ const stateText = computed(() => {
   ><template
     v-for="(part, index) in highlight(training.title, training.matched)"
     :key="index"
-  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></a>
+  ><mark v-if="part.hit">{{ part.text }}</mark><template v-else>{{ part.text }}</template></template><AppIcon
+    name="external"
+    class="training-title-external"
+  /><span class="visually-hidden"> (nouvel onglet)</span></a>
   <!-- Les faits avec les icônes de la carte (docs/101) : le mot reste pour un lecteur d'écran. -->
   <p
     class="training-facts meta-line"

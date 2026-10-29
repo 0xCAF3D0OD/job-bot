@@ -168,7 +168,7 @@ onBeforeUnmount(() => {
         rel="noopener noreferrer"
         data-test="discover-demo"
       >
-        Voir la démo
+        <span class="with-icon"><AppIcon name="external" />Voir la démo</span><span class="visually-hidden"> (nouvel onglet)</span>
       </a>
       <p
         v-if="!loggedIn"

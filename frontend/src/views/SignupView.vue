@@ -192,7 +192,7 @@ async function submit(): Promise<void> {
         <span>J'ai lu <RouterLink
           to="/tes-donnees"
           target="_blank"
-        >ce que deviennent mes données</RouterLink></span>
+        >ce que deviennent mes données<span class="visually-hidden"> (nouvel onglet)</span></RouterLink></span>
       </label>
       <p
         v-if="consentError"

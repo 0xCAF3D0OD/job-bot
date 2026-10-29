@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { api } from "../api/client";
 import type { components } from "../api/schema";
+import AppIcon from "./AppIcon.vue";
 
 // Les certificats à joindre (docs/87 §4, 0.69.1), dans « Postuler » : ceux marqués « à joindre »,
 // les plus récents d'abord ; ceux à faire corriger, rappelés à part.
@@ -36,7 +37,7 @@ onMounted(async () => {
           target="_blank"
           rel="noopener noreferrer"
           :data-test="`prep-certificate-${item.document_id}`"
-        >{{ label(item.filename) }}</a>{{ index < attach.length - 1 ? ", " : "." }}
+        ><span class="with-icon"><AppIcon name="download" />{{ label(item.filename) }}</span><span class="visually-hidden"> (nouvel onglet)</span></a>{{ index < attach.length - 1 ? ", " : "." }}
       </template>
     </p>
     <p

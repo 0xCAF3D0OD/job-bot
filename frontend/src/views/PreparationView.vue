@@ -485,7 +485,7 @@ onMounted(() => void load());
                   rel="noopener noreferrer"
                   class="button-link primary-link"
                   data-test="apply"
-                >{{ applyLink.label }}</a>
+                ><span class="with-icon"><AppIcon name="external" />{{ applyLink.label }}</span><span class="visually-hidden"> (nouvel onglet)</span></a>
               </div>
             </section>
             <section

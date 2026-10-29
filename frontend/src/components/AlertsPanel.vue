@@ -249,7 +249,7 @@ onMounted(() => void load());
               <a
                 v-if="cell.url && cell.status !== 'received'"
                 :href="cell.url"
-                :aria-label="`Ouvrir la recherche sur ${siteName(cell.site)}`"
+                :aria-label="`Ouvrir la recherche sur ${siteName(cell.site)} (nouvel onglet)`"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="link"
@@ -257,12 +257,12 @@ onMounted(() => void load());
               <a
                 v-if="cell.remote_url && cell.status !== 'received'"
                 :href="cell.remote_url"
-                :aria-label="`La même recherche en télétravail sur ${siteName(cell.site)}`"
+                :aria-label="`La même recherche en télétravail sur ${siteName(cell.site)} (nouvel onglet)`"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="link"
                 data-test="cell-remote"
-              >en télétravail</a>
+              ><span class="with-icon"><AppIcon name="external" />en télétravail</span></a>
               <span class="alert-status">{{ statusText(cell) }}</span>
               <label
                 v-if="cell.status !== 'received'"

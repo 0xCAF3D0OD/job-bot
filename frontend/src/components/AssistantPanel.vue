@@ -438,7 +438,7 @@ const headItems: MoreMenuItem[] = [
                       :href="part.href"
                       target="_blank"
                       rel="noopener noreferrer"
-                    >{{ part.text }}</a>
+                    >{{ part.text }}<span class="visually-hidden"> (nouvel onglet)</span></a>
                     <strong v-else-if="part.bold">{{ part.text }}</strong>
                     <template v-else>
                       {{ part.text }}
@@ -471,7 +471,7 @@ const headItems: MoreMenuItem[] = [
                       :href="part.href"
                       target="_blank"
                       rel="noopener noreferrer"
-                    >{{ part.text }}</a>
+                    >{{ part.text }}<span class="visually-hidden"> (nouvel onglet)</span></a>
                     <strong v-else-if="part.bold">{{ part.text }}</strong>
                     <template v-else>
                       {{ part.text }}

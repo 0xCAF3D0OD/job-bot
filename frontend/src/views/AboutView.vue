@@ -2,6 +2,7 @@
 import { onMounted, ref } from "vue";
 
 import { api } from "../api/client";
+import AppIcon from "../components/AppIcon.vue";
 import PageHero from "../components/PageHero.vue";
 
 // À propos (docs/126 §4) : pourquoi jobA1, ce qu'il promet, qui est derrière. Publique, comme
@@ -55,7 +56,7 @@ onMounted(async () => {
           href="https://github.com/0xCAF3D0OD/job-bot"
           target="_blank"
           rel="noopener noreferrer"
-        >Voir le code<span class="visually-hidden"> (nouvel onglet)</span></a>
+        ><span class="with-icon"><AppIcon name="external" />Voir le code</span><span class="visually-hidden"> (nouvel onglet)</span></a>
       </p>
     </div>
   </section>
