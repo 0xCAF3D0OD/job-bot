@@ -265,6 +265,9 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 .offer-day-name { font-weight: var(--weight-semibold); font-size: var(--font-body); color: var(--text); }
 .offer-day-count { font-size: var(--font-small); color: var(--muted); white-space: nowrap; }
 .offer-day-title::after { content: ""; flex: 1; align-self: center; height: 1px; background: var(--border); }
+.offer-day-title.grouped-title::after { content: none; }
+/* La feuille « Filtres » des Offres aère ses groupes. */
+.filter-sheet { display: grid; gap: var(--space-5); }
 .filter-more { justify-self: start; margin: var(--space-1) var(--space-1); font-size: var(--font-small); }
 .logo {
   display: grid;
@@ -4143,4 +4146,9 @@ html.search-open { overflow: hidden; }
 }
 @supports not (animation-timeline: scroll()) {
   :is(.topbar nav.main-nav, .jobs-tabs, .kind-tabs, .prep-tabs.prep-steps) { scrollbar-width: thin; }
+}
+/* Offres sous 600 px : la recherche sur toute la largeur, « Filtrer » et « Ajouter » dessous. */
+@media (max-width: 599px) {
+  .offers-toolbar { flex-wrap: wrap; }
+  .offers-toolbar-search { flex: 1 1 100%; }
 }

@@ -14,7 +14,8 @@ import SpontaneousForm from "../components/SpontaneousForm.vue";
 import ManualOfferForm from "../components/ManualOfferForm.vue";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import FirstOffers from "../components/FirstOffers.vue";
-import { usePhone } from "../composables/usePhone";
+import { useNarrow, usePhone } from "../composables/usePhone";
+import OfferFilterSheet from "../components/OfferFilterSheet.vue";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
 import OfferSearch from "../components/OfferSearch.vue";
@@ -77,9 +78,10 @@ const selectedId = ref<number | null>(null);
 const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 const { phone } = usePhone();
+const { phone: narrow } = useNarrow();
 // Barre d'outils (1.6.55) : « Filtrer » ouvre un panneau sous le bouton (ordinateur) ou une feuille en
 // bas de l'écran (téléphone) ; les filtres actifs restent visibles en pastilles sous la barre.
-const chips = computed(() => activeChips(filters.value, phone.value));
+const chips = computed(() => activeChips(filters.value, phone.value && !narrow.value));
 const filterAnchor = ref<HTMLElement | null>(null);
 const filterToggle = ref<HTMLButtonElement | null>(null);
 // Le panneau tient sous le bouton, dans la fenêtre ; au-delà, il défile et garde son pied en bas.
@@ -101,7 +103,7 @@ function onPointerDown(event: PointerEvent): void {
 }
 // La feuille ouverte, la page dessous ne défile plus.
 watch([filtersOpen, phone], ([open, onPhone]) => {
-  document.documentElement.classList.toggle("filters-open", open && onPhone);
+  document.documentElement.classList.toggle("filters-open", open && onPhone && !narrow.value);
 });
 // Candidature spontanée (docs/39) : sans annonce, préparée comme une offre.
 const spontaneousOpen = ref(false);
@@ -127,7 +129,7 @@ const dayCounts = computed(() => {
   }
   return counts;
 });
-type Day = { name: string; count: string };
+type Day = { name: string; count: string; n: number };
 function dayHeader(index: number): Day | null {
   if (!byDay.value) return null;
   const offer = items.value[index];
@@ -135,7 +137,8 @@ function dayHeader(index: number): Day | null {
   const key = dayKey(offer.first_seen_at);
   const previous = items.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
   if (previous && dayKey(previous.first_seen_at) === key) return null;
-  return { name: dayName(offer.first_seen_at), count: plural(dayCounts.value.get(key) ?? 0, "offre", "offres") };
+  const n = dayCounts.value.get(key) ?? 0;
+  return { name: dayName(offer.first_seen_at), count: plural(n, "offre", "offres"), n };
 }
 // Une liste à plat (lignes de jour et offres) pour que chaque offre s'anime seule (docs/60 §3).
 const rows = computed(() =>
@@ -457,8 +460,9 @@ onUnmounted(() => {
       class="offers-toolbar"
       data-test="offers-toolbar"
     >
+      <!-- Sous 600 px (planche) : la recherche revient dans la barre, à côté de « Filtrer ». -->
       <OfferSearch
-        v-if="!phone"
+        v-if="!phone || narrow"
         class="offers-toolbar-search"
         :value="filters.q"
         @search="(q) => update({ q })"
@@ -488,8 +492,20 @@ onUnmounted(() => {
         </button>
         <!-- Téléphone : la feuille sort de la page (Teleport), au-dessus de la barre du bas ; ordinateur :
              le panneau reste sous le bouton, sans Teleport, pour ne pas être recréé à chaque filtre. -->
+        <!-- Sous 600 px : la feuille « Filtres » de la planche. -->
+        <OfferFilterSheet
+          v-if="narrow"
+          :open="filtersOpen"
+          :filters="filters"
+          :facets="facets"
+          :total="total"
+          @update="update"
+          @reset="reset"
+          @close="closeFilters"
+        />
         <component
           :is="phone ? Teleport : 'div'"
+          v-else
           v-bind="phone ? { to: 'body' } : { class: 'offers-filters-anchor' }"
         >
           <div
@@ -673,12 +689,23 @@ onUnmounted(() => {
             :class="{ 'offer-day': row.day }"
             :data-test="row.day ? 'offer-day' : undefined"
           >
+            <!-- Sous 600 px (planche « Structure téléphone ») : le titre du jour d'une liste groupée,
+                 son nombre en pastille. -->
             <h2
               v-if="row.day"
-              class="offer-day-title"
+              :class="['offer-day-title', { 'grouped-title': narrow }]"
             >
               <span class="offer-day-name">{{ row.day.name }}</span>
-              <span class="offer-day-count">{{ row.day.count }}</span>
+              <CountBadge
+                v-if="narrow"
+                :count="row.day.n"
+                class="grouped-count"
+                :aria-label="row.day.count"
+              />
+              <span
+                v-else
+                class="offer-day-count"
+              >{{ row.day.count }}</span>
             </h2>
             <OfferCard
               v-else-if="row.offer"
