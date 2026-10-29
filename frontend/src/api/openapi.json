@@ -4628,6 +4628,58 @@
         }
       }
     },
+    "/api/letters/{draft_id}/review": {
+      "post": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Review Letter",
+        "description": "Relecture avant affichage : une relecture, au plus une correction, puis une relecture.",
+        "operationId": "reviewLetter",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "IA non configurée, profil vide ou budget atteint"
+          },
+          "502": {
+            "description": "Réponse de l'IA inutilisable"
+          },
+          "503": {
+            "description": "IA momentanément indisponible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/letters/{draft_id}": {
       "put": {
         "tags": [
@@ -15331,6 +15383,16 @@
           },
           "document": {
             "$ref": "#/components/schemas/LetterDocumentOut"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -19648,6 +19710,56 @@
           "result"
         ],
         "title": "RescoreResponse"
+      },
+      "ReviewCriterionOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "ok",
+          "reason"
+        ],
+        "title": "ReviewCriterionOut"
+      },
+      "ReviewOut": {
+        "properties": {
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewCriterionOut"
+            },
+            "type": "array",
+            "title": "Criteria"
+          },
+          "corrected": {
+            "type": "boolean",
+            "title": "Corrected"
+          }
+        },
+        "type": "object",
+        "required": [
+          "criteria",
+          "corrected"
+        ],
+        "title": "ReviewOut",
+        "description": "La relecture avant affichage : sept critères, réussis ou à revoir."
       },
       "RhythmDay": {
         "properties": {

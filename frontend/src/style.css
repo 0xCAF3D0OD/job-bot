@@ -621,6 +621,11 @@ p.badge.reason { margin: 0; }
 .side-card .hint { margin: 0; font-size: var(--font-small); }
 .version-instruction { margin: 0; overflow-wrap: anywhere; }
 .versions .grouped-row-title { overflow-wrap: anywhere; }
+/* La relecture de la lettre : la ligne, puis un critère par ligne, sa pastille au bout. */
+.review-line { margin: 0; color: var(--muted); }
+.review-criteria { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.review-criteria li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.review-criterion-text { display: grid; gap: var(--space-1); min-width: 0; }
 .letter-sheet {
   background: #fff; color: #1a1a1a; border: 1px solid var(--border); border-radius: 6px;
   box-shadow: 0 12px 32px rgba(17, 17, 31, 0.08);

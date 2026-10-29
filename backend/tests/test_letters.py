@@ -64,12 +64,15 @@ def letter_json(chunk_ids: list[int], **extra: Any) -> str:
 
 class FakeClient:
     def __init__(self) -> None:
-        self.response: RawResult | Exception | None = None
+        # Une réponse, ou une suite de réponses servies dans l'ordre (rédaction, relecture…).
+        self.response: RawResult | Exception | list[RawResult] | None = None
         self.params: list[dict[str, Any]] = []
 
     async def score(self, params: dict[str, Any]) -> RawResult:
         self.params.append(params)
         assert self.response is not None
+        if isinstance(self.response, list):
+            return self.response.pop(0)
         if isinstance(self.response, Exception):
             raise self.response
         return self.response
@@ -414,3 +417,84 @@ async def test_instruction_refused_or_without_effect(
     assert same.json()["detail"].startswith("Cette consigne ne change rien")
     versions = (await api.get(f"/api/offers/{offer_id}/letters")).json()
     assert [v["version"] for v in versions] == [1]
+
+
+def review(failing: dict[str, str] | None = None, invented: list[int] | None = None) -> RawResult:
+    """Une relecture de l'IA : tout réussi, sauf les critères donnés (clé → raison)."""
+    failing = failing or {}
+    keys = ["accroche", "pertinence", "precision", "conclusion", "invention", "consigne"]
+    criteria = [{"key": k, "ok": k not in failing, "reason": failing.get(k, "Bien.")} for k in keys]
+    text = json.dumps({"criteria": criteria, "invented_paragraphs": invented or []})
+    return RawResult(text, "claude-opus-5", Usage(2000, 0, 0, 300), "end_turn")
+
+
+async def test_review_all_ok_without_coordinates(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    """Relue du premier coup : 7/7, pas de correction ; le relecteur ne voit pas les coordonnées."""
+    offer_id, chunk_id = await setup_offer(rt)
+    await api.put("/api/identity", json=IDENTITY)
+    fake.response = [answer(chunk_id), review()]
+    letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    assert letter["review"] is None
+    reviewed = (await api.post(f"/api/letters/{letter['id']}/review")).json()
+    criteria = reviewed["review"]["criteria"]
+    assert [c["label"] for c in criteria] == [
+        "Accroche",
+        "Pertinence",
+        "Précision",
+        "Longueur",
+        "Conclusion",
+        "Aucune invention",
+        "Règles",
+    ]
+    assert all(c["ok"] for c in criteria) and reviewed["review"]["corrected"] is False
+    assert len(fake.params) == 2
+    sent = json.dumps(fake.params[1], ensure_ascii=False)
+    assert "<lettre>" in sent and "Votre annonce a retenu mon attention." in sent
+    for value in IDENTITY.values():
+        assert value not in sent
+
+
+async def test_review_corrects_once(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:
+    """Un critère à revoir : une seule correction, puis une seule relecture."""
+    offer_id, chunk_id = await setup_offer(rt)
+    fake.response = [
+        answer(chunk_id),
+        review({"precision": "Des adjectifs vides, peu de faits."}),
+        answer(
+            chunk_id, paragraphs=[{"text": "J'administre 12 nœuds K3s.", "chunk_ids": [chunk_id]}]
+        ),
+        review({"conclusion": "Pas de demande d'entretien."}),
+    ]
+    letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    reviewed = (await api.post(f"/api/letters/{letter['id']}/review")).json()
+    assert len(fake.params) == 4
+    correction = fake.params[2]["messages"][0]["content"]
+    assert "Précision : Des adjectifs vides" in correction
+    assert reviewed["paragraphs"][0]["text"] == "J'administre 12 nœuds K3s."
+    states = {c["key"]: c["ok"] for c in reviewed["review"]["criteria"]}
+    # La seconde relecture fait foi, même avec un critère encore à revoir : pas de boucle.
+    assert states["precision"] is True and states["conclusion"] is False
+    assert reviewed["review"]["corrected"] is True
+    versions = (await api.get(f"/api/offers/{offer_id}/letters")).json()
+    assert [v["version"] for v in versions] == [1]
+
+
+async def test_review_removes_invention(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:
+    """« Aucune invention » est bloquant : le paragraphe qui invente encore est retiré."""
+    offer_id, chunk_id = await setup_offer(rt)
+    invented = {"invention": "« 10 ans chez Google » n'est dans aucun bloc."}
+    fake.response = [
+        answer(chunk_id),
+        review(invented, invented=[2]),
+        answer(chunk_id),
+        review(invented, invented=[2]),
+    ]
+    letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    reviewed = (await api.post(f"/api/letters/{letter['id']}/review")).json()
+    assert len(fake.params) == 4
+    texts = [p["text"] for p in reviewed["paragraphs"]]
+    assert "J'administre un cluster K3s." not in texts and texts
+    invention = next(c for c in reviewed["review"]["criteria"] if c["key"] == "invention")
+    assert invention["ok"] is True and "retiré" in invention["reason"]

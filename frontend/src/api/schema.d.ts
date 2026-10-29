@@ -1713,6 +1713,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/letters/{draft_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review Letter
+         * @description Relecture avant affichage : une relecture, au plus une correction, puis une relecture.
+         */
+        post: operations["reviewLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/letters/{draft_id}": {
         parameters: {
             query?: never;
@@ -5362,6 +5382,7 @@ export interface components {
             /** Edited At */
             edited_at: string | null;
             document: components["schemas"]["LetterDocumentOut"];
+            review?: components["schemas"]["ReviewOut"] | null;
         };
         /** LetterParagraph */
         LetterParagraph: {
@@ -6782,6 +6803,27 @@ export interface components {
              * @enum {string}
              */
             result: "queued" | "already_queued";
+        };
+        /** ReviewCriterionOut */
+        ReviewCriterionOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Ok */
+            ok: boolean;
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * ReviewOut
+         * @description La relecture avant affichage : sept critères, réussis ou à revoir.
+         */
+        ReviewOut: {
+            /** Criteria */
+            criteria: components["schemas"]["ReviewCriterionOut"][];
+            /** Corrected */
+            corrected: boolean;
         };
         /** RhythmDay */
         RhythmDay: {
@@ -11432,6 +11474,58 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Réponse de l'IA inutilisable */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description IA momentanément indisponible */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reviewLetter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LetterOut"];
+                };
+            };
+            /** @description IA non configurée, profil vide ou budget atteint */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
             /** @description Réponse de l'IA inutilisable */
             502: {

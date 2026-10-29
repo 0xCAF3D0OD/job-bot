@@ -161,6 +161,43 @@ describe("PreparationView", () => {
     expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toBe("Plus court");
   });
 
+  it("la lettre s'affiche relue : « Relue : 6/7 », le détail avec ses pastilles, « Relecture… »", async () => {
+    mockGet([letter(11, 1)]);
+    const criteria = [
+      ["accroche", "Accroche", true],
+      ["pertinence", "Pertinence", true],
+      ["precision", "Précision", false],
+      ["longueur", "Longueur", true],
+      ["conclusion", "Conclusion", true],
+      ["invention", "Aucune invention", true],
+      ["regles", "Règles", true],
+    ].map(([key, label, ok]) => ({ key, label, ok, reason: ok ? "Bien." : "Peu de chiffres." }));
+    let release: (value: unknown) => void = () => undefined;
+    POST.mockImplementation((path: string) =>
+      path === "/api/letters/{draft_id}/review"
+        ? new Promise((resolve) => {
+            release = resolve;
+          })
+        : Promise.resolve({ data: letter(12, 2, { instruction: "plus court" }) }),
+    );
+    const wrapper = await mountView();
+    await wrapper.find("[data-test=instruction]").setValue("plus court");
+    await wrapper.find("[data-test=write]").trigger("click");
+    await flushPromises();
+    // Pendant la relecture, le bouton le dit.
+    expect(wrapper.find("[data-test=write]").text()).toContain("Relecture…");
+    release({ data: letter(12, 2, { instruction: "plus court", review: { criteria, corrected: true } }) });
+    await flushPromises();
+    const line = wrapper.find("[data-test=review-line]");
+    expect(line.attributes("aria-live")).toBe("polite");
+    expect(line.text()).toBe("Relue : 6/7. À renforcer : précision.");
+    const pills = wrapper.findAll("[data-test=review-detail] [data-test=state-pill]");
+    expect(pills.map((p) => p.text())).toContain("À revoir");
+    expect(pills.filter((p) => p.text() === "Réussi")).toHaveLength(6);
+    expect(wrapper.find("[data-test=review-precision] .state-pill").classes()).toContain("todo");
+    expect(wrapper.find("[data-test=review-detail] .state-pill.error").exists()).toBe(false);
+  });
+
   it("consigne hors de portée : une ligne sous la consigne, gardée, pas de nouvelle version", async () => {
     mockGet([letter(11, 1)]);
     POST.mockResolvedValue({
