@@ -341,3 +341,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.127 | Mise en ligne : app.joba1.ch menait à la démo (sur le réseau partagé, « api » désignait aussi l'API de la démo) ; Caddy joint maintenant la plateforme par un nom à elle, et `make deploy` vérifie que l'adresse mène bien à la plateforme | livrée |
 | 1.6.128 | Connexion : nouvelle image du soir, celle sur laquelle finit la vidéo du jour qui tombe | livrée |
 | 1.6.129 | Panneau de commande sur téléphone et tri pas à pas : composants communs (progression « 1 sur N », panneau du bas, raccourcis ← →) et règles §4 | livrée |
+| 1.6.130 | Tri : le bandeau « Annuler » dans la page sur ordinateur, au-dessus du panneau de commande sur téléphone ; colonne de travail --page-column | livrée |
