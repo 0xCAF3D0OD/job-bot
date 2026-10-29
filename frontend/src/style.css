@@ -4098,6 +4098,9 @@ html.search-open { overflow: hidden; }
   :root:has(.tab-bar) .action-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
   .action-bar > :is(button, a):not(.link) { width: 100%; justify-content: center; }
   :root:has(.action-bar) main { padding-bottom: calc(var(--tabbar-h, 0rem) + var(--action-bar-h, 5.5rem) + var(--space-5) + env(safe-area-inset-bottom)); }
+  /* Avec un pied de page, c'est lui qui réserve la place du panneau : ses liens restent atteignables, sans vide en double. */
+  :root:has(.action-bar):has(.app-footer) main { padding-bottom: var(--space-6); }
+  :root:has(.action-bar) .app-footer { padding-bottom: calc(var(--tabbar-h, 0rem) + var(--action-bar-h, 5.5rem) + var(--space-8) + env(safe-area-inset-bottom)); }
 }
 
 /* Le bandeau « Annuler » et le bouton Assistant au-dessus du panneau de commande, sous 600 px. Au-delà,
