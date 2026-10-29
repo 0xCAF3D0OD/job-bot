@@ -3597,6 +3597,7 @@ main:focus { outline: none; }
 .pick-ad { justify-self: start; }
 .triage-pile .pick-done { padding: 0; justify-items: start; text-align: left; }
 .triage-pile .pick-done .illu.spot { margin-inline: 0; }
+.triage-pile .pick-done .face-state-actions { justify-content: flex-start; }
 
 /* --- Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») ---
    Tous les blocs sur les mêmes bords ; fond de page clair, les blocs neutres sur --band. */

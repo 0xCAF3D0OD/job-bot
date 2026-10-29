@@ -228,36 +228,42 @@ const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gar
           right="Garder"
         />
       </div>
-      <FaceState
+      <div
         v-else
-        title="Tri du jour terminé"
-        illustration="reussite"
-        class="pick-done"
-        data-test="pick-done"
+        class="pick-step"
       >
-        <p v-if="summary">
-          {{ summary }}.
-        </p>
-        <div class="face-state-actions">
-          <button
-            v-if="kept"
-            type="button"
-            class="secondary"
-            data-test="pick-preparing"
-            @click="emit('showPreparing')"
-          >
-            {{ prepareLabel }}
-          </button>
-          <RouterLink
-            v-else
-            :to="{ name: 'today' }"
-            class="button-link"
-            data-test="pick-today"
-          >
-            Revenir à Aujourd'hui
-          </RouterLink>
-        </div>
-      </FaceState>
+        <FaceState
+          title="Tri du jour terminé"
+          illustration="reussite"
+          class="pick-done"
+          data-test="pick-done"
+        >
+          <p v-if="summary">
+            {{ summary }}.
+          </p>
+          <div class="face-state-actions">
+            <button
+              v-if="kept"
+              type="button"
+              class="secondary"
+              data-test="pick-preparing"
+              @click="emit('showPreparing')"
+            >
+              {{ prepareLabel }}
+            </button>
+            <RouterLink
+              v-else
+              :to="{ name: 'today' }"
+              class="button-link"
+              data-test="pick-today"
+            >
+              Revenir à Aujourd'hui
+            </RouterLink>
+          </div>
+        </FaceState>
+        <!-- Le dernier « Annuler » reste à sa place, sous l'action (sur ordinateur). -->
+        <UndoToast inline />
+      </div>
     </Transition>
   </div>
 </template>

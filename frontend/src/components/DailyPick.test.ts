@@ -69,6 +69,19 @@ describe("DailyPick", () => {
     expect(wrapper.emitted("showPreparing")).toBeTruthy();
   });
 
+  it("à la fin, le dernier « Annuler » reste dans la page", async () => {
+    PATCH.mockResolvedValue({ response: { ok: true } });
+    const wrapper = mountPick();
+    await wrapper.find("[data-test=pick-keep]").trigger("click");
+    await wrapper.find("[data-test=pick-keep]").trigger("click");
+    await flushPromises();
+    const done = wrapper.find("[data-test=pick-done]");
+    expect(done.exists()).toBe(true);
+    expect(wrapper.find("[data-test=undo-inline]").text()).toContain("Gardée : SRE.");
+    await useUndo().undo();
+    wrapper.unmount();
+  });
+
   it("sur téléphone : la note, pourquoi et l'annonce passent dans le panneau, pas de raccourcis", () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
     const wrapper = mountPick();
