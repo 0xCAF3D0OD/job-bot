@@ -227,7 +227,7 @@ function copyOnOpen(): void {
             class="button-link"
             data-test="wizard-open"
             @click="copyOnOpen"
-          ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
+          ><span class="with-icon">Ouvrir {{ site.name }} : {{ search.terms }}{{ search.location ? ` · ${search.location}` : "" }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
         </template>
         <a
           v-for="link in remoteLinks"
@@ -238,7 +238,7 @@ function copyOnOpen(): void {
           class="button-link"
           data-test="wizard-open-remote"
           @click="copyOnOpen"
-        ><span class="with-icon"><AppIcon name="external" />Ouvrir {{ site.name }} en télétravail : {{ link.terms }}<span class="visually-hidden"> (nouvel onglet)</span></span></a>
+        ><span class="with-icon">Ouvrir {{ site.name }} en télétravail : {{ link.terms }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
       </div>
       <!-- Deux boutons égaux, côte à côte (docs/104 §4). -->
       <div class="form-actions wizard-site-actions">

@@ -80,7 +80,7 @@ onMounted(load);
         rel="noopener noreferrer"
         class="button-link"
         data-test="extension-install"
-      ><span class="with-icon"><AppIcon name="external" />Installer l'extension<span class="visually-hidden"> (Firefox, nouvel onglet)</span></span></a>
+      ><span class="with-icon">Installer l'extension<AppIcon name="external" /><span class="visually-hidden"> (Firefox, nouvel onglet)</span></span></a>
     </SettingRow>
     <SettingRow
       title="Relier l'extension"

@@ -56,7 +56,7 @@ onMounted(async () => {
           href="https://github.com/0xCAF3D0OD/job-bot"
           target="_blank"
           rel="noopener noreferrer"
-        ><span class="with-icon"><AppIcon name="external" />Voir le code</span><span class="visually-hidden"> (nouvel onglet)</span></a>
+        ><span class="with-icon">Voir le code<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
       </p>
     </div>
   </section>

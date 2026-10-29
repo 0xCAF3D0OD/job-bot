@@ -22,4 +22,11 @@ describe("liens vers un nouvel onglet", () => {
     expect(seen).toBeGreaterThan(15);
     expect(missing).toEqual([]);
   });
+
+  it("l'icône « ouvrir ailleurs » vient après le texte, partout (demande de Design)", () => {
+    const before = Object.entries(sources)
+      .filter(([, source]) => source.includes('<span class="with-icon"><AppIcon name="external" />'))
+      .map(([path]) => path);
+    expect(before).toEqual([]);
+  });
 });

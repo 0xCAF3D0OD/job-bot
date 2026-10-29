@@ -369,7 +369,7 @@ onMounted(() => void load());
             :href="link.url"
             target="_blank"
             rel="noopener noreferrer"
-          ><span class="with-icon"><AppIcon name="external" />{{ link.label }}</span><span class="visually-hidden"> (nouvel onglet)</span></a>
+          ><span class="with-icon">{{ link.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
         </span>
       </DisclosureRow>
       <p

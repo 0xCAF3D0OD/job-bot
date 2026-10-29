@@ -253,7 +253,7 @@ onMounted(() => void load());
                 target="_blank"
                 rel="noopener noreferrer"
                 class="link"
-              ><span class="with-icon"><AppIcon name="external" />Ouvrir</span></a>
+              ><span class="with-icon">Ouvrir<AppIcon name="external" /></span></a>
               <a
                 v-if="cell.remote_url && cell.status !== 'received'"
                 :href="cell.remote_url"
@@ -262,7 +262,7 @@ onMounted(() => void load());
                 rel="noopener noreferrer"
                 class="link"
                 data-test="cell-remote"
-              ><span class="with-icon"><AppIcon name="external" />en télétravail</span></a>
+              ><span class="with-icon">en télétravail<AppIcon name="external" /></span></a>
               <span class="alert-status">{{ statusText(cell) }}</span>
               <label
                 v-if="cell.status !== 'received'"
