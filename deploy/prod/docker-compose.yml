@@ -1,0 +1,139 @@
+# La vraie plateforme jobA1 sur le serveur (docs/136). Les images sont construites par GitHub
+# Actions (.github/workflows/images.yml) ; le serveur ne fait que les télécharger.
+# Lancé par `make deploy` depuis le Mac (deploy/prod/serveur.sh), jamais à la main.
+#
+# Deux fichiers de réglages, à côté de celui-ci, jamais dans git :
+#   .env        : la version, les adresses et les mots de passe de la base (compose seul) ;
+#   jobbot.env  : les réglages de jobA1 (clé d'IA, boîtes e-mail, ntfy, sauvegardes…),
+#                 voir jobbot.env.example.
+name: joba1
+
+x-image: &image ${JOBA1_REGISTRY:-ghcr.io/0xcaf3d0od}/joba1-api:${JOBA1_TAG:?JOBA1_TAG manquant (make deploy le remplit)}
+
+# Les adresses de la base, une par accès (docs/exploitation.md, « Accès à la base »).
+x-urls:
+  app: &url-app postgresql+psycopg://jobbot_app:${APP_DB_PASSWORD:?}@db:5432/jobbot
+  worker: &url-worker postgresql+psycopg://jobbot_worker:${WORKER_DB_PASSWORD:?}@db:5432/jobbot
+  owner: &url-owner postgresql+psycopg://jobbot:${POSTGRES_PASSWORD:?}@db:5432/jobbot
+
+x-environment: &environment
+  JOBBOT_ENV: prod
+  JOBBOT_API_HOST: 0.0.0.0
+  # Seul Caddy joint l'API (aucun port publié) : elle croit l'adresse qu'il transmet.
+  JOBBOT_TRUSTED_PROXIES: "*"
+  JOBBOT_STORAGE_PATH: /data
+  JOBBOT_BACKUP_PATH: /sauvegardes
+  JOBBOT_PUBLIC_URL: ${APP_PUBLIC_URL:-https://${APP_DOMAIN}}
+  TZ: Europe/Zurich
+
+x-jobbot: &jobbot
+  image: *image
+  restart: unless-stopped
+  env_file: ["${JOBBOT_ENV_FILE:-jobbot.env}"]
+  volumes:
+    - files:/data
+    - ${JOBA1_SAUVEGARDES:-../../sauvegardes}:/sauvegardes
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jobbot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: jobbot
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobbot -d jobbot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # Aucun port publié : seuls l'API et le worker la voient.
+
+  # Le schéma à jour avant l'API et le worker, à chaque lancement. Sert aussi aux commandes
+  # ponctuelles avec l'accès propriétaire : `docker compose run --rm migrate jobbot set-password`.
+  migrate:
+    <<: *jobbot
+    restart: "no"
+    command: ["jobbot", "migrate"]
+    environment:
+      <<: *environment
+      JOBBOT_DATABASE_URL: *url-app
+      JOBBOT_WORKER_DATABASE_URL: *url-worker
+      JOBBOT_MIGRATE_DATABASE_URL: *url-owner
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *jobbot
+    command: ["jobbot", "api"]
+    environment:
+      <<: *environment
+      JOBBOT_API_PORT: "8000"
+      JOBBOT_DATABASE_URL: *url-app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      # Au démarrage, une sonde par seconde : la mise à jour n'attend pas 30 s pour rien.
+      start_period: 60s
+      start_interval: 1s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *jobbot
+    command: ["jobbot", "worker"]
+    environment:
+      <<: *environment
+      JOBBOT_WORKER_HTTP_PORT: "8001"
+      JOBBOT_DATABASE_URL: *url-app
+      JOBBOT_WORKER_DATABASE_URL: *url-worker
+      # Les sauvegardes lisent toute la base avec l'accès propriétaire (docs/82).
+      JOBBOT_MIGRATE_DATABASE_URL: *url-owner
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/healthz')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      # Au démarrage, une sonde par seconde : la mise à jour n'attend pas 30 s pour rien.
+      start_period: 60s
+      start_interval: 1s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    image: ${JOBA1_REGISTRY:-ghcr.io/0xcaf3d0od}/joba1-web:${JOBA1_TAG:?}
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?}
+      DEMO_DOMAIN: ${DEMO_DOMAIN:?}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      # HTTP/3, si le pare-feu laisse passer l'UDP ; sans lui, tout marche en HTTP/2.
+      - "${HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - caddy:/data
+    networks: [default, joba1]
+    # Le site n'attend pas l'API : pendant qu'elle redémarre, il répond « jobA1 se met à jour »
+    # (Caddyfile), que l'interface reconnaît, plutôt que rien du tout.
+    depends_on:
+      api:
+        condition: service_started
+
+networks:
+  # Le réseau partagé avec la démo (projet joba1-demo, deploy/prod/demo.yml) : Caddy y joint
+  # l'API de la démo sous le nom demo-api.
+  joba1:
+    name: joba1
+
+volumes:
+  database:
+  files:
+  caddy:

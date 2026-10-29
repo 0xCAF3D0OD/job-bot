@@ -1,5 +1,7 @@
 # La démo en ligne de jobA1
 
+> **Sur le serveur de jobA1, la démo tourne désormais à côté de la vraie plateforme** et se met à jour avec elle (`make deploy`, docs/136) : ce qui suit sert pour une démo seule, sur un autre serveur.
+
 Ce dossier fait tourner la **démo publique** de jobA1 sur un serveur : des données fictives (« Camille Exemple »), en lecture seule, remises à neuf chaque nuit à 4 h. Pourquoi et comment : [docs/77](../../docs/77-demo-en-ligne.md).
 
 La démo n'a **aucun secret** : ni clé d'IA, ni boîte e-mail, ni mot de passe, et rien de ta vraie plateforme.

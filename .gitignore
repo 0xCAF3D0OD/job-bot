@@ -5,6 +5,8 @@ sauvegardes/
 .env
 .env.*
 !.env.example
+# Réglages de la plateforme sur le serveur (deploy/prod, docs/136)
+jobbot.env
 
 # Python
 __pycache__/

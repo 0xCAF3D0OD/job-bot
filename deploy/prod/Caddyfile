@@ -1,0 +1,97 @@
+# Le site du serveur jobA1 (docs/136) : la vraie plateforme (APP_DOMAIN) et la démo
+# (DEMO_DOMAIN), derrière un seul Caddy, qui obtient tout seul les certificats HTTPS.
+# Pour un essai local : http://app.localhost et http://demo.localhost.
+{
+	admin off
+}
+
+# Ce que les deux sites ont en commun ; {args[0]} : l'API à joindre.
+(site) {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Ni métriques, ni documentation de l'API, ni état technique depuis Internet.
+	@private path /metrics /metrics/* /readyz /version /api/docs /api/docs/* /api/openapi.json /api/redoc
+	handle @private {
+		respond 404
+	}
+
+	handle /api/* {
+		reverse_proxy {args[0]}
+	}
+
+	handle /healthz {
+		reverse_proxy {args[0]}
+	}
+
+	# Les fichiers de l'application (`/assets/…`, nommés d'après leur contenu) : un fichier qui
+	# n'existe plus (version précédente) répond 404, jamais `index.html` ; l'interface se
+	# recharge alors d'elle-même (docs/exploitation.md, « Maintenance »).
+	handle /assets/* {
+		root * /srv
+		file_server
+	}
+
+	# L'interface : une application d'une page, `index.html` pour toute autre adresse.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# L'API redémarre (mise à jour) : une réponse « en maintenance », que l'interface reconnaît
+	# pour montrer sa page d'attente, au lieu d'une erreur 502.
+	handle_errors 502 503 504 {
+		header Content-Type application/json
+		header Retry-After 10
+		respond `{"detail": "jobA1 se met à jour, ça revient dans un instant.", "maintenance": true, "reason": "update", "message": null}` 503
+	}
+}
+
+# --- La vraie plateforme ---------------------------------------------------------------------
+{$APP_DOMAIN} {
+	# Un document déposé fait 10 Mo au plus (docs/exploitation.md, « Limites des requêtes »).
+	request_body {
+		max_size 11MB
+	}
+
+	import site api:8000
+
+	# Journal d'accès : 7 jours au plus.
+	log {
+		output file /data/access-app.log {
+			roll_keep_for 168h
+		}
+	}
+}
+
+# --- La démo (docs/77) : son API tourne dans le projet joba1-demo -----------------------------
+{$DEMO_DOMAIN} {
+	# Rien de lourd à envoyer : la démo refuse toute écriture.
+	request_body {
+		max_size 1MB
+	}
+
+	# Des offres d'emploi fictives n'ont rien à faire dans les moteurs de recherche.
+	header X-Robots-Tag "noindex, nofollow"
+	handle /robots.txt {
+		respond "User-agent: *
+Disallow: /
+"
+	}
+
+	import site demo-api:8000
+
+	log {
+		output file /data/access-demo.log {
+			roll_keep_for 168h
+		}
+	}
+}
