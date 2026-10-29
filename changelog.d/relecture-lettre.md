@@ -1,0 +1,1 @@
+Préparer : chaque lettre est relue avant de s'afficher, sur sept critères (accroche, pertinence, précision, longueur, conclusion, aucune invention, règles) ; au plus une correction automatique ; un fait absent du profil est toujours retiré ; « Relue : 6/7 » sous la lettre et le détail avec ses pastilles

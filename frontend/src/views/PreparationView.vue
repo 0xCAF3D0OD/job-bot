@@ -16,6 +16,7 @@ import AiWriting from "../components/AiWriting.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
+import DisclosureRow from "../components/DisclosureRow.vue";
 import FormField from "../components/FormField.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
@@ -196,6 +197,26 @@ async function saveThenWrite(): Promise<void> {
   await save();
   await write(true);
 }
+// La rédaction, puis la relecture : le bouton dit ce qui se passe vraiment (BusyButton).
+const phase = ref<"write" | "review">("write");
+async function reviewLetter(letter: Letter): Promise<Letter> {
+  try {
+    const { data } = await api.POST("/api/letters/{draft_id}/review", { params: { path: { draft_id: letter.id } } });
+    return data ?? letter;
+  } catch {
+    return letter;
+  }
+}
+// « Relue : 6/7. À renforcer : précision, conclusion. »
+const reviewLine = computed(() => {
+  const review = selected.value?.review;
+  if (!review) return "";
+  const passed = review.criteria.filter((c) => c.ok);
+  const weak = review.criteria.filter((c) => !c.ok).map((c) => c.label.toLowerCase());
+  const head = `Relue : ${passed.length}/${review.criteria.length}.`;
+  return weak.length ? `${head} À renforcer : ${weak.join(", ")}.` : `${head} Rien à renforcer.`;
+});
+
 // Le retour sur la consigne (aria-live) : ce que l'IA ne peut pas changer, ou qu'il n'y a rien à changer.
 const instructionNote = ref("");
 async function write(force = false): Promise<void> {
@@ -224,15 +245,19 @@ async function write(force = false): Promise<void> {
       else if (!reached("letter")) error.value = detail(err, "La rédaction a échoué, réessaie.");
       return;
     }
-    letters.value = [data, ...letters.value];
+    // La relecture avant l'affichage (rédacteur, puis relecteur) : la lettre s'affiche relue.
+    phase.value = "review";
+    const reviewed = await reviewLetter(data);
+    letters.value = [reviewed, ...letters.value];
     instruction.value = "";
-    select(data);
+    select(reviewed);
     fresh.value = true;
     setTimeout(() => (fresh.value = false), 1000);
   } catch {
     error.value = "API injoignable.";
   } finally {
     writing.value = false;
+    phase.value = "write";
   }
 }
 
@@ -638,6 +663,38 @@ onMounted(() => void load());
               {{ doc.enclosure }}
             </p>
           </article>
+          <!-- La relecture (décision de Kevin) : une ligne, puis le détail repliable, un critère par
+               ligne avec sa pastille (« Réussi » ou « À revoir », jamais le ton erreur). -->
+          <p
+            class="review-line"
+            aria-live="polite"
+            data-test="review-line"
+          >
+            {{ reviewLine }}
+          </p>
+          <DisclosureRow
+            v-if="selected?.review"
+            title="Détail de la relecture"
+            :value="selected.review.corrected ? 'corrigée une fois' : ''"
+            class="review-detail"
+            data-test="review-detail"
+          >
+            <ul class="review-criteria">
+              <li
+                v-for="criterion in selected.review.criteria"
+                :key="criterion.key"
+                :data-test="`review-${criterion.key}`"
+              >
+                <span class="review-criterion-text">
+                  <strong>{{ criterion.label }}</strong>
+                  <span class="hint">{{ criterion.reason }}</span>
+                </span>
+                <StatusPill :tone="criterion.ok ? 'ok' : 'todo'">
+                  {{ criterion.ok ? "Réussi" : "À revoir" }}
+                </StatusPill>
+              </li>
+            </ul>
+          </DisclosureRow>
         </div>
 
         <section class="prep-side">
@@ -695,7 +752,7 @@ onMounted(() => void load());
               <BusyButton
                 :class="nextStep === 'letter' ? 'primary' : 'secondary'"
                 :busy="writing"
-                busy-label="Rédaction…"
+                :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
                 :disabled="reached('letter')"
                 data-test="write"
                 @click="write()"

@@ -59,6 +59,7 @@ async def prepare(
     base_draft_id: int | None,
     instruction: str | None,
     estimate_usd: Decimal,
+    check_plan: bool = True,
 ) -> WritingContext:
     if not runtime.settings.llm_configured:
         raise HTTPException(
@@ -93,8 +94,10 @@ async def prepare(
             previous = latest.content if latest else None
             previous_language = latest.language if latest else None
         # La formule (docs/125) : les lettres et les CV du mois.
+        # La relecture d'une lettre déjà rédigée ne compte pas une lettre de plus.
         try:
-            await plans.check(session, kind)
+            if check_plan:
+                await plans.check(session, kind)
         except plans.LimitReached as exc:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, str(exc)) from exc
         spend, budget, rate = await budget_state(session, datetime.now(UTC))

@@ -22,6 +22,7 @@ from jobbot.letters.document import Identity, LetterDocument, Recipient, assembl
 from jobbot.letters.pdf import letter_to_pdf
 from jobbot.letters.service import load_identity
 from jobbot.llm import letter as letter_llm
+from jobbot.llm import letter_review
 from jobbot.llm.scoring import InvalidScore
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -70,6 +71,21 @@ class LetterDocumentOut(BaseModel):
     missing_identity: list[str]
 
 
+class ReviewCriterionOut(BaseModel):
+    key: str
+    label: str
+    ok: bool
+    reason: str
+
+
+class ReviewOut(BaseModel):
+    """La relecture avant affichage : sept critères, réussis ou à revoir."""
+
+    criteria: list[ReviewCriterionOut]
+    # Une correction automatique a été faite (au plus une).
+    corrected: bool
+
+
 class LetterOut(BaseModel):
     id: int
     offer_id: int
@@ -83,6 +99,8 @@ class LetterOut(BaseModel):
     created_at: datetime
     edited_at: datetime | None
     document: LetterDocumentOut
+    # Absente tant que la lettre n'est pas relue (ou pour une lettre d'avant la relecture).
+    review: ReviewOut | None = None
 
 
 class LetterRequest(BaseModel):
@@ -142,6 +160,16 @@ def _out(draft: Draft, document: LetterDocument) -> LetterOut:
         created_at=draft.created_at,
         edited_at=draft.edited_at,
         document=LetterDocumentOut(**asdict(document)),
+        review=_review_out(draft.content.get("review")),
+    )
+
+
+def _review_out(review: dict[str, Any] | None) -> ReviewOut | None:
+    if not review:
+        return None
+    return ReviewOut(
+        criteria=[ReviewCriterionOut(**c) for c in review.get("criteria", [])],
+        corrected=bool(review.get("corrected")),
     )
 
 
@@ -269,6 +297,125 @@ def _same_letter(previous: dict[str, Any], content: dict[str, Any]) -> bool:
     base.setdefault("salutation", content.get("salutation"))
     base.setdefault("closing", content.get("closing"))
     return norm(base) == norm(content)
+
+
+async def _reviewed(
+    runtime: Runtime,
+    ctx: writing.WritingContext,
+    letter: dict[str, Any],
+    *,
+    offer_id: int,
+    language: str,
+    instruction: str | None,
+    corrected: bool = False,
+) -> letter_review.Review:
+    settings = runtime.settings
+    params = letter_review.request_params(
+        settings.llm_model,
+        settings.llm_writing_effort,
+        ctx.chunks,
+        ctx.offer,
+        letter,
+        language=language,
+        instruction=instruction,
+    )
+    raw = await writing.call(
+        runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
+    )
+    try:
+        return letter_review.parse_review(raw.text, letter, corrected=corrected)
+    except InvalidScore:
+        raise writing.unusable() from None
+
+
+@router.post(
+    "/letters/{draft_id}/review",
+    operation_id="reviewLetter",
+    responses={
+        409: {"description": "IA non configurée, profil vide ou budget atteint"},
+        502: {"description": "Réponse de l'IA inutilisable"},
+        503: {"description": "IA momentanément indisponible"},
+    },
+)
+async def review_letter(request: Request, draft_id: int) -> LetterOut:
+    """Relecture avant affichage : une relecture, au plus une correction, puis une relecture."""
+    runtime = _runtime(request)
+    settings = runtime.settings
+    async with runtime.sessionmaker() as session:
+        draft = await _get_draft(session, draft_id)
+        offer_id, language, instruction = draft.offer_id, draft.language, draft.instruction
+        letter = {k: v for k, v in draft.content.items() if k != "review"}
+    ctx = await writing.prepare(
+        runtime,
+        offer_id,
+        DraftKind.LETTER,
+        base_draft_id=draft_id,
+        instruction=instruction,
+        estimate_usd=LETTER_ESTIMATE_USD,
+        check_plan=False,
+    )
+    review = await _reviewed(
+        runtime, ctx, letter, offer_id=offer_id, language=language, instruction=instruction
+    )
+    if not review.all_ok:
+        # Une seule correction automatique, puis une nouvelle relecture : jamais de boucle.
+        params = letter_llm.request_params(
+            settings.llm_model,
+            settings.llm_writing_effort,
+            ctx.chunks,
+            ctx.offer,
+            language=language,  # type: ignore[arg-type]
+            assessment=ctx.assessment,
+            previous=letter,
+            instruction=letter_review.correction_instruction(review),
+        )
+        raw = await writing.call(
+            runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
+        )
+        try:
+            fixed = letter_llm.parse_output(raw.text, ctx.chunks)
+        except InvalidScore:
+            fixed = None
+        if fixed is not None and not fixed.refusal:
+            letter = {**letter, **fixed.model_dump(exclude={"language", "refusal", "employer"})}
+            review = await _reviewed(
+                runtime,
+                ctx,
+                letter,
+                offer_id=offer_id,
+                language=language,
+                instruction=instruction,
+                corrected=True,
+            )
+        # « Aucune invention » est bloquant : un paragraphe qui invente encore est retiré.
+        if review.failing("invention") and review.invented_paragraphs:
+            letter = letter_review.drop_invented(letter, review)
+            review = letter_review.Review(
+                [
+                    letter_review.Criterion(
+                        c.key, c.label, True, "Un fait absent de ton profil a été retiré."
+                    )
+                    if c.key == "invention"
+                    else c
+                    for c in review.criteria
+                ],
+                [],
+                corrected=True,
+            )
+    async with runtime.sessionmaker.begin() as session:
+        draft = await _get_draft(session, draft_id)
+        draft.content = {**letter, "review": review.as_dict()}
+        await session.flush()
+        await session.refresh(draft)
+        out = await _render(session, draft)
+    log.info(
+        "letter_reviewed",
+        offer_id=offer_id,
+        passed=review.passed,
+        total=len(review.criteria),
+        corrected=review.corrected,
+    )
+    return out
 
 
 @router.put("/letters/{draft_id}", operation_id="editLetter")
