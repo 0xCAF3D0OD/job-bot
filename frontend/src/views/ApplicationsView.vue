@@ -649,7 +649,7 @@ onUnmounted(() => assistant.setFocus(null));
           <RouterLink
             v-if="narrow && toFollowUp.length"
             to="/candidatures/relances"
-            class="button-link"
+            class="button-link follow-ups-start"
             data-test="follow-ups-start"
           >
             <span class="with-icon"><AppIcon name="reply" />Relancer une à une</span>

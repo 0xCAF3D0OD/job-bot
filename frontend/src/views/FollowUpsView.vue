@@ -179,13 +179,13 @@ onMounted(async () => {
           <ActionBar>
             <button
               type="button"
-              class="primary"
+              class="primary follow-up-main"
               data-test="follow-up-open"
               @click="sheet = true"
             >
               <span class="with-icon"><AppIcon name="reply" />Relancer</span>
             </button>
-            <div class="action-bar-row">
+            <div class="action-bar-row follow-up-row">
               <button
                 type="button"
                 class="secondary"
@@ -218,26 +218,31 @@ onMounted(async () => {
             />
           </BottomSheet>
         </div>
-        <FaceState
+        <div
           v-else
-          title="Relances du jour terminées"
-          illustration="reussite"
-          class="pick-done"
-          data-test="follow-ups-done"
+          class="pick-step"
         >
-          <p v-if="summary">
-            {{ summary }}.
-          </p>
-          <div class="face-state-actions">
-            <RouterLink
-              to="/candidatures/suivi"
-              class="button-link"
-              data-test="follow-ups-back-done"
-            >
-              Revenir au Suivi
-            </RouterLink>
-          </div>
-        </FaceState>
+          <FaceState
+            title="Relances du jour terminées"
+            illustration="reussite"
+            class="pick-done"
+            data-test="follow-ups-done"
+          >
+            <p v-if="summary">
+              {{ summary }}.
+            </p>
+            <div class="face-state-actions">
+              <RouterLink
+                to="/candidatures/suivi"
+                class="button-link"
+                data-test="follow-ups-back-done"
+              >
+                Revenir au Suivi
+              </RouterLink>
+            </div>
+          </FaceState>
+          <UndoToast inline />
+        </div>
       </div>
     </div>
   </section>
