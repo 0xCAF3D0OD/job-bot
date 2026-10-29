@@ -158,6 +158,8 @@ describe("le Suivi (1.6.20)", () => {
 
 describe("les alertes (1.6.22)", () => {
   it("« Rien reçu depuis 24 heures » : le point en --orange, plus de couleur en dur", () => {
+    // Depuis la pastille d'état (1.6.74), l'état « à faire » d'une alerte est une StatusPill au ton « todo ».
+    expect(css).toContain(".state-pill.todo .state-pill-dot { background: var(--orange); }");
     // #e08a2e n'apparaît qu'une fois : la valeur de --orange.
     expect(css.split("#e08a2e").length - 1).toBe(1);
   });
