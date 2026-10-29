@@ -20,7 +20,7 @@ import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
-import SettingsSection from "../components/SettingsSection.vue";
+import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
 import SavedStatus from "../components/SavedStatus.vue";
@@ -342,25 +342,25 @@ const GROUPS = computed<{ title: string; entries: Entry[] }[]>(() => [
   {
     title: "Recherche d'emploi",
     entries: [
-      { id: "recherche", title: "Objectif ORP et sites", description: "Objectif du mois, preuves, sites suivis", icon: "briefcase", to: { query: { rubrique: "recherche" } } },
-      { id: "rythme", title: "Rythme", description: "Jours de recherche, pause", icon: "calendar", to: { query: { rubrique: "rythme" } } },
+      { id: "recherche", title: "Objectif ORP et sites", description: "Objectif du mois, preuves, sites suivis", icon: SETTINGS_ICONS.recherche!, to: { query: { rubrique: "recherche" } } },
+      { id: "rythme", title: "Rythme", description: "Jours de recherche, pause", icon: SETTINGS_ICONS.rythme!, to: { query: { rubrique: "rythme" } } },
       { title: "Alertes", description: "Recherches suivies sur les sites", icon: "list-check", to: "/candidatures/alertes" },
     ],
   },
   {
     title: "Être averti",
     entries: [
-      { id: "notifications", title: "Notifications", description: "Seuil, message du jour, téléphone", icon: "bell", to: { query: { rubrique: "notifications" } } },
-      { id: "ia", title: "IA", description: "Ce qu'elle fait chaque mois", icon: "ai", to: { query: { rubrique: "ia" } } },
-      { id: "outils", title: "Agenda et extension", description: "Calendrier, navigateur", icon: "plug", to: { query: { rubrique: "outils" } } },
+      { id: "notifications", title: "Notifications", description: "Seuil, message du jour, téléphone", icon: SETTINGS_ICONS.notifications!, to: { query: { rubrique: "notifications" } } },
+      { id: "ia", title: "IA", description: "Ce qu'elle fait chaque mois", icon: SETTINGS_ICONS.ia!, to: { query: { rubrique: "ia" } } },
+      { id: "outils", title: "Agenda et extension", description: "Calendrier, navigateur", icon: SETTINGS_ICONS.outils!, to: { query: { rubrique: "outils" } } },
     ],
   },
   {
     title: "Compte et aide",
     entries: [
-      { id: "compte", title: "Compte", description: "Formule, export, fermeture", icon: "user", to: { query: { rubrique: "compte" } } },
+      { id: "compte", title: "Compte", description: "Formule, export, fermeture", icon: SETTINGS_ICONS.compte!, to: { query: { rubrique: "compte" } } },
       ...(owner.value
-        ? [{ id: "plateforme" as const, title: "Administration", description: "Comptes et IA de la plateforme", icon: "shield" as IconName, to: { query: { rubrique: "plateforme" } } }]
+        ? [{ id: "plateforme" as const, title: "Administration", description: "Comptes et IA de la plateforme", icon: SETTINGS_ICONS.plateforme!, to: { query: { rubrique: "plateforme" } } }]
         : []),
       // L'aide (décision de Kevin, à revoir après le test utilisateurs) : l'Assistant, s'il est là.
       ...(assistant.available.value
@@ -484,6 +484,7 @@ onUnmounted(() => spy?.disconnect());
               v-if="listOnly && entry.id === 'notifications' && notifications?.personal"
               title="Recevoir sur mon téléphone"
               description="Offres, relances et rappel ORP, par ntfy."
+              icon="message"
               label
               data-test="settings-phone-row"
             >
