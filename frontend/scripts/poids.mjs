@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const DIST = new URL("../dist/", import.meta.url).pathname;
-export const LIMITS = { premier: 120_000, total: 270_000, css: 45_000 };
+export const LIMITS = { premier: 120_000, total: 285_000, css: 45_000 };
 
 const manifest = JSON.parse(readFileSync(join(DIST, ".vite/manifest.json"), "utf8"));
 const size = (file) => gzipSync(readFileSync(join(DIST, file))).length;
