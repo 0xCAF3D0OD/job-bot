@@ -39,6 +39,15 @@ describe("GroupedList et GroupedRow (règles §4)", () => {
     expect(wrapper.find(".grouped-chevron").exists()).toBe(false);
   });
 
+  it("l'entrée affichée (liste et détail) : aria-current et la pastille de sélection", () => {
+    const wrapper = mount(GroupedRow, { props: { title: "Notifications", to: "/reglages?rubrique=notifications", current: true }, global });
+    const link = wrapper.findComponent(RouterLinkStub);
+    expect(link.attributes("aria-current")).toBe("page");
+    expect(link.classes()).toContain("grouped-row-current");
+    const other = mount(GroupedRow, { props: { title: "Rythme", to: "/reglages?rubrique=rythme" }, global });
+    expect(other.findComponent(RouterLinkStub).attributes("aria-current")).toBeUndefined();
+  });
+
   it("un bouton : émet click", async () => {
     const wrapper = mount(GroupedRow, { props: { title: "Taux minimum", value: "80 %", button: true }, global });
     await wrapper.find("button.grouped-row").trigger("click");

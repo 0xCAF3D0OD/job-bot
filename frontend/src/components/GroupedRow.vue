@@ -12,9 +12,11 @@ import AppIcon from "./AppIcon.vue";
 // - `button` : un bouton (événement click), avec chevron ;
 // - `label` : une étiquette ; la radio ou la case va dans le slot `start` (WCAG 2.5.8) ;
 // - sinon, une ligne d'information.
+// `current` : l'entrée affichée à côté (liste et détail, Réglages sur ordinateur) : aria-current="page" et la
+// pastille de sélection (Sélection unique, §4).
 const props = withDefaults(
-  defineProps<{ title: string; description?: string; icon?: IconName; value?: string; to?: RouteLocationRaw; href?: string; button?: boolean; label?: boolean; chevron?: boolean }>(),
-  { description: "", icon: undefined, value: "", to: undefined, href: undefined, button: false, label: false, chevron: undefined },
+  defineProps<{ title: string; description?: string; icon?: IconName; value?: string; to?: RouteLocationRaw; href?: string; button?: boolean; label?: boolean; chevron?: boolean; current?: boolean }>(),
+  { description: "", icon: undefined, value: "", to: undefined, href: undefined, button: false, label: false, chevron: undefined, current: false },
 );
 const emit = defineEmits<{ click: [event: MouseEvent] }>();
 const descriptionId = useId();
@@ -27,7 +29,8 @@ const showChevron = computed(() => props.chevron ?? Boolean(props.to || props.hr
     <component
       :is="tag"
       class="grouped-row"
-      :class="{ 'grouped-row-action': tag !== 'div' }"
+      :class="{ 'grouped-row-action': tag !== 'div', 'grouped-row-current': current }"
+      :aria-current="current ? 'page' : undefined"
       :to="to"
       :href="href"
       :type="tag === 'button' ? 'button' : undefined"
