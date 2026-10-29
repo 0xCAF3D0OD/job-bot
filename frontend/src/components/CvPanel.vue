@@ -12,6 +12,10 @@ import HoverNote from "./HoverNote.vue";
 import InlineConfirm from "./InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
 import PlanLimit from "./PlanLimit.vue";
+import SavedStatus from "./SavedStatus.vue";
+
+// Un bloc ajouté ou retiré : « Enregistré », annoncé (WCAG 4.1.3).
+const savedAt = ref(0);
 
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
@@ -120,9 +124,9 @@ async function write(force = false): Promise<void> {
   }
 }
 
-async function save(chunkIds?: number[]): Promise<void> {
+async function save(chunkIds?: number[]): Promise<boolean> {
   const cv = selected.value;
-  if (!cv) return;
+  if (!cv) return false;
   saving.value = true;
   error.value = "";
   try {
@@ -132,22 +136,23 @@ async function save(chunkIds?: number[]): Promise<void> {
     });
     if (!data) {
       error.value = detail(err, "Enregistrement refusé.");
-      return;
+      return false;
     }
     cvs.value = cvs.value.map((c) => (c.id === data.id ? data : c));
     show(data);
+    return true;
   } finally {
     saving.value = false;
   }
 }
 
-function toggle(id: number, checked: boolean): void {
+async function toggle(id: number, checked: boolean): Promise<void> {
   const ids = selected.value?.chunk_ids ?? [];
   if (!checked && ids.length === 1) {
     error.value = "Garde au moins un bloc dans le CV.";
     return;
   }
-  void save(checked ? [...ids, id] : ids.filter((i) => i !== id));
+  if (await save(checked ? [...ids, id] : ids.filter((i) => i !== id))) savedAt.value = Date.now();
 }
 
 // Déplace un bloc coché avant ou après le bloc coché voisin de la même rubrique.
@@ -369,7 +374,7 @@ onMounted(() => void load());
                   :checked="block.selected"
                   :disabled="saving"
                   data-test="block-toggle"
-                  @change="toggle(block.id, ($event.target as HTMLInputElement).checked)"
+                  @change="void toggle(block.id, ($event.target as HTMLInputElement).checked)"
                 >
                 {{ block.title }}
               </label>
@@ -392,6 +397,7 @@ onMounted(() => void load());
             </li>
           </template>
         </ul>
+        <SavedStatus :at="savedAt" />
       </div>
 
       <div

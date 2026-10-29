@@ -118,7 +118,7 @@ describe("Candidatures, page réunie", () => {
     const { wrapper } = await mountView();
     expect(wrapper.find("[data-test=state]").text()).toContain("Preuves d'octobre : 1 ligne à compléter");
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
-    await wrapper.find("[data-test=all-months]").setValue(true);
+    await wrapper.find("[data-test=all-months]").trigger("click");
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(2);
   });
 
@@ -410,7 +410,10 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     const { wrapper } = await mountView();
     const todo = wrapper.find("[data-test=todo]");
     expect(todo.find("h2").text()).toBe("À relancer · 7");
-    expect(wrapper.find(".segmented").exists()).toBe(false);
+    // Pas de sélecteur au-dessus des listes à faire (plus de troisième niveau d'onglets) ; « Ce mois · Tous les mois »
+    // ne filtre que la liste complète, plus bas.
+    expect(todo.find(".segmented").exists()).toBe(false);
+    expect(wrapper.find(".segmented").element.compareDocumentPosition(todo.element) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
     expect(todo.findAll("[data-test=application-card]")).toHaveLength(3);
     expect(todo.find("[data-test=todo-all]").text()).toBe("Afficher plus (4)");
     await todo.find("[data-test=todo-all]").trigger("click");

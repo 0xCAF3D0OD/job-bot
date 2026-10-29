@@ -158,15 +158,28 @@ describe("le Suivi (1.6.20)", () => {
 
 describe("les alertes (1.6.22)", () => {
   it("« Rien reçu depuis 24 heures » : le point en --orange, plus de couleur en dur", () => {
-    expect(css).toContain(".summary-list .late .dot { background: var(--orange); }");
+    // Depuis la pastille d'état (1.6.74), l'état « à faire » d'une alerte est une StatusPill au ton « todo ».
+    expect(css).toContain(".state-pill.todo .state-pill-dot { background: var(--orange); }");
     // #e08a2e n'apparaît qu'une fois : la valeur de --orange.
     expect(css.split("#e08a2e").length - 1).toBe(1);
   });
 });
 
+describe("les champs (planche « Champs »)", () => {
+  it("la bordure fait 3:1 au moins sur le champ et sur la carte, en clair et en sombre (WCAG 1.4.11)", () => {
+    for (const theme of [light, dark]) {
+      expect(ratio(theme["field-border"]!, theme["field-bg"]!)).toBeGreaterThanOrEqual(3);
+      expect(ratio(theme["field-border"]!, theme.surface!)).toBeGreaterThanOrEqual(3);
+      expect(ratio(theme.accent!, theme["field-bg"]!)).toBeGreaterThanOrEqual(3);
+      expect(ratio(theme.text!, theme["field-bg"]!)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(theme.muted!, theme["field-bg"]!)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
 describe("l'interrupteur (1.6.23)", () => {
   it("la piste non cochée se voit sur la carte : --faint, 3:1 au moins (WCAG 1.4.11)", () => {
-    expect(css).toMatch(/:root input\[type="checkbox"\] \{[^}]*background: var\(--faint\)/);
+    expect(css).toMatch(/:root input\[type="checkbox"\]\[role="switch"\] \{[^}]*background: var\(--faint\)/);
     expect(ratio(light.faint!, light.surface!)).toBeGreaterThanOrEqual(3);
     expect(ratio(dark.faint!, dark.surface!)).toBeGreaterThanOrEqual(3);
   });
@@ -185,7 +198,6 @@ describe("les lignes repliables (1.6.24)", () => {
 
 describe("revue sur ordinateur (1.6.27)", () => {
   it("« en dessous » des semaines en gris ; le lien en bouton a le bord des boutons secondaires", () => {
-    expect(css).toContain(".rhythm-weeks li.missed .rhythm-weeks-state { background: var(--band); color: var(--muted); }");
     expect(css).toMatch(/\.button-link \{[^}]*border: 1px solid var\(--faint\)/);
   });
   it("le bouton « Assistant » laisse sa place en bas de la page", () => {

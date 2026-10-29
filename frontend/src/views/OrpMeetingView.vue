@@ -20,6 +20,10 @@ import HoverNote from "../components/HoverNote.vue";
 import { meetingDate } from "../dates";
 import { formatMonth, plural } from "../format";
 import { usePlan } from "../composables/usePlan";
+import SavedStatus from "../components/SavedStatus.vue";
+
+// Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
+const savedAt = ref(0);
 
 const { aiNote } = usePlan();
 
@@ -211,6 +215,7 @@ async function saveQuestions(questions: Question[]): Promise<void> {
   if (data) {
     page.value = data;
     message.value = "";
+    savedAt.value = Date.now();
   } else {
     message.value = (error as { detail?: string } | undefined)?.detail ?? "Impossible d'enregistrer pour l'instant.";
   }
@@ -449,6 +454,7 @@ onMounted(() => void load());
                 </label>
               </li>
             </ul>
+            <SavedStatus :at="savedAt" />
             <FormField
               v-if="meeting"
               v-slot="{ id, describedby, invalid }"
