@@ -79,6 +79,9 @@ describe("Les relances une à une", () => {
     await wrapper.find("[data-test=follow-up-open]").trigger("click");
     const panel = wrapper.findComponent({ name: "FollowUpPanel" });
     expect(panel.exists()).toBe(true);
+    // Les deux actions dans la rangée de la feuille : « Rédiger » en contour, « Marquer comme relancée » en principal.
+    expect(wrapper.find("[data-test=follow-up-write]").text()).toContain("Rédiger");
+    expect(wrapper.find("[data-test=follow-up-done]").classes()).toContain("primary");
     panel.vm.$emit("done");
     await flushPromises();
     expect(wrapper.find("[data-test=follow-up-card]").text()).toContain("Beta SA");

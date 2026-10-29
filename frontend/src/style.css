@@ -3602,8 +3602,13 @@ main:focus { outline: none; }
 .follow-up-lines { display: grid; gap: var(--space-1); line-height: var(--leading-normal); }
 .follow-up-lines p { margin: 0; }
 .pick-card > .state-pill { justify-self: start; }
-/* Sur ordinateur, les boutons gardent la largeur de leur texte (§3) ; pleine largeur dans le panneau. */
-@media (min-width: 600px) { .follow-up-main, .follow-up-row { justify-self: start; } }
+/* Sur ordinateur, les trois actions sur une ligne, à la largeur de leur texte (§3) ; sous 600 px, le
+   panneau : « Relancer » plein, puis la rangée. */
+@media (min-width: 600px) {
+  .follow-up-step { grid-template-columns: repeat(3, auto) 1fr; }
+  .follow-up-step > :not(.action-bar), .follow-up-step .action-bar-note { grid-column: 1 / -1; }
+  .follow-up-step .follow-up-row { display: contents; }
+}
 .suivi-todo > .follow-ups-start { align-self: flex-start; }
 
 /* --- Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») ---

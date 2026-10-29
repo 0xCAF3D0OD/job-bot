@@ -7,6 +7,7 @@ import { followUpList, noAnswerText } from "../applicationState";
 import ActionBar from "../components/ActionBar.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
+import BusyButton from "../components/BusyButton.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
 import FaceState from "../components/FaceState.vue";
 import FollowUpPanel from "../components/FollowUpPanel.vue";
@@ -29,6 +30,7 @@ const index = ref(0);
 const followed = ref(0);
 const archived = ref(0);
 const sheet = ref(false);
+const panel = ref<InstanceType<typeof FollowUpPanel> | null>(null);
 
 const current = computed(() => queue.value[index.value] ?? null);
 const position = computed(() => (current.value ? index.value + 1 : 0));
@@ -149,7 +151,7 @@ onMounted(async () => {
         <div
           v-if="current"
           :key="current.id"
-          class="pick-step"
+          class="pick-step follow-up-step"
         >
           <article
             class="pick-card"
@@ -213,9 +215,32 @@ onMounted(async () => {
             @close="sheet = false"
           >
             <FollowUpPanel
+              ref="panel"
               :application="current"
+              external
               @done="onFollowedUp"
             />
+            <template #actions>
+              <BusyButton
+                v-if="panel && !panel.written"
+                class="secondary"
+                :busy="panel.writing"
+                busy-label="Rédaction…"
+                data-test="follow-up-write"
+                @click="panel.write()"
+              >
+                <span class="with-icon"><AppIcon name="ai" />Rédiger</span>
+              </BusyButton>
+              <button
+                type="button"
+                class="primary"
+                :disabled="panel?.saving"
+                data-test="follow-up-done"
+                @click="panel?.markDone()"
+              >
+                Marquer comme relancée
+              </button>
+            </template>
           </BottomSheet>
         </div>
         <div

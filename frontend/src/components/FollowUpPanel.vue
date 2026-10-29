@@ -13,7 +13,9 @@ const { aiNote } = usePlan();
 
 // Relancer une candidature (docs/38) : un court message (IA ou modèle simple), à copier ou à
 // ouvrir dans ta messagerie ; rien n'est envoyé par la plateforme. Puis « Marquer comme relancée ».
-const props = defineProps<{ application: Application }>();
+// `external` : les deux actions (« Rédiger la relance », « Marquer comme relancée ») sont posées par
+// la page, dans la rangée d'actions d'une feuille du bas (les relances une à une) ; exposées ici.
+const props = withDefaults(defineProps<{ application: Application; external?: boolean }>(), { external: false });
 const emit = defineEmits<{ done: [] }>();
 
 const subject = ref("");
@@ -65,6 +67,7 @@ async function markDone(): Promise<void> {
     saving.value = false;
   }
 }
+defineExpose({ write, markDone, writing, saving, written: computed(() => !!text.value) });
 </script>
 
 <template>
@@ -77,7 +80,7 @@ async function markDone(): Promise<void> {
       <span><AppIcon name="send" /><span class="visually-hidden">envoyée le </span>{{ dateInList(`${application.sent_at}T12:00:00`) }}</span>
     </p>
     <BusyButton
-      v-if="!text"
+      v-if="!text && !external"
       class="secondary small"
       :busy="writing"
       busy-label="Rédaction…"
@@ -88,7 +91,7 @@ async function markDone(): Promise<void> {
         <span class="with-icon"><AppIcon name="ai" />Rédiger la relance</span>
       </HoverNote>
     </BusyButton>
-    <template v-else>
+    <template v-else-if="text">
       <p
         v-if="reason"
         class="hint"
@@ -131,6 +134,7 @@ async function markDone(): Promise<void> {
       {{ error }}
     </p>
     <button
+      v-if="!external"
       type="button"
       class="primary small"
       :disabled="saving"
