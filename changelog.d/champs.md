@@ -1,0 +1,1 @@
+Champs : fond distinct, bordure à 3:1 au moins, focus visible, 48 px et rayon des cartes partout ; cases et radios dessinées, interrupteur seulement pour un réglage isolé ; consentements jamais cochés d'avance

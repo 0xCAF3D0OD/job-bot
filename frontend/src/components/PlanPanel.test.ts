@@ -125,9 +125,15 @@ describe("le paiement de Plus (docs/125 §6)", () => {
     await flushPromises();
     const buy = wrapper.find("[data-test=plan-buy]");
     expect(buy.text()).toBe("Passer à Plus");
-    expect(buy.attributes("disabled")).toBeDefined();
     expect(wrapper.find(".plan-terms a").attributes("href")).toBe("/conditions");
+    // Jamais cochée d'avance (nLPD) ; sans elle, rien n'est envoyé et le message est sous la case.
+    expect((wrapper.find("[data-test=plan-accept]").element as HTMLInputElement).checked).toBe(false);
+    await buy.trigger("click");
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=plan-terms-error]").text()).toContain("Accepte les conditions");
+    expect(wrapper.find("[data-test=plan-accept]").attributes("aria-invalid")).toBe("true");
     await wrapper.find("[data-test=plan-accept]").setValue(true);
+    expect(wrapper.find("[data-test=plan-terms-error]").exists()).toBe(false);
     await buy.trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/billing/checkout", { body: { accept_terms: true } });

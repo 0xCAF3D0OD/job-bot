@@ -311,6 +311,7 @@ const stateText = computed(() => {
         <label class="check">
           <input
             type="checkbox"
+            role="switch"
             :checked="training.mark.certified ?? false"
             data-test="certified"
             @change="emit('mark', 'done', { certified: !(training.mark.certified ?? false) })"

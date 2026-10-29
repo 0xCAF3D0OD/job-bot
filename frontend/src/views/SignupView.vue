@@ -18,6 +18,9 @@ const password = ref("");
 const again = ref("");
 const note = ref("");
 const consent = ref(false);
+// Le consentement (nLPD) : jamais coché d'avance ; sans lui, le message est sous la case, qui reçoit le focus.
+const consentError = ref("");
+const consentBox = ref<HTMLInputElement | null>(null);
 // Le champ piège (docs/102, garde-fous) : invisible, les personnes le laissent vide.
 const website = ref("");
 const error = ref("");
@@ -44,13 +47,17 @@ function problem(): string {
   if (password.value.length < MIN_PASSWORD) return `Le mot de passe fait ${MIN_PASSWORD} caractères au moins.`;
   if (password.value !== again.value) return "Les deux mots de passe diffèrent.";
   if (note.value.length > MAX_NOTE) return `Le mot pour l'équipe jobA1 fait ${MAX_NOTE} caractères au plus.`;
-  if (!consent.value) return "Coche la case : lis d'abord ce que deviennent tes données.";
   return "";
 }
 
 async function submit(): Promise<void> {
   error.value = problem();
   if (error.value) return;
+  consentError.value = consent.value ? "" : "Coche la case : lis d'abord ce que deviennent tes données.";
+  if (consentError.value) {
+    consentBox.value?.focus();
+    return;
+  }
   busy.value = true;
   try {
     const { error: failed, response } = await api.POST("/api/auth/signup", {
@@ -174,15 +181,27 @@ async function submit(): Promise<void> {
       </div>
       <label class="check signup-consent">
         <input
+          ref="consentBox"
           v-model="consent"
           type="checkbox"
           data-test="signup-consent"
+          :aria-invalid="consentError ? true : undefined"
+          :aria-describedby="consentError ? 'signup-consent-error' : undefined"
+          @change="consent && (consentError = '')"
         >
         <span>J'ai lu <RouterLink
           to="/tes-donnees"
           target="_blank"
         >ce que deviennent mes données</RouterLink></span>
       </label>
+      <p
+        v-if="consentError"
+        id="signup-consent-error"
+        class="field-error"
+        data-test="signup-consent-error"
+      >
+        {{ consentError }}
+      </p>
       <p
         v-if="error"
         class="notice"

@@ -558,13 +558,12 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           placeholder="infra, linux…"
         />
       </div>
-      <label class="filter-switch calm-panel-switch">
-        <span>Utilisé par l'IA</span>
+      <label class="check calm-panel-switch">
         <input
           v-model="editing.form.active"
           type="checkbox"
-          role="switch"
         >
+        <span>Utilisé par l'IA</span>
       </label>
       <div class="form-actions">
         <button

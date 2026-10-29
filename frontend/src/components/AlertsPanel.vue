@@ -8,6 +8,10 @@ import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import { offerUndo } from "../composables/useUndo";
 import MailboxAddress from "./MailboxAddress.vue";
 import { onDay } from "../format";
+import SavedStatus from "../components/SavedStatus.vue";
+
+// Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
+const savedAt = ref(0);
 
 // Mes alertes (docs/20 §1) : une recherche par ligne, un site par colonne. La plateforme
 // ouvre la recherche déjà remplie ; l'alerte se crée sur le site, avec l'adresse de son choix.
@@ -100,11 +104,11 @@ async function remove(search: AlertSearch): Promise<void> {
 
 async function toggleCreated(search: AlertSearch, cell: Cell): Promise<void> {
   const params = { params: { path: { search_id: search.id, site: cell.site } } };
-  apply(
-    cell.created_at
-      ? (await api.DELETE("/api/alert-searches/{search_id}/sites/{site}", params)).data
-      : (await api.PUT("/api/alert-searches/{search_id}/sites/{site}", params)).data,
-  );
+  const next = cell.created_at
+    ? (await api.DELETE("/api/alert-searches/{search_id}/sites/{site}", params)).data
+    : (await api.PUT("/api/alert-searches/{search_id}/sites/{site}", params)).data;
+  apply(next);
+  if (next) savedAt.value = Date.now();
 }
 
 function statusText(cell: Cell): string {
@@ -282,6 +286,7 @@ onMounted(() => void load());
           </tr>
         </tbody>
       </table>
+      <SavedStatus :at="savedAt" />
     </div>
 
     <form

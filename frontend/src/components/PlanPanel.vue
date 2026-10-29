@@ -40,6 +40,9 @@ const offered = computed(() => plan.value?.plan === "plus" && !plan.value.plan_u
 const canBuy = computed(() => !!plan.value?.billing_available && plan.value.plan !== "plus");
 
 const accepted = ref(false);
+// Les conditions (nLPD) : jamais cochées d'avance ; sans elles, le message est sous la case, qui reçoit le focus.
+const termsError = ref("");
+const termsBox = ref<HTMLInputElement | null>(null);
 const busy = ref(false);
 const confirming = ref(false);
 // Une ligne à la fois : le retour du paiement, une erreur, la résiliation faite.
@@ -55,6 +58,11 @@ function detail(error: unknown, fallback: string): string {
 }
 
 async function buy(): Promise<void> {
+  termsError.value = accepted.value ? "" : "Accepte les conditions d'utilisation pour passer à Plus.";
+  if (termsError.value) {
+    termsBox.value?.focus();
+    return;
+  }
   busy.value = true;
   message.value = null;
   try {
@@ -185,7 +193,7 @@ onMounted(async () => {
           v-if="canBuy"
           type="button"
           class="primary small"
-          :disabled="!accepted || busy"
+          :disabled="busy"
           :aria-describedby="`${c.describedby ?? ''} plan-terms`.trim()"
           data-test="plan-buy"
           @click="buy"
@@ -202,12 +210,24 @@ onMounted(async () => {
           class="checkbox plan-terms"
         >
           <input
+            ref="termsBox"
             v-model="accepted"
             type="checkbox"
             data-test="plan-accept"
+            :aria-invalid="termsError ? true : undefined"
+            :aria-describedby="termsError ? 'plan-terms-error' : undefined"
+            @change="accepted && (termsError = '')"
           >
           <span>J'accepte les <RouterLink to="/conditions">conditions d'utilisation</RouterLink></span>
         </label>
+        <p
+          v-if="termsError"
+          id="plan-terms-error"
+          class="field-error"
+          data-test="plan-terms-error"
+        >
+          {{ termsError }}
+        </p>
       </div>
     </SettingCard>
 

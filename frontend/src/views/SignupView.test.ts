@@ -50,7 +50,9 @@ describe("demander un compte (docs/102)", () => {
     expect(wrapper.find("[data-test=signup-error]").text()).toContain("diffèrent");
     await fill(wrapper, { consent: false });
     await form.trigger("submit");
-    expect(wrapper.find("[data-test=signup-error]").text()).toContain("Coche la case");
+    // Le message est sous la case, reliée à elle (nLPD, WCAG 3.3.1).
+    expect(wrapper.find("[data-test=signup-consent-error]").text()).toContain("Coche la case");
+    expect(wrapper.find("[data-test=signup-consent]").attributes("aria-describedby")).toBe("signup-consent-error");
     expect(POST).not.toHaveBeenCalled();
     expect(wrapper.find("[data-test=signup-note]").attributes("maxlength")).toBe("300");
     expect(wrapper.find("[data-test=signup-username]").attributes("maxlength")).toBe("40");

@@ -42,6 +42,7 @@ import { useDataChanged } from "../composables/useDataChanged";
 import { usePageReady } from "../composables/usePageTransition";
 import { offerUndo } from "../composables/useUndo";
 import InlineConfirm from "../components/InlineConfirm.vue";
+import SegmentedControl from "../components/SegmentedControl.vue";
 
 // Onglet Suivi (docs/22) : candidatures et preuves ORP du mois. L'essentiel d'abord (règles §3.2,
 // annexe de l'audit) : la phrase de ce qui est à faire, le mois, la liste « À faire » ; le
@@ -57,6 +58,7 @@ const orp = ref<OrpMonth | null>(null);
 usePageReady("applications", () => !!orp.value);
 const all = ref<Application[]>([]);
 const allMonths = ref(false);
+const monthScope = computed({ get: () => (allMonths.value ? "tout" : "mois"), set: (v: string) => (allMonths.value = v === "tout") });
 const editing = ref<{ id: number | null; value: ApplicationFormValue } | null>(null);
 const error = ref("");
 const loaded = ref(false);
@@ -793,16 +795,14 @@ onUnmounted(() => assistant.setFocus(null));
                   data-test="suivi-search"
                 >
               </span>
-              <label
+              <!-- Deux choix qui changent l'affichage tout de suite : un contrôle segmenté (règles §4, « Choisir »). -->
+              <SegmentedControl
                 v-if="!wanted.length"
-                class="check all-months"
-              >
-                <input
-                  v-model="allMonths"
-                  type="checkbox"
-                  data-test="all-months"
-                > Tous les mois
-              </label>
+                v-model="monthScope"
+                class="all-months"
+                label="Période"
+                :options="[{ value: 'mois', label: 'Ce mois' }, { value: 'tout', label: 'Tous les mois', test: 'all-months' }]"
+              />
             </div>
             <p
               v-if="!items.length"

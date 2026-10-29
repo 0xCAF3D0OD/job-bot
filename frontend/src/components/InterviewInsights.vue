@@ -14,6 +14,10 @@ import { plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import PlanLimit from "./PlanLimit.vue";
 import StatusPill from "./StatusPill.vue";
+import SavedStatus from "../components/SavedStatus.vue";
+
+// Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
+const savedAt = ref(0);
 
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
 
@@ -31,7 +35,10 @@ async function load(): Promise<void> {
 
 async function toggle(text: string, done: boolean): Promise<void> {
   const { data: next } = await api.PUT("/api/interviews/insights/prepared", { body: { text, done } });
-  if (next) data.value = next;
+  if (next) {
+    data.value = next;
+    savedAt.value = Date.now();
+  }
 }
 
 async function coach(): Promise<void> {
@@ -113,6 +120,7 @@ const summaryValue = computed(() =>
             </label>
           </li>
         </ul>
+        <SavedStatus :at="savedAt" />
       </section>
       <section v-if="data.went_well.length">
         <h4>Ce qui a marché</h4>

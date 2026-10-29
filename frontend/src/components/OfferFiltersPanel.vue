@@ -7,6 +7,10 @@ import { activeCount, DEFAULT_FILTERS, SCORE_CHOICES, scoreLabel } from "../comp
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
 import OfferSearch from "./OfferSearch.vue";
+import SavedStatus from "../components/SavedStatus.vue";
+
+// Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
+const savedAt = ref(0);
 
 const props = defineProps<{
   filters: OfferFilters;
@@ -40,6 +44,7 @@ const customizing = ref(false);
 function toggleVisible(key: FilterKey): void {
   const next = props.visible.includes(key) ? props.visible.filter((k) => k !== key) : [...props.visible, key];
   emit("visibility", next);
+  savedAt.value = Date.now();
 }
 
 const VIEWS: { value: View; label: string }[] = [
@@ -313,29 +318,27 @@ const more = ref(secondaryActive.value > 0);
       </template>
       <label
         v-if="visible.includes('external')"
-        class="filter-row filter-switch"
+        class="filter-row filter-check"
       >
-        <span class="with-icon"><AppIcon name="building" />Chez l'employeur uniquement</span>
         <input
           type="checkbox"
-          role="switch"
           :checked="filters.externalOnly"
           data-test="external-only"
           @change="emit('update', { externalOnly: !filters.externalOnly })"
         >
+        <span class="with-icon"><AppIcon name="building" />Chez l'employeur uniquement</span>
       </label>
       <label
         v-if="visible.includes('doubtful')"
-        class="filter-row filter-switch"
+        class="filter-row filter-check"
       >
-        <span class="with-icon"><AppIcon name="alert" />Masquer les offres à vérifier</span>
         <input
           type="checkbox"
-          role="switch"
           :checked="filters.hideDoubtful"
           data-test="hide-doubtful"
           @change="emit('update', { hideDoubtful: !filters.hideDoubtful })"
         >
+        <span class="with-icon"><AppIcon name="alert" />Masquer les offres à vérifier</span>
       </label>
     </div>
 
@@ -440,6 +443,7 @@ const more = ref(secondaryActive.value > 0);
           {{ entry.label }}
         </label>
       </fieldset>
+      <SavedStatus :at="savedAt" />
     </div>
 
     <!-- Le pied (1.6.55) : « Tout effacer » à gauche, masqué sans filtre actif (docs/43 n° 13), et
