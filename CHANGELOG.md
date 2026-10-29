@@ -308,3 +308,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.94 | Composants communs de la structure téléphone : liste groupée, feuille du bas, action fixée en bas, contrôle segmenté pleine largeur | livrée |
 | 1.6.95 | Règles : structure téléphone inspirée de l'application CFF (listes groupées, feuilles du bas, action fixée en bas, contrôle segmenté, recherche) ; Réglages en liste sur téléphone, liste et détail sur ordinateur | livrée |
 | 1.6.96 | Cloche : le texte d'une alerte passe à la ligne au lieu d'être coupé par « … » | livrée |
+| 1.6.97 | Téléphone : les titres d'offres, les jours du calendrier du Suivi et les cartes de l'accueil passent à la ligne au lieu d'être coupés en 320 px | livrée |
