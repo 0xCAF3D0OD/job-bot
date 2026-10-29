@@ -187,6 +187,15 @@ describe("l'entrée affichée d'une liste groupée", () => {
   });
 });
 
+describe("radios (planche « Champs »)", () => {
+  it("une radio est ronde : sa règle est au moins aussi forte que celle des cases, et vient après", () => {
+    const common = css.indexOf(':root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]) {');
+    const round = css.indexOf(':root input[type="radio"]:not([role="switch"]) { border-radius: 50%; }');
+    expect(common).toBeGreaterThan(0);
+    expect(round).toBeGreaterThan(common);
+  });
+});
+
 describe("l'interrupteur (1.6.23)", () => {
   it("la piste non cochée se voit sur la carte : --faint, 3:1 au moins (WCAG 1.4.11)", () => {
     expect(css).toMatch(/:root input\[type="checkbox"\]\[role="switch"\] \{[^}]*background: var\(--faint\)/);

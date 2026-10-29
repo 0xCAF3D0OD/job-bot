@@ -4105,7 +4105,8 @@ html.search-open { overflow: hidden; }
 /* Case et radio dessinées (planche « Champs ») : 20 px, cochées en --accent, non cochées en --field-border
    (4,0:1 sur la carte), rayon 6 px pour la case ; la ligne entière est l'étiquette. */
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]) { appearance: none; -webkit-appearance: none; box-sizing: border-box; flex: none; display: inline-grid; place-content: center; width: 1.25rem; height: 1.25rem; margin: 0; border: 1.5px solid var(--field-border); border-radius: 0.375rem; background: var(--field-bg); cursor: pointer; vertical-align: middle; }
-:root input[type="radio"] { border-radius: 50%; }
+/* `:not([role="switch"])` : au moins aussi fort que la règle commune (son :is() contient un :not()), sinon la radio est carrée. */
+:root input[type="radio"]:not([role="switch"]) { border-radius: 50%; }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):checked { border-color: var(--accent); }
 :root input[type="checkbox"]:not([role="switch"]):checked { background: var(--accent); }
 :root input[type="checkbox"]:not([role="switch"]):checked::after { content: ""; width: 0.85rem; height: 0.85rem; background: var(--on-accent); mask: var(--icon-done) center / contain no-repeat; }
