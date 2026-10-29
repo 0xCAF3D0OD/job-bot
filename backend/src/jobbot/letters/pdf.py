@@ -9,7 +9,7 @@ import unicodedata
 from xml.sax.saxutils import escape
 
 from reportlab.lib.colors import Color
-from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
@@ -64,7 +64,8 @@ def letter_to_pdf(letter: LetterDocument, title: str = "Lettre") -> bytes:
     """Lettre A4, mise en page suisse : destinataire à droite."""
     base = ParagraphStyle("base", fontName="Helvetica", fontSize=11, leading=14.5)
     right = ParagraphStyle("right", parent=base, leftIndent=9 * cm)
-    body = ParagraphStyle("body", parent=base, alignment=TA_JUSTIFY, spaceAfter=10)
+    # Jamais justifiée (WCAG 1.4.8) : les espaces inégaux gênent la lecture.
+    body = ParagraphStyle("body", parent=base, alignment=TA_LEFT, spaceAfter=10)
     story: list[Flowable] = []
 
     def block(lines: list[str], style: ParagraphStyle = base, after: float = 18) -> None:

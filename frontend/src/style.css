@@ -607,14 +607,18 @@ p.badge.reason { margin: 0; }
 .prep-main { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .prep-main .notice { margin: 0; }
 .prep-empty { flex: 1; display: flex; flex-direction: column; justify-content: center; background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); }
-.prep-side { display: grid; gap: var(--space-4); position: sticky; top: 5.5rem; align-self: start; }
+.prep-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); position: sticky; top: 5.5rem; align-self: start; min-width: 0; }
 .side-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4) var(--space-5); display: grid; gap: var(--space-3); }
 .side-card h2 { font-size: var(--font-body); margin: 0; }
-.side-card label { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--muted); }
+.side-card > label { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--muted); }
 .side-card button { justify-content: center; }
 .side-card .hint { margin: 0; font-size: var(--font-small); }
 .versions { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); font-size: var(--font-small); }
-.versions .link { text-align: left; color: var(--muted); }
+.versions .link { display: grid; gap: var(--space-1); text-align: left; color: var(--muted); white-space: normal; overflow-wrap: anywhere; min-width: 0; }
+.versions .version-name { color: var(--text); }
+.versions .link.active .version-name { color: var(--accent); }
+.versions .version-meta { color: var(--muted); font-weight: var(--weight-regular); }
+.version-instruction { margin: 0; overflow-wrap: anywhere; }
 .versions .link.active { color: var(--accent); font-weight: var(--weight-semibold); }
 .letter-sheet {
   background: #fff; color: #1a1a1a; border: 1px solid var(--border); border-radius: 6px;
@@ -630,7 +634,7 @@ p.badge.reason { margin: 0; }
 .letter-subject { font-weight: 700; display: flex; gap: 0.3rem; align-items: baseline; }
 .letter-subject input { flex: 1; font: inherit; font-weight: 700; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.1rem 0.25rem; }
 .letter-paragraph { margin-bottom: 0.9rem; }
-.letter-paragraph textarea { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.15rem 0.25rem; resize: none; overflow: hidden; text-align: justify; }
+.letter-paragraph textarea { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.15rem 0.25rem; resize: none; overflow: hidden; text-align: left; }
 .letter-sheet input:hover, .letter-sheet textarea:hover { border-color: #d5d5e0; }
 .letter-sheet input:focus, .letter-sheet textarea:focus { outline: none; border-color: var(--accent); background: #fafaff; }
 /* Les blocs d'un paragraphe (docs/131 §B.7) : au survol du paragraphe ou quand on l'écrit, pas à la lecture. */
@@ -640,7 +644,7 @@ p.badge.reason { margin: 0; }
 .letter-enclosure { margin-top: 2rem !important; font-size: 0.85rem; }
 .print-only { display: none; }
 @media (max-width: 960px) {
-  .prep-layout { grid-template-columns: 1fr; }
+  .prep-layout { grid-template-columns: minmax(0, 1fr); }
   .prep-side { position: static; }
   .letter-sheet { padding: 1.6rem 1.3rem; }
   .letter-recipient, .letter-date { margin-left: 0; }
@@ -654,7 +658,7 @@ p.badge.reason { margin: 0; }
 #print-root .cv-sheet { font-size: 9.5pt; }
 #print-root .screen-only { display: none !important; }
 #print-root .print-only { display: inline; }
-#print-root p.print-only { display: block; text-align: justify; }
+#print-root p.print-only { display: block; text-align: left; }
 #print-root .chunk-refs { display: none; }
 @media print {
   @page { size: A4; margin: 0; }

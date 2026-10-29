@@ -16,6 +16,7 @@ import AiWriting from "../components/AiWriting.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
+import FormField from "../components/FormField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
@@ -273,11 +274,22 @@ function sources(ids: number[]): string {
     .join(", ");
 }
 
-function versionLabel(letter: Letter): string {
+// Le nom d'une version : les six premiers mots de sa consigne, sans « … » (règle §2) ; la consigne
+// entière au survol et au focus (WCAG 1.4.13). Une ligne courte qui ne déborde jamais de la colonne.
+const NAME_WORDS = 6;
+function versionName(letter: Letter): string {
+  const words = (letter.instruction ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return "Première rédaction";
+  const name = words.slice(0, NAME_WORDS).join(" ").replace(/[,;:.]+$/, "");
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+function versionLong(letter: Letter): boolean {
+  return (letter.instruction ?? "").trim().split(/\s+/).length > NAME_WORDS;
+}
+function versionMeta(letter: Letter): string {
   // L'heure compte : plusieurs versions le même jour (« modifiée aujourd'hui à 14 h 05 »).
   const when = dateWithTime(letter.edited_at ?? letter.created_at);
-  const what = letter.instruction ? `« ${letter.instruction} »` : "première rédaction";
-  return `v${letter.version} · ${LANGUAGES[letter.language]} · ${what} · ${letter.edited_at ? "modifiée" : "rédigée"} ${when}`;
+  return `v${letter.version} · ${LANGUAGES[letter.language]} · ${letter.edited_at ? "modifiée" : "rédigée"} ${when}`;
 }
 
 onMounted(() => void load());
@@ -539,6 +551,14 @@ onMounted(() => void load());
             kind="letter"
           />
 
+          <!-- La consigne entière de la version affichée : au toucher il n'y a pas de survol. -->
+          <p
+            v-if="selected?.instruction"
+            class="hint version-instruction screen-only"
+            data-test="version-instruction"
+          >
+            Consigne : {{ selected.instruction }}
+          </p>
           <article
             v-if="doc && draft"
             class="letter-sheet print-sheet"
@@ -620,28 +640,43 @@ onMounted(() => void load());
             <h2>
               {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
             </h2>
-            <label>Langue
+            <FormField
+              v-slot="field"
+              label="Langue"
+            >
               <select
+                :id="field.id"
                 v-model="language"
                 data-test="language"
               >
-                <option value="">Celle de l'annonce</option>
+                <option value="">
+                  Celle de l'annonce
+                </option>
                 <option
                   v-for="(label, code) in LANGUAGES"
                   :key="code"
                   :value="code"
-                >{{ label }}</option>
+                >
+                  {{ label }}
+                </option>
               </select>
-            </label>
-            <label v-if="selected">Consigne (facultative)
+            </FormField>
+            <FormField
+              v-if="selected"
+              v-slot="field"
+              label="Consigne"
+              optional
+            >
               <textarea
+                :id="field.id"
                 v-model="instruction"
                 rows="2"
                 maxlength="500"
-                placeholder="plus court, insiste sur Kubernetes…"
+                placeholder="plus court, insiste sur Kubernetes"
+                :aria-describedby="field.describedby"
                 data-test="instruction"
               />
-            </label>
+            </FormField>
             <div class="mobile-dock">
               <BusyButton
                 :class="nextStep === 'letter' ? 'primary' : 'secondary'"
@@ -652,7 +687,7 @@ onMounted(() => void load());
                 @click="write()"
               >
                 <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
-                  <span class="with-icon"><AppIcon name="ai" />{{ selected ? "Nouvelle version" : "Rédiger la lettre" }}</span>
+                  <span class="with-icon"><AppIcon name="ai" />{{ selected ? "Rédiger la nouvelle version" : "Rédiger la lettre" }}</span>
                 </HoverNote>
               </BusyButton>
             </div>
@@ -726,7 +761,17 @@ onMounted(() => void load());
                   data-test="version"
                   @click="select(letter)"
                 >
-                  {{ versionLabel(letter) }}
+                  <HoverNote
+                    v-if="versionLong(letter)"
+                    :text="letter.instruction ?? ''"
+                  >
+                    <span class="version-name">{{ versionName(letter) }}</span>
+                  </HoverNote>
+                  <span
+                    v-else
+                    class="version-name"
+                  >{{ versionName(letter) }}</span>
+                  <span class="version-meta">{{ versionMeta(letter) }}</span>
                 </button>
               </li>
             </ul>

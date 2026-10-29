@@ -130,6 +130,25 @@ describe("PreparationView", () => {
     expect(wrapper.find("[data-test=docx]").exists()).toBe(true);
   });
 
+  it("une consigne longue : six mots pour nom, la consigne entière au survol, sans « … »", async () => {
+    const long = "Insiste davantage sur Kubernetes et Terraform, raccourcis ".repeat(6).trim();
+    expect(long.length).toBeGreaterThan(300);
+    mockGet([letter(12, 2, { instruction: long }), letter(11, 1)]);
+    const wrapper = await mountView();
+    const versions = wrapper.findAll("[data-test=version]");
+    const named = versions.find((v) => v.text().includes("Insiste"))!;
+    expect(named.find(".version-name").text()).toBe("Insiste davantage sur Kubernetes et Terraform");
+    expect(named.text()).not.toContain("…");
+    expect(named.findComponent({ name: "HoverNote" }).props("text")).toBe(long);
+    expect(versions.some((v) => v.find(".version-name").text() === "Première rédaction")).toBe(true);
+    // La consigne entière s'affiche aussi au-dessus de la lettre de la version choisie.
+    await named.trigger("click");
+    expect(wrapper.find("[data-test=version-instruction]").text()).toBe(`Consigne : ${long}`);
+    // La consigne a son libellé (FormField), le bouton dit ce qu'il fait.
+    expect(wrapper.find("label[for]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=write]").text()).toContain("Rédiger la nouvelle version");
+  });
+
   it("nouvelle version avec consigne : part de la version affichée", async () => {
     mockGet([letter(11, 1)]);
     POST.mockResolvedValue({ data: letter(12, 2, { instruction: "plus court" }) });
@@ -139,7 +158,7 @@ describe("PreparationView", () => {
     await flushPromises();
     const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(opts.body).toEqual({ language: null, instruction: "plus court", base_draft_id: 11 });
-    expect(wrapper.find(".versions .active").text()).toContain("plus court");
+    expect(wrapper.find(".versions .active .version-name").text()).toBe("Plus court");
   });
 
   it("erreur de l'API : message lisible", async () => {
