@@ -305,3 +305,9 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.91 | Réglages : l'ordre des attributs des lignes radio suit la règle du lint (aucun changement visible) | livrée |
 | 1.6.92 | Formulaires : champ commun (libellé, « facultatif », aide, erreur sous le champ avec icône), largeur de 10 caractères pour une date, cases à cocher sur 44 px | livrée |
 | 1.6.93 | Composants communs dans les pages : bouton Copier unique, « Afficher plus » en bas des cartes, têtes de carte « Titre · nombre », menu « Plus d'actions » avec icônes et sans rouge (confirmation sur place ou « Annuler » 6 s), boutons qui gardent le focus pendant l'action, blocs de chargement des Réglages et du Profil, écrans vides alignés (« Aucun … pour l'instant. », une ligne et « Effacer les filtres » quand les filtres ne trouvent rien) | livrée |
+| 1.6.94 | Composants communs de la structure téléphone : liste groupée, feuille du bas, action fixée en bas, contrôle segmenté pleine largeur | livrée |
+| 1.6.95 | Règles : structure téléphone inspirée de l'application CFF (listes groupées, feuilles du bas, action fixée en bas, contrôle segmenté, recherche) ; Réglages en liste sur téléphone, liste et détail sur ordinateur | livrée |
+| 1.6.96 | Cloche : le texte d'une alerte passe à la ligne au lieu d'être coupé par « … » | livrée |
+| 1.6.97 | Téléphone : les titres d'offres, les jours du calendrier du Suivi et les cartes de l'accueil passent à la ligne au lieu d'être coupés en 320 px | livrée |
+| 1.6.98 | L'audit téléphone ne compte plus une étiquette (label[for] ou qui entoure son champ) comme cible quand son champ fait lui-même au moins 24 × 24 px (WCAG 2.5.8, exception « équivalent ») ; une étiquette dont le champ est caché ou trop petit reste mesurée | livrée |
+| 1.6.99 | Formulaires : un champ date natif garde la place de son icône, l'année n'est plus coupée | livrée |

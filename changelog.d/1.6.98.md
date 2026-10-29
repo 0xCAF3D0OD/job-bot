@@ -1,0 +1,1 @@
+L'audit téléphone ne compte plus une étiquette (label[for] ou qui entoure son champ) comme cible quand son champ fait lui-même au moins 24 × 24 px (WCAG 2.5.8, exception « équivalent ») ; une étiquette dont le champ est caché ou trop petit reste mesurée

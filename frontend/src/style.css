@@ -810,7 +810,7 @@ input[type="date"], input[type="datetime-local"] { font: inherit; padding: var(-
 .bell-item.unread { background: var(--accent-soft); }
 .bell-item.unread .bell-title { font-weight: var(--weight-bold); }
 .bell-title { font-size: var(--font-small); color: var(--text); }
-.bell-text { font-size: var(--font-small); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bell-text { font-size: var(--font-small); color: var(--muted); overflow-wrap: anywhere; } /* Jamais de « … » dans une ligne de liste (§2) : le texte passe à la ligne. */
 .bell-time { font-size: var(--font-caption); color: var(--muted); }
 .bell-empty { padding: var(--space-2) var(--space-3) var(--space-3); margin: 0; }
 
@@ -1079,7 +1079,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 /* Un long lien passe à la ligne au lieu d'élargir le panneau (docs/74). */
 .card-job-room dd > span { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 900px) {
-  .suivi-calendar .day { min-height: 3.6rem; }
+  .suivi-calendar .day { min-height: 3.6rem; padding-inline: var(--space-1); }
   .day-marks .mark { display: none; }
 }
 
@@ -2428,6 +2428,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .welcome-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
 .welcome-screen { grid-template-columns: minmax(0, 1fr); }
 .welcome-screen h1, .welcome-card span { min-width: 0; overflow-wrap: break-word; }
+.welcome-card { white-space: normal; }
 .welcome-card > span { flex: 1 1 auto; grid-template-columns: minmax(0, 1fr); }
 /* En 320 et 360 px : les dix points et « Plus tard » tiennent sur la ligne (audit téléphone). */
 @media (max-width: 400px) {
@@ -2795,10 +2796,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .training-tile { position: relative; flex: 1; display: flex; flex-direction: column; padding: var(--space-6); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); transition: border-color 150ms, box-shadow 150ms; }
 .training-tile:hover { border-color: var(--accent); box-shadow: 0 6px 18px rgb(17 17 31 / 6%); }
 .tile-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.tile-tag { display: inline-flex; align-items: center; height: 1.4rem; padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--accent-soft); color: var(--accent); font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: 0.03em; }
-.tile-tag.strong { background: var(--text); color: var(--surface); text-transform: uppercase; }
-.tile-tag.warn { background: var(--orange-soft); color: var(--orange-text); }
-@media (prefers-color-scheme: dark) { .tile-tag.warn { background: var(--orange-soft); color: var(--orange-text); } }
 .tile-title { margin: var(--space-3) 0 0; font-size: var(--font-title); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
 .tile-open { all: unset; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: var(--text); }
 .tile-open::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
@@ -3992,21 +3989,12 @@ html.filters-open { overflow: hidden; }
 .alerts-section { display: grid; gap: var(--space-3); margin-bottom: var(--space-8); }
 .alerts-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .alerts-section-head .section-title { margin: 0; }
-.alert-state {
-  display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill); background: var(--band); color: var(--text); font-size: var(--font-small); white-space: nowrap;
-}
-.alert-state::before { content: ""; flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--muted); }
-.alert-state.received::before { background: var(--ok); }
-.alert-state.waiting::before { background: var(--accent); }
-.alert-state.silent::before { background: var(--orange); }
 .alert-quiet, .alert-date { color: var(--muted); font-size: var(--font-small); white-space: nowrap; }
 /* La recherche qu'on vient d'ajouter depuis la recherche globale : son contour en accent. */
 .alert-search.highlighted { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .site-message-text { white-space: pre-line; overflow-wrap: anywhere; }
 @media (max-width: 820px) {
   .alerts-section { margin-bottom: var(--space-6); }
-  .alert-state { white-space: normal; text-align: right; }
 }
 
 /* --- Recherche globale (série du 27.10, point 2 ; planche « 2. Recherche globale ») ---
@@ -4085,7 +4073,7 @@ html.search-open { overflow: hidden; }
 .offer-line-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
 .offer-line-title {
   padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: var(--weight-semibold);
-  text-align: left; text-decoration: none; overflow-wrap: anywhere; cursor: pointer;
+  text-align: left; text-decoration: none; overflow-wrap: anywhere; white-space: normal; min-width: 0; cursor: pointer;
 }
 .offer-line-title::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 /* Le focus clavier : le contour sur la zone du lien, toute la ligne (WCAG 2.4.7). */
@@ -4198,6 +4186,9 @@ html.search-open { overflow: hidden; }
 .form-field:is(.field-w-5, .field-w-10, .field-w-20, .field-w-30) > :is(input, select) { width: min(100%, var(--field-w)); }
 .field-w-5 { --field-w: var(--field-5); }
 .field-w-10 { --field-w: var(--field-10); }
+/* Une date native garde son icône de calendrier à droite : 10 caractères plus l'icône, pour que l'année
+   ne soit jamais coupée (« 28.10.2026 »). */
+.field-w-10 > input[type="date"] { --field-w: calc(var(--field-10) + var(--control-h)); }
 .field-w-20 { --field-w: var(--field-20); }
 .field-w-30 { --field-w: var(--field-30); }
 /* L'erreur ne repose pas que sur le rouge (WCAG 1.4.1) : une icône devant, partout où .field-error sert. */
@@ -4210,4 +4201,79 @@ html.search-open { overflow: hidden; }
 /* Case à cocher : toute la ligne est l'étiquette, 44 px de haut sur téléphone (WCAG 2.5.8, Apple HIG). */
 @media (pointer: coarse), (max-width: 820px) {
   label.check { min-height: 2.75rem; }
+}
+
+/* --- Structure téléphone (planche « Structure téléphone », règles §4) --- */
+/* Contrôle segmenté : les liens prennent l'aspect des boutons ; `full`, toute la largeur partagée. */
+.segmented > a {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  height: var(--control-inner-h); padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-pill);
+  background: var(--surface); color: var(--muted); font-size: var(--font-small); line-height: var(--leading-none);
+  text-decoration: none; white-space: nowrap;
+}
+.segmented > a[aria-current="page"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-semibold); }
+.segmented > a:hover:not([aria-current="page"]) { background: color-mix(in srgb, var(--text) 8%, var(--surface)); }
+.segmented > a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.segmented-full { display: flex; flex-wrap: nowrap; width: 100%; }
+.segmented-full > :is(a, button) { flex: 1 1 0; min-width: 0; padding-inline: var(--space-2); }
+/* Jamais coupé ni « … » : un débordement se voit, et la CI le refuse en 320 px. */
+.segmented-label { white-space: nowrap; }
+
+/* Liste groupée : titre hors de la carte, une carte, lignes séparées par un filet, 48 px au moins. */
+.grouped { display: grid; gap: var(--space-2); }
+.grouped-title { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding-inline: var(--space-1); font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--muted); }
+.grouped-card { list-style: none; margin: 0; padding: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.grouped-item + .grouped-item { border-top: 1px solid var(--divider); }
+.grouped-row {
+  display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; min-height: 3rem;
+  padding: var(--space-3) var(--space-4); border: 0; background: none; color: var(--text); font: inherit; text-align: left; text-decoration: none;
+}
+.grouped-row-action { cursor: pointer; }
+.grouped-row-action:hover { background: color-mix(in srgb, var(--text) 4%, var(--surface)); }
+.grouped-row-action:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.grouped-icon { flex: none; width: 1.25rem; height: 1.25rem; color: var(--text); }
+.grouped-text { display: grid; gap: calc(var(--space-1) / 2); flex: 1 1 auto; min-width: 0; }
+.grouped-row-title { line-height: var(--leading-normal); }
+.grouped-row-description { font-size: var(--font-small); color: var(--muted); line-height: var(--leading-normal); }
+.grouped-value { flex: none; font-size: var(--font-small); color: var(--muted); }
+.grouped-chevron { flex: none; width: 1.1rem; height: 1.1rem; color: var(--muted); }
+/* Une radio ou une case en tête : toute la ligne est l'étiquette (WCAG 2.5.8). */
+.grouped-row > input[type="radio"], .grouped-row > input[type="checkbox"] { flex: none; margin: 0; }
+
+/* Feuille du bas : au centre sur ordinateur ; collée en bas sur téléphone ; plein écran avec `full`. */
+.sheet { box-sizing: border-box; width: min(32rem, calc(100vw - 2 * var(--space-4))); max-height: 85dvh; padding: 0; border: 0; border-radius: var(--space-5); background: var(--bg); color: var(--text); box-shadow: 0 24px 64px rgb(17 17 31 / 24%); }
+.sheet::backdrop { background: rgb(17 17 31 / 45%); }
+.sheet-inner { display: flex; flex-direction: column; gap: var(--space-4); max-height: inherit; padding: var(--space-4); box-sizing: border-box; }
+.sheet-head { display: flex; align-items: center; gap: var(--space-3); }
+.sheet-title { flex: 1 1 auto; margin: 0; font-size: var(--font-section); line-height: var(--leading-tight); }
+.sheet-close { flex: none; display: inline-flex; align-items: center; justify-content: center; width: var(--control-h); height: var(--control-h); padding: 0; border: 0; border-radius: 50%; background: var(--panel); color: var(--text); }
+.sheet-close:hover { background: color-mix(in srgb, var(--text) 8%, var(--panel)); }
+.sheet-close .icon { width: 1.1rem; height: 1.1rem; }
+.sheet-body { overflow: auto; display: grid; gap: var(--space-4); }
+.sheet-actions { display: flex; gap: var(--space-3); align-items: center; }
+@media (max-width: 599px) {
+  .sheet { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: var(--space-5) var(--space-5) 0 0; }
+  .sheet-inner { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
+  .sheet-inner::before { content: ""; align-self: center; width: 2.25rem; height: 0.25rem; margin-bottom: calc(var(--space-2) * -1); border-radius: var(--radius-pill); background: var(--border); }
+  .sheet-full { height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; }
+  .sheet-full .sheet-inner { padding-top: calc(var(--space-4) + env(safe-area-inset-top)); }
+  .sheet-full .sheet-inner::before { display: none; }
+  /* L'action principale prend la place qui reste (« Afficher 3 offres »). */
+  .sheet-actions > .primary { flex: 1 1 auto; justify-content: center; }
+  .sheet[open] { animation: sheet-up var(--t-state) var(--ease-out); }
+}
+@keyframes sheet-up { from { transform: translateY(2rem); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
+
+/* Action fixée en bas : au-dessus de la barre d'onglets, pleine largeur, sous 600 px seulement. */
+.action-bar { display: contents; }
+@media (max-width: 599px) {
+  .action-bar {
+    position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom); z-index: 21;
+    display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4);
+    background: var(--surface); border-top: 1px solid var(--border);
+  }
+  :root:has(.tab-bar) .action-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
+  .action-bar > :is(button, a) { width: 100%; justify-content: center; }
+  :root:has(.action-bar) main { padding-bottom: calc(var(--tabbar-h, 0rem) + 5.5rem + env(safe-area-inset-bottom)); }
 }
