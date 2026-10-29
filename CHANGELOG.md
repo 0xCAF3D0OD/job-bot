@@ -324,3 +324,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.110 | Listes de filtre compactes à la hauteur des boutons ; le chevron d'une liste ne recouvre plus jamais son texte | livrée |
 | 1.6.111 | Profil sur téléphone (sous 600 px) : un contrôle segmenté pleine largeur (Critères, Parcours, Coordonnées), les critères en liste groupée qui ouvre le formulaire sur le critère touché, et l'effet des critères en deux lignes | livrée |
 | 1.6.112 | Réglages selon la planche « Structure téléphone » : une liste groupée (La recherche, Être averti, Compte et aide) ; sur téléphone, la liste seule puis une sous-page par rubrique avec « ← Réglages », et « Recevoir sur mon téléphone » à un toucher depuis la liste ; sur ordinateur, la liste à gauche et la rubrique à droite | livrée |
+| 1.6.113 | CI : l'audit des contrôles en 1440, 320, 360 et 390 px, rangées de même hauteur à 1 px près et texte des listes jamais sous le chevron | livrée |
