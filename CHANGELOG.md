@@ -329,3 +329,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.115 | Cloche : sur téléphone, une feuille plein écran avec les alertes nouvelles et déjà lues en listes groupées | livrée |
 | 1.6.116 | Réglages : le groupe « Recherche d'emploi » et sa ligne « Objectif ORP et sites » ; dans « Compte et aide », « Aide » ouvre l'Assistant (quand l'IA est configurée) et « Écrire à l'exploitant » reprend son contact | livrée |
 | 1.6.117 | Cloche : « Notifications » au lieu d'« Alertes » (titre et nom accessible), « Alertes » étant l'onglet des sources d'offres | livrée |
+| 1.6.118 | Préparer : chaque lettre est relue avant de s'afficher, sur sept critères (accroche, pertinence, précision, longueur, conclusion, aucune invention, règles) ; au plus une correction automatique ; un fait absent du profil est toujours retiré ; « Relue : 6/7 » sous la lettre et le détail avec ses pastilles | livrée |
