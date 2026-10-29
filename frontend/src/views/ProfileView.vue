@@ -8,17 +8,25 @@ import IdentityForm from "../components/IdentityForm.vue";
 import PageHero from "../components/PageHero.vue";
 import ProfileGauge from "../components/ProfileGauge.vue";
 import ProfileParcours from "../components/ProfileParcours.vue";
+import SegmentedControl from "../components/SegmentedControl.vue";
+import { useNarrow } from "../composables/usePhone";
 
 // Tout ce qui te concerne au même endroit (docs/10 §2 a) ; l'onglet est dans l'URL.
 const TABS = [
-  // Sur téléphone, un nom court qui tient sur une ligne (docs/36 §5).
-  { key: "recherche", label: "Critères", icon: "filter", short: "Critères" },
-  { key: "parcours", label: "Parcours", icon: "folder", short: "Parcours" },
-  { key: "coordonnees", label: "Coordonnées", icon: "mail", short: "Contact" },
+  { key: "recherche", label: "Critères", icon: "filter" },
+  { key: "parcours", label: "Parcours", icon: "folder" },
+  { key: "coordonnees", label: "Coordonnées", icon: "mail" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
 const route = useRoute();
+const { phone: narrow } = useNarrow();
+const segments = TABS.map((entry) => ({
+  value: entry.key,
+  label: entry.label,
+  to: { query: entry.key === "recherche" ? {} : { onglet: entry.key } },
+  test: `tab-${entry.key}`,
+}));
 const tab = computed<Tab>(() => {
   const wanted = route.query.onglet;
   return TABS.find((t) => t.key === wanted)?.key ?? "recherche";
@@ -31,8 +39,17 @@ const tab = computed<Tab>(() => {
   <PageHero
     title="Profil"
   >
+    <!-- Sous 600 px (planche « Structure téléphone ») : un contrôle segmenté sur toute la largeur. -->
+    <SegmentedControl
+      v-if="narrow"
+      :model-value="tab"
+      :options="segments"
+      label="Profil"
+      full
+    />
     <nav
-      class="prep-tabs profile-tabs"
+      v-else
+      class="prep-tabs"
       aria-label="Profil"
     >
       <RouterLink
@@ -45,8 +62,7 @@ const tab = computed<Tab>(() => {
       >
         <span class="with-icon">
           <AppIcon :name="entry.icon" />
-          <span class="label-long">{{ entry.label }}</span>
-          <span class="label-short">{{ entry.short }}</span>
+          {{ entry.label }}
         </span>
       </RouterLink>
     </nav>

@@ -1,0 +1,1 @@
+Profil sur téléphone (sous 600 px) : un contrôle segmenté pleine largeur (Critères, Parcours, Coordonnées), les critères en liste groupée qui ouvre le formulaire sur le critère touché, et l'effet des critères en deux lignes

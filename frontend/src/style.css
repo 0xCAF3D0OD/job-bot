@@ -2304,8 +2304,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .welcome-dot { width: 1rem; }
   .welcome-dot.current::after { width: 1rem; }
 }
-/* Profil en 320 px : les trois onglets tiennent sans leurs icônes. */
-@media (max-width: 359px) { .profile-tabs .with-icon > .icon { display: none; } }
 /* Réglages : toute la ligne d'un choix « offres » se touche, pas seulement la radio. */
 .radio-row { cursor: pointer; }
 /* Tri sur téléphone : « Garder » et « Écarter » restent visibles sans défiler, au-dessus de la barre. */
