@@ -318,3 +318,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.104 | Info-bulle : au focus clavier, fermée par Échap, la souris peut passer dessus sans qu'elle disparaisse (WCAG 1.4.13) | livrée |
 | 1.6.105 | Barres de défilement aux couleurs de la plateforme sur ordinateur, fondu au bord des onglets qui défilent ; rien ne change sur téléphone ni en contraste élevé | livrée |
 | 1.6.106 | Champs : un champ posé dans une rangée de boutons prend la hauteur des contrôles, la rangée reste alignée ; contrôle segmenté pleine largeur selon la planche | livrée |
+| 1.6.107 | Liste groupée : l'entrée affichée à côté (liste et détail) porte la pastille de sélection et aria-current | livrée |
