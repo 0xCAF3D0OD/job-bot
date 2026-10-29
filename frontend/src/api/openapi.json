@@ -12035,6 +12035,17 @@
               }
             ],
             "title": "Saved At"
+          },
+          "returned": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Returned"
           }
         },
         "type": "object",

@@ -8,6 +8,7 @@ type RemotePolicy = components["schemas"]["RemotePolicy"];
 import HoverNote from "./HoverNote.vue";
 import TagInput from "./TagInput.vue";
 import { placeLabel } from "../cantons";
+import { plural } from "../format";
 
 import AppIcon from "./AppIcon.vue";
 import FilterOutcome from "./FilterOutcome.vue";
@@ -152,7 +153,11 @@ async function save(): Promise<void> {
     form.value = { ...EMPTY, ...data.criteria };
     savedAt.value = data.saved_at ?? new Date().toISOString();
     editing.value = false;
-    message.value = "Critères enregistrés. Les offres sont refiltrées d'ici une minute.";
+    // Les offres écartées sont réévaluées tout de suite : dire combien reviennent.
+    const back = data.returned ?? 0;
+    message.value = back
+      ? `Critères enregistrés. ${plural(back, "offre revient", "offres reviennent")} dans À examiner.`
+      : "Critères enregistrés. Aucune offre écartée ne revient.";
   } catch {
     message.value = "L'enregistrement a échoué : vérifie les valeurs saisies.";
   } finally {

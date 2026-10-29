@@ -1,0 +1,1 @@
+Filtre par lieu corrigé : variantes de langue (Bern, Berne, Zürich, Zuerich, Genf, Bienne…), abréviations et noms de canton, taux, pays et codes postaux retirés du lieu de l'annonce ; un chef-lieu vaut son canton entier ; enregistrer ses critères réévalue tout de suite les offres écartées et dit combien reviennent
