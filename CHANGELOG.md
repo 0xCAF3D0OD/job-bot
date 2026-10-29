@@ -327,3 +327,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.113 | CI : l'audit des contrôles en 1440, 320, 360 et 390 px, rangées de même hauteur à 1 px près et texte des listes jamais sous le chevron | livrée |
 | 1.6.114 | Préparer : la consigne modifie enfin la formule d'appel, l'objet et la formule de politesse (« Dear Hiring Committee ») ; une demande hors de portée (coordonnées, date) ou sans effet le dit en une ligne et ne crée pas de version ; la version affichée est marquée dans la liste | livrée |
 | 1.6.115 | Cloche : sur téléphone, une feuille plein écran avec les alertes nouvelles et déjà lues en listes groupées | livrée |
+| 1.6.116 | Réglages : le groupe « Recherche d'emploi » et sa ligne « Objectif ORP et sites » ; dans « Compte et aide », « Aide » ouvre l'Assistant (quand l'IA est configurée) et « Écrire à l'exploitant » reprend son contact | livrée |
