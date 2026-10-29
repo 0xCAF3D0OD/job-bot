@@ -5,7 +5,12 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 import SettingsView from "./SettingsView.vue";
 
-vi.mock("../composables/usePhone", () => ({ PHONE_QUERY: "", usePhone: () => ({ phone: ref(true) }) }));
+vi.mock("../composables/usePhone", () => ({
+  PHONE_QUERY: "",
+  usePhone: () => ({ phone: ref(true) }),
+  // Entre 600 et 820 px : la longue page et ses marqueurs.
+  useNarrow: () => ({ phone: ref(false) }),
+}));
 vi.mock("../api/client", () => ({
   api: {
     GET: (path: string) =>

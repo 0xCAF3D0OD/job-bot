@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
-import { usePhone } from "../composables/usePhone";
+import { useNarrow, usePhone } from "../composables/usePhone";
+import type { IconName } from "../icons";
 import PageHero from "../components/PageHero.vue";
 import PlanPanel from "../components/PlanPanel.vue";
 import { usePlan } from "../composables/usePlan";
@@ -19,6 +20,8 @@ import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
+import GroupedList from "../components/GroupedList.vue";
+import GroupedRow from "../components/GroupedRow.vue";
 import SettingCard from "../components/SettingCard.vue";
 import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
@@ -310,9 +313,45 @@ const active = computed<SectionId>(() => {
   return sections.value.find((s) => s.id === wanted)?.id ?? OLD_ANCHORS[route.hash.slice(1)] ?? "recherche";
 });
 
-// Sur téléphone, une longue page (docs/110) : les marqueurs du haut mènent à chaque rubrique et
-// suivent la lecture. Ils se collent sous la barre du haut.
-const { phone } = usePhone();
+// Sous 600 px (planche « Structure téléphone », 249:645) : une liste groupée ; chaque entrée ouvre sa
+// sous-page, avec « ← Réglages ». Sans rubrique dans l'adresse, la liste seule.
+const { phone: narrow } = useNarrow();
+const listOnly = computed(() => narrow.value && !route.query.rubrique);
+const shown = (id: SectionId): boolean => !narrow.value || active.value === id;
+type Entry = { title: string; description?: string; icon: IconName; to: RouteLocationRaw; id?: SectionId };
+const GROUPS = computed<{ title: string; entries: Entry[] }[]>(() => [
+  {
+    title: "Ma recherche",
+    entries: [
+      { id: "recherche", title: "Recherche d'emploi", description: "Objectif ORP, preuves, sites suivis", icon: "briefcase", to: { query: { rubrique: "recherche" } } },
+      { id: "rythme", title: "Rythme", description: "Jours de recherche, pause", icon: "calendar", to: { query: { rubrique: "rythme" } } },
+      { title: "Alertes", description: "Recherches suivies sur les sites", icon: "list-check", to: "/candidatures/alertes" },
+    ],
+  },
+  {
+    title: "Être averti",
+    entries: [
+      { id: "notifications", title: "Notifications", description: "Seuil, message du jour, téléphone", icon: "bell", to: { query: { rubrique: "notifications" } } },
+      { id: "ia", title: "IA", description: "Ce qu'elle fait chaque mois", icon: "ai", to: { query: { rubrique: "ia" } } },
+      { id: "outils", title: "Agenda et extension", description: "Calendrier, navigateur", icon: "plug", to: { query: { rubrique: "outils" } } },
+    ],
+  },
+  {
+    title: "Compte et aide",
+    entries: [
+      { id: "compte", title: "Compte", description: "Formule, export, fermeture", icon: "user", to: { query: { rubrique: "compte" } } },
+      ...(owner.value
+        ? [{ id: "plateforme" as const, title: "Administration", description: "Comptes et IA de la plateforme", icon: "shield" as IconName, to: { query: { rubrique: "plateforme" } } }]
+        : []),
+      ...(showDiagnostic.value ? [{ title: "État du service", icon: "activity" as IconName, to: "/reglages/diagnostic" }] : []),
+    ],
+  },
+]);
+
+// Entre 600 et 820 px, une longue page (docs/110) : les marqueurs du haut mènent à chaque rubrique
+// et suivent la lecture. Ils se collent sous la barre du haut.
+const { phone: wide } = usePhone();
+const phone = computed(() => wide.value && !narrow.value);
 const current = ref<SectionId>("recherche");
 const markers = ref<HTMLElement | null>(null);
 const markersTop = ref(0);
@@ -362,11 +401,53 @@ onUnmounted(() => spy?.disconnect());
 
 <template>
   <PageHero
+    v-if="!narrow || listOnly"
     title="Réglages"
   />
-  <section class="band">
-    <div class="settings-layout">
+  <PageHero
+    v-else
+    :title="sections.find((s) => s.id === active)?.label ?? 'Réglages'"
+  >
+    <template #back>
+      <RouterLink
+        :to="{ query: {} }"
+        class="back-link"
+        data-test="settings-back"
+      >
+        <span class="with-icon"><AppIcon name="arrow-left" />Réglages</span>
+      </RouterLink>
+    </template>
+  </PageHero>
+  <section
+    v-if="listOnly"
+    class="band settings-list"
+    data-test="settings-list"
+  >
+    <div class="container">
+      <GroupedList
+        v-for="group in GROUPS"
+        :key="group.title"
+        :title="group.title"
+      >
+        <GroupedRow
+          v-for="entry in group.entries"
+          :key="entry.title"
+          :title="entry.title"
+          :description="entry.description"
+          :icon="entry.icon"
+          :to="entry.to"
+          :data-test="`settings-entry-${entry.id ?? entry.title}`"
+        />
+      </GroupedList>
+    </div>
+  </section>
+  <section
+    v-else
+    class="band"
+  >
+    <div :class="['settings-layout', { 'settings-sub': narrow }]">
       <nav
+        v-if="!narrow"
         class="settings-toc"
         aria-label="Sections des réglages"
       >
@@ -418,6 +499,7 @@ onUnmounted(() => spy?.disconnect());
         <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
              contrôle à droite ; plus de bouton « Enregistrer ». -->
         <SettingsSection
+          v-if="shown('recherche')"
           id="recherche"
           title="Recherche d'emploi"
           :value="summary.recherche"
@@ -512,6 +594,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('rythme')"
           id="rythme"
           title="Rythme"
           :value="summary.rythme"
@@ -673,6 +756,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('notifications')"
           id="notifications"
           title="Notifications"
           :value="summary.notifications"
@@ -791,6 +875,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('ia')"
           id="ia"
           title="IA"
           :value="summary.ia"
@@ -870,6 +955,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('compte')"
           id="compte"
           title="Compte"
           :value="summary.compte"
@@ -885,6 +971,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
+          v-if="shown('outils')"
           id="outils"
           title="Agenda et extension"
           :value="summary.outils"
@@ -896,7 +983,7 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
-          v-if="owner"
+          v-if="owner && shown('plateforme')"
           id="plateforme"
           title="Administration"
           :value="summary.plateforme"

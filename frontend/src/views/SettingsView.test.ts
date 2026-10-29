@@ -317,3 +317,37 @@ describe("Des Réglages épurés (docs/106)", () => {
   });
 
 });
+
+describe("SettingsView sous 600 px (planche « Structure téléphone »)", () => {
+  const original = globalThis.matchMedia;
+  afterEach(() => {
+    globalThis.matchMedia = original;
+  });
+  const narrow = () => {
+    globalThis.matchMedia = ((query: string) =>
+      ({ matches: query.includes("599px") || query.includes("820px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList);
+  };
+
+  it("sans rubrique : la liste groupée seule, chaque entrée mène à sa sous-page", async () => {
+    narrow();
+    mockGet(true);
+    const { wrapper } = await mountSettings();
+    const list = wrapper.find("[data-test=settings-list]");
+    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["Ma recherche", "Être averti", "Compte et aide"]);
+    expect(list.text()).toContain("Seuil, message du jour, téléphone");
+    expect(wrapper.find("[data-test=section-notifications]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=settings-markers]").exists()).toBe(false);
+    expect(list.find("[data-test=settings-entry-notifications] .grouped-row-action").exists()).toBe(true);
+  });
+
+  it("une rubrique : sa sous-page seule, avec « ← Réglages »", async () => {
+    narrow();
+    mockGet(true);
+    const { wrapper } = await mountSettings("notifications");
+    expect(wrapper.find("[data-test=settings-list]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=settings-back]").text()).toBe("Réglages");
+    expect(wrapper.find("h1").text()).toBe("Notifications");
+    expect(wrapper.find("[data-test=section-notifications]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=section-rythme]").exists()).toBe(false);
+  });
+});

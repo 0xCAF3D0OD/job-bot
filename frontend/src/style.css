@@ -4107,3 +4107,6 @@ html.search-open { overflow: hidden; }
 :root input[type="radio"]:checked { border-width: 2px; background: radial-gradient(circle, var(--accent) 0 0.3rem, var(--field-bg) calc(0.3rem + 0.5px)); }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :root input:is([type="checkbox"]:not([role="switch"]), [type="radio"]):disabled { border-color: var(--border); background: var(--panel); cursor: not-allowed; }
+/* Réglages sous 600 px : la sous-page a son titre en haut de page, la section ne le répète pas. */
+.settings-sub .settings-section > .section-title { display: none; }
+.settings-list .container { display: grid; gap: var(--space-6); }
