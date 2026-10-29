@@ -140,6 +140,8 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
 :root {
   --page-max: 1020px;
   --page-wide: 80rem;
+  /* Une colonne de travail, un élément à la fois (le tri des offres du jour). */
+  --page-column: 50rem;
   --measure: 31em;
   --field-20: 13rem;
   --field-30: 18rem;
@@ -4105,6 +4107,18 @@ html.search-open { overflow: hidden; }
   :root:has(.tab-bar) .action-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
   .action-bar > :is(button, a):not(.link) { width: 100%; justify-content: center; }
   :root:has(.action-bar) main { padding-bottom: calc(var(--tabbar-h, 0rem) + var(--action-bar-h, 5.5rem) + var(--space-5) + env(safe-area-inset-bottom)); }
+}
+
+/* Le bandeau « Annuler » et le bouton Assistant au-dessus du panneau de commande, sous 600 px. Au-delà,
+   le bandeau `inline` d'une page prend la place de celui d'App. */
+@media (max-width: 599px) {
+  :root:has(.action-bar) .toast { bottom: calc(var(--tabbar-h, 0rem) + var(--action-bar-h, 5.5rem) + var(--space-3) + env(safe-area-inset-bottom)); }
+  :root:has(.action-bar) .assistant-fab { bottom: calc(var(--tabbar-h, 0rem) + var(--action-bar-h, 5.5rem) + var(--space-3) + env(safe-area-inset-bottom)); }
+  .undo-toast.inline { display: none; }
+}
+@media (min-width: 600px) {
+  .undo-toast.inline { position: static; width: auto; max-width: none; margin: 0; box-shadow: none; border: 1px solid var(--border); border-left: 3px solid var(--accent); animation: none; }
+  :root:has(.undo-toast.inline) .undo-toast:not(.inline) { display: none; }
 }
 
 /* Progression pas à pas : « 1 sur 5 », puis un segment par élément. */
