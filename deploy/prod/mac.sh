@@ -96,7 +96,7 @@ case "${1:-}" in
     echo "✓ Sauvegardes du serveur copiées dans $dest ($(ls "$dest" | wc -l | tr -d ' ') fichiers)"
     ;;
   restaurer)
-    [ -f "${FICHIER:-}" ] || erreur "Indique la sauvegarde à envoyer : make prod-restaurer FICHIER=sauvegardes/jobA1-….jobA1backup"
+    [ -f "${FICHIER:-}" ] || erreur "Fichier introuvable : « ${FICHIER:-} ». Indique le chemin complet d'une sauvegarde (dossier JOBBOT_BACKUP_PATH du .env) : make prod-restaurer FICHIER=\"…/jobA1-AAAA-MM-JJ-HHMM.jobA1backup\""
     nom="$(basename "$FICHIER")"
     etape "Envoi de $nom"
     scp -q -i "$SSH_KEY" "$FICHIER" "$SERVER:/tmp/$nom"

@@ -59,10 +59,10 @@ Les sauvegardes (docs/82) vont dans `~/joba1/sauvegardes`, **sur le même disque
 
    ```bash
    cd backend && uv run jobbot backup && cd ..
-   make prod-restaurer FICHIER=sauvegardes/jobA1-AAAA-MM-JJ-HHMM.jobA1backup
+   make prod-restaurer FICHIER="<dossier JOBBOT_BACKUP_PATH du .env>/jobA1-AAAA-MM-JJ-HHMM.jobA1backup"
    ```
 
-   Il faut écrire « restaurer » pour confirmer. Sans données à reprendre : `make prod-mot-de-passe` crée le compte de l'exploitant.
+   Le fichier est dans le dossier `JOBBOT_BACKUP_PATH` du `.env` du Mac (chez toi, iCloud). Il faut écrire « restaurer » pour confirmer. Une sauvegarde du Mac se restaure sur le serveur bien que le propriétaire de la base n'y soit pas le même (« dkey » sur le Mac, `jobbot` ici) : ses droits par défaut sont reposés au nom du propriétaire du serveur (1.6.x, corrigé le 29.10 après le premier essai). Sans données à reprendre : `make prod-mot-de-passe` crée le compte de l'exploitant.
 7. **Ne relance plus `make dev` avec la vraie boîte e-mail** : deux plateformes qui lisent la même boîte se disputeraient les alertes, et la boîte des invités est vidée à chaque relevé. Pour développer, garde un `.env` local sans `JOBBOT_IMAP_*` ni `JOBBOT_GUEST_IMAP_*`.
 8. **L'extension** : dans sa fenêtre, remplace l'adresse par `https://app.joba1.ch`.
 
