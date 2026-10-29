@@ -168,7 +168,7 @@ def to_docx(letter: LetterDocument) -> bytes:
     block([letter.salutation], after=12)
     for text in letter.paragraphs:
         p = doc.add_paragraph(text)
-        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT  # jamais justifiée (WCAG 1.4.8)
         p.paragraph_format.space_after = Pt(10)
     block([letter.closing], after=36)
     block([letter.signature], after=30)

@@ -1,0 +1,1 @@
+Préparer une candidature : la colonne Versions ne déborde plus (nom court de six mots, consigne entière au survol et au-dessus de la lettre) ; « Rédiger la nouvelle version » et une consigne avec son libellé ; lettre alignée à gauche, jamais justifiée (page, PDF et Word) ; plus jamais de tiret cadratin dans une lettre

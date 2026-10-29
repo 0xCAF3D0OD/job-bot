@@ -230,10 +230,15 @@ async def test_edit_then_application_and_docx(
         f"/api/letters/{first['id']}",
         json={
             "subject": "Candidature",
-            "paragraphs": [{"text": "Texte corrigé.", "chunk_ids": []}],
+            "paragraphs": [
+                {"text": "Texte corrigé.", "chunk_ids": []},
+                {"text": "Une lettre d'avant — avec un tiret.", "chunk_ids": []},
+            ],
         },
     )
     assert edited.status_code == 200 and edited.json()["edited_at"]
+    # Le texte rendu n'a jamais de tiret cadratin, même enregistré avec.
+    assert edited.json()["paragraphs"][1]["text"] == "Une lettre d'avant, avec un tiret."
 
     prefill = (await api.get(f"/api/offers/{offer_id}/application-prefill")).json()
     assert prefill["company_address"] == "Avenue de l'Exemple 5, 1003 Lausanne"
@@ -250,7 +255,10 @@ async def test_edit_then_application_and_docx(
     assert response.status_code == 200
     assert "Acme" in response.headers["content-disposition"]
     paragraphs = [p.text for p in read_docx(io.BytesIO(response.content)).paragraphs]
+    # Jamais justifiée (WCAG 1.4.8).
+    assert all(p.alignment != 3 for p in read_docx(io.BytesIO(response.content)).paragraphs)
     assert "Objet : Candidature" in paragraphs and "Texte corrigé." in paragraphs
+    assert all("—" not in p for p in paragraphs)
     assert any("Jean Exemple" in p for p in paragraphs)
 
     pdf = await api.get(f"/api/letters/{first['id']}/pdf")
@@ -318,3 +326,27 @@ async def test_get_offer(api: AsyncClient, rt: Runtime) -> None:
     offer = (await api.get(f"/api/offers/{offer_id}")).json()
     assert offer["id"] == offer_id and offer["title"] == "Ingénieur DevOps junior"
     assert (await api.get("/api/offers/999999")).status_code == 404
+
+
+def test_letter_has_no_em_dash() -> None:
+    """Jamais de tiret cadratin : la consigne le demande, le garde-fou le retire."""
+    from jobbot.llm.letter import INSTRUCTIONS, no_dash, parse_output
+
+    assert "tiret cadratin" in INSTRUCTIONS
+    raw = json.dumps(
+        {
+            "language": "fr",
+            "subject": "Candidature — ingénieur DevOps",
+            "paragraphs": [
+                {"text": "Votre plateforme — et son équipe — m'intéresse.", "chunk_ids": []},
+                {"text": "Un taux de 80\u2013100 % me convient — merci.", "chunk_ids": []},
+            ],
+            "employer": {"address": None, "contact_name": None, "contact_phone": None},
+        }
+    )
+    output = parse_output(raw, [])
+    texts = [output.subject, *(p.text for p in output.paragraphs)]
+    assert all("—" not in t for t in texts)
+    assert output.paragraphs[0].text == "Votre plateforme, et son équipe, m'intéresse."
+    assert output.paragraphs[1].text == "Un taux de 80\u2013100 % me convient, merci."
+    assert no_dash("Fin — .") == "Fin."

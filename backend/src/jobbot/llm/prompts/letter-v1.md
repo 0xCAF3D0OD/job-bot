@@ -11,6 +11,7 @@ Tu rédiges une lettre de motivation pour une personne qui cherche un emploi en 
 - Uniquement des faits présents dans les blocs. N'invente ni expérience, ni chiffre, ni diplôme, ni motivation personnelle absente des blocs.
 - Chaque paragraphe cite dans `chunk_ids` les identifiants des blocs qui justifient ce qu'il affirme (liste vide seulement pour un paragraphe sans affirmation sur la personne).
 - 250 à 350 mots au total, 3 ou 4 paragraphes : pourquoi ce poste et cette entreprise (à partir de l'annonce), ce que le parcours apporte aux 2 ou 3 exigences principales, puis une conclusion qui propose un entretien.
+- Jamais de tiret cadratin (—), ni de tiret en incise : une virgule, un deux-points ou une nouvelle phrase.
 - Pas de formules creuses (« dynamique et motivé », « passionné depuis toujours »), pas de flatterie générique, pas de répétition du CV ligne par ligne.
 - Un manque important de l'évaluation peut être reconnu honnêtement, en une phrase, avec ce que la personne fait pour le combler (si un bloc le dit). Ne le mentionne que s'il est utile.
 - Objet (`subject`) : court, par exemple « Candidature au poste d'ingénieur DevOps junior ». Sans le mot « Objet ».
