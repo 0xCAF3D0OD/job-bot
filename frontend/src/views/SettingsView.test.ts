@@ -135,17 +135,22 @@ describe("SettingsView, une rubrique à la fois (docs/48)", () => {
     const { wrapper, router } = await mountSettings();
     // Liste et détail (planche « Structure téléphone ») : la liste groupée à gauche, l'entrée affichée marquée.
     const list = wrapper.find("[data-test=settings-list]");
-    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["La recherche", "Être averti", "Compte et aide"]);
+    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["Recherche d'emploi", "Être averti", "Compte et aide"]);
     expect(list.findAll(".grouped-row-title").map((t) => t.text())).toEqual([
-      "Recherche d'emploi",
+      "Objectif ORP et sites",
       "Rythme",
       "Alertes",
       "Notifications",
       "IA",
       "Agenda et extension",
       "Compte",
+      "Écrire à l'exploitant",
     ]);
-    expect(list.find("[aria-current=page] .grouped-row-title").text()).toBe("Recherche d'emploi");
+    expect(list.find("[aria-current=page] .grouped-row-title").text()).toBe("Objectif ORP et sites");
+    // Sans coordonnées de l'exploitant : la même phrase que Données personnelles, pas de lien.
+    const write = list.find("[data-test=\"settings-entry-Écrire à l'exploitant\"]");
+    expect(write.text()).toContain("L'exploitant de la plateforme n'a pas encore indiqué ses coordonnées.");
+    expect(write.find("a, button").exists()).toBe(false);
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
     // Le seuil de notification est dans sa rubrique, dit en clair.
@@ -344,7 +349,7 @@ describe("SettingsView sous 600 px (planche « Structure téléphone »)", () =>
     mockGet(true);
     const { wrapper } = await mountSettings();
     const list = wrapper.find("[data-test=settings-list]");
-    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["La recherche", "Être averti", "Compte et aide"]);
+    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["Recherche d'emploi", "Être averti", "Compte et aide"]);
     expect(list.text()).toContain("Seuil, message du jour, téléphone");
     expect(wrapper.find("[data-test=section-notifications]").exists()).toBe(false);
     expect(wrapper.find("[data-test=settings-markers]").exists()).toBe(false);
@@ -360,5 +365,24 @@ describe("SettingsView sous 600 px (planche « Structure téléphone »)", () =>
     expect(wrapper.find("h1").text()).toBe("Notifications");
     expect(wrapper.find("[data-test=section-notifications]").exists()).toBe(true);
     expect(wrapper.find("[data-test=section-rythme]").exists()).toBe(false);
+  });
+});
+
+describe("SettingsView, Compte et aide (décision de Kevin)", () => {
+  it("« Écrire à l'exploitant » ouvre son adresse e-mail quand il l'a donnée", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/privacy"
+            ? { contact: "Kevin, Lausanne, contact@exemple.ch" }
+            : path === "/api/notifications"
+              ? { configured: false, server: "https://ntfy.sh" }
+              : { notify_score_threshold: 70, llm_monthly_budget_chf: 10, rhythm_days: [0, 1, 2, 3, 4] },
+      }),
+    );
+    const { wrapper } = await mountSettings();
+    const write = wrapper.find("[data-test=\"settings-entry-Écrire à l'exploitant\"]");
+    expect(write.text()).toContain("Le contact de la plateforme, toujours là.");
+    expect(write.find("a").attributes("href")).toBe("mailto:contact@exemple.ch");
   });
 });

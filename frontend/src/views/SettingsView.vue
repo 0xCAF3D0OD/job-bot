@@ -5,6 +5,7 @@ import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
 import { api, type SettingsModel } from "../api/client";
 import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
+import { useAssistant } from "../composables/useAssistant";
 import { useNarrow, usePhone } from "../composables/usePhone";
 import type { IconName } from "../icons";
 import PageHero from "../components/PageHero.vue";
@@ -293,7 +294,7 @@ const summary = computed(() => ({
 
 // Une rubrique à la fois (docs/48 §2) : le sommaire choisit, l'adresse la retient.
 const SECTIONS = [
-  { id: "recherche", label: "Recherche d'emploi" },
+  { id: "recherche", label: "Objectif ORP et sites" },
   { id: "rythme", label: "Rythme" },
   { id: "notifications", label: "Notifications" },
   { id: "ia", label: "IA" },
@@ -323,12 +324,25 @@ const active = computed<SectionId>(() => {
 const { phone: narrow } = useNarrow();
 const listOnly = computed(() => narrow.value && !route.query.rubrique);
 const shown = (id: SectionId): boolean => !narrow.value || active.value === id;
-type Entry = { title: string; description?: string; icon: IconName; to: RouteLocationRaw; id?: SectionId };
+type Entry = { title: string; description?: string; icon: IconName; to?: RouteLocationRaw; href?: string; run?: () => void; id?: SectionId };
+// Écrire à l'exploitant (décision de Kevin) : le contact déjà affiché dans À propos et Données
+// personnelles ; une adresse e-mail s'ouvre directement, sinon la page À propos qui le montre.
+const operatorContact = ref<string | null>(null);
+const operatorEmail = computed(() => operatorContact.value?.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)?.[0] ?? null);
+onMounted(async () => {
+  try {
+    const { data } = await api.GET("/api/privacy");
+    operatorContact.value = data?.contact ?? null;
+  } catch {
+    operatorContact.value = null;
+  }
+});
+const assistant = useAssistant();
 const GROUPS = computed<{ title: string; entries: Entry[] }[]>(() => [
   {
-    title: "La recherche",
+    title: "Recherche d'emploi",
     entries: [
-      { id: "recherche", title: "Recherche d'emploi", description: "Objectif ORP, preuves, sites suivis", icon: "briefcase", to: { query: { rubrique: "recherche" } } },
+      { id: "recherche", title: "Objectif ORP et sites", description: "Objectif du mois, preuves, sites suivis", icon: "briefcase", to: { query: { rubrique: "recherche" } } },
       { id: "rythme", title: "Rythme", description: "Jours de recherche, pause", icon: "calendar", to: { query: { rubrique: "rythme" } } },
       { title: "Alertes", description: "Recherches suivies sur les sites", icon: "list-check", to: "/candidatures/alertes" },
     ],
@@ -348,6 +362,18 @@ const GROUPS = computed<{ title: string; entries: Entry[] }[]>(() => [
       ...(owner.value
         ? [{ id: "plateforme" as const, title: "Administration", description: "Comptes et IA de la plateforme", icon: "shield" as IconName, to: { query: { rubrique: "plateforme" } } }]
         : []),
+      // L'aide (décision de Kevin, à revoir après le test utilisateurs) : l'Assistant, s'il est là.
+      ...(assistant.available.value
+        ? [{ title: "Aide", description: "Pose ta question à l'Assistant.", icon: "ai" as IconName, run: () => (assistant.open.value = true) }]
+        : []),
+      {
+        title: "Écrire à l'exploitant",
+        description: operatorContact.value
+          ? "Le contact de la plateforme, toujours là."
+          : "L'exploitant de la plateforme n'a pas encore indiqué ses coordonnées.",
+        icon: "send" as IconName,
+        ...(operatorEmail.value ? { href: `mailto:${operatorEmail.value}` } : operatorContact.value ? { to: "/a-propos" } : {}),
+      },
       ...(showDiagnostic.value ? [{ title: "État du service", icon: "activity" as IconName, to: "/reglages/diagnostic" }] : []),
     ],
   },
@@ -447,8 +473,11 @@ onUnmounted(() => spy?.disconnect());
               :description="entry.description"
               :icon="entry.icon"
               :to="entry.to"
+              :href="entry.href"
+              :button="!!entry.run"
               :current="!narrow && entry.id === active"
               :data-test="`settings-entry-${entry.id ?? entry.title}`"
+              @click="entry.run?.()"
             />
             <!-- Le réglage à un toucher (choix provisoire de Kevin, à revoir avec le test utilisateurs). -->
             <GroupedRow
@@ -500,7 +529,7 @@ onUnmounted(() => spy?.disconnect());
         <SettingsSection
           v-if="shown('recherche')"
           id="recherche"
-          title="Recherche d'emploi"
+          title="Objectif ORP et sites"
           :value="summary.recherche"
           :active="active === 'recherche'"
           cards

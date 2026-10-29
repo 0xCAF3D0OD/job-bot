@@ -1,0 +1,1 @@
+Réglages : le groupe « Recherche d'emploi » et sa ligne « Objectif ORP et sites » ; dans « Compte et aide », « Aide » ouvre l'Assistant (quand l'IA est configurée) et « Écrire à l'exploitant » reprend son contact

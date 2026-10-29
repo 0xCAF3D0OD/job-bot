@@ -34,7 +34,7 @@ describe("Réglages sur téléphone : une longue page et ses marqueurs (docs/110
     const ids = wrapper.findAll("section.settings-section").map((s) => s.attributes("id"));
     expect(ids).toEqual(["recherche", "rythme", "notifications", "ia", "compte", "outils"]);
     const markers = wrapper.findAll("[data-test=settings-markers] a");
-    expect(markers.map((m) => m.text())).toEqual(["Recherche d'emploi", "Rythme", "Notifications", "IA", "Compte", "Agenda et extension"]);
+    expect(markers.map((m) => m.text())).toEqual(["Objectif ORP et sites", "Rythme", "Notifications", "IA", "Compte", "Agenda et extension"]);
     const scroll = vi.fn();
     (document.getElementById("notifications") as HTMLElement).scrollIntoView = scroll;
     await wrapper.find("[data-test=marker-notifications]").trigger("click");
