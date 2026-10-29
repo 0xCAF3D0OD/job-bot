@@ -158,7 +158,7 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     await flushPromises();
 
     const summary = wrapper.find("[data-test=criteria-summary]");
-    expect(summary.find(".grouped-title").text()).toBe("Recherche");
+    expect(summary.find(".grouped-title").text()).toBe("Poste recherché");
     const titles = summary.findAll(".grouped-row-title").map((t) => t.text());
     expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d'activité", "Types d'offres exclus"]);
     expect(summary.find("[data-test=criteria-row-taux] .grouped-row-description").text()).toBe("80 % au moins");

@@ -187,7 +187,7 @@ onMounted(() => void load());
       class="criteria-layout"
     >
       <GroupedList
-        title="Recherche"
+        title="Poste recherché"
         data-test="criteria-summary"
       >
         <GroupedRow

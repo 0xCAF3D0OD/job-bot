@@ -13,10 +13,9 @@ import { useNarrow } from "../composables/usePhone";
 
 // Tout ce qui te concerne au même endroit (docs/10 §2 a) ; l'onglet est dans l'URL.
 const TABS = [
-  // Sur téléphone, un nom court qui tient sur une ligne (docs/36 §5).
-  { key: "recherche", label: "Critères", icon: "filter", short: "Critères" },
-  { key: "parcours", label: "Parcours", icon: "folder", short: "Parcours" },
-  { key: "coordonnees", label: "Coordonnées", icon: "mail", short: "Coordonnées" },
+  { key: "recherche", label: "Critères", icon: "filter" },
+  { key: "parcours", label: "Parcours", icon: "folder" },
+  { key: "coordonnees", label: "Coordonnées", icon: "mail" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -63,8 +62,7 @@ const tab = computed<Tab>(() => {
       >
         <span class="with-icon">
           <AppIcon :name="entry.icon" />
-          <span class="label-long">{{ entry.label }}</span>
-          <span class="label-short">{{ entry.short }}</span>
+          {{ entry.label }}
         </span>
       </RouterLink>
     </nav>
