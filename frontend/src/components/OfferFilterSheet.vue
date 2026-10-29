@@ -3,13 +3,13 @@ import { computed } from "vue";
 
 import type { OfferFacets, Source } from "../api/client";
 import { sourceLabel } from "../format";
-import type { OfferFilters, View } from "../composables/useOfferFilters";
+import { SCORE_CHOICES, type OfferFilters, type View } from "../composables/useOfferFilters";
 import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
 
 // Les filtres des Offres sous 600 px (planche « Structure téléphone », 248:306) : une feuille du bas.
-// Statut en radios, note en cases, télétravail en interrupteur, taux en ligne avec sa valeur ; puis
+// Statut en radios, note minimale en radios (règles §4, « Choix d'un seuil »), télétravail en interrupteur, taux en ligne avec sa valeur ; puis
 // les sites et les cantons. Chaque choix s'applique tout de suite ; « Afficher N offres » referme.
 const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number }>();
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
@@ -23,30 +23,9 @@ const VIEWS: { value: View; label: string }[] = [
   { value: "all", label: "Toutes" },
 ];
 
-// Les quatre mots de la note (format.ts, scoreWord) et leurs bornes. Le filtre est un intervalle :
-// cocher deux mots qui ne se suivent pas coche aussi celui du milieu.
-const BANDS = [
-  { label: "Très proche", min: 85, max: 100 },
-  { label: "Proche", min: 70, max: 84 },
-  { label: "À creuser", min: 50, max: 69 },
-  { label: "Loin", min: 0, max: 49 },
-];
-const range = computed(() =>
-  props.filters.minScore === null && props.filters.maxScore === null
-    ? null
-    : { low: props.filters.minScore ?? 0, high: props.filters.maxScore ?? 100 },
-);
-function checked(band: (typeof BANDS)[number]): boolean {
-  const r = range.value;
-  return !!r && band.min >= r.low && band.max <= r.high;
-}
-function toggleBand(band: (typeof BANDS)[number]): void {
-  const chosen = BANDS.filter((b) => (b === band ? !checked(b) : checked(b)));
-  if (!chosen.length) return emit("update", { minScore: null, maxScore: null });
-  const low = Math.min(...chosen.map((b) => b.min));
-  const high = Math.max(...chosen.map((b) => b.max));
-  emit("update", { minScore: low > 0 ? low : null, maxScore: high < 100 ? high : null });
-}
+// La note minimale : les mêmes choix que sur ordinateur. Une adresse d'avant (?note=60-90) garde
+// ses bornes, et aucune radio n'est cochée.
+const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
 
 const RATES = [null, 50, 60, 70, 80, 90, 100];
 function onRate(event: Event): void {
@@ -91,21 +70,22 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
       </GroupedList>
 
       <GroupedList
-        title="Note"
+        title="Note minimale"
         :level="3"
       >
         <GroupedRow
-          v-for="band in BANDS"
-          :key="band.label"
-          :title="band.label"
+          v-for="choice in SCORE_CHOICES"
+          :key="choice.label"
+          :title="choice.label"
           label
-          :data-test="`sheet-score-${band.min}`"
+          :data-test="`sheet-score-${choice.min ?? 'all'}`"
         >
           <template #start>
             <input
-              type="checkbox"
-              :checked="checked(band)"
-              @change="toggleBand(band)"
+              type="radio"
+              name="sheet-score"
+              :checked="scoreChoice === choice.min"
+              @change="emit('update', { minScore: choice.min, maxScore: null })"
             >
           </template>
         </GroupedRow>

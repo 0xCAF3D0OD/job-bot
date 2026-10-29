@@ -14,31 +14,27 @@ function mountSheet(patch: Partial<OfferFilters> = {}, total = 3) {
 }
 
 describe("OfferFilterSheet (planche « Structure téléphone », 248:306)", () => {
-  it("statut en radios, note en cases, télétravail en interrupteur, « Afficher 3 offres »", () => {
+  it("statut et note minimale en radios, télétravail en interrupteur, « Afficher 3 offres »", () => {
     const wrapper = mountSheet();
     expect(wrapper.find("[data-test=sheet-view-to_review] input[type=radio]").element).toHaveProperty("checked", true);
-    expect(wrapper.findAll("[data-test^=sheet-score] input[type=checkbox]")).toHaveLength(4);
+    expect(wrapper.findAll("[data-test^=sheet-score] input[type=radio]")).toHaveLength(3);
+    expect(wrapper.find("[data-test=sheet-score-all] input").element).toHaveProperty("checked", true);
     expect(wrapper.find("[data-test=sheet-remote] input[role=switch]").exists()).toBe(true);
     expect(wrapper.find("[data-test=sheet-show]").text()).toBe("Afficher 3 offres");
     expect(mountSheet({}, 1).find("[data-test=sheet-show]").text()).toBe("Afficher 1 offre");
   });
 
-  it("la note : les mots cochés donnent un intervalle, celui du milieu suit", async () => {
+  it("la note minimale : les mêmes choix que sur ordinateur, ligne entière cliquable", async () => {
     const wrapper = mountSheet();
+    expect(wrapper.findAll("[data-test^=sheet-score]").map((row) => row.text())).toEqual(["Toutes", "Proche et plus", "Très proche"]);
     await wrapper.find("[data-test=sheet-score-85] input").trigger("change");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minScore: 85, maxScore: null }]);
-
-    // Très proche et À creuser cochés : Proche, entre les deux, l'est aussi.
-    const both = mountSheet({ minScore: 85, maxScore: null });
-    await both.find("[data-test=sheet-score-50] input").trigger("change");
-    expect(both.emitted("update")?.at(-1)).toEqual([{ minScore: 50, maxScore: null }]);
-
-    // Proche seul : de 70 à 84.
-    const close = mountSheet({ minScore: 70, maxScore: 84 });
-    expect(close.find("[data-test=sheet-score-70] input").element).toHaveProperty("checked", true);
-    expect(close.find("[data-test=sheet-score-85] input").element).toHaveProperty("checked", false);
-    await close.find("[data-test=sheet-score-70] input").trigger("change");
-    expect(close.emitted("update")?.at(-1)).toEqual([{ minScore: null, maxScore: null }]);
+    await wrapper.find("[data-test=sheet-score-all] input").trigger("change");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minScore: null, maxScore: null }]);
+    expect(mountSheet({ minScore: 70 }).find("[data-test=sheet-score-70] input").element).toHaveProperty("checked", true);
+    // Une adresse d'avant (?note=60-90) garde ses bornes : aucune radio cochée.
+    const old = mountSheet({ minScore: 60, maxScore: 90 });
+    expect(old.findAll("[data-test^=sheet-score] input:checked")).toHaveLength(0);
   });
 
   it("taux, sites, cantons et réinitialiser", async () => {
