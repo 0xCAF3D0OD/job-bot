@@ -3583,10 +3583,10 @@ main:focus { outline: none; }
   .action-band-title { font-size: var(--font-figure); }
 }
 
-/* L'écran de tri (planche « Tri et panneau de commande ») : une colonne de 50 rem au plus ; la
+/* L'écran de tri (planche « Tri et panneau de commande ») : une colonne (--page-column) ; la
    progression en haut ; la carte comme la fiche ; « Écarter » et « Garder » chacun sur la moitié, les
    raccourcis dessous. Sur téléphone, la note et les actions passent dans le panneau de commande. */
-.jobs-head.triage-head, .container.triage-page { max-width: calc(50rem + 2 * var(--space-6)); }
+.jobs-head.triage-head, .container.triage-page { max-width: calc(var(--page-column) + 2 * var(--space-6)); }
 .band:has(> .triage-page) { background: var(--bg); border-top: 0; padding-top: 0; }
 .triage-pile { display: grid; gap: var(--space-4); }
 .triage-pile .daily-pick { margin-top: 0; }

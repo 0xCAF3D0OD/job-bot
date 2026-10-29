@@ -13,6 +13,7 @@ import CompanyLogo from "./CompanyLogo.vue";
 import FaceState from "./FaceState.vue";
 import KeyHints from "./KeyHints.vue";
 import ScoreWord from "./ScoreWord.vue";
+import UndoToast from "./UndoToast.vue";
 
 // Les offres du jour, une à la fois (planche « Tri et panneau de commande ») : la carte comme la
 // fiche (note et pourquoi sur une ligne, 2 ou 3 étiquettes, « Voir l'annonce »), puis « Écarter » et
@@ -168,6 +169,9 @@ const prepareLabel = computed(() => `Préparer ${kept.value === 1 ? "l'offre gar
             ><span class="with-icon">Voir l'annonce<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
           </template>
         </article>
+        <!-- « Annuler » entre la carte et les boutons, sur ordinateur (planche) ; sur téléphone, celui
+             d'App, au-dessus du panneau. -->
+        <UndoToast inline />
         <ActionBar>
           <template v-if="narrow">
             <div

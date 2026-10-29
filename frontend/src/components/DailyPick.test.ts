@@ -48,6 +48,8 @@ describe("DailyPick", () => {
     await flushPromises();
     expect(PATCH).not.toHaveBeenCalled();
     expect(wrapper.find("[data-test=pick-card]").text()).toContain("SRE");
+    // « Annuler » entre la carte et les boutons.
+    expect(wrapper.find("[data-test=undo-inline]").text()).toContain("Gardée : DevOps.");
     // « Annuler » : la première revient, rien n'est parti.
     await useUndo().undo();
     await flushPromises();
