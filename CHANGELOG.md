@@ -339,3 +339,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.125 | La vraie plateforme en ligne : images construites par GitHub, `make deploy` depuis le Mac, démo sur le même serveur (docs/136) | préparée, pas encore installée sur le serveur |
 | 1.6.126 | Restauration : une sauvegarde faite sur le Mac se restaure sur le serveur, même si le propriétaire de la base n'y porte pas le même nom (les droits par défaut sont reposés au nom du propriétaire d'ici) ; `make prod-restaurer` dit quel fichier il n'a pas trouvé | livrée |
 | 1.6.127 | Mise en ligne : app.joba1.ch menait à la démo (sur le réseau partagé, « api » désignait aussi l'API de la démo) ; Caddy joint maintenant la plateforme par un nom à elle, et `make deploy` vérifie que l'adresse mène bien à la plateforme | livrée |
+| 1.6.128 | Connexion : nouvelle image du soir, celle sur laquelle finit la vidéo du jour qui tombe | livrée |
