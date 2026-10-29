@@ -16,7 +16,7 @@ from jobbot.core.filter import (
     canton_of,
     evaluate,
 )
-from jobbot.core.normalize import normalize_location
+from jobbot.core.places import place_key
 from jobbot.db.models import Criterion, Evaluation, Offer, OfferStatus
 from jobbot.filtering.duplicates import group_duplicates
 from jobbot.log import get_logger
@@ -65,7 +65,7 @@ def _city_cantons(offers: list[Offer]) -> dict[str, str]:
     for offer in offers:
         canton = canton_of(offer.location)
         if canton:
-            known.setdefault(normalize_location(offer.location), canton)
+            known.setdefault(place_key(offer.location), canton)
     return known
 
 
@@ -74,6 +74,8 @@ class FilterResult:
     examined: int = 0
     to_review: int = 0
     filtered_out: int = 0
+    # Offres écartées qui reviennent dans « À examiner » (après un changement de critères).
+    returned: int = 0
 
 
 async def run_filter(runtime: Runtime) -> FilterResult:
@@ -103,7 +105,7 @@ async def run_filter(runtime: Runtime) -> FilterResult:
             # Canton tenu à jour pour toutes les offres (filtre par canton de la page Offres).
             if offer.location:
                 offer.canton = canton_of(offer.location) or city_cantons.get(
-                    normalize_location(offer.location)
+                    place_key(offer.location)
                 )
             if offer.status not in FILTERABLE:
                 continue
@@ -148,6 +150,8 @@ async def run_filter(runtime: Runtime) -> FilterResult:
                     },
                 )
             )
+            if evaluation.passed and offer.status == OfferStatus.FILTERED_OUT:
+                result.returned += 1
             offer.status = OfferStatus.TO_REVIEW if evaluation.passed else OfferStatus.FILTERED_OUT
             result.examined += 1
             if evaluation.passed:

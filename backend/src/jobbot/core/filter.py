@@ -10,7 +10,8 @@ import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from jobbot.core.normalize import normalize_location, normalize_text
+from jobbot.core.normalize import normalize_text
+from jobbot.core.places import CITY_CANTON, canton_in, criterion_place, place_key
 
 # --- Prérequis ------------------------------------------------------------------------
 
@@ -94,12 +95,6 @@ REQUIREMENT_WORDS = (
 )  # fmt: skip
 
 _REMOTE = re.compile(r"\b(home office|teletravail|remote|full remote|homeoffice)\b")
-# « Lausanne, VD », « 1003 Lausanne VD », « Zürich (ZH) ».
-_CANTON_IN_LOCATION = re.compile(r"(?:,\s*|\s|\()([A-Z]{2})\)?\s*$")
-_CANTONS = {
-    "AG", "AI", "AR", "BE", "BL", "BS", "FR", "GE", "GL", "GR", "JU", "LU", "NE", "NW",
-    "OW", "SG", "SH", "SO", "SZ", "TG", "TI", "UR", "VD", "VS", "ZG", "ZH",
-}  # fmt: skip
 
 
 # --- Évaluation -----------------------------------------------------------------------
@@ -132,12 +127,9 @@ class Evaluation:
 
 
 def canton_of(location: str | None) -> str | None:
-    if not location:
-        return None
-    match = _CANTON_IN_LOCATION.search(location.strip())
-    if match and match.group(1) in _CANTONS:
-        return match.group(1)
-    return None
+    """Le canton d'un lieu : nommé (« Lausanne, VD », « Sion, Valais ») ou celui d'une ville
+    connue (« Berne » → BE)."""
+    return canton_in(location) or CITY_CANTON.get(place_key(location)) if location else None
 
 
 def contains(text: str, phrase: str) -> bool:
@@ -181,13 +173,18 @@ def _check_location(
             return None
         return Reason("remote", f"Lieu : télétravail complet ({facts.location}), non accepté")
 
-    entries = [loc.strip() for loc in criteria.locations if loc.strip()]
-    wanted_cantons = {loc.upper() for loc in entries if loc.upper() in _CANTONS}
-    wanted_cities = {normalize_location(loc) for loc in entries if loc.upper() not in _CANTONS}
-    city = normalize_location(facts.location)
+    # Les deux côtés passent par la même clé (core/places.py) : variantes de langue, taux, pays et
+    # codes postaux ne font plus écarter une offre (« Berne » avec « bern », « Zurich 80-100 % »).
+    places = [criterion_place(loc) for loc in criteria.locations if loc.strip()]
+    wanted_cantons = {value for kind, value in places if kind == "canton"}
+    wanted_cities = {value for kind, value in places if kind == "city"}
+    city = place_key(facts.location)
+    if not city and not canton_in(facts.location):
+        # Rien de lisible dans le lieu (« Suisse ») : on ne sait pas, on n'écarte pas.
+        return None
     if city in wanted_cities:
         return None
-    canton = canton_of(facts.location) or city_cantons.get(city)
+    canton = canton_in(facts.location) or city_cantons.get(city) or CITY_CANTON.get(city)
     if canton in wanted_cantons:
         return None
     if canton is None and wanted_cantons:

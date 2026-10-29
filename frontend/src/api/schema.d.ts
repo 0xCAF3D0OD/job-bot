@@ -4335,6 +4335,8 @@ export interface components {
             keywords: components["schemas"]["KeywordsOut"];
             /** Saved At */
             saved_at?: string | null;
+            /** Returned */
+            returned?: number | null;
         };
         /**
          * CvBlock

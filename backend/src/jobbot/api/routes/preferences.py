@@ -20,7 +20,7 @@ from jobbot.core.filter import (
     RemotePolicy,
 )
 from jobbot.db.models import Criterion, Setting
-from jobbot.filtering.service import load_criteria, save_criteria
+from jobbot.filtering.service import load_criteria, run_filter, save_criteria
 from jobbot.notify import service as notify_service
 from jobbot.rhythm.service import DEFAULT_DAYS, DEFAULT_HOUR
 from jobbot.runtime import Runtime
@@ -71,6 +71,8 @@ class CriteriaOut(BaseModel):
     # Date du premier enregistrement ; None tant que Kevin ne les a jamais saisis : la page
     # montre alors le formulaire, ensuite un résumé et un bouton « Modifier » (docs/10 §2).
     saved_at: datetime | None = None
+    # Après un enregistrement : les offres écartées qui reviennent dans « À examiner ».
+    returned: int | None = None
 
 
 class FilterResponse(BaseModel):
@@ -162,8 +164,14 @@ async def put_criteria(request: Request, body: CriteriaIn) -> CriteriaOut:
     async with runtime.sessionmaker.begin() as session:
         await save_criteria(session, criteria)
         saved_at = await session.scalar(select(func.min(Criterion.updated_at)))
-    await enqueue(runtime.settings, FILTER_JOB)
-    return CriteriaOut(criteria=_criteria_in(criteria), keywords=_keywords(), saved_at=saved_at)
+    # Toutes les offres écartées sont réévaluées tout de suite, pour dire combien reviennent.
+    result = await run_filter(runtime)
+    return CriteriaOut(
+        criteria=_criteria_in(criteria),
+        keywords=_keywords(),
+        saved_at=saved_at,
+        returned=result.returned,
+    )
 
 
 @router.post("/filter", operation_id="startFilter", status_code=status.HTTP_202_ACCEPTED)

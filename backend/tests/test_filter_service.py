@@ -144,7 +144,9 @@ async def test_api_criteria_save_and_refilter(api: AsyncClient) -> None:
     assert saved["locations"] == ["VD", "Genève"]  # espaces retirés, doublons écartés
     assert (await api.get("/api/criteria")).json()["criteria"] == saved
 
-    assert (await api.post("/api/filter")).json() == {"result": "already_queued"}
+    # Le filtre a tourné tout de suite (plus de tâche en file) ; « Collecter » en relance une.
+    assert response["returned"] == 0
+    assert (await api.post("/api/filter")).json() == {"result": "queued"}
     assert (await api.put("/api/criteria", json={"min_rate": 150})).status_code == 422
 
 
@@ -240,3 +242,21 @@ async def test_api_offer_filters(api: AsyncClient, fresh: Runtime) -> None:
                 "DELETE FROM settings WHERE key IN ('offer_filters_visible', 'offer_filters_known')"
             )
         )
+
+
+@pytest.mark.usefixtures("clean_queue")
+async def test_changing_criteria_brings_offers_back(api: AsyncClient, fresh: Runtime) -> None:
+    """Changer les critères réévalue les offres écartées et dit combien reviennent."""
+    await add_offer(fresh, "A Berne", "Berne, Suisse 80-100%")
+    await add_offer(fresh, "A Zurich", "Zurich 80\u2013100 %")
+    await add_offer(fresh, "A Lugano", "Lugano")
+    first = (await api.put("/api/criteria", json={"locations": ["zurich"]})).json()
+    assert first["returned"] == 0
+    assert await statuses(fresh) == {
+        "A Berne": "filtered_out",
+        "A Zurich": "to_review",
+        "A Lugano": "filtered_out",
+    }
+    second = (await api.put("/api/criteria", json={"locations": ["zurich", "BE"]})).json()
+    assert second["returned"] == 1
+    assert (await statuses(fresh))["A Berne"] == "to_review"

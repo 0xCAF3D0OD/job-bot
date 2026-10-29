@@ -28,7 +28,7 @@ describe("CriteriaView", () => {
   it("charge, modifie et enregistre les prérequis", async () => {
     GET.mockResolvedValue({ data: { criteria: { locations: ["VD"], min_rate: null }, keywords } });
     PUT.mockImplementation((_path: string, { body }: { body: unknown }) =>
-      Promise.resolve({ data: { criteria: body, keywords }, response: { status: 200 } }),
+      Promise.resolve({ data: { criteria: body, keywords, returned: 112 }, response: { status: 200 } }),
     );
     const wrapper = mount(CriteriaView);
     await flushPromises();
@@ -55,7 +55,7 @@ describe("CriteriaView", () => {
         excluded_types: ["stage"],
       }),
     });
-    expect(wrapper.find("[role=status]").text()).toContain("refiltrées");
+    expect(wrapper.find("[role=status]").text()).toBe("Critères enregistrés. 112 offres reviennent dans À examiner.");
   });
 });
 
