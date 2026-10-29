@@ -5,6 +5,7 @@ plateforme assemble le reste (letters/document.py).
 """
 
 import json
+import re
 from dataclasses import dataclass
 from importlib import resources
 from typing import Any, Literal
@@ -134,6 +135,16 @@ def request_params(
     }
 
 
+_DASH = re.compile(r"\s*\u2014\s*|\s+\u2013\s+")
+_DOUBLED = re.compile(r",\s*([,.;:!?])")
+
+
+def no_dash(text: str) -> str:
+    """Garde-fou de la lettre : le tiret cadratin (et le tiret en incise) devient une virgule.
+    Un intervalle collé (« 80\u2013100 % ») reste tel quel."""
+    return _DOUBLED.sub(r"\1", _DASH.sub(", ", text)).strip()
+
+
 def _clean(value: str | None) -> str | None:
     if value is None:
         return None
@@ -149,7 +160,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> LetterOutput:
     valid = {c.id for c in chunks}
     paragraphs = [
         Paragraph(
-            text=p.text.strip(),
+            text=no_dash(p.text),
             chunk_ids=list(dict.fromkeys(i for i in p.chunk_ids if i in valid)),
         )
         for p in output.paragraphs
@@ -157,7 +168,7 @@ def parse_output(text: str, chunks: list[ProfileChunkData]) -> LetterOutput:
     ]
     if not paragraphs:
         raise InvalidScore("lettre vide")
-    subject = output.subject.strip()
+    subject = no_dash(output.subject)
     for prefix in ("Objet :", "Objet:", "Subject:", "Betreff:"):
         subject = subject.removeprefix(prefix).strip()
     employer = Employer(

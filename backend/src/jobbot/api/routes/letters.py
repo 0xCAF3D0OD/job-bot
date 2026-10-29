@@ -116,8 +116,8 @@ def _document(identity: Identity, recipient: Recipient, draft: Draft) -> LetterD
         identity,
         recipient,
         draft.language,
-        draft.content["subject"],
-        [p["text"] for p in draft.content["paragraphs"]],
+        letter_llm.no_dash(draft.content["subject"]),
+        [letter_llm.no_dash(p["text"]) for p in draft.content["paragraphs"]],
         day,
     )
 
@@ -128,8 +128,12 @@ def _out(draft: Draft, document: LetterDocument) -> LetterOut:
         offer_id=draft.offer_id,
         version=draft.version,
         language=draft.language,
-        subject=draft.content["subject"],
-        paragraphs=[LetterParagraph(**p) for p in draft.content["paragraphs"]],
+        # Le texte rendu, sans tiret cadratin, même pour une lettre d'avant le garde-fou.
+        subject=letter_llm.no_dash(draft.content["subject"]),
+        paragraphs=[
+            LetterParagraph(**{**p, "text": letter_llm.no_dash(p["text"])})
+            for p in draft.content["paragraphs"]
+        ],
         employer=EmployerOut(**(draft.content.get("employer") or {})),
         instruction=draft.instruction,
         model=draft.model,
