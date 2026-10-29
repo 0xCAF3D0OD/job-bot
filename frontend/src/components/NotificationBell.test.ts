@@ -40,8 +40,8 @@ describe("NotificationBell", () => {
     // légende reprend le nom accessible.
     const bell = wrapper.find("[data-test=bell]");
     expect(bell.classes()).toContain("has-unread");
-    expect(bell.attributes("aria-label")).toBe("Alertes, 2 non lues");
-    expect(bell.attributes("data-label")).toBe("Alertes, 2 non lues");
+    expect(bell.attributes("aria-label")).toBe("Notifications, 2 non lues");
+    expect(bell.attributes("data-label")).toBe("Notifications, 2 non lues");
 
     await wrapper.find("[data-test=bell]").trigger("click");
     await flushPromises();
@@ -68,13 +68,13 @@ describe("NotificationBell", () => {
     expect(wrapper.find("[data-test=bell]").classes()).not.toContain("has-unread");
     await wrapper.find("[data-test=bell]").trigger("click");
     await flushPromises();
-    expect(wrapper.find("[data-test=bell-panel]").text()).toContain("Aucune alerte");
+    expect(wrapper.find("[data-test=bell-panel]").text()).toContain("Aucune notification");
     wrapper.unmount();
   });
 });
 
 describe("NotificationBell sous 600 px (planche « Structure téléphone »)", () => {
-  it("s'ouvre en feuille plein écran, titre « Alertes » et ✕ « Fermer »", async () => {
+  it("s'ouvre en feuille plein écran, titre « Notifications » et ✕ « Fermer »", async () => {
     const matchMedia = window.matchMedia;
     window.matchMedia = ((query: string) => ({ matches: query.includes("599px"), media: query, addEventListener: () => undefined, removeEventListener: () => undefined })) as unknown as typeof window.matchMedia;
     GET.mockResolvedValue({ data: { unread: 1, items: [item(1)] } });
@@ -83,7 +83,7 @@ describe("NotificationBell sous 600 px (planche « Structure téléphone »)", (
     await flushPromises();
     const sheet = wrapper.find("dialog.sheet");
     expect(sheet.classes()).toContain("sheet-full");
-    expect(sheet.find(".sheet-title").text()).toBe("Alertes");
+    expect(sheet.find(".sheet-title").text()).toBe("Notifications");
     expect(sheet.findAll("[data-test=bell-item]")).toHaveLength(1);
     await sheet.find("[data-test=sheet-close]").trigger("click");
     await flushPromises();
