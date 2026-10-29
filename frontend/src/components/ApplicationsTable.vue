@@ -83,7 +83,7 @@ function rowItems(application: Application): MoreMenuItem[] {
         <td>
           <select
             :value="application.status"
-            :class="['status-select', application.status]"
+            :class="['status-select', 'field-compact', application.status]"
             :aria-label="`Statut de la candidature chez ${application.company}`"
             data-test="status-select"
             @change="emit('status', application, ($event.target as HTMLSelectElement).value as ApplicationStatus)"
