@@ -1,0 +1,1 @@
+Offres sur téléphone (sous 600 px) : la recherche sur toute la largeur, les jours avec leur nombre en pastille, et une feuille « Filtres » (statut, note, télétravail, taux, sites, cantons) avec « Réinitialiser » et « Afficher N offres »
