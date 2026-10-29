@@ -4089,18 +4089,38 @@ html.search-open { overflow: hidden; }
 @keyframes sheet-up { from { transform: translateY(2rem); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .sheet[open] { animation: none; } }
 
-/* Action fixée en bas : au-dessus de la barre d'onglets, pleine largeur, sous 600 px seulement. */
+/* Panneau de commande : on lit en haut, on agit en bas. Sous 600 px, il reste en bas, au-dessus de la
+   barre d'onglets ; au-delà, son contenu reste dans la page. Deux actions de même largeur en rangée. */
 .action-bar { display: contents; }
+.action-bar-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--space-3); }
+.action-bar-row > :is(button, a) { justify-content: center; }
+.action-bar-note { margin: 0; color: var(--muted); font-size: var(--font-small); }
 @media (max-width: 599px) {
   .action-bar {
     position: fixed; left: 0; right: 0; bottom: env(safe-area-inset-bottom); z-index: 21;
-    display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4);
-    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4);
+    background: var(--surface); border-radius: calc(var(--radius-sm) * 2) calc(var(--radius-sm) * 2) 0 0;
+    box-shadow: 0 -8px 24px rgb(17 17 31 / 10%);
   }
   :root:has(.tab-bar) .action-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
-  .action-bar > :is(button, a) { width: 100%; justify-content: center; }
-  :root:has(.action-bar) main { padding-bottom: calc(var(--tabbar-h, 0rem) + 5.5rem + env(safe-area-inset-bottom)); }
+  .action-bar > :is(button, a):not(.link) { width: 100%; justify-content: center; }
+  :root:has(.action-bar) main { padding-bottom: calc(var(--tabbar-h, 0rem) + var(--action-bar-h, 5.5rem) + var(--space-5) + env(safe-area-inset-bottom)); }
 }
+
+/* Progression pas à pas : « 1 sur 5 », puis un segment par élément. */
+.step-progress { display: grid; gap: var(--space-2); }
+.step-progress-text { margin: 0; color: var(--muted); font-size: var(--font-small); }
+.step-progress-bar { display: flex; gap: var(--space-1); height: 4px; }
+.step-progress-segment { flex: 1 1 0; border-radius: var(--radius-pill); background: var(--border); transition: background-color var(--t-state); }
+.step-progress-segment.done { background: var(--accent); }
+.step-progress-bar.continuous { border-radius: var(--radius-pill); background: var(--border); }
+.step-progress-bar.continuous .step-progress-segment { flex: none; }
+
+/* Raccourcis ← → sous deux actions : avec clavier et souris seulement. */
+.key-hints { display: flex; justify-content: space-between; margin: 0; color: var(--muted); font-size: var(--font-small); }
+.key-hints > span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.key-hints kbd { display: inline-flex; font: inherit; }
+@media not ((hover: hover) and (pointer: fine)) { .key-hints { display: none; } }
 
 /* Case et radio dessinées (planche « Champs ») : 20 px, cochées en --accent, non cochées en --field-border
    (4,0:1 sur la carte), rayon 6 px pour la case ; la ligne entière est l'étiquette. */
