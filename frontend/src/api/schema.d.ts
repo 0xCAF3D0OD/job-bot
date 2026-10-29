@@ -11426,14 +11426,12 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Validation Error */
+            /** @description Consigne hors de portée (coordonnées, date…) ou sans effet : aucune version créée, le message le dit */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
+                content?: never;
             };
             /** @description Réponse de l'IA inutilisable */
             502: {

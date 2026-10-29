@@ -17,6 +17,8 @@ import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import FormField from "../components/FormField.vue";
+import GroupedList from "../components/GroupedList.vue";
+import GroupedRow from "../components/GroupedRow.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
@@ -159,7 +161,9 @@ function current(list: Letter[]): Letter | null {
 
 function detail(err: unknown, fallback: string): string {
   const value = (err as { detail?: unknown } | undefined)?.detail;
-  return typeof value === "string" ? value.charAt(0).toUpperCase() + value.slice(1) + "." : fallback;
+  if (typeof value !== "string") return fallback;
+  const text = value.charAt(0).toUpperCase() + value.slice(1);
+  return /[.!?]$/.test(text) ? text : `${text}.`;
 }
 
 async function load(): Promise<void> {
@@ -192,6 +196,8 @@ async function saveThenWrite(): Promise<void> {
   await save();
   await write(true);
 }
+// Le retour sur la consigne (aria-live) : ce que l'IA ne peut pas changer, ou qu'il n'y a rien à changer.
+const instructionNote = ref("");
 async function write(force = false): Promise<void> {
   if (dirty.value && !force) {
     choosingWrite.value = true;
@@ -200,8 +206,9 @@ async function write(force = false): Promise<void> {
   choosingWrite.value = false;
   writing.value = true;
   error.value = "";
+  instructionNote.value = "";
   try {
-    const { data, error: err } = await api.POST("/api/offers/{offer_id}/letters", {
+    const { data, error: err, response } = await api.POST("/api/offers/{offer_id}/letters", {
       params: { path: { offer_id: offerId } },
       body: {
         language: language.value || null,
@@ -212,7 +219,9 @@ async function write(force = false): Promise<void> {
     // Le compteur de la formule suit ; à la limite, la ligne grise dit pourquoi (docs/125 §4).
     await refreshPlan();
     if (!data) {
-      if (!reached("letter")) error.value = detail(err, "La rédaction a échoué, réessaie.");
+      // Une consigne hors de portée, ou qui ne change rien : une ligne sous la consigne, gardée.
+      if (response?.status === 422) instructionNote.value = detail(err, "Cette consigne ne change rien à la lettre.");
+      else if (!reached("letter")) error.value = detail(err, "La rédaction a échoué, réessaie.");
       return;
     }
     letters.value = [data, ...letters.value];
@@ -282,9 +291,6 @@ function versionName(letter: Letter): string {
   if (!words.length) return "Première rédaction";
   const name = words.slice(0, NAME_WORDS).join(" ").replace(/[,;:.]+$/, "");
   return name.charAt(0).toUpperCase() + name.slice(1);
-}
-function versionLong(letter: Letter): boolean {
-  return (letter.instruction ?? "").trim().split(/\s+/).length > NAME_WORDS;
 }
 function versionMeta(letter: Letter): string {
   // L'heure compte : plusieurs versions le même jour (« modifiée aujourd'hui à 14 h 05 »).
@@ -675,8 +681,16 @@ onMounted(() => void load());
                 placeholder="plus court, insiste sur Kubernetes"
                 :aria-describedby="field.describedby"
                 data-test="instruction"
+                @input="instructionNote = ''"
               />
             </FormField>
+            <p
+              class="hint instruction-note"
+              aria-live="polite"
+              data-test="instruction-note"
+            >
+              {{ instructionNote }}
+            </p>
             <div class="mobile-dock">
               <BusyButton
                 :class="nextStep === 'letter' ? 'primary' : 'secondary'"
@@ -747,34 +761,24 @@ onMounted(() => void load());
 
           <div
             v-if="letters.length > 1"
-            class="side-card"
           >
-            <h2>Versions</h2>
-            <ul class="versions">
-              <li
+            <GroupedList
+              title="Versions"
+              :level="2"
+              class="versions"
+            >
+              <GroupedRow
                 v-for="letter in letters"
                 :key="letter.id"
-              >
-                <button
-                  type="button"
-                  :class="['link', { active: letter.id === selectedId }]"
-                  data-test="version"
-                  @click="select(letter)"
-                >
-                  <HoverNote
-                    v-if="versionLong(letter)"
-                    :text="letter.instruction ?? ''"
-                  >
-                    <span class="version-name">{{ versionName(letter) }}</span>
-                  </HoverNote>
-                  <span
-                    v-else
-                    class="version-name"
-                  >{{ versionName(letter) }}</span>
-                  <span class="version-meta">{{ versionMeta(letter) }}</span>
-                </button>
-              </li>
-            </ul>
+                :title="versionName(letter)"
+                :description="versionMeta(letter)"
+                button
+                :chevron="false"
+                :current="letter.id === selectedId"
+                data-test="version"
+                @click="select(letter)"
+              />
+            </GroupedList>
           </div>
         </section>
       </div>

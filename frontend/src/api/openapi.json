@@ -4616,21 +4616,14 @@
           "409": {
             "description": "IA non configurée, profil vide, budget atteint ou compte indisponible"
           },
+          "422": {
+            "description": "Consigne hors de portée (coordonnées, date…) ou sans effet : aucune version créée, le message le dit"
+          },
           "502": {
             "description": "Réponse de l'IA inutilisable"
           },
           "503": {
             "description": "IA momentanément indisponible"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
           }
         }
       }

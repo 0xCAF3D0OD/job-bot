@@ -350,3 +350,67 @@ def test_letter_has_no_em_dash() -> None:
     assert output.paragraphs[0].text == "Votre plateforme, et son équipe, m'intéresse."
     assert output.paragraphs[1].text == "Un taux de 80\u2013100 % me convient, merci."
     assert no_dash("Fin — .") == "Fin."
+
+
+async def test_instruction_changes_salutation(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    """« Dear Hiring Committee » change la formule d'appel : l'IA la reçoit et la renvoie."""
+    offer_id, chunk_id = await setup_offer(rt)
+    fake.response = answer(chunk_id, language="en")
+    first = (await api.post(f"/api/offers/{offer_id}/letters", json={"language": "en"})).json()
+    # Une version d'avant les formules : celles de la langue.
+    assert first["document"]["salutation"] == "Dear Sir or Madam,"
+    fake.response = answer(
+        chunk_id, language="en", salutation="Dear Hiring Committee,", closing="Yours sincerely,"
+    )
+    second = (
+        await api.post(
+            f"/api/offers/{offer_id}/letters",
+            json={"instruction": "Dear Hiring Committee", "base_draft_id": first["id"]},
+        )
+    ).json()
+    assert second["document"]["salutation"] == "Dear Hiring Committee,"
+    assert second["document"]["closing"] == "Yours sincerely,"
+    # La version précédente donne ses formules à l'IA, qui les reprend ou les change.
+    fake.response = answer(
+        chunk_id,
+        language="en",
+        salutation="Dear Hiring Committee,",
+        closing="Yours sincerely,",
+        paragraphs=[{"text": "Shorter.", "chunk_ids": []}],
+    )
+    await api.post(
+        f"/api/offers/{offer_id}/letters",
+        json={"instruction": "shorter", "base_draft_id": second["id"]},
+    )
+    assert "formule d'appel : Dear Hiring Committee," in fake.params[2]["messages"][0]["content"]
+    schema = fake.params[0]["output_config"]["format"]["schema"]
+    assert {"salutation", "closing", "refusal"} <= set(schema["required"])
+
+
+async def test_instruction_refused_or_without_effect(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    """Hors de portée ou sans effet : une ligne, et aucune version créée."""
+    offer_id, chunk_id = await setup_offer(rt)
+    fake.response = answer(chunk_id)
+    first = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+
+    refusal = "Je ne peux pas modifier tes coordonnées ici : va dans Profil."
+    fake.response = answer(chunk_id, refusal=refusal)
+    refused = await api.post(
+        f"/api/offers/{offer_id}/letters",
+        json={"instruction": "change mon numéro de téléphone", "base_draft_id": first["id"]},
+    )
+    assert refused.status_code == 422 and refused.json()["detail"] == refusal
+
+    fake.response = answer(chunk_id)
+    same = await api.post(
+        f"/api/offers/{offer_id}/letters",
+        json={"instruction": "garde tout", "base_draft_id": first["id"]},
+    )
+    assert same.status_code == 422
+    assert same.json()["detail"].startswith("Cette consigne ne change rien")
+    versions = (await api.get(f"/api/offers/{offer_id}/letters")).json()
+    assert [v["version"] for v in versions] == [1]

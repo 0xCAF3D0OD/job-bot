@@ -118,7 +118,8 @@ describe("PreparationView", () => {
     PUT.mockResolvedValue({ data: letter(11, 1, { subject: "Candidature", edited_at: "2026-10-05T10:00:00Z" }) });
     const wrapper = await mountView();
     expect(wrapper.findAll("[data-test=version]")).toHaveLength(2);
-    expect(wrapper.find(".versions .active").text()).toContain("v1");
+    // La version affichée est marquée (pastille de sélection, aria-current).
+    expect(wrapper.find(".versions [aria-current=page]").text()).toContain("v1");
 
     await wrapper.find("[data-test=subject]").setValue("Candidature");
     expect(wrapper.find("[data-test=docx]").exists()).toBe(false);
@@ -130,17 +131,16 @@ describe("PreparationView", () => {
     expect(wrapper.find("[data-test=docx]").exists()).toBe(true);
   });
 
-  it("une consigne longue : six mots pour nom, la consigne entière au survol, sans « … »", async () => {
+  it("une consigne longue : six mots pour nom, la consigne entière au-dessus de la lettre, sans « … »", async () => {
     const long = "Insiste davantage sur Kubernetes et Terraform, raccourcis ".repeat(6).trim();
     expect(long.length).toBeGreaterThan(300);
     mockGet([letter(12, 2, { instruction: long }), letter(11, 1)]);
     const wrapper = await mountView();
     const versions = wrapper.findAll("[data-test=version]");
     const named = versions.find((v) => v.text().includes("Insiste"))!;
-    expect(named.find(".version-name").text()).toBe("Insiste davantage sur Kubernetes et Terraform");
+    expect(named.find(".grouped-row-title").text()).toBe("Insiste davantage sur Kubernetes et Terraform");
     expect(named.text()).not.toContain("…");
-    expect(named.findComponent({ name: "HoverNote" }).props("text")).toBe(long);
-    expect(versions.some((v) => v.find(".version-name").text() === "Première rédaction")).toBe(true);
+    expect(versions.some((v) => v.find(".grouped-row-title").text() === "Première rédaction")).toBe(true);
     // La consigne entière s'affiche aussi au-dessus de la lettre de la version choisie.
     await named.trigger("click");
     expect(wrapper.find("[data-test=version-instruction]").text()).toBe(`Consigne : ${long}`);
@@ -158,7 +158,25 @@ describe("PreparationView", () => {
     await flushPromises();
     const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(opts.body).toEqual({ language: null, instruction: "plus court", base_draft_id: 11 });
-    expect(wrapper.find(".versions .active .version-name").text()).toBe("Plus court");
+    expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toBe("Plus court");
+  });
+
+  it("consigne hors de portée : une ligne sous la consigne, gardée, pas de nouvelle version", async () => {
+    mockGet([letter(11, 1)]);
+    POST.mockResolvedValue({
+      data: undefined,
+      error: { detail: "Je ne peux pas modifier tes coordonnées ici : va dans Profil." },
+      response: { status: 422 },
+    });
+    const wrapper = await mountView();
+    await wrapper.find("[data-test=instruction]").setValue("change mon téléphone");
+    await wrapper.find("[data-test=write]").trigger("click");
+    await flushPromises();
+    const note = wrapper.find("[data-test=instruction-note]");
+    expect(note.attributes("aria-live")).toBe("polite");
+    expect(note.text()).toBe("Je ne peux pas modifier tes coordonnées ici : va dans Profil.");
+    expect(wrapper.find<HTMLTextAreaElement>("[data-test=instruction]").element.value).toBe("change mon téléphone");
+    expect(wrapper.findAll("[data-test=version]")).toHaveLength(0);
   });
 
   it("erreur de l'API : message lisible", async () => {

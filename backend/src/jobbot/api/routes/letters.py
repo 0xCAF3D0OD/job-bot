@@ -7,7 +7,7 @@ Les coordonnées de Kevin ne partent jamais vers l'IA : elles sont ajoutées par
 from dataclasses import asdict
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -119,6 +119,8 @@ def _document(identity: Identity, recipient: Recipient, draft: Draft) -> LetterD
         letter_llm.no_dash(draft.content["subject"]),
         [letter_llm.no_dash(p["text"]) for p in draft.content["paragraphs"]],
         day,
+        salutation=draft.content.get("salutation"),
+        closing=draft.content.get("closing"),
     )
 
 
@@ -176,6 +178,10 @@ async def list_letters(request: Request, offer_id: int) -> list[LetterOut]:
         409: {
             "description": "IA non configurée, profil vide, budget atteint ou compte indisponible"
         },
+        422: {
+            "description": "Consigne hors de portée (coordonnées, date…) ou sans effet : "
+            "aucune version créée, le message le dit"
+        },
         502: {"description": "Réponse de l'IA inutilisable"},
         503: {"description": "IA momentanément indisponible"},
     },
@@ -210,6 +216,20 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
         output = letter_llm.parse_output(raw.text, ctx.chunks)
     except InvalidScore:
         raise writing.unusable() from None
+    # Une demande hors de portée (coordonnées, date, destinataire) : une ligne, pas de version.
+    if output.refusal:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, output.refusal)
+    content = output.model_dump(exclude={"language", "refusal"})
+    # Une version identique à celle d'où elle part : rien à créer.
+    if (
+        ctx.previous is not None
+        and ctx.previous_language == output.language
+        and _same_letter(ctx.previous, content)
+    ):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Cette consigne ne change rien à la lettre : pas de nouvelle version.",
+        )
 
     async with runtime.sessionmaker.begin() as session:
         draft = await writing.add_version(
@@ -217,7 +237,7 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
             offer_id,
             DraftKind.LETTER,
             language=output.language,
-            content=output.model_dump(exclude={"language"}),
+            content=content,
             instruction=instruction,
             model=raw.model,
             prompt_version=letter_llm.PROMPT_VERSION,
@@ -230,6 +250,25 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
         out = await _render(session, draft)
     log.info("letter_written", offer_id=offer_id, version=out.version, language=out.language)
     return out
+
+
+def _same_letter(previous: dict[str, Any], content: dict[str, Any]) -> bool:
+    """Même objet, mêmes formules, même corps (aux espaces près)."""
+
+    def norm(letter: dict[str, Any]) -> tuple[str, ...]:
+        parts = [
+            letter.get("subject") or "",
+            letter.get("salutation") or "",
+            letter.get("closing") or "",
+        ]
+        parts += [p["text"] for p in letter.get("paragraphs", [])]
+        return tuple(" ".join(part.split()) for part in parts)
+
+    base = dict(previous)
+    # Une ancienne version sans formules avait celles de la langue.
+    base.setdefault("salutation", content.get("salutation"))
+    base.setdefault("closing", content.get("closing"))
+    return norm(base) == norm(content)
 
 
 @router.put("/letters/{draft_id}", operation_id="editLetter")

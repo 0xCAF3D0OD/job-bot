@@ -1,0 +1,1 @@
+Préparer : la consigne modifie enfin la formule d'appel, l'objet et la formule de politesse (« Dear Hiring Committee ») ; une demande hors de portée (coordonnées, date) ou sans effet le dit en une ligne et ne crée pas de version ; la version affichée est marquée dans la liste
