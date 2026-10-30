@@ -12,8 +12,10 @@ import OfferBrief from "../components/OfferBrief.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
+import ActionBar from "../components/ActionBar.vue";
 import AiWriting from "../components/AiWriting.vue";
 import AppIcon from "../components/AppIcon.vue";
+import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
@@ -23,6 +25,8 @@ import GroupedRow from "../components/GroupedRow.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
+import SegmentedControl from "../components/SegmentedControl.vue";
+import { useNarrow } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { dateWithTime } from "../dates";
@@ -137,6 +141,23 @@ const notFound = ref(false);
 const LANGUAGES: Record<LetterLanguage, string> = { fr: "Français", en: "English", de: "Deutsch" };
 
 const selected = computed(() => letters.value.find((l) => l.id === selectedId.value) ?? null);
+
+// Sous 600 px, le panneau de commande (planche « Tri et panneau de commande ») : la langue en contrôle
+// segmenté, la consigne d'une ligne, puis « Versions · Télécharger » (une feuille du bas) et
+// « Rédiger ». Sans choix, la langue affichée est celle de la lettre (celle de l'annonce).
+const { phone: narrow } = useNarrow();
+const versionsOpen = ref(false);
+const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: LANGUAGES[code], test: `language-${code}` }));
+const shownLanguage = computed<string>({
+  get: () => language.value || selected.value?.document?.language || "fr",
+  set: (value) => {
+    language.value = value as LetterLanguage;
+  },
+});
+function pickVersion(letter: Letter): void {
+  select(letter);
+  versionsOpen.value = false;
+}
 const doc = computed(() => selected.value?.document ?? null);
 // « Objet : » (fr) ou « Subject: » (en), ajouté par la plateforme devant l'objet.
 const subjectPrefix = computed(() => {
@@ -697,7 +718,10 @@ onMounted(() => void load());
           </DisclosureRow>
         </div>
 
-        <section class="prep-side">
+        <section
+          v-if="!narrow"
+          class="prep-side"
+        >
           <OfferBrief :offer="offer" />
           <div class="side-card">
             <h2>
@@ -838,6 +862,121 @@ onMounted(() => void load());
             </GroupedList>
           </div>
         </section>
+        <ActionBar v-if="narrow">
+          <SegmentedControl
+            v-model="shownLanguage"
+            :options="LANGUAGE_OPTIONS"
+            label="Langue de la lettre"
+            full
+          />
+          <input
+            v-if="selected"
+            v-model="instruction"
+            class="prep-instruction-line"
+            maxlength="500"
+            aria-label="Consigne pour la nouvelle version"
+            placeholder="Consigne : plus court, insiste sur Kubernetes"
+            data-test="instruction"
+            @input="instructionNote = ''"
+          >
+          <p
+            v-if="instructionNote"
+            class="action-bar-note"
+            aria-live="polite"
+            data-test="instruction-note"
+          >
+            {{ instructionNote }}
+          </p>
+          <InlineConfirm
+            v-if="choosingWrite"
+            message="Tu as des modifications non enregistrées dans cette version."
+            confirm-label="Enregistrer, puis rédiger"
+            alt-label="Rédiger sans enregistrer"
+            cancel-label="Garder"
+            :danger="false"
+            :busy="writing"
+            @confirm="saveThenWrite"
+            @alt="write(true)"
+            @cancel="choosingWrite = false"
+          />
+          <PlanLimit usage="letter" />
+          <div class="action-bar-row">
+            <button
+              v-if="selected"
+              type="button"
+              class="secondary"
+              data-test="versions-open"
+              @click="versionsOpen = true"
+            >
+              Versions · Télécharger
+            </button>
+            <BusyButton
+              class="primary"
+              :busy="writing"
+              :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
+              :disabled="reached('letter')"
+              data-test="write"
+              @click="write()"
+            >
+              <span class="with-icon"><AppIcon name="ai" />Rédiger</span>
+            </BusyButton>
+          </div>
+        </ActionBar>
+        <BottomSheet
+          v-if="narrow && selected"
+          :open="versionsOpen"
+          title="Versions et téléchargement"
+          data-test="versions-sheet"
+          @close="versionsOpen = false"
+        >
+          <GroupedList
+            title="Versions"
+            :level="3"
+          >
+            <GroupedRow
+              v-for="letter in letters"
+              :key="letter.id"
+              :title="versionName(letter)"
+              :description="versionMeta(letter)"
+              button
+              :current="letter.id === selectedId"
+              data-test="sheet-version"
+              @click="pickVersion(letter)"
+            />
+          </GroupedList>
+          <p
+            v-if="dirty"
+            class="hint"
+          >
+            Enregistre d'abord tes modifications pour les télécharger.
+          </p>
+          <template #actions>
+            <button
+              v-if="dirty"
+              type="button"
+              class="primary"
+              :disabled="saving"
+              data-test="save-letter"
+              @click="save"
+            >
+              Enregistrer mes modifications
+            </button>
+            <template v-else>
+              <a
+                class="button-link prep-download"
+                :href="`/api/letters/${selected.id}/pdf`"
+                download
+                data-test="pdf"
+              ><span class="with-icon"><AppIcon name="download" />Lettre (PDF)</span></a>
+              <a
+                class="button-link prep-download"
+                :href="`/api/letters/${selected.id}/docx`"
+                download
+                data-test="docx"
+              ><span class="with-icon"><AppIcon name="download" />Lettre (Word)</span></a>
+            </template>
+          </template>
+        </BottomSheet>
       </div>
     </div>
   </section>

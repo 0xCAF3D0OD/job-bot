@@ -3595,6 +3595,11 @@ main:focus { outline: none; }
   .action-band-title { font-size: var(--font-figure); }
 }
 
+/* Préparer sur téléphone : la consigne d'une ligne dans le panneau ; les deux téléchargements de la
+   feuille « Versions et téléchargement », de même largeur. */
+.prep-instruction-line { width: 100%; }
+.sheet-actions > .prep-download { flex: 1 1 0; justify-content: center; }
+
 /* L'écran de tri (planche « Tri et panneau de commande ») : une colonne (--page-column) ; la
    progression en haut ; la carte comme la fiche ; « Écarter » et « Garder » chacun sur la moitié, les
    raccourcis dessous. Sur téléphone, la note et les actions passent dans le panneau de commande. */
