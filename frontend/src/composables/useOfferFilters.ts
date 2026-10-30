@@ -133,7 +133,7 @@ export function activeChips(filters: OfferFilters, withSearch: boolean): FilterC
   const q = filters.q.trim();
   if (withSearch && q) chips.push({ key: "q", label: `Recherche : ${q}`, patch: { q: "" } });
   if (filters.minScore !== null || filters.maxScore !== null)
-    chips.push({ key: "score", label: `Note : ${scoreLabel(filters)}`, patch: { minScore: null, maxScore: null } });
+    chips.push({ key: "score", label: `Note minimale : ${scoreLabel(filters)}`, patch: { minScore: null, maxScore: null } });
   if (filters.remote)
     chips.push({
       key: "remote",
