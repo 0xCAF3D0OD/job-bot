@@ -5767,6 +5767,28 @@ export interface components {
             /** Limit */
             limit: number | null;
         };
+        /**
+         * MilestonesOut
+         * @description Les étapes datées d'un compte, pour le test utilisateurs (30.10.2026) : le numéro du compte,
+         *     l'inscription et la première fois de chaque étape (vide : pas encore). Rien d'autre.
+         */
+        MilestonesOut: {
+            /** Account */
+            account: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** First Alert */
+            first_alert: string | null;
+            /** First Offer */
+            first_offer: string | null;
+            /** First Prepared */
+            first_prepared: string | null;
+            /** First Export */
+            first_export: string | null;
+        };
         /** MissingOut */
         MissingOut: {
             /** Skill */
@@ -6545,6 +6567,11 @@ export interface components {
             database_admin: boolean;
             backup?: components["schemas"]["BackupOut"] | null;
             first_steps?: components["schemas"]["FirstStepsStats"] | null;
+            /**
+             * Milestones
+             * @default []
+             */
+            milestones: components["schemas"]["MilestonesOut"][];
         };
         /**
          * PlatformSettingsIn

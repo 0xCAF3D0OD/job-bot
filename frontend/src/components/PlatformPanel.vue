@@ -20,6 +20,23 @@ type Platform = PlatformOut;
 type Account = AccountOut;
 
 const platform = ref<Platform | null>(null);
+
+// Les étapes datées du test utilisateurs (30.10.2026) : pour chaque compte, le temps entre son
+// inscription et la première fois de chaque étape. Une étape et une date, aucun contenu.
+const MILESTONES = [
+  { key: "first_alert", label: "Alerte" },
+  { key: "first_offer", label: "Offre" },
+  { key: "first_prepared", label: "Candidature" },
+  { key: "first_export", label: "Preuves" },
+] as const;
+function elapsed(from: string, to: string | null | undefined): string {
+  if (!to) return "—";
+  const minutes = Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / 60_000));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `${hours} h`;
+  return `${Math.round(hours / 24)} j`;
+}
 // Où s'arrêtent les comptes qui n'ont pas fini (docs/128 §4) : l'étape à faire, et combien.
 const STEP_TITLES = ["Critères et CV", "Alertes sur les sites d'emploi", "Première offre gardée", "Lettre et CV pour l'offre", "Candidature envoyée"];
 const stoppedAt = computed(() =>
@@ -575,6 +592,57 @@ function size(bytes: number | null | undefined): string {
           <strong>{{ plural(row.count, "compte", "comptes") }}</strong>
         </SettingRow>
       </template>
+    </SettingCard>
+
+    <!-- Le test utilisateurs (30.10.2026) : le temps entre l'inscription et chaque première étape.
+         Des numéros de compte et des durées, jamais un nom ni un contenu. -->
+    <SettingCard
+      class="platform-card"
+      data-test="platform-milestones"
+    >
+      <SettingRow
+        title="Test utilisateurs"
+        :description="platform.milestones?.length
+          ? 'Le temps entre l\'inscription et la première fois de chaque étape.'
+          : 'Aucun compte invité pour l\'instant.'"
+      />
+      <table
+        v-if="platform.milestones?.length"
+        class="runs milestones-table"
+        data-test="milestones-table"
+      >
+        <thead>
+          <tr>
+            <th scope="col">
+              Compte
+            </th>
+            <th
+              v-for="column in MILESTONES"
+              :key="column.key"
+              scope="col"
+            >
+              {{ column.label }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in platform.milestones"
+            :key="row.account"
+            data-test="milestones-row"
+          >
+            <th scope="row">
+              n° {{ row.account }}<span class="milestones-since">{{ dateInList(row.created_at) }}</span>
+            </th>
+            <td
+              v-for="column in MILESTONES"
+              :key="column.key"
+            >
+              {{ elapsed(row.created_at, row[column.key]) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </SettingCard>
 
     <!-- Les sauvegardes (docs/82) : l'état en mots à droite, pas seulement en couleur (WCAG 1.4.1). -->

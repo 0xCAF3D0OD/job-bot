@@ -16538,6 +16538,78 @@
         ],
         "title": "MessageOut"
       },
+      "MilestonesOut": {
+        "properties": {
+          "account": {
+            "type": "integer",
+            "title": "Account"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "first_alert": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Alert"
+          },
+          "first_offer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Offer"
+          },
+          "first_prepared": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Prepared"
+          },
+          "first_export": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Export"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "created_at",
+          "first_alert",
+          "first_offer",
+          "first_prepared",
+          "first_export"
+        ],
+        "title": "MilestonesOut",
+        "description": "Les étapes datées d'un compte, pour le test utilisateurs (30.10.2026) : le numéro du compte,\nl'inscription et la première fois de chaque étape (vide : pas encore). Rien d'autre."
+      },
       "MissingOut": {
         "properties": {
           "skill": {
@@ -18950,6 +19022,14 @@
                 "type": "null"
               }
             ]
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/MilestonesOut"
+            },
+            "type": "array",
+            "title": "Milestones",
+            "default": []
           }
         },
         "type": "object",

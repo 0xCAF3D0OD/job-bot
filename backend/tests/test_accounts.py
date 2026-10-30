@@ -495,7 +495,8 @@ async def test_database_refuses_other_account(
     owner, other = two_accounts
     await seed_account_a(runtime)
     tables = await account_tables(runtime)
-    assert len(tables) == 34  # dont les paiements de Plus (docs/125) et les « Pas vrai »
+    # dont les paiements de Plus (docs/125), les « Pas vrai » et les étapes datées
+    assert len(tables) == 35
     with accounts.use(other):
         async with runtime.sessionmaker() as session:
             for table in tables:

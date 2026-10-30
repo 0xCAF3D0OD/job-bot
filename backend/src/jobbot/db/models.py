@@ -620,6 +620,24 @@ class ForbiddenClaim(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class AccountMilestone(Base):
+    """La date d'une étape, la première fois (test utilisateurs, 30.10.2026) : première alerte
+    créée, première offre reçue, première candidature préparée, premières preuves exportées.
+    Écrite par des déclencheurs de la base (migration 0072), jamais remplacée par une plus tardive.
+    Une étape et une date, rien d'autre."""
+
+    __tablename__ = "account_milestones"
+
+    user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        server_default=CURRENT_ACCOUNT,
+        primary_key=True,
+    )
+    step: Mapped[str] = mapped_column(Text, primary_key=True)
+    reached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class OrpMonth(Base):
     """État de la remise des preuves ORP d'un mois (docs/09 §4)."""
 

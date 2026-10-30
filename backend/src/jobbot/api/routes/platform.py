@@ -89,6 +89,27 @@ class FirstStepsStats(BaseModel):
     stopped_at: list[int]
 
 
+class MilestonesOut(BaseModel):
+    """Les étapes datées d'un compte, pour le test utilisateurs (30.10.2026) : le numéro du compte,
+    l'inscription et la première fois de chaque étape (vide : pas encore). Rien d'autre."""
+
+    account: int
+    created_at: datetime
+    first_alert: datetime | None
+    first_offer: datetime | None
+    first_prepared: datetime | None
+    first_export: datetime | None
+
+
+MILESTONE_COLUMNS = (
+    "created_at",
+    "first_alert",
+    "first_offer",
+    "first_prepared",
+    "first_export",
+)
+
+
 class PlatformOut(BaseModel):
     # Les comptes acceptés ; les demandes en attente sont à part.
     accounts: list[AccountOut]
@@ -103,6 +124,7 @@ class PlatformOut(BaseModel):
     database_admin: bool = False
     backup: BackupOut | None = None
     first_steps: FirstStepsStats | None = None
+    milestones: list[MilestonesOut] = []
 
 
 class LinkCreated(BaseModel):
@@ -176,6 +198,10 @@ async def get_platform(request: Request) -> PlatformOut:
                 {"since": datetime.now(UTC) - FIRST_STEPS_WINDOW},
             )
         )
+        milestones = [
+            MilestonesOut(account=row.user_id, **{k: getattr(row, k) for k in MILESTONE_COLUMNS})
+            for row in await session.execute(text("select * from milestones_progress()"))
+        ]
     return PlatformOut(
         accounts=[
             AccountOut(
@@ -227,6 +253,7 @@ async def get_platform(request: Request) -> PlatformOut:
             ),
             stopped_at=[sum(1 for row in progress if row.reached == step) for step in range(5)],
         ),
+        milestones=milestones,
     )
 
 
