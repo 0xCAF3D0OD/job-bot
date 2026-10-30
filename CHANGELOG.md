@@ -351,3 +351,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.137 | Offres : « Note minimale » partout (panneau de l'ordinateur, pastille du filtre actif), comme dans la feuille du téléphone | livrée |
 | 1.6.138 | Fiche d'une offre sur téléphone : la note et son pourquoi, « Préparer ma candidature » et « Postuler chez l'employeur » dans le panneau du bas | livrée |
 | 1.6.139 | Préparer et Postuler, parties communes : téléchargement et bouton occupé sans changer de largeur ni de couleur, zones de texte sans poignée, aération (§4), états « en préparation » dans l'audit téléphone | livrée |
+| 1.6.140 | Lettres : une affirmation plus forte que le profil (en production, utilisateurs, chiffre, institution, rôle) est réécrite au niveau du bloc ou retirée ; la rédaction ne grossit plus un fait ; « Pas vrai » sur une phrase (côté serveur) | livrée |
