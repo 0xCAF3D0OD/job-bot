@@ -3583,6 +3583,14 @@ main:focus { outline: none; }
   .action-band-title { font-size: var(--font-figure); }
 }
 
+/* La fiche sur téléphone (planche « Tri et panneau de commande ») : elle couvre l'écran, barre d'onglets
+   comprise ; son panneau descend donc tout en bas, et la fin de la fiche reste au-dessus de lui. */
+@media (max-width: 599px) {
+  :root:has(.tab-bar) .detail-column .action-bar { bottom: env(safe-area-inset-bottom); }
+  .detail-column:has(.action-bar) .detail-panel { padding-bottom: calc(var(--action-bar-h, 9rem) + var(--space-5)); }
+}
+.action-bar > .bar-link { align-self: flex-start; font-size: var(--font-body); }
+
 /* L'écran de tri (planche « Tri et panneau de commande ») : une colonne (--page-column) ; la
    progression en haut ; la carte comme la fiche ; « Écarter » et « Garder » chacun sur la moitié, les
    raccourcis dessous. Sur téléphone, la note et les actions passent dans le panneau de commande. */

@@ -6,6 +6,7 @@ import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { dateInList, dateInSentence } from "../dates";
 import { expiredText, gapSkill, plural, rateText, remoteText, sourceLabel } from "../format";
 import type { IconName } from "../icons";
+import ActionBar from "./ActionBar.vue";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import DisclosureRow from "./DisclosureRow.vue";
@@ -17,6 +18,8 @@ import ScoreCorrection from "./ScoreCorrection.vue";
 import SidePanel from "./SidePanel.vue";
 import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
+import { useNarrow } from "../composables/usePhone";
+import { whyLine } from "../whyLine";
 
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
@@ -199,6 +202,9 @@ function pointParts(text: string): { key: string; rest: string } {
   const match = /^([^:]{1,40}?)\s?:\s+(.+)$/.exec(text.trim());
   return match ? { key: match[1]!, rest: match[2]! } : { key: "", rest: text };
 }
+// Sous 600 px, le panneau de commande (planche « Tri et panneau de commande ») : la note et son
+// pourquoi sur une ligne, « Préparer ma candidature », « Postuler chez l'employeur » en lien.
+const { phone: narrow } = useNarrow();
 const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_MAX));
 const gaps = computed(() => (props.offer.gaps ?? []).slice(0, POINTS_MAX));
 // Les annonces d'origine qui ne sont pas déjà le bouton « Postuler » (docs/45 : pas de doublon).
@@ -404,7 +410,7 @@ watch(
         {{ expiredText(offer) }}
       </p>
       <div
-        v-if="offer.status !== 'applied'"
+        v-if="offer.status !== 'applied' && !narrow"
         class="detail-actions"
         data-test="triage"
       >
@@ -426,6 +432,37 @@ watch(
       </div>
     </section>
 
+    <ActionBar v-if="narrow && offer.status !== 'applied'">
+      <div
+        v-if="offer.score !== null && offer.score !== undefined"
+        class="pick-score"
+        data-test="bar-score"
+      >
+        <ScoreWord :score="offer.score" />
+        <p
+          v-if="offer.why"
+          class="pick-why"
+        >
+          {{ whyLine(offer.why) }}
+        </p>
+      </div>
+      <RouterLink
+        :to="`/candidatures/offres/${offer.id}/preparer`"
+        class="button-link primary-link"
+        data-test="prepare"
+      >
+        {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+      </RouterLink>
+      <a
+        v-if="postLink"
+        :href="postLink.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="link bar-link"
+        :data-test="offer.employer_url ? 'employer' : 'apply'"
+      ><span class="with-icon">{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+    </ActionBar>
+
     <!-- Pourquoi : la note, la phrase, « Cette note ne me correspond pas ». -->
     <section
       v-if="offer.summary_role || offer.score_error || offer.why"
@@ -435,7 +472,7 @@ watch(
       <h3>Pourquoi</h3>
       <template v-if="offer.summary_role || offer.why">
         <div
-          v-if="offer.score !== null && offer.score !== undefined"
+          v-if="offer.score !== null && offer.score !== undefined && !(narrow && offer.status !== 'applied')"
           class="detail-note"
           data-test="ai"
         >
@@ -453,7 +490,7 @@ watch(
           class="score-why"
           data-test="score-why"
         >
-          <p v-if="offer.why">
+          <p v-if="offer.why && !(narrow && offer.status !== 'applied')">
             {{ offer.why }}
           </p>
           <p
