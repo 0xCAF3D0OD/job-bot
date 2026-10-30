@@ -53,7 +53,7 @@ onMounted(async () => {
       <ul>
         <li><strong>Toi seul</strong>, par ta connexion. Aucun autre compte ne voit tes données.</li>
         <li>
-          L'exploitant voit seulement ton usage : dernière connexion, dépense de l'IA du mois, nombre d'offres reçues, et la date de tes premières étapes (première alerte, première offre reçue, première candidature préparée, premières preuves exportées), sans leur contenu.
+          L'exploitant voit seulement ton usage : dernière connexion, dépense de l'IA du mois, nombre d'offres reçues. Pendant un test de la plateforme, aussi la date de tes premières étapes (première alerte, première offre reçue, première candidature préparée, premières preuves exportées), sans leur contenu, pour mesurer le temps de prise en main : elles sont effacées à la fin du test, ou avec ton compte.
         </li>
         <li>
           Il administre le serveur, mais ne voit jamais tes offres, candidatures, documents ou discussions. Il ne les lit qu'à ta demande ou par obligation légale.

@@ -242,6 +242,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/platform/user-test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set User Test
+         * @description Le test utilisateurs : ses dates sont gardées jusqu'à sa fin (décision de Kevin).
+         */
+        put: operations["setUserTest"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/platform/accounts/{account_id}/approve": {
         parameters: {
             query?: never;
@@ -6572,6 +6592,11 @@ export interface components {
              * @default []
              */
             milestones: components["schemas"]["MilestonesOut"][];
+            /**
+             * User Test Open
+             * @default true
+             */
+            user_test_open: boolean;
         };
         /**
          * PlatformSettingsIn
@@ -7841,6 +7866,11 @@ export interface components {
             /** Limit Text */
             limit_text: string | null;
         };
+        /** UserTestIn */
+        UserTestIn: {
+            /** Open */
+            open: boolean;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -8473,6 +8503,46 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PlatformSettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformOut"];
+                };
+            };
+            /** @description Exploitant seul */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setUserTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserTestIn"];
             };
         };
         responses: {

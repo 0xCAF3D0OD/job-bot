@@ -29,6 +29,14 @@ const MILESTONES = [
   { key: "first_prepared", label: "Candidature" },
   { key: "first_export", label: "Preuves" },
 ] as const;
+// Gardées jusqu'à la fin du test (décision de Kevin) : « Terminer le test » efface les dates de
+// tous les comptes et arrête l'enregistrement ; un nouveau test le rouvre.
+const endingTest = ref(false);
+async function setUserTest(open: boolean): Promise<void> {
+  endingTest.value = false;
+  const { data } = await api.PUT("/api/platform/user-test", { body: { open } });
+  if (data) show(data);
+}
 function elapsed(from: string, to: string | null | undefined): string {
   if (!to) return "—";
   const minutes = Math.max(0, Math.round((Date.parse(to) - Date.parse(from)) / 60_000));
@@ -602,12 +610,40 @@ function size(bytes: number | null | undefined): string {
     >
       <SettingRow
         title="Test utilisateurs"
-        :description="platform.milestones?.length
-          ? 'Le temps entre l\'inscription et la première fois de chaque étape.'
-          : 'Aucun compte invité pour l\'instant.'"
+        :description="!platform.user_test_open
+          ? 'Aucun test en cours : rien n\'est enregistré.'
+          : platform.milestones?.length
+            ? 'Le temps entre l\'inscription et la première fois de chaque étape. Gardé jusqu\'à la fin du test.'
+            : 'Aucun compte invité pour l\'instant.'"
+      >
+        <button
+          v-if="platform.user_test_open"
+          type="button"
+          class="secondary small"
+          data-test="user-test-end"
+          @click="endingTest = true"
+        >
+          Terminer le test
+        </button>
+        <button
+          v-else
+          type="button"
+          class="secondary small"
+          data-test="user-test-start"
+          @click="setUserTest(true)"
+        >
+          Commencer un test
+        </button>
+      </SettingRow>
+      <InlineConfirm
+        v-if="endingTest"
+        message="Les dates de tous les comptes sont effacées, et plus rien n'est enregistré."
+        confirm-label="Terminer et effacer"
+        @confirm="setUserTest(false)"
+        @cancel="endingTest = false"
       />
       <table
-        v-if="platform.milestones?.length"
+        v-if="platform.user_test_open && platform.milestones?.length"
         class="runs milestones-table"
         data-test="milestones-table"
       >

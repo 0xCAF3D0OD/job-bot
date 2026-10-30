@@ -1,1 +1,1 @@
-Test utilisateurs : la date de la première alerte, de la première offre reçue, de la première candidature préparée et des premières preuves exportées, par compte, sans contenu ; un tableau pour l'exploitant, mentionné dans « Tes données »
+Test utilisateurs : la date de la première alerte, de la première offre reçue, de la première candidature préparée et des premières preuves exportées, par compte, sans contenu, gardée jusqu'à la fin du test ; un tableau pour l'exploitant, mentionné dans « Tes données »
