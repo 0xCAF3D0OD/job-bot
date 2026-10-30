@@ -20,8 +20,10 @@ from jobbot.llm.scoring import (
     profile_block,
 )
 
-PROMPT_VERSION = "letter-v2"
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/letter-v2.md").read_text("utf-8")
+# v3 (30.10.2026) : ne jamais grossir un fait présent (statut, public, client, échelle, rôle), et
+# les affirmations marquées « Pas vrai » données comme interdites.
+PROMPT_VERSION = "letter-v3"
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/letter-v3.md").read_text("utf-8")
 MAX_TOKENS = 16_000
 Language = Literal["fr", "en", "de"]
 
@@ -135,9 +137,13 @@ def request_params(
     assessment: Assessment | None = None,
     previous: dict[str, Any] | None = None,
     instruction: str | None = None,
+    forbidden: list[str] | None = None,
 ) -> dict[str, Any]:
     parts = [offer_message(offer), "\n\n", assessment_text(assessment)]
     parts.append(f"<langue>{language or 'auto'}</langue>")
+    if forbidden:
+        lines = "\n".join(f"- {claim}" for claim in forbidden)
+        parts.append(f"\n\n<interdits>\n{lines}\n</interdits>")
     if previous is not None:
         parts.append("\n\n" + _previous_text(previous))
     if instruction:
