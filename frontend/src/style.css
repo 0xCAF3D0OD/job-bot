@@ -3587,7 +3587,7 @@ main:focus { outline: none; }
    comprise ; son panneau descend donc tout en bas, et la fin de la fiche reste au-dessus de lui. */
 @media (max-width: 599px) {
   :root:has(.tab-bar) .detail-column .action-bar { bottom: env(safe-area-inset-bottom); }
-  .detail-column:has(.action-bar) .detail-panel { padding-bottom: calc(var(--action-bar-h, 9rem) + var(--space-5)); }
+  .detail-column:has(.action-bar) .detail-panel { padding-bottom: calc(var(--action-bar-h) + var(--space-5)); }
 }
 .action-bar > .bar-link { align-self: flex-start; font-size: var(--font-body); }
 
