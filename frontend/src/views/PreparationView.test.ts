@@ -384,7 +384,9 @@ describe("« Pas vrai » (30.10.2026)", () => {
     await wrapper.find("[data-test=false-claim]").trigger("click");
     await wrapper.find("[data-test=false-claim-confirm]").trigger("click");
     await flushPromises();
+    // Aucun paragraphe vide ne reste à sa place.
     expect(wrapper.findAll("[data-test=paragraph]")).toHaveLength(1);
+    expect(wrapper.findAll(".letter-paragraph")).toHaveLength(1);
     await useUndo().undo();
     await flushPromises();
     const texts = wrapper.findAll("[data-test=paragraph]").map((p) => (p.element as HTMLTextAreaElement).value);
@@ -427,6 +429,9 @@ describe("« Pas vrai » (30.10.2026)", () => {
     const bar = wrapper.find("[data-test=action-bar]");
     expect(bar.find("[data-test=false-claim-chosen]").text()).toBe("« J'administre un cluster K3s. »");
     expect(bar.find("[data-test=write]").exists()).toBe(false);
+    // Une tâche à la fois : ni la langue ni la consigne pendant le choix.
+    expect(bar.find(".segmented").exists()).toBe(false);
+    expect(bar.find("[data-test=instruction]").exists()).toBe(false);
     await bar.find("[data-test=false-claim-cancel]").trigger("click");
     expect(wrapper.find("[data-test=action-bar] [data-test=write]").exists()).toBe(true);
     vi.unstubAllGlobals();

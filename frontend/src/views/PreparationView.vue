@@ -982,14 +982,17 @@ onMounted(() => void load());
           </div>
         </section>
         <ActionBar v-if="narrow">
+          <!-- Une phrase choisie : le panneau ne montre que la citation et « Annuler » / « Pas vrai » ;
+               la langue et la consigne reviennent ensuite (une tâche à la fois). -->
           <SegmentedControl
+            v-if="!claim"
             v-model="shownLanguage"
             :options="LANGUAGE_OPTIONS"
             label="Langue de la lettre"
             full
           />
           <input
-            v-if="selected"
+            v-if="selected && !claim"
             v-model="instruction"
             class="prep-instruction-line"
             maxlength="500"
@@ -999,7 +1002,7 @@ onMounted(() => void load());
             @input="instructionNote = ''"
           >
           <p
-            v-if="instructionNote"
+            v-if="instructionNote && !claim"
             class="action-bar-note"
             aria-live="polite"
             data-test="instruction-note"
