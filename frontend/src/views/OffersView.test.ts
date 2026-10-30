@@ -656,12 +656,12 @@ describe("Offres, ajouter une offre (docs/111)", () => {
 });
 
 describe("Offres, la note en ligne (1.6.47)", () => {
-  it("une ligne « Note · Toutes » comme Statut et Tri, ses trois choix dépliés dessous", async () => {
+  it("une ligne « Note minimale · Toutes » comme Statut et Tri, ses trois choix dépliés dessous", async () => {
     mockOffers(page([offer(1, "Une")]));
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     const row = wrapper.find("[data-test=row-score]");
-    expect(row.find(".with-icon").text()).toBe("Note");
+    expect(row.find(".with-icon").text()).toBe("Note minimale");
     expect(row.find(".filter-row-value").text()).toBe("Toutes");
     expect(row.attributes("aria-expanded")).toBe("false");
     await row.trigger("click");
@@ -732,7 +732,7 @@ describe("Offres, barre d'outils (1.6.55)", () => {
     const wrapper = await mountAt("/offres?note=70&canton=VD&canton=GE&externe=1&q=dev");
     const chips = wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text());
     // La recherche n'a pas de pastille : son champ est dans la barre.
-    expect(chips).toEqual(["Note : Proche et plus", "Canton : VD", "Canton : GE", "Chez l'employeur"]);
+    expect(chips).toEqual(["Note minimale : Proche et plus", "Canton : VD", "Canton : GE", "Chez l'employeur"]);
     expect(wrapper.find("[data-test=filters-count]").text()).toBe("4");
     expect(wrapper.find("[data-test=filters-toggle]").attributes("aria-label")).toBe("Filtrer, 4 filtres actifs");
     await wrapper.find("[data-test=chip-remove-canton-VD]").trigger("click");

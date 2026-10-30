@@ -31,7 +31,7 @@ const emit = defineEmits<{
 }>();
 
 const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: "score", label: "Note" },
+  { key: "score", label: "Note minimale" },
   { key: "remote", label: "Télétravail" },
   { key: "sources", label: "Sites" },
   { key: "cantons", label: "Cantons" },
@@ -221,13 +221,13 @@ const more = ref(secondaryActive.value > 0);
           data-test="row-score"
           @click="open('score')"
         >
-          <span class="with-icon"><AppIcon name="star" />Note</span><span class="filter-row-value">{{ scoreValue }}</span>
+          <span class="with-icon"><AppIcon name="star" />Note minimale</span><span class="filter-row-value">{{ scoreValue }}</span>
         </button>
         <div
           v-if="page === 'score'"
           class="filter-drop"
           role="radiogroup"
-          aria-label="Note"
+          aria-label="Note minimale"
         >
           <button
             v-for="choice in SCORE_CHOICES"
