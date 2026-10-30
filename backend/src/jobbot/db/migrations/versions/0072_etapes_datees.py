@@ -12,6 +12,10 @@ rien d'autre : ni texte d'offre, ni lettre, ni coordonnées (nLPD, mentionné da
 Les dates s'écrivent dans la base, par des déclencheurs : tous les chemins (l'interface, le worker
 des alertes, l'extension) sont couverts. Pour les comptes existants, les dates déjà connues sont
 reprises. `milestones_progress()` les donne à l'exploitant seul.
+
+Gardées jusqu'à la fin du test (décision de Kevin) : `end_user_test()`, à l'exploitant seul, les
+efface pour tous les comptes et arrête l'enregistrement (`user_test_open` à false dans les
+réglages de la plateforme) ; un nouveau test le rouvre. La fermeture d'un compte les efface aussi.
 """
 
 from collections.abc import Sequence
@@ -80,7 +84,9 @@ def upgrade() -> None:
     op.execute(
         "create function mark_milestone(account bigint, kind text, at timestamptz) "
         f"returns void language sql set search_path = {SEARCH_PATH} as $$ "
-        "insert into account_milestones (user_id, step, reached_at) values (account, kind, at) "
+        "insert into account_milestones (user_id, step, reached_at) select account, kind, at "
+        "where coalesce((select value #>> '{}' from platform_settings "
+        "where key = 'user_test_open'), 'true') = 'true' "
         "on conflict (user_id, step) do update set reached_at = excluded.reached_at "
         "where excluded.reached_at < account_milestones.reached_at $$"
     )
@@ -119,9 +125,23 @@ def upgrade() -> None:
     )
     op.execute("revoke all on function milestones_progress() from public")
     op.execute(f"grant execute on function milestones_progress() to {APP}")
+    # La fin du test : toutes les dates effacées, l'enregistrement arrêté (l'exploitant seul).
+    op.execute(
+        "create function end_user_test() returns void language plpgsql security definer "
+        f"set search_path = {SEARCH_PATH} as $$ begin "
+        f"if {CURRENT} is distinct from platform_owner() then "
+        "raise exception 'réservé à l''exploitant'; end if; "
+        "delete from account_milestones; "
+        "insert into platform_settings (key, value) values ('user_test_open', 'false'::jsonb) "
+        "on conflict (key) do update set value = excluded.value; end $$"
+    )
+    op.execute("revoke all on function end_user_test() from public")
+    op.execute(f"grant execute on function end_user_test() to {APP}")
 
 
 def downgrade() -> None:
+    op.execute("drop function end_user_test()")
+    op.execute("delete from platform_settings where key = 'user_test_open'")
     op.execute("drop function milestones_progress()")
     for table, *_ in TRIGGERS:
         op.execute(f"drop trigger milestone on {table}")

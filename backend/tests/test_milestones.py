@@ -18,6 +18,14 @@ from .test_platform import invite, secured  # noqa: F401
 TABLES = "offers, searches, drafts, alert_searches, orp_months, account_milestones"
 
 
+@pytest.fixture(autouse=True)
+async def test_open() -> AsyncIterator[None]:
+    """Chaque test commence et finit avec un test utilisateurs en cours."""
+    yield
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM platform_settings WHERE key = 'user_test_open'"))
+
+
 @pytest.fixture
 async def fresh(runtime: Runtime) -> AsyncIterator[Runtime]:
     async def clean() -> None:
@@ -104,6 +112,30 @@ async def test_the_owner_alone_reads_the_dates(
             "first_export",
         }  # fmt: skip
         assert (await guest.get("/api/platform")).status_code == 403
+        # Gardées jusqu'à la fin du test : « Terminer le test » efface tout et arrête.
+        assert (await guest.put("/api/platform/user-test", json={"open": False})).status_code == 403
+        ended = (await owner.put("/api/platform/user-test", json={"open": False})).json()
+        assert ended["user_test_open"] is False
+        assert all(
+            row[k] is None
+            for row in ended["milestones"]
+            for k in ("first_alert", "first_offer", "first_prepared", "first_export")
+        )
+        # Test terminé : une offre reçue n'est plus datée.
+        async with secured.sessionmaker.begin() as session:
+            guest_id = await session.scalar(text("SELECT max(id) FROM users"))
+        accounts.set_current(guest_id)
+        try:
+            async with secured.sessionmaker.begin() as session:
+                now = datetime.now(UTC)
+                session.add(Offer(fingerprint="fin", title="SRE", first_seen_at=now,
+                                  last_seen_at=now))  # fmt: skip
+        finally:
+            accounts.set_current(None)
+        async with admin_engine().connect() as conn:
+            assert await conn.scalar(text("select count(*) from account_milestones")) == 0
+        reopened = (await owner.put("/api/platform/user-test", json={"open": True})).json()
+        assert reopened["user_test_open"] is True
     async with secured.sessionmaker.begin() as session:
         guest_id = await session.scalar(text("SELECT max(id) FROM users"))
     accounts.set_current(guest_id)

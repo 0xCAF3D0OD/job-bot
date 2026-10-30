@@ -125,8 +125,8 @@ async def test_special_functions_are_guarded() -> None:
         "where prosecdef and pronamespace = 'public'::regnamespace"
     )
     # 12 depuis la 0070 : `first_steps_progress`, le chiffre des premiers pas (docs/128 §4) ;
-    # 13 depuis la 0072 : `milestones_progress`, les étapes datées du test utilisateurs.
-    assert len(functions) == 13
+    # 14 depuis la 0072 : `milestones_progress` et `end_user_test`, le test utilisateurs.
+    assert len(functions) == 14
     for name, config, acl in functions:
         assert config == ["search_path=public, pg_temp"], name
         # Pas d'exécution pour tout le monde (« =X/ » : PUBLIC), seulement pour l'API.
