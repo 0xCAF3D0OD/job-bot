@@ -440,6 +440,9 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
   });
 
   it("la conclusion en haut : relances et candidatures à déclarer, les nombres en accent", async () => {
+    // Le jour figé : envoyée le 20 octobre, la candidature n'est pas encore à relancer le 25 (10 jours).
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-25T08:00:00Z"));
     const many = [1, 2].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
@@ -453,6 +456,7 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     mockApi(() => month({ count: 0, rows: [] }), [{ ...application, sent_at: "2026-10-20" }]);
     const { wrapper: calm } = await mountView();
     expect(calm.find("[data-test=suivi-sentence]").text()).toBe("Rien à relancer ni à déclarer.");
+    vi.useRealTimers();
   });
 
   it("l'objectif en cases, une par candidature (règles §4)", async () => {
