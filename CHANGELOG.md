@@ -347,3 +347,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.133 | Relances une à une sur téléphone : depuis « À relancer » du Suivi, une candidature à la fois, « Relancer » dans une feuille du bas, « Passer », « Classer sans réponse » avec « Annuler », écran de fin | livrée |
 | 1.6.134 | Téléphone : le pied de page n'est plus caché sous le panneau de commande | livrée |
 | 1.6.135 | Filtres d'Offres sur téléphone : « Note minimale » en boutons radio (Toutes, Proche et plus, Très proche), ligne entière cliquable | livrée |
+| 1.6.136 | Test du Suivi : le jour figé, il ne dépend plus de la date où il tourne | livrée |
