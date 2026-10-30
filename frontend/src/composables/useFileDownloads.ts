@@ -2,8 +2,9 @@ import { onMounted, onUnmounted } from "vue";
 
 // Fichiers préparés par la plateforme (docs/59 §4) : PDF, Word, export ORP, agenda. Les liens
 // `<a download href="/api/…">` restent tels quels ; un seul écouteur les télécharge lui-même pour
-// que le retour soit sur le lien : « Préparation… » pendant la préparation, puis « ✓ PDF · 84 Ko »
-// 2 secondes, ou « Réessayer » (feuille de style, `a[download][data-file]`).
+// que le retour soit sur le lien, qui garde sa largeur : pendant la préparation, son icône devient
+// un indicateur ; prêt, une coche 2 secondes ; en échec, « Réessayer » (feuille de style,
+// `a[download][data-file]`). L'état et la taille sont annoncés (aria-live), puisqu'ils ne s'écrivent plus.
 const DONE_MS = 2000;
 const FAILED_MS = 4000;
 
@@ -32,10 +33,33 @@ function save(blob: Blob, name: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+let live: HTMLElement | null = null;
+function announce(text: string): void {
+  if (!live || !live.isConnected) {
+    live = document.createElement("span");
+    live.className = "visually-hidden";
+    live.setAttribute("role", "status");
+    live.dataset.test = "file-status";
+    document.body.append(live);
+  }
+  live.textContent = text;
+}
+
+function linkLabel(link: HTMLAnchorElement): string {
+  return (link.textContent ?? "").replace(/\s+/g, " ").trim() || "Fichier";
+}
+
+const SAYS = {
+  preparing: (name: string) => `${name} : préparation…`,
+  done: (name: string, size: string) => `${name} téléchargé${size ? `, ${size}` : ""}.`,
+  failed: (name: string) => `${name} : échec, réessaie.`,
+};
+
 function mark(link: HTMLAnchorElement, state: "preparing" | "done" | "failed" | null, size = ""): void {
   if (state) link.dataset.file = state;
   else delete link.dataset.file;
   link.dataset.size = size;
+  if (state) announce(SAYS[state](linkLabel(link), size));
 }
 
 export async function download(link: HTMLAnchorElement): Promise<void> {
