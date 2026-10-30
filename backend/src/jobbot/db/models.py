@@ -597,6 +597,29 @@ class Draft(Base):
     edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class ForbiddenClaim(Base):
+    """Une affirmation marquée « Pas vrai » dans une lettre (30.10.2026) : la rédaction et la
+    relecture la reçoivent comme interdite ; la personne la voit et peut la retirer (Profil)."""
+
+    __tablename__ = "forbidden_claims"
+    # La lettre d'où vient l'affirmation, du même compte (docs/78 §3.3).
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["user_id", "draft_id"],
+            ["drafts.user_id", "drafts.id"],
+            name="forbidden_claims_draft_id_fkey",
+            ondelete="SET NULL",
+        ),
+    )
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    text: Mapped[str] = mapped_column(Text)
+    draft_id: Mapped[int | None] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class OrpMonth(Base):
     """État de la remise des preuves ORP d'un mois (docs/09 §4)."""
 

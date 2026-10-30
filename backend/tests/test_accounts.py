@@ -36,6 +36,7 @@ from jobbot.db.models import (
     Draft,
     Evaluation,
     ExtensionToken,
+    ForbiddenClaim,
     Interview,
     InterviewPractice,
     LlmCall,
@@ -61,6 +62,7 @@ PASSWORD = "un-mot-de-passe-de-test"
 # désignent du commun ou se lisent dans son propre compte.
 PERSONAL = {
     "action_id",
+    "claim_id",
     "application_id",
     "chunk_id",
     "contact_id",
@@ -221,9 +223,12 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
             ),
             {"v": f'["{SECRET}"]'},
         )
+        claim = ForbiddenClaim(text=f"{SECRET} affirmation", draft_id=draft.id)
+        session.add(claim)
         await session.flush()
         return {
             "action_id": action.id,
+            "claim_id": claim.id,
             "application_id": application.id,
             "chunk_id": chunk.id,
             "contact_id": contact.id,
@@ -337,7 +342,14 @@ async def two_accounts(runtime: Runtime) -> AsyncIterator[tuple[int, int]]:
         await conn.execute(text("TRUNCATE offers, alert_searches, chat_conversations CASCADE"))
         await conn.execute(text("DELETE FROM calendar_tokens WHERE name = :n"), {"n": SECRET})
         await conn.execute(text("DELETE FROM extension_tokens WHERE name = :n"), {"n": SECRET})
-        for table in ("documents", "profile_chunks", "notifications", "llm_calls", "orp_months"):
+        for table in (
+            "documents",
+            "profile_chunks",
+            "notifications",
+            "llm_calls",
+            "orp_months",
+            "forbidden_claims",
+        ):
             await conn.execute(text(f"DELETE FROM {table}"))
         await conn.execute(text("DELETE FROM profiles WHERE name = :n"), {"n": f"{SECRET} essai"})
         await conn.execute(
@@ -483,7 +495,7 @@ async def test_database_refuses_other_account(
     owner, other = two_accounts
     await seed_account_a(runtime)
     tables = await account_tables(runtime)
-    assert len(tables) == 33  # dont les paiements de Plus (docs/125)
+    assert len(tables) == 34  # dont les paiements de Plus (docs/125) et les « Pas vrai »
     with accounts.use(other):
         async with runtime.sessionmaker() as session:
             for table in tables:

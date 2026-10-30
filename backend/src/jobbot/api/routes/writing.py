@@ -4,7 +4,7 @@ Vérifications (IA configurée, profil, plafond), appel et ses erreurs, enregist
 nouvelle version. Les coordonnées de Kevin n'interviennent jamais ici.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import plans
-from jobbot.db.models import Draft, Evaluation, Offer, OfferStatus
+from jobbot.db.models import Draft, Evaluation, ForbiddenClaim, Offer, OfferStatus
 from jobbot.llm.client import RawResult, Refused
 from jobbot.llm.letter import Assessment
 from jobbot.llm.scoring import OfferData, ProfileChunkData
@@ -42,6 +42,8 @@ class WritingContext:
     rate: Decimal
     # La langue de cette version (une version dans une autre langue n'est jamais « identique »).
     previous_language: str | None = None
+    # Les affirmations marquées « Pas vrai » : jamais écrites, toujours retirées à la relecture.
+    forbidden: list[str] = field(default_factory=list)
 
 
 async def get_draft(session: AsyncSession, draft_id: int, kind: str) -> Draft:
@@ -102,6 +104,7 @@ async def prepare(
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, str(exc)) from exc
         spend, budget, rate = await budget_state(session, datetime.now(UTC))
         data = offer_data(offer)
+        forbidden = await forbidden_claims(session)
     if spend + estimate_usd * rate > budget:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
@@ -113,7 +116,13 @@ async def prepare(
             strengths=[p["text"] for p in evaluation.strengths or []],
             gaps=[p["text"] for p in evaluation.gaps or []],
         )
-    return WritingContext(data, chunks, assessment, previous, rate, previous_language)
+    return WritingContext(data, chunks, assessment, previous, rate, previous_language, forbidden)
+
+
+async def forbidden_claims(session: AsyncSession) -> list[str]:
+    """Les affirmations marquées « Pas vrai » du compte, les plus anciennes d'abord."""
+    rows = await session.scalars(select(ForbiddenClaim.text).order_by(ForbiddenClaim.id))
+    return list(rows)
 
 
 async def call(

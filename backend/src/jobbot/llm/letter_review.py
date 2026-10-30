@@ -3,6 +3,12 @@
 Sept critères, chacun réussi ou à revoir, avec une raison d'une ligne. Deux se vérifient sans l'IA
 (la longueur et le tiret cadratin) ; les autres, l'IA les juge. Le relecteur ne
 reçoit que le texte de la lettre, l'offre et le profil : jamais les coordonnées de la personne.
+
+v2 (demande de Kevin du 30.10.2026) : chaque phrase est rapprochée de sa source. Une affirmation
+plus forte que son bloc (en production, utilisateurs, chiffre, institution, rôle…) est listée dans
+`claims`, avec la citation du bloc et la phrase réécrite au niveau de la source, ou rien (la phrase
+est alors retirée). Le contrôle sans l'IA (llm/claims.py) lui signale les phrases suspectes, et les
+affirmations marquées « Pas vrai » lui sont données comme interdites.
 """
 
 import json
@@ -12,6 +18,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
+from jobbot.llm import claims as claims_check
+from jobbot.llm.letter import no_dash
 from jobbot.llm.scoring import (
     InvalidScore,
     OfferData,
@@ -20,9 +28,9 @@ from jobbot.llm.scoring import (
     profile_block,
 )
 
-PROMPT_VERSION = "letter-review-v1"
+PROMPT_VERSION = "letter-review-v2"
 INSTRUCTIONS = (
-    resources.files("jobbot.llm").joinpath("prompts/letter-review-v1.md").read_text("utf-8")
+    resources.files("jobbot.llm").joinpath("prompts/letter-review-v2.md").read_text("utf-8")
 )
 MAX_TOKENS = 4_000
 
@@ -56,9 +64,19 @@ class AiCriterion(BaseModel):
     reason: str = Field(min_length=1, max_length=200)
 
 
+class AiClaim(BaseModel):
+    """Une phrase plus forte que sa source : la citation du bloc, et la phrase à son niveau."""
+
+    paragraph: int
+    sentence: str = Field(min_length=1, max_length=2000)
+    block: int | None = None
+    quote: str = Field(default="", max_length=600)
+    rewrite: str = Field(default="", max_length=2000)
+
+
 class AiReview(BaseModel):
     criteria: list[AiCriterion] = Field(min_length=1, max_length=len(AI_KEYS))
-    invented_paragraphs: list[int] = Field(default_factory=list)
+    claims: list[AiClaim] = Field(default_factory=list, max_length=30)
 
 
 OUTPUT_SCHEMA: dict[str, Any] = {
@@ -77,9 +95,23 @@ OUTPUT_SCHEMA: dict[str, Any] = {
                 "additionalProperties": False,
             },
         },
-        "invented_paragraphs": {"type": "array", "items": {"type": "integer"}},
+        "claims": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "paragraph": {"type": "integer"},
+                    "sentence": {"type": "string"},
+                    "block": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
+                    "quote": {"type": "string"},
+                    "rewrite": {"type": "string"},
+                },
+                "required": ["paragraph", "sentence", "block", "quote", "rewrite"],
+                "additionalProperties": False,
+            },
+        },
     },
-    "required": ["criteria", "invented_paragraphs"],
+    "required": ["criteria", "claims"],
     "additionalProperties": False,
 }
 
@@ -93,9 +125,18 @@ class Criterion:
 
 
 @dataclass(frozen=True)
+class Claim:
+    paragraph: int
+    sentence: str
+    block: int | None
+    quote: str
+    rewrite: str
+
+
+@dataclass(frozen=True)
 class Review:
     criteria: list[Criterion]
-    invented_paragraphs: list[int]
+    claims: list[Claim]
     corrected: bool = False
 
     @property
@@ -112,7 +153,7 @@ class Review:
     def as_dict(self) -> dict[str, Any]:
         return {
             "criteria": [asdict(c) for c in self.criteria],
-            "invented_paragraphs": self.invented_paragraphs,
+            "claims": [asdict(c) for c in self.claims],
             "corrected": self.corrected,
         }
 
@@ -149,7 +190,9 @@ def _letter_text(letter: dict[str, Any]) -> str:
     lines = [f"objet : {letter.get('subject', '')}"]
     if letter.get("salutation"):
         lines.append(f"formule d'appel : {letter['salutation']}")
-    lines += [f"[{i}] {text}" for i, text in enumerate(_texts(letter), start=1)]
+    for i, paragraph in enumerate(letter.get("paragraphs", []), start=1):
+        cited = ", ".join(str(c) for c in paragraph.get("chunk_ids", []))
+        lines.append(f"[{i}] (blocs : {cited or 'aucun'}) {paragraph['text']}")
     if letter.get("closing"):
         lines.append(f"formule de politesse : {letter['closing']}")
     return "<lettre>\n" + "\n".join(lines) + "\n</lettre>"
@@ -164,13 +207,20 @@ def request_params(
     *,
     language: str | None,
     instruction: str | None,
+    flags: list[claims_check.Flag] | None = None,
+    forbidden: list[str] | None = None,
 ) -> dict[str, Any]:
     """Le relecteur : le texte de la lettre, l'offre et le profil, jamais les coordonnées."""
     parts = [offer_message(offer), f"\n\n<langue>{language or 'auto'}</langue>"]
     if instruction:
         safe = instruction.replace("</consigne>", "</ consigne>")
         parts.append(f"\n\n<consigne>\n{safe}\n</consigne>")
+    if forbidden:
+        parts.append(claims_check.forbidden_block(forbidden))
     parts.append("\n\n" + _letter_text(letter))
+    if flags:
+        lines = "\n".join(f"[{f.paragraph}] {f.text()}" for f in flags)
+        parts.append(f"\n\n<signalements>\n{lines}\n</signalements>")
     return {
         "model": model,
         "max_tokens": MAX_TOKENS,
@@ -186,8 +236,16 @@ def request_params(
     }
 
 
-def parse_review(text: str, letter: dict[str, Any], *, corrected: bool = False) -> Review:
-    """Les avis de l'IA, complétés par les vérifications du code, dans l'ordre de l'affichage."""
+def parse_review(
+    text: str,
+    letter: dict[str, Any],
+    *,
+    corrected: bool = False,
+    flags: list[claims_check.Flag] | None = None,
+) -> Review:
+    """Les avis de l'IA, complétés par les vérifications du code, dans l'ordre de l'affichage.
+    Une phrase signalée par le contrôle sans l'IA met « Aucune invention » à revoir, même si l'IA
+    l'a laissée passer."""
     try:
         ai = AiReview.model_validate(json.loads(text))
     except (json.JSONDecodeError, ValidationError) as exc:
@@ -200,6 +258,8 @@ def parse_review(text: str, letter: dict[str, Any], *, corrected: bool = False) 
     for key, label in LABELS.items():
         if key == "longueur":
             ok, reason = checks["longueur"]
+        elif key == "invention" and flags and seen["invention"].ok:
+            ok, reason = False, f"Plus fort que ton profil : {flags[0].text()}"
         elif key == "regles":
             # Les règles : le tiret et la formule (le code), la langue et la consigne (l'IA).
             code_ok, code_reason = checks["regles"]
@@ -211,8 +271,12 @@ def parse_review(text: str, letter: dict[str, Any], *, corrected: bool = False) 
             ok, reason = found.ok, found.reason
         criteria.append(Criterion(key, label, ok, reason.strip()))
     count = len(_texts(letter))
-    invented = sorted({i for i in ai.invented_paragraphs if 1 <= i <= count})
-    return Review(criteria, invented, corrected)
+    stronger = [
+        Claim(c.paragraph, c.sentence.strip(), c.block, c.quote.strip(), c.rewrite.strip())
+        for c in ai.claims
+        if 1 <= c.paragraph <= count
+    ]
+    return Review(criteria, stronger, corrected)
 
 
 def correction_instruction(review: Review) -> str:
@@ -222,16 +286,26 @@ def correction_instruction(review: Review) -> str:
         "Corrige la lettre selon cette relecture, sans rien changer d'autre :\n"
         + "\n".join(lines)
         + "\nRetire tout fait absent des blocs du profil : ne le remplace jamais par un autre."
+        + "\nRamène toute affirmation plus forte que son bloc au niveau exact du bloc (statut,"
+        + " public, client, lieu, échelle, rôle), sans rien ajouter."
     )
 
 
-def drop_invented(letter: dict[str, Any], review: Review) -> dict[str, Any]:
-    """« Aucune invention » est bloquant : un paragraphe qui invente encore est retiré."""
-    if not review.invented_paragraphs:
+def apply_claims(letter: dict[str, Any], review: Review) -> dict[str, Any]:
+    """Chaque phrase plus forte que sa source est réécrite au niveau de la source, ou retirée.
+
+    La phrase est cherchée mot pour mot dans son paragraphe ; une phrase introuvable est laissée (le
+    contrôle sans l'IA la rattrape ensuite). Un paragraphe vidé disparaît, jamais la lettre entière.
+    """
+    if not review.claims:
         return letter
-    keep = [
-        p
-        for i, p in enumerate(letter.get("paragraphs", []), start=1)
-        if i not in review.invented_paragraphs
-    ]
-    return {**letter, "paragraphs": keep} if keep else letter
+    paragraphs = [dict(p) for p in letter.get("paragraphs", [])]
+    for claim in review.claims:
+        paragraph = paragraphs[claim.paragraph - 1]
+        if claim.sentence not in paragraph["text"]:
+            continue
+        replacement = no_dash(claim.rewrite) if claim.rewrite else ""
+        text = paragraph["text"].replace(claim.sentence, replacement)
+        paragraph["text"] = " ".join(text.split())
+    kept = [p for p in paragraphs if p["text"].strip()]
+    return {**letter, "paragraphs": kept} if kept else letter
