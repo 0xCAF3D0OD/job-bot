@@ -222,8 +222,18 @@ describe("OfferDetail sur téléphone (planche « Tri et panneau de commande »)
     expect(bar.find("[data-test=bar-score]").text()).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
     expect(bar.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
     expect(bar.find("[data-test=apply]").classes()).toContain("link");
-    // La note et sa phrase ne sont plus répétées dans « Pourquoi ».
-    expect(wrapper.find("[data-test=section-for-you] [data-test=ai]").exists()).toBe(false);
+    // La note et sa phrase sont dans le panneau : sans niveau, la carte « Pourquoi » disparaît, et
+    // « Cette note ne me correspond pas » passe dans « ⋯ », ouverte dans une feuille du bas.
+    expect(wrapper.find("[data-test=section-for-you]").exists()).toBe(false);
+    await wrapper.find("[data-test=more]").trigger("click");
+    await wrapper.find("[data-test=score-correction-menu]").trigger("click");
+    const sheet = wrapper.find("[data-test=score-correction-sheet]");
+    expect(sheet.find("[data-test=score-correction-open]").exists()).toBe(false);
+    expect(sheet.find(".score-correction-card").exists()).toBe(true);
+    // Avec un niveau, la carte reste, avec le niveau seul.
+    const level = await mountDetail(offer({ score: 78, why: "x", summary_role: "x", level: "above", level_detail: "" }));
+    expect(level.find("[data-test=section-for-you] [data-test=score-level]").exists()).toBe(true);
+    expect(level.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
     vi.unstubAllGlobals();
   });
 

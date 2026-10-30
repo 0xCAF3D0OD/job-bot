@@ -8,8 +8,9 @@ import { offerUndo } from "../composables/useUndo";
 // ou trop basse, pourquoi) ; puis un bloc de profil à relire, ou un critère en un clic. Rien
 // n'est appris en cachette : la correction passe par un bloc visible dans Profil, ou par un
 // critère. Envoyée au bout de 6 secondes, sauf « Annuler ».
-const props = defineProps<{ offerId: number }>();
-const emit = defineEmits<{ changed: [] }>();
+// `startOpen` : les deux questions tout de suite (dans la feuille du bas ouverte par « ⋯ », téléphone).
+const props = withDefaults(defineProps<{ offerId: number; startOpen?: boolean }>(), { startOpen: false });
+const emit = defineEmits<{ changed: []; cancel: [] }>();
 
 type Direction = "high" | "low";
 type Reason =
@@ -43,7 +44,7 @@ const REASONS: Record<Direction, { value: Reason; label: string }[]> = {
 const KIND_LABEL = { preference: "Préférence", redhibitoire: "Rédhibitoire" };
 
 const saved = ref<Saved | null>(null);
-const open = ref(false);
+const open = ref(props.startOpen);
 const direction = ref<Direction | null>(null);
 const reason = ref<Reason | null>(null);
 const note = ref("");
@@ -72,6 +73,12 @@ function reset(): void {
   block.value = null;
   changes.value = null;
   error.value = "";
+}
+
+// « Annuler » : on referme ; la feuille du bas qui l'entoure se ferme aussi.
+function cancel(): void {
+  reset();
+  emit("cancel");
 }
 
 watch(() => props.offerId, () => {
@@ -278,7 +285,7 @@ function applyChange(change: Change): void {
             type="button"
             class="pill"
             data-test="score-correction-cancel"
-            @click="reset"
+            @click="cancel"
           >
             Annuler
           </button>
@@ -316,7 +323,7 @@ function applyChange(change: Change): void {
         <button
           type="button"
           class="link"
-          @click="reset"
+          @click="cancel"
         >
           Annuler
         </button>
@@ -334,7 +341,7 @@ function applyChange(change: Change): void {
         type="button"
         class="link"
         data-test="score-correction-close"
-        @click="reset"
+        @click="cancel"
       >
         Annuler
       </button>
