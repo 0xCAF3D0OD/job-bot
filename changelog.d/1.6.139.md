@@ -1,0 +1,1 @@
+Préparer et Postuler, parties communes : téléchargement et bouton occupé sans changer de largeur ni de couleur, zones de texte sans poignée, aération (§4), états « en préparation » dans l'audit téléphone

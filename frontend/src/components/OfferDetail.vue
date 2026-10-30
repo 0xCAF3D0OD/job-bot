@@ -6,7 +6,9 @@ import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { dateInList, dateInSentence } from "../dates";
 import { expiredText, gapSkill, plural, rateText, remoteText, sourceLabel } from "../format";
 import type { IconName } from "../icons";
+import ActionBar from "./ActionBar.vue";
 import AppIcon from "./AppIcon.vue";
+import BottomSheet from "./BottomSheet.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import ContactsPanel from "./ContactsPanel.vue";
@@ -17,6 +19,8 @@ import ScoreCorrection from "./ScoreCorrection.vue";
 import SidePanel from "./SidePanel.vue";
 import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
+import { useNarrow } from "../composables/usePhone";
+import { whyLine } from "../whyLine";
 
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
@@ -199,6 +203,20 @@ function pointParts(text: string): { key: string; rest: string } {
   const match = /^([^:]{1,40}?)\s?:\s+(.+)$/.exec(text.trim());
   return match ? { key: match[1]!, rest: match[2]! } : { key: "", rest: text };
 }
+// Sous 600 px, le panneau de commande (planche « Tri et panneau de commande ») : la note et son
+// pourquoi sur une ligne, « Préparer ma candidature », « Postuler chez l'employeur » en lien.
+const { phone: narrow } = useNarrow();
+// Sur téléphone, avec le panneau, « Cette note ne me correspond pas » passe dans « ⋯ » et s'ouvre dans
+// une feuille du bas ; la carte « Pourquoi » ne reste que pour le niveau ou une réserve sur la note.
+const withBar = computed(() => narrow.value && props.offer.status !== "applied");
+const scored = computed(() => props.offer.score !== null && props.offer.score !== undefined);
+const correcting = ref(false);
+const whyCard = computed(() => {
+  const o = props.offer;
+  if (!(o.summary_role || o.score_error || o.why)) return false;
+  if (!withBar.value) return true;
+  return !!o.level || !!scoreNote.value || !!o.summary_partial || !(o.summary_role || o.why);
+});
 const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_MAX));
 const gaps = computed(() => (props.offer.gaps ?? []).slice(0, POINTS_MAX));
 // Les annonces d'origine qui ne sont pas déjà le bouton « Postuler » (docs/45 : pas de doublon).
@@ -244,6 +262,9 @@ const menuItems = computed<MoreMenuItem[]>(() => {
         ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
         : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
     );
+  }
+  if (withBar.value && scored.value) {
+    items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "star", run: () => (correcting.value = true) });
   }
   if (assistant.available.value) {
     items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
@@ -404,7 +425,7 @@ watch(
         {{ expiredText(offer) }}
       </p>
       <div
-        v-if="offer.status !== 'applied'"
+        v-if="offer.status !== 'applied' && !narrow"
         class="detail-actions"
         data-test="triage"
       >
@@ -426,16 +447,61 @@ watch(
       </div>
     </section>
 
+    <BottomSheet
+      v-if="withBar && scored"
+      :open="correcting"
+      title="Corriger la note"
+      data-test="score-correction-sheet"
+      @close="correcting = false"
+    >
+      <ScoreCorrection
+        :offer-id="offer.id"
+        start-open
+        @changed="correcting = false; emit('changed')"
+        @cancel="correcting = false"
+      />
+    </BottomSheet>
+    <ActionBar v-if="withBar">
+      <div
+        v-if="offer.score !== null && offer.score !== undefined"
+        class="pick-score"
+        data-test="bar-score"
+      >
+        <ScoreWord :score="offer.score" />
+        <p
+          v-if="offer.why"
+          class="pick-why"
+        >
+          {{ whyLine(offer.why) }}
+        </p>
+      </div>
+      <RouterLink
+        :to="`/candidatures/offres/${offer.id}/preparer`"
+        class="button-link primary-link bar-main"
+        data-test="prepare"
+      >
+        {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+      </RouterLink>
+      <a
+        v-if="postLink"
+        :href="postLink.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="link bar-link"
+        :data-test="offer.employer_url ? 'employer' : 'apply'"
+      ><span class="with-icon">{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
+    </ActionBar>
+
     <!-- Pourquoi : la note, la phrase, « Cette note ne me correspond pas ». -->
     <section
-      v-if="offer.summary_role || offer.score_error || offer.why"
+      v-if="whyCard"
       class="detail-card"
       data-test="section-for-you"
     >
       <h3>Pourquoi</h3>
       <template v-if="offer.summary_role || offer.why">
         <div
-          v-if="offer.score !== null && offer.score !== undefined"
+          v-if="offer.score !== null && offer.score !== undefined && !withBar"
           class="detail-note"
           data-test="ai"
         >
@@ -453,7 +519,7 @@ watch(
           class="score-why"
           data-test="score-why"
         >
-          <p v-if="offer.why">
+          <p v-if="offer.why && !withBar">
             {{ offer.why }}
           </p>
           <p
@@ -475,7 +541,7 @@ watch(
         </p>
         <!-- « Cette note ne me correspond pas » (docs/114). -->
         <ScoreCorrection
-          v-if="offer.score !== null && offer.score !== undefined"
+          v-if="scored && !withBar"
           :offer-id="offer.id"
           @changed="emit('changed')"
         />
