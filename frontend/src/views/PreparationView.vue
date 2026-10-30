@@ -18,6 +18,7 @@ import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
+import FalseClaimSheet, { type FalseClaimMode } from "../components/FalseClaimSheet.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import FormField from "../components/FormField.vue";
 import GroupedList from "../components/GroupedList.vue";
@@ -34,6 +35,8 @@ import { expiredText, ofMonth } from "../format";
 import StatusPill from "../components/StatusPill.vue";
 import InlineConfirm from "../components/InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
+import { offerUndo } from "../composables/useUndo";
+import { sentencesAt, withoutSentence } from "../letterSentences";
 import PlanLimit from "../components/PlanLimit.vue";
 
 const { aiNote, reached, refresh: refreshPlan } = usePlan();
@@ -320,6 +323,108 @@ function resizeAll(): void {
 function onInput(event: Event): void {
   resize(event.target as HTMLTextAreaElement);
   edited();
+}
+
+// « Pas vrai » (demande de Kevin du 30.10.2026, repères de Design). Sur ordinateur, une sélection dans
+// un paragraphe s'étend aux phrases entières et un bouton « Pas vrai » paraît sous le paragraphe
+// (Maj + flèches pour sélectionner, puis Tab). Sur téléphone, la sélection native ouvre le menu du
+// système : toucher une phrase la choisit, et l'action passe dans le panneau. Puis la feuille
+// « Pas vrai » : retirer la phrase, ou la réécrire d'après le profil ; « Annuler » pendant 6 s.
+const claim = ref<{ index: number; sentence: string } | null>(null);
+const claimOpen = ref(false);
+const claimBusy = ref(false);
+const claimError = ref("");
+const flashed = ref<number | null>(null);
+function onSelect(index: number, event: Event): void {
+  const el = event.target as HTMLTextAreaElement;
+  const { selectionStart: from, selectionEnd: to, value } = el;
+  if (!narrow.value && from === to) {
+    if (claim.value?.index === index) claim.value = null;
+    return;
+  }
+  const sentence = sentencesAt(value, from, to);
+  claim.value = sentence ? { index, sentence } : null;
+}
+function clearClaim(): void {
+  claim.value = null;
+  claimOpen.value = false;
+  claimError.value = "";
+}
+// La seule phrase de la lettre ne se retire pas : elle se réécrit.
+const onlySentence = computed(() => {
+  const paragraphs = draft.value?.paragraphs.filter((p) => p.text.trim()) ?? [];
+  return paragraphs.length === 1 && paragraphs[0]!.text.trim() === claim.value?.sentence;
+});
+function flash(index: number): void {
+  flashed.value = index;
+  setTimeout(() => (flashed.value = null), 1200);
+}
+async function confirmClaim(mode: FalseClaimMode): Promise<void> {
+  const letter = selected.value;
+  const chosen = claim.value;
+  if (!letter || !chosen || !draft.value) return;
+  claimError.value = "";
+  if (mode === "remove") {
+    const paragraph = draft.value.paragraphs[chosen.index]!;
+    const before = { ...paragraph };
+    const rest = withoutSentence(before.text, chosen.sentence);
+    // Un paragraphe vidé disparaît ; « Annuler » le remet à sa place.
+    if (rest) paragraph.text = rest;
+    else draft.value.paragraphs.splice(chosen.index, 1);
+    const wasDirty = dirty.value;
+    clearClaim();
+    if (rest) flash(chosen.index);
+    void nextTick(resizeAll);
+    await offerUndo({
+      message: "Phrase retirée. jobA1 ne l'écrira plus.",
+      commit: async (keepalive) => {
+        const { data } = await api.POST("/api/letters/{draft_id}/false-claim", {
+          params: { path: { draft_id: letter.id } },
+          body: { sentence: chosen.sentence, mode: "remove" },
+          keepalive,
+        });
+        if (!data) return false;
+        letters.value = letters.value.map((l) => (l.id === data.letter.id ? data.letter : l));
+        // Sans autre modification en cours, la version enregistrée devient celle affichée.
+        if (!wasDirty && !dirty.value && selectedId.value === data.letter.id) select(data.letter);
+        return true;
+      },
+      restore: () => {
+        if (selectedId.value !== letter.id || !draft.value) return;
+        if (rest) draft.value.paragraphs[chosen.index]!.text = before.text;
+        else draft.value.paragraphs.splice(chosen.index, 0, before);
+        void nextTick(resizeAll);
+      },
+    });
+    return;
+  }
+  claimBusy.value = true;
+  try {
+    const { data, error: err } = await api.POST("/api/letters/{draft_id}/false-claim", {
+      params: { path: { draft_id: letter.id } },
+      body: { sentence: chosen.sentence, mode: "rewrite" },
+    });
+    if (!data) {
+      claimError.value = detail(err, "La réécriture a échoué, réessaie.");
+      return;
+    }
+    const reviewed = await reviewLetter(data.letter);
+    letters.value = [reviewed, ...letters.value];
+    clearClaim();
+    select(reviewed);
+    fresh.value = true;
+    setTimeout(() => (fresh.value = false), 1000);
+    void offerUndo({
+      message: "Phrase réécrite d'après ton profil.",
+      commit: () => true,
+      restore: async () => {
+        select(letter);
+        await api.DELETE("/api/forbidden-claims/{claim_id}", { params: { path: { claim_id: data.claim_id } } });
+      },
+    });
+  } finally {
+    claimBusy.value = false;
+  }
 }
 
 function sources(ids: number[]): string {
@@ -662,12 +767,26 @@ onMounted(() => void load());
             >
               <textarea
                 v-model="paragraph.text"
-                class="screen-only"
+                :class="['screen-only', { 'claim-flash': flashed === index }]"
                 rows="3"
                 :aria-label="`Paragraphe ${index + 1}`"
                 data-test="paragraph"
                 @input="onInput"
+                @select="onSelect(index, $event)"
+                @mouseup="onSelect(index, $event)"
+                @keyup="onSelect(index, $event)"
+                @click="narrow && onSelect(index, $event)"
               />
+              <button
+                v-if="!narrow && claim?.index === index"
+                type="button"
+                class="secondary small false-claim-button screen-only"
+                data-test="false-claim"
+                @mousedown.prevent
+                @click="claimOpen = true"
+              >
+                Pas vrai
+              </button>
               <p class="print-only">
                 {{ paragraph.text }}
               </p>
@@ -900,7 +1019,36 @@ onMounted(() => void load());
             @cancel="choosingWrite = false"
           />
           <PlanLimit usage="letter" />
-          <div class="action-bar-row prep-bar-row">
+          <template v-if="claim">
+            <p
+              class="action-bar-note false-claim-chosen"
+              data-test="false-claim-chosen"
+            >
+              « {{ claim.sentence }} »
+            </p>
+            <div class="action-bar-row">
+              <button
+                type="button"
+                class="secondary"
+                data-test="false-claim-cancel"
+                @click="clearClaim"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                class="primary"
+                data-test="false-claim-open"
+                @click="claimOpen = true"
+              >
+                Pas vrai
+              </button>
+            </div>
+          </template>
+          <div
+            v-else
+            class="action-bar-row prep-bar-row"
+          >
             <button
               v-if="selected"
               type="button"
@@ -981,6 +1129,16 @@ onMounted(() => void load());
     </div>
   </section>
 
+  <FalseClaimSheet
+    v-if="selected && claim"
+    :open="claimOpen"
+    :sentence="claim?.sentence ?? ''"
+    :busy="claimBusy"
+    :error="claimError"
+    :only-sentence="onlySentence"
+    @close="claimOpen = false; claimError = ''"
+    @confirm="confirmClaim"
+  />
   <SuccessCard
     v-if="sent"
     name="suivi-envoi"

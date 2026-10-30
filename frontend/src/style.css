@@ -3598,6 +3598,14 @@ main:focus { outline: none; }
 /* Préparer sur téléphone : la consigne d'une ligne dans le panneau ; les deux téléchargements de la
    feuille « Versions et téléchargement », de même largeur. */
 .prep-instruction-line { width: 100%; }
+/* « Pas vrai » : le bouton sous le paragraphe (ordinateur), la phrase citée en gris (feuille et
+   panneau, deux lignes au plus), puis le paragraphe corrigé brièvement surligné. */
+.false-claim-button { margin-top: var(--space-1); }
+.false-claim-quote { margin: 0 0 var(--space-4); color: var(--muted); line-height: var(--leading-normal); }
+.false-claim-chosen { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.letter-paragraph textarea.claim-flash { animation: claim-flash 1.2s var(--ease-out) both; }
+@keyframes claim-flash { from { background: var(--accent-soft); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .letter-paragraph textarea.claim-flash { animation: none; } }
 /* « Versions · Télécharger » à la largeur de son texte, jamais coupé ; « Rédiger » prend le reste.
    Sous 360 px, « Versions » seul. */
 .prep-bar-row:has(> :nth-child(2)) { grid-template-columns: max-content minmax(0, 1fr); grid-auto-flow: row; }
