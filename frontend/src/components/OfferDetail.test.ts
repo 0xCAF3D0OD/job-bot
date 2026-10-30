@@ -229,7 +229,9 @@ describe("OfferDetail sur téléphone (planche « Tri et panneau de commande »)
     await wrapper.find("[data-test=score-correction-menu]").trigger("click");
     const sheet = wrapper.find("[data-test=score-correction-sheet]");
     expect(sheet.find("[data-test=score-correction-open]").exists()).toBe(false);
-    expect(sheet.find(".score-correction-card").exists()).toBe(true);
+    expect(sheet.find(".score-correction-card.bare").exists()).toBe(true);
+    // Le ✕ de la feuille ferme : pas de « Annuler » en plus.
+    expect(sheet.text()).not.toContain("Annuler");
     // Avec un niveau, la carte reste, avec le niveau seul.
     const level = await mountDetail(offer({ score: 78, why: "x", summary_role: "x", level: "above", level_detail: "" }));
     expect(level.find("[data-test=section-for-you] [data-test=score-level]").exists()).toBe(true);

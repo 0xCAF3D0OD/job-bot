@@ -8,7 +8,8 @@ import { offerUndo } from "../composables/useUndo";
 // ou trop basse, pourquoi) ; puis un bloc de profil à relire, ou un critère en un clic. Rien
 // n'est appris en cachette : la correction passe par un bloc visible dans Profil, ou par un
 // critère. Envoyée au bout de 6 secondes, sauf « Annuler ».
-// `startOpen` : les deux questions tout de suite (dans la feuille du bas ouverte par « ⋯ », téléphone).
+// `startOpen` : dans la feuille du bas ouverte par « ⋯ » (téléphone) : les questions tout de suite,
+// sans cadre (pas de boîte dans la boîte) et sans « Annuler » (le ✕ de la feuille ferme).
 const props = withDefaults(defineProps<{ offerId: number; startOpen?: boolean }>(), { startOpen: false });
 const emit = defineEmits<{ changed: []; cancel: [] }>();
 
@@ -177,7 +178,7 @@ function applyChange(change: Change): void {
 
     <div
       v-else
-      class="score-correction-card"
+      :class="['score-correction-card', { bare: startOpen }]"
     >
       <p class="score-correction-question">
         <strong>Écart</strong>
@@ -282,6 +283,7 @@ function applyChange(change: Change): void {
             Ajouter à mon profil
           </button>
           <button
+            v-if="!startOpen"
             type="button"
             class="pill"
             data-test="score-correction-cancel"
@@ -321,6 +323,7 @@ function applyChange(change: Change): void {
           </RouterLink>
         </div>
         <button
+          v-if="!startOpen"
           type="button"
           class="link"
           @click="cancel"
@@ -337,7 +340,7 @@ function applyChange(change: Change): void {
         {{ error }}
       </p>
       <button
-        v-if="!block && !changes"
+        v-if="!block && !changes && !startOpen"
         type="button"
         class="link"
         data-test="score-correction-close"

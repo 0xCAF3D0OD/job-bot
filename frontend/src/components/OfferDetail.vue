@@ -450,7 +450,7 @@ watch(
     <BottomSheet
       v-if="withBar && scored"
       :open="correcting"
-      title="Cette note ne me correspond pas"
+      title="Corriger la note"
       data-test="score-correction-sheet"
       @close="correcting = false"
     >

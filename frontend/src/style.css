@@ -3591,6 +3591,8 @@ main:focus { outline: none; }
   .detail-column:has(.action-bar) .detail-panel { padding-bottom: calc(var(--action-bar-h) + var(--space-5)); }
 }
 .action-bar > .bar-link { align-self: flex-start; font-size: var(--font-body); }
+/* La correction de la note dans sa feuille du bas (fiche, téléphone) : sans cadre. */
+.score-correction-card.bare { padding: 0; background: none; border: 0; border-radius: 0; }
 /* « Préparer ma candidature » à la taille des autres boutons du panneau (Écarter, Garder, Relancer). */
 .action-bar > .bar-main { min-height: var(--control-h); font-size: var(--font-body); }
 
