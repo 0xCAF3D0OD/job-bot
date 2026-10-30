@@ -17,10 +17,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.api.routes import writing
-from jobbot.db.models import Application, Draft, DraftKind, Offer
+from jobbot.db.models import Application, Draft, DraftKind, ForbiddenClaim, Offer
 from jobbot.letters.document import Identity, LetterDocument, Recipient, assemble, to_docx
 from jobbot.letters.pdf import letter_to_pdf
 from jobbot.letters.service import load_identity
+from jobbot.llm import claims as claims_check
 from jobbot.llm import letter as letter_llm
 from jobbot.llm import letter_review
 from jobbot.llm.scoring import InvalidScore
@@ -110,6 +111,26 @@ class LetterRequest(BaseModel):
     instruction: Annotated[str, Field(max_length=500)] | None = None
     # Version à retravailler ; par défaut la plus récente.
     base_draft_id: int | None = None
+
+
+class FalseClaimIn(BaseModel):
+    """« Pas vrai » sur une phrase de la lettre : la retirer, ou la réécrire d'après le profil."""
+
+    sentence: Annotated[str, Field(min_length=3, max_length=2000)]
+    mode: Literal["remove", "rewrite"] = "remove"
+
+
+class FalseClaimOut(BaseModel):
+    # La version corrigée : la même (phrase retirée) ou une nouvelle (réécrite).
+    letter: LetterOut
+    # L'affirmation ajoutée aux interdits, pour « Annuler ».
+    claim_id: int
+
+
+class ForbiddenClaimOut(BaseModel):
+    id: int
+    text: str
+    created_at: datetime
 
 
 class LetterEdit(BaseModel):
@@ -216,14 +237,33 @@ async def list_letters(request: Request, offer_id: int) -> list[LetterOut]:
 )
 async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> LetterOut:
     """L'IA rédige une nouvelle version (quelques dizaines de secondes)."""
-    runtime = _runtime(request)
-    settings = runtime.settings
     instruction = (body.instruction or "").strip() or None
+    return await _write(
+        _runtime(request),
+        offer_id,
+        language=body.language,
+        base_draft_id=body.base_draft_id,
+        instruction=instruction,
+    )
+
+
+async def _write(
+    runtime: Runtime,
+    offer_id: int,
+    *,
+    language: letter_llm.Language | None,
+    base_draft_id: int | None,
+    instruction: str | None,
+    saved_instruction: str | None = None,
+) -> LetterOut:
+    """Une nouvelle version. `saved_instruction` : ce que la version montre comme consigne, quand
+    elle diffère de celle donnée à l'IA (« Pas vrai : … »)."""
+    settings = runtime.settings
     ctx = await writing.prepare(
         runtime,
         offer_id,
         DraftKind.LETTER,
-        base_draft_id=body.base_draft_id,
+        base_draft_id=base_draft_id,
         instruction=instruction,
         estimate_usd=LETTER_ESTIMATE_USD,
     )
@@ -232,10 +272,11 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
         settings.llm_writing_effort,
         ctx.chunks,
         ctx.offer,
-        language=body.language,
+        language=language,
         assessment=ctx.assessment,
         previous=ctx.previous,
         instruction=instruction,
+        forbidden=ctx.forbidden,
     )
     raw = await writing.call(
         runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
@@ -266,7 +307,7 @@ async def write_letter(request: Request, offer_id: int, body: LetterRequest) -> 
             DraftKind.LETTER,
             language=output.language,
             content=content,
-            instruction=instruction,
+            instruction=saved_instruction or instruction,
             model=raw.model,
             prompt_version=letter_llm.PROMPT_VERSION,
         )
@@ -299,6 +340,13 @@ def _same_letter(previous: dict[str, Any], content: dict[str, Any]) -> bool:
     return norm(base) == norm(content)
 
 
+def _flags(ctx: writing.WritingContext, letter: dict[str, Any]) -> list[claims_check.Flag]:
+    """Les phrases plus fortes que leur source, ou marquées « Pas vrai » (sans l'IA)."""
+    return claims_check.check(
+        letter, ctx.chunks, offer_text=ctx.offer.text or "", forbidden=ctx.forbidden
+    )
+
+
 async def _reviewed(
     runtime: Runtime,
     ctx: writing.WritingContext,
@@ -310,6 +358,7 @@ async def _reviewed(
     corrected: bool = False,
 ) -> letter_review.Review:
     settings = runtime.settings
+    flags = _flags(ctx, letter)
     params = letter_review.request_params(
         settings.llm_model,
         settings.llm_writing_effort,
@@ -318,12 +367,14 @@ async def _reviewed(
         letter,
         language=language,
         instruction=instruction,
+        flags=flags,
+        forbidden=ctx.forbidden,
     )
     raw = await writing.call(
         runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
     )
     try:
-        return letter_review.parse_review(raw.text, letter, corrected=corrected)
+        return letter_review.parse_review(raw.text, letter, corrected=corrected, flags=flags)
     except InvalidScore:
         raise writing.unusable() from None
 
@@ -338,7 +389,12 @@ async def _reviewed(
     },
 )
 async def review_letter(request: Request, draft_id: int) -> LetterOut:
-    """Relecture avant affichage : une relecture, au plus une correction, puis une relecture."""
+    """Relecture avant affichage : une relecture, au plus une correction, puis une relecture.
+
+    Chaque phrase est rapprochée de sa source (30.10.2026) : une affirmation plus forte que son
+    bloc est réécrite au niveau du bloc par le relecteur, ou retirée. Ce que le contrôle sans l'IA
+    signale encore à la fin est retiré : une lettre affichée ne dit jamais plus que le profil.
+    """
     runtime = _runtime(request)
     settings = runtime.settings
     async with runtime.sessionmaker() as session:
@@ -357,6 +413,8 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
     review = await _reviewed(
         runtime, ctx, letter, offer_id=offer_id, language=language, instruction=instruction
     )
+    letter = letter_review.apply_claims(letter, review)
+    fixed_claims = len(review.claims)
     if not review.all_ok:
         # Une seule correction automatique, puis une nouvelle relecture : jamais de boucle.
         params = letter_llm.request_params(
@@ -368,6 +426,7 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
             assessment=ctx.assessment,
             previous=letter,
             instruction=letter_review.correction_instruction(review),
+            forbidden=ctx.forbidden,
         )
         raw = await writing.call(
             runtime, params, offer_id=offer_id, kind=DraftKind.LETTER, rate=ctx.rate
@@ -387,21 +446,29 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
                 instruction=instruction,
                 corrected=True,
             )
-        # « Aucune invention » est bloquant : un paragraphe qui invente encore est retiré.
-        if review.failing("invention") and review.invented_paragraphs:
-            letter = letter_review.drop_invented(letter, review)
-            review = letter_review.Review(
-                [
-                    letter_review.Criterion(
-                        c.key, c.label, True, "Un fait absent de ton profil a été retiré."
-                    )
-                    if c.key == "invention"
-                    else c
-                    for c in review.criteria
-                ],
-                [],
-                corrected=True,
-            )
+            letter = letter_review.apply_claims(letter, review)
+            fixed_claims += len(review.claims)
+    # Ce qui reste plus fort que le profil est retiré ; « Aucune invention » le dit.
+    remaining = _flags(ctx, letter)
+    if remaining:
+        letter = claims_check.drop(letter, remaining)
+    if fixed_claims or remaining:
+        count = fixed_claims + len(remaining)
+        plural = "s" if count > 1 else ""
+        reason = (
+            f"{count} phrase{plural} plus forte{plural} que ton profil, "
+            f"corrigée{plural} ou retirée{plural}."
+        )
+        review = letter_review.Review(
+            [
+                letter_review.Criterion(c.key, c.label, True, reason)
+                if c.key == "invention" and not _flags(ctx, letter)
+                else c
+                for c in review.criteria
+            ],
+            review.claims,
+            corrected=True,
+        )
     async with runtime.sessionmaker.begin() as session:
         draft = await _get_draft(session, draft_id)
         draft.content = {**letter, "review": review.as_dict()}
@@ -414,8 +481,104 @@ async def review_letter(request: Request, draft_id: int) -> LetterOut:
         passed=review.passed,
         total=len(review.criteria),
         corrected=review.corrected,
+        claims=fixed_claims,
+        removed=len(remaining),
     )
     return out
+
+
+def _without(letter: dict[str, Any], sentence: str) -> dict[str, Any] | None:
+    """La lettre sans cette phrase (aux espaces près) ; None si elle n'y est pas."""
+    wanted = " ".join(sentence.split())
+    paragraphs = []
+    found = False
+    for paragraph in letter.get("paragraphs", []):
+        text = " ".join(paragraph["text"].split())
+        if not found and wanted in text:
+            found = True
+            text = " ".join(text.replace(wanted, " ").split())
+        if text:
+            paragraphs.append({**paragraph, "text": text})
+    if not found:
+        return None
+    return {**letter, "paragraphs": paragraphs}
+
+
+@router.post(
+    "/letters/{draft_id}/false-claim",
+    operation_id="markFalseClaim",
+    responses={
+        404: {"description": "Lettre introuvable"},
+        409: {"description": "Réécrire : IA non configurée, profil vide ou budget atteint"},
+        422: {"description": "Phrase introuvable dans cette version, ou seule phrase de la lettre"},
+    },
+)
+async def mark_false_claim(request: Request, draft_id: int, body: FalseClaimIn) -> FalseClaimOut:
+    """« Pas vrai » : la phrase rejoint les interdits du profil, puis elle est retirée de cette
+    version, ou réécrite d'après le profil dans une nouvelle version."""
+    runtime = _runtime(request)
+    sentence = " ".join(body.sentence.split())
+    async with runtime.sessionmaker.begin() as session:
+        draft = await _get_draft(session, draft_id)
+        offer_id, language = draft.offer_id, draft.language
+        without = _without(draft.content, sentence)
+        if without is None:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, "Phrase introuvable dans cette version."
+            )
+        if body.mode == "remove" and not without["paragraphs"]:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                "C'est la seule phrase de la lettre : rédige plutôt une nouvelle version.",
+            )
+        claim = ForbiddenClaim(text=sentence, draft_id=draft_id)
+        session.add(claim)
+        await session.flush()
+        claim_id = claim.id
+        if body.mode == "remove":
+            draft.content = without
+            draft.edited_at = datetime.now(UTC)
+            await session.flush()
+            await session.refresh(draft)
+            out = await _render(session, draft)
+    if body.mode == "rewrite":
+        out = await _write(
+            runtime,
+            offer_id,
+            language=language,  # type: ignore[arg-type]
+            base_draft_id=draft_id,
+            instruction=(
+                f"Cette phrase est fausse : « {sentence} ». Réécris-la au niveau exact de ce que "
+                "disent les blocs du profil, ou retire-la s'ils n'en disent rien. Ne change rien "
+                "d'autre."
+            ),
+            saved_instruction=f"Pas vrai : « {sentence} »"[:500],
+        )
+    log.info("letter_false_claim", draft_id=draft_id, mode=body.mode)
+    return FalseClaimOut(letter=out, claim_id=claim_id)
+
+
+@router.get("/forbidden-claims", operation_id="listForbiddenClaims")
+async def list_forbidden_claims(request: Request) -> list[ForbiddenClaimOut]:
+    """Les affirmations marquées « Pas vrai », les plus récentes d'abord."""
+    async with _runtime(request).sessionmaker() as session:
+        rows = await session.scalars(select(ForbiddenClaim).order_by(ForbiddenClaim.id.desc()))
+        return [ForbiddenClaimOut(id=c.id, text=c.text, created_at=c.created_at) for c in rows]
+
+
+@router.delete(
+    "/forbidden-claims/{claim_id}",
+    operation_id="deleteForbiddenClaim",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_forbidden_claim(request: Request, claim_id: int) -> Response:
+    """« Annuler », ou l'affirmation était vraie finalement : elle n'est plus interdite."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        claim = await session.get(ForbiddenClaim, claim_id)
+        if claim is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "affirmation introuvable")
+        await session.delete(claim)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.put("/letters/{draft_id}", operation_id="editLetter")

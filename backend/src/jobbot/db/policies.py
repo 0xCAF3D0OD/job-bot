@@ -33,6 +33,8 @@ PERSONAL = (
     "drafts",
     "evaluations",
     "extension_tokens",
+    # Les affirmations marquées « Pas vrai » dans une lettre (30.10.2026).
+    "forbidden_claims",
     "interview_practices",
     "interviews",
     "llm_batches",

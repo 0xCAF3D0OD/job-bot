@@ -1,0 +1,1 @@
+Lettres : une affirmation plus forte que le profil (en production, utilisateurs, chiffre, institution, rôle) est réécrite au niveau du bloc ou retirée ; la rédaction ne grossit plus un fait ; « Pas vrai » sur une phrase (côté serveur)

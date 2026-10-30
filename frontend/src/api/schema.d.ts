@@ -1725,9 +1725,74 @@ export interface paths {
         /**
          * Review Letter
          * @description Relecture avant affichage : une relecture, au plus une correction, puis une relecture.
+         *
+         *     Chaque phrase est rapprochée de sa source (30.10.2026) : une affirmation plus forte que son
+         *     bloc est réécrite au niveau du bloc par le relecteur, ou retirée. Ce que le contrôle sans l'IA
+         *     signale encore à la fin est retiré : une lettre affichée ne dit jamais plus que le profil.
          */
         post: operations["reviewLetter"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/letters/{draft_id}/false-claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark False Claim
+         * @description « Pas vrai » : la phrase rejoint les interdits du profil, puis elle est retirée de cette
+         *     version, ou réécrite d'après le profil dans une nouvelle version.
+         */
+        post: operations["markFalseClaim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/forbidden-claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Forbidden Claims
+         * @description Les affirmations marquées « Pas vrai », les plus récentes d'abord.
+         */
+        get: operations["listForbiddenClaims"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/forbidden-claims/{claim_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Forbidden Claim
+         * @description « Annuler », ou l'affirmation était vraie finalement : elle n'est plus interdite.
+         */
+        delete: operations["deleteForbiddenClaim"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4609,6 +4674,26 @@ export interface components {
             /** Count */
             count: number;
         };
+        /**
+         * FalseClaimIn
+         * @description « Pas vrai » sur une phrase de la lettre : la retirer, ou la réécrire d'après le profil.
+         */
+        FalseClaimIn: {
+            /** Sentence */
+            sentence: string;
+            /**
+             * Mode
+             * @default remove
+             * @enum {string}
+             */
+            mode: "remove" | "rewrite";
+        };
+        /** FalseClaimOut */
+        FalseClaimOut: {
+            letter: components["schemas"]["LetterOut"];
+            /** Claim Id */
+            claim_id: number;
+        };
         /** FillIdentity */
         FillIdentity: {
             /** Name */
@@ -4857,6 +4942,18 @@ export interface components {
             title: string;
             /** Accepted */
             accepted: boolean;
+        };
+        /** ForbiddenClaimOut */
+        ForbiddenClaimOut: {
+            /** Id */
+            id: number;
+            /** Text */
+            text: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** FundingExample */
         FundingExample: {
@@ -11542,6 +11639,102 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    markFalseClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FalseClaimIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FalseClaimOut"];
+                };
+            };
+            /** @description Lettre introuvable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réécrire : IA non configurée, profil vide ou budget atteint */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Phrase introuvable dans cette version, ou seule phrase de la lettre */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listForbiddenClaims: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ForbiddenClaimOut"][];
+                };
+            };
+        };
+    };
+    deleteForbiddenClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                claim_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
