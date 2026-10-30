@@ -900,7 +900,7 @@ onMounted(() => void load());
             @cancel="choosingWrite = false"
           />
           <PlanLimit usage="letter" />
-          <div class="action-bar-row">
+          <div class="action-bar-row prep-bar-row">
             <button
               v-if="selected"
               type="button"
@@ -908,7 +908,7 @@ onMounted(() => void load());
               data-test="versions-open"
               @click="versionsOpen = true"
             >
-              Versions · Télécharger
+              <span class="prep-versions-long">Versions · Télécharger</span><span class="prep-versions-short">Versions</span>
             </button>
             <BusyButton
               class="primary"

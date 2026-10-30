@@ -3598,6 +3598,11 @@ main:focus { outline: none; }
 /* Préparer sur téléphone : la consigne d'une ligne dans le panneau ; les deux téléchargements de la
    feuille « Versions et téléchargement », de même largeur. */
 .prep-instruction-line { width: 100%; }
+/* « Versions · Télécharger » à la largeur de son texte, jamais coupé ; « Rédiger » prend le reste.
+   Sous 360 px, « Versions » seul. */
+.prep-bar-row:has(> :nth-child(2)) { grid-template-columns: max-content minmax(0, 1fr); grid-auto-flow: row; }
+.prep-versions-short { display: none; }
+@media (max-width: 359px) { .prep-versions-long { display: none; } .prep-versions-short { display: inline; } }
 .sheet-actions > .prep-download { flex: 1 1 0; justify-content: center; }
 
 /* L'écran de tri (planche « Tri et panneau de commande ») : une colonne (--page-column) ; la
