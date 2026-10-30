@@ -2,16 +2,19 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { useUndo } from "../composables/useUndo";
 import PreparationView from "./PreparationView.vue";
 
 const GET = vi.fn();
 const POST = vi.fn();
 const PUT = vi.fn();
+const DELETE = vi.fn();
 vi.mock("../api/client", () => ({
   api: {
     GET: (...a: unknown[]) => GET(...a),
     POST: (...a: unknown[]) => POST(...a),
     PUT: (...a: unknown[]) => PUT(...a),
+    DELETE: (...a: unknown[]) => DELETE(...a),
   },
 }));
 afterEach(() => vi.resetAllMocks());
@@ -300,5 +303,137 @@ describe("barre de candidature", () => {
     expect(document.querySelector("[data-test=sent-moment]")!.textContent).toContain("Candidature envoyée chez Acme SA");
     // Comptée pour l'ORP ; le retour aux offres est dans la barre du haut (offre envoyée).
     expect(document.querySelector("[data-test=sent-moment]")!.textContent).not.toContain("Retour aux offres");
+  });
+});
+
+describe("Préparer sur téléphone (planche « Tri et panneau de commande »)", () => {
+  it("le panneau : langue, consigne, « Versions · Télécharger » (feuille) et « Rédiger »", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1), letter(12, 2, { instruction: "plus court" })]);
+    POST.mockResolvedValue({ data: letter(13, 3, { language: "de" }) });
+    const wrapper = await mountView();
+    const bar = wrapper.find("[data-test=action-bar]");
+    // La langue de la lettre est cochée tant qu'on n'en choisit pas d'autre.
+    expect(bar.find("[data-test=language-fr]").attributes("aria-checked")).toBe("true");
+    expect(bar.find("[data-test=instruction]").exists()).toBe(true);
+    expect(bar.find("[data-test=write]").text()).toContain("Rédiger");
+    // Les cartes de côté (rédiger, télécharger, versions) laissent place au panneau.
+    expect(wrapper.find("[data-test=download-card]").exists()).toBe(false);
+    await bar.find("[data-test=versions-open]").trigger("click");
+    const sheet = wrapper.find("[data-test=versions-sheet]");
+    expect(sheet.findAll("[data-test=sheet-version]")).toHaveLength(2);
+    expect(sheet.find("[data-test=pdf]").text()).toContain("Lettre (PDF)");
+    expect(sheet.find("[data-test=docx]").text()).toContain("Lettre (Word)");
+    // Choisir une langue, puis rédiger : la nouvelle version part dans cette langue.
+    await bar.find("[data-test=language-de]").trigger("click");
+    await bar.find("[data-test=write]").trigger("click");
+    await flushPromises();
+    const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    expect(opts.body).toMatchObject({ language: "de" });
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("« Pas vrai » (30.10.2026)", () => {
+  function choose(wrapper: Awaited<ReturnType<typeof mountView>>, index: number, from: number, to: number) {
+    const area = wrapper.findAll("[data-test=paragraph]")[index]!;
+    const el = area.element as HTMLTextAreaElement;
+    el.setSelectionRange(from, to);
+    return area.trigger("select");
+  }
+
+  it("ordinateur : la sélection s'étend à la phrase, « Pas vrai », retirer, « Annuler » pendant 6 s", async () => {
+    const two = letter(11, 1, {
+      paragraphs: [
+        { text: "Votre annonce a retenu mon attention.", chunk_ids: [] },
+        { text: "J'administre un cluster K3s. Il tourne en production à l'État de Vaud.", chunk_ids: [1] },
+      ],
+    });
+    mockGet([two]);
+    POST.mockResolvedValue({ data: { letter: { ...two, paragraphs: [two.paragraphs[0], { text: "J'administre un cluster K3s.", chunk_ids: [1] }] }, claim_id: 5 } });
+    const wrapper = await mountView();
+    const text = two.paragraphs[1]!.text;
+    await choose(wrapper, 1, text.indexOf("production"), text.indexOf("production") + 5);
+    await wrapper.find("[data-test=false-claim]").trigger("click");
+    const sheet = wrapper.find("[data-test=false-claim-sheet]");
+    expect(sheet.find("[data-test=false-claim-quote]").text()).toBe("« Il tourne en production à l'État de Vaud. »");
+    await sheet.find("[data-test=false-claim-confirm]").trigger("click");
+    await flushPromises();
+    // Retirée tout de suite à l'écran ; la demande part après 6 s, sauf « Annuler ».
+    const area = () => wrapper.findAll("[data-test=paragraph]")[1]!.element as HTMLTextAreaElement;
+    expect(area().value).toBe("J'administre un cluster K3s.");
+    expect(POST).not.toHaveBeenCalled();
+    await useUndo().undo();
+    await flushPromises();
+    expect(area().value).toBe(text);
+    await choose(wrapper, 1, text.indexOf("production"), text.indexOf("production") + 5);
+    await wrapper.find("[data-test=false-claim]").trigger("click");
+    await wrapper.find("[data-test=false-claim-confirm]").trigger("click");
+    await useUndo().flush();
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith(
+      "/api/letters/{draft_id}/false-claim",
+      expect.objectContaining({ body: { sentence: "Il tourne en production à l'État de Vaud.", mode: "remove" } }),
+    );
+  });
+
+  it("une phrase qui est tout le paragraphe : le paragraphe disparaît, « Annuler » le remet", async () => {
+    mockGet([letter(11, 1)]);
+    const wrapper = await mountView();
+    await choose(wrapper, 1, 0, 5);
+    await wrapper.find("[data-test=false-claim]").trigger("click");
+    await wrapper.find("[data-test=false-claim-confirm]").trigger("click");
+    await flushPromises();
+    // Aucun paragraphe vide ne reste à sa place.
+    expect(wrapper.findAll("[data-test=paragraph]")).toHaveLength(1);
+    expect(wrapper.findAll(".letter-paragraph")).toHaveLength(1);
+    await useUndo().undo();
+    await flushPromises();
+    const texts = wrapper.findAll("[data-test=paragraph]").map((p) => (p.element as HTMLTextAreaElement).value);
+    expect(texts).toEqual(["Votre annonce a retenu mon attention.", "J'administre un cluster K3s."]);
+  });
+
+  it("réécrire d'après le profil : une nouvelle version relue ; « Annuler » revient à l'ancienne", async () => {
+    const first = letter(11, 1);
+    mockGet([first]);
+    const rewritten = letter(12, 2, { instruction: "Pas vrai : « J'administre un cluster K3s. »" });
+    POST.mockImplementation((path: string) =>
+      Promise.resolve({ data: path.endsWith("/review") ? rewritten : { letter: rewritten, claim_id: 7 } }),
+    );
+    DELETE.mockResolvedValue({ response: { ok: true } });
+    const wrapper = await mountView();
+    await choose(wrapper, 1, 0, 5);
+    await wrapper.find("[data-test=false-claim]").trigger("click");
+    await wrapper.find("[data-test=false-claim-rewrite] input").setValue(true);
+    await wrapper.find("[data-test=false-claim-confirm]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith(
+      "/api/letters/{draft_id}/false-claim",
+      expect.objectContaining({ body: { sentence: "J'administre un cluster K3s.", mode: "rewrite" } }),
+    );
+    expect(POST).toHaveBeenCalledWith("/api/letters/{draft_id}/review", expect.anything());
+    expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).toContain("Pas vrai");
+    await useUndo().undo();
+    await flushPromises();
+    expect(DELETE).toHaveBeenCalledWith("/api/forbidden-claims/{claim_id}", { params: { path: { claim_id: 7 } } });
+    expect(wrapper.find(".versions [aria-current=page] .grouped-row-title").text()).not.toContain("Pas vrai");
+  });
+
+  it("téléphone : toucher une phrase la choisit, « Pas vrai » remplace « Rédiger » dans le panneau", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1)]);
+    const wrapper = await mountView();
+    const area = wrapper.findAll("[data-test=paragraph]")[1]!;
+    (area.element as HTMLTextAreaElement).setSelectionRange(3, 3);
+    await area.trigger("click");
+    const bar = wrapper.find("[data-test=action-bar]");
+    expect(bar.find("[data-test=false-claim-chosen]").text()).toBe("« J'administre un cluster K3s. »");
+    expect(bar.find("[data-test=write]").exists()).toBe(false);
+    // Une tâche à la fois : ni la langue ni la consigne pendant le choix.
+    expect(bar.find(".segmented").exists()).toBe(false);
+    expect(bar.find("[data-test=instruction]").exists()).toBe(false);
+    await bar.find("[data-test=false-claim-cancel]").trigger("click");
+    expect(wrapper.find("[data-test=action-bar] [data-test=write]").exists()).toBe(true);
+    vi.unstubAllGlobals();
   });
 });

@@ -4634,7 +4634,7 @@
           "letters"
         ],
         "summary": "Review Letter",
-        "description": "Relecture avant affichage : une relecture, au plus une correction, puis une relecture.",
+        "description": "Relecture avant affichage : une relecture, au plus une correction, puis une relecture.\n\nChaque phrase est rapprochée de sa source (30.10.2026) : une affirmation plus forte que son\nbloc est réécrite au niveau du bloc par le relecteur, ou retirée. Ce que le contrôle sans l'IA\nsignale encore à la fin est retiré : une lettre affichée ne dit jamais plus que le profil.",
         "operationId": "reviewLetter",
         "parameters": [
           {
@@ -4666,6 +4666,120 @@
           },
           "503": {
             "description": "IA momentanément indisponible"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/letters/{draft_id}/false-claim": {
+      "post": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Mark False Claim",
+        "description": "« Pas vrai » : la phrase rejoint les interdits du profil, puis elle est retirée de cette\nversion, ou réécrite d'après le profil dans une nouvelle version.",
+        "operationId": "markFalseClaim",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FalseClaimIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FalseClaimOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lettre introuvable"
+          },
+          "409": {
+            "description": "Réécrire : IA non configurée, profil vide ou budget atteint"
+          },
+          "422": {
+            "description": "Phrase introuvable dans cette version, ou seule phrase de la lettre"
+          }
+        }
+      }
+    },
+    "/api/forbidden-claims": {
+      "get": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "List Forbidden Claims",
+        "description": "Les affirmations marquées « Pas vrai », les plus récentes d'abord.",
+        "operationId": "listForbiddenClaims",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ForbiddenClaimOut"
+                  },
+                  "type": "array",
+                  "title": "Response Listforbiddenclaims"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/forbidden-claims/{claim_id}": {
+      "delete": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Delete Forbidden Claim",
+        "description": "« Annuler », ou l'affirmation était vraie finalement : elle n'est plus interdite.",
+        "operationId": "deleteForbiddenClaim",
+        "parameters": [
+          {
+            "name": "claim_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Claim Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -12845,6 +12959,48 @@
         ],
         "title": "Facet"
       },
+      "FalseClaimIn": {
+        "properties": {
+          "sentence": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Sentence"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "remove",
+              "rewrite"
+            ],
+            "title": "Mode",
+            "default": "remove"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sentence"
+        ],
+        "title": "FalseClaimIn",
+        "description": "« Pas vrai » sur une phrase de la lettre : la retirer, ou la réécrire d'après le profil."
+      },
+      "FalseClaimOut": {
+        "properties": {
+          "letter": {
+            "$ref": "#/components/schemas/LetterOut"
+          },
+          "claim_id": {
+            "type": "integer",
+            "title": "Claim Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "letter",
+          "claim_id"
+        ],
+        "title": "FalseClaimOut"
+      },
       "FillIdentity": {
         "properties": {
           "name": {
@@ -13548,6 +13704,30 @@
           "accepted"
         ],
         "title": "FollowedTrainingOut"
+      },
+      "ForbiddenClaimOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "text",
+          "created_at"
+        ],
+        "title": "ForbiddenClaimOut"
       },
       "FundingExample": {
         "properties": {

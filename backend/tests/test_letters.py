@@ -419,12 +419,16 @@ async def test_instruction_refused_or_without_effect(
     assert [v["version"] for v in versions] == [1]
 
 
-def review(failing: dict[str, str] | None = None, invented: list[int] | None = None) -> RawResult:
-    """Une relecture de l'IA : tout réussi, sauf les critères donnés (clé → raison)."""
+def review(
+    failing: dict[str, str] | None = None, claims: list[dict[str, Any]] | None = None
+) -> RawResult:
+    """Une relecture de l'IA : tout réussi, sauf les critères donnés (clé → raison) ; `claims` :
+    les phrases plus fortes que leur source (paragraphe, phrase, réécriture)."""
     failing = failing or {}
     keys = ["accroche", "pertinence", "precision", "conclusion", "invention", "consigne"]
     criteria = [{"key": k, "ok": k not in failing, "reason": failing.get(k, "Bien.")} for k in keys]
-    text = json.dumps({"criteria": criteria, "invented_paragraphs": invented or []})
+    found = [{"block": None, "quote": "", "rewrite": "", **c} for c in claims or []]
+    text = json.dumps({"criteria": criteria, "claims": found})
     return RawResult(text, "claude-opus-5", Usage(2000, 0, 0, 300), "end_turn")
 
 
@@ -463,7 +467,8 @@ async def test_review_corrects_once(api: AsyncClient, rt: Runtime, fake: FakeCli
         answer(chunk_id),
         review({"precision": "Des adjectifs vides, peu de faits."}),
         answer(
-            chunk_id, paragraphs=[{"text": "J'administre 12 nœuds K3s.", "chunk_ids": [chunk_id]}]
+            chunk_id,
+            paragraphs=[{"text": "J'administre des nœuds K3s avec Helm.", "chunk_ids": [chunk_id]}],
         ),
         review({"conclusion": "Pas de demande d'entretien."}),
     ]
@@ -472,7 +477,7 @@ async def test_review_corrects_once(api: AsyncClient, rt: Runtime, fake: FakeCli
     assert len(fake.params) == 4
     correction = fake.params[2]["messages"][0]["content"]
     assert "Précision : Des adjectifs vides" in correction
-    assert reviewed["paragraphs"][0]["text"] == "J'administre 12 nœuds K3s."
+    assert reviewed["paragraphs"][0]["text"] == "J'administre des nœuds K3s avec Helm."
     states = {c["key"]: c["ok"] for c in reviewed["review"]["criteria"]}
     # La seconde relecture fait foi, même avec un critère encore à revoir : pas de boucle.
     assert states["precision"] is True and states["conclusion"] is False
@@ -482,14 +487,15 @@ async def test_review_corrects_once(api: AsyncClient, rt: Runtime, fake: FakeCli
 
 
 async def test_review_removes_invention(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:
-    """« Aucune invention » est bloquant : le paragraphe qui invente encore est retiré."""
+    """« Aucune invention » est bloquant : une phrase qui invente encore est retirée."""
     offer_id, chunk_id = await setup_offer(rt)
     invented = {"invention": "« 10 ans chez Google » n'est dans aucun bloc."}
+    claim = {"paragraph": 2, "sentence": "J'administre un cluster K3s."}
     fake.response = [
         answer(chunk_id),
-        review(invented, invented=[2]),
+        review(invented, claims=[claim]),
         answer(chunk_id),
-        review(invented, invented=[2]),
+        review(invented, claims=[claim]),
     ]
     letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
     reviewed = (await api.post(f"/api/letters/{letter['id']}/review")).json()
@@ -497,4 +503,131 @@ async def test_review_removes_invention(api: AsyncClient, rt: Runtime, fake: Fak
     texts = [p["text"] for p in reviewed["paragraphs"]]
     assert "J'administre un cluster K3s." not in texts and texts
     invention = next(c for c in reviewed["review"]["criteria"] if c["key"] == "invention")
-    assert invention["ok"] is True and "retiré" in invention["reason"]
+    assert invention["ok"] is True and "retirée" in invention["reason"]
+
+
+KEVIN_SENTENCE = (
+    "alloremplacant.ch is a platform I built end to end and which runs in production for "
+    "compulsory schooling in the canton of Vaud."
+)
+
+
+async def setup_allo(rt: Runtime) -> tuple[int, int]:
+    """Un profil qui ne dit que « alloremplacant.ch, plateforme de remplacements »."""
+    offer_id, _ = await setup_offer(rt)
+    async with rt.sessionmaker.begin() as session:
+        chunk = ProfileChunk(
+            kind="experience",
+            title="Allô Remplaçant",
+            content="alloremplacant.ch, plateforme de remplacements",
+        )
+        session.add(chunk)
+        await session.flush()
+        return offer_id, chunk.id
+
+
+def allo_letter(chunk_id: int, extra: str = "") -> list[dict[str, Any]]:
+    return [
+        {"text": "Votre annonce a retenu mon attention.", "chunk_ids": []},
+        {"text": f"{KEVIN_SENTENCE} {extra}".strip(), "chunk_ids": [chunk_id]},
+    ]
+
+
+async def test_review_catches_the_exaggeration_the_ai_missed(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    """La phrase de la lettre de Kevin (30.10.2026), que la relecture laissait passer : le contrôle
+    sans l'IA la signale au relecteur, met « Aucune invention » à revoir, et la retire à la fin si
+    la correction ne l'a pas ramenée au niveau du profil."""
+    offer_id, allo = await setup_allo(rt)
+    paragraphs = allo_letter(allo, "The platform uses Vue and FastAPI.")
+    fake.response = [
+        answer(allo, paragraphs=paragraphs),
+        review(),  # l'IA ne voit rien
+        answer(allo, paragraphs=paragraphs),  # la correction ne change rien
+        review(),
+    ]
+    letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    reviewed = (await api.post(f"/api/letters/{letter['id']}/review")).json()
+    sent = json.dumps(fake.params[1], ensure_ascii=False)
+    assert "<signalements>" in sent and "production" in sent
+    correction = fake.params[2]["messages"][0]["content"]
+    assert "Aucune invention : Plus fort que ton profil" in correction
+    texts = " ".join(p["text"] for p in reviewed["paragraphs"])
+    assert "in production" not in texts and "The platform uses Vue and FastAPI." in texts
+    invention = next(c for c in reviewed["review"]["criteria"] if c["key"] == "invention")
+    assert invention["ok"] is True and "plus forte que ton profil" in invention["reason"]
+
+
+async def test_review_rewrites_a_claim_at_the_level_of_its_source(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    """Le relecteur cite le bloc et réécrit la phrase à son niveau : elle remplace l'ancienne."""
+    offer_id, allo = await setup_allo(rt)
+    rewrite = "I built alloremplacant.ch, a platform for substitute teachers."
+    claim = {"paragraph": 2, "sentence": KEVIN_SENTENCE, "block": allo, "rewrite": rewrite}
+    fake.response = [
+        answer(allo, paragraphs=allo_letter(allo)),
+        review({"invention": "« en production » n'est pas dans le bloc."}, claims=[claim]),
+        answer(allo, paragraphs=[allo_letter(allo)[0], {"text": rewrite, "chunk_ids": [allo]}]),
+        review(),
+    ]
+    letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    reviewed = (await api.post(f"/api/letters/{letter['id']}/review")).json()
+    assert reviewed["paragraphs"][1]["text"] == rewrite
+    assert all(c["ok"] for c in reviewed["review"]["criteria"])
+
+
+async def test_false_claim_removed_then_forbidden(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    """« Pas vrai » : la phrase est retirée de la version, et la rédaction suivante la reçoit
+    comme interdite ; « Annuler » la rend de nouveau permise."""
+    offer_id, allo = await setup_allo(rt)
+    fake.response = [answer(allo, paragraphs=allo_letter(allo, "The platform uses Vue."))]
+    letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    marked = await api.post(
+        f"/api/letters/{letter['id']}/false-claim", json={"sentence": f"  {KEVIN_SENTENCE} "}
+    )
+    assert marked.status_code == 200
+    body = marked.json()
+    assert body["letter"]["id"] == letter["id"]
+    assert [p["text"] for p in body["letter"]["paragraphs"]] == [
+        "Votre annonce a retenu mon attention.",
+        "The platform uses Vue.",
+    ]
+    claims = (await api.get("/api/forbidden-claims")).json()
+    assert [c["text"] for c in claims] == [KEVIN_SENTENCE]
+    fake.response = [answer(allo)]
+    await api.post(f"/api/offers/{offer_id}/letters", json={})
+    sent = fake.params[-1]["messages"][0]["content"]
+    assert "<interdits>" in sent and KEVIN_SENTENCE in sent
+    assert (await api.delete(f"/api/forbidden-claims/{body['claim_id']}")).status_code == 204
+    assert (await api.get("/api/forbidden-claims")).json() == []
+    missing = await api.post(
+        f"/api/letters/{letter['id']}/false-claim", json={"sentence": "Une phrase absente."}
+    )
+    assert missing.status_code == 422
+
+
+async def test_false_claim_rewritten_in_a_new_version(
+    api: AsyncClient, rt: Runtime, fake: FakeClient
+) -> None:
+    """« La réécrire d'après mon profil » : une nouvelle version, partie de celle-ci."""
+    offer_id, allo = await setup_allo(rt)
+    fake.response = [answer(allo, paragraphs=allo_letter(allo))]
+    letter = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    rewrite = "I built alloremplacant.ch, a platform for substitute teachers."
+    fake.response = [
+        answer(allo, paragraphs=[allo_letter(allo)[0], {"text": rewrite, "chunk_ids": [allo]}])
+    ]
+    marked = await api.post(
+        f"/api/letters/{letter['id']}/false-claim",
+        json={"sentence": KEVIN_SENTENCE, "mode": "rewrite"},
+    )
+    assert marked.status_code == 200
+    new = marked.json()["letter"]
+    assert new["version"] == 2 and new["paragraphs"][1]["text"] == rewrite
+    assert new["instruction"].startswith("Pas vrai : « alloremplacant.ch")
+    sent = fake.params[-1]["messages"][0]["content"]
+    assert "Cette phrase est fausse" in sent and "<interdits>" in sent

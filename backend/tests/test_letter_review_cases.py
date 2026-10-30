@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from jobbot.llm import letter_review
+from jobbot.llm import claims, letter_review
 from jobbot.llm.scoring import OfferData, ProfileChunkData
 from jobbot.scoring import service
 from tests.conftest import make_settings
@@ -22,8 +22,8 @@ PROFILE = [
         id=1,
         kind="experience",
         title="Ingénieur plateforme, Démo SA (2021-2025)",
-        content="Plateforme Kubernetes de 40 services ; déploiements de 2 jours à 20 minutes ; "
-        "astreintes avec Prometheus et Grafana.",
+        content="Plateforme Kubernetes de 40 services en production ; déploiements de 2 jours à "
+        "20 minutes ; astreintes avec Prometheus et Grafana.",
     ),
     ProfileChunkData(
         id=2,
@@ -98,6 +98,15 @@ CASES: dict[str, tuple[dict[str, Any], dict[str, bool]]] = {
         _letter(GOOD[0].replace(" : ", " — "), *GOOD[1:]),
         {"regles": False, "longueur": True},
     ),
+    # Un fait présent, grossi (30.10.2026) : la plateforme existe, pas ses clients ni sa production.
+    "exageree": (
+        _letter(
+            GOOD[0],
+            "Chez Démo SA, ma plateforme de 40 services sert 2 000 clients en production.",
+            *GOOD[2:],
+        ),
+        {"invention": False, "longueur": True, "regles": True},
+    ),
     "inventee": (
         _letter(
             GOOD[0],
@@ -117,6 +126,24 @@ def test_reference_letters_code_checks(name: str) -> None:
     for key in ("longueur", "regles"):
         if key in expected:
             assert checks[key][0] is expected[key], (name, key, checks[key][1])
+
+
+def test_reference_letters_claims_without_ai() -> None:
+    """Le contrôle des affirmations, sans l'IA : la bonne lettre passe, l'exagérée et l'inventée
+    sont signalées (la seconde par son chiffre et son rôle)."""
+    flagged = {
+        name
+        for name, (letter, _) in CASES.items()
+        if claims.check(
+            {**letter, "paragraphs": _cited(letter)}, PROFILE, offer_text=OFFER.text or ""
+        )
+    }
+    assert flagged == {"exageree", "inventee"}
+
+
+def _cited(letter: dict[str, Any]) -> list[dict[str, Any]]:
+    """Les paragraphes de référence ne citent pas de bloc : ils sont comparés au profil entier."""
+    return [{**p, "chunk_ids": []} for p in letter["paragraphs"]]
 
 
 def test_reviewer_never_receives_coordinates() -> None:
