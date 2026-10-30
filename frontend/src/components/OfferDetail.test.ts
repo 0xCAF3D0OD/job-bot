@@ -212,3 +212,37 @@ describe("la note expliquée (docs/121 §C.1-3)", () => {
     expect(wrapper.emitted("changed")).toHaveLength(1);
   });
 });
+
+describe("OfferDetail sur téléphone (planche « Tri et panneau de commande »)", () => {
+  it("le panneau du bas : la note et pourquoi, « Préparer ma candidature », « Postuler » en lien", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    const wrapper = await mountDetail(offer({ score: 78, why: "Kubernetes, Terraform et CI/CD : dans ton profil.", summary_role: "x" }));
+    expect(wrapper.find("[data-test=triage]").exists()).toBe(false);
+    const bar = wrapper.find("[data-test=action-bar]");
+    expect(bar.find("[data-test=bar-score]").text()).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
+    expect(bar.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
+    expect(bar.find("[data-test=apply]").classes()).toContain("link");
+    // La note et sa phrase sont dans le panneau : sans niveau, la carte « Pourquoi » disparaît, et
+    // « Cette note ne me correspond pas » passe dans « ⋯ », ouverte dans une feuille du bas.
+    expect(wrapper.find("[data-test=section-for-you]").exists()).toBe(false);
+    await wrapper.find("[data-test=more]").trigger("click");
+    await wrapper.find("[data-test=score-correction-menu]").trigger("click");
+    const sheet = wrapper.find("[data-test=score-correction-sheet]");
+    expect(sheet.find("[data-test=score-correction-open]").exists()).toBe(false);
+    expect(sheet.find(".score-correction-card.bare").exists()).toBe(true);
+    // Le ✕ de la feuille ferme : pas de « Annuler » en plus.
+    expect(sheet.text()).not.toContain("Annuler");
+    // Avec un niveau, la carte reste, avec le niveau seul.
+    const level = await mountDetail(offer({ score: 78, why: "x", summary_role: "x", level: "above", level_detail: "" }));
+    expect(level.find("[data-test=section-for-you] [data-test=score-level]").exists()).toBe(true);
+    expect(level.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("une offre où j'ai postulé : pas de panneau", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
+    const wrapper = await mountDetail(offer({ status: "applied" }));
+    expect(wrapper.find("[data-test=action-bar]").exists()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+});

@@ -348,3 +348,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.134 | Téléphone : le pied de page n'est plus caché sous le panneau de commande | livrée |
 | 1.6.135 | Filtres d'Offres sur téléphone : « Note minimale » en boutons radio (Toutes, Proche et plus, Très proche), ligne entière cliquable | livrée |
 | 1.6.136 | Test du Suivi : le jour figé, il ne dépend plus de la date où il tourne | livrée |
+| 1.6.137 | Offres : « Note minimale » partout (panneau de l'ordinateur, pastille du filtre actif), comme dans la feuille du téléphone | livrée |
+| 1.6.138 | Fiche d'une offre sur téléphone : la note et son pourquoi, « Préparer ma candidature » et « Postuler chez l'employeur » dans le panneau du bas | livrée |
+| 1.6.139 | Préparer et Postuler, parties communes : téléchargement et bouton occupé sans changer de largeur ni de couleur, zones de texte sans poignée, aération (§4), états « en préparation » dans l'audit téléphone | livrée |
