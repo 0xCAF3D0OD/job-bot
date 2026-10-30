@@ -19,6 +19,7 @@ import MaintenanceOverlay from "./components/MaintenanceOverlay.vue";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { useCollect } from "./composables/useCollect";
+import { useAutoGrow } from "./composables/useAutoGrow";
 import { useFileDownloads } from "./composables/useFileDownloads";
 import { useMaintenance } from "./composables/useMaintenance";
 import { useProfiles } from "./composables/useProfiles";
@@ -40,6 +41,7 @@ const { current: profile, main: mainProfile, choose } = useProfiles();
 const route = useRoute();
 // Fichiers préparés : le retour sur le lien lui-même (docs/59 §4).
 useFileDownloads();
+useAutoGrow();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
 const { last: lastJobsPage, check: checkJobsPage } = useJobsMemory();

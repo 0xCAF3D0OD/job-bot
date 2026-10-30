@@ -13,7 +13,7 @@ import pytest
 from playwright.sync_api import Page, sync_playwright
 
 sys.path.insert(0, str(Path(__file__).parent))
-from telephone import AUDIT
+from telephone import AUDIT, BUSY
 
 BASE = """
 <style>
@@ -243,3 +243,21 @@ def test_un_numero_plus_petit_a_cote_du_libelle_reste_sur_la_meme_ligne(page: Pa
     """
     assert audit(page, html) == []
 
+
+
+def test_preparation_simulee_releve_un_bouton_qui_s_elargit(page: Page) -> None:
+    page.set_content(BASE % """
+      <style>
+        a[download][data-file="preparing"]::after { content: " · Préparation…"; }
+        .busy-button .busy-label-on { display: none; }
+        .busy-button.busy .busy-label-on { display: inline; }
+      </style>
+      <p><a download href="/api/x" style="display:inline-block">Word</a></p>
+      <button class="busy-button">Rédiger<span class="busy-label-on"> · Rédaction en cours…</span></button>
+      <p><a download href="/api/y" style="display:inline-block;width:6rem">PDF</a></p>
+    """)
+    result = page.evaluate(BUSY)
+    assert result["count"] == 3
+    assert len(result["grown"]) == 2
+    assert "« Word" in result["grown"][0]
+    assert all("PDF" not in g for g in result["grown"])

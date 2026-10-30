@@ -15,6 +15,11 @@ Il échoue aussi si le libellé d'un segment, d'un onglet ou d'un bouton est cou
 que sa boîte, « … » par text-overflow, ou, pour un segment et un onglet, libellé sur deux lignes.
 Le message nomme le libellé et sa largeur (par exemple « Coordonnées » dans le Profil en 320 px).
 
+Les états « en préparation » sont vérifiés aussi, avec des données simulées puisque la démo n'a pas
+d'IA : sur chaque page qui a un bouton occupé (BusyButton) ou un téléchargement (`a[download]`), ils
+sont mis en préparation, puis la page est auditée de nouveau. Un bouton qui change de largeur en
+préparation est un défaut (« Word · Préparation… » sortait de sa carte).
+
     make demo                      # ou make demo-image (http://localhost:8280)
     cd backend && uv run --with playwright python ../frontend/scripts/telephone.py http://localhost:5200
 """
@@ -244,6 +249,29 @@ AUDIT = r"""() => {
 }""".replace("MIN", str(MIN_TARGET)).replace("COMFORT", str(COMFORT_TARGET))
 
 
+# Met en préparation les boutons occupés et les téléchargements, comme le ferait l'application, et
+# rend ceux qui ont changé de largeur.
+BUSY = r"""async () => {
+  const targets = [...document.querySelectorAll('.busy-button:not(.busy), a[download]:not([data-file])')]
+    .filter((e) => e.getBoundingClientRect().width > 1);
+  const before = targets.map((e) => e.getBoundingClientRect().width);
+  for (const e of targets) {
+    if (e.matches('.busy-button')) { e.classList.add('busy'); e.setAttribute('aria-disabled', 'true'); }
+    else { e.dataset.file = 'preparing'; e.dataset.size = ''; }
+  }
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const grown = [];
+  targets.forEach((e, i) => {
+    const after = e.getBoundingClientRect().width;
+    if (Math.abs(after - before[i]) > 1) {
+      const t = (e.innerText || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+      grown.push(`${e.tagName.toLowerCase()} « ${t} » change de largeur en préparation : ${Math.round(before[i])} → ${Math.round(after)} px`);
+    }
+  });
+  return { count: targets.length, grown };
+}"""
+
+
 async def open_bell(page: Page) -> bool | str:
     """Ouvre le panneau de la cloche ; False s'il n'y a pas de cloche, un défaut si on ne peut pas la toucher."""
     bell = page.locator("[data-test=bell]").first
@@ -272,18 +300,26 @@ async def main() -> int:
         for width in WIDTHS:
             page = await browser.new_page(viewport={"width": width, "height": HEIGHT}, has_touch=True, is_mobile=True)
             for path in PAGES + extra + PUBLIC:
-                for bell in (False, True):
+                for state in ("page", "cloche", "préparation"):
                     await page.goto(f"{BASE}/{path}")
                     await page.wait_for_timeout(1500)
                     if path in PUBLIC and f"/{path}" not in page.url:
                         break  # la démo connectée redirige : la page publique n'existe pas ici
-                    opened = await open_bell(page) if bell else True
+                    opened: bool | str = True
+                    grown: list[str] = []
+                    if state == "cloche":
+                        opened = await open_bell(page)
+                    elif state == "préparation":
+                        busy = await page.evaluate(BUSY)
+                        if not busy["count"]:
+                            continue
+                        grown = busy["grown"]
                     if opened is False:
                         continue
                     result = await page.evaluate(AUDIT)
                     faults = [opened] if isinstance(opened, str) else []
-                    faults = list(dict.fromkeys(faults + result["faults"]))
-                    where = f"/{path}" + (" (cloche ouverte)" if bell else "")
+                    faults = list(dict.fromkeys(faults + grown + result["faults"]))
+                    where = f"/{path}" + {"page": "", "cloche": " (cloche ouverte)", "préparation": " (en préparation, simulé)"}[state]
                     for warning in dict.fromkeys(result["warnings"]):
                         print(f"{width} px  {where}  avertissement : {warning}")
                         warned += 1

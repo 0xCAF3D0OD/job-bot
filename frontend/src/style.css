@@ -78,6 +78,9 @@
   --leading-none: 1;
   --leading-tight: 1.3;
   --leading-normal: 1.5;
+  /* Aération (§4, WCAG 1.4.12) : après un paragraphe, deux fois la taille du texte ; entre un libellé et sa valeur, un écart fixe. */
+  --paragraph-gap: 2em;
+  --label-gap: var(--space-2);
   color-scheme: light;
   font-family: "Figtree Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-weight: 400;
@@ -150,6 +153,8 @@ a:where(:not([class]), [class=""], .back-link, .hint):hover { color: var(--accen
   --field-10: 8rem;
   --header-max: 84rem;
 }
+/* Entre deux paragraphes de texte courant : deux fois la taille du texte (§4, Aération). */
+p + p { margin-block-start: var(--paragraph-gap); }
 /* 75 caractères par ligne au plus, à toutes les tailles d'écran (§3, Baymard : 50 à 75 ; WCAG 1.4.8 : 80). Baymard
    passe avant Material (40 à 60) dans l'ordre des références (§9) : 31 em partout. */
 p, dd, .orp-meeting-questions li, .extension-steps li, .site-suggestions li, .privacy-page li, .orp-month-lines li,
@@ -429,7 +434,9 @@ select.field-compact { padding-left: var(--space-4); border-radius: var(--radius
 /* `:root select` : au moins aussi fort que la règle commune des champs, pour que son `padding` n'écrase jamais la place du chevron. */
 :root select { appearance: none; -webkit-appearance: none; padding-right: var(--space-8); background-image: var(--field-chevron); background-repeat: no-repeat; background-position: right var(--space-3) center; background-size: 1.1rem; }
 /* Zone de texte : 3 lignes au moins, elle s'agrandit avec le contenu. */
-textarea { width: 100%; min-height: calc(3lh + 2 * var(--space-2) + 2px); resize: vertical; field-sizing: content; }
+/* Une zone de texte s'agrandit seule avec son contenu (planche « Champs ») : pas de poignée. Sans field-sizing
+   (Firefox), useAutoGrow ajuste la hauteur. */
+textarea { width: 100%; min-height: calc(3lh + 2 * var(--space-2) + 2px); resize: none; field-sizing: content; }
 input[type="number"] { width: 7rem; }
 .tag-input { display: grid; gap: var(--space-2); }
 .tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
@@ -582,7 +589,7 @@ p.badge.reason { margin: 0; }
 .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: var(--space-2); margin: 0; }
 .facts div { background: var(--band); border-radius: var(--radius); padding: var(--space-3) var(--space-3); }
 .facts dt { font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.facts dd { margin: var(--space-1) 0 0; font-weight: var(--weight-semibold); font-size: var(--font-title); }
+.facts dd { margin: var(--label-gap) 0 0; font-weight: var(--weight-semibold); font-size: var(--font-title); }
 
 /* --- Propositions de blocs (0.4.1) --- */
 
@@ -644,7 +651,7 @@ p.badge.reason { margin: 0; }
 .letter-date { margin-bottom: 1.8rem !important; }
 .letter-subject { font-weight: 700; display: flex; gap: 0.3rem; align-items: baseline; }
 .letter-subject input { flex: 1; font: inherit; font-weight: 700; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.1rem 0.25rem; }
-.letter-paragraph { margin-bottom: 0.9rem; }
+.letter-paragraph { margin-bottom: var(--paragraph-gap); }
 .letter-paragraph textarea { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.15rem 0.25rem; resize: none; overflow: hidden; text-align: left; }
 .letter-sheet input:hover, .letter-sheet textarea:hover { border-color: #d5d5e0; }
 .letter-sheet input:focus, .letter-sheet textarea:focus { outline: none; border-color: var(--accent); background: #fafaff; }
@@ -1158,7 +1165,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .form-sheet { margin: calc(var(--space-2) * -1) 0 var(--space-4); padding: var(--space-4) var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .form-sheet .hint { margin-bottom: var(--space-2); }
 .form-sheet-files { display: flex; gap: var(--space-4); margin: 0 0 var(--space-2); }
-.form-sheet dl { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: var(--space-1) var(--space-4); margin: 0; font-size: var(--font-small); }
+.form-sheet dl { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: var(--label-gap) var(--space-4); margin: 0; font-size: var(--font-small); }
 .form-sheet dt { color: var(--muted); }
 .form-sheet dd { margin: 0; display: flex; gap: var(--space-3); align-items: baseline; justify-content: space-between; min-width: 0; }
 .form-sheet dd span { overflow-wrap: anywhere; }
@@ -1913,14 +1920,19 @@ input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="
 .copy-done { display: inline-block; color: var(--ok-text); animation: copy-pop var(--t-state) var(--ease-out); }
 @keyframes copy-pop { from { transform: scale(0.85); opacity: 0.4; } }
 
-/* Fichier préparé par la plateforme (docs/59 §4) : le retour est sur le bouton lui-même. */
-a[download][data-file="preparing"] { pointer-events: none; color: var(--muted) !important; }
-a[download][data-file="preparing"]::before { content: ""; display: inline-block; width: 0.75em; height: 0.75em; margin-right: 0.4em; vertical-align: -0.08em; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: file-spin 0.8s linear infinite; }
-a[download][data-file="preparing"]::after { content: "· Préparation…"; margin-left: 0.3em; }
-a[download][data-file="done"]::before { content: ""; display: inline-block; width: 1em; height: 1em; margin-right: 0.3em; vertical-align: -0.15em; background: var(--ok-text); mask: var(--icon-done) center / contain no-repeat; }
-a[download][data-file="done"]:not([data-size=""])::after { content: "· " attr(data-size); margin-left: 0.3em; color: var(--muted); font-weight: var(--weight-regular); }
+/* Fichier préparé par la plateforme (docs/59 §4) : le retour est sur le bouton lui-même, qui garde sa largeur et sa
+   couleur. Pendant la préparation, son icône devient un indicateur ; prêt, une coche ; l'état et la taille sont
+   annoncés (useFileDownloads). Un lien sans icône (.with-icon) garde l'indicateur avant le libellé. */
+a[download][data-file="preparing"] { pointer-events: none; }
+a[download][data-file] .with-icon { position: relative; }
+a[download]:is([data-file="preparing"], [data-file="done"]) .with-icon > .icon:first-child { visibility: hidden; }
+a[download][data-file="preparing"] .with-icon::before { content: ""; position: absolute; left: 0; top: 50%; box-sizing: border-box; width: 1.1em; height: 1.1em; margin-top: -0.55em; border: 2px solid var(--border); border-top-color: currentColor; border-radius: 50%; animation: file-spin 0.8s linear infinite; }
+a[download][data-file="done"] .with-icon::before { content: ""; position: absolute; left: 0; top: 50%; width: 1.1em; height: 1.1em; margin-top: -0.55em; background: var(--ok-text); mask: var(--icon-done) center / contain no-repeat; }
+a[download][data-file="preparing"]:not(:has(.with-icon))::before { content: ""; display: inline-block; width: 0.75em; height: 0.75em; margin-right: 0.4em; vertical-align: -0.08em; border: 2px solid var(--border); border-top-color: currentColor; border-radius: 50%; animation: file-spin 0.8s linear infinite; }
+a[download][data-file="done"]:not(:has(.with-icon))::before { content: ""; display: inline-block; width: 1em; height: 1em; margin-right: 0.3em; vertical-align: -0.15em; background: var(--ok-text); mask: var(--icon-done) center / contain no-repeat; }
 a[download][data-file="failed"] { color: var(--orange-text) !important; }
 a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 0.3em; }
+@media (prefers-reduced-motion: reduce) { a[download][data-file="preparing"] :is(.with-icon)::before, a[download][data-file="preparing"]::before { animation-duration: 2.4s; } }
 @keyframes file-spin { to { transform: rotate(360deg); } }
 
 /* L'IA rédige (docs/59 §4) : une barre d'étapes, l'étape en cours en violet, les faites cochées. */
@@ -2413,7 +2425,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .practice-screen > .notice { margin: 0 var(--space-6) var(--space-2); }
 .practice-screen > .form-actions { padding: 0 var(--space-6) var(--space-4); margin: 0; }
 .practice-answer { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-6) var(--space-4); border-top: 1px solid var(--divider); }
-.practice-answer textarea { width: 100%; resize: vertical; min-height: 4.5rem; }
+.practice-answer textarea { width: 100%; min-height: 4.5rem; }
 .practice-answer-actions { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
 .practice-summary { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); padding-bottom: var(--space-4); border-bottom: 1px solid var(--divider); }
 .practice-summary h4, .practice-question h4 { margin: 0 0 var(--space-2); font-size: var(--font-small); }
@@ -3976,7 +3988,8 @@ html.search-open { overflow: hidden; }
 .busy-button > .busy-label { grid-area: 1 / 1; }
 .busy-button > .busy-label-on, .busy-button.busy > .busy-label:not(.busy-label-on) { visibility: hidden; }
 .busy-button.busy > .busy-label-on { visibility: visible; }
-.busy-button[aria-disabled="true"] { opacity: 0.6; cursor: progress; }
+/* Occupé, il garde sa couleur et son contraste : il n'a pas l'air désactivé (planche « Vide et chargement »). */
+.busy-button[aria-disabled="true"] { cursor: progress; }
 @media (prefers-reduced-motion: reduce) {
   .show-more .icon, .copy-button { transition: none; }
 }
@@ -4003,7 +4016,7 @@ html.search-open { overflow: hidden; }
 /* --- Formulaires (planche « Formulaires », règles §4) --- */
 /* Le champ commun : libellé semi-gras au-dessus, « (facultatif) » en gris, aide d'une ligne, champ,
    puis l'erreur sous le champ. */
-.form-field { display: grid; gap: var(--space-1); min-width: 0; align-content: start; }
+.form-field { display: grid; gap: var(--label-gap); min-width: 0; align-content: start; }
 .form-field-label { font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--text); line-height: var(--leading-normal); }
 .form-field-optional { font-weight: var(--weight-regular); color: var(--muted); }
 .form-field-hint { margin: 0; font-size: var(--font-small); color: var(--muted); line-height: var(--leading-normal); }
