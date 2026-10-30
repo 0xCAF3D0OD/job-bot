@@ -3603,7 +3603,7 @@ main:focus { outline: none; }
 .prep-bar-row:has(> :nth-child(2)) { grid-template-columns: max-content minmax(0, 1fr); grid-auto-flow: row; }
 .prep-versions-short { display: none; }
 @media (max-width: 359px) { .prep-versions-long { display: none; } .prep-versions-short { display: inline; } }
-.sheet-actions > .prep-download { flex: 1 1 0; justify-content: center; }
+.sheet-actions > .prep-download { flex: 1 1 0; justify-content: center; min-height: var(--control-h); font-size: var(--font-body); }
 
 /* L'écran de tri (planche « Tri et panneau de commande ») : une colonne (--page-column) ; la
    progression en haut ; la carte comme la fiche ; « Écarter » et « Garder » chacun sur la moitié, les
