@@ -4223,3 +4223,22 @@ html.search-open { overflow: hidden; }
   .offers-toolbar { flex-wrap: wrap; }
   .offers-toolbar-search { flex: 1 1 100%; }
 }
+
+/* Le test utilisateurs (page plateforme) : le numéro du compte et sa date d'inscription, puis une
+   durée par étape ; des nombres alignés à droite, lisibles en 390 px. */
+.milestones-table { justify-self: stretch; align-self: stretch; width: 100%; border: 0; border-radius: 0; background: none; }
+.milestones-table th[scope="row"] { font-size: var(--font-small); color: var(--text); }
+.milestones-since { display: block; margin-top: var(--space-1); color: var(--muted); font-weight: var(--weight-regular); font-size: var(--font-caption); }
+.milestones-table td { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.milestones-table thead th:not(:first-child) { text-align: right; }
+/* Le tableau suit les bords du texte de la carte (le padding des lignes) ; pas de filet sous la
+   dernière ligne. */
+.milestones-table :is(th, td):first-child { padding-left: var(--space-6); }
+.milestones-table :is(th, td):last-child { padding-right: var(--space-6); }
+.milestones-table tbody tr:last-child > :is(th, td) { border-bottom: none; }
+@media (max-width: 820px) {
+  .runs.milestones-table { display: table; overflow: visible; }
+  .milestones-table :is(th, td):first-child { padding-left: var(--space-4); }
+  .milestones-table :is(th, td):last-child { padding-right: var(--space-4); }
+}
+@media (max-width: 599px) { .milestones-table :is(th, td):not(:first-child):not(:last-child) { padding-inline: var(--space-2); } }
