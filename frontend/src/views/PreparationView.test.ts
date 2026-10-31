@@ -302,3 +302,31 @@ describe("barre de candidature", () => {
     expect(document.querySelector("[data-test=sent-moment]")!.textContent).not.toContain("Retour aux offres");
   });
 });
+
+describe("Préparer sur téléphone (planche « Tri et panneau de commande »)", () => {
+  it("le panneau : langue, consigne, « Versions · Télécharger » (feuille) et « Rédiger »", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1), letter(12, 2, { instruction: "plus court" })]);
+    POST.mockResolvedValue({ data: letter(13, 3, { language: "de" }) });
+    const wrapper = await mountView();
+    const bar = wrapper.find("[data-test=action-bar]");
+    // La langue de la lettre est cochée tant qu'on n'en choisit pas d'autre.
+    expect(bar.find("[data-test=language-fr]").attributes("aria-checked")).toBe("true");
+    expect(bar.find("[data-test=instruction]").exists()).toBe(true);
+    expect(bar.find("[data-test=write]").text()).toContain("Rédiger");
+    // Les cartes de côté (rédiger, télécharger, versions) laissent place au panneau.
+    expect(wrapper.find("[data-test=download-card]").exists()).toBe(false);
+    await bar.find("[data-test=versions-open]").trigger("click");
+    const sheet = wrapper.find("[data-test=versions-sheet]");
+    expect(sheet.findAll("[data-test=sheet-version]")).toHaveLength(2);
+    expect(sheet.find("[data-test=pdf]").text()).toContain("Lettre (PDF)");
+    expect(sheet.find("[data-test=docx]").text()).toContain("Lettre (Word)");
+    // Choisir une langue, puis rédiger : la nouvelle version part dans cette langue.
+    await bar.find("[data-test=language-de]").trigger("click");
+    await bar.find("[data-test=write]").trigger("click");
+    await flushPromises();
+    const [, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
+    expect(opts.body).toMatchObject({ language: "de" });
+    vi.unstubAllGlobals();
+  });
+});
