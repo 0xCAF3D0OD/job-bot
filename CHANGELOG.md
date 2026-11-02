@@ -361,3 +361,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.147 | Le visage du chargement de page (FaceTransform) se transforme une seule fois au lieu de tourner en boucle (WCAG 2.2.2) | livrée |
 | 1.6.148 | Les couleurs de la nouvelle identité (fond crème, sombre chaud, bleu #2445C2 pour l'action) en variables partagées par le téléphone et l'ordinateur, avec les anciens noms en alias | livrée |
 | 1.6.149 | Sur le téléphone, la barre du bas passe à cinq onglets libellés (Accueil, Candidatures, Assistant, Bilan, Compte) ; l'onglet actif est un rond bleu posé dans un creux de la barre | livrée |
+| 1.6.150 | Sur le téléphone, l'en-tête suit la nouvelle identité : le logo et la cloche sur l'Accueil, le logo et le titre de la page sur Candidatures, Bilan, Réglages et Profil ; la loupe et le menu du compte quittent l'en-tête (le compte est un onglet de la barre du bas) | livrée |
