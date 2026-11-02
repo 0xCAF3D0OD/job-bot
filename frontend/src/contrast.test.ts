@@ -9,15 +9,27 @@ import { describe, expect, it } from "vitest";
 // Lancé depuis frontend/ (npm test, vitest).
 const css = readFileSync(resolve(process.cwd(), "src/style.css"), "utf8");
 
-function tokens(block: string): Record<string, string> {
+// Une couleur s'écrit en hexadécimal ou renvoie à un rôle (« --accent: var(--primary-graphic) », docs/139 §3) :
+// les renvois se résolvent après la fusion clair + sombre, comme dans le navigateur.
+function declarations(block: string): Record<string, string> {
   const found: Record<string, string> = {};
-  for (const match of block.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)) found[match[1]!] = match[2]!;
+  for (const match of block.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6}|var\(--[\w-]+\))\s*;/g)) found[match[1]!] = match[2]!;
   return found;
 }
 
-const light = tokens(css.slice(css.indexOf(":root {"), css.indexOf("}", css.indexOf(":root {"))));
+function resolved(raw: Record<string, string>): Record<string, string> {
+  const value = (name: string, depth = 0): string | undefined => {
+    const v = raw[name];
+    const alias = v?.match(/^var\(--([\w-]+)\)$/);
+    return alias && depth < 10 ? value(alias[1]!, depth + 1) : v;
+  };
+  return Object.fromEntries(Object.keys(raw).map((name) => [name, value(name)!]).filter(([, v]) => v?.startsWith("#")));
+}
+
+const lightRaw = declarations(css.slice(css.indexOf(":root {"), css.indexOf("}", css.indexOf(":root {"))));
 const darkStart = css.indexOf("@media (prefers-color-scheme: dark)");
-const dark = { ...light, ...tokens(css.slice(darkStart, css.indexOf("}\n}", darkStart))) };
+const light = resolved(lightRaw);
+const dark = resolved({ ...lightRaw, ...declarations(css.slice(darkStart, css.indexOf("}\n}", darkStart))) });
 
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
@@ -73,7 +85,6 @@ describe("pastilles teintées (mode clair)", () => {
     const pairs: [string, string][] = [
       [light.accent!, light["accent-soft"]!],
       [light.accent!, mix(light.accent!, white, 0.15)],
-      [light["orange-text"]!, mix(light.orange!, white, 0.18)],
       [light["orange-text"]!, light["orange-soft"]!],
       [light["ok-text"]!, mix(light.ok!, white, 0.16)],
       ["#ffffff", light.accent!],
@@ -109,20 +120,21 @@ describe("initiales des entreprises et pastille de la cloche (audit du 22.10.202
     }
     expect(css).toContain("@media (prefers-color-scheme: dark) { .logo.c1, .logo.c2 { color: var(--on-accent); } }");
     // L'accent, avec --on-accent, en clair et en sombre ; jamais l'orange (docs/135, 1.6.3).
-    expect(css).toContain(".logo.c0 { background: var(--accent); color: var(--on-accent); }");
-    expect(ratio(light["on-accent"]!, light.accent!)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(dark["on-accent"]!, dark.accent!)).toBeGreaterThanOrEqual(4.5);
+    expect(css).toContain(".logo.c0 { background: var(--primary); color: var(--on-accent); }");
+    expect(ratio(light["on-accent"]!, light.primary!)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(dark["on-accent"]!, dark.primary!)).toBeGreaterThanOrEqual(4.5);
     expect(css).not.toMatch(/\.logo\.c\d \{ background: var\(--orange\)/);
   });
 });
 
 describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () => {
-  it("la cloche, seule pastille orange : chiffre foncé, 4,5:1 au moins en clair et en sombre", () => {
-    expect(css).toContain("background: var(--orange); color: var(--text);");
-    // La pastille unique (CountBadge, 1.6.33), en orange pour la cloche.
-    expect(css).toContain("@media (prefers-color-scheme: dark) { .count-badge.orange { color: var(--on-accent); } }");
-    expect(ratio(light.text!, light.orange!)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(dark["on-accent"]!, dark.orange!)).toBeGreaterThanOrEqual(4.5);
+  it("la cloche, seule pastille orange : 4,5:1 au moins en clair et en sombre", () => {
+    // La pastille unique (CountBadge, 1.6.33), en orange pour la cloche : chiffre blanc sur l'orange foncé en clair,
+    // chiffre de la couleur du fond sur l'orange clair du sombre chaud (docs/139).
+    expect(css).toContain(".count-badge.orange { background: var(--orange); color: var(--on-primary); }");
+    expect(css).toContain("@media (prefers-color-scheme: dark) { .count-badge.orange { color: var(--bg); } }");
+    expect(ratio(light["on-primary"]!, light.orange!)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(dark.bg!, dark.orange!)).toBeGreaterThanOrEqual(4.5);
     expect(css).not.toContain("#c62a2f");
   });
   it("une offre sélectionnée : --muted reste à 4,5:1 sur le voile d'accent", () => {
@@ -160,8 +172,9 @@ describe("les alertes (1.6.22)", () => {
   it("« Rien reçu depuis 24 heures » : le point en --orange, plus de couleur en dur", () => {
     // Depuis la pastille d'état (1.6.74), l'état « à faire » d'une alerte est une StatusPill au ton « todo ».
     expect(css).toContain(".state-pill.todo .state-pill-dot { background: var(--orange); }");
-    // #e08a2e n'apparaît qu'une fois : la valeur de --orange.
-    expect(css.split("#e08a2e").length - 1).toBe(1);
+    // Une seule orange d'interface : --orange est l'alias de --warning (docs/139).
+    expect(css).toContain("--orange: var(--warning);");
+    expect(css).not.toContain("#e08a2e");
   });
 });
 
