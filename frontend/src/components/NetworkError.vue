@@ -8,6 +8,9 @@ import FaceState from "./FaceState.vue";
 // échoue pour une raison de réseau. jobA1 réessaie de lui-même dès que le réseau revient (l'événement
 // « online » du navigateur) : la phrase le promet parce que c'est vrai ; « Réessayer » le fait tout de
 // suite. Rien de ce qui est saisi n'est effacé.
+// `title` et `line` (téléphone, maquette ErreurConnexion) : le visage au lieu de l'illustration, une phrase
+// propre à la page, et « Réessayer » en bouton principal.
+const props = defineProps<{ title?: string; line?: string }>();
 const emit = defineEmits<{ retry: [] }>();
 
 function back(): void {
@@ -19,15 +22,16 @@ onUnmounted(() => globalThis.removeEventListener?.("online", back));
 
 <template>
   <FaceState
-    title="Pas de connexion"
-    illustration="connexion-perdue"
+    :title="props.title ?? 'Pas de connexion'"
+    :illustration="props.title ? undefined : 'connexion-perdue'"
+    mood="attentif"
     data-test="network-error"
   >
-    <p>jobA1 réessaie dès que le réseau revient. Ce que tu as saisi est gardé.</p>
+    <p>{{ props.line ?? "jobA1 réessaie dès que le réseau revient. Ce que tu as saisi est gardé." }}</p>
     <div class="face-state-actions">
       <button
         type="button"
-        class="secondary"
+        :class="props.title ? 'primary' : 'secondary'"
         data-test="network-retry"
         @click="emit('retry')"
       >

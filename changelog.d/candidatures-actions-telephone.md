@@ -1,0 +1,1 @@
+Candidatures sur téléphone : un bouton « ⋯ » sur chaque carte ouvre ses actions (écarter l'offre, marquer comme envoyée), et les écrans « Aucune offre avec ces filtres » et « Connexion perdue » suivent la maquette.
