@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1, accueil format Smilebaton</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+@keyframes navDot{from{transform:translateY(14px) scale(.7);opacity:.3}to{transform:none;opacity:1}}.nav-dot{animation:navDot .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}@media (prefers-reduced-motion: reduce){.nav-dot{animation:none}}
+@keyframes navTab{from{transform:translateY(22px)}to{transform:translateY(0)}}@keyframes navIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.nav-tab{animation:navTab .32s cubic-bezier(.2,0,0,1) both}.nav-in{animation:navIn .3s cubic-bezier(.2,0,0,1) .08s both}@media (prefers-reduced-motion: reduce){.nav-tab,.nav-in{animation:none}}
+/*jaMotion*/button,a,input,[role=tab],[role=radio],[role=switch]{transition:background-color .2s cubic-bezier(.2,0,0,1),color .2s,border-color .2s,box-shadow .2s,transform .12s}button:active,a:active{transform:scale(.97)}@media (prefers-reduced-motion: reduce){button,a,input{transition:none}button:active,a:active{transform:none}}
+body{margin:0}
+a{color:#2445C2}a:hover{color:#1A3496}
+@keyframes jaWave{from{transform:translateX(0)}to{transform:translateX(-50px)}}
+@keyframes jaRise{from{transform:translateY(100px)}to{transform:translateY(0)}}
+.ja-wave{animation:jaWave 1.4s linear 2}
+.ja-rise{animation:jaRise 1.2s cubic-bezier(.2,.8,.2,1) both}
+.ob-scribble path{stroke-dasharray:1;stroke-dashoffset:0;animation:obDraw 1s .45s cubic-bezier(.45,0,.55,1) both}
+@keyframes obDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.ob-hand{animation:obWrite 1s 1.4s steps(22,end) both}
+@keyframes obWrite{from{clip-path:inset(-30% 100% -30% -10%)}to{clip-path:inset(-30% -10% -30% -10%)}}
+@media (prefers-reduced-motion: reduce){.ja-wave,.ja-rise{animation:none}.ob-scribble path{animation:none;stroke-dashoffset:0}.ob-hand{animation:none;clip-path:none}}
+@keyframes navUp{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.nav-active{animation:navUp .28s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion: reduce){.nav-active{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+
+<main style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column">
+
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 14px 12px 0 20px">
+<svg width="34" height="34" viewBox="8 8 86 86" role="img" aria-label="jobA1"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="45" r="10" fill="#2445C2"></circle><circle cx="76" cy="41" r="10" fill="#E8B48A"></circle><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+<div style="display: flex; align-items: center; gap: 4px">
+<a href="Notifications.dc.html" aria-label="Notifications, 4 non lues" style="text-decoration: none; position: relative; width: 44px; height: 44px; background: transparent; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: #1B1F2A;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg><span style="position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 5px; background: #2445C2; border: 2px solid #F7F5F0"></span></a>
+
+</div>
+</header>
+
+<div style="padding: 22px 22px 46px">
+<h1 style="margin: 0; font-size: 42px; line-height: 48px; font-weight: 800; letter-spacing: -1.2px">Bonjour Kevin.</h1>
+<sc-if value="{{tagline}}" hint-placeholder-val="{{ false }}">
+<p style="margin: 14px 0 0; font-size: 22px; line-height: 30px; font-weight: 700; color: #474C59">Less <span style="position: relative; display: inline-block; white-space: nowrap"><s style="text-decoration: none">searching,</s><svg class="ob-scribble" aria-hidden="true" viewBox="0 0 200 40" preserveAspectRatio="none" style="position: absolute; left: -8px; top: 50%; width: calc(100% + 16px); height: 1.05em; margin-top: -0.48em; overflow: visible; opacity: 0.92"><path pathLength="1" d="M2.0 22.0 L10.3 3.9 L14.3 34.2 L18.8 6.0 L25.4 31.4 L32.0 8.0 L37.6 34.8 L43.0 5.4 L46.3 36.2 L51.3 3.7 L58.9 32.1 L65.3 5.2 L69.4 31.4 L76.8 5.6 L83.5 33.7 L91.0 7.2 L97.9 34.2 L104.0 4.7 L107.5 33.5 L111.6 5.9 L119.2 35.6 L126.6 4.9 L132.6 34.5 L140.0 8.7 L146.7 31.4 L152.9 9.0 L157.4 33.3 L161.2 5.8 L166.3 31.4 L170.3 4.5 L178.0 31.5 L184.3 8.3 L191.1 32.7 L196.7 8.3 L198.0 32.1 M196 14 C 150 30, 90 6, 40 26 S 8 18, 4 30" fill="none" stroke="#F09A66" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></svg></span><br><span class="ob-hand" style="display: inline-block; margin-top: 2px; font-family: 'Caveat Brush', Caveat, cursive; font-weight: 400; font-size: 46px; line-height: 46px; color: #2445C2; transform: rotate(-3deg)">more living.</span></p>
+</sc-if>
+</div>
+
+<section aria-labelledby="s-orp" style="position: relative; margin-top: -10px; padding: 26px 22px 64px; background: #E8ECFB; color: #1B1F2A; border-radius: 34px 34px 0 0">
+<h2 id="s-orp" style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 800; letter-spacing: -0.8px">ORP</h2>
+<a href="Orp.dc.html" style="margin-top: 18px; display: flex; align-items: center; gap: 18px; text-decoration: none; color: #1B1F2A">
+<svg width="104" height="104" viewBox="0 0 100 100" role="img" aria-label="2 recherches validées sur 10"><defs><clipPath id="sbOrp"><circle cx="50" cy="50" r="44"></circle></clipPath></defs><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><g clip-path="url(#sbOrp)"><g class="ja-rise"><g transform="translate(0 72)"><path class="ja-wave" d="M -100 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 L 200 120 L -100 120 Z" fill="#C9D3F6" stroke="#2445C2" stroke-width="2.5"></path></g></g></g><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="3.5"></circle><text x="50" y="59" text-anchor="middle" font-family="Figtree, sans-serif" font-size="26" font-weight="800" fill="#1B1F2A" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round" paint-order="stroke">2/10</text></svg>
+<span style="flex: 1; font-size: 20px; line-height: 26px; font-weight: 800">Encore 8 d'ici<br>le 30&nbsp;nov.</span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+</a>
+</section>
+
+<section aria-labelledby="s-off" style="position: relative; margin-top: -34px; padding: 26px 0 64px; background: #FDEDE3; border-radius: 34px 34px 0 0">
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 12px 0 22px">
+<h2 id="s-off" style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 800; letter-spacing: -0.8px">Offres</h2>
+<a href="Candidatures.dc.html" style="min-height: 44px; display: flex; align-items: center; padding: 0 10px; font-size: 15px; font-weight: 700; text-decoration: none; color: #1A3496">Tout voir</a>
+</div>
+<div role="region" aria-label="Offres du jour, défilement horizontal" style="margin-top: 14px; display: flex; gap: 12px; overflow-x: auto; padding: 0 22px 4px; scroll-padding-left: 22px; scroll-snap-type: x mandatory; overscroll-behavior-x: contain">
+<a href="Offre.dc.html" style="flex: none; width: 272px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #FFFFFF; border: 1px solid #F2D8C6; border-radius: 18px; text-decoration: none; color: #1B1F2A">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<span style="width: 40px; height: 40px; border-radius: 10px; background: #1B1F2A; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">AS</span>
+<span style="flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px"><svg width="44" height="44" viewBox="0 0 100 100" role="img" aria-label="Proche : 92 sur 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#E3F3EA" stroke-width="9"></circle><circle cx="50" cy="50" r="42" fill="none" stroke="#17734A" stroke-width="9" stroke-dasharray="242.78 263.89" transform="rotate(-90 50 50)"></circle><path d="M50 1V15M85 50H99M50 85V99M1 50H15" stroke="#FFFFFF" stroke-width="3.5"></path><text x="50" y="62" text-anchor="middle" font-family="Figtree, sans-serif" font-size="32" font-weight="800" fill="#17734A">92</text></svg><span aria-hidden="true" style="font-size: 12px; font-weight: 700; color: #17734A">Proche</span></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 16px; font-weight: 700; line-height: 21px">DevOps Engineer</span>
+<span style="font-size: 14px; color: #596070">Alpstack · Lausanne</span>
+</div>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<span style="padding: 4px 8px; border-radius: 6px; background: #F1EFE9; font-size: 12px; font-weight: 600; color: #3D4250">80–100 %</span>
+<span style="padding: 4px 8px; border-radius: 6px; background: #F1EFE9; font-size: 12px; font-weight: 600; color: #3D4250">CDI</span>
+<span style="padding: 4px 8px; border-radius: 6px; background: #F1EFE9; font-size: 12px; font-weight: 600; color: #3D4250">Hybride</span>
+</div>
+</a>
+<a href="Offre.dc.html" style="flex: none; width: 272px; scroll-snap-align: start; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: #FFFFFF; border: 1px solid #F2D8C6; border-radius: 18px; text-decoration: none; color: #1B1F2A">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<span style="width: 40px; height: 40px; border-radius: 10px; background: #2445C2; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center">RL</span>
+<span style="flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px"><svg width="44" height="44" viewBox="0 0 100 100" role="img" aria-label="Proche : 87 sur 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#E3F3EA" stroke-width="9"></circle><circle cx="50" cy="50" r="42" fill="none" stroke="#17734A" stroke-width="9" stroke-dasharray="229.59 263.89" transform="rotate(-90 50 50)"></circle><path d="M50 1V15M85 50H99M50 85V99M1 50H15" stroke="#FFFFFF" stroke-width="3.5"></path><text x="50" y="62" text-anchor="middle" font-family="Figtree, sans-serif" font-size="32" font-weight="800" fill="#17734A">87</text></svg><span aria-hidden="true" style="font-size: 12px; font-weight: 700; color: #17734A">Proche</span></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 16px; font-weight: 700; line-height: 21px">Platform Engineer junior</span>
+<span style="font-size: 14px; color: #596070">Romandie Logistics · Renens</span>
+</div>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<span style="padding: 4px 8px; border-radius: 6px; background: #F1EFE9; font-size: 12px; font-weight: 600; color: #3D4250">100 %</span>
+<span style="padding: 4px 8px; border-radius: 6px; background: #F1EFE9; font-size: 12px; font-weight: 600; color: #3D4250">CDI</span>
+</div>
+</a>
+</div>
+</section>
+
+<section aria-labelledby="s-todo" style="position: relative; margin-top: -34px; padding: 26px 22px 30px; background: #F7F5F0; border-radius: 34px 34px 0 0">
+<h2 id="s-todo" style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 800; letter-spacing: -0.8px">À faire</h2>
+<ul style="margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+<li style="border-bottom: 1px solid #E0DCD2"><a href="Candidatures.dc.html" style="display: flex; align-items: center; gap: 14px; min-height: 64px; text-decoration: none; color: #1B1F2A"><span style="font-size: 28px; font-weight: 800; color: #2445C2; width: 30px">13</span><span style="flex: 1; font-size: 16px; font-weight: 600">Relances à envoyer</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+<li><a href="Orp.dc.html" style="display: flex; align-items: center; gap: 14px; min-height: 64px; text-decoration: none; color: #1B1F2A"><span style="font-size: 28px; font-weight: 800; color: #2445C2; width: 30px">1</span><span style="flex: 1; font-size: 16px; font-weight: 600">Rendez-vous ORP à préparer</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+</ul>
+</section>
+
+</main>
+
+<div aria-hidden="true" style="flex: none; height: 22px"></div>
+<nav aria-label="Navigation principale" style="position: relative; z-index: 5; flex: none; height: 84px; box-sizing: border-box; padding-top: 8px; background: transparent; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start">
+<svg aria-hidden="true" width="390" height="84" viewBox="0 0 390 84" style="position: absolute; left: 0; top: 0; z-index: 0"><path d="M0 0 H-9 C3 0 3 40 39 40 C75 40 75 0 87 0 H390 V84 H0 Z" fill="#FFFFFF"></path><path d="M0 0.5 H-9 C3 0.5 3 40.5 39 40.5 C75 40.5 75 0.5 87 0.5 H390" fill="none" stroke="#E5E2D9" stroke-width="1"></path></svg>
+<a href="AccueilSmile.dc.html" aria-current="page" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; min-height: 56px; text-decoration: none; color: #2445C2; font-size: 12px; font-weight: 700"><span class="nav-dot" style="width: 56px; height: 56px; margin-top: -30px; border-radius: 28px; background: #2445C2; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(36,69,194,.28)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"></path></svg></span><span style="margin-top: 10px">Accueil</span></a>
+<a href="Candidatures.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"></path></svg></span>Candidatures</a>
+<a href="Assistant.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M26 45 C 28.5 37, 37.5 37, 40 45" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"></path><path d="M59 30.5 Q60.84 40.16 70.5 42 Q60.84 43.84 59 53.5 Q57.16 43.84 47.5 42 Q57.16 40.16 59 30.5 Z" fill="#E8B48A"></path><path d="M29 60 C 37 71, 55 71, 63 60" fill="none" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"></path></g></svg></span>Assistant</a>
+<a href="Explorer.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg></span>Progresser</a>
+<a href="Compte.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg></span>Compte</a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"premiereOuverture":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { tagline: !!this.props.premiereOuverture };
+}
+}
+</script>
+</body>
+</html>
