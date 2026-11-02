@@ -119,7 +119,9 @@ dans le navigateur (`localStorage`), « Automatique » par défaut. Réglage dan
 2. **FaceTransform joué une fois** (WCAG 2.2.2) : fait, PR 460. Le pouls d'attente de FaceMark reste en boucle
    (une vraie attente, D9).
 3. **Barre du bas** (`BottomNav`, à la place de `TabBar`) : sa propre PR, empilée sur 461. Assistant ouvre le
-   panneau et Compte mène aux Réglages en attendant leurs écrans. `AppHeader` suit dans une PR à part.
+   panneau et Compte mène aux Réglages en attendant leurs écrans (PR 462, fusionnée). Puis `AppHeader` (D11,
+   maquettes strictes) : logo et cloche sur l'Accueil, logo et titre sur les pages d'onglet, ni loupe ni menu du
+   compte sur téléphone ; la variante « retour + titre » arrive avec chaque sous-page.
 4. **Accueil** (`AccueilSmile`), 5. **Candidatures** (+ `Filtres`, `ActionsOffre`, `AucuneOffre`, `ErreurConnexion`),
    6. **Détail d'une offre**, 7. **Ma candidature** (`Preparer`, `StepTabs`), 8. **Progresser** (`Explorer`, `Orp`,
    `LiquidCircle`, `ObjectifAtteint`), 9. **Notifications**, 10. **Compte** (+ `Reglages`, Apparence),
