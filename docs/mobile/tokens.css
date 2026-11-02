@@ -1,4 +1,7 @@
-/* jobA1, design tokens (mobile + ordinateur). Source : docs/mobile/maquettes/Systeme.dc.html et ModeSombre.dc.html */
+/* jobA1, design tokens (mobile + ordinateur). Source : docs/mobile/maquettes/Systeme.dc.html et ModeSombre.dc.html
+   Corrigé le 2026-11-02 selon les décisions de docs/regles-ui-ergonomie.md (D1 à D10) : « À creuser » passe de
+   --warning au gris chaud --score-dig (D5). Les maquettes montrent encore « À creuser » en orange et le chiffre au
+   centre de l'anneau : les lire avec ces décisions (docs/139 §2). */
 
 :root {
   /* Surfaces */
@@ -30,7 +33,8 @@
   /* Statuts */
   --success: #17734A;          /* Proche, Preuve */
   --success-soft: #E3F3EA;
-  --warning: #A8540E;          /* À creuser, À joindre */
+  --warning: #A8540E;          /* À joindre, relances : ce qui demande d'agir (D5, 2026-11-02) */
+  --score-dig: #6F6459;        /* « À creuser » : gris chaud, jamais l'orange (D5) ; 4,75:1 sur --surface-muted */
   --warning-soft: #FCEEDD;
   --neutral: #596070;          /* Loin */
   --neutral-soft: #ECEEF2;
@@ -41,6 +45,7 @@
   --radius-card: 18px;
   --radius-block: 34px;        /* blocs pastel de l'accueil */
   --radius-pill: 999px;
+  /* --radius-sm (8 px) vient de l'échelle du projet (D7, 2026-11-02). */
 
   /* Boutons (hauteurs) */
   --btn-primary: 54px;
@@ -97,6 +102,7 @@
     --success: #62D497;
     --success-soft: #1C3527;
     --warning: #F2A766;
+    --score-dig: #B39A82;
     --warning-soft: #3A2A1C;
     --neutral: #ABA398;
     --neutral-soft: #2E2A26;
@@ -123,6 +129,7 @@
   --success: #62D497;
   --success-soft: #1C3527;
   --warning: #F2A766;
+  --score-dig: #B39A82;
   --warning-soft: #3A2A1C;
   --neutral: #ABA398;
   --neutral-soft: #2E2A26;

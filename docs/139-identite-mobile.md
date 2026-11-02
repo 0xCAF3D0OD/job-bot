@@ -1,10 +1,32 @@
 # 139 — La nouvelle identité mobile (et les tokens partagés avec l'ordinateur)
 
-> Statut : **plan à valider**, aucun code écrit. Le 2026-11-02 : les maquettes font foi pour ce chantier (exception
-> datée dans `CLAUDE.md`) ; les 9 conflits avec les règles se valident un par un avant de toucher `regles-ui-ergonomie.md`. Origine : ta demande du 2 novembre 2026 (« nouvelle identité mobile »).
+> Statut : **validé** le 2026-11-02, avec les décisions D1 à D10 et les réponses Q2 à Q7 (voir §0 et
+> `docs/regles-ui-ergonomie.md`, « Décisions du 2 novembre 2026 »). Les maquettes font foi pour ce chantier
+> (exception datée dans `CLAUDE.md`), corrigées par ces décisions.
 > Références : `docs/mobile/tokens.css` (source de vérité des valeurs), `docs/mobile/maquettes/` (écrans, dont
 > `Systeme.dc.html`, `ModeSombre.dc.html`, `Emoticones.dc.html`, `Animations.dc.html`), `docs/mobile/logo_svg_calques/`.
 > Le gel du design jusqu'au test utilisateurs est levé pour ce travail, à ta demande.
+
+## 0. Les décisions du 2 novembre, et comment lire les maquettes
+
+Le détail est dans `docs/regles-ui-ergonomie.md` (fin du document). Là où une décision garde la règle, **la maquette
+se lit corrigée** :
+
+- **Onglets** (D1, D2) : 5 sur téléphone, **« Bilan »** à la place de « Progresser » (sous-onglets ORP, Bilan,
+  Formations), **« Accueil »** à la place d'« Aujourd'hui » ; l'ordinateur garde ses 3 entrées.
+- **Note** (D3) : l'anneau gradué de `Systeme.dc.html` (règle 1) sans le chiffre au centre ; le **mot** en premier
+  plan ; **4 mots** et seuils 85 / 70 / 50 au lieu de 3 mots et 80 / 60 ; le chiffre seulement dans la fiche.
+- **« À creuser »** (D5) : gris chaud `--score-dig`, partout où la maquette le montre en orange (Candidatures,
+  Filtres, Systeme). L'orange reste à « À joindre » et aux relances. `docs/mobile/tokens.css` est corrigé.
+- **Sélection** (D4) : rond plein seulement dans la barre du bas ; les segments gardent la pastille teintée.
+- **Objectif ORP** (D6) : cercle liquide, « x sur y » toujours écrit.
+- **Rayons** (D7) : 8, 18, 34, 999 seulement ; les autres rayons des maquettes (6, 10, 12, 14, 20, 22) se rangent sur
+  le plus proche de ces quatre.
+- **Seuil** (D8) : 820 px, un seul.
+- **Chargement** (D9) : feston seul sur téléphone, visage transformé une fois sur ordinateur.
+- **Illustrations** (D10) : visages d'humeur pour les écrans vides, erreurs et chargements ; illustrations pour les
+  premiers pas et les grandes réussites.
+- **Candidatures** (Q5) : À traiter · Envoyées · Rendez-vous, aussi sur ordinateur (renommage prévu).
 
 ## 1. En clair
 
@@ -59,7 +81,7 @@ par une variable de `style.css` », et la CI (`scales.test.ts`, `contrast.test.t
 | `--ok-text` `--ok` | `--success` | |
 | `--orange-text` `--orange` `--orange-soft` | `--warning` `--warning-soft` | |
 | `--down-text` `--down` | `--danger` | |
-| `--score-dig` | `--warning` | « À creuser » passe du gris chaud à l'orange (Q3) |
+| `--score-dig` | `--score-dig` | gardé : « À creuser » reste en gris chaud (D5), nouvelle valeur chaude |
 | `--mint` `--sky` `--mint-soft` | supprimés | absents de la nouvelle palette |
 
 **Police** : Figtree est déjà là (`@fontsource-variable/figtree`). `Caveat Brush` (trait crayon) est nouvelle :
