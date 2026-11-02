@@ -118,7 +118,8 @@ dans le navigateur (`localStorage`), « Automatique » par défaut. Réglage dan
    forcé (`data-theme`) passe à l'étape Compte › Apparence.
 2. **FaceTransform joué une fois** (WCAG 2.2.2) : fait, PR 460. Le pouls d'attente de FaceMark reste en boucle
    (une vraie attente, D9).
-3. **Barre du bas** (`BottomNav`) et `AppHeader`.
+3. **Barre du bas** (`BottomNav`, à la place de `TabBar`) : sa propre PR, empilée sur 461. Assistant ouvre le
+   panneau et Compte mène aux Réglages en attendant leurs écrans. `AppHeader` suit dans une PR à part.
 4. **Accueil** (`AccueilSmile`), 5. **Candidatures** (+ `Filtres`, `ActionsOffre`, `AucuneOffre`, `ErreurConnexion`),
    6. **Détail d'une offre**, 7. **Ma candidature** (`Preparer`, `StepTabs`), 8. **Progresser** (`Explorer`, `Orp`,
    `LiquidCircle`, `ObjectifAtteint`), 9. **Notifications**, 10. **Compte** (+ `Reglages`, Apparence),
