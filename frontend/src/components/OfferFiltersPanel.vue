@@ -6,7 +6,6 @@ import type { OfferFilters, Remote, Sort, View } from "../composables/useOfferFi
 import { activeCount, DEFAULT_FILTERS, SCORE_CHOICES, scoreLabel } from "../composables/useOfferFilters";
 import { sourceLabel } from "../format";
 import AppIcon from "./AppIcon.vue";
-import OfferSearch from "./OfferSearch.vue";
 import SavedStatus from "../components/SavedStatus.vue";
 
 // Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
@@ -18,8 +17,6 @@ const props = defineProps<{
   facets: OfferFacets;
   // Offres affichées avec ces filtres, pour « Afficher N offres ».
   total: number;
-  // La recherche en tête du panneau (téléphone, 1.6.55) ; sur ordinateur, elle est dans la barre d'outils.
-  withSearch?: boolean;
   // Filtres affichés (docs/10 §3) ; statut, recherche et tri le sont toujours.
   visible: FilterKey[];
 }>();
@@ -152,12 +149,6 @@ const more = ref(secondaryActive.value > 0);
     class="filters-panel"
     data-test="filters"
   >
-    <OfferSearch
-      v-if="withSearch"
-      :value="filters.q"
-      @search="(q) => emit('update', { q })"
-    />
-
     <div class="filter-card">
       <button
         type="button"

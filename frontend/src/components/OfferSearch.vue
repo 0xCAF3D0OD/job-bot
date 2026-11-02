@@ -3,9 +3,9 @@ import { ref, watch } from "vue";
 
 import AppIcon from "./AppIcon.vue";
 
-// La recherche des offres (1.6.55) : dans la barre d'outils sur ordinateur, en tête de la feuille
-// « Filtres » sur téléphone. Appliquée 300 ms après la dernière frappe.
-const props = defineProps<{ value: string }>();
+// La recherche des offres (1.6.55) : dans la barre d'outils ; sur téléphone, au-dessus des vues de
+// Candidatures (docs/139 étape 5a, C4). Appliquée 300 ms après la dernière frappe.
+const props = defineProps<{ value: string; placeholder?: string }>();
 const emit = defineEmits<{ search: [value: string] }>();
 
 const search = ref(props.value);
@@ -30,8 +30,8 @@ watch(
       v-model="search"
       class="field-compact filters-search"
       type="search"
-      aria-label="Recherche"
-      placeholder="Titre, entreprise, mot-clé…"
+      aria-label="Rechercher une offre"
+      :placeholder="placeholder ?? 'Titre, entreprise, mot-clé…'"
       data-test="search"
     >
   </span>

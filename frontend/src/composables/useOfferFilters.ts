@@ -128,10 +128,8 @@ export interface FilterChip {
 
 /** Les filtres actifs en pastilles sous la barre d'outils (1.6.55), une par valeur, chacune avec son retrait.
  *  La recherche n'en a une que si son champ est caché (téléphone : il est dans la feuille). */
-export function activeChips(filters: OfferFilters, withSearch: boolean): FilterChip[] {
+export function activeChips(filters: OfferFilters): FilterChip[] {
   const chips: FilterChip[] = [];
-  const q = filters.q.trim();
-  if (withSearch && q) chips.push({ key: "q", label: `Recherche : ${q}`, patch: { q: "" } });
   if (filters.minScore !== null || filters.maxScore !== null)
     chips.push({ key: "score", label: `Note minimale : ${scoreLabel(filters)}`, patch: { minScore: null, maxScore: null } });
   if (filters.remote)

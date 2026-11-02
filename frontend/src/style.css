@@ -1019,6 +1019,13 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
 .jobs-tabs a { white-space: nowrap; }
 .jobs-band > .offers-page { padding-top: var(--space-6); }
+/* Le titre et « Alertes » (docs/139 étape 5a, C1) : un lien à côté du titre ; sur téléphone, dans l'en-tête. */
+.jobs-title { display: flex; align-items: baseline; gap: var(--space-4); }
+.jobs-alerts-link { display: inline-flex; align-items: center; gap: var(--space-1); font-weight: var(--weight-bold); text-decoration: none; }
+.jobs-alerts-link[aria-current="page"] { text-decoration: underline; text-underline-offset: 0.3em; }
+.jobs-alerts-link .tab-count { margin: 0; }
+.topbar-page-tools, .in-place { display: contents; }
+.jobs-tools:empty { display: none; }
 .jobs-body { max-width: var(--page-max); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12); }
 @media (max-width: 720px) {
   .jobs-head { padding: var(--space-5) var(--space-4) 0; }
@@ -1489,9 +1496,23 @@ button, .button-link { max-width: 100%; }
   .topbar.has-burger .topbar-actions { grid-column: 3; }
   .topbar.has-burger :is(.global-search, .account-menu) { display: none; }
   .topbar.has-burger:not([data-variant="home"]) .bell { display: none; }
+  /* Les outils d'une page d'onglet (Candidatures : « Alertes », filtres), à droite du titre, 44 px de haut. */
+  .topbar-page-tools { display: flex; align-items: center; }
+  .topbar-page-tools .jobs-alerts-link { min-height: var(--control-h); padding: 0 var(--space-3); border-radius: var(--radius-pill); font-size: var(--font-body); }
+  .offers-filter-icon { position: relative; width: var(--control-h); height: var(--control-h); border: 0; background: none; color: var(--text); }
+  .topbar .offers-filter-icon .icon { width: 1.5rem; height: 1.5rem; }
+  .offers-filter-icon .count-badge { position: absolute; top: var(--space-1); right: var(--space-1); }
+  /* Candidatures (maquette Candidatures) : la recherche et « Ajouter », puis les trois vues en contrôle segmenté. */
+  .jobs-head .jobs-tools { margin: 0 0 var(--space-3); }
+  .jobs-tools .offers-toolbar { flex-wrap: nowrap; margin: 0; }
+  .jobs-tools .offers-toolbar-search { flex: 1 1 auto; }
+  .jobs-tools .offers-toolbar .filters-search { height: var(--field-h); border-radius: var(--radius-card); font-size: var(--font-body); }
+  .jobs-tools .offers-add-compact { flex: none; min-height: var(--field-h); padding: 0 var(--space-4); border-radius: var(--radius-card); }
+  .jobs-segments { margin-bottom: var(--space-2); }
+  .offers-spontaneous { margin: var(--space-6) 0 0; text-align: center; }
   .topbar[data-variant="tab"] .topbar-title { display: block; margin: 0; overflow: hidden; color: var(--text); font-size: var(--title-tab); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: -0.02em; text-overflow: ellipsis; white-space: nowrap; }
   /* Le titre visible est celui de l'en-tête ; le h1 de la page reste pour les lecteurs d'écran. */
-  :root:has(.topbar[data-variant="tab"]) main :is(.page-head, .jobs-head) > h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  :root:has(.topbar[data-variant="tab"]) main :is(.page-head, .jobs-head, .jobs-title) > h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   input, select, textarea { font-size: 16px; }
   /* Cloche : carte sur toute la largeur de l'écran, sous la barre, qui pousse la page. */
 }

@@ -81,7 +81,12 @@ const { phone } = usePhone();
 const { phone: narrow } = useNarrow();
 // Barre d'outils (1.6.55) : « Filtrer » ouvre un panneau sous le bouton (ordinateur) ou une feuille en
 // bas de l'écran (téléphone) ; les filtres actifs restent visibles en pastilles sous la barre.
-const chips = computed(() => activeChips(filters.value, phone.value && !narrow.value));
+const chips = computed(() => activeChips(filters.value));
+const filterLabel = computed(() => {
+  const active = chips.value.length ? `, ${plural(chips.value.length, "filtre actif", "filtres actifs")}` : "";
+  if (phone.value) return `Filtres${active}`;
+  return active ? `Filtrer${active}` : undefined;
+});
 const filterAnchor = ref<HTMLElement | null>(null);
 const filterToggle = ref<HTMLButtonElement | null>(null);
 // Le panneau tient sous le bouton, dans la fenêtre ; au-delà, il défile et garde son pied en bas.
@@ -456,110 +461,132 @@ onUnmounted(() => {
     <!-- La barre d'outils (1.6.55, planche « Barre d'outils Offres ») : la recherche qui prend la ligne
          (ordinateur), « Filtrer » et « + Ajouter » ; les filtres actifs en pastilles dessous. La liste a
          toute la largeur, sans colonne de filtres. -->
-    <div
-      class="offers-toolbar"
-      data-test="offers-toolbar"
+    <!-- Téléphone (docs/139 étape 5a, maquette Candidatures) : la recherche et « Ajouter » montent au-dessus
+         des vues (#jobs-tools), le bouton des filtres dans l'en-tête, à côté d'« Alertes ». -->
+    <component
+      :is="phone ? Teleport : 'div'"
+      v-bind="phone ? { to: '#jobs-tools', defer: true } : { class: 'in-place' }"
     >
-      <!-- Sous 600 px (planche) : la recherche revient dans la barre, à côté de « Filtrer ». -->
-      <OfferSearch
-        v-if="!phone || narrow"
-        class="offers-toolbar-search"
-        :value="filters.q"
-        @search="(q) => update({ q })"
-      />
       <div
-        ref="filterAnchor"
-        class="offers-filter"
+        class="offers-toolbar"
+        data-test="offers-toolbar"
       >
-        <!-- L'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille. -->
-        <button
-          ref="filterToggle"
-          type="button"
-          class="secondary offers-toolbar-button"
-          :aria-label="chips.length ? `Filtrer, ${plural(chips.length, 'filtre actif', 'filtres actifs')}` : undefined"
-          :aria-expanded="filtersOpen"
-          aria-controls="offers-filters"
-          data-test="filters-toggle"
-          @click="filtersOpen ? closeFilters() : openFilters()"
-        >
-          <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
-          <CountBadge
-            v-if="chips.length"
-            aria-hidden="true"
-            data-test="filters-count"
-            :count="chips.length"
-          />
-        </button>
-        <!-- Téléphone : la feuille sort de la page (Teleport), au-dessus de la barre du bas ; ordinateur :
-             le panneau reste sous le bouton, sans Teleport, pour ne pas être recréé à chaque filtre. -->
-        <!-- Sous 600 px : la feuille « Filtres » de la planche. -->
-        <OfferFilterSheet
-          v-if="narrow"
-          :open="filtersOpen"
-          :filters="filters"
-          :facets="facets"
-          :total="total"
-          @update="update"
-          @reset="reset"
-          @close="closeFilters"
+        <OfferSearch
+          class="offers-toolbar-search"
+          :value="filters.q"
+          :placeholder="phone ? 'Poste, entreprise, lieu' : undefined"
+          @search="(q) => update({ q })"
         />
-        <component
-          :is="phone ? Teleport : 'div'"
-          v-else
-          v-bind="phone ? { to: 'body' } : { class: 'offers-filters-anchor' }"
+        <div
+          ref="filterAnchor"
+          class="offers-filter"
         >
-          <div
-            v-if="filtersOpen && phone"
-            class="offers-filters-veil"
-            data-test="filters-veil"
-            @click="closeFilters"
-          />
-          <section
-            v-if="filtersOpen"
-            id="offers-filters"
-            :class="['offers-filters', { sheet: phone }]"
-            :style="phone ? undefined : { '--filters-room': filtersRoom }"
-            role="dialog"
-            aria-labelledby="offers-filters-title"
-            data-test="filters-dialog"
+          <component
+            :is="phone ? Teleport : 'div'"
+            v-bind="phone ? { to: '#topbar-page-tools', defer: true } : { class: 'in-place' }"
           >
-            <div class="offers-filters-head">
-              <h2 id="offers-filters-title">
-                Filtres
-              </h2>
-              <IconButton
-                icon="close"
-                label="Fermer les filtres"
-                class="close"
-                data-test="close-filters"
-                @click="closeFilters"
+            <!-- L'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille ; sur téléphone,
+                 l'icône seule, ronde, 44 px. -->
+            <button
+              ref="filterToggle"
+              type="button"
+              :class="phone ? 'icon-button offers-filter-icon' : 'secondary offers-toolbar-button'"
+              :aria-label="filterLabel"
+              :aria-expanded="filtersOpen"
+              aria-controls="offers-filters"
+              data-test="filters-toggle"
+              @click="filtersOpen ? closeFilters() : openFilters()"
+            >
+              <span class="with-icon"><AppIcon :name="phone ? 'settings' : 'filter'" /><template v-if="!phone">Filtrer</template></span>
+              <CountBadge
+                v-if="chips.length"
+                aria-hidden="true"
+                data-test="filters-count"
+                :count="chips.length"
               />
-            </div>
-            <OfferFiltersPanel
-              :filters="filters"
-              :counts="counts"
-              :facets="facets"
-              :visible="visibleFilters"
-              :total="total"
-              :with-search="phone"
-              @update="update"
-              @reset="reset"
-              @visibility="setVisibility"
-              @done="closeFilters"
+            </button>
+          </component>
+          <!-- Téléphone : la feuille sort de la page (Teleport), au-dessus de la barre du bas ; ordinateur :
+             le panneau reste sous le bouton, sans Teleport, pour ne pas être recréé à chaque filtre. -->
+          <!-- Sous 600 px : la feuille « Filtres » de la planche. -->
+          <OfferFilterSheet
+            v-if="narrow"
+            :open="filtersOpen"
+            :filters="filters"
+            :facets="facets"
+            :total="total"
+            @update="update"
+            @reset="reset"
+            @close="closeFilters"
+          />
+          <component
+            :is="phone ? Teleport : 'div'"
+            v-else
+            v-bind="phone ? { to: 'body' } : { class: 'offers-filters-anchor' }"
+          >
+            <div
+              v-if="filtersOpen && phone"
+              class="offers-filters-veil"
+              data-test="filters-veil"
+              @click="closeFilters"
             />
-          </section>
-        </component>
+            <section
+              v-if="filtersOpen"
+              id="offers-filters"
+              :class="['offers-filters', { sheet: phone }]"
+              :style="phone ? undefined : { '--filters-room': filtersRoom }"
+              role="dialog"
+              aria-labelledby="offers-filters-title"
+              data-test="filters-dialog"
+            >
+              <div class="offers-filters-head">
+                <h2 id="offers-filters-title">
+                  Filtres
+                </h2>
+                <IconButton
+                  icon="close"
+                  label="Fermer les filtres"
+                  class="close"
+                  data-test="close-filters"
+                  @click="closeFilters"
+                />
+              </div>
+              <OfferFiltersPanel
+                :filters="filters"
+                :counts="counts"
+                :facets="facets"
+                :visible="visibleFilters"
+                :total="total"
+                @update="update"
+                @reset="reset"
+                @visibility="setVisibility"
+                @done="closeFilters"
+              />
+            </section>
+          </component>
+        </div>
+        <!-- Téléphone (C10) : « Ajouter » compact, à côté de la recherche ; « Postuler spontanément » est un
+             lien au bas de la liste. Ordinateur : un seul « + Ajouter » et son menu (1.6.47). -->
+        <button
+          v-if="phone"
+          type="button"
+          class="secondary offers-add-compact"
+          data-test="manual-open"
+          @click="openManual"
+        >
+          <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
+        </button>
+        <MoreMenu
+          v-else
+          class="offers-add"
+          :items="addItems"
+          trigger="Ajouter"
+          trigger-icon="plus"
+          test-id="add-menu"
+          :inline="false"
+        />
       </div>
-      <!-- Un seul « + Ajouter » (1.6.47) : « Ajouter une offre » et « Postuler spontanément ». -->
-      <MoreMenu
-        class="offers-add"
-        :items="addItems"
-        trigger="Ajouter"
-        trigger-icon="plus"
-        test-id="add-menu"
-        :inline="false"
-      />
-    </div>
+    </component>
     <OfferFilterChips
       :chips="chips"
       @update="update"
@@ -724,6 +751,19 @@ onUnmounted(() => {
           test-id="offers-more"
           @update:model-value="loadMore"
         />
+        <p
+          v-if="phone && !loading"
+          class="offers-spontaneous"
+        >
+          <button
+            type="button"
+            class="link"
+            data-test="spontaneous-open"
+            @click="spontaneousOpen = true"
+          >
+            Postuler spontanément
+          </button>
+        </p>
       </div>
 
       <Transition name="detail">

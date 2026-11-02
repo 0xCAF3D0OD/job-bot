@@ -1,0 +1,1 @@
+Candidatures a trois vues, À traiter, Envoyées et Rendez-vous, et « Alertes » devient un lien à côté du titre ; sur le téléphone, « Alertes » et les filtres passent dans l'en-tête, la recherche et « Ajouter » au-dessus des vues, et « Postuler spontanément » en lien au bas de la liste
