@@ -356,3 +356,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.142 | Test utilisateurs : la date de la première alerte, de la première offre reçue, de la première candidature préparée et des premières preuves exportées, par compte, sans contenu, gardée jusqu'à la fin du test ; un tableau pour l'exploitant, mentionné dans « Tes données » | livrée |
 | 1.6.143 | Préparer : « Pas vrai » sur une phrase de la lettre (sélection sur ordinateur, toucher sur téléphone), la retirer ou la réécrire d'après le profil, « Annuler » pendant 6 s | livrée |
 | 1.6.144 | Règles d'interface : titres de section sans point, « preuves d'octobre », repliables du Suivi et de Rendez-vous comme ceux du Bilan, note d'offre près du poste, règles 1.3 | livrée |
+| 1.6.145 | La CI refuse un numéro de cadrage docs/NNN déjà pris, et docs/137 parle de blocs plutôt que de versions numérotées | livrée |
