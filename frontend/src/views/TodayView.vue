@@ -17,6 +17,8 @@ import { isNetworkError } from "../network";
 import OrpMonth from "../components/OrpMonth.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import PageHero from "../components/PageHero.vue";
+import HomePhone, { type HomeTodo } from "../components/HomePhone.vue";
+import { usePhone } from "../composables/usePhone";
 import { useCollect } from "../composables/useCollect";
 import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
@@ -30,6 +32,10 @@ import { usePageReady } from "../composables/usePageTransition";
 // phrase de conclusion ; le tri du jour dans la bande d'action, seule action principale ; puis
 // « À faire aujourd'hui », « Mois ORP » et « À retenir ».
 const today = ref<Today | null>(null);
+// L'Accueil du téléphone (docs/139 étape 4) : sa propre mise en page, sous 820 px.
+const { phone } = usePhone();
+// Le prénom de « Bonjour Kevin. » : le premier mot du nom des Coordonnées.
+const firstName = ref<string | null>(null);
 usePageReady("today", () => !!today.value);
 const best = ref<Offer[]>([]);
 const preparing = ref<Offer[]>([]);
@@ -190,6 +196,44 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
   };
 });
 
+// « À faire » du téléphone (A4) : les mêmes tâches, un nombre et un libellé ; toute la ligne est le lien.
+const todos = computed<HomeTodo[]>(() => {
+  const t = today.value;
+  if (!t) return [];
+  const many = (n: number, one: string, more: string): string => (n === 1 ? one : more);
+  const list: HomeTodo[] = [];
+  for (const task of tasks.value) {
+    const group = task.key.split("-")[0]!;
+    const same = list.find((todo) => todo.key === group);
+    if (same) {
+      same.count += 1;
+      continue;
+    }
+    const count =
+      group === "follow" ? t.to_follow_up : group === "preparing" ? preparing.value.length : group === "alerts" ? t.alerts_waiting : 1;
+    list.push({ key: group, test: `todo-${task.test}`, count, label: "", to: task.to });
+  }
+  for (const todo of list) {
+    const n = todo.count;
+    todo.label = {
+      meeting: "Rendez-vous ORP à préparer",
+      interview: many(n, "Entretien à préparer", "Entretiens à préparer"),
+      orp: t.orp_due_month ? `Preuves ${ofMonth(t.orp_due_month)} à remettre` : "Preuves à remettre",
+      follow: many(n, "Relance à envoyer", "Relances à envoyer"),
+      preparing: many(n, "Candidature à préparer", "Candidatures à préparer"),
+      review: many(n, "Entretien à faire le point", "Entretiens à faire le point"),
+      alerts: many(n, "Alerte à vérifier", "Alertes à vérifier"),
+    }[todo.key] ?? "";
+    if (todo.key === "interview" || todo.key === "review") todo.to = "/candidatures/suivi";
+  }
+  return list;
+});
+const homeEmpty = computed(() => {
+  if (rhythmPaused.value) return "En pause : rien à trier.";
+  if (restDay.value) return "Jour de repos : rien à trier.";
+  return triageDone.value ? "Tri terminé · À demain" : "Rien à trier · À demain";
+});
+
 const dateTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" }).format(
   new Date(),
 );
@@ -250,6 +294,10 @@ async function fetchAll(): Promise<void> {
   best.value = (offers.data?.items ?? []).filter((o) => o.score !== null && o.score !== undefined);
   preparing.value = (current.data?.items ?? []).filter((o) => o.status === "preparing");
   highlight.value = report.data?.highlight ?? null;
+  if (phone.value && firstName.value === null) {
+    const who = await api.GET("/api/identity").catch(() => null);
+    firstName.value = who?.data?.name?.trim().split(/\s+/)[0] || "";
+  }
 }
 
 // Masquer les premiers pas : la carte s'en va tout de suite, « Annuler » pendant 6 secondes
@@ -275,11 +323,45 @@ const { me } = useAuth();
 </script>
 
 <template>
+  <HomePhone
+    v-if="phone && today"
+    :name="firstName || null"
+    :first-day="starting"
+    :month="today.month"
+    :count="today.month_count"
+    :target="today.month_target ?? null"
+    :offers="dose"
+    :can-triage="triagePending && !starting"
+    :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
+    :todos="todos"
+  >
+    <!-- Les premiers pas et l'accueil reporté restent en tête tant qu'ils existent (A9). -->
+    <RouterLink
+      v-if="me?.welcome === 'postponed'"
+      to="/bienvenue"
+      class="notice today-welcome"
+      data-test="finish-welcome"
+    >
+      <strong>Terminer mon accueil</strong> : quelques questions pour régler ta recherche.
+    </RouterLink>
+    <FirstSteps
+      v-if="starting"
+      :steps="today.first_steps"
+      :has-offers="today.has_offers ?? true"
+      :offer-id="today.first_steps_offer_id ?? null"
+      :pick-ready="!restDay && !rhythmPaused && best.length > 0"
+      @dismiss="dismissSteps"
+    />
+  </HomePhone>
   <PageHero
+    v-if="!phone"
     title="Aujourd'hui"
     :eyebrow="eyebrow"
   />
-  <section class="band">
+  <section
+    v-if="!phone || !today"
+    class="band"
+  >
     <div
       v-if="today"
       class="container today"

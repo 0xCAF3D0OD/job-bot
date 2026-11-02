@@ -19,6 +19,8 @@ import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import FaceState from "../components/FaceState.vue";
 import OrpGauge from "../components/dash/OrpGauge.vue";
+import RhythmCard from "../components/RhythmCard.vue";
+import { usePhone } from "../composables/usePhone";
 import IconButton from "../components/IconButton.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import {
@@ -75,9 +77,15 @@ const gaugeUseful = computed(
 );
 const showGauge = computed(() => period.value === "recent" || (period.value === "month" && month.value === currentMonth()));
 
+// La carte Rythme quitte l'Accueil du téléphone et vient ici, sous l'ORP (A5, 2026-11-02) ; elle ira dans
+// Bilan › ORP, sous le cercle liquide, quand l'onglet existera (docs/139 étape 8).
+const { phone } = usePhone();
+const rhythm = ref<Today["rhythm"] | null>(null);
+
 async function loadOrp(): Promise<void> {
   const { data } = await api.GET("/api/today");
   if (data?.month) orp.value = { count: data.month_count, target: data.month_target ?? null, month: data.month, history: data.orp_history ?? [] };
+  rhythm.value = data?.rhythm ?? null;
 }
 
 async function load(): Promise<void> {
@@ -285,6 +293,10 @@ const PERIODS: { key: Period; label: string }[] = [
           :month="orp.month"
           :history="orp.history"
           past
+        />
+        <RhythmCard
+          v-if="phone && rhythm"
+          :week="rhythm"
         />
       </div>
       <!-- Le détail replié (règles §3.4, 1.6.62) : chaque ligne dit déjà l'essentiel ; on déplie pour

@@ -122,7 +122,8 @@ dans le navigateur (`localStorage`), « Automatique » par défaut. Réglage dan
    panneau et Compte mène aux Réglages en attendant leurs écrans (PR 462, fusionnée). Puis `AppHeader` (D11,
    maquettes strictes) : logo et cloche sur l'Accueil, logo et titre sur les pages d'onglet, ni loupe ni menu du
    compte sur téléphone ; la variante « retour + titre » arrive avec chaque sous-page.
-4. **Accueil** (`AccueilSmile`), 5. **Candidatures** (+ `Filtres`, `ActionsOffre`, `AucuneOffre`, `ErreurConnexion`),
+4. **Accueil** (`AccueilSmile`) : `HomePhone` et `LiquidCircle`, écarts A1 à A9 validés le 2026-11-02 (A3 : bouton
+   « Trier les n offres » ; A5 : la carte Rythme dans le Bilan, puis dans Bilan › ORP à l'étape 8), 5. **Candidatures** (+ `Filtres`, `ActionsOffre`, `AucuneOffre`, `ErreurConnexion`),
    6. **Détail d'une offre**, 7. **Ma candidature** (`Preparer`, `StepTabs`), 8. **Progresser** (`Explorer`, `Orp`,
    `LiquidCircle`, `ObjectifAtteint`), 9. **Notifications**, 10. **Compte** (+ `Reglages`, Apparence),
    11. **le reste** : Assistant, Onboarding C.
