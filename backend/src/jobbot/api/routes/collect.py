@@ -489,17 +489,20 @@ def _filters(
 IN_PROGRESS = (OfferStatus.PREPARING, OfferStatus.APPLIED)
 
 
-def _view_condition(view: str) -> ColumnElement[bool] | None:
+def _view_condition(view: str, with_filtered_out: bool = False) -> ColumnElement[bool] | None:
     """Une offre expirée n'apparaît que dans « Expirées », sauf si elle est en cours."""
     live = Offer.expired_at.is_(None)
     if view == "to_review":
         return and_(Offer.status.in_(TO_REVIEW), live)
     if view == "pending":
         # En préparation, elle reste à traiter même retirée : un bandeau le dit dans la fiche.
-        return or_(
-            and_(Offer.status.in_((*TO_REVIEW, OfferStatus.LATER)), live),
-            Offer.status == OfferStatus.PREPARING,
+        # « Masquer les offres écartées » coupé (docs/139, C2) : elles s'y ajoutent.
+        shown = (
+            *TO_REVIEW,
+            OfferStatus.LATER,
+            *((OfferStatus.FILTERED_OUT,) if with_filtered_out else ()),
         )
+        return or_(and_(Offer.status.in_(shown), live), Offer.status == OfferStatus.PREPARING)
     if view == "filtered_out":
         return and_(Offer.status == OfferStatus.FILTERED_OUT, live)
     if view == "later":
@@ -529,6 +532,7 @@ async def list_offers(
     external_only: bool = False,
     remote: Literal["partial", "full"] | None = None,
     hide_doubtful: bool = False,
+    with_filtered_out: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
@@ -572,7 +576,7 @@ async def list_offers(
         conditions.append(score >= min_score)
     if max_score is not None:
         conditions.append(score <= max_score)
-    view_condition = _view_condition(view)
+    view_condition = _view_condition(view, with_filtered_out)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
     without_sources = _filters(q, [], cantons, min_rate, external_only, remote, hide_doubtful)
@@ -641,6 +645,8 @@ async def list_offers(
         all=sum(live.values()),
     )
     total = counts.model_dump().get(view, counts.all)
+    if view == "pending" and with_filtered_out:
+        total += counts.filtered_out
     histogram = [0] * 20
     unscored = 0
     for index, count in score_rows:

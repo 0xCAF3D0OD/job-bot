@@ -327,3 +327,17 @@ async def test_pending_view_puts_preparation_first(api: AsyncClient, runtime: Ru
     assert "Gardée pour plus tard" in titles_
     assert "Envoyée" not in titles_ and "Écartée" not in titles_
     assert page["total"] == page["counts"]["pending"] == len(titles_)
+
+
+async def test_pending_view_can_show_filtered_out(api: AsyncClient, runtime: Runtime) -> None:
+    """« Masquer les offres écartées » coupé : À traiter les montre aussi (docs/139, C2)."""
+    await add(runtime, 13, "Écartée", ["jobup"], status=OfferStatus.FILTERED_OUT)
+    hidden = (await api.get("/api/offers", params={"view": "pending"})).json()
+    shown = (
+        await api.get("/api/offers", params={"view": "pending", "with_filtered_out": True})
+    ).json()
+    assert "Écartée" not in [o["title"] for o in hidden["items"]]
+    assert "Écartée" in [o["title"] for o in shown["items"]]
+    out = hidden["counts"]["filtered_out"]
+    assert out >= 1
+    assert shown["total"] == hidden["total"] + out == len(shown["items"])

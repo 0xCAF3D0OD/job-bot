@@ -1,0 +1,1 @@
+Sur le téléphone, la feuille Filtres suit la maquette : la correspondance en mots (Tous, À creuser et +, Proche et +, Très proche), le taux d'activité, le tri et « Masquer les offres écartées » en tête, puis les autres filtres ; la note « À creuser et plus » rejoint aussi les choix de l'ordinateur

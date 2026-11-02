@@ -10199,6 +10199,7 @@ export interface operations {
                 external_only?: boolean;
                 remote?: ("partial" | "full") | null;
                 hide_doubtful?: boolean;
+                with_filtered_out?: boolean;
             };
             header?: never;
             path?: never;

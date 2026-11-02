@@ -3,36 +3,39 @@ import { computed } from "vue";
 
 import type { OfferFacets, Source } from "../api/client";
 import { sourceLabel } from "../format";
-import { SCORE_CHOICES, type OfferFilters, type View } from "../composables/useOfferFilters";
+import type { OfferFilters, Sort } from "../composables/useOfferFilters";
 import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
 
-// Les filtres des Offres sous 600 px (planche « Structure téléphone », 248:306) : une feuille du bas.
-// Statut en radios, note minimale en radios (règles §4, « Choix d'un seuil »), télétravail en interrupteur, taux en ligne avec sa valeur ; puis
-// les sites et les cantons. Chaque choix s'applique tout de suite ; « Afficher N offres » referme.
+// La feuille « Filtres » du téléphone (maquette Filtres, docs/139 étape 5c ; C5 validé le 2026-11-02) :
+// la correspondance en mots (D3), le taux, « Masquer les offres écartées » ; le tri (C8) ; puis les filtres
+// d'avant (télétravail, employeur, offres à vérifier, sites, cantons). Contrat et Distance attendent le
+// serveur (issue 468). Chaque choix s'applique tout de suite ; « Afficher N offres » referme.
 const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number }>();
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
-const VIEWS: { value: View; label: string }[] = [
-  { value: "pending", label: "À traiter" },
-  { value: "to_review", label: "À examiner" },
-  { value: "in_progress", label: "En cours" },
-  { value: "later", label: "Plus tard" },
-  { value: "filtered_out", label: "Écartées" },
-  { value: "expired", label: "Expirées" },
-  { value: "all", label: "Toutes" },
+// La correspondance avec les mots de la note (D3), pas en chiffres.
+const SCORES: { label: string; min: number | null }[] = [
+  { label: "Tous", min: null },
+  { label: "À creuser et +", min: 50 },
+  { label: "Proche et +", min: 70 },
+  { label: "Très proche", min: 85 },
 ];
-
-// La note minimale : les mêmes choix que sur ordinateur. Une adresse d'avant (?note=60-90) garde
-// ses bornes, et aucune radio n'est cochée.
+// Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.
 const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
-
-const RATES = [null, 50, 60, 70, 80, 90, 100];
-function onRate(event: Event): void {
-  const value = Number((event.target as HTMLSelectElement).value);
-  emit("update", { minRate: value > 0 ? value : null });
-}
+// Le taux minimum : le serveur garde une offre dont le taux maximum l'atteint, ou au taux inconnu.
+const RATES: { label: string; min: number | null }[] = [
+  { label: "Tous", min: null },
+  { label: "60 % et +", min: 60 },
+  { label: "80 % et +", min: 80 },
+  { label: "100 %", min: 100 },
+];
+const SORTS: { label: string; value: Sort }[] = [
+  { label: "Par jour", value: "day" },
+  { label: "Note", value: "score" },
+  { label: "Récentes", value: "recent" },
+];
 
 function toggle<T extends string>(values: T[], value: T): T[] {
   return values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
@@ -48,51 +51,91 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
     @close="emit('close')"
   >
     <div class="filter-sheet">
-      <GroupedList
-        title="Statut"
-        :level="3"
+      <div
+        class="filter-choices"
+        role="group"
+        aria-labelledby="sheet-score-title"
       >
-        <GroupedRow
-          v-for="view in VIEWS"
-          :key="view.value"
-          :title="view.label"
-          label
-          :data-test="`sheet-view-${view.value}`"
-        >
-          <template #start>
-            <input
-              type="radio"
-              name="sheet-view"
-              :checked="filters.view === view.value"
-              @change="emit('update', { view: view.value })"
-            >
-          </template>
-        </GroupedRow>
-      </GroupedList>
+        <h3 id="sheet-score-title">
+          Correspondance minimale
+        </h3>
+        <div class="filter-choices-row">
+          <button
+            v-for="choice in SCORES"
+            :key="choice.label"
+            type="button"
+            class="filter-choice"
+            :aria-pressed="scoreChoice === choice.min"
+            :data-test="`sheet-score-${choice.min ?? 'all'}`"
+            @click="emit('update', { minScore: choice.min, maxScore: null })"
+          >
+            {{ choice.label }}
+          </button>
+        </div>
+      </div>
 
-      <GroupedList
-        title="Note minimale"
-        :level="3"
+      <div
+        class="filter-choices"
+        role="group"
+        aria-labelledby="sheet-rate-title"
       >
-        <GroupedRow
-          v-for="choice in SCORE_CHOICES"
-          :key="choice.label"
-          :title="choice.label"
-          label
-          :data-test="`sheet-score-${choice.min ?? 'all'}`"
-        >
-          <template #start>
-            <input
-              type="radio"
-              name="sheet-score"
-              :checked="scoreChoice === choice.min"
-              @change="emit('update', { minScore: choice.min, maxScore: null })"
-            >
-          </template>
-        </GroupedRow>
-      </GroupedList>
+        <h3 id="sheet-rate-title">
+          Taux d'activité
+        </h3>
+        <div class="filter-choices-row">
+          <button
+            v-for="choice in RATES"
+            :key="choice.label"
+            type="button"
+            class="filter-choice"
+            :aria-pressed="filters.minRate === choice.min"
+            :data-test="`sheet-rate-${choice.min ?? 'all'}`"
+            @click="emit('update', { minRate: choice.min })"
+          >
+            {{ choice.label }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="filter-choices"
+        role="group"
+        aria-labelledby="sheet-sort-title"
+      >
+        <h3 id="sheet-sort-title">
+          Trier
+        </h3>
+        <div class="filter-choices-row">
+          <button
+            v-for="choice in SORTS"
+            :key="choice.value"
+            type="button"
+            class="filter-choice"
+            :aria-pressed="filters.sort === choice.value"
+            :data-test="`sheet-sort-${choice.value}`"
+            @click="emit('update', { sort: choice.value })"
+          >
+            {{ choice.label }}
+          </button>
+        </div>
+      </div>
 
       <GroupedList :level="3">
+        <GroupedRow
+          v-if="filters.view === 'pending'"
+          title="Masquer les offres écartées"
+          label
+          data-test="sheet-filtered-out"
+        >
+          <template #end>
+            <input
+              type="checkbox"
+              role="switch"
+              :checked="!filters.showFilteredOut"
+              @change="emit('update', { showFilteredOut: !filters.showFilteredOut })"
+            >
+          </template>
+        </GroupedRow>
         <GroupedRow
           title="Télétravail au moins partiel"
           label
@@ -105,27 +148,6 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
               :checked="filters.remote !== null"
               @change="emit('update', { remote: filters.remote === null ? 'partial' : null })"
             >
-          </template>
-        </GroupedRow>
-        <GroupedRow
-          title="Taux minimum"
-          label
-          data-test="sheet-rate"
-        >
-          <template #end>
-            <select
-              class="field-compact"
-              :value="filters.minRate ?? ''"
-              @change="onRate"
-            >
-              <option
-                v-for="rate in RATES"
-                :key="rate ?? 'tous'"
-                :value="rate ?? ''"
-              >
-                {{ rate === null ? "Tous" : `${rate} %` }}
-              </option>
-            </select>
           </template>
         </GroupedRow>
         <GroupedRow
@@ -208,11 +230,11 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
     <template #actions>
       <button
         type="button"
-        class="secondary"
+        class="link filters-clear"
         data-test="sheet-reset"
         @click="emit('reset')"
       >
-        Réinitialiser
+        Tout effacer
       </button>
       <button
         type="button"
