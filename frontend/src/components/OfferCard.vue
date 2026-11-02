@@ -4,8 +4,9 @@ import { useRouter } from "vue-router";
 
 import type { Offer } from "../api/client";
 import { dateInList } from "../dates";
+import { rateText, remoteText } from "../format";
 import OfferLine from "./OfferLine.vue";
-import ScoreWord from "./ScoreWord.vue";
+import ScoreRing from "./ScoreRing.vue";
 import StatusPill from "./StatusPill.vue";
 import { usePlan } from "../composables/usePlan";
 
@@ -33,6 +34,14 @@ const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>
   if (o.remote_from_switzerland === false) return { text: "Télétravail fermé depuis la Suisse", kind: "warn" };
   return null;
 });
+// Les faits de l'offre en pastilles, comme sur l'Accueil (docs/139, étape 5b).
+const facts = computed(() =>
+  [rateText(props.offer.rate_min, props.offer.rate_max), props.offer.employment_type ?? "", remoteText(props.offer) ?? ""].filter(Boolean),
+);
+// À traiter mêle trois statuts (C2) : la carte dit quand elle est en préparation ou gardée pour plus tard.
+const statusTag = computed(() =>
+  props.offer.status === "preparing" ? "En préparation" : props.offer.status === "later" ? "Plus tard" : null,
+);
 const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" ") ?? "");
 const location = computed(() =>
   [props.offer.location, props.showDate ? dateInList(props.offer.first_seen_at) : ""].filter(Boolean).join(" · ") || null,
@@ -63,6 +72,14 @@ function prepare(): void {
     @action="prepare"
   >
     <template #badges>
+      <StatusPill
+        v-if="statusTag"
+        :dot="false"
+        :class="['offer-status-tag', offer.status]"
+        data-test="status-tag"
+      >
+        {{ statusTag }}
+      </StatusPill>
       <!-- Des étiquettes sans état : sans point, neutres (règle §4). -->
       <StatusPill
         v-if="offer.spontaneous"
@@ -91,8 +108,24 @@ function prepare(): void {
         class="visually-hidden"
       > : {{ doubtText }}</span></span>
     </template>
+    <template
+      v-if="facts.length"
+      #facts
+    >
+      <span
+        class="offer-facts"
+        data-test="offer-facts"
+      >
+        <span
+          v-for="fact in facts"
+          :key="fact"
+        >{{ fact }}</span>
+      </span>
+    </template>
+    <!-- D3 (C7) : l'anneau sans chiffre, le mot dessous ; le chiffre pour les lecteurs d'écran. -->
     <template #verdict>
-      <ScoreWord
+      <ScoreRing
+        worded
         :score="offer.score ?? null"
         :pending="offer.summary_role ? 'Pas de note : aucun bloc de profil actif' : reached('score') ? 'Pas encore notée : les offres notées du mois sont utilisées' : 'Pas encore notée, à noter'"
         :stale="offer.score_stale"

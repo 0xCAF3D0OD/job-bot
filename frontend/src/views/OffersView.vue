@@ -40,6 +40,7 @@ const items = ref<Offer[]>([]);
 const total = ref(0);
 const counts = ref<Record<View, number>>({
   to_review: 0,
+  pending: 0,
   filtered_out: 0,
   later: 0,
   in_progress: 0,
@@ -55,6 +56,7 @@ const facets = ref<OfferFacets>({ sources: [], cantons: [], scores: [], unscored
 const loading = ref(false);
 // La fin de la phrase selon le statut regardé : « 4 offres à examiner. », « 1 offre écartée. ».
 const VIEW_END: Record<string, [string, string]> = {
+  pending: [" à traiter", " à traiter"],
   to_review: [" à examiner", " à examiner"],
   in_progress: [" en cours", " en cours"],
   later: [" pour plus tard", " pour plus tard"],
@@ -64,7 +66,7 @@ const VIEW_END: Record<string, [string, string]> = {
 };
 // Dans une autre vue que « À examiner », la phrase redit ce que compte la pastille de l'onglet
 // (1.6.27) : « 35 offres en cours · 169 à examiner. »
-const otherView = computed(() => filters.value.view !== "to_review" && counts.value.to_review > 0);
+const otherView = computed(() => filters.value.view !== "pending" && counts.value.pending > 0);
 const sentenceEnd = computed(() => {
   const [one, many] = VIEW_END[filters.value.view] ?? ["", ""];
   return `${total.value > 1 ? many : one}`;
@@ -125,11 +127,16 @@ const selected = computed(() => items.value.find((o) => o.id === selectedId.valu
 // comptée dans aucun jour.
 const pinnedId = ref<number | null>(null);
 const byDay = computed(() => filters.value.sort === "day");
+// À traiter (C2, C8) : les offres en préparation viennent d'abord (le serveur les met en tête) ; triées
+// par jour, elles ont leur propre titre, « En préparation », avant les jours.
+function groupKey(offer: Offer): string {
+  return filters.value.view === "pending" && offer.status === "preparing" ? "preparing" : dayKey(offer.first_seen_at);
+}
 const dayCounts = computed(() => {
   const counts = new Map<string, number>();
   for (const offer of items.value) {
     if (offer.id === pinnedId.value) continue;
-    const key = dayKey(offer.first_seen_at);
+    const key = groupKey(offer);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return counts;
@@ -139,11 +146,11 @@ function dayHeader(index: number): Day | null {
   if (!byDay.value) return null;
   const offer = items.value[index];
   if (!offer || offer.id === pinnedId.value) return null;
-  const key = dayKey(offer.first_seen_at);
+  const key = groupKey(offer);
   const previous = items.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
-  if (previous && dayKey(previous.first_seen_at) === key) return null;
+  if (previous && groupKey(previous) === key) return null;
   const n = dayCounts.value.get(key) ?? 0;
-  return { name: dayName(offer.first_seen_at), count: plural(n, "offre", "offres"), n };
+  return { name: key === "preparing" ? "En préparation" : dayName(offer.first_seen_at), count: plural(n, "offre", "offres"), n };
 }
 // Une liste à plat (lignes de jour et offres) pour que chaque offre s'anime seule (docs/60 §3).
 const rows = computed(() =>
@@ -218,7 +225,7 @@ function openManual(): void {
 
 // Tout est examiné (1.6.50) : la vue « À examiner » est vide alors que le compte a des offres.
 const allReviewed = computed(
-  () => !noOffersYet.value && filters.value.view === "to_review" && counts.value.to_review === 0 && !activeCount(filters.value),
+  () => !noOffersYet.value && filters.value.view === "pending" && counts.value.pending === 0 && !activeCount(filters.value),
 );
 
 // Le menu de « + Ajouter » (1.6.47) : « Ajouter une offre » attend une liste ; un compte neuf la trouve
@@ -455,7 +462,7 @@ onUnmounted(() => {
       data-test="offers-sentence"
     >
       <strong v-if="total">{{ plural(total, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}<template v-if="otherView">
-        {{ " · " }}<strong data-test="offers-to-review">{{ counts.to_review }}</strong>{{ " à examiner" }}
+        {{ " · " }}<strong data-test="offers-to-review">{{ counts.pending }}</strong>{{ " à traiter" }}
       </template>{{ "." }}
     </p>
     <!-- La barre d'outils (1.6.55, planche « Barre d'outils Offres ») : la recherche qui prend la ligne
@@ -716,23 +723,13 @@ onUnmounted(() => {
             :class="{ 'offer-day': row.day }"
             :data-test="row.day ? 'offer-day' : undefined"
           >
-            <!-- Sous 600 px (planche « Structure téléphone ») : le titre du jour d'une liste groupée,
-                 son nombre en pastille. -->
+            <!-- Le titre du jour, son nombre en gris (maquette Candidatures, C8) ; « En préparation » d'abord. -->
             <h2
               v-if="row.day"
-              :class="['offer-day-title', { 'grouped-title': narrow }]"
+              class="offer-day-title"
             >
               <span class="offer-day-name">{{ row.day.name }}</span>
-              <CountBadge
-                v-if="narrow"
-                :count="row.day.n"
-                class="grouped-count"
-                :aria-label="row.day.count"
-              />
-              <span
-                v-else
-                class="offer-day-count"
-              >{{ row.day.count }}</span>
+              <span class="offer-day-count">{{ row.day.count }}</span>
             </h2>
             <OfferCard
               v-else-if="row.offer"

@@ -44,7 +44,7 @@ function page(items: unknown[]) {
     data: {
       items,
       total: items.length,
-      counts: { to_review: 5, filtered_out: 2, later: 0, in_progress: 0, expired: 3, all: 7 },
+      counts: { to_review: 5, pending: 6, filtered_out: 2, later: 0, in_progress: 0, expired: 3, all: 7 },
       facets: {
         sources: [
           { value: "indeed", count: 3 },
@@ -126,7 +126,7 @@ describe("filtres dans l'adresse", () => {
     expect(fromQuery({ taux: "abc", site: "Monster!", statut: "?" })).toMatchObject({
       minRate: null,
       sources: [],
-      view: "to_review",
+      view: "pending",
     });
   });
 });
@@ -141,7 +141,7 @@ describe("OffersView", () => {
     // « Ajouter une offre » seulement dans l'écran vide, et la conclusion en une phrase (1.6.18).
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(false);
     expect(wrapper.find("[data-test=offers-none-add]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à examiner.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à traiter.");
     expect(empty.find("a").attributes("href")).toBe("/candidatures/alertes");
     expect(wrapper.find("[data-test=offers-empty]").exists()).toBe(false);
     // Des filtres : c'est « rien ne correspond », pas un compte neuf.
@@ -156,7 +156,7 @@ describe("OffersView", () => {
   it("la conclusion en une phrase, selon le statut regardé (règles §3.2, 1.6.18)", async () => {
     mockOffers(page([offer(1, "Une"), offer(2, "Deux")]));
     const wrapper = await mountAt("/offres");
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres à examiner.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter.");
     expect(wrapper.find("[data-test=offers-sentence] strong").text()).toBe("2 offres");
     // Un seul bouton « + Ajouter » (1.6.47) ; son menu propose les deux façons d'ajouter.
     await wrapper.find("[data-test=add-menu]").trigger("click");
@@ -164,13 +164,13 @@ describe("OffersView", () => {
     mockOffers(page([offer(3, "Trois")]));
     const dropped = await mountAt("/offres?statut=filtered_out");
     // Dans une autre vue, la phrase redit ce que compte la pastille de l'onglet (1.6.27).
-    expect(dropped.find("[data-test=offers-sentence]").text().replace(/\s+/g, " ")).toMatch(/^1 offre écartée( · \d+ à examiner)?\.$/);
+    expect(dropped.find("[data-test=offers-sentence]").text().replace(/\s+/g, " ")).toMatch(/^1 offre écartée( · \d+ à traiter)?\.$/);
   });
 
   it("transmet les filtres de l'adresse à l'API", async () => {
     await mountAt("/offres?canton=VD&taux=80&site=jobup&externe=1&q=linux");
     expect(lastQuery()).toMatchObject({
-      view: "to_review",
+      view: "pending",
       cantons: ["VD"],
       min_rate: 80,
       sources: ["jobup"],
@@ -183,7 +183,7 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
     // Cartes (docs/27) : la ligne déplie le choix dessous ; un autre filtre le replie.
-    expect(wrapper.find("[data-test=row-view]").text()).toContain("À examiner");
+    expect(wrapper.find("[data-test=row-view]").text()).toContain("À traiter");
     // Les filtres secondaires sont repliés dans « Plus de filtres » (docs/73 §6).
     expect(wrapper.find("[data-test=row-cantons]").exists()).toBe(false);
     await wrapper.find("[data-test=more-filters]").trigger("click");
@@ -278,12 +278,11 @@ describe("note et résumé", () => {
     const wrapper = await mountAt("/offres?tri=score&note=70");
     expect(lastQuery()).toMatchObject({ sort: "score", min_score: 70 });
     const [scored, unscored] = wrapper.findAll("[data-test=offer]");
-    // La note en mots dans la liste, le chiffre au survol (docs/121 §C.5).
+    // D3 (C7) : l'anneau sans chiffre comme jauge, le mot dessous ; le chiffre pour les lecteurs d'écran.
     expect(scored?.find("[data-test=score]").text()).toBe("Proche");
     expect(scored?.find("[data-test=score]").classes()).toContain("close");
     expect(scored?.find("[data-test=score]").attributes("aria-label")).toBe("Proche : 82 sur 100");
-    // La jauge discrète sous le mot, pour la nuance (règles §4, rétablie en 1.6.6).
-    expect(scored?.find(".score-gauge").attributes("style")).toContain("--p: 82");
+    expect(scored?.find(".score-ring").attributes("style")).toContain("--p: 82");
     expect(scored?.find(".score-line").exists()).toBe(false);
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
@@ -690,8 +689,8 @@ describe("Offres, sans bande d'action (1.6.53)", () => {
     expect(wrapper.text()).not.toContain("Commencer le tri");
   });
 
-  it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre à examiner. »", async () => {
-    const reviewed = { to_review: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
+  it("tout est examiné : pas de bande, « Tout est examiné » sans bouton, « Aucune offre à traiter. »", async () => {
+    const reviewed = { to_review: 0, pending: 0, filtered_out: 2, later: 0, in_progress: 3, expired: 1, all: 6 };
     mockOffers({ data: { ...page([]).data, counts: reviewed } });
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
@@ -699,7 +698,7 @@ describe("Offres, sans bande d'action (1.6.53)", () => {
     expect(done.find(".face-state-title").text()).toBe("Tout est examiné");
     expect(done.text()).toContain("Les nouvelles arrivent chaque matin.");
     expect(done.find("button, a").exists()).toBe(false);
-    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à examiner.");
+    expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("Aucune offre à traiter.");
   });
 });
 
@@ -762,5 +761,35 @@ describe("Offres, illustrations (planche « Illustrations »)", () => {
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=network-error]").exists()).toBe(true);
     expect(wrapper.text()).not.toContain("Impossible de charger les offres.");
+  });
+});
+
+describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
+  it("en préparation d'abord, sous son titre ; l'étiquette sur la carte ; les faits en pastilles", async () => {
+    const now = new Date().toISOString();
+    mockOffers(
+      page([
+        offer(1, "Lettre en cours", { status: "preparing", first_seen_at: now }),
+        offer(2, "Gardée", { status: "later", first_seen_at: now, employment_type: "CDI" }),
+        offer(3, "Nouvelle", { first_seen_at: now }),
+      ]),
+    );
+    const wrapper = await mountAt("/offres");
+    expect(lastQuery().view).toBe("pending");
+    const titles = wrapper.findAll("[data-test=offer-day] .offer-day-name").map((h) => h.text());
+    expect(titles).toEqual(["En préparation", "Aujourd'hui"]);
+    const cards = wrapper.findAll("[data-test=offer]");
+    expect(cards.map((c) => c.find("[data-test=status-tag]").exists() && c.find("[data-test=status-tag]").text())).toEqual([
+      "En préparation",
+      "Plus tard",
+      false,
+    ]);
+    expect(cards[1]!.findAll("[data-test=offer-facts] span").map((s) => s.text())).toEqual(["80–100 %", "CDI"]);
+  });
+
+  it("hors du tri par jour, une liste à plat", async () => {
+    mockOffers(page([offer(1, "Lettre en cours", { status: "preparing" }), offer(2, "Nouvelle")]));
+    const wrapper = await mountAt("/offres?tri=score");
+    expect(wrapper.find("[data-test=offer-day]").exists()).toBe(false);
   });
 });

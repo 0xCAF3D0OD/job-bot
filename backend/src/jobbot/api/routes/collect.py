@@ -1,7 +1,7 @@
 """Journal des recherches, offres collectées et lancement manuel de la collecte."""
 
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
@@ -161,6 +161,8 @@ class ScorePoint(BaseModel):
 
 class OfferCounts(BaseModel):
     to_review: int
+    # À traiter (docs/139, C2) : à examiner, plus tard et en préparation.
+    pending: int
     filtered_out: int
     later: int
     # En préparation ou candidature envoyée (expirées comprises : un bandeau le signale).
@@ -492,6 +494,12 @@ def _view_condition(view: str) -> ColumnElement[bool] | None:
     live = Offer.expired_at.is_(None)
     if view == "to_review":
         return and_(Offer.status.in_(TO_REVIEW), live)
+    if view == "pending":
+        # En préparation, elle reste à traiter même retirée : un bandeau le dit dans la fiche.
+        return or_(
+            and_(Offer.status.in_((*TO_REVIEW, OfferStatus.LATER)), live),
+            Offer.status == OfferStatus.PREPARING,
+        )
     if view == "filtered_out":
         return and_(Offer.status == OfferStatus.FILTERED_OUT, live)
     if view == "later":
@@ -509,7 +517,9 @@ async def list_offers(
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
     sort: Literal["recent", "day", "popular", "score", "activity"] = "recent",
-    view: Literal["to_review", "filtered_out", "later", "in_progress", "expired", "all"] = "all",
+    view: Literal[
+        "to_review", "pending", "filtered_out", "later", "in_progress", "expired", "all"
+    ] = "all",
     q: Annotated[str | None, Query(max_length=200)] = None,
     min_score: Annotated[int | None, Query(ge=1, le=100)] = None,
     max_score: Annotated[int | None, Query(ge=0, le=99)] = None,
@@ -545,12 +555,16 @@ async def list_offers(
     activity = func.coalesce(sent, drafted, Offer.first_seen_at)
     # Jour de réception, heure suisse : les offres d'un même jour, la mieux notée d'abord.
     day = func.date(func.timezone(LOCAL_TZ.key, Offer.first_seen_at))
-    order = {
+    order: tuple[ColumnElement[Any], ...] = {
         "day": (day.desc(), score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
         "popular": (Offer.seen_count.desc(), Offer.last_seen_at.desc(), Offer.id.desc()),
         "score": (score.desc().nulls_last(), Offer.first_seen_at.desc(), Offer.id.desc()),
         "activity": (activity.desc(), Offer.id.desc()),
     }.get(sort, (Offer.first_seen_at.desc(), Offer.id.desc()))
+    if view == "pending":
+        # À traiter : les offres en préparation d'abord (docs/139, C2), puis l'ordre du tri.
+        first: ColumnElement[Any] = case((Offer.status == OfferStatus.PREPARING, 0), else_=1)
+        order = (first, *order)
     conditions = _filters(q, sources, cantons, min_rate, external_only, remote, hide_doubtful)
     # Sans le filtre de note : base de la courbe des notes.
     without_score = [*conditions]
@@ -618,6 +632,8 @@ async def list_offers(
             live[offer_status] = live.get(offer_status, 0) + count
     counts = OfferCounts(
         to_review=sum(live.get(s, 0) for s in TO_REVIEW),
+        pending=sum(live.get(s, 0) for s in (*TO_REVIEW, OfferStatus.LATER))
+        + sum(c for s, e, c in grouped if s == OfferStatus.PREPARING),
         filtered_out=live.get(OfferStatus.FILTERED_OUT, 0),
         later=live.get(OfferStatus.LATER, 0),
         in_progress=sum(live.get(s, 0) for s in IN_PROGRESS),

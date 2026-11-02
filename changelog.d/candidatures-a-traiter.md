@@ -1,0 +1,1 @@
+À traiter réunit les offres à examiner, gardées pour plus tard et en préparation, celles en préparation d'abord sous leur propre titre ; chaque carte dit « En préparation » ou « Plus tard », montre le taux, le contrat et le télétravail en pastilles, et la note en anneau sans chiffre avec le mot dessous ; sur le téléphone, une carte par offre

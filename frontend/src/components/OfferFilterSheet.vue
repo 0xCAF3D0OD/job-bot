@@ -15,6 +15,7 @@ const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferF
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
 
 const VIEWS: { value: View; label: string }[] = [
+  { value: "pending", label: "À traiter" },
   { value: "to_review", label: "À examiner" },
   { value: "in_progress", label: "En cours" },
   { value: "later", label: "Plus tard" },

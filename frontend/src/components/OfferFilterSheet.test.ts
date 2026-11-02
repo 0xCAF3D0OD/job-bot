@@ -16,7 +16,7 @@ function mountSheet(patch: Partial<OfferFilters> = {}, total = 3) {
 describe("OfferFilterSheet (planche « Structure téléphone », 248:306)", () => {
   it("statut et note minimale en radios, télétravail en interrupteur, « Afficher 3 offres »", () => {
     const wrapper = mountSheet();
-    expect(wrapper.find("[data-test=sheet-view-to_review] input[type=radio]").element).toHaveProperty("checked", true);
+    expect(wrapper.find("[data-test=sheet-view-pending] input[type=radio]").element).toHaveProperty("checked", true);
     expect(wrapper.findAll("[data-test^=sheet-score] input[type=radio]")).toHaveLength(3);
     expect(wrapper.find("[data-test=sheet-score-all] input").element).toHaveProperty("checked", true);
     expect(wrapper.find("[data-test=sheet-remote] input[role=switch]").exists()).toBe(true);

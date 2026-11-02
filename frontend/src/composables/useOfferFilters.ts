@@ -4,7 +4,7 @@ import { useRoute, useRouter, type LocationQuery } from "vue-router";
 import type { Source } from "../api/client";
 import { sourceLabel } from "../format";
 
-export type View = "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
+export type View = "pending" | "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
 export type Sort = "day" | "recent" | "popular" | "score" | "activity";
 
 // Télétravail (docs/26 §4) : au moins partiel, ou complet.
@@ -27,7 +27,8 @@ export interface OfferFilters {
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
-  view: "to_review",
+  // À traiter (docs/139, C2) : à examiner, plus tard et en préparation.
+  view: "pending",
   // Par jour, la mieux notée d'abord dans chaque jour (retour d'usage du 2026-10-14).
   sort: "day",
   q: "",
@@ -41,7 +42,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   hideDoubtful: false,
 };
 
-const VIEWS: View[] = ["to_review", "filtered_out", "later", "in_progress", "expired", "all"];
+const VIEWS: View[] = ["pending", "to_review", "filtered_out", "later", "in_progress", "expired", "all"];
 const SORTS: Sort[] = ["day", "recent", "popular", "score", "activity"];
 
 function list(value: LocationQuery[string] | undefined): string[] {
