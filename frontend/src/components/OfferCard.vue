@@ -5,17 +5,21 @@ import { useRouter } from "vue-router";
 import type { Offer } from "../api/client";
 import { dateInList } from "../dates";
 import { rateText, remoteText } from "../format";
+import AppIcon from "./AppIcon.vue";
 import OfferLine from "./OfferLine.vue";
 import ScoreRing from "./ScoreRing.vue";
 import StatusPill from "./StatusPill.vue";
 import { usePlan } from "../composables/usePlan";
+import { usePhone } from "../composables/usePhone";
 
 // Une offre dans la liste d'Offres : la Ligne d'offre complète (planche « Ligne d'offre », 1.6.7x) ;
 // le détail s'ouvre à droite. Toute la ligne sélectionne l'offre ; pas de mot d'action sur une offre
 // nouvelle (choix de Kevin), « Préparer » seulement sur une offre gardée. La date n'y est que hors du
 // tri « Par jour », où la ligne du jour la donne.
 const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean }>();
-defineEmits<{ select: [] }>();
+defineEmits<{ select: []; more: [] }>();
+// Téléphone (C6) : le « ⋯ » de 44 px dans le coin bas de la carte ouvre ses actions.
+const { phone } = usePhone();
 const router = useRouter();
 
 const expired = computed(() => Boolean(props.offer.expired_at) && props.offer.status !== "applied");
@@ -123,6 +127,20 @@ function prepare(): void {
       </span>
     </template>
     <!-- D3 (C7) : l'anneau sans chiffre, le mot dessous ; le chiffre pour les lecteurs d'écran. -->
+    <template
+      v-if="phone"
+      #corner
+    >
+      <button
+        type="button"
+        class="offer-more"
+        :aria-label="`Actions pour ${offer.title}`"
+        data-test="offer-more"
+        @click="$emit('more')"
+      >
+        <AppIcon name="more" />
+      </button>
+    </template>
     <template #verdict>
       <ScoreRing
         worded

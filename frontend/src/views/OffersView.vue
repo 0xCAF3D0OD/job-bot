@@ -6,6 +6,7 @@ import { api, type FilterKey, type Offer, type OfferFacets } from "../api/client
 import AppIcon from "../components/AppIcon.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
 import IconButton from "../components/IconButton.vue";
+import OfferActionSheet from "../components/OfferActionSheet.vue";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
 import ShowMore from "../components/ShowMore.vue";
@@ -83,6 +84,12 @@ const { phone } = usePhone();
 // Barre d'outils (1.6.55) : « Filtrer » ouvre un panneau sous le bouton (ordinateur) ou une feuille en
 // bas de l'écran (téléphone) ; les filtres actifs restent visibles en pastilles sous la barre.
 const chips = computed(() => activeChips(filters.value));
+// « Note minimale : Proche et plus, Taux : 80 % et plus. Élargis un critère pour voir plus d'offres. »
+const emptyFiltersLine = computed(() => {
+  const q = filters.value.q.trim();
+  const parts = [...(q ? [`Recherche « ${q} »`] : []), ...chips.value.map((chip) => chip.label)];
+  return `${parts.join(", ")}. Élargis un critère pour voir plus d'offres.`;
+});
 const filterLabel = computed(() => {
   const active = chips.value.length ? `, ${plural(chips.value.length, "filtre actif", "filtres actifs")}` : "";
   if (phone.value) return `Filtres${active}`;
@@ -295,8 +302,8 @@ async function load(append = false): Promise<void> {
   }
 }
 
-async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"): Promise<void> {
-  const offer = selected.value;
+async function setStatus(status: "to_review" | "later" | "ignored" | "preparing", target: Offer | null = selected.value): Promise<void> {
+  const offer = target;
   if (!offer) return;
   const { error } = await api.PATCH("/api/offers/{offer_id}/status", {
     params: { path: { offer_id: offer.id } },
@@ -308,14 +315,36 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   }
   // L'offre quitte la vue actuelle si elle n'y a plus sa place : on recharge ; sa carte
   // s'efface et les suivantes remontent (docs/60 §3), avec « Annuler » dans le message.
-  if (status !== "preparing") selectedId.value = null;
+  if (status !== "preparing" && selectedId.value === offer.id) selectedId.value = null;
   const previous = offer.status;
   undo.value =
     status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")
       ? { id: offer.id, status: previous }
       : null;
-  notice.value = undo.value ? `Passée en ${STATUS_TEXT[status]}.` : "";
+  notice.value = undo.value ? (status === "ignored" ? "Offre écartée." : `Passée en ${STATUS_TEXT[status]}.`) : "";
+  // « Annuler » reste 6 s (docs/108), puis le message s'efface.
+  clearTimeout(undoTimer);
+  if (undo.value) {
+    const shown = undo.value;
+    undoTimer = setTimeout(() => {
+      if (undo.value !== shown) return;
+      undo.value = null;
+      notice.value = "";
+    }, 6000);
+  }
   await load();
+}
+let undoTimer: ReturnType<typeof setTimeout> | undefined;
+
+// La feuille d'actions d'une carte (téléphone, C6) : l'offre dont on a touché le « ⋯ ».
+const actionsOffer = ref<Offer | null>(null);
+function discardFromSheet(offer: Offer): void {
+  actionsOffer.value = null;
+  void setStatus("ignored", offer);
+}
+function sentFromSheet(offer: Offer): void {
+  actionsOffer.value = null;
+  void openApplication(offer);
 }
 
 const STATUS_TEXT: Record<string, string> = { later: "Plus tard", ignored: "Ignorées", to_review: "À examiner" };
@@ -358,8 +387,8 @@ async function setAddress(address: string): Promise<void> {
   await load();
 }
 
-async function openApplication(): Promise<void> {
-  const offer = selected.value;
+async function openApplication(target: Offer | null = selected.value): Promise<void> {
+  const offer = target;
   if (!offer) return;
   applyError.value = "";
   const { data } = await api.GET("/api/offers/{offer_id}/application-prefill", {
@@ -442,6 +471,7 @@ useDataChanged(() => {
   void load();
 });
 onUnmounted(() => {
+  clearTimeout(undoTimer);
   window.removeEventListener("keydown", onKeydown);
   document.removeEventListener("pointerdown", onPointerDown);
   assistant.setFocus(null);
@@ -452,7 +482,7 @@ onUnmounted(() => {
   <section class="offers-page">
     <!-- La conclusion en une phrase (règles §3.2), le compte en accent comme sur Aujourd'hui. -->
     <p
-      v-if="!loading || items.length"
+      v-if="!failed && (!loading || items.length)"
       class="offers-sentence"
       data-test="offers-sentence"
     >
@@ -611,8 +641,11 @@ onUnmounted(() => {
           @arrived="load()"
         />
         <PlanLimit usage="score" />
+        <!-- Téléphone (maquette ErreurConnexion, C9) : le visage, la phrase des offres, « Réessayer ». -->
         <NetworkError
           v-if="failed && offline"
+          :title="phone ? 'Connexion perdue' : undefined"
+          :line="phone ? 'Impossible de charger les offres. Vérifie ta connexion, puis réessaie.' : undefined"
           @retry="load()"
         />
         <p
@@ -676,6 +709,25 @@ onUnmounted(() => {
             </RouterLink>
           </div>
         </FaceState>
+        <!-- Téléphone (maquette AucuneOffre, C9) : ce qui filtre, en mots, et « Modifier les filtres ». -->
+        <FaceState
+          v-else-if="!loading && items.length === 0 && activeCount(filters) && phone"
+          title="Aucune offre avec ces filtres"
+          mood="neutre"
+          data-test="offers-empty"
+        >
+          <p>{{ emptyFiltersLine }}</p>
+          <div class="face-state-actions">
+            <button
+              type="button"
+              class="primary"
+              data-test="offers-edit-filters"
+              @click="openFilters()"
+            >
+              Modifier les filtres
+            </button>
+          </div>
+        </FaceState>
         <!-- Aucun résultat avec des filtres (règles §4) : une ligne grise et « Effacer les filtres ». -->
         <p
           v-else-if="!loading && items.length === 0 && activeCount(filters)"
@@ -724,6 +776,7 @@ onUnmounted(() => {
               :selected="row.offer.id === selectedId"
               :show-date="!byDay || row.offer.id === pinnedId"
               @select="selectOffer(row.offer.id)"
+              @more="actionsOffer = row.offer"
             />
           </li>
         </TransitionGroup>
@@ -736,7 +789,7 @@ onUnmounted(() => {
           @update:model-value="loadMore"
         />
         <p
-          v-if="phone && !loading"
+          v-if="phone && !loading && !failed"
           class="offers-spontaneous"
         >
           <button
@@ -778,6 +831,13 @@ onUnmounted(() => {
     :error="applyError"
     @submit="saveApplication"
     @close="applying = null"
+  />
+  <OfferActionSheet
+    v-if="phone"
+    :offer="actionsOffer"
+    @close="actionsOffer = null"
+    @discard="discardFromSheet"
+    @sent="sentFromSheet"
   />
   <SidePanel
     v-if="spontaneousOpen"

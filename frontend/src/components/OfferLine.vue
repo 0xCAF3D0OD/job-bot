@@ -146,5 +146,7 @@ const described = computed(() => [`${id}-sub`, props.note || props.state ? `${id
     >
       {{ action }}
     </button>
+    <!-- Un bouton dans un coin de la ligne (le « ⋯ » d'une carte d'offre), au-dessus de la zone qui l'ouvre. -->
+    <slot name="corner" />
   </article>
 </template>

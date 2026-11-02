@@ -4071,7 +4071,17 @@ html.search-open { overflow: hidden; }
   .offer-cards > li > .offer-line.full,
   .offer-cards > li:not(.offer-day) + li:not(.offer-day) > .offer-line.full { padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-card); }
   .offer-line.full { align-items: start; }
+  /* Le « ⋯ » d'une carte (C6) : 44 px dans le coin bas, au-dessus du lien étiré qui ouvre l'offre. */
+  .offer-more {
+    position: absolute; right: var(--space-1); bottom: var(--space-1); z-index: 1; display: inline-grid; place-items: center;
+    width: var(--control-h); height: var(--control-h); padding: 0; border: 0; border-radius: var(--radius-pill); background: none; color: var(--muted);
+  }
+  .offer-more:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  .offer-line:has(> .offer-more) .offer-line-text { padding-bottom: var(--space-2); }
 }
+/* La feuille d'actions d'une offre : le lieu sous le titre, « Écarter » en rouge (maquette ActionsOffre). */
+.offer-actions-where { margin: 0; color: var(--muted); font-size: var(--font-small); }
+.offer-actions-discard .grouped-row, .offer-actions-discard .grouped-icon { color: var(--danger); }
 @media (prefers-reduced-motion: reduce) { .offer-line { transition: none; } }
 /* --- Suivi, le filtre par mots (décision de Kevin, 27.10) --- le champ et « Tous les mois » sur une ligne. */
 .suivi-list-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); margin-bottom: var(--space-4); }
