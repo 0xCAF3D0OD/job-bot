@@ -114,8 +114,10 @@ dans le navigateur (`localStorage`), « Automatique » par défaut. Réglage dan
 
 0. **Cette PR** : les fichiers dans `docs/mobile/` et ce plan. Si tu valides, j'y ajoute la mise à jour de
    `docs/regles-ui-ergonomie.md` et du `CLAUDE.md` (Q1), avant tout code.
-1. **Tokens clair et sombre** + alias + `data-theme` + test de contraste et de concordance avec `tokens.css`.
-2. **FaceTransform et FaceMark joués une fois** (WCAG 2.2.2) : petite, indépendante, peut passer tout de suite.
+1. **Tokens clair et sombre** + alias + test de contraste et de concordance avec `tokens.css` (PR 461). Le choix
+   forcé (`data-theme`) passe à l'étape Compte › Apparence.
+2. **FaceTransform joué une fois** (WCAG 2.2.2) : fait, PR 460. Le pouls d'attente de FaceMark reste en boucle
+   (une vraie attente, D9).
 3. **Barre du bas** (`BottomNav`) et `AppHeader`.
 4. **Accueil** (`AccueilSmile`), 5. **Candidatures** (+ `Filtres`, `ActionsOffre`, `AucuneOffre`, `ErreurConnexion`),
    6. **Détail d'une offre**, 7. **Ma candidature** (`Preparer`, `StepTabs`), 8. **Progresser** (`Explorer`, `Orp`,
