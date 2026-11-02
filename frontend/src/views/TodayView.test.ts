@@ -172,10 +172,11 @@ describe("Les premiers pas (docs/128)", () => {
 describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => {
   const days = [19, 20, 21, 22, 23, 24, 25].map((d, i) => ({ day: `2026-10-${d}`, research: i < 5, sent: 0, paused: false }));
   const rhythm = (extra: Record<string, unknown> = {}) => ({ target: 3, count: 1, days, research_today: true, ...extra });
+  // Le jour de Zurich, comme l'interface : entre 23 h et minuit UTC, le jour du runner a un jour de retard.
   const isoIn = (n: number): string => {
-    const d = new Date();
-    d.setDate(d.getDate() + n);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const d = new Date(`${new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" })}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
   };
   afterEach(clearStorage);
 

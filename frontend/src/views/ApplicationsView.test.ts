@@ -392,10 +392,11 @@ describe("Suivi en calendrier (docs/22)", () => {
 
 describe("Suivi, une carte et un panneau (docs/46)", () => {
   it("la prochaine étape suit l'ordre : relance, puis ORP, sinon Gérer ; la liste ouvre le panneau", async () => {
+    // Le jour de Zurich, comme l'interface : entre 23 h et minuit UTC, le jour du runner a un jour de retard.
     const ago = (days: number): string => {
-      const d = new Date();
-      d.setDate(d.getDate() - days);
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const d = new Date(`${new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" })}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() - days);
+      return d.toISOString().slice(0, 10);
     };
     const late = { ...application, id: 2, company: "Lente SA", sent_at: ago(12), interview_at: null };
     mockApi(() => month(), [late]);
