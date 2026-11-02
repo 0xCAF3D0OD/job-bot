@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1, connexion perdue</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+.wait-pulse2{animation:waitPulse 1.2s ease-in-out .6s infinite}@media (prefers-reduced-motion: reduce){.wait-pulse2{animation:none}}
+@keyframes triNo{0%{transform:rotate(0)}25%{transform:rotate(-6deg)}50%{transform:rotate(5deg)}75%{transform:rotate(-2deg)}100%{transform:rotate(0)}}.tri-no{transform-origin:50% 86%;animation:triNo .6s cubic-bezier(.2,0,0,1) .25s both}@media (prefers-reduced-motion: reduce){.tri-no{animation:none}}
+@keyframes joiePop{0%{transform:scale(.6)}100%{transform:scale(1)}}.joie{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}input[type=checkbox]:checked{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}[aria-pressed=true]>svg{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}@media (prefers-reduced-motion: reduce){.joie,input[type=checkbox]:checked,[aria-pressed=true]>svg{animation:none}}
+@keyframes navDot{from{transform:translateY(14px) scale(.7);opacity:.3}to{transform:none;opacity:1}}.nav-dot{animation:navDot .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}@media (prefers-reduced-motion: reduce){.nav-dot{animation:none}}
+@keyframes navTab{from{transform:translateY(22px)}to{transform:translateY(0)}}@keyframes navIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.nav-tab{animation:navTab .32s cubic-bezier(.2,0,0,1) both}.nav-in{animation:navIn .3s cubic-bezier(.2,0,0,1) .08s both}@media (prefers-reduced-motion: reduce){.nav-tab,.nav-in{animation:none}}
+/*jaMotion*/button,a,input,[role=tab],[role=radio],[role=switch]{transition:background-color .2s cubic-bezier(.2,0,0,1),color .2s,border-color .2s,box-shadow .2s,transform .12s}button:active,a:active{transform:scale(.97)}@media (prefers-reduced-motion: reduce){button,a,input{transition:none}button:active,a:active{transform:none}}
+body{margin:0}
+a{color:#2445C2}a:hover{color:#1A3496}
+@keyframes waitSpin{to{transform:rotate(360deg)}}
+.wait-spin{transform-origin:50px 50px;animation:waitSpin 3s linear infinite}
+@keyframes waitPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.wait-pulse{animation:waitPulse 1.2s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.wait-spin,.wait-pulse{animation:none}}
+@keyframes navUp{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.nav-active{animation:navUp .28s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion: reduce){.nav-active{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; padding-left: 4px">
+<div style="display: flex; align-items: center; gap: 10px"><svg width="28" height="28" viewBox="8 8 86 86" role="img" aria-label="jobA1"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="45" r="10" fill="#2445C2"></circle><circle cx="76" cy="41" r="10" fill="#E8B48A"></circle><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><h1 style="margin: 0; font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.5px">Candidatures</h1></div>
+<a href="Filtres.dc.html" aria-label="Filtres" style="width: 44px; height: 44px; border-radius: 22px; display: flex; align-items: center; justify-content: center; color: #1B1F2A">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg>
+</a>
+</div>
+<label style="display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 14px; color: #596070">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Rechercher une offre</span>
+<input type="search" placeholder="Poste, entreprise, lieu" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-family: inherit; font-size: 16px; color: #1B1F2A">
+</label>
+<div role="group" aria-label="Statut" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #ECE9E1; border-radius: 14px">
+<button type="button" aria-pressed="true" style="height: 40px; border: 0; border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(27, 31, 42, 0.12); font-family: inherit; font-size: 14px; font-weight: 700; color: #1B1F2A; cursor: pointer">À traiter</button>
+<button type="button" aria-pressed="false" style="height: 40px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Envoyées</button>
+<button type="button" aria-pressed="false" style="height: 40px; border: 0; border-radius: 10px; background: transparent; font-family: inherit; font-size: 14px; font-weight: 600; color: #474C59; cursor: pointer">Rendez-vous</button>
+</div>
+</header>
+
+<div style="position: relative; flex: 1; min-height: 0; display: flex">
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 0 32px 40px; text-align: center">
+<sc-if value="{{failed}}" hint-placeholder-val="{{ true }}">
+<svg class="tri-no" width="156" height="156" viewBox="0 0 100 100" role="img" aria-label="jobA1, erreur"><path d="M56.77 22.25 L85.23 73.75 Q92.00 86.00 78.00 86.00 L22.00 86.00 Q8.00 86.00 14.77 73.75 L43.23 22.25 Q50.00 10.00 56.77 22.25 Z" fill="#FCEEDD" stroke="#F0C69B" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><g transform="translate(50 63) scale(0.5) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="46" r="10" fill="#2445C2"></circle><circle cx="76" cy="44" r="10" fill="#E8B48A"></circle><path d="M36 77 L 64 77" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+<h2 role="alert" style="margin: 8px 0 0; font-size: 22px; line-height: 28px; font-weight: 800">Connexion perdue</h2>
+<p style="margin: 0; font-size: 16px; line-height: 23px; color: #474C59">Impossible de charger les offres. Vérifie ta connexion, puis réessaie.</p>
+<button type="button" onClick="{{retry}}" style="margin-top: 10px; height: 52px; padding: 0 28px; border: 0; border-radius: 26px; background: #2445C2; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Réessayer</button>
+</sc-if>
+<sc-if value="{{loading}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="display: flex; flex-direction: column; align-items: center; gap: 14px">
+<div style="width: 156px; height: 156px; flex: none; display: flex; align-items: center; justify-content: center"><svg width="130" height="130" viewBox="0 0 100 100" role="img" aria-label="Chargement en cours"><path class="wait-spin" d="M97.20 50.00 L97.01 51.64 L96.48 53.25 L95.63 54.80 L94.55 56.26 L93.33 57.64 L92.07 58.94 L90.87 60.19 L89.81 61.41 L88.95 62.66 L88.34 63.95 L87.97 65.34 L87.83 66.84 L87.86 68.46 L87.98 70.19 L88.11 72.00 L88.15 73.84 L88.04 75.66 L87.69 77.38 L87.07 78.96 L86.16 80.34 L84.96 81.48 L83.51 82.36 L81.87 83.00 L80.10 83.43 L78.28 83.71 L76.48 83.89 L74.76 84.08 L73.16 84.33 L71.70 84.73 L70.40 85.33 L69.23 86.16 L68.15 87.22 L67.13 88.48 L66.11 89.88 L65.05 91.35 L63.90 92.79 L62.65 94.10 L61.27 95.20 L59.78 96.02 L58.20 96.48 L56.55 96.59 L54.87 96.33 L53.20 95.77 L51.57 94.96 L50.00 94.00 L48.50 92.98 L47.06 92.02 L45.67 91.18 L44.30 90.56 L42.92 90.18 L41.48 90.06 L39.98 90.18 L38.39 90.49 L36.71 90.91 L34.95 91.35 L33.15 91.71 L31.34 91.91 L29.58 91.87 L27.91 91.54 L26.40 90.88 L25.07 89.90 L23.95 88.62 L23.03 87.12 L22.30 85.45 L21.72 83.71 L21.22 81.96 L20.74 80.30 L20.21 78.77 L19.56 77.41 L18.75 76.23 L17.73 75.22 L16.50 74.34 L15.08 73.55 L13.52 72.79 L11.89 72.00 L10.28 71.12 L8.76 70.11 L7.44 68.95 L6.38 67.62 L5.65 66.14 L5.26 64.54 L5.22 62.84 L5.48 61.10 L5.99 59.35 L6.67 57.64 L7.41 55.99 L8.11 54.40 L8.69 52.89 L9.07 51.43 L9.20 50.00 L9.07 48.57 L8.69 47.11 L8.11 45.60 L7.41 44.01 L6.67 42.36 L5.99 40.65 L5.48 38.90 L5.22 37.16 L5.26 35.46 L5.65 33.86 L6.38 32.38 L7.44 31.05 L8.76 29.89 L10.28 28.88 L11.89 28.00 L13.52 27.21 L15.08 26.45 L16.50 25.66 L17.73 24.78 L18.75 23.77 L19.56 22.59 L20.21 21.23 L20.74 19.70 L21.22 18.04 L21.72 16.29 L22.30 14.55 L23.03 12.88 L23.95 11.38 L25.07 10.10 L26.40 9.12 L27.91 8.46 L29.58 8.13 L31.34 8.09 L33.15 8.29 L34.95 8.65 L36.71 9.09 L38.39 9.51 L39.98 9.82 L41.48 9.94 L42.92 9.82 L44.30 9.44 L45.67 8.82 L47.06 7.98 L48.50 7.02 L50.00 6.00 L51.57 5.04 L53.20 4.23 L54.87 3.67 L56.55 3.41 L58.20 3.52 L59.78 3.98 L61.27 4.80 L62.65 5.90 L63.90 7.21 L65.05 8.65 L66.11 10.12 L67.13 11.52 L68.15 12.78 L69.23 13.84 L70.40 14.67 L71.70 15.27 L73.16 15.67 L74.76 15.92 L76.48 16.11 L78.28 16.29 L80.10 16.57 L81.87 17.00 L83.51 17.64 L84.96 18.52 L86.16 19.66 L87.07 21.04 L87.69 22.62 L88.04 24.34 L88.15 26.16 L88.11 28.00 L87.98 29.81 L87.86 31.54 L87.83 33.16 L87.97 34.66 L88.34 36.05 L88.95 37.34 L89.81 38.59 L90.87 39.81 L92.07 41.06 L93.33 42.36 L94.55 43.74 L95.63 45.20 L96.48 46.75 L97.01 48.36 Z" fill="#E8ECFB" stroke="#C9D3F6" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><g transform="translate(50 52) scale(0.6) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle class="wait-pulse" cx="24" cy="46" r="10" fill="#2445C2"></circle><circle class="wait-pulse2" cx="76" cy="44" r="10" fill="#E8B48A"></circle><path d="M34 75 L 66 75" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></div>
+<h2 style="margin: 8px 0 0; font-size: 22px; line-height: 28px; font-weight: 800">Chargement…</h2>
+<p style="margin: 0; font-size: 16px; line-height: 23px; color: #474C59">On récupère tes offres.</p>
+</div>
+</sc-if>
+</main>
+</div>
+<div aria-hidden="true" style="flex: none; height: 22px"></div>
+<nav aria-label="Navigation principale" style="position: relative; z-index: 5; flex: none; height: 84px; box-sizing: border-box; padding-top: 8px; background: transparent; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start">
+<svg aria-hidden="true" width="390" height="84" viewBox="0 0 390 84" style="position: absolute; left: 0; top: 0; z-index: 0"><path d="M0 0 H69 C81 0 81 40 117 40 C153 40 153 0 165 0 H390 V84 H0 Z" fill="#FFFFFF"></path><path d="M0 0.5 H69 C81 0.5 81 40.5 117 40.5 C153 40.5 153 0.5 165 0.5 H390" fill="none" stroke="#E5E2D9" stroke-width="1"></path></svg>
+<a href="AccueilSmile.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"></path></svg></span>Accueil</a>
+<a href="Candidatures.dc.html" aria-current="page" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; min-height: 56px; text-decoration: none; color: #2445C2; font-size: 12px; font-weight: 700"><span class="nav-dot" style="width: 56px; height: 56px; margin-top: -30px; border-radius: 28px; background: #2445C2; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(36,69,194,.28)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"></path></svg></span><span style="margin-top: 10px">Candidatures</span></a>
+<a href="Assistant.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M26 45 C 28.5 37, 37.5 37, 40 45" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"></path><path d="M59 30.5 Q60.84 40.16 70.5 42 Q60.84 43.84 59 53.5 Q57.16 43.84 47.5 42 Q57.16 40.16 59 30.5 Z" fill="#E8B48A"></path><path d="M29 60 C 37 71, 55 71, 63 60" fill="none" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"></path></g></svg></span>Assistant</a>
+<a href="Explorer.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg></span>Progresser</a>
+<a href="Compte.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg></span>Compte</a>
+</nav>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+componentWillUnmount() { clearTimeout(this.t); }
+renderVals() {
+const s = this.state || {};
+const loading = !!s.loading;
+return {
+failed: !loading, loading: loading,
+retry: () => { clearTimeout(this.t); this.setState({ loading: true }); this.t = setTimeout(() => this.setState({ loading: false }), 2500); }
+};
+}
+}
+</script>
+</body>
+</html>

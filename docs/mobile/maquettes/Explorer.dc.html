@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1, progresser</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+@keyframes joiePop{0%{transform:scale(.6)}100%{transform:scale(1)}}.joie{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}input[type=checkbox]:checked{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}[aria-pressed=true]>svg{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}@media (prefers-reduced-motion: reduce){.joie,input[type=checkbox]:checked,[aria-pressed=true]>svg{animation:none}}
+@keyframes navDot{from{transform:translateY(14px) scale(.7);opacity:.3}to{transform:none;opacity:1}}.nav-dot{animation:navDot .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}@media (prefers-reduced-motion: reduce){.nav-dot{animation:none}}
+@keyframes navTab{from{transform:translateY(22px)}to{transform:translateY(0)}}@keyframes navIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.nav-tab{animation:navTab .32s cubic-bezier(.2,0,0,1) both}.nav-in{animation:navIn .3s cubic-bezier(.2,0,0,1) .08s both}@media (prefers-reduced-motion: reduce){.nav-tab,.nav-in{animation:none}}
+@keyframes jaWave{from{transform:translateX(0)}to{transform:translateX(-50px)}}@keyframes jaRise{from{transform:translateY(100px)}to{transform:translateY(0)}}.ja-wave{animation:jaWave 1.4s linear 2}.ja-rise{animation:jaRise 1.2s cubic-bezier(.2,.8,.2,1) both}@media (prefers-reduced-motion: reduce){.ja-wave,.ja-rise{animation:none}}
+body{margin:0}
+a{color:#2445C2}a:hover{color:#1A3496}
+.chips{scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+button,a{transition:background-color .2s cubic-bezier(.2,0,0,1),color .2s,border-color .2s,box-shadow .2s,transform .12s}
+button:active,a:active{transform:scale(.97)}
+@keyframes navUp{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.nav-active{animation:navUp .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes swap{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:none}}
+.swap{animation:swap .3s cubic-bezier(.2,0,0,1) both}
+@keyframes up{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
+.sheet{animation:up .3s cubic-bezier(.2,0,0,1) both}
+@keyframes fade{0%{opacity:0}100%{opacity:1}}
+.fade{animation:fade .2s ease-out both}
+@keyframes grow{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+.grow{transform-origin:left;animation:grow .6s cubic-bezier(.2,0,0,1) both}
+@media (prefers-reduced-motion: reduce){.nav-active,.swap,.sheet,.fade,.grow{animation:none}*{transition:none !important}button:active,a:active{transform:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; padding-left: 4px">
+<div style="display: flex; align-items: center; gap: 10px"><svg width="28" height="28" viewBox="8 8 86 86" role="img" aria-label="jobA1"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="45" r="10" fill="#2445C2"></circle><circle cx="76" cy="41" r="10" fill="#E8B48A"></circle><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="#2445C2" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"></path></g></svg><h1 style="margin: 0; font-size: 30px; line-height: 36px; font-weight: 700; letter-spacing: -0.5px">Progresser</h1></div>
+
+</div>
+<div role="tablist" aria-label="Rubrique" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; padding: 4px; background: #ECE9E1; border-radius: 14px">
+<button type="button" role="tab" aria-selected="{{selO}}" onClick="{{goO}}" style="{{tabO}}">ORP</button>
+<button type="button" role="tab" aria-selected="{{selB}}" onClick="{{goB}}" style="{{tabB}}">Bilan</button>
+<button type="button" role="tab" aria-selected="{{selF}}" onClick="{{goF}}" style="{{tabF}}">Formations</button>
+</div>
+</header>
+
+<main style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 2px 16px 16px">
+<sc-if value="{{isO}}" hint-placeholder-val="{{ true }}">
+<div class="swap" style="display: flex; flex-direction: column; gap: 14px">
+<section style="display: flex; align-items: center; gap: 18px; padding: 18px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 20px">
+<svg width="120" height="120" viewBox="0 0 100 100" role="img" aria-label="8 recherches validées sur 10">
+<defs><clipPath id="progClip"><circle cx="50" cy="50" r="44"></circle></clipPath></defs>
+<circle cx="50" cy="50" r="44" fill="#F1EFE9"></circle>
+<g clip-path="url(#progClip)"><g class="ja-rise"><g transform="translate(0 28.36)"><path class="ja-wave" d="M -100 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 q 12.5 -3 25 0 q 12.5 3 25 0 L 200 120 L -100 120 Z" fill="#C9D3F6" stroke="#2445C2" stroke-width="2.5"></path></g></g></g>
+<circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="3.5"></circle>
+<text x="50" y="59" text-anchor="middle" font-family="Figtree, sans-serif" font-size="26" font-weight="800" fill="#1B1F2A" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round" paint-order="stroke">8/10</text>
+</svg>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 17px; font-weight: 700; line-height: 22px">2 recherches à faire</span>
+<span style="font-size: 14px; color: #596070; line-height: 19px">Objectif fixé par ta conseillère ORP. Échéance le 31 octobre.</span>
+</div>
+</section>
+<button type="button" style="height: 52px; border-radius: 26px; border: 1.5px solid #2445C2; background: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 700; color: #2445C2; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg>Exporter le formulaire (PDF)</button>
+<section style="display: flex; flex-direction: column; gap: 8px"><div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 4px"><h2 style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #596070">Dernières recherches</h2><span style="font-size: 13px; color: #596070">8 ce mois</span></div>
+<ul style="margin: 0; padding: 0; list-style: none; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden"><li style="display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 14px; border-bottom: 1px solid #EFECE5">
+<span style="flex: none; width: 44px; text-align: center; display: flex; flex-direction: column"><span style="font-size: 18px; font-weight: 800; line-height: 20px">28</span><span style="font-size: 12px; color: #596070">oct.</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Alpstack</span><span style="font-size: 13px; color: #596070">DevOps Engineer · E-mail</span></span>
+<span style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; background: #E3F3EA; color: #17734A; font-size: 12px; font-weight: 700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Preuve</span>
+</li><li style="display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 14px; border-bottom: 1px solid #EFECE5">
+<span style="flex: none; width: 44px; text-align: center; display: flex; flex-direction: column"><span style="font-size: 18px; font-weight: 800; line-height: 20px">24</span><span style="font-size: 12px; color: #596070">oct.</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Romandie Logistics</span><span style="font-size: 13px; color: #596070">Platform Engineer · Portail</span></span>
+<span style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; background: #FCEEDD; color: #A8540E; font-size: 12px; font-weight: 700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v6M12 17v.01"></path></svg>À joindre</span>
+</li><li style="display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 14px">
+<span style="flex: none; width: 44px; text-align: center; display: flex; flex-direction: column"><span style="font-size: 18px; font-weight: 800; line-height: 20px">21</span><span style="font-size: 12px; color: #596070">oct.</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Léman Data SA</span><span style="font-size: 13px; color: #596070">Cloud Engineer · E-mail</span></span>
+<span style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 999px; background: #E3F3EA; color: #17734A; font-size: 12px; font-weight: 700"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Preuve</span>
+</li></ul>
+<a href="Orp.dc.html" style="min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; text-decoration: none">Voir tout le mois et les preuves</a>
+</section>
+</div>
+</sc-if>
+
+<sc-if value="{{isF}}" hint-placeholder-val="{{ false }}">
+<div role="tablist" aria-label="Formations" style="display: flex; gap: 20px; padding: 0 4px; border-bottom: 1px solid #E5E2D9">
+<button type="button" role="tab" aria-selected="{{selCat}}" onClick="{{goCat}}" style="{{subCat}}">Catalogue</button>
+<button type="button" role="tab" aria-selected="{{selSui}}" onClick="{{goSui}}" style="{{subSui}}">Suivies<span style="{{badge}}">{{followCount}}</span></button>
+</div>
+
+<sc-if value="{{isCat}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{openOrp}}" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #FDEDE3; border: 0; border-radius: 18px; font-family: inherit; text-align: left; color: #1B1F2A; cursor: pointer">
+<span aria-hidden="true" style="flex: none; width: 36px; height: 36px; border-radius: 18px; background: #FFFFFF; color: #A8540E; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg></span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Financement possible par l'ORP</span><span style="font-size: 13px; color: #6B4A2E">Seulement avec l'accord préalable de ta conseillère</span></span>
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8F4710" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+</button>
+
+<div class="chips" role="radiogroup" aria-label="Type de formation" style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="5"><button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button></sc-for>
+</div>
+
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<section class="swap" style="display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0; padding: 0 4px; display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #596070"><span>{{g.title}}</span><span style="letter-spacing: 0; text-transform: none; font-weight: 600">{{g.count}}</span></h2>
+<div style="display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden">
+<sc-for list="{{g.items}}" as="it" hint-placeholder-count="3">
+<div style="{{it.rowStyle}}">
+<button type="button" onClick="{{it.open}}" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 0 12px 14px; border: 0; background: transparent; font-family: inherit; text-align: left; color: #1B1F2A; cursor: pointer">
+<span aria-hidden="true" style="{{it.iconStyle}}">{{it.ico}}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; line-height: 20px; font-weight: 700">{{it.title}}</span><span style="font-size: 13px; color: #596070">{{it.sub}}</span><span style="display: flex; gap: 6px; flex-wrap: wrap"><span style="{{it.priceStyle}}">{{it.price}}</span><sc-if value="{{it.progress}}" hint-placeholder-val="{{ '' }}"><span style="padding: 2px 8px; border-radius: 6px; background: #E8ECFB; color: #1A3496; font-size: 12px; font-weight: 700">{{it.progress}}</span></sc-if></span></span>
+</button>
+<button type="button" aria-pressed="{{it.kept}}" aria-label="{{it.keepAria}}" onClick="{{it.keep}}" style="{{it.keepStyle}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="{{it.keepFill}}" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z"></path></svg></button>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-for>
+<button type="button" style="height: 52px; border-radius: 26px; border: 1.5px solid #2445C2; background: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 700; color: #1A3496; cursor: pointer">Chercher d'autres formations</button>
+</sc-if>
+
+<sc-if value="{{isSui}}" hint-placeholder-val="{{ false }}">
+<section class="swap" style="display: flex; flex-direction: column; gap: 14px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px">
+<div style="display: flex; gap: 12px; align-items: center"><span aria-hidden="true" style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: #E8ECFB; color: #2445C2; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" stroke-linejoin="round"><circle cx="12" cy="9" r="6"></circle><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"></path></svg></span><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">Certified Kubernetes Administrator (CKA)</span><span style="font-size: 13px; color: #596070">The Linux Foundation / CNCF</span></span></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; font-size: 14px"><span style="font-weight: 700">{{modText}}</span><span style="color: #596070">{{modPct}}</span></div>
+<div role="progressbar" aria-label="Avancement" aria-valuemin="0" aria-valuemax="12" aria-valuenow="{{mod}}" style="height: 10px; border-radius: 5px; background: #E8ECFB; overflow: hidden"><div class="grow" style="{{barStyle}}"></div></div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 12px; border-top: 1px solid #EFECE5">
+<span style="font-size: 15px; font-weight: 600">Module terminé</span>
+<div style="display: flex; align-items: center; gap: 4px">
+<button type="button" aria-label="Un module de moins" onClick="{{dec}}" style="width: 44px; height: 44px; border: 1.5px solid #C9D3F6; border-radius: 22px; background: #FFFFFF; color: #1A3496; font-family: inherit; font-size: 22px; font-weight: 700; cursor: pointer">−</button>
+<span aria-live="polite" style="min-width: 40px; text-align: center; font-size: 17px; font-weight: 800">{{mod}}</span>
+<button type="button" aria-label="Un module de plus" onClick="{{inc}}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #2445C2; color: #FFFFFF; font-family: inherit; font-size: 22px; font-weight: 700; cursor: pointer">+</button>
+</div>
+</div>
+<a href="#cka" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 700; text-decoration: none">Continuer le cours (nouvel onglet)</a>
+</section>
+<sc-for list="{{keptList}}" as="k" hint-placeholder-count="1">
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px"><span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">{{k.title}}</span><span style="font-size: 13px; color: #596070">Gardée · pas encore commencée</span></span><button type="button" onClick="{{k.open}}" style="height: 40px; padding: 0 14px; border: 0; border-radius: 20px; background: #E8ECFB; color: #1A3496; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer">Voir</button></div>
+</sc-for>
+<p style="margin: 0 4px; font-size: 13px; line-height: 18px; color: #596070">Le bookmark du catalogue range une formation ici. Elle passe « en cours » au premier module.</p>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{isB}}" hint-placeholder-val="{{ false }}">
+<div class="swap" style="display: flex; flex-direction: column; gap: 14px">
+<p style="margin: 4px 4px 0; font-size: 17px; line-height: 24px; font-weight: 700">Pas encore de réponse sur 21 candidatures envoyées.</p>
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px">
+<div style="padding: 12px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 26px; font-weight: 800">21</span><span style="font-size: 13px; color: #596070">candidatures</span></div>
+<div style="padding: 12px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 26px; font-weight: 800">0</span><span style="font-size: 13px; color: #596070">réponses</span></div>
+<div style="padding: 12px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 26px; font-weight: 800">0</span><span style="font-size: 13px; color: #596070">entretiens</span></div>
+</div>
+<section style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Parcours</h2>
+<sc-for list="{{funnel}}" as="r" hint-placeholder-count="4"><div style="display: grid; grid-template-columns: 96px 1fr 40px; align-items: center; gap: 10px; font-size: 14px"><span style="color: #474C59">{{r.label}}</span><span style="height: 12px; border-radius: 6px; background: #F2F1EC; overflow: hidden"><span class="grow" style="{{r.bar}}"></span></span><span style="text-align: right; font-weight: 700">{{r.n}}</span></div></sc-for>
+<p style="margin: 2px 0 0; padding: 10px 12px; background: #FCEEDD; border-radius: 12px; font-size: 14px; line-height: 20px; color: #6B4A2E"><b style="color: #8F4710">Le plus de pertes :</b> entre candidatures et réponses. Soigne les lettres et relance.</p>
+</section>
+<a href="Orp.dc.html" style="display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 0 14px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; text-decoration: none; color: #1B1F2A"><span style="flex: 1; display: flex; flex-direction: column"><span style="font-size: 15px; font-weight: 700">Mois par mois</span><span style="font-size: 13px; color: #596070">Objectif ORP : 13 par mois</span></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
+</div>
+</sc-if>
+</main>
+
+<div aria-hidden="true" style="flex: none; height: 22px"></div>
+<nav aria-label="Navigation principale" style="position: relative; z-index: 5; flex: none; height: 84px; box-sizing: border-box; padding-top: 8px; background: transparent; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start">
+<svg aria-hidden="true" width="390" height="84" viewBox="0 0 390 84" style="position: absolute; left: 0; top: 0; z-index: 0"><path d="M0 0 H225 C237 0 237 40 273 40 C309 40 309 0 321 0 H390 V84 H0 Z" fill="#FFFFFF"></path><path d="M0 0.5 H225 C237 0.5 237 40.5 273 40.5 C309 40.5 309 0.5 321 0.5 H390" fill="none" stroke="#E5E2D9" stroke-width="1"></path></svg>
+<a href="AccueilSmile.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"></path></svg></span>Accueil</a>
+<a href="Candidatures.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"></path></svg></span>Candidatures</a>
+<a href="Assistant.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="32" height="32" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M26 45 C 28.5 37, 37.5 37, 40 45" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"></path><path d="M59 30.5 Q60.84 40.16 70.5 42 Q60.84 43.84 59 53.5 Q57.16 43.84 47.5 42 Q57.16 40.16 59 30.5 Z" fill="#E8B48A"></path><path d="M29 60 C 37 71, 55 71, 63 60" fill="none" stroke="#FFFFFF" stroke-width="7.5" stroke-linecap="round"></path></g></svg></span>Assistant</a>
+<a href="Explorer.dc.html" aria-current="page" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; min-height: 56px; text-decoration: none; color: #2445C2; font-size: 12px; font-weight: 700"><span class="nav-dot" style="width: 56px; height: 56px; margin-top: -30px; border-radius: 28px; background: #2445C2; color: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(36,69,194,.28)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg></span><span style="margin-top: 10px">Progresser</span></a>
+<a href="Compte.dc.html" style="position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 56px; text-decoration: none; color: #596070; font-size: 12px; font-weight: 600"><span style="width: 56px; height: 32px; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg></span>Compte</a>
+</nav>
+
+<sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}">
+<button type="button" class="fade" tabindex="-1" aria-hidden="true" onClick="{{closeSheet}}" style="position: absolute; inset: 0; z-index: 8; border: 0; padding: 0; background: rgba(27,31,42,.45); cursor: default"></button>
+<section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sht" style="position: absolute; z-index: 9; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 14px; padding: 10px 20px 26px; background: #FFFFFF; border-radius: 26px 26px 0 0">
+<span aria-hidden="true" style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: #D9DCE6"></span>
+<sc-if value="{{sheetOrp}}" hint-placeholder-val="{{ false }}">
+<h2 id="sht" style="margin: 4px 0 0; font-size: 22px; font-weight: 800">Formation et chômage</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px; color: #3D4250">L'ORP peut financer une formation. Il faut d'abord la demander à ta conseillère et attendre son accord, avant de t'inscrire.</p>
+<a href="#arbeit" style="min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; border-top: 1px solid #EFECE5; font-size: 15px; font-weight: 700; text-decoration: none">Mesures du marché du travail, arbeit.swiss<span style="font-size: 13px; font-weight: 600; color: #596070">nouvel onglet</span></a>
+<a href="#orp" style="min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; border-top: 1px solid #EFECE5; font-size: 15px; font-weight: 700; text-decoration: none">Adresses des ORP<span style="font-size: 13px; font-weight: 600; color: #596070">nouvel onglet</span></a>
+<button type="button" onClick="{{closeSheet}}" style="height: 54px; border: 0; border-radius: 27px; background: #2445C2; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer">Compris</button>
+</sc-if>
+<sc-if value="{{sheetItem}}" hint-placeholder-val="{{ false }}">
+<span style="align-self: flex-start; padding: 3px 10px; border-radius: 999px; background: #E8ECFB; color: #1A3496; font-size: 12px; font-weight: 700">{{cur.type}}</span>
+<h2 id="sht" style="margin: -4px 0 0; font-size: 22px; line-height: 28px; font-weight: 800">{{cur.title}}</h2>
+<div style="display: flex; flex-direction: column; background: #F7F5F0; border-radius: 14px">
+<div style="display: flex; justify-content: space-between; padding: 12px 14px; font-size: 15px"><span style="color: #596070">Organisme</span><span style="font-weight: 700; text-align: right">{{cur.org}}</span></div>
+<div style="display: flex; justify-content: space-between; padding: 12px 14px; border-top: 1px solid #EFECE5; font-size: 15px"><span style="color: #596070">Format</span><span style="font-weight: 700">{{cur.meta}}</span></div>
+<div style="display: flex; justify-content: space-between; padding: 12px 14px; border-top: 1px solid #EFECE5; font-size: 15px"><span style="color: #596070">Prix</span><span style="font-weight: 700">{{cur.price}}</span></div>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 19px; color: #596070">{{cur.note}}</p>
+<a href="#site" style="height: 54px; border-radius: 27px; background: #2445C2; color: #FFFFFF; font-size: 17px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px">Voir la formation<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"></path></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">(nouvel onglet)</span></a>
+<button type="button" onClick="{{cur.keep}}" style="height: 48px; border: 0; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; color: #1A3496; cursor: pointer">{{cur.keepLabel}}</button>
+</sc-if>
+</section>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const s = this.state || {};
+const set = (o) => this.setState(Object.assign({}, this.state || {}, o));
+const sec = s.sec || 'o', sub = s.sub || 'cat', chip = s.chip || 'all';
+const kept = s.kept || { ckad: true };
+const mod = s.mod == null ? 6 : s.mod;
+const D = [
+ { id: 'cka', g: 'cert', type: 'Certification', title: 'Certified Kubernetes Administrator (CKA)', org: 'The Linux Foundation / CNCF', meta: 'Examen en ligne · anglais', free: false, progress: 'En cours · module MOD/12' },
+ { id: 'ckad', g: 'cert', type: 'Certification', title: 'Certified Kubernetes Application Developer (CKAD)', org: 'The Linux Foundation / CNCF', meta: 'Examen en ligne · anglais', free: false },
+ { id: 'tfa', g: 'cert', type: 'Certification', title: 'HashiCorp Terraform Associate', org: 'HashiCorp', meta: 'Examen en ligne · anglais', free: false },
+ { id: 'az400', g: 'cert', type: 'Certification', title: 'Microsoft DevOps Engineer Expert (AZ-400)', org: 'Microsoft', meta: 'Examen · anglais', free: false },
+ { id: 'lfs158', g: 'cours', type: 'Cours', title: 'Introduction to Kubernetes (LFS158)', org: 'The Linux Foundation', meta: 'À ton rythme · anglais', free: true },
+ { id: 'kc', g: 'cours', type: 'Atelier', title: 'Killercoda', org: 'Killercoda', meta: 'À ton rythme · anglais', free: true },
+ { id: 'mslearn', g: 'cours', type: 'Parcours', title: 'Microsoft Learn', org: 'Microsoft', meta: 'À ton rythme · français', free: true },
+ { id: 'killer', g: 'cours', type: 'Atelier', title: 'Simulateur killer.sh', org: 'Killer Shell', meta: 'À ton rythme · anglais', free: false }
+];
+const ICO = { Certification: '★', Cours: '▤', Atelier: '›_', Parcours: '⇢' };
+const ok = (d) => chip === 'all' || (chip === 'cert' && d.g === 'cert') || (chip === 'cours' && d.g === 'cours') || (chip === 'free' && d.free) || (chip === 'fr' && d.meta.indexOf('français') >= 0);
+const item = (d, i) => {
+  const k = !!kept[d.id];
+  return {
+    title: d.title, sub: d.org + ' · ' + d.meta, ico: ICO[d.type],
+    price: d.free ? 'Gratuit' : 'Payant',
+    priceStyle: 'padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; ' + (d.free ? 'background: #E3F3EA; color: #17734A' : 'background: #F2F1EC; color: #474C59'),
+    progress: d.progress ? d.progress.replace('MOD', mod) : '',
+    iconStyle: 'flex: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; ' + (d.g === 'cert' ? 'background: #E8ECFB; color: #2445C2' : 'background: #FDEDE3; color: #A8540E'),
+    rowStyle: 'display: flex; align-items: center; ' + (i ? 'border-top: 1px solid #EFECE5' : ''),
+    kept: String(k), keepAria: (k ? 'Retirer des formations gardées : ' : 'Garder : ') + d.title,
+    keepFill: k ? 'currentColor' : 'none',
+    keepStyle: 'flex: none; width: 48px; height: 48px; margin-right: 6px; border: 0; border-radius: 24px; background: transparent; color: ' + (k ? '#2445C2' : '#596070') + '; display: flex; align-items: center; justify-content: center; cursor: pointer',
+    keep: () => { const n = Object.assign({}, kept); n[d.id] = !k; set({ kept: n }); },
+    open: () => set({ sheet: 'item', cur: d.id })
+  };
+};
+const certs = D.filter(d => d.g === 'cert' && ok(d)), cours = D.filter(d => d.g === 'cours' && ok(d));
+const groups = [];
+if (certs.length) groups.push({ title: 'Certifications', count: String(certs.length), items: certs.map(item) });
+if (cours.length) groups.push({ title: 'Cours et ateliers', count: String(cours.length), items: cours.map(item) });
+const C = [['all', 'Tout'], ['cert', 'Certifications'], ['cours', 'Cours'], ['free', 'Gratuites'], ['fr', 'En français']];
+const chips = C.map(c => ({ label: c[1], on: String(chip === c[0]), pick: () => set({ chip: c[0] }), style: 'flex: none; height: 40px; padding: 0 16px; border-radius: 20px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; ' + (chip === c[0] ? 'background: #E8ECFB; color: #1A3496; border: 1.5px solid #2445C2' : 'background: #FFFFFF; color: #1B1F2A; border: 1.5px solid #E5E2D9') }));
+const seg = (on) => 'height: 40px; border: 0; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #FFFFFF; color: #1B1F2A; box-shadow: 0 1px 2px rgba(27,31,42,.12)' : 'background: transparent; color: #474C59');
+const subt = (on) => 'height: 44px; padding: 0; margin-bottom: -1px; border: 0; border-bottom: 3px solid ' + (on ? '#2445C2' : 'transparent') + '; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer; color: ' + (on ? '#1B1F2A' : '#596070');
+const keptIds = Object.keys(kept).filter(k => kept[k] && k !== 'cka');
+const cur = D.find(d => d.id === s.cur) || D[0];
+const curKept = !!kept[cur.id];
+const F = [['Offres reçues', 634], ['Gardées', 524], ['Candidatures', 21], ['Réponses', 0], ['Entretiens', 0]];
+return {
+  isO: sec === 'o', selO: String(sec === 'o'), tabO: seg(sec === 'o'), goO: () => set({ sec: 'o' }), isF: sec === 'f', isB: sec === 'b', selF: String(sec === 'f'), selB: String(sec === 'b'), tabF: seg(sec === 'f'), tabB: seg(sec === 'b'),
+  goF: () => set({ sec: 'f' }), goB: () => set({ sec: 'b' }),
+  isCat: sub === 'cat', isSui: sub === 'sui', selCat: String(sub === 'cat'), selSui: String(sub === 'sui'), subCat: subt(sub === 'cat'), subSui: subt(sub === 'sui'),
+  goCat: () => set({ sub: 'cat' }), goSui: () => set({ sub: 'sui' }),
+  followCount: String(1 + keptIds.length),
+  badge: 'min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 10px; background: #2445C2; color: #FFFFFF; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center',
+  chips: chips, groups: groups,
+  mod: String(mod), modText: 'Module ' + mod + ' sur 12', modPct: Math.round(mod / 12 * 100) + ' %',
+  barStyle: 'height: 100%; border-radius: 5px; background: #2445C2; transition: width .4s cubic-bezier(.2,0,0,1); width: ' + (mod / 12 * 100) + '%',
+  inc: () => set({ mod: Math.min(12, mod + 1) }), dec: () => set({ mod: Math.max(0, mod - 1) }),
+  keptList: keptIds.map(id => { const d = D.find(x => x.id === id); return { title: d.title, open: () => set({ sheet: 'item', cur: id }) }; }),
+  funnel: F.map(f => ({ label: f[0], n: String(f[1]), bar: 'display: block; height: 100%; border-radius: 6px; background: ' + (f[1] ? '#2445C2' : '#E5E2D9') + '; width: ' + Math.max(f[1] / 634 * 100, f[1] ? 3 : 0) + '%' })),
+  sheet: !!s.sheet, sheetOrp: s.sheet === 'orp', sheetItem: s.sheet === 'item',
+  openOrp: () => set({ sheet: 'orp' }), closeSheet: () => set({ sheet: null }),
+  cur: { type: cur.type, title: cur.title, org: cur.org, meta: cur.meta, price: cur.free ? 'Gratuit' : 'Payant', note: cur.free ? 'Gratuite : pas besoin de l\'accord ORP pour la suivre.' : 'Payante : demande l\'accord de ta conseillère ORP avant de t\'inscrire si tu veux un financement.', keepLabel: curKept ? 'Retirer des formations gardées' : 'Garder pour plus tard', keep: () => { const n = Object.assign({}, kept); n[cur.id] = !curKept; set({ kept: n }); } }
+};
+}
+}
+</script>
+</body>
+</html>

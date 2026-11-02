@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1, réglages</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+@keyframes joiePop{0%{transform:scale(.6)}100%{transform:scale(1)}}.joie{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}input[type=checkbox]:checked{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}[aria-pressed=true]>svg{animation:joiePop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1)}@media (prefers-reduced-motion: reduce){.joie,input[type=checkbox]:checked,[aria-pressed=true]>svg{animation:none}}
+/*jaMotion*/button,a,input,[role=tab],[role=radio],[role=switch]{transition:background-color .2s cubic-bezier(.2,0,0,1),color .2s,border-color .2s,box-shadow .2s,transform .12s}button:active,a:active{transform:scale(.97)}@media (prefers-reduced-motion: reduce){button,a,input{transition:none}button:active,a:active{transform:none}}
+body{margin:0}
+a{color:#2445C2}a:hover{color:#1A3496}
+@keyframes dlgIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; display: flex; align-items: center; gap: 4px; padding: 12px 8px 4px">
+<a href="Compte.dc.html" aria-label="Retour au compte" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; color: #1B1F2A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">Réglages</h1>
+</header>
+
+<main style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px; padding: 10px 16px 28px">
+
+<section aria-labelledby="r-notif" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="r-notif" style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #596070; text-transform: uppercase; letter-spacing: 0.6px">Notifications</h2>
+<ul style="margin: 0; padding: 0; list-style: none; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden">
+<sc-for list="{{notifs}}" as="n" hint-placeholder-count="4">
+<li style="{{n.rowStyle}}">
+<span id="{{n.id}}" style="flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 10px 0"><span style="font-size: 16px; font-weight: 600">{{n.label}}</span><span style="font-size: 13px; line-height: 18px; color: #596070">{{n.hint}}</span></span>
+<button type="button" role="switch" aria-checked="{{n.checked}}" aria-labelledby="{{n.id}}" onClick="{{n.toggle}}" style="{{n.switchStyle}}"><span style="width: 26px; height: 26px; border-radius: 13px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.2)"></span></button>
+</li>
+</sc-for>
+</ul>
+</section>
+
+<section aria-labelledby="r-aff" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="r-aff" style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #596070; text-transform: uppercase; letter-spacing: 0.6px">Affichage</h2>
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 14px; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px">
+<span style="font-size: 16px; font-weight: 600">Apparence</span>
+<div role="group" aria-label="Apparence" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; background: #ECE9E1; border-radius: 14px">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="3"><button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button></sc-for>
+</div>
+</div>
+<ul style="margin: 0; padding: 0; list-style: none; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden">
+<li style="border-bottom: 1px solid #EFECE5"><a href="#langue" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #1B1F2A"><span style="flex: 1; font-size: 16px; font-weight: 600">Langue</span><span style="font-size: 15px; color: #596070">Français</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+<li><a href="#texte" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #1B1F2A"><span style="flex: 1; font-size: 16px; font-weight: 600">Taille du texte</span><span style="font-size: 15px; color: #596070">Selon le téléphone</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+</ul>
+</section>
+
+<section aria-labelledby="r-data" style="display: flex; flex-direction: column; gap: 8px">
+<h2 id="r-data" style="margin: 0 4px; font-size: 13px; font-weight: 700; color: #596070; text-transform: uppercase; letter-spacing: 0.6px">Mes données</h2>
+<ul style="margin: 0; padding: 0; list-style: none; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden">
+<li style="border-bottom: 1px solid #EFECE5"><a href="#export" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #1B1F2A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2445C2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"></path></svg><span style="flex: 1; font-size: 16px; font-weight: 600">Exporter mes données</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+<li><a href="#ia" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 14px; text-decoration: none; color: #1B1F2A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2445C2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8Z"></path></svg><span style="flex: 1; font-size: 16px; font-weight: 600">Charte d'utilisation de l'IA</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#596070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a></li>
+</ul>
+<button type="button" onClick="{{openDelete}}" style="margin-top: 6px; min-height: 52px; border: 1.5px solid #E7B8AE; border-radius: 16px; background: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 700; color: #B4371F; cursor: pointer">Supprimer mon compte</button>
+</section>
+</main>
+
+<sc-if value="{{dlg}}" hint-placeholder-val="{{ false }}">
+<button type="button" tabindex="-1" aria-hidden="true" onClick="{{closeDelete}}" style="position: absolute; inset: 0; border: 0; padding: 0; background: rgba(27,31,42,0.45); animation: fadeIn .2s ease both; cursor: default"></button>
+<div role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-d" style="position: absolute; left: 24px; right: 24px; top: 250px; display: flex; flex-direction: column; gap: 14px; padding: 24px 22px 20px; background: #FFFFFF; border-radius: 26px; box-shadow: 0 20px 50px rgba(27,31,42,0.25); animation: dlgIn .22s cubic-bezier(.2,.8,.2,1) both">
+<span style="width: 48px; height: 48px; border-radius: 24px; background: #FBE9E5; color: #B4371F; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg></span>
+<h2 id="dlg-t" style="margin: 0; font-size: 21px; font-weight: 800">Supprimer ton compte ?</h2>
+<p id="dlg-d" style="margin: 0; font-size: 15px; line-height: 22px; color: #474C59">Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive. Pense à exporter ta feuille ORP avant.</p>
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px">
+<button type="button" onClick="{{closeDelete}}" style="height: 50px; border: 0; border-radius: 25px; background: #1B1F2A; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Annuler</button>
+<button type="button" onClick="{{closeDelete}}" style="height: 50px; border: 0; border-radius: 25px; background: transparent; color: #B4371F; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer">Supprimer définitivement</button>
+</div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const s = this.state || {};
+const on = s.on || { offres: true, relances: true, orp: true, news: false };
+const theme = s.theme || 'Auto';
+const sw = (v) => 'flex: none; width: 52px; height: 32px; padding: 3px; border-radius: 16px; border: 0; cursor: pointer; display: flex; transition: background-color .2s; ' + (v ? 'background: #2445C2; justify-content: flex-end' : 'background: #8A8679; justify-content: flex-start');
+const seg = (v) => 'height: 40px; border: 0; border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; ' + (v ? 'background: #FFFFFF; box-shadow: 0 1px 2px rgba(27,31,42,0.12); font-weight: 700; color: #1B1F2A' : 'background: transparent; font-weight: 600; color: #474C59');
+const rows = [
+['offres', 'Nouvelles offres', 'Quand une offre correspond à 80 % ou plus'],
+['relances', 'Relances', 'Une candidature attend une réponse depuis 7 jours'],
+['orp', 'Objectif ORP', 'Rappel 5 jours avant la fin du mois'],
+['news', 'Actualités et formations', 'Une fois par semaine au maximum']
+];
+return {
+notifs: rows.map(([k, label, hint], i) => ({
+id: 'n-' + k, label: label, hint: hint, checked: on[k] ? 'true' : 'false',
+switchStyle: sw(on[k]),
+rowStyle: 'display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 14px;' + (i < rows.length - 1 ? ' border-bottom: 1px solid #EFECE5' : ''),
+toggle: () => this.setState({ on: Object.assign({}, on, { [k]: !on[k] }) })
+})),
+themes: ['Clair', 'Sombre', 'Auto'].map((t) => ({ label: t, pressed: t === theme ? 'true' : 'false', style: seg(t === theme), pick: () => this.setState({ theme: t }) })),
+dlg: !!s.dlg,
+openDelete: () => this.setState({ dlg: true }),
+closeDelete: () => this.setState({ dlg: false })
+};
+}
+}
+</script>
+</body>
+</html>

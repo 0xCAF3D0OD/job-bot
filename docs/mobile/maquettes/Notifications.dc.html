@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>jobA1, notifications</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+main>*{flex-shrink:0}
+@keyframes ft-sun-open{0%,8%{transform:scaleY(.12)}28%,100%{transform:scaleY(1)}}@keyframes ft-rays-in{0%,22%{opacity:0;transform:scale(.6) rotate(0)}40%{opacity:1;transform:scale(1) rotate(15deg)}85%{opacity:1;transform:scale(1) rotate(60deg)}100%{opacity:0;transform:scale(1) rotate(75deg)}}@keyframes ft-loupe{0%{opacity:0;transform:translate(40px,40px)}15%,35%{opacity:1;transform:translate(0,0)}55%,75%{opacity:1;transform:translate(52px,-4px)}95%,100%{opacity:0;transform:translate(70px,30px)}}@keyframes ft-mag-l{0%,13%{transform:scale(1)}18%,33%{transform:scale(1.35)}38%,100%{transform:scale(1)}}@keyframes ft-mag-r{0%,53%{transform:scale(1)}58%,73%{transform:scale(1.35)}78%,100%{transform:scale(1)}}@keyframes ft-dot-out{0%,10%{transform:scale(1)}20%,80%{transform:scale(0)}92%,100%{transform:scale(1)}}@keyframes ft-pop-in{0%,14%{transform:scale(0)}28%,76%{transform:scale(1)}88%,100%{transform:scale(0)}}@keyframes ft-bell-ring{0%,28%{transform:rotate(0)}36%{transform:rotate(16deg)}44%{transform:rotate(-14deg)}52%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}68%,100%{transform:rotate(0)}}@keyframes face-wink{0%,100%{transform:scaleY(1)}40%,60%{transform:scaleY(.15)}}.ft-box{transform-box:fill-box;transform-origin:50% 50%}.ft-top{transform-box:fill-box;transform-origin:50% 0}.ft-once .ft-spark{animation:ft-dot-out 2.8s cubic-bezier(.4,0,.2,1) .5s both}.ft-once .ft-pop{animation:ft-pop-in 2.8s cubic-bezier(.2,.9,.3,1.2) .5s both}.ft-once .ft-ring-bell{animation:ft-bell-ring 2.8s ease-in-out .5s both}@media (prefers-reduced-motion: reduce){.ft-once,.ft-once *{animation:none !important}.ft-once .ft-loupe,.ft-once .ft-rays,.ft-once .ft-pop{display:none}}
+body{margin:0}
+a{color:#2445C2}a:hover{color:#1A3496}
+button,a,article{transition:background-color .3s cubic-bezier(.2,0,0,1),color .2s,box-shadow .2s,transform .12s}
+button:active,a:active{transform:scale(.97)}
+@keyframes pop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .4s linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1) both}
+@keyframes snackIn{0%{transform:translateY(16px);opacity:0}100%{transform:none;opacity:1}}
+.snack{animation:snackIn .25s cubic-bezier(.2,0,0,1) both}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 6s linear infinite}
+@keyframes asDot{0%,100%{opacity:.35}40%{opacity:1}}
+.as-dot{animation:asDot 1s ease-in-out infinite}.as-dot1{animation-delay:.2s}.as-dot2{animation-delay:.4s}
+@media (prefers-reduced-motion: reduce){.pop,.snack,.spin,.as-dot{animation:none}*{transition:none !important}button:active,a:active{transform:none}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F7F5F0; color: #1B1F2A; font-family: Figtree, system-ui, sans-serif; overflow: hidden">
+
+<header style="flex: none; display: flex; align-items: center; gap: 4px; padding: 12px 8px 4px">
+<a href="AccueilSmile.dc.html" aria-label="Retour à l'accueil" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; color: #1B1F2A"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+<h1 style="flex: 1; margin: 0; font-size: 22px; font-weight: 700">Notifications</h1>
+<button type="button" onClick="{{readAll}}" aria-disabled="{{noneUnreadAttr}}" style="{{readAllStyle}}">Tout lire</button>
+</header>
+
+<div style="flex: none; padding: 6px 16px 12px">
+<div role="tablist" aria-label="Filtre" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: #ECE9E1; border-radius: 14px">
+<button type="button" role="tab" aria-selected="{{selAll}}" onClick="{{goAll}}" style="{{tabAll}}">Toutes</button>
+<button type="button" role="tab" aria-selected="{{selUn}}" onClick="{{goUn}}" style="{{tabUn}}">{{unLabel}}</button>
+</div>
+</div>
+
+<main aria-live="polite" style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding: 0 16px 20px">
+<sc-if value="{{hasItems}}" hint-placeholder-val="{{ true }}">
+<section style="display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; padding: 0 4px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #596070">Aujourd'hui</h2><div style="display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden">
+<sc-if value="{{vis_a}}" hint-placeholder-val="{{ true }}"><article style="{{bg_a}}; display: flex; gap: 12px; padding: 14px 14px 14px 12px">
+<svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="flex: none"><circle cx="50" cy="50" r="42" fill="none" stroke="#FCEEDD" stroke-width="10"></circle><circle cx="50" cy="50" r="42" fill="none" stroke="#A8540E" stroke-width="10" stroke-dasharray="182.08 263.89" transform="rotate(-90 50 50)"></circle><text x="50" y="62" text-anchor="middle" font-family="Figtree, sans-serif" font-size="34" font-weight="800" fill="#A8540E">69</text></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: flex-start; gap: 8px"><button type="button" onClick="{{read_a}}" style="flex: 1; padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; font-size: 15px; line-height: 20px; color: #1B1F2A; cursor: pointer; {{tw_a}}">5 nouvelles offres pour toi</button><span style="flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #596070; padding-top: 2px">09:12<sc-if value="{{un_a}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="non lue" style="width: 9px; height: 9px; border-radius: 5px; background: #2445C2"></span></sc-if></span></div>
+<span style="font-size: 14px; line-height: 20px; color: #474C59">La meilleure : Software Engineer (Core DevOps), Infomaniak, 69/100.</span>
+<a href="Candidatures.dc.html" onClick="{{read_a}}" style="align-self: flex-start; margin-top: 4px; height: 40px; padding: 0 16px; border-radius: 20px; background: #E8ECFB; color: #1A3496; font-size: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Voir les offres</a>
+</div>
+</article></sc-if>
+<sc-if value="{{vis_b}}" hint-placeholder-val="{{ true }}"><article style="{{bg_b}}; border-top: 1px solid #EFECE5; display: flex; gap: 12px; padding: 14px 14px 14px 12px">
+<svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="flex: none; overflow: visible"><circle cx="50" cy="50" r="44" fill="#FFFFFF"></circle><circle cx="50" cy="50" r="44" fill="none" stroke="#2445C2" stroke-width="5"></circle><g transform="translate(20 21) scale(0.6)"><path d="M46 15 A35 35 0 0 1 79.7 40.5 L 91 48.6 C 92.2 49.4, 92.2 50.6, 91 51.4 L 79.7 59.5 A35 35 0 1 1 46 15 Z" fill="#2445C2"></path><path d="M33 31 Q34.76 40.24 44 42 Q34.76 43.76 33 53 Q31.24 43.76 22 42 Q31.24 40.24 33 31 Z" fill="#E8B48A"></path><path d="M59 31 Q60.76 40.24 70 42 Q60.76 43.76 59 53 Q57.24 43.76 48 42 Q57.24 40.24 59 31 Z" fill="#E8B48A"></path><path d="M31 58 C 31 57, 32 56.5, 33 56.5 L 59 56.5 C 60 56.5, 61 57, 61 58 C 60.5 68.5, 54 74.5, 46 74.5 C 38 74.5, 31.5 68.5, 31 58 Z" fill="#FFFFFF"></path></g></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: flex-start; gap: 8px"><button type="button" onClick="{{read_b}}" style="flex: 1; padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; font-size: 15px; line-height: 20px; color: #1B1F2A; cursor: pointer; {{tw_b}}">Ta lettre pour Alpstack est prête</button><span style="flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #596070; padding-top: 2px">08:40<sc-if value="{{un_b}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="non lue" style="width: 9px; height: 9px; border-radius: 5px; background: #2445C2"></span></sc-if></span></div>
+<span style="font-size: 14px; line-height: 20px; color: #474C59">L'Assistant l'a rédigée en français. À relire avant l'envoi.</span>
+<a href="Preparer.dc.html" onClick="{{read_b}}" style="align-self: flex-start; margin-top: 4px; height: 40px; padding: 0 16px; border-radius: 20px; background: #E8ECFB; color: #1A3496; font-size: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Relire</a>
+</div>
+</article></sc-if>
+</div></section>
+<section style="display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; padding: 0 4px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #596070">Hier</h2><div style="display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden">
+<sc-if value="{{vis_c}}" hint-placeholder-val="{{ true }}"><article style="{{bg_c}}; display: flex; gap: 12px; padding: 14px 14px 14px 12px">
+<svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="flex: none; overflow: visible"><rect x="7" y="7" width="86" height="86" rx="30" fill="#ECE9E1" stroke="#D6D2C7" stroke-width="1.5" vector-effect="non-scaling-stroke"></rect><g transform="translate(50 52) scale(0.6) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="46" r="10" fill="#2445C2"></circle><circle cx="76" cy="44" r="10" fill="#E8B48A"></circle><path d="M34 75 L 66 75" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: flex-start; gap: 8px"><button type="button" onClick="{{read_c}}" style="flex: 1; padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; font-size: 15px; line-height: 20px; color: #1B1F2A; cursor: pointer; {{tw_c}}">Preuves d'octobre à remettre avant le 5 novembre</button><span style="flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #596070; padding-top: 2px">Hier<sc-if value="{{un_c}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="non lue" style="width: 9px; height: 9px; border-radius: 5px; background: #2445C2"></span></sc-if></span></div>
+<span style="font-size: 14px; line-height: 20px; color: #474C59">10 candidatures, 4 lignes à compléter.</span>
+<a href="Orp.dc.html" onClick="{{read_c}}" style="align-self: flex-start; margin-top: 4px; height: 40px; padding: 0 16px; border-radius: 20px; background: #E8ECFB; color: #1A3496; font-size: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Compléter</a>
+</div>
+</article></sc-if>
+<sc-if value="{{vis_d}}" hint-placeholder-val="{{ true }}"><article style="{{bg_d}}; border-top: 1px solid #EFECE5; display: flex; gap: 12px; padding: 14px 14px 14px 12px">
+<svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="flex: none; overflow: visible"><rect x="7" y="7" width="86" height="86" rx="30" fill="#ECE9E1" stroke="#D6D2C7" stroke-width="1.5" vector-effect="non-scaling-stroke"></rect><g transform="translate(50 52) scale(0.6) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="46" r="10" fill="#2445C2"></circle><circle cx="76" cy="44" r="10" fill="#E8B48A"></circle><path d="M34 75 L 66 75" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: flex-start; gap: 8px"><button type="button" onClick="{{read_d}}" style="flex: 1; padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; font-size: 15px; line-height: 20px; color: #1B1F2A; cursor: pointer; {{tw_d}}">5 candidatures sans réponse depuis 10 jours</button><span style="flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #596070; padding-top: 2px">Hier<sc-if value="{{un_d}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="non lue" style="width: 9px; height: 9px; border-radius: 5px; background: #2445C2"></span></sc-if></span></div>
+<span style="font-size: 14px; line-height: 20px; color: #474C59">L'Assistant peut préparer un court message de relance.</span>
+<a href="Candidatures.dc.html" onClick="{{read_d}}" style="align-self: flex-start; margin-top: 4px; height: 40px; padding: 0 16px; border-radius: 20px; background: #E8ECFB; color: #1A3496; font-size: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Relancer</a>
+</div>
+</article></sc-if>
+</div></section>
+<section style="display: flex; flex-direction: column; gap: 8px"><h2 style="margin: 0; padding: 0 4px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #596070">Cette semaine</h2><div style="display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E5E2D9; border-radius: 18px; overflow: hidden">
+<sc-if value="{{vis_e}}" hint-placeholder-val="{{ true }}"><article style="{{bg_e}}; display: flex; gap: 12px; padding: 14px 14px 14px 12px">
+<svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="flex: none; overflow: visible"><path d="M5 84 V58 A45 45 0 0 1 95 58 V84 Q95 91 88 91 H12 Q5 91 5 84 Z" fill="#E8ECFB" stroke="#C9D3F6" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><g transform="translate(50 60) scale(0.54) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="46" r="10" fill="#2445C2"></circle><circle cx="76" cy="44" r="10" fill="#E8B48A"></circle><path d="M32 74 C 42 80, 58 80, 68 74" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: flex-start; gap: 8px"><button type="button" onClick="{{read_e}}" style="flex: 1; padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; font-size: 15px; line-height: 20px; color: #1B1F2A; cursor: pointer; {{tw_e}}">2 candidatures sur 5 cette semaine</button><span style="flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #596070; padding-top: 2px">30 oct.<sc-if value="{{un_e}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="non lue" style="width: 9px; height: 9px; border-radius: 5px; background: #2445C2"></span></sc-if></span></div>
+<span style="font-size: 14px; line-height: 20px; color: #474C59">Lundi, 3 offres bien notées t'attendent.</span>
+
+</div>
+</article></sc-if>
+<sc-if value="{{vis_f}}" hint-placeholder-val="{{ true }}"><article style="{{bg_f}}; border-top: 1px solid #EFECE5; display: flex; gap: 12px; padding: 14px 14px 14px 12px">
+<svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="flex: none; overflow: visible"><path d="M56.77 22.25 L85.23 73.75 Q92.00 86.00 78.00 86.00 L22.00 86.00 Q8.00 86.00 14.77 73.75 L43.23 22.25 Q50.00 10.00 56.77 22.25 Z" fill="#FCEEDD" stroke="#F0C69B" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><g transform="translate(50 63) scale(0.5) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="46" r="10" fill="#2445C2"></circle><circle cx="76" cy="44" r="10" fill="#E8B48A"></circle><path d="M36 77 L 64 77" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: flex-start; gap: 8px"><button type="button" onClick="{{read_f}}" style="flex: 1; padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; font-size: 15px; line-height: 20px; color: #1B1F2A; cursor: pointer; {{tw_f}}">Budget de l'IA presque atteint</button><span style="flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #596070; padding-top: 2px">30 oct.<sc-if value="{{un_f}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="non lue" style="width: 9px; height: 9px; border-radius: 5px; background: #2445C2"></span></sc-if></span></div>
+<span style="font-size: 14px; line-height: 20px; color: #474C59">16 CHF sur 20 ce mois-ci. Au-delà, les nouvelles offres ne sont plus notées.</span>
+<a href="Reglages.dc.html" onClick="{{read_f}}" style="align-self: flex-start; margin-top: 4px; height: 40px; padding: 0 16px; border-radius: 20px; background: #E8ECFB; color: #1A3496; font-size: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center">Voir le budget</a>
+</div>
+</article></sc-if>
+<sc-if value="{{vis_g}}" hint-placeholder-val="{{ true }}"><article style="{{bg_g}}; border-top: 1px solid #EFECE5; display: flex; gap: 12px; padding: 14px 14px 14px 12px">
+<svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true" style="flex: none"><circle cx="50" cy="50" r="42" fill="none" stroke="#FCEEDD" stroke-width="10"></circle><circle cx="50" cy="50" r="42" fill="none" stroke="#A8540E" stroke-width="10" stroke-dasharray="168.89 263.89" transform="rotate(-90 50 50)"></circle><text x="50" y="62" text-anchor="middle" font-family="Figtree, sans-serif" font-size="34" font-weight="800" fill="#A8540E">64</text></svg>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: flex-start; gap: 8px"><button type="button" onClick="{{read_g}}" style="flex: 1; padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; font-size: 15px; line-height: 20px; color: #1B1F2A; cursor: pointer; {{tw_g}}">17 nouvelles offres pour toi</button><span style="flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #596070; padding-top: 2px">30 oct.<sc-if value="{{un_g}}" hint-placeholder-val="{{ false }}"><span role="img" aria-label="non lue" style="width: 9px; height: 9px; border-radius: 5px; background: #2445C2"></span></sc-if></span></div>
+<span style="font-size: 14px; line-height: 20px; color: #474C59">La meilleure : Cloud Platform Engineer, SonarSource, 64/100.</span>
+
+</div>
+</article></sc-if>
+</div></section>
+<a href="Reglages.dc.html" style="min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; text-decoration: none">Choisir mes notifications</a>
+</sc-if>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<div role="status" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 60px 24px; text-align: center">
+<div class="pop" style="width: 156px; height: 156px; display: flex; align-items: center; justify-content: center"><svg class="ft-once" style="overflow: visible" width="150" height="150" viewBox="0 0 100 100" role="img" aria-label="jobA1 content" style="flex: none; overflow: visible"><path d="M5 84 V58 A45 45 0 0 1 95 58 V84 Q95 91 88 91 H12 Q5 91 5 84 Z" fill="#E8ECFB" stroke="#C9D3F6" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><g transform="translate(50 60) scale(0.54) translate(-50 -52)"><path d="M43 33 L54 24 V58" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="24" cy="46" r="10" fill="#2445C2"></circle><circle class="ft-box ft-spark" cx="76" cy="44" r="10" fill="#E8B48A"></circle><g transform="translate(0 2)"><g class="ft-box ft-pop"><g class="ft-top ft-ring-bell"><path d="M76 24 V27" stroke="#E8B48A" stroke-width="4" stroke-linecap="round"></path><path d="M66 48 Q 66 28 76 27 Q 86 28 86 48 L 89 51 L 63 51 Z" fill="#E8B48A" stroke="#E8B48A" stroke-width="2.5" stroke-linejoin="round"></path><circle cx="76" cy="55" r="3.5" fill="#E8B48A"></circle></g></g></g><path d="M32 74 C 42 80, 58 80, 68 74" fill="none" stroke="#2445C2" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path></g></svg></div>
+<h2 style="margin: 6px 0 0; font-size: 22px; font-weight: 800">Tout est lu</h2>
+<p style="margin: 0; font-size: 15px; line-height: 22px; color: #474C59">Les nouvelles offres et les rappels ORP arriveront ici.</p>
+<button type="button" onClick="{{goAll}}" style="margin-top: 6px; height: 52px; padding: 0 22px; border-radius: 26px; border: 1.5px solid #2445C2; background: #FFFFFF; color: #1A3496; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Voir toutes les notifications</button>
+</div>
+</sc-if>
+</main>
+
+<sc-if value="{{snack}}" hint-placeholder-val="{{ false }}">
+<div class="snack" role="status" style="position: absolute; left: 16px; right: 16px; bottom: 28px; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 4px 6px 4px 16px; background: #1B1F2A; color: #FFFFFF; border-radius: 14px; box-shadow: 0 6px 20px rgba(27,31,42,.25)"><span style="flex: 1; font-size: 15px">{{snackText}}</span><button type="button" onClick="{{undo}}" style="height: 44px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent; color: #C9D3F6; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Annuler</button></div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const s = this.state || {};
+const set = (o) => this.setState(Object.assign({}, this.state || {}, o));
+const IDS = ["a", "b", "c", "d", "e", "f", "g"];
+const unread = s.unread || {"d": true, "b": true, "a": true, "c": true};
+const only = !!s.only;
+const n = IDS.filter(i => unread[i]).length;
+const v = {};
+IDS.forEach(i => {
+  const u = !!unread[i];
+  v['un_' + i] = u;
+  v['vis_' + i] = !only || u;
+  v['bg_' + i] = 'background: ' + (u ? '#F4F6FD' : '#FFFFFF');
+  v['tw_' + i] = 'font-weight: ' + (u ? '800' : '600');
+  v['read_' + i] = () => { const x = Object.assign({}, unread); delete x[i]; set({ unread: x, snack: false }); };
+});
+const seg = (on) => 'height: 40px; border: 0; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; ' + (on ? 'background: #FFFFFF; color: #1B1F2A; box-shadow: 0 1px 2px rgba(27,31,42,.12)' : 'background: transparent; color: #474C59');
+return Object.assign(v, {
+  selAll: String(!only), selUn: String(only), tabAll: seg(!only), tabUn: seg(only),
+  goAll: () => set({ only: false }), goUn: () => set({ only: true }),
+  unLabel: n ? 'Non lues (' + n + ')' : 'Non lues',
+  hasItems: !(only && n === 0), empty: only && n === 0,
+  noneUnreadAttr: String(n === 0),
+  readAllStyle: 'height: 44px; padding: 0 12px; border: 0; border-radius: 22px; background: transparent; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; color: ' + (n ? '#1A3496' : '#8A8F9C'),
+  readAll: () => { if (n) set({ prev: unread, unread: {}, snack: true, snackText: n + (n > 1 ? ' notifications marquées comme lues' : ' notification marquée comme lue') }); },
+  snack: !!s.snack, snackText: s.snackText || '',
+  undo: () => set({ unread: s.prev || unread, snack: false })
+});
+}
+}
+</script>
+</body>
+</html>

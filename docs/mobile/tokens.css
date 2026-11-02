@@ -1,0 +1,135 @@
+/* jobA1, design tokens (mobile + ordinateur). Source : docs/mobile/maquettes/Systeme.dc.html et ModeSombre.dc.html */
+
+:root {
+  /* Surfaces */
+  --bg: #F7F5F0;            /* fond d'écran (crème) */
+  --surface: #FFFFFF;       /* cartes, barre du bas */
+  --surface-muted: #ECE9E1; /* onglets segmentés, puces */
+  --line: #E5E2D9;          /* contours, séparateurs */
+  --line-soft: #EFECE5;
+
+  /* Texte */
+  --text: #1B1F2A;
+  --text-secondary: #596070;
+  --text-tertiary: #474C59;
+
+  /* Bleu de marque */
+  --primary: #2445C2;          /* boutons pleins (texte blanc) */
+  --primary-graphic: #2445C2;  /* logo, anneaux, icônes, contours */
+  --primary-text: #1A3496;     /* liens, boutons texte */
+  --primary-soft: #E8ECFB;     /* sélection, arche Content, bloc ORP */
+  --water: #C9D3F6;            /* cercle liquide ORP */
+  --on-primary: #FFFFFF;
+
+  /* Pêche (chaleur, jamais un statut) */
+  --spark: #E8B48A;            /* étincelle du logo */
+  --peach: #F3B08A;            /* crayon, contour du soleil */
+  --peach-soft: #FDEDE3;       /* bloc Offres, soleil */
+  --scribble: #F09A66;
+
+  /* Statuts */
+  --success: #17734A;          /* Proche, Preuve */
+  --success-soft: #E3F3EA;
+  --warning: #A8540E;          /* À creuser, À joindre */
+  --warning-soft: #FCEEDD;
+  --neutral: #596070;          /* Loin */
+  --neutral-soft: #ECEEF2;
+  --danger: #B4371F;           /* destructif uniquement */
+  --danger-line: #E7B8AE;
+
+  /* Rayons */
+  --radius-card: 18px;
+  --radius-block: 34px;        /* blocs pastel de l'accueil */
+  --radius-pill: 999px;
+
+  /* Boutons (hauteurs) */
+  --btn-primary: 54px;
+  --btn-secondary: 52px;
+  --btn-tertiary: 48px;
+  --btn-compact: 40px;
+  --target-min: 44px;
+
+  /* Typo */
+  --font: "Figtree", system-ui, sans-serif;
+  --font-hand: "Caveat Brush", cursive;  /* moments de marque seulement */
+  --title-tab: 30px;
+  --title-sub: 22px;
+  --label-caps: 13px;
+
+  /* Icônes */
+  --icon-stroke: 2.2px;
+
+  /* Mouvement (règle 10) */
+  --ease-out: ease-out;
+  --ease-standard: cubic-bezier(.2, 0, 0, 1);
+  --spring-soft: linear(0, 0.36 8%, 0.75 18%, 1.02 28%, 1.1 36%, 1.08 44%, 1.02 56%, 0.99 68%, 1);
+  --spring-strong: linear(0, 0.5 6%, 1.2 16%, 1.32 22%, 1.2 32%, 0.96 46%, 1.03 60%, 0.99 76%, 1);
+  --t-fast: 200ms;      /* couleur, appui */
+  --t-standard: 300ms;  /* feuille, onglet */
+  --t-joy: 400ms;       /* réussite, ressort doux */
+  --t-party: 600ms;     /* objectif atteint, ressort fort */
+
+  /* Mise en page mobile */
+  --nav-height: 84px;
+  --nav-spacer: 22px;   /* zone vide au-dessus de la barre */
+  --mood-box: 156px;    /* zone des visages d'humeur */
+}
+
+/* Mode sombre chaud
+   Automatique : suit le téléphone. data-theme="light" ou "dark" sur <html> force le choix (Compte > Apparence). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #171411;
+    --surface: #221E1A;
+    --surface-muted: #2C2722;
+    --line: #38322B;
+    --line-soft: #2C2722;
+    --text: #F3EEE6;
+    --text-secondary: #ABA398;
+    --text-tertiary: #C7BFB3;
+    --primary: #2445C2;
+    --primary-graphic: #7D95FF;
+    --primary-text: #AEBDFF;
+    --primary-soft: #232B45;
+    --water: #3A4A85;
+    --peach-soft: #3A281E;
+    --success: #62D497;
+    --success-soft: #1C3527;
+    --warning: #F2A766;
+    --warning-soft: #3A2A1C;
+    --neutral: #ABA398;
+    --neutral-soft: #2E2A26;
+    --danger: #FF8A73;
+    --danger-line: #6B3329;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #171411;
+  --surface: #221E1A;
+  --surface-muted: #2C2722;
+  --line: #38322B;
+  --line-soft: #2C2722;
+  --text: #F3EEE6;
+  --text-secondary: #ABA398;
+  --text-tertiary: #C7BFB3;
+  --primary: #2445C2;
+  --primary-graphic: #7D95FF;
+  --primary-text: #AEBDFF;
+  --primary-soft: #232B45;
+  --water: #3A4A85;
+  --peach-soft: #3A281E;
+  --success: #62D497;
+  --success-soft: #1C3527;
+  --warning: #F2A766;
+  --warning-soft: #3A2A1C;
+  --neutral: #ABA398;
+  --neutral-soft: #2E2A26;
+  --danger: #FF8A73;
+  --danger-line: #6B3329;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-standard: 0ms; --t-joy: 0ms; --t-party: 0ms; }
+}
