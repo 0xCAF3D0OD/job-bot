@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import AppFooter from "./components/AppFooter.vue";
 import { DEMO_REFUSED_EVENT, UNAUTHORIZED_EVENT } from "./api/client";
 
-import GlobalSearch from "./components/GlobalSearch.vue";
-import NotificationBell from "./components/NotificationBell.vue";
-import AccountMenu from "./components/AccountMenu.vue";
 import AppIcon from "./components/AppIcon.vue";
-import BrandMark from "./components/BrandMark.vue";
+import AppHeader from "./components/AppHeader.vue";
 import BottomNav from "./components/BottomNav.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
@@ -23,7 +20,7 @@ import { useAutoGrow } from "./composables/useAutoGrow";
 import { useFileDownloads } from "./composables/useFileDownloads";
 import { useMaintenance } from "./composables/useMaintenance";
 import { useProfiles } from "./composables/useProfiles";
-import { mainMenu, type NavEntry, PUBLIC_ROUTES } from "./router";
+import { PUBLIC_ROUTES } from "./router";
 
 const { message, failed } = useCollect();
 // Maintenance (docs/79) : la page d'attente, et le rappel à l'exploitant qui passe quand même.
@@ -44,19 +41,9 @@ useFileDownloads();
 useAutoGrow();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
-const { last: lastJobsPage, check: checkJobsPage } = useJobsMemory();
+const { check: checkJobsPage } = useJobsMemory();
 // Le menu ne mène jamais à une offre disparue (audit du 22.10.2026).
 watch(loggedIn, (now) => now && void checkJobsPage().catch(() => undefined), { immediate: true });
-// Cinq entrées (docs/19 §1, docs/89) ; sans connexion, seulement la présentation (docs/67).
-const DISCOVER: NavEntry[] = [{ path: "/la-plateforme", name: "discover", label: "La plateforme", icon: "globe" }];
-const menu = computed(() => (loggedIn.value ? mainMenu : DISCOVER));
-// La page en cours dans le menu : Candidatures couvre tous ses onglets et ses fiches.
-function isCurrent(entry: NavEntry): boolean {
-  if (entry.name === "jobs") return route.path.startsWith("/candidatures");
-  if (entry.name === "bilan") return route.path.startsWith("/bilan");
-  return route.path === entry.path || route.path.startsWith(`${entry.path}/`);
-}
-
 function skipToContent(): void {
   document.getElementById("contenu")?.focus();
 }
@@ -75,23 +62,14 @@ function onDemoRefused(event: Event): void {
   demoRefused.value = String((event as CustomEvent<string>).detail || "Dans la démo, rien n'est enregistré.");
 }
 
-// La ligne du bas de l'en-tête (1.6.37) : seulement quand le contenu défile sous l'en-tête fixe.
-const scrolled = ref(false);
-function onScroll(): void {
-  scrolled.value = window.scrollY > 0;
-}
-
 onMounted(async () => {
   window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   window.addEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
   await load();
 });
 onUnmounted(() => {
   window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
   window.removeEventListener(DEMO_REFUSED_EVENT, onDemoRefused);
-  window.removeEventListener("scroll", onScroll);
 });
 </script>
 
@@ -104,71 +82,7 @@ onUnmounted(() => {
     data-test="skip-link"
     @click.prevent="skipToContent"
   >Aller au contenu</a>
-  <header
-    v-if="!route.meta.bare"
-    :class="['topbar', { 'has-burger': loggedIn, scrolled }]"
-  >
-    <div class="topbar-inner">
-      <RouterLink
-        to="/"
-        class="brand"
-        aria-label="jobA1, accueil"
-      >
-        <!-- Le logo, le visage du 1, et « jobA1 » en entier, connecté ou non (docs/103). -->
-        <BrandMark :size="32" />
-        jobA1
-      </RouterLink>
-      <nav
-        class="main-nav"
-        aria-label="Navigation principale"
-      >
-        <ul class="nav">
-          <li
-            v-for="entry in menu"
-            :key="entry.name"
-          >
-            <RouterLink
-              :to="entry.name === 'jobs' ? lastJobsPage : entry.path"
-              :class="{ 'router-link-active': isCurrent(entry) }"
-              :aria-current="isCurrent(entry) ? 'page' : undefined"
-            >
-              <!-- L'icône devant le nom (docs/101, règle 1). -->
-              <span class="with-icon">
-                <AppIcon
-                  v-if="entry.icon"
-                  :name="entry.icon"
-                />{{ entry.label }}
-              </span>
-            </RouterLink>
-          </li>
-        </ul>
-      </nav>
-      <div
-        v-if="loggedIn"
-        class="topbar-actions"
-      >
-        <!-- Deux boutons ronds, sans capsule (1.6.46) : la cloche et l'initiale ; chacun ouvre son menu
-             sous lui, au clic, et se ferme à Échap ou par un clic ailleurs. -->
-        <!-- La recherche globale (série du 27.10, point 2) : le champ à gauche de la cloche ; sur écran
-             étroit, la loupe. -->
-        <GlobalSearch />
-        <NotificationBell />
-        <AccountMenu />
-      </div>
-      <div
-        v-else-if="me"
-        class="topbar-actions"
-      >
-        <RouterLink
-          :to="{ name: 'login', query: route.name === 'login' ? route.query : { suite: route.fullPath } }"
-          class="button-link primary-link"
-          data-test="login-link"
-        >
-          Se connecter
-        </RouterLink>
-      </div>
-    </div>
-  </header>
+  <AppHeader v-if="!route.meta.bare" />
   <div
     v-if="loggedIn && profile && !profile.is_main"
     class="profile-banner"

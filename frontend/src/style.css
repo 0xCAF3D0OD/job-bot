@@ -1495,9 +1495,19 @@ button, .button-link { max-width: 100%; }
 .mobile-menu-section { display: grid; gap: var(--space-3); justify-items: start; padding-top: var(--space-4); border-top: 1px solid var(--divider); }
 .mobile-menu-section .link { font-size: var(--font-body); min-height: 2.75rem; }
 .mobile-menu-section .account-name, .mobile-menu-section .account-profile { margin: 0; padding: 0; border: 0; font-size: var(--font-small); color: var(--muted); }
+/* L'en-tête du téléphone (docs/139, maquettes strictes, 2026-11-02) : le logo seul, le titre de la page d'onglet à
+   30 px, la cloche sur l'Accueil seulement ; ni loupe ni menu du compte (Compte est un onglet de la barre du bas). */
+.topbar-title { display: none; }
 @media (max-width: 820px) {
-  .topbar.has-burger .topbar-inner { grid-template-columns: 1fr auto; }
+  .topbar.has-burger .topbar-inner { grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-3); }
   .topbar.has-burger nav.main-nav { display: none; }
+  .topbar.has-burger .brand-name { display: none; }
+  .topbar.has-burger .topbar-actions { grid-column: 3; }
+  .topbar.has-burger :is(.global-search, .account-menu) { display: none; }
+  .topbar.has-burger:not([data-variant="home"]) .bell { display: none; }
+  .topbar[data-variant="tab"] .topbar-title { display: block; margin: 0; overflow: hidden; color: var(--text); font-size: var(--title-tab); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: -0.02em; text-overflow: ellipsis; white-space: nowrap; }
+  /* Le titre visible est celui de l'en-tête ; le h1 de la page reste pour les lecteurs d'écran. */
+  :root:has(.topbar[data-variant="tab"]) main :is(.page-head, .jobs-head) > h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   input, select, textarea { font-size: 16px; }
   /* Cloche : carte sur toute la largeur de l'écran, sous la barre, qui pousse la page. */
 }
@@ -2766,7 +2776,7 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
   .tab-bar-icon .icon { width: 1.5rem; height: 1.5rem; stroke-width: var(--icon-stroke); }
   /* L'onglet actif : le rond bleu plein de 56 px, l'icône en blanc, le libellé en bleu et en gras. */
   .tab-bar .active { color: var(--primary-text); font-weight: var(--weight-bold); }
-  .tab-bar .active .tab-bar-icon { width: 3.5rem; height: 3.5rem; margin-top: calc(-1 * var(--nav-spacer) - var(--space-2)); margin-bottom: calc(2rem - 3.5rem + var(--nav-spacer) + var(--space-2)); border-radius: 50%; background: var(--primary); color: var(--on-primary); box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 28%, transparent); }
+  .tab-bar .active .tab-bar-icon { width: 3.5rem; height: 3.5rem; margin-top: calc(-1 * var(--nav-spacer) - var(--space-2)); margin-bottom: calc(var(--nav-spacer) + var(--space-2) - var(--space-6)); border-radius: 50%; background: var(--primary); color: var(--on-primary); box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 28%, transparent); }
   .tab-bar .active .tab-bar-icon .icon { width: 1.625rem; height: 1.625rem; }
   .tab-bar .active .mascot-face { fill: var(--on-primary); }
   .tab-bar .active :is(.mascot-line) { stroke: var(--primary); }

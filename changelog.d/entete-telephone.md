@@ -1,0 +1,1 @@
+Sur le téléphone, l'en-tête suit la nouvelle identité : le logo et la cloche sur l'Accueil, le logo et le titre de la page sur Candidatures, Bilan, Réglages et Profil ; la loupe et le menu du compte quittent l'en-tête (le compte est un onglet de la barre du bas)
