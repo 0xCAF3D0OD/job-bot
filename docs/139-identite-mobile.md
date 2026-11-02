@@ -1,6 +1,7 @@
 # 139 — La nouvelle identité mobile (et les tokens partagés avec l'ordinateur)
 
-> Statut : **plan à valider**, aucun code écrit. Origine : ta demande du 2 novembre 2026 (« nouvelle identité mobile »).
+> Statut : **plan à valider**, aucun code écrit. Le 2026-11-02 : les maquettes font foi pour ce chantier (exception
+> datée dans `CLAUDE.md`) ; les 9 conflits avec les règles se valident un par un avant de toucher `regles-ui-ergonomie.md`. Origine : ta demande du 2 novembre 2026 (« nouvelle identité mobile »).
 > Références : `docs/mobile/tokens.css` (source de vérité des valeurs), `docs/mobile/maquettes/` (écrans, dont
 > `Systeme.dc.html`, `ModeSombre.dc.html`, `Emoticones.dc.html`, `Animations.dc.html`), `docs/mobile/logo_svg_calques/`.
 > Le gel du design jusqu'au test utilisateurs est levé pour ce travail, à ta demande.
@@ -16,9 +17,10 @@
 
 ## 2. Ce que j'ai lu
 
-- 32 maquettes (texte, structure, valeurs) et `canvas.json`. **Les maquettes ne s'ouvrent pas seules dans un
-  navigateur** : les 27 fichiers chargent `./support.js`, absent du zip (le composant `<x-dc>` ne se dessine pas).
-  Je les ai lues dans leur source ; voir la question Q8.
+- 32 maquettes (texte, structure, valeurs) et `canvas.json`. Elles ne s'ouvrent pas seules dans un navigateur
+  (`support.js` est le moteur du canevas claude.ai, non fourni). **Le rendu se lit dans `docs/mobile/captures/`**
+  (un PNG par écran et par planche, clair et sombre), les valeurs exactes dans le HTML, couleurs et tailles dans
+  `tokens.css`.
 - Le code : `style.css` (4 254 lignes, 166 `@media`), `router.ts`, `App.vue`, 150 composants, `usePhone.ts`
   (déjà 820 px pour « téléphone », 600 px pour la « structure téléphone »).
 - Figma (fichier jobA1) : **aucune page pour la nouvelle identité**. Les pages « Écran · … » et « Planche · … »
