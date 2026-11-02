@@ -125,6 +125,8 @@ const described = computed(() => [`${id}-sub`, props.note || props.state ? `${id
         :class="['offer-line-note', { alert }]"
         data-test="offer-line-note"
       ><slot name="note">{{ note }}</slot></span>
+      <!-- Les faits en pastilles (taux, contrat, télétravail), sous le lieu (maquette Candidatures). -->
+      <slot name="facts" />
     </span>
     <span
       v-if="$slots.verdict || verdict"

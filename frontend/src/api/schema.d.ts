@@ -6118,6 +6118,8 @@ export interface components {
         OfferCounts: {
             /** To Review */
             to_review: number;
+            /** Pending */
+            pending: number;
             /** Filtered Out */
             filtered_out: number;
             /** Later */
@@ -10187,7 +10189,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 sort?: "recent" | "day" | "popular" | "score" | "activity";
-                view?: "to_review" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
+                view?: "to_review" | "pending" | "filtered_out" | "later" | "in_progress" | "expired" | "all";
                 q?: string | null;
                 min_score?: number | null;
                 max_score?: number | null;

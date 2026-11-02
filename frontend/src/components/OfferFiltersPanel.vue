@@ -45,6 +45,7 @@ function toggleVisible(key: FilterKey): void {
 }
 
 const VIEWS: { value: View; label: string }[] = [
+  { value: "pending", label: "À traiter" },
   { value: "to_review", label: "À examiner" },
   { value: "in_progress", label: "En cours" },
   { value: "later", label: "Plus tard" },

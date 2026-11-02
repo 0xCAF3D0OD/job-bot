@@ -106,6 +106,7 @@ async def test_counts_and_facets_follow_filters(api: AsyncClient) -> None:
     ).json()
     assert body["counts"] == {
         "to_review": 1,
+        "pending": 1,
         "filtered_out": 0,
         "later": 0,
         "in_progress": 0,
@@ -312,3 +313,17 @@ async def test_score_range_and_curve(api: AsyncClient, runtime: Runtime) -> None
     assert len(curve) == 20 and sum(curve) == 5  # tout, sans le filtre de note
     assert curve[8] == 1 and curve[12] == 2 and curve[17] == 1 and curve[19] == 1
     assert body["facets"]["unscored"] == 1
+
+
+async def test_pending_view_puts_preparation_first(api: AsyncClient, runtime: Runtime) -> None:
+    """À traiter (docs/139, C2) : à examiner, plus tard, en préparation ; celles-ci d'abord."""
+    await add(runtime, 10, "Gardée pour plus tard", ["jobup"], status=OfferStatus.LATER)
+    await add(runtime, 11, "En préparation", ["jobup"], status=OfferStatus.PREPARING)
+    await add(runtime, 12, "Envoyée", ["jobup"], status=OfferStatus.APPLIED)
+    await add(runtime, 13, "Écartée", ["jobup"], status=OfferStatus.FILTERED_OUT)
+    page = (await api.get("/api/offers", params={"view": "pending", "sort": "recent"})).json()
+    titles_ = [o["title"] for o in page["items"]]
+    assert titles_[0] == "En préparation"
+    assert "Gardée pour plus tard" in titles_
+    assert "Envoyée" not in titles_ and "Écartée" not in titles_
+    assert page["total"] == page["counts"]["pending"] == len(titles_)

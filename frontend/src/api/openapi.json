@@ -2727,6 +2727,7 @@
             "schema": {
               "enum": [
                 "to_review",
+                "pending",
                 "filtered_out",
                 "later",
                 "in_progress",
@@ -17618,6 +17619,10 @@
             "type": "integer",
             "title": "To Review"
           },
+          "pending": {
+            "type": "integer",
+            "title": "Pending"
+          },
           "filtered_out": {
             "type": "integer",
             "title": "Filtered Out"
@@ -17642,6 +17647,7 @@
         "type": "object",
         "required": [
           "to_review",
+          "pending",
           "filtered_out",
           "later",
           "in_progress",
