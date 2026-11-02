@@ -10,7 +10,7 @@ import NotificationBell from "./components/NotificationBell.vue";
 import AccountMenu from "./components/AccountMenu.vue";
 import AppIcon from "./components/AppIcon.vue";
 import BrandMark from "./components/BrandMark.vue";
-import TabBar from "./components/TabBar.vue";
+import BottomNav from "./components/BottomNav.vue";
 import AssistantPanel from "./components/AssistantPanel.vue";
 import AppToast from "./components/AppToast.vue";
 import UndoToast from "./components/UndoToast.vue";
@@ -245,7 +245,7 @@ onUnmounted(() => {
   </main>
   <AppFooter v-if="!route.meta.bare" />
   <!-- Sur téléphone, les deux pages de travail en bas de l'écran (docs/92). -->
-  <TabBar v-if="loggedIn" />
+  <BottomNav v-if="loggedIn" />
   <MaintenanceOverlay
     :waiting="maintenanceWaiting"
     :message="maintenanceMessage"
