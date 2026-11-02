@@ -116,9 +116,11 @@ Il y a une contradiction à trancher : le brief dit **« 100 % mobile, sans vers
 ## 10. Livraison proposée
 
 1. **Les maquettes Figma** : le parcours d'une candidature, une leçon (question, retour juste, retour faux), la fin de leçon, l'entrée depuis Aujourd'hui ; téléphone et ordinateur. Préparées le 30 octobre, page « Planche · Entraînement (proposition) » du fichier jobA1, et validées le même jour. L'entrée depuis Aujourd'hui est une ligne de plus dans « À faire aujourd'hui » (« Faire 1 séance d'entraînement », bouton « S'entraîner »), qui n'apparaît que s'il reste une séance pour le jour même.
-2. **1.7.0** : la leçon et les cinq types de jeux, avec « Les classiques » (une banque de 60 questions en français, écrite à l'avance, sans IA).
-3. **1.8.0** : le parcours d'une candidature préparé par l'IA (entreprise, poste, toi, questions qui piquent), avec l'entretien blanc en final.
-4. **1.9.0** : le rythme jusqu'à la date de l'entretien, les rappels par ntfy, la révision des questions ratées.
+2. **Bloc A, les classiques** : la leçon et les cinq types de jeux, avec « Les classiques » (une banque de 60 questions en français, écrite à l'avance, sans IA).
+3. **Bloc B, le parcours IA** : le parcours d'une candidature préparé par l'IA (entreprise, poste, toi, questions qui piquent), avec l'entretien blanc en final.
+4. **Bloc C, le rythme** : le rythme jusqu'à la date de l'entretien, les rappels par ntfy, la révision des questions ratées.
+
+Chaque bloc se livre en plusieurs PR, une par étape, sans numéro de version : le numéro est donné à la fusion (docs/coordination.md).
 
 ## Points à valider
 
@@ -128,4 +130,4 @@ Il y a une contradiction à trancher : le brief dit **« 100 % mobile, sans vers
 4. **Des faits sourcés** sur l'entreprise, jamais inventés (§5).
 5. **Un parcours compte comme un entraînement** ; « Les classiques » illimités (§6).
 6. **Le style de jobA1**, sans couleurs d'étape, et la mascotte existante (§4, §8).
-7. **Les maquettes Figma avant tout code**, puis trois versions (§10).
+7. **Les maquettes Figma avant tout code**, puis trois blocs (§10).

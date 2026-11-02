@@ -96,9 +96,10 @@ audit-controles: ## rangées de contrôles de même hauteur et listes dont le te
 changelog: ## assemble CHANGELOG.md depuis changelog.d/ (sur main, l'action changelog.yml numérote et assemble)
 	python3 scripts/changelog.py
 
-changelog-check: ## vérifie les fichiers de changelog.d/ et l'assemblage
+changelog-check: ## vérifie les fichiers de changelog.d/, l'assemblage et les numéros de docs/
 	python3 -m unittest discover -s scripts -q
 	python3 scripts/changelog.py --check
+	python3 scripts/docs_numeros.py
 
 poids: ## le budget de poids des pages (docs/117 §3)
 	cd frontend && npm run -s poids

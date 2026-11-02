@@ -79,7 +79,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Les fichiers de changelog.d et leur assemblage
+      # Aussi : un numéro de docs/ n'est pris qu'une fois. Sur une PR, la CI passe sur main + la PR,
+      # donc un docs/139 déjà pris sur main entre-temps est vu (scripts/docs_numeros.py).
+      - name: Les fichiers de changelog.d, leur assemblage et les numéros de docs/
         run: make changelog-check
       # La base de comparaison : sur une PR, la CI travaille sur le commit de fusion de test
       # (refs/pull/N/merge), dont le premier parent est main au moment du passage. Le base.sha de
