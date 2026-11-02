@@ -358,3 +358,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.144 | Règles d'interface : titres de section sans point, « preuves d'octobre », repliables du Suivi et de Rendez-vous comme ceux du Bilan, note d'offre près du poste, règles 1.3 | livrée |
 | 1.6.145 | La CI refuse un numéro de cadrage docs/NNN déjà pris, et docs/137 parle de blocs plutôt que de versions numérotées | livrée |
 | 1.6.146 | Sur invitation seulement pour le moment : les demandes de compte sont fermées d'office, l'exploitant invite par un lien à copier | livrée |
+| 1.6.147 | Le visage du chargement de page (FaceTransform) se transforme une seule fois au lieu de tourner en boucle (WCAG 2.2.2) | livrée |

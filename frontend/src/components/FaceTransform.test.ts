@@ -1,4 +1,7 @@
 // Le personnage se transforme (docs/123, complément 0.96.0).
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -27,5 +30,12 @@ describe("FaceTransform", () => {
     expect(svg.classes()).toContain("ft-still");
     expect(svg.find(".ft-loupe").exists()).toBe(false);
     expect(svg.find(".ft-eye").exists()).toBe(true);
+  });
+
+  it("se joue une seule fois, jamais en boucle (WCAG 2.2.2)", () => {
+    const css = readFileSync(join(__dirname, "..", "style.css"), "utf8");
+    const rules = css.split("\n").filter((line) => /^\.ft-[^{]*\{[^}]*animation:/.test(line));
+    expect(rules.length).toBeGreaterThan(0);
+    for (const rule of rules) expect(rule).not.toMatch(/infinite/);
   });
 });
