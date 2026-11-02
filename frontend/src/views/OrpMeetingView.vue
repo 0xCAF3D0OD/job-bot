@@ -17,7 +17,7 @@ import { offerUndo } from "../composables/useUndo";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import OrpOutcomeForm from "../components/OrpOutcomeForm.vue";
 import HoverNote from "../components/HoverNote.vue";
-import { meetingDate } from "../dates";
+import { dateInSentence, meetingDate } from "../dates";
 import { formatMonth, plural } from "../format";
 import { usePlan } from "../composables/usePlan";
 import SavedStatus from "../components/SavedStatus.vue";
@@ -101,6 +101,13 @@ const monthValue = computed(() => {
   const last = prep.value?.months?.at(-1);
   if (!last) return "";
   return last.target ? `${last.count} candidatures sur ${last.target}` : plural(last.count, "candidature", "candidatures");
+});
+// La phrase visible replié, comme dans le Bilan (règles §3) : sans point final.
+const blockersLine = computed(() => {
+  const first = prep.value?.blockers[0];
+  const works = prep.value?.works ?? "";
+  const line = first ?? (works ? `Ce qui marche : ${works.charAt(0).toLowerCase()}${works.slice(1)}` : "");
+  return line.replace(/\.$/, "");
 });
 const dutiesValue = computed(() => {
   const late = lateObligations.value.length;
@@ -605,7 +612,8 @@ onMounted(() => void load());
           <template v-if="prep && !noApplications">
             <DisclosureRow
               title="Le mois en bref"
-              :value="monthValue"
+              icon="stats"
+              :description="monthValue || 'Le résumé de tes derniers mois'"
               start-open
               data-test="sheet-summary"
             >
@@ -633,7 +641,8 @@ onMounted(() => void load());
             <DisclosureRow
               v-if="prep.blockers.length || prep.works"
               title="Ce qui bloque"
-              :value="plural(prep.blockers.length + (prep.works ? 1 : 0), 'piste', 'pistes')"
+              icon="alert"
+              :description="blockersLine"
               data-test="sheet-blockers"
             >
               <ul v-if="prep.blockers.length">
@@ -654,7 +663,8 @@ onMounted(() => void load());
             <DisclosureRow
               v-if="prep.missing.length"
               title="Compétences demandées qui manquent"
-              :value="plural(prep.missing.length, 'compétence', 'compétences')"
+              icon="book"
+              :description="`Le plus demandé : ${prep.missing[0]!.skill}`"
               data-test="sheet-missing"
             >
               <ul v-if="prep.missing.length">
@@ -676,7 +686,8 @@ onMounted(() => void load());
             <DisclosureRow
               v-if="pendingObligations.length"
               title="Obligations et échéances"
-              :value="dutiesValue"
+              icon="clock"
+              :description="dutiesValue"
               data-test="sheet-obligations"
             >
               <ul class="orp-meeting-duties">
@@ -694,7 +705,8 @@ onMounted(() => void load());
             v-if="page.past.length"
             class="orp-log"
             title="Le carnet"
-            :value="plural(page.past.length, 'rendez-vous', 'rendez-vous')"
+            icon="calendar"
+            :description="`${plural(page.past.length, 'rendez-vous', 'rendez-vous')}, le dernier ${dateInSentence(page.past[0]!.starts_at)}`"
             data-test="meeting-log"
           >
             <ul>

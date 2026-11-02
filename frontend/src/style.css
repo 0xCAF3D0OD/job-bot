@@ -3915,9 +3915,11 @@ html.search-open { overflow: hidden; }
    La même partout : logo ou initiale, poste en gras, « entreprise · lieu » en gris, puis au bout de la
    ligne le verdict et l'action. Toute la ligne est un vrai lien (le titre, étiré sur elle) ; l'action
    reste au-dessus. Survol : fond accent à 5 %, poste en accent. Focus clavier : contour de 2 px, rayon 8
-   (WCAG 2.4.7). Sur téléphone, le verdict reste à droite et l'action passe sous le texte. */
+   (WCAG 2.4.7). Sur téléphone, le verdict reste à droite et l'action passe sous le texte.
+   Le texte s'arrête à la mesure (--measure) : sur une ligne large (Offres, Tri du jour), le verdict
+   et l'action restent près du poste, pas au bord de la carte (règles §3, Listes ; loi de proximité). */
 .offer-line {
-  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto;
+  position: relative; display: grid; grid-template-columns: auto minmax(0, var(--measure)) auto auto; justify-content: start;
   grid-template-areas: "logo text verdict action"; align-items: center; gap: var(--space-2) var(--space-4);
   padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); color: var(--text); cursor: pointer;
   transition: background-color 150ms;

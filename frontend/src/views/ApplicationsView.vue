@@ -138,6 +138,25 @@ const bannerText = computed(() => {
   if (d.incomplete) return `Preuves ${month} : ${plural(d.incomplete, "ligne", "lignes")} à compléter, remise avant ${due}.`;
   return `Preuves ${month} prêtes : à remettre avant ${due}.`;
 });
+// Les repliables du détail, comme ceux du Bilan (règles §3) : une icône, un titre et l'enseignement
+// en une phrase, visible replié.
+const calendarLine = computed(() => {
+  const missing = monthItems.value.filter((a) => incomplete.value.has(a.id)).length;
+  if (missing) return `${plural(missing, "candidature", "candidatures")} à compléter pour l'ORP`;
+  const days = new Set(monthItems.value.map((a) => a.sent_at)).size;
+  return days ? `${plural(days, "jour", "jours")} avec au moins une candidature` : "Aucune candidature ce mois-ci";
+});
+const listLine = computed(() => {
+  if (wanted.value.length) return `${plural(items.value.length, "candidature trouvée", "candidatures trouvées")}, tous mois confondus`;
+  const list = monthItems.value;
+  if (!list.length) return "Aucune candidature ce mois-ci";
+  const waiting = list.filter((a) => a.status === "en_attente" || a.status === "relancee").length;
+  const interviews = list.filter((a) => a.status === "entretien").length;
+  const parts = [plural(list.length, "candidature", "candidatures")];
+  if (waiting) parts.push(`${waiting} en attente de réponse`);
+  if (interviews) parts.push(plural(interviews, "entretien", "entretiens"));
+  return parts.join(", ");
+});
 // À relancer (docs/38) : en attente depuis 10 jours, ou relancées sans réponse depuis 14 jours.
 const toFollowUp = computed(() => followUpList(all.value));
 // Cartes du jour choisi : envoyées ce jour-là ou entretien ce jour-là.
@@ -714,6 +733,8 @@ onUnmounted(() => assistant.setFocus(null));
           <DisclosureRow
             :key="calendarKey"
             :title="`Calendrier ${ofMonth(orp.month)}`"
+            icon="calendar"
+            :description="calendarLine"
             :start-open="!!selectedDay"
             data-test="detail-calendar"
           >
@@ -770,7 +791,8 @@ onUnmounted(() => assistant.setFocus(null));
           </DisclosureRow>
           <DisclosureRow
             :title="wanted.length ? `Candidatures « ${words.trim()} »` : `Toutes les candidatures ${ofMonth(orp.month)}`"
-            :value="String(wanted.length ? items.length : monthItems.length)"
+            icon="list-check"
+            :description="listLine"
             :start-open="wanted.length > 0"
             class="suivi-list"
             data-test="detail-list"

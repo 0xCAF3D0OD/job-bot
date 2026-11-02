@@ -306,7 +306,8 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     expect(preparing.find("strong").text()).toBe("Préparer 2 candidatures");
     expect(preparing.text()).toContain("2 offres gardées attendent leur lettre.");
     expect(preparing.attributes("href")).toBe("/candidatures/offres?statut=in_progress");
-    expect(section.find("[data-test=orp-urgent]").text()).toContain("Remettre les preuves de");
+    expect(section.find("[data-test=orp-urgent] strong").text()).toBe("Remettre les preuves de septembre");
+    expect(section.find("[data-test=orp-urgent] .today-task-action").text()).toBe("Remettre");
     expect(section.find("[data-test=upcoming-interview]").text()).toMatch(/(Aujourd'hui|Demain) à .* chez Bientôt SA/);
     expect(section.find("[data-test=alerts-waiting] strong").text()).toBe("Vérifier 1 alerte");
     // Clic direct : la ligne entière est le lien, pas de « › ».
@@ -334,7 +335,7 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     mockGet(today({ rhythm: rhythm() }));
     const wrapper = await mountView();
     vi.useRealTimers();
-    expect(wrapper.find("#today-orp-title").text()).toBe("Mois ORP.");
+    expect(wrapper.find("#today-orp-title").text()).toBe("Mois ORP");
     const card = wrapper.find("[data-test=orp-month]");
     expect(card.find("[data-test=month-count]").text()).toBe("Ce mois · 3 / 20");
     // Sans la tuile du visage : le mois prend la place (1.6.51, choix de Kevin).
@@ -350,7 +351,7 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     mockGet(today());
     let wrapper = await mountView();
     const retain = wrapper.find("[data-test=today-retain]");
-    expect(retain.find("h2").text()).toBe("À retenir.");
+    expect(retain.find("h2").text()).toBe("À retenir");
     expect(retain.find(".today-retain-word").text()).toBe("jobs.ch");
     expect(retain.text()).toContain("Plus souvent une réponse que les offres de LinkedIn");
     expect(retain.find("[data-test=today-retain-link]").attributes("href")).toBe("/bilan");
