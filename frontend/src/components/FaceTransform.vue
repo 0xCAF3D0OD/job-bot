@@ -3,8 +3,8 @@ import { motionAllowed } from "../composables/useIntro";
 import { LOGO_EYE, LOGO_ONE, LOGO_SMILE, LOGO_SPARK, LOGO_TILT } from "../brandPaths";
 
 // Le personnage se transforme (docs/123, complément 0.96.0, d'après ta maquette « X ») : pendant
-// qu'une page charge, le visage du logo prend l'objet de la page, puis redevient lui-même, en
-// boucle tant que l'attente dure (2,8 s ; 3 s pour la loupe). Avec « réduire les animations » :
+// qu'une page charge, le visage du logo prend l'objet de la page, puis redevient lui-même, une
+// seule fois (2,8 s ; 3 s pour la loupe ; WCAG 2.2.2, docs/139). Avec « réduire les animations » :
 // le visage tel quel. Décoratif : le nom de la page est écrit dessous.
 export type Transform = "today" | "offers" | "applications" | "alerts" | "insights" | "orp-meeting" | "profile" | "settings";
 defineProps<{ kind: Transform; size?: number }>();
