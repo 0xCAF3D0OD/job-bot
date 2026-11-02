@@ -1,0 +1,1 @@
+Sur le téléphone, l'Accueil prend la nouvelle identité : « Bonjour » et ton prénom, l'ORP en cercle liquide, les offres du jour en cartes avec « Trier les n offres », et À faire en nombres ; la carte Rythme passe dans le Bilan
