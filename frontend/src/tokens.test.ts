@@ -31,11 +31,14 @@ function block(text: string, start: number): string {
   return text.slice(start);
 }
 
+const FORCED = ':root[data-theme="dark"] {';
 const referenceLight = declarations(block(reference, reference.indexOf(":root {")));
 const referenceDark = declarations(block(reference, reference.indexOf("@media (prefers-color-scheme: dark)")));
 const darkBlock = block(css, css.indexOf("@media (prefers-color-scheme: dark)"));
+const forcedBlock = block(css, css.indexOf(FORCED));
 const styleDark = declarations(darkBlock);
-const styleLight = declarations(css.replace(darkBlock, ""));
+const styleForced = declarations(forcedBlock);
+const styleLight = declarations(css.replace(darkBlock, "").replace(forcedBlock, ""));
 const normalize = (value: string) => value.replace(/\s+/g, " ").toLowerCase();
 
 describe("les variables de docs/mobile/tokens.css (docs/139)", () => {
@@ -57,5 +60,32 @@ describe("les variables de docs/mobile/tokens.css (docs/139)", () => {
   it("« À creuser » reste en gris chaud, jamais l'orange (D5, 2026-11-02)", () => {
     expect(styleLight.get("score-dig")).not.toBe(styleLight.get("warning"));
     expect(styleDark.get("score-dig")).not.toBe(styleDark.get("warning"));
+  });
+});
+
+describe("le choix forcé clair ou sombre (Compte › Apparence, Q7)", () => {
+  it("le sombre automatique ne s'applique pas quand le clair est forcé", () => {
+    expect(darkBlock).toContain(':root:not([data-theme="light"]) {');
+    expect(darkBlock).not.toMatch(/^\s*:root \{/m);
+  });
+
+  it("le sombre forcé porte exactement les valeurs du sombre automatique, donc celles de tokens.css", () => {
+    expect(css.indexOf(FORCED)).toBeGreaterThan(0);
+    expect([...styleForced.entries()]).toEqual([...styleDark.entries()]);
+    for (const [name, value] of referenceDark) expect(styleForced.get(name), `--${name}`).toBe(value);
+  });
+
+  it("chaque règle sombre a son double forcé, et ne s'applique pas quand le clair est forcé", () => {
+    const rules = [...css.matchAll(/@media \(prefers-color-scheme: dark\) \{\s*([^{}]+)\{([^{}]*)\}/g)];
+    expect(rules.length).toBeGreaterThan(5);
+    for (const [, selector, body] of rules) {
+      const parts = selector!.split(",").map((part) => part.trim());
+      for (const part of parts) expect(part, part).toMatch(/^:root:not\(\[data-theme="light"\]\)/);
+      const forced = parts.map((part) => part.replace(':root:not([data-theme="light"])', ':root[data-theme="dark"]')).join(", ");
+      const twins = [...css.matchAll(new RegExp(`(?:^|\\n)${forced.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{`, "g"))];
+      expect(twins.length, forced).toBeGreaterThan(0);
+      const bodies = twins.map((twin) => normalize(block(css, twin.index!)));
+      expect(bodies.some((twin) => twin.includes(normalize(body!).trim())), forced).toBe(true);
+    }
   });
 });

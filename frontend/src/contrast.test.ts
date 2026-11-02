@@ -118,7 +118,8 @@ describe("initiales des entreprises et pastille de la cloche (audit du 22.10.202
       expect(ratio(light.text!, light[tone]!)).toBeGreaterThanOrEqual(4.5);
       expect(ratio(dark["on-accent"]!, dark[tone]!)).toBeGreaterThanOrEqual(4.5);
     }
-    expect(css).toContain("@media (prefers-color-scheme: dark) { .logo.c1, .logo.c2 { color: var(--on-accent); } }");
+    expect(css).toContain('@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo.c1, :root:not([data-theme="light"]) .logo.c2 { color: var(--on-accent); } }');
+    expect(css).toContain(':root[data-theme="dark"] .logo.c1, :root[data-theme="dark"] .logo.c2 { color: var(--on-accent); }');
     // L'accent, avec --on-accent, en clair et en sombre ; jamais l'orange (docs/135, 1.6.3).
     expect(css).toContain(".logo.c0 { background: var(--primary); color: var(--on-accent); }");
     expect(ratio(light["on-accent"]!, light.primary!)).toBeGreaterThanOrEqual(4.5);
@@ -132,7 +133,8 @@ describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () =>
     // La pastille unique (CountBadge, 1.6.33), en orange pour la cloche : chiffre blanc sur l'orange foncé en clair,
     // chiffre de la couleur du fond sur l'orange clair du sombre chaud (docs/139).
     expect(css).toContain(".count-badge.orange { background: var(--orange); color: var(--on-primary); }");
-    expect(css).toContain("@media (prefers-color-scheme: dark) { .count-badge.orange { color: var(--bg); } }");
+    expect(css).toContain('@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .count-badge.orange { color: var(--bg); } }');
+    expect(css).toContain(':root[data-theme="dark"] .count-badge.orange { color: var(--bg); }');
     expect(ratio(light["on-primary"]!, light.orange!)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(dark.bg!, dark.orange!)).toBeGreaterThanOrEqual(4.5);
     expect(css).not.toContain("#c62a2f");
@@ -234,5 +236,17 @@ describe("revue sur ordinateur (1.6.27)", () => {
   });
   it("le bouton « Assistant » laisse sa place en bas de la page", () => {
     expect(css).toMatch(/:root:has\(\.assistant-fab\) \.app-footer \{ padding-bottom: calc\(/);
+  });
+});
+
+describe("l'anneau de la note : « Loin » et « À creuser » (revue de la PR 461)", () => {
+  it("l'anneau de « Loin » se voit sur la carte (3:1, WCAG 1.4.11) et se distingue du gris chaud d'« À creuser »", () => {
+    for (const theme of [light, dark]) {
+      expect(ratio(theme["neutral-graphic"]!, theme.surface!)).toBeGreaterThanOrEqual(3);
+      expect(ratio(theme["neutral-graphic"]!, theme["score-dig"]!)).toBeGreaterThanOrEqual(1.5);
+      expect(ratio(theme["text-secondary"]!, theme.surface!)).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(css).toContain(".score-ring.far { --ring: var(--neutral-graphic); --ring-text: var(--text-secondary); }");
+    expect(css).toContain(".score-word.far .score-gauge { color: var(--neutral-graphic); }");
   });
 });

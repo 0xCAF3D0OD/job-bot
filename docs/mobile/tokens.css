@@ -36,7 +36,8 @@
   --warning: #A8540E;          /* À joindre, relances : ce qui demande d'agir (D5, 2026-11-02) */
   --score-dig: #6F6459;        /* « À creuser » : gris chaud, jamais l'orange (D5) ; 4,75:1 sur --surface-muted */
   --warning-soft: #FCEEDD;
-  --neutral: #596070;          /* Loin */
+  --neutral: #596070;          /* Loin (le mot) */
+  --neutral-graphic: #878E9B;  /* Loin (anneau, jauge) : 3:1 sur la carte, distinct de --score-dig (2026-11-02) */
   --neutral-soft: #ECEEF2;
   --danger: #B4371F;           /* destructif uniquement */
   --danger-line: #E7B8AE;
@@ -105,6 +106,7 @@
     --score-dig: #B39A82;
     --warning-soft: #3A2A1C;
     --neutral: #ABA398;
+    --neutral-graphic: #6B707C;
     --neutral-soft: #2E2A26;
     --danger: #FF8A73;
     --danger-line: #6B3329;
@@ -132,6 +134,7 @@
   --score-dig: #B39A82;
   --warning-soft: #3A2A1C;
   --neutral: #ABA398;
+  --neutral-graphic: #6B707C;
   --neutral-soft: #2E2A26;
   --danger: #FF8A73;
   --danger-line: #6B3329;
