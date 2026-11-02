@@ -2878,6 +2878,16 @@
               "default": false,
               "title": "Hide Doubtful"
             }
+          },
+          {
+            "name": "with_filtered_out",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "With Filtered Out"
+            }
           }
         ],
         "responses": {

@@ -655,7 +655,7 @@ describe("Offres, ajouter une offre (docs/111)", () => {
 });
 
 describe("Offres, la note en ligne (1.6.47)", () => {
-  it("une ligne « Note minimale · Toutes » comme Statut et Tri, ses trois choix dépliés dessous", async () => {
+  it("une ligne « Note minimale · Toutes » comme Statut et Tri, ses quatre choix dépliés dessous", async () => {
     mockOffers(page([offer(1, "Une")]));
     const wrapper = await mountAt("/offres");
     await openFilters(wrapper);
@@ -666,6 +666,7 @@ describe("Offres, la note en ligne (1.6.47)", () => {
     await row.trigger("click");
     expect(wrapper.findAll("[data-test^=score-choice-]").map((c) => c.text())).toEqual([
       "Toutes",
+      "À creuser et plus",
       "Proche et plus",
       "Très proche",
     ]);
@@ -791,5 +792,15 @@ describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
     mockOffers(page([offer(1, "Lettre en cours", { status: "preparing" }), offer(2, "Nouvelle")]));
     const wrapper = await mountAt("/offres?tri=score");
     expect(wrapper.find("[data-test=offer-day]").exists()).toBe(false);
+  });
+});
+
+describe("« Masquer les offres écartées » (docs/139 étape 5c, C2)", () => {
+  it("coupé, À traiter demande aussi les écartées, et une pastille le dit", async () => {
+    const wrapper = await mountAt("/offres?ecartees=montrer");
+    expect(lastQuery()).toMatchObject({ view: "pending", with_filtered_out: true });
+    expect(wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text())).toEqual(["Avec les offres écartées"]);
+    await mountAt("/offres");
+    expect(lastQuery().with_filtered_out).toBeUndefined();
   });
 });

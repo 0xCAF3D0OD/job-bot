@@ -14,7 +14,7 @@ import SpontaneousForm from "../components/SpontaneousForm.vue";
 import ManualOfferForm from "../components/ManualOfferForm.vue";
 import MoreMenu, { type MoreMenuItem } from "../components/MoreMenu.vue";
 import FirstOffers from "../components/FirstOffers.vue";
-import { useNarrow, usePhone } from "../composables/usePhone";
+import { usePhone } from "../composables/usePhone";
 import OfferFilterSheet from "../components/OfferFilterSheet.vue";
 import OfferFiltersPanel from "../components/OfferFiltersPanel.vue";
 import OfferFilterChips from "../components/OfferFilterChips.vue";
@@ -80,7 +80,6 @@ const selectedId = ref<number | null>(null);
 const chunkTitles = ref<Record<number, string>>({});
 const filtersOpen = ref(false);
 const { phone } = usePhone();
-const { phone: narrow } = useNarrow();
 // Barre d'outils (1.6.55) : « Filtrer » ouvre un panneau sous le bouton (ordinateur) ou une feuille en
 // bas de l'écran (téléphone) ; les filtres actifs restent visibles en pastilles sous la barre.
 const chips = computed(() => activeChips(filters.value));
@@ -108,10 +107,6 @@ function onPointerDown(event: PointerEvent): void {
   if (event.target instanceof Node && filterAnchor.value?.contains(event.target)) return;
   filtersOpen.value = false;
 }
-// La feuille ouverte, la page dessous ne défile plus.
-watch([filtersOpen, phone], ([open, onPhone]) => {
-  document.documentElement.classList.toggle("filters-open", open && onPhone && !narrow.value);
-});
 // Candidature spontanée (docs/39) : sans annonce, préparée comme une offre.
 const spontaneousOpen = ref(false);
 // Ajouter une offre trouvée ailleurs (docs/111), aussi par « Partager vers jobA1 » sur Android :
@@ -276,6 +271,7 @@ async function load(append = false): Promise<void> {
           external_only: f.externalOnly || undefined,
           remote: f.remote ?? undefined,
           hide_doubtful: f.hideDoubtful || undefined,
+          with_filtered_out: (f.view === "pending" && f.showFilteredOut) || undefined,
         },
       },
     });
@@ -448,7 +444,6 @@ useDataChanged(() => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown);
   document.removeEventListener("pointerdown", onPointerDown);
-  document.documentElement.classList.remove("filters-open");
   assistant.setFocus(null);
 });
 </script>
@@ -513,11 +508,10 @@ onUnmounted(() => {
               />
             </button>
           </component>
-          <!-- Téléphone : la feuille sort de la page (Teleport), au-dessus de la barre du bas ; ordinateur :
-             le panneau reste sous le bouton, sans Teleport, pour ne pas être recréé à chaque filtre. -->
-          <!-- Sous 600 px : la feuille « Filtres » de la planche. -->
+          <!-- Téléphone (sous 820 px, seuil unique D8) : la feuille « Filtres » de la maquette ; ordinateur : le
+               panneau sous le bouton, sans Teleport, pour ne pas être recréé à chaque filtre. -->
           <OfferFilterSheet
-            v-if="narrow"
+            v-if="phone"
             :open="filtersOpen"
             :filters="filters"
             :facets="facets"
@@ -526,22 +520,15 @@ onUnmounted(() => {
             @reset="reset"
             @close="closeFilters"
           />
-          <component
-            :is="phone ? Teleport : 'div'"
+          <div
             v-else
-            v-bind="phone ? { to: 'body' } : { class: 'offers-filters-anchor' }"
+            class="offers-filters-anchor"
           >
-            <div
-              v-if="filtersOpen && phone"
-              class="offers-filters-veil"
-              data-test="filters-veil"
-              @click="closeFilters"
-            />
             <section
               v-if="filtersOpen"
               id="offers-filters"
-              :class="['offers-filters', { sheet: phone }]"
-              :style="phone ? undefined : { '--filters-room': filtersRoom }"
+              class="offers-filters"
+              :style="{ '--filters-room': filtersRoom }"
               role="dialog"
               aria-labelledby="offers-filters-title"
               data-test="filters-dialog"
@@ -570,7 +557,7 @@ onUnmounted(() => {
                 @done="closeFilters"
               />
             </section>
-          </component>
+          </div>
         </div>
         <!-- Téléphone (C10) : « Ajouter » compact, à côté de la recherche ; « Postuler spontanément » est un
              lien au bas de la liste. Ordinateur : un seul « + Ajouter » et son menu (1.6.47). -->

@@ -24,6 +24,9 @@ export interface OfferFilters {
   remote: Remote | null;
   // Offres « à vérifier » masquées (docs/30 §3), ?verifier=masquer.
   hideDoubtful: boolean;
+  // À traiter avec les offres écartées par les critères (« Masquer les offres écartées » coupé,
+  // docs/139 C2), ?ecartees=montrer.
+  showFilteredOut: boolean;
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
@@ -40,6 +43,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   externalOnly: false,
   remote: null,
   hideDoubtful: false,
+  showFilteredOut: false,
 };
 
 const VIEWS: View[] = ["pending", "to_review", "filtered_out", "later", "in_progress", "expired", "all"];
@@ -74,6 +78,7 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     externalOnly: one(query.externe) === "1",
     remote: one(query.teletravail) === "complet" ? "full" : one(query.teletravail) === "partiel" ? "partial" : null,
     hideDoubtful: one(query.verifier) === "masquer",
+    showFilteredOut: one(query.ecartees) === "montrer",
   };
 }
 
@@ -91,6 +96,7 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   if (filters.externalOnly) query.externe = "1";
   if (filters.remote) query.teletravail = filters.remote === "full" ? "complet" : "partiel";
   if (filters.hideDoubtful) query.verifier = "masquer";
+  if (filters.showFilteredOut) query.ecartees = "montrer";
   return query;
 }
 
@@ -104,13 +110,15 @@ export function activeCount(filters: OfferFilters): number {
     (filters.minScore !== null || filters.maxScore !== null ? 1 : 0) +
     (filters.externalOnly ? 1 : 0) +
     (filters.remote ? 1 : 0) +
-    (filters.hideDoubtful ? 1 : 0)
+    (filters.hideDoubtful ? 1 : 0) +
+    (filters.showFilteredOut ? 1 : 0)
   );
 }
 
-// Les choix de la note en mots (format.ts, scoreWord) : 70 « Proche », 85 « Très proche ».
+// Les choix de la note en mots (format.ts, scoreWord) : 50 « À creuser », 70 « Proche », 85 « Très proche ».
 export const SCORE_CHOICES = [
   { label: "Toutes", min: null },
+  { label: "À creuser et plus", min: 50 },
   { label: "Proche et plus", min: 70 },
   { label: "Très proche", min: 85 },
 ] as const;
@@ -156,6 +164,8 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
   if (filters.externalOnly) chips.push({ key: "external", label: "Chez l'employeur", patch: { externalOnly: false } });
   if (filters.hideDoubtful)
     chips.push({ key: "doubtful", label: "Sans les offres à vérifier", patch: { hideDoubtful: false } });
+  if (filters.showFilteredOut)
+    chips.push({ key: "filtered-out", label: "Avec les offres écartées", patch: { showFilteredOut: false } });
   return chips;
 }
 
