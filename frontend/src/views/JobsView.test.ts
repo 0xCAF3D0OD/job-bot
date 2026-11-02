@@ -21,6 +21,7 @@ async function mountJobs(path: string) {
           { path: "offres", name: "offers", component: child, meta: { tab: "offres" } },
           { path: "suivi", name: "applications", component: child, meta: { tab: "suivi" } },
           { path: "alertes", name: "alerts", component: child, meta: { tab: "alertes" } },
+          { path: "rendez-vous-orp", name: "orp-meeting", component: child, meta: { tab: "rendez-vous" } },
         ],
       },
     ],
@@ -31,26 +32,32 @@ async function mountJobs(path: string) {
   return { wrapper, router };
 }
 
-describe("JobsView (docs/19 §2)", () => {
-  it("trois onglets, titre du menu, pastilles, mois conservé", async () => {
+describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
+  it("trois vues À traiter · Envoyées · Rendez-vous, « Alertes » à côté du titre, pastilles, mois conservé", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({ data: path === "/api/today" ? { to_review: 12, to_follow_up: 2, alerts_waiting: 1 } : { incomplete: 1 } }),
     );
     const { wrapper, router } = await mountJobs("/candidatures/alertes?mois=2026-09");
-    // Le titre reste celui du menu (docs/88) : l'onglet souligné dit où l'on est.
+    // Le titre reste celui du menu (docs/88) : la vue soulignée dit où l'on est.
     expect(wrapper.find("h1").text()).toBe("Candidatures");
-    const tabs = ["offres", "suivi", "alertes"].map((k) => wrapper.find(`[data-test=jobs-tab-${k}]`));
-    // Suivi : à relancer (2) + lignes ORP à compléter (1), docs/22 §1.
-    expect(tabs.map((t) => t.text())).toEqual(["Offres 12", "Suivi 3", "Alertes 1"]);
-    expect(tabs[2]!.classes()).toContain("active");
+    const tabs = ["offres", "suivi", "rendez-vous"].map((k) => wrapper.find(`[data-test=jobs-tab-${k}]`));
+    // Envoyées : à relancer (2) + lignes ORP à compléter (1), docs/22 §1.
+    expect(tabs.map((t) => t.text())).toEqual(["À traiter 12", "Envoyées 3", "Rendez-vous"]);
+    expect(wrapper.find("[data-test=jobs-tab-alertes]").exists()).toBe(false);
+    // Alertes : un lien à côté du titre (C1), marqué quand on y est.
+    const alerts = wrapper.find(".jobs-title [data-test=jobs-alerts]");
+    expect(alerts.text()).toBe("Alertes1");
+    expect(alerts.attributes("aria-current")).toBe("page");
+    expect(tabs.some((t) => t.classes().includes("active"))).toBe(false);
     expect(tabs[1]!.attributes("href")).toBe("/candidatures/suivi?mois=2026-09");
     expect(wrapper.find("[data-test=child]").exists()).toBe(true);
 
     await tabs[0]!.trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.name).toBe("offers");
-    expect(wrapper.find("h1").text()).toBe("Candidatures");
-    expect(GET).toHaveBeenCalledTimes(4); // pastilles relues au changement d'onglet
+    expect(wrapper.find("[data-test=jobs-tab-offres]").classes()).toContain("active");
+    expect(wrapper.find("[data-test=jobs-alerts]").attributes("aria-current")).toBeUndefined();
+    expect(GET).toHaveBeenCalledTimes(4); // pastilles relues au changement de vue
   });
 
   it("l'en-tête suit la largeur de l'onglet : Offres à 1 280 px, les autres à 1 020 (1.6.29)", async () => {
