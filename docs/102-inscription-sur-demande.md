@@ -33,7 +33,7 @@
 - **Deux actions** par demande :
   - **« Accepter »** : le compte devient actif, avec le plafond d'IA par défaut d'un compte invité (5 CHF) ;
   - **« Refuser »** : la demande et le compte sont effacés.
-- **Un interrupteur « Accepter des demandes de compte »**, activé par défaut. Éteint, la page « Créer un compte » dit « Les demandes de compte sont fermées pour le moment », et le lien de la page de connexion disparaît.
+- **Un interrupteur « Accepter des demandes de compte »**, éteint par défaut depuis le 2 novembre 2026 : pour le moment, on entre sur invitation seulement (Réglages › Plateforme › « Inviter quelqu'un », puis copier le lien). Éteint, la page « Créer un compte » dit « Les demandes de compte sont fermées pour le moment », et le lien de la page de connexion disparaît.
 - **La cloche** : une nouvelle demande t'arrive comme une alerte (« Nouvelle demande de compte : *identifiant* »). Elle arrive aussi par ntfy, si tu l'as réglé.
 - **Les invitations** (lien à usage unique) restent. Un compte invité est accepté d'office.
 

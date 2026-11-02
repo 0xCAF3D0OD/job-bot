@@ -59,7 +59,7 @@ const link = ref<{ kind: "invite" | "reset"; username: string | null; url: strin
 const total = ref<string | number>("");
 const caps = ref<Record<number, string | number>>({});
 // Les demandes de compte (docs/102) : l'interrupteur.
-const signupOpen = ref(true);
+const signupOpen = ref(false);
 
 function money(value: string): string {
   return Number(value).toLocaleString("fr-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

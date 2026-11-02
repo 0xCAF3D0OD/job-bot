@@ -32,7 +32,8 @@ async def clean() -> None:
 
 @pytest.fixture
 async def secured() -> AsyncIterator[Runtime]:
-    """Connexion activée, exploitant configuré (avec mot de passe) : demandes ouvertes."""
+    """Connexion activée, exploitant configuré (avec mot de passe), interrupteur allumé :
+    demandes ouvertes."""
     runtime = Runtime.create(make_settings(auth_enabled=True))
     auth_routes.throttle.failures.clear()
     auth_routes.signup_limit.hits.clear()
@@ -41,6 +42,10 @@ async def secured() -> AsyncIterator[Runtime]:
         await conn.execute(
             text("UPDATE users SET password_hash = :h"),
             {"h": passwords.hash_password(OWNER_PASSWORD)},
+        )
+        await conn.execute(
+            text("INSERT INTO platform_settings (key, value) VALUES (:k, 'true'::jsonb)"),
+            {"k": signup.OPEN_KEY},
         )
     yield runtime
     await clean()
@@ -233,6 +238,17 @@ async def test_closed_when_full_switched_off_or_demo(runtime: Runtime, secured: 
             assert refused.status_code == 403 and refused.json()["demo"] is True
     finally:
         await demo.dispose()
+
+
+async def test_invitation_only_by_default(runtime: Runtime, secured: Runtime) -> None:
+    """Sans réglage, on entre sur invitation seulement : demandes fermées, lien caché."""
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("TRUNCATE platform_settings"))
+    async with client(runtime) as owner, client(secured) as guest:
+        assert (await guest.get("/api/auth/signup")).json() == {"open": False}
+        assert (await guest.post("/api/auth/signup", json=demand())).status_code == 403
+        assert (await owner.get("/api/platform")).json()["signup_open"] is False
+    assert await pending_ids(secured) == []
 
 
 async def test_closed_before_the_owner_is_set_up(secured: Runtime) -> None:

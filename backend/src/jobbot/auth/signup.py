@@ -1,6 +1,8 @@
 """S'inscrire, sur demande (docs/102).
 
-N'importe qui demande un compte depuis la page de connexion ; le compte attend que
+Pour le moment, la plateforme ouvre sur invitation seulement : les demandes sont fermées
+d'office, et l'exploitant les rouvre dans Réglages, Plateforme s'il le veut. Ouvertes,
+n'importe qui demande un compte depuis la page de connexion ; le compte attend que
 l'exploitant l'accepte (`users.approved_at` vide). Tant qu'il attend : ni connexion, ni
 session, ni tâche, ni profil, ni adresse de réception. Refuser efface le compte ; une demande
 sans réponse est effacée après 30 jours.
@@ -27,8 +29,9 @@ CLOSED = "les demandes de compte sont fermées pour le moment"
 
 
 async def switched_on(session: AsyncSession) -> bool:
-    """L'interrupteur de l'exploitant, « Accepter des demandes de compte » (activé d'office)."""
-    return bool(await platform.get(session, OPEN_KEY, True))
+    """L'interrupteur de l'exploitant, « Demandes de compte » (éteint d'office : on entre sur
+    invitation seulement, tant que l'exploitant ne l'allume pas)."""
+    return bool(await platform.get(session, OPEN_KEY, False))
 
 
 async def pending_count(session: AsyncSession) -> int:

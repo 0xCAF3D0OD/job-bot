@@ -6571,7 +6571,7 @@ export interface components {
             signup_requests: components["schemas"]["SignupRequestOut"][];
             /**
              * Signup Open
-             * @default true
+             * @default false
              */
             signup_open: boolean;
             /** Ai Total Budget Chf */
