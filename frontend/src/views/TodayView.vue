@@ -20,7 +20,7 @@ import PageHero from "../components/PageHero.vue";
 import { useCollect } from "../composables/useCollect";
 import { DOSE, DOSE_CATCH_UP, triageDoneToday } from "../composables/useDailyDose";
 import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
-import { daysBefore, formatMonth, localDate, orpPace, plural } from "../format";
+import { daysBefore, localDate, ofMonth, orpPace, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
 import { offerUndo } from "../composables/useUndo";
@@ -28,7 +28,7 @@ import { usePageReady } from "../composables/usePageTransition";
 
 // Aujourd'hui (1.6.51, docs/interface.md n° 17, planche « Revue 1.6.46 ») : une seule colonne. La
 // phrase de conclusion ; le tri du jour dans la bande d'action, seule action principale ; puis
-// « À faire aujourd'hui. », « Mois ORP. » et « À retenir. ».
+// « À faire aujourd'hui », « Mois ORP » et « À retenir ».
 const today = ref<Today | null>(null);
 usePageReady("today", () => !!today.value);
 const best = ref<Offer[]>([]);
@@ -112,7 +112,7 @@ const sentence = computed<Part[]>(() => {
   return parts;
 });
 
-// « À faire aujourd'hui. » : des lignes toutes construites pareil (icône, titre avec un verbe, une
+// « À faire aujourd'hui » : des lignes toutes construites pareil (icône, titre avec un verbe, une
 // ligne de détail, un bouton à contour) ; seulement ce qui a quelque chose à faire, le daté d'abord.
 type Task = { key: string; test: string; icon: IconName; title: string; detail: string; action: string; to: RouteLocationRaw };
 const tasks = computed<Task[]>(() => {
@@ -182,9 +182,9 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       key: "orp",
       test: urgent ? "orp-urgent" : "orp-due",
       icon: "check-circle",
-      title: `Remettre les preuves de ${formatMonth(t.orp_due_month)}`,
+      title: `Remettre les preuves ${ofMonth(t.orp_due_month)}`,
       detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd'hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
-      action: "Compléter",
+      action: "Remettre",
       to: { path: "/candidatures/suivi", query: { mois: t.orp_due_month } },
     },
   };
@@ -236,7 +236,7 @@ async function fetchAll(): Promise<void> {
     // La dose du jour (docs/86) : les meilleures, pas toute la pile.
     api.GET("/api/offers", { params: { query: { view: "to_review", sort: "score", limit: DOSE_CATCH_UP } } }),
     api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } }),
-    // « À retenir. » : l'écart du Bilan sur les 3 derniers mois.
+    // « À retenir » : l'écart du Bilan sur les 3 derniers mois.
     api.GET("/api/insights", { params: { query: { period: "recent" } } }),
   ]);
   today.value = day.data ?? null;
@@ -404,7 +404,7 @@ const { me } = useAuth();
         aria-labelledby="today-orp-title"
       >
         <h2 id="today-orp-title">
-          Mois ORP.
+          Mois ORP
         </h2>
         <div
           class="dash-card today-orp"
@@ -435,7 +435,7 @@ const { me } = useAuth();
         data-test="today-retain"
       >
         <h2 id="today-retain-title">
-          À retenir.
+          À retenir
         </h2>
         <div class="today-retain">
           <p class="today-retain-word">

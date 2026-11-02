@@ -473,7 +473,10 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     const { wrapper } = await mountView();
     const detail = wrapper.find("[data-test=suivi-detail]");
     expect(detail.findAll(".disclosure-title").map((d) => d.text())).toEqual(["Calendrier d'octobre", "Toutes les candidatures d'octobre"]);
-    expect(detail.find("[data-test=detail-list] .disclosure-value").text()).toBe("1");
+    // Comme les repliables du Bilan (règles §3) : une icône et une phrase, visibles replié.
+    expect(detail.findAll(".disclosure-icon")).toHaveLength(2);
+    expect(detail.find("[data-test=detail-list] [data-test=disclosure-description]").text()).toMatch(/^1 candidature\b/);
+    expect(detail.find("[data-test=detail-calendar] [data-test=disclosure-description]").text()).not.toBe("");
     expect(wrapper.find("[data-test=layout-calendar]").exists()).toBe(false);
 
     const { wrapper: day } = await mountView("/candidatures/suivi?jour=2026-10-02");

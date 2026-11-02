@@ -228,7 +228,9 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     const rows = wrapper.findAll(".orp-month-rows > .disclosure");
     expect(rows.map((r) => r.find(".disclosure-title").text())).toEqual(["Le mois en bref", "Ce qui bloque", "Compétences demandées qui manquent"]);
     expect(rows.map((r) => r.find(".disclosure-row").attributes("aria-expanded"))).toEqual(["true", "false", "false"]);
-    expect(rows[0]!.find(".disclosure-value").text()).toBe("6 candidatures sur 10");
+    // Comme les repliables du Bilan (règles §3) : une icône et une phrase, visibles replié.
+    expect(rows.every((r) => r.find(".disclosure-icon").exists())).toBe(true);
+    expect(rows[0]!.find("[data-test=disclosure-description]").text()).toBe("6 candidatures sur 10");
     // La feuille : « Télécharger » en plein, « Rédiger avec l'IA » en contour.
     expect(wrapper.find("[data-test=sheet-pdf]").classes()).toContain("primary-link");
     expect(wrapper.find("[data-test=sheet-write]").classes()).toContain("secondary");
@@ -267,7 +269,7 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     await flushPromises();
     const late = wrapper.find("[data-test=meeting-when] .orp-late");
     expect(late.text()).toBe("En retard : preuves de septembre, à remettre au plus tard le 5 octobre.");
-    expect(wrapper.find("[data-test=sheet-obligations] .disclosure-value").text()).toBe("1 en retard, 1 échéance");
+    expect(wrapper.find("[data-test=sheet-obligations] [data-test=disclosure-description]").text()).toBe("1 en retard, 1 échéance");
   });
 
   it("premier rendez-vous : « Enregistrer » en plein, « Voir les offres » en lien", async () => {
@@ -281,12 +283,14 @@ describe("Rendez-vous, l'essentiel d'abord (1.6.23, décisions du 25/10)", () =>
     expect(wrapper.findAll("h2.orp-section").map((h) => h.text())).toEqual([]);
   });
 
-  it("« Ce qui bloque » compte aussi ce qui marche dans son résumé", async () => {
+  it("« Ce qui bloque » sans blocage : sa phrase dit ce qui marche", async () => {
     const prep = { ...PREP, months, blockers: [], works: "Les offres de jobs.ch obtiennent plus souvent une réponse.", missing: [] };
     GET.mockResolvedValue({ data: { meeting: MEETING, preparation: prep, ...MORE } });
     const wrapper = mount(OrpMeetingView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
-    expect(wrapper.find("[data-test=sheet-blockers] .disclosure-value").text()).toBe("1 piste");
+    expect(wrapper.find("[data-test=sheet-blockers] [data-test=disclosure-description]").text()).toBe(
+      "Ce qui marche : les offres de jobs.ch obtiennent plus souvent une réponse",
+    );
   });
 
   it("sans candidature, une échéance passée n'est pas une alerte", async () => {

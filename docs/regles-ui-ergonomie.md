@@ -1,6 +1,6 @@
 # jobA1 : règles d'interface et d'ergonomie
 
-Version 1.2 · 26 octobre 2026 (références, §9)
+Version 1.3 · 2 novembre 2026 (écarts du 2 novembre : Offres, Listes, Mots, annexe)
 
 Ce document fixe la structure de jobA1. Toute interface doit s'y conformer. **Claude Code n'invente aucune structure, aucun composant et aucun mot qui ne figure pas ici ou dans la bibliothèque Figma.** Un besoin nouveau se propose d'abord, il ne se code pas.
 
@@ -64,7 +64,7 @@ Règles :
   - les éléments liés vont dans **la même carte**, séparés d'un filet (les sites suivis, les sites d'une recherche d'alerte) ;
   - un détail long se **replie** : le repliable porte une icône, un titre et **l'enseignement en une phrase**, visible replié ; chevron vers la droite fermé, vers le bas ouvert (Bilan) ;
   - sur téléphone, un contrôle large (champ et son texte, jours de la semaine) passe sous le texte ; un interrupteur reste à droite. Un contrôle très large (jeton, adresse, zone de texte) passe sous le texte à toutes les tailles ;
-  - composants : `SettingCard` et `SettingRow` (Réglages, Alertes), `DisclosureRow` avec `icon` et `description` (Bilan).
+  - composants : `SettingCard` et `SettingRow` (Réglages, Alertes), `DisclosureRow` avec `icon` et `description` (Bilan, Suivi, Rendez-vous ; la phrase remplace le compte à droite).
 - **Enregistrement immédiat (1.6.65)** : pas de bouton « Enregistrer ». Un interrupteur ou un choix s'applique tout de suite ; un champ chiffré s'enregistre quand on le quitte, pas à chaque frappe. « Enregistré » s'affiche à côté du champ et s'annonce aux lecteurs d'écran (message d'état, WCAG 4.1.3). Une valeur impossible : l'erreur sous le champ, reliée à lui (WCAG 3.3.1), et l'ancienne valeur reste enregistrée. Une désactivation qui se rattrape (un site suivi) propose « Annuler » pendant 6 s (§4).
 - **Une confirmation dit ce qui est vraiment fait (1.6.69)** : jamais « c'est fait » si une étape reste à l'utilisateur. Exemple : ajouter une recherche ne crée l'alerte sur aucun site ; la confirmation dit « Recherche ajoutée » et « Il te reste à créer l'alerte sur … », avec l'action en bouton principal.
 - Pas plus de 3 cartes visibles sans défilement sur téléphone.
@@ -74,8 +74,10 @@ Largeurs (1.6.32) :
 - **La page** : un seul conteneur centré, largeur maximale de **1 020 px** (`--page-max`), marges comprises ; **chaque
   bloc prend toute sa largeur**. 1 020 px est un choix de jobA1, compatible avec la largeur large de Polaris (`inlineSize`
   `large`), recommandée pour les tableaux de bord. Pages concernées : **Aujourd'hui, Suivi, Alertes,
-  Rendez-vous et Bilan**. Seule exception : **Candidatures › Offres**, avec ses trois colonnes (filtres, liste,
-  détail), garde **1 280 px** (`--page-wide`) : à 1 020 px, la liste et le détail n'auraient chacun que 338 px.
+  Rendez-vous et Bilan**. Seule exception : **Candidatures › Offres** garde **1 280 px** (`--page-wide`) pour ses
+  deux colonnes, la liste et le détail d'une offre ouverte côte à côte (les filtres sont dans la barre d'outils
+  depuis la planche « Barre d'outils Offres ») : à 1 020 px, la liste n'aurait que 462 px et le détail 486 px. Sans
+  offre ouverte, la ligne d'offre garde son texte à la mesure (Listes, ci-dessous).
 - **Pas de colonne étroite avec le côté droit vide.** Une colonne d'appui (l'`aside` de Polaris) ne reçoit que du
   contenu d'appui : **jamais une commande principale, jamais un contenu requis** (Polaris, mise en page).
 - **Le texte courant et les phrases de conclusion** : **75 caractères** par ligne au plus, à toutes les tailles
@@ -96,7 +98,8 @@ Largeurs (1.6.32) :
   (`--field-30`), **date et heure à leur taille naturelle** ; les nombres courts (objectif, note sur 100, jour du mois)
   à 5 caractères (`--field-5`) ; **la recherche peut rester fluide**.
 - **Les listes** : le statut ou l'action reste **près du texte** qu'il concerne ; aucune ligne de liste ne dépasse la
-  largeur de la page.
+  largeur de la page. La Ligne d'offre arrête son texte à la mesure (`--measure`) : le verdict et l'action suivent le
+  poste, jamais au bord d'une carte large (Offres, Tri du jour). Loi de proximité (Gestalt, NN/g).
 
 ## 4. Composants (seuls autorisés)
 
@@ -108,7 +111,7 @@ Largeurs (1.6.32) :
 | **Progression ORP** | 10 cases, une par candidature. |
 | **Semaine** | Points par jour : rempli = candidature, cerclé = aujourd'hui. |
 | **Initiales d'entreprise** | Fond accent, menthe ou ciel, jamais l'orange (réservé à ce qui demande d'agir). Contraste ≥ 4,5:1 : `--on-accent` sur l'accent, texte foncé sur la menthe et le ciel. |
-| **Offres du jour** | Sur Aujourd'hui, la carte « Tri du jour. » (le nombre d'offres, la meilleure en aperçu, « Commencer le tri ») ; le tri terminé : « Tri terminé · À demain », sans bouton plein. Le tri dans son écran (2e niveau, §2) : une offre à la fois en pile de cartes, avec une phrase « pourquoi » d'une ligne ; les manques sont dans la fiche. Garder et Écarter côte à côte, chacun sur la moitié de la carte : une décision binaire, deux grandes cibles (loi de Fitts) ; c'est la seule exception à « pas de bouton pleine largeur » (§3). « Annuler » pendant 6 s ; à la fin, retour à Aujourd'hui. Balayage autorisé sur téléphone, en plus des boutons. |
+| **Offres du jour** | Sur Aujourd'hui, la carte « Tri du jour » (le nombre d'offres, la meilleure en aperçu, « Commencer le tri ») ; le tri terminé : « Tri terminé · À demain », sans bouton plein. Le tri dans son écran (2e niveau, §2) : une offre à la fois en pile de cartes, avec une phrase « pourquoi » d'une ligne ; les manques sont dans la fiche. Garder et Écarter côte à côte, chacun sur la moitié de la carte : une décision binaire, deux grandes cibles (loi de Fitts) ; c'est la seule exception à « pas de bouton pleine largeur » (§3). « Annuler » pendant 6 s ; à la fin, retour à Aujourd'hui. Balayage autorisé sur téléphone, en plus des boutons. |
 | **Écran vide** | **La première fois** (« Pas encore de … ») : ce que la page fera, puis une action principale, un bouton plein (§3.3), une éventuelle seconde action en contour. L'illustration attribuée à l'écran (voir Illustrations), sinon le visage du 1. Titre sans point final. **Réussite** (tout est fait) : l'illustration de la réussite, quand ça revient, pas de bouton plein. **Aucun résultat** (des filtres ne laissent rien) : ni illustration ni visage, une ligne grise à la place de la liste et « Effacer les filtres ». **Vide dans une carte** : une ligne grise « Aucun … pour l'instant. » sous la tête de carte, sans « · 0 » ; l'action reste dans la tête. Inspiré des états vides de Polaris et de NN/g (premier usage, aucun résultat). |
 | **Chargement** | **Rien avant 300 ms** (NN/g, Response Time Limits), puis des blocs gris à la forme du contenu (`LoadingBlocks`), la tête de carte déjà affichée. **Une seule annonce « Chargement… » par zone** (WCAG 4.1.3). **Un seul système** (ISO 9241-110, cohérence) : le voile du visage seulement au tout premier chargement de l'application ; un changement de page montre les blocs gris, ou rien sous 300 ms. Animations coupées si le système le demande (`prefers-reduced-motion`). |
 | **Action en cours** | Le bouton garde sa place et **sa largeur** (`BusyButton`) : le nom de l'action suivi de « … » (« Rédaction… »), **`aria-disabled="true"` et pas `disabled`**, pour que le focus reste dessus (WCAG 2.4.3), et l'état annoncé (WCAG 4.1.3). **Il garde sa couleur et son contraste** : occupé n'est pas désactivé, pas d'opacité réduite. |
@@ -169,6 +172,10 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 - Une chose = un mot, partout.
 - Vocabulaire ORP : objectif, preuves, conseiller, rendez-vous.
 - Termes validés : Gardées · À préparer · Poste obtenu. *(Compléter avec la liste du cadrage 126.)*
+- Les preuves du mois **se remettent** : « Remettre les preuves d'octobre » et son bouton « Remettre » (Aujourd'hui),
+  « Marquer comme remis » et « Preuves d'octobre remises » (Suivi). « Compléter » ne sert qu'à une ligne à laquelle
+  il manque une information ; « atteint » parle de l'objectif du mois, pas des preuves.
+- Un mois après « de » s'élide : « d'octobre », « d'août » (`ofMonth`, `frontend/src/format.ts`).
 - Interdits pour l'utilisateur : jargon technique (README, réglage d'installation, lecteur intégré, Diagnostic), anglicismes inutiles, mots ambigus (Retenues, Engagement, Commencées, Progresser).
 - Ton : tutoiement, phrases courtes, aucun tiret cadratin.
 
@@ -231,10 +238,10 @@ On reprend les principes, jamais l'apparence. Une structure de page empruntée �
 | Écart | Règle concernée | État |
 |---|---|---|
 | Candidatures surchargée (5 sous-onglets) | 2 | Corrigé en 1.0.0, à refléter dans Figma |
-| Suivi et Bilan trop chargés | 3 | À faire : conclusion en haut, détail replié |
+| Suivi et Bilan trop chargés | 3 | Corrigé : conclusion en haut, détail replié (repliables alignés sur le Bilan en 1.3) |
 | Vocabulaire ambigu | 5 | Partiellement corrigé, liste à finaliser |
 | Contraste des initiales | 4, 7 | Corrigé en 0.99.1 |
 | Liens trop petits | 7 | Corrigé en 0.99.1 |
-| Pastille de notification rouge | 4 | À passer en orange |
+| Pastille de notification rouge | 4 | Corrigé : orange |
 | Mentions légales, À propos | 8 | Corrigé en 1.0.1, à refléter dans Figma |
 | Écrans vides de la démo | 4 | Prévu au cadrage 128 |
