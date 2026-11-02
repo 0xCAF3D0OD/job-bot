@@ -19027,7 +19027,7 @@
           "signup_open": {
             "type": "boolean",
             "title": "Signup Open",
-            "default": true
+            "default": false
           },
           "ai_total_budget_chf": {
             "type": "string",

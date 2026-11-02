@@ -116,8 +116,8 @@ class PlatformOut(BaseModel):
     accounts: list[AccountOut]
     invitations: list[InvitationOut]
     signup_requests: list[SignupRequestOut] = []
-    # L'interrupteur « Accepter des demandes de compte » (activé d'office).
-    signup_open: bool = True
+    # L'interrupteur « Demandes de compte » (éteint d'office : sur invitation seulement).
+    signup_open: bool = False
     ai_total_budget_chf: Decimal
     ai_month_spend_chf: Decimal
     auth_enabled: bool
