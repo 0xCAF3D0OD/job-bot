@@ -608,6 +608,14 @@ async def test_false_claim_removed_then_forbidden(
         f"/api/letters/{letter['id']}/false-claim", json={"sentence": "Une phrase absente."}
     )
     assert missing.status_code == 422
+    # Une phrase qui est tout le paragraphe : le paragraphe disparaît, aucun vide n'est gardé
+    # (ni dans la version, ni donc dans le PDF et le Word).
+    whole = await api.post(
+        f"/api/letters/{letter['id']}/false-claim", json={"sentence": "The platform uses Vue."}
+    )
+    assert [p["text"] for p in whole.json()["letter"]["paragraphs"]] == [
+        "Votre annonce a retenu mon attention."
+    ]
 
 
 async def test_false_claim_rewritten_in_a_new_version(

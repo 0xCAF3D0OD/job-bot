@@ -68,6 +68,49 @@ describe("Plateforme (docs/65 §5)", () => {
     expect(rows.map((row) => row.find(".setting-row-control").text())).toEqual(["2 comptes", "1 compte"]);
   });
 
+  it("le test utilisateurs : le temps entre l'inscription et chaque étape, sans nom (30.10.2026)", async () => {
+    const created = "2026-10-20T08:00:00Z";
+    GET.mockResolvedValue({
+      data: {
+        ...PLATFORM,
+        user_test_open: true,
+        milestones: [
+          {
+            account: 12,
+            created_at: created,
+            first_alert: "2026-10-20T08:25:00Z",
+            first_offer: "2026-10-20T14:00:00Z",
+            first_prepared: "2026-10-23T09:00:00Z",
+            first_export: null,
+          },
+        ],
+      },
+    });
+    const wrapper = mount(PlatformPanel);
+    await flushPromises();
+    const table = wrapper.find("[data-test=milestones-table]");
+    expect(table.findAll("thead th").map((th) => th.text())).toEqual(["Compte", "Alerte", "Offre", "Candidature", "Preuves"]);
+    const row = table.find("[data-test=milestones-row]");
+    expect(row.find("th").text()).toContain("n° 12");
+    expect(row.findAll("td").map((td) => td.text())).toEqual(["25 min", "6 h", "3 j", "—"]);
+    // Aucun nom de compte dans ce tableau.
+    for (const account of PLATFORM.accounts) expect(table.text()).not.toContain(account.username);
+    // Gardées jusqu'à la fin du test : « Terminer le test » demande confirmation, puis efface tout.
+    PUT.mockResolvedValue({ data: { ...PLATFORM, user_test_open: false, milestones: [] } });
+    await wrapper.find("[data-test=user-test-end]").trigger("click");
+    expect(PUT).not.toHaveBeenCalled();
+    await wrapper.find("[data-test=platform-milestones] [data-test=inline-confirm-yes]").trigger("click");
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/platform/user-test", { body: { open: false } });
+    expect(wrapper.find("[data-test=milestones-table]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=platform-milestones]").text()).toContain("Aucun test en cours");
+    expect(wrapper.find("[data-test=user-test-start]").exists()).toBe(true);
+    GET.mockResolvedValue({ data: { ...PLATFORM, user_test_open: true, milestones: [] } });
+    const empty = mount(PlatformPanel);
+    await flushPromises();
+    expect(empty.find("[data-test=platform-milestones]").text()).toContain("Aucun compte invité");
+  });
+
   it("l'usage de chaque compte, les actions seulement pour les autres", async () => {
     GET.mockResolvedValue({ data: PLATFORM });
     const wrapper = mount(PlatformPanel);

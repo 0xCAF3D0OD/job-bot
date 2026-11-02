@@ -18,6 +18,8 @@ from typing import Literal
 Family = Literal["personal", "connection", "shared", "technical"]
 
 PERSONAL = (
+    # Les dates des premières étapes, pour le test utilisateurs (30.10.2026).
+    "account_milestones",
     "account_sites",
     "alert_searches",
     "alert_setups",

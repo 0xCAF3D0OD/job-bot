@@ -552,6 +552,51 @@
         }
       }
     },
+    "/api/platform/user-test": {
+      "put": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Set User Test",
+        "description": "Le test utilisateurs : ses dates sont gardées jusqu'à sa fin (décision de Kevin).",
+        "operationId": "setUserTest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserTestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOut"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Exploitant seul"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/platform/accounts/{account_id}/approve": {
       "post": {
         "tags": [
@@ -16538,6 +16583,78 @@
         ],
         "title": "MessageOut"
       },
+      "MilestonesOut": {
+        "properties": {
+          "account": {
+            "type": "integer",
+            "title": "Account"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "first_alert": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Alert"
+          },
+          "first_offer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Offer"
+          },
+          "first_prepared": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Prepared"
+          },
+          "first_export": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Export"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "created_at",
+          "first_alert",
+          "first_offer",
+          "first_prepared",
+          "first_export"
+        ],
+        "title": "MilestonesOut",
+        "description": "Les étapes datées d'un compte, pour le test utilisateurs (30.10.2026) : le numéro du compte,\nl'inscription et la première fois de chaque étape (vide : pas encore). Rien d'autre."
+      },
       "MissingOut": {
         "properties": {
           "skill": {
@@ -18950,6 +19067,19 @@
                 "type": "null"
               }
             ]
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/MilestonesOut"
+            },
+            "type": "array",
+            "title": "Milestones",
+            "default": []
+          },
+          "user_test_open": {
+            "type": "boolean",
+            "title": "User Test Open",
+            "default": true
           }
         },
         "type": "object",
@@ -22543,6 +22673,19 @@
           "limit_text"
         ],
         "title": "UsageOut"
+      },
+      "UserTestIn": {
+        "properties": {
+          "open": {
+            "type": "boolean",
+            "title": "Open"
+          }
+        },
+        "type": "object",
+        "required": [
+          "open"
+        ],
+        "title": "UserTestIn"
       },
       "ValidationError": {
         "properties": {

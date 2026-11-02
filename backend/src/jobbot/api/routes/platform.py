@@ -89,6 +89,28 @@ class FirstStepsStats(BaseModel):
     stopped_at: list[int]
 
 
+class MilestonesOut(BaseModel):
+    """Les étapes datées d'un compte, pour le test utilisateurs (30.10.2026) : le numéro du compte,
+    l'inscription et la première fois de chaque étape (vide : pas encore). Rien d'autre."""
+
+    account: int
+    created_at: datetime
+    first_alert: datetime | None
+    first_offer: datetime | None
+    first_prepared: datetime | None
+    first_export: datetime | None
+
+
+USER_TEST_KEY = "user_test_open"
+MILESTONE_COLUMNS = (
+    "created_at",
+    "first_alert",
+    "first_offer",
+    "first_prepared",
+    "first_export",
+)
+
+
 class PlatformOut(BaseModel):
     # Les comptes acceptés ; les demandes en attente sont à part.
     accounts: list[AccountOut]
@@ -103,6 +125,9 @@ class PlatformOut(BaseModel):
     database_admin: bool = False
     backup: BackupOut | None = None
     first_steps: FirstStepsStats | None = None
+    milestones: list[MilestonesOut] = []
+    # Un test utilisateurs en cours : les dates s'enregistrent (gardées jusqu'à sa fin).
+    user_test_open: bool = True
 
 
 class LinkCreated(BaseModel):
@@ -176,6 +201,11 @@ async def get_platform(request: Request) -> PlatformOut:
                 {"since": datetime.now(UTC) - FIRST_STEPS_WINDOW},
             )
         )
+        user_test_open = await platform.get(session, USER_TEST_KEY, True) is not False
+        milestones = [
+            MilestonesOut(account=row.user_id, **{k: getattr(row, k) for k in MILESTONE_COLUMNS})
+            for row in await session.execute(text("select * from milestones_progress()"))
+        ]
     return PlatformOut(
         accounts=[
             AccountOut(
@@ -227,6 +257,8 @@ async def get_platform(request: Request) -> PlatformOut:
             ),
             stopped_at=[sum(1 for row in progress if row.reached == step) for step in range(5)],
         ),
+        milestones=milestones,
+        user_test_open=user_test_open,
     )
 
 
@@ -382,6 +414,30 @@ async def save_platform_settings(request: Request, body: PlatformSettingsIn) -> 
             await platform.put(session, "ai_total_budget_chf", str(body.ai_total_budget_chf))
         if body.signup_open is not None:
             await platform.put(session, signup.OPEN_KEY, body.signup_open)
+    return await get_platform(request)
+
+
+class UserTestIn(BaseModel):
+    # false : terminer le test (toutes les dates effacées, plus rien d'enregistré) ;
+    # true : en commencer un nouveau.
+    open: bool
+
+
+@router.put(
+    "/user-test",
+    operation_id="setUserTest",
+    responses={403: {"description": "Exploitant seul"}},
+)
+async def set_user_test(request: Request, body: UserTestIn) -> PlatformOut:
+    """Le test utilisateurs : ses dates sont gardées jusqu'à sa fin (décision de Kevin)."""
+    runtime = _runtime(request)
+    await require_owner(runtime)
+    async with runtime.sessionmaker.begin() as session:
+        if body.open:
+            await platform.put(session, USER_TEST_KEY, True)
+        else:
+            await session.execute(text("select end_user_test()"))
+    log.info("user_test", open=body.open)
     return await get_platform(request)
 
 
