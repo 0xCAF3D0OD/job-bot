@@ -25,6 +25,9 @@ toutes les PR modifiaient (les tableaux de réservation, `CHANGELOG.md`) ne sont
 - **Pas de numéro avant la fusion** : ni dans la branche (`fix/<sujet>`, `feat/<sujet>`), ni dans le titre de la PR,
   ni dans les commits, ni dans un dossier de captures (`docs/captures/<sujet>/`). Le numéro se lit après la fusion,
   dans `changelog.d/` ou `CHANGELOG.md`.
+- **Un numéro de cadrage par document.** Un nouveau `docs/NNN-<sujet>.md` prend le numéro suivant sur main.
+  Deux PR ouvertes en même temps peuvent prendre le même : la CI (`scripts/docs_numeros.py`) le voit sur le
+  commit de fusion de test, et la dernière arrivée prend le numéro libre suivant.
 - **Les tâches en cours se suivent dans les PR ouvertes**, plus dans un tableau. La description de chaque PR donne la
   session, la tâche et la liste des fichiers touchés.
 
