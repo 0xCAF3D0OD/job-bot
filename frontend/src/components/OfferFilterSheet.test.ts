@@ -14,19 +14,25 @@ function mountSheet(patch: Partial<OfferFilters> = {}, total = 3) {
 }
 
 describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5c)", () => {
-  it("correspondance en mots, taux, tri, « Masquer les offres écartées » ; « Afficher 3 offres »", () => {
+  it("correspondance en mots, taux minimum, tri, « Afficher aussi » ; « Afficher 3 offres »", () => {
     const wrapper = mountSheet();
     expect(wrapper.findAll("[data-test^=sheet-score]").map((b) => b.text())).toEqual(["Tous", "À creuser et +", "Proche et +", "Très proche"]);
     expect(wrapper.find("[data-test=sheet-score-all]").attributes("aria-pressed")).toBe("true");
-    expect(wrapper.findAll("[data-test^=sheet-rate]").map((b) => b.text())).toEqual(["Tous", "60 % et +", "80 % et +", "100 %"]);
+    // Le taux minimum, un seul choix : un groupe de radios, pas des puces (5e).
+    const rates = wrapper.find("[role=radiogroup][aria-label='Taux minimum']");
+    expect(rates.findAll("[role=radio]").map((b) => b.text())).toEqual(["Tous", "60 %", "80 %", "100 %"]);
+    expect(rates.find("[data-test=sheet-rate-all]").attributes("aria-checked")).toBe("true");
     expect(wrapper.find("[data-test=sheet-sort-day]").attributes("aria-pressed")).toBe("true");
-    // Les écartées sont masquées par défaut : l'interrupteur est allumé.
-    expect(wrapper.find("[data-test=sheet-filtered-out] input[role=switch]").element).toHaveProperty("checked", true);
+    // « Afficher aussi » : Écartées et Expirées, éteints par défaut ; plus de vue « Toutes ».
+    const also = wrapper.find("[data-test=sheet-show-also]");
+    expect(also.find(".grouped-title").text()).toBe("Afficher aussi");
+    expect(also.findAll(".grouped-row-title").map((t) => t.text())).toEqual(["Écartées", "Expirées"]);
+    expect(also.findAll("input[role=switch]").map((i) => (i.element as HTMLInputElement).checked)).toEqual([false, false]);
     expect(wrapper.find("[data-test^=sheet-view]").exists()).toBe(false);
     expect(wrapper.find("[data-test=sheet-show]").text()).toBe("Afficher 3 offres");
     expect(mountSheet({}, 1).find("[data-test=sheet-show]").text()).toBe("Afficher 1 offre");
     // Hors d'À traiter, l'interrupteur n'a pas de sens.
-    expect(mountSheet({ view: "expired" }).find("[data-test=sheet-filtered-out]").exists()).toBe(false);
+    expect(mountSheet({ view: "expired" }).find("[data-test=sheet-show-also]").exists()).toBe(false);
   });
 
   it("chaque choix s'applique tout de suite", async () => {
@@ -39,6 +45,10 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ sort: "score" }]);
     await wrapper.find("[data-test=sheet-filtered-out] input").trigger("change");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ showFilteredOut: true }]);
+    await wrapper.find("[data-test=sheet-expired] input").trigger("change");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ showExpired: true }]);
+    await wrapper.find("[data-test=sheet-rate-all]").trigger("click");
+    expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minRate: null }]);
     expect(mountSheet({ minScore: 70 }).find("[data-test=sheet-score-70]").attributes("aria-pressed")).toBe("true");
     // Une adresse d'avant (?note=60-90) garde ses bornes : aucun choix marqué.
     expect(mountSheet({ minScore: 60, maxScore: 90 }).findAll("[data-test^=sheet-score][aria-pressed=true]")).toHaveLength(0);

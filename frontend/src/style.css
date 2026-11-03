@@ -371,7 +371,7 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 /* Les choix en pastilles de la feuille (maquette Filtres) : un titre, puis des pastilles de 44 px ; la choisie
    en pastille teintée (D4), jamais pleine. */
 .filter-choices { display: grid; gap: var(--space-2); }
-.filter-choices h3 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.filter-choices h3, .filter-sheet .grouped-title { margin: 0; padding: 0; font-size: var(--font-body); font-weight: var(--weight-bold); color: var(--text); }
 .filter-choices-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .filter-choice {
   min-height: var(--control-h); padding: 0 var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-pill);

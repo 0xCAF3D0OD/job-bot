@@ -23,7 +23,7 @@ const counts = ref({ offres: 0, suivi: 0, alertes: 0, "rendez-vous": 0 });
 // Le titre reste « Candidatures » (docs/88) : la vue soulignée dit où l'on est.
 type View = Exclude<JobsTab, "alertes">;
 const TABS: { key: View; label: string; icon: IconName; path: string; hint: string }[] = [
-  { key: "offres", label: "À traiter", icon: "briefcase", path: "/candidatures/offres", hint: "à examiner" },
+  { key: "offres", label: "À traiter", icon: "briefcase", path: "/candidatures/offres", hint: "à traiter" },
   { key: "suivi", label: "Envoyées", icon: "send", path: "/candidatures/suivi", hint: "à relancer ou à compléter" },
   { key: "rendez-vous", label: "Rendez-vous", icon: "calendar", path: "/candidatures/rendez-vous-orp", hint: "" },
 ];
@@ -43,7 +43,8 @@ function badge(key: JobsTab): number {
 async function refresh(): Promise<void> {
   const [today, orp] = await Promise.all([api.GET("/api/today"), api.GET("/api/orp")]);
   counts.value = {
-    offres: today.data?.to_review ?? 0,
+    // « À traiter » : le nombre de la phrase de la liste, calculé au même endroit (docs/139, C2).
+    offres: today.data?.pending ?? 0,
     // Suivi : à relancer, plus les lignes ORP à compléter (docs/22 §1).
     suivi: (today.data?.to_follow_up ?? 0) + (orp.data?.incomplete ?? 0),
     alertes: today.data?.alerts_waiting ?? 0,

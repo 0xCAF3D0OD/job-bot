@@ -795,12 +795,16 @@ describe("À traiter (docs/139 étape 5b, C2 et C8)", () => {
   });
 });
 
-describe("« Masquer les offres écartées » (docs/139 étape 5c, C2)", () => {
-  it("coupé, À traiter demande aussi les écartées, et une pastille le dit", async () => {
-    const wrapper = await mountAt("/offres?ecartees=montrer");
-    expect(lastQuery()).toMatchObject({ view: "pending", with_filtered_out: true });
-    expect(wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text())).toEqual(["Avec les offres écartées"]);
+describe("« Afficher aussi » : Écartées et Expirées (docs/139 étapes 5c et 5e)", () => {
+  it("allumés, À traiter demande aussi les écartées et les expirées, et des pastilles le disent", async () => {
+    const wrapper = await mountAt("/offres?ecartees=montrer&expirees=montrer");
+    expect(lastQuery()).toMatchObject({ view: "pending", with_filtered_out: true, with_expired: true });
+    expect(wrapper.findAll("[data-test=filter-chips] li").map((c) => c.text())).toEqual([
+      "Avec les offres écartées",
+      "Avec les offres expirées",
+    ]);
     await mountAt("/offres");
     expect(lastQuery().with_filtered_out).toBeUndefined();
+    expect(lastQuery().with_expired).toBeUndefined();
   });
 });

@@ -1,11 +1,13 @@
 """Journal des recherches, offres collectées et lancement manuel de la collecte."""
 
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import ColumnElement, Time, and_, case, cast, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.filter import remote_location
 from jobbot.core.normalize import normalize_text
@@ -489,7 +491,9 @@ def _filters(
 IN_PROGRESS = (OfferStatus.PREPARING, OfferStatus.APPLIED)
 
 
-def _view_condition(view: str, with_filtered_out: bool = False) -> ColumnElement[bool] | None:
+def _view_condition(
+    view: str, with_filtered_out: bool = False, with_expired: bool = False
+) -> ColumnElement[bool] | None:
     """Une offre expirée n'apparaît que dans « Expirées », sauf si elle est en cours."""
     live = Offer.expired_at.is_(None)
     if view == "to_review":
@@ -502,7 +506,13 @@ def _view_condition(view: str, with_filtered_out: bool = False) -> ColumnElement
             OfferStatus.LATER,
             *((OfferStatus.FILTERED_OUT,) if with_filtered_out else ()),
         )
-        return or_(and_(Offer.status.in_(shown), live), Offer.status == OfferStatus.PREPARING)
+        # « Afficher aussi : Expirées » (docs/139, 5e) : la vue « Expirées » s'y ajoute.
+        expired = and_(Offer.expired_at.is_not(None), Offer.status.not_in(IN_PROGRESS))
+        return or_(
+            and_(Offer.status.in_(shown), live),
+            Offer.status == OfferStatus.PREPARING,
+            *((expired,) if with_expired else ()),
+        )
     if view == "filtered_out":
         return and_(Offer.status == OfferStatus.FILTERED_OUT, live)
     if view == "later":
@@ -512,6 +522,18 @@ def _view_condition(view: str, with_filtered_out: bool = False) -> ColumnElement
     if view == "expired":
         return and_(Offer.expired_at.is_not(None), Offer.status.not_in(IN_PROGRESS))
     return or_(live, Offer.status.in_(IN_PROGRESS))
+
+
+async def count_pending(
+    session: AsyncSession, conditions: Sequence[ColumnElement[bool]] = ()
+) -> int:
+    """« À traiter » (docs/139, C2) : à examiner, plus tard et en préparation.
+
+    Le seul calcul de ce nombre : la phrase de la liste et la pastille du segment le lisent ici.
+    """
+    pending = _view_condition("pending")
+    query = select(func.count()).select_from(Offer).where(Offer.duplicate_of.is_(None), *conditions)
+    return int(await session.scalar(query.where(pending) if pending is not None else query) or 0)
 
 
 @router.get("/offers", operation_id="listOffers")
@@ -533,6 +555,7 @@ async def list_offers(
     remote: Literal["partial", "full"] | None = None,
     hide_doubtful: bool = False,
     with_filtered_out: bool = False,
+    with_expired: bool = False,
 ) -> OfferPage:
     """`recent` : dernières offres apparues ; `popular` : offres vues dans le plus d'alertes ;
     `score` : meilleure note de l'IA d'abord (offres non notées à la fin).
@@ -576,7 +599,7 @@ async def list_offers(
         conditions.append(score >= min_score)
     if max_score is not None:
         conditions.append(score <= max_score)
-    view_condition = _view_condition(view, with_filtered_out)
+    view_condition = _view_condition(view, with_filtered_out, with_expired)
     listed = [*conditions, *([view_condition] if view_condition is not None else [])]
     # Facettes : calculées sans le filtre qu'elles décrivent, pour pouvoir élargir le choix.
     without_sources = _filters(q, [], cantons, min_rate, external_only, remote, hide_doubtful)
@@ -594,6 +617,7 @@ async def list_offers(
         without_cantons.append(view_condition)
 
     async with runtime.sessionmaker() as session:
+        pending = await count_pending(session, conditions)
         expired_flag = Offer.expired_at.is_not(None)
         grouped = (
             await session.execute(
@@ -636,8 +660,7 @@ async def list_offers(
             live[offer_status] = live.get(offer_status, 0) + count
     counts = OfferCounts(
         to_review=sum(live.get(s, 0) for s in TO_REVIEW),
-        pending=sum(live.get(s, 0) for s in (*TO_REVIEW, OfferStatus.LATER))
-        + sum(c for s, e, c in grouped if s == OfferStatus.PREPARING),
+        pending=pending,
         filtered_out=live.get(OfferStatus.FILTERED_OUT, 0),
         later=live.get(OfferStatus.LATER, 0),
         in_progress=sum(live.get(s, 0) for s in IN_PROGRESS),
@@ -647,6 +670,8 @@ async def list_offers(
     total = counts.model_dump().get(view, counts.all)
     if view == "pending" and with_filtered_out:
         total += counts.filtered_out
+    if view == "pending" and with_expired:
+        total += counts.expired
     histogram = [0] * 20
     unscored = 0
     for index, count in score_rows:

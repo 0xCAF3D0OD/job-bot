@@ -7,10 +7,12 @@ import type { OfferFilters, Sort } from "../composables/useOfferFilters";
 import BottomSheet from "./BottomSheet.vue";
 import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
+import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 
 // La feuille « Filtres » du téléphone (maquette Filtres, docs/139 étape 5c ; C5 validé le 2026-11-02) :
-// la correspondance en mots (D3), le taux, « Masquer les offres écartées » ; le tri (C8) ; puis les filtres
-// d'avant (télétravail, employeur, offres à vérifier, sites, cantons). Contrat et Distance attendent le
+// la correspondance en mots (D3), le taux minimum (un seul choix, 5e), le tri (C8), « Afficher aussi »
+// (Écartées, Expirées : 5e, à la place de la vue « Toutes ») ; puis les filtres d'avant (télétravail,
+// employeur, offres à vérifier, sites, cantons). Contrat et Distance attendent le
 // serveur (issue 468). Chaque choix s'applique tout de suite ; « Afficher N offres » referme.
 const props = defineProps<{ open: boolean; filters: OfferFilters; facets: OfferFacets; total: number }>();
 const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; close: [] }>();
@@ -24,13 +26,18 @@ const SCORES: { label: string; min: number | null }[] = [
 ];
 // Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.
 const scoreChoice = computed(() => (props.filters.maxScore === null ? props.filters.minScore : -1));
-// Le taux minimum : le serveur garde une offre dont le taux maximum l'atteint, ou au taux inconnu.
-const RATES: { label: string; min: number | null }[] = [
-  { label: "Tous", min: null },
-  { label: "60 % et +", min: 60 },
-  { label: "80 % et +", min: 80 },
-  { label: "100 %", min: 100 },
+// Le taux minimum, un seul choix (5e) : le serveur garde une offre dont le taux maximum l'atteint, ou au
+// taux inconnu. Un contrôle segmenté, pas des puces qui ont l'air de se cumuler.
+const RATES: SegmentOption[] = [
+  { value: "all", label: "Tous", test: "sheet-rate-all" },
+  { value: "60", label: "60 %", test: "sheet-rate-60" },
+  { value: "80", label: "80 %", test: "sheet-rate-80" },
+  { value: "100", label: "100 %", test: "sheet-rate-100" },
 ];
+const rate = computed({
+  get: () => (props.filters.minRate === null ? "all" : String(props.filters.minRate)),
+  set: (value: string) => emit("update", { minRate: value === "all" ? null : Number(value) }),
+});
 const SORTS: { label: string; value: Sort }[] = [
   { label: "Par jour", value: "day" },
   { label: "Note", value: "score" },
@@ -74,27 +81,16 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
         </div>
       </div>
 
-      <div
-        class="filter-choices"
-        role="group"
-        aria-labelledby="sheet-rate-title"
-      >
+      <div class="filter-choices">
         <h3 id="sheet-rate-title">
-          Taux d'activité
+          Taux minimum
         </h3>
-        <div class="filter-choices-row">
-          <button
-            v-for="choice in RATES"
-            :key="choice.label"
-            type="button"
-            class="filter-choice"
-            :aria-pressed="filters.minRate === choice.min"
-            :data-test="`sheet-rate-${choice.min ?? 'all'}`"
-            @click="emit('update', { minRate: choice.min })"
-          >
-            {{ choice.label }}
-          </button>
-        </div>
+        <SegmentedControl
+          v-model="rate"
+          :options="RATES"
+          label="Taux minimum"
+          full
+        />
       </div>
 
       <div
@@ -120,10 +116,15 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
         </div>
       </div>
 
-      <GroupedList :level="3">
+      <!-- « Afficher aussi » (5e) : les deux allumés, c'est l'ancienne vue « Toutes ». -->
+      <GroupedList
+        v-if="filters.view === 'pending'"
+        :level="3"
+        title="Afficher aussi"
+        data-test="sheet-show-also"
+      >
         <GroupedRow
-          v-if="filters.view === 'pending'"
-          title="Masquer les offres écartées"
+          title="Écartées"
           label
           data-test="sheet-filtered-out"
         >
@@ -131,11 +132,27 @@ const showLabel = computed(() => (props.total === 1 ? "Afficher 1 offre" : `Affi
             <input
               type="checkbox"
               role="switch"
-              :checked="!filters.showFilteredOut"
+              :checked="filters.showFilteredOut"
               @change="emit('update', { showFilteredOut: !filters.showFilteredOut })"
             >
           </template>
         </GroupedRow>
+        <GroupedRow
+          title="Expirées"
+          label
+          data-test="sheet-expired"
+        >
+          <template #end>
+            <input
+              type="checkbox"
+              role="switch"
+              :checked="filters.showExpired"
+              @change="emit('update', { showExpired: !filters.showExpired })"
+            >
+          </template>
+        </GroupedRow>
+      </GroupedList>
+      <GroupedList :level="3">
         <GroupedRow
           title="Télétravail au moins partiel"
           label
