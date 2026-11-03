@@ -370,3 +370,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.156 | Candidatures : la pastille « À traiter » et la phrase de la liste donnent le même nombre, le taux d'activité se choisit comme un minimum unique, et la feuille Filtres du téléphone peut afficher aussi les offres écartées et expirées. | livrée |
 | 1.6.157 | Candidatures : l'anneau de note suit la maquette (piste pâle, graduations, couleur du mot ; « Pas encore notée » en texte), la phrase décrit la liste affichée, et sur ordinateur la note et l'action sont alignées à droite. | livrée |
 | 1.6.158 | Documentation : les décisions de la nouvelle identité mobile sont attribuées à Kevin. | livrée |
+| 1.6.159 | Interface : le segment choisi est une carte sur un rail gris (44 px), aussi sur Candidatures (ordinateur), les types de blocs du Parcours et la période du Bilan ; les puces choisies sont teintées, jamais pleines, et les autres ont un bord plus marqué (3:1). | livrée |
