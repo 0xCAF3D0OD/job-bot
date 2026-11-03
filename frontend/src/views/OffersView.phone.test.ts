@@ -88,7 +88,7 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     const wrapper = await mountAt("/offres?note=70&taux=80", []);
     const empty = wrapper.find("[data-test=offers-empty]");
     expect(empty.find(".face-state-title").text()).toBe("Aucune offre avec ces filtres");
-    expect(empty.text()).toContain("Note minimale : Proche et plus, Taux : 80 % et plus. Élargis un critère pour voir plus d'offres.");
+    expect(empty.text()).toContain("Note minimale : Proche et plus, Taux minimum : 80 %. Élargis un critère pour voir plus d'offres.");
     expect(empty.find("[data-test=offers-edit-filters]").classes()).toContain("primary");
     wrapper.unmount();
   });

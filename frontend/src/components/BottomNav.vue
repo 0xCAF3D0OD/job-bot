@@ -54,7 +54,8 @@ const notch = computed(() => {
 async function refresh(): Promise<void> {
   try {
     const { data } = await api.GET("/api/today");
-    toReview.value = data?.to_review ?? 0;
+    // Le nombre du segment « À traiter » (docs/139, C2).
+    toReview.value = data?.pending ?? 0;
   } catch {
     // Silencieux : le nombre n'est qu'un repère.
   }

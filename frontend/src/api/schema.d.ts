@@ -7623,6 +7623,11 @@ export interface components {
             first_steps_finished: boolean;
             /** To Review */
             to_review: number;
+            /**
+             * Pending
+             * @default 0
+             */
+            pending: number;
             /** Month */
             month: string;
             /** Month Count */
@@ -10200,6 +10205,7 @@ export interface operations {
                 remote?: ("partial" | "full") | null;
                 hide_doubtful?: boolean;
                 with_filtered_out?: boolean;
+                with_expired?: boolean;
             };
             header?: never;
             path?: never;

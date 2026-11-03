@@ -35,7 +35,7 @@ async function mountJobs(path: string) {
 describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
   it("trois vues À traiter · Envoyées · Rendez-vous, « Alertes » à côté du titre, pastilles, mois conservé", async () => {
     GET.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === "/api/today" ? { to_review: 12, to_follow_up: 2, alerts_waiting: 1 } : { incomplete: 1 } }),
+      Promise.resolve({ data: path === "/api/today" ? { to_review: 5, pending: 12, to_follow_up: 2, alerts_waiting: 1 } : { incomplete: 1 } }),
     );
     const { wrapper, router } = await mountJobs("/candidatures/alertes?mois=2026-09");
     // Le titre reste celui du menu (docs/88) : la vue soulignée dit où l'on est.

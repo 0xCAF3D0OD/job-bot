@@ -327,6 +327,8 @@ async def test_pending_view_puts_preparation_first(api: AsyncClient, runtime: Ru
     assert "Gardée pour plus tard" in titles_
     assert "Envoyée" not in titles_ and "Écartée" not in titles_
     assert page["total"] == page["counts"]["pending"] == len(titles_)
+    # La pastille du segment (Accueil, Candidatures) lit le même nombre que la phrase.
+    assert (await api.get("/api/today")).json()["pending"] == page["counts"]["pending"]
 
 
 async def test_pending_view_can_show_filtered_out(api: AsyncClient, runtime: Runtime) -> None:
@@ -341,3 +343,22 @@ async def test_pending_view_can_show_filtered_out(api: AsyncClient, runtime: Run
     out = hidden["counts"]["filtered_out"]
     assert out >= 1
     assert shown["total"] == hidden["total"] + out == len(shown["items"])
+
+
+async def test_pending_view_can_show_expired(api: AsyncClient, runtime: Runtime) -> None:
+    """« Afficher aussi : Expirées » : À traiter montre aussi les expirées (docs/139, 5e)."""
+    await add(runtime, 14, "Expirée", ["jobup"], expired_at=NOW)
+    await add(runtime, 15, "Écartée", ["jobup"], status=OfferStatus.FILTERED_OUT)
+    hidden = (await api.get("/api/offers", params={"view": "pending"})).json()
+    both = (
+        await api.get(
+            "/api/offers",
+            params={"view": "pending", "with_expired": True, "with_filtered_out": True},
+        )
+    ).json()
+    assert "Expirée" not in [o["title"] for o in hidden["items"]]
+    assert {"Expirée", "Écartée"} <= {o["title"] for o in both["items"]}
+    counts = hidden["counts"]
+    assert counts["expired"] >= 1
+    assert both["total"] == hidden["total"] + counts["expired"] + counts["filtered_out"]
+    assert both["total"] == len(both["items"])

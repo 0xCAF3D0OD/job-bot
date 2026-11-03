@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import first_steps as first_steps_service
 from jobbot.alerts import service as alert_service
+from jobbot.api.routes.collect import count_pending
 from jobbot.contacts import service as contact_service
 from jobbot.core.orp import LOCAL_TZ, due_date, shift_month
 from jobbot.db.models import (
@@ -116,6 +117,8 @@ class TodayOut(BaseModel):
     # Les cinq étapes faites, la réussite pas encore montrée : la carte de réussite.
     first_steps_finished: bool = False
     to_review: int
+    # « À traiter » (docs/139, C2) : à examiner, plus tard, en préparation ; le calcul de la liste.
+    pending: int = 0
     month: str
     month_count: int
     month_target: int | None
@@ -211,6 +214,7 @@ async def get_today(request: Request) -> TodayOut:
                 Offer.duplicate_of.is_(None),
             )
         )
+        pending = await count_pending(session)
         month_count = await count(
             select(func.count()).select_from(Application).where(Application.orp_month == month)
         )
@@ -330,6 +334,7 @@ async def get_today(request: Request) -> TodayOut:
         first_steps_offer_id=steps.offer_id,
         first_steps_finished=steps.just_finished,
         to_review=to_review,
+        pending=pending,
         month=month,
         month_count=month_count,
         month_target=int(target) if target else None,

@@ -27,6 +27,8 @@ export interface OfferFilters {
   // À traiter avec les offres écartées par les critères (« Masquer les offres écartées » coupé,
   // docs/139 C2), ?ecartees=montrer.
   showFilteredOut: boolean;
+  // À traiter avec les offres expirées (« Afficher aussi › Expirées », docs/139 5e), ?expirees=montrer.
+  showExpired: boolean;
 }
 
 export const DEFAULT_FILTERS: OfferFilters = {
@@ -44,6 +46,7 @@ export const DEFAULT_FILTERS: OfferFilters = {
   remote: null,
   hideDoubtful: false,
   showFilteredOut: false,
+  showExpired: false,
 };
 
 const VIEWS: View[] = ["pending", "to_review", "filtered_out", "later", "in_progress", "expired", "all"];
@@ -79,6 +82,7 @@ export function fromQuery(query: LocationQuery): OfferFilters {
     remote: one(query.teletravail) === "complet" ? "full" : one(query.teletravail) === "partiel" ? "partial" : null,
     hideDoubtful: one(query.verifier) === "masquer",
     showFilteredOut: one(query.ecartees) === "montrer",
+    showExpired: one(query.expirees) === "montrer",
   };
 }
 
@@ -97,6 +101,7 @@ export function toQuery(filters: OfferFilters): LocationQuery {
   if (filters.remote) query.teletravail = filters.remote === "full" ? "complet" : "partiel";
   if (filters.hideDoubtful) query.verifier = "masquer";
   if (filters.showFilteredOut) query.ecartees = "montrer";
+  if (filters.showExpired) query.expirees = "montrer";
   return query;
 }
 
@@ -111,7 +116,8 @@ export function activeCount(filters: OfferFilters): number {
     (filters.externalOnly ? 1 : 0) +
     (filters.remote ? 1 : 0) +
     (filters.hideDoubtful ? 1 : 0) +
-    (filters.showFilteredOut ? 1 : 0)
+    (filters.showFilteredOut ? 1 : 0) +
+    (filters.showExpired ? 1 : 0)
   );
 }
 
@@ -160,12 +166,14 @@ export function activeChips(filters: OfferFilters): FilterChip[] {
       patch: { cantons: filters.cantons.filter((c) => c !== canton) },
     });
   if (filters.minRate !== null)
-    chips.push({ key: "rate", label: `Taux : ${filters.minRate} % et plus`, patch: { minRate: null } });
+    chips.push({ key: "rate", label: `Taux minimum : ${filters.minRate} %`, patch: { minRate: null } });
   if (filters.externalOnly) chips.push({ key: "external", label: "Chez l'employeur", patch: { externalOnly: false } });
   if (filters.hideDoubtful)
     chips.push({ key: "doubtful", label: "Sans les offres à vérifier", patch: { hideDoubtful: false } });
   if (filters.showFilteredOut)
     chips.push({ key: "filtered-out", label: "Avec les offres écartées", patch: { showFilteredOut: false } });
+  if (filters.showExpired)
+    chips.push({ key: "expired", label: "Avec les offres expirées", patch: { showExpired: false } });
   return chips;
 }
 

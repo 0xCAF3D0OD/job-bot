@@ -279,6 +279,7 @@ async function load(append = false): Promise<void> {
           remote: f.remote ?? undefined,
           hide_doubtful: f.hideDoubtful || undefined,
           with_filtered_out: (f.view === "pending" && f.showFilteredOut) || undefined,
+          with_expired: (f.view === "pending" && f.showExpired) || undefined,
         },
       },
     });

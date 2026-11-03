@@ -1,0 +1,1 @@
+Candidatures : la pastille « À traiter » et la phrase de la liste donnent le même nombre, le taux d'activité se choisit comme un minimum unique, et la feuille Filtres du téléphone peut afficher aussi les offres écartées et expirées.

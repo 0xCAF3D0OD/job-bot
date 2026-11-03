@@ -2888,6 +2888,16 @@
               "default": false,
               "title": "With Filtered Out"
             }
+          },
+          {
+            "name": "with_expired",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "With Expired"
+            }
           }
         ],
         "responses": {
@@ -21951,6 +21961,11 @@
           "to_review": {
             "type": "integer",
             "title": "To Review"
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending",
+            "default": 0
           },
           "month": {
             "type": "string",
