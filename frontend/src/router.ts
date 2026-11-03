@@ -136,7 +136,9 @@ export const routes: RouteRecordRaw[] = [
           return { path: "/candidatures/offres" };
         },
       },
-      { path: "offres", name: "offers", component: OffersView, meta: { tab: "offres" } },
+      // L'offre ouverte sur téléphone est une sous-page (docs/139 étape 6, O1) : /candidatures/offres/12, avec les
+      // filtres de la liste. Même entrée que la liste : la vue reste montée, son défilement et ses filtres aussi.
+      { path: "offres/:id(\\d+)?", name: "offers", component: OffersView, meta: { tab: "offres" } },
       { path: "suivi", name: "applications", component: ApplicationsView, meta: { tab: "suivi" } },
       // Preuves ORP fondues dans le Suivi (docs/22 §1) : les anciens liens y mènent, avec le mois.
       { path: "preuves", redirect: (to) => ({ path: "/candidatures/suivi", query: to.query }) },
@@ -195,7 +197,12 @@ export const routes: RouteRecordRaw[] = [
 export const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior: (to) => (to.hash ? { el: to.hash, top: 80 } : { top: 0 }),
+  scrollBehavior: (to, from) => {
+    if (to.hash) return { el: to.hash, top: 80 };
+    // Ouvrir ou fermer la sous-page d'une offre (téléphone, étape 6, O1) : la liste dessous garde son défilement.
+    if (to.name === "offers" && from.name === "offers" && to.params.id !== from.params.id) return false;
+    return { top: 0 };
+  },
 });
 
 // Ouvert sans connexion : la présentation de la plateforme, la connexion (docs/18 §1), les liens

@@ -213,36 +213,90 @@ describe("la note expliquée (docs/121 §C.1-3)", () => {
   });
 });
 
-describe("OfferDetail sur téléphone (planche « Tri et panneau de commande »)", () => {
-  it("le panneau du bas : la note et pourquoi, « Préparer ma candidature », « Postuler » en lien", async () => {
-    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 étape 6a)", () => {
+  const phone = () => vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px") || media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
+
+  it("en-tête retour, Sauvegarder, « ⋯ », Partager ; en bas « Écarter » et « Préparer ma candidature »", async () => {
+    phone();
     const wrapper = await mountDetail(offer({ score: 78, why: "Kubernetes, Terraform et CI/CD : dans ton profil.", summary_role: "x" }));
     expect(wrapper.find("[data-test=triage]").exists()).toBe(false);
-    const bar = wrapper.find("[data-test=action-bar]");
-    expect(bar.find("[data-test=bar-score]").text()).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
+    const head = wrapper.find("[data-test=offer-subhead]");
+    expect(head.find("[data-test=back-detail]").attributes("aria-label")).toBe("Retour aux candidatures");
+    await head.find("[data-test=back-detail]").trigger("click");
+    expect(wrapper.emitted("close")).toHaveLength(1);
+    // Le signet est l'état « Plus tard » (O2).
+    const save = head.find("[data-test=offer-save]");
+    expect(save.attributes("aria-pressed")).toBe("false");
+    await save.trigger("click");
+    expect(wrapper.emitted("status")?.[0]).toEqual(["later"]);
+    // Partager : le lien de l'annonce, jamais l'adresse jobA1.
+    expect(head.find("[data-test=offer-share]").exists()).toBe(true);
+    const bar = wrapper.find("[data-test=offer-bar]");
+    expect(bar.find("[data-test=offer-discard]").text()).toBe("Écarter");
     expect(bar.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
-    expect(bar.find("[data-test=apply]").classes()).toContain("link");
-    // La note et sa phrase sont dans le panneau : sans niveau, la carte « Pourquoi » disparaît, et
-    // « Cette note ne me correspond pas » passe dans « ⋯ », ouverte dans une feuille du bas.
-    expect(wrapper.find("[data-test=section-for-you]").exists()).toBe(false);
-    await wrapper.find("[data-test=more]").trigger("click");
-    await wrapper.find("[data-test=score-correction-menu]").trigger("click");
-    const sheet = wrapper.find("[data-test=score-correction-sheet]");
-    expect(sheet.find("[data-test=score-correction-open]").exists()).toBe(false);
-    expect(sheet.find(".score-correction-card.bare").exists()).toBe(true);
-    // Le ✕ de la feuille ferme : pas de « Annuler » en plus.
-    expect(sheet.text()).not.toContain("Annuler");
-    // Avec un niveau, la carte reste, avec le niveau seul.
-    const level = await mountDetail(offer({ score: 78, why: "x", summary_role: "x", level: "above", level_detail: "" }));
-    expect(level.find("[data-test=section-for-you] [data-test=score-level]").exists()).toBe(true);
-    expect(level.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
+    await bar.find("[data-test=offer-discard]").trigger("click");
+    expect(wrapper.emitted("status")?.[1]).toEqual(["ignored"]);
+    // La note et sa phrase restent dans la carte « Pourquoi » ; la correction passe par la feuille « ⋯ ».
+    expect(wrapper.find("[data-test=section-for-you]").text()).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
+    expect(wrapper.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
     vi.unstubAllGlobals();
   });
 
-  it("une offre où j'ai postulé : pas de panneau", async () => {
-    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px"), addEventListener() {}, removeEventListener() {} }));
+  it("le signet est plein pour une offre gardée pour plus tard ; un clic la remet à examiner", async () => {
+    phone();
+    const wrapper = await mountDetail(offer({ status: "later" }));
+    const save = wrapper.find("[data-test=offer-save]");
+    expect(save.attributes("aria-pressed")).toBe("true");
+    await save.trigger("click");
+    expect(wrapper.emitted("status")?.[0]).toEqual(["to_review"]);
+    vi.unstubAllGlobals();
+  });
+
+  it("partage le lien public par la feuille du téléphone, sinon le copie", async () => {
+    phone();
+    const shareFn = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, share: shareFn });
+    const wrapper = await mountDetail(offer({ employer_url: "https://exemple.ch/poste" }));
+    await wrapper.find("[data-test=offer-share]").trigger("click");
+    expect(shareFn).toHaveBeenCalledWith(expect.objectContaining({ url: "https://exemple.ch/poste" }));
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, share: undefined, clipboard: { writeText } });
+    await wrapper.find("[data-test=offer-share]").trigger("click");
+    await flushPromises();
+    expect(writeText).toHaveBeenCalledWith("https://exemple.ch/poste");
+    expect(wrapper.find("[data-test=offer-said]").text()).toBe("Lien copié.");
+    vi.unstubAllGlobals();
+  });
+
+  it("une offre expirée mène aux offres proches ; en préparation, « Reprendre la lettre »", async () => {
+    phone();
+    const expired = await mountDetail(offer({ expired_at: "2026-10-30T10:00:00Z" }));
+    expect(expired.find("[data-test=nearby]").text()).toBe("Voir des offres proches");
+    expect(expired.find("[data-test=prepare]").exists()).toBe(false);
+    const preparing = await mountDetail(offer({ status: "preparing" }));
+    expect(preparing.find("[data-test=prepare]").text()).toBe("Reprendre la lettre");
+    vi.unstubAllGlobals();
+  });
+
+  it("la feuille « ⋯ » : Écarter, Marquer comme envoyée, puis les actions de la fiche, sans « Plus tard »", async () => {
+    phone();
+    const wrapper = await mountDetail(offer({ score: 78, why: "x", summary_role: "x" }));
+    await wrapper.find("[data-test=detail-more]").trigger("click");
+    const sheet = wrapper.find("[data-test=offer-actions]");
+    const titles = sheet.findAll(".grouped-row-title").map((t) => t.text());
+    expect(titles.slice(0, 2)).toEqual(["Écarter l'offre", "Marquer comme envoyée"]);
+    expect(titles).toContain("Signaler comme expirée");
+    expect(titles).toContain("Cette note ne me correspond pas");
+    expect(titles).not.toContain("Plus tard");
+    await sheet.find("[data-test=offer-action-score-correction-menu] button").trigger("click");
+    expect(wrapper.find("[data-test=score-correction-sheet] .score-correction-card.bare").exists()).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("une offre où j'ai postulé : pas de barre", async () => {
+    phone();
     const wrapper = await mountDetail(offer({ status: "applied" }));
-    expect(wrapper.find("[data-test=action-bar]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=offer-bar]").exists()).toBe(false);
     vi.unstubAllGlobals();
   });
 });
