@@ -369,3 +369,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.155 | Candidatures sur téléphone : un bouton « ⋯ » sur chaque carte ouvre ses actions (écarter l'offre, marquer comme envoyée), et les écrans « Aucune offre avec ces filtres » et « Connexion perdue » suivent la maquette. | livrée |
 | 1.6.156 | Candidatures : la pastille « À traiter » et la phrase de la liste donnent le même nombre, le taux d'activité se choisit comme un minimum unique, et la feuille Filtres du téléphone peut afficher aussi les offres écartées et expirées. | livrée |
 | 1.6.157 | Candidatures : l'anneau de note suit la maquette (piste pâle, graduations, couleur du mot ; « Pas encore notée » en texte), la phrase décrit la liste affichée, et sur ordinateur la note et l'action sont alignées à droite. | livrée |
+| 1.6.158 | Documentation : les décisions de la nouvelle identité mobile sont attribuées à Kevin. | livrée |
