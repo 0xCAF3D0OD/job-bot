@@ -3642,6 +3642,13 @@ main:focus { outline: none; }
 /* Jamais coupé ni « … » : un débordement se voit, et la CI le refuse en 320 px. */
 .segmented-label { white-space: nowrap; }
 .segmented .tab-count { margin: 0; }
+/* Dans une rangée de contrôles (docs/94 : une rangée, une hauteur), le rail prend la hauteur de la rangée
+   (--control-h) ; chaque segment garde une zone de clic de 44 px, invisible (WCAG 2.5.8). */
+:is(.news-filters .segmented, .segmented.all-months) { height: var(--control-h); align-items: center; }
+:is(.news-filters .segmented, .segmented.all-months) > :is(a, button) { position: relative; min-height: 0; height: var(--control-inner-h); }
+:is(.news-filters .segmented, .segmented.all-months) > :is(a, button)::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%);
+}
 @media (prefers-reduced-motion: reduce) {
   .segmented > :is(a, button) { transition: none; }
 }
