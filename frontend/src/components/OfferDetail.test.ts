@@ -72,12 +72,15 @@ describe("OfferDetail, annonce chez l'employeur (docs/20 §2)", () => {
 });
 
 describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
-  it("deux boutons, le reste dans ⋯, sans doublon de l'annonce d'origine (docs/45)", async () => {
+  it("tête : « Préparer » et « Écarter », le reste dans ⋯, le lien de l'annonce dans « Le poste » (étape 6b)", async () => {
     const wrapper = await mountDetail(offer());
     const triage = wrapper.find("[data-test=triage]");
-    expect(triage.findAll("a")).toHaveLength(2);
-    expect(wrapper.find("[data-test=apply]").attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
-    expect(wrapper.find("[data-test=apply]").text()).toContain("Postuler sur Indeed");
+    expect(triage.findAll("a")).toHaveLength(1);
+    expect(triage.find("[data-test=prepare]").text()).toBe("Préparer ma candidature");
+    expect(triage.find("[data-test=offer-discard]").text()).toBe("Écarter");
+    const apply = wrapper.find("[data-test=section-ad] [data-test=apply]");
+    expect(apply.attributes("href")).toBe("https://ch.indeed.com/viewjob?jk=1");
+    expect(apply.text()).toContain("Postuler sur Indeed");
     // « Voir sur Indeed » serait le même lien que « Postuler sur Indeed » : il n'apparaît pas.
     expect(wrapper.text()).not.toContain("Voir sur Indeed");
     expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
@@ -85,11 +88,12 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     for (const key of ["mark-applied", "later", "ignore", "flag-expired"]) {
       expect(wrapper.find(`[data-test=${key}]`).exists()).toBe(true);
     }
+    expect(wrapper.find("[data-test=ignore]").text()).toContain("Écarter");
     // Chercher chez l'employeur est rangé dans la partie Entreprise (docs/74).
     expect(wrapper.find("[data-test=find-employer]").exists()).toBe(false);
   });
 
-  it("cartes Pourquoi, Points forts, À savoir, puis Entreprise et Annonce repliées (planche « Fiche d'une offre »)", async () => {
+  it("la correspondance, « Le poste » résumé par jobA1, puis Entreprise et Contacts repliés (maquette Offre)", async () => {
     const wrapper = await mountDetail(
       offer({
         employer_url: "https://exemple.ch/jobs/2",
@@ -114,37 +118,41 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
         description: "Missions. ".repeat(60),
       }),
     );
-    const titles = wrapper.findAll(".detail-card h3, .disclosure-title").map((h) => h.text());
-    expect(titles).toEqual(["Pourquoi", "Points forts", "À savoir", "Entreprise", "Annonce"]);
-    // Trois puces au plus, le mot clé en gras en tête.
+    // « ← » vient en premier, au-dessus du logo et du titre (règles §2).
+    expect(wrapper.find("[data-test=offer-detail]").element.firstElementChild!.getAttribute("data-test")).toBe("back-detail");
+    // Les étiquettes : seulement ce qui est connu, et la date sans « il y a » (dates.ts).
+    const tags = wrapper.findAll("[data-test=offer-tags] li").map((li) => li.text());
+    expect(tags).toEqual(["80–100 %", "Contrat non précisé", "Télétravail 2 j", "Reçue le 5 octobre"]);
+    // Le mot en titre, le chiffre en texte secondaire (O3), pas de chiffre dans l'anneau (D3).
+    expect(wrapper.find("[data-test=match-title]").text()).toBe("Très proche de ton profil");
+    expect(wrapper.find("[data-test=match-sub]").text()).toBe("88 sur 100, selon ton profil et tes préférences");
+    expect(wrapper.find("[data-test=section-for-you] .score-ring").text()).not.toContain("88");
+    const lines = wrapper.findAll("[data-test=match-lines] li");
+    expect(lines.map((li) => li.classes("ok"))).toEqual([true, true, true]);
+    expect(lines[0]!.text()).toContain("Kubernetes");
+    // Le détail de la note : trois puces au plus, le mot clé en gras en tête.
     const points = wrapper.findAll("[data-test=strengths] li");
     expect(points).toHaveLength(3);
     expect(points[0]!.find("strong").text()).toBe("Kubernetes :");
-    expect(points[0]!.text()).toBe("Kubernetes : plateforme de 40 services en production.");
-    // L'entreprise et l'annonce, repliées, avec leur résumé (règles §3.4, 1.6.21).
+    expect(wrapper.find("[data-test=score-note]").text()).toBe("Ton profil a changé depuis : note à refaire.");
+    // Le poste : « Résumé par jobA1 » au-dessus du résumé (O6), l'annonce complète à la demande.
+    expect(wrapper.find("[data-test=summary-by]").text()).toBe("Résumé par jobA1");
+    expect(wrapper.findAll("[data-test=summary]")).toHaveLength(3);
+    expect(wrapper.find("[data-test=description]").exists()).toBe(false);
+    const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark [data-icon]").attributes("data-icon"));
+    expect(marks).toEqual(["alert", "x-circle"]);
+    // L'annonce chez l'employeur est le lien ; celle d'Indeed, seule autre, s'affiche directement (docs/76 §3).
+    expect(wrapper.find("[data-test=ad-more]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=source-indeed]").text()).toContain("Voir sur Indeed");
+    await wrapper.find("[data-test=read-more]").trigger("click");
+    expect(wrapper.find("[data-test=description]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=read-more]").exists()).toBe(false);
+    // L'entreprise et les contacts, repliés, avec leur résumé (règles §3.4) ; plus de « Contacts » dans ⋯ (O9).
     const rows = wrapper.findAll(".detail-disclosure > .disclosure-row");
     expect(rows.map((r) => r.attributes("aria-expanded"))).toEqual(["false", "false"]);
     expect(wrapper.find("[data-test=company-section] .disclosure-value").text()).toBe("Exemple SA");
-    // « ← Offres » vient en premier, au-dessus du logo et du titre (règles §2).
-    expect(wrapper.find("[data-test=offer-detail]").element.firstElementChild!.getAttribute("data-test")).toBe("back-detail");
-    expect(wrapper.find("[data-test=score-note]").text()).toBe("Ton profil a changé depuis : note à refaire.");
-    // À savoir : « libellé : valeur », seulement ce qui est connu ; plus de « 1 fois, depuis le… ».
-    const labels = wrapper.findAll("[data-test=terms] dt").map((dt) => dt.text());
-    expect(labels).toEqual(["Taux", "Télétravail", "Reçue", "Adresse"]);
-    expect(wrapper.find("[data-test=term-remote] dd").text()).toBe("2 jours par semaine");
-    expect(wrapper.find("[data-test=term-rate] dd").text()).toBe("80 à 100 %");
-    const marks = wrapper.findAll("[data-test=facts] li").map((li) => li.find(".fact-mark [data-icon]").attributes("data-icon"));
-    expect(marks).toEqual(["alert", "x-circle"]);
+    expect(wrapper.find("[data-test=contacts-section]").exists()).toBe(true);
     expect(wrapper.text()).not.toMatch(/fois, depuis le/);
-    // L'annonce chez l'employeur est le bouton ; celle d'Indeed, seule autre, s'affiche
-    // directement, sans « ⋯ » pour une seule action (docs/76 §3).
-    expect(wrapper.find("[data-test=ad-more]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=source-indeed]").text()).toContain("Voir sur Indeed");
-    expect(wrapper.find("[data-test=section-facts] [data-test=address]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=description]").classes()).toContain("folded");
-    await wrapper.find("[data-test=read-more]").trigger("click");
-    expect(wrapper.find("[data-test=description]").classes()).not.toContain("folded");
-    expect(wrapper.find("[data-test=read-more]").exists()).toBe(false);
   });
 
   it("annonce trouvée chez l'employeur : « Postuler chez l'employeur »", async () => {
@@ -156,14 +164,14 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
 });
 
 describe("OfferDetail, partie Entreprise rangée (docs/74)", () => {
-  it("l'adresse dans « À savoir », les actions dans le « ⋯ » de l'entreprise, « Adresse inconnue · Ajouter »", async () => {
+  it("l'adresse dans la partie Entreprise, les actions dans son « ⋯ », « Adresse inconnue · Ajouter »", async () => {
     const known = await mountDetail(offer({ company_address: "Rue 1\n1201 Genève", company_address_source: "registry" }));
     expect(known.find("[data-test=address] dd").text()).toContain("Rue 1, 1201 Genève");
     expect(known.find("[data-test=add-address]").exists()).toBe(false);
     const section = known.find("[data-test=company-section]");
     await section.find("[data-test=company-more]").trigger("click");
     const labels = section.findAll("[role=menuitem]").map((item) => item.text());
-    expect(labels).toEqual(["Modifier l'adresse", "Chercher l'adresse", "Chercher l'offre chez l'employeur", "Contacts"]);
+    expect(labels).toEqual(["Modifier l'adresse", "Chercher l'adresse", "Chercher l'offre chez l'employeur"]);
 
     const missing = await mountDetail(offer());
     expect(missing.find("[data-test=address] dd").text().replace(/\s+/g, " ")).toBe("Adresse inconnue · Ajouter");

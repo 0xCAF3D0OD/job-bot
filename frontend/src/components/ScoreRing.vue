@@ -8,7 +8,8 @@ import { scoreWord } from "../format";
 // mot (Très proche et Proche en --success, À creuser en --score-dig, Loin en --neutral-graphic), jamais en bleu.
 // `worded` : pas de chiffre au centre, le mot dessous ; le chiffre reste pour les lecteurs d'écran et au survol.
 // Sans note : pas d'anneau, « Pas encore notée » en texte (la raison au survol et pour les lecteurs d'écran).
-const props = defineProps<{ score: number | null; pending?: string; stale?: boolean; large?: boolean; worded?: boolean }>();
+// `bare` : l'anneau seul, sans chiffre ni mot, quand le mot est écrit à côté (fiche d'une offre, étape 6b).
+const props = defineProps<{ score: number | null; pending?: string; stale?: boolean; large?: boolean; worded?: boolean; bare?: boolean }>();
 
 const value = computed(() =>
   props.score === null ? null : Math.max(0, Math.min(100, Math.round(props.score))),
@@ -70,7 +71,7 @@ const dash = computed(() => `${(((value.value ?? 0) * CIRCUMFERENCE) / 100).toFi
         />
       </svg>
       <span
-        v-if="!worded"
+        v-if="!worded && !bare"
         class="score-ring-value"
       >{{ value }}<small v-if="large">/100</small></span>
     </span>
