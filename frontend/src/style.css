@@ -3768,11 +3768,35 @@ main:focus { outline: none; }
 .prep-versions-short { display: none; }
 @media (max-width: 359px) { .prep-versions-long { display: none; } .prep-versions-short { display: inline; } }
 .sheet-actions > .prep-download { flex: 1 1 0; justify-content: center; min-height: var(--control-h); font-size: var(--font-body); }
-/* La fiche sur téléphone (planche « Tri et panneau de commande ») : elle couvre l'écran, barre d'onglets
-   comprise ; son panneau descend donc tout en bas, et la fin de la fiche reste au-dessus de lui. */
-@media (max-width: 599px) {
-  :root:has(.tab-bar) .detail-column .action-bar { bottom: env(safe-area-inset-bottom); }
-  .detail-column:has(.action-bar) .detail-panel { padding-bottom: calc(var(--action-bar-h) + var(--space-5)); }
+/* La fiche sur téléphone, une sous-page (maquette Offre, docs/139 étape 6a) : elle couvre l'écran, en-tête de
+   l'app et barre du bas compris. La liste reste dessous, avec son défilement et ses filtres. En haut, le
+   retour et trois boutons de 48 px ; en bas, une barre fixe : « Écarter » bordé et l'action principale. */
+@media (max-width: 820px) {
+  .offers-grid > .detail-column:not(.placeholder) { inset: 0; z-index: 30; background: var(--bg); overscroll-behavior: contain; }
+  .offers-grid > .detail-column:not(.placeholder) .detail-panel {
+    width: 100%; padding: 0 var(--space-5) calc(var(--space-12) + var(--space-8) + var(--space-2) + var(--space-6) + env(safe-area-inset-bottom));
+  }
+  .offer-subhead {
+    position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between;
+    margin: 0 calc(-1 * var(--space-3)); padding: calc(var(--space-3) + env(safe-area-inset-top)) 0 var(--space-1); background: var(--bg);
+  }
+  .offer-subhead-actions { display: flex; }
+  .offer-subhead .icon-button { width: 3rem; height: 3rem; border: 0; background: transparent; color: var(--text); }
+  .offer-subhead .icon-button > .icon { width: 1.5rem; height: 1.5rem; }
+  .offer-save[aria-pressed="true"] { color: var(--primary-text); }
+  .offer-save[aria-pressed="true"] svg { fill: currentColor; }
+  .offer-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; display: flex; gap: var(--space-3);
+    padding: var(--space-3) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 1px solid var(--line);
+  }
+  .offer-bar-discard {
+    flex: none; min-height: 3.25rem; padding: 0 var(--space-5); border: 1px solid var(--field-border); border-radius: var(--radius-pill);
+    background: var(--surface); color: var(--text); font-size: var(--font-body); font-weight: var(--weight-semibold);
+  }
+  .offer-bar-main { flex: 1; min-height: 3.25rem; justify-content: center; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+  .offer-bar-spark { color: var(--spark); }
+  :root:has(.offer-subhead) .assistant-fab { display: none; }
 }
 .action-bar > .bar-link { align-self: flex-start; font-size: var(--font-body); }
 /* La correction de la note dans sa feuille du bas (fiche, téléphone) : sans cadre. */

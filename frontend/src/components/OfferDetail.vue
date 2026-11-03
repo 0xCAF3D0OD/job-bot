@@ -6,21 +6,20 @@ import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { dateInList, dateInSentence } from "../dates";
 import { expiredText, gapSkill, plural, rateText, remoteText, sourceLabel } from "../format";
 import type { IconName } from "../icons";
-import ActionBar from "./ActionBar.vue";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import DisclosureRow from "./DisclosureRow.vue";
 import ContactsPanel from "./ContactsPanel.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
+import OfferActionSheet from "./OfferActionSheet.vue";
 import ScoreWord from "./ScoreWord.vue";
 import GapFill from "./GapFill.vue";
 import ScoreCorrection from "./ScoreCorrection.vue";
 import SidePanel from "./SidePanel.vue";
 import StatusPill from "./StatusPill.vue";
 import { useAssistant } from "../composables/useAssistant";
-import { useNarrow } from "../composables/usePhone";
-import { whyLine } from "../whyLine";
+import { usePhone } from "../composables/usePhone";
 
 import HoverNote from "./HoverNote.vue";
 import IconButton from "./IconButton.vue";
@@ -203,19 +202,16 @@ function pointParts(text: string): { key: string; rest: string } {
   const match = /^([^:]{1,40}?)\s?:\s+(.+)$/.exec(text.trim());
   return match ? { key: match[1]!, rest: match[2]! } : { key: "", rest: text };
 }
-// Sous 600 px, le panneau de commande (planche « Tri et panneau de commande ») : la note et son
-// pourquoi sur une ligne, « Préparer ma candidature », « Postuler chez l'employeur » en lien.
-const { phone: narrow } = useNarrow();
-// Sur téléphone, avec le panneau, « Cette note ne me correspond pas » passe dans « ⋯ » et s'ouvre dans
-// une feuille du bas ; la carte « Pourquoi » ne reste que pour le niveau ou une réserve sur la note.
-const withBar = computed(() => narrow.value && props.offer.status !== "applied");
+// Sur téléphone (sous 820 px), la fiche est une sous-page (maquette Offre, docs/139 étape 6a) : en-tête
+// « retour » avec Sauvegarder, « ⋯ » et Partager ; en bas, « Écarter » et « Préparer ma candidature ».
+// « Cette note ne me correspond pas » passe dans la feuille « ⋯ » et s'ouvre dans une feuille du bas.
+const { phone: sub } = usePhone();
+const withBar = computed(() => sub.value && props.offer.status !== "applied");
 const scored = computed(() => props.offer.score !== null && props.offer.score !== undefined);
 const correcting = ref(false);
 const whyCard = computed(() => {
   const o = props.offer;
-  if (!(o.summary_role || o.score_error || o.why)) return false;
-  if (!withBar.value) return true;
-  return !!o.level || !!scoreNote.value || !!o.summary_partial || !(o.summary_role || o.why);
+  return !!(o.summary_role || o.score_error || o.why);
 });
 const strengths = computed(() => (props.offer.strengths ?? []).slice(0, POINTS_MAX));
 const gaps = computed(() => (props.offer.gaps ?? []).slice(0, POINTS_MAX));
@@ -255,7 +251,8 @@ const menuItems = computed<MoreMenuItem[]>(() => {
       items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
     } else {
       items.push({ label: "Plus tard", test: "later", icon: "clock", run: () => emit("status", "later") });
-      items.push({ label: "Ignorer", test: "ignore", icon: "x-circle", run: () => emit("status", "ignored") });
+      // Un seul mot pour une action (étape 6, O8) : « Écarter », comme dans la feuille de la liste.
+      items.push({ label: "Écarter", test: "ignore", icon: "x-circle", run: () => emit("status", "ignored") });
     }
     items.push(
       o.expired_at
@@ -271,6 +268,55 @@ const menuItems = computed<MoreMenuItem[]>(() => {
   }
   return items;
 });
+
+// La feuille « ⋯ » de la sous-page (O9) : « Écarter l'offre » et « Marquer comme envoyée », puis les actions
+// propres à la fiche. « Plus tard » devient le signet de l'en-tête (O2).
+const sheetOpen = ref(false);
+const sheetExtra = computed<MoreMenuItem[]>(() => {
+  const o = props.offer;
+  const items: MoreMenuItem[] = [];
+  if (o.status === "later" || o.status === "ignored" || o.status === "preparing") {
+    items.push({ label: "Remettre à examiner", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+  }
+  if (o.status !== "applied") {
+    items.push(
+      o.expired_at
+        ? { label: "Pas expirée", test: "not-expired", icon: "refresh", run: () => emit("expiry", false) }
+        : { label: "Signaler comme expirée", test: "flag-expired", icon: "alert", run: () => emit("expiry", true) },
+    );
+  }
+  if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "star", run: () => (correcting.value = true) });
+  if (assistant.available.value) items.push({ label: "Demander à l'assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  return items;
+});
+// Sauvegarder (O2) : l'état « Plus tard », qui existe déjà ; le signet est plein quand l'offre y est.
+const saved = computed(() => props.offer.status === "later");
+const canSave = computed(() => ["to_review", "later"].includes(props.offer.status));
+function toggleSaved(): void {
+  emit("status", saved.value ? "to_review" : "later");
+  saidAloud.value = saved.value ? "Offre remise à examiner." : "Offre gardée pour plus tard.";
+}
+// Partager (O2) : le lien public de l'annonce (employeur, puis site source), jamais l'adresse jobA1, qui est
+// privée. La feuille de partage du téléphone, sinon le lien copié.
+const shareUrl = computed(() => props.offer.employer_url || props.offer.links.find((l) => l.url)?.url || null);
+const saidAloud = ref("");
+async function share(): Promise<void> {
+  const url = shareUrl.value;
+  if (!url) return;
+  const title = [props.offer.title, props.offer.company].filter(Boolean).join(" · ");
+  if (typeof navigator.share === "function") {
+    await navigator.share({ title, url }).catch(() => undefined);
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    saidAloud.value = "Lien copié.";
+  } catch {
+    saidAloud.value = "Copie impossible.";
+  }
+}
+// Offre expirée (O7) : le bouton principal mène aux offres proches, par le titre du poste.
+const nearbyLink = computed(() => ({ path: "/candidatures/offres", query: { q: props.offer.title } }));
 
 // Partie « Entreprise » (docs/74) : l'adresse visible, les actions dans son « ⋯ ».
 const canSearchEmployer = computed(
@@ -345,8 +391,56 @@ watch(
     class="detail-panel"
     data-test="offer-detail"
   >
-    <!-- Sur téléphone, le retour en haut à gauche, au-dessus de la fiche (règles §2). -->
+    <!-- La sous-page du téléphone (maquette Offre) : retour à gauche ; Sauvegarder, « ⋯ », Partager à droite. -->
+    <header
+      v-if="sub"
+      class="offer-subhead"
+      data-test="offer-subhead"
+    >
+      <IconButton
+        icon="arrow-left"
+        label="Retour aux candidatures"
+        data-test="back-detail"
+        @click="$emit('close')"
+      />
+      <div class="offer-subhead-actions">
+        <button
+          v-if="canSave"
+          type="button"
+          class="icon-button icon-only offer-save"
+          :aria-pressed="saved"
+          aria-label="Garder pour plus tard"
+          data-label="Garder pour plus tard"
+          data-test="offer-save"
+          @click="toggleSaved"
+        >
+          <AppIcon name="bookmark" />
+        </button>
+        <IconButton
+          icon="more"
+          label="Plus d'actions sur l'offre"
+          data-test="detail-more"
+          @click="sheetOpen = true"
+        />
+        <IconButton
+          v-if="shareUrl"
+          icon="upload"
+          label="Partager l'annonce"
+          data-test="offer-share"
+          @click="share"
+        />
+      </div>
+      <p
+        class="visually-hidden"
+        aria-live="polite"
+        data-test="offer-said"
+      >
+        {{ saidAloud }}
+      </p>
+    </header>
+    <!-- Sur un écran moyen, le retour en haut à gauche, au-dessus de la fiche (règles §2). -->
     <button
+      v-else
       type="button"
       class="link detail-back"
       data-test="back-detail"
@@ -411,7 +505,7 @@ watch(
             @click="$emit('close')"
           />
           <MoreMenu
-            v-if="menuItems.length"
+            v-if="menuItems.length && !sub"
             :items="menuItems"
             label="Plus d'actions sur l'offre"
           />
@@ -425,7 +519,7 @@ watch(
         {{ expiredText(offer) }}
       </p>
       <div
-        v-if="offer.status !== 'applied' && !narrow"
+        v-if="offer.status !== 'applied' && !sub"
         class="detail-actions"
         data-test="triage"
       >
@@ -461,36 +555,50 @@ watch(
         @cancel="correcting = false"
       />
     </BottomSheet>
-    <ActionBar v-if="withBar">
-      <div
-        v-if="offer.score !== null && offer.score !== undefined"
-        class="pick-score"
-        data-test="bar-score"
+    <OfferActionSheet
+      v-if="sub"
+      :offer="sheetOpen ? offer : null"
+      :extra="sheetExtra"
+      @close="sheetOpen = false"
+      @discard="sheetOpen = false; emit('status', 'ignored')"
+      @sent="sheetOpen = false; emit('applied')"
+    />
+    <!-- La barre du bas de la sous-page (O8) : « Écarter » (avec « Annuler » 6 s) et l'action principale ;
+         une offre expirée mène aux offres proches (O7). -->
+    <div
+      v-if="withBar"
+      class="offer-bar"
+      data-test="offer-bar"
+    >
+      <button
+        v-if="offer.status !== 'ignored'"
+        type="button"
+        class="offer-bar-discard"
+        data-test="offer-discard"
+        @click="emit('status', 'ignored')"
       >
-        <ScoreWord :score="offer.score" />
-        <p
-          v-if="offer.why"
-          class="pick-why"
-        >
-          {{ whyLine(offer.why) }}
-        </p>
-      </div>
+        Écarter
+      </button>
       <RouterLink
+        v-if="offer.expired_at && offer.status !== 'preparing'"
+        :to="nearbyLink"
+        class="button-link primary-link offer-bar-main"
+        data-test="nearby"
+      >
+        Voir des offres proches
+      </RouterLink>
+      <RouterLink
+        v-else
         :to="`/candidatures/offres/${offer.id}/preparer`"
-        class="button-link primary-link bar-main"
+        class="button-link primary-link offer-bar-main"
         data-test="prepare"
       >
-        {{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}
+        <span class="with-icon"><AppIcon
+          name="spark"
+          class="offer-bar-spark"
+        />{{ offer.status === "preparing" ? "Reprendre la lettre" : "Préparer ma candidature" }}</span>
       </RouterLink>
-      <a
-        v-if="postLink"
-        :href="postLink.url"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="link bar-link"
-        :data-test="offer.employer_url ? 'employer' : 'apply'"
-      ><span class="with-icon">{{ postLink.label }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></span></a>
-    </ActionBar>
+    </div>
 
     <!-- Pourquoi : la note, la phrase, « Cette note ne me correspond pas ». -->
     <section
@@ -501,7 +609,7 @@ watch(
       <h3>Pourquoi</h3>
       <template v-if="offer.summary_role || offer.why">
         <div
-          v-if="offer.score !== null && offer.score !== undefined && !withBar"
+          v-if="offer.score !== null && offer.score !== undefined"
           class="detail-note"
           data-test="ai"
         >
@@ -519,7 +627,7 @@ watch(
           class="score-why"
           data-test="score-why"
         >
-          <p v-if="offer.why && !withBar">
+          <p v-if="offer.why">
             {{ offer.why }}
           </p>
           <p
@@ -541,7 +649,7 @@ watch(
         </p>
         <!-- « Cette note ne me correspond pas » (docs/114). -->
         <ScoreCorrection
-          v-if="scored && !withBar"
+          v-if="scored && !sub"
           :offer-id="offer.id"
           @changed="emit('changed')"
         />

@@ -172,16 +172,31 @@ const assistant = useAssistant();
 watch(selected, (offer) => {
   assistant.setFocus(offer ? { offerId: offer.id, label: `offre ${offer.title}${offer.company ? ` chez ${offer.company}` : ""}` } : null);
   // Après la navigation d'ouverture encore en cours, sinon l'offre se rouvrirait.
-  if (!offer)
-    void opening.then(() => {
-      if (route.query.offre) void router.replace({ query: { ...route.query, offre: undefined } });
-    });
+  if (!offer) void opening.then(() => leaveOffer());
 });
+
+// L'offre ouverte dans l'adresse : sur téléphone, la sous-page /candidatures/offres/12 (O1) ; sur ordinateur,
+// ?offre=12 à côté de la liste. Les filtres de la liste restent dans l'adresse.
+const routeOfferId = (): number => Number(route.params.id || route.query.offre);
+// Fermer la sous-page revient à la liste par l'historique : même défilement, mêmes filtres, et le geste de
+// retour d'iOS fait la même chose. Arrivé directement sur la sous-page, on remplace l'adresse.
+function leaveOffer(): void {
+  if (route.params.id) {
+    const back = (window.history.state as { back?: string } | null)?.back;
+    if (back?.startsWith("/candidatures/offres") && !/\/offres\/\d/.test(back)) router.back();
+    else void router.replace({ name: "offers", params: {}, query: route.query });
+  } else if (route.query.offre) void router.replace({ query: { ...route.query, offre: undefined } });
+}
 
 // Lien de l'assistant : /candidatures/offres?offre=12 ouvre l'offre, même hors de la liste.
 async function openFromQuery(): Promise<void> {
-  const id = Number(route.query.offre);
+  const id = routeOfferId();
   if (!Number.isInteger(id) || id <= 0) return;
+  // Sur téléphone, un lien ?offre= devient la sous-page.
+  if (phone.value && route.query.offre) {
+    void router.replace({ name: "offers", params: { id: String(id) }, query: { ...route.query, offre: undefined } });
+    return;
+  }
   if (!items.value.some((o) => o.id === id)) {
     const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
     if (!data) return;
@@ -193,9 +208,9 @@ async function openFromQuery(): Promise<void> {
 // L'adresse suit l'offre ouverte : « Retour » du navigateur la referme (Nielsen 3, audit du
 // 22.10.2026).
 watch(
-  () => route.query.offre,
-  (offre) => {
-    if (offre) void openFromQuery();
+  () => [route.params.id, route.query.offre],
+  () => {
+    if (routeOfferId()) void openFromQuery();
     else selectedId.value = null;
   },
 );
@@ -205,7 +220,9 @@ watch(
 let opening: Promise<unknown> = Promise.resolve();
 function selectOffer(id: number): void {
   selectedId.value = id;
-  if (route.query.offre !== String(id)) opening = router.push({ query: { ...route.query, offre: String(id) } });
+  if (phone.value) {
+    if (route.params.id !== String(id)) opening = router.push({ name: "offers", params: { id: String(id) }, query: route.query });
+  } else if (route.query.offre !== String(id)) opening = router.push({ query: { ...route.query, offre: String(id) } });
   void nextTick(() => document.querySelector<HTMLElement>("[data-test=offer-detail-title]")?.focus({ preventScroll: true }));
 }
 
@@ -318,7 +335,9 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   }
   // L'offre quitte la vue actuelle si elle n'y a plus sa place : on recharge ; sa carte
   // s'efface et les suivantes remontent (docs/60 §3), avec « Annuler » dans le message.
-  if (status !== "preparing" && selectedId.value === offer.id) selectedId.value = null;
+  // Le signet de la sous-page (« Plus tard » et retour) laisse la fiche ouverte : l'offre reste dans « À traiter ».
+  const stays = status === "preparing" || (phone.value && (status === "later" || status === "to_review"));
+  if (!stays && selectedId.value === offer.id) selectedId.value = null;
   const previous = offer.status;
   undo.value =
     status in STATUS_TEXT && previous !== status && (previous === "to_review" || previous === "later" || previous === "ignored")
@@ -419,6 +438,8 @@ function onKeydown(event: KeyboardEvent): void {
   if (event.key !== "Escape") return;
   // Échap ferme la couche du dessus seulement : bulle d'aide ou panneau latéral d'abord.
   if (event.defaultPrevented || document.documentElement.classList.contains("side-open")) return;
+  // Une feuille du bas ouverte (<dialog>) se ferme seule : la fiche dessous reste ouverte.
+  if (document.querySelector("dialog[open]")) return;
   if (applying.value) applying.value = null;
   else if (filtersOpen.value) closeFilters();
   else selectedId.value = null;

@@ -112,3 +112,46 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     wrapper.unmount();
   });
 });
+
+describe("La fiche d'une offre, une sous-page sur téléphone (docs/139 étape 6a, O1)", () => {
+  async function mountNamed(path: string, items: unknown[]) {
+    GET.mockImplementation((p: string) =>
+      Promise.resolve(p === "/api/offers" ? { data: { items, total: items.length, counts, facets } } : { data: null }),
+    );
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/candidatures/offres/:id(\\d+)?", name: "offers", component: OffersView }],
+    });
+    await router.push(path);
+    const host = mount({ template: '<div id="topbar-page-tools" /><div id="jobs-tools" /><RouterView />' }, {
+      attachTo: document.body,
+      global: { plugins: [router], stubs: { ContactsPanel: true } },
+    });
+    await flushPromises();
+    return { host, router };
+  }
+
+  it("ouvrir une offre mène à /candidatures/offres/12 avec les filtres ; le retour ramène à la liste", async () => {
+    const { host, router } = await mountNamed("/candidatures/offres?tri=score", [offer(12, "DevOps Engineer")]);
+    await host.find("[data-test=offer] [data-test=offer-line-open]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres/12?tri=score");
+    expect(host.find("[data-test=offer-subhead]").exists()).toBe(true);
+    await host.find("[data-test=back-detail]").trigger("click");
+    await flushPromises();
+    await new Promise((r) => setTimeout(r, 0));
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres?tri=score");
+    expect(host.find("[data-test=offer-detail]").exists()).toBe(false);
+  });
+
+  it("un lien ?offre=12 devient la sous-page ; arrivé directement, le retour remplace l'adresse", async () => {
+    const { host, router } = await mountNamed("/candidatures/offres?offre=12", [offer(12, "DevOps Engineer")]);
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres/12");
+    expect(host.find("[data-test=offer-detail]").exists()).toBe(true);
+    await host.find("[data-test=back-detail]").trigger("click");
+    await flushPromises();
+    expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres");
+  });
+});
