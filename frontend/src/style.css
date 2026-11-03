@@ -344,9 +344,6 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 
 /* --- Onglets en bascule --- */
 
-.tabs { display: inline-flex; gap: var(--space-1); padding: var(--space-1); border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); }
-.tabs button { border: none; padding: var(--space-2) var(--space-4); font-size: var(--font-small); color: var(--muted); background: transparent; border-radius: var(--radius-sm); }
-.tabs button[aria-selected="true"] { background: var(--primary); color: var(--on-accent); }
 
 /* --- Pastilles --- */
 
@@ -374,10 +371,10 @@ button.small { padding: var(--space-2) var(--space-4); font-size: var(--font-sma
 .filter-choices h3, .filter-sheet .grouped-title { margin: 0; padding: 0; font-size: var(--font-body); font-weight: var(--weight-bold); color: var(--text); }
 .filter-choices-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .filter-choice {
-  min-height: var(--control-h); padding: 0 var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-pill);
+  min-height: var(--control-h); padding: 0 var(--space-4); border: 1px solid var(--field-border); border-radius: var(--radius-pill);
   background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold);
 }
-.filter-choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.filter-choice[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .filter-more { justify-self: start; margin: var(--space-1) var(--space-1); font-size: var(--font-small); }
 .logo {
   display: grid;
@@ -632,8 +629,12 @@ p.badge.reason { margin: 0; }
 .facet-count { margin-left: auto; color: var(--muted); font-size: var(--font-caption); }
 .chip { padding: var(--space-1) var(--space-2); font-size: var(--font-caption); border-radius: var(--radius-pill); gap: var(--space-1); }
 .chip .facet-count { margin-left: var(--space-1); }
-.chip.on { background: var(--primary); border-color: var(--primary); color: var(--on-accent); }
-.chip.on .facet-count { color: var(--on-accent); opacity: 0.8; }
+/* Puce de choix (§4, D4 2026-11-03) : ce que j'ai filtré ou choisi. Non choisie, bord --field-border (3:1 sur la
+   carte, WCAG 1.4.11) ; choisie, teintée : fond --primary-soft, bord --primary-graphic, texte --primary-text. Jamais
+   pleine (le rond plein est réservé à la barre du bas). */
+button.chip:is([aria-pressed], [role="radio"]) { border: 1px solid var(--field-border); background: var(--surface); }
+button.chip.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
+.chip.on .facet-count { color: var(--primary-text); }
 .detail-column { position: sticky; top: 5.25rem; max-height: calc(100vh - 6.5rem); overflow: auto; border-radius: var(--radius); }
 .detail-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .close { border: none; background: none; font-size: var(--font-figure); line-height: var(--leading-none); padding: var(--space-1) var(--space-2); color: var(--muted); }
@@ -1035,6 +1036,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .jobs-head h1 { font-size: var(--font-page); margin: 0 0 var(--space-4); }
 .jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
 .jobs-tabs a { white-space: nowrap; }
+.jobs-segments { margin-bottom: var(--space-4); }
 .jobs-band > .offers-page { padding-top: var(--space-6); }
 /* Le titre et « Alertes » (docs/139 étape 5a, C1) : un lien à côté du titre ; sur téléphone, dans l'en-tête. */
 .jobs-title { display: flex; align-items: baseline; gap: var(--space-4); }
@@ -1845,8 +1847,6 @@ html.side-open { overflow: hidden; }
   .letter-paragraph textarea { text-align: left; }
   .apply-step-post { display: none; }
   .apply-step-post + .apply-step { border-top: 0; padding-top: 0; }
-  .kind-tabs { display: flex; flex-wrap: nowrap; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-  .kind-tabs button { flex: none; white-space: nowrap; }
 }
 
 /* Propositions de l'assistant (docs/52) : une carte, la phrase, puis Confirmer / Non merci. */
@@ -3611,35 +3611,59 @@ main:focus { outline: none; }
   .settings-card > p.hint, .settings-card .ai-spend { margin-left: var(--annotation); }
 }
 
-/* --- Boutons segmentés (1.6.41, §4 ; Figma : Segment, Sélecteur segmenté) ---
-   Material 3, boutons segmentés (2 à 5 choix) : pour filtrer ou changer l'affichage d'une même carte, jamais
-   pour naviguer (§2). Un rail neutre, une pastille par option, à la largeur de son texte ; le texte ne se coupe
-   jamais : c'est la pastille entière qui passe à la ligne (Material 3, puces). L'option active a le style de
-   l'onglet actif de l'en-tête (NN/g, cohérence) ; le survol, une couche neutre à 8 % (Material 3, couches d'état).
-   Le rail fait --control-h, comme les autres contrôles d'une rangée (docs/94). */
-.segmented, .score-choice {
+/* --- Contrôle segmenté (§4 « Sélection unique », D4 tranchée par Kevin le 2026-11-03 ; maquettes docs/mobile) ---
+   Le segment dit où je suis : un rail --surface-muted ; le segment choisi en carte (--surface, bord 1 px --line,
+   léger relief, texte --text en gras), les autres transparents, texte --text-tertiary en demi-gras. Le bord et le
+   changement de texte marquent le choix sans l'ombre (le blanc sur le rail n'atteint pas 3:1). L'état est aussi dit
+   aux lecteurs d'écran : aria-current="page" (liens), aria-checked (radios). Segments de 44 px, rail de 52 px,
+   coins concentriques. Le texte ne se coupe jamais : c'est le segment entier qui passe à la ligne. */
+.segmented {
+  display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--space-1);
+  box-sizing: border-box; width: fit-content; max-width: 100%; padding: var(--space-1);
+  border: 0; border-radius: var(--radius-card); background: var(--surface-muted);
+}
+.segmented > :is(a, button) {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); box-sizing: border-box;
+  min-height: 2.75rem; min-width: 0; padding: 0 var(--space-4);
+  border: 1px solid transparent; border-radius: calc(var(--radius-card) - var(--space-1)); background: transparent;
+  color: var(--text-tertiary); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-none);
+  text-decoration: none; white-space: nowrap; transition: background-color 150ms, color 150ms;
+}
+.segmented > :is(a[aria-current="page"], button[aria-checked="true"]) {
+  border-color: var(--line); background: var(--surface); color: var(--text); font-weight: var(--weight-bold);
+  box-shadow: 0 1px 2px rgb(27 31 42 / 12%);
+}
+.segmented > :is(a:not([aria-current="page"]), button:not([aria-checked="true"], :disabled)):hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text);
+}
+.segmented > :is(a, button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.segmented-full { flex-wrap: nowrap; width: 100%; }
+.segmented-full > :is(a, button) { flex: 1 1 0; padding-inline: var(--space-2); }
+/* Jamais coupé ni « … » : un débordement se voit, et la CI le refuse en 320 px. */
+.segmented-label { white-space: nowrap; }
+.segmented .tab-count { margin: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .segmented > :is(a, button) { transition: none; }
+}
+
+/* La Correspondance du panneau de filtres (ordinateur) : des puces de choix sur un rail neutre. */
+.score-choice {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1);
   box-sizing: border-box; min-height: var(--control-h); height: auto; padding: var(--space-1);
   border: 0; border-radius: var(--radius-pill); background: var(--panel);
 }
-.segmented { width: fit-content; max-width: 100%; }
-.segmented > button, .score-choice > .pill {
+.score-choice > .pill {
   flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
   height: var(--control-inner-h); min-height: 0; min-width: 0; padding: 0 var(--space-3);
   border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface);
   color: var(--muted); font-size: var(--font-small); font-weight: var(--weight-regular); line-height: var(--leading-none);
   white-space: nowrap; transition: background-color 150ms;
 }
-.segmented > button:hover:not([aria-checked="true"]):not(:disabled),
-.score-choice > .pill:hover:not([aria-checked="true"]) {
-  background: color-mix(in srgb, var(--text) 8%, var(--surface)); border-color: var(--border); color: var(--muted);
-}
-.segmented > button[aria-checked="true"], .score-choice > .pill[aria-checked="true"] {
-  background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-semibold);
-}
-.segmented > button:focus-visible, .score-choice > .pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.score-choice > .pill:hover:not([aria-checked="true"]) { background: color-mix(in srgb, var(--text) 8%, var(--surface)); border-color: var(--border); color: var(--muted); }
+.score-choice > .pill[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-semibold); }
+.score-choice > .pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
-  .segmented > button, .score-choice > .pill { transition: none; }
+  .score-choice > .pill { transition: none; }
 }
 
 /* --- En-tête (1.6.46, planche Figma « Planche · Revue 1.6.46 » ; sélection, 1.6.58, « Planche · 1. Sélection
@@ -3861,14 +3885,6 @@ main:focus { outline: none; }
    sans rail), puis quatre repliables chiffrés : chaque ligne dit l'essentiel, le dépli montre le dessin. */
 .insights > .bilan-sentence { margin: 0 0 var(--space-6); }
 .insights > .action-band { margin-bottom: var(--space-6); }
-.bilan-period { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.bilan-period button {
-  min-height: var(--control-h); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill);
-  background: none; color: var(--text); font-weight: var(--weight-regular); transition: background-color 150ms;
-}
-.bilan-period button:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
-.bilan-period button[aria-checked="true"] { background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-semibold); }
-.bilan-period button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .bilan-compare-part .bilan-subtitle, .bilan-interviews .bilan-subtitle { margin: 0; font-size: var(--font-small); font-weight: var(--weight-semibold); color: var(--muted); }
 /* Parcours : six chiffres en ligne, séparés d'une flèche ; l'étape faible en accent. */
 .bilan-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-6); }
@@ -3914,7 +3930,6 @@ main:focus { outline: none; }
   .bilan-month { width: 3rem; }
   .bilan-interview-list li { grid-template-columns: 3.5rem minmax(0, 1fr) auto; gap: var(--space-3); }
 }
-@media (prefers-reduced-motion: reduce) { .bilan-period button { transition: none; } }
 
 /* --- Réglages, rubriques en cartes (1.6.66, planche « 5. Réglages ») : les règles de la page ---
    La dépense de l'IA dans sa carte ; les jours de la semaine. Les règles du composant sont dans le bloc
@@ -4149,10 +4164,10 @@ html.search-open { overflow: hidden; }
   .bell-panel { position: absolute; top: 100%; left: var(--space-4); right: var(--space-4); width: auto; max-height: calc(100dvh - 10rem); overflow: auto; }
   /* Zones de clic d'au moins 44 px de haut sans changer l'aspect (WCAG 2.5.8, Apple HIG 44 pt) : une
      zone invisible agrandie autour des liens et boutons texte. */
-  .back-link, .brand, .app-footer a, .demo-banner a, .pick-title a, .segmented > button { position: relative; }
+  .back-link, .brand, .app-footer a, .demo-banner a, .pick-title a { position: relative; }
   .prep-tabs a { min-height: 2.75rem; box-sizing: border-box; display: inline-flex; align-items: center; }
   .app-footer nav { row-gap: var(--space-5); }
-  .back-link::before, .brand::before, .app-footer a::before, .demo-banner a::before, .pick-title a::before, .segmented > button::before, .welcome-dot::before {
+  .back-link::before, .brand::before, .app-footer a::before, .demo-banner a::before, .pick-title a::before, .welcome-dot::before {
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: max(100%, 2.75rem);
     transform: translate(-50%, -50%);
   }
@@ -4188,25 +4203,6 @@ html.search-open { overflow: hidden; }
 }
 
 /* --- Structure téléphone (planche « Structure téléphone », règles §4) --- */
-/* Contrôle segmenté : les liens prennent l'aspect des boutons ; `full`, toute la largeur partagée. */
-.segmented > a {
-  flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
-  height: var(--control-inner-h); padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-pill);
-  background: var(--surface); color: var(--muted); font-size: var(--font-small); line-height: var(--leading-none);
-  text-decoration: none; white-space: nowrap;
-}
-.segmented > a[aria-current="page"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-semibold); }
-.segmented > a:hover:not([aria-current="page"]) { background: color-mix(in srgb, var(--text) 8%, var(--surface)); }
-.segmented > a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.segmented-full { display: flex; flex-wrap: nowrap; width: 100%; }
-.segmented-full > :is(a, button) { flex: 1 1 0; min-width: 0; padding-inline: var(--space-2); }
-/* Pleine largeur (planche « Structure téléphone ») : segments sans bordure sur le rail gris ; l'actif en pastille
-   teintée, texte accent en demi-gras (Sélection unique, §4). */
-.segmented-full > :is(a, button) { border-color: transparent; background: transparent; }
-.segmented-full > :is(a[aria-current="page"], button[aria-checked="true"]) { border-color: transparent; background: var(--accent-soft); color: var(--accent); font-weight: var(--weight-semibold); }
-.segmented-full > :is(a:not([aria-current="page"]), button:not([aria-checked="true"])):hover { background: color-mix(in srgb, var(--text) 8%, var(--panel)); }
-/* Jamais coupé ni « … » : un débordement se voit, et la CI le refuse en 320 px. */
-.segmented-label { white-space: nowrap; }
 
 /* Liste groupée : titre hors de la carte, une carte, lignes séparées par un filet, 48 px au moins. */
 .grouped { display: grid; gap: var(--space-2); }

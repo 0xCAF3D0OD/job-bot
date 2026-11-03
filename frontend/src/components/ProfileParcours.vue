@@ -22,7 +22,7 @@ import IconButton from "./IconButton.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import CertificatesSection from "./CertificatesSection.vue";
 import { offerUndo } from "../composables/useUndo";
-import CountBadge from "./CountBadge.vue";
+import SegmentedControl, { type SegmentOption } from "./SegmentedControl.vue";
 import LoadingBlocks from "./LoadingBlocks.vue";
 const KINDS: { value: ChunkKind; label: string; hint: string }[] = [
   { value: "experience", label: "Expérience", hint: "Un poste, une mission, avec dates et réalisations." },
@@ -82,6 +82,10 @@ function kindCount(kind: ChunkKind): number {
 }
 // Filtres (docs/49 §3) : seulement les types qui ont des blocs (et celui choisi).
 const usedKinds = computed(() => KINDS.filter((k) => kindCount(k.value) || filter.value === k.value));
+const kindSegments = computed<SegmentOption[]>(() => [
+  { value: "all", label: "Tous", count: chunks.value.length, test: "kind-all" },
+  ...usedKinds.value.map((k) => ({ value: k.value, label: k.label, count: kindCount(k.value), test: `kind-${k.value}` })),
+]);
 
 function sizeText(size: number): string {
   return size < 1024 * 1024 ? `${Math.max(1, Math.round(size / 1024))} Ko` : `${(size / 1024 / 1024).toFixed(1)} Mo`;
@@ -431,37 +435,15 @@ const documentItems = computed<MoreMenuItem[]>(() => {
           <span class="with-icon"><AppIcon name="plus" />Nouveau bloc</span>
         </button>
       </div>
-      <div
+      <!-- Le type de bloc en contrôle segmenté (D4, 2026-11-03), avec le nombre de chaque type. -->
+      <SegmentedControl
         v-if="chunks.length"
-        class="tabs kind-tabs"
-        role="tablist"
-        aria-label="Types de blocs"
-      >
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="filter === 'all'"
-          @click="filter = 'all'"
-        >
-          Tous <CountBadge
-            class="tab-count"
-            :count="chunks.length"
-          />
-        </button>
-        <button
-          v-for="kind in usedKinds"
-          :key="kind.value"
-          type="button"
-          role="tab"
-          :aria-selected="filter === kind.value"
-          @click="filter = kind.value"
-        >
-          {{ kind.label }} <CountBadge
-            class="tab-count"
-            :count="kindCount(kind.value)"
-          />
-        </button>
-      </div>
+        :model-value="filter"
+        :options="kindSegments"
+        label="Types de blocs"
+        class="kind-tabs"
+        @update:model-value="filter = $event as ChunkKind | 'all'"
+      />
 
       <!-- Cartes calmes (docs/49 §3) : 3 lignes, le type en bas, toute la carte ouvre le bloc, avec
          survol ; 3 colonnes au plus, sans crayon (docs/130 §C). -->

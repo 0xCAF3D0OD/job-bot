@@ -64,7 +64,7 @@ describe("ProfileView", () => {
     expect(wrapper.findAll("[data-test=chunk]")).toHaveLength(1);
 
     // Filtres sans les types vides (docs/49 §3).
-    expect(wrapper.findAll("[role=tab]").map((t) => t.text())).toEqual(["Tous 1", "Compétence 1"]);
+    expect(wrapper.findAll(".kind-tabs [role=radio]").map((t) => t.text())).toEqual(["Tous 1", "Compétence 1"]);
     // Carte calme : le type et les mots-clés en bas, plus de Modifier / Supprimer sur la carte.
     const card = wrapper.find("[data-test=chunk]");
     expect(card.find(".chunk-foot").text()).toContain("Compétence · 1 mot-clé");

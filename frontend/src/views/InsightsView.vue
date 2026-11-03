@@ -6,6 +6,7 @@ import { api, type Today } from "../api/client";
 import type { components } from "../api/schema";
 import ActionBand from "../components/ActionBand.vue";
 import AppIcon from "../components/AppIcon.vue";
+import SegmentedControl, { type SegmentOption } from "../components/SegmentedControl.vue";
 import BilanCompare from "../components/bilan/BilanCompare.vue";
 import BilanFunnel from "../components/bilan/BilanFunnel.vue";
 import BilanInterviews from "../components/bilan/BilanInterviews.vue";
@@ -143,6 +144,7 @@ const PERIODS: { key: Period; label: string }[] = [
   { key: "recent", label: "3 mois" },
   { key: "all", label: "Tout" },
 ];
+const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, label: p.label, test: `period-${p.key}` }));
 </script>
 
 <template>
@@ -166,24 +168,14 @@ const PERIODS: { key: Period; label: string }[] = [
       to="/candidatures/alertes"
     />
     <div class="insights-head">
-      <!-- La période (1.6.62) : le choix actif dans la pastille teintée de l'en-tête, sans rail. -->
-      <div
+      <!-- La période en contrôle segmenté (D4, 2026-11-03) : le segment choisi en carte sur le rail. -->
+      <SegmentedControl
+        :model-value="period"
+        :options="periodSegments"
+        label="Période"
         class="bilan-period"
-        role="radiogroup"
-        aria-label="Période"
-      >
-        <button
-          v-for="choice in PERIODS"
-          :key="choice.key"
-          type="button"
-          role="radio"
-          :aria-checked="period === choice.key"
-          :data-test="`period-${choice.key}`"
-          @click="choose(choice.key)"
-        >
-          {{ choice.label }}
-        </button>
-      </div>
+        @update:model-value="choose($event as Period)"
+      />
       <div
         v-if="period === 'month'"
         class="month-nav"

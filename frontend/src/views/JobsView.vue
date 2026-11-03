@@ -3,8 +3,6 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import { api } from "../api/client";
-import AppIcon from "../components/AppIcon.vue";
-import type { IconName } from "../icons";
 import type { JobsTab } from "../router";
 import CountBadge from "../components/CountBadge.vue";
 import SegmentedControl, { type SegmentOption } from "../components/SegmentedControl.vue";
@@ -20,15 +18,23 @@ const { phone } = usePhone();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
 const counts = ref({ offres: 0, suivi: 0, alertes: 0, "rendez-vous": 0 });
 
-// Le titre reste « Candidatures » (docs/88) : la vue soulignée dit où l'on est.
+// Le titre reste « Candidatures » (docs/88) : le segment choisi dit où l'on est.
 type View = Exclude<JobsTab, "alertes">;
-const TABS: { key: View; label: string; icon: IconName; path: string; hint: string }[] = [
-  { key: "offres", label: "À traiter", icon: "briefcase", path: "/candidatures/offres", hint: "à traiter" },
-  { key: "suivi", label: "Envoyées", icon: "send", path: "/candidatures/suivi", hint: "à relancer ou à compléter" },
-  { key: "rendez-vous", label: "Rendez-vous", icon: "calendar", path: "/candidatures/rendez-vous-orp", hint: "" },
+const TABS: { key: View; label: string; path: string; hint: string }[] = [
+  { key: "offres", label: "À traiter", path: "/candidatures/offres", hint: "à traiter" },
+  { key: "suivi", label: "Envoyées", path: "/candidatures/suivi", hint: "à relancer ou à compléter" },
+  { key: "rendez-vous", label: "Rendez-vous", path: "/candidatures/rendez-vous-orp", hint: "" },
 ];
 const segments = computed<SegmentOption[]>(() =>
-  TABS.map((item) => ({ value: item.key, label: item.label, to: link(item.path), test: `jobs-tab-${item.key}` })),
+  TABS.map((item) => ({
+    value: item.key,
+    label: item.label,
+    to: link(item.path),
+    test: `jobs-tab-${item.key}`,
+    // La maquette téléphone n'a pas de nombre dans les segments ; l'ordinateur garde le sien.
+    count: phone.value ? undefined : badge(item.key),
+    hint: `${badge(item.key)} ${item.hint}`,
+  })),
 );
 
 // Le mois choisi suit d'un onglet à l'autre (Suivi et Preuves ORP).
@@ -90,36 +96,15 @@ onMounted(() => void refresh());
       id="jobs-tools"
       class="jobs-tools"
     />
+    <!-- Les trois vues en contrôle segmenté, sur téléphone et sur ordinateur (D4, 2026-11-03) ; sur ordinateur,
+         à la largeur du texte, avec le nombre de chaque vue. -->
     <SegmentedControl
-      v-if="phone"
       :model-value="tab"
       :options="segments"
       label="Candidatures"
-      full
+      :full="phone"
       class="jobs-segments"
     />
-    <nav
-      v-else
-      class="prep-tabs jobs-tabs"
-      aria-label="Candidatures"
-    >
-      <RouterLink
-        v-for="item in TABS"
-        :key="item.key"
-        :to="link(item.path)"
-        :class="{ active: tab === item.key }"
-        :aria-current="tab === item.key ? 'page' : undefined"
-        :data-test="`jobs-tab-${item.key}`"
-      >
-        <!-- L'icône devant le nom (docs/101, règle 1). -->
-        <span class="with-icon"><AppIcon :name="item.icon" />{{ item.label }}</span>{{ " " }}<CountBadge
-          v-if="badge(item.key)"
-          class="tab-count"
-          :title="`${badge(item.key)} ${item.hint}`"
-          :count="badge(item.key)"
-        />
-      </RouterLink>
-    </nav>
   </div>
   <section class="band jobs-band">
     <RouterView />

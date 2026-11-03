@@ -1,0 +1,1 @@
+Interface : le segment choisi est une carte sur un rail gris (44 px), aussi sur Candidatures (ordinateur), les types de blocs du Parcours et la période du Bilan ; les puces choisies sont teintées, jamais pleines, et les autres ont un bord plus marqué (3:1).
