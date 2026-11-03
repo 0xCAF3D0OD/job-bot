@@ -1,23 +1,37 @@
-// La note dans un cercle dont le contour se remplit comme la note (docs/73).
+// L'anneau de la note (maquette Systeme, règle 1 ; D3, D5).
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 
 import ScoreRing from "./ScoreRing.vue";
 
+const arc = (wrapper: ReturnType<typeof mount>) => wrapper.find(".score-ring-arc").attributes("stroke-dasharray");
+
 describe("ScoreRing", () => {
-  it("remplit le contour selon la note, et la dit en toutes lettres", () => {
-    const ring = mount(ScoreRing, { props: { score: 75 } }).find("[data-test=score]");
-    expect(ring.text()).toBe("75");
-    expect(ring.attributes("style")).toContain("--p: 75");
-    expect(ring.attributes("aria-label")).toBe("Proximité avec ton profil : 75 sur 100");
-    expect(ring.classes()).toContain("close");
+  it("piste complète, graduations tous les 25 %, arc proportionnel à la note, couleur du mot", () => {
+    const wrapper = mount(ScoreRing, { props: { score: 75, worded: true } });
+    const ring = wrapper.find("[data-test=score]");
+    expect(wrapper.find(".score-ring-track").exists()).toBe(true);
+    expect(wrapper.find(".score-ring-ticks").attributes("d")).toBe("M50 1V15M85 50H99M50 85V99M1 50H15");
+    expect(arc(wrapper)).toBe("197.92 263.89");
+    // Proche : vert, jamais le bleu par défaut ; le mot dessous, pas de chiffre (D3).
+    expect(wrapper.find(".score-ring").classes()).toContain("close");
+    expect(ring.text()).toBe("Proche");
+    expect(ring.attributes("aria-label")).toBe("Proche : 75 sur 100");
   });
 
-  it("garde le contour entre vide et plein, et signale une note ancienne", () => {
-    const full = mount(ScoreRing, { props: { score: 130, stale: true } }).find("[data-test=score]");
-    expect(full.attributes("style")).toContain("--p: 100");
-    expect(full.attributes("aria-label")).toContain("ancien profil");
-    expect(mount(ScoreRing, { props: { score: -5 } }).attributes("style")).toContain("--p: 0");
+  it("garde l'arc entre vide et plein, et signale une note ancienne", () => {
+    const full = mount(ScoreRing, { props: { score: 130, stale: true } });
+    expect(arc(full)).toBe("263.89 263.89");
+    expect(full.find("[data-test=score]").attributes("aria-label")).toContain("ancien profil");
+    expect(arc(mount(ScoreRing, { props: { score: -5 } }))).toBe("0.00 263.89");
+  });
+
+  it("sans note : pas d'anneau, « Pas encore notée » en texte, la raison pour les lecteurs d'écran", () => {
+    const wrapper = mount(ScoreRing, { props: { score: null, pending: "Pas encore notée, à noter", worded: true } });
+    expect(wrapper.find("svg").exists()).toBe(false);
+    expect(wrapper.find("[data-test=score]").classes()).toContain("score-pending");
+    expect(wrapper.find("[data-test=score]").attributes("title")).toBe("Pas encore notée, à noter");
+    expect(wrapper.find("[data-test=score]").text()).toContain("Pas encore notée");
   });
 
   it("montre « /100 » dans le grand cercle du panneau", () => {

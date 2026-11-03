@@ -65,12 +65,14 @@ const VIEW_END: Record<string, [string, string]> = {
   expired: [" expirée", " expirées"],
   all: ["", ""],
 };
-// Dans une autre vue que « À examiner », la phrase redit ce que compte la pastille de l'onglet
-// (1.6.27) : « 35 offres en cours · 169 à examiner. »
-const otherView = computed(() => filters.value.view !== "pending" && counts.value.pending > 0);
+// La phrase décrit la liste affichée, rien d'autre (jacque, 2026-11-03) : « 35 offres en cours. »,
+// « 12 offres à traiter avec ces filtres. ». Le nombre de tout « À traiter » est sur la pastille du segment.
+// Avec les écartées ou les expirées en plus, la liste n'est plus seulement « à traiter » : « affichées ».
 const sentenceEnd = computed(() => {
-  const [one, many] = VIEW_END[filters.value.view] ?? ["", ""];
-  return `${total.value > 1 ? many : one}`;
+  const f = filters.value;
+  const mixed = f.view === "pending" && (f.showFilteredOut || f.showExpired);
+  const [one, many] = mixed ? [" affichée", " affichées"] : (VIEW_END[f.view] ?? ["", ""]);
+  return `${total.value > 1 ? many : one}${activeCount(f) ? " avec ces filtres" : ""}`;
 });
 const failed = ref(false);
 // Une panne de réseau (planche « Illustrations ») : l'écran « Pas de connexion », qui réessaie seul.
@@ -487,9 +489,7 @@ onUnmounted(() => {
       class="offers-sentence"
       data-test="offers-sentence"
     >
-      <strong v-if="total">{{ plural(total, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}<template v-if="otherView">
-        {{ " · " }}<strong data-test="offers-to-review">{{ counts.pending }}</strong>{{ " à traiter" }}
-      </template>{{ "." }}
+      <strong v-if="total">{{ plural(total, "offre", "offres") }}</strong><span v-else>{{ "Aucune offre" }}</span>{{ sentenceEnd }}{{ "." }}
     </p>
     <!-- La barre d'outils (1.6.55, planche « Barre d'outils Offres ») : la recherche qui prend la ligne
          (ordinateur), « Filtrer » et « + Ajouter » ; les filtres actifs en pastilles dessous. La liste a

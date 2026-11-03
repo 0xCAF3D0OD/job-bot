@@ -158,6 +158,13 @@ describe("OffersView", () => {
     const wrapper = await mountAt("/offres");
     expect(wrapper.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter.");
     expect(wrapper.find("[data-test=offers-sentence] strong").text()).toBe("2 offres");
+    // La phrase décrit la liste affichée, sans le nombre de tout « À traiter » (2026-11-03).
+    const inProgress = await mountAt("/offres?statut=in_progress");
+    expect(inProgress.find("[data-test=offers-sentence]").text()).toBe("2 offres en cours.");
+    const searched = await mountAt("/offres?q=devops");
+    expect(searched.find("[data-test=offers-sentence]").text()).toBe("2 offres à traiter avec ces filtres.");
+    const mixed = await mountAt("/offres?ecartees=montrer");
+    expect(mixed.find("[data-test=offers-sentence]").text()).toBe("2 offres affichées avec ces filtres.");
     // Un seul bouton « + Ajouter » (1.6.47) ; son menu propose les deux façons d'ajouter.
     await wrapper.find("[data-test=add-menu]").trigger("click");
     expect(wrapper.find("[data-test=manual-open]").exists()).toBe(true);
@@ -239,7 +246,7 @@ describe("OffersView", () => {
     const cards = wrapper.findAll("[data-test=offer]");
     // Une ligne (docs/73 §4) : le site et « chez l'employeur » sont dans le panneau.
     expect(cards[0]?.text()).not.toContain("chez l'employeur");
-    // Pas encore notée : un cercle vide, qui le dit (docs/76 §3).
+    // Pas encore notée : pas d'anneau, le texte, et la raison au survol (docs/76 §3).
     expect(cards[0]?.find("[data-test=score]").attributes("title")).toContain("à noter");
     expect(cards[0]?.find("[data-test=offer-alert]").exists()).toBe(false);
     expect(cards[1]?.find("[data-test=offer-alert]").text()).toBe("Type : stage (« stage »)");
@@ -282,13 +289,13 @@ describe("note et résumé", () => {
     expect(scored?.find("[data-test=score]").text()).toBe("Proche");
     expect(scored?.find("[data-test=score]").classes()).toContain("close");
     expect(scored?.find("[data-test=score]").attributes("aria-label")).toBe("Proche : 82 sur 100");
-    expect(scored?.find(".score-ring").attributes("style")).toContain("--p: 82");
+    expect(scored?.find(".score-ring-arc").attributes("stroke-dasharray")).toBe("216.39 263.89");
     expect(scored?.find(".score-line").exists()).toBe(false);
     // Le résumé est dans le panneau ; hors du tri par jour, la date revient dans l'offre.
     expect(scored?.find("[data-test=summary]").exists()).toBe(false);
     expect(scored?.find(".offer-line-sub").text()).toMatch(/ · \d{1,2} \S+$/);
     expect(wrapper.findAll("[data-test=offer-day]")).toHaveLength(0);
-    expect(unscored?.find("[data-test=score]").classes()).toContain("pending");
+    expect(unscored?.find("[data-test=score]").classes()).toContain("score-pending");
 
     await scored?.trigger("click");
     expect(wrapper.find("[data-test=ai]").text()).toContain("Proche");
