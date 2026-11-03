@@ -1,0 +1,1 @@
+Candidatures : l'anneau de note suit la maquette (piste pâle, graduations, couleur du mot ; « Pas encore notée » en texte), la phrase décrit la liste affichée, et sur ordinateur la note et l'action sont alignées à droite.

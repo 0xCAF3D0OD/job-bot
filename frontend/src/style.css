@@ -666,17 +666,24 @@ p.badge.reason { margin: 0; }
 /* --- Note et résumé IA (0.4.0-b) --- */
 
 /* La note dans un cercle : le contour, plein à 100, se remplit comme la note (docs/73). */
-.score-ring { --p: 0; --ring: var(--accent); position: relative; flex-shrink: 0; display: inline-grid; place-content: center; justify-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-none); color: var(--ring-text, var(--accent)); font-variant-numeric: tabular-nums; }
-.score-ring::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(var(--ring) calc(var(--p) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px)); }
-.score-ring.very-close { --ring: var(--ok); --ring-text: var(--ok-text); }
-.score-ring.dig { --ring: var(--score-dig); --ring-text: var(--score-dig); }
+/* L'anneau de la note (maquette Systeme, règle 1) : piste pâle complète, arc dans la couleur du mot, graduations
+   tous les 25 % découpées dans le fond (--ring-gap), jamais en bleu (D3, D5). */
+.score-ring { --ring: var(--success); --ring-soft: var(--success-soft); position: relative; flex-shrink: 0; display: inline-grid; place-content: center; width: 2.6rem; height: 2.6rem; font-size: var(--font-small); font-weight: var(--weight-bold); line-height: var(--leading-none); color: var(--ring); font-variant-numeric: tabular-nums; }
+.score-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; }
+.score-ring-track { stroke: var(--ring-soft); stroke-width: 9; }
+.score-ring-arc { stroke: var(--ring); stroke-width: 9; }
+.score-ring-ticks { stroke: var(--ring-gap, var(--surface)); stroke-width: 3.5; }
+.score-ring-value { position: relative; }
+.score-ring.very-close, .score-ring.close { --ring: var(--success); --ring-soft: var(--success-soft); }
+.score-ring.dig { --ring: var(--score-dig); --ring-soft: color-mix(in srgb, var(--score-dig) 18%, var(--surface)); }
 .score-ring.far { --ring: var(--neutral-graphic); --ring-text: var(--text-secondary); }
-.score-ring.stale { opacity: 0.6; }
-.score-ring.pending { color: var(--muted); font-weight: var(--weight-semibold); border: 2px dashed color-mix(in srgb, var(--muted) 45%, transparent); }
-.score-ring.pending::before { content: none; }
-.score-ring.large { width: 4.2rem; height: 4.2rem; font-size: var(--font-section); gap: var(--space-1); }
-.score-ring.large::before { -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5.5px), #000 calc(100% - 5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 5.5px), #000 calc(100% - 5px)); }
+.score-ring.far { --ring-soft: var(--neutral-soft); }
+.score-ring-wrap { display: inline-grid; justify-items: center; }
+.score-ring-wrap.stale .score-ring { opacity: 0.6; }
+.score-ring.large { width: 4.2rem; height: 4.2rem; font-size: var(--font-section); }
 .score-ring.large small { font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--muted); }
+/* Sans note : pas d'anneau, le texte seul. */
+.score-pending { font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); text-align: center; }
 .summary { margin: 0; display: grid; gap: var(--space-1); font-size: var(--font-small); }
 .summary div { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); gap: var(--space-2); }
 .summary dt { color: var(--muted); font-weight: var(--weight-semibold); }
@@ -4058,6 +4065,13 @@ html.search-open { overflow: hidden; }
 .offer-cards > li:last-child > .offer-line,
 .offer-cards > li:has(+ .offer-day) > .offer-line { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
 .offer-cards > li > .offer-line:hover { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+/* Candidatures sur ordinateur (jacque, 2026-11-03) : la note et l'action dans deux colonnes de largeur fixe,
+   collées à droite, à la même place sur chaque ligne, avec ou sans action. */
+@media (min-width: 821px) {
+  .offer-cards .offer-line.full { grid-template-columns: auto minmax(0, 1fr) 6.5rem 6rem; justify-content: stretch; }
+  .offer-cards .offer-line.full .offer-line-text { max-width: var(--measure); }
+  .offer-cards .offer-line.full .offer-line-verdict { justify-self: center; }
+}
 /* Dans une carte (Suivi, Tri du jour) : la ligne s'aligne sur le titre de la carte. */
 .today-rows .offer-line, .today-triage-preview .offer-line { margin-inline: calc(var(--space-2) * -1); padding-inline: var(--space-2); }
 @media (max-width: 820px) {
@@ -4405,7 +4419,7 @@ html.search-open { overflow: hidden; }
 .home-todo strong { min-width: var(--space-8); font-size: var(--font-figure); color: var(--primary-text); }
 .home-todo a > span { flex: 1; }
 .home-todo .icon, .home-orp-link .icon { color: var(--text-secondary); }
-.score-ring-worded { display: inline-grid; justify-items: center; gap: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--ring-text, var(--primary-text)); }
-.score-ring-worded.very-close { --ring-text: var(--ok-text); }
+.score-ring-worded { display: inline-grid; justify-items: center; gap: var(--space-1); font-size: var(--font-caption); font-weight: var(--weight-bold); color: var(--ring-text, var(--ok-text)); }
+.score-ring-worded.very-close, .score-ring-worded.close { --ring-text: var(--ok-text); }
 .score-ring-worded.dig { --ring-text: var(--score-dig); }
 .score-ring-worded.far { --ring-text: var(--text-secondary); }
