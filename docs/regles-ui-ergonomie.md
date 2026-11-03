@@ -259,7 +259,7 @@ On reprend les principes, jamais l'apparence. Une structure de page empruntée �
 
 ## Décisions du 2 novembre 2026 : la nouvelle identité mobile (docs/139)
 
-Prises par jacque le 2026-11-02, point par point, sur le tableau des conflits entre ce document et les maquettes de
+Prises par Kevin le 2026-11-02, point par point, sur le tableau des conflits entre ce document et les maquettes de
 `docs/mobile/` (exception datée dans `CLAUDE.md`). Une décision « suivre la règle » garde la règle ; une décision
 « suivre la maquette » la remplace.
 
