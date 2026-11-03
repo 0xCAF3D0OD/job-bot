@@ -27,7 +27,11 @@ import LoadingBlocks from "../components/LoadingBlocks.vue";
 import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
-import { useNarrow } from "../composables/usePhone";
+import CompanyLogo from "../components/CompanyLogo.vue";
+import IconButton from "../components/IconButton.vue";
+import ScoreRing from "../components/ScoreRing.vue";
+import StepTabs, { type Step } from "../components/StepTabs.vue";
+import { usePhone } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { dateWithTime } from "../dates";
@@ -114,16 +118,26 @@ function focusContacts(): void {
 }
 
 const offer = ref<Offer | null>(null);
-// Sur téléphone, la barre des étapes défile : l'étape ouverte reste en vue.
-watch(
-  [tab, () => !!offer.value],
-  () =>
-    void nextTick(() =>
-      document.querySelector<HTMLElement>(".prep-steps a.active")?.scrollIntoView?.({ inline: "nearest", block: "nearest" }),
-    ),
-  { immediate: true },
-);
-
+// Les étapes (C2) : Lettre, CV, Postuler ; Suivre une fois la candidature envoyée (docs/124 §G).
+const steps = computed<Step[]>(() => {
+  const o = offer.value;
+  const list: Step[] = [
+    { key: "letter", label: "Lettre", to: { query: {} }, done: !!currentLetterId.value, test: "tab-letter" },
+    { key: "cv", label: "CV", to: { query: { doc: "cv" } }, done: !!currentCvId.value, test: "tab-cv" },
+    { key: "apply", label: "Postuler", to: { query: { doc: "postuler" } }, done: o?.status === "applied", test: "tab-apply" },
+  ];
+  if (o?.status === "applied") list.push({ key: "follow", label: "Suivre", to: { query: { doc: "suivre" } }, test: "tab-follow" });
+  return list;
+});
+// Le retour à l'offre (C1) : par l'historique quand on vient de la fiche (même défilement, mêmes
+// filtres, geste de retour d'iOS) ; sinon le lien ouvre la fiche.
+function backToOffer(event: MouseEvent): void {
+  const back = (window.history.state as { back?: string } | null)?.back ?? "";
+  if (back.startsWith(`/candidatures/offres/${offerId}`) && !back.includes("/preparer")) {
+    event.preventDefault();
+    router.back();
+  }
+}
 const assistant = useAssistant();
 watch(offer, (o) => {
   if (o) assistant.setFocus({ offerId: o.id, label: `préparation : ${o.title}${o.company ? ` chez ${o.company}` : ""}` });
@@ -145,10 +159,11 @@ const LANGUAGES: Record<LetterLanguage, string> = { fr: "Français", en: "Englis
 
 const selected = computed(() => letters.value.find((l) => l.id === selectedId.value) ?? null);
 
-// Sous 600 px, le panneau de commande (planche « Tri et panneau de commande ») : la langue en contrôle
-// segmenté, la consigne d'une ligne, puis « Versions · Télécharger » (une feuille du bas) et
-// « Rédiger ». Sans choix, la langue affichée est celle de la lettre (celle de l'annonce).
-const { phone: narrow } = useNarrow();
+// Sous 820 px (le seuil unique), la mise en page du téléphone (étape 7a) : la langue et la consigne
+// au-dessus de la lettre, les versions et le téléchargement dans le « ⋯ » de la tête (une feuille du
+// bas), un seul bouton plein dans la barre du bas. Sans choix, la langue affichée est celle de la
+// lettre (celle de l'annonce).
+const { phone } = usePhone();
 const versionsOpen = ref(false);
 const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: LANGUAGES[code], test: `language-${code}` }));
 const shownLanguage = computed<string>({
@@ -156,6 +171,16 @@ const shownLanguage = computed<string>({
   set: (value) => {
     language.value = value as LetterLanguage;
   },
+});
+// Le bouton plein de la barre (C3) : « Rédiger… » quand il y a quelque chose à rédiger, sinon rien
+// (« Continuer vers le CV » prend la place).
+const LANGUAGE_IN: Record<LetterLanguage, string> = { fr: "français", de: "allemand", en: "anglais" };
+const writeLabel = computed(() => {
+  const chosen = language.value;
+  if (!selected.value) return chosen ? `Rédiger en ${LANGUAGE_IN[chosen]}` : "Rédiger la lettre";
+  if (chosen && chosen !== selected.value.language) return `Rédiger à nouveau en ${LANGUAGE_IN[chosen]}`;
+  if (instruction.value.trim()) return "Rédiger la nouvelle version";
+  return "";
 });
 function pickVersion(letter: Letter): void {
   select(letter);
@@ -338,7 +363,7 @@ const flashed = ref<number | null>(null);
 function onSelect(index: number, event: Event): void {
   const el = event.target as HTMLTextAreaElement;
   const { selectionStart: from, selectionEnd: to, value } = el;
-  if (!narrow.value && from === to) {
+  if (!phone.value && from === to) {
     if (claim.value?.index === index) claim.value = null;
     return;
   }
@@ -453,77 +478,58 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <PageHero :title="offer?.title ?? (notFound ? 'Offre introuvable' : '')">
-    <!-- Toujours visible : revenir aux offres à tout moment (retour d'usage du 2026-10-07), en
-         haut à gauche (0.99.1). -->
+  <!-- La tête (maquette Preparer, étape 7a) : le retour à l'offre, « Ma candidature », puis l'offre en une
+       ligne (logo, poste, « Entreprise · Lieu », l'anneau sans chiffre, D3) et les étapes. -->
+  <PageHero
+    class="prep-head"
+    :title="notFound ? 'Offre introuvable' : 'Ma candidature'"
+  >
     <template #back>
       <RouterLink
-        to="/candidatures/offres"
+        :to="`/candidatures/offres/${offerId}`"
         class="back-link prep-back"
-        data-test="back-to-offers"
+        data-test="back-to-offer"
+        @click="backToOffer"
       >
-        <AppIcon name="arrow-left" />Offres
+        <AppIcon name="arrow-left" /><span class="prep-back-text">Retour à l'offre</span>
       </RouterLink>
     </template>
-    <p
+    <template #actions>
+      <IconButton
+        v-if="phone && tab === 'letter' && selected"
+        icon="more"
+        label="Versions et téléchargement"
+        class="prep-more"
+        data-test="versions-open"
+        @click="versionsOpen = true"
+      />
+    </template>
+    <div
       v-if="offer"
-      class="page-head-sub prep-sub"
+      class="prep-offer"
+      data-test="prep-offer"
     >
-      {{ [offer.company, offer.location].filter(Boolean).join(" · ") }}
-    </p>
-    <!-- Les étapes ont la même adresse (seul `?doc=` change) : RouterLink les dirait toutes
-         « page actuelle » ; seule l'étape ouverte est annoncée (WCAG 4.1.2, audit du 22.10.2026). -->
-    <nav
+      <CompanyLogo :offer="offer" />
+      <p class="prep-offer-text">
+        <span
+          class="prep-offer-title"
+          data-test="prep-offer-title"
+        >{{ offer.title }}</span>
+        <span class="prep-offer-sub">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
+      </p>
+      <ScoreRing
+        v-if="offer.score !== null && offer.score !== undefined"
+        :score="offer.score"
+        :stale="offer.score_stale"
+        bare
+      />
+    </div>
+    <StepTabs
       v-if="offer"
-      class="prep-tabs prep-steps"
-      aria-label="Étapes de la candidature"
-    >
-      <RouterLink
-        :to="{ query: {} }"
-        :class="{ active: tab === 'letter' }"
-        :aria-current="tab === 'letter' ? 'step' : undefined"
-        data-test="tab-letter"
-      >
-        <span class="step-number">1</span><span class="with-icon"><AppIcon name="mail" />Lettre</span><span
-          v-if="currentLetterId"
-          class="step-done"
-          data-test="step-done"
-        ><AppIcon name="done" /><span class="visually-hidden">faite</span></span>
-      </RouterLink>
-      <RouterLink
-        :to="{ query: { doc: 'cv' } }"
-        :class="{ active: tab === 'cv' }"
-        :aria-current="tab === 'cv' ? 'step' : undefined"
-        data-test="tab-cv"
-      >
-        <span class="step-number">2</span><span class="with-icon"><AppIcon name="file" />CV</span><span
-          v-if="currentCvId"
-          class="step-done"
-          data-test="step-done"
-        ><AppIcon name="done" /><span class="visually-hidden">fait</span></span>
-      </RouterLink>
-      <RouterLink
-        :to="{ query: { doc: 'postuler' } }"
-        :class="{ active: tab === 'apply' }"
-        :aria-current="tab === 'apply' ? 'step' : undefined"
-        data-test="tab-apply"
-      >
-        <span class="step-number">3</span><span class="with-icon"><AppIcon name="send" />Postuler</span><span
-          v-if="offer.status === 'applied'"
-          class="step-done"
-          data-test="step-done"
-        ><AppIcon name="done" /><span class="visually-hidden">fait</span></span>
-      </RouterLink>
-      <RouterLink
-        v-if="offer.status === 'applied'"
-        :to="{ query: { doc: 'suivre' } }"
-        :class="{ active: tab === 'follow' }"
-        :aria-current="tab === 'follow' ? 'step' : undefined"
-        data-test="tab-follow"
-      >
-        <span class="step-number">4</span><span class="with-icon"><AppIcon name="clock" />Suivre</span>
-      </RouterLink>
-    </nav>
+      :steps="steps"
+      :current="tab"
+      label="Étapes de la candidature"
+    />
   </PageHero>
 
   <section class="band">
@@ -708,6 +714,37 @@ onMounted(() => void load());
             kind="letter"
           />
 
+          <!-- La langue et la consigne, au-dessus de la lettre sur téléphone (en attendant leur place dans la
+               carte de la lettre, étape 7b). -->
+          <div
+            v-if="phone && !claim"
+            class="prep-letter-tools"
+          >
+            <SegmentedControl
+              v-model="shownLanguage"
+              :options="LANGUAGE_OPTIONS"
+              label="Langue de la lettre"
+              full
+            />
+            <input
+              v-if="selected"
+              v-model="instruction"
+              class="prep-instruction-line"
+              maxlength="500"
+              aria-label="Consigne pour la nouvelle version"
+              placeholder="Consigne : plus court, insiste sur Kubernetes"
+              data-test="instruction"
+              @input="instructionNote = ''"
+            >
+            <p
+              v-if="instructionNote"
+              class="hint"
+              aria-live="polite"
+              data-test="instruction-note"
+            >
+              {{ instructionNote }}
+            </p>
+          </div>
           <!-- La consigne entière de la version affichée : au toucher il n'y a pas de survol. -->
           <p
             v-if="selected?.instruction"
@@ -775,10 +812,10 @@ onMounted(() => void load());
                 @select="onSelect(index, $event)"
                 @mouseup="onSelect(index, $event)"
                 @keyup="onSelect(index, $event)"
-                @click="narrow && onSelect(index, $event)"
+                @click="phone && onSelect(index, $event)"
               />
               <button
-                v-if="!narrow && claim?.index === index"
+                v-if="!phone && claim?.index === index"
                 type="button"
                 class="secondary small false-claim-button screen-only"
                 data-test="false-claim"
@@ -838,7 +875,7 @@ onMounted(() => void load());
         </div>
 
         <section
-          v-if="!narrow"
+          v-if="!phone"
           class="prep-side"
         >
           <OfferBrief :offer="offer" />
@@ -981,34 +1018,12 @@ onMounted(() => void load());
             </GroupedList>
           </div>
         </section>
-        <ActionBar v-if="narrow">
-          <!-- Une phrase choisie : le panneau ne montre que la citation et « Annuler » / « Pas vrai » ;
-               la langue et la consigne reviennent ensuite (une tâche à la fois). -->
-          <SegmentedControl
-            v-if="!claim"
-            v-model="shownLanguage"
-            :options="LANGUAGE_OPTIONS"
-            label="Langue de la lettre"
-            full
-          />
-          <input
-            v-if="selected && !claim"
-            v-model="instruction"
-            class="prep-instruction-line"
-            maxlength="500"
-            aria-label="Consigne pour la nouvelle version"
-            placeholder="Consigne : plus court, insiste sur Kubernetes"
-            data-test="instruction"
-            @input="instructionNote = ''"
-          >
-          <p
-            v-if="instructionNote && !claim"
-            class="action-bar-note"
-            aria-live="polite"
-            data-test="instruction-note"
-          >
-            {{ instructionNote }}
-          </p>
+        <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
+             choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
+        <ActionBar
+          v-if="phone"
+          class="prep-bar"
+        >
           <InlineConfirm
             v-if="choosingWrite"
             message="Tu as des modifications non enregistrées dans cette version."
@@ -1021,7 +1036,10 @@ onMounted(() => void load());
             @alt="write(true)"
             @cancel="choosingWrite = false"
           />
-          <PlanLimit usage="letter" />
+          <PlanLimit
+            v-if="writeLabel"
+            usage="letter"
+          />
           <template v-if="claim">
             <p
               class="action-bar-note false-claim-chosen"
@@ -1048,33 +1066,28 @@ onMounted(() => void load());
               </button>
             </div>
           </template>
-          <div
-            v-else
-            class="action-bar-row prep-bar-row"
+          <BusyButton
+            v-else-if="writeLabel || writing"
+            class="primary prep-bar-main"
+            :busy="writing"
+            :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
+            :disabled="reached('letter')"
+            data-test="write"
+            @click="write()"
           >
-            <button
-              v-if="selected"
-              type="button"
-              class="secondary"
-              data-test="versions-open"
-              @click="versionsOpen = true"
-            >
-              <span class="prep-versions-long">Versions · Télécharger</span><span class="prep-versions-short">Versions</span>
-            </button>
-            <BusyButton
-              class="primary"
-              :busy="writing"
-              :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
-              :disabled="reached('letter')"
-              data-test="write"
-              @click="write()"
-            >
-              <span class="with-icon"><AppIcon name="ai" />Rédiger</span>
-            </BusyButton>
-          </div>
+            <span class="with-icon"><AppIcon name="ai" />{{ writeLabel }}</span>
+          </BusyButton>
+          <RouterLink
+            v-else
+            :to="{ query: { doc: 'cv' } }"
+            class="button-link primary-link prep-bar-main"
+            data-test="next-step"
+          >
+            Continuer vers le CV
+          </RouterLink>
         </ActionBar>
         <BottomSheet
-          v-if="narrow && selected"
+          v-if="phone && selected"
           :open="versionsOpen"
           title="Versions et téléchargement"
           data-test="versions-sheet"
@@ -1129,6 +1142,19 @@ onMounted(() => void load());
           </template>
         </BottomSheet>
       </div>
+      <!-- Le CV prêt : la prochaine étape, seul bouton plein de la barre (C6). -->
+      <ActionBar
+        v-if="phone && offer && tab === 'cv' && currentCvId"
+        class="prep-bar"
+      >
+        <RouterLink
+          :to="{ query: { doc: 'postuler' } }"
+          class="button-link primary-link prep-bar-main"
+          data-test="next-step"
+        >
+          Continuer vers Postuler
+        </RouterLink>
+      </ActionBar>
     </div>
   </section>
 

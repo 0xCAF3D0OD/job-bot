@@ -1,0 +1,1 @@
+Interface : « Ma candidature » sur téléphone suit la maquette : retour à l'offre, l'offre en une ligne, étapes Lettre · CV · Postuler en contrôle segmenté avec coche verte, un seul bouton plein en bas (« Continuer vers le CV », « Rédiger à nouveau en allemand »), versions et téléchargement dans « ⋯ ».
