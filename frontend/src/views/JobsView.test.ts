@@ -38,7 +38,7 @@ describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
       Promise.resolve({ data: path === "/api/today" ? { to_review: 5, pending: 12, to_follow_up: 2, alerts_waiting: 1 } : { incomplete: 1 } }),
     );
     const { wrapper, router } = await mountJobs("/candidatures/alertes?mois=2026-09");
-    // Le titre reste celui du menu (docs/88) : la vue soulignée dit où l'on est.
+    // Le titre reste celui du menu (docs/88) : le segment choisi dit où l'on est.
     expect(wrapper.find("h1").text()).toBe("Candidatures");
     const tabs = ["offres", "suivi", "rendez-vous"].map((k) => wrapper.find(`[data-test=jobs-tab-${k}]`));
     // Envoyées : à relancer (2) + lignes ORP à compléter (1), docs/22 §1.
@@ -48,14 +48,14 @@ describe("JobsView (docs/19 §2, docs/139 étape 5a)", () => {
     const alerts = wrapper.find(".jobs-title [data-test=jobs-alerts]");
     expect(alerts.text()).toBe("Alertes1");
     expect(alerts.attributes("aria-current")).toBe("page");
-    expect(tabs.some((t) => t.classes().includes("active"))).toBe(false);
+    expect(tabs.some((t) => t.attributes("aria-current") === "page")).toBe(false);
     expect(tabs[1]!.attributes("href")).toBe("/candidatures/suivi?mois=2026-09");
     expect(wrapper.find("[data-test=child]").exists()).toBe(true);
 
     await tabs[0]!.trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.name).toBe("offers");
-    expect(wrapper.find("[data-test=jobs-tab-offres]").classes()).toContain("active");
+    expect(wrapper.find("[data-test=jobs-tab-offres]").attributes("aria-current")).toBe("page");
     expect(wrapper.find("[data-test=jobs-alerts]").attributes("aria-current")).toBeUndefined();
     expect(GET).toHaveBeenCalledTimes(4); // pastilles relues au changement de vue
   });

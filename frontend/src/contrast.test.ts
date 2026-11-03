@@ -250,3 +250,31 @@ describe("l'anneau de la note : « Loin » et « À creuser » (revue de la PR 4
     expect(css).toContain(".score-word.far .score-gauge { color: var(--neutral-graphic); }");
   });
 });
+
+describe("les puces et le contrôle segmenté (D4, 2026-11-03)", () => {
+  it("le bord d'une puce non choisie fait 3:1 sur la carte et sur la page, en clair et en sombre (WCAG 1.4.11)", () => {
+    expect(css).toContain('button.chip:is([aria-pressed], [role="radio"]) { border: 1px solid var(--field-border);');
+    expect(css).toMatch(/\.filter-choice \{[^}]*border: 1px solid var\(--field-border\)/);
+    for (const theme of [light, dark]) {
+      for (const background of ["surface", "bg", "panel"]) {
+        expect(ratio(theme["field-border"]!, theme[background]!), background).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
+  it("une puce choisie est teintée et lisible ; jamais pleine", () => {
+    expect(css).toContain("button.chip.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }");
+    expect(css).not.toMatch(/\.chip\.on \{[^}]*background: var\(--primary\);/);
+    for (const theme of [light, dark]) {
+      expect(ratio(theme["primary-text"]!, theme["primary-soft"]!)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(theme["primary-graphic"]!, theme["primary-soft"]!)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("le texte des segments reste lisible sur le rail et sur la carte choisie", () => {
+    for (const theme of [light, dark]) {
+      expect(ratio(theme["text-tertiary"]!, theme["surface-muted"]!)).toBeGreaterThanOrEqual(4.5);
+      expect(ratio(theme.text!, theme.surface!)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
