@@ -65,7 +65,7 @@ const VIEW_END: Record<string, [string, string]> = {
   expired: [" expirée", " expirées"],
   all: ["", ""],
 };
-// La phrase décrit la liste affichée, rien d'autre (jacque, 2026-11-03) : « 35 offres en cours. »,
+// La phrase décrit la liste affichée, rien d'autre (Kevin, 2026-11-03) : « 35 offres en cours. »,
 // « 12 offres à traiter avec ces filtres. ». Le nombre de tout « À traiter » est sur la pastille du segment.
 // Avec les écartées ou les expirées en plus, la liste n'est plus seulement « à traiter » : « affichées ».
 const sentenceEnd = computed(() => {

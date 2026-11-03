@@ -4065,7 +4065,7 @@ html.search-open { overflow: hidden; }
 .offer-cards > li:last-child > .offer-line,
 .offer-cards > li:has(+ .offer-day) > .offer-line { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
 .offer-cards > li > .offer-line:hover { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
-/* Candidatures sur ordinateur (jacque, 2026-11-03) : la note et l'action dans deux colonnes de largeur fixe,
+/* Candidatures sur ordinateur (Kevin, 2026-11-03) : la note et l'action dans deux colonnes de largeur fixe,
    collées à droite, à la même place sur chaque ligne, avec ou sans action. */
 @media (min-width: 821px) {
   .offer-cards .offer-line.full { grid-template-columns: auto minmax(0, 1fr) 6.5rem 6rem; justify-content: stretch; }
