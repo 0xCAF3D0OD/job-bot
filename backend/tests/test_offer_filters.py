@@ -104,9 +104,10 @@ async def test_counts_and_facets_follow_filters(api: AsyncClient) -> None:
     body = (
         await api.get("/api/offers", params={"view": "to_review", "q": "devops", "cantons": "GE"})
     ).json()
+    # « À traiter » ne suit pas les filtres : c'est la pastille du segment (docs/139, 2026-11-03).
+    assert body["counts"].pop("pending") == (await api.get("/api/today")).json()["pending"]
     assert body["counts"] == {
         "to_review": 1,
-        "pending": 1,
         "filtered_out": 0,
         "later": 0,
         "in_progress": 0,
@@ -362,3 +363,22 @@ async def test_pending_view_can_show_expired(api: AsyncClient, runtime: Runtime)
     assert counts["expired"] >= 1
     assert both["total"] == hidden["total"] + counts["expired"] + counts["filtered_out"]
     assert both["total"] == len(both["items"])
+
+
+async def test_counts_pending_is_the_badge_and_total_is_the_list(
+    api: AsyncClient, runtime: Runtime
+) -> None:
+    """Une seule source par nombre (docs/139, 2026-11-03).
+
+    counts.pending est la pastille, sans filtre ; total décrit la liste affichée.
+    """
+    await add(runtime, 16, "Kubernetes à Lausanne", ["jobup"])
+    await add(runtime, 17, "Comptable", ["jobup"])
+    await add(runtime, 18, "Envoyée", ["jobup"], status=OfferStatus.APPLIED)
+    badge = (await api.get("/api/today")).json()["pending"]
+    searched = (await api.get("/api/offers", params={"view": "pending", "q": "comptable"})).json()
+    assert searched["counts"]["pending"] == badge
+    assert searched["total"] == len(searched["items"]) == 1
+    in_progress = (await api.get("/api/offers", params={"view": "in_progress"})).json()
+    assert in_progress["counts"]["pending"] == badge
+    assert in_progress["total"] == len(in_progress["items"])

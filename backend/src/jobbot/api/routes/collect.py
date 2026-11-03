@@ -163,7 +163,7 @@ class ScorePoint(BaseModel):
 
 class OfferCounts(BaseModel):
     to_review: int
-    # À traiter (docs/139, C2) : à examiner, plus tard et en préparation.
+    # À traiter, sans les filtres de la liste : le nombre de la pastille (count_pending).
     pending: int
     filtered_out: int
     later: int
@@ -617,7 +617,12 @@ async def list_offers(
         without_cantons.append(view_condition)
 
     async with runtime.sessionmaker() as session:
-        pending = await count_pending(session, conditions)
+        # « À traiter » sans les filtres : le nombre de la pastille, une seule source (docs/139).
+        pending = await count_pending(session)
+        # Le total décrit ce que la liste montre : la vue et les filtres, rien d'autre.
+        total = int(
+            await session.scalar(select(func.count()).select_from(Offer).where(*listed)) or 0
+        )
         expired_flag = Offer.expired_at.is_not(None)
         grouped = (
             await session.execute(
@@ -667,11 +672,6 @@ async def list_offers(
         expired=sum(c for s, e, c in grouped if e and s not in IN_PROGRESS),
         all=sum(live.values()),
     )
-    total = counts.model_dump().get(view, counts.all)
-    if view == "pending" and with_filtered_out:
-        total += counts.filtered_out
-    if view == "pending" and with_expired:
-        total += counts.expired
     histogram = [0] * 20
     unscored = 0
     for index, count in score_rows:
