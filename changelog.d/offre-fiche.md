@@ -1,0 +1,1 @@
+Interface : la fiche d'une offre suit la maquette mobile, sur téléphone comme sur ordinateur : étiquettes sous le titre, « Proche de ton profil » avec « 92 sur 100 » et les points forts et manques, « Le poste » résumé par jobA1, Entreprise et Contacts repliés en bas de page.

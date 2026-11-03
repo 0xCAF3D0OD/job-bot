@@ -298,8 +298,10 @@ describe("note et résumé", () => {
     expect(unscored?.find("[data-test=score]").classes()).toContain("score-pending");
 
     await scored?.trigger("click");
-    expect(wrapper.find("[data-test=ai]").text()).toContain("Proche");
-    expect(wrapper.find("[data-test=ai]").text()).not.toContain("82/100");
+    expect(wrapper.find("[data-test=match-title]").text()).toBe("Proche de ton profil");
+    expect(wrapper.find("[data-test=match-sub]").text()).toContain("82 sur 100");
+    expect(wrapper.find("[data-test=match-sub]").text()).not.toContain("82/100");
+
     // Le bloc d'où vient le point fort, au survol (docs/131 §B.7).
     const strengths = wrapper.find("[data-test=strengths]");
     // Plus de soulignement pointillé ni de bloc au survol (planche « Fiche d'une offre »).

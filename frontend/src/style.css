@@ -2952,24 +2952,60 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
    des cartes sur le fond du détail (1.6.21). */
 .detail-panel > .detail-back { justify-self: start; }
 .detail-panel .detail-disclosure + .detail-disclosure { margin-top: 0; }
-/* La fiche en cartes (planche « Fiche d'une offre », 231:2), comme les Réglages : l'offre, Pourquoi,
-   Points forts · Manques, À savoir, puis les deux repliables. */
-.detail-card { display: grid; gap: var(--space-3); padding: var(--space-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+/* La fiche (maquette Offre, étape 6b), même ordre et mêmes styles sur ordinateur (O10) : la tête à nu
+   sur le fond, la correspondance en carte, « Le poste » à nu, puis Entreprise et Contacts repliés. */
+.detail-panel { gap: var(--space-5); }
+.detail-card { display: grid; gap: var(--space-3); padding: var(--space-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .detail-card h3 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
 .detail-card > p { margin: 0; }
-.detail-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-3); align-items: start; }
+.detail-offer { display: grid; gap: var(--space-3); min-width: 0; }
+.detail-head { display: flex; justify-content: space-between; align-items: start; gap: var(--space-3); }
+.detail-offer .logo.large { width: 3.5rem; height: 3.5rem; border-radius: var(--radius-card); font-size: var(--font-title); }
 .detail-title { display: grid; gap: var(--space-1); min-width: 0; }
-.detail-title h2 { margin: 0; overflow-wrap: anywhere; }
-.detail-sub { margin: 0; color: var(--muted); line-height: var(--leading-normal); }
-.detail-title .status-line { margin-top: var(--space-1); }
-.detail-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-2); }
-.detail-note { display: grid; gap: var(--space-1); justify-items: start; }
-.detail-note .hint { margin: 0; font-size: var(--font-caption); }
-.detail-card .score-why { margin: 0; }
-.detail-points ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); line-height: var(--leading-normal); }
-.detail-points li { position: relative; padding-left: var(--space-4); }
-.detail-points li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
-.detail-points ul + h3 { margin-top: var(--space-3); }
+.detail-title h2 { margin: 0; font-size: var(--font-figure); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.detail-sub { margin: 0; color: var(--text-secondary); line-height: var(--leading-normal); }
+.detail-offer .status-line, .detail-offer .expired-notice { margin: 0; }
+.offer-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.offer-tags li { padding: var(--space-1) var(--space-2); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--font-small); font-weight: var(--weight-semibold); line-height: var(--leading-tight); color: var(--text-tertiary); }
+.detail-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-1); }
+/* La correspondance (O3, O4) : le mot en couleur de la note, le chiffre en texte secondaire ; un manque
+   en gris chaud (--score-dig), jamais en orange (D5). */
+.match-card { gap: var(--space-4); }
+.match-head { display: flex; align-items: center; gap: var(--space-3); }
+.match-head .score-ring-wrap { padding: 0; }
+.match-head .score-ring.large { width: 4rem; height: 4rem; }
+.match-title { margin: 0; font-size: var(--font-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.match-title.is-very-close, .match-title.is-close { color: var(--ok-text); }
+.match-title.is-dig { color: var(--score-dig); }
+.match-title.is-far, .match-title.is-none { color: var(--text-secondary); }
+.match-sub { margin: var(--space-1) 0 0; font-size: var(--font-small); color: var(--text-secondary); line-height: var(--leading-normal); }
+.match-lines { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; line-height: var(--leading-tight); }
+.match-lines li { display: flex; align-items: flex-start; gap: var(--space-3); }
+.match-lines .icon { flex: none; width: 1.125rem; height: 1.125rem; }
+.match-lines .ok .icon { color: var(--success); }
+.match-lines .gap .icon { color: var(--score-dig); }
+.match-detail { margin: 0; background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; }
+.match-detail > .disclosure-row { min-height: var(--target-min); padding: var(--space-3) 0 0; }
+.match-detail .disclosure-body { margin: 0; padding: var(--space-2) 0 0; gap: 0; }
+.match-detail h4 { margin: var(--space-3) 0 var(--space-1); font-size: var(--font-small); font-weight: var(--weight-semibold); }
+.match-detail ul { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-2); line-height: var(--leading-normal); }
+.match-detail p { margin: 0 0 var(--space-2); line-height: var(--leading-normal); }
+.match-detail .level-line { color: var(--text-secondary); font-size: var(--font-small); }
+/* Le poste (O6) : « Résumé par jobA1 » au-dessus du texte rédigé, l'annonce complète à la demande. */
+.detail-post { display: grid; gap: var(--space-2); min-width: 0; }
+.detail-post-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.detail-post-head h3 { margin: 0; font-size: var(--font-title); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.post-by { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+.post-summary { margin: 0; line-height: var(--leading-normal); color: var(--text-tertiary); }
+.detail-post .full-text { max-height: none; overflow: hidden; padding-right: 0; color: var(--text-tertiary); font-size: var(--font-body); transition: max-height 0.3s ease; }
+.detail-post .full-text.folded { max-height: calc(6 * 1.65em); mask-image: linear-gradient(to bottom, #000 60%, transparent); }
+@media (prefers-reduced-motion: reduce) { .detail-post .full-text { transition: none; } }
+.post-links { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--space-5); }
+.post-links .link { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0; font-weight: var(--weight-semibold); text-decoration: none; }
+.detail-post .offer-facts { display: grid; margin: var(--space-2) 0 0; }
+.detail-post .offer-facts span { padding: 0; background: none; border-radius: 0; font-size: inherit; font-weight: inherit; color: inherit; }
+.detail-post .offer-facts .fact-mark { padding-top: 0.2em; }
+.detail-more-rows { display: grid; }
 .detail-rows { margin: 0; display: grid; }
 .detail-rows > div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--divider); line-height: var(--leading-normal); }
 .detail-rows > div:first-child { border-top: 0; }
@@ -2985,7 +3021,6 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 /* L'action d'une ligne ouverte (« Voir sur jobs.ch ») à la marge du texte, pas collée au bord. */
 .detail-panel .detail-disclosure .disclosure-actions { padding-right: var(--space-6); }
 /* « À savoir » : les pastilles taux, télétravail, contrat, puis les faits avec leur icône. */
-.offer-terms { list-style: none; margin: 0 0 var(--space-4); padding: 0; }
 .offer-facts .fact-mark { display: inline-flex; justify-content: center; align-self: start; padding-top: 0.2em; }
 .offer-facts .fact-mark > .icon { width: 1rem; height: 1rem; }
 .offer-facts .seen .fact-mark { color: var(--muted); }
