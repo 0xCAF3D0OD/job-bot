@@ -351,6 +351,48 @@ describe("barre de candidature", () => {
     expect(DELETE).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 5 } } }));
   });
 
+  it("« C'est fait ! » remplace « Candidature notée » quand l'envoi atteint l'objectif, une fois par mois (B10)", async () => {
+    localStorage.clear();
+    const orp = { month: "2026-10", count: 10, target: 10, rows: [], holder: { name: "Kevin", address: null }, searches: [], changed_after_submit: false };
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/offers/{offer_id}"
+            ? offer
+            : path === "/api/offers/{offer_id}/application-prefill"
+              ? { offer_id: 7, sent_at: "2026-10-05", method: "electronique", company: "Acme SA", job_title: "Ingénieur DevOps junior" }
+              : path === "/api/orp"
+                ? orp
+                : [],
+      }),
+    );
+    POST.mockResolvedValue({ data: { id: 5, company: "Acme SA", job_title: "Ingénieur DevOps junior", sent_at: "2026-10-05", orp_month: "2026-10" } });
+    const wrapper = await mountView("/offres/7/preparer?doc=postuler");
+    await wrapper.find("[data-test=already-applied]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=goal-reached] h1").text()).toBe("C'est fait !");
+    // Retenu sur l'appareil, avec la même clé que la carte de l'Accueil.
+    expect(localStorage.getItem("jobA1.orp-goal.2026-10")).toBe("1");
+
+    // « Je n'ai pas postulé » : l'objectif n'est plus atteint, la fête pourra revenir.
+    DELETE.mockResolvedValue({ response: { ok: true } });
+    await wrapper.find("[data-test=cancel-applied]").trigger("click");
+    expect(wrapper.find("[data-test=goal-reached]").exists()).toBe(false);
+    expect(localStorage.getItem("jobA1.orp-goal.2026-10")).toBeNull();
+    await useUndo().undo();
+    await flushPromises();
+    expect(wrapper.find("[data-test=goal-reached]").exists()).toBe(true);
+
+    // Déjà vue ce mois-ci : « Candidature notée », comme d'habitude.
+    const again = await mountView("/offres/7/preparer?doc=postuler");
+    await again.find("[data-test=already-applied]").trigger("click");
+    await flushPromises();
+    expect(again.find("[data-test=goal-reached]").exists()).toBe(false);
+    expect(again.find("[data-test=sent-moment] h1").text()).toBe("Candidature notée");
+    localStorage.clear();
+  });
+
   it("« J'ai déjà postulé » enregistre l'envoi sans rouvrir le formulaire", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
