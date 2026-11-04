@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
 
 from jobbot.api.app import create_app
 from jobbot.api.routes import trainings as routes
@@ -136,6 +137,8 @@ async def test_catalog_filter_and_marks(rt: Runtime) -> None:
             "progress": "module 4/12",
             "done_at": None,
             "certified": None,
+            "modules_total": None,
+            "modules_done": None,
             "chunk_id": None,
             "funding_status": None,
             "funding_requested_at": None,
@@ -247,6 +250,78 @@ async def test_trainings_follow_the_profile(rt: Runtime, monkeypatch: pytest.Mon
         assert (await api.post("/api/trainings/suggest")).json() == {"added": 1}
     async with rt.engine.begin() as conn:
         await conn.execute(text("DELETE FROM profiles WHERE NOT is_main"))
+
+
+async def test_progress_by_modules(rt: Runtime) -> None:
+    """B19 : « Module 6 sur 12 ». Au premier module, la formation passe « en cours » ; jamais
+    « terminée » toute seule. Les contraintes valent aussi en base."""
+    app = create_app(rt.settings, rt)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        cka = (await api.get("/api/trainings")).json()["items"][0]
+        url = f"/api/trainings/{cka['id']}/mark"
+        kept = await api.put(
+            url, json={"status": "interested", "modules_total": 12, "modules_done": 0}
+        )
+        assert (
+            kept.json()["status"],
+            kept.json()["modules_total"],
+            kept.json()["modules_done"],
+        ) == (
+            "interested",
+            12,
+            0,
+        )
+        first = await api.put(
+            url, json={"status": "interested", "modules_total": 12, "modules_done": 1}
+        )
+        assert first.json()["status"] == "in_progress"
+        # Avec un total, le texte libre ne sert plus ; sans total, il reste.
+        both = await api.put(
+            url,
+            json={
+                "status": "in_progress",
+                "progress": "Module 2",
+                "modules_total": 12,
+                "modules_done": 12,
+            },
+        )
+        assert both.json()["status"] == "in_progress"
+        assert both.json()["progress"] is None
+        free = await api.put(url, json={"status": "in_progress", "progress": "Module 2"})
+        assert (free.json()["progress"], free.json()["modules_total"]) == ("Module 2", None)
+        listed = next(
+            t for t in (await api.get("/api/trainings")).json()["items"] if t["id"] == cka["id"]
+        )
+        assert listed["mark"]["modules_total"] is None
+        await api.put(url, json={"status": "in_progress", "modules_total": 12, "modules_done": 6})
+        listed = next(
+            t for t in (await api.get("/api/trainings")).json()["items"] if t["id"] == cka["id"]
+        )
+        assert (listed["mark"]["modules_done"], listed["mark"]["modules_total"]) == (6, 12)
+
+        for wrong in (
+            {"modules_total": 0},
+            {"modules_total": 3, "modules_done": 4},
+            {"modules_total": 3, "modules_done": -1},
+            {"modules_done": 2},
+        ):
+            refused = await api.put(url, json={"status": "in_progress", **wrong})
+            assert refused.status_code == 422, wrong
+        await api.delete(url)
+
+    # En base aussi : au moins un module, et pas plus de modules faits que de modules.
+    for total, done in ((0, None), (3, 4), (3, -1)):
+        with pytest.raises(IntegrityError):
+            async with rt.sessionmaker.begin() as session:
+                await session.execute(
+                    text(
+                        "INSERT INTO training_marks (profile_id, training_id, status,"
+                        " modules_total, modules_done)"
+                        " SELECT p.id, :t, 'in_progress', :total, :done"
+                        " FROM profiles p WHERE p.is_main"
+                    ),
+                    {"t": cka["id"], "total": total, "done": done},
+                )
 
 
 async def test_finished_training_becomes_a_profile_block(rt: Runtime) -> None:

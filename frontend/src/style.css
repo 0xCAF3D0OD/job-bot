@@ -984,6 +984,7 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .training-actions .segmented { width: 100%; }
 .training-field { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; font-size: var(--font-small); }
 .training-field input[type="text"], .training-field input[type="date"] { padding: var(--space-1) var(--space-2); font-size: var(--font-small); }
+.training-field input[type="number"] { width: 6rem; padding: var(--space-1) var(--space-2); font-size: var(--font-small); }
 .badge.warn { background: var(--orange-soft); color: var(--orange-text); }
 /* En sombre, après la règle claire qui l'écrasait (docs/133 : contraste vu en mode sombre). */
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.warn { background: var(--orange-soft); color: var(--orange-text); } }
@@ -4512,3 +4513,20 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
   .training-suggest { justify-self: start; width: auto; padding-inline: var(--space-6); }
   .training-mine { max-width: 40rem; }
 }
+
+/* L'avancement par modules (B19, maquette Explorer › Formations › Suivies) : la ligne « Module 6 sur 12 · 50 % »,
+   la barre, puis « Module terminé » avec − et + de 44 px. */
+.training-modules { display: grid; gap: var(--space-2); }
+.training-modules-line { display: flex; justify-content: space-between; gap: var(--space-3); font-size: var(--font-small); }
+.training-modules-line span { color: var(--text-secondary); }
+.training-modules-bar { height: 10px; overflow: hidden; border-radius: var(--radius-pill); background: var(--primary-soft); }
+.training-modules-bar span { display: block; height: 100%; border-radius: inherit; background: var(--primary-graphic); transition: width var(--t-state) var(--ease-out); }
+.training-modules-step { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-1); padding-top: var(--space-3); border-top: 1px solid var(--line-soft); font-weight: var(--weight-semibold); }
+.training-modules-buttons { display: flex; align-items: center; gap: var(--space-1); }
+.training-modules-buttons button { display: grid; place-items: center; width: var(--target-min); height: var(--target-min); min-height: 0; padding: 0; border-radius: var(--radius-pill); font-size: var(--font-section); font-weight: var(--weight-bold); line-height: var(--leading-none); }
+.training-modules-less { border: 1.5px solid var(--water); background: var(--surface); color: var(--primary-text); }
+.training-modules-more { border: 0; background: var(--primary); color: var(--on-primary); }
+.training-modules-buttons button:disabled { border-color: var(--line); background: var(--surface-muted); color: var(--text-secondary); }
+.training-modules-count { min-width: 2.5rem; text-align: center; font-size: var(--font-title); font-weight: var(--weight-bold); }
+.training-modules-finish { justify-self: start; min-height: var(--target-min); }
+@media (prefers-reduced-motion: reduce) { .training-modules-bar span { transition: none; } }

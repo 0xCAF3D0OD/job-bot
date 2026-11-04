@@ -13,7 +13,8 @@ import HoverNote from "../components/HoverNote.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
-import TrainingCardBody from "../components/TrainingCardBody.vue";
+import TrainingCardBody, { type MarkExtra } from "../components/TrainingCardBody.vue";
+import TrainingModules from "../components/TrainingModules.vue";
 import TrainingRow from "../components/TrainingRow.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePlan } from "../composables/usePlan";
@@ -66,9 +67,15 @@ const sections = computed(() =>
 );
 // Suivies (B19) : en cours d'abord, en cartes ; puis les gardées et les terminées, en lignes.
 const marked = computed(() => items.value.filter((t) => t.mark));
-const inProgress = computed(() => marked.value.filter((t) => t.mark!.status === "in_progress"));
+// Une carte : en cours, ou gardée avec son nombre de modules (le + du premier module la passe « en cours »).
+const current = (t: Training): boolean =>
+  t.mark!.status === "in_progress" || (t.mark!.status === "interested" && Boolean(t.mark!.modules_total));
+const inProgress = computed(() => marked.value.filter(current));
 const others = computed(() =>
-  [...marked.value.filter((t) => t.mark!.status === "interested"), ...marked.value.filter((t) => t.mark!.status === "done")],
+  [
+    ...marked.value.filter((t) => t.mark!.status === "interested" && !current(t)),
+    ...marked.value.filter((t) => t.mark!.status === "done"),
+  ],
 );
 const mineCount = computed(() => marked.value.length);
 
@@ -104,7 +111,7 @@ function replace(training: Training): void {
 async function mark(
   training: Training,
   status: Status | null,
-  extra: { progress?: string | null; done_at?: string | null; certified?: boolean | null } = {},
+  extra: MarkExtra = {},
 ): Promise<void> {
   if (status === null) {
     await api.DELETE("/api/trainings/{training_id}/mark", { params: { path: { training_id: training.id } } });
@@ -118,6 +125,9 @@ async function mark(
       progress: extra.progress ?? training.mark?.progress ?? null,
       done_at: extra.done_at ?? training.mark?.done_at ?? (status === "done" ? new Date().toISOString().slice(0, 10) : null),
       certified: extra.certified ?? training.mark?.certified ?? null,
+      // B19 : un nombre de modules effacé (null) l'est vraiment ; absent, il reste.
+      modules_total: "modules_total" in extra ? extra.modules_total : (training.mark?.modules_total ?? null),
+      modules_done: "modules_done" in extra ? extra.modules_done : (training.mark?.modules_done ?? null),
     },
   });
   if (data) replace({ ...training, mark: data });
@@ -376,7 +386,18 @@ onMounted(() => void load());
               <span>{{ training.provider }}</span>
             </span>
           </div>
-          <p class="training-current-progress">
+          <TrainingModules
+            v-if="training.mark!.modules_total"
+            :title="training.title"
+            :total="training.mark!.modules_total"
+            :done="training.mark!.modules_done ?? 0"
+            @save="(done) => mark(training, training.mark!.status, { modules_done: done })"
+            @finish="(done) => mark(training, 'done', { modules_done: done })"
+          />
+          <p
+            v-else
+            class="training-current-progress"
+          >
             {{ training.mark!.progress || "En cours" }}
           </p>
           <div class="training-current-actions">
@@ -420,7 +441,7 @@ onMounted(() => void load());
           </li>
         </ul>
         <p class="training-help">
-          Le signet du catalogue range une formation ici. Ouvre-la pour noter où tu en es.
+          Le signet du catalogue range une formation ici. Elle passe « en cours » au premier module.
         </p>
       </div>
     </div>

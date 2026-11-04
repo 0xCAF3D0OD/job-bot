@@ -4,7 +4,7 @@ from datetime import date
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Request, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,6 +42,9 @@ class TrainingMarkOut(BaseModel):
     progress: str | None
     done_at: date | None
     certified: bool | None
+    # L'avancement par modules (B19) : « Module 6 sur 12 ». Sans total, le texte libre `progress`.
+    modules_total: int | None = None
+    modules_done: int | None = None
     # Bloc de profil créé depuis la formation (docs/37 §1).
     chunk_id: int | None = None
     # Demande de financement à l'ORP (docs/37 §2).
@@ -84,6 +87,17 @@ class TrainingMarkIn(BaseModel):
     progress: Annotated[str, Field(max_length=80)] | None = None
     done_at: date | None = None
     certified: bool | None = None
+    # B19 : au moins un module ; les modules faits entre 0 et le total (aussi contraint en base).
+    modules_total: Annotated[int, Field(ge=1, le=999)] | None = None
+    modules_done: Annotated[int, Field(ge=0, le=999)] | None = None
+
+    @model_validator(mode="after")
+    def _modules(self) -> "TrainingMarkIn":
+        if self.modules_done is not None and (
+            self.modules_total is None or self.modules_done > self.modules_total
+        ):
+            raise ValueError("modules faits entre 0 et le nombre de modules")
+        return self
 
 
 class TrainingReview(BaseModel):
@@ -167,6 +181,8 @@ async def list_trainings(request: Request, domain_only: bool = False) -> Trainin
                     progress=mark.progress,
                     done_at=mark.done_at,
                     certified=mark.certified,
+                    modules_total=mark.modules_total,
+                    modules_done=mark.modules_done,
                     chunk_id=mark.chunk_id,
                     funding_status=mark.funding_status,
                     funding_requested_at=mark.funding_requested_at,
@@ -200,13 +216,20 @@ async def mark_training(
 ) -> TrainingMarkOut:
     async with _runtime(request).sessionmaker.begin() as session:
         profile = await _visible(session, request, training_id)
+        total = body.modules_total
+        done = (body.modules_done or 0) if total is not None else None
+        # Au premier module fait, elle passe « en cours » ; jamais « terminée » toute seule (B19).
+        state = "in_progress" if body.status == "interested" and done else body.status
         values = {
-            "status": body.status,
+            "status": state,
+            # Le texte libre reste pour les formations sans nombre de modules.
             "progress": (body.progress or "").strip() or None
-            if body.status == "in_progress"
+            if state == "in_progress" and total is None
             else None,
-            "done_at": body.done_at if body.status == "done" else None,
-            "certified": body.certified if body.status == "done" else None,
+            "done_at": body.done_at if state == "done" else None,
+            "certified": body.certified if state == "done" else None,
+            "modules_total": total,
+            "modules_done": done,
         }
         kept = (
             await session.execute(
@@ -327,6 +350,8 @@ def _mark_out(mark: TrainingMark) -> TrainingMarkOut:
         progress=mark.progress,
         done_at=mark.done_at,
         certified=mark.certified,
+        modules_total=mark.modules_total,
+        modules_done=mark.modules_done,
         chunk_id=mark.chunk_id,
         funding_status=mark.funding_status,
         funding_requested_at=mark.funding_requested_at,

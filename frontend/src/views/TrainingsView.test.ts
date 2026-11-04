@@ -126,7 +126,7 @@ describe("TrainingsView", () => {
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/trainings/{training_id}/mark", {
       params: { path: { training_id: 1 } },
-      body: { status: "in_progress", progress: null, done_at: null, certified: null },
+      body: { status: "in_progress", progress: null, done_at: null, certified: null, modules_total: null, modules_done: null },
     });
     await wrapper.find("[data-test=progress]").setValue("module 4/12");
     await flushPromises();
@@ -205,6 +205,84 @@ describe("TrainingsView", () => {
     expect((wrapper.find("[data-test=certified]").element as HTMLInputElement).checked).toBe(true);
     await card.find("[data-test=training-update]").trigger("click");
     expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("CKAD");
+  });
+
+  it("B19 : le compteur de modules, la barre, l'envoi unique et « Marquer comme terminée »", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const current = { status: "in_progress", progress: null, done_at: null, certified: null, modules_total: 12, modules_done: 6 };
+    GET.mockResolvedValue({ data: page([training(3, { title: "CKAD", mark: current })]) });
+    PUT.mockImplementation((_url: string, { body }: { body: Record<string, unknown> }) => Promise.resolve({ data: { ...current, ...body } }));
+    const wrapper = await mountView("/formations?onglet=miennes");
+    const card = wrapper.find("[data-test=training-current]");
+    expect(card.find(".training-modules-line").text()).toBe("Module 6 sur 1250 %");
+    const bar = card.find("[data-test=modules-bar]");
+    expect([bar.attributes("aria-valuenow"), bar.attributes("aria-valuemin"), bar.attributes("aria-valuemax")]).toEqual(["6", "0", "12"]);
+    expect(bar.attributes("aria-valuetext")).toBe("Module 6 sur 12");
+    expect(card.find("[data-test=module-more]").attributes("aria-label")).toBe("Un module de plus");
+    expect(card.find("[data-test=module-less]").attributes("aria-label")).toBe("Un module de moins");
+    // Rien n'est annoncé au chargement.
+    expect(card.find("[data-test=modules-status]").text()).toBe("");
+
+    // Trois appuis : l'écran suit tout de suite, un seul envoi 500 ms après le dernier.
+    for (let i = 0; i < 3; i++) await card.find("[data-test=module-more]").trigger("click");
+    expect(card.find("[data-test=module-count]").text()).toBe("9");
+    expect(card.find("[data-test=modules-status]").text()).toBe("Module 9 sur 12");
+    expect(card.find("[data-test=modules-status]").attributes("role")).toBe("status");
+    expect(PUT).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(499);
+    expect(PUT).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledTimes(1);
+    expect(PUT.mock.calls[0]![1].body).toMatchObject({ status: "in_progress", modules_total: 12, modules_done: 9 });
+
+    // Au dernier module : + désactivé, « Marquer comme terminée » proposé ; le statut ne change pas seul.
+    for (let i = 0; i < 4; i++) await wrapper.find("[data-test=module-more]").trigger("click");
+    expect(wrapper.find("[data-test=module-count]").text()).toBe("12");
+    expect(wrapper.find("[data-test=module-more]").attributes("disabled")).toBeDefined();
+    vi.advanceTimersByTime(500);
+    await flushPromises();
+    expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ status: "in_progress", modules_done: 12 });
+    await wrapper.find("[data-test=module-finish]").trigger("click");
+    await flushPromises();
+    expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ status: "done", modules_done: 12 });
+    vi.useRealTimers();
+  });
+
+  it("B19 : − désactivé à 0 ; une formation gardée avec ses modules est une carte, + la passe « en cours »", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const kept = { status: "interested", progress: null, done_at: null, certified: null, modules_total: 4, modules_done: 0 };
+    GET.mockResolvedValue({ data: page([training(5, { title: "Terraform", mark: kept })]) });
+    PUT.mockResolvedValue({ data: { ...kept, status: "in_progress", modules_done: 1 } });
+    const wrapper = await mountView("/formations?onglet=miennes");
+    expect(wrapper.findAll("[data-test=training-kept]")).toHaveLength(0);
+    expect(wrapper.find("[data-test=module-less]").attributes("disabled")).toBeDefined();
+    await wrapper.find("[data-test=module-less]").trigger("click");
+    expect(wrapper.find("[data-test=module-count]").text()).toBe("0");
+    await wrapper.find("[data-test=module-more]").trigger("click");
+    vi.advanceTimersByTime(500);
+    await flushPromises();
+    expect(PUT.mock.calls[0]![1].body).toMatchObject({ status: "interested", modules_total: 4, modules_done: 1 });
+    vi.useRealTimers();
+  });
+
+  it("B19 : le nombre de modules se note dans le panneau ; vide, on revient au texte libre", async () => {
+    const current = { status: "in_progress", progress: "module 2", done_at: null, certified: null, modules_total: null, modules_done: null };
+    GET.mockResolvedValue({ data: page([training(3, { title: "CKAD", mark: current })]) });
+    PUT.mockImplementation((_url: string, { body }: { body: Record<string, unknown> }) => Promise.resolve({ data: { ...current, ...body } }));
+    const wrapper = await mountView("/formations?onglet=miennes");
+    await wrapper.find("[data-test=training-update]").trigger("click");
+    await flushPromises();
+    expect(wrapper.find("[data-test=progress]").exists()).toBe(true);
+    await wrapper.find("[data-test=modules-total]").setValue("12");
+    await flushPromises();
+    expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ modules_total: 12, modules_done: 0 });
+    expect(wrapper.find("[data-test=progress]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=training-modules]").exists()).toBe(true);
+    await wrapper.find("[data-test=modules-total]").setValue("");
+    await flushPromises();
+    expect(PUT.mock.calls.at(-1)![1].body).toMatchObject({ modules_total: null, modules_done: null });
+    expect(wrapper.find("[data-test=progress]").exists()).toBe(true);
   });
 
   it("Suivies vide : l'invitation à garder une formation", async () => {

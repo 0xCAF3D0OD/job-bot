@@ -628,7 +628,9 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
                 profile_id=profile.id,
                 training_id=training.id,
                 status=status,
-                progress="Module 3 sur 6" if status == "in_progress" else None,
+                # L'avancement par modules (B19), comme la maquette : « Module 6 sur 12 ».
+                modules_total=12 if status == "in_progress" else None,
+                modules_done=6 if status == "in_progress" else None,
                 funding_status="requested" if status == "in_progress" else None,
                 funding_requested_at=today - timedelta(days=9) if status == "in_progress" else None,
             )

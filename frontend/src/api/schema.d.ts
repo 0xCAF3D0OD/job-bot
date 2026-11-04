@@ -7764,6 +7764,10 @@ export interface components {
             done_at?: string | null;
             /** Certified */
             certified?: boolean | null;
+            /** Modules Total */
+            modules_total?: number | null;
+            /** Modules Done */
+            modules_done?: number | null;
         };
         /** TrainingMarkOut */
         TrainingMarkOut: {
@@ -7778,6 +7782,10 @@ export interface components {
             done_at: string | null;
             /** Certified */
             certified: boolean | null;
+            /** Modules Total */
+            modules_total?: number | null;
+            /** Modules Done */
+            modules_done?: number | null;
             /** Chunk Id */
             chunk_id?: number | null;
             /** Funding Status */

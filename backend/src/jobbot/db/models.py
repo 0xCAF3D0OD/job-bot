@@ -870,6 +870,9 @@ class TrainingMark(Base):
     )
     status: Mapped[str] = mapped_column(Text)  # interested | in_progress | done
     progress: Mapped[str | None] = mapped_column(Text)
+    # L'avancement par modules (B19) : « Module 6 sur 12 » ; contraintes dans la migration 0073.
+    modules_total: Mapped[int | None]
+    modules_done: Mapped[int | None]
     done_at: Mapped[date | None] = mapped_column(Date)
     certified: Mapped[bool | None]
     # Bloc « formation » créé depuis la formation terminée (docs/37 §1).

@@ -16,7 +16,13 @@ import StatusPill from "./StatusPill.vue";
 // le panneau latéral, avec tout le suivi en trois sections (Suivi, Financement ORP,
 // Profil).
 export type TrainingStatus = "interested" | "in_progress" | "done";
-export type MarkExtra = { progress?: string | null; done_at?: string | null; certified?: boolean | null };
+export type MarkExtra = {
+  progress?: string | null;
+  done_at?: string | null;
+  certified?: boolean | null;
+  modules_total?: number | null;
+  modules_done?: number | null;
+};
 type Status = TrainingStatus;
 
 const props = withDefaults(defineProps<{ training: Training; variant?: "card" | "panel" }>(), { variant: "card" });
@@ -142,12 +148,31 @@ async function save(): Promise<void> {
 
 const inputValue = (event: Event): string => (event.target as HTMLInputElement).value;
 
+// Le nombre de modules (B19) : vide, on revient au texte libre ; plus petit, les modules faits suivent.
+function setTotal(value: string): void {
+  const mark = props.training.mark;
+  if (!mark) return;
+  const total = Math.trunc(Number(value));
+  if (!value.trim() || !Number.isFinite(total) || total < 1) {
+    emit("mark", mark.status, { modules_total: null, modules_done: null });
+    return;
+  }
+  const capped = Math.min(total, 999);
+  emit("mark", mark.status, { modules_total: capped, modules_done: Math.min(mark.modules_done ?? 0, capped) });
+}
+
 // La pastille d'état de la carte : « En cours · module 6/12 », « Terminée · certificat ».
 const stateText = computed(() => {
   const mark = props.training.mark;
   if (!mark) return "";
   const detail =
-    mark.status === "in_progress" ? mark.progress : mark.status === "done" && mark.certified ? "certificat" : null;
+    mark.status === "in_progress"
+      ? mark.modules_total
+        ? `module ${mark.modules_done ?? 0} sur ${mark.modules_total}`
+        : mark.progress
+      : mark.status === "done" && mark.certified
+        ? "certificat"
+        : null;
   return detail ? `${STATUSES[mark.status]} · ${detail}` : (STATUSES[mark.status] ?? "");
 });
 </script>
@@ -287,8 +312,23 @@ const stateText = computed(() => {
           </button>
         </div>
       </div>
+      <!-- B19 : avec un nombre de modules, le compteur de la carte Suivies ; sans, le texte libre. -->
       <label
-        v-if="training.mark?.status === 'in_progress'"
+        v-if="training.mark && training.mark.status !== 'done'"
+        class="training-field"
+      ><span>Nombre de modules<span class="form-field-optional"> (facultatif)</span></span>
+        <input
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="999"
+          :value="training.mark.modules_total ?? ''"
+          data-test="modules-total"
+          @change="setTotal(inputValue($event))"
+        >
+      </label>
+      <label
+        v-if="training.mark?.status === 'in_progress' && !training.mark.modules_total"
         class="training-field"
       >Progression
         <input
