@@ -31,7 +31,7 @@ async function mountBell() {
 }
 
 describe("NotificationBell", () => {
-  it("pastille, liste, clic qui ouvre la page et marque lue", async () => {
+  it("pastille, panneau aux lignes de la page, ligne-lien qui marque lue et ouvre la page", async () => {
     GET.mockResolvedValue({ data: { unread: 2, items: [item(1), item(2, { read_at: "2026-10-05T08:00:00Z", title: "Ancienne" })] } });
     POST.mockResolvedValue({ data: { unread: 1, items: [] } });
     const { wrapper, router } = await mountBell();
@@ -43,16 +43,20 @@ describe("NotificationBell", () => {
     expect(bell.attributes("aria-label")).toBe("Notifications, 2 non lues");
     expect(bell.attributes("data-label")).toBe("Notifications, 2 non lues");
 
-    await wrapper.find("[data-test=bell]").trigger("click");
+    await bell.trigger("click");
     await flushPromises();
-    const items = wrapper.findAll("[data-test=bell-item]");
-    expect(items).toHaveLength(2);
-    expect(items[0]!.classes()).toContain("unread");
-    // La règle des dates (§5) : jamais « il y a 2 h », « aujourd'hui » (ou « hier » juste après minuit).
-    expect(items[0]!.text()).toMatch(/aujourd'hui|hier/);
-    expect(items[0]!.text()).not.toContain("il y a");
+    const rows = wrapper.findAll("[data-test=notification]");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.classes()).toContain("unread");
+    expect(rows[0]!.find("[data-test=unread-dot]").attributes("aria-label")).toBe("non lue");
+    expect(rows[1]!.find("[data-test=unread-dot]").exists()).toBe(false);
+    // N7 : la ligne entière est un seul lien, sans élément interactif à l'intérieur.
+    expect(rows[0]!.element.tagName).toBe("A");
+    expect(rows[0]!.find("a, button").exists()).toBe(false);
+    expect(rows[0]!.text()).not.toContain("il y a");
+    expect(wrapper.find("[data-test=bell-all]").attributes("href")).toBe("/notifications");
 
-    await items[0]!.trigger("click");
+    await rows[0]!.trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/inbox/{notification_id}/read", { params: { path: { notification_id: 1 } } });
     expect(router.currentRoute.value.fullPath).toBe("/orp?mois=2026-09");
@@ -73,21 +77,19 @@ describe("NotificationBell", () => {
   });
 });
 
-describe("NotificationBell sous 600 px (planche « Structure téléphone »)", () => {
-  it("s'ouvre en feuille plein écran, titre « Notifications » et ✕ « Fermer »", async () => {
+describe("NotificationBell sur téléphone (maquette Notifications, N1)", () => {
+  it("mène à la page /notifications, sans panneau", async () => {
     const matchMedia = window.matchMedia;
-    window.matchMedia = ((query: string) => ({ matches: query.includes("599px"), media: query, addEventListener: () => undefined, removeEventListener: () => undefined })) as unknown as typeof window.matchMedia;
+    window.matchMedia = ((query: string) => ({ matches: query.includes("820px"), media: query, addEventListener: () => undefined, removeEventListener: () => undefined })) as unknown as typeof window.matchMedia;
     GET.mockResolvedValue({ data: { unread: 1, items: [item(1)] } });
-    const { wrapper } = await mountBell();
-    await wrapper.find("[data-test=bell]").trigger("click");
+    const { wrapper, router } = await mountBell();
+    const bell = wrapper.find("[data-test=bell]");
+    expect(bell.element.tagName).toBe("A");
+    expect(bell.attributes("href")).toBe("/notifications");
+    await bell.trigger("click");
     await flushPromises();
-    const sheet = wrapper.find("dialog.sheet");
-    expect(sheet.classes()).toContain("sheet-full");
-    expect(sheet.find(".sheet-title").text()).toBe("Notifications");
-    expect(sheet.findAll("[data-test=bell-item]")).toHaveLength(1);
-    await sheet.find("[data-test=sheet-close]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=bell]").attributes("aria-expanded")).toBe("false");
+    expect(router.currentRoute.value.path).toBe("/notifications");
+    expect(wrapper.find("[data-test=bell-panel]").exists()).toBe(false);
     window.matchMedia = matchMedia;
     wrapper.unmount();
   });
