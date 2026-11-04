@@ -6,9 +6,12 @@ import CopyLabel from "./CopyLabel.vue";
 // Copier, un seul bouton partout (règles §4, planche « tête de carte, Copier et ⋯ ») : l'icône seule,
 // juste à côté de la valeur ; « Copier » en légende au survol, puis la coche et « Copié » pendant 2 s,
 // annoncés aux lecteurs d'écran (WCAG 4.1.3). Inspiré du bouton de copie de GitHub (Primer).
-const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string }>(), {
+// `text` (maquette Preparer, étape 7c) : le mot « Copier » dans une pastille, qui devient « Copié » en vert ;
+// le nom du champ reste lu par un lecteur d'écran.
+const props = withDefaults(defineProps<{ value: string; label?: string; testId?: string; text?: string }>(), {
   label: "Copier",
   testId: "copy",
+  text: "",
 });
 const emit = defineEmits<{ copied: [] }>();
 
@@ -35,11 +38,15 @@ onUnmounted(() => clearTimeout(timer));
 <template>
   <button
     type="button"
-    class="copy-button"
+    :class="text ? ['copy-text', { 'copy-done': done }] : 'copy-button'"
     :data-test="testId"
     @click="copy"
   >
+    <template v-if="text">
+      {{ done ? "Copié" : "Copier" }}<span class="visually-hidden"> : {{ text }}</span>
+    </template>
     <CopyLabel
+      v-else
       :done="done"
       :label="label"
     />

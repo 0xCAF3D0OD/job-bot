@@ -902,8 +902,6 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .kw.offer { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
 .orp-url { display: none; }
 #print-root .orp-url { display: block; font-size: 7pt; color: #333; word-break: break-all; }
-.apply-bar { position: sticky; top: 4.6rem; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 6px 18px rgba(17, 17, 31, 0.06); }
-@media print { .apply-bar { display: none; } }
 
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -1274,17 +1272,9 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .assistant-focus .assistant-close { font-size: var(--font-title); }
 
 /* --- Champs à recopier sur le site de l'employeur (docs/25 §5, docs/47) --- */
-.form-sheet { margin: calc(var(--space-2) * -1) 0 var(--space-4); padding: var(--space-4) var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-.form-sheet .hint { margin-bottom: var(--space-2); }
-.form-sheet-files { display: flex; gap: var(--space-4); margin: 0 0 var(--space-2); }
-.form-sheet dl { display: grid; grid-template-columns: minmax(8rem, max-content) 1fr; gap: var(--label-gap) var(--space-4); margin: 0; font-size: var(--font-small); }
-.form-sheet dt { color: var(--muted); }
-.form-sheet dd { margin: 0; display: flex; gap: var(--space-3); align-items: baseline; justify-content: space-between; min-width: 0; }
-.form-sheet dd span { overflow-wrap: anywhere; }
 .form-sheet-long { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .identity-more { margin-top: var(--space-4); }
 .identity-fields, .profile-form, .add-search-form { display: grid; gap: var(--space-4); }
-@media (max-width: 640px) { .form-sheet dl { grid-template-columns: 1fr; } .form-sheet dt { margin-top: var(--space-1); } }
 .extension-steps { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-1); }
 .extension-token { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--accent); border-radius: var(--radius); background: var(--accent-soft); }
 .extension-token code { overflow-wrap: anywhere; font-size: var(--font-small); }
@@ -1415,7 +1405,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 /* Suivi : enseignements et formulaire ORP, une ligne ouverte à la fois */
 
 /* Alléger (docs/32) : boutons et liens sur une ligne, « ? » toujours rond */
-button, .button-link, .link, .apply-bar a, .apply-bar button { white-space: nowrap; }
+button, .button-link, .link { white-space: nowrap; }
 /* Cartes et lignes cliquables : leur texte passe à la ligne normalement (docs/33 §3.1). */
 /* Les liens de recherche LinkedIn sont longs : ils passent à la ligne au lieu de déborder. */
 .contacts-searches .link { white-space: normal; overflow-wrap: anywhere; }
@@ -1499,7 +1489,6 @@ button, .button-link { max-width: 100%; }
 /* Bulle temporaire (docs/32 §4) */
 .toast { display: flex; align-items: center; gap: var(--space-3); }
 .toast-close { flex: none; margin: calc(var(--space-2) * -1) calc(var(--space-1) * -1) calc(var(--space-2) * -1) auto; }
-.side-panel-body .form-sheet { margin: 0; padding: 0; border: 0; }
 
 .news-group { display: grid; gap: var(--space-2); }
 .news-group-title { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
@@ -1763,8 +1752,7 @@ html.side-open { overflow: hidden; }
 .panel-section { display: grid; gap: var(--space-2); padding-top: var(--space-4); margin-top: var(--space-2); border-top: 1px solid var(--border); }
 .panel-section h3 { margin: 0 0 var(--space-2); font-size: var(--font-body); font-weight: var(--weight-semibold); }
 /* De l'air entre un texte et la carte qui suit (retour du 2026-10-15) : 1rem au moins. */
-.panel-section .form-sheet { margin: 0; }
-.panel-section > :is(.notice, .form-sheet, .disclosure, .calm-list) + * { margin-top: var(--space-2); }
+.panel-section > :is(.notice, .disclosure, .calm-list) + * { margin-top: var(--space-2); }
 
 /* Fiche d'une offre en sections (docs/45) : deux boutons, puis Pour toi, À savoir, Entreprise, Annonce. */
 .more-button { display: inline-flex; align-items: center; justify-content: center; min-width: 2.25rem; min-height: 2.25rem; border: none; background: none; padding: 0 var(--space-2); color: var(--muted); }
@@ -1799,13 +1787,6 @@ html.side-open { overflow: hidden; }
 .offer-brief-more { justify-self: start; }
 .download-actions { flex-wrap: nowrap; }
 .download-actions a { white-space: nowrap; }
-.apply-steps { display: grid; gap: var(--space-4); align-content: start; }
-.apply-steps .panel-section { margin-top: 0; }
-.apply-steps .panel-section:first-child { border-top: 0; padding-top: 0; }
-.apply-steps .hint { margin: 0; }
-.apply-steps .button-link, .apply-done { justify-self: start; }
-.prep-side [data-test=apply-contacts] { gap: var(--space-2); }
-.prep-side [data-test=apply-contacts] .link { justify-self: start; justify-content: flex-start; }
 
 /* Réglages (docs/48) : une rubrique à la fois ; sites et sources en lignes calmes. */
 .calm-list { list-style: none; margin: var(--space-2) 0 var(--space-4); padding: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
@@ -1832,18 +1813,11 @@ html.side-open { overflow: hidden; }
 
 /* Téléphone, revue de 0.36 à 0.41 (docs/51), sous 820 px seulement. */
 .subject-phone { display: none; }
-.apply-steps { counter-reset: apply-step; }
-.apply-step { counter-increment: apply-step; }
-.apply-step h3::before { content: counter(apply-step) ". "; }
 @media (max-width: 820px) {
   .letter-subject { flex-wrap: wrap; }
   .letter-subject .subject-wide { display: none; }
   .letter-subject .subject-phone { display: block; flex: 1 1 100%; width: 100%; font: inherit; font-weight: 700; color: inherit; background: transparent; border: 1px dashed transparent; border-radius: 4px; padding: 0.1rem 0.25rem; resize: none; overflow: hidden; }
   .letter-paragraph textarea { text-align: left; }
-  /* « Postuler » quitte la liste des étapes : son bouton reste, fixé en bas (un parent caché le cachait aussi). */
-  .apply-step-post { display: contents; }
-  .apply-step-post > h3 { display: none; }
-  .apply-step-post + .apply-step { border-top: 0; padding-top: 0; }
 }
 
 /* Propositions de l'assistant (docs/52) : une carte, la phrase, puis Confirmer / Non merci. */
@@ -2723,8 +2697,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 :root[data-theme="dark"] .certificate .badge.warn { background: var(--orange-soft); color: var(--orange-text); }
 .certificate-letter textarea { width: 100%; font: inherit; line-height: var(--leading-normal); }
 .certificate-letter p { margin: 0; }
-.prep-certificates { display: grid; gap: var(--space-1); margin: var(--space-2) 0 var(--space-3); }
-.prep-certificates p { margin: 0; }
 
 /* Les rubriques d'un onglet de Progresser (docs/90) : des pastilles, pas un second rang
    d'onglets. Emploi · Économie · Vidéos ; Catalogue · Suivies. */
@@ -3539,16 +3511,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
   .pick-keep-enter-active, .pick-keep-leave-active, .pick-dismiss-enter-active, .pick-dismiss-leave-active { transition: none; }
 }
 /* ④ Suivre (docs/124 §G) : trois lignes séparées par un filet, une action au plus chacune. */
-.follow-step { display: grid; gap: var(--space-4); align-content: start; line-height: var(--leading-normal); }
-.follow-lead { margin: 0; font-size: var(--font-title); font-weight: var(--weight-semibold); }
-.follow-rows { margin: 0; padding: 0; list-style: none; }
-.follow-rows li { display: grid; grid-template-columns: 8rem 1fr auto; align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
-.follow-rows li:last-child { border-bottom: 0; }
-.follow-name { font-weight: var(--weight-semibold); }
-.follow-ok { color: var(--ok-text); }
-.follow-edit { grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
-.follow-edit input { flex: 1; min-width: 10rem; }
-@media (max-width: 820px) { .follow-rows li { grid-template-columns: 1fr auto; } .follow-name { grid-column: 1 / -1; } .follow-edit { grid-column: 1 / -1; } }
 /* La formule (docs/125 §4) : une ligne par usage, le compte et une jauge courte, séparées par un
    filet ; ce que Plus ajoute sur fond gris (ce qu'on consulte, docs/110). */
 .plan-usage { margin: var(--space-3) 0 0; padding: 0; list-style: none; }
@@ -3801,11 +3763,42 @@ main:focus { outline: none; }
 .doc-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .doc-tags li { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .prep-instruction-line { width: 100%; }
+/* Postuler (étape 7c, C7) : où l'annonce se postule et les pièces, les champs à recopier, un contact. */
+.apply-cards { display: grid; gap: var(--space-4); align-content: start; min-width: 0; }
+.apply-cards > :is(.button-link, button, .link) { justify-self: start; }
+.apply-cards h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.apply-where-text, .apply-cards .hint { margin: 0; color: var(--text-secondary); }
+.apply-files { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; }
+.apply-files > a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; padding: 0 var(--space-3); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-semibold); text-decoration: none; }
+.apply-files .icon { color: var(--primary-graphic); }
+.apply-copy { gap: 0; padding: var(--space-4) 0 0; overflow: hidden; }
+.apply-copy h2 { padding: 0 var(--space-4) var(--space-2); font-size: var(--font-small); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.form-sheet dl { margin: 0; }
+.form-sheet-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 var(--space-3); min-height: 3.25rem; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4); border-top: 1px solid var(--line-soft); }
+.form-sheet dt { font-size: var(--font-small); color: var(--text-secondary); }
+.form-sheet dd { grid-row: 2; margin: 0; font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.form-sheet-row > button { grid-row: 1 / 3; grid-column: 2; }
+.form-sheet > .hint { margin: 0; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line-soft); }
+.copy-text { min-width: 4.75rem; min-height: 2.75rem; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-weight: var(--weight-bold); }
+.copy-text.copy-done { background: var(--success-soft); color: var(--success); }
+.apply-contact { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 3.5rem; padding: 0 var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); font-weight: var(--weight-semibold); text-decoration: none; }
+.apply-contact .icon { color: var(--text-secondary); }
+.prep-bar > .apply-reopen { align-self: center; min-height: 2.75rem; display: inline-flex; align-items: center; }
+.prep-sent-notice { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
+/* « Candidature notée » (C9) : le visage, la phrase, l'objectif ORP, puis « Offre suivante » et « Annuler ». */
+.prep-sent { display: grid; justify-items: center; gap: var(--space-4); max-width: 30rem; margin-inline: auto; padding: var(--space-8) var(--space-4); text-align: center; }
+.prep-sent .face-state-title { font-size: var(--font-section); font-weight: var(--weight-bold); }
+.prep-sent-orp { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-align: left; text-decoration: none; }
+.prep-sent-orp > span { display: grid; gap: var(--space-1); }
+.prep-sent-orp > span > span { font-size: var(--font-small); color: var(--text-secondary); }
+.prep-sent-actions { display: grid; gap: var(--space-2); justify-items: center; width: 100%; }
+.prep-sent-actions > .button-link { justify-content: center; width: 100%; min-height: 3.375rem; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.prep-sent-cancel { min-height: 3rem; font-size: var(--font-body); }
 /* Sur téléphone, une sous-page : sa propre tête à la place de l'en-tête de l'app, pas de barre d'onglets, et
    une barre du bas fixe avec un seul bouton plein (C6). Les versions et le téléchargement passent dans le
    « ⋯ » de la tête. */
 @media (max-width: 820px) {
-  :root:has(.prep-head) :is(.topbar, .tab-bar, .assistant-fab) { display: none; }
+  :root:has(:is(.prep-head, .prep-sent)) :is(.topbar, .tab-bar, .assistant-fab) { display: none; }
   .prep-head { grid-template-columns: auto minmax(0, 1fr) auto; padding-top: calc(var(--space-2) + env(safe-area-inset-top)); }
   .prep-head h1 { grid-column: 2; font-size: var(--font-section); }
   .prep-head > .prep-back { grid-column: 1; grid-row: 1; width: 3rem; height: 3rem; justify-content: center; margin: 0 0 0 calc(-1 * var(--space-3)); color: var(--text); }

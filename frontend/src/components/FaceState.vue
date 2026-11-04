@@ -8,7 +8,7 @@ import Illustration, { type IllustrationName } from "./Illustration.vue";
 // `illustration` (1.6.73, règle §4) : une illustration décorative à la place du visage, pour un
 // écran vide, des premiers pas, une réussite ou une erreur ; jamais les deux à la fois.
 withDefaults(
-  defineProps<{ title: string; mood?: Mood; waiting?: boolean; heading?: "h2" | "p"; illustration?: IllustrationName }>(),
+  defineProps<{ title: string; mood?: Mood; waiting?: boolean; heading?: "h1" | "h2" | "p"; illustration?: IllustrationName }>(),
   {
     mood: "content",
     heading: "h2",

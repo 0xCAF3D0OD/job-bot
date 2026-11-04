@@ -2,12 +2,12 @@
 import { computed, onMounted, ref } from "vue";
 
 import { api, type Identity } from "../api/client";
-import AppIcon from "./AppIcon.vue";
 import CopyButton from "./CopyButton.vue";
 
 // Fiche « Pour le formulaire » (docs/25 §5) : chaque valeur à copier dans le formulaire en
-// ligne de l'employeur, dans l'ordre habituel de ces formulaires.
-const props = defineProps<{ letterText?: string | null; letterId?: number | null; cvId?: number | null }>();
+// ligne de l'employeur, dans l'ordre habituel de ces formulaires. Une ligne par champ (maquette
+// Preparer, étape 7c) : le nom en petit, la valeur, et « Copier » qui devient « Copié ».
+const props = defineProps<{ letterText?: string | null }>();
 
 const identity = ref<Identity | null>(null);
 
@@ -57,40 +57,22 @@ const missing = computed(() => {
     class="form-sheet"
     data-test="form-sheet"
   >
-    <p
-      v-if="letterId || cvId"
-      class="form-sheet-files"
-    >
-      <a
-        v-if="cvId"
-        class="link"
-        :href="`/api/cvs/${cvId}/pdf`"
-        download
-        data-test="sheet-cv"
-      ><span class="with-icon"><AppIcon name="download" />CV (PDF)</span></a>
-      <a
-        v-if="letterId"
-        class="link"
-        :href="`/api/letters/${letterId}/pdf`"
-        download
-        data-test="sheet-letter"
-      ><span class="with-icon"><AppIcon name="download" />Lettre (PDF)</span></a>
-    </p>
     <dl>
-      <template
+      <div
         v-for="[label, value] in rows"
         :key="label"
+        class="form-sheet-row"
       >
         <dt>{{ label }}</dt>
-        <dd>
-          <span :class="{ 'form-sheet-long': value.length > 80 }">{{ value }}</span>
-          <CopyButton
-            :value="value"
-            :label="`Copier : ${label}`"
-            test-id="sheet-copy"
-          />
+        <dd :class="{ 'form-sheet-long': value.length > 80 }">
+          {{ value }}
         </dd>
-      </template>
+        <CopyButton
+          :value="value"
+          :text="label"
+          test-id="sheet-copy"
+        />
+      </div>
     </dl>
     <p
       v-if="missing"

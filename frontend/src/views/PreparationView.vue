@@ -3,10 +3,6 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer } from "../api/client";
-import { applicationBody } from "../applicationBody";
-import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
-import FollowStep from "../components/FollowStep.vue";
-import ContactsPanel from "../components/ContactsPanel.vue";
 import CvPanel from "../components/CvPanel.vue";
 import OfferBrief from "../components/OfferBrief.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
@@ -23,8 +19,8 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import FormField from "../components/FormField.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
+import LiquidCircle from "../components/LiquidCircle.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
-import SuccessCard from "../components/SuccessCard.vue";
 import HoverNote from "../components/HoverNote.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
 import CompanyLogo from "../components/CompanyLogo.vue";
@@ -34,7 +30,7 @@ import StepTabs, { type Step } from "../components/StepTabs.vue";
 import { usePhone } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { dateWithTime } from "../dates";
+import { dateInSentence, dateWithTime } from "../dates";
 import { expiredText, ofMonth } from "../format";
 import StatusPill from "../components/StatusPill.vue";
 import InlineConfirm from "../components/InlineConfirm.vue";
@@ -48,26 +44,35 @@ const { aiNote, reached, refresh: refreshPlan } = usePlan();
 const route = useRoute();
 const router = useRouter();
 const offerId = Number(route.params.id);
-// Trois onglets numérotés (docs/47 §2) : ① Lettre, ② CV, ③ Postuler ; ④ Suivre une fois la
-// candidature envoyée (docs/124 §G).
+// Trois étapes (docs/47 §2) : Lettre, CV, Postuler. L'ancienne étape « Suivre » (Q1, étape 7c) mène à
+// Postuler, qui rappelle l'envoi et renvoie au suivi.
 const tab = computed(() =>
-  route.query.doc === "cv" ? "cv" : route.query.doc === "postuler" ? "apply" : route.query.doc === "suivre" ? "follow" : "letter",
+  route.query.doc === "cv" ? "cv" : route.query.doc === "postuler" || route.query.doc === "suivre" ? "apply" : "letter",
 );
 
-// « Postuler sur … » (docs/13 §1), dans l'onglet Postuler.
+// « Postuler sur … » (docs/13 §1), dans l'onglet Postuler : le lien, où il mène (« sur jobup »), et
+// le lien secondaire une fois ouvert (C8, « Rouvrir jobup »).
 const SITE_NAMES: Record<string, string> = { jobup: "jobup", indeed: "Indeed", jobroom: "Job-Room" };
-const applyLink = computed(() => {
+type ApplyLink = { url: string; label: string; where: string; reopen: string };
+const EMPLOYER = { label: "Postuler chez l'employeur", where: "chez l'employeur", reopen: "Rouvrir le site de l'employeur" };
+const applyLink = computed<ApplyLink | null>(() => {
   const o = offer.value;
   if (!o) return null;
   // Annonce trouvée chez l'employeur (docs/20 §2) : c'est là qu'on postule.
-  if (o.employer_url) return { url: o.employer_url, label: "Postuler chez l'employeur" };
+  if (o.employer_url) return { url: o.employer_url, ...EMPLOYER };
   if (o.apply_url) {
-    return { url: o.apply_url, label: o.apply_kind === "external" ? "Postuler chez l'employeur" : "Postuler sur jobup" };
+    return o.apply_kind === "external"
+      ? { url: o.apply_url, ...EMPLOYER }
+      : { url: o.apply_url, label: "Postuler sur jobup", where: "sur jobup", reopen: "Rouvrir jobup" };
   }
   const link = o.links[0];
-  if (link?.source === "manual") return { url: link.url, label: "Ouvrir l'annonce" };
-  return link ? { url: link.url, label: `Postuler sur ${SITE_NAMES[link.source] ?? link.source}` } : null;
+  if (!link) return null;
+  if (link.source === "manual") return { url: link.url, label: "Ouvrir l'annonce", where: "", reopen: "Rouvrir l'annonce" };
+  const site = SITE_NAMES[link.source] ?? link.source;
+  return { url: link.url, label: `Postuler sur ${site}`, where: `sur ${site}`, reopen: `Rouvrir ${site}` };
 });
+// Le formulaire ouvert : « J'ai postulé » devient le bouton plein (maquette, étape 7c).
+const opened = ref(false);
 const currentCvId = ref<number | null>(null);
 const currentLetterId = computed(() => current(letters.value)?.id ?? null);
 // Corps de la lettre, pour les formulaires qui le demandent en texte (docs/25 §5).
@@ -76,58 +81,80 @@ const currentLetterText = computed(() => current(letters.value)?.paragraphs.map(
 const nextStep = computed<"letter" | "cv" | "apply">(() =>
   !currentLetterId.value ? "letter" : !currentCvId.value ? "cv" : "apply",
 );
-const applying = ref<ApplicationFormValue | null>(null);
 const applyError = ref("");
-// Le moment « candidature envoyée », sur la carte qui vient devant (docs/61 §1) : où elle compte
-// pour l'ORP.
-const sent = ref<{ company: string; month: string; count: number | null; target: number | null } | null>(null);
+const applyBusy = ref(false);
+// L'écran « Candidature notée » (C9) : le poste, où, et ce qui reste pour l'objectif ORP du mois.
+type Sent = { id: number; company: string; title: string; where: string; month: string; count: number | null; target: number | null };
+const sent = ref<Sent | null>(null);
+// Une candidature déjà envoyée (Q1) : la date, rappelée en tête avec le lien vers le suivi.
+const sentOn = ref("");
 
-async function openApplication(): Promise<void> {
+// « J'ai postulé » (C8) : enregistré tout de suite, à la date du jour et avec les valeurs de l'annonce ;
+// la date se corrige ensuite dans le suivi.
+async function markApplied(): Promise<void> {
   applyError.value = "";
-  const { data } = await api.GET("/api/offers/{offer_id}/application-prefill", {
-    params: { path: { offer_id: offerId } },
-  });
-  if (data) applying.value = { ...data, status: "en_attente" };
-}
-
-async function saveApplication(value: ApplicationFormValue): Promise<void> {
-  const { data, error: err } = await api.POST("/api/applications", {
-    body: { ...applicationBody(value), offer_id: offerId },
-  });
-  if (!data) {
-    const message = (err as { detail?: unknown } | undefined)?.detail;
-    applyError.value = typeof message === "string" ? message : "Enregistrement impossible pour l'instant : réessaie.";
-    return;
+  applyBusy.value = true;
+  try {
+    const prefill = await api.GET("/api/offers/{offer_id}/application-prefill", { params: { path: { offer_id: offerId } } });
+    const { data, error: err } = prefill.data ? await api.POST("/api/applications", { body: prefill.data }) : { data: null, error: prefill.error };
+    if (!data) {
+      applyError.value = detail(err, "Enregistrement impossible pour l'instant : réessaie.");
+      return;
+    }
+    useJobsMemory().sent(offerId);
+    sent.value = { id: data.id, company: data.company, title: data.job_title, where: applyLink.value?.where ?? "", month: data.orp_month, count: null, target: null };
+    sentOn.value = data.sent_at;
+    if (offer.value) offer.value = { ...offer.value, status: "applied" };
+    window.scrollTo?.({ top: 0 });
+    const orp = await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null);
+    if (orp?.data && sent.value) sent.value = { ...sent.value, count: orp.data.count, target: orp.data.target ?? null };
+  } finally {
+    applyBusy.value = false;
   }
-  applying.value = null;
-  useJobsMemory().sent(offerId);
-  sent.value = { company: data.company, month: data.orp_month, count: null, target: null };
-  const orp = await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null);
-  if (orp?.data && sent.value) sent.value = { ...sent.value, count: orp.data.count, target: orp.data.target ?? null };
-  const refreshed = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: offerId } } });
-  if (refreshed.data) offer.value = refreshed.data;
-  // L'étape ④ Suivre s'ouvre (docs/124 §G).
-  void router.replace({ query: { ...route.query, doc: "suivre" } });
 }
 
-// « Ajouter un contact » de l'étape Suivre : les contacts sont à côté.
-function focusContacts(): void {
-  const side = document.querySelector<HTMLElement>("[data-test=apply-contacts]");
-  side?.scrollIntoView({ behavior: "smooth", block: "center" });
-  side?.querySelector<HTMLElement>("button, input")?.focus({ preventScroll: true });
+// « Annuler, je n'ai pas postulé » (C9) : l'offre revient en préparation tout de suite ; la candidature
+// n'est effacée qu'après 6 s, sauf « Annuler » (comme « Écarter »).
+function cancelApplied(): void {
+  const done = sent.value;
+  const before = offer.value;
+  if (!done || !before) return;
+  sent.value = null;
+  offer.value = { ...before, status: "preparing" };
+  opened.value = false;
+  void offerUndo({
+    message: "Candidature retirée : l'offre revient en préparation.",
+    commit: async (keepalive) => {
+      const { response } = await api.DELETE("/api/applications/{application_id}", {
+        params: { path: { application_id: done.id } },
+        keepalive,
+      });
+      return response.ok;
+    },
+    restore: () => {
+      sent.value = done;
+      offer.value = before;
+    },
+  });
 }
+
+const orpLine = computed(() => {
+  const s = sent.value;
+  if (!s || s.count === null) return "";
+  if (!s.target) return `${s.count} ${s.count === 1 ? "recherche" : "recherches"} ce mois`;
+  const left = s.target - s.count;
+  return left > 0 ? `Encore ${left} ${left === 1 ? "recherche" : "recherches"}` : "Objectif atteint";
+});
 
 const offer = ref<Offer | null>(null);
-// Les étapes (C2) : Lettre, CV, Postuler ; Suivre une fois la candidature envoyée (docs/124 §G).
+// Les étapes (C2) : Lettre, CV, Postuler (Q1 : plus de « Suivre »).
 const steps = computed<Step[]>(() => {
   const o = offer.value;
-  const list: Step[] = [
+  return [
     { key: "letter", label: "Lettre", to: { query: {} }, done: !!current(letters.value)?.read_at, test: "tab-letter" },
     { key: "cv", label: "CV", to: { query: { doc: "cv" } }, done: !!currentCvId.value, test: "tab-cv" },
     { key: "apply", label: "Postuler", to: { query: { doc: "postuler" } }, done: o?.status === "applied", test: "tab-apply" },
   ];
-  if (o?.status === "applied") list.push({ key: "follow", label: "Suivre", to: { query: { doc: "suivre" } }, test: "tab-follow" });
-  return list;
 });
 // Le retour à l'offre (C1) : par l'historique quand on vient de la fiche (même défilement, mêmes
 // filtres, geste de retour d'iOS) ; sinon le lien ouvre la fiche.
@@ -254,6 +281,10 @@ async function load(): Promise<void> {
     return;
   }
   offer.value = o.data;
+  if (o.data.status === "applied") {
+    const apps = await api.GET("/api/applications", { params: { query: { offer: offerId } } });
+    sentOn.value = apps.data?.[0]?.sent_at ?? "";
+  }
   const cvs = await api.GET("/api/offers/{offer_id}/cvs", { params: { path: { offer_id: offerId } } });
   const list = cvs.data ?? [];
   const stamp = (c: (typeof list)[number]) => Date.parse(c.edited_at ?? c.created_at);
@@ -505,9 +536,57 @@ onMounted(() => void load());
 </script>
 
 <template>
+  <!-- « Candidature notée » (C9) : un écran entier à la place de la page, comme dans la maquette. -->
+  <section
+    v-if="sent"
+    class="band prep-sent"
+    data-test="sent-moment"
+  >
+    <FaceState
+      title="Candidature notée"
+      heading="h1"
+      mood="ravi"
+      role="status"
+    >
+      <p>{{ sent.title }} chez {{ sent.company }}{{ sent.where ? `, postulée ${sent.where}` : "" }}.</p>
+    </FaceState>
+    <RouterLink
+      v-if="orpLine"
+      to="/bilan"
+      class="prep-sent-orp"
+      data-test="sent-orp"
+    >
+      <LiquidCircle
+        v-if="sent.target"
+        :count="sent.count ?? 0"
+        :target="sent.target"
+        :size="64"
+      />
+      <span><strong>{{ orpLine }}</strong><span>Objectif ORP {{ ofMonth(sent.month) }}</span></span>
+      <AppIcon name="chevron" />
+    </RouterLink>
+    <div class="prep-sent-actions">
+      <RouterLink
+        to="/candidatures/offres"
+        class="button-link primary-link"
+        data-test="next-offer"
+      >
+        Offre suivante
+      </RouterLink>
+      <button
+        type="button"
+        class="link prep-sent-cancel"
+        data-test="cancel-applied"
+        @click="cancelApplied"
+      >
+        Annuler, je n'ai pas postulé
+      </button>
+    </div>
+  </section>
   <!-- La tête (maquette Preparer, étape 7a) : le retour à l'offre, « Ma candidature », puis l'offre en une
        ligne (logo, poste, « Entreprise · Lieu », l'anneau sans chiffre, D3) et les étapes. -->
   <PageHero
+    v-else
     class="prep-head"
     :title="notFound ? 'Offre introuvable' : 'Ma candidature'"
   >
@@ -559,7 +638,10 @@ onMounted(() => void load());
     />
   </PageHero>
 
-  <section class="band">
+  <section
+    v-if="!sent"
+    class="band"
+  >
     <div class="container">
       <!-- Offre introuvable (planche « Illustrations ») : retirée par l'employeur, peut-être. -->
       <FaceState
@@ -588,116 +670,119 @@ onMounted(() => void load());
       >
         {{ expiredText(offer) }} Vérifie avant d'envoyer ta candidature.
       </p>
-      <div
+      <!-- Une candidature déjà envoyée (Q1) : le rappel de l'envoi et le lien vers le suivi. -->
+      <p
         v-if="offer?.status === 'applied'"
-        class="apply-bar"
-        data-test="apply-bar"
+        class="notice prep-sent-notice"
+        data-test="applied-notice"
       >
-        <StatusPill
-          tone="ok"
-          data-test="applied-pill"
-        >
-          Candidature envoyée
-        </StatusPill>
-        <RouterLink
-          to="/candidatures/offres"
-          class="button-link primary-link"
-          data-test="next-offers"
-        >
-          <span class="with-icon"><AppIcon name="arrow-left" />Revenir aux offres</span>
-        </RouterLink>
-        <RouterLink
-          to="/candidatures/suivi"
-          class="link"
-        >
+        <span>Envoyée{{ sentOn ? ` ${dateInSentence(`${sentOn}T12:00:00`)}` : "" }}.</span>
+        <RouterLink to="/candidatures/suivi">
           Voir le suivi
         </RouterLink>
-      </div>
+      </p>
 
-
-      <!-- ③ Postuler (docs/47 §2) : dans l'ordre où on le fait ; les contacts à côté. -->
+      <!-- Postuler (C7) : où l'annonce se postule et les pièces, ce qu'on recopie, puis un contact. -->
       <div
-        v-if="offer && (tab === 'apply' || tab === 'follow')"
+        v-if="offer && tab === 'apply'"
         class="prep-layout"
         data-test="apply-steps"
       >
-        <FollowStep
-          v-if="tab === 'follow' && offer.status === 'applied'"
-          class="prep-main"
-          :offer-id="offer.id"
-          @add-contact="focusContacts"
-        />
         <div
-          v-else
-          class="apply-steps"
+          v-if="offer.status !== 'applied'"
+          class="prep-main apply-cards"
         >
-          <template v-if="offer.status !== 'applied'">
-            <!-- Numéros par compteur CSS : sur téléphone, « Postuler » est fixé en bas et sa
-                 section disparaît, les étapes se renumérotent (docs/51 n° 4). -->
-            <section class="panel-section apply-step apply-step-post">
-              <h3>Postuler</h3>
-              <div class="mobile-dock">
-                <a
-                  v-if="applyLink"
-                  :href="applyLink.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="button-link primary-link"
-                  data-test="apply"
-                ><span class="with-icon">{{ applyLink.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
-              </div>
-            </section>
-            <section
-              class="panel-section apply-step"
-              data-test="apply-sheet"
-            >
-              <h3>À recopier sur le site de l'employeur</h3>
-              <!-- Visible aussi sur téléphone, où la section « Postuler » laisse place au bouton fixé. -->
-              <PrepCertificates />
-              <FormSheet
-                class="reading-width"
-                :letter-text="currentLetterText"
-                :letter-id="currentLetterId"
-                :cv-id="currentCvId"
-              />
-            </section>
-            <section class="panel-section apply-step">
-              <h3>
-                <HoverNote text="Elle passe dans ton suivi et compte pour tes preuves ORP du mois.">
-                  J'ai postulé
-                </HoverNote>
-              </h3>
-              <button
-                type="button"
-                class="secondary small apply-done"
-                data-test="mark-applied"
-                @click="openApplication"
-              >
-                Marquer comme envoyée
-              </button>
-            </section>
-          </template>
-
-          <p
-            v-else
-            class="hint"
+          <section
+            class="doc-card"
+            aria-labelledby="apply-where-title"
+            data-test="apply-where"
           >
-            Candidature envoyée. <RouterLink :to="{ query: { doc: 'suivre' } }">
-              Suivre
-            </RouterLink>
-          </p>
+            <h2 id="apply-where-title">
+              {{ applyLink?.where ? `L'annonce se postule ${applyLink.where}` : "L'annonce" }}
+            </h2>
+            <p
+              v-if="applyLink"
+              class="apply-where-text"
+            >
+              Le formulaire s'ouvre dans un nouvel onglet. Reviens ici ensuite pour marquer l'envoi.
+            </p>
+            <PrepCertificates>
+              <a
+                v-if="currentLetterId"
+                :href="`/api/letters/${currentLetterId}/pdf`"
+                download
+                data-test="sheet-letter"
+              ><AppIcon name="file" />Lettre.pdf</a>
+              <a
+                v-if="currentCvId"
+                :href="`/api/cvs/${currentCvId}/pdf`"
+                download
+                data-test="sheet-cv"
+              ><AppIcon name="file" />CV.pdf</a>
+            </PrepCertificates>
+          </section>
+          <section
+            class="doc-card apply-copy"
+            aria-labelledby="apply-copy-title"
+            data-test="apply-sheet"
+          >
+            <h2 id="apply-copy-title">
+              À recopier sur le formulaire
+            </h2>
+            <FormSheet :letter-text="currentLetterText" />
+          </section>
+          <RouterLink
+            v-if="offer.company"
+            :to="`/candidatures/offres/${offer.id}#contacts`"
+            class="apply-contact"
+            data-test="find-contact"
+          >
+            <span>Trouver un contact chez {{ offer.company }}</span><AppIcon name="chevron" />
+          </RouterLink>
+          <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». -->
+          <ActionBar class="prep-bar apply-actions">
+            <p
+              v-if="applyError"
+              class="notice error"
+              role="alert"
+            >
+              {{ applyError }}
+            </p>
+            <a
+              v-if="applyLink && !opened"
+              :href="applyLink.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="button-link primary-link prep-bar-main"
+              data-test="apply"
+              @click="opened = true"
+            ><span class="with-icon">{{ applyLink.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
+            <template v-else>
+              <BusyButton
+                class="primary prep-bar-main"
+                :busy="applyBusy"
+                busy-label="Enregistrement…"
+                data-test="mark-applied"
+                @click="markApplied"
+              >
+                J'ai postulé
+              </BusyButton>
+              <a
+                v-if="applyLink"
+                :href="applyLink.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link apply-reopen"
+                data-test="apply"
+              >{{ applyLink.reopen }}<span class="visually-hidden"> (nouvel onglet)</span></a>
+            </template>
+          </ActionBar>
         </div>
         <section
-          v-if="offer.company"
+          v-if="!phone"
           class="prep-side"
         >
-          <div
-            class="side-card"
-            data-test="apply-contacts"
-          >
-            <h2>Contacts chez {{ offer.company }}</h2>
-            <ContactsPanel :offer-id="offer.id" />
-          </div>
+          <OfferBrief :offer="offer" />
         </section>
       </div>
 
@@ -1227,26 +1312,5 @@ onMounted(() => void load());
     :only-sentence="onlySentence"
     @close="claimOpen = false; claimError = ''"
     @confirm="confirmClaim"
-  />
-  <SuccessCard
-    v-if="sent"
-    name="suivi-envoi"
-    :title="`Candidature envoyée chez ${sent.company}`"
-    test-id="sent-moment"
-    @close="sent = null"
-  >
-    <p v-if="sent.count !== null">
-      Comptée pour l'ORP {{ ofMonth(sent.month) }} :
-      <strong>{{ sent.count }}{{ sent.target ? ` sur ${sent.target}` : "" }}</strong>
-    </p>
-  </SuccessCard>
-  <ApplicationForm
-    v-if="applying"
-    title="Candidature envoyée"
-    :initial="applying"
-    :with-status="false"
-    :error="applyError"
-    @submit="saveApplication"
-    @close="applying = null"
   />
 </template>

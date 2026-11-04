@@ -6,7 +6,8 @@ import type { components } from "../api/schema";
 import AppIcon from "./AppIcon.vue";
 
 // Les certificats à joindre (docs/87 §4, 0.69.1), dans « Postuler » : ceux marqués « à joindre »,
-// les plus récents d'abord ; ceux à faire corriger, rappelés à part.
+// les plus récents d'abord, à côté de Lettre.pdf et CV.pdf (le slot, C7) ; ceux à faire corriger,
+// rappelés à part.
 type Page = components["schemas"]["CertificatesPage"];
 const page = ref<Page | null>(null);
 
@@ -21,31 +22,28 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    v-if="attach.length || toCorrect.length"
-    class="prep-certificates"
+  <p
+    v-if="$slots.default || attach.length"
+    class="apply-files"
     data-test="prep-certificates"
   >
-    <p v-if="attach.length">
-      Certificats à joindre :
-      <template
-        v-for="(item, index) in attach"
-        :key="item.document_id"
-      >
-        <a
-          :href="`/api/documents/${item.document_id}/file`"
-          target="_blank"
-          rel="noopener noreferrer"
-          :data-test="`prep-certificate-${item.document_id}`"
-        ><span class="with-icon"><AppIcon name="download" />{{ label(item.filename) }}</span><span class="visually-hidden"> (nouvel onglet)</span></a>{{ index < attach.length - 1 ? ", " : "." }}
-      </template>
-    </p>
-    <p
-      v-if="toCorrect.length"
-      class="hint"
-    >
-      Pas encore {{ toCorrect.map((c) => `« ${label(c.filename)} »`).join(", ") }} : à faire corriger d'abord, dans
-      <RouterLink to="/profil?onglet=parcours">Profil › Parcours</RouterLink>.
-    </p>
-  </div>
+    <slot />
+    <a
+      v-for="item in attach"
+      :key="item.document_id"
+      :href="`/api/documents/${item.document_id}/file`"
+      target="_blank"
+      rel="noopener noreferrer"
+      :data-test="`prep-certificate-${item.document_id}`"
+    ><AppIcon name="file" />{{ label(item.filename) }}<span class="visually-hidden"> (certificat, nouvel onglet)</span></a>
+  </p>
+  <p
+    v-if="toCorrect.length"
+    class="hint"
+  >
+    Pas encore {{ toCorrect.map((c) => `« ${label(c.filename)} »`).join(", ") }} : à faire corriger d'abord, dans
+    <RouterLink to="/profil?onglet=parcours">
+      Profil › Parcours
+    </RouterLink>.
+  </p>
 </template>
