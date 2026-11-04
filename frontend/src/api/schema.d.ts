@@ -1838,6 +1838,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/letters/{draft_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Letter Read
+         * @description « J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre appareil).
+         */
+        put: operations["markLetterRead"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/letters/{draft_id}/docx": {
         parameters: {
             query?: never;
@@ -5502,6 +5522,8 @@ export interface components {
             edited_at: string | null;
             document: components["schemas"]["LetterDocumentOut"];
             review?: components["schemas"]["ReviewOut"] | null;
+            /** Read At */
+            read_at?: string | null;
         };
         /** LetterParagraph */
         LetterParagraph: {
@@ -5509,6 +5531,11 @@ export interface components {
             text: string;
             /** Chunk Ids */
             chunk_ids?: number[];
+        };
+        /** LetterRead */
+        LetterRead: {
+            /** Read */
+            read: boolean;
         };
         /** LetterRequest */
         LetterRequest: {
@@ -11856,6 +11883,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LetterEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LetterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    markLetterRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LetterRead"];
             };
         };
         responses: {

@@ -3786,7 +3786,20 @@ main:focus { outline: none; }
   border-color: var(--line); background: var(--surface); color: var(--text); font-weight: var(--weight-bold);
   box-shadow: 0 1px 2px rgb(27 31 42 / 12%);
 }
-.prep-letter-tools { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
+/* Les cartes Lettre et CV (étape 7b, C4, C5) : le titre et la langue en tête, le document entier dessous sur un
+   fond --surface-muted (la feuille), puis « Modifier le texte » et « J'ai relu la lettre ». */
+.doc-card { display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.doc-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); }
+.doc-card-head h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
+.doc-language > button { min-inline-size: 2.75rem; padding-inline: var(--space-3); }
+.doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: none; }
+.doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
+.doc-card-edit { justify-content: center; min-height: 3.25rem; border: 1px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-weight: var(--weight-bold); }
+.doc-card-instruction { display: grid; gap: var(--space-2); }
+.doc-card-read { display: flex; align-items: center; gap: var(--space-3); min-height: 3rem; padding-top: var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-semibold); cursor: pointer; }
+.doc-card-read input { flex: none; width: 1.5rem; height: 1.5rem; margin: 0; accent-color: var(--primary); }
+.doc-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.doc-tags li { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .prep-instruction-line { width: 100%; }
 /* Sur téléphone, une sous-page : sa propre tête à la place de l'en-tête de l'app, pas de barre d'onglets, et
    une barre du bas fixe avec un seul bouton plein (C6). Les versions et le téléchargement passent dans le
@@ -3807,6 +3820,10 @@ main:focus { outline: none; }
     padding: var(--space-3) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom));
     background: var(--surface); border-top: 1px solid var(--line); border-radius: 0; box-shadow: none;
   }
+  .prep-bar > .prep-bar-waiting { border: 0; background: var(--surface-muted); color: var(--text-tertiary); cursor: default; box-shadow: none; }
+  .prep-bar > .prep-bar-hint { text-align: center; color: var(--text-secondary); }
+  .doc-card { padding: var(--space-3); }
+  .doc-card > :is(.letter-sheet, .cv-sheet) { padding: var(--space-5) var(--space-4); }
   .prep-bar > .prep-bar-main { width: 100%; min-height: 3.375rem; justify-content: center; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); white-space: normal; text-align: center; line-height: var(--leading-tight); }
   /* La barre d'onglets est cachée : la place qu'elle réservait aussi. Le bouton fixé des autres étapes (le CV à
      rédiger, Postuler) prend l'aspect de la barre ; avec la barre, il reste dans la page. */

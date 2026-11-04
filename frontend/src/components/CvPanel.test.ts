@@ -93,6 +93,10 @@ describe("CvPanel", () => {
     const item = wrapper.find("[data-test=cv-item]");
     expect(item.find("p").text()).toBe("Infrastructure Terraform sur AWS.");
     expect(item.find(".kw").text()).toBe("Terraform");
+    // La carte « CV adapté », avec ce que l'adaptation met en avant (étape 7b, C5).
+    const card = wrapper.find("[data-test=cv-card]");
+    expect(card.find("h2").text()).toBe("CV adapté");
+    expect(card.findAll("[data-test=cv-highlights] li").map((li) => li.text())).toEqual(["Terraform"]);
     expect(wrapper.find("[data-test=cv-docx]").attributes("href")).toBe("/api/cvs/21/docx");
   });
 

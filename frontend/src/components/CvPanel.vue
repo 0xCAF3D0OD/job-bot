@@ -45,6 +45,8 @@ const loaded = ref(false);
 
 const selected = computed(() => cvs.value.find((c) => c.id === selectedId.value) ?? null);
 const doc = computed(() => selected.value?.document ?? null);
+// Les mots-clés de l'offre que l'adaptation a mis en avant (en gras dans le CV), cinq au plus.
+const highlights = computed(() => [...new Set((selected.value?.keywords ?? []).map((word) => word.trim()).filter(Boolean))].slice(0, 5));
 const blocksBySection = computed(() => {
   const groups: Record<string, Cv["blocks"]> = {};
   for (const block of selected.value?.blocks ?? []) (groups[block.section] ??= []).push(block);
@@ -216,79 +218,105 @@ onMounted(() => void load());
         En-tête incomplet ({{ doc.missing_identity.join(", ") }}) :
         <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
       </p>
-      <div
-        v-if="loaded && !selected && !writing"
-        class="empty-detail prep-empty"
-        data-test="no-cv"
+      <!-- La carte du CV (maquette Preparer, étape 7b, C5) : le CV entier et modifiable, et dessus ce que
+           l'adaptation a mis en avant (ses mots-clés). -->
+      <section
+        class="doc-card"
+        aria-labelledby="cv-card-title"
+        data-test="cv-card"
       >
-        <p>Aucun CV adapté pour cette offre.</p>
-      </div>
-      <AiWriting
-        v-else-if="writing && !selected"
-        kind="cv"
-      />
-
-      <article
-        v-if="doc && selected"
-        class="cv-sheet print-sheet"
-        :class="{ 'fresh-lines': fresh, busy: writing || saving }"
-        :lang="doc.language"
-        data-test="cv"
-      >
-        <p class="cv-name">
-          {{ doc.name || "Ton nom" }}
-        </p>
-        <input
-          v-model="edit.headline"
-          class="cv-headline screen-only"
-          aria-label="Titre du profil"
-          data-test="headline"
-          @input="dirty = true"
+        <div class="doc-card-head">
+          <h2 id="cv-card-title">
+            CV adapté
+          </h2>
+        </div>
+        <ul
+          v-if="highlights.length"
+          class="doc-tags"
+          aria-label="Mis en avant pour cette offre"
+          data-test="cv-highlights"
         >
-        <p class="cv-headline print-only">
-          {{ edit.headline }}
-        </p>
-        <p class="cv-contacts">
-          {{ doc.contacts.join(" · ") }}
-        </p>
-        <h3>{{ doc.summary_heading }}</h3>
-        <textarea
-          v-model="edit.summary"
-          class="screen-only"
-          rows="2"
-          aria-label="Résumé du profil"
-          data-test="summary"
-          @input="onInput"
-        />
-        <p class="print-only">
-          {{ edit.summary }}
-        </p>
-        <template
-          v-for="section in doc.sections"
-          :key="section.key"
-        >
-          <h3>{{ section.heading }}</h3>
-          <div
-            v-for="item in section.items"
-            :key="item.chunk_id"
-            class="cv-item"
-            data-test="cv-item"
+          <li
+            v-for="word in highlights"
+            :key="word"
           >
-            <strong
-              v-if="item.title"
-              class="cv-item-title"
-            >{{ item.title }}</strong>
-            <p>
-              <span
-                v-for="(segment, index) in item.content"
-                :key="index"
-                :class="{ kw: segment.strong }"
-                v-text="segment.text"
-              />
-            </p>
-          </div>
-        </template>
-      </article>
+            {{ word }}
+          </li>
+        </ul>
+        <div
+          v-if="loaded && !selected && !writing"
+          class="empty-detail prep-empty"
+          data-test="no-cv"
+        >
+          <p>Aucun CV adapté pour cette offre.</p>
+        </div>
+        <AiWriting
+          v-else-if="writing && !selected"
+          kind="cv"
+        />
+
+        <article
+          v-if="doc && selected"
+          class="cv-sheet print-sheet"
+          :class="{ 'fresh-lines': fresh, busy: writing || saving }"
+          :lang="doc.language"
+          data-test="cv"
+        >
+          <p class="cv-name">
+            {{ doc.name || "Ton nom" }}
+          </p>
+          <input
+            v-model="edit.headline"
+            class="cv-headline screen-only"
+            aria-label="Titre du profil"
+            data-test="headline"
+            @input="dirty = true"
+          >
+          <p class="cv-headline print-only">
+            {{ edit.headline }}
+          </p>
+          <p class="cv-contacts">
+            {{ doc.contacts.join(" · ") }}
+          </p>
+          <h3>{{ doc.summary_heading }}</h3>
+          <textarea
+            v-model="edit.summary"
+            class="screen-only"
+            rows="2"
+            aria-label="Résumé du profil"
+            data-test="summary"
+            @input="onInput"
+          />
+          <p class="print-only">
+            {{ edit.summary }}
+          </p>
+          <template
+            v-for="section in doc.sections"
+            :key="section.key"
+          >
+            <h3>{{ section.heading }}</h3>
+            <div
+              v-for="item in section.items"
+              :key="item.chunk_id"
+              class="cv-item"
+              data-test="cv-item"
+            >
+              <strong
+                v-if="item.title"
+                class="cv-item-title"
+              >{{ item.title }}</strong>
+              <p>
+                <span
+                  v-for="(segment, index) in item.content"
+                  :key="index"
+                  :class="{ kw: segment.strong }"
+                  v-text="segment.text"
+                />
+              </p>
+            </div>
+          </template>
+        </article>
+      </section>
     </div>
 
     <section class="prep-side">
