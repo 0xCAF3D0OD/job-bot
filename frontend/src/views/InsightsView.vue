@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api, type Today } from "../api/client";
+import { api } from "../api/client";
 import type { components } from "../api/schema";
 import ActionBand from "../components/ActionBand.vue";
 import AppIcon from "../components/AppIcon.vue";
@@ -10,16 +10,13 @@ import SegmentedControl, { type SegmentOption } from "../components/SegmentedCon
 import BilanCompare from "../components/bilan/BilanCompare.vue";
 import BilanFunnel from "../components/bilan/BilanFunnel.vue";
 import BilanInterviews from "../components/bilan/BilanInterviews.vue";
-import BilanMonths from "../components/bilan/BilanMonths.vue";
-import DashTile from "../components/dash/DashTile.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import { isNetworkError } from "../network";
-import { formatMonth, plural, shiftMonth } from "../format";
+import { formatMonth, shiftMonth } from "../format";
 import CopyButton from "../components/CopyButton.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import FaceState from "../components/FaceState.vue";
-import OrpGauge from "../components/dash/OrpGauge.vue";
 import IconButton from "../components/IconButton.vue";
 import { usePageReady } from "../composables/usePageTransition";
 import {
@@ -27,13 +24,13 @@ import {
   bestSite,
   conclusion,
   interviewsLine,
-  monthLine,
   monthName,
-  weakStep,
 } from "../bilanText";
 
-// Ce qui marche dans ta recherche (docs/42) : parcours, comparaisons, résumé pour l'ORP ;
-// présenté comme le tableau d'Aujourd'hui (docs/55) : tuiles, barres, cartes à bulles.
+// Bilan › Résultats (docs/42 ; maquette Explorer, onglet Bilan, B13 et B14, Kevin, 2026-11-04). De haut en bas :
+// la phrase, la carte du site qui répond le plus (sans la bande bleue), la période, trois chiffres, la carte
+// Parcours, puis les lignes « Mois par mois » (vers le Suivi ORP), « Ce qui marche » et « Entretiens ».
+// Sur ordinateur, les mêmes blocs en deux colonnes.
 type Insights = components["schemas"]["SearchReportOut"];
 type Period = "recent" | "month" | "all";
 
@@ -67,25 +64,9 @@ function go(delta: number): void {
   void router.push({ query: { mois: shiftMonth(month.value, delta) } });
 }
 
-// L'objectif ORP du mois en cours et les trois mois précédents (docs/95) : la jauge quittée
-// d'Aujourd'hui, montrée quand on regarde le mois en cours ou les dernières semaines.
-const orp = ref<{ count: number; target: number | null; month: string; history: Today["orp_history"] } | null>(null);
-// Un compte sans aucune candidature (docs/128 §3) : la jauge à zéro n'apprend rien.
-const gaugeUseful = computed(
-  () => !!orp.value && ((insights.value?.funnel.applications ?? 0) > 0 || orp.value.count > 0 || orp.value.history.some((m) => m.count > 0)),
-);
-const showGauge = computed(() => period.value === "recent" || (period.value === "month" && month.value === currentMonth()));
-
-
-async function loadOrp(): Promise<void> {
-  const { data } = await api.GET("/api/today");
-  if (data?.month) orp.value = { count: data.month_count, target: data.month_target ?? null, month: data.month, history: data.orp_history ?? [] };
-}
-
 async function load(): Promise<void> {
   error.value = "";
   offline.value = false;
-  if (!orp.value) void loadOrp().catch(() => undefined);
   try {
     const { data } = await api.GET("/api/insights", {
       params: { query: period.value === "month" ? { period: "month", month: month.value } : { period: period.value } },
@@ -98,26 +79,20 @@ async function load(): Promise<void> {
   }
 }
 
-const SUIVI = "/candidatures/suivi";
-
-const tiles = computed(() => {
-  const r = insights.value;
-  if (!r) return null;
-  const f = r.funnel;
-  const share = f.applications ? `${Math.round((f.responses / f.applications) * 100)} % des envois` : "aucun envoi";
-  return {
-    applications: `sur ${plural(f.retained, "offre gardée", "offres gardées")}`,
-    responses: share,
-    interviews: r.interviews_upcoming
-      ? `dont ${r.interviews_upcoming} à venir`
-      : `sur ${plural(f.responses, "réponse", "réponses")}`,
-    delay: r.delay ? `${r.delay.typical} j` : "—",
-    delayRange: !r.delay
-      ? "pas encore de réponse"
-      : r.delay.shortest === r.delay.longest
-        ? "d'habitude"
-        : `de ${r.delay.shortest} à ${r.delay.longest} j`,
-  };
+// Les trois chiffres de la maquette.
+const figures = computed(() => {
+  const f = insights.value?.funnel;
+  if (!f) return [];
+  return [
+    { key: "applications", value: f.applications, label: f.applications === 1 ? "candidature" : "candidatures" },
+    { key: "responses", value: f.responses, label: f.responses === 1 ? "réponse" : "réponses" },
+    { key: "interviews", value: f.interviews, label: f.interviews === 1 ? "entretien" : "entretiens" },
+  ];
+});
+// « Mois par mois » : l'objectif ORP mensuel, s'il est indiqué.
+const goalLine = computed(() => {
+  const target = insights.value?.month_target;
+  return target ? `Objectif ORP : ${target} par mois` : "Objectif ORP à indiquer";
 });
 
 watch(() => route.query, () => void load());
@@ -126,7 +101,6 @@ onMounted(() => void load());
 // La conclusion, la bande et la phrase de chaque repliable (1.6.62, planche « 3 et 4. Bilan »).
 const summary = computed(() => (insights.value ? conclusion(insights.value, period.value) : null));
 const site = computed(() => (insights.value ? bestSite(insights.value.comparisons) : null));
-const weak = computed(() => (insights.value ? weakStep(insights.value.funnel) : null));
 // « Le résumé d'octobre à copier », « Le résumé de mai à copier ».
 const orpDescription = computed(() => {
   const name = monthName(month.value);
@@ -142,52 +116,14 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
 
 <template>
   <section class="jobs-body insights">
-    <!-- La conclusion (règles §3.2) : l'état général, comparé à la période d'avant ; elle ne redit pas
-         la bande (1.6.62). -->
+    <!-- La phrase (règles §3.2) : l'état général, comparé à la période d'avant. -->
     <p
       v-if="insights && summary && insights.funnel.applications > 0"
-      class="today-sentence bilan-sentence"
+      class="bilan-sentence"
       data-test="headline"
     >
       {{ summary.before }}<strong>{{ summary.accent }}</strong>{{ summary.after }}
     </p>
-    <!-- La bande d'action (§3) : le site qui répond le plus, et le cibler dans les alertes. Sans site
-         qui se détache, pas de bande. -->
-    <ActionBand
-      v-if="insights && site && insights.funnel.applications > 0"
-      :title="site.title"
-      :summary="site.summary"
-      :action="`Cibler ${site.label} dans mes alertes`"
-      to="/candidatures/alertes"
-    />
-    <div class="insights-head">
-      <!-- La période en contrôle segmenté (D4, 2026-11-03) : le segment choisi en carte sur le rail. -->
-      <SegmentedControl
-        :model-value="period"
-        :options="periodSegments"
-        label="Période"
-        class="bilan-period"
-        @update:model-value="choose($event as Period)"
-      />
-      <div
-        v-if="period === 'month'"
-        class="month-nav"
-      >
-        <IconButton
-          icon="arrow-left"
-          label="Mois précédent"
-          data-test="prev-month"
-          @click="go(-1)"
-        />
-        <strong data-test="month">{{ formatMonth(month) }}</strong>
-        <IconButton
-          icon="arrow-right"
-          label="Mois suivant"
-          data-test="next-month"
-          @click="go(1)"
-        />
-      </div>
-    </div>
 
     <NetworkError
       v-if="error && offline"
@@ -203,121 +139,107 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
 
     <LoadingBlocks
       v-if="!insights && !error"
-      :heights="['11rem', '16rem', '12rem']"
+      :heights="['8rem', '6rem', '14rem']"
     />
     <div
-      v-if="insights && tiles"
+      v-if="insights"
       class="bilan"
     >
-      <!-- La conclusion d'abord, puis les trois chiffres et l'objectif ORP ; le détail sur
-           demande (docs/126 §2 : « une page, une question »). -->
-      <FaceState
-        v-if="insights.funnel.applications === 0"
-        title="Trop tôt pour conclure"
-        illustration="trop-tot"
-        data-test="insights-empty"
-      >
-        <p>Le Bilan se remplit avec tes premières candidatures et réponses.</p>
-        <div class="face-state-actions">
-          <RouterLink
-            to="/candidatures/offres"
-            class="button-link primary-link"
-          >
-            <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
-          </RouterLink>
-        </div>
-      </FaceState>
-      <!-- Les quatre tuiles en carrés, les mois précédents à côté (docs/133 §3) : le mois en
-           cours est sur Aujourd'hui. -->
-      <div
-        v-if="insights.funnel.applications > 0"
-        :class="['bilan-top', { single: !(showGauge && orp && gaugeUseful) }]"
-      >
-        <div
-          v-if="insights.funnel.applications > 0"
-          class="bilan-tiles"
-          data-test="bilan-tiles"
-        >
-          <DashTile
-            :to="SUIVI"
-            icon="send"
-            :label="insights.funnel.applications === 1 ? 'candidature' : 'candidatures'"
-            :value="String(insights.funnel.applications)"
-            :trend="tiles.applications"
-            tone="accent"
-            data-test="tile-applications"
-          />
-          <DashTile
-            :to="SUIVI"
-            icon="reply"
-            :label="insights.funnel.responses === 1 ? 'réponse' : 'réponses'"
-            :value="String(insights.funnel.responses)"
-            :trend="tiles.responses"
-            data-test="tile-responses"
-          />
-          <DashTile
-            :to="SUIVI"
-            icon="calendar"
-            :label="insights.funnel.interviews === 1 ? 'entretien' : 'entretiens'"
-            :value="String(insights.funnel.interviews)"
-            :trend="tiles.interviews"
-            data-test="tile-interviews"
-          />
-          <DashTile
-            icon="clock"
-            label="délai de réponse"
-            :value="tiles.delay"
-            :trend="tiles.delayRange"
-            data-test="delay"
-          />
-        </div>
-        <OrpGauge
-          v-if="showGauge && orp && gaugeUseful"
-          :count="orp.count"
-          :target="orp.target"
-          :month="orp.month"
-          :history="orp.history"
-          past
+      <div class="bilan-main">
+        <!-- Le site qui répond le plus, et le cibler dans les alertes ; sans site qui se détache, rien. -->
+        <ActionBand
+          v-if="site && insights.funnel.applications > 0"
+          class="bilan-site"
+          :title="site.title"
+          :summary="site.summary"
+          :action="`Cibler ${site.label} dans mes alertes`"
+          to="/candidatures/alertes"
         />
+        <div class="insights-head">
+          <!-- La période en contrôle segmenté (D4, 2026-11-03), au-dessus des chiffres. -->
+          <SegmentedControl
+            :model-value="period"
+            :options="periodSegments"
+            label="Période"
+            class="bilan-period"
+            @update:model-value="choose($event as Period)"
+          />
+          <div
+            v-if="period === 'month'"
+            class="month-nav"
+          >
+            <IconButton
+              icon="arrow-left"
+              label="Mois précédent"
+              data-test="prev-month"
+              @click="go(-1)"
+            />
+            <strong data-test="month">{{ formatMonth(month) }}</strong>
+            <IconButton
+              icon="arrow-right"
+              label="Mois suivant"
+              data-test="next-month"
+              @click="go(1)"
+            />
+          </div>
+        </div>
+        <FaceState
+          v-if="insights.funnel.applications === 0"
+          title="Trop tôt pour conclure"
+          illustration="trop-tot"
+          data-test="insights-empty"
+        >
+          <p>Le Bilan se remplit avec tes premières candidatures et réponses.</p>
+          <div class="face-state-actions">
+            <RouterLink
+              to="/candidatures/offres"
+              class="button-link primary-link"
+            >
+              <span class="with-icon"><AppIcon name="briefcase" />Voir les offres</span>
+            </RouterLink>
+          </div>
+        </FaceState>
+        <template v-else>
+          <ul
+            class="bilan-figures"
+            data-test="bilan-figures"
+          >
+            <li
+              v-for="figure in figures"
+              :key="figure.key"
+              :data-test="`figure-${figure.key}`"
+            >
+              <strong>{{ figure.value }}</strong>
+              <span>{{ figure.label }}</span>
+            </li>
+          </ul>
+          <BilanFunnel :funnel="insights.funnel" />
+        </template>
       </div>
-      <!-- Le détail replié (règles §3.4, 1.6.62) : chaque ligne dit déjà l'essentiel ; on déplie pour
-           le graphique (NN/g, divulgation progressive). -->
+      <!-- Le détail en lignes (B13) : « Mois par mois » mène au Suivi ORP ; les autres se déplient. -->
       <section
         v-if="insights.funnel.applications > 0"
         class="bilan-detail"
+        aria-label="Le détail"
         data-test="bilan-detail"
       >
-        <DisclosureRow
-          title="Parcours"
-          icon="trend"
-          :description="weak ? `Le plus de pertes : ${weak.between}` : 'Les six étapes de ta recherche'"
-          data-test="detail-funnel"
+        <RouterLink
+          to="/bilan/orp"
+          class="bilan-link"
+          data-test="detail-months"
         >
-          <BilanFunnel :funnel="insights.funnel" />
-        </DisclosureRow>
+          <span><strong>Mois par mois</strong><span>{{ goalLine }}</span></span>
+          <AppIcon name="chevron" />
+        </RouterLink>
         <DisclosureRow
           title="Ce qui marche"
-          icon="star"
           :description="bestComparison(insights.comparisons, !!site)"
           data-test="detail-compare"
         >
           <BilanCompare :comparisons="insights.comparisons" />
         </DisclosureRow>
         <DisclosureRow
-          v-if="insights.months.length"
-          title="Par mois"
-          icon="calendar"
-          :description="monthLine(insights.months, insights.month_target, new Date())"
-          data-test="detail-months"
-        >
-          <BilanMonths
-            :months="insights.months"
-            :target="insights.month_target"
-          />
-        </DisclosureRow>
-        <DisclosureRow
           title="Entretiens"
-          icon="user"
           :description="interviewsLine(insights.interviews)"
           data-test="detail-interviews"
         >
@@ -327,7 +249,6 @@ const periodSegments: SegmentOption[] = PERIODS.map((p) => ({ value: p.key, labe
         <DisclosureRow
           v-if="period === 'month' && insights.orp_summary"
           title="Pour l'ORP"
-          icon="file"
           :description="orpDescription"
           data-test="detail-orp"
         >

@@ -7,7 +7,6 @@ type Report = components["schemas"]["SearchReportOut"];
 type Comparison = components["schemas"]["ComparisonOut"];
 type Group = components["schemas"]["GroupOut"];
 type Funnel = components["schemas"]["FunnelOut"];
-type MonthCount = components["schemas"]["MonthCountOut"];
 type InterviewLine = components["schemas"]["InterviewLineOut"];
 export type Period = "recent" | "month" | "all";
 
@@ -138,36 +137,8 @@ export function bestComparison(comparisons: Comparison[], skipSites = false): st
 }
 
 const MONTH_NAMES = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
-const MONTH_SHORT = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 export function monthName(key: string): string {
   return MONTH_NAMES[Number(key.slice(5, 7)) - 1] ?? key;
-}
-export function monthShort(key: string): string {
-  return MONTH_SHORT[Number(key.slice(5, 7)) - 1] ?? key;
-}
-
-/** La phrase repliée de « Par mois » : le mois en cours, l'objectif et les jours qui restent. */
-export function monthLine(months: MonthCount[], target: number | null | undefined, today: Date): string {
-  const current = months.at(-1);
-  if (!current) return "Rien encore";
-  const count = `${current.count} ${word(current.count, "candidature", "candidatures")}`;
-  if (!target) return `${capital(monthName(current.month))} : ${count}`;
-  const last = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const left = last - today.getDate();
-  const rest = left === 0 ? "dernier jour" : `il reste ${left} ${word(left, "jour", "jours")}`;
-  return `${capital(monthName(current.month))} : ${count} sur ${target}, ${rest}`;
-}
-
-/** Le texte de « Par mois » pour les lecteurs d'écran (WCAG 1.1.1). */
-export function monthsText(months: MonthCount[], target: number | null | undefined): string {
-  const parts = months.map((m, i) => {
-    const current = i === months.length - 1;
-    const name = capital(monthName(m.month));
-    if (current) return `${name}, en cours : ${m.count}${target ? ` sur ${target}` : ""}.`;
-    return i === 0 ? `${name} : ${m.count} ${word(m.count, "candidature", "candidatures")}.` : `${name} : ${m.count}.`;
-  });
-  if (target) parts.push(`Objectif : ${target} par mois.`);
-  return parts.join(" ");
 }
 
 // Le jour d'un entretien dans la liste (dates.ts, §5) : « aujourd'hui », « hier », « 12 oct. ».
