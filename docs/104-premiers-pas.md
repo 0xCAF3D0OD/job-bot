@@ -57,7 +57,7 @@ Ton retour du 2026-10-20 : « l'utilisateur eliot reçoit toujours cette informa
 
 - **Le domaine** (`JOBBOT_ALERT_DOMAIN=alertes.joba1.ch`) : un invité reçoit à `nom-code@alertes.joba1.ch` (le nom du compte en minuscules, sans accents ; le code de 8 caractères après le dernier tiret). Le domaine redirige tout vers ta boîte Gmail ; la collecte reconnaît le code dans l'adresse de destination et range l'e-mail dans le bon compte. Les adresses `+code` déjà données aux sites continuent de marcher.
 - **Ce qu'il te reste à faire** (une fois) : sur le domaine `joba1.ch`, une redirection « catch-all » de `*@alertes.joba1.ch` vers ta boîte (Cloudflare Email Routing, par exemple), puis `JOBBOT_ALERT_DOMAIN=alertes.joba1.ch` dans le `.env`. Tant que ce n'est pas fait, rien ne change.
-- **En attendant** : l'adresse d'un invité qui passe par ta boîte s'affiche abrégée (`k…+k9dyqou7@gmail.com`), avec **« Copier l'adresse »**, qui copie l'adresse entière à donner aux sites. Pour toi (l'exploitant), ton adresse reste entière.
+- **En attendant** : l'adresse d'un invité qui passe par ta boîte s'affiche abrégée (`k…+fictif01@gmail.com`), avec **« Copier l'adresse »**, qui copie l'adresse entière à donner aux sites. Pour toi (l'exploitant), ton adresse reste entière.
 - **Vérifié** : tests du routage (`nom-code@domaine`, majuscules, code inconnu, `+code` toujours valable), de la page Alertes d'un invité avec le domaine, du composant d'adresse (abrégée, entière, copie) ; pytest, ruff, mypy, vitest, eslint, vue-tsc.
 
 
@@ -108,13 +108,13 @@ Ton retour du 2026-10-21 : « je ne vois pas d'offre de pâtissier chez eliot »
 
 ## 0.82.3 — L'adresse d'alerte sans « catch-all »
 
-Ton essai du 2026-10-21 avec le compte « amy » : le code de jobup, envoyé à `amy-32e6krri@joba1.ch`, n'est jamais arrivé. Chez Infomaniak, `joba1.ch` n'a qu'**une** redirection, `alertes@joba1.ch` → ta boîte Gmail ; une adresse qui n'existe pas (`amy-…@joba1.ch`) n'est pas reçue, et l'écran de la redirection ne permet pas d'en faire une « catch-all » (le nom n'est pas modifiable).
+Ton essai du 2026-10-21 avec le compte « amy » : le code de jobup, envoyé à `amy-fictif02@joba1.ch`, n'est jamais arrivé. Chez Infomaniak, `joba1.ch` n'a qu'**une** redirection, `alertes@joba1.ch` → ta boîte Gmail ; une adresse qui n'existe pas (`amy-…@joba1.ch`) n'est pas reçue, et l'écran de la redirection ne permet pas d'en faire une « catch-all » (le nom n'est pas modifiable).
 
-- **Le réglage accepte une adresse entière** : `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch`. L'invité reçoit alors à **`alertes+amy-32e6krri@joba1.ch`** : la partie après le « + » est ignorée par la plupart des hébergeurs, et la redirection de `alertes@` la fait suivre ; la collecte lit le code après le dernier tiret, comme avant.
-- `JOBBOT_ALERT_DOMAIN=joba1.ch` (le domaine seul) garde le format `amy-32e6krri@joba1.ch`, pour un domaine avec « catch-all ».
+- **Le réglage accepte une adresse entière** : `JOBBOT_ALERT_DOMAIN=alertes@joba1.ch`. L'invité reçoit alors à **`alertes+amy-fictif02@joba1.ch`** : la partie après le « + » est ignorée par la plupart des hébergeurs, et la redirection de `alertes@` la fait suivre ; la collecte lit le code après le dernier tiret, comme avant.
+- `JOBBOT_ALERT_DOMAIN=joba1.ch` (le domaine seul) garde le format `amy-fictif02@joba1.ch`, pour un domaine avec « catch-all ».
 - **L'adresse affichée** à l'invité est entière (ce n'est pas la boîte de l'exploitant), avec « Copier l'adresse ».
 - **Avant de changer le `.env`** : envoyer un e-mail à `alertes+test@joba1.ch` et vérifier qu'il arrive dans Gmail (Infomaniak accepte-t-il le « + » sur une redirection ?).
-- **Une adresse déjà donnée à un site** (`amy-32e6krri@joba1.ch`) ne reçoit rien tant qu'il n'y a pas de « catch-all » : la changer sur le site (l'adresse affichée dans jobA1 suit le réglage).
+- **Une adresse déjà donnée à un site** (`amy-fictif02@joba1.ch`) ne reçoit rien tant qu'il n'y a pas de « catch-all » : la changer sur le site (l'adresse affichée dans jobA1 suit le réglage).
 - **Vérifié** : tests du réglage (adresse entière ou domaine), de l'adresse fabriquée, du routage de `alertes+nom-code@`, de l'affichage entier.
 
 ## 0.82.4 — La recherche publique de jobup coupée

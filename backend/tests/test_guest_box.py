@@ -69,7 +69,7 @@ async def _amy(rt: Runtime) -> int:
         user = User(
             username="amy-boite",
             password_hash=passwords.hash_password("un-mot-de-passe-solide"),
-            mail_code="32e6krri",
+            mail_code="fictif02",
         )
         session.add(user)
         await session.flush()
@@ -98,7 +98,7 @@ async def test_guest_box_is_separate_and_emptied(
     owner_box, guest_box = boxes
     amy = await _amy(rt)
     owner_box.add(_mail("<kevin@x>", "kevin@example.com"), "<kevin@x>")
-    guest_box.add(_mail("<amy@x>", "alertes+amy-32e6krri@example.ch"), "<amy@x>")
+    guest_box.add(_mail("<amy@x>", "alertes+amy-fictif02@example.ch"), "<amy@x>")
     # Dans la boîte des invités, un e-mail sans code d'invité n'est à personne, pas à
     # l'exploitant.
     guest_box.add(_mail("<perdu@x>", "alertes@example.ch"), "<perdu@x>")
@@ -129,7 +129,7 @@ async def test_guest_address_without_owner_box(tmp_path: Path) -> None:
         with accounts.use(amy):
             async with rt.sessionmaker.begin() as session:
                 address = await addresses.account_address(session, settings)
-        assert address == "alertes+amy-boite-32e6krri@example.ch"
+        assert address == "alertes+amy-boite-fictif02@example.ch"
         app = create_app(settings, rt)
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
             assert (await api.get("/api/privacy")).json()["guest_mailbox"] is True
