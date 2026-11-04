@@ -62,8 +62,7 @@ def test_passwords() -> None:
 
 
 def test_rules() -> None:
-    # Les Actualités ne sont plus publiques (docs/69 §1) ; « Tes données » et la connexion, si.
-    assert not is_public("GET", "/api/news") and not is_public("GET", "/api/news/items/3/image")
+    # « Mon domaine » n'est pas public ; « Tes données » et la connexion, si.
     assert not is_public("GET", "/api/news/preferences") and not is_public("GET", "/api/offers")
     assert is_public("GET", "/api/privacy") and not is_public("PUT", "/api/privacy")
     assert is_public("POST", "/api/auth/login")
@@ -106,12 +105,8 @@ async def test_pages_reserved_until_login(rt: Runtime) -> None:
             "/api/inbox",
         ):
             assert (await api.get(path)).status_code == 401, path
-        assert (await api.post("/api/news/seen")).status_code == 401
-        # Les Actualités demandent la connexion depuis 0.56.1 (docs/69 §1) : elles répondaient
-        # au nom de l'exploitant et laissaient deviner sa recherche d'emploi.
-        assert (await api.get("/api/news")).status_code == 401
+        assert (await api.post("/api/inbox/read-all")).status_code == 401
         assert (await api.get("/api/news/preferences")).status_code == 401
-        assert (await api.get("/api/news/items/1/image")).status_code == 401
         # Ouvert : les mentions de « Tes données ».
         assert (await api.get("/api/privacy")).status_code == 200
 
@@ -175,11 +170,11 @@ async def test_cross_site_changes_refused(rt: Runtime) -> None:
     await add_user(rt)
     async with client(rt) as api:
         await api.post("/api/auth/login", json={"username": "camille", "password": PASSWORD})
-        refused = await api.post("/api/news/seen", headers={"Sec-Fetch-Site": "cross-site"})
+        refused = await api.post("/api/inbox/read-all", headers={"Sec-Fetch-Site": "cross-site"})
         assert refused.status_code == 403
         assert (
-            await api.post("/api/news/seen", headers={"Sec-Fetch-Site": "same-origin"})
-        ).status_code == 204
+            await api.post("/api/inbox/read-all", headers={"Sec-Fetch-Site": "same-origin"})
+        ).status_code == 200
 
 
 async def test_auth_disabled_opens_everything(runtime: Runtime) -> None:

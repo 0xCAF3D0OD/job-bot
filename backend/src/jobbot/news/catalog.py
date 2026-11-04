@@ -1,12 +1,13 @@
-"""Sources suggérées (docs/16 §4.1) et veilles par recherche (docs/16 §4.2)."""
+"""Le catalogue des sources des Actualités (docs/16 §4.1).
+
+Les Actualités ont quitté la plateforme (docs/135) : le catalogue ne sert plus qu'à la migration
+0064, qui en crée les sources sur une base neuve.
+"""
 
 import json
 from dataclasses import dataclass
 from functools import cache
 from importlib.resources import files
-from urllib.parse import urlencode
-
-GOOGLE_NEWS = "https://news.google.com/rss/search?"
 
 
 @dataclass(frozen=True)
@@ -37,11 +38,3 @@ class Catalog:
 def load() -> Catalog:
     data = json.loads(files("jobbot.news").joinpath("catalog.json").read_text("utf-8"))
     return Catalog(domains=data["domains"], sources=[CatalogSource(**s) for s in data["sources"]])
-
-
-def search_feed(query: str, country: str, language: str) -> str:
-    """Flux public de Google Actualités pour une recherche ; seuls ces trois champs partent."""
-    region = "US" if country == "INT" else country
-    return GOOGLE_NEWS + urlencode(
-        {"q": query, "hl": language, "gl": region, "ceid": f"{region}:{language}"}
-    )

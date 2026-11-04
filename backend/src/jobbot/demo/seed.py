@@ -7,7 +7,7 @@ a toujours l'air d'être « cette semaine ». Refuse une base qui contient un vr
 """
 
 import hashlib
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Any
 
 from sqlalchemy import delete, select, update
@@ -37,7 +37,6 @@ from jobbot.db.models import (
     OrpMonth,
     Profile,
     ProfileChunk,
-    ProfileSource,
     Search,
     Setting,
     Training,
@@ -631,32 +630,6 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
                 progress="Module 3 sur 6" if status == "in_progress" else None,
                 funding_status="requested" if status == "in_progress" else None,
                 funding_requested_at=today - timedelta(days=9) if status == "in_progress" else None,
-            )
-        )
-
-    # Actualités : une source fictive, quelques articles d'exemple.
-    source = NewsSource(
-        kind="articles",
-        name="Actualités d'exemple",
-        url="https://github.com/0xCAF3D0OD/job-bot",
-        feed_url="https://github.com/0xCAF3D0OD/job-bot#demo-feed",
-        country="CH",
-        language="fr",
-        labour_market=True,
-        fetched_at=datetime.now(UTC),
-    )
-    session.add(source)
-    await session.flush()
-    session.add(ProfileSource(profile_id=profile.id, source_id=source.id, active=True))
-    for number, (title, summary) in enumerate(data.NEWS, start=1):
-        session.add(
-            NewsItem(
-                source_id=source.id,
-                title=title,
-                url=f"https://github.com/0xCAF3D0OD/job-bot#demo-{number}",
-                summary=summary,
-                language="fr",
-                published_at=_at(today - timedelta(days=number - 1), 6),
             )
         )
 

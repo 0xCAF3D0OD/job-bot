@@ -22,12 +22,9 @@ from jobbot.db.models import (
     ApplicationStatus,
     Evaluation,
     Interview,
-    NewsItem,
-    NewsSource,
     Offer,
     OfferStatus,
     OrpMonth,
-    ProfileSource,
     Site,
     Training,
     TrainingMark,
@@ -136,16 +133,6 @@ TOOLS: list[dict[str, Any]] = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
-        "name": "actualites",
-        "description": "Les dernières actualités des sources suivies par le profil affiché.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "limite": {"type": "integer", "minimum": 1, "maximum": 20, "default": 10}
-            },
-        },
-    },
-    {
         "name": "formations",
         "description": "Les formations suivies par le profil affiché (intéressé, en cours, "
         "terminée), avec la progression.",
@@ -164,7 +151,6 @@ LABELS = {
     "retours_entretien": "tes retours d'entretien",
     "profil": "tes blocs de profil",
     "criteres": "tes critères",
-    "actualites": "les actualités",
     "formations": "tes formations",
 }
 
@@ -522,29 +508,6 @@ async def _criteria(session: AsyncSession, _profile_id: int, _params: dict[str, 
     }
 
 
-async def _news(session: AsyncSession, profile_id: int, params: dict[str, Any]) -> Any:
-    rows = (
-        await session.execute(
-            select(NewsItem, NewsSource.name)
-            .join(NewsSource, NewsSource.id == NewsItem.source_id)
-            .join(ProfileSource, ProfileSource.source_id == NewsSource.id)
-            .where(ProfileSource.profile_id == profile_id, ProfileSource.active.is_(True))
-            .order_by(NewsItem.published_at.desc())
-            .limit(_limit(params))
-        )
-    ).all()
-    return [
-        {
-            "titre": item.title,
-            "source": source,
-            "date": _day(item.published_at),
-            "resume": _cut(item.summary, 400),
-            "lien": item.url,
-        }
-        for item, source in rows
-    ]
-
-
 async def _trainings(session: AsyncSession, profile_id: int, _params: dict[str, Any]) -> Any:
     rows = (
         await session.execute(
@@ -579,7 +542,6 @@ _TOOLS: dict[str, Tool] = {
     "retours_entretien": _interviews,
     "profil": _profile,
     "criteres": _criteria,
-    "actualites": _news,
     "formations": _trainings,
 }
 

@@ -60,7 +60,6 @@ def test_scheduler_can_be_disabled(settings: Settings) -> None:
         "collect",
         "employer",
         "heartbeat",
-        "news",
         "reminders",
         "rhythm",
         "score",

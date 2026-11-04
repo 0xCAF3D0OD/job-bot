@@ -85,7 +85,7 @@ describe("maintenance en lecture seule (docs/80)", () => {
     const listener = (event: Event) => read.push((event as CustomEvent<string | null>).detail);
     window.addEventListener(MAINTENANCE_EVENT, waiting);
     window.addEventListener(MAINTENANCE_READ_EVENT, listener);
-    await api.POST("/api/news/seen", respond(503, { detail: "…", maintenance: true, mode: "lecture", message: "Sauvegarde" }));
+    await api.POST("/api/inbox/read-all", respond(503, { detail: "…", maintenance: true, mode: "lecture", message: "Sauvegarde" }));
     window.removeEventListener(MAINTENANCE_EVENT, waiting);
     window.removeEventListener(MAINTENANCE_READ_EVENT, listener);
     expect(read).toEqual(["Sauvegarde"]);
@@ -98,9 +98,9 @@ describe("écriture de la page elle-même (docs/81)", () => {
     const read = vi.fn();
     window.addEventListener(MAINTENANCE_READ_EVENT, read);
     const refusal = { detail: "…", maintenance: true, mode: "lecture", message: null };
-    await api.POST("/api/news/seen", { ...BACKGROUND, ...respond(503, refusal) });
+    await api.POST("/api/inbox/read-all", { ...BACKGROUND, ...respond(503, refusal) });
     expect(read).not.toHaveBeenCalled();
-    await api.POST("/api/news/seen", respond(503, refusal));
+    await api.POST("/api/inbox/read-all", respond(503, refusal));
     expect(read).toHaveBeenCalledTimes(1);
     window.removeEventListener(MAINTENANCE_READ_EVENT, read);
   });

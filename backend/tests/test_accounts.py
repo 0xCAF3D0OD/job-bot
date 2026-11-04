@@ -376,7 +376,7 @@ async def test_account_b_sees_and_changes_nothing_of_a(
     async def no_queue(*_args: object) -> bool:
         return True
 
-    for module in ("collect", "scoring", "preferences", "news"):
+    for module in ("collect", "scoring", "preferences"):
         monkeypatch.setattr(f"jobbot.api.routes.{module}.enqueue", no_queue)
 
     # Connexion activée : B est reconnu par son cookie.
@@ -462,7 +462,7 @@ async def test_without_login_nothing_answers(
     async def no_queue(*_args: object) -> bool:
         return True
 
-    for module in ("collect", "scoring", "preferences", "news"):
+    for module in ("collect", "scoring", "preferences"):
         monkeypatch.setattr(f"jobbot.api.routes.{module}.enqueue", no_queue)
     secured = Runtime.create(make_settings(auth_enabled=True))
     app = create_app(secured.settings, secured)
