@@ -26,6 +26,13 @@ const app = (id: number, company: string, sent_at: string, status = "en_attente"
   contacts: [],
 });
 
+// Une candidature récente, envoyée il y a deux jours : pas encore à relancer, quelle que soit la date du test.
+function daysAgo(days: number): string {
+  const day = new Date();
+  day.setDate(day.getDate() - days);
+  return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+}
+
 async function mountView(list: unknown[]) {
   GET.mockResolvedValue({ data: list });
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
@@ -38,7 +45,7 @@ async function mountView(list: unknown[]) {
 describe("Les relances une à une", () => {
   it("une candidature à la fois, les plus anciennes d'abord ; « Passer » n'enregistre rien", async () => {
     const wrapper = await mountView([
-      app(1, "Récente SA", "2026-10-25"),
+      app(1, "Récente SA", daysAgo(2)),
       app(2, "Maquette Médias Sàrl", "2026-09-08"),
       app(3, "Beta SA", "2026-09-20"),
     ]);
@@ -85,7 +92,7 @@ describe("Les relances une à une", () => {
   });
 
   it("rien à relancer : un écran vide", async () => {
-    const wrapper = await mountView([app(1, "Récente SA", "2026-10-25")]);
+    const wrapper = await mountView([app(1, "Récente SA", daysAgo(2))]);
     expect(wrapper.find("[data-test=follow-ups-empty]").text()).toContain("Rien à relancer");
   });
 });

@@ -102,6 +102,9 @@ class LetterOut(BaseModel):
     document: LetterDocumentOut
     # Absente tant que la lettre n'est pas relue (ou pour une lettre d'avant la relecture).
     review: ReviewOut | None = None
+    # « J'ai relu la lettre » (docs/139 étape 7b, C11) : coché par la personne, sur cette version
+    # seulement ; une nouvelle rédaction part décochée.
+    read_at: datetime | None = None
 
 
 class LetterRequest(BaseModel):
@@ -131,6 +134,10 @@ class ForbiddenClaimOut(BaseModel):
     id: int
     text: str
     created_at: datetime
+
+
+class LetterRead(BaseModel):
+    read: bool
 
 
 class LetterEdit(BaseModel):
@@ -182,6 +189,7 @@ def _out(draft: Draft, document: LetterDocument) -> LetterOut:
         edited_at=draft.edited_at,
         document=LetterDocumentOut(**asdict(document)),
         review=_review_out(draft.content.get("review")),
+        read_at=draft.content.get("read_at"),
     )
 
 
@@ -598,6 +606,20 @@ async def edit_letter(request: Request, draft_id: int, body: LetterEdit) -> Lett
         if body.language:
             draft.language = body.language
         draft.edited_at = datetime.now(UTC)
+        await session.flush()
+        await session.refresh(draft)
+        return await _render(session, draft)
+
+
+@router.put("/letters/{draft_id}/read", operation_id="markLetterRead")
+async def mark_letter_read(request: Request, draft_id: int, body: LetterRead) -> LetterOut:
+    """« J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre appareil)."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        draft = await _get_draft(session, draft_id)
+        content = {k: v for k, v in draft.content.items() if k != "read_at"}
+        if body.read:
+            content["read_at"] = datetime.now(UTC).isoformat()
+        draft.content = content
         await session.flush()
         await session.refresh(draft)
         return await _render(session, draft)

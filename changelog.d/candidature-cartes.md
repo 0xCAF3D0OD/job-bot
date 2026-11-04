@@ -1,0 +1,1 @@
+Interface : sur « Ma candidature », la lettre et le CV sont dans des cartes ; la langue FR, DE, EN se choisit dans la carte de la lettre, « Modifier le texte » ouvre la consigne, et « J'ai relu la lettre » débloque « Continuer vers le CV ».

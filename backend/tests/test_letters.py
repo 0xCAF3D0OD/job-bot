@@ -639,3 +639,21 @@ async def test_false_claim_rewritten_in_a_new_version(
     assert new["instruction"].startswith("Pas vrai : « alloremplacant.ch")
     sent = fake.params[-1]["messages"][0]["content"]
     assert "Cette phrase est fausse" in sent and "<interdits>" in sent
+
+
+async def test_mark_letter_read(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:
+    """« J'ai relu la lettre » (docs/139 étape 7b) : sur la version, et une nouvelle part décochée."""
+    offer_id, chunk_id = await setup_offer(rt)
+    fake.response = answer(chunk_id)
+    first = (await api.post(f"/api/offers/{offer_id}/letters", json={})).json()
+    assert first["read_at"] is None
+    read = (await api.put(f"/api/letters/{first['id']}/read", json={"read": True})).json()
+    assert read["read_at"] and read["id"] == first["id"]
+    listed = (await api.get(f"/api/offers/{offer_id}/letters")).json()
+    assert listed[0]["read_at"] == read["read_at"]
+    fake.response = answer(chunk_id, language="en")
+    second = (await api.post(f"/api/offers/{offer_id}/letters", json={"language": "en"})).json()
+    assert second["read_at"] is None
+    unread = (await api.put(f"/api/letters/{first['id']}/read", json={"read": False})).json()
+    assert unread["read_at"] is None
+    assert (await api.put("/api/letters/999999/read", json={"read": True})).status_code == 404

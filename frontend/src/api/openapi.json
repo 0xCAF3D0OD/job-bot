@@ -4913,6 +4913,59 @@
         }
       }
     },
+    "/api/letters/{draft_id}/read": {
+      "put": {
+        "tags": [
+          "letters"
+        ],
+        "summary": "Mark Letter Read",
+        "description": "« J'ai relu la lettre » : coché ou décoché, gardé avec la version (pour un autre appareil).",
+        "operationId": "markLetterRead",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LetterRead"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LetterOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/letters/{draft_id}/docx": {
       "get": {
         "tags": [
@@ -15650,6 +15703,18 @@
                 "type": "null"
               }
             ]
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
           }
         },
         "type": "object",
@@ -15690,6 +15755,19 @@
           "text"
         ],
         "title": "LetterParagraph"
+      },
+      "LetterRead": {
+        "properties": {
+          "read": {
+            "type": "boolean",
+            "title": "Read"
+          }
+        },
+        "type": "object",
+        "required": [
+          "read"
+        ],
+        "title": "LetterRead"
       },
       "LetterRequest": {
         "properties": {

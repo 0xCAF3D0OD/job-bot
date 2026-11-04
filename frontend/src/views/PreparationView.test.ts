@@ -98,7 +98,7 @@ describe("PreparationView", () => {
     expect(wrapper.find("[data-test=no-letter]").exists()).toBe(true);
     expect(wrapper.find("[data-test=instruction]").exists()).toBe(false);
 
-    await wrapper.find("[data-test=language]").setValue("fr");
+    await wrapper.find("[data-test=letter-card] [data-test=language-fr]").trigger("click");
     await wrapper.find("[data-test=write]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/offers/{offer_id}/letters", {
@@ -245,7 +245,7 @@ describe("barre de candidature", () => {
           path === "/api/offers/{offer_id}"
             ? offer
             : path === "/api/offers/{offer_id}/letters"
-              ? [letter(11, 1)]
+              ? [letter(11, 1, { read_at: "2026-10-05T09:00:00Z" })]
               : path === "/api/offers/{offer_id}/cvs"
                 ? [{ id: 31, version: 1, created_at: "2026-10-05T08:00:00Z", edited_at: null }]
                 : path === "/api/offers/{offer_id}/application-prefill"
@@ -313,27 +313,30 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
 
   it("un seul bouton plein en bas ; la langue choisie le change en « Rédiger à nouveau en allemand » (C3, C6)", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
-    mockGet([letter(11, 1), letter(12, 2, { instruction: "plus court" })]);
+    mockGet([letter(11, 1), letter(12, 2, { instruction: "plus court", read_at: "2026-10-05T09:00:00Z" })]);
     POST.mockResolvedValue({ data: letter(13, 3, { language: "de" }) });
     const wrapper = await mountView();
     const bar = wrapper.find("[data-test=action-bar]");
-    // Rien à rédiger : la prochaine étape.
+    // Rien à rédiger et la lettre relue : la prochaine étape.
     expect(bar.find("[data-test=next-step]").text()).toBe("Continuer vers le CV");
     expect(bar.find("[data-test=write]").exists()).toBe(false);
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
-    // La langue et la consigne au-dessus de la lettre ; la langue de la lettre est cochée.
-    const tools = wrapper.find(".prep-letter-tools");
-    expect(tools.find("[data-test=language-fr]").attributes("aria-checked")).toBe("true");
-    expect(tools.find("[data-test=instruction]").exists()).toBe(true);
+    // La carte de la lettre : son titre, la langue de la lettre cochée en tête (C3).
+    const card = wrapper.find("[data-test=letter-card]");
+    expect(card.find("h2").text()).toBe("Lettre de motivation");
+    expect(card.find("[data-test=language-fr]").attributes("aria-checked")).toBe("true");
+    // « Modifier le texte » ouvre la consigne dans la carte (C4).
+    expect(card.find("[data-test=instruction]").exists()).toBe(false);
+    await card.find("[data-test=edit-text]").trigger("click");
+    expect(wrapper.find("[data-test=letter-card] [data-test=instruction]").exists()).toBe(true);
     // Les cartes de côté laissent place au « ⋯ » de la tête (versions et téléchargement).
     expect(wrapper.find("[data-test=download-card]").exists()).toBe(false);
     await wrapper.find("[data-test=versions-open]").trigger("click");
     const sheet = wrapper.find("[data-test=versions-sheet]");
     expect(sheet.findAll("[data-test=sheet-version]")).toHaveLength(2);
     expect(sheet.find("[data-test=pdf]").text()).toContain("Lettre (PDF)");
-    expect(sheet.find("[data-test=docx]").text()).toContain("Lettre (Word)");
     // Choisir une langue ne rédige rien ; le bouton plein le propose, et part dans cette langue.
-    await tools.find("[data-test=language-de]").trigger("click");
+    await card.find("[data-test=language-de]").trigger("click");
     expect(POST).not.toHaveBeenCalled();
     expect(bar.find("[data-test=write]").text()).toContain("Rédiger à nouveau en allemand");
     await bar.find("[data-test=write]").trigger("click");
@@ -342,12 +345,43 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(opts.body).toMatchObject({ language: "de" });
   });
 
+  it("« J'ai relu la lettre » : sans elle, « Continuer » est inactif et dit pourquoi ; cochée, l'étape est faite (C11)", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1)]);
+    PUT.mockResolvedValue({ data: letter(11, 1, { read_at: "2026-10-05T09:00:00Z" }) });
+    const wrapper = await mountView();
+    const next = () => wrapper.find("[data-test=action-bar] [data-test=next-step]");
+    expect(next().attributes("aria-disabled")).toBe("true");
+    expect(wrapper.find("[data-test=next-step-hint]").text()).toBe("Relis la lettre pour continuer.");
+    expect(wrapper.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(false);
+    // L'étape CV reste ouverte : seul le bouton attend.
+    expect(wrapper.find("[data-test=tab-cv]").attributes("href")).toContain("doc=cv");
+    await wrapper.find("[data-test=letter-read]").setValue(true);
+    await flushPromises();
+    expect(PUT).toHaveBeenCalledWith("/api/letters/{draft_id}/read", { params: { path: { draft_id: 11 } }, body: { read: true } });
+    expect(next().attributes("href")).toContain("doc=cv");
+    expect(wrapper.find("[data-test=next-step-hint]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(true);
+  });
+
+  it("« J'ai relu la lettre » refusé (démo) : la case se décoche", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1)]);
+    PUT.mockResolvedValue({ error: { detail: "Dans la démo, rien n'est enregistré." } });
+    const wrapper = await mountView();
+    const box = wrapper.find("[data-test=letter-read]");
+    await box.setValue(true);
+    await flushPromises();
+    expect((box.element as HTMLInputElement).checked).toBe(false);
+    expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").attributes("aria-disabled")).toBe("true");
+  });
+
   it("sans lettre : « Rédiger la lettre », ou « Rédiger en anglais » une fois la langue choisie", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([]);
     const wrapper = await mountView();
     expect(wrapper.find("[data-test=action-bar] [data-test=write]").text()).toContain("Rédiger la lettre");
-    await wrapper.find(".prep-letter-tools [data-test=language-en]").trigger("click");
+    await wrapper.find("[data-test=letter-card] [data-test=language-en]").trigger("click");
     expect(wrapper.find("[data-test=action-bar] [data-test=write]").text()).toContain("Rédiger en anglais");
   });
 });
@@ -449,8 +483,9 @@ describe("« Pas vrai » (30.10.2026)", () => {
     expect(bar.find("[data-test=false-claim-chosen]").text()).toBe("« J'administre un cluster K3s. »");
     expect(bar.find("[data-test=next-step]").exists()).toBe(false);
     // Une tâche à la fois : ni la langue ni la consigne pendant le choix.
-    expect(wrapper.find(".prep-letter-tools").exists()).toBe(false);
+    expect(wrapper.find("[data-test=letter-card] .doc-language").exists()).toBe(false);
     await bar.find("[data-test=false-claim-cancel]").trigger("click");
     expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=letter-card] .doc-language").exists()).toBe(true);
   });
 });

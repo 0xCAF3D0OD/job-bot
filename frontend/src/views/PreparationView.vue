@@ -122,7 +122,7 @@ const offer = ref<Offer | null>(null);
 const steps = computed<Step[]>(() => {
   const o = offer.value;
   const list: Step[] = [
-    { key: "letter", label: "Lettre", to: { query: {} }, done: !!currentLetterId.value, test: "tab-letter" },
+    { key: "letter", label: "Lettre", to: { query: {} }, done: !!current(letters.value)?.read_at, test: "tab-letter" },
     { key: "cv", label: "CV", to: { query: { doc: "cv" } }, done: !!currentCvId.value, test: "tab-cv" },
     { key: "apply", label: "Postuler", to: { query: { doc: "postuler" } }, done: o?.status === "applied", test: "tab-apply" },
   ];
@@ -162,12 +162,12 @@ const selected = computed(() => letters.value.find((l) => l.id === selectedId.va
 // Sous 820 px (le seuil unique), la mise en page du téléphone (étape 7a) : la langue et la consigne
 // au-dessus de la lettre, les versions et le téléchargement dans le « ⋯ » de la tête (une feuille du
 // bas), un seul bouton plein dans la barre du bas. Sans choix, la langue affichée est celle de la
-// lettre (celle de l'annonce).
+// lettre ; sans lettre, aucune : elle sera celle de l'annonce.
 const { phone } = usePhone();
 const versionsOpen = ref(false);
-const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: LANGUAGES[code], test: `language-${code}` }));
+const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), test: `language-${code}` }));
 const shownLanguage = computed<string>({
-  get: () => language.value || selected.value?.document?.language || "fr",
+  get: () => language.value || selected.value?.document?.language || "",
   set: (value) => {
     language.value = value as LetterLanguage;
   },
@@ -182,6 +182,32 @@ const writeLabel = computed(() => {
   if (instruction.value.trim()) return "Rédiger la nouvelle version";
   return "";
 });
+// « Modifier le texte » (C4) : la consigne s'ouvre dans la carte (téléphone) ou prend le focus à côté.
+const instructionOpen = ref(false);
+const instructionEl = ref<HTMLInputElement | null>(null);
+function openInstruction(): void {
+  if (!phone.value) {
+    document.querySelector<HTMLTextAreaElement>(".side-instruction")?.focus();
+    return;
+  }
+  instructionOpen.value = true;
+  void nextTick(() => instructionEl.value?.focus());
+}
+// « J'ai relu la lettre » (C11) : gardé avec la version, pour un autre appareil.
+const readBusy = ref(false);
+// En cas d'échec (démo, réseau), la case reprend l'état enregistré.
+async function markRead(box: HTMLInputElement): Promise<void> {
+  const letter = selected.value;
+  if (!letter) return;
+  readBusy.value = true;
+  try {
+    const { data } = await api.PUT("/api/letters/{draft_id}/read", { params: { path: { draft_id: letter.id } }, body: { read: box.checked } });
+    if (data) letters.value = letters.value.map((l) => (l.id === data.id ? data : l));
+    else box.checked = !!letter.read_at;
+  } finally {
+    readBusy.value = false;
+  }
+}
 function pickVersion(letter: Letter): void {
   select(letter);
   versionsOpen.value = false;
@@ -299,6 +325,7 @@ async function write(force = false): Promise<void> {
     const reviewed = await reviewLetter(data);
     letters.value = [reviewed, ...letters.value];
     instruction.value = "";
+    instructionOpen.value = false;
     select(reviewed);
     fresh.value = true;
     setTimeout(() => (fresh.value = false), 1000);
@@ -702,176 +729,210 @@ onMounted(() => void load());
             <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
           </p>
 
-          <div
-            v-if="!selected && !writing"
-            class="empty-detail prep-empty"
-            data-test="no-letter"
+          <!-- La carte de la lettre (maquette Preparer, étape 7b) : le titre et la langue en tête (C3 : choisir
+               ne rédige rien, le bouton du bas le propose), la lettre entière et modifiable (C4), « Modifier le
+               texte » qui ouvre la consigne, puis « J'ai relu la lettre » (C11). -->
+          <section
+            class="doc-card"
+            aria-labelledby="letter-card-title"
+            data-test="letter-card"
           >
-            <p>Aucune lettre pour cette offre.</p>
-          </div>
-          <AiWriting
-            v-else-if="writing && !selected"
-            kind="letter"
-          />
-
-          <!-- La langue et la consigne, au-dessus de la lettre sur téléphone (en attendant leur place dans la
-               carte de la lettre, étape 7b). -->
-          <div
-            v-if="phone && !claim"
-            class="prep-letter-tools"
-          >
-            <SegmentedControl
-              v-model="shownLanguage"
-              :options="LANGUAGE_OPTIONS"
-              label="Langue de la lettre"
-              full
-            />
-            <input
-              v-if="selected"
-              v-model="instruction"
-              class="prep-instruction-line"
-              maxlength="500"
-              aria-label="Consigne pour la nouvelle version"
-              placeholder="Consigne : plus court, insiste sur Kubernetes"
-              data-test="instruction"
-              @input="instructionNote = ''"
-            >
-            <p
-              v-if="instructionNote"
-              class="hint"
-              aria-live="polite"
-              data-test="instruction-note"
-            >
-              {{ instructionNote }}
-            </p>
-          </div>
-          <!-- La consigne entière de la version affichée : au toucher il n'y a pas de survol. -->
-          <p
-            v-if="selected?.instruction"
-            class="hint version-instruction screen-only"
-            data-test="version-instruction"
-          >
-            Consigne : {{ selected.instruction }}
-          </p>
-          <article
-            v-if="doc && draft"
-            class="letter-sheet print-sheet"
-            :class="{ 'fresh-lines': fresh, busy: writing }"
-            :lang="doc.language"
-            data-test="letter"
-          >
-            <div class="letter-sender">
-              <span
-                v-for="line in doc.sender"
-                :key="line"
-              >{{ line }}</span>
-            </div>
-            <div class="letter-recipient">
-              <span
-                v-for="line in doc.recipient"
-                :key="line"
-              >{{ line }}</span>
-            </div>
-            <p class="letter-date">
-              {{ doc.place_date }}
-            </p>
-            <p class="letter-subject">
-              <span v-if="subjectPrefix.trim()">{{ subjectPrefix.trim() }}</span>
-              <input
-                v-model="draft.subject"
-                class="screen-only subject-wide"
-                aria-label="Objet de la lettre"
-                data-test="subject"
-                @input="edited"
-              >
-              <!-- Sur téléphone, l'objet passe à la ligne (docs/51 n° 2). -->
-              <textarea
-                v-model="draft.subject"
-                class="screen-only subject-phone"
-                rows="1"
-                aria-label="Objet de la lettre"
-                data-test="subject-phone"
-                @input="onInput"
-                @keydown.enter.prevent
+            <div class="doc-card-head">
+              <h2 id="letter-card-title">
+                Lettre de motivation
+              </h2>
+              <SegmentedControl
+                v-if="!claim"
+                v-model="shownLanguage"
+                :options="LANGUAGE_OPTIONS"
+                label="Langue de la lettre"
+                class="doc-language"
               />
-              <span class="print-only">{{ draft.subject }}</span>
-            </p>
-            <p>{{ doc.salutation }}</p>
+            </div>
             <div
-              v-for="(paragraph, index) in draft.paragraphs"
-              :key="index"
-              class="letter-paragraph"
+              v-if="!selected && !writing"
+              class="empty-detail prep-empty"
+              data-test="no-letter"
             >
-              <textarea
-                v-model="paragraph.text"
-                :class="['screen-only', { 'claim-flash': flashed === index }]"
-                rows="3"
-                :aria-label="`Paragraphe ${index + 1}`"
-                data-test="paragraph"
-                @input="onInput"
-                @select="onSelect(index, $event)"
-                @mouseup="onSelect(index, $event)"
-                @keyup="onSelect(index, $event)"
-                @click="phone && onSelect(index, $event)"
-              />
-              <button
-                v-if="!phone && claim?.index === index"
-                type="button"
-                class="secondary small false-claim-button screen-only"
-                data-test="false-claim"
-                @mousedown.prevent
-                @click="claimOpen = true"
-              >
-                Pas vrai
-              </button>
-              <p class="print-only">
-                {{ paragraph.text }}
-              </p>
-              <span
-                v-if="sources(paragraph.chunk_ids)"
-                class="chunk-refs screen-only"
-              >Blocs : {{ sources(paragraph.chunk_ids) }}</span>
+              <p>Aucune lettre pour cette offre.</p>
             </div>
-            <p>{{ doc.closing }}</p>
-            <p class="letter-signature">
-              {{ doc.signature }}
+            <AiWriting
+              v-else-if="writing && !selected"
+              kind="letter"
+            />
+
+            <!-- La consigne entière de la version affichée : au toucher il n'y a pas de survol. -->
+            <p
+              v-if="selected?.instruction"
+              class="hint version-instruction screen-only"
+              data-test="version-instruction"
+            >
+              Consigne : {{ selected.instruction }}
             </p>
-            <p class="letter-enclosure">
-              {{ doc.enclosure }}
-            </p>
-          </article>
-          <!-- La relecture (décision de Kevin) : une ligne, puis le détail repliable, un critère par
-               ligne avec sa pastille (« Réussi » ou « À revoir », jamais le ton erreur). -->
-          <p
-            class="review-line"
-            aria-live="polite"
-            data-test="review-line"
-          >
-            {{ reviewLine }}
-          </p>
-          <DisclosureRow
-            v-if="selected?.review"
-            title="Détail de la relecture"
-            :value="selected.review.corrected ? 'corrigée une fois' : ''"
-            class="review-detail"
-            data-test="review-detail"
-          >
-            <ul class="review-criteria">
-              <li
-                v-for="criterion in selected.review.criteria"
-                :key="criterion.key"
-                :data-test="`review-${criterion.key}`"
+            <article
+              v-if="doc && draft"
+              class="letter-sheet print-sheet"
+              :class="{ 'fresh-lines': fresh, busy: writing }"
+              :lang="doc.language"
+              data-test="letter"
+            >
+              <div class="letter-sender">
+                <span
+                  v-for="line in doc.sender"
+                  :key="line"
+                >{{ line }}</span>
+              </div>
+              <div class="letter-recipient">
+                <span
+                  v-for="line in doc.recipient"
+                  :key="line"
+                >{{ line }}</span>
+              </div>
+              <p class="letter-date">
+                {{ doc.place_date }}
+              </p>
+              <p class="letter-subject">
+                <span v-if="subjectPrefix.trim()">{{ subjectPrefix.trim() }}</span>
+                <input
+                  v-model="draft.subject"
+                  class="screen-only subject-wide"
+                  aria-label="Objet de la lettre"
+                  data-test="subject"
+                  @input="edited"
+                >
+                <!-- Sur téléphone, l'objet passe à la ligne (docs/51 n° 2). -->
+                <textarea
+                  v-model="draft.subject"
+                  class="screen-only subject-phone"
+                  rows="1"
+                  aria-label="Objet de la lettre"
+                  data-test="subject-phone"
+                  @input="onInput"
+                  @keydown.enter.prevent
+                />
+                <span class="print-only">{{ draft.subject }}</span>
+              </p>
+              <p>{{ doc.salutation }}</p>
+              <div
+                v-for="(paragraph, index) in draft.paragraphs"
+                :key="index"
+                class="letter-paragraph"
               >
-                <span class="review-criterion-text">
-                  <strong>{{ criterion.label }}</strong>
-                  <span class="hint">{{ criterion.reason }}</span>
-                </span>
-                <StatusPill :tone="criterion.ok ? 'ok' : 'todo'">
-                  {{ criterion.ok ? "Réussi" : "À revoir" }}
-                </StatusPill>
-              </li>
-            </ul>
-          </DisclosureRow>
+                <textarea
+                  v-model="paragraph.text"
+                  :class="['screen-only', { 'claim-flash': flashed === index }]"
+                  rows="3"
+                  :aria-label="`Paragraphe ${index + 1}`"
+                  data-test="paragraph"
+                  @input="onInput"
+                  @select="onSelect(index, $event)"
+                  @mouseup="onSelect(index, $event)"
+                  @keyup="onSelect(index, $event)"
+                  @click="phone && onSelect(index, $event)"
+                />
+                <button
+                  v-if="!phone && claim?.index === index"
+                  type="button"
+                  class="secondary small false-claim-button screen-only"
+                  data-test="false-claim"
+                  @mousedown.prevent
+                  @click="claimOpen = true"
+                >
+                  Pas vrai
+                </button>
+                <p class="print-only">
+                  {{ paragraph.text }}
+                </p>
+                <span
+                  v-if="sources(paragraph.chunk_ids)"
+                  class="chunk-refs screen-only"
+                >Blocs : {{ sources(paragraph.chunk_ids) }}</span>
+              </div>
+              <p>{{ doc.closing }}</p>
+              <p class="letter-signature">
+                {{ doc.signature }}
+              </p>
+              <p class="letter-enclosure">
+                {{ doc.enclosure }}
+              </p>
+            </article>
+            <!-- La relecture (décision de Kevin) : une ligne, puis le détail repliable, un critère par
+               ligne avec sa pastille (« Réussi » ou « À revoir », jamais le ton erreur). -->
+            <p
+              class="review-line"
+              aria-live="polite"
+              data-test="review-line"
+            >
+              {{ reviewLine }}
+            </p>
+            <DisclosureRow
+              v-if="selected?.review"
+              title="Détail de la relecture"
+              :value="selected.review.corrected ? 'corrigée une fois' : ''"
+              class="review-detail"
+              data-test="review-detail"
+            >
+              <ul class="review-criteria">
+                <li
+                  v-for="criterion in selected.review.criteria"
+                  :key="criterion.key"
+                  :data-test="`review-${criterion.key}`"
+                >
+                  <span class="review-criterion-text">
+                    <strong>{{ criterion.label }}</strong>
+                    <span class="hint">{{ criterion.reason }}</span>
+                  </span>
+                  <StatusPill :tone="criterion.ok ? 'ok' : 'todo'">
+                    {{ criterion.ok ? "Réussi" : "À revoir" }}
+                  </StatusPill>
+                </li>
+              </ul>
+            </DisclosureRow>
+            <template v-if="selected && !claim">
+              <button
+                v-if="!instructionOpen"
+                type="button"
+                class="secondary doc-card-edit"
+                data-test="edit-text"
+                @click="openInstruction"
+              >
+                Modifier le texte
+              </button>
+              <div
+                v-else-if="phone"
+                class="doc-card-instruction"
+              >
+                <input
+                  ref="instructionEl"
+                  v-model="instruction"
+                  class="prep-instruction-line"
+                  maxlength="500"
+                  aria-label="Consigne pour la nouvelle version"
+                  placeholder="Consigne : plus court, insiste sur Kubernetes"
+                  data-test="instruction"
+                  @input="instructionNote = ''"
+                >
+                <p
+                  v-if="instructionNote"
+                  class="hint"
+                  aria-live="polite"
+                  data-test="instruction-note"
+                >
+                  {{ instructionNote }}
+                </p>
+              </div>
+              <label class="doc-card-read">
+                <input
+                  type="checkbox"
+                  :checked="!!selected.read_at"
+                  :disabled="writing || readBusy"
+                  data-test="letter-read"
+                  @change="markRead($event.target as HTMLInputElement)"
+                >
+                <span>J'ai relu la lettre</span>
+              </label>
+            </template>
+          </section>
         </div>
 
         <section
@@ -883,27 +944,6 @@ onMounted(() => void load());
             <h2>
               {{ selected ? "Nouvelle version" : "Rédiger la lettre" }}
             </h2>
-            <FormField
-              v-slot="field"
-              label="Langue"
-            >
-              <select
-                :id="field.id"
-                v-model="language"
-                data-test="language"
-              >
-                <option value="">
-                  Celle de l'annonce
-                </option>
-                <option
-                  v-for="(label, code) in LANGUAGES"
-                  :key="code"
-                  :value="code"
-                >
-                  {{ label }}
-                </option>
-              </select>
-            </FormField>
             <FormField
               v-if="selected"
               v-slot="field"
@@ -917,6 +957,7 @@ onMounted(() => void load());
                 maxlength="500"
                 placeholder="plus court, insiste sur Kubernetes"
                 :aria-describedby="field.describedby"
+                class="side-instruction"
                 data-test="instruction"
                 @input="instructionNote = ''"
               />
@@ -938,7 +979,7 @@ onMounted(() => void load());
                 @click="write()"
               >
                 <HoverNote :text="writing ? '' : aiNote('Environ 0,10 $.', 'letter')">
-                  <span class="with-icon"><AppIcon name="ai" />{{ selected ? "Rédiger la nouvelle version" : "Rédiger la lettre" }}</span>
+                  <span class="with-icon"><AppIcon name="ai" />{{ writeLabel || (selected ? "Rédiger la nouvelle version" : "Rédiger la lettre") }}</span>
                 </HoverNote>
               </BusyButton>
             </div>
@@ -1078,13 +1119,32 @@ onMounted(() => void load());
             <span class="with-icon"><AppIcon name="ai" />{{ writeLabel }}</span>
           </BusyButton>
           <RouterLink
-            v-else
+            v-else-if="selected?.read_at"
             :to="{ query: { doc: 'cv' } }"
             class="button-link primary-link prep-bar-main"
             data-test="next-step"
           >
             Continuer vers le CV
           </RouterLink>
+          <!-- Pas encore relue : le bouton reste là, inactif, et dit pourquoi ; l'étape CV reste ouverte. -->
+          <template v-else>
+            <button
+              type="button"
+              class="prep-bar-main prep-bar-waiting"
+              aria-disabled="true"
+              aria-describedby="prep-bar-hint"
+              data-test="next-step"
+            >
+              Continuer vers le CV
+            </button>
+            <p
+              id="prep-bar-hint"
+              class="action-bar-note prep-bar-hint"
+              data-test="next-step-hint"
+            >
+              Relis la lettre pour continuer.
+            </p>
+          </template>
         </ActionBar>
         <BottomSheet
           v-if="phone && selected"
