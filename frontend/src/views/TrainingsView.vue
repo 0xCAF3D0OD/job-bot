@@ -4,98 +4,93 @@ import { useRoute } from "vue-router";
 
 import { api, type Training } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
+import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
-import FaceState from "../components/FaceState.vue";
-import DisclosureRow from "../components/DisclosureRow.vue";
+import CountBadge from "../components/CountBadge.vue";
 import DomainField from "../components/DomainField.vue";
+import FaceState from "../components/FaceState.vue";
+import HoverNote from "../components/HoverNote.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import PushTransition from "../components/PushTransition.vue";
 import SidePanel from "../components/SidePanel.vue";
-import TrainingCard from "../components/TrainingCard.vue";
 import TrainingCardBody from "../components/TrainingCardBody.vue";
-import { usePhone } from "../composables/usePhone";
+import TrainingRow from "../components/TrainingRow.vue";
 import { usePageReady } from "../composables/usePageTransition";
-import { languageLabel } from "../newsLabels";
-import { KINDS, ORP_LINKS, PRICES } from "../trainingLabels";
-import { plural } from "../format";
-
-import HoverNote from "../components/HoverNote.vue";
 import { usePlan } from "../composables/usePlan";
-import CountBadge from "../components/CountBadge.vue";
+import { plural } from "../format";
+import { ORP_LINKS } from "../trainingLabels";
 
 const { aiNote } = usePlan();
-// Formations (docs/16 §5) : catalogue vérifié, suggestions de l'IA sur demande, suivi.
+// Bilan › Formations (docs/16 §5 ; maquette Explorer, onglet Formations ; B15 à B19, Kevin, 2026-11-04).
+// Catalogue : l'encadré du financement, les puces de filtre, les formations en lignes groupées, puis
+// « Chercher d'autres formations ». Suivies : les formations en cours, puis les gardées et les terminées.
 type Status = "interested" | "in_progress" | "done";
+type Kind = "all" | "cert" | "cours";
 
 const route = useRoute();
 const tab = computed<"catalog" | "mine">(() => (route.query.onglet === "miennes" ? "mine" : "catalog"));
 const items = ref<Training[]>([]);
 const keywords = ref<string[]>([]);
-const languages = ref<string[]>([]);
 const canSuggest = ref(false);
 const loaded = ref(false);
 usePageReady("trainings", () => loaded.value);
 const domainOnly = ref(true);
-const kind = ref("");
-const price = ref("");
-const language = ref("");
 const suggesting = ref(false);
 const message = ref("");
 
 const hasDomain = computed(() => keywords.value.length > 0);
-// « Mes formations » (docs/44 §3) : en cours d'abord, puis intéressé, puis terminées.
-const MINE_ORDER: Record<string, number> = { in_progress: 0, interested: 1, done: 2 };
-const shown = computed(() => {
-  const found = items.value.filter(
+
+// Les puces (B17) : Tout, Certifications ou Cours, un seul choix ; « Gratuites » et « En français » s'ajoutent.
+const kind = ref<Kind>("all");
+const free = ref(false);
+const french = ref(false);
+const KIND_CHIPS: { key: Kind; label: string }[] = [
+  { key: "all", label: "Tout" },
+  { key: "cert", label: "Certifications" },
+  { key: "cours", label: "Cours" },
+];
+const filtered = computed(() =>
+  items.value.filter(
     (t) =>
-      (tab.value === "mine" ? t.mark !== null : true) &&
-      (!kind.value || t.kind === kind.value) &&
-      (!price.value || t.price === price.value) &&
-      (!language.value || t.language === language.value),
-  );
-  if (tab.value !== "mine") return found;
-  return [...found].sort((a, b) => (MINE_ORDER[a.mark!.status] ?? 9) - (MINE_ORDER[b.mark!.status] ?? 9));
-});
-// Deux groupes titrés, comme les sections des Actualités (docs/43 n° 21).
+      (kind.value === "all" || (kind.value === "cert") === (t.kind === "certification")) &&
+      (!free.value || t.price === "free") &&
+      (!french.value || t.language === "fr"),
+  ),
+);
+// Deux groupes titrés avec leur nombre (B18) : « Certifications · 9 », « Cours et ateliers · 12 ».
 const sections = computed(() =>
   [
-    { key: "certifications", label: "Certifications", items: shown.value.filter((t) => t.kind === "certification") },
-    { key: "courses", label: "Cours et parcours", items: shown.value.filter((t) => t.kind !== "certification") },
+    { key: "certifications", label: "Certifications", items: filtered.value.filter((t) => t.kind === "certification") },
+    { key: "courses", label: "Cours et ateliers", items: filtered.value.filter((t) => t.kind !== "certification") },
   ].filter((section) => section.items.length),
 );
-const mineCount = computed(() => items.value.filter((t) => t.mark).length);
+// Suivies (B19) : en cours d'abord, en cartes ; puis les gardées et les terminées, en lignes.
+const marked = computed(() => items.value.filter((t) => t.mark));
+const inProgress = computed(() => marked.value.filter((t) => t.mark!.status === "in_progress"));
+const others = computed(() =>
+  [...marked.value.filter((t) => t.mark!.status === "interested"), ...marked.value.filter((t) => t.mark!.status === "done")],
+);
+const mineCount = computed(() => marked.value.length);
 
 async function load(): Promise<void> {
-  // Au premier chargement, les mots-clés ne sont pas encore connus : « Mon domaine » par défaut.
+  // Le catalogue de ton domaine quand il est connu ; sans domaine, tout le catalogue.
   const { data } = await api.GET("/api/trainings", {
     params: { query: { domain_only: domainOnly.value && (!loaded.value || hasDomain.value) } },
   });
   if (!data) return;
   items.value = data.items;
   keywords.value = data.domain_keywords;
-  languages.value = data.languages;
   canSuggest.value = data.can_suggest;
   const first = !loaded.value;
   loaded.value = true;
   if (first && !data.domain_keywords.length && domainOnly.value) {
-    // Sans domaine, le filtre ne garderait rien : tout le catalogue.
     domainOnly.value = false;
     await load();
   }
 }
 
-// Sans domaine, « Mon domaine » ouvre le champ sur place (docs/43 n° 4).
+// Sans domaine, « Chercher d'autres formations » ouvre le champ du domaine sur place (docs/43 n° 4).
 const domainFieldOpen = ref(false);
-
-function setDomain(value: boolean): void {
-  if (value && !hasDomain.value) {
-    domainFieldOpen.value = !domainFieldOpen.value;
-    return;
-  }
-  domainOnly.value = value;
-  void load();
-}
-
 function onDomainSaved(): void {
   domainFieldOpen.value = false;
   domainOnly.value = true;
@@ -128,7 +123,7 @@ async function mark(
   if (data) replace({ ...training, mark: data });
 }
 
-// Le cœur d'une carte (docs/93) : « Intéressé », ou retirer cette seule marque.
+// Le signet d'une ligne (docs/101) : garder (« Intéressé »), ou retirer cette seule marque.
 async function toggleInterest(training: Training): Promise<void> {
   await mark(training, training.mark?.status === "interested" ? null : "interested");
 }
@@ -143,9 +138,10 @@ async function review(training: Training, keep: boolean): Promise<void> {
 }
 
 async function suggest(): Promise<void> {
-  // Bouton toujours actif (docs/29 §3) : sans domaine, il dit quoi faire.
+  // Bouton toujours actif (docs/29 §3) : sans domaine, il ouvre le champ du domaine.
   if (!hasDomain.value) {
-    message.value = "Définis d'abord ton domaine : bouton « Domaine ».";
+    domainFieldOpen.value = true;
+    message.value = "Indique d'abord ton domaine : les formations proposées en dépendent.";
     return;
   }
   suggesting.value = true;
@@ -166,9 +162,9 @@ async function suggest(): Promise<void> {
   }
 }
 
-// Téléphone (docs/34 §2) : une liste fine, la fiche en plein écran, les filtres derrière
-// « Filtrer », l'encadré ORP replié. Sur ordinateur, rien ne change.
-const { phone } = usePhone();
+// Le financement (B16) : l'encadré ouvre la feuille « Formation et chômage ».
+const fundingOpen = ref(false);
+
 const openId = ref<number | null>(null);
 // Une formation ouverte depuis l'aperçu de la capsule (docs/92) : `?formation=ID`.
 watch(
@@ -179,274 +175,286 @@ watch(
   { immediate: true },
 );
 const opened = computed(() => items.value.find((t) => t.id === openId.value) ?? null);
-const filtersOpen = ref(false);
-const activeFilters = computed(() => [kind.value, price.value, language.value].filter(Boolean).length);
-// Le nom du bouton Filtrer, annoncé et en infobulle, avec le nombre de filtres actifs (docs/101).
-// « Effacer les filtres » (règles §4, aucun résultat) : le type, le prix, la langue, puis le domaine.
+// « Effacer les filtres » (règles §4, aucun résultat).
+const activeFilters = computed(() => (kind.value !== "all" ? 1 : 0) + (free.value ? 1 : 0) + (french.value ? 1 : 0));
 function clearFilters(): void {
-  kind.value = "";
-  price.value = "";
-  language.value = "";
-  if (domainOnly.value) setDomain(false);
+  kind.value = "all";
+  free.value = false;
+  french.value = false;
 }
-const filterLabel = computed(() =>
-  activeFilters.value ? `Filtrer, ${activeFilters.value} ${activeFilters.value > 1 ? "actifs" : "actif"}` : "Filtrer",
-);
 
 onMounted(() => void load());
 </script>
 
 <template>
   <section class="band">
-    <div class="container">
-      <!-- Une seule ligne d'outils (docs/130 §E) : Catalogue ou Suivies, puis les filtres. -->
-      <div class="trainings-toolbar">
-        <nav
-          class="sub-tabs"
-          aria-label="Formations affichées"
+    <div class="container trainings">
+      <!-- Catalogue · Suivies, soulignés (second niveau, S4 ; B15), le nombre de suivies en pastille. -->
+      <nav
+        class="trainings-tabs"
+        aria-label="Formations affichées"
+      >
+        <RouterLink
+          :to="{ query: {} }"
+          :class="{ active: tab === 'catalog' }"
+          :aria-current="tab === 'catalog' ? 'true' : undefined"
+          data-test="tab-catalog"
         >
-          <RouterLink
-            :to="{ query: {} }"
-            :class="{ active: tab === 'catalog' }"
-            :aria-current="tab === 'catalog' ? 'true' : undefined"
-            data-test="tab-catalog"
-          >
-            <span class="with-icon"><AppIcon name="book" />Catalogue</span>
-          </RouterLink>
-          <RouterLink
-            :to="{ query: { onglet: 'miennes' } }"
-            :class="{ active: tab === 'mine' }"
-            :aria-current="tab === 'mine' ? 'true' : undefined"
-            data-test="tab-mine"
-          >
-            <span class="with-icon"><AppIcon name="bookmark" />Suivies</span>{{ " " }}<CountBadge
-              v-if="mineCount"
-              class="tab-count"
-            
-              :count="mineCount"
-            />
-          </RouterLink>
-        </nav>
+          Catalogue
+        </RouterLink>
+        <RouterLink
+          :to="{ query: { onglet: 'miennes' } }"
+          :class="{ active: tab === 'mine' }"
+          :aria-current="tab === 'mine' ? 'true' : undefined"
+          data-test="tab-mine"
+        >
+          Suivies<CountBadge
+            v-if="mineCount"
+            class="tab-count"
+            :count="mineCount"
+          />
+        </RouterLink>
+      </nav>
 
-        <div
-          v-if="loaded"
-          class="news-filters"
-        >
-          <div
-            class="segmented"
-            role="radiogroup"
-            aria-label="Formations affichées"
-          >
-            <button
-              type="button"
-              role="radio"
-              :aria-checked="domainOnly && hasDomain"
-              :aria-controls="hasDomain || !domainFieldOpen ? undefined : 'domaine-champ'"
-              data-test="filter-domain"
-              @click="setDomain(true)"
-            >
-              Domaine
-            </button>
-            <button
-              type="button"
-              role="radio"
-              :aria-checked="!domainOnly || !hasDomain"
-              data-test="filter-all"
-              @click="setDomain(false)"
-            >
-              Tout
-            </button>
-          </div>
-          <!-- Filtrer : l'entonnoir et le mot (1.6.26), le nombre de filtres actifs en pastille (docs/101). -->
-          <button
-            v-if="phone"
-            type="button"
-            class="pill filter-toggle training-filter-toggle"
-            :aria-label="activeFilters ? filterLabel : undefined"
-            :aria-expanded="filtersOpen"
-            data-test="training-filter-toggle"
-            @click="filtersOpen = !filtersOpen"
-          >
-            <span class="with-icon"><AppIcon name="filter" />Filtrer</span>
-            <CountBadge
-              v-if="activeFilters"
-              class="tab-count"
-              aria-hidden="true"
-              data-test="training-filter-count"
-            
-              :count="activeFilters"
-            />
-          </button>
-          <PushTransition :enabled="phone">
-            <div
-              v-show="!phone || filtersOpen"
-              :class="phone ? 'training-filter-sheet' : 'training-filter-group'"
-            >
-              <select
-                v-model="kind"
-                class="field-compact"
-                aria-label="Type"
-                data-test="filter-kind"
-              >
-                <option value="">
-                  Tous les types
-                </option>
-                <option
-                  v-for="(label, key) in KINDS"
-                  :key="key"
-                  :value="key"
-                >
-                  {{ label }}
-                </option>
-              </select>
-              <select
-                v-model="price"
-                class="field-compact"
-                aria-label="Prix"
-                data-test="filter-price"
-              >
-                <option value="">
-                  Gratuit ou payant
-                </option>
-                <option
-                  v-for="(label, key) in PRICES"
-                  :key="key"
-                  :value="key"
-                >
-                  {{ label }}
-                </option>
-              </select>
-              <select
-                v-if="languages.length > 1"
-                v-model="language"
-                class="field-compact"
-                aria-label="Langue"
-              >
-                <option value="">
-                  Toutes les langues
-                </option>
-                <option
-                  v-for="code in languages"
-                  :key="code"
-                  :value="code"
-                >
-                  {{ languageLabel(code) }}
-                </option>
-              </select>
-            </div>
-          </PushTransition>
-          <span
-            v-if="canSuggest && tab === 'catalog'"
-            class="news-status"
-          >
-            <BusyButton
-              class="secondary small"
-              :busy="suggesting"
-              busy-label="Recherche en cours…"
-              data-test="suggest"
-              @click="suggest"
-            >
-              <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
-                <span class="with-icon"><AppIcon name="ai" />Chercher d'autres formations</span>
-              </HoverNote>
-            </BusyButton>
-          </span>
-        </div>
-      </div>
-      <!-- Formation et chômage, une ligne repliable sous les outils (docs/130 §E). -->
-      <DisclosureRow
-        class="orp-note-row"
-        title="Formation et chômage"
-        value="accord de l'ORP"
-        data-test="orp-note"
-      >
-        <strong><HoverNote text="L'assurance chômage peut financer certaines formations : c'est l'ORP qui décide.">Formation et chômage</HoverNote> :</strong> financement possible <strong>sur demande à ton conseiller ORP et avec
-          son accord préalable</strong>.
-        <span class="orp-links">
-          <a
-            v-for="link in ORP_LINKS"
-            :key="link.url"
-            :href="link.url"
-            target="_blank"
-            rel="noopener noreferrer"
-          ><span class="with-icon">{{ link.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
-        </span>
-      </DisclosureRow>
-      <p
-        v-if="message"
-        class="hint"
-        role="status"
-      >
-        {{ message }}
-      </p>
-      <PushTransition>
-        <DomainField
-          v-if="domainFieldOpen && !hasDomain"
-          id="domaine-champ"
-          @saved="onDomainSaved"
-        />
-      </PushTransition>
       <LoadingBlocks
         v-if="!loaded"
-        :columns="phone ? 1 : 3"
-        :heights="['16rem', '16rem', '16rem']"
+        :heights="['4rem', '2.5rem', '20rem']"
       />
-
-      <!-- Aucune formation suivie (planche « Illustrations ») ; un filtre vide garde sa phrase. -->
+      <template v-else-if="tab === 'catalog'">
+        <!-- Le financement (B16) : un encadré pêche qui ouvre « Formation et chômage ». -->
+        <button
+          type="button"
+          class="training-funding-note"
+          data-test="orp-note"
+          @click="fundingOpen = true"
+        >
+          <span
+            class="training-funding-icon"
+            aria-hidden="true"
+          ><AppIcon name="tag" /></span>
+          <span><strong>Financement possible par l'ORP</strong><span>Seulement avec l'accord préalable de l'ORP</span></span>
+          <AppIcon name="chevron" />
+        </button>
+        <!-- Les puces (B17) : le genre, un seul choix ; « Gratuites » et « En français » s'ajoutent. -->
+        <div
+          class="training-chips"
+          role="group"
+          aria-label="Filtrer les formations"
+        >
+          <button
+            v-for="chip in KIND_CHIPS"
+            :key="chip.key"
+            type="button"
+            class="training-chip"
+            :aria-pressed="kind === chip.key"
+            :data-test="`chip-${chip.key}`"
+            @click="kind = chip.key"
+          >
+            {{ chip.label }}
+          </button>
+          <button
+            type="button"
+            class="training-chip"
+            :aria-pressed="free"
+            data-test="chip-free"
+            @click="free = !free"
+          >
+            Gratuites
+          </button>
+          <button
+            type="button"
+            class="training-chip"
+            :aria-pressed="french"
+            data-test="chip-fr"
+            @click="french = !french"
+          >
+            En français
+          </button>
+        </div>
+        <!-- Aucun résultat (règles §4) : une ligne grise et « Effacer les filtres ». -->
+        <p
+          v-if="!sections.length"
+          class="muted empty"
+          data-test="trainings-no-result"
+        >
+          Aucune formation avec ces filtres.
+          <button
+            v-if="activeFilters"
+            type="button"
+            class="link"
+            data-test="trainings-reset"
+            @click="clearFilters"
+          >
+            Effacer les filtres
+          </button>
+        </p>
+        <div
+          v-else
+          class="training-groups"
+        >
+          <section
+            v-for="section in sections"
+            :key="section.key"
+            class="training-section"
+            :aria-labelledby="`training-${section.key}`"
+            :data-test="`training-section-${section.key}`"
+          >
+            <h2 :id="`training-${section.key}`">
+              <span>{{ section.label }}</span><span>{{ section.items.length }}</span>
+            </h2>
+            <ul class="training-list">
+              <li
+                v-for="training in section.items"
+                :key="training.id"
+              >
+                <TrainingRow
+                  :training="training"
+                  @open="openId = training.id"
+                  @interest="toggleInterest(training)"
+                  @review="(keep) => review(training, keep)"
+                />
+              </li>
+            </ul>
+          </section>
+        </div>
+        <p
+          v-if="message"
+          class="hint"
+          role="status"
+        >
+          {{ message }}
+        </p>
+        <PushTransition>
+          <DomainField
+            v-if="domainFieldOpen && !hasDomain"
+            id="domaine-champ"
+            @saved="onDomainSaved"
+          />
+        </PushTransition>
+        <!-- La recherche par domaine (B17) : sous la liste, « Chercher d'autres formations ». -->
+        <BusyButton
+          v-if="canSuggest"
+          class="secondary training-suggest"
+          :busy="suggesting"
+          busy-label="Recherche en cours…"
+          data-test="suggest"
+          @click="suggest"
+        >
+          <HoverNote :text="suggesting ? '' : aiNote('Environ 0,02 à 0,05 $.')">
+            Chercher d'autres formations
+          </HoverNote>
+        </BusyButton>
+      </template>
+      <!-- Aucune formation suivie (planche « Illustrations »). -->
       <FaceState
-        v-if="loaded && !shown.length && tab === 'mine'"
+        v-else-if="!mineCount"
         title="Aucune formation suivie"
         illustration="formations-vide"
         data-test="trainings-none"
       >
-        <p>Marque une formation « Intéressé » dans le catalogue.</p>
+        <p>Garde une formation du catalogue avec son signet.</p>
       </FaceState>
-      <!-- Aucun résultat (règles §4) : une ligne grise et « Effacer les filtres ». -->
-      <p
-        v-else-if="loaded && !shown.length"
-        class="muted empty"
-        data-test="trainings-no-result"
+      <div
+        v-else
+        class="training-mine"
       >
-        Aucune formation avec ces filtres.
-        <button
-          v-if="activeFilters || domainOnly"
-          type="button"
-          class="link"
-          data-test="trainings-reset"
-          @click="clearFilters"
-        >
-          Effacer les filtres
-        </button>
-      </p>
-      <template v-else>
+        <!-- En cours (B19) : la carte avec l'avancement noté, en attendant le compteur de modules. -->
         <section
-          v-for="section in sections"
-          :key="section.key"
-          class="training-section"
-          :data-test="`training-section-${section.key}`"
+          v-for="training in inProgress"
+          :key="training.id"
+          class="training-current"
+          :aria-labelledby="`training-current-${training.id}`"
+          data-test="training-current"
         >
-          <h2 class="news-group-title">
-            {{ section.label }}
-          </h2>
-          <!-- Des cartes, sur ordinateur comme sur téléphone (docs/93). -->
-          <ul class="training-tiles">
-            <li
-              v-for="training in section.items"
-              :key="training.id"
-              data-test="training"
+          <div class="training-current-head">
+            <span
+              :class="['training-row-icon', { cert: training.kind === 'certification' }]"
+              aria-hidden="true"
+            ><AppIcon :name="training.kind === 'certification' ? 'star' : 'book'" /></span>
+            <span>
+              <strong :id="`training-current-${training.id}`">{{ training.title }}</strong>
+              <span>{{ training.provider }}</span>
+            </span>
+          </div>
+          <p class="training-current-progress">
+            {{ training.mark!.progress || "En cours" }}
+          </p>
+          <div class="training-current-actions">
+            <a
+              :href="training.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-test="training-continue"
+            >Continuer le cours<span class="visually-hidden"> (nouvel onglet)</span><AppIcon name="external" /></a>
+            <button
+              type="button"
+              class="link"
+              data-test="training-update"
+              @click="openId = training.id"
             >
-              <TrainingCard
-                :training="training"
-                @open="openId = training.id"
-                @interest="toggleInterest(training)"
-                @review="(keep) => review(training, keep)"
-              />
-            </li>
-          </ul>
+              Noter l'avancement
+            </button>
+          </div>
         </section>
-      </template>
+        <ul
+          v-if="others.length"
+          class="training-kept"
+        >
+          <li
+            v-for="training in others"
+            :key="training.id"
+            data-test="training-kept"
+          >
+            <span>
+              <strong>{{ training.title }}</strong>
+              <span>{{ training.mark!.status === "done" ? "Terminée" : "Gardée · pas encore commencée" }}</span>
+            </span>
+            <button
+              type="button"
+              class="training-see"
+              :aria-label="`Voir : ${training.title}`"
+              @click="openId = training.id"
+            >
+              Voir
+            </button>
+          </li>
+        </ul>
+        <p class="training-help">
+          Le signet du catalogue range une formation ici. Ouvre-la pour noter où tu en es.
+        </p>
+      </div>
     </div>
   </section>
+  <!-- « Formation et chômage » (B16) : ce qu'il faut savoir avant de s'inscrire, et les pages officielles. -->
+  <BottomSheet
+    :open="fundingOpen"
+    title="Formation et chômage"
+    @close="fundingOpen = false"
+  >
+    <div
+      class="training-funding-sheet"
+      data-test="orp-sheet"
+    >
+      <p>L'ORP peut financer une formation. Il faut d'abord la demander à l'ORP et attendre son accord, avant de t'inscrire.</p>
+      <a
+        v-for="link in ORP_LINKS"
+        :key="link.url"
+        :href="link.url"
+        target="_blank"
+        rel="noopener noreferrer"
+      >{{ link.label }}<span>nouvel onglet</span></a>
+    </div>
+    <template #actions>
+      <button
+        type="button"
+        class="primary"
+        data-test="orp-sheet-close"
+        @click="fundingOpen = false"
+      >
+        Compris
+      </button>
+    </template>
+  </BottomSheet>
   <!-- Le suivi dans le panneau latéral, sur ordinateur comme sur téléphone (docs/44 §2). -->
   <SidePanel
     v-if="opened"

@@ -1,0 +1,1 @@
+Interface : Bilan › Formations suit la maquette : Catalogue · Suivies soulignés, l'encadré du financement, des puces de filtre, les formations en lignes groupées avec leur signet, et Suivies en cartes (étape 8e).

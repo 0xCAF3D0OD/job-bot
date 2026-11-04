@@ -62,40 +62,55 @@ async function openPanel(wrapper: Awaited<ReturnType<typeof mountView>>): Promis
 }
 
 describe("TrainingsView", () => {
-  it("catalogue filtré sur « Mon domaine », mention ORP, mots surlignés", async () => {
-    GET.mockResolvedValue({ data: page([training(1), training(2, { title: "Microsoft Learn", price: "free", kind: "parcours", matched: [] })]) });
+  it("catalogue : l'encadré du financement, les puces, les lignes groupées (B16 à B18)", async () => {
+    GET.mockResolvedValue({
+      data: page([
+        training(1),
+        training(2, { title: "Microsoft Learn", price: "free", kind: "parcours", language: "fr", format: "self_paced" }),
+        training(3, { title: "Killercoda", price: "free", kind: "atelier", format: "self_paced" }),
+      ]),
+    });
     const wrapper = await mountView();
+    // Le catalogue de ton domaine, sans bouton « Domaine · Tout » (B17).
     expect(GET).toHaveBeenCalledWith("/api/trainings", { params: { query: { domain_only: true } } });
-    expect(wrapper.find("[data-test=orp-note]").text()).toContain("accord");
-    const cards = wrapper.findAll("[data-test=training]");
-    expect(cards).toHaveLength(2);
-    expect(cards[0]!.findAll("mark").map((m) => m.text())).toEqual(["Kubernetes", "CKA"]);
-    // Format court sur la carte, complet dans l'infobulle ; la mention du financement est
-    // dans l'encadré du haut, plus sur chaque carte (docs/43 n° 20, 22). Trois faits (docs/93).
-    expect(cards[0]!.findAll(".tile-facts li")).toHaveLength(3);
-    expect(cards[0]!.find("[data-test=training-second]").text()).toContain("Examen en ligne ·");
-    expect(cards[0]!.find("[data-test=training-second] span").attributes("title")).toBe("examen en ligne surveillé");
-    expect(cards[0]!.text()).not.toContain("Financement possible");
-    expect(wrapper.find("[data-test=training-section-certifications] h2").text()).toBe("Certifications");
-
-    await wrapper.find("[data-test=filter-price]").setValue("free");
+    expect(wrapper.find("[data-test=filter-all]").exists()).toBe(false);
+    // Le financement : l'encadré, puis la feuille « Formation et chômage » (B16, formulation neutre B4).
+    const note = wrapper.find("[data-test=orp-note]");
+    expect(note.text()).toBe("Financement possible par l'ORPSeulement avec l'accord préalable de l'ORP");
+    await note.trigger("click");
+    const sheet = wrapper.find("[data-test=orp-sheet]");
+    expect(sheet.text()).toContain("Il faut d'abord la demander à l'ORP et attendre son accord");
+    expect(sheet.findAll("a")).toHaveLength(2);
+    // Les groupes, avec leur nombre ; une ligne : titre, « éditeur · format · langue », le prix.
+    expect(wrapper.find("[data-test=training-section-certifications] h2").text()).toBe("Certifications1");
+    expect(wrapper.find("[data-test=training-section-courses] h2").text()).toBe("Cours et ateliers2");
+    const first = wrapper.findAll("[data-test=training]")[0]!;
+    expect(first.find("strong").text()).toBe("Certified Kubernetes Administrator (CKA)");
+    expect(first.text()).toContain("The Linux Foundation / CNCF · Examen en ligne · anglais");
+    expect(first.find("[data-test=training-price]").text()).toBe("Payant");
+    // Les puces (B17) : un seul genre ; « Gratuites » et « En français » s'ajoutent.
+    await wrapper.find("[data-test=chip-cours]").trigger("click");
+    expect(wrapper.find("[data-test=chip-cours]").attributes("aria-pressed")).toBe("true");
+    expect(wrapper.find("[data-test=chip-all]").attributes("aria-pressed")).toBe("false");
+    expect(wrapper.findAll("[data-test=training]")).toHaveLength(2);
+    await wrapper.find("[data-test=chip-fr]").trigger("click");
+    expect(wrapper.findAll("[data-test=training] strong").map((t) => t.text())).toEqual(["Microsoft Learn"]);
+    await wrapper.find("[data-test=chip-free]").trigger("click");
     expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);
-    await wrapper.find("[data-test=filter-all]").trigger("click");
-    await flushPromises();
-    expect(GET).toHaveBeenLastCalledWith("/api/trainings", { params: { query: { domain_only: false } } });
+    await wrapper.find("[data-test=chip-cert]").trigger("click");
+    expect(wrapper.find("[data-test=trainings-no-result]").exists()).toBe(true);
   });
 
   it("aucun résultat avec des filtres : une ligne grise et « Effacer les filtres » (règles §4)", async () => {
     GET.mockResolvedValue({ data: page([training(1)]) });
     const wrapper = await mountView();
-    await wrapper.find("[data-test=filter-price]").setValue("free");
+    await wrapper.find("[data-test=chip-free]").trigger("click");
     const none = wrapper.find("[data-test=trainings-no-result]");
     expect(none.text()).toContain("Aucune formation avec ces filtres.");
     expect(none.find("[data-test=face-state]").exists()).toBe(false);
     await none.find("[data-test=trainings-reset]").trigger("click");
-    await flushPromises();
-    expect(GET).toHaveBeenLastCalledWith("/api/trainings", { params: { query: { domain_only: false } } });
     expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);
+    expect(wrapper.find("[data-test=chip-free]").attributes("aria-pressed")).toBe("false");
   });
 
   it("suivi : intéressé, en cours avec progression, retrait", async () => {
@@ -116,16 +131,15 @@ describe("TrainingsView", () => {
     await wrapper.find("[data-test=progress]").setValue("module 4/12");
     await flushPromises();
     expect(PUT.mock.calls.at(-1)![1].body.progress).toBe("module 4/12");
-    // Sur la carte : l'état en étiquette, l'avancement à la place du format (docs/93).
-    expect(wrapper.find("[data-test=training] [data-test=training-state]").text()).toBe("En cours");
-    expect(wrapper.find("[data-test=training] [data-test=training-second]").text()).toBe("module 4/12");
+    // Sur la ligne : l'avancement noté, en étiquette (B19).
+    expect(wrapper.find("[data-test=training] [data-test=training-progress]").text()).toBe("En cours · module 4/12");
     expect(wrapper.find("[data-test=tab-mine]").text()).toContain("1");
     await wrapper.find("[data-test=mark-in_progress]").trigger("click");
     await flushPromises();
     expect(DELETE).toHaveBeenCalled();
   });
 
-  it("le cœur : intéressé, puis retiré ; en cours, il ouvre le panneau (docs/93)", async () => {
+  it("le signet : gardée, puis retirée ; en cours, il ouvre le panneau (docs/101)", async () => {
     const inProgress = { status: "in_progress", progress: "module 2/6", done_at: null, certified: null };
     GET.mockResolvedValue({ data: page([training(1), training(2, { title: "Autre", mark: inProgress })]) });
     PUT.mockImplementation((_p: string, { body }: { body: Record<string, unknown> }) =>
@@ -134,7 +148,7 @@ describe("TrainingsView", () => {
     DELETE.mockResolvedValue({});
     const wrapper = await mountView();
     const heart = () => wrapper.findAll("[data-test=interest]")[0]!;
-    expect(heart().attributes("aria-label")).toBe("Garder");
+    expect(heart().attributes("aria-label")).toBe("Garder : Certified Kubernetes Administrator (CKA)");
     await heart().trigger("click");
     await flushPromises();
     expect(PUT.mock.calls[0]![1].body.status).toBe("interested");
@@ -168,44 +182,35 @@ describe("TrainingsView", () => {
     expect(wrapper.findAll("[data-test=unverified]")).toHaveLength(0);
   });
 
-  it("onglet Mes formations : seulement les formations suivies", async () => {
-    GET.mockResolvedValue({ data: page([training(1, { mark: { status: "done", progress: null, done_at: "2026-09-30", certified: true } }), training(2)]) });
+  it("Suivies : en cours en carte avec l'avancement, puis les gardées et les terminées (B19)", async () => {
+    const done = { status: "done", progress: null, done_at: "2026-09-30", certified: true };
+    const current = { status: "in_progress", progress: "Module 3 sur 6", done_at: null, certified: null };
+    const kept = { status: "interested", progress: null, done_at: null, certified: null };
+    GET.mockResolvedValue({
+      data: page([training(1, { mark: done }), training(2), training(3, { title: "CKAD", mark: current }), training(4, { title: "Terraform", mark: kept })]),
+    });
     const wrapper = await mountView("/formations?onglet=miennes");
-    expect(wrapper.findAll("[data-test=training]")).toHaveLength(1);
-    expect(wrapper.find("[data-test=training-state]").text()).toBe("Terminée");
-    await openPanel(wrapper);
+    expect(wrapper.find("[data-test=tab-mine]").classes()).toContain("active");
+    expect(wrapper.find("[data-test=tab-mine]").text()).toBe("Suivies3");
+    const card = wrapper.find("[data-test=training-current]");
+    expect(card.text()).toContain("CKAD");
+    expect(card.find(".training-current-progress").text()).toBe("Module 3 sur 6");
+    expect(card.find("[data-test=training-continue]").attributes("href")).toBe("https://training.example/3");
+    expect(wrapper.findAll("[data-test=training-kept]").map((li) => li.text())).toEqual([
+      "TerraformGardée · pas encore commencée Voir",
+      "Certified Kubernetes Administrator (CKA)Terminée Voir",
+    ]);
+    await wrapper.findAll("[data-test=training-kept] button")[1]!.trigger("click");
+    await flushPromises();
     expect((wrapper.find("[data-test=certified]").element as HTMLInputElement).checked).toBe(true);
+    await card.find("[data-test=training-update]").trigger("click");
+    expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("CKAD");
   });
 
-  it("téléphone : les mêmes cartes, fiche en plein écran, filtres derrière « Filtrer », encadré ORP replié", async () => {
-    const original = globalThis.matchMedia;
-    globalThis.matchMedia = ((query: string) =>
-      ({ matches: true, media: query, addEventListener: () => {}, removeEventListener: () => {} }) as unknown as MediaQueryList);
-    GET.mockResolvedValue({ data: page([training(1), training(2, { title: "Microsoft Learn", price: "free", kind: "parcours" })]) });
-    PUT.mockResolvedValue({ data: { status: "interested", progress: null, done_at: null, certified: null } });
-    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: TrainingsView }] });
-    await router.push("/formations");
-    const wrapper = mount(TrainingsView, { global: { plugins: [router], stubs: { teleport: true } } });
-    await flushPromises();
-
-    expect(wrapper.findAll("[data-test=training]")).toHaveLength(2);
-    expect(wrapper.find(".training-tiles").exists()).toBe(true);
-    expect(wrapper.find("[data-test=orp-note]").classes()).toContain("disclosure");
-    const toggle = wrapper.find("[data-test=training-filter-toggle]");
-    // Le mot « Filtrer » se lit (1.6.26) ; le nom accessible n'ajoute que le compte.
-    expect(toggle.text()).toBe("Filtrer");
-    expect(toggle.attributes("aria-label")).toBeUndefined();
-    expect(toggle.find("[data-test=training-filter-count]").exists()).toBe(false);
-    await wrapper.find("[data-test=filter-kind]").setValue("certification");
-    expect(toggle.attributes("aria-label")).toBe("Filtrer, 1 actif");
-    expect(toggle.find("[data-test=training-filter-count]").text()).toBe("1");
-
-    await wrapper.find("[data-test=training-open]").trigger("click");
-    expect(wrapper.find("[data-test=side-panel]").attributes("aria-label")).toBe("Certified Kubernetes Administrator (CKA)");
-    await wrapper.find("[data-test=side-panel] [data-test=mark-interested]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=training] [data-test=training-state]").text()).toBe("Intéressé");
-    globalThis.matchMedia = original;
+  it("Suivies vide : l'invitation à garder une formation", async () => {
+    GET.mockResolvedValue({ data: page([training(1)]) });
+    const wrapper = await mountView("/formations?onglet=miennes");
+    expect(wrapper.find("[data-test=trainings-none]").text()).toContain("Garde une formation du catalogue avec son signet.");
   });
 
   it("formation terminée : « Ajouter à mon profil », bloc prérempli, puis « Dans ton profil »", async () => {
@@ -255,5 +260,16 @@ describe("TrainingsView", () => {
     expect(PUT.mock.calls[0]![1].body).toEqual({ status: "requested" });
     expect(wrapper.find("[data-test=funding-badge]").text()).toBe("Financement demandé");
     expect(wrapper.find("[data-test=training-funding]").text()).toContain("Demandée le 15 oct.");
+  });
+
+  it("« Chercher d'autres formations » sans domaine : le champ du domaine s'ouvre", async () => {
+    GET.mockResolvedValue({ data: page([training(1)], { domain_keywords: [] }) });
+    const wrapper = await mountView();
+    expect(GET).toHaveBeenLastCalledWith("/api/trainings", { params: { query: { domain_only: false } } });
+    await wrapper.find("[data-test=suggest]").trigger("click");
+    await flushPromises();
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain("Indique d'abord ton domaine");
+    expect(wrapper.find("#domaine-champ").exists()).toBe(true);
   });
 });
