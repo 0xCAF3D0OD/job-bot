@@ -393,3 +393,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.179 | Ménage : 23 anciennes consignes de l'IA que plus rien ne charge, et 16 exports de l'interface que rien n'importe | livrée |
 | 1.6.180 | Les Actualités retirées aussi du serveur : plus de relevé toutes les 6 h, plus de routes ni d'outil de l'assistant ; « Mon domaine » reste, les tables restent | livrée |
 | 1.6.181 | Sécurité : règles pour les coordonnées et les enregistrements vocaux ; l'export des données est limité à 3 par 24 heures et annoncé dans la cloche | livrée en partie ; retaper le mot de passe avant l'export attend un écran validé |
+| 1.6.182 | Interface : une formation suivie peut compter ses modules (« Module 6 sur 12 », barre et compteur − / +) ; elle passe « en cours » au premier module. | livrée |
