@@ -18,8 +18,8 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const main = { id: 1, name: "Profil principal", occupation: null, is_main: true, domain_keywords: ["DevOps"], sources: 5 };
-const nurse = { id: 2, name: "Infirmière", occupation: "infirmière", is_main: false, domain_keywords: ["soins"], sources: 3 };
+const main = { id: 1, name: "Profil principal", occupation: null, is_main: true, domain_keywords: ["DevOps"] };
+const nurse = { id: 2, name: "Infirmière", occupation: "infirmière", is_main: false, domain_keywords: ["soins"] };
 
 describe("ProfilesPanel", () => {
   it("création d'un profil d'essai avec domaine, langues et pays", async () => {
@@ -79,7 +79,7 @@ describe("ProfilesPanel", () => {
     expect(titles).toEqual(["Profils d'essai", "Profil principal (principal)", "Infirmière", "Un autre profil"]);
     expect(card.findAll("[data-test=setting-row]")).toHaveLength(2);
     const [first, second] = card.findAll("[data-test=profile]");
-    expect(second!.find(".setting-row-description").text()).toBe("infirmière · soins · 3 sources");
+    expect(second!.find(".setting-row-description").text()).toBe("infirmière · soins");
     // Le profil utilisé le dit en mots (WCAG 1.4.1) ; les autres ont « Utiliser » et « ⋯ » à droite.
     expect(first!.find(".setting-row-control").text()).toContain("Utilisé");
     expect(second!.find(".setting-row-control [data-test=profile-use]").exists()).toBe(true);

@@ -18856,10 +18856,6 @@
             },
             "type": "array",
             "title": "Domain Keywords"
-          },
-          "sources": {
-            "type": "integer",
-            "title": "Sources"
           }
         },
         "type": "object",
@@ -18868,8 +18864,7 @@
           "name",
           "occupation",
           "is_main",
-          "domain_keywords",
-          "sources"
+          "domain_keywords"
         ],
         "title": "ProfileOut"
       },

@@ -4,7 +4,6 @@ import { nextTick, onMounted, ref } from "vue";
 import { api, type Profile, type ProfileList } from "../api/client";
 import { useProfiles } from "../composables/useProfiles";
 import { COUNTRIES, LANGUAGES } from "../newsLabels";
-import { plural } from "../format";
 import BusyButton from "./BusyButton.vue";
 import FormField from "./FormField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
@@ -96,12 +95,11 @@ async function create(): Promise<void> {
   }
 }
 
-// La phrase d'un profil : « infirmière · soins, EMS · 3 sources ».
+// La phrase d'un profil : « infirmière · soins, EMS ».
 function line(profile: Profile): string {
   return [
     profile.occupation,
     profile.domain_keywords.length ? profile.domain_keywords.join(", ") : "domaine non renseigné",
-    plural(profile.sources, "source", "sources"),
   ]
     .filter(Boolean)
     .join(" · ");

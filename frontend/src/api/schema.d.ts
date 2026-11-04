@@ -6552,8 +6552,6 @@ export interface components {
             is_main: boolean;
             /** Domain Keywords */
             domain_keywords: string[];
-            /** Sources */
-            sources: number;
         };
         /** ProfileUpdate */
         ProfileUpdate: {
