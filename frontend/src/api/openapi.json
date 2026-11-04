@@ -21286,6 +21286,32 @@
               }
             ],
             "title": "Certified"
+          },
+          "modules_total": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 999.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modules Total"
+          },
+          "modules_done": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 999.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modules Done"
           }
         },
         "type": "object",
@@ -21338,6 +21364,28 @@
               }
             ],
             "title": "Certified"
+          },
+          "modules_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modules Total"
+          },
+          "modules_done": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modules Done"
           },
           "chunk_id": {
             "anyOf": [
