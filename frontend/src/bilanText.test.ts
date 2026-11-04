@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bestSite, conclusion, interviewsLine, monthLine, weakStep } from "./bilanText";
+import { bestSite, conclusion, interviewsLine, weakStep } from "./bilanText";
 
 const group = (key: string, responses: number, total: number) => ({ key, label: key, responses, total, enough: total >= 5 });
 
@@ -21,11 +21,7 @@ describe("textes du Bilan (1.6.62)", () => {
     expect(weakStep({ received: 0, retained: 0, applications: 0, responses: 0, interviews: 0, engagements: 0 })).toBeNull();
   });
 
-  it("« Par mois » et « Entretiens » repliés", () => {
-    const months = [{ month: "2026-10", count: 7 }];
-    expect(monthLine(months, 10, new Date(2026, 9, 27))).toBe("Octobre : 7 candidatures sur 10, il reste 4 jours");
-    expect(monthLine(months, 10, new Date(2026, 9, 31))).toBe("Octobre : 7 candidatures sur 10, dernier jour");
-    expect(monthLine([{ month: "2026-10", count: 1 }], null, new Date(2026, 9, 2))).toBe("Octobre : 1 candidature");
+  it("« Entretiens » replié", () => {
     expect(interviewsLine([])).toBe("Pas encore d'entretien");
     expect(interviewsLine([{ application_id: 1, company: "A", day: "2026-10-14", kind: null, state: "rated", rating: 3 }])).toBe(
       "1 entretien, aucun à venir",

@@ -1,0 +1,1 @@
+Interface : Bilan › Résultats suit la maquette : la phrase, la carte du meilleur site, la période, trois chiffres, la carte Parcours en barres et les lignes du détail ; en deux colonnes sur ordinateur (étape 8d).
