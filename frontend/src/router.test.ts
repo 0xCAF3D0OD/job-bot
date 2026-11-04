@@ -45,8 +45,12 @@ describe("routes réservées (docs/18 §1)", () => {
     await router.push("/progresser");
     expect(router.currentRoute.value.path).toBe("/bilan");
     await router.push("/candidatures/bilan?mois=2026-10");
-    expect(router.currentRoute.value.fullPath).toBe("/bilan?mois=2026-10");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/resultats?mois=2026-10");
     expect(router.currentRoute.value.name).toBe("insights");
+    await router.push("/bilan?mois=2026-09");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/resultats?mois=2026-09");
+    await router.push("/bilan");
+    expect(router.currentRoute.value.name).toBe("bilan-orp");
     await router.push("/connexion?suite=/offres");
     expect(router.currentRoute.value.fullPath).toBe("/candidatures/offres");
     // Rubrique Candidatures (docs/19 §2) : /candidatures ouvre les Offres, anciens liens redirigés.

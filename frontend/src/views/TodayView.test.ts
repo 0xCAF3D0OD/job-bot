@@ -355,7 +355,7 @@ describe("Aujourd'hui en une colonne (1.6.51, docs/interface.md n° 17)", () => 
     expect(retain.find("h2").text()).toBe("À retenir");
     expect(retain.find(".today-retain-word").text()).toBe("jobs.ch");
     expect(retain.text()).toContain("Plus souvent une réponse que les offres de LinkedIn");
-    expect(retain.find("[data-test=today-retain-link]").attributes("href")).toBe("/bilan");
+    expect(retain.find("[data-test=today-retain-link]").attributes("href")).toBe("/bilan/resultats");
     mockGet(today(), null);
     wrapper = await mountView();
     expect(wrapper.find("[data-test=today-retain]").exists()).toBe(false);

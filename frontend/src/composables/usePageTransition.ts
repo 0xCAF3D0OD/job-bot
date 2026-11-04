@@ -12,6 +12,7 @@ export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform 
   offers: { label: "Offres", face: "offers" },
   applications: { label: "Suivi", face: "applications" },
   insights: { label: "Bilan", face: "insights" },
+  "bilan-orp": { label: "Bilan", face: "insights" },
   alerts: { label: "Alertes", face: "alerts" },
   "orp-meeting": { label: "Rendez-vous", face: "orp-meeting" },
   profile: { label: "Profil", face: "profile" },
