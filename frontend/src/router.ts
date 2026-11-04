@@ -35,6 +35,7 @@ const TodayView = () => import("./views/TodayView.vue");
 const TriageView = () => import("./views/TriageView.vue");
 const FollowUpsView = () => import("./views/FollowUpsView.vue");
 const TrainingsView = () => import("./views/TrainingsView.vue");
+const NotificationsView = () => import("./views/NotificationsView.vue");
 
 export interface NavEntry {
   path: string;
@@ -187,6 +188,9 @@ export const routes: RouteRecordRaw[] = [
       { path: "actualites", redirect: "/bilan" },
     ],
   },
+  // Les notifications (maquette Notifications, docs/139 étape 9a) : la page de la cloche sur téléphone, « Tout
+  // voir » sur ordinateur.
+  { path: "/notifications", name: "notifications", component: NotificationsView },
   // Diagnostic technique, sorti des Réglages (docs/21 §6).
   { path: "/reglages/diagnostic", name: "diagnostic", component: DiagnosticView },
   // Connexion (docs/18 §1).

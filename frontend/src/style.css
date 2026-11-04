@@ -940,18 +940,6 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .bell-panel { position: absolute; right: 0; top: 2.9rem; z-index: 40; width: min(24rem, calc(100vw - 2rem)); max-height: 70vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 16px 40px rgba(17, 17, 31, 0.16); padding: var(--space-2); }
 .bell-head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-2) var(--space-2); }
 /* Sur téléphone, la cloche en feuille plein écran : les alertes non lues gardent leur fond teinté. */
-.sheet .bell-head { padding: 0; }
-.bell-unread > .grouped-row { background: var(--accent-soft); }
-.bell-unread .grouped-row-title { font-weight: var(--weight-semibold); }
-.bell-unread :is(.grouped-row-description, .grouped-value) { color: var(--text); } /* --muted : 4,3:1 seulement sur ce fond */
-.bell-panel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
-.bell-item { width: 100%; display: grid; gap: var(--space-1); text-align: left; border: 0; background: transparent; padding: var(--space-2) var(--space-3); border-radius: var(--radius); font-weight: var(--weight-regular); }
-.bell-item:hover { background: var(--band); }
-.bell-item.unread { background: var(--accent-soft); }
-.bell-item.unread .bell-title { font-weight: var(--weight-bold); }
-.bell-title { font-size: var(--font-small); color: var(--text); }
-.bell-text { font-size: var(--font-small); color: var(--muted); overflow-wrap: anywhere; } /* Jamais de « … » dans une ligne de liste (§2) : le texte passe à la ligne. */
-.bell-time { font-size: var(--font-caption); color: var(--muted); }
 .bell-empty { padding: var(--space-2) var(--space-3) var(--space-3); margin: 0; }
 
 /* Actualités (docs/15 §2) */
@@ -1320,8 +1308,6 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 .account-panel > a:hover,
 .account-panel > .link:hover,
 .assistant-recent-item:hover,
-.bell-item:not(.unread):hover { background: none; color: var(--accent); text-shadow: var(--hover-bold); }
-.bell-item:hover .bell-title { color: var(--accent); }
 .account-panel > a.router-link-active,
 .more-menu .menu button[aria-checked="true"] { background: none; color: var(--accent); font-weight: var(--weight-semibold); }
 .more-menu .menu .danger:hover { color: var(--text); }
@@ -1350,7 +1336,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 /* §4 Zones de clic sur écran tactile : 44 × 44 px au moins, sans changer l'aspect (zone
    invisible agrandie autour des petits éléments). */
 @media (pointer: coarse), (max-width: 820px) {
-  .link, button.link, .close, .assistant-close, .chip, .bell-item, .filter-row { position: relative; }
+  .link, button.link, .close, .assistant-close, .chip, .filter-row { position: relative; }
   .link::before, button.link::before, .close::before, .assistant-close::before {
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: max(100%, 2.75rem);
     transform: translate(-50%, -50%);
@@ -1403,7 +1389,7 @@ button, .button-link { max-width: 100%; }
 .disclosure-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .disclosure-list > .disclosure { border: 0; border-radius: 0; margin: 0; }
 .disclosure-list > .disclosure + .disclosure { border-top: 1px solid var(--divider); }
-.disclosure-row, .filter-row, .bell-item { white-space: normal; }
+.disclosure-row, .filter-row { white-space: normal; }
 .disclosure-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-4) var(--space-6); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
 .disclosure-row:hover .disclosure-title, .disclosure.open .disclosure-title { color: var(--accent); }
 /* Ouvert, le titre est déjà en accent : le survol teinte la ligne (1.6.4). */
@@ -4530,3 +4516,39 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-modules-count { min-width: 2.5rem; text-align: center; font-size: var(--font-title); font-weight: var(--weight-bold); }
 .training-modules-finish { justify-self: start; min-height: var(--target-min); }
 @media (prefers-reduced-motion: reduce) { .training-modules-bar span { transition: none; } }
+/* Notifications (maquette Notifications, docs/139 étape 9a). La page : retour, titre, « Tout lire » ; le filtre ;
+   un groupe par jour, chaque groupe dans une carte. Le panneau de la cloche reprend les mêmes lignes. */
+.notifications-page { display: grid; gap: var(--space-4); max-width: 40rem; }
+.notifications-head { display: flex; align-items: center; gap: var(--space-1); margin-left: calc(-1 * var(--space-3)); }
+.notifications-head h1 { flex: 1; margin: 0; font-size: var(--font-section); }
+.notifications-head .icon-button { display: inline-flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; color: var(--text); }
+.notifications-head .icon-button .icon { width: 1.5rem; height: 1.5rem; }
+.notifications-read-all { min-height: var(--target-min); padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.notifications-read-all:disabled { background: transparent; color: var(--text-secondary); }
+.notifications-group { display: grid; gap: var(--space-2); }
+.notifications-group h2 { margin: 0; padding: 0 var(--space-1); font-size: var(--label-caps); font-weight: var(--weight-bold); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
+.notifications-card { margin: 0; padding: 0; list-style: none; overflow: hidden; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.notifications-card li + li { border-top: 1px solid var(--line-soft); }
+/* Non lue : un fond bleu très clair (la moitié de --primary-soft sur la carte, #F4F6FD de la maquette), --primary-soft
+   en sombre (décision du 2026-11-04), le titre plus gras et le point bleu. */
+.notif-row { --notif-unread: color-mix(in srgb, var(--primary-soft) 50%, var(--surface)); display: grid; gap: var(--space-1); width: 100%; box-sizing: border-box; min-height: 0; padding: var(--space-3) var(--space-4); border: 0; border-radius: 0; background: var(--surface); color: var(--text); text-align: left; text-decoration: none; white-space: normal; font-weight: var(--weight-regular); }
+.notif-row.unread { background: var(--notif-unread); }
+.notif-row:hover { background: var(--band); }
+.notif-row.unread:hover { background: var(--primary-soft); }
+.notif-row-head { display: flex; align-items: flex-start; gap: var(--space-2); }
+.notif-row-title { flex: 1; min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
+.notif-row.unread .notif-row-title { font-weight: var(--weight-bold); }
+.notif-row-time { display: flex; flex: none; align-items: center; gap: var(--space-2); padding-top: var(--space-1); font-size: var(--font-caption); color: var(--text-secondary); }
+.notif-row-dot { width: 0.5rem; height: 0.5rem; border-radius: var(--radius-pill); background: var(--primary-graphic); }
+.notif-row-text { font-size: var(--font-small); line-height: var(--leading-normal); color: var(--text-tertiary); overflow-wrap: anywhere; }
+.notifications-settings { display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); font-weight: var(--weight-bold); text-decoration: none; }
+.notifications-empty { padding: var(--space-12) var(--space-6); }
+.bell-panel .notifications-card { border: 0; border-radius: var(--radius-sm); }
+.bell-all { display: flex; align-items: center; justify-content: center; min-height: var(--target-min); font-weight: var(--weight-bold); text-decoration: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .notif-row { --notif-unread: var(--primary-soft); }
+  :root:not([data-theme="light"]) .notif-row.unread:hover { background: var(--band); }
+}
+:root[data-theme="dark"] .notif-row { --notif-unread: var(--primary-soft); }
+:root[data-theme="dark"] .notif-row.unread:hover { background: var(--band); }
+@media (max-width: 820px) { :root:has(.notifications-head) .topbar { display: none; } }

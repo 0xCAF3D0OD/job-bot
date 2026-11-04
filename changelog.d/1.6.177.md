@@ -1,0 +1,1 @@
+Interface : la cloche mène à une page Notifications sur téléphone (filtre Toutes ou Non lues, groupes par jour, « Tout lire » annulable) ; sur ordinateur, son panneau reprend les mêmes lignes avec « Tout voir ».
