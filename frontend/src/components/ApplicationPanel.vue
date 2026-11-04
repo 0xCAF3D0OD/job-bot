@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-import type { Application, ApplicationStatus, Interview, OrpRow } from "../api/client";
+import { api, type Application, type ApplicationStatus, type Interview, type OrpRow } from "../api/client";
 import { noAnswerText, followUpDue, interviewUpcoming, needsFeedback, noAnswerDue } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { dateInList, dateInSentence, meetingDate } from "../dates";
@@ -29,6 +29,42 @@ const emit = defineEmits<{
   practice: [application: Application];
   changed: [];
 }>();
+
+// La relance (revue de l'étape 7c, reprise de l'ancienne étape « Suivre ») : le jour choisi, sinon 10 jours
+// après l'envoi ; « Changer » propose un jour entre 5 et 30 jours après l'envoi. Une fois répondue ou relancée,
+// plus de relance prévue.
+const REMIND_AFTER_DAYS = 10;
+const MIN_DAYS = 5;
+const MAX_DAYS = 30;
+function shift(day: string, days: number): string {
+  const d = new Date(`${day}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+const followUpOn = ref<string | null>(null);
+const remindOn = computed(() => followUpOn.value ?? props.application.follow_up_on ?? shift(props.application.sent_at, REMIND_AFTER_DAYS));
+const remindEditing = ref(false);
+const remindDraft = ref("");
+const remindError = ref("");
+function startRemind(): void {
+  remindError.value = "";
+  remindDraft.value = remindOn.value;
+  remindEditing.value = true;
+}
+async function saveRemind(): Promise<void> {
+  remindError.value = "";
+  const { data } = await api.PATCH("/api/applications/{application_id}/follow-up-date", {
+    params: { path: { application_id: props.application.id } },
+    body: { follow_up_on: remindDraft.value || null },
+  });
+  if (!data) {
+    remindError.value = `Choisis un jour entre ${MIN_DAYS} et ${MAX_DAYS} jours après l'envoi.`;
+    return;
+  }
+  followUpOn.value = data.follow_up_on ?? shift(data.sent_at, REMIND_AFTER_DAYS);
+  remindEditing.value = false;
+  emit("changed");
+}
 
 // Lien vers la plateforme dans l'événement d'agenda (docs/40 §1).
 const origin = globalThis.location?.origin ?? "";
@@ -197,6 +233,67 @@ const onStatus = (event: Event): void =>
           @click="emit('status', application, 'sans_reponse')"
         >
           Passer en Sans réponse
+        </button>
+      </p>
+      <p
+        v-if="application.status !== 'en_attente'"
+        class="panel-line muted"
+        data-test="panel-remind"
+      >
+        Plus de relance prévue
+      </p>
+      <form
+        v-else-if="remindEditing"
+        class="panel-line remind-edit"
+        data-test="panel-remind"
+        @submit.prevent="saveRemind"
+      >
+        <label>
+          <span>Relance le</span>
+          <input
+            v-model="remindDraft"
+            type="date"
+            :min="shift(application.sent_at, MIN_DAYS)"
+            :max="shift(application.sent_at, MAX_DAYS)"
+            :aria-invalid="remindError ? 'true' : undefined"
+            :aria-describedby="remindError ? 'remind-error' : undefined"
+            data-test="remind-date"
+          >
+        </label>
+        <button
+          type="submit"
+          class="primary small"
+          data-test="remind-save"
+        >
+          Enregistrer
+        </button>
+        <button
+          type="button"
+          class="link"
+          @click="remindEditing = false"
+        >
+          Annuler
+        </button>
+        <span
+          v-if="remindError"
+          id="remind-error"
+          class="field-error"
+          role="alert"
+        >{{ remindError }}</span>
+      </form>
+      <p
+        v-else
+        class="panel-line"
+        data-test="panel-remind"
+      >
+        Relance : {{ dateInSentence(`${remindOn}T12:00:00`) }} ·
+        <button
+          type="button"
+          class="link"
+          data-test="remind-change"
+          @click="startRemind"
+        >
+          Changer<span class="visually-hidden"> le jour de la relance</span>
         </button>
       </p>
     </section>
