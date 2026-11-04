@@ -9,8 +9,9 @@ import io
 import json
 import re
 import zipfile
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
@@ -33,6 +34,7 @@ from jobbot.db.models import (
     UserSession,
 )
 from jobbot.log import get_logger
+from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["account"])
@@ -145,6 +147,12 @@ ACCOUNT_FIELDS = (
 )
 
 
+# Un export par session volée doit se voir et rester rare (docs/regles-securite-donnees.md §9).
+EXPORT_KIND = "data_export"
+EXPORT_LIMIT = 3
+EXPORT_WINDOW = timedelta(hours=24)
+
+
 def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, indent=1, default=str)
 
@@ -152,10 +160,33 @@ def _json(value: Any) -> str:
 @router.get(
     "/account/export",
     operation_id="exportAccount",
-    responses={200: {"content": {"application/zip": {}}, "description": "Archive ZIP"}},
+    responses={
+        200: {"content": {"application/zip": {}}, "description": "Archive ZIP"},
+        429: {"description": "Trop d'exports en 24 heures"},
+    },
 )
 async def export_account(request: Request) -> Response:
+    """L'archive de toutes les données du compte. Contre une session volée
+    (docs/regles-securite-donnees.md, X-2 et X-3) : 3 exports par 24 heures au plus, et
+    chaque export est annoncé dans la cloche et sur le téléphone, sans rien de son contenu."""
     runtime = _runtime(request)
+    async with runtime.sessionmaker() as session:
+        since = datetime.now(UTC) - EXPORT_WINDOW
+        recent = list(
+            await session.scalars(
+                select(Notification.created_at)
+                .where(Notification.kind == EXPORT_KIND, Notification.created_at > since)
+                .order_by(Notification.created_at)
+            )
+        )
+    if len(recent) >= EXPORT_LIMIT:
+        wait = max(1, int((recent[0] + EXPORT_WINDOW - datetime.now(UTC)).total_seconds()))
+        log.warning("account_export_limited", exports=len(recent))
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            f"{EXPORT_LIMIT} exports par 24 heures au plus : réessaie plus tard",
+            headers={"Retry-After": str(wait)},
+        )
     buffer = io.BytesIO()
     async with runtime.sessionmaker() as session:
         username = await session.scalar(select(User.username).where(User.id == accounts.current()))
@@ -218,10 +249,34 @@ async def export_account(request: Request) -> Response:
     day = datetime.now(UTC).strftime("%Y-%m-%d")
     name = f"jobA1-{_safe(username or 'compte')}-{day}.zip"
     log.info("account_exported", tables=len(tables))
+    await _announce_export(runtime)
     return Response(
         buffer.getvalue(),
         media_type="application/zip",
-        headers={"Content-Disposition": f'attachment; filename="{name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{name}"',
+            # Ni le navigateur ni un intermédiaire ne gardent une copie de l'archive.
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+async def _announce_export(runtime: Runtime) -> None:
+    """La cloche et le téléphone : l'heure de l'export et quoi faire si ce n'était pas toi.
+    Rien des données elles-mêmes (le téléphone passe par ntfy, un service tiers)."""
+    at = datetime.now(ZoneInfo("Europe/Zurich"))
+    await notify.deliver(
+        runtime,
+        notify.Message(
+            title="Tes données ont été exportées",
+            message=(
+                f"Le {at:%d.%m.%Y} à {at:%H:%M}. Si ce n'est pas toi : Réglages, "
+                "« Se déconnecter partout », puis change ton mot de passe."
+            ),
+            priority=4,
+        ),
+        kind=EXPORT_KIND,
+        link="/reglages",
     )
 
 

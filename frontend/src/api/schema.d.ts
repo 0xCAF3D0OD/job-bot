@@ -306,7 +306,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Export Account */
+        /**
+         * Export Account
+         * @description L'archive de toutes les données du compte. Contre une session volée
+         *     (docs/regles-securite-donnees.md, X-2 et X-3) : 3 exports par 24 heures au plus, et
+         *     chaque export est annoncé dans la cloche et sur le téléphone, sans rien de son contenu.
+         */
         get: operations["exportAccount"];
         put?: never;
         post?: never;
@@ -8690,6 +8695,13 @@ export interface operations {
                     "application/json": unknown;
                     "application/zip": unknown;
                 };
+            };
+            /** @description Trop d'exports en 24 heures */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
