@@ -24,6 +24,8 @@ defineProps<{ title: string; subtitle?: string; short?: string; eyebrow?: string
     <h1 v-else>
       {{ title }}
     </h1>
+    <!-- Une action de la page, sur la ligne du titre (le « ⋯ » de Ma candidature). -->
+    <slot name="actions" />
     <p
       v-if="subtitle"
       class="page-head-sub"
