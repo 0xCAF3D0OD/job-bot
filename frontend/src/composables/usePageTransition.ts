@@ -13,6 +13,7 @@ export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform 
   applications: { label: "Suivi", face: "applications" },
   insights: { label: "Bilan", face: "insights" },
   "bilan-orp": { label: "Bilan", face: "insights" },
+  "orp-month": { label: "Suivi ORP", face: "applications" },
   alerts: { label: "Alertes", face: "alerts" },
   "orp-meeting": { label: "Rendez-vous", face: "orp-meeting" },
   profile: { label: "Profil", face: "profile" },

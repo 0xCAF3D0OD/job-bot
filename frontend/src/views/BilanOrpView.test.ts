@@ -44,12 +44,12 @@ describe("Bilan › ORP", () => {
     expect(goal.find("[data-test=liquid-circle]").attributes("aria-label")).toBe("4 recherches sur 10");
     expect(goal.find("h2").text()).toBe("6 recherches à faire");
     expect(goal.find("p").text()).toBe("Objectif fixé avec l'ORP. Échéance le 31 octobre.");
-    const rows = wrapper.findAll("[data-test=orp-last] li");
+    const rows = wrapper.findAll("[data-test=orp-rows] li");
     expect(rows.map((r) => r.find(".orp-what strong").text())).toEqual(["Alpstack", "Romandie Logistics", "Léman Data SA"]);
     expect(rows[0]!.text()).toContain("DevOps Engineer · Électronique");
     expect(rows.map((r) => r.find(".status-pill").text())).toEqual(["Preuve", "À joindre", "Preuve"]);
     // L'ordre de la page (B6).
-    const order = ["orp-goal", "orp-export", "orp-last", "orp-all", "rhythm"].map((t) => wrapper.html().indexOf(`data-test="${t}"`));
+    const order = ["orp-goal", "orp-export", "orp-rows", "orp-all", "rhythm"].map((t) => wrapper.html().indexOf(`data-test="${t}"`));
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 

@@ -25,6 +25,8 @@ import DisclosureRow from "../components/DisclosureRow.vue";
 import InterviewForm from "../components/InterviewForm.vue";
 import InterviewPractice from "../components/InterviewPractice.vue";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
+import OrpGoalCard from "../components/OrpGoalCard.vue";
+import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
 import SuiviCalendar from "../components/SuiviCalendar.vue";
 import CardHead from "../components/CardHead.vue";
@@ -45,17 +47,19 @@ import InlineConfirm from "../components/InlineConfirm.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
 import { useNarrow } from "../composables/usePhone";
 
-// Onglet Suivi (docs/22) : candidatures et preuves ORP du mois. L'essentiel d'abord (règles §3.2,
-// annexe de l'audit) : la phrase de ce qui est à faire, le mois, la liste « À faire » ; le
-// calendrier et la liste du mois sont repliés dessous (§3.4).
+// Deux pages sur les mêmes données (docs/139 étape 8b ; B7 et B8, Kevin, 2026-11-04) :
+// - Candidatures › Envoyées (docs/22) : la phrase des relances, la ligne « Objectif ORP : n sur N » vers
+//   Bilan › ORP, « À relancer », puis la liste des candidatures, repliée (règles §3.4) ;
+// - le Suivi ORP (/bilan/orp, maquette Orp) : le mois, l'objectif, le bandeau de la remise quand il est utile,
+//   l'export, les recherches du mois, puis « Ajouter », « À déclarer » et le calendrier.
 const TODO_ROWS = 3;
 const { phone: narrow } = useNarrow();
-const SEGMENTS_MAX = 15;
 
 const route = useRoute();
 const router = useRouter();
+const orpPage = route.name === "orp-month";
 const orp = ref<OrpMonth | null>(null);
-usePageReady("applications", () => !!orp.value);
+usePageReady(orpPage ? "orp-month" : "applications", () => !!orp.value);
 const all = ref<Application[]>([]);
 const allMonths = ref(false);
 const monthScope = computed({ get: () => (allMonths.value ? "tout" : "mois"), set: (v: string) => (allMonths.value = v === "tout") });
@@ -123,10 +127,6 @@ const monthMenu = computed<MoreMenuItem[]>(() => {
   ];
 });
 const firstIncomplete = computed(() => monthItems.value.find((a) => incomplete.value.has(a.id)) ?? null);
-// L'objectif en cases, une par candidature (règles §4), comme sur Aujourd'hui ; au-delà de 15,
-// une barre continue.
-const segments = computed(() => (orp.value?.target && orp.value.target <= SEGMENTS_MAX ? orp.value.target : 0));
-const share = computed(() => (orp.value?.target ? Math.min(100, Math.round((orp.value.count / orp.value.target) * 100)) : 0));
 const dayTitle = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long" });
 // Le bandeau des preuves (docs/134) : ce qui reste à faire, et pour quand.
 const bannerText = computed(() => {
@@ -171,17 +171,12 @@ const dayCards = computed(() => {
   );
 });
 
-// La conclusion (règles §3.2) : ce qui reste à faire, les nombres en accent.
+// La conclusion d'Envoyées (règles §3.2) : les relances à faire, le nombre en accent. « À déclarer » est
+// dans le Suivi ORP.
 const sentence = computed<{ text: string; strong?: boolean }[]>(() => {
   const follow = toFollowUp.value.length;
-  const declare = orp.value?.count ? toDeclare.value.length : 0;
-  if (!follow && !declare) return [{ text: "Rien à relancer ni à déclarer." }];
-  const parts: { text: string; strong?: boolean }[] = [];
-  if (follow) parts.push({ text: plural(follow, "relance", "relances"), strong: true }, { text: " à faire" });
-  if (follow && declare) parts.push({ text: " et " });
-  if (declare) parts.push({ text: plural(declare, "candidature", "candidatures"), strong: true }, { text: " à déclarer" });
-  parts.push({ text: "." });
-  return parts;
+  if (!follow) return [{ text: "Rien à relancer." }];
+  return [{ text: plural(follow, "relance", "relances"), strong: true }, { text: " à faire." }];
 });
 // À relancer, puis à déclarer dans Job-Room (docs/133 §1) : deux listes l'une sous l'autre (1.6.27 ;
 // le sélecteur faisait un troisième niveau d'onglets, règles §2), trois lignes, « Afficher plus » pour le reste.
@@ -444,25 +439,22 @@ onUnmounted(() => assistant.setFocus(null));
 </script>
 
 <template>
-  <section class="jobs-body">
+  <section :class="['jobs-body', { 'orp-page': orpPage }]">
     <template v-if="orp">
-      <!-- La conclusion d'abord (règles §3.2 ; annexe de l'audit : Suivi trop chargé). -->
-      <p
-        v-if="loaded && all.length"
-        class="offers-sentence suivi-sentence"
-        data-test="suivi-sentence"
-      >
-        <component
-          :is="part.strong ? 'strong' : 'span'"
-          v-for="(part, index) in sentence"
-          :key="index"
-        >
-          {{ part.text }}
-        </component>
-      </p>
-      <!-- Une ligne : le mois, l'objectif en cases, puis « Ajouter » et le « ⋯ » du mois. -->
-      <div class="applications-head">
-        <div class="month-nav">
+      <template v-if="orpPage">
+        <!-- La tête de la sous-page (maquette Orp) : le retour au Bilan et le titre. -->
+        <header class="orp-page-head">
+          <RouterLink
+            to="/bilan"
+            class="icon-button icon-only"
+            aria-label="Retour au Bilan"
+            data-test="orp-back"
+          >
+            <AppIcon name="arrow-left" />
+          </RouterLink>
+          <h1>Suivi ORP</h1>
+        </header>
+        <div class="month-nav orp-page-month">
           <IconButton
             icon="arrow-left"
             label="Mois précédent"
@@ -477,108 +469,124 @@ onUnmounted(() => assistant.setFocus(null));
             @click="go(1)"
           />
         </div>
+        <OrpGoalCard :data="orp" />
+        <!-- L'état des preuves du mois, juste sous l'objectif (B8) : une phrase, une action ; seulement s'il y
+             a à faire ou si elles sont remises (docs/134). -->
         <div
-          class="month-goal"
-          data-test="goal"
+          v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
+          :class="['today-banner', 'applications-banner', { done: orp.state === 'remis' }]"
+          data-test="orp-banner"
         >
-          <span><strong>{{ orp.count }}</strong>{{ orp.target ? ` / ${orp.target}` : "" }}<span :class="{ 'goal-unit': orp.target }">{{ orp.count === 1 ? " candidature" : " candidatures" }}</span></span>
-          <div
-            v-if="orp.target"
-            :class="['orp-month-bar', { continuous: !segments }]"
-            role="progressbar"
-            aria-label="Objectif ORP du mois"
-            :aria-valuenow="orp.count"
-            aria-valuemin="0"
-            :aria-valuemax="orp.target"
+          <span data-test="state">{{ bannerText }}</span>
+          <!-- Une action ORP à la fois (docs/22 §2). -->
+          <button
+            v-if="orp.state === 'remis'"
+            type="button"
+            class="link"
+            :disabled="busy"
+            data-test="cancel-submit"
+            @click="confirmingCancel = true"
           >
-            <template v-if="segments">
-              <span
-                v-for="index in segments"
-                :key="index"
-                :class="['segment', { done: index <= orp.count }]"
-              />
-            </template>
-            <span
-              v-else
-              class="fill"
-              :style="{ width: `${share}%` }"
-            />
-          </div>
-          <span
+            Annuler la remise
+          </button>
+          <button
+            v-else-if="firstIncomplete"
+            type="button"
+            class="link"
+            data-test="complete-next"
+            @click="edit(firstIncomplete)"
+          >
+            Compléter
+          </button>
+          <button
             v-else
-            class="hint"
-          >Objectif ORP à saisir dans les Réglages.</span>
+            type="button"
+            class="link"
+            :disabled="busy"
+            data-test="submit"
+            @click="submit(true)"
+          >
+            Marquer comme remis
+          </button>
         </div>
-        <div class="applications-tools">
+        <InlineConfirm
+          v-if="confirmingCancel && orp.state === 'remis'"
+          message="Annuler la remise de ce mois ? Les preuves repassent « à remettre »."
+          confirm-label="Annuler la remise"
+          cancel-label="Garder la remise"
+          @confirm="submit(false)"
+          @cancel="confirmingCancel = false"
+        />
+        <!-- L'export du formulaire ; le CSV et le PDF avec le journal restent dans le « ⋯ » (docs/85 §3). -->
+        <div class="orp-export-row">
           <button
             type="button"
-            class="pill add-application"
-            data-test="add-application"
-            @click="addManual"
+            class="secondary orp-export"
+            data-test="pdf"
+            @click="sheet?.printPdf()"
           >
-            <span class="with-icon"><AppIcon name="plus" />Ajouter</span>
+            <AppIcon name="download" />Exporter le formulaire (PDF)
           </button>
           <MoreMenu
             v-if="orp.count"
-            :items="monthMenu"
+            :items="monthMenu.slice(1)"
             label="Plus d'actions sur le mois"
             test-id="orp-more"
           />
         </div>
-      </div>
-      <!-- L'état des preuves du mois, un bandeau daté comme sur Aujourd'hui (docs/134) : une
-           phrase, une action ; seulement s'il y a à faire ou si elles sont remises. -->
-      <div
-        v-if="orp.count && (orp.state !== 'en_cours' || firstIncomplete)"
-        :class="['today-banner', 'applications-banner', { done: orp.state === 'remis' }]"
-        data-test="orp-banner"
-      >
-        <span data-test="state">{{ bannerText }}</span>
-        <!-- Une action ORP à la fois (docs/22 §2). -->
-        <button
-          v-if="orp.state === 'remis'"
-          type="button"
-          class="link"
-          :disabled="busy"
-          data-test="cancel-submit"
-          @click="confirmingCancel = true"
+        <OrpSheet
+          ref="sheet"
+          :data="orp"
+          @reload="load"
+        />
+        <section
+          class="orp-last orp-month-list"
+          aria-labelledby="orp-month-title"
         >
-          Annuler la remise
-        </button>
+          <h2 id="orp-month-title">
+            <span>Recherches du mois</span>
+            <span>{{ plural(orp.rows.length, "entrée", "entrées") }}</span>
+          </h2>
+          <OrpSearchRows
+            :rows="orp.rows"
+            open
+            @open="openId = $event"
+          />
+        </section>
         <button
-          v-else-if="firstIncomplete"
           type="button"
-          class="link"
-          data-test="complete-next"
-          @click="edit(firstIncomplete)"
+          class="pill add-application"
+          data-test="add-application"
+          @click="addManual"
         >
-          Compléter
+          <span class="with-icon"><AppIcon name="plus" />Ajouter une recherche</span>
         </button>
-        <button
-          v-else
-          type="button"
-          class="link"
-          :disabled="busy"
-          data-test="submit"
-          @click="submit(true)"
+      </template>
+      <template v-else>
+        <!-- La conclusion d'abord (règles §3.2 ; annexe de l'audit : Suivi trop chargé). -->
+        <p
+          v-if="loaded && all.length"
+          class="offers-sentence suivi-sentence"
+          data-test="suivi-sentence"
         >
-          Marquer comme remis
-        </button>
-      </div>
-      <InlineConfirm
-        v-if="confirmingCancel && orp.state === 'remis'"
-        message="Annuler la remise de ce mois ? Les preuves repassent « à remettre »."
-        confirm-label="Annuler la remise"
-        cancel-label="Garder la remise"
-        @confirm="submit(false)"
-        @cancel="confirmingCancel = false"
-      />
-
-      <OrpSheet
-        ref="sheet"
-        :data="orp"
-        @reload="load"
-      />
+          <component
+            :is="part.strong ? 'strong' : 'span'"
+            v-for="(part, index) in sentence"
+            :key="index"
+          >
+            {{ part.text }}
+          </component>
+        </p>
+        <!-- L'objectif du mois, une ligne vers Bilan › ORP (B7). -->
+        <RouterLink
+          to="/bilan"
+          class="orp-goal-line"
+          data-test="goal"
+        >
+          <span>Objectif ORP : <strong>{{ orp.target ? `${orp.count} sur ${orp.target}` : "à indiquer" }}</strong></span>
+          <AppIcon name="chevron" />
+        </RouterLink>
+      </template>
 
       <EngagementMoment
         v-if="celebrating"
@@ -608,7 +616,7 @@ onUnmounted(() => assistant.setFocus(null));
 
       <!-- Aucune candidature du tout (docs/128 §3) : ce qui remplit le Suivi. -->
       <FaceState
-        v-if="loaded && !all.length"
+        v-if="!orpPage && loaded && !all.length"
         title="Pas encore de candidature"
         data-test="applications-none-yet"
       >
@@ -625,6 +633,7 @@ onUnmounted(() => assistant.setFocus(null));
       <template v-else-if="loaded">
         <!-- L'essentiel : à relancer, puis à déclarer, trois lignes chacune (règles §2 et §3). -->
         <section
+          v-if="!orpPage"
           class="dash-card suivi-todo"
           data-test="todo"
         >
@@ -675,7 +684,7 @@ onUnmounted(() => assistant.setFocus(null));
           </RouterLink>
         </section>
         <section
-          v-if="orp.count"
+          v-if="orpPage && orp.count"
           class="dash-card suivi-todo suivi-declare"
           aria-label="À déclarer dans Job-Room"
           data-test="declare"
@@ -727,10 +736,14 @@ onUnmounted(() => assistant.setFocus(null));
           class="bilan-detail suivi-detail"
           data-test="suivi-detail"
         >
-          <h2 class="section-title first">
+          <h2
+            v-if="!orpPage"
+            class="section-title first"
+          >
             Le détail
           </h2>
           <DisclosureRow
+            v-if="orpPage"
             :key="calendarKey"
             :title="`Calendrier ${ofMonth(orp.month)}`"
             icon="calendar"
@@ -790,6 +803,7 @@ onUnmounted(() => assistant.setFocus(null));
             </section>
           </DisclosureRow>
           <DisclosureRow
+            v-else
             :title="wanted.length ? `Candidatures « ${words.trim()} »` : `Toutes les candidatures ${ofMonth(orp.month)}`"
             icon="list-check"
             :description="listLine"

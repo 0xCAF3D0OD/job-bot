@@ -1,0 +1,1 @@
+Interface : le Suivi ORP du mois devient une sous-page du Bilan (objectif, remise des preuves, export, recherches du mois, À déclarer, calendrier) ; Candidatures › Envoyées garde les relances, la liste et une ligne « Objectif ORP : n sur N ».
