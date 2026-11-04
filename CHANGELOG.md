@@ -387,3 +387,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.173 | Interface : Bilan › Formations suit la maquette : Catalogue · Suivies soulignés, l'encadré du financement, des puces de filtre, les formations en lignes groupées avec leur signet, et Suivies en cartes (étape 8e). | livrée |
 | 1.6.174 | Interface : les puces de filtre et le bouton « Voir » des Formations gardent 40 px à l'écran avec une zone tactile de 44 px. | livrée |
 | 1.6.175 | Tests et docs : les codes d'adresse d'alerte réels remplacés par des codes factices (audit sécurité) | livrée |
+| 1.6.176 | La doc en 10 minutes : un README d'une page avec 3 schémas Lucidchart, et un guide de lecture des docs par sujet | livrée |
+| 1.6.177 | Interface : la cloche mène à une page Notifications sur téléphone (filtre Toutes ou Non lues, groupes par jour, « Tout lire » annulable) ; sur ordinateur, son panneau reprend les mêmes lignes avec « Tout voir ». | livrée |
