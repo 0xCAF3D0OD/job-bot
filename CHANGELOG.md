@@ -379,3 +379,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.165 | Interface : la fiche d'une candidature envoyée montre « Relance : le … · Changer » pour choisir le jour de la relance ; Postuler propose « J'ai déjà postulé » avant d'ouvrir le formulaire ; « Je n'ai pas postulé » remet l'offre en préparation et le menu Candidatures y ramène. | livrée |
 | 1.6.166 | Interface : quand le jour de relance est arrivé et que la candidature attend toujours une réponse, sa fiche affiche « Relance à faire » (avec « Changer »). | livrée |
 | 1.6.167 | Interface : réglage « Apparence » (Clair, Sombre, Auto) dans les Réglages, retenu sur l’appareil, sur téléphone et ordinateur. | livrée |
+| 1.6.168 | CI : sur main, les tests de chaque commit vont jusqu’au bout (plus d’annulation par un lancement suivant) ; seules les PR annulent encore leurs anciens lancements | livrée |
