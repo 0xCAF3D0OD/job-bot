@@ -18,7 +18,6 @@ export const LANGUAGES: Record<string, string> = {
   es: "espagnol",
 };
 
-export const countryLabel = (code: string): string => COUNTRIES[code] ?? code;
 export const languageLabel = (code: string): string => LANGUAGES[code] ?? code;
 
 export interface Segment {

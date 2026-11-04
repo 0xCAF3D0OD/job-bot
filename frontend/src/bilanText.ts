@@ -15,7 +15,7 @@ function capital(text: string): string {
 }
 
 // En français, 0 et 1 prennent le singulier : « 0 poste obtenu ».
-export function word(n: number, one: string, many: string): string {
+function word(n: number, one: string, many: string): string {
   return n > 1 ? many : one;
 }
 
