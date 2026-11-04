@@ -4461,8 +4461,11 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-funding-note > span:nth-child(2) { display: grid; flex: 1; gap: var(--space-1); }
 .training-funding-note > span:nth-child(2) > span, .training-row-text > span:nth-child(2), .training-current-head span span, .training-kept li > span > span, .training-help { font-size: var(--font-small); color: var(--text-secondary); }
 .training-funding-icon { display: grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--warning); }
-.training-chips { display: flex; gap: var(--space-2); margin-inline: calc(var(--space-4) * -1); padding: 0 var(--space-4); overflow-x: auto; scrollbar-width: none; }
-.training-chip { flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+.training-chips { --chip-reach: calc((var(--target-min) - var(--btn-compact)) / 2); display: flex; gap: var(--space-2); margin: calc(var(--chip-reach) * -1) calc(var(--space-4) * -1); padding: var(--chip-reach) var(--space-4); overflow-x: auto; scrollbar-width: none; }
+.training-chip { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 1.5px solid var(--line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+/* Les puces et « Voir » gardent 40 px à l'œil (--btn-compact) ; la zone touchable atteint 44 px
+   (le ::after part du bord intérieur, d'où les 1,5 px de la bordure). */
+.training-chip::after, .training-see::after { content: ""; position: absolute; inset: calc((var(--target-min) - var(--btn-compact)) / -2 - 1.5px) 0; }
 .training-chip[aria-pressed="true"] { border-color: var(--primary-graphic); background: var(--primary-soft); color: var(--primary-text); }
 .training-groups { display: grid; gap: var(--space-5); }
 .training-section { display: grid; gap: var(--space-2); align-content: start; }
@@ -4497,14 +4500,14 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .training-current-actions .link { min-height: var(--target-min); font-size: var(--font-body); }
 .training-kept { display: grid; gap: var(--space-3); }
 .training-kept li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
-.training-see { flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+.training-see { position: relative; flex: none; min-height: var(--btn-compact); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
 .training-help { margin: 0 var(--space-1); line-height: var(--leading-normal); }
 .training-funding-sheet { display: grid; }
 .training-funding-sheet p { margin: 0 0 var(--space-3); line-height: var(--leading-normal); }
 .training-funding-sheet a { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: var(--btn-tertiary); padding: 0 var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-bold); text-decoration: none; }
 .training-funding-sheet a span { flex: none; font-size: var(--font-caption); font-weight: var(--weight-semibold); color: var(--text-secondary); }
 @media (min-width: 821px) {
-  .training-chips { flex-wrap: wrap; margin-inline: 0; padding: 0; overflow: visible; }
+  .training-chips { flex-wrap: wrap; margin: 0; padding: 0; overflow: visible; }
   .training-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .training-suggest { justify-self: start; width: auto; padding-inline: var(--space-6); }
   .training-mine { max-width: 40rem; }
