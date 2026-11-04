@@ -9,7 +9,7 @@
 
 Aujourd'hui, tout ce que les sites écrivent aux invités passe par **ta boîte Gmail personnelle** :
 
-`alertes+amy-32e6krri@joba1.ch` → redirection Infomaniak → `kevin.dinocera@gmail.com` → libellé « Professionnel/job-bot » → lu par jobA1.
+`alertes+amy-fictif02@joba1.ch` → redirection Infomaniak → `kevin.dinocera@gmail.com` → libellé « Professionnel/job-bot » → lu par jobA1.
 
 | Ce qui pose problème | Pourquoi un audit le relèverait |
 |---|---|
