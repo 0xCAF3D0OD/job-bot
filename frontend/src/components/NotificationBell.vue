@@ -1,56 +1,36 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { useRouter } from "vue-router";
 
-import { api, type Inbox, type InboxItem } from "../api/client";
-import { dateInList } from "../dates";
+import type { InboxItem } from "../api/client";
 import { plural } from "../format";
-import { useNarrow } from "../composables/usePhone";
+import { useInbox } from "../composables/useInbox";
+import { usePhone } from "../composables/usePhone";
 import AppIcon from "./AppIcon.vue";
-import BottomSheet from "./BottomSheet.vue";
-import GroupedList from "./GroupedList.vue";
-import GroupedRow from "./GroupedRow.vue";
+import NotificationRow from "./NotificationRow.vue";
 
 // Cloche des notifications (docs/15 §1 ; « Notifications » et non « Alertes », le nom de l'onglet des
-// sources d'offres dans Candidatures) : les mêmes que sur le téléphone, relues chaque minute.
+// sources d'offres dans Candidatures), relue chaque minute. Sur téléphone, elle mène à la page
+// /notifications (maquette Notifications) ; sur ordinateur, elle ouvre son panneau, avec les mêmes lignes
+// que la page et « Tout voir » (N2, décision du 2026-11-04).
 const REFRESH_MS = 60_000;
+// Le panneau montre les plus récentes ; la page, toutes.
+const PANEL_MAX = 8;
 
-const router = useRouter();
-const inbox = ref<Inbox>({ unread: 0, items: [] });
-// Un bouton rond, sans capsule (1.6.46) : le menu s'ouvre sous lui.
+const { inbox, refresh, markRead, readAll } = useInbox();
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
 let timer: ReturnType<typeof setInterval> | undefined;
-// Sous 600 px (planche « Structure téléphone ») : la cloche s'ouvre en feuille plein écran, titre à gauche et
-// ✕ rond à droite ; au-delà, le panneau sous le bouton.
-const { phone: narrow } = useNarrow();
-const unread = computed(() => inbox.value.items.filter((i) => !i.read_at));
-const read = computed(() => inbox.value.items.filter((i) => i.read_at));
+const { phone } = usePhone();
+const recent = computed(() => inbox.value.items.slice(0, PANEL_MAX));
 
 const badge = computed(() => (inbox.value.unread > 9 ? "9+" : String(inbox.value.unread)));
 const label = computed(() =>
   inbox.value.unread ? `Notifications, ${plural(inbox.value.unread, "non lue", "non lues")}` : "Notifications",
 );
 
-async function refresh(): Promise<void> {
-  try {
-    const { data } = await api.GET("/api/inbox");
-    if (data) inbox.value = data;
-  } catch {
-    // API momentanément injoignable : on réessaiera à la prochaine minute.
-  }
-}
-
-
-async function select(item: InboxItem): Promise<void> {
+function select(item: InboxItem): void {
   open.value = false;
-  if (!item.read_at) {
-    const { data } = await api.POST("/api/inbox/{notification_id}/read", {
-      params: { path: { notification_id: item.id } },
-    });
-    if (data) inbox.value = data;
-  }
-  if (item.link) await router.push(item.link);
+  void markRead(item);
 }
 
 function toggle(): void {
@@ -58,15 +38,9 @@ function toggle(): void {
   if (open.value) void refresh();
 }
 
-async function readAll(): Promise<void> {
-  const { data } = await api.POST("/api/inbox/read-all");
-  if (data) inbox.value = data;
-}
-
 function onDocumentClick(event: MouseEvent): void {
-  const target = event.target as Node;
-  // Le panneau et la feuille sont dans la cloche : un clic ailleurs la ferme.
-  if (open.value && !root.value?.contains(target)) open.value = false;
+  // Le panneau est dans la cloche : un clic ailleurs le ferme.
+  if (open.value && !root.value?.contains(event.target as Node)) open.value = false;
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -93,14 +67,14 @@ onUnmounted(() => {
   >
     <!-- Sans alerte : un rond neutre ; avec des alertes : une capsule orange clair, la cloche et le
          chiffre côte à côte (1.6.46). La légende reprend le nom accessible (WCAG 1.4.13). -->
-    <button
-      type="button"
+    <component
+      :is="phone ? 'RouterLink' : 'button'"
+      v-bind="phone ? { to: '/notifications' } : { type: 'button', 'aria-expanded': open }"
       :class="['header-round', 'bell-button', { 'has-unread': inbox.unread }]"
       :aria-label="label"
       :data-label="label"
-      :aria-expanded="open"
       data-test="bell"
-      @click="toggle"
+      @click="phone ? undefined : toggle()"
     >
       <AppIcon name="bell" />
       <span
@@ -109,16 +83,16 @@ onUnmounted(() => {
         aria-hidden="true"
         data-test="bell-badge"
       >{{ badge }}</span>
-    </button>
-    <component
-      :is="narrow ? BottomSheet : 'div'"
-      v-if="narrow || open"
-      v-bind="narrow ? { open, title: 'Notifications', full: true } : { class: 'bell-panel', role: 'dialog', 'aria-label': 'Notifications' }"
+    </component>
+    <div
+      v-if="open && !phone"
+      class="bell-panel"
+      role="dialog"
+      aria-label="Notifications"
       data-test="bell-panel"
-      @close="open = false"
     >
       <div class="bell-head">
-        <strong v-if="!narrow">Notifications</strong>
+        <strong>Notifications</strong>
         <button
           v-if="inbox.unread"
           type="button"
@@ -126,7 +100,7 @@ onUnmounted(() => {
           data-test="read-all"
           @click="readAll"
         >
-          <span class="with-icon"><AppIcon name="done" />Tout marquer comme lu</span>
+          Tout lire
         </button>
       </div>
       <p
@@ -135,48 +109,28 @@ onUnmounted(() => {
       >
         Aucune notification pour l'instant.
       </p>
-      <!-- Sur téléphone, deux listes groupées : les nouvelles, puis celles déjà lues (planche). -->
-      <template v-else-if="narrow">
-        <GroupedList
-          v-for="group in [{ title: 'Nouvelles', items: unread }, { title: 'Déjà lues', items: read }].filter((g) => g.items.length)"
-          :key="group.title"
-          :title="group.title"
-          :level="3"
-        >
-          <GroupedRow
-            v-for="item in group.items"
-            :key="item.id"
-            :title="item.title"
-            :description="item.message?.split('\n')[0] ?? ''"
-            :value="dateInList(item.created_at)"
-            :class="{ 'bell-unread': !item.read_at }"
-            button
-            :chevron="Boolean(item.link)"
-            data-test="bell-item"
-            @click="select(item)"
-          />
-        </GroupedList>
-      </template>
-      <ul v-else>
+      <ul
+        v-else
+        class="notifications-card"
+      >
         <li
-          v-for="item in inbox.items"
+          v-for="item in recent"
           :key="item.id"
         >
-          <button
-            type="button"
-            :class="['bell-item', { unread: !item.read_at }]"
-            data-test="bell-item"
-            @click="select(item)"
-          >
-            <span class="bell-title">{{ item.title }}</span>
-            <span
-              v-if="item.message"
-              class="bell-text"
-            >{{ item.message.split("\n")[0] }}</span>
-            <span class="bell-time">{{ dateInList(item.created_at) }}</span>
-          </button>
+          <NotificationRow
+            :item="item"
+            @open="select"
+          />
         </li>
       </ul>
-    </component>
+      <RouterLink
+        to="/notifications"
+        class="bell-all"
+        data-test="bell-all"
+        @click="open = false"
+      >
+        Tout voir
+      </RouterLink>
+    </div>
   </div>
 </template>

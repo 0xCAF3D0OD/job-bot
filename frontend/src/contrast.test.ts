@@ -278,3 +278,18 @@ describe("les puces et le contrôle segmenté (D4, 2026-11-03)", () => {
     }
   });
 });
+
+describe("une notification non lue (maquette Notifications, N5)", () => {
+  it("le titre et le message restent lisibles sur le fond des non lues, en clair et en sombre (WCAG 1.4.3)", () => {
+    // En clair, la moitié de --primary-soft sur la carte ; en sombre, --primary-soft (décision du 2026-11-04).
+    expect(css).toContain("--notif-unread: color-mix(in srgb, var(--primary-soft) 50%, var(--surface));");
+    expect(css).toContain(':root:not([data-theme="light"]) .notif-row { --notif-unread: var(--primary-soft); }');
+    expect(css).toContain(':root[data-theme="dark"] .notif-row { --notif-unread: var(--primary-soft); }');
+    const backgrounds = [mix(light["primary-soft"]!, light.surface!, 0.5), dark["primary-soft"]!];
+    for (const [theme, background] of [[light, backgrounds[0]!], [dark, backgrounds[1]!]] as const) {
+      expect(ratio(theme.text!, background), "titre").toBeGreaterThanOrEqual(4.5);
+      expect(ratio(theme["text-tertiary"]!, background), "message").toBeGreaterThanOrEqual(4.5);
+      expect(ratio(theme["text-secondary"]!, background), "heure").toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});

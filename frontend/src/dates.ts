@@ -93,3 +93,19 @@ export function inDays(value: string | Date, now: Date = new Date()): string {
   if (days === 1) return "demain";
   return `dans ${days} jours`;
 }
+
+/** Le groupe d'une notification (maquette Notifications) : « Aujourd'hui », « Hier », « Cette semaine », « Plus tôt ». */
+export function dayGroup(value: string | Date, now: Date = new Date()): string {
+  const days = calendarDays(toDate(value), now);
+  if (days <= 0) return "Aujourd'hui";
+  if (days === 1) return "Hier";
+  return days < 7 ? "Cette semaine" : "Plus tôt";
+}
+
+/** L'heure d'une notification, à droite de son titre : « 9 h 12 » aujourd'hui, « Hier », sinon « 30 oct. ». */
+export function timeInList(value: string | Date, now: Date = new Date()): string {
+  const days = calendarDays(toDate(value), now);
+  if (days <= 0) return timeOfDay(value);
+  if (days === 1) return "Hier";
+  return dateInList(value, now);
+}
