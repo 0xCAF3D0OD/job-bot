@@ -3791,7 +3791,7 @@ main:focus { outline: none; }
 .doc-card { display: grid; gap: var(--space-3); min-width: 0; padding: var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .doc-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); }
 .doc-card-head h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
-.doc-language > button { padding-inline: var(--space-3); }
+.doc-language > button { min-inline-size: 2.75rem; padding-inline: var(--space-3); }
 .doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: none; }
 .doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
 .doc-card-edit { justify-content: center; min-height: 3.25rem; border: 1px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-weight: var(--weight-bold); }
