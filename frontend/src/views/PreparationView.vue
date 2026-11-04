@@ -113,7 +113,7 @@ async function markApplied(): Promise<void> {
   }
 }
 
-// « Annuler, je n'ai pas postulé » (C9) : l'offre revient en préparation tout de suite ; la candidature
+// « Je n'ai pas postulé » (C9, revue de la PR 479) : l'offre revient en préparation tout de suite ; la candidature
 // n'est effacée qu'après 6 s, sauf « Annuler » (comme « Écarter »).
 function cancelApplied(): void {
   const done = sent.value;
@@ -122,6 +122,8 @@ function cancelApplied(): void {
   sent.value = null;
   offer.value = { ...before, status: "preparing" };
   opened.value = false;
+  // L'offre revient en préparation : le menu Candidatures y ramène de nouveau.
+  useJobsMemory().remember(`/candidatures/offres/${offerId}/preparer?doc=postuler`);
   void offerUndo({
     message: "Candidature retirée : l'offre revient en préparation.",
     commit: async (keepalive) => {
@@ -134,6 +136,7 @@ function cancelApplied(): void {
     restore: () => {
       sent.value = done;
       offer.value = before;
+      useJobsMemory().sent(offerId);
     },
   });
 }
@@ -579,7 +582,7 @@ onMounted(() => void load());
         data-test="cancel-applied"
         @click="cancelApplied"
       >
-        Annuler, je n'ai pas postulé
+        Je n'ai pas postulé
       </button>
     </div>
   </section>
@@ -757,6 +760,17 @@ onMounted(() => void load());
               data-test="apply"
               @click="opened = true"
             ><span class="with-icon">{{ applyLink.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
+            <!-- Déjà fait ailleurs (page rechargée, e-mail, téléphone) : sans rouvrir le formulaire. -->
+            <BusyButton
+              v-if="applyLink && !opened"
+              class="link apply-already"
+              :busy="applyBusy"
+              busy-label="Enregistrement…"
+              data-test="already-applied"
+              @click="markApplied"
+            >
+              J'ai déjà postulé
+            </BusyButton>
             <template v-else>
               <BusyButton
                 class="primary prep-bar-main"

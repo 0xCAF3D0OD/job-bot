@@ -2,6 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { useJobsMemory } from "../composables/useJobsMemory";
 import { useUndo } from "../composables/useUndo";
 import PreparationView from "./PreparationView.vue";
 
@@ -295,9 +296,13 @@ describe("barre de candidature", () => {
     expect(apply.classes()).toContain("primary-link");
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
     expect(steps.find("[data-test=mark-applied]").exists()).toBe(false);
+    // Déjà postulé ailleurs (e-mail, téléphone, page rechargée) : un lien tertiaire, pas un second bouton plein.
+    expect(steps.find("[data-test=already-applied]").text()).toContain("J'ai déjà postulé");
+    expect(steps.find("[data-test=already-applied]").classes()).toContain("link");
     apply.element.addEventListener("click", (event) => event.preventDefault());
     await apply.trigger("click");
     expect(steps.find("[data-test=apply]").text()).toBe("Rouvrir le site de l'employeur (nouvel onglet)");
+    expect(steps.find("[data-test=already-applied]").exists()).toBe(false);
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
 
     // « J'ai postulé » enregistre tout de suite, avec les valeurs de l'annonce et la date du jour.
@@ -327,9 +332,14 @@ describe("barre de candidature", () => {
     expect(done.find("[data-test=next-offer]").attributes("href")).toBe("/candidatures/offres");
     expect(wrapper.find("[data-test=apply-steps]").exists()).toBe(false);
 
-    // « Annuler, je n'ai pas postulé » : l'offre revient en préparation ; la candidature part après 6 s.
+    // « Je n'ai pas postulé » : l'offre revient en préparation (le menu y ramène) ; la candidature part après 6 s.
+    expect(done.find("[data-test=cancel-applied]").text()).toBe("Je n'ai pas postulé");
+    useJobsMemory().remember("/candidatures/offres/7/preparer?doc=postuler");
+    useJobsMemory().sent(7);
+    expect(useJobsMemory().last.value).toBe("/candidatures/suivi");
     DELETE.mockResolvedValue({ response: { ok: true } });
     await done.find("[data-test=cancel-applied]").trigger("click");
+    expect(useJobsMemory().last.value).toBe("/candidatures/offres/7/preparer?doc=postuler");
     expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(false);
     expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
     expect(wrapper.find("[data-test=apply]").classes()).toContain("primary-link");
@@ -339,6 +349,28 @@ describe("barre de candidature", () => {
     await wrapper.find("[data-test=cancel-applied]").trigger("click");
     await useUndo().flush();
     expect(DELETE).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 5 } } }));
+  });
+
+  it("« J'ai déjà postulé » enregistre l'envoi sans rouvrir le formulaire", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/offers/{offer_id}"
+            ? offer
+            : path === "/api/offers/{offer_id}/application-prefill"
+              ? { offer_id: 7, sent_at: "2026-10-05", method: "electronique", company: "Acme SA", job_title: "Ingénieur DevOps junior" }
+              : path === "/api/orp"
+                ? { count: 3, target: null }
+                : [],
+      }),
+    );
+    POST.mockResolvedValue({ data: { id: 5, company: "Acme SA", job_title: "Ingénieur DevOps junior", sent_at: "2026-10-05", orp_month: "2026-10" } });
+    const wrapper = await mountView("/offres/7/preparer?doc=postuler");
+    await wrapper.find("[data-test=already-applied]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/applications", { body: expect.objectContaining({ offer_id: 7, sent_at: "2026-10-05" }) });
+    expect(wrapper.find("[data-test=sent-moment] h1").text()).toBe("Candidature notée");
+    expect(wrapper.find("[data-test=sent-orp]").text()).toContain("3 recherches ce mois");
   });
 
   it("une candidature déjà envoyée : « Envoyée le … » et le lien vers le suivi, plus d'étape « Suivre » (Q1)", async () => {

@@ -1,0 +1,1 @@
+Interface : la fiche d'une candidature envoyée montre « Relance : le … · Changer » pour choisir le jour de la relance ; Postuler propose « J'ai déjà postulé » avant d'ouvrir le formulaire ; « Je n'ai pas postulé » remet l'offre en préparation et le menu Candidatures y ramène.
