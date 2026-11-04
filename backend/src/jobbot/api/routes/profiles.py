@@ -145,7 +145,7 @@ async def propose_keywords(request: Request, body: ProfileKeywordsIn) -> Profile
     "/{profile_id}/duplicate", operation_id="duplicateProfile", status_code=status.HTTP_201_CREATED
 )
 async def duplicate_profile(request: Request, profile_id: int) -> ProfileList:
-    """Copie d'un profil (préférences et sources), pour comparer deux variantes."""
+    """Copie d'un profil (ses préférences), pour comparer deux variantes."""
     # Les profils d'essai sont un outil de l'exploitant (docs/65 §4).
     await require_owner(_runtime(request))
     async with _runtime(request).sessionmaker.begin() as session:
@@ -157,7 +157,6 @@ async def duplicate_profile(request: Request, profile_id: int) -> ProfileList:
             f"{original.name} (copie)"[:60],
             original.occupation,
             dict(original.preferences or {}),
-            copy_from=original,
         )
     return await _list(_runtime(request), request.headers.get(service.HEADER))
 

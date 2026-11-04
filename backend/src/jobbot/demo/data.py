@@ -589,30 +589,3 @@ INTERVIEW_REFUSED = {
     "thanks": "no",
     "employer_feedback": "Profil plus senior recherché pour ce poste.",
 }
-
-NEWS = [
-    (
-        "Le chômage reste stable en Suisse romande (article d'exemple)",
-        "Les chiffres du mois montrent une légère baisse dans les métiers de l'informatique.",
-    ),
-    (
-        "Kubernetes : ce que cherchent les recruteurs en 2026 (exemple)",
-        "Plateformes internes, sécurité et coûts du cloud reviennent dans la plupart des annonces.",
-    ),
-    (
-        "Comment préparer un entretien technique (article d'exemple)",
-        "Trois conseils pour raconter un incident et ce qu'il vous a appris.",
-    ),
-    (
-        "Formations continues : ce que l'assurance-chômage peut financer (exemple)",
-        "Les mesures du marché du travail en quelques questions.",
-    ),
-    (
-        "Télétravail : les entreprises romandes restent hybrides (exemple)",
-        "Deux à trois jours au bureau par semaine restent la norme.",
-    ),
-    (
-        "Les métiers du cloud en tête des recrutements (article d'exemple)",
-        "DevOps, SRE et ingénieurs plateforme sont les profils les plus demandés.",
-    ),
-]

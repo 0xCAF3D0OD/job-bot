@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
 from jobbot.db.models import Setting
-from jobbot.news import trades
 from jobbot.profiles.service import main_profile
 
 KEY = "welcome"
@@ -48,7 +47,7 @@ async def save(session: AsyncSession, changes: dict[str, Any]) -> dict[str, Any]
     )
     trade = changes.get("trade")
     if isinstance(trade, str) and trade.strip():
-        # Le métier devient le premier mot de « Mon domaine » : les Actualités le suivent, et
+        # Le métier devient le premier mot de « Mon domaine » : Formations le suit, et
         # la page Alertes propose la recherche qui va avec. Le métier choisi avant à l'accueil
         # s'en va ; les mots ajoutés ailleurs restent. Le profil est verrouillé pendant la
         # modification, pour ne pas écraser un changement de « Mon domaine » simultané.
@@ -62,6 +61,4 @@ async def save(session: AsyncSession, changes: dict[str, Any]) -> dict[str, Any]
             gone.add(previous.strip().lower())
         preferences["domain_keywords"] = [name] + [w for w in words if w.lower() not in gone]
         profile.preferences = preferences
-        # Les actualités du métier (docs/116 §4) : les sources de sa famille, ou une veille.
-        await trades.follow_trade(session, profile, name)
     return value if isinstance(value, dict) else {}

@@ -124,7 +124,7 @@ async def test_read_only_maintenance_lets_guests_read(
         login = await api.post("/api/auth/login", json={"username": GUEST, "password": PASSWORD})
         assert login.status_code == 204
         assert (await api.get("/api/applications")).status_code == 200
-        refused = await api.post("/api/news/seen")
+        refused = await api.post("/api/inbox/read-all")
         assert refused.status_code == 503
         assert refused.json()["mode"] == "lecture"
         assert refused.json()["message"] == "Sauvegarde"
