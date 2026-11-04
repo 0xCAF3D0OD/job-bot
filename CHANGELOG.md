@@ -380,3 +380,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.166 | Interface : quand le jour de relance est arrivé et que la candidature attend toujours une réponse, sa fiche affiche « Relance à faire » (avec « Changer »). | livrée |
 | 1.6.167 | Interface : réglage « Apparence » (Clair, Sombre, Auto) dans les Réglages, retenu sur l’appareil, sur téléphone et ordinateur. | livrée |
 | 1.6.168 | CI : sur main, les tests de chaque commit vont jusqu’au bout (plus d’annulation par un lancement suivant) ; seules les PR annulent encore leurs anciens lancements | livrée |
+| 1.6.169 | Interface : le Bilan a trois sous-onglets, ORP · Résultats · Formations ; l’onglet ORP montre l’objectif du mois en cercle liquide, l’export du formulaire, les trois dernières recherches et la carte Rythme. | livrée |
