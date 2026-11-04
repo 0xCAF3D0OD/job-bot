@@ -53,7 +53,7 @@ export function focusBody(value: AssistantFocus | null): Record<string, unknown>
 }
 
 // Trois suggestions selon la page et l'élément choisi (docs/24 §1).
-export const HOW_IT_WORKS = "Comment ça marche ici ?";
+const HOW_IT_WORKS = "Comment ça marche ici ?";
 
 export function suggestionsFor(page: string, value: AssistantFocus | null): string[] {
   if (value?.offerId) {

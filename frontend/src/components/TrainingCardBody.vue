@@ -15,8 +15,8 @@ import StatusPill from "./StatusPill.vue";
 // calme (description sur 3 lignes, une ligne en bas : « Suivre », ou l'état et « Gérer ») ;
 // le panneau latéral, avec tout le suivi en trois sections (Suivi, Financement ORP,
 // Profil).
-export type TrainingStatus = "interested" | "in_progress" | "done";
-export type MarkExtra = { progress?: string | null; done_at?: string | null; certified?: boolean | null };
+type TrainingStatus = "interested" | "in_progress" | "done";
+type MarkExtra = { progress?: string | null; done_at?: string | null; certified?: boolean | null };
 type Status = TrainingStatus;
 
 const props = withDefaults(defineProps<{ training: Training; variant?: "card" | "panel" }>(), { variant: "card" });

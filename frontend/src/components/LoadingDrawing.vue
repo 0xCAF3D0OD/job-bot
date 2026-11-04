@@ -47,7 +47,7 @@ watch(
 <script lang="ts">
 // Seule la maintenance garde son dessin unDraw : les pages qui chargent montrent le visage
 // du 1 depuis la 0.94.0 (docs/123 §2).
-export type DrawingName = "maintenance";
+type DrawingName = "maintenance";
 </script>
 
 <template>

@@ -23,7 +23,7 @@ function emphasis(text: string): Inline[] {
     .filter((part) => part.text);
 }
 
-export function link(label: string, target: string): Inline {
+function link(label: string, target: string): Inline {
   if (INTERNAL.test(target)) return { text: label, bold: false, href: target };
   if (/^https:\/\/[^\s"'<>]+$/.test(target)) return { text: label, bold: false, href: target, external: true };
   // Adresse inconnue : seulement le texte.

@@ -1,5 +1,5 @@
 // Cantons suisses en toutes lettres (docs/43 n° 24) : « VD » s'affiche « Vaud ».
-export const CANTONS: Record<string, string> = {
+const CANTONS: Record<string, string> = {
   AG: "Argovie",
   AI: "Appenzell Rhodes-Intérieures",
   AR: "Appenzell Rhodes-Extérieures",

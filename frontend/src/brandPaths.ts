@@ -15,7 +15,7 @@ export const LOGO_SMILE = "M28 72 C 40 82, 60 82, 72 70";
 export const ICON_ONE = "M43 33 L54 24 V58";
 export const ICON_EYE = { x: 24, y: 46 };
 export const ICON_SPARK = { x: 76, y: 44 };
-export const ICON_SMILE = "M32 74 C 42 80, 58 80, 68 74";
+const ICON_SMILE = "M32 74 C 42 80, 58 80, 68 74";
 
 // La mascotte de l'assistant (docs/99), planche « La mascotte de l'Assistant » : un visage rond
 // avec la pointe d'une bulle à droite, et trois expressions. viewBox « 0 0 100 100 ».
