@@ -134,7 +134,7 @@ Les données ORP et de recherche d'emploi touchent à l'aide sociale : on les tr
 
 Le but : une personne malveillante, même avec une session volée ou une faille d'injection de script, ne doit pas pouvoir emporter les coordonnées ni les données d'un compte, et encore moins de plusieurs. L'export reste un droit de la personne (nLPD art. 25 et 28) : on le protège, on ne le supprime pas.
 
-**X-1.** L'export complet ne se fait que par le compte lui-même, **après avoir retapé son mot de passe** (réauthentification), comme la suppression du compte. *Réf. : NIST 63B-4 (réauthentification avant une opération sensible), ASVS « Authentication » et « Data Protection », OWASP API Security Top 10:2023 API2.*
+**X-1.** L'export complet ne se fait que par le compte lui-même, **après avoir retapé son mot de passe** (réauthentification), comme la suppression du compte : `POST /api/account/export`, essais ratés limités comme à la connexion. *Réf. : NIST 63B-4 (réauthentification avant une opération sensible), ASVS « Authentication » et « Data Protection », OWASP API Security Top 10:2023 API2.*
 
 **X-2.** L'export est limité : 3 par 24 heures et par compte au plus. Au-delà, 429 avec `Retry-After`. *Réf. : OWASP API Security Top 10:2023 API4 (consommation sans limite), ISO 27001 A.8.12 (prévention des fuites).*
 
@@ -202,7 +202,6 @@ Ce que le code ne respecte pas encore, d'après l'audit du 2026-11-04 et la rele
 | A-1 | scrypt avec N = 2^14, sous le minimum de l'OWASP (2^17) | `backend/src/jobbot/auth/passwords.py` |
 | A-2 | 12 caractères au minimum au lieu de 15, pas de refus des mots de passe compromis | `backend/src/jobbot/auth/passwords.py` |
 | I-4 | la page Confidentialité ne dit pas la garantie du transfert vers Anthropic aux États-Unis | `frontend/src/views/PrivacyView.vue` |
-| X-1 | l'export n'exige pas de retaper le mot de passe : il faut un champ dans « Tes données », absent de Figma (à valider) | `frontend/src/components/AccountDataPanel.vue`, `backend/src/jobbot/api/routes/account.py` |
 | X-4 | listes non vérifiées route par route (pagination bornée, champs rendus) | `backend/src/jobbot/api/routes/` |
 | X-8 | pas de limite sur les lectures en rafale | `backend/src/jobbot/api/` |
 | O-1 à O-6 | aucun enregistrement vocal n'existe encore (la dictée du clavier du téléphone ne passe pas par jobA1) ; les règles s'appliquent dès le premier | entraînement aux entretiens |

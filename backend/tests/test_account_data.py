@@ -100,7 +100,7 @@ async def test_export_holds_only_the_account(secured: Runtime, account: int) -> 
         summary = (await api.get("/api/account/data")).json()
         assert (summary["offers"], summary["documents"], summary["alert_emails"]) == (1, 1, 1)
         assert summary["can_delete"]
-        exported = await api.get("/api/account/export")
+        exported = await api.post("/api/account/export", json={"password": PASSWORD})
     assert exported.headers["content-type"] == "application/zip"
     assert "jobA1-camille-donnees-" in exported.headers["content-disposition"]
     archive = zipfile.ZipFile(io.BytesIO(exported.content))
@@ -124,16 +124,21 @@ async def test_export_holds_only_the_account(secured: Runtime, account: int) -> 
 
 
 async def test_export_is_announced_and_limited(secured: Runtime, account: int) -> None:
-    """Contre une session volée (docs/regles-securite-donnees.md X-2, X-3) : chaque export est
-    dans la cloche, sans rien des données ; le quatrième en 24 heures est refusé."""
+    """Contre une session volée (docs/regles-securite-donnees.md X-1 à X-3) : chaque export est
+    dans la cloche, sans rien des données ; le quatrième en 24 heures est refusé ; le mot de
+    passe est exigé (X-1)."""
     camille = await guest(secured)
     await seed(secured, camille, "CAMILLE")
     async with client(secured) as api:
         await login(api)
+        # Une session seule ne suffit pas : sans le bon mot de passe, rien ne sort (X-1).
+        assert (await api.get("/api/account/export")).status_code == 405
+        wrong = await api.post("/api/account/export", json={"password": "pas-le-bon"})
+        assert wrong.status_code == 403 and "zip" not in wrong.headers["content-type"]
         for _ in range(3):
-            done = await api.get("/api/account/export")
+            done = await api.post("/api/account/export", json={"password": PASSWORD})
             assert done.status_code == 200 and done.headers["cache-control"] == "no-store"
-        refused = await api.get("/api/account/export")
+        refused = await api.post("/api/account/export", json={"password": PASSWORD})
         assert refused.status_code == 429 and int(refused.headers["retry-after"]) > 0
         bell = (await api.get("/api/inbox")).json()
     exports = [n for n in bell["items"] if n["title"] == "Tes données ont été exportées"]
