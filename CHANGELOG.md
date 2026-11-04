@@ -385,3 +385,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.171 | Interface : « C'est fait ! » remplace « Candidature notée » quand « J'ai postulé » atteint l'objectif ORP du mois, une fois par mois (étape 8c). | livrée |
 | 1.6.172 | Interface : Bilan › Résultats suit la maquette : la phrase, la carte du meilleur site, la période, trois chiffres, la carte Parcours en barres et les lignes du détail ; en deux colonnes sur ordinateur (étape 8d). | livrée |
 | 1.6.173 | Interface : Bilan › Formations suit la maquette : Catalogue · Suivies soulignés, l'encadré du financement, des puces de filtre, les formations en lignes groupées avec leur signet, et Suivies en cartes (étape 8e). | livrée |
+| 1.6.174 | Interface : les puces de filtre et le bouton « Voir » des Formations gardent 40 px à l'écran avec une zone tactile de 44 px. | livrée |
