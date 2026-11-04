@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 
+import { useTheme } from "../composables/useTheme";
+
 // Illustration de jobA1 (docs/67) : une image générée pour la plateforme, préparée par
 // scripts/illustrations.mjs. Chargée seulement quand elle s'affiche ; elle entre une fois, en
 // fondu, quand elle est là. En sombre, la série sombre si elle existe, sinon la claire assombrie.
@@ -23,6 +25,7 @@ function srcset(name: string): string {
 
 const light = computed(() => srcset(props.name));
 const dark = computed(() => srcset(`${props.name}-sombre`));
+const { theme } = useTheme();
 const loaded = ref(false);
 const img = ref<HTMLImageElement | null>(null);
 watch(
@@ -73,9 +76,10 @@ export type IllustrationName =
     :data-illustration="name"
   >
     <picture :key="name">
+      <!-- L'apparence choisie dans les Réglages prime sur celle du système (Clair, Sombre, Auto). -->
       <source
-        v-if="dark"
-        media="(prefers-color-scheme: dark)"
+        v-if="dark && theme !== 'light'"
+        :media="theme === 'dark' ? 'all' : '(prefers-color-scheme: dark)'"
         :srcset="dark"
         :sizes="sizes"
       >

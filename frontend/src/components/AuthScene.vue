@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import video from "../assets/videos/connexion-soir.mp4";
+import { useTheme } from "../composables/useTheme";
 
 // La scène de la connexion (docs/67, compléments 0.55.2 et 0.55.3) : la ville et le bureau. En
 // clair, le jour. En sombre, la vidéo du jour qui tombe joue une fois, puis l'image du soir reste ;
@@ -43,8 +44,10 @@ async function dusk(): Promise<void> {
   }
 }
 
+// L'apparence choisie dans les Réglages prime ; en Auto, le système.
+const { theme } = useTheme();
 function follow(): void {
-  if (dark?.matches) {
+  if (theme.value === "auto" ? dark?.matches : theme.value === "dark") {
     if (phase.value === "day") void dusk();
   } else {
     clearTimeout(fallback);
@@ -60,6 +63,7 @@ onMounted(() => {
   dark.addEventListener("change", follow);
   follow();
 });
+watch(theme, follow);
 onBeforeUnmount(() => {
   clearTimeout(fallback);
   dark?.removeEventListener("change", follow);

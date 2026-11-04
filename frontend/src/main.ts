@@ -2,6 +2,7 @@ import { createApp } from "vue";
 
 import App from "./App.vue";
 import { router } from "./router";
+import { useTheme } from "./composables/useTheme";
 import "@fontsource-variable/figtree";
 import "./style.css";
 
@@ -27,4 +28,6 @@ router.onError((error: unknown) => {
   if (/dynamically imported module|Importing a module script failed|error loading dynamically/i.test(String(error))) reloadOnce();
 });
 
+// L'apparence choisie (Clair, Sombre) avant le premier rendu : pas d'éclair de l'autre thème.
+useTheme().apply();
 createApp(App).use(router).mount("#app");
