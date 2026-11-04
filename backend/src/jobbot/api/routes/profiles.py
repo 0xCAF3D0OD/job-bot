@@ -4,11 +4,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from jobbot.api.owner import require_owner
 from jobbot.api.routes.news import Country, Language, NewsPreferences
-from jobbot.db.models import Profile, ProfileSource
+from jobbot.db.models import Profile
 from jobbot.profiles import keywords, service
 from jobbot.runtime import Runtime
 
@@ -29,7 +29,6 @@ class ProfileOut(BaseModel):
     occupation: str | None
     is_main: bool
     domain_keywords: list[str]
-    sources: int
 
 
 class ProfileList(BaseModel):
@@ -66,15 +65,6 @@ class ProfileUpdate(BaseModel):
 async def _list(runtime: Runtime, header: str | None) -> ProfileList:
     async with runtime.sessionmaker.begin() as session:
         current = await service.resolve(session, header)
-        counts = dict(
-            (
-                await session.execute(
-                    select(ProfileSource.profile_id, func.count()).group_by(
-                        ProfileSource.profile_id
-                    )
-                )
-            ).all()
-        )
         rows = list(
             await session.scalars(select(Profile).order_by(Profile.is_main.desc(), Profile.id))
         )
@@ -87,7 +77,6 @@ async def _list(runtime: Runtime, header: str | None) -> ProfileList:
                 occupation=p.occupation,
                 is_main=p.is_main,
                 domain_keywords=list((p.preferences or {}).get("domain_keywords") or []),
-                sources=counts.get(p.id, 0),
             )
             for p in rows
         ],
