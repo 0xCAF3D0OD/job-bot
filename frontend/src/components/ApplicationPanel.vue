@@ -36,13 +36,18 @@ const emit = defineEmits<{
 const REMIND_AFTER_DAYS = 10;
 const MIN_DAYS = 5;
 const MAX_DAYS = 30;
+function isoDay(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 function shift(day: string, days: number): string {
   const d = new Date(`${day}T12:00:00`);
   d.setDate(d.getDate() + days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return isoDay(d);
 }
 const followUpOn = ref<string | null>(null);
 const remindOn = computed(() => followUpOn.value ?? props.application.follow_up_on ?? shift(props.application.sent_at, REMIND_AFTER_DAYS));
+// Le jour venu ou passé, toujours en attente : « Relance à faire » à la place de la date.
+const remindDue = computed(() => remindOn.value <= isoDay(new Date()));
 const remindEditing = ref(false);
 const remindDraft = ref("");
 const remindError = ref("");
@@ -286,7 +291,7 @@ const onStatus = (event: Event): void =>
         class="panel-line"
         data-test="panel-remind"
       >
-        Relance : {{ dateInSentence(`${remindOn}T12:00:00`) }} ·
+        {{ remindDue ? "Relance à faire" : `Relance : ${dateInSentence(`${remindOn}T12:00:00`)}` }} ·
         <button
           type="button"
           class="link"

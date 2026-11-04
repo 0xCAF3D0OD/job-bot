@@ -1,12 +1,20 @@
 // La ligne de relance de la fiche candidature (revue de l'étape 7c) : reprise de l'ancienne étape « Suivre ».
 import { flushPromises, mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import ApplicationPanel from "./ApplicationPanel.vue";
 
 const PATCH = vi.fn();
 vi.mock("../api/client", () => ({ api: { PATCH: (...a: unknown[]) => PATCH(...a), GET: vi.fn().mockResolvedValue({ data: [] }) } }));
-afterEach(() => vi.resetAllMocks());
+// Le jour du test est fixé au lendemain de l'envoi : les dates écrites en dur restent à venir.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-03T09:00:00"));
+});
+afterEach(() => {
+  vi.useRealTimers();
+  vi.resetAllMocks();
+});
 
 const application = {
   id: 3,
@@ -63,6 +71,21 @@ describe("La relance dans la fiche candidature", () => {
     });
     expect(line().text()).toMatch(/^Relance : le 20 octobre/);
     expect(wrapper.emitted("changed")).toHaveLength(1);
+  });
+
+  it("le jour de relance venu, toujours en attente : « Relance à faire », avec « Changer »", () => {
+    // Envoyée il y a 12 jours, sans jour choisi : la relance (10 jours après) est passée.
+    const day = new Date();
+    day.setDate(day.getDate() - 12);
+    const sent = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+    const due = mountPanel({ sent_at: sent });
+    expect(due.find("[data-test=panel-remind]").text()).toMatch(/^Relance à faire ·\s+Changer le jour de la relance$/);
+    expect(due.find("[data-test=remind-change]").exists()).toBe(true);
+    // Un jour choisi plus tard : la date revient.
+    const later = new Date();
+    later.setDate(later.getDate() + 3);
+    const laterDay = `${later.getFullYear()}-${String(later.getMonth() + 1).padStart(2, "0")}-${String(later.getDate()).padStart(2, "0")}`;
+    expect(mountPanel({ sent_at: sent, follow_up_on: laterDay }).find("[data-test=panel-remind]").text()).toMatch(/^Relance : le /);
   });
 
   it("le jour choisi est repris ; une fois répondue, « Plus de relance prévue » sans bouton", () => {
