@@ -191,7 +191,7 @@ const orpTask = computed<{ urgent: boolean; task: Task } | null>(() => {
       title: `Remettre les preuves ${ofMonth(t.orp_due_month)}`,
       detail: days < 0 ? `Échéance passée ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.` : days === 0 ? "À remettre aujourd'hui." : `À remettre avant ${dateInSentence(`${t.orp_due_date}T12:00:00`)}.`,
       action: "Remettre",
-      to: { path: "/candidatures/suivi", query: { mois: t.orp_due_month } },
+      to: { path: "/bilan/orp", query: { mois: t.orp_due_month } },
     },
   };
 });

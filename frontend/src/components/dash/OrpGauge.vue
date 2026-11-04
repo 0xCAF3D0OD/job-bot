@@ -18,7 +18,7 @@ const short = (month: string): string => formatMonth(month).split(" ")[0] ?? mon
 
 <template>
   <RouterLink
-    :to="{ path: '/candidatures/suivi', query: { mois: month } }"
+    :to="{ path: '/bilan/orp', query: { mois: month } }"
     class="dash-card dash-link orp-gauge"
     data-test="orp-gauge"
   >

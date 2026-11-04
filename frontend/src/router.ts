@@ -95,7 +95,7 @@ export const routes: RouteRecordRaw[] = [
   {
     path: "/orp",
     redirect: (to) => ({
-      path: to.query.onglet === "journal" ? "/candidatures/alertes" : "/candidatures/suivi",
+      path: to.query.onglet === "journal" ? "/candidatures/alertes" : "/bilan/orp",
       query: keepMonth(to.query),
     }),
   },
@@ -131,18 +131,27 @@ export const routes: RouteRecordRaw[] = [
         path: "",
         redirect: (to) => {
           const query = keepMonth(to.query);
-          if (to.query.vue === "orp") return { path: "/candidatures/suivi", query };
+          if (to.query.vue === "orp") return { path: "/bilan/orp", query };
           if (to.query.vue === "journal") return { path: "/candidatures/alertes" };
-          if (query.mois) return { path: "/candidatures/suivi", query };
+          if (query.mois) return { path: "/bilan/orp", query };
           return { path: "/candidatures/offres" };
         },
       },
       // L'offre ouverte sur téléphone est une sous-page (docs/139 étape 6, O1) : /candidatures/offres/12, avec les
       // filtres de la liste. Même entrée que la liste : la vue reste montée, son défilement et ses filtres aussi.
       { path: "offres/:id(\\d+)?", name: "offers", component: OffersView, meta: { tab: "offres" } },
-      { path: "suivi", name: "applications", component: ApplicationsView, meta: { tab: "suivi" } },
-      // Preuves ORP fondues dans le Suivi (docs/22 §1) : les anciens liens y mènent, avec le mois.
-      { path: "preuves", redirect: (to) => ({ path: "/candidatures/suivi", query: to.query }) },
+      // Envoyées. Un lien vers un mois ou un jour (rappels, assistant, Aujourd'hui) mène au Suivi ORP (B9,
+      // 2026-11-04) ; celui d'une candidature (?candidature=) ou d'une recherche (?q=) reste ici.
+      {
+        path: "suivi",
+        name: "applications",
+        component: ApplicationsView,
+        meta: { tab: "suivi" },
+        beforeEnter: (to) =>
+          (to.query.mois || to.query.jour) && !to.query.candidature && !to.query.q ? { path: "/bilan/orp", query: to.query } : true,
+      },
+      // Preuves ORP fondues dans le Suivi ORP (docs/22 §1, B9) : les anciens liens y mènent, avec le mois.
+      { path: "preuves", redirect: (to) => ({ path: "/bilan/orp", query: to.query }) },
       // Mes alertes et alertes reçues (docs/20 §1) ; l'ancien « Journal des recherches ».
       { path: "alertes", name: "alerts", component: AlertsView, meta: { tab: "alertes" } },
       { path: "journal", redirect: "/candidatures/alertes" },
@@ -157,6 +166,8 @@ export const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  // Le Suivi ORP du mois (docs/139 étape 8b, maquette Orp) : une sous-page de Bilan › ORP.
+  { path: "/bilan/orp", name: "orp-month", component: ApplicationsView },
   {
     // Le Bilan (docs/42, docs/126 §1) : ce qui marche, puis Formations.
     path: "/bilan",

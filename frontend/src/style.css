@@ -724,11 +724,8 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .form-grid input, .form-grid select { width: 100%; font: inherit; color: var(--text); }
 @media (max-width: 640px) { .form-grid { grid-template-columns: minmax(0, 1fr); } }
 .form-grid textarea { width: 100%; }
-.applications-head { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); align-items: center; justify-content: space-between; margin-bottom: var(--space-6); }
 .month-nav { display: flex; align-items: center; gap: var(--space-2); }
 .month-nav strong { min-width: 9rem; text-align: center; font-weight: var(--weight-semibold); text-transform: capitalize; }
-.month-goal { display: grid; gap: var(--space-2); min-width: 14rem; flex: 1; }
-.month-goal .orp-month-bar { margin: 0; }
 .status-select.entretien { border-color: var(--accent); color: var(--accent); }
 .status-select.engagement { border-color: var(--ok); color: var(--ok-text); }
 .status-select.refus, .status-select.sans_reponse { color: var(--muted); }
@@ -1170,7 +1167,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 /* Une candidature en ligne (docs/130 §A) : la forme d'Aujourd'hui, la partie centrale ouvre le
    panneau, l'action à droite fait l'étape du moment. */
 /* L'en-tête du Suivi sur deux lignes : le mois et les outils, puis le compte et l'état ORP. */
-.applications-tools { display: flex; align-items: center; gap: var(--space-3); }
 /* « À faire » d'abord (1.6.20), puis le détail replié ; le jour choisi sous le calendrier. */
 .suivi-sentence { margin-bottom: var(--space-6); }
 .suivi-todo { margin-bottom: var(--space-8); }
@@ -1590,10 +1586,6 @@ html.side-open { overflow: hidden; }
   .job-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
   /* Suivi : le mois, puis l'objectif, puis « Ajouter » et le « ⋯ » (1.6.20, comme Figma). */
-  .applications-head .month-nav strong { min-width: auto; white-space: nowrap; }
-  .applications-head .month-nav { gap: var(--space-1); }
-  .applications-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
-  .applications-head .month-goal { min-width: 0; }
   /* La liste du mois dans son repliable : la date, l'entreprise, le statut ; le poste, le mode et le « ⋯ »
      sont dans le panneau, qu'ouvre le nom de l'entreprise. */
   .suivi-detail .runs :is(th, td):is(:nth-child(3), :nth-child(4), :nth-child(6)) { display: none; }
@@ -4515,16 +4507,34 @@ html.search-open { overflow: hidden; }
 button.orp-export { justify-content: center; min-height: var(--btn-primary); border: 1.5px solid var(--primary-graphic); border-radius: var(--radius-pill); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .orp-last h2 { display: flex; justify-content: space-between; margin: var(--space-2) var(--space-1) var(--space-2); font-size: var(--label-caps); letter-spacing: var(--letter-label); text-transform: uppercase; color: var(--text-secondary); }
 .orp-last h2 span + span { font-weight: var(--weight-semibold); letter-spacing: 0; text-transform: none; }
-.orp-last ul, .orp-none { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
+.orp-rows, .orp-none { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); }
 .orp-none { padding: var(--space-4); color: var(--text-secondary); }
-.orp-last li { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); }
-.orp-last li + li { border-top: 1px solid var(--line); }
+.orp-row { display: flex; align-items: center; white-space: normal; gap: var(--space-4); width: 100%; padding: var(--space-4); border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+.orp-rows li + li { border-top: 1px solid var(--line); }
 .orp-day { flex: none; display: grid; justify-items: center; min-width: 2.75rem; font-size: var(--font-caption); color: var(--text-secondary); }
 .orp-day strong { font-size: var(--font-title); font-weight: var(--weight-bold); color: var(--text); }
 .orp-what { flex: 1; min-width: 0; display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 .orp-what strong { font-size: var(--font-body); font-weight: var(--weight-semibold); color: var(--text); }
-.orp-last .status-pill { gap: var(--space-1); font-weight: var(--weight-bold); }
+.orp-rows .status-pill { gap: var(--space-1); font-weight: var(--weight-bold); }
 .orp-all { display: flex; align-items: center; justify-content: center; min-height: var(--btn-primary); font-weight: var(--weight-bold); text-decoration: none; }
+/* Le Suivi ORP (docs/139 étape 8b, maquette Orp) : une sous-page du Bilan ; sur téléphone, sa tête remplace
+   l'en-tête de l'app, la barre du bas reste. */
+.jobs-body.orp-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); max-width: calc(var(--page-column) + 2 * var(--space-6)); }
+.orp-page-head { display: flex; align-items: center; gap: var(--space-2); margin-left: calc(-1 * var(--space-3)); }
+.orp-page-head h1 { margin: 0; font-size: var(--font-section); }
+.orp-page-head .icon-button { display: inline-flex; align-items: center; width: 3rem; height: 3rem; justify-content: center; color: var(--text); }
+.orp-page-head .icon-button .icon { width: 1.5rem; height: 1.5rem; }
+.orp-page-month { justify-content: space-between; }
+.orp-page-month strong { font-size: var(--font-title); font-weight: var(--weight-bold); }
+.orp-export-row { display: flex; align-items: center; gap: var(--space-2); }
+.orp-export-row .orp-export { flex: 1; }
+.orp-month-list h2 { font-size: var(--font-title); letter-spacing: 0; text-transform: none; color: var(--text); }
+.orp-month-list h2 span + span { font-size: var(--font-body); font-weight: var(--weight-regular); color: var(--text-secondary); }
+.orp-page :is(.add-application, .suivi-todo, .suivi-detail, .applications-banner) { margin: 0; }
+.orp-page .add-application { justify-self: start; }
+.orp-rows button.orp-row:hover { background: var(--accent-soft); }
+.orp-goal-line { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--target-min); margin-bottom: var(--space-4); padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); color: var(--text); text-decoration: none; }
+@media (max-width: 820px) { :root:has(.orp-page-head) .topbar { display: none; } }
 .home-block-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--space-3) 0 var(--space-5); }
 .home-block-head a { display: flex; align-items: center; min-height: var(--target-min); padding: 0 var(--space-2); font-weight: var(--weight-bold); text-decoration: none; }
 .home-cards { display: flex; gap: var(--space-3); margin-top: var(--space-3); padding: 0 var(--space-5) var(--space-1); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: var(--space-5); overscroll-behavior-x: contain; scrollbar-width: none; }

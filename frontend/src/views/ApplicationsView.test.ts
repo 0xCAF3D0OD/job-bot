@@ -91,20 +91,18 @@ function mockApi(orpMonth: () => unknown = () => month(), applications: unknown[
   GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/orp" ? orpMonth() : applications }));
 }
 
-// Onglets de la rubrique Candidatures (docs/19 §2) : la vue vient de la route.
+// Deux pages sur la même vue (docs/139 étape 8b) : Envoyées et le Suivi ORP, selon la route.
 async function mountView(path = "/candidatures/suivi") {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: "/candidatures/suivi", component: ApplicationsView, props: { view: "suivi" } },
-      { path: "/candidatures/preuves", component: ApplicationsView, props: { view: "orp" } },
+      { path: "/candidatures/suivi", name: "applications", component: ApplicationsView },
+      { path: "/bilan/orp", name: "orp-month", component: ApplicationsView },
       { path: "/:any(.*)*", component: { template: "<div />" } },
     ],
   });
   await router.push(path);
-  const view = path.includes("preuves") ? "orp" : "suivi";
   const wrapper = mount(ApplicationsView, {
-    props: { view },
     global: { plugins: [router], stubs: { teleport: true, ContactsPanel: true } },
   });
   await flushPromises();
@@ -116,7 +114,8 @@ describe("Candidatures, page réunie", () => {
     const old = { ...application, id: 9, company: "Ancienne SA", sent_at: "2026-08-01", orp_month: "2026-08" };
     mockApi(() => month(), [application, old]);
     const { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=state]").text()).toContain("Preuves d'octobre : 1 ligne à compléter");
+    // La remise des preuves est dans le Suivi ORP (B8).
+    expect(wrapper.find("[data-test=state]").exists()).toBe(false);
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(1);
     await wrapper.find("[data-test=all-months]").trigger("click");
     expect(wrapper.findAll("[data-test=application]")).toHaveLength(2);
@@ -132,16 +131,16 @@ describe("Candidatures, onglet Suivi", () => {
     expect(wrapper.text()).toContain("Acme SA");
     // Un seul conteneur, chaque bloc sur toute sa largeur (règles §3, 1.6.32).
     expect(wrapper.find(".jobs-body").classes()).toEqual(["jobs-body"]);
-    expect(wrapper.find("[data-test=goal]").text()).toContain("1 / 20");
-    expect(wrapper.find("[role=progressbar]").attributes("aria-valuenow")).toBe("1");
-    // Au-delà de 15, une barre continue.
-    expect(wrapper.find(".orp-month-bar.continuous").exists()).toBe(true);
+    // L'objectif, une ligne vers Bilan › ORP (B7).
+    expect(wrapper.find("[data-test=goal]").text()).toBe("Objectif ORP : 1 sur 20");
+    expect(wrapper.find("[data-test=goal]").attributes("href")).toBe("/bilan");
+    expect(wrapper.find("[data-test=month]").exists()).toBe(false);
   });
 
   it("sans objectif : invite à le saisir", async () => {
     mockApi(() => month({ count: 0, target: null }), []);
     const { wrapper } = await mountView();
-    expect(wrapper.find("[data-test=goal]").text()).toContain("Réglages");
+    expect(wrapper.find("[data-test=goal]").text()).toBe("Objectif ORP : à indiquer");
     // Un compte sans aucune candidature : ce qui remplit le Suivi (docs/128 §3).
     expect(wrapper.text()).toContain("Pas encore de candidature");
     expect(wrapper.find("[data-test=applications-none-yet]").exists()).toBe(true);
@@ -149,7 +148,7 @@ describe("Candidatures, onglet Suivi", () => {
 
   it("changer de mois recharge la liste", async () => {
     mockApi(() => month({ count: 0 }), []);
-    const { wrapper } = await mountView();
+    const { wrapper } = await mountView("/bilan/orp");
     await wrapper.find("[data-test=prev-month]").trigger("click");
     await flushPromises();
     expect(GET).toHaveBeenLastCalledWith("/api/applications");
@@ -171,7 +170,7 @@ describe("Candidatures, onglet Suivi", () => {
   it("ajout manuel : crée une candidature sans offre", async () => {
     mockApi(() => month({ count: 0 }), []);
     POST.mockResolvedValue({ data: application });
-    const { wrapper } = await mountView();
+    const { wrapper } = await mountView("/bilan/orp");
     await wrapper.find("[data-test=add-application]").trigger("click");
     const form = wrapper.find("form.application-form");
     expect(form.exists()).toBe(true);
@@ -189,7 +188,7 @@ describe("Candidatures, onglet Suivi", () => {
 describe("Candidatures, onglet Preuves ORP", () => {
   it("affiche le mois, l'état et les lignes à compléter", async () => {
     mockApi();
-    const { wrapper } = await mountView("/candidatures/preuves");
+    const { wrapper } = await mountView("/bilan/orp");
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: undefined } } });
     // Un bandeau daté (docs/134) : ce qui reste à faire, et pour quand.
     // La date de phrase (dates.ts) : l'année seulement quand elle diffère.
@@ -198,7 +197,8 @@ describe("Candidatures, onglet Preuves ORP", () => {
     await wrapper.find("[data-test=orp-more]").trigger("click");
     expect(wrapper.find("[data-test=csv]").attributes("href")).toBe("/api/orp/2026-10/csv");
     expect(wrapper.find("[data-test=csv]").attributes("download")).toBe("");
-    expect(wrapper.find("[data-test=pdf]").exists()).toBe(true);
+    // Le PDF est le bouton « Exporter le formulaire (PDF) » de la maquette Orp.
+    expect(wrapper.find("[data-test=pdf]").text()).toBe("Exporter le formulaire (PDF)");
     expect(wrapper.find("[data-test=columns]").exists()).toBe(false);
     // La version imprimée reprend l'en-tête et laisse le n° AVS à remplir.
     expect(wrapper.find(".orp-sheet").text()).toContain("N° AVS : ____");
@@ -213,8 +213,8 @@ describe("Candidatures, onglet Preuves ORP", () => {
     const months = [month({ to_declare: 1, rows }), month({ to_declare: 0, rows: [rows[0], { ...rows[1], declared_at: "2026-10-19" }] })];
     mockApi(() => months.shift() ?? month({ to_declare: 0, rows: [rows[0]] }), [declared, left]);
     PUT.mockResolvedValue({ response: { status: 204 } });
-    const { wrapper } = await mountView();
-    // Sa propre liste, sous « À relancer » (1.6.27 : plus d'onglets, règles §2).
+    const { wrapper } = await mountView("/bilan/orp");
+    // Sa propre liste, sous les recherches du mois (B8).
     const list = wrapper.find("[data-test=declare]");
     expect(list.attributes("aria-label")).toBe("À déclarer dans Job-Room");
     expect(list.findAll("li")).toHaveLength(1);
@@ -245,7 +245,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
   it("une action à la fois : compléter tant qu'une ligne manque", async () => {
     // La ligne 2 (sans adresse) correspond à la candidature 2.
     mockApi(() => month(), [{ ...application, id: 2 }]);
-    const { wrapper } = await mountView("/candidatures/preuves");
+    const { wrapper } = await mountView("/bilan/orp");
     expect(wrapper.find("[data-test=complete-next]").text()).toBe("Compléter");
     expect(wrapper.find("[data-test=submit]").exists()).toBe(false);
     expect(wrapper.find("[data-test=more-options]").exists()).toBe(false);
@@ -257,7 +257,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
   it("compléter une ligne ouvre la candidature et l'enregistre", async () => {
     mockApi(() => month(), [{ ...application, id: 2, sent_at: "2026-10-02", status: "refus" }]);
     PUT.mockResolvedValue({ data: { id: 2 } });
-    const { wrapper } = await mountView("/candidatures/preuves");
+    const { wrapper } = await mountView("/bilan/orp");
     await wrapper.find("[data-test=complete-next]").trigger("click");
     await flushPromises();
     const form = wrapper.find("form.application-form");
@@ -277,7 +277,7 @@ describe("Candidatures, onglet Preuves ORP", () => {
     mockApi(() => months.shift() ?? month(complete));
     PUT.mockResolvedValue({ response: { status: 204 } });
     DELETE.mockResolvedValue({ response: { status: 204 } });
-    const { wrapper } = await mountView("/candidatures/preuves");
+    const { wrapper } = await mountView("/bilan/orp");
     await wrapper.find("[data-test=submit]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/orp/{month}/submission", { params: { path: { month: "2026-10" } } });
@@ -294,10 +294,10 @@ describe("Candidatures, onglet Preuves ORP", () => {
 
   it("navigation de mois : passe par l'URL", async () => {
     mockApi();
-    const { wrapper, router } = await mountView("/candidatures/preuves");
+    const { wrapper, router } = await mountView("/bilan/orp");
     await wrapper.find("[data-test=prev-month]").trigger("click");
     await flushPromises();
-    expect(router.currentRoute.value.fullPath).toBe("/candidatures/preuves?mois=2026-09");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/orp?mois=2026-09");
     expect(GET).toHaveBeenCalledWith("/api/orp", { params: { query: { month: "2026-09" } } });
   });
 });
@@ -329,10 +329,13 @@ describe("Suivi en calendrier (docs/22)", () => {
     const sent = { ...application, id: 2, sent_at: "2026-10-02", interview_at: "2026-10-20T09:00:00Z" };
     mockApi(() => month(), [sent, old]);
     PUT.mockResolvedValue({ data: sent });
-    const { wrapper } = await mountView();
-    // « À faire » d'abord : les candidatures à relancer ; le calendrier est replié dessous.
-    expect(wrapper.find("[data-test=todo]").text()).toContain("À relancer");
-    expect(wrapper.find("[data-test=todo]").text()).toContain("Ancienne SA");
+    const { wrapper: sentPage } = await mountView();
+    // Envoyées : « À relancer » d'abord ; le calendrier est dans le Suivi ORP (B8).
+    expect(sentPage.find("[data-test=todo]").text()).toContain("À relancer");
+    expect(sentPage.find("[data-test=todo]").text()).toContain("Ancienne SA");
+    expect(sentPage.find("[data-test=detail-calendar]").exists()).toBe(false);
+    const { wrapper } = await mountView("/bilan/orp");
+    expect(wrapper.find("[data-test=todo]").exists()).toBe(false);
     expect(wrapper.find("[data-test=detail-calendar] .disclosure-row").attributes("aria-expanded")).toBe("false");
     expect(wrapper.find("[data-test=day-panel]").exists()).toBe(false);
     // Le 2 octobre : une pastille, avec le point rouge de la ligne ORP à compléter (ligne 2).
@@ -419,7 +422,7 @@ describe("Suivi, une carte et un panneau (docs/46)", () => {
 });
 
 describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop chargé)", () => {
-  it("à relancer et à déclarer : deux listes l'une sous l'autre, trois lignes chacune, « Afficher plus »", async () => {
+  it("à relancer et à déclarer : trois lignes chacune, « Afficher plus »", async () => {
     const many = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ ...application, id: 20 + n, company: `Exemple ${n}`, sent_at: "2026-08-0" + n }));
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
@@ -435,12 +438,14 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     expect(todo.findAll("[data-test=application-card]")).toHaveLength(7);
     expect(todo.find("[data-test=todo-all]").text()).toBe("Afficher moins");
     // La liste à déclarer, dessous, avec ses deux lignes (moins de trois : pas de « Afficher plus »).
-    const declare = wrapper.find("[data-test=declare]");
+    // La liste à déclarer est dans le Suivi ORP, avec ses deux lignes (moins de trois : pas de « Afficher plus »).
+    expect(wrapper.find("[data-test=declare]").exists()).toBe(false);
+    const declare = (await mountView("/bilan/orp")).wrapper.find("[data-test=declare]");
     expect(declare.findAll("li")).toHaveLength(2);
     expect(declare.find("[data-test=declare-all]").exists()).toBe(false);
   });
 
-  it("la conclusion en haut : relances et candidatures à déclarer, les nombres en accent", async () => {
+  it("la conclusion en haut : les relances à faire, le nombre en accent", async () => {
     // Le jour figé : envoyée le 20 octobre, la candidature n'est pas encore à relancer le 25 (10 jours).
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-25T08:00:00Z"));
@@ -448,58 +453,62 @@ describe("Suivi, l'essentiel d'abord (1.6.20, annexe de l'audit : Suivi trop cha
     mockApi(() => month(), many);
     const { wrapper } = await mountView();
     const sentence = wrapper.find("[data-test=suivi-sentence]");
-    expect(sentence.text()).toBe("2 relances à faire et 2 candidatures à déclarer.");
-    expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["2 relances", "2 candidatures"]);
-    // Elle vient avant le mois.
+    expect(sentence.text()).toBe("2 relances à faire.");
+    expect(sentence.findAll("strong").map((s) => s.text())).toEqual(["2 relances"]);
+    // Elle vient avant l'objectif.
     const html = wrapper.html();
-    expect(html.indexOf("suivi-sentence")).toBeLessThan(html.indexOf("applications-head"));
+    expect(html.indexOf("suivi-sentence")).toBeLessThan(html.indexOf('data-test="goal"'));
 
     mockApi(() => month({ count: 0, rows: [] }), [{ ...application, sent_at: "2026-10-20" }]);
     const { wrapper: calm } = await mountView();
-    expect(calm.find("[data-test=suivi-sentence]").text()).toBe("Rien à relancer ni à déclarer.");
+    expect(calm.find("[data-test=suivi-sentence]").text()).toBe("Rien à relancer.");
     vi.useRealTimers();
   });
 
-  it("l'objectif en cases, une par candidature (règles §4)", async () => {
+  it("le Suivi ORP : retour, mois, objectif, bandeau, export, recherches, puis Ajouter, À déclarer, calendrier (B8)", async () => {
     mockApi(() => month({ count: 6, target: 10 }), [application]);
-    const { wrapper } = await mountView();
-    const bar = wrapper.find("[data-test=goal] .orp-month-bar");
-    expect(bar.findAll(".segment")).toHaveLength(10);
-    expect(bar.findAll(".segment.done")).toHaveLength(6);
-    expect(bar.attributes("aria-valuemax")).toBe("10");
+    const { wrapper } = await mountView("/bilan/orp");
+    expect(wrapper.find("h1").text()).toBe("Suivi ORP");
+    expect(wrapper.find("[data-test=orp-back]").attributes("href")).toBe("/bilan");
+    expect(wrapper.find("[data-test=orp-goal] h2").text()).toBe("4 recherches à faire");
+    expect(wrapper.find("#orp-month-title").findAll("span").map((x) => x.text())).toEqual(["Recherches du mois", "2 entrées"]);
+    const html = wrapper.html();
+    const order = ["data-test=\"month\"", "data-test=\"orp-goal\"", "data-test=\"orp-banner\"", "data-test=\"pdf\"", "data-test=\"orp-rows\"", "data-test=\"add-application\"", "data-test=\"declare\"", "data-test=\"detail-calendar\""].map((t) => html.indexOf(t));
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((x, y) => x - y));
+    // Une recherche ouvre sa candidature.
+    mockApi(() => month({ rows: [row(3)] }), [application]);
+    const { wrapper: one } = await mountView("/bilan/orp");
+    await one.find("[data-test=orp-row-3]").trigger("click");
+    expect(one.find("[data-test=application-panel]").exists()).toBe(true);
   });
 
-  it("le détail replié : le calendrier et la liste du mois ; un jour demandé ouvre le calendrier", async () => {
+  it("le détail replié : la liste du mois dans Envoyées, le calendrier dans le Suivi ORP ; un jour demandé l'ouvre", async () => {
     mockApi(() => month(), [{ ...application, sent_at: "2026-10-02" }]);
     const { wrapper } = await mountView();
     const detail = wrapper.find("[data-test=suivi-detail]");
-    expect(detail.findAll(".disclosure-title").map((d) => d.text())).toEqual(["Calendrier d'octobre", "Toutes les candidatures d'octobre"]);
+    expect(detail.findAll(".disclosure-title").map((d) => d.text())).toEqual(["Toutes les candidatures d'octobre"]);
     // Comme les repliables du Bilan (règles §3) : une icône et une phrase, visibles replié.
-    expect(detail.findAll(".disclosure-icon")).toHaveLength(2);
+    expect(detail.findAll(".disclosure-icon")).toHaveLength(1);
     expect(detail.find("[data-test=detail-list] [data-test=disclosure-description]").text()).toMatch(/^1 candidature\b/);
-    expect(detail.find("[data-test=detail-calendar] [data-test=disclosure-description]").text()).not.toBe("");
+    const orpPage = (await mountView("/bilan/orp")).wrapper;
+    expect(orpPage.find("[data-test=detail-calendar] [data-test=disclosure-description]").text()).not.toBe("");
     expect(wrapper.find("[data-test=layout-calendar]").exists()).toBe(false);
 
-    const { wrapper: day } = await mountView("/candidatures/suivi?jour=2026-10-02");
+    const { wrapper: day } = await mountView("/bilan/orp?jour=2026-10-02");
     expect(day.find("[data-test=detail-calendar] .disclosure-row").attributes("aria-expanded")).toBe("true");
     expect(day.find("[data-test=day-panel]").text()).toContain("Acme SA");
   });
 });
 
-describe("Suivi, revue des pages (docs/43 n° 14)", () => {
-  it("une ligne : le mois, l'objectif et les outils ; l'état ORP s'il y a à faire (docs/130 §A)", async () => {
+describe("Suivi ORP, le bandeau des preuves (docs/134)", () => {
+  it("sous l'objectif, seulement s'il y a à faire ou si elles sont remises", async () => {
     mockApi(() => month());
-    const { wrapper } = await mountView();
-    const head = wrapper.find(".applications-head");
-    expect(head.find("[data-test=month]").exists()).toBe(true);
-    expect(head.find("[data-test=goal]").exists()).toBe(true);
-    expect(head.find(".applications-tools [data-test=add-application]").text()).toBe("Ajouter");
-    // L'état des preuves : un bandeau à part (docs/134).
-    expect(head.find("[data-test=state]").exists()).toBe(false);
+    const { wrapper } = await mountView("/bilan/orp");
     expect(wrapper.find("[data-test=orp-banner]").classes()).toContain("today-banner");
 
     mockApi(() => month({ state: "en_cours", incomplete: 0, rows: [row(1)] }));
-    const { wrapper: calm } = await mountView();
+    const { wrapper: calm } = await mountView("/bilan/orp");
     expect(calm.find("[data-test=orp-banner]").exists()).toBe(false);
   });
 });

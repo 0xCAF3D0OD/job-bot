@@ -21,7 +21,7 @@ describe("routes réservées (docs/18 §1)", () => {
     // Ancienne adresse : redirigée vers l'onglet, puis vers la connexion.
     await router.push("/candidatures?vue=orp&mois=2026-09");
     expect(router.currentRoute.value.name).toBe("login");
-    expect(router.currentRoute.value.query.suite).toBe("/candidatures/suivi?mois=2026-09");
+    expect(router.currentRoute.value.query.suite).toBe("/bilan/orp?mois=2026-09");
     await router.push("/formations");
     expect(router.currentRoute.value.name).toBe("login");
   });
@@ -57,11 +57,17 @@ describe("routes réservées (docs/18 §1)", () => {
     await router.push("/candidatures");
     expect(router.currentRoute.value.name).toBe("offers");
     await router.push("/orp?mois=2026-09");
-    expect(router.currentRoute.value.fullPath).toBe("/candidatures/suivi?mois=2026-09");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/orp?mois=2026-09");
     await router.push("/offres/12/preparer");
     expect(router.currentRoute.value.name).toBe("preparation");
     await router.push("/candidatures?mois=2026-08");
-    expect(router.currentRoute.value.fullPath).toBe("/candidatures/suivi?mois=2026-08");
+    expect(router.currentRoute.value.fullPath).toBe("/bilan/orp?mois=2026-08");
+    // Envoyées : un mois ou un jour mène au Suivi ORP ; une candidature ou une recherche reste (B9).
+    await router.push("/candidatures/suivi?mois=2026-07&jour=2026-07-02");
+    expect(router.currentRoute.value.name).toBe("orp-month");
+    expect(router.currentRoute.value.query.jour).toBe("2026-07-02");
+    await router.push("/candidatures/suivi?candidature=4&mois=2026-07");
+    expect(router.currentRoute.value.name).toBe("applications");
     // Journal des recherches devenu l'onglet Alertes (docs/20 §1).
     await router.push("/journal");
     expect(router.currentRoute.value.name).toBe("alerts");
