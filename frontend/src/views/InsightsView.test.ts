@@ -57,8 +57,7 @@ function report(extra: Record<string, unknown> = {}) {
   };
 }
 
-// Chaque adresse reçoit sa propre réponse : le Bilan n'est servi qu'à /api/insights, sinon
-// la jauge ORP lit un bilan à la place de leurs données.
+// Chaque adresse reçoit sa propre réponse : le Bilan n'est servi qu'à /api/insights.
 function serve(insights: Record<string, unknown> | Error, today: Record<string, unknown> | null = null) {
   GET.mockImplementation((path: string) => {
     if (path === "/api/insights") {
@@ -84,7 +83,7 @@ async function mountView(path = "/candidatures/bilan") {
 }
 
 describe("Bilan (docs/42, docs/55)", () => {
-  it("la conclusion, la bande du meilleur site, la période, les tuiles", async () => {
+  it("la phrase, la carte du meilleur site, la période, les trois chiffres, Mois par mois (B13)", async () => {
     serve(report({ comparisons: [{ key: "source", title: "", groups: [group("jobs.ch", 3, 5), group("jobup.ch", 2, 10), group("LinkedIn", 1, 4)] }] }));
     const { wrapper } = await mountView();
     expect(GET).toHaveBeenCalledWith("/api/insights", { params: { query: { period: "recent" } } });
@@ -101,10 +100,15 @@ describe("Bilan (docs/42, docs/55)", () => {
     const periods = wrapper.findAll(".bilan-period button");
     expect(periods.map((p) => p.text())).toEqual(["Un mois", "3 mois", "Tout"]);
     expect(periods[1]!.attributes("aria-checked")).toBe("true");
-    // Les tuiles, inchangées (docs/55, 1.6.26).
-    expect(wrapper.find("[data-test=tile-applications] [data-test=tile-caption]").text()).toBe("candidatures, sur 19 offres gardées");
-    expect(wrapper.find("[data-test=tile-responses]").text()).toContain("41 % des envois");
-    expect(wrapper.find("[data-test=delay] [data-test=tile-caption]").text()).toBe("délai de réponse, de 2 à 18 j");
+    // Sans la bande bleue (B13) : la carte seule, sous la phrase, au-dessus de la période.
+    expect(band.classes()).toContain("bilan-site");
+    // Trois chiffres (B13) : candidatures, réponses, entretiens ; plus de délai de réponse.
+    expect(wrapper.findAll("[data-test=bilan-figures] li").map((li) => li.text())).toEqual(["22candidatures", "9réponses", "3entretiens"]);
+    expect(wrapper.find("[data-test=delay]").exists()).toBe(false);
+    // « Mois par mois » mène au Suivi ORP, avec l'objectif mensuel.
+    const months = wrapper.find("[data-test=detail-months]");
+    expect(months.attributes("href")).toBe("/bilan/orp");
+    expect(months.text()).toBe("Mois par moisObjectif ORP : 10 par mois");
   });
 
   it("pas de bande sans site qui se détache", async () => {
@@ -113,7 +117,7 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[data-test=action-band]").exists()).toBe(false);
   });
 
-  it("quatre repliables chiffrés : la phrase repliée, le dessin déplié", async () => {
+  it("la carte Parcours, puis « Ce qui marche » et « Entretiens » repliés (B13)", async () => {
     // Une date fixe : les dates des données (le 29 octobre) ne deviennent pas « aujourd'hui ».
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-22T10:00:00Z"));
@@ -127,19 +131,20 @@ describe("Bilan (docs/42, docs/55)", () => {
     }));
     const { wrapper } = await mountView();
     const rows = wrapper.findAll("[data-test=bilan-detail] .disclosure-row");
-    expect(rows.map((r) => r.find(".disclosure-title").text())).toEqual(["Parcours", "Ce qui marche", "Par mois", "Entretiens"]);
+    expect(rows.map((r) => r.find(".disclosure-title").text())).toEqual(["Ce qui marche", "Entretiens"]);
     expect(rows.every((r) => r.attributes("aria-expanded") === "false")).toBe(true);
     const descriptions = wrapper.findAll("[data-test=bilan-detail] [data-test=disclosure-description]").map((d) => d.text());
-    expect(descriptions[0]).toBe("Le plus de pertes : entre les réponses et les entretiens");
-    expect(descriptions[1]).toBe("Une relance fait mieux répondre : 4 sur 8, contre 6 sur 18");
-    expect(descriptions[2]).toMatch(/^Octobre : 7 candidatures sur 10, /);
-    expect(descriptions[3]).toBe("3 entretiens, le prochain le 29 octobre");
-    // Parcours : six chiffres, l'étape faible en accent, et ce qu'il faut travailler ; le texte pour les
-    // lecteurs d'écran (WCAG 1.1.1).
-    expect(wrapper.findAll("[data-test=funnel-received] > *").map((e) => e.text())).toEqual(["75", "offres reçues"]);
-    expect(wrapper.findAll("[data-test=funnel-engagements] > *").map((e) => e.text())).toEqual(["0", "poste obtenu"]);
-    expect(wrapper.find("[data-test=funnel-interviews]").classes()).toContain("weak");
-    expect(wrapper.find("[data-test=funnel-work]").text()).toBe("C'est l'étape à travailler : préparer les entretiens.");
+    expect(descriptions).toEqual(["Une relance fait mieux répondre : 4 sur 8, contre 6 sur 18", "3 entretiens, le prochain le 29 octobre"]);
+    // Parcours (maquette) : une barre par étape, à l'échelle des offres reçues ; « Postes obtenus » seulement
+    // dès le premier ; l'encadré « Le plus de pertes » ; le texte pour les lecteurs d'écran (WCAG 1.1.1).
+    expect(wrapper.find("[data-test=funnel] h2").text()).toBe("Parcours");
+    expect(wrapper.findAll("[data-test=funnel-received] > *").map((e) => e.text())).toEqual(["Offres reçues", "", "75"]);
+    expect(wrapper.find("[data-test=funnel-received] .bilan-funnel-track > span").attributes("style")).toBe("width: 100%;");
+    expect(wrapper.find("[data-test=funnel-interviews] .bilan-funnel-track > span").attributes("style")).toBe("width: 4%;");
+    expect(wrapper.find("[data-test=funnel-engagements]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=funnel-work]").text()).toBe(
+      "Le plus de pertes : entre les réponses et les entretiens. À travailler : préparer les entretiens.",
+    );
     expect(wrapper.find("[data-test=funnel] .visually-hidden").text()).toBe(
       "75 offres reçues, 19 gardées, 22 candidatures, 9 réponses, 3 entretiens, 0 poste obtenu.",
     );
@@ -151,12 +156,6 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(few.text()).toBe("LinkedIn : trop peu pour conclure (1 sur 4)");
     expect(few.find(".bilan-bar").exists()).toBe(false);
     expect(wrapper.find("[data-test=group-no]").text()).toContain("Sans relance");
-    // Par mois : la ligne de l'objectif, le mois en cours dit en mots.
-    expect(wrapper.find(".bilan-goal").text()).toBe("Objectif : 10");
-    expect(wrapper.find("[data-test=month-2026-10]").text()).toBe("7 / 10oct. · en cours");
-    expect(wrapper.find("[data-test=bilan-months] .visually-hidden").text()).toBe(
-      "Août : 9 candidatures. Septembre : 10. Octobre, en cours : 7 sur 10. Objectif : 10 par mois.",
-    );
     // Entretiens : date, entreprise, type, état ; puis les enseignements, sans second repliable.
     const lines = wrapper.findAll(".bilan-interview-list li");
     expect(lines[0]!.findAll("span, strong").map((e) => e.text())).toEqual([
@@ -216,13 +215,10 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(wrapper.find("[role=alert]").text()).toContain("Bilan indisponible");
   });
 
-  it("les mois précédents à côté des tuiles ; le mois en cours reste sur Aujourd'hui (docs/133 §3)", async () => {
-    serve(report(), { month: "2026-10", month_count: 3, month_target: 20, orp_history: [{ month: "2026-09", count: 20 }] });
+  it("plus de « Mois précédents » ni de jauge ORP : le Suivi ORP les montre (B13)", async () => {
+    serve(report());
     const { wrapper } = await mountView();
-    const gauge = wrapper.find("[data-test=orp-gauge]");
-    expect(gauge.find("h2").text()).toBe("Mois précédents");
-    expect(gauge.find("[data-test=month-count]").exists()).toBe(false);
-    expect(gauge.find(".gauge-history li").text().replace(/\s+/g, " ")).toBe("septembre 202620 / 20atteint");
-    expect(gauge.element.parentElement!.classList.contains("bilan-top")).toBe(true);
+    expect(wrapper.find("[data-test=orp-gauge]").exists()).toBe(false);
+    expect(GET).not.toHaveBeenCalledWith("/api/today");
   });
 });
