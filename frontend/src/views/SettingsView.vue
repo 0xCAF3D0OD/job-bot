@@ -21,6 +21,7 @@ import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
+import AppearancePanel from "../components/AppearancePanel.vue";
 import GroupedList from "../components/GroupedList.vue";
 import GroupedRow from "../components/GroupedRow.vue";
 import SavedStatus from "../components/SavedStatus.vue";
@@ -993,6 +994,7 @@ onUnmounted(() => spy?.disconnect());
         >
           <!-- Chaque panneau porte ses cartes (1.6.67) : la formule, les profils d'essai, la connexion,
                les données personnelles. -->
+          <AppearancePanel />
           <PlanPanel />
           <ProfilesPanel v-if="owner" />
           <SessionPanel />
