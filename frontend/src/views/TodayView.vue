@@ -525,7 +525,7 @@ const { me } = useAuth();
           </p>
           <p>{{ highlight.sentence }}</p>
           <RouterLink
-            to="/bilan"
+            to="/bilan/resultats"
             class="button-link"
             data-test="today-retain-link"
           >

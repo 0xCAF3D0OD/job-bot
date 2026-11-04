@@ -10,6 +10,7 @@ import PlaceholderView from "./views/PlaceholderView.vue";
 // téléchargent plus Préparer, le Bilan ou les Réglages.
 const AlertsView = () => import("./views/AlertsView.vue");
 const InsightsView = () => import("./views/InsightsView.vue");
+const BilanOrpView = () => import("./views/BilanOrpView.vue");
 const OrpMeetingView = () => import("./views/OrpMeetingView.vue");
 const DiagnosticView = () => import("./views/DiagnosticView.vue");
 const AccessView = () => import("./views/AccessView.vue");
@@ -62,8 +63,8 @@ export const mainMenu: NavEntry[] = navigation.filter((entry) => ["today", "jobs
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
 export type JobsTab = "offres" | "suivi" | "alertes" | "rendez-vous";
-// Onglets du Bilan (docs/126 §1) : les résultats, puis ce qui aide à progresser.
-export type BilanTab = "resultats" | "formations";
+// Onglets du Bilan (docs/126 §1 ; docs/139 étape 8, B1) : l'ORP, les résultats, puis ce qui aide à progresser.
+export type BilanTab = "orp" | "resultats" | "formations";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, () => Promise<unknown>> = {
@@ -146,7 +147,7 @@ export const routes: RouteRecordRaw[] = [
       { path: "alertes", name: "alerts", component: AlertsView, meta: { tab: "alertes" } },
       { path: "journal", redirect: "/candidatures/alertes" },
       // Le Bilan est une entrée du menu (docs/126 §1) : les anciens liens y mènent, avec le mois.
-      { path: "bilan", redirect: (to) => ({ path: "/bilan", query: to.query }) },
+      { path: "bilan", redirect: (to) => ({ path: "/bilan/resultats", query: to.query }) },
       // Le rendez-vous avec le conseiller ORP (docs/83).
       {
         path: "rendez-vous-orp",
@@ -161,7 +162,16 @@ export const routes: RouteRecordRaw[] = [
     path: "/bilan",
     component: BilanView,
     children: [
-      { path: "", name: "insights", component: InsightsView, meta: { tab: "resultats" } },
+      // L'ORP d'abord (maquette Explorer, B1, 2026-11-04) ; un ancien lien vers un mois (/bilan?mois=…) mène
+      // aux Résultats de ce mois.
+      {
+        path: "",
+        name: "bilan-orp",
+        component: BilanOrpView,
+        meta: { tab: "orp" },
+        beforeEnter: (to) => (typeof to.query.mois === "string" ? { path: "/bilan/resultats", query: to.query } : true),
+      },
+      { path: "resultats", name: "insights", component: InsightsView, meta: { tab: "resultats" } },
       { path: "formations", name: "trainings", component: TrainingsView, meta: { tab: "formations" } },
       { path: "actualites", redirect: "/bilan" },
     ],
