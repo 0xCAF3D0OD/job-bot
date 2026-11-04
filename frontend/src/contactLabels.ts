@@ -16,7 +16,7 @@ export const CHANNELS: Record<Contact["channel"], string> = {
   other: "Autre",
 };
 // Relance proposée 7 jours après une prise de contact restée sans réponse (docs/31 §4).
-export const FOLLOW_UP_DAYS = 7;
+const FOLLOW_UP_DAYS = 7;
 
 export function isoDay(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;

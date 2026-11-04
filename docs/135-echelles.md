@@ -716,6 +716,10 @@ Décision du 25 octobre : les Actualités quittent l'interface ; le code serveur
 
 ### Inutilisé côté serveur, à décider
 
+> **Décidé le 2026-11-04** (Kevin) : le code est retiré (routes, relevé, assistant, accueil, profils d'essai,
+> démo), les tables et leurs données restent. Gardés : « Mon domaine » (`/api/news/preferences`), `news/domain`,
+> `news/language`, et `news/catalog` pour la migration 0064.
+
 - **L'API** `/api/news` : 11 routes sur 13 n'ont plus d'appelant (`listNews`, `refreshNews`, `markNewsSeen`,
   `getNewsImage`, `listNewsSources`, `addNewsSource`, `getNewsCatalog`, `addNewsCatalogSource`, `addNewsSearch`,
   `updateNewsSource`, `deleteNewsSource`). Restent utilisées : `getNewsPreferences` et `saveNewsPreferences`

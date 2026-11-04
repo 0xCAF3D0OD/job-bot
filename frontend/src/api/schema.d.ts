@@ -306,7 +306,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Export Account */
+        /**
+         * Export Account
+         * @description L'archive de toutes les données du compte. Contre une session volée
+         *     (docs/regles-securite-donnees.md, X-2 et X-3) : 3 exports par 24 heures au plus, et
+         *     chaque export est annoncé dans la cloche et sur le téléphone, sans rien de son contenu.
+         */
         get: operations["exportAccount"];
         put?: never;
         post?: never;
@@ -2522,43 +2527,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/news": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List News */
-        get: operations["listNews"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh News
-         * @description « Relever maintenant » : relevé de toutes les sources actives, en arrière-plan.
-         */
-        post: operations["refreshNews"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/news/preferences": {
         parameters: {
             query?: never;
@@ -2575,140 +2543,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/news/seen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Mark Seen */
-        post: operations["markNewsSeen"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/items/{item_id}/image": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get News Image */
-        get: operations["getNewsImage"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/sources": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Sources */
-        get: operations["listNewsSources"];
-        put?: never;
-        /**
-         * Add Source
-         * @description Site, flux RSS ou chaîne YouTube : le flux est trouvé et vérifié avant l'ajout.
-         */
-        post: operations["addNewsSource"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/catalog": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Catalog
-         * @description Sources suggérées, vérifiées, classées par domaine, pays et langue.
-         */
-        get: operations["getNewsCatalog"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/catalog/{catalog_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add Catalog Source */
-        post: operations["addNewsCatalogSource"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/searches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add Search
-         * @description Veille par recherche : mots-clés, pays et langue, relevés dans Google Actualités.
-         */
-        post: operations["addNewsSearch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/news/sources/{source_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Source
-         * @description Le profil ne suit plus la source ; suivie par personne, elle est effacée avec ses
-         *     contenus.
-         */
-        delete: operations["deleteNewsSource"];
-        options?: never;
-        head?: never;
-        /** Update Source */
-        patch: operations["updateNewsSource"];
         trace?: never;
     };
     "/api/trainings": {
@@ -2895,7 +2729,7 @@ export interface paths {
         put?: never;
         /**
          * Duplicate Profile
-         * @description Copie d'un profil (préférences et sources), pour comparer deux variantes.
+         * @description Copie d'un profil (ses préférences), pour comparer deux variantes.
          */
         post: operations["duplicateProfile"];
         delete?: never;
@@ -3972,32 +3806,6 @@ export interface components {
             created_at: string;
             /** Last Used At */
             last_used_at: string | null;
-        };
-        /** CatalogSourceOut */
-        CatalogSourceOut: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "articles" | "videos";
-            /** Url */
-            url: string;
-            /** Domains */
-            domains: string[];
-            /** Country */
-            country: string;
-            /** Language */
-            language: string | null;
-            /** Labour Market */
-            labour_market: boolean;
-            /** Description */
-            description: string;
-            /** Added */
-            added: boolean;
         };
         /** CertificateLetterOut */
         CertificateLetterOut: {
@@ -5909,78 +5717,9 @@ export interface components {
             /** Weeks */
             weeks: components["schemas"]["MonthWeekOut"][];
         };
-        /** NewsCatalog */
-        NewsCatalog: {
-            /** Domains */
-            domains: {
-                [key: string]: string;
-            };
-            /** Sources */
-            sources: components["schemas"]["CatalogSourceOut"][];
-        };
-        /** NewsItemOut */
-        NewsItemOut: {
-            /** Id */
-            id: number;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "articles" | "videos";
-            /** Source */
-            source: string;
-            /** Title */
-            title: string;
-            /** Url */
-            url: string;
-            /** Summary */
-            summary: string | null;
-            /** Has Image */
-            has_image: boolean;
-            /**
-             * Published At
-             * Format: date-time
-             */
-            published_at: string;
-            /** Country */
-            country: string | null;
-            /** Language */
-            language: string | null;
-            /** Labour Market */
-            labour_market: boolean;
-            /** Matched */
-            matched: string[];
-        };
-        /** NewsPage */
-        NewsPage: {
-            /** Items */
-            items: components["schemas"]["NewsItemOut"][];
-            /** New Articles */
-            new_articles: number;
-            /** New Videos */
-            new_videos: number;
-            /**
-             * New Jobs
-             * @default 0
-             */
-            new_jobs: number;
-            /**
-             * New Economy
-             * @default 0
-             */
-            new_economy: number;
-            /** Fetched At */
-            fetched_at: string | null;
-            /** Refreshing */
-            refreshing: boolean;
-            /** Countries */
-            countries: string[];
-            /** Languages */
-            languages: string[];
-        };
         /**
          * NewsPreferences
-         * @description « Mon domaine » et filtres de la page, retenus d'une visite à l'autre (docs/16 §2-3).
+         * @description « Mon domaine » et filtres, retenus d'une visite à l'autre (docs/16 §2-3).
          */
         NewsPreferences: {
             /** Domain Keywords */
@@ -5991,87 +5730,6 @@ export interface components {
             countries: string[];
             /** Languages */
             languages: string[];
-        };
-        /** NewsRefresh */
-        NewsRefresh: {
-            /** Queued */
-            queued: boolean;
-        };
-        /**
-         * NewsSearchIn
-         * @description Veille par recherche (docs/16 §4.2) : seuls ces trois champs partent chez Google.
-         */
-        NewsSearchIn: {
-            /** Query */
-            query: string;
-            /** Country */
-            country: string;
-            /** Language */
-            language: string;
-        };
-        /** NewsSourceIn */
-        NewsSourceIn: {
-            /** Url */
-            url: string;
-            /** Name */
-            name?: string | null;
-            /** Match */
-            match?: string | null;
-            /** Country */
-            country?: string | null;
-            /** Language */
-            language?: string | null;
-            /**
-             * Labour Market
-             * @default false
-             */
-            labour_market: boolean;
-        };
-        /** NewsSourceOut */
-        NewsSourceOut: {
-            /** Id */
-            id: number;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "articles" | "videos";
-            /** Name */
-            name: string;
-            /** Url */
-            url: string;
-            /** Feed Url */
-            feed_url: string;
-            /** Match */
-            match: string | null;
-            /** Active */
-            active: boolean;
-            /** Country */
-            country: string | null;
-            /** Language */
-            language: string | null;
-            /** Labour Market */
-            labour_market: boolean;
-            /** Query */
-            query: string | null;
-            /** Fetched At */
-            fetched_at: string | null;
-            /** Error */
-            error: string | null;
-        };
-        /**
-         * NewsSourceUpdate
-         * @description Champs à modifier ; ceux absents restent inchangés. Une valeur vide efface pays ou langue.
-         */
-        NewsSourceUpdate: {
-            /** Active */
-            active?: boolean | null;
-            /** Country */
-            country?: string | "" | null;
-            /** Language */
-            language?: string | "" | null;
-            /** Labour Market */
-            labour_market?: boolean | null;
         };
         /** NotificationOut */
         NotificationOut: {
@@ -8698,6 +8356,13 @@ export interface operations {
                     "application/json": unknown;
                     "application/zip": unknown;
                 };
+            };
+            /** @description Trop d'exports en 24 heures */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -13215,62 +12880,6 @@ export interface operations {
             };
         };
     };
-    listNews: {
-        parameters: {
-            query?: {
-                kind?: ("articles" | "videos") | null;
-                limit?: number;
-                domain_only?: boolean;
-                country?: string[] | null;
-                language?: string[] | null;
-                topic?: ("jobs" | "economy") | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsPage"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    refreshNews: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsRefresh"];
-                };
-            };
-        };
-    };
     getNewsPreferences: {
         parameters: {
             query?: never;
@@ -13311,284 +12920,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NewsPreferences"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    markNewsSeen: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getNewsImage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                item_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "image/*": unknown;
-                };
-            };
-            /** @description Pas de miniature */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    listNewsSources: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsSourceOut"][];
-                };
-            };
-        };
-    };
-    addNewsSource: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NewsSourceIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsSourceOut"][];
-                };
-            };
-            /** @description Aucun flux lisible à cette adresse */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getNewsCatalog: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsCatalog"];
-                };
-            };
-        };
-    };
-    addNewsCatalogSource: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                catalog_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsSourceOut"][];
-                };
-            };
-            /** @description Suggestion inconnue */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Déjà suivie */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    addNewsSearch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NewsSearchIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsSourceOut"][];
-                };
-            };
-            /** @description Veille déjà suivie */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    deleteNewsSource: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                source_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsSourceOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    updateNewsSource: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                source_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["NewsSourceUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewsSourceOut"][];
                 };
             };
             /** @description Validation Error */

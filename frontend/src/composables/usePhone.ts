@@ -4,7 +4,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 export const PHONE_QUERY = "(max-width: 820px)";
 // La structure téléphone (planche « Structure téléphone ») : listes groupées et contrôle segmenté,
 // sous 600 px seulement.
-export const NARROW_QUERY = "(max-width: 599px)";
+const NARROW_QUERY = "(max-width: 599px)";
 
 export function useNarrow() {
   return usePhone(NARROW_QUERY);

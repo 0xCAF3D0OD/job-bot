@@ -10,7 +10,7 @@ type Cell = AlertsPage["searches"][number]["cells"][number];
 const late = (cell: Cell): boolean =>
   cell.status === "created" && !!cell.created_at && Date.now() - Date.parse(cell.created_at) > WAIT_HOURS * 3_600_000;
 
-export function alertRows(page: AlertsPage) {
+function alertRows(page: AlertsPage) {
   return page.searches
     .filter((s) => s.active)
     .map((search) => {

@@ -21,9 +21,9 @@ export const PAGE_TRANSITIONS: Record<string, { label: string; face?: Transform 
   trainings: { label: "Formations" },
 };
 // Planche « vide et chargement » : rien avant 300 ms (NN/g, Response Time Limits).
-export const SHOW_AFTER_MS = 300;
+const SHOW_AFTER_MS = 300;
 // Plus lente (docs/63 §3) : le temps de voir le visage.
-export const SHOW_AT_LEAST_MS = 1200;
+const SHOW_AT_LEAST_MS = 1200;
 const GIVE_UP_MS = 8000;
 
 export const pageTransition = reactive({ page: null as string | null, shown: false });

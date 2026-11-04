@@ -1,7 +1,7 @@
 # Les règles de sécurité de jobA1
 
 > Ce texte dit **qui voit quoi**, comment les données et les secrets sont gardés, et que faire en cas d'incident. Il vaut pour toute installation de jobA1, et il est mis à jour à chaque version qui touche à la sécurité.
-> Origine : le constat de sécurité du 2026-10-18 (docs/78). Le détail technique est dans `docs/exploitation.md`, « Sécurité » et « Accès à la base ».
+> Origine : le constat de sécurité du 2026-10-18 (docs/78). Les règles que le code suit pour les données des utilisateurs, avec leurs références (OWASP, NIST, ISO, nLPD) : `docs/regles-securite-donnees.md`. Le détail technique est dans `docs/exploitation.md`, « Sécurité » et « Accès à la base ».
 
 ## 1. Qui voit quoi
 

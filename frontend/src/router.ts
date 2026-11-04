@@ -261,7 +261,7 @@ router.beforeEach(async (to) => {
 // sur une autre page, sa transition si elle charge des données (docs/61 §2) ; pas en changeant
 // seulement un filtre, un mois ou un onglet dans la page.
 // Le titre de l'onglet du navigateur, « Page · jobA1 » (WCAG 2.4.2, audit du 22.10.2026).
-export const PAGE_TITLES: Record<string, string> = {
+const PAGE_TITLES: Record<string, string> = {
   today: "Aujourd'hui",
   offers: "Offres",
   applications: "Suivi",

@@ -83,12 +83,11 @@ async def test_invitation_creates_an_account_with_its_own_profile(
         assert again.status_code == 410
         assert (await guest.get("/api/auth/links/jba_inconnu")).status_code == 404
 
-        # Son profil principal suit d'office les articles « marché de l'emploi ».
+        # Son profil principal est créé à la première visite.
         camille = await account_id(owner, "camille")
         with accounts.use(camille):
             async with secured.sessionmaker() as session:
                 assert await session.scalar(text("select count(*) from profiles")) == 1
-                assert await session.scalar(text("select count(*) from profile_sources")) > 0
 
         # La rubrique Plateforme lui est fermée, comme les profils d'essai.
         assert (await guest.get("/api/platform")).status_code == 403

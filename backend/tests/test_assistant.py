@@ -237,7 +237,8 @@ async def test_tools_read_data(runtime: Runtime) -> None:
         assert json.loads(orp)["a_remettre_avant"] == date(2026, 11, 5).isoformat()
         for name in ("situation", "alertes", "retours_entretien", "profil", "formations"):
             assert (await tools.run(session, 1, name, {}))[1] is False
-        assert (await tools.run(session, 1, "actualites", {}))[1] is False
+        # Les Actualités ont quitté la plateforme (docs/135, 1.6.25) : plus d'outil.
+        assert (await tools.run(session, 1, "actualites", {}))[1] is True
     assert set(tools.LABELS) == {t["name"] for t in tools.TOOLS}
     await reset(runtime)
 
