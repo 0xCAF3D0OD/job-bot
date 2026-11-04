@@ -1,0 +1,1 @@
+Interface : chaque notification a l'icône de son genre et le libellé de son action (« Voir les offres », « Relancer », « Compléter »…), et celle des offres dit « La meilleure : <poste> chez <entreprise>, très proche. » au lieu d'une note chiffrée.

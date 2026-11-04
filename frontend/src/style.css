@@ -4531,10 +4531,23 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .notifications-card li + li { border-top: 1px solid var(--line-soft); }
 /* Non lue : un fond bleu très clair (la moitié de --primary-soft sur la carte, #F4F6FD de la maquette), --primary-soft
    en sombre (décision du 2026-11-04), le titre plus gras et le point bleu. */
-.notif-row { --notif-unread: color-mix(in srgb, var(--primary-soft) 50%, var(--surface)); display: grid; gap: var(--space-1); width: 100%; box-sizing: border-box; min-height: 0; padding: var(--space-3) var(--space-4); border: 0; border-radius: 0; background: var(--surface); color: var(--text); text-align: left; text-decoration: none; white-space: normal; font-weight: var(--weight-regular); }
+.notif-row { --notif-unread: color-mix(in srgb, var(--primary-soft) 50%, var(--surface)); display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); align-items: start; gap: var(--space-3); width: 100%; box-sizing: border-box; min-height: 0; padding: var(--space-4) var(--space-4) var(--space-4) var(--space-3); border: 0; border-radius: 0; background: var(--surface); color: var(--text); text-align: left; text-decoration: none; white-space: normal; font-weight: var(--weight-regular); }
 .notif-row.unread { background: var(--notif-unread); }
 .notif-row:hover { background: var(--band); }
 .notif-row.unread:hover { background: var(--primary-soft); }
+.notif-row-body { display: grid; gap: var(--space-1); min-width: 0; }
+.notif-row-action { justify-self: start; display: inline-flex; align-items: center; min-height: var(--btn-compact); margin-top: var(--space-1); padding: 0 var(--space-4); border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); }
+/* L'icône du genre (N8) : la forme en couleur douce, le visage du 1 en bleu. */
+.notif-icon { display: block; overflow: visible; }
+.notif-icon-bg { stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.notif-icon-offers .notif-icon-bg { fill: var(--peach-soft); stroke: var(--peach); }
+.notif-icon-orp .notif-icon-bg { fill: var(--surface-muted); stroke: color-mix(in srgb, var(--text-secondary) 25%, var(--surface-muted)); }
+.notif-icon-warning .notif-icon-bg { fill: var(--warning-soft); stroke: color-mix(in srgb, var(--warning) 30%, var(--warning-soft)); }
+.notif-icon-calm .notif-icon-bg { fill: var(--primary-soft); stroke: var(--water); }
+.notif-icon-glyph { fill: none; stroke: var(--primary-graphic); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.notif-icon-line { fill: none; stroke: var(--primary-graphic); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.notif-icon-eye { fill: var(--primary-graphic); }
+.notif-icon-spark { fill: var(--spark); }
 .notif-row-head { display: flex; align-items: flex-start; gap: var(--space-2); }
 .notif-row-title { flex: 1; min-width: 0; font-size: var(--font-body); font-weight: var(--weight-semibold); line-height: var(--leading-tight); overflow-wrap: anywhere; }
 .notif-row.unread .notif-row-title { font-weight: var(--weight-bold); }
@@ -4551,4 +4564,7 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 }
 :root[data-theme="dark"] .notif-row { --notif-unread: var(--primary-soft); }
 :root[data-theme="dark"] .notif-row.unread:hover { background: var(--band); }
+/* En sombre, une non lue a le fond de la pastille (N5) : un contour la garde visible. */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .notif-row.unread .notif-row-action { box-shadow: inset 0 0 0 1.5px var(--water); } }
+:root[data-theme="dark"] .notif-row.unread .notif-row-action { box-shadow: inset 0 0 0 1.5px var(--water); }
 @media (max-width: 820px) { :root:has(.notifications-head) .topbar { display: none; } }

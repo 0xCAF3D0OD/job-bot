@@ -290,6 +290,8 @@ describe("une notification non lue (maquette Notifications, N5)", () => {
       expect(ratio(theme.text!, background), "titre").toBeGreaterThanOrEqual(4.5);
       expect(ratio(theme["text-tertiary"]!, background), "message").toBeGreaterThanOrEqual(4.5);
       expect(ratio(theme["text-secondary"]!, background), "heure").toBeGreaterThanOrEqual(4.5);
+      // Le libellé de l'action (N8) : sur sa pastille.
+      expect(ratio(theme["primary-text"]!, theme["primary-soft"]!), "action").toBeGreaterThanOrEqual(4.5);
     }
   });
 });
