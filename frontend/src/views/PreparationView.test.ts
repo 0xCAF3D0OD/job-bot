@@ -280,31 +280,84 @@ describe("barre de candidature", () => {
     expect(wrapper.find("h1").text()).toBe("Ma candidature");
     expect(wrapper.find("[data-test=prep-offer-title]").text()).toBe(offer.title);
     const steps = wrapper.find("[data-test=apply-steps]");
-    // Numérotées par compteur CSS (docs/51 n° 4).
-    expect(steps.findAll(".apply-steps .apply-step h3").map((h) => h.text())).toEqual([
-      "Postuler",
-      "À recopier sur le site de l'employeur",
-      "J'ai postulé",
+    // Postuler (C7) : où l'annonce se postule, les pièces, ce qu'on recopie, puis un contact dans la fiche.
+    expect(steps.findAll("h2").map((h) => h.text())).toEqual([
+      "L'annonce se postule chez l'employeur",
+      "À recopier sur le formulaire",
     ]);
-    expect(steps.find("[data-test=apply-contacts] h2").text()).toBe("Contacts chez Acme SA");
-    expect(steps.find("[data-test=apply]").attributes("href")).toBe("https://acme.example/jobs/1");
-    // Lettre et CV prêts : « Postuler » est le seul bouton plein (docs/29 §1.3).
-    expect(steps.find("[data-test=apply]").classes()).toContain("primary-link");
+    expect(steps.find("[data-test=sheet-letter]").text()).toBe("Lettre.pdf");
+    expect(steps.find("[data-test=sheet-cv]").attributes("href")).toBe("/api/cvs/31/pdf");
+    expect(steps.find("[data-test=find-contact]").text()).toBe("Trouver un contact chez Acme SA");
+    expect(steps.find("[data-test=find-contact]").attributes("href")).toBe("/candidatures/offres/7#contacts");
+    // D'abord le formulaire, seul bouton plein (docs/29 §1.3) ; une fois ouvert, « J'ai postulé » (C8).
+    const apply = steps.find("[data-test=apply]");
+    expect(apply.attributes("href")).toBe("https://acme.example/jobs/1");
+    expect(apply.classes()).toContain("primary-link");
+    expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
+    expect(steps.find("[data-test=mark-applied]").exists()).toBe(false);
+    apply.element.addEventListener("click", (event) => event.preventDefault());
+    await apply.trigger("click");
+    expect(steps.find("[data-test=apply]").text()).toBe("Rouvrir le site de l'employeur (nouvel onglet)");
     expect(wrapper.findAll(".primary, .primary-link")).toHaveLength(1);
 
-    await steps.find("[data-test=mark-applied]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find<HTMLInputElement>("[data-test=application-url]").element.value).toBe(
-      "https://acme.example/jobs/1",
+    // « J'ai postulé » enregistre tout de suite, avec les valeurs de l'annonce et la date du jour.
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/offers/{offer_id}/application-prefill"
+            ? { offer_id: 7, sent_at: "2026-10-05", method: "electronique", company: "Acme SA", job_title: "Ingénieur DevOps junior", application_url: "https://acme.example/jobs/1" }
+            : path === "/api/orp"
+              ? { count: 9, target: 10 }
+              : null,
+      }),
     );
-    await wrapper.find("form.application-form").trigger("submit");
+    POST.mockResolvedValue({ data: { id: 5, company: "Acme SA", job_title: "Ingénieur DevOps junior", sent_at: "2026-10-05", orp_month: "2026-10" } });
+    await steps.find("[data-test=mark-applied]").trigger("click");
     await flushPromises();
     const [path, opts] = POST.mock.calls[0] as [string, { body: Record<string, unknown> }];
     expect(path).toBe("/api/applications");
-    expect(opts.body).toMatchObject({ offer_id: 7, application_url: "https://acme.example/jobs/1" });
-    expect(document.querySelector("[data-test=sent-moment]")!.textContent).toContain("Candidature envoyée chez Acme SA");
-    // Comptée pour l'ORP ; le retour aux offres est dans la barre du haut (offre envoyée).
-    expect(document.querySelector("[data-test=sent-moment]")!.textContent).not.toContain("Retour aux offres");
+    expect(opts.body).toMatchObject({ offer_id: 7, sent_at: "2026-10-05", application_url: "https://acme.example/jobs/1" });
+
+    // « Candidature notée » (C9) à la place de la page : l'objectif ORP, « Offre suivante », « Annuler ».
+    const done = wrapper.find("[data-test=sent-moment]");
+    expect(done.find("h1").text()).toBe("Candidature notée");
+    expect(done.text()).toContain("Ingénieur DevOps junior chez Acme SA, postulée chez l'employeur.");
+    expect(done.find("[data-test=sent-orp]").text()).toContain("Encore 1 recherche");
+    expect(done.find("[data-test=sent-orp]").text()).toContain("Objectif ORP d'octobre");
+    expect(done.find("[data-test=next-offer]").attributes("href")).toBe("/candidatures/offres");
+    expect(wrapper.find("[data-test=apply-steps]").exists()).toBe(false);
+
+    // « Annuler, je n'ai pas postulé » : l'offre revient en préparation ; la candidature part après 6 s.
+    DELETE.mockResolvedValue({ response: { ok: true } });
+    await done.find("[data-test=cancel-applied]").trigger("click");
+    expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=apply]").classes()).toContain("primary-link");
+    await useUndo().undo();
+    await flushPromises();
+    expect(wrapper.find("[data-test=sent-moment]").exists()).toBe(true);
+    await wrapper.find("[data-test=cancel-applied]").trigger("click");
+    await useUndo().flush();
+    expect(DELETE).toHaveBeenCalledWith("/api/applications/{application_id}", expect.objectContaining({ params: { path: { application_id: 5 } } }));
+  });
+
+  it("une candidature déjà envoyée : « Envoyée le … » et le lien vers le suivi, plus d'étape « Suivre » (Q1)", async () => {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({
+        data:
+          path === "/api/offers/{offer_id}"
+            ? { ...offer, status: "applied" }
+            : path === "/api/applications"
+              ? [{ id: 5, sent_at: "2026-10-05" }]
+              : [],
+      }),
+    );
+    const wrapper = await mountView("/offres/7/preparer?doc=suivre");
+    expect(wrapper.find("[data-test=applied-notice]").text()).toBe("Envoyée le 5 octobre. Voir le suivi");
+    expect(wrapper.find("[data-test=tab-follow]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=tab-apply]").attributes("aria-current")).toBe("step");
+    expect(wrapper.find("[data-test=tab-apply] [data-test=step-done]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=mark-applied]").exists()).toBe(false);
   });
 });
 

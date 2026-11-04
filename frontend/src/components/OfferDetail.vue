@@ -1,6 +1,7 @@
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { dateInList, dateInSentence } from "../dates";
@@ -26,6 +27,11 @@ const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string> }
 
 // Les contacts dans le panneau latéral (docs/32 §2.2) ; l'entreprise a sa section (docs/45).
 const contactsCount = ref(0);
+// « Trouver un contact chez … » de Postuler (C7) : la fiche s'ouvre sur ses Contacts, dépliés.
+const toContacts = useRoute()?.hash === "#contacts";
+onMounted(() => {
+  if (toContacts) document.getElementById("contacts")?.scrollIntoView?.({ block: "start" });
+});
 // L'annonce repliée à 6 lignes (docs/45) : « Lire toute l'annonce » la déplie.
 const LONG_TEXT = 420;
 const textOpen = ref(false);
@@ -973,8 +979,10 @@ watch(
       </DisclosureRow>
       <DisclosureRow
         v-if="offer.company"
+        id="contacts"
         title="Contacts"
         :value="contactsCount ? String(contactsCount) : ''"
+        :start-open="toContacts"
         class="detail-disclosure"
         data-test="contacts-section"
       >

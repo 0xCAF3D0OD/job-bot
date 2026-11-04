@@ -1,0 +1,1 @@
+Interface : sur « Ma candidature », Postuler suit la maquette : les pièces (Lettre.pdf, CV.pdf, certificats), les champs à recopier avec « Copier » qui devient « Copié », « Trouver un contact » vers la fiche ; « J'ai postulé » enregistre l'envoi en un appui, puis l'écran « Candidature notée » propose l'offre suivante ou d'annuler ; l'étape « Suivre » est retirée.
