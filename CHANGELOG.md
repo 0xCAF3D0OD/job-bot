@@ -389,3 +389,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.175 | Tests et docs : les codes d'adresse d'alerte réels remplacés par des codes factices (audit sécurité) | livrée |
 | 1.6.176 | La doc en 10 minutes : un README d'une page avec 3 schémas Lucidchart, et un guide de lecture des docs par sujet | livrée |
 | 1.6.177 | Interface : la cloche mène à une page Notifications sur téléphone (filtre Toutes ou Non lues, groupes par jour, « Tout lire » annulable) ; sur ordinateur, son panneau reprend les mêmes lignes avec « Tout voir ». | livrée |
+| 1.6.178 | Sécurité : les règles que le code suit pour les données des utilisateurs, d'après l'OWASP, le NIST, l'ISO et la nLPD (docs/regles-securite-donnees.md) | livrée |
