@@ -381,3 +381,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.167 | Interface : réglage « Apparence » (Clair, Sombre, Auto) dans les Réglages, retenu sur l’appareil, sur téléphone et ordinateur. | livrée |
 | 1.6.168 | CI : sur main, les tests de chaque commit vont jusqu’au bout (plus d’annulation par un lancement suivant) ; seules les PR annulent encore leurs anciens lancements | livrée |
 | 1.6.169 | Interface : le Bilan a trois sous-onglets, ORP · Résultats · Formations ; l’onglet ORP montre l’objectif du mois en cercle liquide, l’export du formulaire, les trois dernières recherches et la carte Rythme. | livrée |
+| 1.6.170 | Interface : le Suivi ORP du mois devient une sous-page du Bilan (objectif, remise des preuves, export, recherches du mois, À déclarer, calendrier) ; Candidatures › Envoyées garde les relances, la liste et une ligne « Objectif ORP : n sur N ». | livrée |
