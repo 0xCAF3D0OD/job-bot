@@ -123,6 +123,24 @@ async def test_export_holds_only_the_account(secured: Runtime, account: int) -> 
     assert b"scrypt$" not in everything and b"token_hash" not in everything
 
 
+async def test_export_is_announced_and_limited(secured: Runtime, account: int) -> None:
+    """Contre une session volée (docs/regles-securite-donnees.md X-2, X-3) : chaque export est
+    dans la cloche, sans rien des données ; le quatrième en 24 heures est refusé."""
+    camille = await guest(secured)
+    await seed(secured, camille, "CAMILLE")
+    async with client(secured) as api:
+        await login(api)
+        for _ in range(3):
+            done = await api.get("/api/account/export")
+            assert done.status_code == 200 and done.headers["cache-control"] == "no-store"
+        refused = await api.get("/api/account/export")
+        assert refused.status_code == 429 and int(refused.headers["retry-after"]) > 0
+        bell = (await api.get("/api/inbox")).json()
+    exports = [n for n in bell["items"] if n["title"] == "Tes données ont été exportées"]
+    assert len(exports) == 3
+    assert all("CAMILLE" not in json.dumps(n) for n in exports)
+
+
 async def test_guest_deletes_own_account(secured: Runtime, account: int) -> None:
     camille = await guest(secured)
     await seed(secured, camille, "CAMILLE")
