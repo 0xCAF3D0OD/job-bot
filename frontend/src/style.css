@@ -100,6 +100,8 @@
   --title-hello: 42px;
   --title-block: 34px;
   --title-sub: 22px;
+  /* « C'est fait ! » (ObjectifAtteint, 8c), en Caveat Brush. */
+  --title-hand: 64px;
   --label-caps: 13px;
   --font-page: 2rem;
   /* Les rayons (D7) : 8 (boutons non pilule, logos d'entreprise), 18 (cartes, champs), 34 (blocs de rubrique de
@@ -277,7 +279,6 @@ p.notice { padding-right: max(var(--space-4), calc(100% - var(--measure))); }
 .nav a:hover { color: var(--text); }
 .nav a.router-link-active { color: var(--text); font-weight: var(--weight-semibold); border-bottom-color: var(--accent); }
 /* Du nouveau à lire dans Progresser (docs/90) : un point, pas un chiffre. */
-.nav-dot { display: inline-block; width: 0.45rem; height: 0.45rem; margin-left: var(--space-1); border-radius: 50%; background: var(--accent); vertical-align: 0.15em; }
 
 /* --- En-tête de page centré --- */
 
@@ -636,7 +637,6 @@ button.chip:is([aria-pressed], [role="radio"]) { border: 1px solid var(--field-b
 button.chip.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }
 .chip.on .facet-count { color: var(--primary-text); }
 .detail-column { position: sticky; top: 5.25rem; max-height: calc(100vh - 6.5rem); overflow: auto; border-radius: var(--radius); }
-.detail-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .close { border: none; background: none; font-size: var(--font-figure); line-height: var(--leading-none); padding: var(--space-1) var(--space-2); color: var(--muted); }
 .close:hover { color: var(--text); }
 
@@ -884,7 +884,6 @@ button.chip.on { background: var(--primary-soft); border-color: var(--primary-gr
 .more-menu .menu button:hover { background: var(--accent-soft); color: var(--accent); }
 .status-line { display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-2); min-height: 0; }
 .status-line:empty { display: none; }
-.address-line { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; font-size: var(--font-small); }
 .address-form { display: grid; gap: var(--space-2); width: 100%; }
 .button-link.primary-link { background: var(--primary); color: var(--on-accent); border-color: var(--primary); }
 .button-link.primary-link:hover { background: color-mix(in srgb, var(--primary) 88%, var(--text)); color: var(--on-primary); }
@@ -1029,8 +1028,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 /* L'en-tête de Candidatures suit la largeur de l'onglet : Offres à 1 280 px (1.6.29). */
 .jobs-head.wide { max-width: var(--page-wide); }
 .jobs-head h1 { font-size: var(--font-page); margin: 0 0 var(--space-4); }
-.jobs-tabs { margin-bottom: 0; overflow-x: auto; scrollbar-width: none; }
-.jobs-tabs a { white-space: nowrap; }
 .jobs-segments { margin-bottom: var(--space-4); }
 .jobs-band > .offers-page { padding-top: var(--space-6); }
 /* Le titre et « Alertes » (docs/139 étape 5a, C1) : un lien à côté du titre ; sur téléphone, dans l'en-tête. */
@@ -1142,7 +1139,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .contact-message-foot .over-limit { color: var(--down-text); }
 
 /* Preuves ORP : une action à la fois (docs/21 §6) */
-.diagnostic-link { margin-top: var(--space-6); font-size: var(--font-small); }
 
 /* Suivi en calendrier (docs/22) */
 /* Toutes les cases à la même taille : chaque semaine prend la hauteur de la plus haute (0.67.3). */
@@ -1175,8 +1171,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .suivi-day .suivi-panel-title { margin: 0; font-size: var(--font-body); }
 /* À déclarer dans Job-Room (docs/85) : sous « À relancer », une ligne par candidature, cliquable. */
 .suivi-declare { display: grid; gap: var(--space-3); }
-.suivi-panel-tabs { width: 100%; }
-.suivi-panel-tabs button { flex: 1; white-space: nowrap; }
 /* Carte calme (docs/46 §2) : qui, quoi, le statut ; en bas, une seule prochaine étape. */
 .app-status { grid-column: 2; grid-row: 1; display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--font-small); color: var(--muted); white-space: nowrap; }
 /* Panneau d'une candidature (docs/46 §3). */
@@ -1293,7 +1287,6 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 .filters-search { font: inherit; width: 100%; padding: var(--space-2) var(--space-3); border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .filter-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .filter-card-body { display: grid; gap: var(--space-2); padding: var(--space-3) var(--space-4); }
-.filter-card-title { font-weight: var(--weight-semibold); font-size: var(--font-body); }
 .filter-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; padding: var(--space-3) var(--space-4); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; font-size: var(--font-small); text-align: left; cursor: pointer; }
 .filter-row + .filter-row { border-top: 1px solid var(--divider); }
 .filter-row:hover { background: var(--panel); }
@@ -1305,7 +1298,6 @@ button.filter-row[aria-expanded]:not(.filter-option)::after { content: ""; flex:
 .filter-option[aria-checked="true"] .facet-count { margin-right: var(--space-2); }
 .filter-check { justify-content: flex-start; }
 .filter-check input { margin: 0; }
-.filter-switch { cursor: pointer; }
 /* Interrupteur (`role="switch"`) : un réglage isolé enregistré tout de suite ; sinon, une case dessinée
    (planche « Champs »). Piste non cochée en --faint : 3,6:1 sur la carte (WCAG 1.4.11). */
 :root input[type="checkbox"][role="switch"] { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: 2.2rem; height: 1.3rem; padding: 0; border: 0; border-radius: var(--radius-pill); background: var(--faint); position: relative; cursor: pointer; flex: none; margin: 0; vertical-align: middle; transition: background-color 0.15s; }
@@ -1486,7 +1478,6 @@ button, .button-link { max-width: 100%; }
 .toast { display: flex; align-items: center; gap: var(--space-3); }
 .toast-close { flex: none; margin: calc(var(--space-2) * -1) calc(var(--space-1) * -1) calc(var(--space-2) * -1) auto; }
 
-.news-group { display: grid; gap: var(--space-2); }
 .news-group-title { margin: 0; font-size: var(--font-caption); font-weight: var(--weight-semibold); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 
 /* Téléphone (docs/33, docs/92) : le menu principal passe dans la barre d'onglets du bas, en-tête compact, champs à 16 px */
@@ -1568,8 +1559,6 @@ html.side-open { overflow: hidden; }
   .assistant-form textarea { resize: none; }
 }
 
-.filter-drop-zone { flex: 0 0 100%; }
-.filter-drop-zone:empty { display: none; }
 
 /* Une seule actualité : image à gauche, titre à droite. */
 /* Lignes : texte à gauche, vignette à droite, séparées par un trait fin, deux colonnes. */
@@ -1660,7 +1649,6 @@ html.side-open { overflow: hidden; }
 .manual-form .form-actions { padding-top: var(--space-1); }
 @media (max-width: 820px) {
   /* Le nombre seul sur sa ligne, puis les boutons à la largeur de leur texte (§3), 44 px de haut. */
-  .list-count-row { flex-wrap: wrap; row-gap: var(--space-3); }
 }
 .spontaneous-badge { margin: 0 0 var(--space-1); }
 .spontaneous-form { display: grid; gap: var(--space-3); justify-items: start; }
@@ -1788,7 +1776,6 @@ html.side-open { overflow: hidden; }
 .calm-row { flex: 1 1 auto; min-width: 0; display: grid; gap: var(--space-1); justify-items: start; padding: var(--space-3) var(--space-4); border: 0; border-radius: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; white-space: normal; }
 .calm-row .hint { font-size: var(--font-small); }
 .calm-row:hover strong { color: var(--accent); }
-.calm-switch { display: inline-flex; flex: none; }
 .calm-panel { display: grid; gap: var(--space-4); }
 .calm-panel > label:not(.check) { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--muted); }
 .calm-panel-switch { font-weight: var(--weight-semibold); }
@@ -2469,7 +2456,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); }
 .extension-link ul { margin: 0 0 var(--space-3); padding-left: var(--space-5); }
 .extension-link .form-actions { display: flex; gap: var(--space-4); align-items: center; margin-top: var(--space-4); }
 .extension-link-done { color: var(--accent); font-weight: var(--weight-semibold); }
-.extension-tokens-title { font-weight: var(--weight-semibold); margin: var(--space-3) 0 var(--space-1); }
 
 /* Démo publique (docs/72) : bande sous la barre du haut. */
 .demo-banner { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); align-items: baseline; justify-content: center; padding: var(--space-2) var(--space-4); background: var(--accent-soft); color: var(--text); font-size: var(--font-small); text-align: center; }
@@ -2983,8 +2969,6 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 .offer-facts .fact-mark { display: inline-flex; justify-content: center; align-self: start; padding-top: 0.2em; }
 .offer-facts .fact-mark > .icon { width: 1rem; height: 1rem; }
 .offer-facts .seen .fact-mark { color: var(--muted); }
-.address-line .address-icon { display: inline-flex; align-self: center; color: var(--muted); }
-.address-line .address-icon > .icon { width: 1rem; height: 1rem; }
 /* Retirer une recherche dans une pastille : la croix ronde, à la taille de la pastille. */
 .keyword-chips .chip button.icon-only { width: 1.6rem; min-width: 1.6rem; height: 1.6rem; min-height: 1.6rem; margin-left: var(--space-1); border-radius: 50%; }
 .keyword-chips .chip button.icon-only > .icon { width: 0.95rem; height: 0.95rem; }
@@ -3001,12 +2985,7 @@ button.icon-only:focus-visible::after { transition-delay: 0s, 0s; }
 /* Téléphone : les cinq onglets de Candidatures tiennent sur la ligne, l'icône au-dessus du nom. */
 @media (max-width: 820px) {
   /* Sur téléphone, les onglets se partagent la largeur, comme dans Figma (1.6.25 : deux onglets au Bilan). */
-  .jobs-tabs a { display: inline-flex; align-items: center; justify-content: center; flex: 1; }
-  .jobs-tabs .with-icon { flex-direction: column; gap: var(--space-1); font-size: var(--font-small); }
-  .jobs-tabs .with-icon > .icon { width: 1.25rem; height: 1.25rem; }
   /* La pastille sur le coin haut droit de l'icône, comme dans la barre du bas (0.84.2). */
-  .jobs-tabs a { position: relative; }
-  .jobs-tabs .tab-count { position: absolute; top: 0.25rem; left: calc(50% + 0.3rem); margin: 0; }
 }
 /* La pastille de nombre, une seule partout (CountBadge, 1.6.33 ; NN/g, heuristique 4) : pleine, bordée de
    la couleur du fond (--surface : blanc en clair, fond sombre en sombre) pour se détacher de l'icône qu'elle
@@ -3074,7 +3053,6 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 /* Un « Enregistrer » plein, collé au formulaire. */
 .settings-card .form-actions, .settings-row .form-actions { padding-top: var(--space-4); }
 /* « Enregistré », une seconde à côté du réglage qui vient de changer. */
-.saved-flash { font-size: var(--font-small); color: var(--ok-text); }
 /* Réglages, une carte par réglage (1.6.65, planche « 5. Réglages », inspirée de la structure des
    pages des CFF) : titre en gras, phrase dessous, contrôle à droite sur la même ligne ; les lignes
    liées dans la même carte, séparées d'un filet. */
@@ -3176,8 +3154,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .setting-desc { display: block; margin: 0; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); font-weight: var(--weight-regular); }
 .settings-card legend + .setting-desc { margin-top: calc(var(--space-2) * -1); }
 /* L'interrupteur à droite, centré sur le titre et sa description. */
-.setting-switch { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: var(--space-5); }
-.setting-switch > span { display: grid; gap: var(--space-1); }
 /* Les jours en pastilles : de vraies cases, cachées, la pastille dit l'état. */
 .rhythm-week { display: flex; flex-wrap: nowrap; gap: var(--space-1); }
 .day-pill { position: relative; display: inline-grid; place-items: center; flex: 1 1 0; min-width: 0; max-width: 3.5rem; height: 2.75rem; padding: 0 var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); font-size: var(--font-body); cursor: pointer; transition: background-color 150ms, color 150ms, border-color 150ms; }
@@ -3190,7 +3166,6 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 .choice + .choice { border-top: 1px solid var(--divider); }
 .choice > input { margin: var(--space-1) 0 0; }
 .choice-label { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
-.choice-desc { grid-column: 2; color: var(--muted); font-size: var(--font-small); line-height: var(--leading-normal); }
 /* Les dates : l'étiquette petite et grise dans le champ, au-dessus de la valeur. */
 .rhythm-pause { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); align-items: start; }
 /* Une pause : le libellé au-dessus, le champ date commun (planche « Champs »), assez large pour l'année et l'icône. */
@@ -3505,15 +3480,11 @@ button.secondary.danger:hover:not(:disabled) { border-color: var(--down-text); c
 /* ④ Suivre (docs/124 §G) : trois lignes séparées par un filet, une action au plus chacune. */
 /* La formule (docs/125 §4) : une ligne par usage, le compte et une jauge courte, séparées par un
    filet ; ce que Plus ajoute sur fond gris (ce qu'on consulte, docs/110). */
-.plan-usage { margin: var(--space-3) 0 0; padding: 0; list-style: none; }
-.plan-usage li { display: grid; grid-template-columns: 1fr auto 4.5rem; align-items: center; gap: var(--space-2) var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); line-height: var(--leading-normal); }
-.plan-usage li:last-child { border-bottom: 0; }
 .plan-usage-count { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
 .plan-usage-gauge { display: block; height: 4px; border-radius: var(--radius-pill); background: linear-gradient(to right, var(--accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--muted) 22%, transparent) 0); }
 .plan-plus { margin-top: var(--space-4); }
 .plan-limit { margin: var(--space-2) 0 var(--space-3); line-height: var(--leading-normal); }
 .plan-terms { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); line-height: var(--leading-normal); }
-.plan-payments-title { margin: var(--space-5) 0 0; font-weight: var(--weight-semibold); }
 .plan-payments li { grid-template-columns: 1fr auto; }
 .plan-message { margin: var(--space-3) 0 0; }
 
@@ -3621,25 +3592,6 @@ main:focus { outline: none; }
   .segmented > :is(a, button) { transition: none; }
 }
 
-/* La Correspondance du panneau de filtres (ordinateur) : des puces de choix sur un rail neutre. */
-.score-choice {
-  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1);
-  box-sizing: border-box; min-height: var(--control-h); height: auto; padding: var(--space-1);
-  border: 0; border-radius: var(--radius-pill); background: var(--panel);
-}
-.score-choice > .pill {
-  flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
-  height: var(--control-inner-h); min-height: 0; min-width: 0; padding: 0 var(--space-3);
-  border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface);
-  color: var(--muted); font-size: var(--font-small); font-weight: var(--weight-regular); line-height: var(--leading-none);
-  white-space: nowrap; transition: background-color 150ms;
-}
-.score-choice > .pill:hover:not([aria-checked="true"]) { background: color-mix(in srgb, var(--text) 8%, var(--surface)); border-color: var(--border); color: var(--muted); }
-.score-choice > .pill[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: var(--weight-semibold); }
-.score-choice > .pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) {
-  .score-choice > .pill { transition: none; }
-}
 
 /* --- En-tête (1.6.46, planche Figma « Planche · Revue 1.6.46 » ; sélection, 1.6.58, « Planche · 1. Sélection
    des onglets ») ---
@@ -3789,11 +3741,44 @@ main:focus { outline: none; }
 .prep-sent-actions { display: grid; gap: var(--space-2); justify-items: center; width: 100%; }
 .prep-sent-actions > .button-link { justify-content: center; width: 100%; min-height: 3.375rem; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .prep-sent-cancel { min-height: 3rem; font-size: var(--font-body); }
+/* « C'est fait ! » (ObjectifAtteint, B10 à B12) : le feston et le visage, « à faire » barré une fois, la phrase
+   manuscrite, puis l'export et l'accueil en bas. La police n'est chargée que si ce titre s'affiche ; elle ne
+   contient que les caractères de « C'est fait ! » (scripts dans le commentaire de la PR 8c). */
+@font-face { font-family: "Caveat Brush"; src: url("./assets/fonts/caveat-brush-cest-fait.woff2?no-inline") format("woff2"); font-display: swap; }
+.goal-reached { position: relative; display: flex; flex-direction: column; align-items: center; max-width: 30rem; margin-inline: auto; padding: var(--space-8) var(--space-5) var(--space-6); box-sizing: border-box; text-align: center; color: var(--text-tertiary); }
+.goal-reached-close { position: absolute; top: var(--space-3); right: var(--space-2); width: var(--btn-tertiary); height: var(--btn-tertiary); color: var(--text); }
+.goal-reached-close .icon { width: 1.375rem; height: 1.375rem; stroke-width: var(--icon-stroke); }
+.goal-reached-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: var(--space-8) var(--space-2) 0; }
+.goal-reached-art { position: relative; display: grid; place-items: center; width: var(--mood-box); height: var(--mood-box); }
+.goal-reached-sun { position: absolute; inset: 8%; fill: var(--peach-soft); stroke: var(--peach); stroke-width: 1.5px; animation: goal-sun 0.9s var(--ease-out) both; }
+.goal-reached-art .face-mark { position: relative; color: var(--logo-line); overflow: visible; animation: goal-pop 0.6s var(--ease-out) both; }
+.goal-reached-art .confetti { top: 50%; }
+.goal-reached-todo { margin: var(--space-8) 0 0; font-size: var(--font-figure); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
+.goal-reached-todo > span { position: relative; display: inline-block; white-space: nowrap; }
+.goal-reached-todo s { text-decoration: none; }
+.goal-reached-todo svg { position: absolute; left: -0.3em; top: 50%; width: calc(100% + 0.6em); height: 1.05em; margin-top: -0.48em; overflow: visible; opacity: 0.92; }
+.goal-reached-todo path { fill: none; stroke: var(--scribble); stroke-width: 8px; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; animation: goal-strike 1s 0.7s cubic-bezier(.45, 0, .55, 1) both; }
+.goal-reached-title { margin: var(--space-1) 0 0; font-family: "Caveat Brush", "Figtree Variable", system-ui, sans-serif; font-size: var(--title-hand); font-weight: var(--weight-regular); line-height: var(--leading-none); color: var(--primary-graphic); transform: rotate(-3deg); animation: goal-write 1s 1.6s steps(22, end) both; }
+.goal-reached-line { margin: var(--space-5) 0 0; font-size: var(--font-body); line-height: var(--leading-normal); }
+.goal-reached-actions { display: grid; gap: var(--space-1); width: 100%; margin-top: var(--space-8); }
+.goal-reached-actions > .primary { justify-content: center; min-height: var(--btn-primary); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
+.goal-reached-home { display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
+.goal-reached-cancel { justify-self: center; min-height: var(--target-min); color: var(--text-secondary); font-weight: var(--weight-regular); }
+@keyframes goal-sun { from { opacity: 0; transform: rotate(-40deg) scale(.7); } }
+@keyframes goal-pop { 0% { opacity: 0; transform: scale(.4); } 50% { transform: scale(1.2); } }
+@keyframes goal-strike { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes goal-write { from { clip-path: inset(-30% 100% -30% -10%); } to { clip-path: inset(-30% -10%); } }
+@media (prefers-reduced-motion: reduce) {
+  .goal-reached-sun, .goal-reached-art .face-mark, .goal-reached-todo path, .goal-reached-title { animation: none; }
+  .goal-reached-art .confetti { display: none; }
+}
 /* Sur téléphone, une sous-page : sa propre tête à la place de l'en-tête de l'app, pas de barre d'onglets, et
    une barre du bas fixe avec un seul bouton plein (C6). Les versions et le téléchargement passent dans le
    « ⋯ » de la tête. */
 @media (max-width: 820px) {
-  :root:has(:is(.prep-head, .prep-sent)) :is(.topbar, .tab-bar, .assistant-fab) { display: none; }
+  :root:has(:is(.prep-head, .prep-sent, .goal-reached)) :is(.topbar, .tab-bar, .assistant-fab) { display: none; }
+  .goal-reached { min-height: 100dvh; padding-top: calc(var(--space-8) + env(safe-area-inset-top)); padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom)); }
+  .goal-reached-close { top: calc(var(--space-3) + env(safe-area-inset-top)); }
   .prep-head { grid-template-columns: auto minmax(0, 1fr) auto; padding-top: calc(var(--space-2) + env(safe-area-inset-top)); }
   .prep-head h1 { grid-column: 2; font-size: var(--font-section); }
   .prep-head > .prep-back { grid-column: 1; grid-row: 1; width: 3rem; height: 3rem; justify-content: center; margin: 0 0 0 calc(-1 * var(--space-3)); color: var(--text); }
@@ -3866,11 +3851,9 @@ main:focus { outline: none; }
   .offer-bar-spark { color: var(--spark); }
   :root:has(.offer-subhead) .assistant-fab { display: none; }
 }
-.action-bar > .bar-link { align-self: flex-start; font-size: var(--font-body); }
 /* La correction de la note dans sa feuille du bas (fiche, téléphone) : sans cadre. */
 .score-correction-card.bare { padding: 0; background: none; border: 0; border-radius: 0; }
 /* « Préparer ma candidature » à la taille des autres boutons du panneau (Écarter, Garder, Relancer). */
-.action-bar > .bar-main { min-height: var(--control-h); font-size: var(--font-body); }
 
 /* L'écran de tri (planche « Tri et panneau de commande ») : une colonne (--page-column) ; la
    progression en haut ; la carte comme la fiche ; « Écarter » et « Garder » chacun sur la moitié, les

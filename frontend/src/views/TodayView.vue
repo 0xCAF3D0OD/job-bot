@@ -25,6 +25,7 @@ import { dateInList, dateInSentence, inDays, timeOfDay } from "../dates";
 import { daysBefore, localDate, ofMonth, orpPace, plural } from "../format";
 import type { IconName } from "../icons";
 import { useDataChanged } from "../composables/useDataChanged";
+import { firstGoal } from "../composables/useGoalMoment";
 import { offerUndo } from "../composables/useUndo";
 import { usePageReady } from "../composables/usePageTransition";
 
@@ -247,21 +248,10 @@ const eyebrow = computed(() => {
   return collect ? `${dateTitle} · ${collect}` : dateTitle;
 });
 
-// R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil.
+// R, l'objectif du mois atteint (docs/123 §2) : une victoire, une fois par mois et par appareil (useGoalMoment).
 const goalWon = ref(false);
 // Les cinq premiers pas faits (docs/128 §1) : le serveur le dit une seule fois.
 const stepsWon = ref(false);
-function firstGoal(t: Today | null): boolean {
-  if (!t?.month_target || t.month_count < t.month_target) return false;
-  const key = `jobA1.orp-goal.${t.month}`;
-  try {
-    if (localStorage.getItem(key)) return false;
-    localStorage.setItem(key, "1");
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 // Une panne de réseau au chargement : l'écran « Pas de connexion » (planche « Illustrations »).
 const offline = ref(false);
@@ -285,7 +275,7 @@ async function fetchAll(): Promise<void> {
   ]);
   today.value = day.data ?? null;
   triageDone.value = triageDoneToday();
-  goalWon.value = firstGoal(today.value);
+  goalWon.value = !!today.value && firstGoal(today.value.month, today.value.month_count, today.value.month_target);
   // Montrée une fois : on le dit au serveur, elle ne revient plus (docs/128 §1).
   if (today.value?.first_steps_finished && !stepsWon.value) {
     stepsWon.value = true;

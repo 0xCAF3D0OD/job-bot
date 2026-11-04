@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api, type Letter, type LetterLanguage, type Offer } from "../api/client";
+import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
 import CvPanel from "../components/CvPanel.vue";
 import OfferBrief from "../components/OfferBrief.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
@@ -14,6 +14,7 @@ import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
 import BusyButton from "../components/BusyButton.vue";
 import FaceState from "../components/FaceState.vue";
+import GoalReached from "../components/GoalReached.vue";
 import FalseClaimSheet, { type FalseClaimMode } from "../components/FalseClaimSheet.vue";
 import DisclosureRow from "../components/DisclosureRow.vue";
 import FormField from "../components/FormField.vue";
@@ -27,6 +28,7 @@ import CompanyLogo from "../components/CompanyLogo.vue";
 import IconButton from "../components/IconButton.vue";
 import ScoreRing from "../components/ScoreRing.vue";
 import StepTabs, { type Step } from "../components/StepTabs.vue";
+import { firstGoal, forgetGoal } from "../composables/useGoalMoment";
 import { usePhone } from "../composables/usePhone";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
@@ -86,6 +88,8 @@ const applyBusy = ref(false);
 // L'écran « Candidature notée » (C9) : le poste, où, et ce qui reste pour l'objectif ORP du mois.
 type Sent = { id: number; company: string; title: string; where: string; month: string; count: number | null; target: number | null };
 const sent = ref<Sent | null>(null);
+// « C'est fait ! » (B10) : le mois ORP que cette candidature vient de compléter, une fois par mois.
+const goal = ref<OrpMonth | null>(null);
 // Une candidature déjà envoyée (Q1) : la date, rappelée en tête avec le lien vers le suivi.
 const sentOn = ref("");
 
@@ -102,12 +106,14 @@ async function markApplied(): Promise<void> {
       return;
     }
     useJobsMemory().sent(offerId);
-    sent.value = { id: data.id, company: data.company, title: data.job_title, where: applyLink.value?.where ?? "", month: data.orp_month, count: null, target: null };
+    // Le mois ORP d'abord : s'il atteint l'objectif, « C'est fait ! » s'affiche tout de suite, sans passer par
+    // « Candidature notée ».
+    const orp = (await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null))?.data;
+    goal.value = orp && firstGoal(data.orp_month, orp.count, orp.target) ? { ...orp, month: data.orp_month } : null;
+    sent.value = { id: data.id, company: data.company, title: data.job_title, where: applyLink.value?.where ?? "", month: data.orp_month, count: orp?.count ?? null, target: orp?.target ?? null };
     sentOn.value = data.sent_at;
     if (offer.value) offer.value = { ...offer.value, status: "applied" };
     window.scrollTo?.({ top: 0 });
-    const orp = await api.GET("/api/orp", { params: { query: { month: data.orp_month } } }).catch(() => null);
-    if (orp?.data && sent.value) sent.value = { ...sent.value, count: orp.data.count, target: orp.data.target ?? null };
   } finally {
     applyBusy.value = false;
   }
@@ -119,7 +125,10 @@ function cancelApplied(): void {
   const done = sent.value;
   const before = offer.value;
   if (!done || !before) return;
+  const won = goal.value;
   sent.value = null;
+  goal.value = null;
+  if (won) forgetGoal(won.month);
   offer.value = { ...before, status: "preparing" };
   opened.value = false;
   // L'offre revient en préparation : le menu Candidatures y ramène de nouveau.
@@ -135,6 +144,7 @@ function cancelApplied(): void {
     },
     restore: () => {
       sent.value = done;
+      if (won && firstGoal(won.month, won.count, won.target)) goal.value = won;
       offer.value = before;
       useJobsMemory().sent(offerId);
     },
@@ -539,9 +549,15 @@ onMounted(() => void load());
 </script>
 
 <template>
+  <!-- « C'est fait ! » (B10) : à la place de « Candidature notée » quand l'objectif du mois est atteint. -->
+  <GoalReached
+    v-if="sent && goal"
+    :data="goal"
+    @cancel="cancelApplied"
+  />
   <!-- « Candidature notée » (C9) : un écran entier à la place de la page, comme dans la maquette. -->
   <section
-    v-if="sent"
+    v-else-if="sent"
     class="band prep-sent"
     data-test="sent-moment"
   >
