@@ -1,0 +1,1 @@
+Interface : cartes des Candidatures du téléphone comme la maquette, « ⋯ » en haut à droite, sans « Préparer » ni étiquette « En préparation » (titre de section), initiales colorées quand le logo ne charge pas ou est vide.

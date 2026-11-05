@@ -4001,13 +4001,14 @@ html.search-open { overflow: hidden; }
   .offer-cards > li > .offer-line.full,
   .offer-cards > li:not(.offer-day) + li:not(.offer-day) > .offer-line.full { padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-card); }
   .offer-line.full { align-items: start; }
-  /* Le « ⋯ » d'une carte (C6) : 44 px dans le coin bas, au-dessus du lien étiré qui ouvre l'offre. */
+  /* Le « ⋯ » d'une carte (C6) : 44 px dans le coin en haut à droite, au-dessus du lien étiré qui ouvre
+     l'offre ; l'anneau descend juste dessous. */
   .offer-more {
-    position: absolute; right: var(--space-1); bottom: var(--space-1); z-index: 1; display: inline-grid; place-items: center;
+    position: absolute; top: 0; right: 0; z-index: 1; display: inline-grid; place-items: center;
     width: var(--control-h); height: var(--control-h); padding: 0; border: 0; border-radius: var(--radius-pill); background: none; color: var(--muted);
   }
   .offer-more:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
-  .offer-line:has(> .offer-more) .offer-line-text { padding-bottom: var(--space-2); }
+  .offer-line:has(> .offer-more) .offer-line-verdict { margin-top: var(--space-5); }
 }
 /* Sombre (maquette CandidaturesSombre) : l'encre devient un carré brun foncé, texte clair ; la pêche garde un texte
    foncé ; les pastilles reprennent --surface-muted. */

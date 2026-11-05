@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 
 import type { Offer } from "../api/client";
 import { dateInList } from "../dates";
-import { rateText, remoteText } from "../format";
+import { cityOnly, rateText, remoteText } from "../format";
 import AppIcon from "./AppIcon.vue";
 import OfferLine from "./OfferLine.vue";
 import ScoreRing from "./ScoreRing.vue";
@@ -18,7 +18,8 @@ import { usePhone } from "../composables/usePhone";
 // tri « Par jour », où la ligne du jour la donne.
 const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean }>();
 defineEmits<{ select: []; more: [] }>();
-// Téléphone (C6) : le « ⋯ » de 44 px dans le coin bas de la carte ouvre ses actions.
+// Téléphone (C6, Kevin 2026-11-05) : le « ⋯ » de 44 px dans le coin en haut à droite ouvre ses actions ;
+// « Préparer » n'est plus sur la carte : la fiche l'a (« Reprendre la lettre »).
 const { phone } = usePhone();
 const router = useRouter();
 
@@ -41,15 +42,16 @@ const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>
 });
 // Les faits de l'offre en pastilles, comme sur l'Accueil (docs/139, étape 5b).
 const facts = computed(() =>
-  [rateText(props.offer.rate_min, props.offer.rate_max), props.offer.employment_type ?? "", remoteText(props.offer) ?? ""].filter(Boolean),
+  [rateText(props.offer.rate_min, props.offer.rate_max), props.offer.employment_type ?? "", remoteText(props.offer, phone.value) ?? ""].filter(Boolean),
 );
 // À traiter mêle trois statuts (C2) : la carte dit quand elle est en préparation ou gardée pour plus tard.
+// Sur téléphone, « En préparation » est le titre de la section, pas une étiquette (Kevin, 2026-11-05).
 const statusTag = computed(() =>
-  props.offer.status === "preparing" ? "En préparation" : props.offer.status === "later" ? "Plus tard" : null,
+  props.offer.status === "preparing" && !phone.value ? "En préparation" : props.offer.status === "later" ? "Plus tard" : null,
 );
 const doubtText = computed(() => props.offer.doubts?.map((d) => d.text).join(" ") ?? "");
 const location = computed(() =>
-  [props.offer.location, props.showDate ? dateInList(props.offer.first_seen_at) : ""].filter(Boolean).join(" · ") || null,
+  [phone.value ? cityOnly(props.offer.location) : props.offer.location, props.showDate ? dateInList(props.offer.first_seen_at) : ""].filter(Boolean).join(" · ") || null,
 );
 
 // La limite de la formule (docs/125) explique une offre sans note.
@@ -70,7 +72,7 @@ function prepare(): void {
     :logo="offer.has_logo ? `/api/offers/${offer.id}/logo` : null"
     :note="alert?.text ?? null"
     :alert="!!alert && alert.kind !== 'gap'"
-    :action="offer.status === 'preparing' ? 'Préparer' : null"
+    :action="offer.status === 'preparing' && !phone ? 'Préparer' : null"
     :selected="selected"
     data-test="offer"
     @select="$emit('select')"

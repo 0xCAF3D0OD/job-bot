@@ -147,10 +147,12 @@ const dayCounts = computed(() => {
 });
 type Day = { name: string; count: string; n: number };
 function dayHeader(index: number): Day | null {
-  if (!byDay.value) return null;
   const offer = items.value[index];
   if (!offer || offer.id === pinnedId.value) return null;
   const key = groupKey(offer);
+  // Sur téléphone, « En préparation » a toujours son titre de section (Kevin, 2026-11-05) : les cartes
+  // n'ont plus d'étiquette.
+  if (!byDay.value && !(phone.value && key === "preparing")) return null;
   const previous = items.value.slice(0, index).filter((o) => o.id !== pinnedId.value).at(-1);
   if (previous && groupKey(previous) === key) return null;
   const n = dayCounts.value.get(key) ?? 0;
