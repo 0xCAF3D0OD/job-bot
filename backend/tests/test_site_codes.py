@@ -6,17 +6,19 @@ from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 
 from jobbot import accounts
 from jobbot.api.app import create_app
 from jobbot.collect import service
-from jobbot.db.models import Notification, Search
+from jobbot.db.models import IGNORED_KIND, Notification, ParseStatus, Search
 from jobbot.mail import confirm, site_codes
 from jobbot.mail.codes import find_code
 from jobbot.mail.message import ParsedEmail
 from jobbot.notify import service as notify
 from jobbot.runtime import Runtime
+from jobbot.sources import sites
+from jobbot.sources.base import ParsedAlert
 from jobbot.worker.jobs import RunContext
 from jobbot.worker.tasks import site_codes as fast_task
 
@@ -78,6 +80,27 @@ async def clean(collect_runtime: Runtime) -> Runtime:
         await conn.execute(text("TRUNCATE notifications"))
         await conn.execute(text("DELETE FROM settings WHERE key = 'code_expected'"))
     return collect_runtime
+
+
+@pytest.fixture
+async def site_example(monkeypatch: pytest.MonkeyPatch) -> Any:
+    """Un site ajouté, lu par l'IA, qui n'a trouvé aucune offre dans l'e-mail : un message du
+    site (bienvenue, « confirmez votre alerte »…)."""
+    async with admin_engine().begin() as conn:
+        await conn.execute(
+            text(
+                "INSERT INTO sites (slug, name, senders, reader)"
+                " VALUES ('jobsexample', 'jobs.example', '{jobs.example}', 'ai')"
+            )
+        )
+
+    async def read_nothing(*_: Any) -> sites.AiReading:
+        return sites.AiReading(ParseStatus.EMPTY, ParsedAlert(None, []), None)
+
+    monkeypatch.setattr(service, "read_with_ai", read_nothing)
+    yield
+    async with admin_engine().begin() as conn:
+        await conn.execute(text("DELETE FROM sites WHERE slug = 'jobsexample'"))
 
 
 def _code_email(message_id: str, received: datetime) -> bytes:
@@ -174,6 +197,7 @@ async def test_extension_reads_a_fresh_code(
     assert await site_codes.latest(clean, "indeed") is None
 
 
+@pytest.mark.usefixtures("site_example")
 async def test_site_messages(clean: Runtime, mailbox: FakeMailbox) -> None:
     mailbox.add(
         make_email(
@@ -196,6 +220,7 @@ async def test_site_messages(clean: Runtime, mailbox: FakeMailbox) -> None:
         assert (await api.get("/api/alert-searches/messages/999999")).status_code == 404
 
 
+@pytest.mark.usefixtures("site_example")
 async def test_confirmation_opened_for_known_sites(
     clean: Runtime, mailbox: FakeMailbox, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -235,6 +260,91 @@ async def test_confirmation_opened_for_known_sites(
     assert not await confirm.open_confirmation("https://www.jobup.ch/unsubscribe?confirm=1")
     assert not await confirm.open_confirmation("https://www.jobup.ch/password/reset?t=1")
     assert len(opened) == 2
+
+
+async def test_mail_from_no_site_is_ignored(clean: Runtime, mailbox: FakeMailbox) -> None:
+    """Un e-mail d'un expéditeur qui n'est aucun site (Stripe) : ni carte « attend ta
+    confirmation », ni message, ni copie, ni objet ; seul son Message-ID reste."""
+    mailbox.add(
+        make_email(
+            message_id="<stripe@x>",
+            sender="notifications@stripe.com",
+            received_at=datetime.now(UTC),
+            subject="Verify your Stripe account",
+            html='<a href="https://dashboard.stripe.com/verify?t=1">Verify your account</a>',
+        ),
+        "<stripe@x>",
+    )
+    with accounts.use(None):
+        await service.collect(clean)
+        async with clean.sessionmaker() as session:
+            owner = await accounts.owner_id(session)
+    with accounts.use(owner):
+        async with clean.sessionmaker() as session:
+            search = await session.scalar(select(Search).where(Search.message_id == "<stripe@x>"))
+    assert search is not None and search.kind == IGNORED_KIND
+    assert search.subject is None and search.confirm_url is None
+    assert search.raw_purged_at is not None and not clean.storage.exists(search.raw_key)
+    app = create_app(clean.settings, clean)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+        assert (await api.get("/api/alert-searches")).json()["to_confirm"] == []
+        assert (await api.get("/api/alert-searches/messages")).json() == []
+        journal = (await api.get("/api/searches")).json()["items"]
+    assert "unknown" not in {s["source"] for s in journal}
+    # Relu à la collecte suivante : déjà connu, pas repris.
+    with accounts.use(None):
+        await service.collect(clean)
+    with accounts.use(owner):
+        async with clean.sessionmaker() as session:
+            count = await session.scalar(
+                select(func.count()).where(Search.message_id == "<stripe@x>")
+            )
+    assert count == 1
+
+
+async def test_purge_forgets_mail_from_no_site(clean: Runtime) -> None:
+    """Gardés avant le correctif : la carte d'un expéditeur inconnu et son message perdent
+    leur copie, leur objet et leur lien ; la ligne disparaît après la fenêtre de collecte."""
+    old = datetime.now(UTC) - timedelta(days=clean.settings.imap_backfill_days + 1)
+    with accounts.use(None):
+        async with clean.sessionmaker() as session:
+            owner = await accounts.owner_id(session)
+    keys = {}
+    with accounts.use(owner):
+        async with clean.sessionmaker.begin() as session:
+            for name, kind, received, url in (
+                ("carte", None, datetime.now(UTC), "https://dashboard.stripe.com/verify"),
+                ("message", "message", datetime.now(UTC), None),
+                ("vieux", "message", old, None),
+            ):
+                key = f"accounts/{owner}/emails/inconnu-{name}.eml"
+                clean.storage.put(key, b"Subject: Verify your account")
+                keys[name] = key
+                session.add(
+                    Search(
+                        source="unknown",
+                        message_id=f"<inconnu-{name}@x>",
+                        received_at=received,
+                        subject="Verify your account",
+                        raw_key=key,
+                        parse_status="unrecognized",
+                        kind=kind,
+                        confirm_url=url,
+                    )
+                )
+        await site_codes.purge(clean)
+        async with clean.sessionmaker() as session:
+            rows = {
+                s.message_id: s
+                for s in await session.scalars(
+                    select(Search).where(Search.message_id.like("<inconnu-%"))
+                )
+            }
+    assert set(rows) == {"<inconnu-carte@x>", "<inconnu-message@x>"}
+    for row in rows.values():
+        assert (row.kind, row.subject, row.confirm_url) == (IGNORED_KIND, None, None)
+        assert row.raw_purged_at is not None
+    assert not any(clean.storage.exists(key) for key in keys.values())
 
 
 async def test_expect_code_is_limited(clean: Runtime, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -13,6 +13,7 @@ from jobbot.core.filter import remote_location
 from jobbot.core.normalize import normalize_text
 from jobbot.core.orp import LOCAL_TZ
 from jobbot.db.models import (
+    IGNORED_KIND,
     Application,
     CompanyLogo,
     Draft,
@@ -345,7 +346,8 @@ async def list_searches(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> SearchPage:
     runtime = _runtime(request)
-    query = select(Search)
+    # Un e-mail qui ne vient d'aucun site n'est pas une alerte : rien à montrer.
+    query = select(Search).where(Search.kind.is_distinct_from(IGNORED_KIND))
     if source is not None:
         query = query.where(Search.source == source)
     if parse_status is not None:

@@ -397,8 +397,9 @@ async def test_api_journal_and_offers(
     )
     await service.collect(collect_runtime)
 
+    # L'e-mail d'un expéditeur qui n'est aucun site n'est pas dans le journal.
     page = (await api.get("/api/searches")).json()
-    assert page["total"] == 2
+    assert page["total"] == 1
     filtered = (await api.get("/api/searches", params={"parse_status": "parsed"})).json()
     assert [s["source"] for s in filtered["items"]] == ["jobup"]
 
