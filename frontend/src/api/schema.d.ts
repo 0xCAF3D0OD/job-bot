@@ -2093,7 +2093,7 @@ export interface paths {
         };
         /**
          * Download Letter Pdf
-         * @description La même lettre en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).
+         * @description La même lettre en PDF (docs/25 §3.4), dans le modèle choisi (sobre par défaut).
          */
         get: operations["downloadLetterPdf"];
         put?: never;
@@ -2148,6 +2148,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cvs/{draft_id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Cv Read
+         * @description « J'ai relu le CV » : coché ou décoché, gardé avec la version (pour un autre appareil).
+         */
+        put: operations["markCvRead"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cvs/{draft_id}/docx": {
         parameters: {
             query?: never;
@@ -2174,7 +2194,7 @@ export interface paths {
         };
         /**
          * Download Cv Pdf
-         * @description Le même CV en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).
+         * @description Le même CV en PDF, pour les formulaires en ligne (docs/25 §3.4), dans le modèle choisi.
          */
         get: operations["downloadCvPdf"];
         put?: never;
@@ -4593,6 +4613,13 @@ export interface components {
             /** Blocks */
             blocks: components["schemas"]["CvBlock"][];
             document: components["schemas"]["CvDocumentOut"];
+            /** Read At */
+            read_at?: string | null;
+        };
+        /** CvRead */
+        CvRead: {
+            /** Read */
+            read: boolean;
         };
         /** CvRequest */
         CvRequest: {
@@ -12509,7 +12536,9 @@ export interface operations {
     };
     downloadLetterPdf: {
         parameters: {
-            query?: never;
+            query?: {
+                modele?: "sobre" | "moderne" | "bandeau" | "classique";
+            };
             header?: never;
             path: {
                 draft_id: number;
@@ -12660,6 +12689,41 @@ export interface operations {
             };
         };
     };
+    markCvRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                draft_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CvRead"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CvOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     downloadCvDocx: {
         parameters: {
             query?: never;
@@ -12693,7 +12757,9 @@ export interface operations {
     };
     downloadCvPdf: {
         parameters: {
-            query?: never;
+            query?: {
+                modele?: "sobre" | "moderne" | "bandeau" | "classique";
+            };
             header?: never;
             path: {
                 draft_id: number;

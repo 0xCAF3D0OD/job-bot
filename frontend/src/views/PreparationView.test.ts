@@ -114,7 +114,7 @@ describe("PreparationView", () => {
       "Candidature au poste d'ingénieur DevOps junior",
     );
     expect(wrapper.find("[data-test=docx]").attributes("href")).toBe("/api/letters/11/docx");
-    expect(wrapper.find("[data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf");
+    expect(wrapper.find("[data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=moderne");
   });
 
   it("la version modifiée en dernier est celle affichée ; les corrections s'enregistrent", async () => {
@@ -287,7 +287,7 @@ describe("barre de candidature", () => {
       "À recopier sur le formulaire",
     ]);
     expect(steps.find("[data-test=sheet-letter]").text()).toBe("Lettre.pdf");
-    expect(steps.find("[data-test=sheet-cv]").attributes("href")).toBe("/api/cvs/31/pdf");
+    expect(steps.find("[data-test=sheet-cv]").attributes("href")).toBe("/api/cvs/31/pdf?modele=moderne");
     expect(steps.find("[data-test=find-contact]").text()).toBe("Trouver un contact chez Acme SA");
     expect(steps.find("[data-test=find-contact]").attributes("href")).toBe("/candidatures/offres/7#contacts");
     // D'abord le formulaire, seul bouton plein (docs/29 §1.3) ; une fois ouvert, « J'ai postulé » (C8).
@@ -503,6 +503,32 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").attributes("aria-disabled")).toBe("true");
   });
 
+  it("le modèle (Kevin, 2026-11-05) : l'aperçu de la lettre dans le modèle choisi, le PDF aussi", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([letter(11, 1)]);
+    const wrapper = await mountView();
+    const picker = wrapper.find("[data-test=template-picker]");
+    expect(picker.text()).toContain("Le même pour CV et lettre");
+    expect(picker.findAll("[role=radio]").map((r) => r.text())).toEqual(["Sobre", "Moderne", "Bandeau", "Classique"]);
+    const preview = () => wrapper.find("[data-test=letter-card] [data-test=doc-preview]");
+    expect(preview().attributes("data-template")).toBe("moderne");
+    await picker.find("[data-test=template-bandeau]").trigger("click");
+    expect(picker.find("[data-test=template-bandeau]").attributes("aria-checked")).toBe("true");
+    expect(preview().attributes("data-template")).toBe("bandeau");
+    expect(wrapper.find("[data-test=edit-text]").text()).toBe("Modifier le texte avec l'Assistant");
+    await wrapper.find("[data-test=versions-open]").trigger("click");
+    expect(wrapper.find("[data-test=versions-sheet] [data-test=pdf]").attributes("href")).toBe("/api/letters/11/pdf?modele=bandeau");
+    await picker.find("[data-test=template-moderne]").trigger("click");
+  });
+
+  it("sans lettre : l'aperçu vide du modèle à la place de « Aucune lettre »", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    mockGet([]);
+    const wrapper = await mountView();
+    expect(wrapper.find("[data-test=letter-card] [data-test=doc-preview-empty]").exists()).toBe(true);
+    expect(wrapper.text()).not.toContain("Aucune lettre pour cette offre.");
+  });
+
   it("sans lettre : « Rédiger la lettre », ou « Rédiger en anglais » une fois la langue choisie", async () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([]);
@@ -603,6 +629,9 @@ describe("« Pas vrai » (30.10.2026)", () => {
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("599px") || media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([letter(11, 1)]);
     const wrapper = await mountView();
+    // Sur téléphone, la lettre est d'abord un aperçu dans le modèle ; touché, il ouvre la lettre entière.
+    expect(wrapper.find("[data-test=paragraph]").exists()).toBe(false);
+    await wrapper.find("[data-test=doc-preview]").trigger("click");
     const area = wrapper.findAll("[data-test=paragraph]")[1]!;
     (area.element as HTMLTextAreaElement).setSelectionRange(3, 3);
     await area.trigger("click");

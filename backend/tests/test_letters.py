@@ -271,6 +271,11 @@ async def test_edit_then_application_and_docx(
     assert "Objet : Candidature" in text_ and "Texte corrigé." in text_
     assert "Jean Exemple" in text_
     assert (await api.get("/api/letters/999999/pdf")).status_code == 404
+    # Le modèle choisi (maquette Preparer) ; un modèle inconnu est refusé.
+    styled = await api.get(f"/api/letters/{first['id']}/pdf", params={"modele": "classique"})
+    assert styled.status_code == 200 and b"Times-Roman" in styled.content
+    unknown = await api.get(f"/api/letters/{first['id']}/pdf", params={"modele": "x"})
+    assert unknown.status_code == 422
 
 
 async def test_errors(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:

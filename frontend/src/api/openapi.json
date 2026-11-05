@@ -5604,7 +5604,7 @@
           "letters"
         ],
         "summary": "Download Letter Pdf",
-        "description": "La même lettre en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).",
+        "description": "La même lettre en PDF (docs/25 §3.4), dans le modèle choisi (sobre par défaut).",
         "operationId": "downloadLetterPdf",
         "parameters": [
           {
@@ -5614,6 +5614,22 @@
             "schema": {
               "type": "integer",
               "title": "Draft Id"
+            }
+          },
+          {
+            "name": "modele",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "sobre",
+                "moderne",
+                "bandeau",
+                "classique"
+              ],
+              "type": "string",
+              "default": "sobre",
+              "title": "Modele"
             }
           }
         ],
@@ -5797,6 +5813,59 @@
         }
       }
     },
+    "/api/cvs/{draft_id}/read": {
+      "put": {
+        "tags": [
+          "cvs"
+        ],
+        "summary": "Mark Cv Read",
+        "description": "« J'ai relu le CV » : coché ou décoché, gardé avec la version (pour un autre appareil).",
+        "operationId": "markCvRead",
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CvRead"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CvOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/cvs/{draft_id}/docx": {
       "get": {
         "tags": [
@@ -5841,7 +5910,7 @@
           "cvs"
         ],
         "summary": "Download Cv Pdf",
-        "description": "Le même CV en PDF, à joindre aux formulaires en ligne (docs/25 §3.4).",
+        "description": "Le même CV en PDF, pour les formulaires en ligne (docs/25 §3.4), dans le modèle choisi.",
         "operationId": "downloadCvPdf",
         "parameters": [
           {
@@ -5851,6 +5920,22 @@
             "schema": {
               "type": "integer",
               "title": "Draft Id"
+            }
+          },
+          {
+            "name": "modele",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "sobre",
+                "moderne",
+                "bandeau",
+                "classique"
+              ],
+              "type": "string",
+              "default": "sobre",
+              "title": "Modele"
             }
           }
         ],
@@ -12746,6 +12831,18 @@
           },
           "document": {
             "$ref": "#/components/schemas/CvDocumentOut"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
           }
         },
         "type": "object",
@@ -12766,6 +12863,19 @@
           "document"
         ],
         "title": "CvOut"
+      },
+      "CvRead": {
+        "properties": {
+          "read": {
+            "type": "boolean",
+            "title": "Read"
+          }
+        },
+        "type": "object",
+        "required": [
+          "read"
+        ],
+        "title": "CvRead"
       },
       "CvRequest": {
         "properties": {

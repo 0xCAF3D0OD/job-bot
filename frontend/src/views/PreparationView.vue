@@ -4,6 +4,9 @@ import { useRoute, useRouter } from "vue-router";
 
 import { api, type Letter, type LetterLanguage, type Offer, type OrpMonth } from "../api/client";
 import CvPanel from "../components/CvPanel.vue";
+import DocPreview from "../components/DocPreview.vue";
+import TemplatePicker from "../components/TemplatePicker.vue";
+import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import OfferBrief from "../components/OfferBrief.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
@@ -205,6 +208,19 @@ const selected = computed(() => letters.value.find((l) => l.id === selectedId.va
 // lettre ; sans lettre, aucune : elle sera celle de l'annonce.
 const { phone } = usePhone();
 const versionsOpen = ref(false);
+// Le modèle (maquette Preparer, Kevin 2026-11-05) : sur téléphone, la lettre se montre en aperçu dans le
+// modèle choisi ; l'aperçu touché ouvre la lettre entière, modifiable.
+const { template } = useDocTemplate();
+const letterOpen = ref(false);
+const previewName = computed(() => doc.value?.sender[0] || "Ton nom");
+// « 1020 Renens » devient « Renens » sous le nom.
+const previewSub = computed(() => {
+  const line = doc.value?.sender.find((l) => /^\d{4}\s/.test(l));
+  return line ? line.replace(/^\d{4}\s+/, "") : null;
+});
+const previewParagraphs = computed(() =>
+  draft.value && doc.value ? [doc.value.salutation, ...draft.value.paragraphs.map((p) => p.text)].filter(Boolean) : [],
+);
 const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), test: `language-${code}` }));
 const shownLanguage = computed<string>({
   get: () => language.value || selected.value?.document?.language || "",
@@ -729,13 +745,13 @@ onMounted(() => void load());
             <PrepCertificates>
               <a
                 v-if="currentLetterId"
-                :href="`/api/letters/${currentLetterId}/pdf`"
+                :href="pdfHref(`/api/letters/${currentLetterId}/pdf`, template)"
                 download
                 data-test="sheet-letter"
               ><AppIcon name="file" />Lettre.pdf</a>
               <a
                 v-if="currentCvId"
-                :href="`/api/cvs/${currentCvId}/pdf`"
+                :href="pdfHref(`/api/cvs/${currentCvId}/pdf`, template)"
                 download
                 data-test="sheet-cv"
               ><AppIcon name="file" />CV.pdf</a>
@@ -845,6 +861,7 @@ onMounted(() => void load());
             <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
           </p>
 
+          <TemplatePicker v-if="phone" />
           <!-- La carte de la lettre (maquette Preparer, étape 7b) : le titre et la langue en tête (C3 : choisir
                ne rédige rien, le bouton du bas le propose), la lettre entière et modifiable (C4), « Modifier le
                texte » qui ouvre la consigne, puis « J'ai relu la lettre » (C11). -->
@@ -865,8 +882,18 @@ onMounted(() => void load());
                 class="doc-language"
               />
             </div>
+            <!-- Sur téléphone, pas encore de lettre : l'aperçu vide du modèle ; « Rédiger la lettre » est en bas. -->
+            <DocPreview
+              v-if="phone && !selected && !writing"
+              :template="template"
+              :name="previewName"
+              :sub="previewSub"
+              :paragraphs="[]"
+              label="Aperçu vide de la lettre"
+              data-test="no-letter"
+            />
             <div
-              v-if="!selected && !writing"
+              v-else-if="!selected && !writing"
               class="empty-detail prep-empty"
               data-test="no-letter"
             >
@@ -885,8 +912,17 @@ onMounted(() => void load());
             >
               Consigne : {{ selected.instruction }}
             </p>
+            <DocPreview
+              v-if="phone && doc && draft && !letterOpen"
+              :template="template"
+              :name="previewName"
+              :sub="previewSub"
+              :paragraphs="previewParagraphs"
+              label="Ouvrir la lettre entière pour la modifier"
+              @open="letterOpen = true"
+            />
             <article
-              v-if="doc && draft"
+              v-if="doc && draft && (!phone || letterOpen)"
               class="letter-sheet print-sheet"
               :class="{ 'fresh-lines': fresh, busy: writing }"
               :lang="doc.language"
@@ -1012,7 +1048,7 @@ onMounted(() => void load());
                 data-test="edit-text"
                 @click="openInstruction"
               >
-                Modifier le texte
+                {{ phone ? "Modifier le texte avec l'Assistant" : "Modifier le texte" }}
               </button>
               <div
                 v-else-if="phone"
@@ -1140,7 +1176,7 @@ onMounted(() => void load());
             >
               <a
                 class="secondary"
-                :href="`/api/letters/${selected.id}/pdf`"
+                :href="pdfHref(`/api/letters/${selected.id}/pdf`, template)"
                 download
                 data-test="pdf"
               ><span class="with-icon"><AppIcon name="download" />PDF</span></a>
@@ -1304,7 +1340,7 @@ onMounted(() => void load());
             <template v-else>
               <a
                 class="button-link prep-download"
-                :href="`/api/letters/${selected.id}/pdf`"
+                :href="pdfHref(`/api/letters/${selected.id}/pdf`, template)"
                 download
                 data-test="pdf"
               ><span class="with-icon"><AppIcon name="download" />Lettre (PDF)</span></a>
@@ -1318,19 +1354,6 @@ onMounted(() => void load());
           </template>
         </BottomSheet>
       </div>
-      <!-- Le CV prêt : la prochaine étape, seul bouton plein de la barre (C6). -->
-      <ActionBar
-        v-if="phone && offer && tab === 'cv' && currentCvId"
-        class="prep-bar"
-      >
-        <RouterLink
-          :to="{ query: { doc: 'postuler' } }"
-          class="button-link primary-link prep-bar-main"
-          data-test="next-step"
-        >
-          Continuer vers Postuler
-        </RouterLink>
-      </ActionBar>
     </div>
   </section>
 

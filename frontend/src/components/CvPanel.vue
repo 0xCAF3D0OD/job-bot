@@ -13,6 +13,11 @@ import InlineConfirm from "./InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
 import PlanLimit from "./PlanLimit.vue";
 import SavedStatus from "./SavedStatus.vue";
+import ActionBar from "./ActionBar.vue";
+import DocPreview from "./DocPreview.vue";
+import TemplatePicker from "./TemplatePicker.vue";
+import { pdfHref, useDocTemplate } from "../composables/useDocTemplate";
+import { usePhone } from "../composables/usePhone";
 
 // Un bloc ajouté ou retiré : « Enregistré », annoncé (WCAG 4.1.3).
 const savedAt = ref(0);
@@ -197,6 +202,48 @@ function versionLabel(cv: Cv): string {
   return `v${cv.version} · ${LANGUAGES[cv.language]} · ${what} · ${cv.edited_at ? "modifiée" : "préparée"} ${when}`;
 }
 
+// Sur téléphone, la même structure que la lettre (maquette Preparer, Kevin 2026-11-05) : le modèle partagé,
+// l'aperçu (touché, il ouvre le CV entier), « Modifier le texte avec l'Assistant », « J'ai relu le CV », la
+// langue en réglage secondaire sous l'aperçu ; le bouton plein en bas.
+const { phone } = usePhone();
+const { template } = useDocTemplate();
+const cvOpen = ref(false);
+const instructionOpen = ref(false);
+const instructionEl = ref<HTMLInputElement | null>(null);
+function openInstruction(): void {
+  instructionOpen.value = true;
+  void nextTick(() => instructionEl.value?.focus());
+}
+const previewSub = computed(() => {
+  const city = doc.value?.contacts.find((c) => /\b\d{4}\s/.test(c))?.replace(/^.*\b\d{4}\s+/, "");
+  return [edit.value.headline, city].filter(Boolean).join(" · ") || null;
+});
+const previewParagraphs = computed(() => {
+  const d = doc.value;
+  if (!d) return [];
+  const items = d.sections.flatMap((s) => s.items.map((i) => [i.title, i.content.map((c) => c.text).join("")].filter(Boolean).join(" : ")));
+  return [edit.value.summary, ...items].filter(Boolean).slice(0, 3);
+});
+// Le bouton plein du téléphone : préparer le CV, puis la nouvelle version quand une consigne est écrite ;
+// sinon « Continuer vers Postuler ».
+const writeLabel = computed(() => {
+  if (!selected.value) return "Préparer le CV";
+  return instruction.value.trim() ? "Préparer la nouvelle version" : "";
+});
+const readBusy = ref(false);
+async function markRead(box: HTMLInputElement): Promise<void> {
+  const cv = selected.value;
+  if (!cv) return;
+  readBusy.value = true;
+  try {
+    const { data } = await api.PUT("/api/cvs/{draft_id}/read", { params: { path: { draft_id: cv.id } }, body: { read: box.checked } });
+    if (data) cvs.value = cvs.value.map((c) => (c.id === data.id ? data : c));
+    else box.checked = !!cv.read_at;
+  } finally {
+    readBusy.value = false;
+  }
+}
+
 onMounted(() => void load());
 </script>
 
@@ -218,6 +265,7 @@ onMounted(() => void load());
         En-tête incomplet ({{ doc.missing_identity.join(", ") }}) :
         <RouterLink to="/profil?onglet=coordonnees">complète tes coordonnées</RouterLink>.
       </p>
+      <TemplatePicker v-if="phone" />
       <!-- La carte du CV (maquette Preparer, étape 7b, C5) : le CV entier et modifiable, et dessus ce que
            l'adaptation a mis en avant (ses mots-clés). -->
       <section
@@ -243,8 +291,16 @@ onMounted(() => void load());
             {{ word }}
           </li>
         </ul>
+        <DocPreview
+          v-if="phone && loaded && !selected && !writing"
+          :template="template"
+          name="Ton nom"
+          :paragraphs="[]"
+          label="Aperçu vide du CV"
+          data-test="no-cv"
+        />
         <div
-          v-if="loaded && !selected && !writing"
+          v-else-if="loaded && !selected && !writing"
           class="empty-detail prep-empty"
           data-test="no-cv"
         >
@@ -255,8 +311,17 @@ onMounted(() => void load());
           kind="cv"
         />
 
+        <DocPreview
+          v-if="phone && doc && selected && !cvOpen"
+          :template="template"
+          :name="doc.name || 'Ton nom'"
+          :sub="previewSub"
+          :paragraphs="previewParagraphs"
+          label="Ouvrir le CV entier pour le modifier"
+          @open="cvOpen = true"
+        />
         <article
-          v-if="doc && selected"
+          v-if="doc && selected && (!phone || cvOpen)"
           class="cv-sheet print-sheet"
           :class="{ 'fresh-lines': fresh, busy: writing || saving }"
           :lang="doc.language"
@@ -316,12 +381,110 @@ onMounted(() => void load());
             </div>
           </template>
         </article>
+        <!-- Téléphone : la langue en réglage secondaire, puis les deux gestes de la lettre. -->
+        <template v-if="phone">
+          <label class="doc-card-language">Langue du titre et du résumé
+            <select
+              v-model="language"
+              data-test="cv-language"
+            >
+              <option value="">Celle de l'annonce</option>
+              <option
+                v-for="(label, code) in LANGUAGES"
+                :key="code"
+                :value="code"
+              >{{ label }}</option>
+            </select>
+          </label>
+          <template v-if="selected">
+            <button
+              v-if="!instructionOpen"
+              type="button"
+              class="secondary doc-card-edit"
+              data-test="cv-edit-text"
+              @click="openInstruction"
+            >
+              Modifier le texte avec l'Assistant
+            </button>
+            <div
+              v-else
+              class="doc-card-instruction"
+            >
+              <input
+                ref="instructionEl"
+                v-model="instruction"
+                class="prep-instruction-line"
+                maxlength="500"
+                aria-label="Consigne pour la nouvelle version"
+                placeholder="Consigne : mets le projet personnel en premier"
+                data-test="cv-instruction"
+              >
+            </div>
+            <label class="doc-card-read">
+              <input
+                type="checkbox"
+                :checked="!!selected.read_at"
+                :disabled="writing || readBusy"
+                data-test="cv-read"
+                @change="markRead($event.target as HTMLInputElement)"
+              >
+              <span>J'ai relu le CV</span>
+            </label>
+          </template>
+        </template>
       </section>
+      <!-- La barre du bas du téléphone : un seul bouton plein, la prochaine chose à faire. -->
+      <ActionBar
+        v-if="phone && loaded"
+        class="prep-bar"
+      >
+        <InlineConfirm
+          v-if="choosingWrite"
+          message="Tu as des modifications non enregistrées dans cette version."
+          confirm-label="Enregistrer, puis rédiger"
+          alt-label="Rédiger sans enregistrer"
+          cancel-label="Garder"
+          :danger="false"
+          :busy="writing"
+          @confirm="saveThenWrite"
+          @alt="write(true)"
+          @cancel="choosingWrite = false"
+        />
+        <PlanLimit
+          v-if="writeLabel"
+          usage="cv"
+        />
+        <BusyButton
+          v-if="writeLabel || writing"
+          class="primary prep-bar-main"
+          :busy="writing"
+          busy-label="Préparation…"
+          :disabled="reached('cv')"
+          data-test="write-cv"
+          @click="write()"
+        >
+          <span class="with-icon"><AppIcon name="ai" />{{ writeLabel || "Préparer le CV" }}</span>
+        </BusyButton>
+        <RouterLink
+          v-else
+          :to="{ query: { doc: 'postuler' } }"
+          class="button-link primary-link prep-bar-main"
+          data-test="next-step"
+        >
+          Continuer vers Postuler
+        </RouterLink>
+      </ActionBar>
     </div>
 
     <section class="prep-side">
-      <OfferBrief :offer="offer" />
-      <div class="side-card">
+      <OfferBrief
+        v-if="!phone"
+        :offer="offer"
+      />
+      <div
+        v-if="!phone"
+        class="side-card"
+      >
         <h2>
           {{ selected ? "Nouvelle version" : "Préparer le CV" }}
         </h2>
@@ -453,7 +616,7 @@ onMounted(() => void load());
         >
           <a
             class="secondary"
-            :href="`/api/cvs/${selected.id}/pdf`"
+            :href="pdfHref(`/api/cvs/${selected.id}/pdf`, template)"
             download
             data-test="cv-pdf"
           ><span class="with-icon"><AppIcon name="download" />PDF</span></a>

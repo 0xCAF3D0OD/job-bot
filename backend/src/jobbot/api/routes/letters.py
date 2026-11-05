@@ -11,7 +11,7 @@ from typing import Annotated, Any, Literal
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jobbot.api.routes import writing
 from jobbot.db.models import Application, Draft, DraftKind, ForbiddenClaim, Offer
 from jobbot.letters.document import Identity, LetterDocument, Recipient, assemble, to_docx
-from jobbot.letters.pdf import letter_to_pdf
+from jobbot.letters.pdf import Template, letter_to_pdf
 from jobbot.letters.service import load_identity
 from jobbot.llm import claims as claims_check
 from jobbot.llm import letter as letter_llm
@@ -654,8 +654,10 @@ async def download_letter_docx(request: Request, draft_id: int) -> Response:
     response_class=Response,
     responses={200: {"content": {"application/pdf": {}}}},
 )
-async def download_letter_pdf(request: Request, draft_id: int) -> Response:
-    """La même lettre en PDF, à joindre aux formulaires en ligne (docs/25 §3.4)."""
+async def download_letter_pdf(
+    request: Request, draft_id: int, modele: Annotated[Template, Query()] = "sobre"
+) -> Response:
+    """La même lettre en PDF (docs/25 §3.4), dans le modèle choisi (sobre par défaut)."""
     async with _runtime(request).sessionmaker() as session:
         draft = await _get_draft(session, draft_id)
         offer = await session.get(Offer, draft.offer_id)
@@ -666,7 +668,7 @@ async def download_letter_pdf(request: Request, draft_id: int) -> Response:
     company = "".join(c for c in (offer.company or "employeur") if c.isalnum() or c in " -")
     filename = f"Lettre - {company.strip()[:60]}.pdf"
     return Response(
-        letter_to_pdf(document, title=filename[:-4]),
+        letter_to_pdf(document, title=filename[:-4], template=modele),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )
