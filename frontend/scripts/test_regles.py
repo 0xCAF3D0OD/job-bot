@@ -12,7 +12,7 @@ import pytest
 from playwright.sync_api import Page, sync_playwright
 
 sys.path.insert(0, str(Path(__file__).parent))
-from regles import AUDIT, MAX_WORDS
+from regles import AUDIT, MAX_WORDS, hand_titles, missing_glyphs
 
 LONG = "Pour les formulaires de candidature, facultatif, quatre sur cinq"
 BASE = """
@@ -104,3 +104,12 @@ def test_un_texte_rogne_par_une_fiche_qui_defile_ne_compte_pas(page: Page) -> No
         '<p style="margin: 0; line-height: 1">Il te manque : Spark, SQL</p>'
     )
     assert stuck(page, body) == []
+
+
+def test_police_manuscrite_contient_chaque_caractere_des_titres():
+    """Caveat Brush (11b) : chaque caractère des 4 fins de titre et de « C'est fait ! » est dans la
+    table cmap du sous-ensemble ; un caractère absent est bien signalé."""
+    titles = hand_titles()
+    assert titles == ["plus vivre.", "Ton CV suffit.", "Juste les tiennes.", "En trier 3.", "C'est fait !"]
+    assert missing_glyphs() == []
+    assert missing_glyphs(texts=["Zoé"]) == ["Z", "é"]

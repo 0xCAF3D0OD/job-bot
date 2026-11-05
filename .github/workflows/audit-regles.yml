@@ -1,5 +1,6 @@
 # L'audit des règles de l'interface trouve toujours un texte collé au bord (docs/135, 1.6.3) :
-# à chaque envoi et chaque PR qui touche aux audits.
+# à chaque envoi et chaque PR qui touche aux audits. Le même test vérifie que la police manuscrite
+# contient chaque caractère des titres qui l'utilisent.
 name: Test de l'audit des règles
 
 on:
@@ -7,10 +8,18 @@ on:
     paths:
       - "frontend/scripts/**"
       - ".github/workflows/audit-regles.yml"
+      # La police manuscrite et les titres qui l'utilisent (test du sous-ensemble, 11b).
+      - "frontend/src/assets/fonts/**"
+      - "frontend/src/views/WelcomeView.vue"
+      - "frontend/src/components/GoalReached.vue"
   pull_request:
     paths:
       - "frontend/scripts/**"
       - ".github/workflows/audit-regles.yml"
+      # La police manuscrite et les titres qui l'utilisent (test du sous-ensemble, 11b).
+      - "frontend/src/assets/fonts/**"
+      - "frontend/src/views/WelcomeView.vue"
+      - "frontend/src/components/GoalReached.vue"
   workflow_dispatch:
 
 permissions:

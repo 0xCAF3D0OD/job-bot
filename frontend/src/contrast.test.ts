@@ -251,6 +251,17 @@ describe("les puces et le contrôle segmenté (D4, 2026-11-03)", () => {
     }
   });
 
+  it("le bouton blanc sur le bleu (premiers pas, 11b) : son texte en --on-brand-surface, lisible dans les deux thèmes", () => {
+    // Le CSS des premiers pas se charge avec la page (WelcomeView.vue), pas avec le premier écran.
+    const welcome = readFileSync(resolve(process.cwd(), "src/views/WelcomeView.vue"), "utf8");
+    expect(welcome).toContain(".welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface);");
+    expect(`${css}${welcome}`).not.toMatch(/\.welcome-start \{ color/);
+    for (const theme of [light, dark]) {
+      expect(theme["on-brand-surface"]).toBe(theme.primary);
+      expect(ratio(theme["on-brand-surface"]!, theme["on-primary"]!)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it("une puce choisie est teintée et lisible ; jamais pleine", () => {
     expect(css).toContain("button.chip.on { background: var(--primary-soft); border-color: var(--primary-graphic); color: var(--primary-text); }");
     expect(css).not.toMatch(/\.chip\.on \{[^}]*background: var\(--primary\);/);

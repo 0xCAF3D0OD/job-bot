@@ -208,7 +208,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: null });
     expect(calls("/api/welcome").at(-1)).toMatchObject({ goal: "job" });
     const line = wrapper.find("[data-test=welcome-defaults]").text();
-    expect(line).toBe("Taux : peu importe · Langues : français · Télétravail : accepté · Téléphone : désactivé");
+    expect(line).toBe("Taux : peu importe · Langues : français · Télétravail : accepté depuis la Suisse · Téléphone : désactivé");
   });
 
   it("le tri : les offres déjà notées, une à la fois ; Garder et Écarter comme dans Candidatures", async () => {
@@ -232,6 +232,39 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     await click(wrapper, "welcome-finish");
     expect(calls("/api/welcome").at(-1)).toEqual({ done: true, postponed: false });
     expect(router.currentRoute.value.path).toBe("/aujourdhui");
+  });
+
+  it("« Écarter » laisse « Annuler » 6 s : l'offre reprend son statut et le tri revient sur elle", async () => {
+    const offers = [{ ...OFFER, status: "to_review" }, { ...OFFER, id: 8, title: "SRE", score: 55, status: "later" }];
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers });
+    await click(wrapper, "welcome-continue");
+    await click(wrapper, "welcome-dismiss");
+    expect(wrapper.find("[data-test=welcome-notice]").text()).toContain("Offre écartée.");
+    expect(wrapper.text()).toContain("Offre 2 sur 2");
+
+    await click(wrapper, "undo-status");
+    expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 7 } }, body: { status: "to_review" } });
+    expect(wrapper.find("[data-test=welcome-notice]").exists()).toBe(false);
+    expect(wrapper.text()).toContain("Offre 1 sur 2");
+
+    // Garder ne propose pas d'annuler ; écarter la dernière offre garde « Annuler » sur « Tout est prêt ».
+    await click(wrapper, "welcome-keep");
+    expect(wrapper.find("[data-test=welcome-notice]").exists()).toBe(false);
+    vi.useFakeTimers();
+    try {
+      await click(wrapper, "welcome-dismiss");
+      expect(wrapper.find("[data-test=welcome-sorted]").text()).toBe("1 offre gardée, 1 écartée.");
+      await click(wrapper, "undo-status");
+      expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 8 } }, body: { status: "later" } });
+      expect(wrapper.text()).toContain("Offre 2 sur 2");
+      await click(wrapper, "welcome-dismiss");
+      vi.advanceTimersByTime(6000);
+      await flushPromises();
+      expect(wrapper.find("[data-test=welcome-notice]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=welcome-sorted]").text()).toBe("1 offre gardée, 1 écartée.");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("sans offre notée : directement « Tout est prêt. », et « Modifier dans Compte » termine l'accueil", async () => {
