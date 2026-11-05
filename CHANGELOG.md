@@ -397,3 +397,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.183 | Ménage : l'ancienne consigne de l'assistant (v21), remplacée par la v22 | livrée |
 | 1.6.184 | Profils d'essai : la ligne de chaque profil n'affiche plus le nombre de sources d'actualités, qui ne servaient plus | livrée |
 | 1.6.185 | Interface : chaque notification a l'icône de son genre et le libellé de son action (« Voir les offres », « Relancer », « Compléter »…), et celle des offres dit « La meilleure : <poste> chez <entreprise>, très proche. » au lieu d'une note chiffrée. | livrée |
+| 1.6.186 | Tes données : l'export demande ton mot de passe, comme la fermeture du compte | livrée |
