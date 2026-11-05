@@ -1,0 +1,1 @@
+Interface : sur téléphone, Candidatures suit la maquette (deux initiales sur fond plein, titre du jour plus petit et collé en haut, recherche à bord clair, sans la phrase du nombre ni « Il te manque » sur la carte)

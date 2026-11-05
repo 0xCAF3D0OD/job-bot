@@ -2,7 +2,8 @@
 import { computed, useId } from "vue";
 import { RouterLink, useRouter, type RouteLocationRaw } from "vue-router";
 
-import { colorIndex, scoreWord } from "../format";
+import { usePhone } from "../composables/usePhone";
+import { colorIndex, initials, scoreWord } from "../format";
 
 // La Ligne d'offre (planche « Ligne d'offre », composant 179:2912), la même partout : le logo ou
 // l'initiale, le poste en gras, « entreprise · lieu » en gris, puis au bout de la ligne le verdict et
@@ -62,7 +63,9 @@ function onRowClick(event: MouseEvent): void {
   else emit("select");
 }
 const name = computed(() => props.company ?? props.title);
-const initial = computed(() => name.value.trim().charAt(0).toUpperCase() || "?");
+// Téléphone (maquette Candidatures) : deux initiales ; ordinateur : la première lettre.
+const { phone } = usePhone();
+const initial = computed(() => (phone.value ? initials(name.value) : name.value.trim().charAt(0).toUpperCase() || "?"));
 const sub = computed(() => [props.company, props.location].filter(Boolean).join(" · "));
 const verdict = computed(() => (props.score === null || props.score === undefined ? null : scoreWord(props.score)));
 const label = computed(() => [props.title, props.company].filter(Boolean).join(", "));

@@ -59,6 +59,14 @@ afterEach(() => {
 });
 
 describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
+  it("comme la maquette : ni phrase au-dessus de la liste, ni « Il te manque » ; deux initiales sur le carré", async () => {
+    const gap = { ...offer(1, "Data Engineer"), company: "Léman Data SA", keywords_asks: [{ text: "Spark", covered: false }] };
+    const host = await mountAt("/offres", [gap]);
+    expect(host.find("[data-test=offers-sentence]").exists()).toBe(false);
+    expect(host.find("[data-test=offer-alert]").exists()).toBe(false);
+    expect(host.find("[data-test=offer] .logo").text()).toBe("LD");
+  });
+
   it("le « ⋯ » de la carte ouvre ses actions ; « Écarter l'offre » garde « Annuler » 6 s", async () => {
     const wrapper = await mountAt("/offres", [offer(1, "DevOps Engineer")]);
     const more = wrapper.find("[data-test=offer] [data-test=offer-more]");
