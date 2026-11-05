@@ -4561,4 +4561,4 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
 .account-delete-card { border-color: var(--danger-line); }
 .account-delete-card .inline-confirm > p:first-child { font-weight: var(--weight-bold); }
 .account-delete-text { color: var(--text-secondary); font-size: var(--font-small); }
-.account-delete-export { justify-self: start; display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); }
+button.account-delete-export { font-size: inherit; color: var(--primary-text); justify-self: start; display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--weight-bold); }

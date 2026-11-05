@@ -102,18 +102,52 @@ describe("Tes données (docs/65 §6)", () => {
     const form = wrapper.find("[data-test=delete-form]");
     expect(form.text()).toContain("Supprimer ton compte ?");
     expect(form.text()).toContain("Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive.");
-    expect(form.find("[data-test=delete-export-orp]").attributes("href")).toBe("/bilan");
+    expect(form.find("[data-test=delete-export-orp]").element.tagName).toBe("BUTTON");
     expect(form.find("[data-test=inline-confirm-yes]").text()).toBe("Supprimer définitivement");
     expect(form.find("[data-test=inline-confirm-no]").text()).toBe("Annuler");
     await wrapper.find("[data-test=delete-password]").setValue("faux");
-    await wrapper.find("[data-test=delete-form]").trigger("submit");
+    await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-test=delete-error]").text()).toBe("Mot de passe incorrect.");
     await wrapper.find("[data-test=delete-password]").setValue("le-bon-mot-de-passe");
-    await wrapper.find("[data-test=delete-form]").trigger("submit");
+    await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");
     await flushPromises();
     expect(POST).toHaveBeenLastCalledWith("/api/account/delete", { body: { password: "le-bon-mot-de-passe" } });
     expect(router.currentRoute.value.path).toBe("/connexion");
+    wrapper.unmount();
+  });
+
+  it("Entrée dans le mot de passe ne supprime pas ; le focus reste sur le champ", async () => {
+    const { wrapper } = await mountPanel();
+    await wrapper.find("[data-test=delete-account]").trigger("click");
+    const input = wrapper.find("[data-test=delete-password]");
+    await input.setValue("le-bon-mot-de-passe");
+    (input.element as HTMLInputElement).focus();
+    await input.trigger("keydown", { key: "Enter" });
+    await wrapper.find("[data-test=delete-form]").trigger("submit");
+    await flushPromises();
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.find("[data-test=delete-form]").exists()).toBe(true);
+    expect(document.activeElement).toBe(input.element);
+    wrapper.unmount();
+  });
+
+  it("« Exporter ma feuille ORP » : le PDF du mois sur place, la confirmation reste ouverte", async () => {
+    const { wrapper, router } = await mountPanel();
+    GET.mockResolvedValue({ data: { month: "2026-11", count: 0, holder: { name: "", address: "" }, applications: [], searches: [] } });
+    await wrapper.find("[data-test=delete-account]").trigger("click");
+    const before = router.currentRoute.value.fullPath;
+    const print = vi.spyOn(await import("../composables/usePrint"), "printSheet").mockImplementation(() => {});
+    POST.mockResolvedValue({ response: { ok: true } });
+    await wrapper.find("[data-test=delete-export-orp]").trigger("click");
+    await flushPromises();
+    expect(GET).toHaveBeenLastCalledWith("/api/orp");
+    expect(print).toHaveBeenCalledOnce();
+    expect(print.mock.calls[0]![1]).toMatchObject({ title: "Preuves ORP - 2026-11" });
+    expect(router.currentRoute.value.fullPath).toBe(before);
+    expect(wrapper.find("[data-test=delete-form]").exists()).toBe(true);
+    expect(POST).not.toHaveBeenCalledWith("/api/account/delete", expect.anything());
+    print.mockRestore();
     wrapper.unmount();
   });
 

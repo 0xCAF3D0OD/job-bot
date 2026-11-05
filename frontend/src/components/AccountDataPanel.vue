@@ -2,10 +2,11 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { api } from "../api/client";
+import { api, type OrpMonth } from "../api/client";
 import { useAuth } from "../composables/useAuth";
 import AppIcon from "./AppIcon.vue";
 import InlineConfirm from "./InlineConfirm.vue";
+import OrpSheet from "./OrpSheet.vue";
 import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
 import { plural } from "../format";
@@ -91,6 +92,28 @@ async function download(): Promise<void> {
     exporting.value = false;
   } finally {
     exportBusy.value = false;
+  }
+}
+
+// « Exporter ma feuille ORP » (C13) : le PDF du mois en cours, comme au Bilan, sans quitter la confirmation.
+const orp = ref<OrpMonth | null>(null);
+const orpSheet = ref<InstanceType<typeof OrpSheet> | null>(null);
+const orpBusy = ref(false);
+const orpError = ref("");
+async function exportOrp(): Promise<void> {
+  if (orpBusy.value) return;
+  orpBusy.value = true;
+  orpError.value = "";
+  try {
+    const { data } = await api.GET("/api/orp");
+    if (!data) throw new Error();
+    orp.value = data;
+    await nextTick();
+    await orpSheet.value?.printPdf();
+  } catch {
+    orpError.value = "La feuille ORP n'a pas pu être préparée. Réessaie depuis le Bilan.";
+  } finally {
+    orpBusy.value = false;
   }
 }
 
@@ -183,7 +206,7 @@ async function remove(): Promise<void> {
   </SettingCard>
   <!-- Supprimer le compte (maquette Réglages ; décisions de Kevin du 2026-11-05, C13) : seul dans sa carte, en
        rouge. La confirmation garde le mot de passe, propose d'abord d'exporter la feuille ORP, et « Annuler » a le
-       focus. -->
+       focus. Entrée dans le mot de passe ne supprime rien : seul le clic sur « Supprimer définitivement » le fait. -->
   <SettingCard
     v-if="summary?.can_delete"
     class="account-delete-card"
@@ -207,7 +230,7 @@ async function remove(): Promise<void> {
       v-else
       class="account-delete setting-row-form"
       data-test="delete-form"
-      @submit.prevent="remove"
+      @submit.prevent
     >
       <InlineConfirm
         message="Supprimer ton compte ?"
@@ -240,13 +263,33 @@ async function remove(): Promise<void> {
         >
           {{ error }}
         </p>
-        <RouterLink
-          to="/bilan"
-          class="account-delete-export"
+        <button
+          type="button"
+          class="link account-delete-export"
+          :aria-busy="orpBusy ? 'true' : undefined"
           data-test="delete-export-orp"
+          @click="exportOrp"
         >
           <span class="with-icon"><AppIcon name="download" />Exporter ma feuille ORP</span>
-        </RouterLink>
+        </button>
+        <p
+          v-if="orpError"
+          class="notice"
+          role="alert"
+          data-test="delete-export-orp-error"
+        >
+          {{ orpError }}
+        </p>
+        <!-- La feuille du mois, cachée : son PDF se fait sur place, la confirmation reste ouverte. -->
+        <div
+          v-if="orp"
+          hidden
+        >
+          <OrpSheet
+            ref="orpSheet"
+            :data="orp"
+          />
+        </div>
       </InlineConfirm>
     </form>
   </SettingCard>

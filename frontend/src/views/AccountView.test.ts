@@ -10,7 +10,9 @@ vi.mock("../api/client", () => ({ api: { GET: (...a: unknown[]) => GET(...a) } }
 const me = ref<Record<string, unknown>>({ username: "kevin", auth_enabled: true, demo: false, is_owner: false });
 vi.mock("../composables/useAuth", () => ({ useAuth: () => ({ me }) }));
 const collectNow = vi.fn();
-vi.mock("../composables/useCollect", () => ({ useCollect: () => ({ running: ref(false), collectNow }) }));
+const running = ref(false);
+const collectMessage = ref("");
+vi.mock("../composables/useCollect", () => ({ useCollect: () => ({ running, message: collectMessage, collectNow }) }));
 vi.mock("../composables/usePlan", () => ({ usePlan: () => ({ plan: ref({ plan: "essentiel" }) }) }));
 vi.mock("../composables/useProfiles", () => ({
   useProfiles: () => ({ list: ref(null), current: ref(null), load: vi.fn(), choose: vi.fn() }),
@@ -35,6 +37,8 @@ const href = (wrapper: Awaited<ReturnType<typeof mountPage>>, test: string) =>
 
 afterEach(() => {
   vi.resetAllMocks();
+  running.value = false;
+  collectMessage.value = "";
   me.value = { username: "kevin", auth_enabled: true, demo: false, is_owner: false };
 });
 
@@ -78,5 +82,27 @@ describe("AccountView (maquette Compte, étape 10a)", () => {
     expect(wrapper.find(".account-avatar .icon").exists()).toBe(true);
     expect(href(wrapper, "account-help")).toBe("/a-propos");
     expect(wrapper.find("[data-test=account-collect]").exists()).toBe(false);
+  });
+});
+
+describe("Collecter maintenant (reprise de la 502)", () => {
+  it("pendant la collecte : la ligne est aria-disabled et aria-busy, le clic ne relance rien, l'état est annoncé", async () => {
+    const wrapper = await mountPage();
+    const button = () => wrapper.get("[data-test=account-collect] button");
+    const status = wrapper.get("[data-test=account-collect-status]");
+    expect(status.attributes("role")).toBe("status");
+    expect(button().attributes("aria-disabled")).toBeUndefined();
+    running.value = true;
+    await flushPromises();
+    expect(button().attributes("aria-disabled")).toBe("true");
+    expect(button().attributes("aria-busy")).toBe("true");
+    expect(status.text()).toBe("Relève en cours…");
+    await button().trigger("click");
+    expect(collectNow).not.toHaveBeenCalled();
+    running.value = false;
+    collectMessage.value = "Collecte lancée. Le journal se met à jour d'ici une minute.";
+    await flushPromises();
+    expect(button().attributes("aria-busy")).toBeUndefined();
+    expect(status.text()).toBe("Collecte lancée. Le journal se met à jour d'ici une minute.");
   });
 });

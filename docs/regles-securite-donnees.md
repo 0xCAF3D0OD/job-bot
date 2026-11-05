@@ -122,7 +122,7 @@ Les données ORP et de recherche d'emploi touchent à l'aide sociale : on les tr
 
 **V-1.** Protection par défaut : une nouvelle fonction qui partage, publie ou envoie des données est **désactivée** tant que l'utilisateur ne l'a pas choisie. *Réf. : nLPD art. 7 al. 3, RGPD art. 25.*
 
-**V-2.** Toute nouvelle donnée d'un compte entre dans l'export (Réglages › Compte, archive ZIP) dans un format lisible (JSON, fichiers d'origine). Un test vérifie que chaque table du compte est exportée. *Réf. : nLPD art. 25 et 28, RGPD art. 15 et 20.*
+**V-2.** Toute nouvelle donnée d'un compte entre dans l'export (Réglages › Mes données, archive ZIP) dans un format lisible (JSON, fichiers d'origine). Un test vérifie que chaque table du compte est exportée. *Réf. : nLPD art. 25 et 28, RGPD art. 15 et 20.*
 
 **V-3.** Toute nouvelle donnée d'un compte est effacée à la suppression du compte : lignes et fichiers. Un test vérifie qu'il ne reste rien. *Réf. : nLPD art. 6 al. 4, RGPD art. 17, ISO 27001 A.8.10.*
 
