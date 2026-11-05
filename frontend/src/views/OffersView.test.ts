@@ -656,6 +656,36 @@ describe("Offres, ajouter une offre (docs/111)", () => {
     expect(router.currentRoute.value.query.ajouter).toBeUndefined();
   });
 
+  // L'offre ajoutée n'est pas dans la page chargée (pas encore notée, ou écartée) : elle est posée en
+  // tête et reste ouverte. Avant, ?offre= dans l'adresse relançait le chargement de la liste, qui
+  // l'effaçait aussitôt et refermait sa fiche.
+  it("l'offre ajoutée s'ouvre et reste ouverte", async () => {
+    // La liste répond après l'offre seule, comme sur le serveur.
+    const later = <T,>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), 20));
+    GET.mockImplementation((path: string) =>
+      path === "/api/offers/manual"
+        ? Promise.resolve({ data: { trade: "Menuisier", added_today: 0, daily_limit: 20 } })
+        : path === "/api/offers/{offer_id}"
+          ? Promise.resolve({ data: offer(9, "Menuisier CFC", { added_by_you: true, links: [] }) })
+          : path === "/api/profile-chunks"
+            ? Promise.resolve({ data: [] })
+            : later(page([offer(1, "Une")])),
+    );
+    const wrapper = await mountAt("/offres?ajouter=1");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await flushPromises();
+    const listLoads = () => GET.mock.calls.filter((c) => c[0] === "/api/offers").length;
+    const before = listLoads();
+    wrapper.findComponent({ name: "ManualOfferForm" }).vm.$emit("added", { id: 9, existing: false, status: "to_review", reasons: [] });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await flushPromises();
+    expect(router.currentRoute.value.query.offre).toBe("9");
+    expect(wrapper.find("[data-test=offer-detail-title]").text()).toContain("Menuisier CFC");
+    expect(wrapper.findAll("[data-test=offer]")[0]!.text()).toContain("Menuisier CFC");
+    // Une seule relecture de la liste, celle qui suit l'ajout.
+    expect(listLoads() - before).toBe(1);
+  });
+
   it("l'étiquette « Ajoutée par toi » sur la carte", async () => {
     mockOffers(page([offer(1, "Une", { added_by_you: true, links: [] })]));
     const wrapper = await mountAt("/offres");

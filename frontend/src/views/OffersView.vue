@@ -24,7 +24,7 @@ import FaceState from "../components/FaceState.vue";
 import { applicationBody } from "../applicationBody";
 import { useAssistant } from "../composables/useAssistant";
 import { useJobsMemory } from "../composables/useJobsMemory";
-import { activeChips, activeCount, useOfferFilters, type View } from "../composables/useOfferFilters";
+import { activeChips, activeCount, toQuery, useOfferFilters, type View } from "../composables/useOfferFilters";
 import { dayKey, dayName, plural } from "../format";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
@@ -202,7 +202,8 @@ async function openFromQuery(): Promise<void> {
   if (!items.value.some((o) => o.id === id)) {
     const { data } = await api.GET("/api/offers/{offer_id}", { params: { path: { offer_id: id } } });
     if (!data) return;
-    items.value = [data, ...items.value];
+    // Deux ouvertures en même temps (l'ajout et l'adresse) : l'offre n'est posée qu'une fois.
+    if (!items.value.some((o) => o.id === id)) items.value = [data, ...items.value];
     pinnedId.value = id;
   }
   selectedId.value = id;
@@ -447,7 +448,12 @@ function onKeydown(event: KeyboardEvent): void {
   else selectedId.value = null;
 }
 
-watch(filters, () => void load(), { deep: true });
+// La liste se recharge quand un filtre change, pas pour ?offre= : l'offre ouverte hors de la liste
+// (ajoutée à la main, ou par un lien) en serait effacée et sa fiche refermée aussitôt.
+watch(
+  () => JSON.stringify(toQuery(filters.value)),
+  () => void load(),
+);
 
 // Filtres affichés (docs/10 §3), enregistrés en base ; tous par défaut.
 const ALL_FILTERS: FilterKey[] = ["score", "sources", "cantons", "rate", "external"];
