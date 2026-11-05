@@ -234,6 +234,13 @@ onMounted(() => {
           :to="rubric('donnees')"
           data-test="account-data"
         />
+        <!-- Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05). -->
+        <GroupedRow
+          v-if="me?.auth_enabled && !me.demo"
+          title="Connexions"
+          :to="rubric('connexions')"
+          data-test="account-connections"
+        />
         <GroupedRow
           title="Ce qui part à l'IA"
           :to="{ path: '/tes-donnees', hash: '#ia' }"

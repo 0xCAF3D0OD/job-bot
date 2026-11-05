@@ -8,6 +8,7 @@ from typing import Any
 
 from sqlalchemy import (
     BigInteger,
+    CheckConstraint,
     ColumnElement,
     Date,
     DateTime,
@@ -1244,6 +1245,37 @@ class PartnerLink(Base):
     )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class OauthLink(Base):
+    """Compte Google, Microsoft ou Apple lié à un compte jobA1 (docs/65, complément du
+    2026-11-05). Niveau : personnelle (le fournisseur et son identifiant) et coordonnées
+    (l'e-mail donné par le fournisseur). Table de connexion : le lien est cherché par une
+    fonction avant que le compte soit connu ; un compte ne voit que ses liens."""
+
+    __tablename__ = "oauth_links"
+    __table_args__ = (
+        UniqueConstraint("provider", "subject", name="oauth_links_subject_key"),
+        CheckConstraint(
+            "provider in ('google', 'microsoft', 'apple')", name="oauth_links_provider_check"
+        ),
+    )
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    # google, microsoft ou apple.
+    provider: Mapped[str] = mapped_column(Text)
+    # L'identifiant stable du compte chez le fournisseur (`sub` du jeton d'identité).
+    subject: Mapped[str] = mapped_column(Text)
+    # L'e-mail du fournisseur, pour l'afficher dans Compte, Connexions ; chez Apple, il
+    # n'arrive qu'à la première connexion (et peut être une adresse relais).
+    email: Mapped[str | None] = mapped_column(Text)
+    # Vérifié par le fournisseur (`email_verified`) : seul un e-mail vérifié lie un autre
+    # fournisseur au même compte. Jamais pour Microsoft, qui ne le garantit pas.
+    email_verified: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Contact(Base):

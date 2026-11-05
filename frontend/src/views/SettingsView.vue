@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
 import { useAuth } from "../composables/useAuth";
+import ConnectionsPanel from "../components/ConnectionsPanel.vue";
 import PageHero from "../components/PageHero.vue";
 import PlanPanel from "../components/PlanPanel.vue";
 import { usePlan } from "../composables/usePlan";
@@ -261,6 +262,8 @@ const SECTIONS = [
   { id: "affichage", label: "Affichage" },
   { id: "formule", label: "Formule" },
   { id: "donnees", label: "Mes données" },
+  // Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05).
+  { id: "connexions", label: "Connexions" },
   { id: "outils", label: "Agenda et extension" },
   { id: "plateforme", label: "Administration" },
 ] as const;
@@ -753,6 +756,15 @@ const label = computed(() => sections.value.find((s) => s.id === active.value)?.
         >
           <SessionPanel />
           <AccountDataPanel />
+        </SettingsSection>
+
+        <SettingsSection
+          v-if="active === 'connexions'"
+          id="connexions"
+          title="Connexions"
+          cards
+        >
+          <ConnectionsPanel />
         </SettingsSection>
 
         <SettingsSection

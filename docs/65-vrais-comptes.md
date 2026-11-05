@@ -148,3 +148,19 @@ Retour du 2026-10-16 : « une page séparée en deux, une illustration à gauche
 - **Téléphone** : l'illustration en petit au-dessus, le formulaire en dessous.
 - La page des liens d'invitation et de nouveau mot de passe prend la même mise en page.
 - `docs/interface.md` : la page de connexion est la seule où l'illustration va jusqu'à 340 px.
+
+## Complément du 2026-11-05 : les boutons Apple, Google et Microsoft sont branchés
+
+La maquette Connexion de jobA1 mobile (boards « Connexion », « Sombre · Connexion », « Connexion, ordinateur ») remplace la page du complément 0.53.1, et les boutons ouvrent une vraie connexion OpenID Connect.
+
+- **La page** : le logo, l'illustration (le personnage qui dit bonjour, le soleil, le nuage, la colline et le sol ; bandeau de 150 px sur téléphone, moitié gauche sur ordinateur), « Content de *te revoir.* », un bouton par fournisseur configuré, « ou avec ton identifiant », puis l'identifiant et le mot de passe (bouton « Afficher le mot de passe », erreurs sous le champ). La vidéo du soir, AuthScene et ses images sont retirées ; l'invitation et l'inscription prennent la même illustration.
+- **Un bouton par fournisseur configuré** : `GET /api/auth/providers` rend ceux dont toutes les variables sont remplies (`JOBBOT_OAUTH_GOOGLE_*`, `JOBBOT_OAUTH_MICROSOFT_*`, `JOBBOT_OAUTH_APPLE_*`, voir `.env.example`). Aucun : pas de bouton, plus de message « arrive bientôt ». L'adresse de retour à déclarer chez chacun : `<adresse publique>/api/auth/oauth/<fournisseur>/callback`.
+- **Le flux** : code d'autorisation avec PKCE (S256), state et nonce vérifiés, id_token vérifié (signature avec les clés publiées du fournisseur, émetteur, destinataire, expiration). Apple répond en `form_post` ; son secret est un JWT signé avec la clé `.p8`, à chaque échange. Le parcours en cours est gardé 10 minutes par le serveur, lié à un cookie `jobbot_oidc`, et servi une seule fois.
+- **Qui est connecté** (décision de Kevin du 2026-11-05, « e-mail vérifié par un fournisseur ») :
+  - un lien existe (fournisseur, numéro du compte chez lui) : la session s'ouvre comme avec le mot de passe (même cookie, même suite `/bienvenue` ou `?suite=`) ;
+  - pas de lien, mais l'e-mail, vérifié par Google ou Apple, est celui d'un lien déjà vérifié d'un seul compte jobA1 : le nouveau lien s'ajoute à ce compte. Microsoft n'est jamais lié par e-mail (son e-mail n'est pas garanti vérifié). Un compte qui n'a qu'un mot de passe se lie d'abord depuis Réglages, Connexions ;
+  - sinon : demandes de compte ouvertes (docs/102), une demande en attente est créée, que l'exploitant accepte comme les autres ; sur invitation seulement, « Aucun compte jobA1 n'est lié à ce compte Google. ».
+  - Apple n'envoie l'e-mail (parfois relayé, `privaterelay.appleid.com`) qu'à la première connexion : il est gardé à ce moment.
+- **Réglages, Connexions** : les comptes liés, « Lier » pour chaque fournisseur configuré et pas encore lié, « Retirer » avec confirmation. Le dernier moyen de se connecter (pas de mot de passe, un seul lien) ne se retire pas : le serveur rend 409 et la ligne le dit.
+- **Journal** : connexion réussie ou refusée, par fournisseur et avec la raison ; jamais de jeton, de code ni d'e-mail.
+- **Écarts** : le retour d'Apple (un POST venu d'appleid.apple.com) est exempté du contrôle d'origine, le state en tient lieu ; les parcours en cours sont gardés en mémoire (un seul processus d'API, comme aujourd'hui) ; un compte sans mot de passe ne peut pas encore exporter ses données ni fermer son compte (docs/regles-securite-donnees.md §14) ; la case de consentement de l'inscription n'est pas montrée dans le parcours par fournisseur, la demande reste soumise à l'accord de l'exploitant.

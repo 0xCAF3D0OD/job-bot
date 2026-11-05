@@ -92,6 +92,10 @@ onMounted(async () => {
       <p>
         Les notifications sur ton téléphone passent par le service ntfy, seulement si tu les as activées.
       </p>
+      <p data-test="privacy-oauth">
+        Si tu te connectes avec Apple, Google ou Microsoft, ce fournisseur sait que tu utilises jobA1 ; jobA1 garde
+        seulement le numéro de ton compte chez lui et ton e-mail, tant que le lien existe (Réglages, Connexions).
+      </p>
 
       <template v-if="billing">
         <h2>Le paiement de Plus (Payrexx)</h2>

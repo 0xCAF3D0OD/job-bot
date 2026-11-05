@@ -118,6 +118,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Providers */
+        get: operations["getAuthProviders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/oauth/{provider}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Start */
+        get: operations["startOauth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/oauth/{provider}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Callback Get */
+        get: operations["oauthCallback"];
+        put?: never;
+        /**
+         * Callback Post
+         * @description Apple : `response_mode=form_post` ; le champ `user` n'arrive qu'à la première fois.
+         */
+        post: operations["oauthCallbackForm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/account/connexions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Connections */
+        get: operations["getConnections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/account/connexions/{connection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Connection */
+        delete: operations["removeConnection"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/maintenance": {
         parameters: {
             query?: never;
@@ -3803,6 +3892,11 @@ export interface components {
             /** Model */
             model: string;
         };
+        /** AuthProviders */
+        AuthProviders: {
+            /** Providers */
+            providers: ("apple" | "google" | "microsoft")[];
+        };
         /**
          * BackupOut
          * @description Les sauvegardes (docs/82) : réglées ou non, la dernière, le dernier essai.
@@ -3864,6 +3958,17 @@ export interface components {
             content: string;
             /** By Ai */
             by_ai: boolean;
+        };
+        /** Body_oauthCallbackForm */
+        Body_oauthCallbackForm: {
+            /** Code */
+            code?: string | null;
+            /** State */
+            state?: string | null;
+            /** Error */
+            error?: string | null;
+            /** User */
+            user?: string | null;
         };
         /** Body_uploadDocument */
         Body_uploadDocument: {
@@ -4170,6 +4275,34 @@ export interface components {
             title: string;
             /** Groups */
             groups: components["schemas"]["GroupOut"][];
+        };
+        /** ConnectionOut */
+        ConnectionOut: {
+            /** Id */
+            id: number;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "apple" | "google" | "microsoft";
+            /** Email */
+            email: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Used At */
+            last_used_at: string | null;
+        };
+        /** Connections */
+        Connections: {
+            /** Providers */
+            providers: ("apple" | "google" | "microsoft")[];
+            /** Links */
+            links: components["schemas"]["ConnectionOut"][];
+            /** Has Password */
+            has_password: boolean;
         };
         /** ContactIn */
         ContactIn: {
@@ -8180,6 +8313,207 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getAuthProviders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthProviders"];
+                };
+            };
+        };
+    };
+    startOauth: {
+        parameters: {
+            query?: {
+                suite?: string | null;
+                lier?: boolean;
+            };
+            header?: never;
+            path: {
+                provider: "apple" | "google" | "microsoft";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Fournisseur non configuré */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    oauthCallback: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
+            };
+            header?: never;
+            path: {
+                provider: "apple" | "google" | "microsoft";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    oauthCallbackForm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: "apple" | "google" | "microsoft";
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["Body_oauthCallbackForm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connections"];
+                };
+            };
+            /** @description Connexion requise */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    removeConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                connection_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lien inconnu */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Dernier moyen de se connecter */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

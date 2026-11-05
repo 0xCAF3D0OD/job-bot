@@ -60,7 +60,9 @@ PERSONAL = (
     "settings",
     "training_marks",
 )
-CONNECTION = ("users", "sessions", "account_links")
+# Les comptes Google, Microsoft et Apple liés (oauth_links) : unicité sur toute la plateforme
+# (un compte du fournisseur n'ouvre qu'un compte jobA1), d'où la famille connexion.
+CONNECTION = ("users", "sessions", "account_links", "oauth_links")
 # Le catalogue des formations est commun ; les suggestions faites pour un profil sont à son
 # compte (règle à part, par profil).
 SHARED = (

@@ -205,4 +205,5 @@ Ce que le code ne respecte pas encore, d'après l'audit du 2026-11-04 et la rele
 | X-4 | listes non vérifiées route par route (pagination bornée, champs rendus) | `backend/src/jobbot/api/routes/` |
 | X-8 | pas de limite sur les lectures en rafale | `backend/src/jobbot/api/` |
 | O-1 à O-6 | aucun enregistrement vocal n'existe encore (la dictée du clavier du téléphone ne passe pas par jobA1) ; les règles s'appliquent dès le premier | entraînement aux entretiens |
+| X-1, V-2, V-3 | un compte créé par Apple, Google ou Microsoft n'a pas de mot de passe : il ne peut ni exporter ses données ni fermer son compte tant que la réauthentification ne passe pas aussi par le fournisseur | `backend/src/jobbot/api/routes/oauth.py`, `account.py` |
 | P-3 et serveur | le script d'installation ne règle ni le pare-feu, ni SSH par clé seule, ni les mises à jour automatiques | `deploy/prod/serveur.sh` |

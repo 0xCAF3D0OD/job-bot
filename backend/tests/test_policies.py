@@ -127,7 +127,9 @@ async def test_special_functions_are_guarded() -> None:
     # 12 depuis la 0070 : `first_steps_progress`, le chiffre des premiers pas (docs/128 §4) ;
     # 14 depuis la 0072 : `milestones_progress` et `end_user_test`, le test utilisateurs.
     # 16 depuis la 0074 : `take_partner_code` et `account_of_partner_token` (Get'emAll).
-    assert len(functions) == 16
+    # 18 depuis la 0076 : `account_of_oauth` et `account_of_verified_email` (Google, Microsoft,
+    # Apple).
+    assert len(functions) == 18
     for name, config, acl in functions:
         assert config == ["search_path=public, pg_temp"], name
         # Pas d'exécution pour tout le monde (« =X/ » : PUBLIC), seulement pour l'API.
