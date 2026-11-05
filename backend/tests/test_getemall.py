@@ -193,8 +193,9 @@ async def test_full_flow_reads_the_follow_up(api: AsyncClient, rt: Runtime, acco
     body = response.json()
     # Sans la case ORP, le champ n'existe pas du tout.
     assert "orp" not in body
-    assert body["profile"]["steps_total"] == 5
-    assert 0 <= body["profile"]["percent"] <= 100
+    profile = body["profile"]
+    assert set(profile) == {"faits", "total", "prochaine"} and profile["total"] == 5
+    assert 0 <= profile["faits"] <= 5 and (profile["prochaine"] is None) == (profile["faits"] == 5)
     [application] = body["applications"]
     assert application["job_title"] == "Ingénieure DevOps"
     assert application["status"] == "entretien" and application["interview_at"]
@@ -408,3 +409,21 @@ async def test_export_and_deletion(api: AsyncClient, rt: Runtime, account: int) 
             {"id": other_id},
         )
     assert left == 0
+
+
+async def test_orp_switch_applies_at_once(api: AsyncClient, rt: Runtime) -> None:
+    """« Partager mes recherches ORP » dans les Réglages : sans nouvelle autorisation."""
+    # Sans application reliée, rien à changer.
+    assert (await api.patch(BASE, json={"orp": True})).status_code == 404
+    await add_application(rt)
+    granted = await link(api)
+    suivi = f"{BASE}/suivi"
+    assert "orp" not in (await api.get(suivi, headers=bearer(granted["token"]))).json()
+    shared = await api.patch(BASE, json={"orp": True})
+    assert shared.status_code == 200 and shared.json()["orp"] is True
+    assert "orp" in (await api.get(suivi, headers=bearer(granted["token"]))).json()
+    assert (await api.patch(BASE, json={"orp": False})).json()["orp"] is False
+    assert "orp" not in (await api.get(suivi, headers=bearer(granted["token"]))).json()
+    # Après « Retirer », plus d'interrupteur.
+    assert (await api.delete(BASE)).status_code == 204
+    assert (await api.patch(BASE, json={"orp": True})).status_code == 404

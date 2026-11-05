@@ -55,15 +55,18 @@ Deux routes en lecture, avec le jeton (`Authorization: Bearer jbg_…`), sous la
 
 | Route | Rend |
 | --- | --- |
-| `GET /api/partenaires/getemall/suivi` | `profile` (étapes faites sur les 5 premiers pas de docs/128, pourcentage, prochaine étape) ; `orp` (mois, recherches faites, objectif, date de remise) **seulement si la case ORP est cochée** ; `applications` (id, poste, entreprise, statut, date d'entretien), les 50 dernières |
+| `GET /api/partenaires/getemall/suivi` | `profile` : `{ faits, total, prochaine }`, les premiers pas de docs/128, avec la clé stable de la prochaine étape ; `orp` (mois, recherches faites, objectif, date de remise) **seulement si la case ORP est cochée** ; `applications` (id, poste, entreprise, statut, date d'entretien), les 50 dernières |
 | `GET /api/partenaires/getemall/candidatures/{id}/offre` | titre, entreprise, texte de l'annonce passé par `llm/redact.py`, puis sans les noms des contacts notés pour cette candidature ou cette offre |
 
-**« Profil complété ».** jobA1 n'a pas de pourcentage de profil. Get'emAll reçoit les premiers pas (docs/128) :
-étapes faites sur 5, et la prochaine (`profile`, `alerts`, `keep`, `prepare`, `sent`) comme « ce qui manque ». La
-lecture ne garde rien : elle ne change pas ce que la personne verra dans jobA1.
+**Premiers pas** (décision de Kevin du 2026-11-05). jobA1 n'a pas de pourcentage de profil. Get'emAll reçoit
+`{ faits, total, prochaine }` : `prochaine` est une clé stable (`profile`, `alerts`, `keep`, `prepare`, `sent`), sans
+texte français ; Get'emAll la traduit et affiche « Premiers pas : X sur 5 ». La lecture ne garde rien : elle ne
+change pas ce que la personne verra dans jobA1.
 
 **ORP.** Les compteurs disent qu'une personne est suivie par l'ORP (nLPD art. 5 let. c ch. 5). La page de
-consentement a une case à part. Sans elle, le champ `orp` n'est pas rendu du tout. Le mois est celui de la page ORP
+consentement a une case à part, décochée par défaut. L'interrupteur « Partager mes recherches ORP » des Réglages
+(`PATCH /api/partenaires/getemall`, `{ "orp": true | false }`) change `partner_links.orp` tout de suite, sans nouvelle
+autorisation. Sans elle, le champ `orp` n'est pas rendu du tout. Le mois est celui de la page ORP
 (le précédent tant qu'il n'est pas remis).
 
 **Jamais** : nom, coordonnées, numéro AVS, id du compte jobA1, noms et coordonnées des contacts, CV, lettres, lignes

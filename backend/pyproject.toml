@@ -16,6 +16,7 @@ dependencies = [
     # Le schéma de procrastinate est appliqué par une migration Alembic :
     # toute montée de version doit s'accompagner d'une migration (voir docs/exploitation.md).
     "httpx>=0.28.1",
+    "pillow>=12",
     "procrastinate>=3.10.0,<3.11",
     "prometheus-client>=0.26.0",
     "psycopg[binary]>=3.3.6",

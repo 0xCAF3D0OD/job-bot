@@ -11,6 +11,7 @@ reparse      réanalyse les copies brutes stockées (après un analyseur nouveau
 anonymize-sample ID…  fait des jeux de test anonymisés à partir d'alertes stockées
 set-password crée le compte de connexion ou change son mot de passe (saisie masquée)
 getemall-tester IDENTIFIANT  marque un compte testeur de Get'emAll (--retirer : l'inverse)
+logos --clean-generic  retire les logos génériques (--essai : liste sans rien retirer)
 """
 
 import argparse
@@ -551,6 +552,32 @@ def cmd_getemall_tester(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_logos(args: argparse.Namespace) -> int:
+    """Retire les images génériques prises pour des logos (docs/14 §4)."""
+    from jobbot.logos.service import CleanResult, clean_generic
+    from jobbot.runtime import Runtime
+
+    if not args.clean_generic:
+        print("Rien à faire : jobbot logos --clean-generic [--essai]", file=sys.stderr)
+        return 1
+    settings = _settings()
+
+    async def run() -> CleanResult:
+        # Décode des images venues d'Internet : avec l'accès du worker, jamais le propriétaire.
+        runtime = Runtime.create(settings, "worker")
+        try:
+            return await clean_generic(runtime, dry_run=args.essai)
+        finally:
+            await runtime.dispose()
+
+    result = asyncio.run(run())
+    for company, reason in result.removed:
+        print(f"{company} : {reason}")
+    verb = "à retirer" if args.essai else "retirés"
+    print(f"{result.examined} logos examinés, {len(result.removed)} {verb}.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="jobA1")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -611,6 +638,12 @@ def main(argv: list[str] | None = None) -> int:
     tester.add_argument("username", help="identifiant du compte")
     tester.add_argument("--retirer", action="store_true", help="retire la marque")
     tester.set_defaults(func=cmd_getemall_tester)
+    logos = sub.add_parser("logos", help="logos des entreprises (docs/14 §4)")
+    logos.add_argument(
+        "--clean-generic", action="store_true", help="retire les images génériques"
+    )
+    logos.add_argument("--essai", action="store_true", help="liste sans rien retirer")
+    logos.set_defaults(func=cmd_logos)
     args = parser.parse_args(argv)
     code: int = args.func(args)
     return code

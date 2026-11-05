@@ -12,7 +12,15 @@ from sqlalchemy.dialects.postgresql import insert
 from jobbot.api.owner import require_owner
 from jobbot.collect.service import reparse
 from jobbot.core.normalize import normalize_text
-from jobbot.db.models import AccountSite, ParseStatus, Search, Site, SiteReader, received_alert
+from jobbot.db.models import (
+    IGNORED_KIND,
+    AccountSite,
+    ParseStatus,
+    Search,
+    Site,
+    SiteReader,
+    received_alert,
+)
 from jobbot.runtime import Runtime
 from jobbot.sources.sites import paused_site_ids
 
@@ -130,7 +138,10 @@ async def _list(runtime: Runtime) -> list[SiteOut]:
             (
                 await session.execute(
                     select(Search.source, func.count())
-                    .where(Search.parse_status == ParseStatus.UNRECOGNIZED)
+                    .where(
+                        Search.parse_status == ParseStatus.UNRECOGNIZED,
+                        Search.kind.is_distinct_from(IGNORED_KIND),
+                    )
                     .group_by(Search.source)
                 )
             ).all()

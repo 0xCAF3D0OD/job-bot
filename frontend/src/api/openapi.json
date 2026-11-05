@@ -2063,6 +2063,49 @@
             "description": "Successful Response"
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Share Orp",
+        "description": "« Partager mes recherches ORP » : pris en compte à la lecture suivante, sans nouvelle\nautorisation. Le cocher ici vaut consentement, comme la case de la page « Autoriser ».",
+        "operationId": "shareGetemallOrp",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetemallShare"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetemallLinkState"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Aucune application reliée"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/partenaires/getemall/autorisation": {
@@ -14479,19 +14522,15 @@
       },
       "GetemallProfile": {
         "properties": {
-          "steps_done": {
+          "faits": {
             "type": "integer",
-            "title": "Steps Done"
+            "title": "Faits"
           },
-          "steps_total": {
+          "total": {
             "type": "integer",
-            "title": "Steps Total"
+            "title": "Total"
           },
-          "percent": {
-            "type": "integer",
-            "title": "Percent"
-          },
-          "next_step": {
+          "prochaine": {
             "anyOf": [
               {
                 "type": "string",
@@ -14507,18 +14546,30 @@
                 "type": "null"
               }
             ],
-            "title": "Next Step"
+            "title": "Prochaine"
           }
         },
         "type": "object",
         "required": [
-          "steps_done",
-          "steps_total",
-          "percent",
-          "next_step"
+          "faits",
+          "total",
+          "prochaine"
         ],
         "title": "GetemallProfile",
-        "description": "« Profil complété » : les premiers pas de jobA1 (docs/128), cinq étapes."
+        "description": "Les premiers pas de jobA1 (docs/128) : « Premiers pas : X sur 5 » dans Get'emAll, qui\ntraduit lui-même la clé de la prochaine étape (décision de Kevin du 2026-11-05)."
+      },
+      "GetemallShare": {
+        "properties": {
+          "orp": {
+            "type": "boolean",
+            "title": "Orp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "orp"
+        ],
+        "title": "GetemallShare"
       },
       "GlobalSearchOut": {
         "properties": {

@@ -1,5 +1,5 @@
-import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { flushPromises, mount } from "@vue/test-utils";
+import { describe, expect, it, vi } from "vitest";
 
 import { isNetworkError } from "../network";
 import NetworkError from "./NetworkError.vue";
@@ -20,6 +20,14 @@ describe("Pas de connexion (planche « Illustrations »)", () => {
     wrapper.unmount();
     window.dispatchEvent(new Event("online"));
     expect(events).toHaveLength(2);
+  });
+
+  it("téléphone (maquette ErreurConnexion) : le triangle qui dit « non », pas l'illustration", async () => {
+    const wrapper = mount(NetworkError, { props: { title: "Connexion perdue", line: "Vérifie ta connexion." } });
+    await vi.dynamicImportSettled();
+    await flushPromises();
+    expect(wrapper.find(".illu").exists()).toBe(false);
+    expect(wrapper.find("[data-mood-animation=hochement]").exists()).toBe(true);
   });
 
   it("une panne de réseau, pas une erreur du serveur", () => {

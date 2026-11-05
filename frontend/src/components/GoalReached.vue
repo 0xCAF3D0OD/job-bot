@@ -4,27 +4,18 @@ import { ref } from "vue";
 import type { OrpMonth } from "../api/client";
 import { ofMonth } from "../format";
 import AppIcon from "./AppIcon.vue";
-import FaceMark from "./FaceMark.vue";
+import MoodAnimation from "./MoodAnimation.vue";
 import OrpSheet from "./OrpSheet.vue";
 
 // « C'est fait ! » (maquette ObjectifAtteint, docs/139 étape 8c ; B10 à B12, Kevin, 2026-11-04) : quand
 // « J'ai postulé » atteint l'objectif ORP du mois, cet écran remplace « Candidature notée ». Le visage
 // ravi dans le feston pêche, « n recherches à faire » barré une fois, « C'est fait ! » en Caveat Brush
 // (un sous-ensemble partagé avec les titres des premiers pas, 3,8 Ko), l'export de la feuille, puis l'accueil.
+// Le soleil saute une fois (docs/139 étape 12).
 // « Je n'ai pas postulé » reste, en lien discret.
 defineProps<{ data: OrpMonth }>();
 const emit = defineEmits<{ cancel: [] }>();
 const sheet = ref<InstanceType<typeof OrpSheet> | null>(null);
-
-// Le feston (le « soleil » de la maquette) : 12 pointes, rayon de 40,5 à 47 sur 100, les creux arrondis.
-const SCALLOP =
-  "M" +
-  Array.from({ length: 144 }, (_, i) => {
-    const a = (i / 144) * Math.PI * 2;
-    const r = 40.5 + 6.5 * (1 - Math.abs(((i % 12) / 12) * 2 - 1)) ** 1.6;
-    return `${(50 + r * Math.cos(a)).toFixed(1)} ${(50 + r * Math.sin(a)).toFixed(1)}`;
-  }).join("L") +
-  "Z";
 
 // Le gribouillis qui barre « à faire » : le tracé de la maquette.
 const SCRIBBLE =
@@ -62,15 +53,8 @@ const PIECES = Array.from({ length: 24 }, (_, i) => {
       role="status"
     >
       <div class="goal-reached-art">
-        <svg
-          class="goal-reached-sun"
-          viewBox="0 0 100 100"
-          aria-hidden="true"
-        ><path :d="SCALLOP" /></svg>
-        <FaceMark
-          mood="ravi"
-          :size="74"
-        />
+        <!-- Objectif atteint (maquette Animations) : le soleil s'accroupit, saute, rayonne. -->
+        <MoodAnimation kind="objectif" />
         <span
           class="confetti"
           aria-hidden="true"

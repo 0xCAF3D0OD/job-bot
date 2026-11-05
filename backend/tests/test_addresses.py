@@ -26,7 +26,7 @@ from jobbot.mail.message import parse_email
 from jobbot.runtime import Runtime
 from jobbot.sources.sites import load_sites
 
-from . import test_collect
+from . import test_collect, test_site_codes
 from .conftest import make_settings
 from .emails import make_email
 from .test_collect import FakeMailbox
@@ -36,6 +36,7 @@ collect_runtime = test_collect.collect_runtime
 imap_settings = test_collect.imap_settings
 mailbox = test_collect.mailbox
 parsers = test_collect.parsers
+site_example = test_site_codes.site_example
 
 BASE = "alertes@example.com"
 NOW = datetime(2026, 10, 16, 9, tzinfo=UTC)
@@ -197,7 +198,7 @@ async def test_collect_routes_each_email_to_its_account(
     assert (again.fetched, again.new_searches) == (1, 0)  # seul l'e-mail sans compte revient
 
 
-@pytest.mark.usefixtures("parsers")
+@pytest.mark.usefixtures("parsers", "site_example")
 async def test_alerts_page_address_and_confirmations(
     collect_runtime: Runtime, mailbox: FakeMailbox, camille: int, account: int
 ) -> None:

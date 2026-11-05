@@ -504,9 +504,10 @@ onUnmounted(() => {
 
 <template>
   <section class="offers-page">
-    <!-- La conclusion en une phrase (règles §3.2), le compte en accent comme sur Aujourd'hui. -->
+    <!-- La conclusion en une phrase (règles §3.2), le compte en accent comme sur Aujourd'hui. Pas sur téléphone :
+         le nombre est sur la pastille de « À traiter » (maquette Candidatures, Kevin, 2026-11-05). -->
     <p
-      v-if="!failed && (!loading || items.length)"
+      v-if="!phone && !failed && (!loading || items.length)"
       class="offers-sentence"
       data-test="offers-sentence"
     >
@@ -736,6 +737,7 @@ onUnmounted(() => {
           v-else-if="!loading && items.length === 0 && activeCount(filters) && phone"
           title="Aucune offre avec ces filtres"
           mood="neutre"
+          animation="loupe"
           data-test="offers-empty"
         >
           <p>{{ emptyFiltersLine }}</p>

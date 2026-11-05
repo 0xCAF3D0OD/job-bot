@@ -851,7 +851,12 @@ export interface paths {
         delete: operations["revokeGetemall"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Share Orp
+         * @description « Partager mes recherches ORP » : pris en compte à la lecture suivante, sans nouvelle
+         *     autorisation. Le cocher ici vaut consentement, comme la case de la page « Autoriser ».
+         */
+        patch: operations["shareGetemallOrp"];
         trace?: never;
     };
     "/api/partenaires/getemall/autorisation": {
@@ -5215,17 +5220,21 @@ export interface components {
         };
         /**
          * GetemallProfile
-         * @description « Profil complété » : les premiers pas de jobA1 (docs/128), cinq étapes.
+         * @description Les premiers pas de jobA1 (docs/128) : « Premiers pas : X sur 5 » dans Get'emAll, qui
+         *     traduit lui-même la clé de la prochaine étape (décision de Kevin du 2026-11-05).
          */
         GetemallProfile: {
-            /** Steps Done */
-            steps_done: number;
-            /** Steps Total */
-            steps_total: number;
-            /** Percent */
-            percent: number;
-            /** Next Step */
-            next_step: ("profile" | "alerts" | "keep" | "prepare" | "sent") | null;
+            /** Faits */
+            faits: number;
+            /** Total */
+            total: number;
+            /** Prochaine */
+            prochaine: ("profile" | "alerts" | "keep" | "prepare" | "sent") | null;
+        };
+        /** GetemallShare */
+        GetemallShare: {
+            /** Orp */
+            orp: boolean;
         };
         /** GlobalSearchOut */
         GlobalSearchOut: {
@@ -9821,6 +9830,46 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    shareGetemallOrp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GetemallShare"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetemallLinkState"];
+                };
+            };
+            /** @description Aucune application reliée */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

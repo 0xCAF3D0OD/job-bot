@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import type { InboxItem } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import FaceTransform from "../components/FaceTransform.vue";
+import MoodAnimation from "../components/MoodAnimation.vue";
 import NotificationRow from "../components/NotificationRow.vue";
 import SegmentedControl from "../components/SegmentedControl.vue";
 import { useInbox } from "../composables/useInbox";
@@ -99,7 +100,13 @@ onMounted(() => void refresh());
         role="status"
         data-test="notifications-empty"
       >
+        <!-- « Tout est lu » (maquette Animations) : la cloche sonne dans l'arche, une fois. -->
+        <MoodAnimation
+          v-if="inbox.items.length"
+          kind="cloche"
+        />
         <FaceTransform
+          v-else
           kind="alerts"
           :size="120"
         />

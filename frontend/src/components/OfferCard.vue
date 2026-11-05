@@ -34,7 +34,8 @@ const alert = computed<{ text: string; kind: "warn" | "danger" | "gap" } | null>
   }
   if (expired.value) return { text: "Retirée", kind: "warn" };
   const missing = (o.keywords_asks ?? []).filter((a) => a.covered === false).map((a) => a.text);
-  if (missing.length) return { text: `Il te manque : ${missing.slice(0, 3).join(", ")}`, kind: "gap" };
+  // Sur téléphone, la carte reste celle de la maquette : ce qui manque est dans la fiche (Kevin, 2026-11-05).
+  if (missing.length && !phone.value) return { text: `Il te manque : ${missing.slice(0, 3).join(", ")}`, kind: "gap" };
   if (o.remote_from_switzerland === false) return { text: "Télétravail fermé depuis la Suisse", kind: "warn" };
   return null;
 });

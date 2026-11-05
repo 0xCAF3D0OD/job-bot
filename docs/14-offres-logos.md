@@ -38,6 +38,8 @@ Les autres tris (note, récentes, populaires) restent disponibles. La page Candi
 
 **Confidentialité et rapidité** : le logo est **téléchargé une fois par le serveur** et gardé dans le stockage local (`data/logos/`), puis servi par la plateforme. Ton navigateur n'appelle donc pas de site tiers, qui pourrait suivre ce que tu consultes. Une seule image par entreprise, 200 Ko au plus, formats image uniquement (PNG, JPEG, WebP, SVG nettoyé).
 
+**Images génériques refusées** (2026-11-05, `logos/generic.py`) : une page d'offre ou un e-mail d'alerte montre parfois une image de la source (carré vide) à la place du logo. Elle est refusée si son empreinte sha256 est dans la liste des images génériques connues, si la même image est déjà celle d'au moins deux autres entreprises (l'empreinte est gardée dans `company_logos.sha256`, même quand l'image est refusée), ou si elle est presque vide : moins de 24 px de côté, moins de 2 % de pixels visibles, ou un aplat d'une seule couleur couvrant presque toute l'image (un sigle d'une seule couleur sur fond transparent reste accepté). Un SVG n'est vérifié que par sa taille déclarée (`width`, `height`). `jobbot logos --clean-generic` retire les logos déjà enregistrés que ces règles refusent (`--essai` : la liste seulement) ; l'interface montre alors l'initiale colorée, et l'entreprise n'est pas retentée avant 30 jours.
+
 ## 5. Base (migration 0021)
 
 ```

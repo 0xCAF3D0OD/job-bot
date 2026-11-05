@@ -77,6 +77,16 @@ export function untilDay(value: string | Date, now: Date = new Date()): string {
 }
 
 /** Couleur stable (0 à 3) pour la pastille d'une entreprise. */
+// Les initiales d'une entreprise sur téléphone (maquette Candidatures) : deux lettres, celles des deux
+// premiers mots sans la forme juridique (« Léman Data SA » → « LD »), ou les deux premières d'un seul
+// mot (« Alpstack » → « AL »).
+const LEGAL_FORMS = new Set(["sa", "sàrl", "sarl", "ag", "gmbh", "sas", "ltd", "inc", "&", "-", "·"]);
+export function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter((w) => w && !LEGAL_FORMS.has(w.toLowerCase()));
+  const letters = (words.length > 1 ? words.slice(0, 2).map((w) => w.charAt(0)) : [...(words[0] ?? "")].slice(0, 2)).join("");
+  return letters.toUpperCase() || "?";
+}
+
 export function colorIndex(name: string): number {
   let hash = 0;
   for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;

@@ -1,0 +1,1 @@
+Un e-mail qui ne vient d'aucun site (Stripe, une banque…) n'est plus gardé ni montré : plus de carte « unknown attend ta confirmation », plus de copie ni d'objet ; ceux déjà reçus sont effacés au prochain nettoyage
