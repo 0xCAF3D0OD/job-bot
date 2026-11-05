@@ -14,6 +14,7 @@ const VIEWS: Record<string, string> = {
   today: "TodayView",
   jobs: "JobsView",
   bilan: "BilanView",
+  account: "AccountView",
   profile: "ProfileView",
   settings: "SettingsView",
 };

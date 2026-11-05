@@ -20,6 +20,7 @@ async function headerAt(path: string) {
       { path: "/aujourdhui", name: "today", component: view },
       { path: "/candidatures/offres", name: "offers", component: view, meta: { tab: "offres" } },
       { path: "/bilan", name: "insights", component: view, meta: { tab: "resultats" } },
+      { path: "/compte", name: "account", component: view },
       { path: "/reglages", name: "settings", component: view },
       { path: "/profil", name: "profile", component: view },
       { path: "/a-propos", name: "about", component: view },
@@ -37,7 +38,7 @@ describe("L'en-tête (docs/139, maquettes strictes du 2026-11-02)", () => {
   });
 
   it("une page d'onglet porte son titre, caché aux lecteurs d'écran (le h1 de la page reste)", async () => {
-    for (const [path, title] of [["/candidatures/offres", "Candidatures"], ["/bilan", "Bilan"], ["/reglages", "Réglages"], ["/profil", "Profil"]]) {
+    for (const [path, title] of [["/candidatures/offres", "Candidatures"], ["/bilan", "Bilan"], ["/compte", "Compte"], ["/reglages", "Réglages"], ["/profil", "Profil"]]) {
       const header = await headerAt(path!);
       expect(header.attributes("data-variant"), path).toBe("tab");
       const shown = header.find("[data-test=header-title]");

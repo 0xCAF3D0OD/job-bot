@@ -35,6 +35,7 @@ PAGES = [
     "candidatures/rendez-vous-orp",
     "bilan/formations",
     "notifications",
+    "compte",
     "profil",
     "profil?onglet=parcours",
     "profil?onglet=coordonnees",

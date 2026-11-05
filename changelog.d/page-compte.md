@@ -1,0 +1,1 @@
+Interface : nouvelle page Compte (onglet Compte du téléphone, menu de l'initiale sur ordinateur) avec la carte du profil, Mon parcours, Préférences, Recherche et outils, Confidentialité et aide ; le menu de l'initiale ne garde que « Compte » et « Se déconnecter ».

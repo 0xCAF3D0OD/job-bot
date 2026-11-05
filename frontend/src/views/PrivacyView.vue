@@ -77,7 +77,9 @@ onMounted(async () => {
         <li>Les autres messages des sites (bienvenue, alerte modifiée…) sont gardés 30 jours.</li>
       </ul>
 
-      <h2>Ce qui part à l'IA (Anthropic)</h2>
+      <h2 id="ia">
+        Ce qui part à l'IA (Anthropic)
+      </h2>
       <ul>
         <li>Le texte des offres, tes blocs de profil et ce que tu demandes : pour noter, rédiger et répondre.</li>
         <li>Le texte de ton CV, sans tes coordonnées ni ta date de naissance, pour proposer tes blocs de profil.</li>

@@ -14,8 +14,8 @@ import CountBadge from "./CountBadge.vue";
 // (seule exception à la pastille teintée) ; une zone vide de 22 px au-dessus de la barre (--nav-spacer) garde le
 // rond loin du texte. Candidatures porte le nombre d'offres à examiner. Les écrans de travail (Préparer, le tri,
 // l'accueil des nouveaux comptes) la cachent (docs/75, 1.6.50).
-// En attendant leurs écrans (docs/139 §5) : Assistant ouvre le panneau de l'assistant ; Compte mène aux Réglages
-// et reste actif sur le Profil.
+// En attendant son écran (docs/139 §5), Assistant ouvre le panneau de l'assistant. Compte mène à la page Compte
+// (étape 10a) et reste actif sur le Profil et les Réglages, qui s'ouvrent depuis elle.
 const HIDDEN = new Set(["preparation", "welcome", "triage"]);
 
 const route = useRoute();
@@ -39,8 +39,8 @@ const tabs = computed<Tab[]>(() => {
       name: "account",
       label: "Compte",
       icon: "user",
-      to: "/reglages",
-      active: onPage && (route.path.startsWith("/reglages") || route.path.startsWith("/profil")),
+      to: "/compte",
+      active: onPage && ["/compte", "/reglages", "/profil"].some((path) => route.path.startsWith(path)),
     },
   );
   return list;

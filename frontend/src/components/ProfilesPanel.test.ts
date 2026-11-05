@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createMemoryHistory, createRouter } from "vue-router";
 
-import AccountMenu from "./AccountMenu.vue";
+import AccountView from "../views/AccountView.vue";
 import ProfilesPanel from "./ProfilesPanel.vue";
 
 const GET = vi.fn();
@@ -105,18 +105,14 @@ describe("ProfilesPanel", () => {
     expect((wrapper.find("[data-test=profile-keywords]").element as HTMLInputElement).value).toBe("infirmière, EMS");
   });
 
-  it("menu du compte : profil affiché retenu, rechargement", async () => {
-    GET.mockResolvedValue({ data: { current_id: 1, items: [main, nurse] } });
+  it("page Compte : profil affiché retenu, rechargement", async () => {
+    GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/profiles" ? { current_id: 1, items: [main, nurse] } : null }));
     const reload = vi.fn();
     vi.stubGlobal("location", { ...window.location, reload });
     const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
-    const wrapper = mount(AccountMenu, { global: { plugins: [router] } });
+    const wrapper = mount(AccountView, { global: { plugins: [router] } });
     await flushPromises();
-    expect(wrapper.find("[data-test=account-panel]").exists()).toBe(false);
-    await wrapper.find("[data-test=account-menu]").trigger("click");
-    // Profil, Réglages, Données personnelles (docs/89, docs/90) ; le Diagnostic est à
-    // l'exploitant (docs/108 §3), et personne n'est connecté ici.
-    expect(wrapper.find("[data-test=account-panel]").findAll("a")).toHaveLength(3);
+    // Le choix du profil affiché a quitté le menu du compte pour la page Compte (C2, 2026-11-05).
     await wrapper.find("[data-test=profile-switcher]").setValue("2");
     expect(localStorage.getItem("jobbot-profile")).toBe("2");
     expect(reload).toHaveBeenCalled();
