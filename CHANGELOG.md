@@ -402,3 +402,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.188 | Interface : les Réglages, une rubrique par page ouverte depuis Compte, avec « Retour au compte » ; le seuil des notifications en mots ; « Supprimer mon compte » dans sa carte rouge (étape 10b) | livrée |
 | 1.6.189 | Interface : l'Assistant devient un onglet plein écran sur téléphone, avec un accueil écrit par l'app, des réponses rapides selon la situation et une mention « L'Assistant peut se tromper » | livrée |
 | 1.6.190 | Interface : les premiers pas en 4 étapes (page bleue, CV, critères, tri de 3 offres), avec des valeurs par défaut modifiables dans Compte | livrée |
+| 1.6.191 | Interface : premiers pas, « Annuler » après « Écarter » pendant le tri, le télétravail « accepté depuis la Suisse » et le CSS de l'accueil chargé avec sa page | livrée |
