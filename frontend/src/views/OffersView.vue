@@ -736,6 +736,7 @@ onUnmounted(() => {
           v-else-if="!loading && items.length === 0 && activeCount(filters) && phone"
           title="Aucune offre avec ces filtres"
           mood="neutre"
+          animation="loupe"
           data-test="offers-empty"
         >
           <p>{{ emptyFiltersLine }}</p>
