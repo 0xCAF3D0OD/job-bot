@@ -43,15 +43,15 @@ const how = (method: string) => method.charAt(0).toUpperCase() + method.slice(1)
         @click="open && $emit('open', row.application_id)"
       >
         <span class="orp-day"><strong>{{ row.day }}</strong>{{ row.month }}</span>
-        <span class="orp-what"><strong>{{ row.company }}</strong>{{ row.job_title }} · {{ how(row.method) }}</span>
+        <span class="orp-what"><strong>{{ row.company }}</strong><span>{{ row.job_title }} · {{ how(row.method) }}</span></span>
         <span
           v-if="row.missing.length"
           class="status-pill expired"
-        ><AppIcon name="alert" />À joindre</span>
+        ><AppIcon name="bang" />À joindre</span>
         <span
           v-else
           class="status-pill applied"
-        ><AppIcon name="check" />Preuve</span>
+        ><AppIcon name="tick" />Preuve</span>
       </component>
     </li>
   </ul>

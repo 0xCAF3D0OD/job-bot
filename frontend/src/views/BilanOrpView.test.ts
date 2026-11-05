@@ -32,12 +32,12 @@ const week = { days: [], count: 0, target: 1 };
 function mountView(target: number | null) {
   GET.mockImplementation((path: string) => Promise.resolve({ data: path === "/api/orp" ? month(target) : { rhythm: week } }));
   return mount(BilanOrpView, {
-    global: { stubs: { RouterLink: { props: ["to"], template: "<a><slot /></a>" }, OrpSheet: true, RhythmCard: { template: "<div data-test=rhythm />" } } },
+    global: { stubs: { RouterLink: { props: ["to"], template: "<a><slot /></a>" }, OrpSheet: true } },
   });
 }
 
 describe("Bilan › ORP", () => {
-  it("l'objectif, l'export, les trois dernières recherches, le lien, puis Rythme", async () => {
+  it("l'objectif, l'export, les trois dernières recherches et le lien, sans carte Semaine (A5 annulé)", async () => {
     const wrapper = mountView(10);
     await flushPromises();
     const goal = wrapper.find("[data-test=orp-goal]");
@@ -49,7 +49,9 @@ describe("Bilan › ORP", () => {
     expect(rows[0]!.text()).toContain("DevOps Engineer · Électronique");
     expect(rows.map((r) => r.find(".status-pill").text())).toEqual(["Preuve", "À joindre", "Preuve"]);
     // L'ordre de la page (B6).
-    const order = ["orp-goal", "orp-export", "orp-rows", "orp-all", "rhythm"].map((t) => wrapper.html().indexOf(`data-test="${t}"`));
+    expect(wrapper.find("[data-test=rhythm]").exists()).toBe(false);
+    expect(GET).not.toHaveBeenCalledWith("/api/today");
+    const order = ["orp-goal", "orp-export", "orp-rows", "orp-all"].map((t) => wrapper.html().indexOf(`data-test="${t}"`));
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
