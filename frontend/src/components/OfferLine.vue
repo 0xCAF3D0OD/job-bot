@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, useId } from "vue";
+import { computed, ref, useId, watch } from "vue";
 import { RouterLink, useRouter, type RouteLocationRaw } from "vue-router";
 
 import { usePhone } from "../composables/usePhone";
-import { colorIndex, initials, scoreWord } from "../format";
+import { cityOnly, colorIndex, initials, scoreWord } from "../format";
+import { isBlankLogo } from "../logoImage";
 
 // La Ligne d'offre (planche « Ligne d'offre », composant 179:2912), la même partout : le logo ou
 // l'initiale, le poste en gras, « entreprise · lieu » en gris, puis au bout de la ligne le verdict et
@@ -65,8 +66,21 @@ function onRowClick(event: MouseEvent): void {
 const name = computed(() => props.company ?? props.title);
 // Téléphone (maquette Candidatures) : deux initiales ; ordinateur : la première lettre.
 const { phone } = usePhone();
+// Une image qui ne charge pas, ou vide (un carré blanc générique) : les initiales colorées à la place.
+const logoFailed = ref(false);
+watch(
+  () => props.logo,
+  () => {
+    logoFailed.value = false;
+  },
+);
+const showLogo = computed(() => !!props.logo && !logoFailed.value);
+function onLogoLoad(event: Event): void {
+  logoFailed.value = isBlankLogo(event.target as HTMLImageElement);
+}
 const initial = computed(() => (phone.value ? initials(name.value) : name.value.trim().charAt(0).toUpperCase() || "?"));
-const sub = computed(() => [props.company, props.location].filter(Boolean).join(" · "));
+// Sur téléphone, la ville sans le canton (maquette Candidatures).
+const sub = computed(() => [props.company, phone.value ? cityOnly(props.location) : props.location].filter(Boolean).join(" · "));
 const verdict = computed(() => (props.score === null || props.score === undefined ? null : scoreWord(props.score)));
 const label = computed(() => [props.title, props.company].filter(Boolean).join(", "));
 const described = computed(() => [`${id}-sub`, props.note || props.state ? `${id}-more` : "", verdict.value ? `${id}-verdict` : ""].filter(Boolean).join(" "));
@@ -79,14 +93,16 @@ const described = computed(() => [`${id}-sub`, props.note || props.state ? `${id
     @click="onRowClick"
   >
     <span
-      :class="['logo', logo ? 'image' : `c${colorIndex(name)}`]"
+      :class="['logo', showLogo ? 'image' : `c${colorIndex(name)}`]"
       aria-hidden="true"
     >
       <img
-        v-if="logo"
-        :src="logo"
+        v-if="showLogo"
+        :src="logo!"
         alt=""
         loading="lazy"
+        @load="onLogoLoad"
+        @error="logoFailed = true"
       >
       <template v-else>{{ initial }}</template>
     </span>

@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 
 import type { Offer } from "../api/client";
 import { usePhone } from "../composables/usePhone";
+import { isBlankLogo } from "../logoImage";
 import { colorIndex, initials } from "../format";
 
 // Logo de l'entreprise servi par la plateforme (docs/14 §4) ; la lettre en secours, deux initiales sur
@@ -34,6 +35,7 @@ const showImage = computed(() => Boolean(props.offer.has_logo) && !failed.value)
       :src="`/api/offers/${offer.id}/logo`"
       alt=""
       loading="lazy"
+      @load="failed = isBlankLogo($event.target as HTMLImageElement)"
       @error="failed = true"
     >
     <template v-else>{{ initial }}</template>

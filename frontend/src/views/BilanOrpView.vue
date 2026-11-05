@@ -1,26 +1,22 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-import { api, type OrpMonth, type Today } from "../api/client";
+import { api, type OrpMonth } from "../api/client";
 import AppIcon from "../components/AppIcon.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import NetworkError from "../components/NetworkError.vue";
 import OrpGoalCard from "../components/OrpGoalCard.vue";
 import OrpSearchRows from "../components/OrpSearchRows.vue";
 import OrpSheet from "../components/OrpSheet.vue";
-import RhythmCard from "../components/RhythmCard.vue";
 import { usePageReady } from "../composables/usePageTransition";
-import { usePhone } from "../composables/usePhone";
 import { isNetworkError } from "../network";
 
 // Bilan › ORP (docs/139 étape 8a, maquette Explorer ; B3 à B6, Kevin, 2026-11-04). De haut en bas :
 // l'objectif du mois (le cercle liquide), l'export, les trois dernières recherches, le lien vers le
-// Suivi ORP du mois, puis la carte Rythme (téléphone, A5).
+// Suivi ORP du mois. Sans carte Rythme : A5 annulé le 2026-11-05 par Kevin (maquette Explorer).
 const orp = ref<OrpMonth | null>(null);
-const rhythm = ref<Today["rhythm"] | null>(null);
 const error = ref(false);
 const offline = ref(false);
-const { phone } = usePhone();
 usePageReady("bilan-orp", () => !!orp.value || error.value);
 
 const LAST = 3;
@@ -29,12 +25,6 @@ const sheet = ref<InstanceType<typeof OrpSheet> | null>(null);
 async function load(): Promise<void> {
   error.value = false;
   offline.value = false;
-  if (phone.value) {
-    void api
-      .GET("/api/today")
-      .then(({ data }) => (rhythm.value = data?.rhythm ?? null))
-      .catch(() => undefined);
-  }
   try {
     const { data } = await api.GET("/api/orp");
     if (!data) throw new Error();
@@ -102,11 +92,6 @@ onMounted(() => void load());
         >
           Voir tout le mois et les preuves
         </RouterLink>
-
-        <RhythmCard
-          v-if="phone && rhythm"
-          :week="rhythm"
-        />
       </template>
     </div>
   </section>

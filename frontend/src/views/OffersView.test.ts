@@ -299,7 +299,7 @@ describe("note et résumé", () => {
 
     await scored?.trigger("click");
     expect(wrapper.find("[data-test=match-title]").text()).toBe("Proche de ton profil");
-    expect(wrapper.find("[data-test=match-sub]").text()).toContain("82 sur 100");
+    expect(wrapper.find("[data-test=match-sub]").text()).toBe("Selon ton profil et tes préférences");
     expect(wrapper.find("[data-test=match-sub]").text()).not.toContain("82/100");
 
     // Le bloc d'où vient le point fort, au survol (docs/131 §B.7).

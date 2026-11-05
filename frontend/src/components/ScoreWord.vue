@@ -10,7 +10,8 @@ import FaceMark from "./FaceMark.vue";
 // et pour les lecteurs d'écran. Sans note :
 // « Pas encore notée », sans visage, avec la raison au survol. Le cercle chiffré reste dans
 // la fiche de l'offre.
-const props = defineProps<{ score: number | null; pending?: string; stale?: boolean }>();
+// `plain` : le mot seul, sans le visage (« Pour cette offre », Kevin 2026-11-05).
+const props = defineProps<{ score: number | null; pending?: string; stale?: boolean; plain?: boolean }>();
 
 const word = computed(() => (props.score === null ? null : scoreWord(props.score)));
 const label = computed(() =>
@@ -30,7 +31,10 @@ const label = computed(() =>
     data-test="score"
   >
     <span class="score-word-label">
-      <FaceMark :mood="word.mood" />
+      <FaceMark
+        v-if="!plain"
+        :mood="word.mood"
+      />
       <span aria-hidden="true">{{ word.word }}</span>
     </span>
     <span

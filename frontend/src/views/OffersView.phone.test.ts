@@ -67,6 +67,26 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(host.find("[data-test=offer] .logo").text()).toBe("LD");
   });
 
+  it("les offres en préparation sous leur titre de section, sans étiquette ni « Préparer » ; la ville sans canton", async () => {
+    const preparing = { ...offer(1, "Senior Platform Engineer"), status: "preparing" };
+    const host = await mountAt("/offres?tri=score", [preparing, offer(2, "Data Engineer")]);
+    const days = host.findAll("[data-test=offer-day]");
+    expect(days).toHaveLength(1);
+    expect(days[0]!.text()).toContain("En préparation");
+    expect(host.find("[data-test=status-tag]").exists()).toBe(false);
+    expect(host.find("[data-test=offer] .offer-line-action").exists()).toBe(false);
+    expect(host.findAll("[data-test=offer] [data-test=offer-more]")).toHaveLength(2);
+    expect(host.find("[data-test=offer] .offer-line-sub").text()).toContain("Acme SA · Lausanne");
+    expect(host.find("[data-test=offer] .offer-line-sub").text()).not.toContain("VD");
+  });
+
+  it("un logo qui ne charge pas : les initiales colorées à la place", async () => {
+    const host = await mountAt("/offres", [{ ...offer(1, "Data Engineer"), company: "Léman Data SA", has_logo: true }]);
+    await host.find("[data-test=offer] .logo img").trigger("error");
+    expect(host.find("[data-test=offer] .logo img").exists()).toBe(false);
+    expect(host.find("[data-test=offer] .logo").text()).toBe("LD");
+  });
+
   it("le « ⋯ » de la carte ouvre ses actions ; « Écarter l'offre » garde « Annuler » 6 s", async () => {
     const wrapper = await mountAt("/offres", [offer(1, "DevOps Engineer")]);
     const more = wrapper.find("[data-test=offer] [data-test=offer-more]");
