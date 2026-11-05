@@ -77,8 +77,15 @@ onUnmounted(() => {
       @click="phone ? undefined : toggle()"
     >
       <AppIcon name="bell" />
+      <!-- Téléphone (maquette Accueil) : la cloche seule et un point bleu ; le nombre est dans le nom accessible. -->
       <span
-        v-if="inbox.unread"
+        v-if="inbox.unread && phone"
+        class="bell-dot"
+        aria-hidden="true"
+        data-test="bell-dot"
+      />
+      <span
+        v-else-if="inbox.unread"
         class="bell-count"
         aria-hidden="true"
         data-test="bell-badge"

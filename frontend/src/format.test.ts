@@ -1,7 +1,7 @@
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
 import { describe, expect, it } from "vitest";
 
-import { dayKey, dayName, dayShort, gapSkill, initials, orpPace } from "./format";
+import { cityOnly, dayKey, dayName, dayShort, gapSkill, initials, orpPace, remoteText } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -58,5 +58,18 @@ describe("initiales d'une entreprise (téléphone)", () => {
     expect(initials("Alpstack")).toBe("AL");
     expect(initials("Maquette Médias Sàrl")).toBe("MM");
     expect(initials("  ")).toBe("?");
+  });
+});
+
+describe("cityOnly et remoteText court (cartes du téléphone)", () => {
+  it("retire le canton, garde le reste", () => {
+    expect(cityOnly("Lausanne, VD")).toBe("Lausanne");
+    expect(cityOnly("Zurich")).toBe("Zurich");
+    expect(cityOnly(null)).toBeNull();
+  });
+  it("« Hybride » et « Télétravail » en pastille courte", () => {
+    expect(remoteText({ remote: "hybrid", remote_days: 2 }, true)).toBe("Hybride");
+    expect(remoteText({ remote: "full" }, true)).toBe("Télétravail");
+    expect(remoteText({ remote: "hybrid", remote_days: 2 })).toBe("Télétravail 2 j");
   });
 });

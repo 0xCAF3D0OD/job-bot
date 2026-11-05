@@ -3,7 +3,7 @@ import { computed } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 
 import type { Offer } from "../api/client";
-import { plural, rateText, remoteText } from "../format";
+import { cityOnly, plural, rateText, remoteText } from "../format";
 import AppIcon from "./AppIcon.vue";
 import CompanyLogo from "./CompanyLogo.vue";
 import FaceMark from "./FaceMark.vue";
@@ -12,8 +12,8 @@ import ScoreRing from "./ScoreRing.vue";
 
 // L'Accueil du téléphone (docs/139 étape 4, maquette AccueilSmile ; écarts A1 à A9 validés le 2026-11-02) :
 // « Bonjour Kevin. », puis trois blocs qui se chevauchent : ORP (le cercle liquide), Offres (les cartes de la
-// dose du jour et « Trier les n offres », seul bouton plein de l'accueil, A3), À faire (un nombre, un
-// libellé). L'ordinateur garde sa page.
+// dose du jour, tant qu'il y en a, et « Tout voir » ; sans bouton « Trier », A3 annulé le 2026-11-05 par
+// Kevin), À faire (un nombre, un libellé). L'ordinateur garde sa page.
 export type HomeTodo = { key: string; test: string; count: number; label: string; to: RouteLocationRaw };
 
 const props = defineProps<{
@@ -23,7 +23,6 @@ const props = defineProps<{
   count: number;
   target: number | null;
   offers: Offer[];
-  canTriage: boolean;
   emptyText: string;
   todos: HomeTodo[];
 }>();
@@ -40,7 +39,7 @@ const orpLine = computed(() => {
   return left > 0 ? `Encore ${left} d'ici le ${monthEnd.value}` : "Objectif du mois atteint.";
 });
 function facts(offer: Offer): string[] {
-  return [rateText(offer.rate_min, offer.rate_max), offer.employment_type ?? "", remoteText(offer) ?? ""].filter(Boolean);
+  return [rateText(offer.rate_min, offer.rate_max), offer.employment_type ?? "", remoteText(offer, true) ?? ""].filter(Boolean);
 }
 </script>
 
@@ -99,7 +98,7 @@ function facts(offer: Offer): string[] {
           Tout voir
         </RouterLink>
       </div>
-      <template v-if="canTriage">
+      <template v-if="offers.length">
         <div
           class="home-cards"
           role="region"
@@ -121,7 +120,7 @@ function facts(offer: Offer): string[] {
               />
             </span>
             <strong>{{ offer.title }}</strong>
-            <span class="home-card-where">{{ [offer.company, offer.location].filter(Boolean).join(" · ") }}</span>
+            <span class="home-card-where">{{ [offer.company, cityOnly(offer.location)].filter(Boolean).join(" · ") }}</span>
             <span
               v-if="facts(offer).length"
               class="home-card-facts"
@@ -133,13 +132,6 @@ function facts(offer: Offer): string[] {
             </span>
           </RouterLink>
         </div>
-        <RouterLink
-          :to="{ name: 'triage' }"
-          class="button-link primary-link home-triage"
-          data-test="home-triage"
-        >
-          Trier les {{ offers.length === 1 ? "1 offre" : `${offers.length} offres` }}
-        </RouterLink>
       </template>
       <p
         v-else
