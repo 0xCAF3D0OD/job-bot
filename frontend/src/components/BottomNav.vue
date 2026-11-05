@@ -14,33 +14,32 @@ import CountBadge from "./CountBadge.vue";
 // (seule exception à la pastille teintée) ; une zone vide de 22 px au-dessus de la barre (--nav-spacer) garde le
 // rond loin du texte. Candidatures porte le nombre d'offres à examiner. Les écrans de travail (Préparer, le tri,
 // l'accueil des nouveaux comptes) la cachent (docs/75, 1.6.50).
-// En attendant son écran (docs/139 §5), Assistant ouvre le panneau de l'assistant. Compte mène à la page Compte
-// (étape 10a) et reste actif sur le Profil et les Réglages, qui s'ouvrent depuis elle.
+// Assistant mène à sa page (étape 11a), seulement quand l'IA est branchée ; la barre attend de le savoir pour se
+// dessiner (AS8). Compte mène à la page Compte (étape 10a) et reste actif sur le Profil et les Réglages.
 const HIDDEN = new Set(["preparation", "welcome", "triage"]);
 
 const route = useRoute();
 const { last: lastJobsPage } = useJobsMemory();
-const { available: assistantAvailable, open: assistantOpen } = useAssistant();
+const { available: assistantAvailable, known: assistantKnown } = useAssistant();
 const toReview = ref(0);
 
-const visible = computed(() => !HIDDEN.has(String(route.name)) && !route.meta.bare);
+const visible = computed(() => assistantKnown.value && !HIDDEN.has(String(route.name)) && !route.meta.bare);
 
-type Tab = { name: string; label: string; icon?: "home" | "briefcase" | "trend" | "user"; to?: string; active: boolean };
+type Tab = { name: string; label: string; icon?: "home" | "briefcase" | "trend" | "user"; to: string; active: boolean };
 const tabs = computed<Tab[]>(() => {
-  const onPage = !assistantOpen.value;
   const list: Tab[] = [
-    { name: "today", label: "Accueil", icon: "home", to: "/aujourdhui", active: onPage && route.path.startsWith("/aujourdhui") },
-    { name: "jobs", label: "Candidatures", icon: "briefcase", to: lastJobsPage.value, active: onPage && route.path.startsWith("/candidatures") },
+    { name: "today", label: "Accueil", icon: "home", to: "/aujourdhui", active: route.path.startsWith("/aujourdhui") },
+    { name: "jobs", label: "Candidatures", icon: "briefcase", to: lastJobsPage.value, active: route.path.startsWith("/candidatures") },
   ];
-  if (assistantAvailable.value) list.push({ name: "assistant", label: "Assistant", active: assistantOpen.value });
+  if (assistantAvailable.value) list.push({ name: "assistant", label: "Assistant", to: "/assistant", active: route.name === "assistant" });
   list.push(
-    { name: "bilan", label: "Bilan", icon: "trend", to: "/bilan", active: onPage && route.path.startsWith("/bilan") },
+    { name: "bilan", label: "Bilan", icon: "trend", to: "/bilan", active: route.path.startsWith("/bilan") },
     {
       name: "account",
       label: "Compte",
       icon: "user",
       to: "/compte",
-      active: onPage && ["/compte", "/reglages", "/profil"].some((path) => route.path.startsWith(path)),
+      active: ["/compte", "/reglages", "/profil"].some((path) => route.path.startsWith(path)),
     },
   );
   return list;
@@ -79,15 +78,20 @@ onMounted(() => void refresh());
       :key="tab.name"
     >
       <RouterLink
-        v-if="tab.to"
         :to="tab.to"
         :class="{ active: tab.active }"
         :aria-current="tab.active ? 'page' : undefined"
         :data-test="`tab-${tab.name}`"
-        @click="assistantOpen = false"
       >
         <span class="tab-bar-icon">
-          <AppIcon :name="tab.icon!" />
+          <AssistantMascot
+            v-if="tab.name === 'assistant'"
+            :size="tab.active ? 30 : 28"
+          />
+          <AppIcon
+            v-else
+            :name="tab.icon!"
+          />
           <CountBadge
             v-if="tab.name === 'jobs' && toReview"
             class="tab-bar-count"
@@ -96,19 +100,6 @@ onMounted(() => void refresh());
         </span>
         <span class="tab-bar-label">{{ tab.label }}</span>
       </RouterLink>
-      <button
-        v-else
-        type="button"
-        :class="{ active: tab.active }"
-        :aria-pressed="tab.active"
-        :data-test="`tab-${tab.name}`"
-        @click="assistantOpen = !assistantOpen"
-      >
-        <span class="tab-bar-icon">
-          <AssistantMascot :size="tab.active ? 30 : 28" />
-        </span>
-        <span class="tab-bar-label">{{ tab.label }}</span>
-      </button>
     </template>
   </nav>
 </template>

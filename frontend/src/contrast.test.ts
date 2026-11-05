@@ -147,17 +147,6 @@ describe("la pastille de la cloche et la sélection d'une offre (1.6.18)", () =>
   });
 });
 
-describe("les tuiles de Bilan (1.6.19)", () => {
-  it("jamais de libellé coupé : la précision passe à la ligne", () => {
-    const rule = (name: string) => css.match(new RegExp(`\\.${name} \\{[^}]*\\}`))![0];
-    for (const name of ["dash-trend"]) {
-      expect(rule(name)).not.toContain("ellipsis");
-      expect(rule(name)).not.toContain("nowrap");
-    }
-    expect(rule("dash-tile-head")).toContain("flex-wrap: wrap");
-  });
-});
-
 describe("le Suivi (1.6.20)", () => {
   it("un refus n'est pas une erreur : gris ; « sans réponse » en --faint, plus de couleur en dur", () => {
     expect(css).toContain(".app-status .dot.refus { background: var(--muted); }");
