@@ -1868,6 +1868,9 @@ button .hover-note { text-decoration: none; cursor: inherit; }
   --lift: 0 6px 16px rgb(27 31 42 / 8%);
 }
 @media (prefers-reduced-motion: reduce) { :root { --t-fast: 0ms; --t-standard: 0ms; --t-joy: 0ms; --t-party: 0ms; } }
+/* Pop « Joie » (maquette Animations, règle 10 Mouvement) : une coche ou un signet qui s'active rebondit une fois. */
+[aria-pressed="true"] > svg, input[type="checkbox"]:not([role="switch"]):checked { animation: joie-pop var(--t-joy) var(--spring-soft); }
+@keyframes joie-pop { from { transform: scale(.6); } }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --lift: 0 6px 18px rgb(0 0 0 / 35%); } }
 :root[data-theme="dark"] { --lift: 0 6px 18px rgb(0 0 0 / 35%); }
 
@@ -3545,8 +3548,6 @@ main:focus { outline: none; }
 .goal-reached-close .icon { width: 1.375rem; height: 1.375rem; stroke-width: var(--icon-stroke); }
 .goal-reached-body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: var(--space-8) var(--space-2) 0; }
 .goal-reached-art { position: relative; display: grid; place-items: center; width: var(--mood-box); height: var(--mood-box); }
-.goal-reached-sun { position: absolute; inset: 8%; fill: var(--peach-soft); stroke: var(--peach); stroke-width: 1.5px; animation: goal-sun 0.9s var(--ease-out) both; }
-.goal-reached-art .face-mark { position: relative; color: var(--logo-line); overflow: visible; animation: goal-pop 0.6s var(--ease-out) both; }
 .goal-reached-art .confetti { top: 50%; }
 .goal-reached-todo { margin: var(--space-8) 0 0; font-size: var(--font-figure); font-weight: var(--weight-bold); line-height: var(--leading-tight); }
 .goal-reached-todo > span { position: relative; display: inline-block; white-space: nowrap; }
@@ -3559,12 +3560,10 @@ main:focus { outline: none; }
 .goal-reached-actions > .primary { justify-content: center; min-height: var(--btn-primary); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
 .goal-reached-home { display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 .goal-reached-cancel { justify-self: center; min-height: var(--target-min); color: var(--text-secondary); font-weight: var(--weight-regular); }
-@keyframes goal-sun { from { opacity: 0; transform: rotate(-40deg) scale(.7); } }
-@keyframes goal-pop { 0% { opacity: 0; transform: scale(.4); } 50% { transform: scale(1.2); } }
 @keyframes goal-strike { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes goal-write { from { clip-path: inset(-30% 100% -30% -10%); } to { clip-path: inset(-30% -10%); } }
 @media (prefers-reduced-motion: reduce) {
-  .goal-reached-sun, .goal-reached-art .face-mark, .goal-reached-todo path, .goal-reached-title { animation: none; }
+  .goal-reached-todo path, .goal-reached-title { animation: none; }
   .goal-reached-art .confetti { display: none; }
 }
 /* Sur téléphone, une sous-page : sa propre tête à la place de l'en-tête de l'app, pas de barre d'onglets, et

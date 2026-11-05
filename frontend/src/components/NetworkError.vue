@@ -25,6 +25,7 @@ onUnmounted(() => globalThis.removeEventListener?.("online", back));
     :title="props.title ?? 'Pas de connexion'"
     :illustration="props.title ? undefined : 'connexion-perdue'"
     mood="attentif"
+    :animation="props.title ? 'hochement' : undefined"
     data-test="network-error"
   >
     <p>{{ props.line ?? "jobA1 réessaie dès que le réseau revient. Ce que tu as saisi est gardé." }}</p>

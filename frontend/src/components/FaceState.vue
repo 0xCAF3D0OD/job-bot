@@ -1,18 +1,32 @@
 <script setup lang="ts">
+import { defineAsyncComponent } from "vue";
+
 import type { Mood } from "../brandPaths";
 import FaceMark from "./FaceMark.vue";
+import type { MoodKind } from "./MoodAnimation.vue";
 import Illustration, { type IllustrationName } from "./Illustration.vue";
 
 // Un état de jobA1 (docs/123 §2, T) : le visage de 120 px au centre, le titre, une ligne. Pour
 // une liste vide et pour une page qui charge (`waiting` : l'œil et la bille pulsent).
 // `illustration` (1.6.73, règle §4) : une illustration décorative à la place du visage, pour un
 // écran vide, des premiers pas, une réussite ou une erreur ; jamais les deux à la fois.
+// `animation` (docs/139 étape 12, maquette Animations) : le visage dans sa forme d'humeur, avec son geste,
+// chargé à part pour ne pas alourdir le premier écran.
+const MoodAnimation = defineAsyncComponent(() => import("./MoodAnimation.vue"));
 withDefaults(
-  defineProps<{ title: string; mood?: Mood; waiting?: boolean; heading?: "h1" | "h2" | "p"; illustration?: IllustrationName }>(),
+  defineProps<{
+    title: string;
+    mood?: Mood;
+    waiting?: boolean;
+    heading?: "h1" | "h2" | "p";
+    illustration?: IllustrationName;
+    animation?: MoodKind;
+  }>(),
   {
     mood: "content",
     heading: "h2",
     illustration: undefined,
+    animation: undefined,
   },
 );
 </script>
@@ -24,6 +38,10 @@ withDefaults(
       :name="illustration"
       class="spot"
       sizes="(max-width: 820px) 260px, 424px"
+    />
+    <MoodAnimation
+      v-else-if="animation"
+      :kind="animation"
     />
     <FaceMark
       v-else

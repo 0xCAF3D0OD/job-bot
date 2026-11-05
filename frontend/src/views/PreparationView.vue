@@ -565,6 +565,7 @@ onMounted(() => void load());
       title="Candidature notée"
       heading="h1"
       mood="ravi"
+      animation="envoyee"
       role="status"
     >
       <p>{{ sent.title }} chez {{ sent.company }}{{ sent.where ? `, postulée ${sent.where}` : "" }}.</p>
