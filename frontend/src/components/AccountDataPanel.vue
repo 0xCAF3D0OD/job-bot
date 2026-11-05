@@ -31,6 +31,12 @@ const router = useRouter();
 const route = useRoute();
 const { expired } = useAuth();
 const passwordInput = ref<HTMLInputElement | null>(null);
+// L'export demande le mot de passe, comme la fermeture (docs/regles-securite-donnees.md X-1) :
+// une session volée ne suffit pas à emporter les données.
+const exporting = ref(false);
+const exportPassword = ref("");
+const exportError = ref("");
+const exportBusy = ref(false);
 
 // Les compteurs en une phrase : « 12 offres · 3 candidatures · … ».
 const counts = computed(() => {
@@ -57,6 +63,37 @@ onMounted(async () => {
   }
 });
 
+function detailOf(failed: unknown, fallback: string): string {
+  const detail = (failed as { detail?: unknown } | undefined)?.detail;
+  return typeof detail === "string" ? detail.charAt(0).toUpperCase() + detail.slice(1) + "." : fallback;
+}
+
+async function download(): Promise<void> {
+  exportBusy.value = true;
+  exportError.value = "";
+  try {
+    const { data, error: failed, response } = await api.POST("/api/account/export", {
+      body: { password: exportPassword.value },
+      parseAs: "blob",
+    });
+    exportPassword.value = "";
+    if (!response.ok || !(data instanceof Blob)) {
+      exportError.value = detailOf(failed, "Export impossible.");
+      return;
+    }
+    const name = /filename="([^"]+)"/.exec(response.headers.get("content-disposition") ?? "")?.[1] ?? "jobA1.zip";
+    const url = URL.createObjectURL(data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(url);
+    exporting.value = false;
+  } finally {
+    exportBusy.value = false;
+  }
+}
+
 async function remove(): Promise<void> {
   busy.value = true;
   error.value = "";
@@ -70,8 +107,7 @@ async function remove(): Promise<void> {
       await router.replace("/connexion");
       return;
     }
-    const detail = (failed as { detail?: unknown } | undefined)?.detail;
-    error.value = typeof detail === "string" ? detail.charAt(0).toUpperCase() + detail.slice(1) + "." : "Fermeture impossible.";
+    error.value = detailOf(failed, "Fermeture impossible.");
   } finally {
     busy.value = false;
   }
@@ -97,13 +133,53 @@ async function remove(): Promise<void> {
       title="Exporter mes données"
       description="Un fichier ZIP avec tout ce que jobA1 garde de toi."
     >
-      <a
-        href="/api/account/export"
-        download
+      <button
+        v-if="!exporting"
+        type="button"
         class="button-link"
         data-test="export"
-      ><span class="with-icon"><AppIcon name="download" />Télécharger</span></a>
+        @click="exporting = true"
+      >
+        <span class="with-icon"><AppIcon name="download" />Télécharger</span>
+      </button>
     </SettingRow>
+    <!-- La confirmation de la fermeture, reprise telle quelle (choix du 2026-11-04) : le mot
+         de passe dedans, sous sa ligne. -->
+    <form
+      v-if="exporting"
+      class="account-delete setting-row-form"
+      data-test="export-form"
+      @submit.prevent="download"
+    >
+      <InlineConfirm
+        message="Tes données partent dans un fichier ZIP. Un avis arrive aussi dans la cloche."
+        confirm-label="Télécharger"
+        cancel-label="Annuler"
+        :danger="false"
+        :busy="exportBusy || !exportPassword"
+        @confirm="download"
+        @cancel="exporting = false"
+      >
+        <label class="account-delete-password">
+          Ton mot de passe pour confirmer
+          <input
+            v-model="exportPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+            data-test="export-password"
+          >
+        </label>
+        <p
+          v-if="exportError"
+          class="notice"
+          role="alert"
+          data-test="export-error"
+        >
+          {{ exportError }}
+        </p>
+      </InlineConfirm>
+    </form>
     <template v-if="summary?.can_delete">
       <SettingRow
         title="Fermer le compte"

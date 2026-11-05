@@ -32,15 +32,42 @@ async function mountPanel(summary = SUMMARY, path = "/reglages") {
 }
 
 describe("Tes données (docs/65 §6)", () => {
-  it("le résumé et l'export en un clic", async () => {
+  it("le résumé, et l'export après le mot de passe (docs/regles-securite-donnees.md X-1)", async () => {
+    POST.mockResolvedValueOnce({ error: { detail: "mot de passe incorrect" }, response: { ok: false, headers: new Headers() } });
+    POST.mockResolvedValueOnce({
+      data: new Blob(["zip"]),
+      response: { ok: true, headers: new Headers({ "content-disposition": 'attachment; filename="jobA1-amy-2026-11-04.zip"' }) },
+    });
+    const createObjectURL = vi.fn().mockReturnValue("blob:x");
+    Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
     const { wrapper } = await mountPanel();
     // Les compteurs en une phrase (1.6.67).
     expect(wrapper.find("[data-test=account-counts] .setting-row-description").text()).toBe(
       "12 offres · 3 candidatures · 1 document · 5 blocs de profil · 20 e-mails d'alerte",
     );
-    const link = wrapper.find("[data-test=export]");
-    expect(link.attributes("href")).toBe("/api/account/export");
-    expect(link.attributes("download")).toBeDefined();
+    // Plus de lien direct : une session seule ne télécharge rien.
+    expect(wrapper.find("a[href='/api/account/export']").exists()).toBe(false);
+    await wrapper.find("[data-test=export]").trigger("click");
+    expect(wrapper.find("[data-test=export-form] [data-test=inline-confirm-yes]").text()).toBe("Télécharger");
+    await wrapper.find("[data-test=export-password]").setValue("faux");
+    await wrapper.find("[data-test=export-form]").trigger("submit");
+    await flushPromises();
+    expect(wrapper.find("[data-test=export-error]").text()).toBe("Mot de passe incorrect.");
+    expect(click).not.toHaveBeenCalled();
+    await wrapper.find("[data-test=export-password]").setValue("le-bon-mot-de-passe");
+    await wrapper.find("[data-test=export-form]").trigger("submit");
+    await flushPromises();
+    expect(POST).toHaveBeenLastCalledWith("/api/account/export", {
+      body: { password: "le-bon-mot-de-passe" },
+      parseAs: "blob",
+    });
+    expect(createObjectURL).toHaveBeenCalled();
+    expect(click).toHaveBeenCalledOnce();
+    // Le mot de passe ne reste pas dans la page, et la confirmation se referme.
+    expect(wrapper.find("[data-test=export-form]").exists()).toBe(false);
+    click.mockRestore();
+    wrapper.unmount();
   });
 
   it("le modèle des Réglages (1.6.67) : une carte, une ligne par action, l'action à droite", async () => {

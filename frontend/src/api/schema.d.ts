@@ -306,15 +306,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        get?: never;
+        put?: never;
         /**
          * Export Account
          * @description L'archive de toutes les données du compte. Contre une session volée
-         *     (docs/regles-securite-donnees.md, X-2 et X-3) : 3 exports par 24 heures au plus, et
-         *     chaque export est annoncé dans la cloche et sur le téléphone, sans rien de son contenu.
+         *     (docs/regles-securite-donnees.md, X-1 à X-3) : le mot de passe d'abord, essais ratés
+         *     limités comme à la connexion ; 3 exports par 24 heures au plus ; chaque export est
+         *     annoncé dans la cloche et sur le téléphone, sans rien de son contenu.
          */
-        get: operations["exportAccount"];
-        put?: never;
-        post?: never;
+        post: operations["exportAccount"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4423,7 +4424,10 @@ export interface components {
             /** Longest */
             longest: number;
         };
-        /** DeleteIn */
+        /**
+         * DeleteIn
+         * @description Le mot de passe qui confirme une action sur tout le compte : fermer, exporter.
+         */
         DeleteIn: {
             /** Password */
             password: string;
@@ -8343,7 +8347,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteIn"];
+            };
+        };
         responses: {
             /** @description Archive ZIP */
             200: {
@@ -8355,7 +8363,23 @@ export interface operations {
                     "application/zip": unknown;
                 };
             };
-            /** @description Trop d'exports en 24 heures */
+            /** @description Mot de passe incorrect */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Trop d'essais, ou trop d'exports en 24 heures */
             429: {
                 headers: {
                     [name: string]: unknown;

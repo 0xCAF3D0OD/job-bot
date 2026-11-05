@@ -75,6 +75,8 @@ class Privacy(BaseModel):
 
 
 class DeleteIn(BaseModel):
+    """Le mot de passe qui confirme une action sur tout le compte : fermer, exporter."""
+
     password: Annotated[str, Field(min_length=1, max_length=200)]
 
 
@@ -157,19 +159,37 @@ def _json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, indent=1, default=str)
 
 
-@router.get(
+@router.post(
     "/account/export",
     operation_id="exportAccount",
     responses={
         200: {"content": {"application/zip": {}}, "description": "Archive ZIP"},
-        429: {"description": "Trop d'exports en 24 heures"},
+        403: {"description": "Mot de passe incorrect"},
+        429: {"description": "Trop d'essais, ou trop d'exports en 24 heures"},
     },
 )
-async def export_account(request: Request) -> Response:
+async def export_account(request: Request, body: DeleteIn) -> Response:
     """L'archive de toutes les données du compte. Contre une session volée
-    (docs/regles-securite-donnees.md, X-2 et X-3) : 3 exports par 24 heures au plus, et
-    chaque export est annoncé dans la cloche et sur le téléphone, sans rien de son contenu."""
+    (docs/regles-securite-donnees.md, X-1 à X-3) : le mot de passe d'abord, essais ratés
+    limités comme à la connexion ; 3 exports par 24 heures au plus ; chaque export est
+    annoncé dans la cloche et sur le téléphone, sans rien de son contenu."""
     runtime = _runtime(request)
+    account = accounts.current()
+    key = f"export:{account}"
+    if wait := throttle.wait(key):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            f"trop d'essais : réessaie dans {wait} s",
+            headers={"Retry-After": str(wait)},
+        )
+    if runtime.settings.auth_enabled:
+        async with runtime.sessionmaker() as session:
+            user = await session.get(User, account)
+        if user is None or not passwords.verify_password(body.password, user.password_hash):
+            throttle.fail(key)
+            log.warning("account_export_wrong_password")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "mot de passe incorrect")
+        throttle.reset(key)
     async with runtime.sessionmaker() as session:
         since = datetime.now(UTC) - EXPORT_WINDOW
         recent = list(

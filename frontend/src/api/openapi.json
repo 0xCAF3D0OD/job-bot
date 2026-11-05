@@ -668,13 +668,23 @@
       }
     },
     "/api/account/export": {
-      "get": {
+      "post": {
         "tags": [
           "account"
         ],
         "summary": "Export Account",
-        "description": "L'archive de toutes les données du compte. Contre une session volée\n(docs/regles-securite-donnees.md, X-2 et X-3) : 3 exports par 24 heures au plus, et\nchaque export est annoncé dans la cloche et sur le téléphone, sans rien de son contenu.",
+        "description": "L'archive de toutes les données du compte. Contre une session volée\n(docs/regles-securite-donnees.md, X-1 à X-3) : le mot de passe d'abord, essais ratés\nlimités comme à la connexion ; 3 exports par 24 heures au plus ; chaque export est\nannoncé dans la cloche et sur le téléphone, sans rien de son contenu.",
         "operationId": "exportAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteIn"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Archive ZIP",
@@ -685,8 +695,21 @@
               "application/zip": {}
             }
           },
+          "403": {
+            "description": "Mot de passe incorrect"
+          },
           "429": {
-            "description": "Trop d'exports en 24 heures"
+            "description": "Trop d'essais, ou trop d'exports en 24 heures"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -12254,7 +12277,8 @@
         "required": [
           "password"
         ],
-        "title": "DeleteIn"
+        "title": "DeleteIn",
+        "description": "Le mot de passe qui confirme une action sur tout le compte : fermer, exporter."
       },
       "DocumentOut": {
         "properties": {
