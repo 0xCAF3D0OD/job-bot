@@ -160,14 +160,25 @@ export function expiredText(offer: { expired_at?: string | null; expiry_source?:
 }
 
 // Télétravail d'une offre (docs/26 §2) : « Télétravail 2 j », « 100 % télétravail · Europe ».
-export function remoteText(offer: {
-  remote?: string | null;
-  remote_days?: number | null;
-  remote_region?: string | null;
-}): string | null {
+// `short` : la pastille d'une carte du téléphone (maquettes Accueil et Candidatures), « Hybride ».
+export function remoteText(
+  offer: {
+    remote?: string | null;
+    remote_days?: number | null;
+    remote_region?: string | null;
+  },
+  short = false,
+): string | null {
+  if (short && offer.remote === "hybrid") return "Hybride";
+  if (short && offer.remote === "full") return "Télétravail";
   if (offer.remote === "hybrid") return offer.remote_days ? `Télétravail ${offer.remote_days} j` : "Télétravail partiel";
   if (offer.remote === "full") return offer.remote_region ? `100 % télétravail · ${offer.remote_region}` : "100 % télétravail";
   return null;
+}
+
+// La ville seule sur une carte du téléphone (maquettes) : « Lausanne, VD » devient « Lausanne ».
+export function cityOnly(location: string | null | undefined): string | null {
+  return location ? location.replace(/,\s*[A-Z]{2}$/, "") : null;
 }
 
 // « 1 offre », « 3 offres », « aucune offre » : de vrais accords plutôt que « offre(s) » (docs/43 n° 2).

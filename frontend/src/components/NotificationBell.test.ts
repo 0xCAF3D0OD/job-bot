@@ -86,6 +86,10 @@ describe("NotificationBell sur téléphone (maquette Notifications, N1)", () => 
     const bell = wrapper.find("[data-test=bell]");
     expect(bell.element.tagName).toBe("A");
     expect(bell.attributes("href")).toBe("/notifications");
+    // La cloche seule et un point (maquette Accueil) ; le nombre reste dans le nom accessible.
+    expect(wrapper.find("[data-test=bell-dot]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=bell-badge]").exists()).toBe(false);
+    expect(bell.attributes("aria-label")).toBe("Notifications, 1 non lue");
     await bell.trigger("click");
     await flushPromises();
     expect(router.currentRoute.value.path).toBe("/notifications");

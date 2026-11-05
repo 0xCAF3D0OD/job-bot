@@ -1,0 +1,1 @@
+Interface : accueil du téléphone comme la maquette, sans bouton « Trier » (A3 annulé), cartes Offres tant qu'il en reste, cloche avec un point, initiales sur fond plein, l'Assistant dans son cercle dans la barre du bas, pied de page seulement en bas du Compte.

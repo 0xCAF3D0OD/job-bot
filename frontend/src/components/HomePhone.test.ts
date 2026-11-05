@@ -17,7 +17,6 @@ function home(props: Partial<InstanceType<typeof HomePhone>["$props"]> = {}) {
       count: 2,
       target: 10,
       offers: [offer(1, 92), offer(2, 60)],
-      canTriage: true,
       emptyText: "Rien à trier · À demain",
       todos: [{ key: "follow", test: "todo-follow-ups", count: 13, label: "Relances à envoyer", to: "/candidatures/suivi" }],
       ...props,
@@ -27,7 +26,7 @@ function home(props: Partial<InstanceType<typeof HomePhone>["$props"]> = {}) {
 }
 
 describe("L'Accueil du téléphone (docs/139 étape 4)", () => {
-  it("bonjour, ORP en cercle liquide, les offres et un seul bouton plein, À faire en nombres", () => {
+  it("bonjour, ORP en cercle liquide, les offres et « Tout voir », À faire en nombres", () => {
     const view = home();
     expect(view.find("h1").text()).toBe("Bonjour Kevin.");
     expect(view.find("[data-test=home-tagline]").exists()).toBe(false);
@@ -38,15 +37,16 @@ describe("L'Accueil du téléphone (docs/139 étape 4)", () => {
     const score = view.find("[data-test=home-card] [data-test=score]");
     expect(score.text()).toBe("92Très proche");
     expect(score.attributes("aria-label")).toBe("Très proche : 92 sur 100");
-    expect(view.find("[data-test=home-triage]").text()).toBe("Trier les 2 offres");
-    expect(view.findAll(".primary-link")).toHaveLength(1);
+    // Ni bouton « Trier » ni bouton plein : « Tout voir » mène aux Candidatures (A3 annulé, maquette).
+    expect(view.find("[data-test=home-triage]").exists()).toBe(false);
+    expect(view.findAll(".primary-link")).toHaveLength(0);
+    expect(view.find("[data-test=home-offers-all]").exists()).toBe(true);
     expect(view.find("[data-test=todo-follow-ups]").text()).toContain("13");
     expect(view.find("[data-test=todo-follow-ups]").text()).toContain("Relances à envoyer");
   });
 
-  it("sans offre à trier : pas de bouton, l'état vide du bloc", () => {
-    const view = home({ canTriage: false, offers: [] });
-    expect(view.find("[data-test=home-triage]").exists()).toBe(false);
+  it("sans offre à trier : l'état vide du bloc", () => {
+    const view = home({ offers: [] });
     expect(view.find("[data-test=home-offers-empty]").text()).toContain("Rien à trier");
     expect(view.find("[data-test=home-offers-all]").exists()).toBe(true);
   });

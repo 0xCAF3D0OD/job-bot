@@ -84,10 +84,15 @@ onMounted(() => void refresh());
         :data-test="`tab-${tab.name}`"
       >
         <span class="tab-bar-icon">
-          <AssistantMascot
+          <!-- L'Assistant dans son cercle (maquette AccueilSmile, barre du bas) : un rond clair cerclé de bleu,
+               la mascotte au 6/10. -->
+          <span
             v-if="tab.name === 'assistant'"
-            :size="tab.active ? 30 : 28"
-          />
+            class="tab-assistant-ring"
+            data-test="tab-assistant-ring"
+          >
+            <AssistantMascot :size="tab.active ? 20 : 19" />
+          </span>
           <AppIcon
             v-else
             :name="tab.icon!"

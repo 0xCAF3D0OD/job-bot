@@ -321,7 +321,6 @@ const { me } = useAuth();
     :count="today.month_count"
     :target="today.month_target ?? null"
     :offers="dose"
-    :can-triage="triagePending && !starting"
     :empty-text="starting ? 'Commence par les premiers pas.' : homeEmpty"
     :todos="todos"
   >

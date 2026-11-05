@@ -79,6 +79,8 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     const wrapper = mount(BottomNav, { global: { plugins: [router] } });
     await flushPromises();
     expect(wrapper.find("[data-test=tab-assistant]").attributes("href")).toBe("/assistant");
+    // La mascotte dans son cercle (maquette AccueilSmile).
+    expect(wrapper.find("[data-test=tab-assistant] [data-test=tab-assistant-ring] [data-test=assistant-mascot]").exists()).toBe(true);
     await router.push("/assistant");
     await flushPromises();
     const tab = wrapper.find("[data-test=tab-assistant]");

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import AppFooter from "./components/AppFooter.vue";
@@ -19,6 +19,7 @@ import { useCollect } from "./composables/useCollect";
 import { useAutoGrow } from "./composables/useAutoGrow";
 import { useFileDownloads } from "./composables/useFileDownloads";
 import { useMaintenance } from "./composables/useMaintenance";
+import { usePhone } from "./composables/usePhone";
 import { useProfiles } from "./composables/useProfiles";
 import { PUBLIC_ROUTES } from "./router";
 
@@ -41,6 +42,10 @@ useFileDownloads();
 useAutoGrow();
 const router = useRouter();
 const { me, loggedIn, load, expired } = useAuth();
+// Le pied de page (docs/126 §4) : sur téléphone connecté, les maquettes n'en ont pas ; il reste en bas du
+// Compte, à un onglet de chaque page (nLPD : facile à trouver).
+const { phone } = usePhone();
+const footer = computed(() => !route.meta.bare && (!phone.value || !loggedIn.value || route.path === "/compte"));
 const { check: checkJobsPage } = useJobsMemory();
 // Le menu ne mène jamais à une offre disparue (audit du 22.10.2026).
 watch(loggedIn, (now) => now && void checkJobsPage().catch(() => undefined), { immediate: true });
@@ -157,7 +162,7 @@ onUnmounted(() => {
   >
     <RouterView />
   </main>
-  <AppFooter v-if="!route.meta.bare" />
+  <AppFooter v-if="footer" />
   <!-- Sur téléphone, les deux pages de travail en bas de l'écran (docs/92). -->
   <BottomNav v-if="loggedIn" />
   <MaintenanceOverlay

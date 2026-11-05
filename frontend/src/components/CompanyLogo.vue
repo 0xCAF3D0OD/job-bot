@@ -2,9 +2,11 @@
 import { computed, ref, watch } from "vue";
 
 import type { Offer } from "../api/client";
-import { colorIndex } from "../format";
+import { usePhone } from "../composables/usePhone";
+import { colorIndex, initials } from "../format";
 
-// Logo de l'entreprise servi par la plateforme (docs/14 §4) ; la lettre en secours.
+// Logo de l'entreprise servi par la plateforme (docs/14 §4) ; la lettre en secours, deux initiales sur
+// téléphone (maquettes Accueil et Offre, comme la Ligne d'offre).
 const props = defineProps<{ offer: Offer; large?: boolean }>();
 
 const failed = ref(false);
@@ -16,7 +18,8 @@ watch(
 );
 
 const name = computed(() => props.offer.company ?? props.offer.title);
-const initial = computed(() => name.value.trim().charAt(0).toUpperCase() || "?");
+const { phone } = usePhone();
+const initial = computed(() => (phone.value ? initials(name.value) : name.value.trim().charAt(0).toUpperCase() || "?"));
 const showImage = computed(() => Boolean(props.offer.has_logo) && !failed.value);
 </script>
 
