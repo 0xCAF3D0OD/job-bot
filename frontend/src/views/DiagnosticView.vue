@@ -13,10 +13,10 @@ import StatusPanel from "../components/StatusPanel.vue";
   <section class="band">
     <div class="container">
       <RouterLink
-        to="/reglages"
+        to="/compte"
         class="back-link"
       >
-        <span class="with-icon"><AppIcon name="arrow-left" />Retour aux réglages</span>
+        <span class="with-icon"><AppIcon name="arrow-left" />Retour au compte</span>
       </RouterLink>
       <StatusPanel />
     </div>

@@ -114,7 +114,7 @@ onBeforeUnmount(stop);
             Relier ce navigateur
           </button>
           <RouterLink
-            to="/reglages"
+            :to="{ path: '/reglages', query: { rubrique: 'outils' } }"
             class="link"
           >
             Annuler

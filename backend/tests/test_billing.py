@@ -86,7 +86,7 @@ async def test_checkout_then_confirmed_on_return(
         started = await api.post("/api/billing/checkout", json={"accept_terms": True})
         assert started.json() == {"link": "https://jobA1.payrexx.com/?payment=abc"}
         assert seen["reference"] == f"jobA1-plus-{user_id}"
-        assert seen["back"].endswith("/reglages?rubrique=compte")
+        assert seen["back"].endswith("/reglages?rubrique=formule")
         back = (await api.post("/api/billing/sync")).json()
         assert back["confirmed"] is True
         expected = service.next_month(datetime.now(UTC).date()) + service.GRACE

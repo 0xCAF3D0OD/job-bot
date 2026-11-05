@@ -10,8 +10,8 @@ import SettingCard from "./SettingCard.vue";
 import SettingRow from "./SettingRow.vue";
 import { plural } from "../format";
 
-// Tes données (docs/65 §6) : ce qui est gardé, l'export complet, la fermeture du compte. Une carte
-// (1.6.67, planche « 5. Réglages ») : une ligne par action, la confirmation sous sa ligne.
+// Tes données (docs/65 §6) : ce qui est gardé et l'export complet, dans une carte (1.6.67) ; la suppression du
+// compte dans la sienne, en dessous (maquette Réglages, docs/139 étape 10b).
 type Summary = {
   offers: number;
   applications: number;
@@ -54,7 +54,7 @@ const counts = computed(() => {
 onMounted(async () => {
   const { data } = await api.GET("/api/account/data");
   summary.value = data ?? null;
-  // Venu de « Fermer mon compte » dans le menu (docs/105) : la confirmation est ouverte.
+  // Venu d'un lien « ?fermer=1 » (docs/105) : la confirmation est ouverte.
   if (route.query.fermer && summary.value?.can_delete) {
     confirming.value = true;
     await nextTick();
@@ -107,7 +107,7 @@ async function remove(): Promise<void> {
       await router.replace("/connexion");
       return;
     }
-    error.value = detailOf(failed, "Fermeture impossible.");
+    error.value = detailOf(failed, "Suppression impossible.");
   } finally {
     busy.value = false;
   }
@@ -180,57 +180,74 @@ async function remove(): Promise<void> {
         </p>
       </InlineConfirm>
     </form>
-    <template v-if="summary?.can_delete">
-      <SettingRow
-        title="Fermer le compte"
-        description="Tout est effacé : offres, candidatures, documents, preuves ORP."
+  </SettingCard>
+  <!-- Supprimer le compte (maquette Réglages ; décisions de Kevin du 2026-11-05, C13) : seul dans sa carte, en
+       rouge. La confirmation garde le mot de passe, propose d'abord d'exporter la feuille ORP, et « Annuler » a le
+       focus. -->
+  <SettingCard
+    v-if="summary?.can_delete"
+    class="account-delete-card"
+    data-test="account-delete-card"
+  >
+    <SettingRow
+      v-if="!confirming"
+      title="Supprimer mon compte"
+      description="Ton CV, tes candidatures et ton suivi ORP sont effacés."
+    >
+      <button
+        type="button"
+        class="secondary small danger"
+        data-test="delete-account"
+        @click="confirming = true"
       >
-        <button
-          v-if="!confirming"
-          type="button"
-          class="secondary small danger"
-          data-test="delete-account"
-          @click="confirming = true"
-        >
-          <span class="with-icon"><AppIcon name="trash" />Fermer mon compte</span>
-        </button>
-      </SettingRow>
-      <!-- La même confirmation que partout (docs/108 §1), le mot de passe dedans : rien ne
-           dépasse de l'écran sur téléphone (docs/105, complément 0.77.4). -->
-      <form
-        v-if="confirming"
-        class="account-delete setting-row-form"
-        data-test="delete-form"
-        @submit.prevent="remove"
+        <span class="with-icon"><AppIcon name="trash" />Supprimer mon compte</span>
+      </button>
+    </SettingRow>
+    <form
+      v-else
+      class="account-delete setting-row-form"
+      data-test="delete-form"
+      @submit.prevent="remove"
+    >
+      <InlineConfirm
+        message="Supprimer ton compte ?"
+        confirm-label="Supprimer définitivement"
+        cancel-label="Annuler"
+        :busy="busy || !password"
+        @confirm="remove"
+        @cancel="confirming = false"
       >
-        <InlineConfirm
-          message="Tout est effacé : offres, candidatures, documents, preuves ORP. Exporte d'abord ce que tu veux garder."
-          confirm-label="Fermer définitivement"
-          :busy="busy || !password"
-          @confirm="remove"
-          @cancel="confirming = false"
-        >
-          <label class="account-delete-password">
-            Ton mot de passe pour confirmer
-            <input
-              ref="passwordInput"
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              data-test="delete-password"
-            >
-          </label>
-          <p
-            v-if="error"
-            class="notice"
-            role="alert"
-            data-test="delete-error"
+        <p class="account-delete-text">
+          Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive. Pense à exporter ta
+          feuille ORP avant.
+        </p>
+        <label class="account-delete-password">
+          Ton mot de passe pour confirmer
+          <input
+            ref="passwordInput"
+            v-model="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            data-test="delete-password"
           >
-            {{ error }}
-          </p>
-        </InlineConfirm>
-      </form>
-    </template>
+        </label>
+        <p
+          v-if="error"
+          class="notice"
+          role="alert"
+          data-test="delete-error"
+        >
+          {{ error }}
+        </p>
+        <RouterLink
+          to="/bilan"
+          class="account-delete-export"
+          data-test="delete-export-orp"
+        >
+          <span class="with-icon"><AppIcon name="download" />Exporter ma feuille ORP</span>
+        </RouterLink>
+      </InlineConfirm>
+    </form>
   </SettingCard>
 </template>

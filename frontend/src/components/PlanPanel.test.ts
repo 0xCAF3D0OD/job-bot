@@ -103,7 +103,7 @@ describe("la formule", () => {
     await usePlan().refresh();
     const line = mount(PlanLimit, { props: { usage: "letter" }, global: { plugins: [router()] } }).find("[data-test=plan-limit-letter]");
     expect(line.text()).toContain("Les 10 lettres du mois sont utilisées : elles reviennent le 1er novembre.");
-    expect(line.find("a").attributes("href")).toBe("/reglages?rubrique=compte");
+    expect(line.find("a").attributes("href")).toBe("/reglages?rubrique=formule");
   });
 
   it("l'exploitant n'a pas de carte Formule", async () => {
@@ -148,7 +148,7 @@ describe("le paiement de Plus (docs/125 §6)", () => {
     );
     await usePlan().refresh();
     const r = router();
-    await r.push("/reglages?rubrique=compte&paiement=ok");
+    await r.push("/reglages?rubrique=formule&paiement=ok");
     const wrapper = mount(PlanPanel, { global: { plugins: [r] } });
     await flushPromises();
     expect(POST).toHaveBeenCalledWith("/api/billing/sync");
@@ -170,7 +170,7 @@ describe("le paiement de Plus (docs/125 §6)", () => {
     GET.mockResolvedValue({ data: plan({ billing_available: true }) });
     await usePlan().refresh();
     const r = router();
-    await r.push("/reglages?rubrique=compte&paiement=annule");
+    await r.push("/reglages?rubrique=formule&paiement=annule");
     const wrapper = mount(PlanPanel, { global: { plugins: [r] } });
     await flushPromises();
     expect(wrapper.find("[data-test=plan-message]").text()).toBe("Paiement annulé : rien n'a été débité.");

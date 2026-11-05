@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute, useRouter, type RouteLocationRaw } from "vue-router";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 
 import { api, type SettingsModel } from "../api/client";
-import { plural } from "../format";
 import { useAuth } from "../composables/useAuth";
-import { useAssistant } from "../composables/useAssistant";
-import { useNarrow, usePhone } from "../composables/usePhone";
-import type { IconName } from "../icons";
 import PageHero from "../components/PageHero.vue";
 import PlanPanel from "../components/PlanPanel.vue";
 import { usePlan } from "../composables/usePlan";
@@ -20,11 +16,9 @@ import ProfilesPanel from "../components/ProfilesPanel.vue";
 import SessionPanel from "../components/SessionPanel.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
-import SettingsSection, { SETTINGS_ICONS } from "../components/SettingsSection.vue";
+import SettingsSection from "../components/SettingsSection.vue";
+import SegmentedControl from "../components/SegmentedControl.vue";
 import AppearancePanel from "../components/AppearancePanel.vue";
-import GroupedList from "../components/GroupedList.vue";
-import GroupedRow from "../components/GroupedRow.vue";
-import SavedStatus from "../components/SavedStatus.vue";
 import SettingCard from "../components/SettingCard.vue";
 import SettingRow from "../components/SettingRow.vue";
 import SitesPanel from "../components/SitesPanel.vue";
@@ -95,17 +89,6 @@ onMounted(async () => {
     stored.value = { ...data };
   }
   loaded.value = true;
-  void setupMarkers();
-  // Ancien lien vers l'état technique : il a maintenant sa page (docs/21 §6).
-  if (window.location.hash === "#etat") {
-    await router.replace("/reglages/diagnostic");
-    return;
-  }
-  // Anciens liens « /reglages#agenda » (docs/48 §5) : la rubrique qui contient la section.
-  const old = route.hash.slice(1);
-  if (old && OLD_ANCHORS[old] && !route.query.rubrique) {
-    await router.replace({ query: { rubrique: OLD_ANCHORS[old] }, hash: route.hash });
-  }
   try {
     const status = await api.GET("/api/notifications");
     notifications.value = status.data ?? null;
@@ -228,28 +211,30 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
   form.value.offers_notify_mode = mode;
   void saveMode();
 }
-// Le seuil des notifications en cinq pastilles (docs/106, décision 2) ; une valeur d'avant,
-// hors des cinq, reste proposée.
-const THRESHOLDS = [50, 60, 70, 80, 90];
-const thresholdChoices = computed(() => {
-  const current = form.value.notify_score_threshold;
-  return typeof current === "number" && !THRESHOLDS.includes(current)
-    ? [...THRESHOLDS, current].sort((a, b) => a - b)
-    : THRESHOLDS;
+// Le seuil des notifications en mots (décision de Kevin du 2026-11-05, C11 ; D3) : Très proche, Proche, À creuser,
+// soit 85, 70 et 50. Une valeur d'avant (60, 80, 90…) s'affiche sous le mot de sa note.
+const THRESHOLD_OPTIONS = [
+  { value: "85", label: "Très proche", test: "threshold-85" },
+  { value: "70", label: "Proche", test: "threshold-70" },
+  { value: "50", label: "À creuser", test: "threshold-50" },
+];
+const threshold = computed({
+  get: () => {
+    const value = form.value.notify_score_threshold ?? 70;
+    return value >= 85 ? "85" : value >= 70 ? "70" : "50";
+  },
+  set: (value: string) => void setThreshold(Number(value)),
 });
 async function setThreshold(value: number): Promise<void> {
   form.value.notify_score_threshold = value;
   await persist("threshold", { notify_score_threshold: value });
 }
-const router = useRouter();
 const { me } = useAuth();
 // L'exploitant (docs/65) : la rubrique Plateforme, son plafond de l'IA, les profils d'essai.
 const owner = computed(() => Boolean(me.value?.is_owner));
 // La formule d'une personne invitée (docs/125).
 const { plan } = usePlan();
 const planName = computed(() => (plan.value?.plan === "plus" ? "Plus" : "Essentiel"));
-// Le Diagnostic technique, à l'exploitant seulement (docs/108 §3).
-// Pas dans la démo : un écran technique, du jargon pour qui découvre jobA1 (audit du 22.10.2026).
 // L'IA est-elle branchée ? Lu pour l'exploitant seulement (la rubrique IA, planche « Illustrations »).
 const aiConfigured = ref<boolean | null>(null);
 watch(
@@ -265,275 +250,53 @@ watch(
   },
   { immediate: true },
 );
-const showDiagnostic = computed(() => owner.value || (me.value?.auth_enabled === false && !me.value?.demo));
-// Résumés des rubriques, affichés sur téléphone (docs/34 §3).
-const summary = computed(() => ({
-  recherche: [
-    form.value.orp_monthly_target ? `objectif ${form.value.orp_monthly_target} / mois` : "objectif à saisir",
-    "sites suivis",
-  ].join(" · "),
-  rythme: [
-    plural(form.value.rhythm_days?.length ?? 5, "jour de recherche", "jours de recherche"),
-    form.value.offers_notify_mode === "daily" ? `offres à ${form.value.offers_notify_hour} h` : "offres dès qu'elles arrivent",
-    form.value.rhythm_pause_until ? "en pause" : "",
-  ]
-    .filter(Boolean)
-    .join(" · "),
-  notifications: [
-    notifications.value ? (notifications.value.configured ? "actives" : "non configurées") : "",
-    `dès ${form.value.notify_score_threshold} / 100`,
-  ]
-    .filter(Boolean)
-    .join(" · "),
-  ia: owner.value ? `plafond ${form.value.llm_monthly_budget_chf} CHF / mois` : `formule ${planName.value}`,
-  compte: [owner.value ? "profils d'essai" : `formule ${planName.value}`, me.value?.auth_enabled ? (me.value.username ?? "") : ""]
-    .filter(Boolean)
-    .join(" · "),
-  outils: "abonnement, extension du navigateur",
-  plateforme: "comptes et IA de la plateforme",
-}));
-
-// Une rubrique à la fois (docs/48 §2) : le sommaire choisit, l'adresse la retient.
+// Les rubriques de la page Compte (étape 10b) : l'ancienne rubrique Compte se partage entre Affichage, Formule
+// et Mes données ; les profils d'essai passent dans Administration.
 const SECTIONS = [
   { id: "recherche", label: "Objectif ORP et sites" },
   { id: "rythme", label: "Rythme" },
   { id: "notifications", label: "Notifications" },
   { id: "ia", label: "IA" },
-  { id: "compte", label: "Compte" },
+  { id: "affichage", label: "Affichage" },
+  { id: "formule", label: "Formule" },
+  { id: "donnees", label: "Mes données" },
   { id: "outils", label: "Agenda et extension" },
   { id: "plateforme", label: "Administration" },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
-const OLD_ANCHORS: Record<string, SectionId> = {
-  recherche: "recherche",
-  notifications: "notifications",
-  ia: "ia",
-  profils: "compte",
-  connexion: "compte",
-  agenda: "outils",
-  extension: "outils",
-};
 const route = useRoute();
 const sections = computed(() => SECTIONS.filter((s) => s.id !== "plateforme" || owner.value));
 const active = computed<SectionId>(() => {
   const wanted = route.query.rubrique;
-  return sections.value.find((s) => s.id === wanted)?.id ?? OLD_ANCHORS[route.hash.slice(1)] ?? "recherche";
+  return sections.value.find((s) => s.id === wanted)?.id ?? "recherche";
 });
 
-// Sous 600 px (planche « Structure téléphone », 249:645) : une liste groupée ; chaque entrée ouvre sa
-// sous-page, avec « ← Réglages ». Sans rubrique dans l'adresse, la liste seule.
-const { phone: narrow } = useNarrow();
-const listOnly = computed(() => narrow.value && !route.query.rubrique);
-const shown = (id: SectionId): boolean => !narrow.value || active.value === id;
-type Entry = { title: string; description?: string; icon: IconName; to?: RouteLocationRaw; href?: string; run?: () => void; id?: SectionId };
-// Écrire à l'exploitant (décision de Kevin) : le contact déjà affiché dans À propos et Données
-// personnelles ; une adresse e-mail s'ouvre directement, sinon la page À propos qui le montre.
-const operatorContact = ref<string | null>(null);
-const operatorEmail = computed(() => operatorContact.value?.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)?.[0] ?? null);
-onMounted(async () => {
-  try {
-    const { data } = await api.GET("/api/privacy");
-    operatorContact.value = data?.contact ?? null;
-  } catch {
-    operatorContact.value = null;
-  }
-});
-const assistant = useAssistant();
-const GROUPS = computed<{ title: string; entries: Entry[] }[]>(() => [
-  {
-    title: "Recherche d'emploi",
-    entries: [
-      { id: "recherche", title: "Objectif ORP et sites", description: "Objectif du mois, preuves, sites suivis", icon: SETTINGS_ICONS.recherche!, to: { query: { rubrique: "recherche" } } },
-      { id: "rythme", title: "Rythme", description: "Jours de recherche, pause", icon: SETTINGS_ICONS.rythme!, to: { query: { rubrique: "rythme" } } },
-      { title: "Alertes", description: "Recherches suivies sur les sites", icon: "list-check", to: "/candidatures/alertes" },
-    ],
-  },
-  {
-    title: "Être averti",
-    entries: [
-      { id: "notifications", title: "Notifications", description: "Seuil, message du jour, téléphone", icon: SETTINGS_ICONS.notifications!, to: { query: { rubrique: "notifications" } } },
-      { id: "ia", title: "IA", description: "Ce qu'elle fait chaque mois", icon: SETTINGS_ICONS.ia!, to: { query: { rubrique: "ia" } } },
-      { id: "outils", title: "Agenda et extension", description: "Calendrier, navigateur", icon: SETTINGS_ICONS.outils!, to: { query: { rubrique: "outils" } } },
-    ],
-  },
-  {
-    title: "Compte et aide",
-    entries: [
-      { id: "compte", title: "Compte", description: "Formule, export, fermeture", icon: SETTINGS_ICONS.compte!, to: { query: { rubrique: "compte" } } },
-      ...(owner.value
-        ? [{ id: "plateforme" as const, title: "Administration", description: "Comptes et IA de la plateforme", icon: SETTINGS_ICONS.plateforme!, to: { query: { rubrique: "plateforme" } } }]
-        : []),
-      // L'aide (décision de Kevin, à revoir après le test utilisateurs) : l'Assistant, s'il est là.
-      ...(assistant.available.value
-        ? [{ title: "Aide", description: "Pose ta question à l'Assistant.", icon: "ai" as IconName, run: () => (assistant.open.value = true) }]
-        : []),
-      {
-        title: "Écrire à l'exploitant",
-        description: operatorContact.value
-          ? "Le contact de la plateforme, toujours là."
-          : "L'exploitant de la plateforme n'a pas encore indiqué ses coordonnées.",
-        icon: "send" as IconName,
-        ...(operatorEmail.value ? { href: `mailto:${operatorEmail.value}` } : operatorContact.value ? { to: "/a-propos" } : {}),
-      },
-      ...(showDiagnostic.value ? [{ title: "État du service", icon: "activity" as IconName, to: "/reglages/diagnostic" }] : []),
-    ],
-  },
-]);
-
-// Entre 600 et 820 px, une longue page (docs/110) : les marqueurs du haut mènent à chaque rubrique
-// et suivent la lecture. Ils se collent sous la barre du haut.
-const { phone: wide } = usePhone();
-const phone = computed(() => wide.value && !narrow.value);
-const current = ref<SectionId>("recherche");
-const markers = ref<HTMLElement | null>(null);
-const markersTop = ref(0);
-let spy: IntersectionObserver | undefined;
-
-function goTo(id: SectionId, smooth = true): void {
-  current.value = id;
-  document.getElementById(id)?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
-}
-
-function watchSections(): void {
-  spy?.disconnect();
-  if (!phone.value || typeof IntersectionObserver === "undefined") return;
-  const top = markersTop.value + (markers.value?.offsetHeight ?? 0);
-  // La rubrique en cours : celle qui passe juste sous les marqueurs.
-  spy = new IntersectionObserver(
-    (entries) => {
-      const seen = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      const first = seen[0]?.target.id as SectionId | undefined;
-      if (first) current.value = first;
-    },
-    { rootMargin: `-${top + 8}px 0px -55% 0px` },
-  );
-  for (const section of sections.value) {
-    const el = document.getElementById(section.id);
-    if (el) spy.observe(el);
-  }
-}
-
-// Le marqueur en cours reste visible dans la rangée qui défile.
-watch(current, async (id) => {
-  await nextTick();
-  markers.value?.querySelector<HTMLElement>(`[data-test="marker-${id}"]`)?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
-});
-
-async function setupMarkers(): Promise<void> {
-  if (!phone.value) return;
-  await nextTick();
-  markersTop.value = Math.round(document.querySelector<HTMLElement>(".topbar")?.getBoundingClientRect().height ?? 0);
-  watchSections();
-  const wanted = sections.value.find((s) => s.id === route.query.rubrique)?.id;
-  if (wanted) goTo(wanted, false);
-}
-watch(phone, () => void setupMarkers());
-onUnmounted(() => spy?.disconnect());
+// Une rubrique par page (décision de Kevin du 2026-11-05, C10) : la page Compte ouvre chacune, et chacune
+// revient au compte. Sans rubrique, l'adresse mène à la page Compte (router.ts).
+const label = computed(() => sections.value.find((s) => s.id === active.value)?.label ?? "Réglages");
 </script>
 
 <template>
-  <PageHero
-    v-if="!narrow || listOnly"
-    title="Réglages"
-  />
-  <PageHero
-    v-else
-    :title="sections.find((s) => s.id === active)?.label ?? 'Réglages'"
-  >
+  <PageHero :title="label">
     <template #back>
       <RouterLink
-        :to="{ query: {} }"
+        to="/compte"
         class="back-link"
         data-test="settings-back"
       >
-        <span class="with-icon"><AppIcon name="arrow-left" />Réglages</span>
+        <span class="with-icon"><AppIcon name="arrow-left" />Retour au compte</span>
       </RouterLink>
     </template>
   </PageHero>
   <section class="band">
-    <div :class="['settings-layout', { 'settings-sub': narrow && !listOnly, 'settings-list': listOnly }]">
-      <!-- La liste (planche « Structure téléphone », 249:645) : seule sous 600 px, à gauche sur ordinateur
-           (liste et détail, Material 3), l'entrée affichée marquée (current). -->
-      <nav
-        v-if="listOnly || !wide"
-        class="settings-nav"
-        aria-label="Sections des réglages"
-        data-test="settings-list"
-      >
-        <GroupedList
-          v-for="group in GROUPS"
-          :key="group.title"
-          :title="group.title"
-        >
-          <template
-            v-for="entry in group.entries"
-            :key="entry.title"
-          >
-            <GroupedRow
-              :title="entry.title"
-              :description="entry.description"
-              :icon="entry.icon"
-              :to="entry.to"
-              :href="entry.href"
-              :button="!!entry.run"
-              :current="!narrow && entry.id === active"
-              :data-test="`settings-entry-${entry.id ?? entry.title}`"
-              @click="entry.run?.()"
-            />
-            <!-- Le réglage à un toucher (choix provisoire de Kevin, à revoir avec le test utilisateurs). -->
-            <GroupedRow
-              v-if="listOnly && entry.id === 'notifications' && notifications?.personal"
-              title="Recevoir sur mon téléphone"
-              description="Offres, relances et rappel ORP, par ntfy."
-              icon="message"
-              label
-              data-test="settings-phone-row"
-            >
-              <template #end>
-                <SavedStatus :at="phoneSavedAt" />
-                <input
-                  type="checkbox"
-                  role="switch"
-                  :checked="notifications.configured"
-                  data-test="list-phone-switch"
-                  @change="setPhone(!notifications.configured)"
-                >
-              </template>
-            </GroupedRow>
-          </template>
-        </GroupedList>
-      </nav>
-      <!-- Sur téléphone, les marqueurs pour parcourir la longue page (docs/110). -->
-      <nav
-        v-if="phone"
-        ref="markers"
-        class="settings-markers"
-        aria-label="Aller à une rubrique"
-        :style="{ top: `${markersTop}px` }"
-        data-test="settings-markers"
-      >
-        <a
-          v-for="section in sections"
-          :key="section.id"
-          :href="`#${section.id}`"
-          :class="{ active: current === section.id }"
-          :aria-current="current === section.id ? 'location' : undefined"
-          :data-test="`marker-${section.id}`"
-          @click.prevent="goTo(section.id)"
-        >{{ section.label }}</a>
-      </nav>
-      <div
-        v-if="!listOnly"
-        class="settings-sections"
-      >
+    <div class="settings-layout settings-sub">
+      <div class="settings-sections">
         <!-- Une carte par réglage (1.6.66, planche « 5. Réglages ») : titre en gras, une phrase, le
              contrôle à droite ; plus de bouton « Enregistrer ». -->
         <SettingsSection
-          v-if="shown('recherche')"
+          v-if="active === 'recherche'"
           id="recherche"
           title="Objectif ORP et sites"
-          :value="summary.recherche"
-          :active="active === 'recherche'"
           cards
         >
           <template v-if="loaded">
@@ -624,11 +387,9 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
-          v-if="shown('rythme')"
+          v-if="active === 'rythme'"
           id="rythme"
           title="Rythme"
-          :value="summary.rythme"
-          :active="active === 'rythme'"
           cards
         >
           <template v-if="loaded">
@@ -786,43 +547,26 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
-          v-if="shown('notifications')"
+          v-if="active === 'notifications'"
           id="notifications"
           title="Notifications"
-          :value="summary.notifications"
-          :active="active === 'notifications'"
           cards
         >
           <template v-if="loaded">
             <SettingCard data-test="notify-form">
               <SettingRow
-                v-slot="c"
                 title="M'avertir d'une offre dès"
                 description="Une offre notée sous ce seuil reste dans la liste, sans notification."
                 :saved="savedRow === 'threshold'"
                 :error="rowErrors.threshold"
                 stack
               >
-                <div
-                  class="score-choices"
-                  role="radiogroup"
-                  :aria-labelledby="c.labelledby"
-                  :aria-describedby="c.describedby"
-                >
-                  <button
-                    v-for="value in thresholdChoices"
-                    :key="value"
-                    type="button"
-                    role="radio"
-                    :aria-checked="form.notify_score_threshold === value"
-                    :class="['chip', { on: form.notify_score_threshold === value }]"
-                    :data-test="`threshold-${value}`"
-                    @click="setThreshold(value)"
-                  >
-                    {{ value }}
-                  </button>
-                  <span class="muted score-max">/ 100</span>
-                </div>
+                <SegmentedControl
+                  v-model="threshold"
+                  :options="THRESHOLD_OPTIONS"
+                  label="M'avertir d'une offre dès"
+                  full
+                />
               </SettingRow>
             </SettingCard>
             <SettingCard data-test="notifications">
@@ -905,11 +649,9 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
-          v-if="shown('ia')"
+          v-if="active === 'ia'"
           id="ia"
           title="IA"
-          :value="summary.ia"
-          :active="active === 'ia'"
           cards
         >
           <template v-if="loaded">
@@ -924,7 +666,7 @@ onUnmounted(() => spy?.disconnect());
                 description="Ce que l'IA fait chaque mois : les offres notées, les lettres, les CV, l'assistant."
               >
                 <RouterLink
-                  :to="{ query: { rubrique: 'compte' } }"
+                  :to="{ query: { rubrique: 'formule' } }"
                   class="button-link"
                   data-test="see-plan"
                 >
@@ -985,28 +727,37 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
-          v-if="shown('compte')"
-          id="compte"
-          title="Compte"
-          :value="summary.compte"
-          :active="active === 'compte'"
+          v-if="active === 'affichage'"
+          id="affichage"
+          title="Affichage"
           cards
         >
-          <!-- Chaque panneau porte ses cartes (1.6.67) : la formule, les profils d'essai, la connexion,
-               les données personnelles. -->
           <AppearancePanel />
+        </SettingsSection>
+
+        <SettingsSection
+          v-if="active === 'formule'"
+          id="formule"
+          title="Formule"
+          cards
+        >
           <PlanPanel />
-          <ProfilesPanel v-if="owner" />
+        </SettingsSection>
+
+        <SettingsSection
+          v-if="active === 'donnees'"
+          id="donnees"
+          title="Mes données"
+          cards
+        >
           <SessionPanel />
           <AccountDataPanel />
         </SettingsSection>
 
         <SettingsSection
-          v-if="shown('outils')"
+          v-if="active === 'outils'"
           id="outils"
           title="Agenda et extension"
-          :value="summary.outils"
-          :active="active === 'outils'"
           cards
         >
           <AgendaPanel />
@@ -1014,30 +765,14 @@ onUnmounted(() => spy?.disconnect());
         </SettingsSection>
 
         <SettingsSection
-          v-if="owner && shown('plateforme')"
+          v-if="owner && active === 'plateforme'"
           id="plateforme"
           title="Administration"
-          :value="summary.plateforme"
-          :active="active === 'plateforme'"
           cards
         >
           <PlatformPanel />
+          <ProfilesPanel />
         </SettingsSection>
-
-        <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) ; sur téléphone, une
-             ligne grise en fin de page, comme les autres destinations (0.78.4). -->
-        <RouterLink
-          v-if="phone && showDiagnostic"
-          to="/reglages/diagnostic"
-          class="info-card diagnostic-row"
-          data-test="diagnostic-row"
-        >
-          <span>
-            <span class="setting-title">État du service</span>
-            <span class="setting-desc">La collecte, l'IA et les tâches de la plateforme.</span>
-          </span>
-          <AppIcon name="chevron" />
-        </RouterLink>
       </div>
     </div>
   </section>

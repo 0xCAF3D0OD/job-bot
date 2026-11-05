@@ -70,34 +70,41 @@ describe("Tes données (docs/65 §6)", () => {
     wrapper.unmount();
   });
 
-  it("le modèle des Réglages (1.6.67) : une carte, une ligne par action, l'action à droite", async () => {
+  it("le modèle des Réglages (1.6.67) ; la suppression seule dans sa carte rouge (C13)", async () => {
     const { wrapper } = await mountPanel();
     const card = wrapper.find("[data-test=account-data]");
     expect(card.classes()).toContain("setting-card");
     expect(wrapper.find("fieldset").exists()).toBe(false);
-    expect(card.findAll(".setting-row-title").map((t) => t.text())).toEqual(["Données personnelles", "Exporter mes données", "Fermer le compte"]);
-    expect(card.findAll("[data-test=setting-row]")).toHaveLength(2);
+    expect(card.findAll(".setting-row-title").map((t) => t.text())).toEqual(["Données personnelles", "Exporter mes données"]);
     // Plus de lien dans la phrase : « Voir les durées » est l'action de la ligne.
     expect(card.find(".setting-row-description a").exists()).toBe(false);
     const retention = card.find("[data-test=account-counts] .setting-row-control [data-test=data-retention]");
     expect(retention.text()).toBe("Voir les durées");
     expect(retention.attributes("href")).toBe("/tes-donnees");
     expect(card.find(".setting-row-control [data-test=export]").text()).toBe("Télécharger");
-    expect(card.find(".setting-row-control [data-test=delete-account]").exists()).toBe(true);
+    const danger = wrapper.find("[data-test=account-delete-card]");
+    expect(danger.classes()).toContain("account-delete-card");
+    expect(danger.find(".setting-row-title").text()).toBe("Supprimer mon compte");
+    expect(danger.find(".setting-row-control [data-test=delete-account]").exists()).toBe(true);
     // La confirmation sous sa ligne, dans la même carte ; le bouton s'efface pendant ce temps.
     await wrapper.find("[data-test=delete-account]").trigger("click");
-    expect(card.find("[data-test=delete-form].setting-row-form").exists()).toBe(true);
+    expect(danger.find("[data-test=delete-form].setting-row-form").exists()).toBe(true);
     expect(wrapper.find("[data-test=delete-account]").exists()).toBe(false);
     wrapper.unmount();
   });
 
-  it("fermer demande le mot de passe, puis renvoie à la connexion", async () => {
+  it("supprimer : le texte de la maquette, l'export ORP, « Annuler » par défaut, puis le mot de passe", async () => {
     POST.mockResolvedValueOnce({ error: { detail: "mot de passe incorrect" }, response: { ok: false } });
     POST.mockResolvedValueOnce({ response: { ok: true } });
     const { wrapper, router } = await mountPanel();
-    expect(wrapper.find("[data-test=delete-account]").text()).toBe("Fermer mon compte");
+    expect(wrapper.find("[data-test=delete-account]").text()).toBe("Supprimer mon compte");
     await wrapper.find("[data-test=delete-account]").trigger("click");
-    expect(wrapper.find("[data-test=inline-confirm-yes]").text()).toBe("Fermer définitivement");
+    const form = wrapper.find("[data-test=delete-form]");
+    expect(form.text()).toContain("Supprimer ton compte ?");
+    expect(form.text()).toContain("Ton CV, tes candidatures et ton suivi ORP seront effacés. Cette action est définitive.");
+    expect(form.find("[data-test=delete-export-orp]").attributes("href")).toBe("/bilan");
+    expect(form.find("[data-test=inline-confirm-yes]").text()).toBe("Supprimer définitivement");
+    expect(form.find("[data-test=inline-confirm-no]").text()).toBe("Annuler");
     await wrapper.find("[data-test=delete-password]").setValue("faux");
     await wrapper.find("[data-test=delete-form]").trigger("submit");
     await flushPromises();
@@ -107,24 +114,25 @@ describe("Tes données (docs/65 §6)", () => {
     await flushPromises();
     expect(POST).toHaveBeenLastCalledWith("/api/account/delete", { body: { password: "le-bon-mot-de-passe" } });
     expect(router.currentRoute.value.path).toBe("/connexion");
+    wrapper.unmount();
   });
 
   it("l'exploitant ne ferme pas son compte ici, même venu du menu", async () => {
-    const { wrapper } = await mountPanel({ ...SUMMARY, can_delete: false }, "/reglages?rubrique=compte&fermer=1");
+    const { wrapper } = await mountPanel({ ...SUMMARY, can_delete: false }, "/reglages?rubrique=donnees&fermer=1");
     expect(wrapper.find("[data-test=delete-account]").exists()).toBe(false);
     expect(wrapper.find("[data-test=delete-form]").exists()).toBe(false);
   });
 
-  it("venu de « Fermer mon compte » (docs/105) : la confirmation est ouverte, le mot de passe a le focus", async () => {
-    const { wrapper } = await mountPanel(SUMMARY, "/reglages?rubrique=compte&fermer=1");
+  it("venu de « Supprimer mon compte » (docs/105) : la confirmation est ouverte, le mot de passe a le focus", async () => {
+    const { wrapper } = await mountPanel(SUMMARY, "/reglages?rubrique=donnees&fermer=1");
     expect(wrapper.find("[data-test=delete-form]").exists()).toBe(true);
     expect(document.activeElement).toBe(wrapper.find("[data-test=delete-password]").element);
     wrapper.unmount();
   });
 
-  it("téléphone (0.77.4) : « Fermer définitivement » grisé sans mot de passe, puis il ferme", async () => {
+  it("téléphone (0.77.4) : « Supprimer définitivement » grisé sans mot de passe, puis il supprime", async () => {
     POST.mockResolvedValueOnce({ response: { ok: true } });
-    const { wrapper, router } = await mountPanel(SUMMARY, "/reglages?rubrique=compte&fermer=1");
+    const { wrapper, router } = await mountPanel(SUMMARY, "/reglages?rubrique=donnees&fermer=1");
     expect(wrapper.find("[data-test=inline-confirm-yes]").attributes("disabled")).toBeDefined();
     await wrapper.find("[data-test=delete-password]").setValue("le-bon-mot-de-passe");
     await wrapper.find("[data-test=inline-confirm-yes]").trigger("click");

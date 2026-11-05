@@ -260,10 +260,10 @@ async def _budget_alert(runtime: Runtime) -> bool:
             "Au-delà du plafond, les offres ne sont plus notées jusqu'au mois prochain.",
             priority=4,
             tags=["warning"],
-            click=f"{runtime.settings.public_url.rstrip('/')}/reglages",
+            click=f"{runtime.settings.public_url.rstrip('/')}/reglages?rubrique=ia",
         ),
         kind="budget",
-        link="/reglages",
+        link="/reglages?rubrique=ia",
     )
     async with runtime.sessionmaker.begin() as session:
         await session.execute(

@@ -169,7 +169,7 @@ onMounted(() => {
         <GroupedRow
           title="Apparence"
           :description="THEME_LABEL[theme]"
-          :to="rubric('compte')"
+          :to="rubric('affichage')"
           data-test="account-appearance"
         />
       </GroupedList>
@@ -199,7 +199,7 @@ onMounted(() => {
         <GroupedRow
           title="Formule"
           :value="planName"
-          :to="rubric('compte')"
+          :to="rubric('formule')"
           data-test="account-plan"
         />
         <GroupedRow
@@ -223,7 +223,7 @@ onMounted(() => {
       <GroupedList title="Confidentialité et aide">
         <GroupedRow
           title="Mes données"
-          :to="rubric('compte')"
+          :to="rubric('donnees')"
           data-test="account-data"
         />
         <GroupedRow
