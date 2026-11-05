@@ -1,4 +1,4 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
@@ -13,6 +13,8 @@ vi.mock("../api/client", async (original) => ({
   ...(await original<typeof import("../api/client")>()),
   api: { GET: (...a: unknown[]) => GET(...a), POST: (...a: unknown[]) => POST(...a), DELETE: (...a: unknown[]) => DELETE(...a) },
 }));
+// Une seule instance à la fois : le panneau d'un test précédent ne doit pas répondre au suivant.
+enableAutoUnmount(afterEach);
 afterEach(() => {
   vi.resetAllMocks();
   vi.unstubAllGlobals();
@@ -256,5 +258,81 @@ describe("AssistantPanel, les visages de la mascotte (docs/99)", () => {
     expect(wrapper.find(".assistant-line.assistant").text()).toContain("Indisponible");
     expect(mood(wrapper, ".assistant-line.assistant")).toBe("listening");
     expect(mood(wrapper, ".assistant-head")).toBe("listening");
+  });
+});
+
+describe("La page Assistant du téléphone (étape 11a, décisions de Kevin du 2026-11-05)", () => {
+  const phoneMedia = (query: string) =>
+    ({ matches: query.includes("820px") || query.includes("640px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList;
+
+  async function mountPage(today: Record<string, unknown>, preparing: Record<string, unknown>[] = []) {
+    vi.stubGlobal("matchMedia", phoneMedia);
+    GET.mockImplementation((path: string, options?: { params?: { query?: { view?: string } } }) => {
+      if (path === "/api/assistant/status") return Promise.resolve({ data: { available: true, model: "x" } });
+      if (path === "/api/today") return Promise.resolve({ data: today });
+      if (path === "/api/identity") return Promise.resolve({ data: { name: "Kevin Di Nocera" } });
+      if (path === "/api/offers" && options?.params?.query?.view === "to_review") {
+        return Promise.resolve({ data: { items: [{ id: 1, score: 90 }, { id: 2, score: 80 }, { id: 3, score: 75 }, { id: 4, score: 72 }] } });
+      }
+      if (path === "/api/offers") return Promise.resolve({ data: { items: preparing } });
+      return Promise.resolve({ data: [] });
+    });
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: "/assistant", name: "assistant", component: { template: "<div />" } },
+        { path: "/:any(.*)*", component: { template: "<div />" } },
+      ],
+    });
+    await router.push("/assistant");
+    const assistant = useAssistant();
+    assistant.available.value = true;
+    assistant.open.value = false;
+    const wrapper = mount(AssistantPanel, { global: { plugins: [router] } });
+    await flushPromises();
+    return { wrapper, router, assistant };
+  }
+
+  const TODAY = { month: "2026-11", month_count: 10, month_target: 10, to_follow_up: 13, orp_meeting_at: "2026-11-09T09:00:00Z", rhythm: null };
+
+  it("la bulle écrite par l'app : le prénom, les offres du tri de l'Accueil, les relances ; les réponses selon la situation", async () => {
+    localStorage.clear();
+    const { wrapper } = await mountPage(TODAY, [{ id: 12, status: "preparing", company: "Alpstack" }]);
+    const panel = wrapper.find("[data-test=assistant-panel]");
+    expect(panel.classes()).toContain("assistant-page");
+    expect(panel.attributes("role")).toBe("region");
+    expect(wrapper.find("h1").text()).toBe("Assistant");
+    expect(wrapper.find("[data-test=assistant-close]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=assistant-new]").attributes("aria-label")).toBe("Nouvelle discussion");
+    // Le tri de l'Accueil : 3 offres (la dose), pas les 4 à examiner.
+    expect(wrapper.find("[data-test=assistant-greeting]").text()).toBe(
+      "Bonjour Kevin. 3 offres t'attendent et 13 relances sont en retard. On commence par quoi ?",
+    );
+    const replies = wrapper.findAll("[data-test=assistant-reply]");
+    expect(replies.map((r) => r.text())).toEqual(["Préparer la lettre pour Alpstack", "Préparer les relances", "Préparer mon rendez-vous ORP"]);
+    expect(replies[0]!.attributes("href")).toBe("/candidatures/offres/12/preparer");
+    expect(replies[1]!.element.tagName).toBe("BUTTON");
+    expect(wrapper.find("[data-test=assistant-input]").attributes("placeholder")).toBe("Demande quelque chose…");
+    expect(wrapper.find("[data-test=assistant-send]").attributes("aria-label")).toBe("Envoyer");
+    expect(wrapper.find("[data-test=assistant-disclaimer]").text()).toBe("L'Assistant peut se tromper. Vérifie avant de confirmer.");
+    expect(GET).not.toHaveBeenCalledWith("/api/assistant/messages", expect.anything());
+  });
+
+  it("rien à faire : « Tout est à jour », et les questions de l'Accueil", async () => {
+    localStorage.clear();
+    GET.mockReset();
+    const { wrapper } = await mountPage({ ...TODAY, to_follow_up: 0, orp_meeting_at: null, rhythm: { research_today: false } });
+    expect(wrapper.find("[data-test=assistant-greeting]").text()).toBe("Bonjour Kevin. Tout est à jour. Une question ?");
+    expect(wrapper.findAll("[data-test=assistant-reply]").map((r) => r.text())).toContain("Que faire aujourd'hui ?");
+  });
+
+  it("un raccourci « Demander à l'assistant » sur téléphone mène à la page", async () => {
+    const { router, assistant } = await mountPage(TODAY);
+    await router.push("/candidatures/offres");
+    await flushPromises();
+    assistant.open.value = true;
+    await flushPromises();
+    expect(router.currentRoute.value.name).toBe("assistant");
+    expect(assistant.open.value).toBe(false);
   });
 });

@@ -13,6 +13,9 @@ export type AssistantFocus = {
 };
 
 const available = ref(false);
+// La réponse du serveur est arrivée (ou a échoué) : la barre du bas attend ce moment pour se dessiner, sans
+// passer de 5 à 4 onglets (décision de Kevin du 2026-11-05, AS8).
+const known = ref(false);
 const open = ref(false);
 const focus = ref<AssistantFocus | null>(null);
 // Demande venue d'un raccourci : le panneau repart sur une nouvelle discussion.
@@ -21,9 +24,17 @@ let checked: Promise<void> | null = null;
 
 export function useAssistant() {
   function check(): Promise<void> {
-    checked ??= api.GET("/api/assistant/status").then(({ data }) => {
-      available.value = Boolean(data?.available);
-    });
+    checked ??= Promise.resolve()
+      .then(() => api.GET("/api/assistant/status"))
+      .then((result) => {
+        available.value = Boolean(result?.data?.available);
+      })
+      .catch(() => {
+        available.value = false;
+      })
+      .finally(() => {
+        known.value = true;
+      });
     return checked;
   }
 
@@ -38,7 +49,7 @@ export function useAssistant() {
     open.value = true;
   }
 
-  return { available, open, focus, fresh, check, setFocus, askAbout };
+  return { available, known, open, focus, fresh, check, setFocus, askAbout };
 }
 
 export function focusBody(value: AssistantFocus | null): Record<string, unknown> | null {
@@ -50,6 +61,17 @@ export function focusBody(value: AssistantFocus | null): Record<string, unknown>
     month: value.month ?? null,
   };
   return Object.values(body).some((v) => v !== null) ? body : null;
+}
+
+// Le premier message de la page Assistant (AS3) : « Bonjour Kevin. 5 offres t'attendent et 13 relances sont en
+// retard. On commence par quoi ? », écrit par l'app avec les chiffres de l'Accueil.
+export function greetingText(name: string, offers: number, followUps: number): string {
+  const hello = name ? `Bonjour ${name}.` : "Bonjour.";
+  const parts: string[] = [];
+  if (offers) parts.push(offers === 1 ? "1 offre t'attend" : `${offers} offres t'attendent`);
+  if (followUps) parts.push(followUps === 1 ? "1 relance est en retard" : `${followUps} relances sont en retard`);
+  if (!parts.length) return `${hello} Tout est à jour. Une question ?`;
+  return `${hello} ${parts.join(" et ")}. On commence par quoi ?`;
 }
 
 // Trois suggestions selon la page et l'élément choisi (docs/24 §1).

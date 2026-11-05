@@ -5,7 +5,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 vi.mock("../api/client", () => ({ api: { GET: () => Promise.resolve({ data: { to_review: 2, pending: 4 } }) } }));
 vi.mock("../composables/useJobsMemory", () => ({ useJobsMemory: () => ({ last: ref("/candidatures/suivi") }) }));
-const assistant = { available: ref(true), open: ref(false) };
+const assistant = { available: ref(true), known: ref(true) };
 vi.mock("../composables/useAssistant", () => ({ useAssistant: () => assistant }));
 
 import BottomNav from "./BottomNav.vue";
@@ -17,6 +17,7 @@ function makeRouter() {
     routes: [
       { path: "/candidatures/offres/:id/preparer", name: "preparation", component: view },
       { path: "/aujourdhui/tri", name: "triage", component: view },
+      { path: "/assistant", name: "assistant", component: view },
       { path: "/:any(.*)*", name: "any", component: view },
     ],
   });
@@ -24,7 +25,7 @@ function makeRouter() {
 
 beforeEach(() => {
   assistant.available.value = true;
-  assistant.open.value = false;
+  assistant.known.value = true;
 });
 
 describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", () => {
@@ -72,19 +73,31 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     expect(wrapper.find("[data-test=tab-account]").classes()).toContain("active");
   });
 
-  it("Assistant ouvre et ferme le panneau ; il prend alors le rond, un autre onglet le referme", async () => {
+  it("Assistant mène à sa page (étape 11a) et y prend le rond", async () => {
     const router = makeRouter();
     await router.push("/aujourdhui");
     const wrapper = mount(BottomNav, { global: { plugins: [router] } });
     await flushPromises();
-    const button = wrapper.find("[data-test=tab-assistant]");
-    await button.trigger("click");
-    expect(assistant.open.value).toBe(true);
-    expect(wrapper.find("[data-test=tab-assistant]").attributes("aria-pressed")).toBe("true");
+    expect(wrapper.find("[data-test=tab-assistant]").attributes("href")).toBe("/assistant");
+    await router.push("/assistant");
+    await flushPromises();
+    const tab = wrapper.find("[data-test=tab-assistant]");
+    expect(tab.classes()).toContain("active");
+    expect(tab.attributes("aria-current")).toBe("page");
     expect(wrapper.find("[data-test=tab-today]").classes()).not.toContain("active");
     expect(wrapper.find("[data-test=tab-bar]").attributes("style")).toContain("--notch-x: 50%");
-    await wrapper.find("[data-test=tab-bilan]").trigger("click");
-    expect(assistant.open.value).toBe(false);
+  });
+
+  it("tant que la présence de l'Assistant n'est pas connue, pas de barre (AS8 : pas de saut de 5 à 4)", async () => {
+    assistant.known.value = false;
+    const router = makeRouter();
+    await router.push("/aujourdhui");
+    const wrapper = mount(BottomNav, { global: { plugins: [router] } });
+    await flushPromises();
+    expect(wrapper.find("[data-test=tab-bar]").exists()).toBe(false);
+    assistant.known.value = true;
+    await flushPromises();
+    expect(wrapper.findAll("[data-test=tab-bar] > *")).toHaveLength(5);
   });
 
   it("sans assistant, quatre onglets", async () => {

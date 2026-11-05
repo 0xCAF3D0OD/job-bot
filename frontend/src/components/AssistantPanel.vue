@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import Illustration from "./Illustration.vue";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import { api, type ChatAction, PROFILE_HEADER, storedProfile, UNAUTHORIZED_EVENT } from "../api/client";
 import { dateInList } from "../dates";
 import type { components } from "../api/schema";
 import { blocks, readEvents } from "../assistantText";
-import { focusBody, suggestionsFor, useAssistant } from "../composables/useAssistant";
+import { focusBody, greetingText, suggestionsFor, useAssistant } from "../composables/useAssistant";
+import { useDailyDose } from "../composables/useDailyDose";
 import { announceDataChanged } from "../composables/useDataChanged";
 import { usePhone } from "../composables/usePhone";
+import AppIcon from "./AppIcon.vue";
+import BrandMark from "./BrandMark.vue";
 import CopyButton from "./CopyButton.vue";
 import IconButton from "./IconButton.vue";
 import InlineConfirm from "./InlineConfirm.vue";
@@ -24,6 +27,7 @@ type Conversation = components["schemas"]["ConversationOut"];
 type Line = { role: "user" | "assistant"; content: string; error?: boolean; actions?: ChatAction[] };
 
 const route = useRoute();
+const router = useRouter();
 const { available, open, focus, fresh, check, setFocus } = useAssistant();
 const suggestions = computed(() => suggestionsFor(String(route.name ?? ""), focus.value));
 const lines = ref<Line[]>([]);
@@ -88,7 +92,7 @@ function scrollDown(): void {
 watch(() => lines.value.length, scrollDown);
 
 function onKey(event: KeyboardEvent): void {
-  if (event.key !== "Escape") return;
+  if (event.key !== "Escape" || page.value) return;
   // Ne ferme que le panneau, pas l'offre ouverte derrière.
   event.stopPropagation();
   open.value = false;
@@ -236,6 +240,55 @@ function onEnter(event: KeyboardEvent): void {
 // signalent pas la touche : le retour à la ligne demandé est alors intercepté ici.
 const { phone } = usePhone();
 
+// La page Assistant du téléphone (docs/139 Q4, étape 11a) : le même panneau, sur toute la page, au-dessus de la
+// barre du bas ; la discussion reste quand on change d'onglet. Un raccourci « Demander à l'assistant » y mène.
+const page = computed(() => phone.value && route.name === "assistant");
+watch(open, (value) => {
+  if (!value || !phone.value) return;
+  open.value = false;
+  void router.push({ name: "assistant" });
+});
+
+// Le premier message de la page (décision de Kevin du 2026-11-05, AS3) : écrit par l'app, sans IA, avec les
+// chiffres de l'Accueil et le prénom des Coordonnées ; puis des réponses selon la situation. « Préparer la
+// lettre » ouvre Ma candidature (AS4) ; les autres posent la question à l'Assistant.
+type Reply = { label: string; to?: string };
+const greeting = ref("");
+const replies = ref<Reply[]>([]);
+const dailyDose = useDailyDose();
+const fallbackReplies = (): Reply[] => suggestionsFor("today", null).map((label) => ({ label }));
+async function loadGreeting(): Promise<void> {
+  try {
+    const [, current, who] = await Promise.all([
+      dailyDose.load(),
+      api.GET("/api/offers", { params: { query: { view: "in_progress", sort: "activity", limit: 100 } } }),
+      api.GET("/api/identity").catch(() => null),
+    ]);
+    const today = dailyDose.today.value;
+    const name = who?.data?.name?.trim().split(/\s+/)[0] ?? "";
+    const offers = dailyDose.triagePending.value ? dailyDose.dose.value.length : 0;
+    greeting.value = greetingText(name, offers, today?.to_follow_up ?? 0);
+    const list: Reply[] = [];
+    const letter = (current.data?.items ?? []).find((offer) => offer.status === "preparing");
+    if (letter) list.push({ label: `Préparer la lettre pour ${letter.company}`, to: `/candidatures/offres/${letter.id}/preparer` });
+    if (today?.to_follow_up) list.push({ label: "Préparer les relances" });
+    if (today?.orp_meeting_at) list.push({ label: "Préparer mon rendez-vous ORP" });
+    replies.value = list.length ? list : fallbackReplies();
+  } catch {
+    greeting.value = greetingText("", 0, 0);
+    replies.value = fallbackReplies();
+  }
+}
+watch(
+  page,
+  (value) => {
+    if (!value) return;
+    if (!lines.value.length) void loadGreeting();
+    if (!conversationId.value) void loadRecent();
+  },
+  { immediate: true },
+);
+
 function onBeforeInput(event: InputEvent): void {
   if (!phone.value) return; // ordinateur : Maj+Entrée va à la ligne
   if (event.inputType !== "insertLineBreak" && event.inputType !== "insertParagraph") return;
@@ -287,7 +340,7 @@ const headItems: MoreMenuItem[] = [
 <template>
   <template v-if="available">
     <button
-      v-if="!open"
+      v-if="!open && !page"
       type="button"
       class="assistant-fab"
       aria-label="Ouvrir l'assistant"
@@ -298,21 +351,38 @@ const headItems: MoreMenuItem[] = [
       <span class="assistant-fab-label">Assistant</span>
     </button>
     <div
-      v-else
-      class="assistant-panel"
-      role="dialog"
+      v-if="open || page"
+      :class="['assistant-panel', { 'assistant-page': page }]"
+      :role="page ? 'region' : 'dialog'"
       aria-label="Assistant"
       data-test="assistant-panel"
       @keydown="onKey"
     >
       <header class="assistant-head">
-        <strong class="assistant-title"><AssistantMascot
+        <!-- La page : le logo et le titre, comme une page d'onglet (D11) ; le crayon ouvre une nouvelle discussion. -->
+        <h1
+          v-if="page"
+          class="assistant-page-title"
+        >
+          <BrandMark :size="28" />Assistant
+        </h1>
+        <strong
+          v-else
+          class="assistant-title"
+        ><AssistantMascot
           :size="26"
           :mood="headMood"
         />Assistant</strong>
         <div class="assistant-head-actions">
+          <IconButton
+            v-if="page"
+            icon="pencil"
+            label="Nouvelle discussion"
+            data-test="assistant-new"
+            @click="startOver"
+          />
           <button
-            v-if="lines.length"
+            v-else-if="lines.length"
             type="button"
             class="link"
             data-test="assistant-new"
@@ -327,6 +397,7 @@ const headItems: MoreMenuItem[] = [
             test-id="assistant-more"
           />
           <IconButton
+            v-if="!page"
             icon="close"
             label="Fermer l'assistant"
             data-test="assistant-close"
@@ -348,7 +419,49 @@ const headItems: MoreMenuItem[] = [
         class="assistant-body"
         aria-live="polite"
       >
-        <template v-if="!lines.length">
+        <template v-if="!lines.length && page">
+          <div
+            v-if="greeting"
+            class="assistant-line assistant"
+            data-test="assistant-greeting"
+          >
+            <AssistantMascot
+              :size="32"
+              class="assistant-line-mascot"
+            />
+            <div class="assistant-bubble">
+              <p>{{ greeting }}</p>
+            </div>
+          </div>
+          <div
+            v-if="greeting"
+            class="assistant-replies"
+          >
+            <template
+              v-for="reply in replies"
+              :key="reply.label"
+            >
+              <RouterLink
+                v-if="reply.to"
+                :to="reply.to"
+                class="assistant-reply"
+                data-test="assistant-reply"
+              >
+                <span class="with-icon">{{ reply.label }}<AppIcon name="arrow-right" /></span>
+              </RouterLink>
+              <button
+                v-else
+                type="button"
+                class="assistant-reply"
+                data-test="assistant-reply"
+                @click="send(reply.label)"
+              >
+                {{ reply.label }}
+              </button>
+            </template>
+          </div>
+        </template>
+        <template v-else-if="!lines.length">
           <!-- Avant la première question (planche « Illustrations », règle §4). -->
           <Illustration
             name="assistant-vide"
@@ -370,6 +483,8 @@ const headItems: MoreMenuItem[] = [
               {{ suggestion }}
             </button>
           </div>
+        </template>
+        <template v-if="!lines.length">
           <div
             v-if="recent.length"
             class="assistant-recent"
@@ -400,7 +515,7 @@ const headItems: MoreMenuItem[] = [
           <!-- La mascotte devant chaque réponse (docs/97). -->
           <AssistantMascot
             v-if="line.role === 'assistant' && (line.content || line.actions?.length)"
-            :size="24"
+            :size="page ? 32 : 24"
             :mood="lineMood(line)"
             class="assistant-line-mascot"
           />
@@ -410,7 +525,10 @@ const headItems: MoreMenuItem[] = [
           >
             {{ line.content }}
           </p>
-          <template v-else>
+          <div
+            v-else
+            class="assistant-bubble"
+          >
             <template
               v-for="(block, b) in blocks(line.content)"
               :key="b"
@@ -490,7 +608,7 @@ const headItems: MoreMenuItem[] = [
                 />
               </div>
             </template>
-          </template>
+          </div>
           <div
             v-for="action in line.actions ?? []"
             :key="action.id"
@@ -598,8 +716,8 @@ const headItems: MoreMenuItem[] = [
           v-model="draft"
           rows="2"
           maxlength="4000"
-          :placeholder="phone ? 'Écris ou dicte ta question…' : 'Écris ta question…'"
-          aria-label="Ta question"
+          :placeholder="page ? 'Demande quelque chose…' : phone ? 'Écris ou dicte ta question…' : 'Écris ta question…'"
+          aria-label="Ta demande à l'Assistant"
           enterkeyhint="send"
           data-test="assistant-input"
           @keydown.enter="onEnter"
@@ -609,11 +727,25 @@ const headItems: MoreMenuItem[] = [
           type="submit"
           class="primary small assistant-send"
           :disabled="busy || reached('chat')"
+          :aria-label="page ? 'Envoyer' : undefined"
           data-test="assistant-send"
         >
-          Envoyer
+          <AppIcon
+            v-if="page"
+            name="arrow-up"
+          />
+          <template v-else>
+            Envoyer
+          </template>
         </button>
       </form>
+      <!-- AS7 : sous le champ, sur la page comme dans le panneau. -->
+      <p
+        class="assistant-disclaimer"
+        data-test="assistant-disclaimer"
+      >
+        L'Assistant peut se tromper. Vérifie avant de confirmer.
+      </p>
     </div>
   </template>
 </template>

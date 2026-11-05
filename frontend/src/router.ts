@@ -7,9 +7,11 @@ import {
   type RouteRecordRaw,
 } from "vue-router";
 
+import { useAssistant } from "./composables/useAssistant";
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
 import { startPage } from "./composables/usePageTransition";
+import { PHONE_QUERY } from "./composables/usePhone";
 import type { IconName } from "./icons";
 import PlaceholderView from "./views/PlaceholderView.vue";
 
@@ -248,6 +250,9 @@ export const routes: RouteRecordRaw[] = [
   { path: "/a-propos", name: "about", component: AboutView },
   // L'accueil après la première connexion (docs/66), plein écran, sans menu.
   { path: "/bienvenue", name: "welcome", component: WelcomeView, meta: { bare: true } },
+  // L'Assistant, une page sur téléphone (docs/139 Q4, étape 11a) : le panneau, sur toute la page, au-dessus de la
+  // barre du bas. Sur ordinateur, l'adresse ouvre le panneau sur l'Accueil.
+  { path: "/assistant", name: "assistant", component: { render: () => null } },
   // Relier l'extension du navigateur en un clic, ouverte par l'extension (docs/71 §4).
   { path: "/extension/relier", name: "extension-link", component: ExtensionLinkView },
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
@@ -286,6 +291,18 @@ router.beforeEach(async (to) => {
   if (loggedIn.value && me.value?.welcome === "pending" && to.name !== "welcome" && !PUBLIC_ROUTES.has(String(to.name))) {
     return { name: "welcome" };
   }
+  // L'Assistant : sa présence est connue avant le premier rendu de la barre du bas (AS8).
+  if (loggedIn.value) {
+    const assistant = useAssistant();
+    await assistant.check();
+    if (to.name === "assistant") {
+      if (!assistant.available.value) return { path: "/aujourdhui" };
+      if (!globalThis.matchMedia?.(PHONE_QUERY).matches) {
+        assistant.open.value = true;
+        return { path: "/aujourdhui" };
+      }
+    }
+  }
   // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) : un invité revient au compte.
   if (to.name === "diagnostic" && loggedIn.value && me.value?.auth_enabled && !me.value.is_owner) {
     return { path: "/compte" };
@@ -305,6 +322,7 @@ router.beforeEach(async (to) => {
 // Le titre de l'onglet du navigateur, « Page · jobA1 » (WCAG 2.4.2, audit du 22.10.2026).
 const PAGE_TITLES: Record<string, string> = {
   today: "Aujourd'hui",
+  assistant: "Assistant",
   offers: "Offres",
   applications: "Suivi",
   alerts: "Alertes",

@@ -40,6 +40,11 @@ export function useDailyDose() {
     return best.value.slice(0, behind ? DOSE_CATCH_UP : DOSE);
   });
 
+  // Le tri à faire, comme sur l'Accueil : ni repos, ni pause, une dose, pas déjà fait aujourd'hui.
+  const triagePending = computed(
+    () => !restDay.value && !today.value?.rhythm?.pause_until && dose.value.length > 0 && !triageDoneToday(),
+  );
+
   async function load(): Promise<void> {
     const [day, offers] = await Promise.all([
       api.GET("/api/today"),
@@ -50,5 +55,5 @@ export function useDailyDose() {
     loaded.value = true;
   }
 
-  return { today, best, dose, restDay, loaded, load };
+  return { today, best, dose, restDay, triagePending, loaded, load };
 }
