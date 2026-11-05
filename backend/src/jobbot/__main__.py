@@ -10,6 +10,7 @@ imap-sample  copie les derniers e-mails de la boîte dans <stockage>/samples (le
 reparse      réanalyse les copies brutes stockées (après un analyseur nouveau ou corrigé)
 anonymize-sample ID…  fait des jeux de test anonymisés à partir d'alertes stockées
 set-password crée le compte de connexion ou change son mot de passe (saisie masquée)
+getemall-tester IDENTIFIANT  marque un compte testeur de Get'emAll (--retirer : l'inverse)
 """
 
 import argparse
@@ -517,6 +518,39 @@ def cmd_set_password(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_getemall_tester(args: argparse.Namespace) -> int:
+    """Phase de test de Get'emAll (docs/140) : seuls les comptes marqués relient l'app. Retirer
+    la marque coupe aussi la lecture du suivi (la base ne reconnaît plus le jeton)."""
+    from sqlalchemy import func, select
+
+    from jobbot.db.models import User
+    from jobbot.runtime import Runtime
+
+    settings = _settings()
+    tester = not args.retirer
+
+    async def save() -> bool:
+        runtime = Runtime.create(settings, "admin")
+        try:
+            async with runtime.sessionmaker.begin() as session:
+                user = await session.scalar(
+                    select(User).where(func.lower(User.username) == args.username.lower())
+                )
+                if user is None:
+                    return False
+                user.getemall_tester = tester
+                return True
+        finally:
+            await runtime.dispose()
+
+    if not asyncio.run(save()):
+        print(f"Aucun compte « {args.username} ».", file=sys.stderr)
+        return 1
+    what = "est maintenant testeur" if tester else "n'est plus testeur"
+    print(f"« {args.username} » {what} de Get'emAll.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="jobbot", description="jobA1")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -573,6 +607,10 @@ def main(argv: list[str] | None = None) -> int:
     password = sub.add_parser("set-password", help="compte de connexion (saisie masquée)")
     password.add_argument("--username", help="identifiant (par défaut : le compte existant)")
     password.set_defaults(func=cmd_set_password)
+    tester = sub.add_parser("getemall-tester", help="testeur de Get'emAll (docs/140)")
+    tester.add_argument("username", help="identifiant du compte")
+    tester.add_argument("--retirer", action="store_true", help="retire la marque")
+    tester.set_defaults(func=cmd_getemall_tester)
     args = parser.parse_args(argv)
     code: int = args.func(args)
     return code

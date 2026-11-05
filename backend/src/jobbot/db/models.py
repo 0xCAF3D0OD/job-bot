@@ -963,6 +963,9 @@ class User(Base):
     )
     # Le mot laissé avec la demande, effacé à l'acceptation.
     signup_note: Mapped[str | None] = mapped_column(Text)
+    # Testeur invité de Get'emAll (docs/140) : seul un compte marqué par l'exploitant peut relier
+    # l'app pendant la phase de test.
+    getemall_tester: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
 
 
 class AccountLink(Base):
@@ -1191,6 +1194,49 @@ class ExtensionToken(Base):
     # Jeton de liaison (« Relier ce navigateur ») : à lire dans les 2 minutes, puis effacé à la
     # première utilisation (docs/76 §1).
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PartnerCode(Base):
+    """Code d'autorisation d'une app partenaire (docs/140 §2) : 60 secondes, une seule lecture,
+    seule son empreinte est gardée. Lié au PKCE (`code_challenge`) et à l'adresse de retour."""
+
+    __tablename__ = "partner_codes"
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    partner: Mapped[str] = mapped_column(Text)
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    code_challenge: Mapped[str] = mapped_column(Text)
+    redirect_uri: Mapped[str] = mapped_column(Text)
+    # La case ORP de la page de consentement (données sensibles, docs/140 §3).
+    orp: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PartnerLink(Base):
+    """Liaison d'une app partenaire (docs/140 §2) : un identifiant propre à l'app, stable, et le
+    jeton de lecture du suivi, dont seule l'empreinte est gardée. Une par compte et par app."""
+
+    __tablename__ = "partner_links"
+    __table_args__ = (UniqueConstraint("user_id", "partner", name="partner_links_partner_key"),)
+
+    user_id: Mapped[int] = account_column()
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    partner: Mapped[str] = mapped_column(Text)
+    # Tiré au hasard, jamais l'id du compte : l'app ne peut pas recouper deux comptes.
+    subject: Mapped[str] = mapped_column(Text)
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    orp: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    authorized_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Contact(Base):

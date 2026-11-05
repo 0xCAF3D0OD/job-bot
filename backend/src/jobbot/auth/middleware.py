@@ -18,6 +18,7 @@ from jobbot.auth import service
 from jobbot.db.base import read_only
 from jobbot.extension import service as extension_service
 from jobbot.log import get_logger
+from jobbot.partners import getemall as partner_service
 
 log = get_logger(__name__)
 
@@ -39,11 +40,15 @@ PUBLIC_ANY = [
     re.compile(r"^/api/auth/"),
     # Le webhook de Payrexx (docs/125 §6) : sans session, la route vérifie sa signature.
     re.compile(r"^/api/billing/webhook$"),
+    # L'échange du code de Get'emAll (docs/140) : la route vérifie le secret client.
+    re.compile(r"^/api/partenaires/getemall/echange$"),
 ]
 CALENDAR_FEED = re.compile(r"^/api/agenda/feed/([A-Za-z0-9_-]+)\.ics$")
 PROFILE_HEADER = b"x-jobbot-profile"
 # Routes de l'extension du navigateur (docs/25) : jeton obligatoire, connexion ou non.
 EXTENSION_PREFIX = "/api/extension/"
+# Routes lues par le serveur de Get'emAll (docs/140) : jeton de liaison obligatoire.
+PARTNER_PATH = re.compile(r"^/api/partenaires/getemall/(?:suivi|lien|candidatures/\d+/offre)$")
 
 
 def is_public(method: str, path: str) -> bool:
@@ -136,6 +141,9 @@ class AuthMiddleware:
             return
         if path.startswith(EXTENSION_PREFIX):
             await self._extension(scope, receive, send, headers)
+            return
+        if PARTNER_PATH.match(path):
+            await self._partner(scope, receive, send, headers)
             return
         if cross_site(method, headers):
             log.warning("cross_site_refused", path=path, origin=headers.get("origin"))
@@ -238,4 +246,33 @@ class AuthMiddleware:
             state["user"] = None
             state["extension_token"] = found.id
             scope["headers"] = [(k, v) for k, v in scope["headers"] if k != PROFILE_HEADER]
+            await self.app(scope, receive, send)
+
+    async def _partner(
+        self, scope: Scope, receive: Receive, send: Send, headers: dict[str, str]
+    ) -> None:
+        """Get'emAll (docs/140) : le jeton de liaison remplace le cookie, comme pour
+        l'extension. Le compte n'est cherché qu'avec ce jeton, jamais avec une session. Sans
+        configuration, aucun jeton n'existe : 401, comme toute route sans connexion."""
+        runtime: Any = scope["app"].state.runtime
+        token = bearer_token(headers)
+        account = None
+        if token and token.startswith(partner_service.TOKEN_PREFIX):
+            async with runtime.sessionmaker.begin() as session:
+                account = await accounts.account_of_token(
+                    session, "partner", service.token_hash(token)
+                )
+        found = None
+        if account is not None:
+            with accounts.use(account):
+                async with runtime.sessionmaker.begin() as session:
+                    found = await partner_service.authenticate(session, token)
+        if found is None:
+            await _json(send, 401, "jeton de liaison absent ou révoqué")
+            return
+        state = scope.setdefault("state", {})
+        state["user"] = None
+        state["partner_link"] = found.id
+        scope["headers"] = [(k, v) for k, v in scope["headers"] if k != PROFILE_HEADER]
+        with accounts.use(account):
             await self.app(scope, receive, send)

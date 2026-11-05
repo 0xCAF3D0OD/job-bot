@@ -18,7 +18,7 @@ from jobbot.api.owner import require_owner
 from jobbot.auth import links, signup
 from jobbot.auth.service import end_all_sessions
 from jobbot.db.base import connected_as_admin
-from jobbot.db.models import AccountLink, CalendarToken, ExtensionToken, User
+from jobbot.db.models import AccountLink, CalendarToken, ExtensionToken, PartnerLink, User
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
 
@@ -369,11 +369,11 @@ async def update_account(request: Request, account_id: int, body: AccountChange)
         if body.plan is not None:
             user.plan = body.plan
     if body.suspended:
-        # Ses jetons d'extension et d'agenda aussi (docs/78 §2), révoqués en son nom : ses
-        # lignes ne sont visibles que de lui.
+        # Ses jetons d'extension, d'agenda et de Get'emAll aussi (docs/78 §2, docs/140),
+        # révoqués en son nom : ses lignes ne sont visibles que de lui.
         with accounts.use(account_id):
             async with runtime.sessionmaker.begin() as session:
-                for model in (ExtensionToken, CalendarToken):
+                for model in (ExtensionToken, CalendarToken, PartnerLink):
                     await session.execute(
                         update(model)
                         .where(model.revoked_at.is_(None))

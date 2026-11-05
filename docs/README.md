@@ -30,7 +30,7 @@ Chaque fichier explique **pourquoi** une fonction existe, et il n'est plus réé
 | Le téléphone | 33, 34, 36, 51, **139 (nouvelle identité mobile, en cours)** |
 | Logo, illustrations, mouvement | 58 à 62, 67, 68, 96 à 101, 103, 107, 123 |
 | Exploitation, sécurité, démo | 71, 72, 77, 78, 79, 80, 82, 117, 136 |
-| Entraînement aux entretiens | 75, 137, 138 |
+| Entraînement aux entretiens | 75, 137, 138, 140 (connexion de Get'emAll) |
 | Revues après plusieurs versions | 41, 43, 50, 56, 64, 69, 76, 81, 127 (test avec 5 personnes) |
 | Retirées depuis (Actualités) | 15, 17, 35 |
 

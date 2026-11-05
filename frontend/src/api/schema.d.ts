@@ -744,6 +744,115 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/partenaires/getemall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Link State */
+        get: operations["getemallLink"];
+        put?: never;
+        post?: never;
+        /**
+         * Revoke
+         * @description « Retirer » dans les Réglages (Connexions) : Get'emAll ne lit plus rien.
+         */
+        delete: operations["revokeGetemall"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partenaires/getemall/autorisation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Authorize */
+        post: operations["authorizeGetemall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partenaires/getemall/echange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange */
+        post: operations["getemallExchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partenaires/getemall/suivi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Follow Up */
+        get: operations["getemallFollowUp"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partenaires/getemall/candidatures/{application_id}/offre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Application Offer */
+        get: operations["getemallOffer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/partenaires/getemall/lien": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlink
+         * @description « Supprimer mes données » dans Get'emAll : la liaison est retirée aussi chez jobA1.
+         */
+        delete: operations["getemallUnlink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/contacts": {
         parameters: {
             query?: never;
@@ -4865,6 +4974,125 @@ export interface components {
             chunk_id: number;
             /** Score */
             score: number | null;
+        };
+        /** GetemallApplication */
+        GetemallApplication: {
+            /** Id */
+            id: number;
+            /** Job Title */
+            job_title: string;
+            /** Company */
+            company: string;
+            /** Status */
+            status: string;
+            /** Interview At */
+            interview_at: string | null;
+        };
+        /** GetemallAuthorizeIn */
+        GetemallAuthorizeIn: {
+            /** Redirect Uri */
+            redirect_uri: string;
+            /** State */
+            state: string;
+            /** Code Challenge */
+            code_challenge: string;
+            /**
+             * Code Challenge Method
+             * @constant
+             */
+            code_challenge_method: "S256";
+            /**
+             * Orp
+             * @default false
+             */
+            orp: boolean;
+        };
+        /** GetemallAuthorizeOut */
+        GetemallAuthorizeOut: {
+            /** Redirect To */
+            redirect_to: string;
+        };
+        /** GetemallExchangeIn */
+        GetemallExchangeIn: {
+            /** Client Secret */
+            client_secret: string;
+            /** Code */
+            code: string;
+            /** Code Verifier */
+            code_verifier: string;
+            /** Redirect Uri */
+            redirect_uri: string;
+        };
+        /** GetemallExchangeOut */
+        GetemallExchangeOut: {
+            /** Subject */
+            subject: string;
+            /** Token */
+            token: string;
+            /** Orp */
+            orp: boolean;
+        };
+        /** GetemallFollowUp */
+        GetemallFollowUp: {
+            profile: components["schemas"]["GetemallProfile"];
+            orp?: components["schemas"]["GetemallOrp"] | null;
+            /** Applications */
+            applications: components["schemas"]["GetemallApplication"][];
+        };
+        /** GetemallLinkState */
+        GetemallLinkState: {
+            /** Available */
+            available: boolean;
+            /** Tester */
+            tester: boolean;
+            /** Linked */
+            linked: boolean;
+            /** Orp */
+            orp: boolean;
+            /** Authorized At */
+            authorized_at: string | null;
+            /** Last Used At */
+            last_used_at: string | null;
+        };
+        /** GetemallOffer */
+        GetemallOffer: {
+            /** Title */
+            title: string;
+            /** Company */
+            company: string | null;
+            /** Description */
+            description: string | null;
+        };
+        /**
+         * GetemallOrp
+         * @description Les recherches du mois, seulement si la case ORP a été cochée.
+         */
+        GetemallOrp: {
+            /** Month */
+            month: string;
+            /** Done */
+            done: number;
+            /** Target */
+            target: number | null;
+            /**
+             * Due On
+             * Format: date
+             */
+            due_on: string;
+        };
+        /**
+         * GetemallProfile
+         * @description « Profil complété » : les premiers pas de jobA1 (docs/128), cinq étapes.
+         */
+        GetemallProfile: {
+            /** Steps Done */
+            steps_done: number;
+            /** Steps Total */
+            steps_total: number;
+            /** Percent */
+            percent: number;
+            /** Next Step */
+            next_step: ("profile" | "alerts" | "keep" | "prepare" | "sent") | null;
         };
         /** GlobalSearchOut */
         GlobalSearchOut: {
@@ -9221,6 +9449,235 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    getemallLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetemallLinkState"];
+                };
+            };
+        };
+    };
+    revokeGetemall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    authorizeGetemall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GetemallAuthorizeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetemallAuthorizeOut"];
+                };
+            };
+            /** @description Adresse de retour hors de la liste */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réservé aux testeurs invités */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Connexion Get'emAll non configurée */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getemallExchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GetemallExchangeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetemallExchangeOut"];
+                };
+            };
+            /** @description Code inconnu, déjà lu, expiré, ou PKCE faux */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Secret client faux */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Connexion Get'emAll non configurée */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Trop d'essais : attendre */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getemallFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetemallFollowUp"];
+                };
+            };
+        };
+    };
+    getemallOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetemallOffer"];
+                };
+            };
+            /** @description Candidature introuvable */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getemallUnlink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

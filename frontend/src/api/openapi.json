@@ -1725,6 +1725,224 @@
         }
       }
     },
+    "/api/partenaires/getemall": {
+      "get": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Link State",
+        "operationId": "getemallLink",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetemallLinkState"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Revoke",
+        "description": "« Retirer » dans les Réglages (Connexions) : Get'emAll ne lit plus rien.",
+        "operationId": "revokeGetemall",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
+    "/api/partenaires/getemall/autorisation": {
+      "post": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Authorize",
+        "operationId": "authorizeGetemall",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetemallAuthorizeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetemallAuthorizeOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Adresse de retour hors de la liste"
+          },
+          "403": {
+            "description": "Réservé aux testeurs invités"
+          },
+          "404": {
+            "description": "Connexion Get'emAll non configurée"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/partenaires/getemall/echange": {
+      "post": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Exchange",
+        "operationId": "getemallExchange",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetemallExchangeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetemallExchangeOut"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Code inconnu, déjà lu, expiré, ou PKCE faux"
+          },
+          "401": {
+            "description": "Secret client faux"
+          },
+          "404": {
+            "description": "Connexion Get'emAll non configurée"
+          },
+          "429": {
+            "description": "Trop d'essais : attendre"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/partenaires/getemall/suivi": {
+      "get": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Follow Up",
+        "operationId": "getemallFollowUp",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetemallFollowUp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/partenaires/getemall/candidatures/{application_id}/offre": {
+      "get": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Application Offer",
+        "operationId": "getemallOffer",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetemallOffer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Candidature introuvable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/partenaires/getemall/lien": {
+      "delete": {
+        "tags": [
+          "partenaires"
+        ],
+        "summary": "Unlink",
+        "description": "« Supprimer mes données » dans Get'emAll : la liaison est retirée aussi chez jobA1.",
+        "operationId": "getemallUnlink",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        }
+      }
+    },
     "/api/offers/{offer_id}/contacts": {
       "get": {
         "tags": [
@@ -13485,6 +13703,353 @@
           "score"
         ],
         "title": "GapBlockOut"
+      },
+      "GetemallApplication": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "interview_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interview At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "job_title",
+          "company",
+          "status",
+          "interview_at"
+        ],
+        "title": "GetemallApplication"
+      },
+      "GetemallAuthorizeIn": {
+        "properties": {
+          "redirect_uri": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Redirect Uri"
+          },
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._~-]{8,200}$",
+            "title": "State"
+          },
+          "code_challenge": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "title": "Code Challenge"
+          },
+          "code_challenge_method": {
+            "type": "string",
+            "const": "S256",
+            "title": "Code Challenge Method"
+          },
+          "orp": {
+            "type": "boolean",
+            "title": "Orp",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "redirect_uri",
+          "state",
+          "code_challenge",
+          "code_challenge_method"
+        ],
+        "title": "GetemallAuthorizeIn"
+      },
+      "GetemallAuthorizeOut": {
+        "properties": {
+          "redirect_to": {
+            "type": "string",
+            "title": "Redirect To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "redirect_to"
+        ],
+        "title": "GetemallAuthorizeOut"
+      },
+      "GetemallExchangeIn": {
+        "properties": {
+          "client_secret": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Client Secret"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Code"
+          },
+          "code_verifier": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Code Verifier"
+          },
+          "redirect_uri": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Redirect Uri"
+          }
+        },
+        "type": "object",
+        "required": [
+          "client_secret",
+          "code",
+          "code_verifier",
+          "redirect_uri"
+        ],
+        "title": "GetemallExchangeIn"
+      },
+      "GetemallExchangeOut": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "orp": {
+            "type": "boolean",
+            "title": "Orp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "token",
+          "orp"
+        ],
+        "title": "GetemallExchangeOut"
+      },
+      "GetemallFollowUp": {
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/GetemallProfile"
+          },
+          "orp": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GetemallOrp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "applications": {
+            "items": {
+              "$ref": "#/components/schemas/GetemallApplication"
+            },
+            "type": "array",
+            "title": "Applications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile",
+          "applications"
+        ],
+        "title": "GetemallFollowUp"
+      },
+      "GetemallLinkState": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "tester": {
+            "type": "boolean",
+            "title": "Tester"
+          },
+          "linked": {
+            "type": "boolean",
+            "title": "Linked"
+          },
+          "orp": {
+            "type": "boolean",
+            "title": "Orp"
+          },
+          "authorized_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authorized At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available",
+          "tester",
+          "linked",
+          "orp",
+          "authorized_at",
+          "last_used_at"
+        ],
+        "title": "GetemallLinkState"
+      },
+      "GetemallOffer": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "company",
+          "description"
+        ],
+        "title": "GetemallOffer"
+      },
+      "GetemallOrp": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "done": {
+            "type": "integer",
+            "title": "Done"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "due_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Due On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "done",
+          "target",
+          "due_on"
+        ],
+        "title": "GetemallOrp",
+        "description": "Les recherches du mois, seulement si la case ORP a été cochée."
+      },
+      "GetemallProfile": {
+        "properties": {
+          "steps_done": {
+            "type": "integer",
+            "title": "Steps Done"
+          },
+          "steps_total": {
+            "type": "integer",
+            "title": "Steps Total"
+          },
+          "percent": {
+            "type": "integer",
+            "title": "Percent"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "profile",
+                  "alerts",
+                  "keep",
+                  "prepare",
+                  "sent"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step"
+          }
+        },
+        "type": "object",
+        "required": [
+          "steps_done",
+          "steps_total",
+          "percent",
+          "next_step"
+        ],
+        "title": "GetemallProfile",
+        "description": "« Profil complété » : les premiers pas de jobA1 (docs/128), cinq étapes."
       },
       "GlobalSearchOut": {
         "properties": {

@@ -49,6 +49,9 @@ PERSONAL = (
     "offers",
     "orp_meetings",
     "orp_months",
+    # La connexion de Get'emAll (docs/140) : codes d'autorisation et liaisons.
+    "partner_codes",
+    "partner_links",
     "profile_chunks",
     "profile_sources",
     "profiles",

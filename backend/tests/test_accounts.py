@@ -83,7 +83,10 @@ SKIPPED = {("post", "/api/auth/logout"), ("post", "/api/auth/logout-all")}
 # Sans connexion, seules répondent : la connexion et les liens d'accès, les mentions de « Tes
 # données », l'état de la maintenance (docs/79), l'agenda (son propre jeton) et l'extension
 # (le sien) — docs/69 §1.
-ANONYMOUS_OPEN = re.compile(r"^/api/(auth/|privacy$|maintenance$|agenda/feed/|extension/)")
+# L'échange du code de Get'emAll (docs/140) : ouvert, la route vérifie le secret client.
+ANONYMOUS_OPEN = re.compile(
+    r"^/api/(auth/|privacy$|maintenance$|agenda/feed/|extension/|partenaires/getemall/echange$)"
+)
 
 
 def visible(response: Any) -> str:
@@ -495,8 +498,9 @@ async def test_database_refuses_other_account(
     owner, other = two_accounts
     await seed_account_a(runtime)
     tables = await account_tables(runtime)
-    # dont les paiements de Plus (docs/125), les « Pas vrai » et les étapes datées
-    assert len(tables) == 35
+    # dont les paiements de Plus (docs/125), les « Pas vrai », les étapes datées et la
+    # connexion de Get'emAll (docs/140)
+    assert len(tables) == 37
     with accounts.use(other):
         async with runtime.sessionmaker() as session:
             for table in tables:

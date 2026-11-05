@@ -27,6 +27,7 @@ SECRET_FIELDS = (
     "backup_passphrase",
     "payrexx_api_secret",
     "payrexx_webhook_key",
+    "getemall_client_secret",
 )
 
 
@@ -134,6 +135,12 @@ class Settings(BaseSettings):
     # La clé de signature des webhooks (Payrexx, rubrique Webhooks), différente du secret de l'API.
     payrexx_webhook_key: SecretStr | None = None
 
+    # « Se connecter avec jobA1 » depuis Get'emAll (docs/140). Sans secret ni adresse de retour,
+    # rien n'est proposé. Les adresses de retour sont fixées ici, par environnement (production,
+    # staging, poste de développement) : jamais lues dans la requête.
+    getemall_client_secret: SecretStr | None = None
+    getemall_redirect_uris: list[str] = Field(default_factory=list)
+
     # Connexion (docs/18 §1) : sans session, l'API ne sert que les Actualités.
     # false seulement pour un essai local : toutes les pages redeviennent ouvertes.
     auth_enabled: bool = True
@@ -213,6 +220,13 @@ class Settings(BaseSettings):
             and self.payrexx_api_secret
             and self.payrexx_webhook_key
         )
+
+    @property
+    def getemall_ready(self) -> bool:
+        secret = (
+            self.getemall_client_secret.get_secret_value() if self.getemall_client_secret else ""
+        )
+        return bool(secret.strip() and self.getemall_redirect_uris)
 
     @property
     def score_model(self) -> str:
