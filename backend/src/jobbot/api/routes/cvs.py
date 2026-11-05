@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import Annotated, Literal
 from urllib.parse import quote
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +18,7 @@ from jobbot.api.routes import writing
 from jobbot.db.models import Draft, DraftKind, Offer
 from jobbot.letters.cv_document import CvDocument, assemble_cv, cv_to_docx, section_of
 from jobbot.letters.document import Identity
-from jobbot.letters.pdf import cv_to_pdf
+from jobbot.letters.pdf import Template, cv_to_pdf
 from jobbot.letters.service import load_identity
 from jobbot.llm import cv as cv_llm
 from jobbot.llm.scoring import InvalidScore, ProfileChunkData
@@ -92,6 +92,12 @@ class CvOut(BaseModel):
     edited_at: datetime | None
     blocks: list[CvBlock]
     document: CvDocumentOut
+    # « J'ai relu le CV » (maquette Preparer, comme la lettre) : gardé avec la version.
+    read_at: datetime | None = None
+
+
+class CvRead(BaseModel):
+    read: bool
 
 
 class CvRequest(BaseModel):
@@ -148,6 +154,7 @@ async def _render(session: AsyncSession, draft: Draft) -> CvOut:
         edited_at=draft.edited_at,
         blocks=blocks,
         document=CvDocumentOut.model_validate(asdict(_document(draft, chunks, identity))),
+        read_at=draft.content.get("read_at"),
     )
 
 
@@ -233,8 +240,9 @@ async def edit_cv(request: Request, draft_id: int, body: CvEdit) -> CvOut:
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, "aucun bloc de profil valide coché"
             )
+        # Une retouche défait « J'ai relu le CV », comme pour la lettre.
         draft.content = {
-            **draft.content,
+            **{k: v for k, v in draft.content.items() if k != "read_at"},
             "headline": body.headline.strip(),
             "summary": body.summary.strip(),
             "chunk_ids": ids,
@@ -245,6 +253,20 @@ async def edit_cv(request: Request, draft_id: int, body: CvEdit) -> CvOut:
             ),
         }
         draft.edited_at = datetime.now(UTC)
+        await session.flush()
+        await session.refresh(draft)
+        return await _render(session, draft)
+
+
+@router.put("/cvs/{draft_id}/read", operation_id="markCvRead")
+async def mark_cv_read(request: Request, draft_id: int, body: CvRead) -> CvOut:
+    """« J'ai relu le CV » : coché ou décoché, gardé avec la version (pour un autre appareil)."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        draft = await writing.get_draft(session, draft_id, DraftKind.CV)
+        content = {k: v for k, v in draft.content.items() if k != "read_at"}
+        if body.read:
+            content["read_at"] = datetime.now(UTC).isoformat()
+        draft.content = content
         await session.flush()
         await session.refresh(draft)
         return await _render(session, draft)
@@ -278,8 +300,10 @@ async def download_cv_docx(request: Request, draft_id: int) -> Response:
     response_class=Response,
     responses={200: {"content": {"application/pdf": {}}}},
 )
-async def download_cv_pdf(request: Request, draft_id: int) -> Response:
-    """Le même CV en PDF, à joindre aux formulaires en ligne (docs/25 §3.4)."""
+async def download_cv_pdf(
+    request: Request, draft_id: int, modele: Annotated[Template, Query()] = "sobre"
+) -> Response:
+    """Le même CV en PDF, pour les formulaires en ligne (docs/25 §3.4), dans le modèle choisi."""
     async with _runtime(request).sessionmaker() as session:
         draft = await writing.get_draft(session, draft_id, DraftKind.CV)
         offer = await session.get(Offer, draft.offer_id)
@@ -289,7 +313,7 @@ async def download_cv_pdf(request: Request, draft_id: int) -> Response:
     company = "".join(c for c in (offer.company or "employeur") if c.isalnum() or c in " -")
     filename = f"CV - {company.strip()[:60]}.pdf"
     return Response(
-        cv_to_pdf(document, title=filename[:-4]),
+        cv_to_pdf(document, title=filename[:-4], template=modele),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(filename)}"},
     )

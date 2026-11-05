@@ -56,13 +56,11 @@ onUnmounted(() => clearInterval(timer));
         :class="{ done: index < current, current: index === current }"
         :aria-current="index === current ? 'step' : undefined"
       >
-        <span
+        <!-- Le libellé sur deux lignes au plus, dans sa colonne (Kevin, 2026-11-05 : rien ne déborde à 320 px). -->
+        <span class="ai-step-label"><AppIcon
           v-if="index < current"
-          class="with-icon"
-        ><AppIcon name="done" />{{ label }}</span>
-        <template v-else>
-          {{ label }}
-        </template>
+          name="done"
+        />{{ label }}</span>
       </li>
     </ol>
     <p class="hint">

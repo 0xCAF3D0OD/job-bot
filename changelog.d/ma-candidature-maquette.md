@@ -1,0 +1,1 @@
+Interface : Ma candidature sur téléphone suit la maquette : choix du modèle (Sobre, Moderne, Bandeau, Classique, le même pour CV et lettre), aperçu de la lettre et du CV dans ce modèle, PDF au modèle choisi, « Modifier le texte avec l'Assistant », « J'ai relu le CV », aperçu vide avec « Rédiger la lettre », et étapes de rédaction sans chevauchement.

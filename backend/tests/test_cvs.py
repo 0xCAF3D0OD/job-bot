@@ -179,6 +179,17 @@ async def test_edit_application_and_docx(api: AsyncClient, rt: Runtime, fake: Fa
     text_ = " ".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf.content)).pages)
     assert "Jean Exemple" in text_ and "Résumé corrigé." in text_ and "EXPÉRIENCES" in text_
     assert text_.index("Stage web") < text_.index("Stage DevOps")
+    styled = await api.get(f"/api/cvs/{cv['id']}/pdf", params={"modele": "moderne"})
+    assert styled.status_code == 200 and styled.content != pdf.content
+
+    # « J'ai relu le CV » (maquette Preparer) : gardé, puis défait par une retouche.
+    read = (await api.put(f"/api/cvs/{cv['id']}/read", json={"read": True})).json()
+    assert read["read_at"] is not None
+    listed = (await api.get(f"/api/offers/{cv['offer_id']}/cvs")).json()
+    assert next(c for c in listed if c["id"] == cv["id"])["read_at"] is not None
+    unread = (await api.put(f"/api/cvs/{cv['id']}/read", json={"read": False})).json()
+    assert unread["read_at"] is None
+    assert (await api.put("/api/cvs/999999/read", json={"read": True})).status_code == 404
 
 
 async def test_new_version_and_errors(api: AsyncClient, rt: Runtime, fake: FakeClient) -> None:
