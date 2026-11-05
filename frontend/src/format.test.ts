@@ -1,7 +1,7 @@
 // Jours de la liste des offres (docs/73 §3), à l'heure suisse.
 import { describe, expect, it } from "vitest";
 
-import { dayKey, dayName, dayShort, gapSkill, orpPace } from "./format";
+import { dayKey, dayName, dayShort, gapSkill, initials, orpPace } from "./format";
 
 // Dimanche 18 octobre 2026, 10 h à Zurich.
 const NOW = new Date("2026-10-18T08:00:00Z");
@@ -48,5 +48,15 @@ describe("orpPace (docs/123 §2, Q)", () => {
   });
   it("le premier jour du mois, personne n'est en retard", () => {
     expect(orpPace(0, 10, "2026-10", new Date(2026, 9, 1))?.state).toBe("on-track");
+  });
+});
+
+describe("initiales d'une entreprise (téléphone)", () => {
+  it("deux mots sans la forme juridique, ou les deux premières lettres d'un seul mot", () => {
+    expect(initials("Léman Data SA")).toBe("LD");
+    expect(initials("Romandie Logistics")).toBe("RL");
+    expect(initials("Alpstack")).toBe("AL");
+    expect(initials("Maquette Médias Sàrl")).toBe("MM");
+    expect(initials("  ")).toBe("?");
   });
 });
