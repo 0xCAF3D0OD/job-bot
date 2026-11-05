@@ -44,6 +44,10 @@ export const ICONS = {
   done: path("M5 12.5l4.5 4.5L19 7.5"),
   "check-circle": circle(12, 12, 8.5) + path("M8.5 12.2l2.4 2.4 4.6-4.8"),
   alert: path("M12 4L2.8 19.5h18.4z") + path("M12 10v4M12 16.8h.01"),
+  // Les étiquettes des recherches ORP et la carte de correspondance (maquettes Explorer et Offre) : la coche
+  // seule, le point d'exclamation seul.
+  tick: path("M5 12l5 5 9-10"),
+  bang: path("M12 7v6M12 17h.01"),
   // L'erreur d'un champ (maquette Connexion) : le rond et le point d'exclamation.
   "alert-circle": circle(12, 12, 9) + path("M12 7v6M12 16.5v.5"),
   "x-circle": circle(12, 12, 8.5) + path("M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"),
