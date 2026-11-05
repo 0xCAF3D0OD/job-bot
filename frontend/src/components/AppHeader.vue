@@ -37,6 +37,7 @@ const phoneTitle = computed<string | null>(() => {
   if (!loggedIn.value || SUB_PAGE.some((key) => route.query[key])) return null;
   if (route.path.startsWith("/candidatures") && route.meta.tab) return "Candidatures";
   if (route.path.startsWith("/bilan") && route.meta.tab) return "Bilan";
+  if (route.name === "account") return "Compte";
   if (route.name === "settings") return "Réglages";
   if (route.name === "profile") return "Profil";
   return null;

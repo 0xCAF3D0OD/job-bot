@@ -3,18 +3,17 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { useAuth } from "../composables/useAuth";
-import { useCollect } from "../composables/useCollect";
 import { useProfiles } from "../composables/useProfiles";
 import AppIcon from "./AppIcon.vue";
 
-// Menu du compte (docs/19 §1, docs/89) : dans la capsule à droite, sous ton initiale. Il porte
-// ce qui n'est pas la recherche : Profil, Réglages, Données personnelles, Diagnostic, la collecte, le
-// profil affiché et la déconnexion. Toujours là, sur ordinateur comme sur téléphone.
+// Menu du compte (docs/19 §1, docs/89) : sous ton initiale, en haut à droite sur ordinateur. Il ne garde que
+// « Compte » et « Se déconnecter » (décision de Kevin du 2026-11-05, C2) : le Profil, les Réglages, la collecte,
+// le profil affiché et le reste s'ouvrent depuis la page Compte.
 const route = useRoute();
 const router = useRouter();
 const { me, logout } = useAuth();
-const { list, current, load, choose } = useProfiles();
-const { running, collectNow } = useCollect();
+// Le profil affiché est lu dès l'ouverture de l'app (le bandeau « Revenir à … »).
+const { load } = useProfiles();
 // Un bouton rond, sans capsule (1.6.46) : le menu s'ouvre sous lui.
 const open = ref(false);
 const root = ref<HTMLElement | null>(null);
@@ -22,15 +21,6 @@ const trigger = ref<HTMLButtonElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 
 const initial = computed(() => me.value?.username?.trim().charAt(0).toUpperCase() ?? "");
-
-function onChange(event: Event): void {
-  choose(Number((event.target as HTMLSelectElement).value));
-}
-
-async function collect(): Promise<void> {
-  open.value = false;
-  await collectNow();
-}
 
 async function signOut(): Promise<void> {
   open.value = false;
@@ -134,78 +124,12 @@ onUnmounted(() => {
       >
         Connecté : <strong>{{ me.username }}</strong>
       </p>
-      <label
-        v-if="list && list.items.length > 1"
-        class="account-profile"
-      >Profil affiché
-        <select
-          class="field-compact"
-          :value="current?.id"
-          data-test="profile-switcher"
-          @change="onChange"
-        >
-          <option
-            v-for="profile in list.items"
-            :key="profile.id"
-            :value="profile.id"
-          >
-            {{ profile.name }} {{ profile.is_main ? "(principal)" : "(essai)" }}
-          </option>
-        </select>
-      </label>
       <RouterLink
-        to="/profil"
+        to="/compte"
         role="menuitem"
-        data-test="account-profile"
+        data-test="account-page-link"
       >
-        <span class="with-icon"><AppIcon name="user" />Profil</span>
-      </RouterLink>
-      <RouterLink
-        to="/reglages"
-        role="menuitem"
-        data-test="account-settings"
-      >
-        <span class="with-icon"><AppIcon name="settings" />Réglages</span>
-      </RouterLink>
-      <RouterLink
-        to="/tes-donnees"
-        role="menuitem"
-        data-test="account-privacy"
-      >
-        <span class="with-icon"><AppIcon name="shield" />Données personnelles</span>
-      </RouterLink>
-      <!-- Le Diagnostic technique, à l'exploitant seulement (docs/108 §3). -->
-      <RouterLink
-        v-if="me?.is_owner || (me?.auth_enabled === false && !me?.demo)"
-        to="/reglages/diagnostic"
-        role="menuitem"
-        data-test="account-diagnostic"
-      >
-        <span class="with-icon"><AppIcon name="activity" />Diagnostic</span>
-      </RouterLink>
-      <!-- La démo ne collecte rien (docs/72). -->
-      <button
-        v-if="!me?.demo"
-        type="button"
-        class="link"
-        role="menuitem"
-        :disabled="running"
-        data-test="account-collect"
-        @click="collect"
-      >
-        <span class="with-icon"><AppIcon name="refresh" />Collecter maintenant</span>
-      </button>
-      <!-- Fermer son compte (docs/105) : mène à la confirmation, dans Réglages › Compte. Ni
-             l'exploitant, ni la démo, ni sans connexion : ils ne peuvent pas le fermer. -->
-      <RouterLink
-        v-if="me?.auth_enabled && !me.is_owner && !me.demo"
-        :to="{ path: '/reglages', query: { rubrique: 'compte', fermer: '1' } }"
-        active-class=""
-        exact-active-class=""
-        role="menuitem"
-        data-test="account-close"
-      >
-        <span class="with-icon"><AppIcon name="close" />Fermer mon compte</span>
+        <span class="with-icon"><AppIcon name="user" />Compte</span>
       </RouterLink>
       <button
         v-if="me?.auth_enabled"

@@ -37,7 +37,7 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     expect(tabs.map((tab) => tab.find(".tab-bar-label").text())).toEqual(["Accueil", "Candidatures", "Assistant", "Bilan", "Compte"]);
     expect(wrapper.find("[data-test=tab-today]").attributes("href")).toBe("/aujourdhui");
     expect(wrapper.find("[data-test=tab-bilan]").attributes("href")).toBe("/bilan");
-    expect(wrapper.find("[data-test=tab-account]").attributes("href")).toBe("/reglages");
+    expect(wrapper.find("[data-test=tab-account]").attributes("href")).toBe("/compte");
     expect(wrapper.text()).not.toContain("Progresser");
   });
 

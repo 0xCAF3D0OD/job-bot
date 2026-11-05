@@ -29,6 +29,7 @@ const NotFoundView = () => import("./views/NotFoundView.vue");
 const PreparationView = () => import("./views/PreparationView.vue");
 const BilanView = () => import("./views/BilanView.vue");
 const ProfileView = () => import("./views/ProfileView.vue");
+const AccountView = () => import("./views/AccountView.vue");
 const SettingsView = () => import("./views/SettingsView.vue");
 const SignupView = () => import("./views/SignupView.vue");
 const TodayView = () => import("./views/TodayView.vue");
@@ -54,12 +55,14 @@ export const navigation: NavEntry[] = [
   { path: "/aujourdhui", name: "today", label: "Aujourd'hui", icon: "calendar" },
   { path: "/candidatures", name: "jobs", label: "Candidatures", icon: "check-circle" },
   { path: "/bilan", name: "bilan", label: "Bilan", icon: "stats" },
+  // La page Compte (docs/139 étape 10a) : le sommaire du profil et des réglages, l'onglet Compte du téléphone.
+  { path: "/compte", name: "account", label: "Compte", icon: "user" },
   { path: "/profil", name: "profile", label: "Profil", icon: "user" },
   { path: "/reglages", name: "settings", label: "Réglages", icon: "settings" },
 ];
 // Le menu principal : trois entrées, une question chacune (docs/126 §1) : Aujourd'hui (que
 // faire ?), Candidatures (où en sont-elles ?), Bilan (qu'est-ce qui marche, quoi améliorer ?).
-// Profil et Réglages s'ouvrent depuis le menu du compte.
+// Profil et Réglages s'ouvrent depuis la page Compte (décision de Kevin du 2026-11-05, C2).
 export const mainMenu: NavEntry[] = navigation.filter((entry) => ["today", "jobs", "bilan"].includes(entry.name));
 
 // Onglets de la rubrique Candidatures (docs/19 §2).
@@ -69,6 +72,7 @@ export type BilanTab = "orp" | "resultats" | "formations";
 
 // Pages livrées ; les autres entrées du menu affichent la version qui les remplira.
 const views: Record<string, () => Promise<unknown>> = {
+  account: AccountView,
   profile: ProfileView,
   settings: SettingsView,
   today: TodayView,
