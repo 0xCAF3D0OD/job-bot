@@ -36,6 +36,10 @@ describe("ScoreRing", () => {
     expect(wrapper.find("[data-test=score]").text()).toContain("Pas encore notée");
   });
 
+  it("le grand cercle de la fiche (bare) : le chiffre seul, sans « /100 » qui déborde", () => {
+    expect(mount(ScoreRing, { props: { score: 87, large: true, bare: true } }).find(".score-ring").text()).toBe("87");
+  });
+
   it("montre « /100 » dans le grand cercle du panneau", () => {
     expect(mount(ScoreRing, { props: { score: 42, large: true } }).text()).toBe("42/100");
   });

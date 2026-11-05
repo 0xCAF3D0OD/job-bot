@@ -123,10 +123,10 @@ describe("OfferDetail, l'essentiel en haut (docs/21 §5)", () => {
     // Les étiquettes : seulement ce qui est connu, et la date sans « il y a » (dates.ts).
     const tags = wrapper.findAll("[data-test=offer-tags] li").map((li) => li.text());
     expect(tags).toEqual(["80–100 %", "Contrat non précisé", "Télétravail 2 j", "Reçue le 5 octobre"]);
-    // Le mot en titre, le chiffre en texte secondaire (O3) et dans l'anneau (2026-11-05, Kevin).
+    // Le mot en titre, le chiffre seul dans l'anneau (D12, maquette Offre).
     expect(wrapper.find("[data-test=match-title]").text()).toBe("Très proche de ton profil");
-    expect(wrapper.find("[data-test=match-sub]").text()).toBe("88 sur 100, selon ton profil et tes préférences");
-    expect(wrapper.find("[data-test=section-for-you] .score-ring").text()).toBe("88/100");
+    expect(wrapper.find("[data-test=match-sub]").text()).toBe("Selon ton profil et tes préférences");
+    expect(wrapper.find("[data-test=section-for-you] .score-ring").text()).toBe("88");
     const lines = wrapper.findAll("[data-test=match-lines] li");
     expect(lines.map((li) => li.classes("ok"))).toEqual([true, true, true]);
     expect(lines[0]!.text()).toContain("Kubernetes");

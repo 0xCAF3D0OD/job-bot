@@ -1,0 +1,1 @@
+Interface : fiche d'une offre du téléphone comme la maquette, le chiffre seul dans l'anneau (plus de « /100 » qui déborde), coche et (!) fins, ni ligne d'état ni canton, et « Pour cette offre » sans le visage devant le mot.
