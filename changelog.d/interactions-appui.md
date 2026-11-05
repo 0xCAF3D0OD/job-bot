@@ -1,0 +1,1 @@
+Interface : chaque bouton, lien, onglet et segment s'enfonce en douceur à l'appui, sans fond bleu au toucher ; les onglets soulignés et le séparateur de « Se déconnecter » sont droits ; dans les alertes et les premiers pas, le bouton bleu ajoute aussi ce qui est tapé
