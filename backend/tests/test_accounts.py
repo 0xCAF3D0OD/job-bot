@@ -8,6 +8,7 @@ il ne doit rien en voir, rien en modifier, rien en supprimer.
 
 import io
 import re
+import secrets
 import zipfile
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta
@@ -41,6 +42,7 @@ from jobbot.db.models import (
     InterviewPractice,
     LlmCall,
     Notification,
+    OauthLink,
     Offer,
     OfferLink,
     OrpMeeting,
@@ -66,6 +68,7 @@ PERSONAL = {
     "application_id",
     "chunk_id",
     "contact_id",
+    "connection_id",
     "conversation_id",
     "document_id",
     "draft_id",
@@ -228,6 +231,13 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
         )
         claim = ForbiddenClaim(text=f"{SECRET} affirmation", draft_id=draft.id)
         session.add(claim)
+        # Un compte Google lié (docs/65, complément du 2026-11-05) : B ne le voit ni ne le retire.
+        oauth = OauthLink(
+            provider="google",
+            subject=f"{SECRET}-{secrets.token_hex(8)}",
+            email=f"{SECRET}@example.ch",
+        )
+        session.add(oauth)
         await session.flush()
         return {
             "action_id": action.id,
@@ -256,6 +266,8 @@ async def seed_account_a(runtime: Runtime) -> dict[str, Any]:
             "token": "inconnu",
             "account_id": accounts.current(),
             "link_id": 1,
+            "connection_id": oauth.id,
+            "provider": "google",
         }
 
 

@@ -43,6 +43,10 @@ PUBLIC_ANY = [
     # L'échange du code de Get'emAll (docs/140) : la route vérifie le secret client.
     re.compile(r"^/api/partenaires/getemall/echange$"),
 ]
+# Le retour d'Apple (docs/65, complément du 2026-11-05) : un formulaire envoyé par le site
+# d'Apple, donc venu d'un autre site. La route le vérifie elle-même : le `state` doit être celui du
+# parcours lancé depuis ce navigateur (cookie), sinon rien ne se passe.
+FORM_POST_CALLBACK = re.compile(r"^/api/auth/oauth/apple/callback$")
 CALENDAR_FEED = re.compile(r"^/api/agenda/feed/([A-Za-z0-9_-]+)\.ics$")
 PROFILE_HEADER = b"x-jobbot-profile"
 # Routes de l'extension du navigateur (docs/25) : jeton obligatoire, connexion ou non.
@@ -145,7 +149,7 @@ class AuthMiddleware:
         if PARTNER_PATH.match(path):
             await self._partner(scope, receive, send, headers)
             return
-        if cross_site(method, headers):
+        if cross_site(method, headers) and not FORM_POST_CALLBACK.match(path):
             log.warning("cross_site_refused", path=path, origin=headers.get("origin"))
             await _json(send, 403, "requête refusée : elle ne vient pas de la plateforme")
             return

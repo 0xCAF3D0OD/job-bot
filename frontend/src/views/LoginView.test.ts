@@ -72,18 +72,97 @@ describe("LoginView", () => {
   });
 });
 
-describe("LoginView, deux moitiés (docs/65, complément 0.53.1)", () => {
-  it("Google, Apple, Microsoft présentés : un clic dit que ça arrive", async () => {
+describe("LoginView, Apple, Google et Microsoft (docs/65, complément du 2026-11-05)", () => {
+  function offer(providers: unknown) {
+    GET.mockImplementation((path: string) =>
+      Promise.resolve({ data: path === "/api/auth/providers" ? { providers } : path === "/api/auth/signup" ? { open: false } : anonymous }),
+    );
+  }
+
+  it("aucun fournisseur configuré : ni bouton, ni séparateur, ni « arrive bientôt »", async () => {
+    offer([]);
+    const { wrapper } = await mountLogin();
+    expect(GET).toHaveBeenCalledWith("/api/auth/providers");
+    expect(wrapper.find("[data-test=social-signin]").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("arrive bientôt");
+    expect(wrapper.find("[data-test=login-form]").exists()).toBe(true);
+  });
+
+  it("seulement les fournisseurs configurés, dans l'ordre Apple, Google, Microsoft", async () => {
+    offer(["microsoft", "google", "inconnu"]);
+    const { wrapper } = await mountLogin();
+    const buttons = wrapper.findAll(".social-button");
+    expect(buttons.map((b) => b.attributes("data-test"))).toEqual(["social-google", "social-microsoft"]);
+    expect(buttons.map((b) => b.text())).toEqual(["Continuer avec Google", "Continuer avec Microsoft"]);
+    // Un lien vers le départ du serveur, avec la page où revenir.
+    expect(buttons[0]!.attributes("href")).toBe("/api/auth/oauth/google/start?suite=%2Fcandidatures");
+    expect(wrapper.find(".social-divider").text()).toBe("ou avec ton identifiant");
+  });
+
+  it("les trois configurés : trois boutons ; une adresse de retour externe n'est pas transmise", async () => {
+    offer(["apple", "google", "microsoft"]);
+    const { wrapper } = await mountLogin("/connexion?suite=//piege.example");
+    expect(wrapper.findAll(".social-button").map((b) => b.attributes("href"))).toEqual([
+      "/api/auth/oauth/apple/start",
+      "/api/auth/oauth/google/start",
+      "/api/auth/oauth/microsoft/start",
+    ]);
+  });
+
+  it("le refus du serveur, dit sur la page (connexion sur invitation)", async () => {
+    offer(["google"]);
+    const { wrapper } = await mountLogin("/connexion?erreur=aucun-compte&fournisseur=google");
+    expect(wrapper.find("[data-test=oauth-error]").text()).toBe("Aucun compte jobA1 n'est lié à ce compte Google.");
+    expect(wrapper.find("[data-test=oauth-error]").attributes("role")).toBe("alert");
+  });
+
+  it("la demande de compte envoyée", async () => {
+    offer(["apple"]);
+    const { wrapper } = await mountLogin("/connexion?info=demande&fournisseur=apple");
+    expect(wrapper.find("[data-test=oauth-info]").text()).toContain("Ta demande de compte est envoyée");
+  });
+});
+
+describe("LoginView, maquette Connexion", () => {
+  it("le titre, l'illustration décorative et le logo", async () => {
     GET.mockResolvedValue({ data: anonymous });
     const { wrapper } = await mountLogin();
-    expect(wrapper.find(".auth-art").exists()).toBe(true);
-    for (const id of ["google", "apple", "microsoft"]) {
-      expect(wrapper.find(`[data-test=social-${id}]`).exists()).toBe(true);
+    expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("Content de te revoir.");
+    expect(wrapper.find(".login-hand").text()).toBe("te revoir.");
+    const art = wrapper.findAll("[data-test=auth-illustration]");
+    expect(art.length).toBe(2);
+    for (const one of art) {
+      // Décorative : cachée aux lecteurs d'écran, image sans texte.
+      expect(one.attributes("aria-hidden") ?? one.element.closest("[aria-hidden=true]")).toBeTruthy();
+      expect(one.find("img").attributes("alt")).toBe("");
     }
-    await wrapper.find("[data-test=social-google]").trigger("click");
-    expect(wrapper.find("[data-test=social-notice]").text()).toContain("Google arrive bientôt");
+    expect(wrapper.find("[data-test=brand-logo]").exists()).toBe(true);
+  });
+
+  it("champs vides : l'erreur sous chaque champ, avec aria-invalid", async () => {
+    GET.mockResolvedValue({ data: anonymous });
+    const { wrapper } = await mountLogin();
+    await wrapper.find("[data-test=login-form]").trigger("submit");
+    await flushPromises();
     expect(POST).not.toHaveBeenCalled();
-    expect(wrapper.find("[data-test=login-form]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=username-error]").text()).toBe("Écris ton identifiant.");
+    expect(wrapper.find("[data-test=login-error]").text()).toBe("Écris ton mot de passe.");
+    expect(wrapper.find("[data-test=username]").attributes("aria-invalid")).toBe("true");
+    expect(wrapper.find("[data-test=username]").attributes("aria-describedby")).toBe("login-username-error");
+    expect(wrapper.find("[data-test=password]").attributes("aria-invalid")).toBe("true");
+    expect(wrapper.find("[data-test=username-error] .icon").exists()).toBe(true);
+  });
+
+  it("« Afficher le mot de passe » : 44 px, aria-pressed", async () => {
+    GET.mockResolvedValue({ data: anonymous });
+    const { wrapper } = await mountLogin();
+    const toggle = wrapper.find("[data-test=password-toggle]");
+    expect(toggle.attributes("aria-label")).toBe("Afficher le mot de passe");
+    expect(toggle.attributes("aria-pressed")).toBe("false");
+    expect(wrapper.find("[data-test=password]").attributes("type")).toBe("password");
+    await toggle.trigger("click");
+    expect(toggle.attributes("aria-pressed")).toBe("true");
+    expect(wrapper.find("[data-test=password]").attributes("type")).toBe("text");
   });
 });
 
@@ -96,7 +175,7 @@ describe("LoginView, demander un compte (docs/102)", () => {
     answer(true);
     const { wrapper } = await mountLogin();
     expect(wrapper.find("[data-test=signup-link]").attributes("href")).toBe("/inscription");
-    expect(wrapper.find(".auth-foot").text().replace(/\s+/g, " ")).toContain("Pas encore de compte ? Créer un compte");
+    expect(wrapper.find(".login-foot").text().replace(/\s+/g, " ")).toContain("Pas encore de compte ? Créer un compte");
     expect(wrapper.text()).not.toContain("sur invitation");
   });
 

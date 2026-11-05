@@ -36,12 +36,16 @@ export const ICONS = {
   rate: circle(12, 12, 9) + path("M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01"),
   tag: path("M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z") + circle(8, 8, 1.3),
   eye: path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3),
+  // Le mot de passe affiché (maquette Connexion) : l'œil barré.
+  "eye-off": path("M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z") + circle(12, 12, 3) + path("M3 3l18 18"),
   file: path("M7 3h7l4 4v14H7z") + path("M14 3v4h4M10 12h5M10 16h5"),
   // États
   check: circle(12, 12, 9, ' fill="currentColor" stroke="none"') + path("M8 12.5l2.5 2.5L16 9.5", ' stroke="var(--icon-on-fill, #fff)"'),
   done: path("M5 12.5l4.5 4.5L19 7.5"),
   "check-circle": circle(12, 12, 8.5) + path("M8.5 12.2l2.4 2.4 4.6-4.8"),
   alert: path("M12 4L2.8 19.5h18.4z") + path("M12 10v4M12 16.8h.01"),
+  // L'erreur d'un champ (maquette Connexion) : le rond et le point d'exclamation.
+  "alert-circle": circle(12, 12, 9) + path("M12 7v6M12 16.5v.5"),
   "x-circle": circle(12, 12, 8.5) + path("M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"),
   star: path("M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"),
   trend: path("M7 17L17 7M9 7h8v8"),

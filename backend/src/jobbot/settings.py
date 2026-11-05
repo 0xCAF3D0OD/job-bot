@@ -28,6 +28,9 @@ SECRET_FIELDS = (
     "payrexx_api_secret",
     "payrexx_webhook_key",
     "getemall_client_secret",
+    "oauth_google_client_secret",
+    "oauth_microsoft_client_secret",
+    "oauth_apple_private_key",
 )
 
 
@@ -141,6 +144,22 @@ class Settings(BaseSettings):
     getemall_client_secret: SecretStr | None = None
     getemall_redirect_uris: list[str] = Field(default_factory=list)
 
+    # Se connecter avec Google, Microsoft ou Apple (OpenID Connect ; docs/65, complément du
+    # 2026-11-05).
+    # Un fournisseur n'est proposé que si tout ce qui le concerne est rempli. Les secrets ne
+    # vivent que dans l'environnement du serveur (ou leur fichier `_FILE`), jamais dans git.
+    oauth_google_client_id: str = ""
+    oauth_google_client_secret: SecretStr | None = None
+    oauth_microsoft_client_id: str = ""
+    oauth_microsoft_client_secret: SecretStr | None = None
+    # « common » : comptes personnels et professionnels ; ou l'id d'un seul annuaire.
+    oauth_microsoft_tenant: str = "common"
+    # Apple : l'identifiant du service (Services ID), de l'équipe, de la clé et la clé .p8.
+    oauth_apple_service_id: str = ""
+    oauth_apple_team_id: str = ""
+    oauth_apple_key_id: str = ""
+    oauth_apple_private_key: SecretStr | None = None
+
     # Connexion (docs/18 §1) : sans session, l'API ne sert que les Actualités.
     # false seulement pour un essai local : toutes les pages redeviennent ouvertes.
     auth_enabled: bool = True
@@ -227,6 +246,33 @@ class Settings(BaseSettings):
             self.getemall_client_secret.get_secret_value() if self.getemall_client_secret else ""
         )
         return bool(secret.strip() and self.getemall_redirect_uris)
+
+    @property
+    def oauth_providers(self) -> list[str]:
+        """Les fournisseurs de connexion configurés, dans l'ordre de la page de connexion."""
+
+        def filled(value: SecretStr | None) -> bool:
+            return bool(value and value.get_secret_value().strip())
+
+        ready = {
+            "apple": bool(
+                self.oauth_apple_service_id.strip()
+                and self.oauth_apple_team_id.strip()
+                and self.oauth_apple_key_id.strip()
+                and filled(self.oauth_apple_private_key)
+            ),
+            "google": bool(
+                self.oauth_google_client_id.strip() and filled(self.oauth_google_client_secret)
+            ),
+            "microsoft": bool(
+                self.oauth_microsoft_client_id.strip()
+                and filled(self.oauth_microsoft_client_secret)
+                and self.oauth_microsoft_tenant.strip()
+            ),
+        }
+        if self.demo or not self.auth_enabled:
+            return []
+        return [name for name, ok in ready.items() if ok]
 
     @property
     def score_model(self) -> str:

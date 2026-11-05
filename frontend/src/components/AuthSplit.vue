@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import AuthScene from "./AuthScene.vue";
+import AuthIllustration from "./AuthIllustration.vue";
 
-// Connexion et liens d'accès (docs/65, complément 0.53.1) : l'écran coupé en deux, la scène qui
-// remplit la moitié gauche avec la phrase de la plateforme dessus (docs/67, compléments 0.55.2 et
-// 0.55.3 : le jour, ou le soir en sombre), le formulaire à droite. Sur téléphone, la scène en
-// bandeau au-dessus du formulaire.
+// Liens d'accès et demande de compte (docs/65 ; docs/102) : l'écran coupé en deux, l'illustration de la connexion à
+// gauche avec la phrase de la plateforme (maquette Connexion, ordinateur), le formulaire à droite. Sur téléphone,
+// le bandeau de 150 px au-dessus du formulaire. La page de connexion a sa propre mise en page (LoginView).
 defineProps<{ title: string; subtitle?: string }>();
 </script>
 
@@ -14,13 +13,11 @@ defineProps<{ title: string; subtitle?: string }>();
       class="auth-art"
       aria-hidden="true"
     >
-      <AuthScene>
-        <div class="auth-caption">
-          <p class="auth-pitch">
-            Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
-          </p>
-        </div>
-      </AuthScene>
+      <AuthIllustration large />
+      <AuthIllustration class="auth-illustration-phone" />
+      <p class="auth-pitch">
+        Tes alertes triées, tes candidatures préparées, tes preuves ORP prêtes.
+      </p>
     </div>
     <div class="auth-panel">
       <div class="auth-box">

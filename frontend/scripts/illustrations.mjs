@@ -19,11 +19,7 @@ import sharp from "sharp";
 // rien rogner ; `largeurs` : les tailles écrites ; `nette` : qualité 92 et netteté renforcée
 // (une image affichée en grand).
 export const ILLUSTRATIONS = {
-  // La connexion (docs/67, compléments 0.55.2 et 0.55.3) : la ville et le bureau, le jour et le
-  // soir, images entières ; leur ciel est prolongé par la page (AuthScene), pas dans l'image.
-  // Affichées en grand : leur pleine largeur (1264 px), en meilleure qualité, un peu plus nettes.
-  connexion: { source: "Connexion_Ville", entiere: true, largeurs: [480, 800, 1264], nette: true },
-  "connexion-soir": { source: "Connexion_Soir", entiere: true, largeurs: [480, 800, 1264], nette: true },
+  // La connexion n'a plus d'image de ville : le personnage du kit (AuthIllustration, 2026-11-05).
   "accueil-reseau": { source: "15_Reseau" },
   "actualites-video": { source: "Actualites_C_Videos" },
   "alertes-carte": { source: "02_Alertes" },

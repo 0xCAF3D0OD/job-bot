@@ -232,8 +232,8 @@ export const routes: RouteRecordRaw[] = [
   { path: "/notifications", name: "notifications", component: NotificationsView },
   // Diagnostic technique, sorti des Réglages (docs/21 §6).
   { path: "/reglages/diagnostic", name: "diagnostic", component: DiagnosticView },
-  // Connexion (docs/18 §1).
-  { path: "/connexion", name: "login", component: LoginView },
+  // Connexion (docs/18 §1) : plein écran, son propre logo (maquette Connexion, 2026-11-05).
+  { path: "/connexion", name: "login", component: LoginView, meta: { bare: true } },
   // Lien d'invitation ou de réinitialisation, transmis par l'exploitant (docs/65 §2).
   { path: "/acces/:token", name: "access", component: AccessView },
   // Demander un compte, validé ensuite par l'exploitant (docs/102).
