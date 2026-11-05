@@ -76,6 +76,13 @@ async def _setting(session: AsyncSession, key: str, value: object) -> None:
     )
 
 
+async def reached(session: AsyncSession) -> int:
+    """Le nombre d'étapes faites, sans rien garder : pour une lecture d'une app partenaire
+    (docs/140 §3), qui ne doit pas changer ce que la personne verra dans jobA1."""
+    stored = await session.scalar(select(Setting.value).where(Setting.key == REACHED_KEY))
+    return max(await _computed(session), stored if isinstance(stored, int) else 0)
+
+
 async def load(session: AsyncSession) -> FirstSteps:
     """Lit les étapes, garde la plus haute atteinte (la session doit pouvoir écrire)."""
     values = {

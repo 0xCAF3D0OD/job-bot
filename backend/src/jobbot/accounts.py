@@ -76,9 +76,14 @@ async def writes_shared(session: AsyncSession) -> bool:
 
 
 async def account_of_token(session: AsyncSession, kind: str, digest: str) -> int | None:
-    """Le compte d'un jeton (extension ou agenda), cherché avant que le compte soit connu ;
-    la base ne rend que ce numéro (fonctions des migrations 0046, 0053 et 0056)."""
-    function = {"extension": "account_of_extension_token", "calendar": "account_of_calendar_token"}
+    """Le compte d'un jeton (extension, agenda ou app partenaire), cherché avant que le compte
+    soit connu ; la base ne rend que ce numéro (fonctions des migrations 0046, 0053, 0056 et
+    0074)."""
+    function = {
+        "extension": "account_of_extension_token",
+        "calendar": "account_of_calendar_token",
+        "partner": "account_of_partner_token",
+    }
     found = await session.scalar(select(getattr(func, function[kind])(digest)))
     return None if found is None else int(found)
 

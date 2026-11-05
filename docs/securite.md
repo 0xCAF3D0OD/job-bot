@@ -29,7 +29,7 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 
 - Les secrets (mot de passe de la base, clé de l'IA, boîte e-mail, boîte des invités, sujet ntfy) ne vivent que dans le fichier `.env` du serveur ou dans des fichiers `_FILE`. **Jamais** dans git, ni dans un journal, ni dans une capture d'écran partagée.
 - **La phrase des sauvegardes** (`JOBBOT_BACKUP_PASSPHRASE`) : aussi gardée hors de l'ordinateur (gestionnaire de mots de passe, papier) ; sans elle, les sauvegardes sont illisibles. La changer ne rechiffre pas les anciennes sauvegardes : elles restent lisibles avec l'ancienne.
-- La base ne garde des mots de passe et des jetons (sessions, invitations, extension, agenda) que leur **empreinte** : scrypt pour les mots de passe, SHA-256 pour les jetons.
+- La base ne garde des mots de passe et des jetons (sessions, invitations, extension, agenda, Get'emAll) que leur **empreinte** : scrypt pour les mots de passe, SHA-256 pour les jetons.
 - **Quand changer un secret** :
   - au départ d'une personne qui y avait accès ;
   - au moindre doute (clé vue, ordinateur perdu) ;
@@ -42,7 +42,7 @@ La séparation est faite **par la base elle-même** (PostgreSQL, sécurité au n
 - L'exploitant **invite** aussi par un lien à usage unique (7 jours) : le compte invité est accepté d'office.
 - Mot de passe de **12 caractères au moins**. Après 5 essais ratés, une attente croissante.
 - Une session dure 30 jours et se prolonge à l'usage, au plus 90 jours après la connexion. « Se déconnecter partout » ferme toutes les sessions du compte.
-- **Suspendre** un compte ferme ses sessions, révoque ses jetons d'extension et d'agenda et arrête ses tâches ; ses données sont gardées.
+- **Suspendre** un compte ferme ses sessions, révoque ses jetons d'extension, d'agenda et de Get'emAll et arrête ses tâches ; ses données sont gardées.
 - La connexion ne se désactive (`JOBBOT_AUTH_ENABLED=false`) que pour un essai sur son propre ordinateur, jamais sur une plateforme joignable par d'autres.
 - Le serveur se connecte à la base avec des rôles **sans privilège** : `jobbot_app` pour l'API, `jobbot_worker` pour le worker. Seules les mises à jour du schéma utilisent le propriétaire des tables.
 
