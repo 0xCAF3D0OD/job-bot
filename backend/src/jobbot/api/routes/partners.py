@@ -148,6 +148,27 @@ async def revoke(request: Request) -> None:
         log.info("getemall_revoked", account=accounts.current(), by="account")
 
 
+class GetemallShare(BaseModel):
+    orp: bool
+
+
+@router.patch(
+    "",
+    operation_id="shareGetemallOrp",
+    responses={404: {"description": "Aucune application reliée"}},
+)
+async def share_orp(request: Request, body: GetemallShare) -> GetemallLinkState:
+    """« Partager mes recherches ORP » : pris en compte à la lecture suivante, sans nouvelle
+    autorisation. Le cocher ici vaut consentement, comme la case de la page « Autoriser »."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        link = await service.current_link(session)
+        if link is None or link.revoked_at is not None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "aucune application reliée")
+        link.orp = body.orp
+    log.info("getemall_orp_changed", account=accounts.current(), orp=body.orp)
+    return await link_state(request)
+
+
 # --- Le serveur de Get'emAll, sans session ------------------------------------------------
 
 
@@ -214,13 +235,13 @@ async def exchange(
 
 
 class GetemallProfile(BaseModel):
-    """« Profil complété » : les premiers pas de jobA1 (docs/128), cinq étapes."""
+    """Les premiers pas de jobA1 (docs/128) : « Premiers pas : X sur 5 » dans Get'emAll, qui
+    traduit lui-même la clé de la prochaine étape (décision de Kevin du 2026-11-05)."""
 
-    steps_done: int
-    steps_total: int
-    percent: int
-    # La prochaine étape (profile, alerts, keep, prepare, sent), vide quand tout est fait.
-    next_step: first_steps.StepKey | None
+    faits: int
+    total: int
+    # Clé stable (profile, alerts, keep, prepare, sent), vide quand tout est fait.
+    prochaine: first_steps.StepKey | None
 
 
 class GetemallOrp(BaseModel):
@@ -278,10 +299,9 @@ async def follow_up(request: Request, response: Response) -> GetemallFollowUp:
         )
         out = GetemallFollowUp(
             profile=GetemallProfile(
-                steps_done=done,
-                steps_total=steps,
-                percent=round(100 * done / steps),
-                next_step=first_steps.STEPS[done] if done < steps else None,
+                faits=done,
+                total=steps,
+                prochaine=first_steps.STEPS[done] if done < steps else None,
             ),
             applications=[
                 GetemallApplication(
