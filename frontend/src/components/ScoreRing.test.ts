@@ -13,9 +13,11 @@ describe("ScoreRing", () => {
     expect(wrapper.find(".score-ring-track").exists()).toBe(true);
     expect(wrapper.find(".score-ring-ticks").attributes("d")).toBe("M50 1V15M85 50H99M50 85V99M1 50H15");
     expect(arc(wrapper)).toBe("197.92 263.89");
-    // Proche : vert, jamais le bleu par défaut ; le mot dessous, pas de chiffre (D3).
+    // Proche (dès 75) : vert, jamais le bleu par défaut ; le chiffre au centre, le mot dessous (2026-11-05, Kevin).
     expect(wrapper.find(".score-ring").classes()).toContain("close");
-    expect(ring.text()).toBe("Proche");
+    expect(wrapper.find(".score-ring-value").text()).toBe("75");
+    expect(wrapper.find(".score-ring-word").text()).toBe("Proche");
+    expect(mount(ScoreRing, { props: { score: 74, worded: true } }).find(".score-ring-word").text()).toBe("À creuser");
     expect(ring.attributes("aria-label")).toBe("Proche : 75 sur 100");
   });
 

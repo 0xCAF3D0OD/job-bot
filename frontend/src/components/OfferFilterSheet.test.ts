@@ -49,7 +49,7 @@ describe("La feuille Filtres du téléphone (maquette Filtres, docs/139 étape 5
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ showExpired: true }]);
     await wrapper.find("[data-test=sheet-rate-all]").trigger("click");
     expect(wrapper.emitted("update")?.at(-1)).toEqual([{ minRate: null }]);
-    expect(mountSheet({ minScore: 70 }).find("[data-test=sheet-score-70]").attributes("aria-pressed")).toBe("true");
+    expect(mountSheet({ minScore: 75 }).find("[data-test=sheet-score-75]").attributes("aria-pressed")).toBe("true");
     // Une adresse d'avant (?note=60-90) garde ses bornes : aucun choix marqué.
     expect(mountSheet({ minScore: 60, maxScore: 90 }).findAll("[data-test^=sheet-score][aria-pressed=true]")).toHaveLength(0);
   });

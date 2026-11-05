@@ -6,9 +6,9 @@ import { scoreWord } from "../format";
 // L'anneau de la note (maquette Systeme, règle 1 ; D3, D5) : une piste complète en couleur pâle, des
 // graduations tous les 25 % découpées dans la couleur du fond, un arc rempli selon la note, dans la couleur du
 // mot (Très proche et Proche en --success, À creuser en --score-dig, Loin en --neutral-graphic), jamais en bleu.
-// `worded` : pas de chiffre au centre, le mot dessous ; le chiffre reste pour les lecteurs d'écran et au survol.
+// `worded` : le mot dessous. Le chiffre est toujours au centre, pour qu'on lise d'emblée une note (2026-11-05, Kevin).
 // Sans note : pas d'anneau, « Pas encore notée » en texte (la raison au survol et pour les lecteurs d'écran).
-// `bare` : l'anneau seul, sans chiffre ni mot, quand le mot est écrit à côté (fiche d'une offre, étape 6b).
+// `bare` : l'anneau et son chiffre, sans le mot, quand le mot est écrit à côté (fiche d'une offre, étape 6b).
 const props = defineProps<{ score: number | null; pending?: string; stale?: boolean; large?: boolean; worded?: boolean; bare?: boolean }>();
 
 const value = computed(() =>
@@ -70,10 +70,7 @@ const dash = computed(() => `${(((value.value ?? 0) * CIRCUMFERENCE) / 100).toFi
           d="M50 1V15M85 50H99M50 85V99M1 50H15"
         />
       </svg>
-      <span
-        v-if="!worded && !bare"
-        class="score-ring-value"
-      >{{ value }}<small v-if="large">/100</small></span>
+      <span class="score-ring-value">{{ value }}<small v-if="large">/100</small></span>
     </span>
     <span
       v-if="worded"

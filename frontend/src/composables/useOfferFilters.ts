@@ -121,7 +121,7 @@ export function activeCount(filters: OfferFilters): number {
   );
 }
 
-// Les choix de la note en mots (format.ts, scoreWord) : 50 « À creuser », 70 « Proche », 85 « Très proche ».
+// Les choix de la note en mots (format.ts, scoreWord) : 50 « À creuser », 75 « Proche », 85 « Très proche ».
 export const SCORE_CHOICES = [
   { label: "Toutes", min: null },
   { label: "À creuser et plus", min: 50 },

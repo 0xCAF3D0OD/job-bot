@@ -157,7 +157,6 @@ onMounted(() => {
       <GroupedList title="Préférences">
         <GroupedRow
           title="Critères de recherche"
-          description="Postes, lieux, taux d'activité"
           to="/profil"
           data-test="account-criteria"
         />
@@ -168,7 +167,7 @@ onMounted(() => {
         />
         <GroupedRow
           title="Apparence"
-          :description="THEME_LABEL[theme]"
+          :value="THEME_LABEL[theme]"
           :to="rubric('affichage')"
           data-test="account-appearance"
         />
@@ -187,7 +186,6 @@ onMounted(() => {
         />
         <GroupedRow
           title="IA"
-          description="Ce qu'elle fait chaque mois"
           :to="rubric('ia')"
           data-test="account-ai"
         />

@@ -6,12 +6,14 @@ import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 
 // Une ligne de liste groupée (règles §4) : icône facultative, titre, phrase grise, puis à droite une
-// valeur et un chevron, ou une commande (slot `end`, un interrupteur). Toute la ligne est la cible,
+// valeur en pastille et un chevron, ou une commande (slot `end`, un interrupteur). Toute la ligne est la cible,
 // 48 px de haut au moins :
 // - `to` ou `href` : un lien, avec chevron ;
 // - `button` : un bouton (événement click), avec chevron ;
 // - `label` : une étiquette ; la radio ou la case va dans le slot `start` (WCAG 2.5.8) ;
 // - sinon, une ligne d'information.
+// Une ligne qui mène ailleurs (`to`, `href`) n'a jamais de phrase grise : toutes ont la même hauteur, l'aperçu va
+// dans la pastille de `value` (2026-11-05, Kevin). La phrase reste pour un réglage ou une action qui s'explique.
 // `current` : l'entrée affichée à côté (liste et détail, Réglages sur ordinateur) : aria-current="page" et la
 // pastille de sélection (Sélection unique, §4). `busy` : un bouton dont l'action tourne, aria-disabled et
 // aria-busy (il garde le focus) ; le clic n'émet rien.
@@ -40,6 +42,7 @@ function onClick(event: MouseEvent): void {
   event.preventDefault();
   void router.push(props.to);
 }
+const shownDescription = computed(() => (tag.value === "a" ? "" : props.description));
 const showChevron = computed(() => props.chevron ?? Boolean(props.to || props.href || props.button));
 </script>
 
@@ -51,7 +54,7 @@ const showChevron = computed(() => props.chevron ?? Boolean(props.to || props.hr
       :class="{ 'grouped-row-action': tag !== 'div', 'grouped-row-current': current }"
       :aria-current="current ? 'page' : undefined"
       v-bind="attrs"
-      :aria-describedby="description && tag !== 'label' ? descriptionId : undefined"
+      :aria-describedby="shownDescription && tag !== 'label' ? descriptionId : undefined"
       @click="onClick"
     >
       <slot name="start" />
@@ -63,7 +66,7 @@ const showChevron = computed(() => props.chevron ?? Boolean(props.to || props.hr
       <span class="grouped-text">
         <span class="grouped-row-title">{{ title }}</span>
         <span
-          v-if="description"
+          v-if="shownDescription"
           :id="descriptionId"
           class="grouped-row-description"
         >{{ description }}</span>

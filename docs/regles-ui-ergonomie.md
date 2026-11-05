@@ -198,10 +198,11 @@ Toute valeur passe par une variable de `frontend/src/style.css`, reprise telle q
 ## 6. Mouvement
 
 - Voile de chargement : au moins 1,2 s (docs/63) ; l'animation de la page se lit dans ce temps, jamais de chargement rallongé pour elle.
-- Chargement d'une page (D9, 2026-11-02) : **sur téléphone, le feston d'attente seul** (le visage « attente », qui bouge tant que ça charge) ; **sur ordinateur, le visage du 1 transformé, joué une seule fois** (WCAG 2.2.2, PR 460). Jamais d'animation entre deux pages ni dans les en-têtes.
+- Chargement d'une page (D9, 2026-11-02) : **sur téléphone, le feston d'attente seul** (le visage « attente », qui bouge tant que ça charge) ; **sur ordinateur, le visage du 1 transformé, joué une seule fois** (WCAG 2.2.2, PR 460). Jamais d'animation dans les en-têtes ; entre deux pages, le fondu court de D13.
 - Micro-animations seulement sur les gestes clés, celles de `docs/mobile/maquettes/Animations.dc.html` (D9) : candidature envoyée (arche, 1,2 s), objectif atteint (soleil « Fête », 1,8 s), nouvelle offre bien notée (1,1 s), refus reçu (triangle gris, 1,6 s), connexion perdue (hochement, 0,6 s), candidature notée (clin d'œil, 0,45 s), aucune offre (loupe), tout est lu (cloche), pop « Joie » (coches, signet). **Jouées une fois** à l'apparition ; seules l'attente et « Rafraîchir » bougent tant que ça charge.
 - Quatre vitesses, rien au-delà de 600 ms pour l'interface (règle 10 des maquettes) : `--t-fast` 200 ms (couleur, appui), `--t-standard` 300 ms (feuille, onglet), `--t-joy` 400 ms (réussite, ressort doux), `--t-party` 600 ms (objectif atteint seulement).
 - La séparation sous l'en-tête n'apparaît que quand le contenu défile dessous, en fondu bref de 250 ms (Material Design 3, barre du haut) ; sans fondu si l'appareil demande moins d'animations (WCAG 2.2, 2.3.3 ; Apple HIG, Mouvement).
+- Appui et arrivée (D13, 2026-11-05) : tout ce qui se touche s'enfonce à 97 % et ses couleurs passent en fondu (`--t-fast`), sans le rectangle bleu du navigateur ; une page, un onglet de page et le contenu qui remplace les blocs gris arrivent en fondu, 6 px plus bas (`--t-standard`).
 - Tout mouvement s'arrête si l'appareil demande moins d'animations.
 
 ## 7. Accessibilité (WCAG 2.2 niveau AA, obligatoire)
@@ -267,7 +268,7 @@ Prises par Kevin le 2026-11-02, point par point, sur le tableau des conflits ent
 |---|---|---|
 | D1 | Suivre la maquette sur téléphone : 5 onglets. L'ordinateur garde ses 3 entrées. | §2 |
 | D2 | Suivre la règle : l'onglet s'appelle « Bilan » partout (sous-onglets ORP, Bilan, Formations) ; « Progresser » reste interdit. L'accueil s'appelle « Accueil » sur téléphone, adresse `/aujourdhui` inchangée. | §2, §5 |
-| D3 | Suivre la règle : 4 mots, seuils 85 / 70 / 50, `scoreWord` inchangé. L'anneau gradué sert de jauge, coloré selon le mot, le mot en premier plan, pas de chiffre au centre. Même composant partout. | §4 |
+| D3 | (Revue par D12 le 2026-11-05.) Suivre la règle : 4 mots, seuils 85 / 70 / 50, `scoreWord` inchangé. L'anneau gradué sert de jauge, coloré selon le mot, le mot en premier plan, pas de chiffre au centre. Même composant partout. | §4 |
 | D4 | Exception pour la barre du bas seulement : rond bleu plein dans le creux. Ailleurs, pastille teintée. **Révisée le 2026-11-03 (Kevin)** : le segment choisi est une carte sur un rail gris (où je suis), la puce teintée sert aux filtres et aux choix (ce que j'ai filtré), bord des puces non choisies en `--field-border` ; soulignement de 3 px seulement au second niveau. | §4 |
 | D5 | Suivre la règle : l'orange reste à ce qui demande d'agir ; « À creuser » en gris chaud. `docs/mobile/tokens.css` et la lecture des maquettes sont corrigés en conséquence. | §4 |
 | D6 | Suivre la maquette : cercle liquide, avec « x sur y » toujours écrit. | §4 |
@@ -281,3 +282,12 @@ Questions du plan, même date : ordinateur, seules les couleurs changent (Q2) ; 
 gardées, `/notifications` et `/assistant` en plus (Q4) ; Candidatures en À traiter · Envoyées · Rendez-vous sur les
 deux tailles, renommage prévu sur ordinateur (Q5) ; fond crème sur ordinateur aussi (Q6) ; apparence gardée dans le
 navigateur pour l'instant (Q7).
+
+## Décisions du 5 novembre 2026 : des interactions plus agréables (Kevin)
+
+| N° | Décision | Remplace |
+|---|---|---|
+| D12 | La note : « Proche » dès 75 (seuils 85 / 75 / 50) et le chiffre toujours au centre de l'anneau, pour qu'on lise d'emblée une note ; le mot reste dessous. | D3 (seuil 70, pas de chiffre) |
+| D13 | Le mouvement : appui animé sur tout ce qui se touche, pas de fond bleu au toucher, fondu court à l'ouverture d'une page et à l'arrivée du contenu chargé. Barre du bas : bords du creux arrondis, ombre plus forte sous le rond, le creux glisse vers l'onglet choisi. | §6 « jamais d'animation entre deux pages » |
+| D14 | Une ligne de liste qui mène ailleurs a une seule hauteur : jamais de phrase grise sous le titre, l'aperçu va dans une pastille à droite. La phrase reste pour un réglage ou une action qui s'explique. | §4 (listes groupées) |
+| D15 | Un trait sur un seul côté (onglet souligné, séparateur) reste droit, sans coin arrondi qui le fait remonter (contrôlé par `regles.py`). Le bouton bleu sous un champ ajoute aussi ce qui y est tapé. | — |
