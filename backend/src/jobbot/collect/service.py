@@ -21,6 +21,7 @@ from jobbot.collect import topic
 from jobbot.core.filter import canton_of
 from jobbot.core.normalize import normalize_offer
 from jobbot.db.models import (
+    IGNORED_KIND,
     PUBLIC_SEARCH_PREFIX,
     EnrichStatus,
     Offer,
@@ -29,6 +30,7 @@ from jobbot.db.models import (
     ParseStatus,
     Search,
     SiteReader,
+    Source,
 )
 from jobbot.llm import alert as alert_llm
 from jobbot.log import get_logger
@@ -243,9 +245,13 @@ async def ingest_email(
     if found is not None and email.sender_domain in GMAIL_DOMAINS:
         source = "gmail"
     no_offer = status == ParseStatus.EMPTY or (status == ParseStatus.UNRECOGNIZED and not error)
-    # « Confirmez votre alerte » : le lien, pour la page Alertes (docs/65 §3) ; ouvert par
-    # jobA1 pour un site connu (docs/112 §4).
-    confirm = confirmation_link(email) if no_offer and found is None else None
+    # Un expéditeur qui n'est aucun site (Stripe, une banque…) et ne donne pas de code : la
+    # boîte le reçoit, mais il ne regarde pas jobA1. Ni carte, ni copie, ni objet : seul son
+    # Message-ID reste, pour ne pas le relire à chaque collecte.
+    ignored = source == Source.UNKNOWN and found is None
+    # « Confirmez votre alerte » : le lien, pour la page Alertes (docs/65 §3), seulement pour
+    # un site ; ouvert par jobA1 pour un site connu (docs/112 §4).
+    confirm = confirmation_link(email) if no_offer and found is None and not ignored else None
     confirmed_at = datetime.now(UTC) if confirm and await open_confirmation(confirm) else None
     # Ni alerte, ni code, ni confirmation : un message du site (bienvenue, mot de passe…) :
     # aucun analyseur ne le reconnaît, ou l'IA n'y a trouvé aucune offre. Une alerte reconnue
@@ -254,9 +260,10 @@ async def ingest_email(
     unknown = status == ParseStatus.UNRECOGNIZED and not error
     read_empty = status == ParseStatus.EMPTY and version == alert_llm.PROMPT_VERSION
     message = confirm is None and (unknown or read_empty)
-    kind = "code" if found else "message" if message else None
+    kind = "code" if found else IGNORED_KIND if ignored else "message" if message else None
     key = raw_key(email)
-    runtime.storage.put(key, fetched.raw)
+    if not ignored:
+        runtime.storage.put(key, fetched.raw)
     # Les recommandations du site : seulement celles du métier (docs/116 §3).
     offers = alert.offers
     if alert.recommended and offers:
@@ -272,7 +279,7 @@ async def ingest_email(
                 message_id=email.message_id,
                 imap_uid=fetched.uid,
                 received_at=email.received_at,
-                subject=email.subject,
+                subject=None if ignored else email.subject,
                 alert_label=alert.alert_label,
                 raw_key=key,
                 parse_status=status,
@@ -285,6 +292,7 @@ async def ingest_email(
                 confirmed_at=confirmed_at,
                 kind=kind,
                 code=found.code if found else None,
+                raw_purged_at=datetime.now(UTC) if ignored else None,
             )
             .on_conflict_do_nothing(index_elements=["user_id", "message_id"])
             .returning(Search.id)

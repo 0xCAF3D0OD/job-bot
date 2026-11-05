@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.base import READ_ONLY
 from jobbot.db.models import (
+    IGNORED_KIND,
     AlertSetup,
     Application,
     Criterion,
@@ -59,7 +60,9 @@ async def _computed(session: AsyncSession) -> int:
         await _found(session, select(Criterion.kind))
         and await _found(session, select(Document.id)),
         await _found(session, select(AlertSetup.search_id))
-        or await _found(session, select(Search.id))
+        or await _found(
+            session, select(Search.id).where(Search.kind.is_distinct_from(IGNORED_KIND))
+        )
         or await _found(session, select(Offer.id)),
         await _found(session, select(Offer.id).where(Offer.status.in_(KEPT))),
         await _found(session, select(Draft.id)),

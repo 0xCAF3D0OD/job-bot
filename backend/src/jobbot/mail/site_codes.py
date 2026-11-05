@@ -7,17 +7,26 @@
 - « J'attends un code » : la boîte est relevée toutes les 15 secondes pendant 5 minutes.
 - Les autres e-mails des sites (bienvenue, alerte modifiée…) se lisent dans « Messages des
   sites », 30 jours.
+- Un e-mail qui ne vient d'aucun site n'est pas gardé : seule une ligne sans objet ni copie
+  reste, le temps de la fenêtre de collecte.
 """
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from bs4 import BeautifulSoup
-from sqlalchemy import delete, select, update
+from sqlalchemy import and_, delete, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from jobbot import accounts
-from jobbot.db.models import Notification, ParseStatus, Search, Setting
+from jobbot.db.models import (
+    IGNORED_KIND,
+    Notification,
+    ParseStatus,
+    Search,
+    Setting,
+    Source,
+)
 from jobbot.log import get_logger
 from jobbot.mail.codes import spaced
 from jobbot.mail.message import parse_email
@@ -162,6 +171,7 @@ async def purge(runtime: Runtime, now: datetime | None = None) -> int:
     messages supprimés au bout de 30 jours, avec leur e-mail ; les copies des alertes d'un
     invité effacées au bout de 90 jours (docs/120)."""
     now = now or datetime.now(UTC)
+    ignored_kept = max(MESSAGES_KEPT_FOR, timedelta(days=runtime.settings.imap_backfill_days))
     async with runtime.sessionmaker.begin() as session:
         # Le code expiré : effacé du journal, et sa copie de l'e-mail avec lui (docs/113).
         expired = list(
@@ -185,11 +195,33 @@ async def purge(runtime: Runtime, now: datetime | None = None) -> int:
             )
             .values(message="Code expiré")
         )
+        # Avant ce correctif, l'e-mail d'un expéditeur inconnu était gardé comme un message ou
+        # comme une alerte à confirmer : sa copie est effacée, son objet et son lien aussi.
+        strays = list(
+            await session.scalars(
+                select(Search).where(
+                    Search.source == Source.UNKNOWN,
+                    or_(Search.kind.is_(None), Search.kind == MESSAGE_KIND),
+                    Search.code.is_(None),
+                    Search.results_count == 0,
+                )
+            )
+        )
+        for search in strays:
+            runtime.storage.delete(search.raw_key)
+            search.kind, search.subject, search.raw_purged_at = IGNORED_KIND, None, now
+            search.confirm_url = search.confirmed_at = None
         old = list(
             await session.scalars(
                 select(Search).where(
-                    Search.kind.in_([CODE_KIND, MESSAGE_KIND]),
-                    Search.received_at < now - MESSAGES_KEPT_FOR,
+                    or_(
+                        and_(
+                            Search.kind.in_([CODE_KIND, MESSAGE_KIND]),
+                            Search.received_at < now - MESSAGES_KEPT_FOR,
+                        ),
+                        # Gardée tant que la collecte relit sa date, pour ne pas la reprendre.
+                        and_(Search.kind == IGNORED_KIND, Search.received_at < now - ignored_kept),
+                    )
                 )
             )
         )

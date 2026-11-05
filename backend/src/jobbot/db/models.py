@@ -153,6 +153,9 @@ class Search(Base):
 # n'est pas une alerte reçue : ni preuve de recherche ORP, ni signe qu'une alerte marche. De
 # même pour un code ou un message d'un site (docs/112).
 PUBLIC_SEARCH_PREFIX = "public:"
+# L'e-mail d'un expéditeur qui n'est aucun site (Stripe, une banque…) : ni copie, ni objet, ni
+# lien ; seul son Message-ID reste, pour que la collecte ne le relise pas. Hors du journal.
+IGNORED_KIND = "ignored"
 
 
 def received_alert() -> ColumnElement[bool]:
