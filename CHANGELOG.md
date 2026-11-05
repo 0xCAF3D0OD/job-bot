@@ -403,3 +403,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.189 | Interface : l'Assistant devient un onglet plein écran sur téléphone, avec un accueil écrit par l'app, des réponses rapides selon la situation et une mention « L'Assistant peut se tromper » | livrée |
 | 1.6.190 | Interface : les premiers pas en 4 étapes (page bleue, CV, critères, tri de 3 offres), avec des valeurs par défaut modifiables dans Compte | livrée |
 | 1.6.191 | Interface : premiers pas, « Annuler » après « Écarter » pendant le tri, le télétravail « accepté depuis la Suisse » et le CSS de l'accueil chargé avec sa page | livrée |
+| 1.6.192 | Interface : chaque bouton, lien, onglet et segment s'enfonce en douceur à l'appui, sans fond bleu au toucher ; les onglets soulignés et le séparateur de « Se déconnecter » sont droits ; dans les alertes et les premiers pas, le bouton bleu ajoute aussi ce qui est tapé | livrée |
