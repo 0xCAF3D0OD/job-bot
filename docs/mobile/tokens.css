@@ -23,6 +23,7 @@
   --primary-soft: #E8ECFB;     /* sélection, arche Content, bloc ORP */
   --water: #C9D3F6;            /* cercle liquide ORP */
   --on-primary: #FFFFFF;
+  --on-brand-surface: var(--primary); /* texte d'un bouton blanc sur fond bleu, clair et sombre */
 
   /* Pêche (chaleur, jamais un statut) */
   --spark: #E8B48A;            /* étincelle du logo */

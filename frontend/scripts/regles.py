@@ -19,11 +19,39 @@ Il n'écrit rien : il liste les défauts, et le résultat doit être vide avant 
 import asyncio
 import json
 import os
+import re
 import sys
+from pathlib import Path
 
 from playwright.async_api import async_playwright
 
 from explore import states
+
+# La police manuscrite (Caveat Brush) est réduite aux seuls caractères des titres qui l'utilisent
+# (docs/139 étapes 8c et 11b) : les fins de titre des premiers pas et « C'est fait ! ». Un titre
+# changé sans refaire le sous-ensemble s'afficherait avec une lettre dans une autre police.
+FRONTEND = Path(__file__).resolve().parent.parent
+HAND_FONT = FRONTEND / "src/assets/fonts/caveat-brush-titres.woff2"
+
+
+def hand_titles() -> list[str]:
+    """Les textes écrits en Caveat Brush, lus dans le code : `hand: "…"` des premiers pas, puis
+    le titre de « C'est fait ! »."""
+    welcome = (FRONTEND / "src/views/WelcomeView.vue").read_text("utf-8")
+    goal = (FRONTEND / "src/components/GoalReached.vue").read_text("utf-8")
+    titles = re.findall(r'hand: "([^"]+)"', welcome)
+    titles += [t.strip() for t in re.findall(r'class="goal-reached-title">([^<]+)<', goal)]
+    return titles
+
+
+def missing_glyphs(font: Path = HAND_FONT, texts: list[str] | None = None) -> list[str]:
+    """Les caractères des titres absents de la table cmap de la police (fonttools)."""
+    from fontTools.ttLib import TTFont
+
+    cmap = TTFont(font).getBestCmap()
+    wanted = "".join(hand_titles() if texts is None else texts)
+    return sorted({c for c in wanted if not c.isspace() and ord(c) not in cmap})
+
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 PAGES = [

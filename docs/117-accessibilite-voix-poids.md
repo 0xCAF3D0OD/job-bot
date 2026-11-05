@@ -30,7 +30,7 @@ Correction de ma comparaison précédente : j'avais écrit « pas de vidéo » ;
 ### 3. Un budget de poids
 
 - **Découper l'application par page** : chaque page se charge quand on l'ouvre. La page de connexion et Aujourd'hui ne téléchargent plus Préparer, le Bilan ou les Réglages. Objectif : moins de 120 Ko compressés pour la première page (205 Ko aujourd'hui).
-- **Une limite vérifiée à chaque PR** : un test mesure, après la construction, la taille compressée du code de la première page et du total ; au-delà de la limite (premier écran 120 Ko, total 260 Ko, CSS 45 Ko), il échoue et dit quel fichier a grossi.
+- **Une limite vérifiée à chaque PR** : un test mesure, après la construction, la taille compressée du code de la première page et du total ; au-delà de la limite (premier écran 120 Ko, total 260 Ko, CSS 45 Ko ; limites actuelles plus bas), il échoue et dit quel fichier a grossi.
 - **Le temps de chargement** mesuré une fois dans les captures (téléphone, connexion 4G simulée), noté dans ce document ; pas de mesure en continu.
 
 ## Garde-fous
@@ -45,6 +45,7 @@ Correction de ma comparaison précédente : j'avais écrit « pas de vidéo » ;
 - **Total porté à 285 Ko** (29.10, décision de Kevin) : main pèse 268,4 Ko, et la structure téléphone charge pour la première fois GroupedList, GroupedRow et SegmentedControl (+1,7 Ko pour le Profil, 270,4 Ko) ; ses 7 étapes suivantes ajoutent chacune un peu. Le premier écran reste limité à 120 Ko et le CSS à 45 Ko.
 - **CSS porté à 48 Ko** (2026-11-02, décision de Kevin) : pendant la nouvelle identité mobile (docs/139), l'ancien et le nouveau CSS du téléphone coexistent ; chaque écran migré retire l'ancien CSS qu'il remplace, pour revenir vers 45 Ko à la fin. L'Accueil du téléphone le porte à 45,4 Ko. Le **total** passe à **290 Ko** le même jour (même décision) : l'Accueil ajoute 2,5 Ko de code (285,7 Ko).
 - **Total porté à 300 Ko** (2026-11-04, décision de Kevin) : le total est à 289,95 Ko après le réglage Apparence, et l'étape 8 de la nouvelle identité mobile (docs/139) ajoute l'onglet ORP du Bilan, le Suivi ORP et l'écran « C'est fait ! », chargés seulement quand on les ouvre. Le premier écran reste limité à 120 Ko et le CSS à 48 Ko ; chaque PR retire le code qu'elle remplace.
+- **Deux mesures du CSS** (2026-11-05, décision de Kevin) : `css-premier`, le CSS que charge le premier écran (l'entrée et Aujourd'hui, avec ce qu'ils importent), reste limité à **48 Ko** ; `css`, tout le CSS, passe à **60 Ko**. Jusqu'ici tout le CSS était dans `style.css`, chargé d'emblée : chaque nouvel écran rognait la même marge. Une page chargée à l'ouverture peut maintenant porter son propre CSS (`<style>` de son composant) sans peser sur le premier écran. Les premiers pas (`WelcomeView.vue`, docs/139 étape 11b) sont les premiers à le faire : le premier écran passe de 48,0 à 46,8 Ko, le total à 48,7 Ko.
 - **Le temps de chargement** (version construite, téléphone simulé, processeur ralenti 4 fois, médiane de 5) : **inchangé**. Aujourd'hui s'affiche en 1,0 s en 4G rapide (avant 1,0 s) et en 2,0 s en 4G lente (avant 2,0 s). Ce temps vient des appels à l'API et de la transition de page (docs/63), pas du code. Le gain est ailleurs : 120 Ko de moins à télécharger et à lire à chaque première visite, ce qui compte sur un forfait limité ou un vieux téléphone.
 
 ## Vérifié (0.87.0)

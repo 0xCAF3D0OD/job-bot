@@ -85,7 +85,7 @@ test: test-audit changelog-check ## tests backend (base jobbot_test), frontend, 
 	cd frontend && npm run -s test && npm run -s typecheck && npm run -s poids
 
 test-audit: ## les audits trouvent ce qu'ils doivent trouver : texte collé au bord, débordement et cibles sur téléphone (navigateur requis)
-	cd backend && uv run --with playwright --with pytest pytest -q ../frontend/scripts/test_regles.py ../frontend/scripts/test_telephone.py ../frontend/scripts/test_controles.py
+	cd backend && uv run --with playwright --with pytest --with fonttools --with brotli pytest -q ../frontend/scripts/test_regles.py ../frontend/scripts/test_telephone.py ../frontend/scripts/test_controles.py
 
 audit-telephone: ## l'audit téléphone sur la démo (320, 360, 390 px ; DEMO_URL, par défaut http://localhost:5200)
 	cd backend && uv run --with playwright python ../frontend/scripts/telephone.py $(or $(DEMO_URL),http://localhost:5200)
