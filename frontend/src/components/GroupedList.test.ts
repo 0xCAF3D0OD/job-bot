@@ -25,14 +25,16 @@ describe("GroupedList et GroupedRow (règles §4)", () => {
     expect(wrapper.findAll(".grouped-card > li")).toHaveLength(2);
   });
 
-  it("un lien : un vrai <a href>, chevron, phrase reliée ; le clic simple passe par le routeur", async () => {
+  it("un lien : un vrai <a href>, chevron, jamais de phrase grise (une seule hauteur) ; le clic simple passe par le routeur", async () => {
     const r = router();
     await r.isReady();
     const wrapper = mount(GroupedRow, { props: { title: "Notifications", description: "Seuil, message du jour", icon: "bell", to: "/reglages?rubrique=notifications" }, global: { plugins: [r] } });
     const link = wrapper.find("a.grouped-row");
     expect(link.attributes("href")).toBe("/reglages?rubrique=notifications");
     expect(link.find(".grouped-chevron").exists()).toBe(true);
-    expect(link.attributes("aria-describedby")).toBe(wrapper.find(".grouped-row-description").attributes("id"));
+    // Une ligne qui mène ailleurs : pas de phrase sous le titre, toutes les lignes ont la même hauteur (2026-11-05, Kevin).
+    expect(wrapper.find(".grouped-row-description").exists()).toBe(false);
+    expect(link.attributes("aria-describedby")).toBeUndefined();
     // Une ligne qui ne diffère que par la query n'est jamais marquée « page » d'elle-même.
     expect(link.attributes("aria-current")).toBeUndefined();
     await link.trigger("click", { button: 0 });

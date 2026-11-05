@@ -285,8 +285,8 @@ describe("note et résumé", () => {
     const wrapper = await mountAt("/offres?tri=score&note=70");
     expect(lastQuery()).toMatchObject({ sort: "score", min_score: 70 });
     const [scored, unscored] = wrapper.findAll("[data-test=offer]");
-    // D3 (C7) : l'anneau sans chiffre comme jauge, le mot dessous ; le chiffre pour les lecteurs d'écran.
-    expect(scored?.find("[data-test=score]").text()).toBe("Proche");
+    // L'anneau avec son chiffre, le mot dessous (2026-11-05, Kevin).
+    expect(scored?.find("[data-test=score]").text()).toBe("82Proche");
     expect(scored?.find("[data-test=score]").classes()).toContain("close");
     expect(scored?.find("[data-test=score]").attributes("aria-label")).toBe("Proche : 82 sur 100");
     expect(scored?.find(".score-ring-arc").attributes("stroke-dasharray")).toBe("216.39 263.89");

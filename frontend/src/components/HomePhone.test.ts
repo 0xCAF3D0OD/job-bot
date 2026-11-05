@@ -34,9 +34,9 @@ describe("L'Accueil du téléphone (docs/139 étape 4)", () => {
     expect(view.find("[data-test=liquid-circle]").attributes("aria-label")).toBe("2 recherches sur 10");
     expect(view.find("[data-test=home-orp]").text()).toContain("Encore 8 d'ici le 30 nov.");
     expect(view.findAll("[data-test=home-card]")).toHaveLength(2);
-    // D3 : l'anneau sans chiffre, le mot dessous ; le chiffre reste pour les lecteurs d'écran.
+    // L'anneau avec son chiffre, le mot dessous (2026-11-05, Kevin).
     const score = view.find("[data-test=home-card] [data-test=score]");
-    expect(score.text()).toBe("Très proche");
+    expect(score.text()).toBe("92Très proche");
     expect(score.attributes("aria-label")).toBe("Très proche : 92 sur 100");
     expect(view.find("[data-test=home-triage]").text()).toBe("Trier les 2 offres");
     expect(view.findAll(".primary-link")).toHaveLength(1);

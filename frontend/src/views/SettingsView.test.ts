@@ -298,7 +298,7 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(wrapper.findAll("[data-test=settings-card]")).toHaveLength(1);
     const choices = wrapper.findAll("[data-test=notify-form] [role=radio]").map((b) => b.text());
     expect(choices).toEqual(["Très proche", "Proche", "À creuser"]);
-    expect(wrapper.find("[data-test=threshold-70]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.find("[data-test=threshold-75]").attributes("aria-checked")).toBe("true");
 
     await wrapper.find("[data-test=threshold-85]").trigger("click");
     await flushPromises();
@@ -313,10 +313,10 @@ describe("Des Réglages épurés (docs/106)", () => {
   it("un seuil d'avant tombe sur le mot qui le contient", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
-        data: path === "/api/notifications" ? { configured: false } : { notify_score_threshold: 75, llm_monthly_budget_chf: 10 },
+        data: path === "/api/notifications" ? { configured: false } : { notify_score_threshold: 72, llm_monthly_budget_chf: 10 },
       }),
     );
     const { wrapper } = await mountSettings("notifications");
-    expect(wrapper.find("[data-test=threshold-70]").attributes("aria-checked")).toBe("true");
+    expect(wrapper.find("[data-test=threshold-75]").attributes("aria-checked")).toBe("true");
   });
 });

@@ -212,16 +212,17 @@ function pickMode(event: MouseEvent, mode: "daily" | "instant"): void {
   void saveMode();
 }
 // Le seuil des notifications en mots (décision de Kevin du 2026-11-05, C11 ; D3) : Très proche, Proche, À creuser,
-// soit 85, 70 et 50. Une valeur d'avant (60, 80, 90…) s'affiche sous le mot de sa note.
+// soit 85, 75 et 50 (Proche dès 75, 2026-11-05, Kevin). Une valeur d'avant (60, 70, 80, 90…) s'affiche sous le mot
+// le plus proche : 70, l'ancien seuil de Proche, reste « Proche ».
 const THRESHOLD_OPTIONS = [
   { value: "85", label: "Très proche", test: "threshold-85" },
-  { value: "70", label: "Proche", test: "threshold-70" },
+  { value: "75", label: "Proche", test: "threshold-75" },
   { value: "50", label: "À creuser", test: "threshold-50" },
 ];
 const threshold = computed({
   get: () => {
     const value = form.value.notify_score_threshold ?? 70;
-    return value >= 85 ? "85" : value >= 70 ? "70" : "50";
+    return value >= 85 ? "85" : value >= 70 ? "75" : "50";
   },
   set: (value: string) => void setThreshold(Number(value)),
 });

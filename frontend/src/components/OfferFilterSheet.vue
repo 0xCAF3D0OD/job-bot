@@ -21,7 +21,7 @@ const emit = defineEmits<{ update: [patch: Partial<OfferFilters>]; reset: []; cl
 const SCORES: { label: string; min: number | null }[] = [
   { label: "Tous", min: null },
   { label: "À creuser et +", min: 50 },
-  { label: "Proche et +", min: 70 },
+  { label: "Proche et +", min: 75 },
   { label: "Très proche", min: 85 },
 ];
 // Une adresse d'avant (?note=60-90) garde ses bornes, et aucun choix n'est marqué.

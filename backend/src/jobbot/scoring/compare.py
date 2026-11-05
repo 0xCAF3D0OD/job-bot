@@ -26,7 +26,7 @@ def word(score: int) -> str:
     """Les mots de la note (docs/121 §C.5)."""
     if score >= 85:
         return "Très proche"
-    if score >= 70:
+    if score >= 75:
         return "Proche"
     if score >= 50:
         return "À creuser"

@@ -85,11 +85,11 @@ export function colorIndex(name: string): number {
 }
 
 /** Niveau d'une note, pour sa couleur : bonne (≥ 70), moyenne (≥ 50) ou faible. */
-// La note en mots (docs/121 §C.5), sur les seuils des couleurs : 85, 70, 50.
+// La note en mots (docs/121 §C.5), sur les seuils des couleurs : 85, 75, 50 (Proche dès 75, 2026-11-05, Kevin).
 export type ScoreTone = "very-close" | "close" | "dig" | "far";
 export function scoreWord(score: number): { word: string; mood: "ravi" | "content" | "attentif" | "neutre"; tone: ScoreTone } {
   if (score >= 85) return { word: "Très proche", mood: "ravi", tone: "very-close" };
-  if (score >= 70) return { word: "Proche", mood: "content", tone: "close" };
+  if (score >= 75) return { word: "Proche", mood: "content", tone: "close" };
   if (score >= 50) return { word: "À creuser", mood: "attentif", tone: "dig" };
   return { word: "Loin", mood: "neutre", tone: "far" };
 }

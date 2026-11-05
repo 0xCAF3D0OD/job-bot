@@ -1,0 +1,1 @@
+Interface : la barre du bas aux bords adoucis, au rond plus marqué et qui glisse d'un onglet à l'autre ; la note avec son chiffre et « Proche » dès 75 ; des lignes de liste d'une seule hauteur avec l'aperçu en pastille ; les pages et le contenu chargé arrivent en fondu
