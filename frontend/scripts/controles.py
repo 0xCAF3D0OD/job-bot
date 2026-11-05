@@ -41,7 +41,9 @@ AUDIT = r"""(tolerance) => {
   };
 
   // 1. Les rangées de contrôles : regroupés quand ils se chevauchent en hauteur dans un même bloc.
-  const sel = 'button:not(.capsule-zone):not(.link):not([role=menuitem]):not(.tile-open), '
+  // Le titre d'une offre (.offer-line-title) est un texte qui ouvre l'offre, comme .tile-open : il
+  // n'est pas un bouton d'une rangée, même avec le « ⋯ » dans le coin (maquette Candidatures, 5.11).
+  const sel = 'button:not(.capsule-zone):not(.link):not([role=menuitem]):not(.tile-open):not(.offer-line-title), '
     + 'select, .segmented, a.button-link, input:not([type=checkbox]):not([type=radio])'
     + ':not([type=range]):not([type=hidden]):not([type=file])';
   const skip = '.topbar, .tab-bar, .side-panel, .bell-panel, .account-panel, '
