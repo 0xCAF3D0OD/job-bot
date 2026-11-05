@@ -260,16 +260,33 @@ const addItems = computed<MoreMenuItem[]>(() => [
 ]);
 
 // L'offre ajoutée (ou déjà là) s'ouvre ; écartée par les critères, elle est gardée avec la raison.
-async function manualAdded(result: { id: number; existing: boolean; status: string; reasons: string[] }): Promise<void> {
+async function manualAdded(result: {
+  id: number;
+  existing: boolean;
+  status: string;
+  reasons: string[];
+  filled?: string[];
+}): Promise<void> {
   manualOpen.value = false;
   undo.value = null;
-  notice.value = result.existing
-    ? "Cette offre était déjà là : la voici."
-    : result.status === "filtered_out"
-      ? `Offre ajoutée. Tes critères l'écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
-      : "Offre ajoutée : sa note arrive dans un instant.";
+  // Complétée : sa note est refaite quand le texte de l'annonce arrive.
+  notice.value = result.filled?.length
+    ? result.filled.includes("description")
+      ? "Offre complétée : sa note est refaite avec le texte de l'annonce."
+      : "Offre complétée."
+    : result.existing
+      ? "Cette offre était déjà là : la voici."
+      : result.status === "filtered_out"
+        ? `Offre ajoutée. Tes critères l'écartent (${result.reasons.join(" ; ")}) : elle est dans « Écartées ».`
+        : "Offre ajoutée : sa note arrive dans un instant.";
   await load();
   await router.replace({ query: { ...route.query, offre: String(result.id) } });
+  await openFromQuery();
+}
+// « L'ouvrir » dans l'avis d'une offre déjà là (candidature spontanée) : le panneau se ferme, l'offre s'ouvre.
+async function openExisting(id: number): Promise<void> {
+  spontaneousOpen.value = false;
+  await router.replace({ query: { ...route.query, offre: String(id) } });
   await openFromQuery();
 }
 let requestId = 0;
@@ -877,7 +894,10 @@ onUnmounted(() => {
     title="Candidature spontanée"
     @close="spontaneousOpen = false"
   >
-    <SpontaneousForm @created="load()" />
+    <SpontaneousForm
+      @created="load()"
+      @open="openExisting"
+    />
   </SidePanel>
   <SidePanel
     v-if="manualOpen"

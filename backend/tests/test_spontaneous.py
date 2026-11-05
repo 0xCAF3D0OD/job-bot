@@ -1,6 +1,7 @@
 """Candidatures spontanées (docs/39) : créée sans annonce, jamais notée, ligne ORP habituelle."""
 
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -91,3 +92,48 @@ async def test_spontaneous_application(api: AsyncClient, runtime: Runtime) -> No
         "/api/offers/spontaneous", json={"company": "X", "title": " ", "reason": "r"}
     )
     assert bad.status_code == 422
+
+
+async def test_spontaneous_warns_when_company_already_there(
+    api: AsyncClient, runtime: Runtime
+) -> None:
+    """Une offre chez la même entreprise est déjà là : rien n'est créé, elle est signalée avec
+    son id pour l'ouvrir ; « Créer quand même » crée la candidature spontanée."""
+    async with runtime.sessionmaker.begin() as session:
+        now = datetime.now(UTC)
+        session.add_all(
+            [
+                Offer(
+                    fingerprint="a",
+                    title="Technicien de maintenance",
+                    company="SpeciTec SA",
+                    status="to_review",
+                    first_seen_at=now - timedelta(days=2),
+                    last_seen_at=now,
+                ),
+                Offer(
+                    fingerprint="b",
+                    title="Ingénieur DevOps (80-100 %)",
+                    company="Specitec",
+                    status="later",
+                    first_seen_at=now - timedelta(days=5),
+                    last_seen_at=now,
+                ),
+            ]
+        )
+    body = {"company": "SpeciTec", "title": "Ingénieur DevOps", "reason": "Leur atelier."}
+    warned = await api.post("/api/offers/spontaneous", json=body)
+    assert warned.status_code == 200
+    found = warned.json()
+    # Le même poste d'abord, même plus ancien.
+    assert found["id"] is None
+    assert found["existing"] == {**found["existing"], "title": "Ingénieur DevOps (80-100 %)"}
+    other = (
+        await api.post("/api/offers/spontaneous", json={**body, "title": "Dessinateur"})
+    ).json()
+    assert other["existing"]["title"] == "Technicien de maintenance"
+    forced = await api.post("/api/offers/spontaneous", json={**body, "force": True})
+    assert forced.status_code == 201 and forced.json()["id"] is not None
+    assert (
+        await api.post("/api/offers/spontaneous", json={**body, "company": "Autre SA"})
+    ).status_code == 201

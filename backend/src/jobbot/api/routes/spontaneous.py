@@ -1,16 +1,21 @@
 """Candidatures spontanées (docs/39) : une offre créée par toi, sans annonce.
 
 Elle réutilise toute la préparation (lettre, CV, contacts, fiche du formulaire) ; elle n'est
-ni notée, ni comparée aux doublons, ni vérifiée chez l'employeur.
+ni notée, ni groupée avec les doublons, ni vérifiée chez l'employeur. À la création, une offre
+déjà là chez la même entreprise est signalée, avec le lien pour l'ouvrir : on ne crée qu'après
+« Créer quand même ».
 """
 
 import uuid
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Request, Response, status
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from jobbot.core.normalize import normalize_company, normalize_title
 from jobbot.db.models import EnrichStatus, Offer, OfferStatus
 from jobbot.runtime import Runtime
 
@@ -28,6 +33,8 @@ class SpontaneousIn(BaseModel):
     # « Pourquoi elle » : ce qui rend la lettre propre à cette entreprise.
     reason: Annotated[str, Field(min_length=1, max_length=1500)]
     website: Annotated[str, Field(max_length=300)] | None = None
+    # Une offre chez cette entreprise est déjà là, et on crée quand même.
+    force: bool = False
 
     @field_validator("company", "title", "reason")
     @classmethod
@@ -46,8 +53,34 @@ class SpontaneousIn(BaseModel):
         return value if value.startswith(("http://", "https://")) else f"https://{value}"
 
 
-class SpontaneousOut(BaseModel):
+class ExistingOffer(BaseModel):
     id: int
+    title: str
+    company: str | None
+    spontaneous: bool
+
+
+class SpontaneousOut(BaseModel):
+    # None : rien n'est créé, une offre chez cette entreprise est déjà là (`existing`).
+    id: int | None
+    existing: ExistingOffer | None = None
+
+
+async def same_company(session: AsyncSession, company: str, title: str) -> Offer | None:
+    """L'offre déjà là chez la même entreprise : le même poste d'abord, sinon la plus récente."""
+    key = normalize_company(company)
+    if not key:
+        return None
+    offers = await session.scalars(
+        select(Offer)
+        .where(Offer.company.is_not(None), Offer.duplicate_of.is_(None))
+        .order_by(Offer.first_seen_at.desc(), Offer.id.desc())
+    )
+    found = [o for o in offers if normalize_company(o.company) == key]
+    wanted = normalize_title(title)
+    return next((o for o in found if normalize_title(o.title) == wanted), None) or (
+        found[0] if found else None
+    )
 
 
 def description(body: SpontaneousIn) -> str:
@@ -67,9 +100,22 @@ def description(body: SpontaneousIn) -> str:
     operation_id="createSpontaneousApplication",
     status_code=status.HTTP_201_CREATED,
 )
-async def create_spontaneous(request: Request, body: SpontaneousIn) -> SpontaneousOut:
+async def create_spontaneous(
+    request: Request, response: Response, body: SpontaneousIn
+) -> SpontaneousOut:
     now = datetime.now(UTC)
     async with _runtime(request).sessionmaker.begin() as session:
+        if not body.force and (found := await same_company(session, body.company, body.title)):
+            response.status_code = status.HTTP_200_OK
+            return SpontaneousOut(
+                id=None,
+                existing=ExistingOffer(
+                    id=found.id,
+                    title=found.title,
+                    company=found.company,
+                    spontaneous=found.spontaneous,
+                ),
+            )
         offer = Offer(
             fingerprint=f"spontaneous:{uuid.uuid4()}",
             title=body.title,

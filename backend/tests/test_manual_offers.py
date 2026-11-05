@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -9,10 +10,11 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select, text
 
-from jobbot import manual_offers
+from jobbot import accounts, manual_offers
 from jobbot.api.app import create_app
+from jobbot.auth import passwords
 from jobbot.core.filter import Criteria
-from jobbot.db.models import LlmCall, Offer, OfferLink
+from jobbot.db.models import LlmCall, Offer, OfferLink, User
 from jobbot.enrich.service import expire_stale
 from jobbot.filtering.service import save_criteria
 from jobbot.llm.client import RawResult
@@ -257,3 +259,113 @@ async def test_daily_limit(api: AsyncClient) -> None:
     refused = await api.post("/api/offers/manual", json={"title": "Un de trop"})
     assert refused.status_code == 429
     assert "20 offres" in refused.json()["detail"]
+
+
+GUEST = "compte-completer"
+
+
+@pytest.fixture
+async def guest(rt: Runtime) -> AsyncIterator[int]:
+    async def clean() -> None:
+        async with admin_engine().begin() as conn:
+            await conn.execute(text(TRUNCATE))
+            await conn.execute(text("DELETE FROM users WHERE username = :u"), {"u": GUEST})
+
+    await clean()
+    async with rt.sessionmaker.begin() as session:
+        user = User(username=GUEST, password_hash=passwords.hash_password("x" * 12))
+        session.add(user)
+        await session.flush()
+        guest_id = user.id
+    yield guest_id
+    await clean()
+
+
+async def _linkedin_offer(rt: Runtime, **extra: Any) -> int:
+    """Une offre venue de LinkedIn : le titre et l'entreprise, sans lieu ni texte."""
+    async with rt.sessionmaker.begin() as session:
+        offer = Offer(
+            fingerprint="linkedin-1",
+            title="Développeuse Full Stack 80-100 %",
+            company="Exemple SA",
+            status="to_review",
+            first_seen_at=datetime.now(UTC),
+            last_seen_at=datetime.now(UTC),
+            **extra,
+        )
+        session.add(offer)
+        await session.flush()
+        session.add(
+            OfferLink(offer_id=offer.id, source="linkedin", url="https://linkedin.example/1")
+        )
+        return int(offer.id)
+
+
+async def test_complete_existing_offer_with_link(
+    api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch, ai: FakeClient
+) -> None:
+    offer_id = await _linkedin_offer(rt, snippet="Extrait de LinkedIn", location="Renens")
+    page(monkeypatch, POSTING_PAGE)
+    # La page de l'employeur dit Lausanne : l'empreinte diffère, le même poste est reconnu.
+    draft = (await api.post("/api/offers/manual/read", json={"url": "exemple.ch/job/1"})).json()[
+        "draft"
+    ]
+    assert draft["existing_offer_id"] == offer_id
+    assert draft["fillable"] == ["description", "url"]
+
+    # Sans « Compléter » : rien ne change, on ouvre l'offre.
+    plain = (await api.post("/api/offers/manual", json=draft)).json()
+    assert (plain["id"], plain["existing"], plain["filled"]) == (offer_id, True, [])
+
+    done = (await api.post("/api/offers/manual", json={**draft, "fill": True})).json()
+    assert (done["id"], done["existing"]) == (offer_id, True)
+    async with rt.sessionmaker() as session:
+        offer = await session.get(Offer, offer_id)
+        assert offer is not None
+        # Seulement les champs vides : le lieu et l'extrait restent ceux de l'offre.
+        assert (offer.company, offer.location) == ("Exemple SA", "Renens")
+        assert offer.description is not None and "Vue et Python" in offer.description
+        assert offer.snippet == "Extrait de LinkedIn"
+        links = {
+            (link.source, link.url)
+            for link in await session.scalars(
+                select(OfferLink).where(OfferLink.offer_id == offer_id)
+            )
+        }
+        assert links == {
+            ("linkedin", "https://linkedin.example/1"),
+            ("manual", "https://exemple.ch/job/1"),
+        }
+        # Le texte arrivé, l'offre est renotée sur l'annonce complète.
+        candidates = await scoring.candidates(session, "h", include_stale_profile=False)
+        assert offer_id in {o.id for o in candidates}
+    assert done["filled"] == ["description", "url"]
+    # Une seconde fois : plus rien à remplir.
+    again = (await api.post("/api/offers/manual/read", json={"url": "exemple.ch/job/1"})).json()
+    assert again["draft"]["fillable"] == []
+    assert ai.calls == []
+
+
+async def test_complete_never_reaches_another_account(
+    api: AsyncClient, rt: Runtime, monkeypatch: pytest.MonkeyPatch, guest: int
+) -> None:
+    owner = accounts.current()
+    accounts.set_current(guest)
+    try:
+        theirs = await _linkedin_offer(rt)
+    finally:
+        accounts.set_current(owner)
+    page(monkeypatch, POSTING_PAGE)
+    draft = (await api.post("/api/offers/manual/read", json={"url": "exemple.ch/job/1"})).json()[
+        "draft"
+    ]
+    assert draft["existing_offer_id"] is None and draft["fillable"] == []
+    mine = (await api.post("/api/offers/manual", json={**draft, "fill": True})).json()
+    assert mine["id"] != theirs and mine["existing"] is False
+    accounts.set_current(guest)
+    try:
+        async with rt.sessionmaker() as session:
+            offer = await session.get(Offer, theirs)
+            assert offer is not None and offer.description is None and offer.location is None
+    finally:
+        accounts.set_current(owner)

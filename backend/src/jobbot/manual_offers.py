@@ -7,7 +7,7 @@ robots n'est jamais contournée : on propose de coller le texte.
 """
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
@@ -19,7 +19,14 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.core.filter import canton_of
-from jobbot.core.normalize import normalize_offer, normalize_text, parse_rate
+from jobbot.core.normalize import (
+    NormalizedOffer,
+    normalize_company,
+    normalize_offer,
+    normalize_text,
+    normalize_title,
+    parse_rate,
+)
 from jobbot.db.models import EnrichStatus, Offer, OfferLink, OfferStatus
 from jobbot.filtering.service import run_filter
 from jobbot.letters.service import load_identity
@@ -69,6 +76,8 @@ class Draft:
     trade: str | None = None
     matches_trade: bool = True
     existing_offer_id: int | None = None
+    # Ce que l'annonce peut apporter à l'offre déjà là : ses champs vides (docs/111).
+    fillable: list[str] = field(default_factory=list)
 
 
 # --- Le balisage JobPosting -------------------------------------------------------------
@@ -198,13 +207,88 @@ async def _complete(session: AsyncSession, draft: Draft) -> Draft:
     if words:
         draft.matches_trade = about_trade(words, draft.title, draft.description)
     norm = normalize_offer(draft.title, draft.company, draft.location)
-    existing = await session.scalar(select(Offer.id).where(Offer.fingerprint == norm.fingerprint))
+    existing = await same_offer(session, norm)
     if existing is None and draft.url:
         existing = await session.scalar(
             select(OfferLink.offer_id).where(OfferLink.url == draft.url).limit(1)
         )
     draft.existing_offer_id = existing
+    draft.fillable = await _fillable(session, existing, draft) if existing is not None else []
     return draft
+
+
+async def same_offer(session: AsyncSession, norm: NormalizedOffer) -> int | None:
+    """L'offre déjà là : même empreinte, ou même poste chez la même entreprise ailleurs
+    (une offre de LinkedIn sans lieu, la même sur la page de l'employeur avec son lieu)."""
+    existing = await session.scalar(select(Offer.id).where(Offer.fingerprint == norm.fingerprint))
+    if existing is not None or not norm.company_key:
+        return existing
+    rows = await session.execute(
+        select(Offer.id, Offer.title, Offer.company)
+        .where(Offer.company.is_not(None), Offer.spontaneous.is_(False))
+        .order_by(Offer.first_seen_at.desc())
+    )
+    for offer_id, title, company in rows:
+        if (
+            normalize_company(company) == norm.company_key
+            and normalize_title(title) == norm.title_key
+        ):
+            return int(offer_id)
+    return None
+
+
+async def _fillable(session: AsyncSession, offer_id: int, draft: Draft) -> list[str]:
+    offer = await session.get(Offer, offer_id)
+    if offer is None:
+        return []
+    fields = [
+        name
+        for name in ("company", "location", "description")
+        if not (getattr(offer, name) or "").strip() and (getattr(draft, name) or "").strip()
+    ]
+    if draft.url and await _manual_link(session, offer_id) is None:
+        fields.append("url")
+    return fields
+
+
+async def _manual_link(session: AsyncSession, offer_id: int) -> OfferLink | None:
+    return await session.scalar(
+        select(OfferLink).where(OfferLink.offer_id == offer_id, OfferLink.source == SOURCE)
+    )
+
+
+async def fill(runtime: Runtime, offer_id: int, draft: Draft) -> list[str]:
+    """Compléter l'offre déjà là avec l'annonce relue : seulement ses champs vides, rien n'est
+    remplacé ni effacé. Le texte arrivé, la note faite sur l'extrait est refaite (docs/111)."""
+    async with runtime.sessionmaker.begin() as session:
+        # Relue sous la RLS du compte : l'id vient de la recherche du doublon, jamais du client.
+        offer = await session.get(Offer, offer_id)
+        if offer is None:
+            return []
+        filled: list[str] = []
+        company = (draft.company or "").strip()[:300]
+        if not (offer.company or "").strip() and company:
+            offer.company = company
+            filled.append("company")
+        location = (draft.location or "").strip()[:300]
+        if not (offer.location or "").strip() and location:
+            offer.location = location
+            offer.canton = offer.canton or canton_of(location)
+            if offer.rate_min is None:
+                offer.rate_min, offer.rate_max = parse_rate(location)
+            filled.append("location")
+        description = (draft.description or "").strip()
+        if not (offer.description or "").strip() and description:
+            offer.description = description
+            offer.snippet = offer.snippet or description[:500]
+            filled.append("description")
+        if draft.url and await _manual_link(session, offer_id) is None:
+            session.add(
+                OfferLink(offer_id=offer_id, source=SOURCE, external_id=None, url=draft.url)
+            )
+            filled.append("url")
+    log.info("manual_offer_filled", offer=offer_id, fields=filled)
+    return filled
 
 
 async def read(runtime: Runtime, url: str | None, text: str | None) -> Draft:
@@ -251,11 +335,9 @@ async def add(runtime: Runtime, draft: Draft) -> int:
     if rate_min is None and draft.location:
         rate_min, rate_max = parse_rate(draft.location)
     async with runtime.sessionmaker.begin() as session:
-        existing = await session.scalar(
-            select(Offer.id).where(Offer.fingerprint == norm.fingerprint)
-        )
+        existing = await same_offer(session, norm)
         if existing is not None:
-            return int(existing)
+            return existing
         if await added_today(session) >= DAILY_LIMIT:
             raise ReadProblem(f"{DAILY_LIMIT} offres ajoutées en 24 heures : c'est le maximum.")
         offer = Offer(
