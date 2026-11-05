@@ -5,7 +5,7 @@ import { useRoute } from "vue-router";
 
 import { api, type Offer, type RegistryCandidate } from "../api/client";
 import { dateInList, dateInSentence } from "../dates";
-import { expiredText, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
+import { cityOnly, expiredText, gapSkill, rateText, remoteText, scoreWord, sourceLabel } from "../format";
 import type { IconName } from "../icons";
 import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
@@ -209,7 +209,7 @@ const { phone: sub } = usePhone();
 const withBar = computed(() => sub.value && props.offer.status !== "applied");
 const scored = computed(() => props.offer.score !== null && props.offer.score !== undefined);
 const correcting = ref(false);
-// La carte de correspondance (O3, O4) : le mot en titre, le chiffre en texte (docs/121), les lignes ✓ et ⚠.
+// La carte de correspondance (O3, O4) : le mot en titre, le chiffre dans l'anneau (D12), les lignes ✓ et (!).
 const MATCH_TITLE: Record<string, string> = {
   "very-close": "Très proche de ton profil",
   close: "Proche de ton profil",
@@ -225,7 +225,8 @@ const matchTitle = computed(() => {
 const matchSub = computed(() => {
   const o = props.offer;
   if (!scored.value) return o.score_error ?? "La note arrive dès que l'annonce est lue.";
-  const base = `${o.score} sur 100, selon ton profil et tes préférences`;
+  // Le chiffre est dans l'anneau (D12) : la phrase dit seulement sur quoi il repose (maquette Offre).
+  const base = "Selon ton profil et tes préférences";
   return o.summary_partial ? `${base}, sur l'extrait de l'alerte seulement` : base;
 });
 const pointTitle = (text: string): string => pointParts(text).key || pointParts(text).rest;
@@ -510,11 +511,13 @@ watch(
           data-test="detail-meta"
         >
           <span class="visually-hidden">Entreprise : </span>{{ offer.company ?? "Entreprise non indiquée"
-          }} · <span class="visually-hidden">Lieu : </span>{{ offer.location || "Lieu non précisé" }}
+          }} · <span class="visually-hidden">Lieu : </span>{{ (sub ? cityOnly(offer.location) : offer.location) || "Lieu non précisé" }}
         </p>
       </div>
+      <!-- Sur téléphone, l'état n'a pas de ligne (maquette Offre) : le bouton du bas le dit déjà
+           (« Reprendre la lettre ») ; une candidature envoyée garde la sienne, avec son lien. -->
       <div
-        v-if="statusLabel"
+        v-if="statusLabel && (!sub || offer.status === 'applied')"
         class="status-line"
       >
         <StatusPill
@@ -684,7 +687,7 @@ watch(
           :key="line.mark + line.text"
           :class="line.mark"
         >
-          <AppIcon :name="line.mark === 'ok' ? 'check' : 'alert'" /><span><span class="visually-hidden">{{ line.mark === "ok" ? "Point fort : " : "Manque : " }}</span>{{ line.text }}</span>
+          <AppIcon :name="line.mark === 'ok' ? 'tick' : 'alert-circle'" /><span><span class="visually-hidden">{{ line.mark === "ok" ? "Point fort : " : "Manque : " }}</span>{{ line.text }}</span>
         </li>
       </ul>
       <DisclosureRow

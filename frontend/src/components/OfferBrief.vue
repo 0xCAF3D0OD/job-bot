@@ -26,6 +26,7 @@ const gaps = () => props.offer.gaps ?? [];
       <ScoreWord
         v-if="offer.score !== null && offer.score !== undefined"
         :score="offer.score"
+        plain
       />
       <span class="muted">
         {{ [strengths().length ? plural(strengths().length, "point fort", "points forts") : "", gaps().length ? plural(gaps().length, "manque", "manques") : ""].filter(Boolean).join(" · ") }}

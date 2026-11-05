@@ -70,7 +70,7 @@ const dash = computed(() => `${(((value.value ?? 0) * CIRCUMFERENCE) / 100).toFi
           d="M50 1V15M85 50H99M50 85V99M1 50H15"
         />
       </svg>
-      <span class="score-ring-value">{{ value }}<small v-if="large">/100</small></span>
+      <span class="score-ring-value">{{ value }}<small v-if="large && !bare">/100</small></span>
     </span>
     <span
       v-if="worded"
