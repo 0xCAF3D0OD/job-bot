@@ -30,14 +30,16 @@ const LANGUAGES: { value: Language; label: string }[] = [
 ];
 
 // Télétravail complet (docs/26 §3) : trois positions, la phrase reste courte.
-const REMOTE_POLICIES: { value: RemotePolicy; label: string; summary: string }[] = [
-  { value: "refuse", label: "Refusé", summary: "Télétravail complet : refusé hors de tes lieux" },
+// `pill` : l'aperçu court dans la ligne du résumé sur téléphone.
+const REMOTE_POLICIES: { value: RemotePolicy; label: string; summary: string; pill: string }[] = [
+  { value: "refuse", label: "Refusé", summary: "Télétravail complet : refusé hors de tes lieux", pill: "Refusé" },
   {
     value: "from_switzerland",
     label: "Si ouvert depuis la Suisse",
     summary: "Télétravail complet : accepté s'il est ouvert depuis la Suisse",
+    pill: "Depuis la Suisse",
   },
-  { value: "anywhere", label: "Partout", summary: "Télétravail complet : accepté partout" },
+  { value: "anywhere", label: "Partout", summary: "Télétravail complet : accepté partout", pill: "Partout" },
 ];
 
 // Tous les champs sont présents dans le formulaire, même ceux que l'API rend facultatifs.
@@ -77,26 +79,30 @@ const languagesHelp = computed(() => {
 
 // Résumé en lignes alignées, libellé à gauche, valeur à droite (docs/43 n° 23) ; les cantons
 // en toutes lettres (n° 24).
+// Chaque critère : sa valeur en phrase (le résumé sur ordinateur, les lecteurs d'écran) et ses éléments, montrés
+// en pastilles sur téléphone (le premier, puis « +N »), sous un titre court qui tient sur une ligne (`short`).
 const summary = computed(() => {
   const f = form.value;
-  const rows: { key: string; label: string; value: string }[] = [
-    { key: "lieux", label: "Lieux", value: f.locations.length ? f.locations.map(placeLabel).join(", ") : "partout" },
+  const places = f.locations.map(placeLabel);
+  const rows: { key: string; label: string; value: string; items: string[]; short?: string }[] = [
+    { key: "lieux", label: "Lieux", value: places.length ? places.join(", ") : "partout", items: places.length ? places : ["Partout"] },
   ];
-  const remote = REMOTE_POLICIES.find((p) => p.value === f.remote_policy)?.summary ?? "";
-  const [remoteLabel, remoteValue] = remote.split(" : ");
-  if (remoteLabel && remoteValue) rows.push({ key: "teletravail", label: remoteLabel, value: remoteValue });
-  rows.push({ key: "taux", label: "Taux d'activité", value: f.min_rate ? `${f.min_rate} % au moins` : "tous" });
+  const policy = REMOTE_POLICIES.find((p) => p.value === f.remote_policy);
+  const [remoteLabel, remoteValue] = (policy?.summary ?? "").split(" : ");
+  if (policy && remoteLabel && remoteValue) rows.push({ key: "teletravail", label: remoteLabel, value: remoteValue, items: [policy.pill] });
+  const rate = f.min_rate ? `${f.min_rate} % au moins` : "tous";
+  rows.push({ key: "taux", label: "Taux d'activité", value: rate, items: [f.min_rate ? `${f.min_rate} % et +` : "Tous"] });
   // Seule l'initiale passe en minuscule : « temporaires et CDD », pas « cdd ».
   const types = CONTRACTS.filter((c) => f.excluded_types.includes(c.value)).map((c) => c.label.charAt(0).toLowerCase() + c.label.slice(1));
-  rows.push({ key: "types", label: "Types d'offres exclus", value: types.length ? types.join(", ") : "aucun" });
-  if (f.banned_words.length) rows.push({ key: "mots", label: "Mots interdits dans le titre", value: f.banned_words.join(", ") });
+  rows.push({ key: "types", label: "Types d'offres exclus", short: "Offres exclues", value: types.length ? types.join(", ") : "aucun", items: types.length ? types.map(sentence) : ["Aucun"] });
+  if (f.banned_words.length) rows.push({ key: "mots", label: "Mots interdits dans le titre", short: "Mots interdits", value: f.banned_words.join(", "), items: f.banned_words });
   const langs = LANGUAGES.filter((l) => f.unspoken_languages.includes(l.value)).map((l) => l.label.toLowerCase());
-  if (langs.length) rows.push({ key: "langues", label: "Langues non parlées", value: langs.join(", ") });
+  if (langs.length) rows.push({ key: "langues", label: "Langues non parlées", value: langs.join(", "), items: langs.map(sentence) });
   return rows;
 });
 
-// Sous 600 px (planche « Structure téléphone ») : le résumé en liste groupée, une ligne par critère,
-// la valeur en phrase grise ; toucher une ligne ouvre le formulaire sur ce critère.
+// Sous 600 px (planche « Structure téléphone ») : le résumé en liste groupée, une ligne par critère, d'une seule
+// hauteur, la valeur en pastilles (D14, 2026-11-05) ; toucher une ligne ouvre le formulaire sur ce critère.
 const { phone: narrow } = useNarrow();
 const ICONS: Record<string, IconName> = { lieux: "pin", teletravail: "plug", taux: "stats", types: "briefcase", mots: "filter", langues: "globe" };
 function sentence(value: string): string {
@@ -198,13 +204,25 @@ onMounted(() => void load());
         <GroupedRow
           v-for="row in summary"
           :key="row.key"
-          :title="row.label"
-          :description="sentence(row.value)"
+          :title="row.short ?? row.label"
           :icon="ICONS[row.key]"
           button
           :data-test="`criteria-row-${row.key}`"
           @click="editAt(row.key)"
-        />
+        >
+          <template #end>
+            <span
+              class="grouped-value"
+              aria-hidden="true"
+            >{{ row.items[0] }}</span>
+            <span
+              v-if="row.items.length > 1"
+              class="grouped-value"
+              aria-hidden="true"
+            >+{{ row.items.length - 1 }}</span>
+            <span class="visually-hidden">: {{ row.value }}</span>
+          </template>
+        </GroupedRow>
       </GroupedList>
       <p
         v-if="message"

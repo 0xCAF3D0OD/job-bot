@@ -160,8 +160,12 @@ describe("CriteriaView sous 600 px (planche « Structure téléphone »)", () =>
     const summary = wrapper.find("[data-test=criteria-summary]");
     expect(summary.find(".grouped-title").text()).toBe("Poste recherché");
     const titles = summary.findAll(".grouped-row-title").map((t) => t.text());
-    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d'activité", "Types d'offres exclus"]);
-    expect(summary.find("[data-test=criteria-row-taux] .grouped-row-description").text()).toBe("80 % au moins");
+    expect(titles).toEqual(["Lieux", "Télétravail complet", "Taux d'activité", "Offres exclues"]);
+    // Une seule hauteur, la valeur en pastilles (D14) ; la phrase entière pour les lecteurs d'écran.
+    expect(summary.find(".grouped-row-description").exists()).toBe(false);
+    expect(summary.find("[data-test=criteria-row-taux] .grouped-value").text()).toBe("80 % et +");
+    expect(summary.find("[data-test=criteria-row-taux] .visually-hidden").text()).toBe(": 80 % au moins");
+    expect(summary.findAll("[data-test=criteria-row-lieux] .grouped-value").map((v) => v.text())).toEqual(["Vaud"]);
 
     const outcome = wrapper.find("[data-test=filter-outcome]");
     expect(outcome.findAll(".grouped-row-title").map((t) => t.text())).toEqual([
