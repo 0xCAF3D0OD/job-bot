@@ -399,3 +399,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.185 | Interface : chaque notification a l'icône de son genre et le libellé de son action (« Voir les offres », « Relancer », « Compléter »…), et celle des offres dit « La meilleure : <poste> chez <entreprise>, très proche. » au lieu d'une note chiffrée. | livrée |
 | 1.6.186 | Tes données : l'export demande ton mot de passe, comme la fermeture du compte | livrée |
 | 1.6.187 | Interface : nouvelle page Compte (onglet Compte du téléphone, menu de l'initiale sur ordinateur) avec la carte du profil, Mon parcours, Préférences, Recherche et outils, Confidentialité et aide ; le menu de l'initiale ne garde que « Compte » et « Se déconnecter ». | livrée |
+| 1.6.188 | Interface : les Réglages, une rubrique par page ouverte depuis Compte, avec « Retour au compte » ; le seuil des notifications en mots ; « Supprimer mon compte » dans sa carte rouge (étape 10b) | livrée |
