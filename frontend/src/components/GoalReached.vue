@@ -10,7 +10,7 @@ import OrpSheet from "./OrpSheet.vue";
 // « C'est fait ! » (maquette ObjectifAtteint, docs/139 étape 8c ; B10 à B12, Kevin, 2026-11-04) : quand
 // « J'ai postulé » atteint l'objectif ORP du mois, cet écran remplace « Candidature notée ». Le visage
 // ravi dans le feston pêche, « n recherches à faire » barré une fois, « C'est fait ! » en Caveat Brush
-// (le sous-ensemble de ces seuls caractères, 2 Ko), l'export de la feuille, puis l'accueil.
+// (un sous-ensemble partagé avec les titres des premiers pas, 3,8 Ko), l'export de la feuille, puis l'accueil.
 // « Je n'ai pas postulé » reste, en lien discret.
 defineProps<{ data: OrpMonth }>();
 const emit = defineEmits<{ cancel: [] }>();

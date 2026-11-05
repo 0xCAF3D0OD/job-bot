@@ -7,15 +7,21 @@ import WelcomeView from "./WelcomeView.vue";
 const GET = vi.fn();
 const PUT = vi.fn();
 const POST = vi.fn();
+const PATCH = vi.fn();
 vi.mock("../api/client", () => ({
-  api: { GET: (...a: unknown[]) => GET(...a), PUT: (...a: unknown[]) => PUT(...a), POST: (...a: unknown[]) => POST(...a) },
+  api: {
+    GET: (...a: unknown[]) => GET(...a),
+    PUT: (...a: unknown[]) => PUT(...a),
+    POST: (...a: unknown[]) => POST(...a),
+    PATCH: (...a: unknown[]) => PATCH(...a),
+  },
 }));
 afterEach(() => vi.resetAllMocks());
 
 const CRITERIA = {
-  locations: [],
+  locations: ["VD"],
   remote_policy: "refuse",
-  min_rate: null,
+  min_rate: 80,
   excluded_types: [],
   banned_words: [],
   unspoken_languages: [],
@@ -24,15 +30,28 @@ const SETTINGS = {
   orp_monthly_target: null,
   notify_score_threshold: 70,
   llm_monthly_budget_chf: 5,
-  orp_due_day: 5,
+  orp_due_day: 12,
   employer_search_threshold: 70,
 };
+const OFFER = {
+  id: 7,
+  title: "DevOps Engineer",
+  company: "Alpstack",
+  location: "Lausanne",
+  score: 88,
+  why: "Kubernetes et Terraform demandés.",
+  rate_min: 80,
+  rate_max: 100,
+  employment_type: "CDI",
+  links: [],
+  keywords_asks: [],
+};
 
-type State = { status: string; step: number; goal: string | null; trade: string | null };
+type State = { status: string; step: number; goal: string | null; trade: string | null; roles?: string[] };
 
 async function mountWelcome(
   state: State = { status: "pending", step: 1, goal: null, trade: null },
-  options: { realTransition?: boolean } = {},
+  options: { offers?: unknown[]; realTransition?: boolean } = {},
 ) {
   GET.mockImplementation((path: string) =>
     Promise.resolve({
@@ -43,21 +62,13 @@ async function mountWelcome(
             ? { criteria: CRITERIA, keywords: {}, saved_at: null }
             : path === "/api/settings"
               ? SETTINGS
-              : { configured: false, server: "https://ntfy.sh", personal: true, topic: null },
+              : path === "/api/offers"
+                ? { items: options.offers ?? [], total: (options.offers ?? []).length }
+                : {},
     }),
   );
-  PUT.mockImplementation((path: string, options: { body: Record<string, unknown> }) =>
-    Promise.resolve({
-      data:
-        path === "/api/criteria"
-          ? { criteria: { ...CRITERIA, ...options.body } }
-          : path === "/api/settings"
-            ? { ...SETTINGS, ...options.body }
-            : path === "/api/notifications/phone"
-              ? { configured: false, server: "https://ntfy.sh", personal: true, topic: null }
-              : {},
-    }),
-  );
+  PUT.mockResolvedValue({ data: {} });
+  PATCH.mockResolvedValue({ response: { ok: true }, data: {} });
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }],
@@ -65,10 +76,7 @@ async function mountWelcome(
   await router.push("/bienvenue");
   const wrapper = mount(WelcomeView, {
     attachTo: options.realTransition ? document.body : undefined,
-    global: {
-      plugins: [router],
-      stubs: { Illustration: true, ...(options.realTransition ? { transition: false } : {}) },
-    },
+    global: { plugins: [router], stubs: options.realTransition ? { transition: false } : {} },
   });
   await flushPromises();
   return { wrapper, router };
@@ -78,204 +86,180 @@ function calls(path: string): Record<string, unknown>[] {
   return PUT.mock.calls.filter((c) => c[0] === path).map((c) => (c[1] as { body: Record<string, unknown> }).body);
 }
 
-describe("l'accueil, façon Duolingo (docs/66)", () => {
-  it("une question par écran ; chaque réponse remplit un vrai réglage", async () => {
-    const { wrapper, router } = await mountWelcome();
-    expect(wrapper.find("[data-test=welcome-goal]").exists()).toBe(true);
+async function click(wrapper: Awaited<ReturnType<typeof mountWelcome>>["wrapper"], test: string): Promise<void> {
+  await wrapper.find(`[data-test=${test}]`).trigger("click");
+  await flushPromises();
+}
 
-    await wrapper.find("[data-test=goal-orp]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/welcome")).toContainEqual(expect.objectContaining({ goal: "orp" }));
+describe("les premiers pas (OnboardingC, 11b)", () => {
+  it("quatre étapes : la barre le dit, « Moins chercher plus vivre. » sur la page bleue", async () => {
+    const { wrapper } = await mountWelcome();
+    expect(wrapper.find(".welcome-blue").exists()).toBe(true);
+    const bar = wrapper.find("[role=progressbar]");
+    expect(bar.attributes("aria-label")).toBe("Étape 1 sur 4");
+    expect(bar.findAll("span.done")).toHaveLength(1);
+    // Le mot barré reste lu par les lecteurs d'écran ; le gribouillis est décoratif.
+    expect(wrapper.find("h1").text().replace(/\s+/g, " ")).toBe("Moins chercher plus vivre.");
+    expect(wrapper.find("[data-test=welcome-back]").exists()).toBe(false);
 
-    await wrapper.find("[data-test=trade-input]").setValue("Infirmière");
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/welcome")).toContainEqual(expect.objectContaining({ trade: "Infirmière" }));
-
-    await wrapper.find("[data-test=place-VD]").trigger("click");
-    await wrapper.find("[data-test=place-GE]").trigger("click");
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/criteria").at(-1)?.locations).toEqual(["VD", "GE"]);
-
-    await wrapper.find("[data-test=rate-80]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/criteria").at(-1)).toMatchObject({ locations: ["VD", "GE"], min_rate: 80 });
-
-    // ORP seulement parce que le premier écran l'a dit.
-    await wrapper.find("[data-test=target-10]").trigger("click");
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 10 });
-
-    // La date de remise, son propre écran : un calendrier, le 1er et après le 28 grisés.
-    expect(wrapper.find("[data-test=due-calendar]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=due-1]").attributes("disabled")).toBeDefined();
-    await wrapper.find("[data-test=due-10]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 10, orp_due_day: 10 });
-
-    expect(wrapper.find("[data-test=welcome-cv]").exists()).toBe(true);
-    await wrapper.find("[data-test=welcome-skip]").trigger("click");
-    await flushPromises();
-
-    // Sans CV lu, pas d'écran « Voici ce que j'ai compris » : les langues, puis le télétravail
-    // (docs/121 §A.2), qui remplissent les critères.
-    expect(wrapper.find("[data-test=welcome-understood]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=welcome-continue]").attributes("disabled")).toBeDefined();
-    await wrapper.find("[data-test=language-anglais]").trigger("click");
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/criteria").at(-1)?.unspoken_languages).toEqual(["allemand", "italien"]);
-    await wrapper.find("[data-test=remote-yes]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/criteria").at(-1)).toMatchObject({ remote_policy: "from_switzerland", locations: ["VD", "GE"] });
-
-    await wrapper.find("[data-test=phone-no]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/notifications/phone")).toEqual([{ enabled: false }]);
-
-    const recap = wrapper.find("[data-test=welcome-recap]").text();
-    expect(recap).toContain("Infirmière");
-    expect(recap).toContain("Vaud, Genève");
-    expect(recap).toContain("10 recherches par mois");
-    expect(recap).toContain("avant le 10 du mois");
-    expect(recap).toContain("Français, Anglais");
-    expect(recap).toContain("Aussi à distance");
-    // Un crayon par ligne, plus de « Modifier » écrit (docs/104 §1).
-    expect(recap).not.toContain("Modifier");
-    expect(wrapper.find("[data-test=recap-trade] .welcome-recap-edit").exists()).toBe(true);
-    expect(wrapper.find("[data-test=welcome-alerts]").exists()).toBe(false);
-
-    // La suite : le personnage l'annonce, puis on crée les alertes.
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=welcome-bubble]").text()).toContain("Prochaine étape : créer tes alertes");
-    expect(wrapper.find("[data-test=welcome-later]").exists()).toBe(false);
-    await wrapper.find("[data-test=welcome-alerts]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/welcome").at(-1)).toEqual({ done: true, postponed: false });
-    expect(router.currentRoute.value.path).toBe("/candidatures/alertes");
+    await click(wrapper, "welcome-start");
+    expect(wrapper.find(".welcome-blue").exists()).toBe(false);
+    expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 2 sur 4");
+    expect(calls("/api/welcome")).toContainEqual({ step: 2 });
+    expect(wrapper.find("[data-test=welcome-back]").exists()).toBe(true);
   });
 
-  it("sans ORP, pas de question sur l'ORP ; « Plus tard » mène à Aujourd'hui", async () => {
-    const { wrapper, router } = await mountWelcome({ status: "pending", step: 4, goal: "job", trade: "DevOps" });
-    // Reprise à l'écran atteint : le taux d'activité.
-    expect(wrapper.find("[data-test=welcome-rate]").exists()).toBe(true);
-    await wrapper.find("[data-test=rate-any]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=welcome-cv]").exists()).toBe(true);
-    await wrapper.find("[data-test=welcome-later]").trigger("click");
-    await flushPromises();
-    expect(calls("/api/welcome")).toContainEqual({ postponed: true });
-    expect(router.currentRoute.value.path).toBe("/aujourdhui");
+  it("le CV : sans fichier, « Continuer sans CV » ; la phrase de confidentialité et son lien", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
+    expect(wrapper.find("[data-test=cv-upload]").text()).toContain("PDF ou Word, 10 Mo maximum");
+    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer sans CV");
+    const privacy = wrapper.find("[data-test=cv-privacy]");
+    expect(privacy.text()).toContain("L'IA n'en reçoit que les parties utiles, sans tes coordonnées.");
+    expect(privacy.find("a").attributes("href")).toBe("/tes-donnees#ia");
+    expect(wrapper.text()).not.toContain("L'Assistant t'aide");
   });
 
-  it("« Retour » revient d'un écran ; le récapitulatif ramène à la réponse à corriger", async () => {
-    const { wrapper } = await mountWelcome({ status: "pending", step: 9, goal: "job", trade: "DevOps" });
-    expect(wrapper.find("[data-test=welcome-ready]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=welcome-skip]").exists()).toBe(false);
-
-    await wrapper.find("[data-test=welcome-back]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=welcome-phone]").exists()).toBe(true);
-    await wrapper.find("[data-test=welcome-skip]").trigger("click");
-    await flushPromises();
-
-    // Corriger le métier depuis le récapitulatif, puis y revenir directement.
-    await wrapper.find("[data-test=recap-trade]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=welcome-trade]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Enregistrer");
-    await wrapper.find("[data-test=welcome-trade] input").setValue("Comptable");
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=welcome-ready]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=welcome-recap]").text()).toContain("Comptable");
-    expect(calls("/api/welcome")).toContainEqual({ step: 9, trade: "Comptable" });
-
-    // Les points : un par écran, on touche celui qu'on veut.
-    expect(wrapper.findAll(".welcome-dot")).toHaveLength(10);
-    expect(wrapper.find("[data-test=dot-trade]").classes()).toContain("answered");
-    expect(wrapper.find("[data-test=dot-cv]").classes()).not.toContain("answered");
-    await wrapper.find("[data-test=dot-places]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=welcome-places]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=dot-places]").attributes("aria-current")).toBe("step");
-    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer");
-  });
-
-  it("en changeant d'écran, le focus va au titre du nouvel écran (docs/69 §4)", async () => {
-    const { wrapper } = await mountWelcome(undefined, { realTransition: true });
-    await wrapper.find("[data-test=goal-job]").trigger("click");
-    await vi.waitFor(async () => {
-      await flushPromises();
-      const focused = document.activeElement as HTMLElement | null;
-      expect(focused?.tagName).toBe("H1");
-      expect(focused?.textContent).toContain("Quel métier");
-    });
-    wrapper.unmount();
-  });
-
-  it("le CV lu par l'IA : les blocs et les postes à valider, les langues et le télétravail préremplis (docs/121 §A)", async () => {
-    const { wrapper } = await mountWelcome({ status: "pending", step: 5, goal: "job", trade: "DevOps" });
-    expect(wrapper.find("[data-test=welcome-cv]").exists()).toBe(true);
+  it("le CV lu par l'IA : les compétences trouvées, les blocs ajoutés au profil, les postes pré-remplis", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
     POST.mockImplementation((path: string) =>
       Promise.resolve({
         data:
           path === "/api/documents"
-            ? { id: 42, filename: "cv.pdf" }
+            ? { id: 3, filename: "cv.pdf" }
             : path === "/api/documents/{document_id}/understand"
               ? {
                   chunks: [
-                    { kind: "experience", title: "Ingénieure DevOps, Acme (2021-2026)", content: "Kubernetes.", tags: [], duplicate_of: null },
-                    { kind: "competence", title: "Cloud", content: "AWS.", tags: [], duplicate_of: 3 },
+                    { kind: "competence", title: "Kubernetes", content: "…", tags: [], duplicate_of: null },
+                    { kind: "experience", title: "Acme SA", content: "…", tags: [], duplicate_of: 4 },
                   ],
-                  roles: ["Ingénieure DevOps", "SRE"],
-                  min_rate: 80,
+                  roles: ["DevOps Engineer", "SRE"],
+                  min_rate: null,
                   languages: ["anglais"],
-                  remote: "remote",
+                  remote: null,
                 }
-              : { id: 1 },
+              : {},
       }),
     );
     const input = wrapper.find("[data-test=cv-upload] input");
-    Object.defineProperty(input.element, "files", { value: [new File(["cv"], "cv.pdf")] });
+    Object.defineProperty(input.element, "files", { value: [new File(["x"], "cv.pdf")] });
     await input.trigger("change");
     await flushPromises();
-    expect(POST).toHaveBeenCalledWith("/api/documents/{document_id}/understand", { params: { path: { document_id: 42 } } });
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
+    expect(wrapper.find("[data-test=cv-done]").text()).toContain("Importé et analysé");
+    expect(wrapper.find("[data-test=cv-skills]").text()).toContain("Kubernetes");
+    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer");
 
-    // Un écran : les postes en pastilles, les blocs en liste ; un doublon décoché.
-    expect(wrapper.find("[data-test=welcome-understood] h1").text()).toBe("Voici ce que j'ai compris");
-    expect(wrapper.find("[data-test=understood-roles]").text()).toContain("SRE");
-    expect((wrapper.find("[data-test=understood-chunk-0]").element as HTMLInputElement).checked).toBe(true);
-    expect((wrapper.find("[data-test=understood-chunk-1]").element as HTMLInputElement).checked).toBe(false);
-    expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("C'est bon");
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    const created = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
-    expect(created).toHaveLength(1);
-    expect((created[0]![1] as { body: Record<string, unknown> }).body).toMatchObject({ title: "Ingénieure DevOps, Acme (2021-2026)", document_id: 42, active: true });
-    expect(calls("/api/welcome")).toContainEqual(expect.objectContaining({ roles: ["Ingénieure DevOps", "SRE"] }));
+    await click(wrapper, "welcome-continue");
+    // Le bloc déjà dans le profil n'est pas ajouté une deuxième fois.
+    const added = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
+    expect(added).toHaveLength(1);
+    expect(added[0]![1]).toMatchObject({ body: { title: "Kubernetes", document_id: 3 } });
+    const roles = wrapper.findAll("[data-test=roles] button");
+    expect(roles.map((r) => r.text())).toEqual(["DevOps Engineer", "SRE"]);
+    expect(roles.every((r) => r.attributes("aria-pressed") === "true")).toBe(true);
 
-    // Les langues, préremplies par le CV.
-    expect(wrapper.find("[data-test=language-anglais]").classes()).toContain("chosen");
-    expect(wrapper.find("[data-test=language-allemand]").classes()).not.toContain("chosen");
+    // Les valeurs par défaut : les langues du CV.
+    await click(wrapper, "welcome-continue");
+    expect(calls("/api/criteria").at(-1)).toMatchObject({ unspoken_languages: ["allemand", "italien"] });
+    expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français, anglais");
   });
 
-  it("sans IA, l'accueil continue sans l'écran du CV", async () => {
-    const { wrapper } = await mountWelcome({ status: "pending", step: 5, goal: "job", trade: "DevOps" });
-    POST.mockImplementation((path: string) =>
-      Promise.resolve(path === "/api/documents" ? { data: { id: 42, filename: "cv.pdf" } } : { data: undefined, error: { detail: "IA non configurée" } }),
-    );
-    const input = wrapper.find("[data-test=cv-upload] input");
-    Object.defineProperty(input.element, "files", { value: [new File(["cv"], "cv.pdf")] });
-    await input.trigger("change");
-    await flushPromises();
-    await wrapper.find("[data-test=welcome-continue]").trigger("click");
-    await flushPromises();
-    expect(wrapper.find("[data-test=welcome-languages]").exists()).toBe(true);
+  it("les critères : postes (trois au plus), lieux en puces, l'ORP et ses recherches par mois", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
+    for (const role of ["Aide-soignante", "Sage-femme", "Ambulancière"]) {
+      await wrapper.find("[data-test=role-input]").setValue(role);
+      await click(wrapper, "role-add");
+    }
+    const roles = wrapper.findAll("[data-test=roles] button");
+    expect(roles).toHaveLength(4);
+    expect(roles.filter((r) => r.attributes("aria-pressed") === "true")).toHaveLength(3);
+    expect(roles[3]!.attributes("aria-disabled")).toBe("true");
+    expect(wrapper.text()).toContain("Trois postes au plus.");
+
+    expect(wrapper.find(".tag").text()).toContain("VD");
+    expect(wrapper.find("[data-test=target]").text()).toBe("10");
+    await click(wrapper, "target-plus");
+    await click(wrapper, "target-plus");
+    expect(wrapper.find("[data-test=target]").text()).toBe("12");
+
+    await click(wrapper, "welcome-continue");
+    expect(calls("/api/criteria").at(-1)).toEqual({
+      ...CRITERIA,
+      locations: ["VD"],
+      min_rate: null,
+      remote_policy: "from_switzerland",
+      unspoken_languages: ["allemand", "italien", "anglais"],
+    });
+    expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: 12, orp_due_day: 5 });
+    expect(calls("/api/welcome").at(-1)).toMatchObject({
+      step: 4,
+      goal: "orp",
+      roles: ["Infirmière", "Aide-soignante", "Sage-femme"],
+      trade: "Infirmière",
+    });
+    // Le téléphone reste désactivé : rien n'est envoyé.
+    expect(PUT.mock.calls.some((c) => c[0] === "/api/notifications/phone")).toBe(false);
+  });
+
+  it("sans ORP : pas d'objectif, pas de remise dans la ligne des valeurs par défaut", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null });
+    await wrapper.find("[data-test=orp-switch]").setValue(false);
+    expect(wrapper.find("[data-test=target]").exists()).toBe(false);
+    await click(wrapper, "welcome-continue");
+    expect(calls("/api/settings").at(-1)).toMatchObject({ orp_monthly_target: null });
+    expect(calls("/api/welcome").at(-1)).toMatchObject({ goal: "job" });
+    const line = wrapper.find("[data-test=welcome-defaults]").text();
+    expect(line).toBe("Taux : peu importe · Langues : français · Télétravail : accepté · Téléphone : désactivé");
+  });
+
+  it("le tri : les offres déjà notées, une à la fois ; Garder et Écarter comme dans Candidatures", async () => {
+    const offers = [OFFER, { ...OFFER, id: 8, title: "SRE", score: 55 }];
+    const { wrapper, router } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null }, { offers });
+    await click(wrapper, "welcome-continue");
+    expect(wrapper.text()).toContain("Garde ou écarte. Celles que tu gardes t'attendent dans Candidatures.");
+    expect(wrapper.text()).not.toContain("apprend");
+    expect(wrapper.find("[data-test=welcome-offer]").text()).toContain("D'après ton CV : Kubernetes et Terraform demandés.");
+    // L'anneau sans chiffre, le mot dessous (D3, D5).
+    expect(wrapper.find(".score-ring-worded").exists()).toBe(true);
+    expect(wrapper.text()).toContain("Offre 1 sur 2");
+
+    await click(wrapper, "welcome-keep");
+    expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 7 } }, body: { status: "preparing" } });
+    await click(wrapper, "welcome-dismiss");
+    expect(PATCH).toHaveBeenLastCalledWith("/api/offers/{offer_id}/status", { params: { path: { offer_id: 8 } }, body: { status: "ignored" } });
+
+    expect(wrapper.find("[data-test=welcome-sorted]").text()).toBe("1 offre gardée, 1 écartée.");
+    expect(wrapper.find("[data-test=welcome-later]").exists()).toBe(false);
+    await click(wrapper, "welcome-finish");
+    expect(calls("/api/welcome").at(-1)).toEqual({ done: true, postponed: false });
+    expect(router.currentRoute.value.path).toBe("/aujourdhui");
+  });
+
+  it("sans offre notée : directement « Tout est prêt. », et « Modifier dans Compte » termine l'accueil", async () => {
+    const { wrapper, router } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null });
+    await click(wrapper, "welcome-continue");
+    expect(wrapper.find("[data-test=welcome-offer]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=welcome-sorted]").text()).toBe("Tes premières offres arrivent après la prochaine collecte.");
+    await click(wrapper, "welcome-account");
+    expect(calls("/api/welcome").at(-1)).toEqual({ done: true, postponed: false });
+    expect(router.currentRoute.value.path).toBe("/compte");
+  });
+
+  it("« Passer » remet à plus tard ; un accueil repris revient à son étape", async () => {
+    const { wrapper, router } = await mountWelcome({ status: "postponed", step: 9, goal: null, trade: null });
+    expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 3 sur 4");
+    await click(wrapper, "welcome-later");
+    expect(calls("/api/welcome").at(-1)).toEqual({ postponed: true });
+    expect(router.currentRoute.value.path).toBe("/aujourdhui");
+  });
+
+  it("en changeant d'étape, le focus va au titre de la nouvelle (docs/69 §4)", async () => {
+    const { wrapper } = await mountWelcome(undefined, { realTransition: true });
+    await click(wrapper, "welcome-start");
+    await vi.waitFor(async () => {
+      await flushPromises();
+      expect(document.activeElement?.tagName).toBe("H1");
+      expect(document.activeElement?.textContent?.replace(/\s+/g, " ").trim()).toBe("Tout réécrire Ton CV suffit.");
+    });
+    wrapper.unmount();
   });
 });

@@ -49,6 +49,7 @@ PAGES = [
     "reglages?rubrique=outils",
     "tes-donnees",
     "accessibilite",
+    "bienvenue",
 ]
 SIZES = [{"width": 1440, "height": 900}, {"width": 390, "height": 844}]
 MAX_WORDS = 16
