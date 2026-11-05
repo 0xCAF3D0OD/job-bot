@@ -135,6 +135,11 @@ describe("LoginView, maquette Connexion", () => {
       // Décorative : cachée aux lecteurs d'écran, image sans texte.
       expect(one.attributes("aria-hidden") ?? one.element.closest("[aria-hidden=true]")).toBeTruthy();
       expect(one.find("img").attributes("alt")).toBe("");
+      // Le kit HD : 400 px en 1×, 800 px en 2×, taille réservée.
+      const img = one.find("img");
+      expect(img.attributes("src")).toContain("perso-02-bonjour-400");
+      expect(img.attributes("srcset")).toMatch(/perso-02-bonjour-400\S* 1x, \S*perso-02-bonjour-800\S* 2x/);
+      expect([img.attributes("width"), img.attributes("height")]).toEqual(["150", "400"]);
     }
     expect(wrapper.find("[data-test=brand-logo]").exists()).toBe(true);
   });
