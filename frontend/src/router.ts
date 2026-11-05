@@ -1,4 +1,11 @@
-import { createRouter, createWebHistory, type LocationQuery, type RouteRecordRaw } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  type LocationQuery,
+  type RouteLocationNormalized,
+  type RouteLocationRaw,
+  type RouteRecordRaw,
+} from "vue-router";
 
 import { useAuth } from "./composables/useAuth";
 import { useJobsMemory } from "./composables/useJobsMemory";
@@ -80,6 +87,32 @@ const views: Record<string, () => Promise<unknown>> = {
 
 function keepMonth(query: LocationQuery): Record<string, string> {
   return typeof query.mois === "string" ? { mois: query.mois } : {};
+}
+
+// Les Réglages n'ont plus de liste (décision de Kevin du 2026-11-05, C10) : sans rubrique, la page Compte. Les
+// anciens liens gardent leur rubrique : « #agenda » (docs/48 §5), et l'ancienne rubrique Compte, qui menait à
+// l'export et à la fermeture, devient Mes données.
+const OLD_ANCHORS: Record<string, string> = {
+  recherche: "recherche",
+  notifications: "notifications",
+  ia: "ia",
+  profils: "plateforme",
+  connexion: "donnees",
+  agenda: "outils",
+  extension: "outils",
+};
+function settingsEntry(to: RouteLocationNormalized): RouteLocationRaw | true {
+  // L'ancienne rubrique Compte (liens de l'assistant, retours de paiement) : la formule, ou Mes données
+  // quand le lien venait fermer le compte.
+  if (to.query.rubrique === "compte") {
+    return { path: "/reglages", query: { ...to.query, rubrique: to.query.fermer ? "donnees" : "formule" } };
+  }
+  if (to.query.rubrique) return true;
+  const anchor = OLD_ANCHORS[to.hash.slice(1)];
+  if (anchor) return { path: "/reglages", query: { rubrique: anchor } };
+  // L'ancien lien de l'état technique (docs/21 §6).
+  if (to.hash === "#etat") return { path: "/reglages/diagnostic" };
+  return { path: "/compte" };
 }
 
 export const routes: RouteRecordRaw[] = [
@@ -253,9 +286,14 @@ router.beforeEach(async (to) => {
   if (loggedIn.value && me.value?.welcome === "pending" && to.name !== "welcome" && !PUBLIC_ROUTES.has(String(to.name))) {
     return { name: "welcome" };
   }
-  // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) : un invité revient aux Réglages.
+  // Le Diagnostic technique, à l'exploitant seulement (docs/108 §3) : un invité revient au compte.
   if (to.name === "diagnostic" && loggedIn.value && me.value?.auth_enabled && !me.value.is_owner) {
-    return { path: "/reglages" };
+    return { path: "/compte" };
+  }
+  // Les Réglages, à chaque passage, même quand seule la rubrique change (un ancien lien dans la page).
+  if (to.name === "settings" && loggedIn.value) {
+    const next = settingsEntry(to);
+    if (next !== true) return next;
   }
   if (loggedIn.value || PUBLIC_ROUTES.has(String(to.name))) return true;
   return { name: "login", query: { suite: to.fullPath } };

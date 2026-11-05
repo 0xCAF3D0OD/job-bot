@@ -57,7 +57,7 @@ class Checkout:
 
 async def checkout(runtime: Runtime, user_id: int) -> Checkout:
     settings = runtime.settings
-    back = f"{settings.public_url.rstrip('/')}/reglages?rubrique=compte"
+    back = f"{settings.public_url.rstrip('/')}/reglages?rubrique=formule"
     gateway_id, link = await payrexx.create_gateway(
         settings, reference=reference(user_id), back=back
     )

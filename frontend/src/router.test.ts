@@ -74,9 +74,21 @@ describe("routes réservées (docs/18 §1)", () => {
     await router.push("/candidatures/journal");
     expect(router.currentRoute.value.name).toBe("alerts");
     // État technique devenu la page Diagnostic (docs/21 §6), à l'exploitant seulement
-    // (docs/108 §3) : un invité revient aux Réglages.
+    // (docs/108 §3) : un invité revient à la page Compte.
     await router.push("/etat");
-    expect(router.currentRoute.value.path).toBe("/reglages");
+    expect(router.currentRoute.value.path).toBe("/compte");
+    // Les Réglages (étape 10b, C10) : plus de liste, la page Compte la remplace ; les anciens liens
+    // ouvrent la bonne rubrique.
+    await router.push("/reglages");
+    expect(router.currentRoute.value.path).toBe("/compte");
+    await router.push("/reglages#agenda");
+    expect(router.currentRoute.value.fullPath).toBe("/reglages?rubrique=outils");
+    await router.push("/reglages?rubrique=compte&fermer=1");
+    expect(router.currentRoute.value.query).toEqual({ rubrique: "donnees", fermer: "1" });
+    await router.push("/reglages?rubrique=compte&paiement=ok");
+    expect(router.currentRoute.value.query).toEqual({ rubrique: "formule", paiement: "ok" });
+    await router.push("/reglages?rubrique=notifications");
+    expect(router.currentRoute.value.query.rubrique).toBe("notifications");
     useAuth().me.value = { ...useAuth().me.value!, is_owner: true };
     await router.push("/etat");
     expect(router.currentRoute.value.name).toBe("diagnostic");

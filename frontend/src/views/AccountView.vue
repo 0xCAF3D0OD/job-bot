@@ -20,7 +20,7 @@ const { me } = useAuth();
 const { theme } = useTheme();
 const { plan } = usePlan();
 const { list, current, load, choose } = useProfiles();
-const { running, collectNow } = useCollect();
+const { running, message: collectMessage, collectNow } = useCollect();
 
 const name = ref("");
 const cvCount = ref<number | null>(null);
@@ -169,7 +169,7 @@ onMounted(() => {
         <GroupedRow
           title="Apparence"
           :description="THEME_LABEL[theme]"
-          :to="rubric('compte')"
+          :to="rubric('affichage')"
           data-test="account-appearance"
         />
       </GroupedList>
@@ -199,7 +199,7 @@ onMounted(() => {
         <GroupedRow
           title="Formule"
           :value="planName"
-          :to="rubric('compte')"
+          :to="rubric('formule')"
           data-test="account-plan"
         />
         <GroupedRow
@@ -214,16 +214,26 @@ onMounted(() => {
           title="Collecter maintenant"
           :description="running ? 'Relève en cours…' : 'Relever tout de suite les offres des sites suivis'"
           button
+          :busy="running"
           :chevron="false"
           data-test="account-collect"
-          @click="!running && collectNow()"
+          @click="collectNow()"
         />
       </GroupedList>
+      <!-- L'état de la collecte, dit aux lecteurs d'écran ; la ligne le montre à l'écran. -->
+      <p
+        v-if="me && !me.demo"
+        class="visually-hidden"
+        role="status"
+        data-test="account-collect-status"
+      >
+        {{ running ? "Relève en cours…" : collectMessage }}
+      </p>
 
       <GroupedList title="Confidentialité et aide">
         <GroupedRow
           title="Mes données"
-          :to="rubric('compte')"
+          :to="rubric('donnees')"
           data-test="account-data"
         />
         <GroupedRow

@@ -296,7 +296,7 @@ async def _announce_export(runtime: Runtime) -> None:
             priority=4,
         ),
         kind=EXPORT_KIND,
-        link="/reglages",
+        link="/reglages?rubrique=donnees",
     )
 
 

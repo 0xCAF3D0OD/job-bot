@@ -129,42 +129,42 @@ describe("SettingsView, enregistrement réglage par réglage (1.6.66)", () => {
   });
 });
 
-describe("SettingsView, une rubrique à la fois (docs/48)", () => {
-  it("six rubriques, une seule affichée ; un ancien lien #agenda mène à « Agenda et extension »", async () => {
+describe("SettingsView, une rubrique par page (étape 10b, C10)", () => {
+  it("une seule rubrique affichée, son nom en titre, « Retour au compte »", async () => {
     mockGet(false);
     const { wrapper, router } = await mountSettings();
-    // Liste et détail (planche « Structure téléphone ») : la liste groupée à gauche, l'entrée affichée marquée.
-    const list = wrapper.find("[data-test=settings-list]");
-    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["Recherche d'emploi", "Être averti", "Compte et aide"]);
-    expect(list.findAll(".grouped-row-title").map((t) => t.text())).toEqual([
-      "Objectif ORP et sites",
-      "Rythme",
-      "Alertes",
-      "Notifications",
-      "IA",
-      "Agenda et extension",
-      "Compte",
-      "Écrire à l'exploitant",
-    ]);
-    expect(list.find("[aria-current=page] .grouped-row-title").text()).toBe("Objectif ORP et sites");
-    // Sans coordonnées de l'exploitant : la même phrase que Données personnelles, pas de lien.
-    const write = list.find("[data-test=\"settings-entry-Écrire à l'exploitant\"]");
-    expect(write.text()).toContain("L'exploitant de la plateforme n'a pas encore indiqué ses coordonnées.");
-    expect(write.find("a, button").exists()).toBe(false);
+    // Sans rubrique valable, la première : Objectif ORP et sites.
+    expect(wrapper.find("h1").text()).toBe("Objectif ORP et sites");
+    const back = wrapper.find("[data-test=settings-back]");
+    expect(back.text()).toContain("Retour au compte");
+    expect(back.attributes("href")).toBe("/compte");
+    expect(wrapper.find("[data-test=settings-list]").exists()).toBe(false);
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(true);
     expect(wrapper.find("[data-test=notifications]").exists()).toBe(false);
-    // Le seuil de notification est dans sa rubrique, dit en clair.
     expect(wrapper.text()).not.toContain("M'avertir d'une offre");
     await router.push({ query: { rubrique: "notifications" } });
     await flushPromises();
+    expect(wrapper.find("h1").text()).toBe("Notifications");
     expect(wrapper.text()).toContain("M'avertir d'une offre dès");
     expect(wrapper.find("[data-test=due-day]").exists()).toBe(false);
-
-    await router.push({ path: "/reglages", query: {}, hash: "#agenda" });
-    await flushPromises();
-    expect(wrapper.find("[data-test=settings-list] [aria-current=page] .grouped-row-title").text()).toBe("Agenda et extension");
+    expect(wrapper.find("[data-test=section-rythme]").exists()).toBe(false);
     // « Chercher l'annonce chez l'employeur » n'est plus ici (1.6.28).
     expect(wrapper.find("[data-test=employer-threshold]").exists()).toBe(false);
+  });
+
+  it("l'ancienne rubrique Compte se partage entre Affichage, Formule et Mes données", async () => {
+    mockGet(false);
+    const rubrics: [string, string][] = [
+      ["affichage", "Affichage"],
+      ["formule", "Formule"],
+      ["donnees", "Mes données"],
+    ];
+    for (const [rubrique, title] of rubrics) {
+      const { wrapper } = await mountSettings(rubrique);
+      expect(wrapper.find("h1").text(), rubrique).toBe(title);
+      expect(wrapper.find(`[data-test=section-${rubrique}]`).exists(), rubrique).toBe(true);
+      wrapper.unmount();
+    }
   });
 
   it("« Chercher l'annonce chez l'employeur » est dans Recherche d'emploi (1.6.28)", async () => {
@@ -187,24 +187,13 @@ describe("SettingsView, comptes (docs/65)", () => {
     useAuth().me.value = { authenticated: true, username: "camille", setup_needed: false, auth_enabled: true, is_owner: isOwner, welcome: "done", demo: false };
   }
 
-  it("compte invité : pas de lien vers le Diagnostic (docs/108 §3)", async () => {
+  it("Mes données : des cartes de réglages, « Se déconnecter partout » à droite de sa ligne (1.6.67)", async () => {
     await as(false);
     mockGet(false);
-    const { wrapper } = await mountSettings();
-    expect(wrapper.find("[data-test='settings-entry-État du service']").exists()).toBe(false);
-    await as(true);
-    const owner = await mountSettings();
-    expect(owner.wrapper.find("[data-test='settings-entry-État du service']").exists()).toBe(true);
-  });
-
-  it("Compte : des cartes de réglages, « Se déconnecter partout » à droite de sa ligne (1.6.67)", async () => {
-    await as(false);
-    mockGet(false);
-    const { wrapper } = await mountSettings("compte");
+    const { wrapper } = await mountSettings("donnees");
     expect(wrapper.find("[data-test=settings-card] fieldset").exists()).toBe(false);
     const titles = wrapper.findAll("[data-test=settings-card] .setting-row-title").map((t) => t.text());
     expect(titles.filter((t) => t === "Connexion")).toHaveLength(1);
-    expect(titles).not.toContain("Compte");
     const logout = wrapper.find("[data-test=logout-all]");
     expect(logout.element.closest(".setting-row-control")).not.toBeNull();
     expect(logout.classes()).toContain("secondary");
@@ -218,9 +207,10 @@ describe("SettingsView, comptes (docs/65)", () => {
     const fixed = wrapper.find("[data-test=budget-fixed]");
     expect(fixed.text()).toContain("Formule Essentiel");
     expect(fixed.text()).not.toContain("CHF");
-    expect(fixed.find("[data-test=see-plan]").attributes("href")).toContain("rubrique=compte");
+    expect(fixed.find("[data-test=see-plan]").attributes("href")).toContain("rubrique=formule");
     expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=settings-entry-plateforme]").exists()).toBe(false);
+    const platform = await mountSettings("plateforme");
+    expect(platform.wrapper.find("[data-test=section-plateforme]").exists()).toBe(false);
   });
 
   it("compte invité : active les notifications sur son téléphone", async () => {
@@ -262,9 +252,8 @@ describe("SettingsView, comptes (docs/65)", () => {
     await as(true);
     mockGet(false);
     const { wrapper } = await mountSettings("plateforme");
-    expect(wrapper.find("[data-test=settings-entry-plateforme] .grouped-row-title").text()).toBe("Administration");
-    // Sans jargon (1.6.27) : « État du service » au lieu de « Diagnostic ».
-    expect(wrapper.find("[data-test='settings-entry-État du service'] .grouped-row-title").text()).toBe("État du service");
+    expect(wrapper.find("h1").text()).toBe("Administration");
+    expect(wrapper.find("[data-test=section-plateforme]").exists()).toBe(true);
     expect(wrapper.find("[data-test=budget-form]").exists()).toBe(false);
   });
 });
@@ -301,19 +290,19 @@ describe("SettingsView, le bon rythme (docs/86)", () => {
 });
 
 describe("Des Réglages épurés (docs/106)", () => {
-  it("une rubrique, une carte ; le seuil en pastilles, enregistré au clic", async () => {
+  it("une rubrique, une carte ; le seuil en mots, enregistré au clic (C11)", async () => {
     mockGet(true);
     const { api } = await import("../api/client");
-    const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_score_threshold: 80 } } as never);
+    const put = vi.mocked(api.PUT).mockResolvedValue({ data: { notify_score_threshold: 85 } } as never);
     const { wrapper } = await mountSettings("notifications");
     expect(wrapper.findAll("[data-test=settings-card]")).toHaveLength(1);
     const choices = wrapper.findAll("[data-test=notify-form] [role=radio]").map((b) => b.text());
-    expect(choices).toEqual(["50", "60", "70", "80", "90"]);
+    expect(choices).toEqual(["Très proche", "Proche", "À creuser"]);
     expect(wrapper.find("[data-test=threshold-70]").attributes("aria-checked")).toBe("true");
 
-    await wrapper.find("[data-test=threshold-80]").trigger("click");
+    await wrapper.find("[data-test=threshold-85]").trigger("click");
     await flushPromises();
-    expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ notify_score_threshold: 80 }) });
+    expect(put).toHaveBeenCalledWith("/api/settings", { body: expect.objectContaining({ notify_score_threshold: 85 }) });
     expect(wrapper.find("[data-test=notify-form] [data-test=setting-saved]").text()).toContain("Enregistré");
     // La notification de test : une ligne, son nom à gauche, « Envoyer » à droite.
     expect(wrapper.find("[data-test=test-notification] .busy-label").text()).toBe("Envoyer");
@@ -321,81 +310,13 @@ describe("Des Réglages épurés (docs/106)", () => {
     expect(wrapper.find("[data-test=notifications] .setting-row-title").text()).toBe("Notification de test");
   });
 
-  it("un seuil d'avant, hors des cinq, reste proposé", async () => {
+  it("un seuil d'avant tombe sur le mot qui le contient", async () => {
     GET.mockImplementation((path: string) =>
       Promise.resolve({
         data: path === "/api/notifications" ? { configured: false } : { notify_score_threshold: 75, llm_monthly_budget_chf: 10 },
       }),
     );
     const { wrapper } = await mountSettings("notifications");
-    const choices = wrapper.findAll("[data-test=notify-form] [role=radio]").map((b) => b.text());
-    expect(choices).toEqual(["50", "60", "70", "75", "80", "90"]);
-  });
-
-});
-
-describe("SettingsView sous 600 px (planche « Structure téléphone »)", () => {
-  const original = globalThis.matchMedia;
-  afterEach(() => {
-    globalThis.matchMedia = original;
-  });
-  const narrow = () => {
-    globalThis.matchMedia = ((query: string) =>
-      ({ matches: query.includes("599px") || query.includes("820px"), addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList);
-  };
-
-  it("sans rubrique : la liste groupée seule, chaque entrée mène à sa sous-page", async () => {
-    narrow();
-    mockGet(true);
-    const { wrapper } = await mountSettings();
-    const list = wrapper.find("[data-test=settings-list]");
-    expect(list.findAll(".grouped-title").map((t) => t.text())).toEqual(["Recherche d'emploi", "Être averti", "Compte et aide"]);
-    expect(list.text()).toContain("Seuil, message du jour, téléphone");
-    expect(wrapper.find("[data-test=section-notifications]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=settings-markers]").exists()).toBe(false);
-    expect(list.find("[data-test=settings-entry-notifications] .grouped-row-action").exists()).toBe(true);
-  });
-
-  it("une rubrique : sa sous-page seule, avec « ← Réglages »", async () => {
-    narrow();
-    mockGet(true);
-    const { wrapper } = await mountSettings("notifications");
-    expect(wrapper.find("[data-test=settings-list]").exists()).toBe(false);
-    expect(wrapper.find("[data-test=settings-back]").text()).toBe("Réglages");
-    expect(wrapper.find("h1").text()).toBe("Notifications");
-    expect(wrapper.find("[data-test=section-notifications]").exists()).toBe(true);
-    expect(wrapper.find("[data-test=section-rythme]").exists()).toBe(false);
-  });
-});
-
-describe("SettingsView, Compte et aide (décision de Kevin)", () => {
-  it("« Écrire à l'exploitant » ouvre son adresse e-mail quand il l'a donnée", async () => {
-    GET.mockImplementation((path: string) =>
-      Promise.resolve({
-        data:
-          path === "/api/privacy"
-            ? { contact: "Kevin, Lausanne, contact@exemple.ch" }
-            : path === "/api/notifications"
-              ? { configured: false, server: "https://ntfy.sh" }
-              : { notify_score_threshold: 70, llm_monthly_budget_chf: 10, rhythm_days: [0, 1, 2, 3, 4] },
-      }),
-    );
-    const { wrapper } = await mountSettings();
-    const write = wrapper.find("[data-test=\"settings-entry-Écrire à l'exploitant\"]");
-    expect(write.text()).toContain("Le contact de la plateforme, toujours là.");
-    expect(write.find("a").attributes("href")).toBe("mailto:contact@exemple.ch");
-  });
-});
-
-describe("SettingsView, une seule table d'icônes", () => {
-  it("l'entrée affichée et le titre de sa rubrique ont la même icône", async () => {
-    mockGet(true);
-    for (const rubrique of ["recherche", "rythme", "notifications", "ia", "compte", "outils"]) {
-      const { wrapper } = await mountSettings(rubrique);
-      const listIcon = wrapper.find("[data-test=settings-list] [aria-current=page] [data-icon]").attributes("data-icon");
-      const titleIcon = wrapper.find(`[data-test=section-${rubrique}] .section-title [data-icon]`).attributes("data-icon");
-      expect(titleIcon, rubrique).toBe(listIcon);
-      wrapper.unmount();
-    }
+    expect(wrapper.find("[data-test=threshold-70]").attributes("aria-checked")).toBe("true");
   });
 });

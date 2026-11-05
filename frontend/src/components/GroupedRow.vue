@@ -13,10 +13,11 @@ import AppIcon from "./AppIcon.vue";
 // - `label` : une étiquette ; la radio ou la case va dans le slot `start` (WCAG 2.5.8) ;
 // - sinon, une ligne d'information.
 // `current` : l'entrée affichée à côté (liste et détail, Réglages sur ordinateur) : aria-current="page" et la
-// pastille de sélection (Sélection unique, §4).
+// pastille de sélection (Sélection unique, §4). `busy` : un bouton dont l'action tourne, aria-disabled et
+// aria-busy (il garde le focus) ; le clic n'émet rien.
 const props = withDefaults(
-  defineProps<{ title: string; description?: string; icon?: IconName; value?: string; to?: RouteLocationRaw; href?: string; button?: boolean; label?: boolean; chevron?: boolean; current?: boolean }>(),
-  { description: "", icon: undefined, value: "", to: undefined, href: undefined, button: false, label: false, chevron: undefined, current: false },
+  defineProps<{ title: string; description?: string; icon?: IconName; value?: string; to?: RouteLocationRaw; href?: string; button?: boolean; label?: boolean; chevron?: boolean; current?: boolean; busy?: boolean }>(),
+  { description: "", icon: undefined, value: "", to: undefined, href: undefined, button: false, label: false, chevron: undefined, current: false, busy: false },
 );
 const emit = defineEmits<{ click: [event: MouseEvent] }>();
 const descriptionId = useId();
@@ -26,9 +27,15 @@ const descriptionId = useId();
 const router = useRouter();
 const tag = computed(() => (props.to || props.href ? "a" : props.button ? "button" : props.label ? "label" : "div"));
 const linkHref = computed(() => (props.to ? router.resolve(props.to).href : props.href));
-const attrs = computed(() => (tag.value === "a" ? { href: linkHref.value } : tag.value === "button" ? { type: "button" } : {}));
+const attrs = computed(() =>
+  tag.value === "a"
+    ? { href: linkHref.value }
+    : tag.value === "button"
+      ? { type: "button", "aria-disabled": props.busy ? "true" : undefined, "aria-busy": props.busy ? "true" : undefined }
+      : {},
+);
 function onClick(event: MouseEvent): void {
-  if (tag.value === "button") emit("click", event);
+  if (tag.value === "button" && !props.busy) emit("click", event);
   if (!props.to || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
   void router.push(props.to);

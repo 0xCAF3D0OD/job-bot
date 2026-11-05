@@ -20,7 +20,7 @@ const text = computed(() => {
     class="hint plan-limit"
     :data-test="`plan-limit-${usage}`"
   >
-    {{ text }} <RouterLink to="/reglages?rubrique=compte">
+    {{ text }} <RouterLink to="/reglages?rubrique=formule">
       Voir la formule
     </RouterLink>
   </p>

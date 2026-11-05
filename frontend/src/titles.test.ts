@@ -31,8 +31,10 @@ describe("titres (docs/88)", () => {
     expect(mainMenu.map((entry) => entry.label)).toEqual(["Aujourd'hui", "Candidatures", "Bilan"]);
   });
 
-  it("chaque page affiche comme titre son nom de page, Réglages compris", () => {
+  it("chaque page affiche comme titre son nom de page, Réglages à part", () => {
     for (const entry of navigation) {
+      // Les Réglages (étape 10b) : une rubrique par page, son nom en titre (SettingsView.test.ts).
+      if (entry.name === "settings") continue;
       const view = VIEWS[entry.name];
       expect(view, entry.name).toBeDefined();
       const html = template(sources[`./views/${view}.vue`]!);

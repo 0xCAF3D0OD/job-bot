@@ -113,7 +113,7 @@ onMounted(async () => {
       </ul>
       <p v-if="loggedIn">
         <RouterLink
-          :to="{ path: '/reglages', query: { rubrique: 'compte' } }"
+          :to="{ path: '/reglages', query: { rubrique: 'donnees' } }"
           class="link"
           data-test="privacy-settings"
         >
