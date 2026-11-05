@@ -28,6 +28,7 @@ from explore import states
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5200"
 PAGES = [
     "aujourdhui",
+    "assistant",
     "candidatures/offres",
     "candidatures/suivi",
     "candidatures/alertes",
@@ -244,6 +245,8 @@ async def main() -> int:
             extra = [f"candidatures/offres?offre={offer}", f"candidatures/offres/{offer}/preparer"]
         for size in SIZES:
             page = await browser.new_page(viewport=size)
+            # La démo n'a pas d'IA : on simule sa présence pour auditer l'onglet Assistant.
+            await page.route("**/api/assistant/status", lambda route: route.fulfill(json={"available": True}))
             for path in PAGES + extra:
                 await page.goto(f"{BASE}/{path}")
                 await page.wait_for_timeout(1700)
