@@ -106,6 +106,21 @@ def test_un_texte_rogne_par_une_fiche_qui_defile_ne_compte_pas(page: Page) -> No
     assert stuck(page, body) == []
 
 
+def curved(page: Page, body: str) -> list[str]:
+    page.set_content(BASE % body)
+    return [f for f in page.evaluate(AUDIT, MAX_WORDS) if "remonte" in f]
+
+
+def test_un_trait_qui_remonte_au_bout_est_trouve_et_un_trait_droit_non(page: Page) -> None:
+    # L'onglet souligné avec un coin arrondi : le trait remonte sur les côtés (capture de Kevin, 2026-11-05).
+    tab = '<a class="%s" style="display: inline-block; border-bottom: 3px solid blue; border-radius: %s">Catalogue</a>'
+    assert len(curved(page, tab % ("tab", "8px"))) == 1
+    assert curved(page, tab % ("tab", "0")) == []
+    # Un cadre complet arrondi, ou un trait transparent (l'onglet inactif), n'est pas un trait qui remonte.
+    assert curved(page, '<div style="border: 1px solid #ccc; border-radius: 8px">Carte</div>') == []
+    assert curved(page, '<a style="display: inline-block; border-bottom: 3px solid transparent; border-radius: 8px">Suivies</a>') == []
+
+
 def test_police_manuscrite_contient_chaque_caractere_des_titres():
     """Caveat Brush (11b) : chaque caractère des 4 fins de titre et de « C'est fait ! » est dans la
     table cmap du sous-ensemble ; un caractère absent est bien signalé."""

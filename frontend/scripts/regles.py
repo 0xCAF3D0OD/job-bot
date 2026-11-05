@@ -10,7 +10,9 @@ Il n'écrit rien : il liste les défauts, et le résultat doit être vide avant 
 - un texte à moins de 1,25 rem du bord de sa carte (docs/93) ;
 - deux cartes d'une même rangée de hauteurs différentes (docs/93) ;
 - un texte collé à ce qui est au-dessus : moins de 3,5 px entre les lettres de deux textes, ou
-  moins de 6 px sous un champ (docs/132).
+  moins de 6 px sous un champ (docs/132) ;
+- un trait sur un, deux ou trois côtés qui remonte au bout parce que la boîte a un coin arrondi
+  (un onglet souligné, un séparateur ; décision de Kevin du 2026-11-05 : les traits restent droits).
 
     make demo                      # la démo locale, données fictives (http://localhost:5200)
     cd backend && uv run --with playwright python ../frontend/scripts/regles.py
@@ -123,6 +125,20 @@ AUDIT = r"""(maxWords) => {
   for (const e of boxes) {
     const outer = boxes.find((o) => o !== e && o.contains(e));
     if (outer) faults.push(`cadre dans un cadre : ${e.className || e.tagName} dans ${outer.className || outer.tagName}`);
+  }
+  // Un trait qui ne fait pas le tour (souligné d'onglet, séparateur) reste droit : aucun coin arrondi
+  // au bout d'un côté tracé, sinon le trait remonte sur les côtés (2026-11-05, Kevin).
+  {
+    const corners = { Top: ['TopLeft', 'TopRight'], Bottom: ['BottomLeft', 'BottomRight'], Left: ['TopLeft', 'BottomLeft'], Right: ['TopRight', 'BottomRight'] };
+    for (const e of main.querySelectorAll('*')) {
+      if (!vis(e)) continue;
+      const s = getComputedStyle(e);
+      const drawn = Object.keys(corners).filter((k) => parseFloat(s[`border${k}Width`]) > 0 && s[`border${k}Style`] !== 'none' && s[`border${k}Color`] !== 'rgba(0, 0, 0, 0)');
+      if (!drawn.length || drawn.length === 4) continue;
+      if (drawn.some((k) => corners[k].some((c) => parseFloat(s[`border${c}Radius`]) > 0))) {
+        faults.push(`trait qui remonte au bout : ${e.className || e.tagName} « ${text(e).slice(0, 40)} »`);
+      }
+    }
   }
   // Le texte à au moins 1,25 rem (20 px) du bord de sa carte ; la carte la plus extérieure.
   const cards = [...main.querySelectorAll('.dash-card, .form-card, .settings-card, .disclosure, .training-tile, .alerts-summary')]

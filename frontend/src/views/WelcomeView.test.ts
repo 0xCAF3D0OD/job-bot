@@ -163,6 +163,13 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=welcome-defaults]").text()).toContain("Langues : français, anglais");
   });
 
+  it("un poste tapé sans le « + » part aussi avec « Continuer »", async () => {
+    const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
+    await wrapper.find("[data-test=role-input]").setValue("Aide-soignante");
+    await click(wrapper, "welcome-continue");
+    expect(calls("/api/welcome").at(-1)).toMatchObject({ step: 4, roles: ["Infirmière", "Aide-soignante"] });
+  });
+
   it("les critères : postes (trois au plus), lieux en puces, l'ORP et ses recherches par mois", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
     for (const role of ["Aide-soignante", "Sage-femme", "Ambulancière"]) {

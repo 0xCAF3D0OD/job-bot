@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 
 import { api, type AlertsPage } from "../api/client";
 import AppIcon from "./AppIcon.vue";
@@ -50,13 +50,15 @@ function cellUrl(searchId: number): string | null {
   return search?.cells.find((c) => c.site === site.value?.slug)?.url ?? null;
 }
 
-async function add(): Promise<void> {
-  if (!form.value.terms.trim()) return;
+async function add(): Promise<boolean> {
+  if (!form.value.terms.trim()) return false;
   const { data } = await api.POST("/api/alert-searches", {
     body: { terms: form.value.terms.trim(), location: form.value.location.trim() || null },
   });
-  if (data) emit("updated", data);
+  if (!data) return false;
+  emit("updated", data);
   form.value = { terms: "", location: "" };
+  return true;
 }
 
 async function remove(id: number): Promise<void> {
@@ -85,7 +87,13 @@ async function siteDone(): Promise<void> {
 
 // Bouton toujours actif (docs/29 §3) : sans recherche, il explique.
 const searchHint = ref("");
-function continueToSites(): void {
+// « Continuer » ajoute aussi la recherche tapée et pas encore ajoutée avec le « + » (2026-11-05, Kevin) :
+// le gros bouton bleu juste en dessous est celui qu'on presse.
+async function continueToSites(): Promise<void> {
+  if (form.value.terms.trim()) {
+    if (!(await add())) return;
+    await nextTick();
+  }
   if (!searches.value.length) {
     searchHint.value = "Ajoute au moins une recherche pour continuer.";
     return;

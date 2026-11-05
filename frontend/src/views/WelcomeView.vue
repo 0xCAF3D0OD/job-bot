@@ -193,7 +193,9 @@ function addRole(): void {
 const spoken = computed(() => (understanding.value?.languages ?? []).filter((l) => (OTHER_LANGUAGES as readonly string[]).includes(l)));
 
 // « Voir mes offres » : les critères, les réglages et les postes partent ensemble, avec les valeurs par défaut.
+// Un poste tapé sans le « + » compte aussi : le bouton bleu est celui qu'on presse (2026-11-05, Kevin).
 async function confirmCriteria(): Promise<void> {
+  if (newRole.value.trim()) addRole();
   if (criteria.value) {
     criteria.value = {
       ...criteria.value,

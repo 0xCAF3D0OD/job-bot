@@ -92,6 +92,23 @@ describe("Alertes, assistant (docs/21 §4)", () => {
   });
 });
 
+describe("Alertes, assistant : le bouton bleu ajoute aussi (2026-11-05)", () => {
+  it("une recherche tapée sans le « + » est ajoutée par « Continuer », puis l'étape suivante s'ouvre", async () => {
+    const wrapper = await mountView(page([]));
+    POST.mockResolvedValue({ data: page([search(1, [cell("jobup"), cell("linkedin")])]) });
+    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    await flushPromises();
+    expect(POST).not.toHaveBeenCalled();
+    expect(wrapper.text()).toContain("Ajoute au moins une recherche pour continuer.");
+
+    await wrapper.find("[data-test=wizard-terms]").setValue("DevOps");
+    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    await flushPromises();
+    expect(POST).toHaveBeenCalledWith("/api/alert-searches", { body: { terms: "DevOps", location: null } });
+    expect(wrapper.text()).toContain("Crée l'alerte sur jobup");
+  });
+});
+
 describe("Alertes, la page (planche « 6. Alertes », 1.6.70)", () => {
   it("la conclusion, la bande de l'alerte muette, une carte par recherche, une ligne par site", async () => {
     const wrapper = await mountView(

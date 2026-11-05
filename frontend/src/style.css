@@ -1002,7 +1002,7 @@ pre.command { margin: var(--space-2) 0; padding: var(--space-2) var(--space-3); 
 
 /* Menu du compte : Profil, Réglages, profil affiché, déconnexion */
 .account-menu { position: relative; }
-.account-panel .account-logout { margin-top: var(--space-1); padding-top: var(--space-2); border-top: 1px solid var(--border); border-radius: 0; }
+.account-panel > .link.account-logout { margin-top: var(--space-1); padding-top: var(--space-2); border-top: 1px solid var(--border); border-radius: 0; }
 .icon-button { border-radius: var(--radius-pill); width: 2.4rem; height: 2.4rem; padding: 0; justify-content: center; }
 .icon-button .icon { width: 1.15rem; height: 1.15rem; }
 .account-panel { position: absolute; right: 0; top: 2.9rem; z-index: 40; min-width: 15rem; display: grid; gap: var(--space-1); padding: var(--space-2); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 16px 40px rgba(17, 17, 31, 0.16); }
@@ -1871,9 +1871,14 @@ button .hover-note { text-decoration: none; cursor: inherit; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --lift: 0 6px 18px rgb(0 0 0 / 35%); } }
 :root[data-theme="dark"] { --lift: 0 6px 18px rgb(0 0 0 / 35%); }
 
-/* Appui : le bouton s'enfonce légèrement. */
-button, .button-link { transition: background-color var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast); }
-button:not(:disabled, .link, [role="radio"], [role="tab"], .filter-row):active, .button-link:active { transform: scale(0.97); }
+/* Appui (maquettes de docs/mobile, 2026-11-05 Kevin) : tout ce qui se touche, bouton, lien, onglet, segment, s'enfonce
+   légèrement et ses couleurs passent en fondu ; au toucher, pas le rectangle bleu du navigateur. Un lien dans une
+   phrase ne bouge pas (une boîte en ligne ne se transforme pas). */
+:root { -webkit-tap-highlight-color: transparent; }
+button, a, .button-link, summary {
+  transition: background-color var(--t-fast) var(--ease-standard), border-color var(--t-fast) var(--ease-standard), color var(--t-fast) var(--ease-standard), box-shadow var(--t-fast) var(--ease-standard), transform calc(var(--t-fast) * 0.6) var(--ease-standard);
+}
+button:not(:disabled):active, a:active, summary:active { transform: scale(0.97); }
 .button-link:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Survol d'une carte cliquable : elle se soulève de 2 px, ombre venue du haut. */
@@ -1983,8 +1988,8 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .empty-state p { margin: 0; max-width: 28rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  button, .button-link, .offer-line, .chunk-card, input[type="checkbox"]::after { transition: none !important; }
-  button:active, .button-link:active { transform: none !important; }
+  button, a, summary, .button-link, .offer-line, .chunk-card, input[type="checkbox"]::after { transition: none !important; }
+  button:active, a:active, summary:active, .button-link:active { transform: none !important; }
   .chunk-card:hover { transform: none !important; }
   input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="true"], .copy-done, .fresh-lines > *, a[download][data-file="preparing"]::before, .ai-steps li.current::before { animation: none !important; }
 }
@@ -4326,7 +4331,7 @@ button.orp-export { justify-content: center; min-height: var(--btn-primary); bor
    du financement, les puces, les formations en lignes dans une carte par groupe ; Suivies en cartes. */
 .trainings { display: grid; gap: var(--space-4); }
 .trainings-tabs { display: flex; gap: var(--space-5); padding: 0 var(--space-1); border-bottom: 1px solid var(--line); }
-.trainings-tabs a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); margin-bottom: -1px; border-bottom: 3px solid transparent; color: var(--text-secondary); font-weight: var(--weight-bold); text-decoration: none; }
+.trainings-tabs a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--target-min); margin-bottom: -1px; border-bottom: 3px solid transparent; border-radius: 0; color: var(--text-secondary); font-weight: var(--weight-bold); text-decoration: none; }
 .trainings-tabs a.active { color: var(--text); border-bottom-color: var(--primary-graphic); }
 .trainings-tabs .tab-count { margin: 0; }
 .training-funding-note { display: flex; justify-content: flex-start; align-items: center; gap: var(--space-3); width: 100%; min-height: 0; padding: var(--space-3) var(--space-4); border: 0; border-radius: var(--radius-card); background: var(--peach-soft); color: var(--text); text-align: left; white-space: normal; font-weight: var(--weight-regular); }
