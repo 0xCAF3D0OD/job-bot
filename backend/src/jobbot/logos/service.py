@@ -11,19 +11,22 @@ import hashlib
 import ipaddress
 import re
 import socket
+from collections import Counter
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urljoin, urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot import accounts
 from jobbot.db.models import Company, CompanyLogo, Offer, OfferStatus
 from jobbot.log import get_logger
+from jobbot.logos import generic
 from jobbot.registry.service import name_key
 from jobbot.runtime import Runtime
 
@@ -135,6 +138,16 @@ async def _site_icon(client: httpx.AsyncClient, website: str) -> str | None:
     return best[1] if best else urljoin(final, "/favicon.ico")
 
 
+async def _others_with(session: AsyncSession, digest: str, key: str) -> int:
+    """Autres entreprises dont la dernière image (retenue ou refusée) est la même."""
+    count = await session.scalar(
+        select(func.count())
+        .select_from(CompanyLogo)
+        .where(CompanyLogo.sha256 == digest, CompanyLogo.name_key != key)
+    )
+    return count or 0
+
+
 @dataclass
 class LogoResult:
     examined: int = 0
@@ -209,12 +222,22 @@ async def fetch_logos(runtime: Runtime) -> LogoResult:
                 if icon:
                     candidates.append((icon, "site"))
             stored: tuple[str, str, str] | None = None
+            fingerprint: str | None = None
             for url, source in candidates:
                 try:
                     data, media_type = await download(client, url)
+                    digest = generic.sha256(data)
+                    async with runtime.sessionmaker() as session:
+                        others = await _others_with(session, digest, key)
+                    reason = generic.refusal(data, media_type, others)
+                    if reason:
+                        # Gardée même refusée : elle compte pour reconnaître l'image ailleurs.
+                        fingerprint = fingerprint or digest
+                        raise Refused(reason)
                 except (Refused, httpx.HTTPError) as exc:
                     log.info("logo_refused", reason=str(exc)[:80] or type(exc).__name__)
                     continue
+                fingerprint = digest
                 extension = (
                     media_type.rsplit("/", 1)[1].replace("svg+xml", "svg").replace("x-icon", "ico")
                 )
@@ -229,6 +252,7 @@ async def fetch_logos(runtime: Runtime) -> LogoResult:
                 "media_type": stored[1] if stored else None,
                 "source": stored[2] if stored else None,
                 "checked_at": now,
+                "sha256": fingerprint,
             }
             async with runtime.sessionmaker.begin() as session:
                 await session.execute(
@@ -241,4 +265,54 @@ async def fetch_logos(runtime: Runtime) -> LogoResult:
             else:
                 result.missing += 1
     log.info("logos_finished", examined=result.examined, found=result.found, missing=result.missing)
+    return result
+
+
+@dataclass
+class CleanResult:
+    examined: int = 0
+    # (entreprise, raison) des logos retirés, ou à retirer pour un essai.
+    removed: list[tuple[str, str]] = field(default_factory=list)
+
+
+async def clean_generic(runtime: Runtime, *, dry_run: bool = False) -> CleanResult:
+    """Retire les logos que les règles de generic.py refusent : l'interface montre alors
+    l'initiale colorée. L'entreprise n'est pas retentée avant RETRY_AFTER."""
+    result = CleanResult()
+    now = datetime.now(UTC)
+    to_delete: list[str] = []
+    async with runtime.sessionmaker() as session:
+        rows = (await session.scalars(select(CompanyLogo))).all()
+        images: dict[str, bytes] = {}
+        for row in rows:
+            if row.storage_key is None:
+                continue
+            try:
+                images[row.name_key] = runtime.storage.get(row.storage_key)
+            except OSError:
+                log.warning("logo_file_missing", storage_key=row.storage_key)
+                continue
+            # Rattrape les logos téléchargés avant que l'empreinte soit gardée.
+            row.sha256 = generic.sha256(images[row.name_key])
+        counts = Counter(row.sha256 for row in rows if row.sha256)
+        for row in rows:
+            data = images.get(row.name_key)
+            if data is None or row.storage_key is None or row.sha256 is None:
+                continue
+            result.examined += 1
+            reason = generic.refusal(data, row.media_type or "", counts[row.sha256] - 1)
+            if not reason:
+                continue
+            result.removed.append((row.name_key, reason))
+            to_delete.append(row.storage_key)
+            row.storage_key = row.media_type = row.source = None
+            row.checked_at = now
+        if dry_run:
+            await session.rollback()
+            return result
+        await session.commit()
+    # Les fichiers après l'enregistrement : jamais une ligne qui désigne un fichier effacé.
+    for storage_key in to_delete:
+        runtime.storage.delete(storage_key)
+    log.info("logos_cleaned", examined=result.examined, removed=len(result.removed))
     return result

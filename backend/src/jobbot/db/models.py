@@ -763,6 +763,10 @@ class CompanyLogo(Base):
     media_type: Mapped[str | None] = mapped_column(Text)
     source: Mapped[str | None] = mapped_column(Text)
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # Empreinte de la dernière image retenue ou refusée comme générique, gardée quand le logo
+    # est retiré : la même image chez deux autres entreprises est celle de la source (docs/14
+    # §4). Niveau : publique.
+    sha256: Mapped[str | None] = mapped_column(Text, index=True)
 
 
 class Notification(Base):
