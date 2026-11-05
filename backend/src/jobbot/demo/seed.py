@@ -594,8 +594,8 @@ async def _around(session: AsyncSession, profile: Profile, today: date) -> None:
         [
             Notification(
                 kind="offers",
-                title="3 nouvelles offres au-dessus de 75",
-                message="Senior Platform Engineer chez Démo Data SA (87) et deux autres.",
+                title="3 nouvelles offres pour toi",
+                message="La meilleure : Senior Platform Engineer chez Démo Data SA, très proche.",
                 link="/candidatures/offres",
                 created_at=_at(today, 7, 45),
             ),

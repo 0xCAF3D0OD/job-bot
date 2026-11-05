@@ -91,8 +91,9 @@ async def test_grouped_notification_once_per_offer(rt: Runtime, sent: list[Messa
 
     assert result.offers == 2
     [message] = sent
-    assert message.title == "2 nouvelles offres pour toi (jusqu'à 88/100)"
+    assert message.title == "2 nouvelles offres pour toi"
     assert message.message.splitlines() == [
+        "La meilleure : Offre 2 chez Acme SA, très proche.",
         "88 · Offre 2 — Acme SA (Lausanne, VD)",
         "72 · Offre 1 — Acme SA (Lausanne, VD)",
     ]
@@ -120,7 +121,12 @@ def test_long_list_is_truncated() -> None:
     rows = [(90 - i, f"Offre {i}", None, None) for i in range(11)]
     message = service.offers_message(settings, rows)
     lines = message.message.splitlines()
-    assert len(lines) == service.MAX_LISTED + 1 and lines[-1] == "… et 3 autres"
+    assert len(lines) == service.MAX_LISTED + 2 and lines[-1] == "… et 3 autres"
+    # Sans entreprise, la phrase s'en passe ; le mot suit les seuils de D3.
+    assert lines[0] == "La meilleure : Offre 0, très proche."
+    assert service.offers_message(settings, [(69, "Dev", "Infomaniak", None)]).message.startswith(
+        "La meilleure : Dev chez Infomaniak, à creuser."
+    )
 
 
 async def test_budget_alert_once_per_month(rt: Runtime, sent: list[Message]) -> None:

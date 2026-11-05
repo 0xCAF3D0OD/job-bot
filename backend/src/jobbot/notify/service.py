@@ -40,6 +40,7 @@ from jobbot.followups.remind import REMIND_AFTER_DAYS, remind_due
 from jobbot.log import get_logger
 from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
+from jobbot.scoring.compare import word
 from jobbot.scoring.service import budget_state
 from jobbot.settings import Settings
 
@@ -138,13 +139,14 @@ def offers_message(
     ]
     if len(rows) > MAX_LISTED:
         lines.append(f"… et {plural(len(rows) - MAX_LISTED, 'autre', 'autres')}")
-    best = rows[0][0]
+    best, best_title, best_company, _ = rows[0]
+    # La meilleure en une phrase, la note en mot (D3, décision de Kevin du 2026-11-04) : la
+    # cloche n'affiche que cette première ligne ; la liste suit pour le téléphone.
+    where = f" chez {best_company}" if best_company else ""
+    lead = f"La meilleure : {best_title}{where}, {word(best).lower()}."
     return Message(
-        title=(
-            f"{plural(len(rows), 'nouvelle offre', 'nouvelles offres')} pour toi"
-            f" (jusqu'à {best}/100)"
-        ),
-        message="\n".join(lines),
+        title=f"{plural(len(rows), 'nouvelle offre', 'nouvelles offres')} pour toi",
+        message="\n".join([lead, *lines]),
         priority=4 if best >= 85 else 3,
         tags=["briefcase"],
         click=f"{settings.public_url.rstrip('/')}/candidatures/offres?tri=score",
