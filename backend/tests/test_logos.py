@@ -1,7 +1,7 @@
 """Logos des entreprises (docs/14 §4) : formats, garde-fous, téléchargement, API. Sans réseau."""
 
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -11,6 +11,7 @@ from sqlalchemy import select, text
 from jobbot.api.app import create_app
 from jobbot.db.models import CompanyLogo, Offer, OfferStatus
 from jobbot.llm import alert
+from jobbot.logos import generic
 from jobbot.logos import service as logos
 from jobbot.runtime import Runtime
 from jobbot.settings import Settings
@@ -18,8 +19,9 @@ from jobbot.sources.jobup_page import parse_jobup_page
 
 from .conftest import admin_engine
 from .test_enrich import URL, page
+from .test_logos_generic import logo
 
-PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 50
+PNG = logo()
 NOW = datetime(2026, 10, 5, 8, 0, tzinfo=UTC)
 
 
@@ -140,3 +142,108 @@ async def test_fetch_logos_and_serve(
         assert response.headers["content-type"] == "image/png"
         assert "default-src 'none'" in response.headers["content-security-policy"]
         assert (await api.get(f"/api/offers/{nothing}/logo")).status_code == 404
+
+
+async def test_fetch_refuses_an_image_shared_by_two_other_companies(
+    rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Le même carré pour trois entreprises : c'est l'image de la source, pas un logo."""
+
+    async def fake_get(_client: object, url: str, _limit: int) -> tuple[bytes, str]:
+        return PNG, url
+
+    monkeypatch.setattr(logos, "_get", fake_get)
+    for n, company in enumerate(("Klanik", "adesso Schweiz AG", "SpeciTec SA"), start=1):
+        await add(rt, n, company, logo_url=f"https://media.licdn.com/{n}.png")
+    result = await logos.fetch_logos(rt)
+    assert (result.found, result.missing) == (2, 1)
+    async with rt.sessionmaker() as session:
+        rows = (await session.scalars(select(CompanyLogo))).all()
+    assert {r.sha256 for r in rows} == {generic.sha256(PNG)}  # gardée même refusée
+    assert sorted(r.storage_key is None for r in rows) == [False, False, True]
+
+
+async def test_fetch_refuses_banned_and_blank_images(
+    rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from PIL import Image
+
+    from .test_logos_generic import png
+
+    blank = png(Image.new("RGB", (64, 64), "white"))
+    images = {"https://x.example/banned.png": PNG, "https://x.example/blank.png": blank}
+
+    async def fake_get(_client: object, url: str, _limit: int) -> tuple[bytes, str]:
+        return images[url], url
+
+    monkeypatch.setattr(logos, "_get", fake_get)
+    monkeypatch.setattr(generic, "BANNED", frozenset({generic.sha256(PNG)}))
+    await add(rt, 1, "Alpha", logo_url="https://x.example/banned.png")
+    await add(rt, 2, "Beta", logo_url="https://x.example/blank.png")
+    result = await logos.fetch_logos(rt)
+    assert (result.found, result.missing) == (0, 2)
+
+
+async def test_clean_generic_removes_refused_logos(
+    rt: Runtime, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from PIL import Image
+
+    from .test_logos_generic import png
+
+    blank = png(Image.new("RGB", (64, 64), "white"))
+    other = logo(48)
+    old = NOW - timedelta(days=3)
+    stored = {
+        "klanik": PNG,
+        "adesso": PNG,
+        "specitec": PNG,  # la même image pour trois entreprises
+        "vide": blank,
+        "acme": other,
+    }
+    async with rt.sessionmaker.begin() as session:
+        for key, data in stored.items():
+            rt.storage.put(f"logos/{key}.png", data)
+            session.add(
+                CompanyLogo(
+                    name_key=key,
+                    storage_key=f"logos/{key}.png",
+                    media_type="image/png",
+                    source="email",
+                    checked_at=old,
+                )
+            )
+
+    trial = await logos.clean_generic(rt, dry_run=True)
+    assert trial.examined == 5 and len(trial.removed) == 4
+    assert rt.storage.exists("logos/klanik.png")
+    async with rt.sessionmaker() as session:
+        assert (await session.get(CompanyLogo, "vide")).storage_key is not None  # type: ignore[union-attr]
+
+    result = await logos.clean_generic(rt)
+    assert dict(result.removed) == {
+        "klanik": "image commune à plusieurs entreprises",
+        "adesso": "image commune à plusieurs entreprises",
+        "specitec": "image commune à plusieurs entreprises",
+        "vide": "une seule couleur",
+    }
+    async with rt.sessionmaker() as session:
+        rows = {r.name_key: r for r in await session.scalars(select(CompanyLogo))}
+    assert rows["acme"].storage_key == "logos/acme.png" and rows["acme"].checked_at == old
+    for key in ("klanik", "adesso", "specitec", "vide"):
+        assert rows[key].storage_key is None and rows[key].source is None
+        assert rows[key].checked_at > old  # pas retentée avant RETRY_AFTER
+        assert not rt.storage.exists(f"logos/{key}.png")
+    assert rows["klanik"].sha256 == generic.sha256(PNG)  # reconnue chez une 4e entreprise
+
+    # Pas de nouvelle tentative avant RETRY_AFTER : l'interface montre l'initiale.
+    requested: list[str] = []
+
+    async def fake_get(_client: object, url: str, _limit: int) -> tuple[bytes, str]:
+        requested.append(url)
+        return PNG, url
+
+    monkeypatch.setattr(logos, "_get", fake_get)
+    await add(rt, 1, "Klanik", logo_url="https://media.licdn.com/k.png")
+    await logos.fetch_logos(rt)
+    assert requested == []
