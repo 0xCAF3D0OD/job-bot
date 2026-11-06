@@ -55,13 +55,14 @@ describe("page de maintenance (docs/79)", () => {
     window.dispatchEvent(new CustomEvent(MAINTENANCE_EVENT, { detail: null }));
     await flushPromises();
     const overlay = document.querySelector("[data-test=maintenance]");
-    expect(overlay?.textContent).toContain("jobA1 revient dans un instant");
-    // Le dessin unDraw de la maintenance (docs/80 §2).
-    expect(overlay?.querySelector("[data-drawing=maintenance]")).not.toBeNull();
+    expect(overlay?.querySelector("h1")?.textContent?.trim()).toBe("jobA1 se met à jour");
+    expect(overlay?.textContent).toContain("Ça revient dans un instant. Ce que tu écrivais est gardé.");
     expect(document.getElementById("app")?.hasAttribute("inert")).toBe(true);
     expect(document.activeElement).toBe(overlay);
 
     await vi.advanceTimersByTimeAsync(POLL_MS);
+    // Une maintenance annoncée : son titre, et le message de l'exploitant.
+    expect(document.querySelector("[data-test=maintenance] h1")?.textContent?.trim()).toBe("Maintenance en cours");
     expect(document.querySelector("[data-test=maintenance]")?.textContent).toContain("Dix minutes");
     await vi.advanceTimersByTimeAsync(POLL_MS);
     expect(document.querySelector("[data-test=maintenance]")).toBeNull();
@@ -104,7 +105,7 @@ describe("maintenance en lecture seule (docs/80)", () => {
   });
 });
 
-describe("page de maintenance, mise en page (0.82.1)", () => {
+describe("page de maintenance, mise en page (maquettes Maintenance du 2026-11-05)", () => {
   it("le compte à rebours du prochain essai, et « Réessayer maintenant »", async () => {
     const wrapper = mount(MaintenanceOverlay, {
       props: { waiting: true, message: null, nextAt: Date.now() + POLL_MS },
@@ -112,18 +113,34 @@ describe("page de maintenance, mise en page (0.82.1)", () => {
     });
     await flushPromises();
     const next = () => document.querySelector("[data-test=maintenance-next]")?.textContent;
-    expect(next()).toBe("Nouvel essai dans 10 secondes");
+    expect(next()?.trim()).toBe("Nouvel essai dans 10 s");
     await vi.advanceTimersByTimeAsync(3000);
-    expect(next()).toBe("Nouvel essai dans 7 secondes");
+    expect(next()?.trim()).toBe("Nouvel essai dans 7 s");
     (document.querySelector("[data-test=maintenance-retry]") as HTMLButtonElement).click();
     await flushPromises();
     expect(wrapper.emitted("retry")).toHaveLength(1);
-    expect(next()).toBe("Nouvel essai en cours…");
-    // Le dessin est déjà là, sans rien télécharger : le serveur ne répond peut-être plus.
-    expect(document.querySelector("[data-drawing=maintenance]")?.innerHTML).toContain("<svg");
-    // L'en-tête de jobA1 et la note qui rassure.
-    expect(document.querySelector(".maintenance .brand")?.textContent).toContain("jobA1");
-    expect(document.querySelector(".maintenance-note")?.textContent).toContain("n'est pas perdu");
+    expect(next()?.trim()).toBe("Nouvel essai en cours…");
+    // Le personnage aux câbles du kit : 400 px, 800 px en 2×, décoratif ; pas d'en-tête.
+    const person = document.querySelector("[data-test=maintenance-person]");
+    expect(person?.getAttribute("src")).toContain("perso-09-cables-400");
+    expect(person?.getAttribute("srcset")).toContain("perso-09-cables-800");
+    expect(person?.getAttribute("alt")).toBe("");
+    expect(document.querySelector(".maintenance header")).toBeNull();
+    wrapper.unmount();
+  });
+
+  it("hors ligne : « Pas de connexion », puis le titre de la mise à jour quand le réseau revient", async () => {
+    const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    const wrapper = mount(MaintenanceOverlay, { props: { waiting: true, message: null, nextAt: null }, attachTo: "#app" });
+    await flushPromises();
+    const title = () => document.querySelector("[data-test=maintenance] h1")?.textContent?.trim();
+    expect(title()).toBe("Pas de connexion");
+    expect(document.querySelector("[data-test=maintenance]")?.textContent).toContain("Vérifie le Wi‑Fi ou les données mobiles.");
+    online.mockReturnValue(true);
+    window.dispatchEvent(new Event("online"));
+    await flushPromises();
+    expect(title()).toBe("jobA1 se met à jour");
+    online.mockRestore();
     wrapper.unmount();
   });
 
