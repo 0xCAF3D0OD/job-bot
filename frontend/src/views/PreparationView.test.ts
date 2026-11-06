@@ -454,6 +454,9 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     const card = wrapper.find("[data-test=letter-card]");
     expect(card.find("h2").text()).toBe("Lettre de motivation");
     expect(card.find("[data-test=language-fr]").attributes("aria-checked")).toBe("true");
+    const pills = card.findAll("[data-test^=language-][role=radio]");
+    expect(pills.map((b) => b.text())).toEqual(["FR", "DE", "EN"]);
+    expect(pills.map((b) => b.attributes("aria-label"))).toEqual(["Français", "Deutsch", "English"]);
     // « Modifier le texte » ouvre la consigne dans la carte (C4).
     expect(card.find("[data-test=instruction]").exists()).toBe(false);
     await card.find("[data-test=edit-text]").trigger("click");

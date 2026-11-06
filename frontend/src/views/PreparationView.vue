@@ -225,7 +225,7 @@ const previewSub = computed(() => {
 const previewParagraphs = computed(() =>
   draft.value && doc.value ? [doc.value.salutation, ...draft.value.paragraphs.map((p) => p.text)].filter(Boolean) : [],
 );
-const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), test: `language-${code}` }));
+const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), name: LANGUAGES[code], test: `language-${code}` }));
 const shownLanguage = computed<string>({
   get: () => language.value || selected.value?.document?.language || "",
   set: (value) => {

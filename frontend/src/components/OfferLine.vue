@@ -80,7 +80,8 @@ function onLogoLoad(event: Event): void {
 }
 const initial = computed(() => (phone.value ? initials(name.value) : name.value.trim().charAt(0).toUpperCase() || "?"));
 // Sur téléphone, la ville sans le canton (maquette Candidatures).
-const sub = computed(() => [props.company, phone.value ? cityOnly(props.location) : props.location].filter(Boolean).join(" · "));
+// L'entreprise, puis le lieu ; deux morceaux, pour que seule l'entreprise se coupe (« … ») et jamais la ville.
+const place = computed(() => (phone.value ? cityOnly(props.location) : props.location) || "");
 const verdict = computed(() => (props.score === null || props.score === undefined ? null : scoreWord(props.score)));
 const label = computed(() => [props.title, props.company].filter(Boolean).join(", "));
 const described = computed(() => [`${id}-sub`, props.note || props.state ? `${id}-more` : "", verdict.value ? `${id}-verdict` : ""].filter(Boolean).join(" "));
@@ -131,7 +132,13 @@ const described = computed(() => [`${id}-sub`, props.note || props.state ? `${id
       <span
         :id="`${id}-sub`"
         class="offer-line-sub"
-      >{{ sub }}</span>
+      ><span
+        v-if="company"
+        class="offer-line-company"
+      >{{ company }}</span><span
+        v-if="place"
+        class="offer-line-place"
+      >{{ company ? " · " : "" }}{{ place }}</span></span>
       <span
         v-if="state"
         :id="`${id}-more`"

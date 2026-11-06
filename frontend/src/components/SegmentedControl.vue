@@ -9,8 +9,9 @@ import CountBadge from "./CountBadge.vue";
 // Profil) et le segment actif porte aria-current ; sinon, un groupe de radios (aria-checked).
 // `full` : les segments se partagent toute la largeur (2 ou 3 choix sur téléphone). Un libellé n'est
 // jamais coupé : le test téléphone de la CI le vérifie en 320 px (.segmented-label). `count` : une pastille de
-// nombre après le libellé (Candidatures sur ordinateur), absente à zéro.
-export type SegmentOption = { value: string; label: string; to?: RouteLocationRaw; test?: string; count?: number; hint?: string };
+// nombre après le libellé (Candidatures sur ordinateur), absente à zéro. `name` : le nom accessible complet quand le
+// libellé visible est une abréviation (FR → « Français »).
+export type SegmentOption = { value: string; label: string; to?: RouteLocationRaw; test?: string; count?: number; hint?: string; name?: string };
 const props = withDefaults(defineProps<{ options: SegmentOption[]; label: string; full?: boolean }>(), { full: false });
 const model = defineModel<string>({ required: true });
 const asLinks = props.options.some((option) => option.to);
@@ -27,6 +28,7 @@ const asLinks = props.options.some((option) => option.to);
       :key="option.value"
       :to="option.to!"
       :aria-current="model === option.value ? 'page' : undefined"
+      :aria-label="option.name"
       :data-test="option.test ?? `segment-${option.value}`"
     >
       <span class="segmented-label">{{ option.label }}</span>{{ option.count ? " " : "" }}<CountBadge
@@ -49,6 +51,7 @@ const asLinks = props.options.some((option) => option.to);
       type="button"
       role="radio"
       :aria-checked="model === option.value"
+      :aria-label="option.name"
       :data-test="option.test ?? `segment-${option.value}`"
       @click="model = option.value"
     >

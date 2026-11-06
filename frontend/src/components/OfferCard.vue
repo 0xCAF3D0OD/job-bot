@@ -162,7 +162,10 @@ function prepare(): void {
    L'espace entre les colonnes passe à 12 px, l'anneau à 48 px. */
 @media (max-width: 820px) {
   .offer-line.full { column-gap: var(--space-3); }
-  .offer-line.full :deep(.offer-line-sub) { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  /* Seule l'entreprise se coupe : le lieu garde sa largeur, la ville n'est jamais coupée (Kevin, 6.11). */
+  .offer-line.full :deep(.offer-line-sub) { display: flex; min-width: 0; white-space: nowrap; }
+  .offer-line.full :deep(.offer-line-company) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .offer-line.full :deep(.offer-line-place) { flex: none; white-space: pre; }
   .offer-line.full :deep(.score-ring) { width: 3rem; height: 3rem; font-size: var(--font-body); }
 }
 </style>

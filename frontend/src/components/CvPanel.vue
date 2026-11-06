@@ -230,7 +230,7 @@ const previewParagraphs = computed(() => {
 // sinon « Continuer vers Postuler ».
 // La langue en FR / DE / EN en tête de la carte (maquette Preparer, Kevin 2026-11-06) : sans choix, celle du CV
 // affiché ; une autre langue propose de préparer le CV à nouveau.
-const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), test: `cv-language-${code}` }));
+const LANGUAGE_OPTIONS = (["fr", "de", "en"] as LetterLanguage[]).map((code) => ({ value: code, label: code.toUpperCase(), name: LANGUAGES[code], test: `cv-language-${code}` }));
 const LANGUAGE_IN: Record<LetterLanguage, string> = { fr: "français", de: "allemand", en: "anglais" };
 const shownLanguage = computed<string>({
   get: () => language.value || selected.value?.language || "",

@@ -104,6 +104,9 @@ describe("Candidatures sur téléphone, étape 5d (docs/139, C6 et C9)", () => {
     expect(host.findAll("[data-test=offer] [data-test=offer-more]")).toHaveLength(2);
     expect(host.find("[data-test=offer] .offer-line-sub").text()).toContain("Acme SA · Lausanne");
     expect(host.find("[data-test=offer] .offer-line-sub").text()).not.toContain("VD");
+    // Deux morceaux : seule l'entreprise se coupe, le lieu (« · Lausanne ») garde sa largeur.
+    expect(host.find("[data-test=offer] .offer-line-company").text()).toBe("Acme SA");
+    expect(host.find("[data-test=offer] .offer-line-place").text()).toMatch(/^· Lausanne/);
   });
 
   it("un logo qui ne charge pas : les initiales colorées à la place", async () => {

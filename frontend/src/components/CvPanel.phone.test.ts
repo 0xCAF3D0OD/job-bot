@@ -100,6 +100,10 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(wrapper.find("[data-test=cv-language]").exists()).toBe(false);
     const head = wrapper.find("[data-test=cv-card] .doc-card-head");
     expect(head.find("[data-test=cv-language-fr]").attributes("aria-checked")).toBe("true");
+    // FR / DE / EN à l'écran, le nom complet pour un lecteur d'écran (Kevin, 6.11).
+    const pills = head.findAll("[role=radio]");
+    expect(pills.map((b) => b.text())).toEqual(["FR", "DE", "EN"]);
+    expect(pills.map((b) => b.attributes("aria-label"))).toEqual(["Français", "Deutsch", "English"]);
     expect(wrapper.find(".prep-side").text()).not.toContain("Nouvelle version");
     expect(wrapper.find("[data-test=next-step]").text()).toBe("Continuer vers Postuler");
 
