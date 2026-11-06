@@ -9,6 +9,7 @@ import {
   countdown,
   dateBlock,
   dateText,
+  interviewPlace,
   pastTitle,
   sheetLines,
   timeAndPlace,
@@ -235,9 +236,10 @@ const last = computed<Meeting | null>(() => {
           </h3>
           <span class="rdv-meta"><span class="visually-hidden">{{ dateText(item.at) }}, </span>{{ [item.application.company, timeOfDay(item.at)].filter(Boolean).join(" · ") }}</span>
           <span
-            v-if="item.application.company_address"
-            class="rdv-meta"
-          >{{ item.application.company_address }}</span>
+            v-if="interviewPlace(item.application)"
+            class="rdv-meta rdv-place"
+            data-test="rdv-place"
+          >{{ interviewPlace(item.application) }}</span>
           <!-- Toute la carte ouvre la préparation (maquette) : le bouton s'étend sur la carte. -->
           <button
             type="button"
@@ -382,6 +384,8 @@ const last = computed<Meeting | null>(() => {
 .rdv-orp-title { margin: 0; font-size: var(--font-title); line-height: 1.28em; font-weight: var(--weight-heavy); }
 .rdv-interview-title { margin: 0; font-size: var(--font-body); line-height: 1.3125em; font-weight: var(--weight-bold); }
 .rdv-meta { font-size: var(--font-small); color: var(--text-secondary); }
+/* Un lien de visioconférence est un long mot : il passe à la ligne où il faut. */
+.rdv-place { overflow-wrap: anywhere; }
 .rdv-ready {
   align-self: flex-start; display: inline-flex; align-items: center; gap: calc(var(--space-1) * 1.5);
   margin-top: calc(var(--space-1) * 1.5); padding: var(--space-1) calc(var(--space-2) + var(--space-1) / 2);

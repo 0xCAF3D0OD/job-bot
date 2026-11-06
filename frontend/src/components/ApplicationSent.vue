@@ -59,7 +59,7 @@ const searches = computed(() => {
       </RouterLink>
       <RouterLink
         to="/candidatures/offres"
-        class="sent-screen-next"
+        class="goal-reached-home"
         data-test="next-offer"
         @click="emit('leave')"
       >
