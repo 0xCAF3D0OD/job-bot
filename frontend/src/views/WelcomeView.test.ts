@@ -2,6 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
+import { useAssistant } from "../composables/useAssistant";
 import WelcomeView from "./WelcomeView.vue";
 
 const GET = vi.fn();
@@ -71,7 +72,10 @@ async function mountWelcome(
   PATCH.mockResolvedValue({ response: { ok: true }, data: {} });
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }],
+    routes: [
+      { path: "/assistant", name: "assistant", component: { template: "<div />" } },
+      { path: "/:any(.*)*", component: { template: "<div />" } },
+    ],
   });
   await router.push("/bienvenue");
   const wrapper = mount(WelcomeView, {
@@ -116,7 +120,29 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const privacy = wrapper.find("[data-test=cv-privacy]");
     expect(privacy.text()).toContain("L'IA n'en reçoit que les parties utiles, sans tes coordonnées.");
     expect(privacy.find("a").attributes("href")).toBe("/tes-donnees#ia");
-    expect(wrapper.text()).not.toContain("L'Assistant t'aide");
+    // Sans Assistant, pas de « Pas de CV à jour ? » ; le personnage au CV, lui, est là (maquette OnboardingC).
+    expect(wrapper.find("[data-test=cv-assistant]").exists()).toBe(false);
+    const person = wrapper.find("[data-test=cv-person]");
+    expect(person.attributes("src")).toContain("perso-03-cv-400");
+    expect(person.attributes("srcset")).toContain("perso-03-cv-800");
+    expect(person.attributes("alt")).toBe("");
+    expect(wrapper.find("[data-test=cv-scene]").attributes("aria-hidden")).toBe("true");
+  });
+
+  it("« Pas de CV à jour ? » : les premiers pas mis de côté, la demande part à l'Assistant (décision du 2026-11-06)", async () => {
+    const assistant = useAssistant();
+    assistant.available.value = true;
+    const { wrapper, router } = await mountWelcome({ status: "pending", step: 2, goal: null, trade: null });
+    const card = wrapper.find("[data-test=cv-assistant]");
+    expect(card.text()).toContain("Pas de CV à jour ?");
+    expect(card.text()).toContain("L'Assistant t'aide à en créer un");
+    await click(wrapper, "cv-assistant");
+    expect(calls("/api/welcome")).toContainEqual({ postponed: true });
+    expect(assistant.pending.value).toBe("Je n'ai pas de CV à jour. Aide-moi à en créer un.");
+    expect(router.currentRoute.value.path).toBe("/assistant");
+    assistant.available.value = false;
+    assistant.pending.value = null;
+    assistant.open.value = false;
   });
 
   it("le CV lu par l'IA : les compétences trouvées, les blocs ajoutés au profil, les postes pré-remplis", async () => {
@@ -153,8 +179,12 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     const added = POST.mock.calls.filter((c) => c[0] === "/api/profile-chunks");
     expect(added).toHaveLength(1);
     expect(added[0]![1]).toMatchObject({ body: { title: "Kubernetes", document_id: 3 } });
-    const roles = wrapper.findAll("[data-test=roles] button");
+    const roles = wrapper.findAll("[data-test=roles] button[aria-pressed]");
     expect(roles.map((r) => r.text())).toEqual(["DevOps Engineer", "SRE"]);
+    // Les postes du CV en puces ; « + Ajouter » ouvre le champ d'un autre poste (maquette Onboarding).
+    expect(wrapper.find("[data-test=role-input]").exists()).toBe(false);
+    await click(wrapper, "role-open");
+    expect(wrapper.find("[data-test=role-input]").exists()).toBe(true);
     expect(roles.every((r) => r.attributes("aria-pressed") === "true")).toBe(true);
 
     // Les valeurs par défaut : les langues du CV.
@@ -165,6 +195,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
   it("un poste tapé sans le « + » part aussi avec « Continuer »", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
+    await click(wrapper, "role-open");
     await wrapper.find("[data-test=role-input]").setValue("Aide-soignante");
     await click(wrapper, "welcome-continue");
     expect(calls("/api/welcome").at(-1)).toMatchObject({ step: 4, roles: ["Infirmière", "Aide-soignante"] });
@@ -172,11 +203,12 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
 
   it("les critères : postes (trois au plus), lieux en puces, l'ORP et ses recherches par mois", async () => {
     const { wrapper } = await mountWelcome({ status: "pending", step: 3, goal: null, trade: null, roles: ["Infirmière"] });
+    await click(wrapper, "role-open");
     for (const role of ["Aide-soignante", "Sage-femme", "Ambulancière"]) {
       await wrapper.find("[data-test=role-input]").setValue(role);
       await click(wrapper, "role-add");
     }
-    const roles = wrapper.findAll("[data-test=roles] button");
+    const roles = wrapper.findAll("[data-test=roles] button[aria-pressed]");
     expect(roles).toHaveLength(4);
     expect(roles.filter((r) => r.attributes("aria-pressed") === "true")).toHaveLength(3);
     expect(roles[3]!.attributes("aria-disabled")).toBe("true");
