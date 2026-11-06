@@ -111,6 +111,21 @@ describe("Bilan (docs/42, docs/55)", () => {
     expect(months.text()).toBe("Mois par moisObjectif ORP : 10 par mois");
   });
 
+  it("sur téléphone : plus de période (Kevin, 6.11), la carte du meilleur site reste", async () => {
+    vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
+    serve(report({ comparisons: [{ key: "source", title: "", groups: [group("jobs.ch", 3, 5), group("jobup.ch", 2, 10)] }] }));
+    const { wrapper } = await mountView();
+    expect(wrapper.find("[data-test=insights-period]").exists()).toBe(false);
+    expect(wrapper.find(".bilan-period").exists()).toBe(false);
+    expect(wrapper.find("[data-test=action-band]").text()).toContain("jobs.ch répond 3 fois sur 5.");
+    // Une ligne dit la période des chiffres, sans contrôle.
+    expect(wrapper.find("[data-test=insights-period-line]").text()).toBe("Sur les 3 derniers mois");
+    serve(report());
+    const month = (await mountView("/candidatures/bilan?mois=2026-10")).wrapper;
+    expect(month.find("[data-test=insights-period-line]").text()).toBe("En octobre 2026");
+    vi.unstubAllGlobals();
+  });
+
   it("pas de bande sans site qui se détache", async () => {
     serve(report({ comparisons: [{ key: "source", title: "", groups: [group("jobs.ch", 2, 10), group("jobup.ch", 2, 10)] }] }));
     const { wrapper } = await mountView();
