@@ -422,3 +422,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.208 | Ajouter une offre : compléter une offre déjà là avec le lien de son annonce, et une candidature spontanée signale l'offre déjà là chez la même entreprise | livrée |
 | 1.6.209 | Le personnage de la connexion passe au kit d'illustrations HD (400 px et 800 px pour les écrans 2×), net sur ordinateur | livrée |
 | 1.6.210 | Candidatures sur téléphone : une connexion perdue affiche « Connexion perdue » et « Réessayer » dans la page (maquette ErreurConnexion), puis l'attente jusqu'à la réponse ; le plein écran reste pour la maintenance | livrée |
+| 1.6.211 | Page introuvable et écrans de maintenance aux maquettes du 5.11 : le personnage du kit HD, « Cette page s’est perdue », et trois écrans (mise à jour, maintenance annoncée, pas de connexion) avec « Réessayer maintenant » en bas | livrée |
