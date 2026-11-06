@@ -258,7 +258,7 @@ export const routes: RouteRecordRaw[] = [
   // Hors onglets : on y arrive depuis une offre (« Préparer ma candidature »).
   { path: "/candidatures/offres/:id(\\d+)/preparer", name: "preparation", component: PreparationView },
   // Adresse inconnue (docs/59 §5) : une page qui le dit.
-  { path: "/:pathMatch(.*)*", name: "not-found", component: NotFoundView },
+  { path: "/:pathMatch(.*)*", name: "not-found", component: NotFoundView, meta: { bare: true } },
 ];
 
 export const router = createRouter({
