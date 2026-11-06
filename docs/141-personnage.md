@@ -67,6 +67,11 @@ personnage (PR 4).
 - L'ancienne série (`SceneIllustration`) reste sur des écrans hors de la liste du §3, en attendant la décision de
   Kevin : Découvrir (page publique), Assistant avant la première question (`assistant-vide`), Réglages › IA
   (`ia-vide`), Formations vide (`formations-vide`), Bilan « Trop tôt » (`trop-tot`), Préparer vide
-  (`preparer-vide`), réussites « Tri terminé » et « Tout est à jour » (`reussite`), offre introuvable
-  (`introuvable`), erreur réseau sur ordinateur (`connexion-perdue`). Elles sont retirées au fil des PR quand
-  l'écran passe au personnage ou à une mascotte d'humeur.
+  (`preparer-vide`), réussites « Tri terminé » et « Tout est à jour » (`reussite`). Elles sont retirées au fil des
+  PR quand l'écran passe au personnage ou à une mascotte d'humeur.
+- Retirées (PR 2) : `connexion-perdue` (la baie de serveurs : l'erreur réseau dans la page montre la mascotte qui
+  fait « non », sur ordinateur comme sur téléphone), `introuvable` (la personne devant un écran : l'offre
+  introuvable est un écran de travail, elle garde le visage du 1), `aucune-offre` (remplacée par le personnage à la
+  loupe ; l'image n'était plus utilisée).
+- Maintenance et pas de connexion : 250 px sur téléphone (maquette), 290 px sur ordinateur. Les deux poses sont
+  chargées d'avance, puisque le réseau peut manquer quand l'écran s'affiche.

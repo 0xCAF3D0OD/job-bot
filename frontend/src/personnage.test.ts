@@ -29,6 +29,8 @@ export const SCREENS: Record<string, string> = {
   "views/WelcomeView.vue": "premiers pas : étape CV, « Tout est prêt. »",
   "components/AuthIllustration.vue": "connexion, téléphone et ordinateur",
   "views/NotFoundView.vue": "page introuvable",
+  "components/MaintenanceOverlay.vue": "maintenance (mise à jour, annoncée) et pas de connexion",
+  "components/CharacterState.vue": "un état montré par le personnage : aucune offre avec ces filtres",
 };
 
 // Les écrans de travail : jamais le personnage (docs/141 §1).
