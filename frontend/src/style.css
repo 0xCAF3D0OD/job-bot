@@ -3528,7 +3528,7 @@ main:focus { outline: none; }
    une barre du bas fixe avec un seul bouton plein (C6). Les versions et le téléchargement passent dans le
    « ⋯ » de la tête. */
 @media (max-width: 820px) {
-  :root:has(:is(.prep-head, .sent-screen, .goal-reached)) :is(.topbar, .tab-bar, .assistant-fab) { display: none; }
+  :root:has(:is(.prep-head, .sent-screen, .goal-reached)) :is(.topbar, .tab-bar, .assistant-fab, .jobs-head) { display: none; }
   .goal-reached { min-height: 100dvh; padding-top: calc(var(--space-8) + env(safe-area-inset-top)); padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom)); }
   .goal-reached-close { top: calc(var(--space-3) + env(safe-area-inset-top)); }
   .prep-head { grid-template-columns: auto minmax(0, 1fr) auto; padding-top: calc(var(--space-2) + env(safe-area-inset-top)); }
