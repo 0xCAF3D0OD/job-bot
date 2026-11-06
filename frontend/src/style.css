@@ -3453,7 +3453,9 @@ main:focus { outline: none; }
 .doc-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); }
 .doc-card-head h2 { margin: 0; font-size: var(--font-body); font-weight: var(--weight-bold); }
 .doc-language { border-radius: var(--radius-pill); background: var(--bg); }
-.doc-language > button { min-inline-size: 2.75rem; min-height: 2.25rem; padding-inline: var(--space-3); border-radius: var(--radius-pill); font-size: var(--font-caption); font-weight: var(--weight-bold); }
+.doc-language > button { position: relative; min-inline-size: 2.75rem; min-height: 2.25rem; padding-inline: var(--space-3); border-radius: var(--radius-pill); font-size: var(--font-caption); font-weight: var(--weight-bold); }
+/* 36 px visibles, 44 px sous le doigt (Kevin, 6.11) : la zone de touche invisible, comme .all-months. */
+.doc-language > button::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 2.75rem); height: 2.75rem; transform: translate(-50%, -50%); }
 .doc-language > button[aria-checked="true"] { border-color: transparent; background: var(--primary); color: var(--on-primary); box-shadow: none; }
 .doc-card > :is(.letter-sheet, .cv-sheet) { box-shadow: none; }
 .doc-card .prep-empty { border-style: solid; border-color: var(--line-soft); }
