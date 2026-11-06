@@ -7907,6 +7907,11 @@ export interface components {
              * @default 0
              */
             pending: number;
+            /**
+             * Pending Near
+             * @default 0
+             */
+            pending_near: number;
             /** Month */
             month: string;
             /** Month Count */
