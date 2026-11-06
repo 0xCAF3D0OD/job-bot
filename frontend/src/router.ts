@@ -102,7 +102,7 @@ const OLD_ANCHORS: Record<string, string> = {
   profils: "plateforme",
   connexion: "donnees",
   agenda: "outils",
-  extension: "outils",
+  extension: "connexions",
 };
 function settingsEntry(to: RouteLocationNormalized): RouteLocationRaw | true {
   // L'ancienne rubrique Compte (liens de l'assistant, retours de paiement) : la formule, ou Mes données

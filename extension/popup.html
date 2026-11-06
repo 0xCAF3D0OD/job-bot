@@ -6,79 +6,140 @@
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
-    <header>
-      <span class="mark" aria-hidden="true"></span>
-      <strong>jobA1</strong>
+    <!-- La fenêtre de l'extension, 360 × 480 (maquette du 6.11.2026, boards Ext*, docs/142). -->
+    <header class="bar">
+      <span class="brand">
+        <svg class="logo" width="26" height="26" viewBox="8 8 86 86" aria-hidden="true"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="45" r="10" fill="currentColor"/><circle cx="76" cy="41" r="10" class="spark"/><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+        jobA1
+      </span>
+      <button id="gear" class="gear" type="button" aria-label="Réglages de l’extension" aria-expanded="false" aria-controls="settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+      </button>
     </header>
 
-    <!-- Relier l'extension à la plateforme, une fois (docs/71 §3). -->
-    <section id="setup" hidden>
-      <h1 id="welcome" hidden>Relier jobA1</h1>
-      <p class="hint">Relie l'extension à ta plateforme jobA1 : indique son adresse, puis « Relier ».</p>
-      <div id="fields">
-        <label>Adresse de ta plateforme
-          <input id="base" type="text" inputmode="url" placeholder="https://joba1.exemple.ch">
-        </label>
-        <details id="manual">
-          <summary>Relier avec un jeton</summary>
-          <p class="hint">Crée un jeton dans Réglages › Extension du navigateur, puis colle-le ici.</p>
-          <label>Jeton
-            <input id="token" type="password" autocomplete="off" placeholder="jbx_…">
+    <main>
+      <!-- Pastille : le site de l'onglet ouvert. -->
+      <span id="site" class="site" hidden>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>
+        <span id="site-name"></span>
+      </span>
+
+      <!-- ExtNonConnecte : l'extension n'est pas reliée à un compte. -->
+      <section id="signin" class="state" hidden>
+        <div class="intro">
+          <svg class="logo" width="56" height="56" viewBox="8 8 86 86" aria-hidden="true"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="45" r="10" fill="currentColor"/><circle cx="76" cy="41" r="10" class="spark"/><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+          <h1 class="title-lg">Relie l’extension à ton compte</h1>
+          <ul class="checks">
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Envoie une annonce à jobA1 en un clic.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Remplit l’adresse de tes alertes.</li>
+            <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Ne lit rien d’autre que ce que tu choisis d’envoyer.</li>
+          </ul>
+        </div>
+        <p id="signin-message" class="note" role="status" hidden></p>
+        <p id="signin-error" class="error" role="alert" hidden></p>
+        <div class="actions tight">
+          <button id="signin-go" class="primary" type="button">Se connecter à jobA1</button>
+          <a class="text-link" href="https://github.com/0xCAF3D0OD/job-bot/blob/main/extension/README.md" target="_blank" rel="noopener noreferrer">Comment ça marche</a>
+        </div>
+      </section>
+
+      <!-- Relié depuis l'onglet d'accueil. -->
+      <section id="linked" class="state" hidden>
+        <div class="center" role="status">
+          <span class="done-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+          <span class="title-md">C’est relié</span>
+          <span class="body">Épingle l’icône jobA1 dans la barre du navigateur. Tu peux fermer cet onglet.</span>
+        </div>
+      </section>
+
+      <!-- L'accès à la plateforme a été refusé ou n'est pas encore donné. -->
+      <section id="authorize-state" class="state" hidden>
+        <div class="intro">
+          <h1 class="title-md">Autorise l’accès à ta plateforme</h1>
+          <p class="body">Le navigateur demande l’accès à l’adresse de ta plateforme jobA1, et seulement celle-ci.</p>
+        </div>
+        <p id="authorize-error" class="error" role="alert" hidden></p>
+        <div class="actions">
+          <button id="authorize" class="primary" type="button">Autoriser l’accès</button>
+        </div>
+      </section>
+
+      <!-- ExtAutreSite : rien à faire sur cette page. -->
+      <section id="idle" class="state" hidden>
+        <div class="center">
+          <svg class="logo" width="56" height="56" viewBox="8 8 86 86" aria-hidden="true"><g transform="rotate(-6 50 50)"><path d="M43 31 L54 22 V56" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="45" r="10" fill="currentColor"/><circle cx="76" cy="41" r="10" class="spark"/><path d="M28 72 C 40 82, 60 82, 72 70" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+          <span class="title-md">Rien à faire sur cette page</span>
+          <span class="body">Ouvre une annonce, ou le formulaire « Créer une alerte » de jobup, jobs.ch ou LinkedIn.</span>
+          <span id="idle-error" class="error" role="alert" hidden></span>
+        </div>
+        <a class="text-link open-app" href="#">Ouvrir jobA1<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
+      </section>
+
+      <!-- Réglages (roue dentée) : l'adresse de la plateforme, relier, délier. -->
+      <section id="settings" class="state" hidden>
+        <h1 class="title-md">Réglages</h1>
+        <div id="fields" class="fields">
+          <label>Adresse de ta plateforme
+            <input id="base" type="text" inputmode="url" placeholder="https://joba1.exemple.ch">
           </label>
-        </details>
-      </div>
-      <button id="link" class="primary" type="button">Relier</button>
-      <button id="authorize" class="primary" type="button" hidden>Autoriser l'accès à ma plateforme</button>
-      <p id="setup-message" class="hint" hidden></p>
-      <p id="setup-error" class="error" hidden></p>
-    </section>
+          <details id="manual">
+            <summary>Relier avec un jeton</summary>
+            <p class="note">Crée un jeton dans Réglages › Connexions de jobA1, puis colle-le ici.</p>
+            <label>Jeton
+              <input id="token" type="password" autocomplete="off" placeholder="jbx_…">
+            </label>
+          </details>
+        </div>
+        <p id="linked-to" class="note" hidden></p>
+        <p id="setup-message" class="note" role="status" hidden></p>
+        <p id="setup-error" class="error" role="alert" hidden></p>
+        <div class="actions">
+          <button id="link" class="primary" type="button">Relier</button>
+          <button id="unlink" class="text-link" type="button" hidden>Délier ce navigateur</button>
+        </div>
+      </section>
 
-    <!-- Relié depuis l'onglet d'accueil. -->
-    <section id="linked" hidden>
-      <p class="ok">C'est relié.</p>
-      <p class="hint">Épingle l'icône jobA1 dans la barre du navigateur : elle remplit les formulaires de candidature et Job-Room. Tu peux fermer cet onglet.</p>
-    </section>
+      <!-- Sur le formulaire de l'employeur (docs/25, avant la maquette du 6.11). -->
+      <section id="main" class="state" hidden>
+        <div id="offer"></div>
+        <select id="choices" hidden aria-label="Candidature"></select>
+        <div id="report" hidden></div>
+        <div id="questions" hidden></div>
+        <div id="frames" hidden></div>
+        <p id="message" class="note" role="status" hidden></p>
+        <p id="error" class="error" role="alert" hidden></p>
+        <div class="actions">
+          <button id="fill" class="primary" type="button" disabled>Remplir le formulaire</button>
+          <button id="sent" class="secondary" type="button" hidden>J'ai envoyé ma candidature</button>
+          <p class="foot">Rien n'est envoyé à ta place.</p>
+        </div>
+      </section>
 
-    <!-- Sur le formulaire de l'employeur. -->
-    <section id="main" hidden>
-      <div id="offer"></div>
-      <select id="choices" hidden aria-label="Candidature"></select>
-      <button id="fill" class="primary" type="button" disabled>Remplir le formulaire</button>
-      <div id="report" hidden></div>
-      <div id="questions" hidden></div>
-      <div id="frames" hidden></div>
-      <button id="sent" class="secondary" type="button" hidden>J'ai envoyé ma candidature</button>
-      <p id="message" class="hint" hidden></p>
-      <p id="error" class="error" hidden></p>
-      <footer>
-        <span class="hint">Rien n'est envoyé à ta place.</span>
-        <button id="unlink" class="link" type="button">Délier</button>
-      </footer>
-    </section>
+      <!-- Sur le formulaire de Job-Room (docs/70). -->
+      <section id="job-room" class="state" hidden>
+        <p class="label">Job-Room · candidatures à déclarer</p>
+        <select id="jr-choices" aria-label="Candidature à déclarer" hidden></select>
+        <div id="jr-report" hidden></div>
+        <p id="jr-message" class="note" role="status" hidden></p>
+        <p id="jr-error" class="error" role="alert" hidden></p>
+        <div class="actions">
+          <button id="jr-fill" class="primary" type="button" disabled>Remplir dans Job-Room</button>
+          <button id="jr-declared" class="secondary" type="button" hidden>C'est déclaré</button>
+          <p class="foot">Rien n'est enregistré à ta place.</p>
+        </div>
+      </section>
 
-    <!-- Sur le formulaire de Job-Room (docs/70). -->
-    <section id="job-room" hidden>
-      <p class="hint">Job-Room · candidatures à déclarer</p>
-      <select id="jr-choices" aria-label="Candidature à déclarer" hidden></select>
-      <button id="jr-fill" class="primary" type="button" disabled>Remplir dans Job-Room</button>
-      <div id="jr-report" hidden></div>
-      <button id="jr-declared" class="secondary" type="button" hidden>C'est déclaré</button>
-      <p id="jr-message" class="hint" hidden></p>
-      <p id="jr-error" class="error" hidden></p>
-      <footer>
-        <span class="hint">Rien n'est enregistré à ta place.</span>
-        <button id="jr-unlink" class="link" type="button">Délier</button>
-      </footer>
-    </section>
-
-    <!-- Sur la page d'un site qui demande un code de vérification (docs/112). -->
-    <section id="codes" hidden>
-      <p class="hint">Code de vérification</p>
-      <p id="codes-text">jobA1 peut remplir ce code tout seul dès qu'il arrive à ton adresse jobA1, puis cliquer « Continuer ».</p>
-      <button id="codes-allow" class="primary" type="button">Remplir mes codes tout seul</button>
-      <p id="codes-message" class="hint" hidden></p>
-      <p id="codes-error" class="error" hidden></p>
-    </section>
+      <!-- Sur la page d'un site qui demande un code de vérification (docs/112). -->
+      <section id="codes" class="state" hidden>
+        <p class="label">Code de vérification</p>
+        <p id="codes-text" class="body">jobA1 peut remplir ce code tout seul dès qu'il arrive à ton adresse jobA1, puis cliquer « Continuer ».</p>
+        <p id="codes-message" class="note" role="status" hidden></p>
+        <p id="codes-error" class="error" role="alert" hidden></p>
+        <div class="actions">
+          <button id="codes-allow" class="primary" type="button">Remplir mes codes tout seul</button>
+        </div>
+      </section>
+    </main>
 
     <script src="fill-job-room.js"></script>
     <script type="module" src="popup.js"></script>

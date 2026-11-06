@@ -283,7 +283,7 @@ const SECTIONS = [
   { id: "donnees", label: "Mes données" },
   // Les comptes Apple, Google ou Microsoft liés (docs/65, complément du 2026-11-05).
   { id: "connexions", label: "Connexions" },
-  { id: "outils", label: "Agenda et extension" },
+  { id: "outils", label: "Agenda" },
   { id: "plateforme", label: "Administration" },
 ] as const;
 type SectionId = (typeof SECTIONS)[number]["id"];
@@ -841,17 +841,17 @@ watch(
           cards
         >
           <ConnectionsPanel />
+          <ExtensionPanel />
           <GetemallPanel />
         </SettingsSection>
 
         <SettingsSection
           v-if="active === 'outils'"
           id="outils"
-          title="Agenda et extension"
+          title="Agenda"
           cards
         >
           <AgendaPanel />
-          <ExtensionPanel />
         </SettingsSection>
 
         <SettingsSection

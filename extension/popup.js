@@ -1,9 +1,9 @@
-// Panneau de l'extension (docs/25 §3.1, docs/71) : candidature reconnue, « Remplir le formulaire »,
-// questions libres, « J'ai envoyé ». Sur Job-Room (docs/70) : les candidatures à déclarer,
-// « Remplir dans Job-Room », « C'est déclaré ». Le jeton reste dans le stockage local du
-// navigateur.
+// Panneau de l'extension (docs/25, docs/71, docs/142). La fenêtre de la maquette du 6.11.2026
+// (360 × 480, boards Ext*) : un en-tête, la pastille du site de l'onglet ouvert, un état à la fois.
+// États : non connectée (ExtNonConnecte), rien à faire (ExtAutreSite), réglages (roue dentée), et
+// ceux d'avant la maquette : formulaire de l'employeur (docs/25), Job-Room (docs/70), codes
+// (docs/112). Le jeton reste dans le stockage local du navigateur.
 // Chrome, Edge, Brave et Firefox (140 et plus) : même code, API `chrome.*` à promesses.
-
 
 const $ = (id) => document.getElementById(id);
 const show = (id, on = true) => ($(id).hidden = !on);
@@ -18,6 +18,58 @@ const welcomeTab = new URLSearchParams(location.search).has("accueil");
 function say(id, text) {
   $(id).textContent = text || "";
   show(id, Boolean(text));
+}
+
+// --- Les états de la fenêtre ------------------------------------------------------------
+
+const STATES = ["signin", "linked", "authorize-state", "idle", "settings", "main", "job-room", "codes"];
+// Sans pastille : ces états ne parlent pas de la page ouverte.
+const NO_SITE = new Set(["signin", "linked", "authorize-state", "settings"]);
+let current = null;
+let beforeSettings = null;
+
+function view(id) {
+  for (const state of STATES) show(state, state === id);
+  if (id !== "settings") beforeSettings = null;
+  current = id;
+  $("gear").setAttribute("aria-expanded", String(id === "settings"));
+  show("site", !NO_SITE.has(id) && Boolean($("site-name").textContent));
+}
+
+// La pastille : l'hôte de l'onglet ouvert (« www.google.ch »), ou un libellé donné.
+function setSite(url, label) {
+  let host = "";
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") host = parsed.hostname;
+  } catch {
+    host = "";
+  }
+  $("site-name").textContent = label || host;
+}
+
+// La roue dentée : les réglages, et retour à l'état d'avant au second clic.
+function toggleSettings() {
+  if (current === "settings") {
+    view(beforeSettings || (config.token ? "idle" : "signin"));
+    return;
+  }
+  const back = current;
+  openSettings();
+  beforeSettings = back;
+}
+
+function openSettings() {
+  const linked = Boolean(config.token);
+  $("base").value = config.base;
+  $("token").value = "";
+  say("setup-error", "");
+  say("setup-message", "");
+  show("fields", !linked);
+  show("link", !linked);
+  show("unlink", linked);
+  say("linked-to", linked ? `Reliée à ${config.base}.` : "");
+  view("settings");
 }
 
 function origin(value) {
@@ -48,44 +100,61 @@ async function base64(path) {
   return btoa(binary);
 }
 
-// --- Relier ------------------------------------------------------------------------------
-
-function setupError(error) {
-  const offline = error.message === "Failed to fetch" || error.name === "TypeError";
-  say("setup-error", offline ? "Plateforme injoignable à cette adresse." : error.message);
+function offline(error) {
+  return error.message === "Failed to fetch" || error.name === "TypeError";
 }
 
-// « Relier » : par la page de la plateforme (docs/71 §4), ou avec un jeton collé.
-async function link() {
+// --- Relier ------------------------------------------------------------------------------
+
+// « Se connecter à jobA1 » : l'adresse connue, on relie par la page de la plateforme ; sinon
+// les réglages, pour la donner.
+function signIn() {
+  say("signin-error", "");
+  say("signin-message", "");
+  if (!config.base) {
+    openSettings();
+    beforeSettings = "signin";
+    say("setup-message", "Indique l'adresse de ta plateforme jobA1, puis « Relier ».");
+    $("base").focus();
+    return;
+  }
+  link(config.base, "", "signin");
+}
+
+// « Relier » (réglages) : par la page de la plateforme (docs/71 §4), ou avec un jeton collé.
+function linkFromSettings() {
   say("setup-error", "");
   say("setup-message", "");
+  link($("base").value, $("token").value.trim(), "setup");
+}
+
+// La demande d'accès part dans le geste même du clic (Firefox l'exige) : pas d'attente avant.
+async function link(baseValue, token, where) {
   try {
-    const base = origin($("base").value);
-    const token = $("token").value.trim();
+    const base = origin(baseValue);
     if (token && !token.startsWith("jbx_")) throw new Error("Le jeton commence par « jbx_ ».");
     config = { base, token };
     // Enregistré en même temps que la demande d'autorisation : Firefox ferme souvent le
     // panneau pendant cette demande, et on reprend à la réouverture (« Autoriser l'accès »).
-    // La demande part sans attendre : Firefox l'exige dans le geste même du clic.
     const saving = token ? chrome.storage.local.set(config) : chrome.storage.local.set({ base }).then(() => chrome.storage.local.remove("token"));
     const asking = requestAccess();
     await saving;
     const granted = await asking;
     if (token) await connect(granted);
-    else await linkByPage(granted);
+    else await linkByPage(granted, where);
   } catch (error) {
-    setupError(error);
+    say(`${where}-error`, offline(error) ? "Plateforme injoignable à cette adresse." : error.message);
   }
 }
 
 // La page « Relier ce navigateur » de la plateforme s'ouvre ; le fond y lit le jeton.
-async function linkByPage(granted) {
+async function linkByPage(granted, where) {
   if (!granted) throw new Error("Autorisation refusée : l'extension ne peut pas joindre ta plateforme.");
   const answer = await chrome.runtime.sendMessage({ type: "link", base: config.base });
   if (!answer?.ok) throw new Error(answer?.error || "La page de ta plateforme ne s'est pas ouverte.");
   say(
-    "setup-message",
-    "Ta plateforme s'est ouverte dans un nouvel onglet : clique sur « Relier ce navigateur ». Si elle ne le propose pas, elle date d'avant la 0.58 : relie avec un jeton.",
+    `${where}-message`,
+    "Ta plateforme s'est ouverte dans un nouvel onglet : clique sur « Relier ce navigateur ».",
   );
 }
 
@@ -107,13 +176,13 @@ async function connect(granted) {
 }
 
 async function authorize() {
-  say("setup-error", "");
+  say("authorize-error", "");
   try {
     const granted = await requestAccess();
     if (config.token) await connect(granted);
-    else await linkByPage(granted);
+    else await linkByPage(granted, "signin").then(() => view("signin"));
   } catch (error) {
-    setupError(error);
+    say("authorize-error", offline(error) ? "Plateforme injoignable à cette adresse." : error.message);
   }
 }
 
@@ -121,25 +190,82 @@ async function permitted() {
   return chrome.permissions.contains({ origins: [accessPattern()] });
 }
 
-function showAuthorize() {
-  show("main", false);
-  show("setup");
-  $("base").value = config.base;
-  $("token").value = config.token;
-  show("fields", false);
-  show("link", false);
-  show("authorize");
+// Délier : le jeton est oublié ici ; il se révoque dans Réglages › Connexions de jobA1.
+async function unlink() {
+  await chrome.storage.local.remove("token");
+  config = { base: config.base, token: "" };
+  view("signin");
 }
 
-async function unlink() {
-  await chrome.storage.local.remove(["base", "token"]);
-  config = { base: "", token: "" };
-  show("main", false);
-  show("job-room", false);
-  show("authorize", false);
-  show("fields");
-  show("link");
-  show("setup");
+function openApp(event) {
+  event.preventDefault();
+  if (config.base) chrome.tabs.create({ url: config.base });
+  window.close();
+}
+
+// --- La page ouverte ----------------------------------------------------------------------
+
+// Un formulaire à remplir ? Seulement le nombre de champs, dans chaque cadre ; rien d'autre
+// n'est lu, et rien ne part (docs/142 §2).
+function countFields() {
+  return document.querySelectorAll("input:not([type=hidden]):not([type=search]), textarea, select").length;
+}
+
+async function hasForm() {
+  try {
+    const results = await chrome.scripting.executeScript({ target: { tabId: tab.id, allFrames: true }, func: countFields });
+    return results.some(({ result }) => Number(result) >= 3);
+  } catch {
+    // Page interdite aux extensions (boutique, réglages du navigateur).
+    return false;
+  }
+}
+
+async function start() {
+  if (!config.token) {
+    view("signin");
+    return;
+  }
+  if (!(await permitted())) {
+    view("authorize-state");
+    return;
+  }
+  tab = await targetTab();
+  setSite(tab?.url);
+  if (isCodePage(tab?.url)) {
+    await startCodes();
+    return;
+  }
+  if (isJobRoom(tab?.url)) {
+    view("job-room");
+    await startJobRoom();
+    return;
+  }
+  if (!tab?.url?.startsWith("http")) {
+    view("idle");
+    return;
+  }
+  let found;
+  try {
+    found = await (await call(`/api/extension/match?url=${encodeURIComponent(tab.url)}`)).json();
+  } catch (error) {
+    view("idle");
+    say("idle-error", offline(error) ? "Plateforme injoignable." : error.message);
+    return;
+  }
+  if (found.offer) {
+    offerId = found.offer.id;
+    renderOffer(found.offer);
+    $("fill").disabled = false;
+    view("main");
+    return;
+  }
+  if (found.choices.length && (await hasForm())) {
+    renderChoices(found.choices);
+    view("main");
+    return;
+  }
+  view("idle");
 }
 
 // --- Candidature -------------------------------------------------------------------------
@@ -163,53 +289,23 @@ function renderOffer(offer) {
   }
 }
 
-async function start() {
-  if (!(await permitted())) {
-    showAuthorize();
-    return;
+
+
+function renderChoices(choices) {
+  const select = $("choices");
+  select.replaceChildren();
+  const hint = document.createElement("option");
+  hint.textContent = "Quelle candidature ?";
+  hint.value = "";
+  select.append(hint);
+  for (const choice of choices) {
+    const option = document.createElement("option");
+    option.value = String(choice.id);
+    option.textContent = `${choice.title} — ${choice.company || "?"}`;
+    select.append(option);
   }
-  show("setup", false);
-  tab = await targetTab();
-  if (isCodePage(tab?.url)) {
-    await startCodes();
-    return;
-  }
-  if (isJobRoom(tab?.url)) {
-    show("job-room");
-    await startJobRoom();
-    return;
-  }
-  show("main");
-  if (!tab?.url?.startsWith("http")) {
-    say("error", "Ouvre le formulaire de l'employeur dans cet onglet, puis clique à nouveau sur l'icône.");
-    return;
-  }
-  try {
-    const found = await (await call(`/api/extension/match?url=${encodeURIComponent(tab.url)}`)).json();
-    const select = $("choices");
-    select.replaceChildren();
-    if (found.offer) {
-      offerId = found.offer.id;
-      renderOffer(found.offer);
-    } else if (found.choices.length) {
-      const hint = document.createElement("option");
-      hint.textContent = "Quelle candidature ?";
-      hint.value = "";
-      select.append(hint);
-      for (const choice of found.choices) {
-        const option = document.createElement("option");
-        option.value = String(choice.id);
-        option.textContent = `${choice.title} — ${choice.company || "?"}`;
-        select.append(option);
-      }
-      show("choices");
-    } else {
-      say("message", "Aucune candidature en préparation : prépare d'abord la lettre ou le CV sur ta plateforme.");
-    }
-    $("fill").disabled = !offerId;
-  } catch (error) {
-    say("error", error.name === "TypeError" ? "Plateforme injoignable." : error.message);
-  }
+  show("choices");
+  $("fill").disabled = true;
 }
 
 // Onglet à remplir : celui d'où le panneau est ouvert. `?onglet=<début de l'adresse>` désigne
@@ -224,6 +320,7 @@ async function targetTab() {
   const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
   return active;
 }
+
 
 // --- Remplir -----------------------------------------------------------------------------
 
@@ -380,7 +477,7 @@ async function watchCode() {
 }
 
 async function startCodes() {
-  show("codes");
+  view("codes");
   if (await chrome.permissions.contains({ origins: codeOrigins() })) await watchCode();
 }
 
@@ -520,7 +617,6 @@ async function declared() {
 
 $("jr-fill").addEventListener("click", fillJobRoom);
 $("jr-declared").addEventListener("click", declared);
-$("jr-unlink").addEventListener("click", unlink);
 $("jr-choices").addEventListener("change", (event) => {
   declaring = Number(event.target.value) || null;
   event.target.title = event.target.selectedOptions[0]?.textContent ?? "";
@@ -529,12 +625,16 @@ $("jr-choices").addEventListener("change", (event) => {
   show("jr-report", false);
 });
 
+
+$("gear").addEventListener("click", toggleSettings);
+$("signin-go").addEventListener("click", signIn);
 $("codes-allow").addEventListener("click", allowCodes);
-$("link").addEventListener("click", link);
+$("link").addEventListener("click", linkFromSettings);
 $("authorize").addEventListener("click", authorize);
 $("unlink").addEventListener("click", unlink);
 $("fill").addEventListener("click", fill);
 $("sent").addEventListener("click", sent);
+for (const a of document.querySelectorAll(".open-app")) a.addEventListener("click", openApp);
 $("choices").addEventListener("change", (event) => {
   offerId = Number(event.target.value) || null;
   $("fill").disabled = !offerId;
@@ -544,29 +644,16 @@ $("choices").addEventListener("change", (event) => {
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area !== "local" || !changes.token?.newValue) return;
   config = { base: changes.base?.newValue ?? config.base, token: changes.token.newValue };
+  say("signin-message", "");
   say("setup-message", "");
-  if (welcomeTab) {
-    show("setup", false);
-    show("linked");
-  } else {
-    await start();
-  }
+  if (welcomeTab) view("linked");
+  else await start();
 });
 
-if (welcomeTab) {
-  document.body.classList.add("accueil");
-  show("welcome");
-}
+if (welcomeTab) document.documentElement.classList.add("accueil");
 
-chrome.storage.local.get(["base", "token"]).then(async (stored) => {
-  if (stored.base && stored.token && !welcomeTab) {
-    config = { base: stored.base, token: stored.token };
-    await start();
-  } else if (stored.base && stored.token) {
-    show("linked");
-  } else {
-    if (stored.base) $("base").value = stored.base;
-    config = { base: stored.base || "", token: "" };
-    show("setup");
-  }
+export const ready = chrome.storage.local.get(["base", "token"]).then(async (stored) => {
+  config = { base: stored.base || "", token: stored.token || "" };
+  if (welcomeTab) view(config.token ? "linked" : "signin");
+  else await start();
 });

@@ -37,7 +37,14 @@ n'enregistre rien : « Sauvegarder » reste le tien.
 
 Si le panneau se ferme pendant la demande d'accès (fréquent dans Firefox), rouvre-le et clique
 à nouveau sur **Relier**. **Relier avec un jeton** (replié) garde l'ancienne méthode : un jeton
-créé dans Réglages › Extension du navigateur, à coller.
+créé dans Réglages › Connexions, à coller.
+
+## La fenêtre (docs/142)
+
+Un en-tête (logo, roue dentée vers les réglages), la pastille du site de l'onglet ouvert, et un
+seul état à la fois : **Relie l'extension à ton compte** tant qu'elle n'est pas reliée, **Rien à
+faire sur cette page** ailleurs, et les états ci-dessous. La roue dentée donne l'adresse de ta
+plateforme et **Délier ce navigateur** ; le jeton se révoque dans Réglages › Connexions de jobA1.
 
 ## Utiliser
 
