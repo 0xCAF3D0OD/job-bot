@@ -3461,7 +3461,6 @@ main:focus { outline: none; }
 .doc-card-instruction { display: grid; gap: var(--space-2); }
 .doc-card-read { display: flex; align-items: center; gap: var(--space-3); min-height: 3rem; padding-top: var(--space-1); border-top: 1px solid var(--line-soft); font-weight: var(--weight-semibold); cursor: pointer; }
 .doc-card-read input { flex: none; width: 1.5rem; height: 1.5rem; margin: 0; accent-color: var(--primary); }
-.doc-card-language { display: grid; gap: var(--space-1); font-size: var(--font-small); color: var(--text-secondary); }
 .doc-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
 .doc-tags li { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-semibold); }
 .prep-instruction-line { width: 100%; }
