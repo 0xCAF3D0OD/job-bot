@@ -1,0 +1,14 @@
+<!-- Page type : recherche jobup avec la fenêtre « Créer une alerte » ouverte (structure reconstituée, pas un relevé). -->
+<header><form role="search"><input name="term" value="DevOps"><input name="location" value="Lausanne"><button>Rechercher</button></form></header>
+<main><button>Créer une alerte</button><ul><li>DevOps Engineer — Sword</li></ul></main>
+<div role="dialog" data-cy="job-alert-modal" aria-labelledby="alert-title">
+  <h2 id="alert-title">Créer une alerte emploi</h2>
+  <p>Reçois les nouvelles offres « DevOps, Lausanne » par e-mail.</p>
+  <form id="alert-form">
+    <label for="alert-email">Adresse e-mail</label>
+    <input id="alert-email" type="email" data-cy="job-alert-email" name="email">
+    <label><input type="checkbox" name="consent"> J'accepte les conditions</label>
+    <button type="submit" data-cy="job-alert-submit">Créer l'alerte</button>
+  </form>
+</div>
+<footer><form><label>Newsletter <input type="email" name="newsletter"></label><button>S'abonner</button></form></footer>

@@ -141,6 +141,23 @@ async def cells(session: AsyncSession, search: AlertSearch, sites: list[Site]) -
     return found
 
 
+class UnknownSite(Exception):
+    """Le site n'est pas dans la liste des sites (404)."""
+
+
+async def mark_created(session: AsyncSession, search_ids: list[int], site: str) -> list[int]:
+    """« J'ai créé l'alerte » sur ce site, pour ces recherches (assistant des alertes,
+    extension) : rend celles qui étaient encore à faire."""
+    if await session.scalar(select(Site.id).where(Site.slug == site)) is None:
+        raise UnknownSite
+    marked: list[int] = []
+    for search_id in search_ids:
+        if await session.get(AlertSetup, (search_id, site)) is None:
+            session.add(AlertSetup(search_id=search_id, site=site))
+            marked.append(search_id)
+    return marked
+
+
 async def waiting(session: AsyncSession) -> int:
     """Alertes créées depuis 24 heures ou plus qui n'ont encore rien envoyé (rappel)."""
     sites = list(await session.scalars(select(Site).where(followed())))

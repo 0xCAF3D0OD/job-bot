@@ -48,6 +48,7 @@ describe("page Tes données (docs/65 §6)", () => {
     expect(text).toContain("seulement l'annonce et son adresse");
     expect(text).toContain("Jamais tes cookies");
     expect(text).toContain("Ton nom est retiré");
+    expect(text).toContain("ton adresse jobA1 dans « Créer une alerte », sans rien valider");
   });
 
   it("le paiement de Plus, seulement une fois ouvert (docs/125 §6)", async () => {

@@ -62,7 +62,9 @@ export async function openPopup(page: Page): Promise<Document> {
     },
   };
   // Le script de lecture de l'annonce (annonce.js) : seul son nom compte ici.
-  Object.assign(globalThis, { chrome, jobA1Annonce: function jobA1Annonce() {} });
+  Object.assign(globalThis, { chrome, jobA1Annonce: function jobA1Annonce() {}, jobA1AlertForm: function jobA1AlertForm() {} });
+  // @ts-expect-error script de l'extension, sans types : les vrais sélecteurs des sites
+  await import("../../extension/alert-selectors.js");
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -296,6 +298,99 @@ describe("envoyer une annonce (ExtAnnonce)", () => {
     page.scripts.countFields = [{ frameId: 0, result: 6 }];
     await openPopup(page);
     expect(shownState()).toBe("main");
+  });
+});
+
+const alertPage = (url: string, filled: boolean, stored: Record<string, string | boolean> = {}): Page => ({
+  tab: { id: 1, url },
+  stored: { ...linked, ...stored } as Record<string, string>,
+  api: { ...nothingHere, "/api/extension/alerts": { address: "kevin.k3x@alertes.joba1.ch", todo: {} } },
+  scripts: {
+    jobA1AlertForm: (args) => [{ frameId: 0, result: { form: true, filled: args[1] ? filled : false } }],
+  },
+});
+const alertCalls = () => injected.filter((i) => i.name === "jobA1AlertForm").map((i) => i.args[1]);
+
+describe("formulaire d'alerte (ExtAlerte)", () => {
+  let clipboard: string[];
+  beforeEach(() => {
+    clipboard = [];
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn(async (t: string) => void clipboard.push(t)) },
+    });
+  });
+
+  it("jobup : « Adresse jobA1 remplie », la pastille du formulaire, rien d'autre demandé", async () => {
+    await openPopup(alertPage("https://www.jobup.ch/fr/emplois/?term=devops", true));
+    expect(shownState()).toBe("alerte");
+    expect(document.getElementById("site-name")?.textContent).toBe("jobup.ch · Créer une alerte");
+    expect(document.getElementById("al-title")?.textContent).toBe("Adresse jobA1 remplie");
+    expect(document.getElementById("al-text")?.textContent).toBe("Vérifie le formulaire sur jobup, puis valide-le toi-même.");
+    expect(document.getElementById("al-address")?.textContent).toBe("kevin.k3x@alertes.joba1.ch");
+    expect(visible("al-hint")).toBe(true);
+    // D'abord reconnaître le formulaire (sans adresse), puis remplir.
+    expect(alertCalls()).toEqual([null, "kevin.k3x@alertes.joba1.ch"]);
+    expect(calls.map((c) => c.path)).toEqual(["/api/extension/alerts"]);
+    expect(document.querySelectorAll("#al-todo button.primary")).toHaveLength(1);
+  });
+
+  it("champ pas trouvé : le repli, l'adresse à copier et la phrase de la maquette", async () => {
+    await openPopup(alertPage("https://www.jobs.ch/fr/offres-emplois/?term=devops", false));
+    expect(document.getElementById("site-name")?.textContent).toBe("jobs.ch · Créer une alerte");
+    expect(document.getElementById("al-title")?.textContent).toBe("Copie ton adresse jobA1");
+    // Pas de coche : rien n'a été rempli.
+    expect(visible("al-mark")).toBe(false);
+    expect(document.getElementById("al-hint")?.textContent).toBe(
+      "Le champ n’a pas été rempli ? Copie l’adresse et colle-la dans le champ e-mail du formulaire.",
+    );
+    await click("al-copy");
+    expect(clipboard).toEqual(["kevin.k3x@alertes.joba1.ch"]);
+    expect(document.getElementById("al-copy")?.textContent).toBe("Copiée");
+  });
+
+  it("LinkedIn, par défaut : rien n'est rempli, l'adresse est copiée", async () => {
+    await openPopup(alertPage("https://www.linkedin.com/jobs/search/?keywords=devops", true));
+    expect(alertCalls()).toEqual([null]);
+    expect(clipboard).toEqual(["kevin.k3x@alertes.joba1.ch"]);
+    expect(document.getElementById("al-title")?.textContent).toBe("Adresse jobA1 copiée");
+    expect(document.getElementById("site-name")?.textContent).toBe("linkedin.com · Créer une alerte");
+  });
+
+  it("LinkedIn, avec le réglage : rempli comme les autres", async () => {
+    await openPopup(alertPage("https://www.linkedin.com/jobs/search/?keywords=devops", true, { fillLinkedIn: true }));
+    expect(alertCalls()).toEqual([null, "kevin.k3x@alertes.joba1.ch"]);
+    expect(document.getElementById("al-title")?.textContent).toBe("Adresse jobA1 remplie");
+  });
+
+  it("le réglage LinkedIn, dans la roue dentée, gardé dans le navigateur", async () => {
+    await openPopup({ tab: { id: 1, url: "https://www.google.ch/" }, stored: linked, api: nothingHere, scripts: {} });
+    document.getElementById("gear")!.click();
+    const box = document.getElementById("linkedin-fill") as HTMLInputElement;
+    expect(visible("linkedin-row")).toBe(true);
+    expect(box.checked).toBe(false);
+    box.click();
+    const { chrome } = globalThis as unknown as { chrome: { storage: { local: { set: ReturnType<typeof vi.fn> } } } };
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({ fillLinkedIn: true });
+  });
+
+  it("« J'ai créé l'alerte » : la route de l'assistant, « Alerte jobup enregistrée »", async () => {
+    const page = alertPage("https://www.jobup.ch/fr/emplois/?term=devops", true);
+    page.api["/api/extension/alerts/jobup"] = { site: "jobup", marked: 2 };
+    await openPopup(page);
+    await click("al-created");
+    const put = calls.find((c) => c.init?.method === "PUT");
+    expect(put?.path).toBe("/api/extension/alerts/jobup");
+    expect(document.getElementById("al-done")?.getAttribute("role")).toBe("status");
+    expect(document.getElementById("al-done-title")?.textContent).toBe("Alerte jobup enregistrée");
+  });
+
+  it("sur jobup sans fenêtre d'alerte ouverte : on continue (annonce, ou rien à faire)", async () => {
+    const page = alertPage("https://www.jobup.ch/fr/emplois/", true);
+    page.scripts.jobA1AlertForm = [{ frameId: 0, result: { form: false, filled: false } }];
+    await openPopup(page);
+    expect(shownState()).toBe("idle");
+    expect(alertCalls()).toEqual([null]);
   });
 });
 

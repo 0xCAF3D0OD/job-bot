@@ -313,10 +313,10 @@ async def mark_alert_created(request: Request, search_id: int, site: str) -> Ale
     async with _runtime(request).sessionmaker.begin() as session:
         if await session.get(AlertSearch, search_id) is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "recherche introuvable")
-        if await session.scalar(select(Site.id).where(Site.slug == site)) is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "site inconnu")
-        if await session.get(AlertSetup, (search_id, site)) is None:
-            session.add(AlertSetup(search_id=search_id, site=site))
+        try:
+            await service.mark_created(session, [search_id], site)
+        except service.UnknownSite:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "site inconnu") from None
     return await _page(_runtime(request))
 
 

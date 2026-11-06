@@ -25,6 +25,11 @@ jobA1 est une plateforme de recherche d'emploi pour la Suisse, que tu héberges 
 - Sur la page d'une annonce, « Envoyer à jobA1 » : jobA1 lit son texte complet, la relie à l'offre déjà reçue (en te demandant si c'est la même) ou l'ajoute, puis refait sa note.
 - Seule l'annonce part : sur LinkedIn, l'annonce ouverte, jamais ton profil ni la liste.
 
+**Les alertes de jobup, jobs.ch et LinkedIn**
+- Quand la fenêtre « Créer une alerte » est ouverte, l'extension met ton adresse jobA1 dans son champ e-mail. Tu vérifies et tu valides toi-même.
+- Sur LinkedIn, par défaut, l'adresse est seulement copiée ; le remplissage se choisit dans les réglages de l'extension.
+- « J'ai créé l'alerte » le note dans jobA1.
+
 **Sur Job-Room (preuves de recherches d'emploi)**
 - Choisis une candidature de ton Suivi : la saisie se remplit (date, entreprise, adresse, poste, mode, taux, résultat).
 - Tu vérifies et tu sauvegardes toi-même ; « C'est déclaré » la marque dans ton Suivi.
@@ -62,6 +67,8 @@ Autre (et, si proposé : Productivité).
 > - la marque « C'est déclaré », sur Job-Room ;
 > - quand tu cliques sur « Envoyer à jobA1 » : le texte de l'annonce de la page (son balisage JobPosting, sinon le texte principal de la page) et son adresse. Sur LinkedIn, seulement l'annonce ouverte. Ta plateforme retire ton nom du texte.
 >
+> **Les formulaires d'alerte** de jobup, jobs.ch et LinkedIn, quand tu ouvres le panneau sur l'un de ces sites : l'extension cherche si la fenêtre « Créer une alerte » est ouverte et y met ton adresse jobA1 (venue de ta plateforme) ; rien de ces pages n'est envoyé. « J'ai créé l'alerte » envoie à ta plateforme le nom du site.
+>
 > **Ce qui est lu sans être envoyé**, à l'ouverture du panneau : le titre, l'entreprise et le lieu de l'annonce de la page, pour les afficher, et le nombre de champs de formulaire.
 >
 > **Ce qui va de ta plateforme à la page**, seulement quand tu cliques sur « Remplir » : tes coordonnées, ta lettre et ton CV, ou les données d'une candidature (Job-Room). Elles sont mises dans les champs du formulaire ; rien n'est envoyé ni enregistré à ta place.
@@ -82,3 +89,4 @@ Autre (et, si proposé : Productivité).
 - 0.59.0, les codes de vérification (docs/112 §3) : accès facultatif à `https://auth.jobup.ch/*` et `https://auth.jobs.ch/*`, demandé par un bouton du panneau (`permissions.request`). Sur une page de code de ces hôtes, `background.js` appelle la plateforme de l'utilisateur (`/api/extension/codes/expect`, puis `/api/extension/codes?site=…` toutes les 5 s pendant 5 minutes au plus), puis injecte `fillCode` (remplit le champ du code, clique sur le bouton d'envoi du formulaire). Rien n'est lu ni envoyé d'autre depuis ces pages.
 - 0.60.0, la nouvelle fenêtre (docs/142 §1) : seulement l'interface du panneau change. À l'ouverture du panneau, sur l'onglet actif, `countFields` compte les champs de formulaire de la page (pour savoir s'il y a un formulaire à remplir) ; seul ce nombre est lu, et il ne quitte pas le navigateur. La police Figtree est dans le paquet (licence OFL).
 - 0.61.0, envoyer une annonce (docs/142 §3) : `annonce.js` définit une seule fonction, passée à l'onglet actif (`func`) au clic sur l'icône (titre, entreprise, lieu du JobPosting, affichés dans le panneau) et au clic sur « Envoyer à jobA1 » (texte de l'annonce, envoyé à `/api/extension/announce` de la plateforme de l'utilisateur). Aucune nouvelle permission. Sur LinkedIn, seuls les blocs de l'annonce ouverte sont lus.
+- 0.62.0, les formulaires d'alerte (docs/142 §4) : `host_permissions` pour `www.jobup.ch`, `jobup.ch`, `www.jobs.ch`, `jobs.ch` et `www.linkedin.com`, et rien d'autre. Aucune lecture en arrière-plan : à l'ouverture du panneau sur l'un de ces sites, `jobA1AlertForm` (`alertes.js`, sélecteurs dans `alert-selectors.js`) cherche la fenêtre « Créer une alerte » et met l'adresse jobA1 dans son champ e-mail (événements `input` et `change`). Jamais de clic sur le bouton d'envoi du site.

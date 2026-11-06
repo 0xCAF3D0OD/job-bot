@@ -152,6 +152,17 @@ main {
 .title-sm { font-size: 16px; font-weight: 800; line-height: 21px; }
 .meta { color: var(--text-secondary); }
 
+.lead { display: flex; gap: 12px; align-items: flex-start; }
+.lead-mark { flex: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 20px; background: var(--success-soft); color: var(--success); }
+.lead-text { display: flex; flex-direction: column; gap: 3px; }
+.title-lead { font-size: 17px; font-weight: 800; line-height: 22px; }
+.address-row { display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.address { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.copy { flex: none; height: 36px; padding: 0 12px; border: 0; border-radius: 18px; background: var(--primary-soft); color: var(--primary-text); font-size: 14px; font-weight: 700; }
+label.check { flex-direction: row; align-items: flex-start; gap: 10px; font-weight: 600; }
+label.check input { width: 20px; min-height: 20px; height: 20px; margin: 2px 0 0; padding: 0; accent-color: var(--primary); }
+label.check span { display: flex; flex-direction: column; gap: 2px; }
+
 /* Un seul bouton plein par état, en bas. */
 .actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
 .actions.tight { margin-top: 0; gap: 4px; }

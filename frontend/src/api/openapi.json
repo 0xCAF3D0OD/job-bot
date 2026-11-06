@@ -1973,6 +1973,74 @@
         }
       }
     },
+    "/api/extension/alerts": {
+      "get": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Alert Address",
+        "description": "L'adresse jobA1 du compte, à mettre dans le champ e-mail du formulaire d'alerte.",
+        "operationId": "extensionAlertAddress",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertAddressOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/extension/alerts/{site}": {
+      "put": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Alert Created",
+        "description": "« J'ai créé l'alerte » depuis l'extension : comme le bouton de l'assistant des alertes\n(`alerts.service.mark_created`), pour les recherches suivies encore à faire sur ce site.",
+        "operationId": "extensionAlertCreated",
+        "parameters": [
+          {
+            "name": "site",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Site"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertCreatedOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Site inconnu"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/extension-tokens": {
       "get": {
         "tags": [
@@ -9829,6 +9897,34 @@
         ],
         "title": "AiReadingOut"
       },
+      "AlertAddressOut": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "todo": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Todo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "todo"
+        ],
+        "title": "AlertAddressOut"
+      },
       "AlertCell": {
         "properties": {
           "site": {
@@ -9900,6 +9996,24 @@
           "created_at"
         ],
         "title": "AlertCell"
+      },
+      "AlertCreatedOut": {
+        "properties": {
+          "site": {
+            "type": "string",
+            "title": "Site"
+          },
+          "marked": {
+            "type": "integer",
+            "title": "Marked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "site",
+          "marked"
+        ],
+        "title": "AlertCreatedOut"
       },
       "AlertSearchIn": {
         "properties": {
