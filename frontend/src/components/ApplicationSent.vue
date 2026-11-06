@@ -76,7 +76,7 @@ const searches = computed(() => {
       </RouterLink>
       <RouterLink
         to="/candidatures/offres"
-        class="sent-screen-next"
+        class="goal-reached-home"
         data-test="next-offer"
         @click="emit('leave')"
       >
@@ -106,7 +106,6 @@ const searches = computed(() => {
 .sent-screen-small { margin-top: var(--space-1); font-size: var(--font-small); }
 .sent-screen-actions { flex: none; display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-5) var(--space-8); }
 .sent-screen-primary { justify-content: center; width: 100%; min-height: var(--btn-primary); border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
-.sent-screen-next { display: flex; align-items: center; justify-content: center; min-height: var(--btn-tertiary); font-weight: var(--weight-bold); color: var(--primary-text); text-decoration: none; }
 @media (min-width: 821px) { .sent-screen { min-height: 0; padding-block: var(--space-8); } .sent-screen-brand { display: none; } }
 .sent-screen-cancel { justify-self: center; min-height: var(--target-min); color: var(--text-secondary); font-weight: var(--weight-regular); }
 </style>
